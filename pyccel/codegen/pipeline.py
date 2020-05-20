@@ -4,7 +4,7 @@ import sys
 import shutil
 from collections import OrderedDict
 
-from pyccel.parser.errors               import Errors
+from pyccel.parser.errors               import Errors, PyccelError
 from pyccel.parser                      import Parser
 from pyccel.codegen.codegen             import Codegen
 from pyccel.codegen.utilities           import construct_flags
@@ -62,6 +62,7 @@ def execute_pyccel(fname, *,
     # to original working directory. Caller should then raise exception.
     def handle_error(stage):
         print('\nERROR at {} stage'.format(stage))
+        errors.check()
         os.chdir(base_dirpath)
 
     # Identify absolute path, directory, and filename
@@ -118,41 +119,32 @@ def execute_pyccel(fname, *,
     try:
         parser = Parser(pymod_filepath, output_folder=pyccel_dirpath.replace('/','.'), show_traceback=verbose)
         ast = parser.parse()
-    except Exception:
+    except PyccelError:
         handle_error('parsing (syntax)')
         raise
 
-    if errors.is_errors():
-        return False
-
     if syntax_only:
-        return True
+        return
 
     # Annotate abstract syntax Tree
     try:
         settings = {}
         ast = parser.annotate(**settings)
-    except Exception:
+    except PyccelError:
         handle_error('annotation (semantic)')
         raise
 
-    if errors.is_errors():
-        return False
-
     if semantic_only:
-        return True
+        return
 
     # Generate .f90 file
     try:
         codegen = Codegen(ast, module_name)
         fname = os.path.join(pyccel_dirpath, module_name)
         fname = codegen.export(fname, language=language)
-    except Exception:
+    except PyccelError:
         handle_error('code generation')
         raise
-
-    if errors.is_errors():
-        return False
 
     #------------------------------------------------------
     # TODO: collect dependencies and proceed recursively
@@ -163,7 +155,7 @@ def execute_pyccel(fname, *,
     #------------------------------------------------------
 
     if convert_only:
-        return True
+        return
 
     # ...
     # Determine all .o files and all folders needed by executable
@@ -231,7 +223,7 @@ def execute_pyccel(fname, *,
             exec_filepath = os.path.join(folder, module_name)
             print( '> Executable has been created: {}'.format(exec_filepath))
         os.chdir(base_dirpath)
-        return True
+        return
 
     # Create shared library
     try:
@@ -262,4 +254,3 @@ def execute_pyccel(fname, *,
 
     if verbose:
         print( '> Shared library has been created: {}'.format(sharedlib_filepath))
-    return True
