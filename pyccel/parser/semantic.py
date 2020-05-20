@@ -1415,7 +1415,7 @@ class SemanticParser(BasicParser):
 
             errors.report(UNDEFINED_VARIABLE, symbol=name,
             bounding_box=self._current_fst_node.absolute_bounding_box,
-            severity='error', blocker=self.blocking)
+            severity='fatal', blocker=True)
         return var
 
 
@@ -1550,7 +1550,6 @@ class SemanticParser(BasicParser):
         #if stmts:
         #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
-
         if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, List)):
             expr_new = self._visit(Dlist(expr.args[0], expr.args[1]))
         else:
@@ -1564,7 +1563,6 @@ class SemanticParser(BasicParser):
         #if stmts:
         #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
-
         expr_new = PyccelDiv(*args)
         #if stmts:
         #    expr_new = CodeBlock(stmts + [expr_new])
@@ -1575,7 +1573,6 @@ class SemanticParser(BasicParser):
         #if stmts:
         #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
-
         expr_new = PyccelMod(*args)
         #if stmts:
         #    expr_new = CodeBlock(stmts + [expr_new])
@@ -1586,7 +1583,6 @@ class SemanticParser(BasicParser):
         #if stmts:
         #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
-
         expr_new = PyccelFloorDiv(*args)
         #if stmts:
         #    expr_new = CodeBlock(stmts + [expr_new])
@@ -1597,7 +1593,6 @@ class SemanticParser(BasicParser):
         #if stmts:
         #    stmts = [self._visit(i, **settings) for i in stmts]
         args     = [self._visit(a, **settings) for a in expr.args]
-
         expr_new = PyccelPow(*args)
         #if stmts:
         #    expr_new = CodeBlock(stmts + [expr_new])
@@ -1617,44 +1612,37 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelOr(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-
         expr_new = PyccelOr(*args)
 
         return expr_new
 
     def _visit_PyccelEq(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-
         expr_new = PyccelEq(*args)
         return expr_new
 
     def _visit_PyccelNe(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-
         expr_new = PyccelNe(*args)
         return expr_new
 
     def _visit_PyccelLt(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-
         expr_new = PyccelLt(*args)
         return expr_new
 
     def _visit_PyccelGe(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-
         expr_new = PyccelGe(*args)
         return expr_new
 
     def _visit_PyccelLe(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-
         expr_new = PyccelLe(*args)
         return expr_new
 
     def _visit_PyccelGt(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-
         expr_new = PyccelGt(*args)
         return expr_new
 
