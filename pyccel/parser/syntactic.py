@@ -170,8 +170,6 @@ class SyntaxParser(BasicParser):
             errors = Errors()
             errors.report(INVALID_PYTHON_SYNTAX, symbol='\n' + str(e),
                           severity='fatal')
-            errors.check()
-            raise e
 
         preprocess_imports(red)
         preprocess_default_args(red)
@@ -197,17 +195,11 @@ class SyntaxParser(BasicParser):
         errors.set_parser_stage('syntax')
 
         # we add the try/except to allow the parser to find all possible errors
-        try:
-            ast = self._visit(self.fst)
-        except Exception as e:
-            errors.check()
-            traceback.print_exc()
-            raise e
+        ast = self._visit(self.fst)
 
 
         self._ast = ast
 
-        errors.check()
         self._visit_done = True
 
         return ast
