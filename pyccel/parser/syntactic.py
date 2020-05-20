@@ -53,6 +53,7 @@ from pyccel.ast import CommentBlock
 from pyccel.ast import With
 from pyccel.ast import List, Dlist
 from pyccel.ast import StarredArguments
+from pyccel.ast import CodeBlock
 from pyccel.ast import create_variable
 
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
@@ -246,7 +247,9 @@ class SyntaxParser(BasicParser):
 
 
     def _visit_RedBaron(self, stmt):
-        return self._treat_iterable(stmt)
+        code = CodeBlock([self._visit(i) for i in stmt])
+        code.set_fst(stmt)
+        return code
 
     def _visit_LineProxyList(self, stmt):
         return self._treat_iterable(stmt)
