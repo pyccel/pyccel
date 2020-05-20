@@ -310,8 +310,9 @@ class SemanticParser(BasicParser):
                 return container.imports['variables'][name]
             container = container.parent_scope
 
-
-        return None
+        errors.report(UNDEFINED_VARIABLE, symbol=name,
+        bounding_box=self._current_fst_node.absolute_bounding_box,
+        severity='fatal', blocker=True)
 
     def replace_variable_from_scope(self, name, new_var):
         """."""
@@ -1349,8 +1350,6 @@ class SemanticParser(BasicParser):
         args = list(expr.indices)
 
         new_args = [self._visit(arg, **settings) for arg in args]
-        if var is None or None in new_args:
-            return None
 
         if (len(new_args)==1 and isinstance(new_args[0],(TupleVariable, PythonTuple))):
             len_args = len(new_args[0])
@@ -1534,9 +1533,6 @@ class SemanticParser(BasicParser):
         atoms = [a['is_pointer'] or a['is_target'] for a in atoms if a['rank']>0]
         args  = [self._visit(a, **settings) for a in expr.args]
 
-        if None in args:
-            args = [a if a is not None else Integer(0) for a in args]
-
         if any(atoms) or atoms_ls:
             return Concatenate(args, True)
         elif atoms_str:
@@ -1552,8 +1548,6 @@ class SemanticParser(BasicParser):
         #if stmts:
         #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
-        if None in args:
-            args = [a if a is not None else Integer(1) for a in args]
 
         if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, List)):
             expr_new = self._visit(Dlist(expr.args[0], expr.args[1]))
@@ -1568,8 +1562,6 @@ class SemanticParser(BasicParser):
         #if stmts:
         #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
-        if None in args:
-            args = [a if a is not None else Integer(1) for a in args]
 
         expr_new = PyccelDiv(*args)
         #if stmts:
@@ -1581,8 +1573,6 @@ class SemanticParser(BasicParser):
         #if stmts:
         #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
-        if None in args:
-            args = [a if a is not None else Integer(1) for a in args]
 
         expr_new = PyccelMod(*args)
         #if stmts:
@@ -1594,8 +1584,6 @@ class SemanticParser(BasicParser):
         #if stmts:
         #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
-        if None in args:
-            args = [a if a is not None else Integer(1) for a in args]
 
         expr_new = PyccelFloorDiv(*args)
         #if stmts:
@@ -1607,8 +1595,6 @@ class SemanticParser(BasicParser):
         #if stmts:
         #    stmts = [self._visit(i, **settings) for i in stmts]
         args     = [self._visit(a, **settings) for a in expr.args]
-        if None in args:
-            args = [a if a is not None else Integer(1) for a in args]
 
         expr_new = PyccelPow(*args)
         #if stmts:
@@ -1623,16 +1609,12 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelAnd(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if None in args:
-            args = [a if a is not None else BooleanFalse() for a in args]
         expr_new = PyccelAnd(*args)
 
         return expr_new
 
     def _visit_PyccelOr(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if None in args:
-            args = [a if a is not None else BooleanFalse() for a in args]
 
         expr_new = PyccelOr(*args)
 
@@ -1640,48 +1622,36 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelEq(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if None in args:
-            args = [a if a is not None else BooleanFalse() for a in args]
 
         expr_new = PyccelEq(*args)
         return expr_new
 
     def _visit_PyccelNe(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if None in args:
-            args = [a if a is not None else BooleanFalse() for a in args]
 
         expr_new = PyccelNe(*args)
         return expr_new
 
     def _visit_PyccelLt(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if None in args:
-            args = [a if a is not None else Integer(0) for a in args]
 
         expr_new = PyccelLt(*args)
         return expr_new
 
     def _visit_PyccelGe(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if None in args:
-            args = [a if a is not None else Integer(0) for a in args]
 
         expr_new = PyccelGe(*args)
         return expr_new
 
     def _visit_PyccelLe(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if None in args:
-            args = [a if a is not None else Integer(0) for a in args]
 
         expr_new = PyccelLe(*args)
         return expr_new
 
     def _visit_PyccelGt(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if None in args:
-            args = [a if a is not None else Integer(0) for a in args]
 
         expr_new = PyccelGt(*args)
         return expr_new
@@ -2464,10 +2434,7 @@ class SemanticParser(BasicParser):
         body     = list(expr.body)
         iterator = expr.target
 
-        if iterable is None:
-            return None
-
-        elif isinstance(iterable, Variable):
+        if isinstance(iterable, Variable):
             indx   = self._get_new_variable(iterable)
             assign = Assign(iterator, IndexedBase(iterable)[indx])
             assign.set_fst(expr.fst)
@@ -3203,7 +3170,6 @@ class SemanticParser(BasicParser):
             errors.report(UNDEFINED_VARIABLE, symbol=name,
             bounding_box=self._current_fst_node.absolute_bounding_box,
             severity='error', blocker=self.blocking)
-            return BooleanFalse()
 
         var2 = self.get_variable(str(expr.rhs))
         if var2 is None:
