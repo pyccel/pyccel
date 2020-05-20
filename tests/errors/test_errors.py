@@ -8,7 +8,7 @@
 
 from pyccel.parser import Parser
 from pyccel.codegen import Codegen
-from pyccel.parser.errors import Errors
+from pyccel.parser.errors import Errors, PyccelSemanticError
 import os
 import pytest
 
@@ -49,7 +49,8 @@ def test_semantic_errors(f):
     ast = pyccel.parse()
 
     settings = {}
-    ast = pyccel.annotate(**settings)
+    with pytest.raises(PyccelSemanticError):
+        ast = pyccel.annotate(**settings)
 
     assert(errors.is_errors())
 
