@@ -122,7 +122,7 @@ def execute_pyccel(fname, *,
         return False
 
     if syntax_only:
-        return
+        return True
 
     # Annotate abstract syntax Tree
     try:
@@ -133,7 +133,7 @@ def execute_pyccel(fname, *,
         raise
 
     if semantic_only:
-        return
+        return True
 
     # Generate .f90 file
     try:
@@ -153,7 +153,7 @@ def execute_pyccel(fname, *,
     #------------------------------------------------------
 
     if convert_only:
-        return
+        return True
 
     # Reset Errors singleton
     errors = Errors()
@@ -225,7 +225,7 @@ def execute_pyccel(fname, *,
             exec_filepath = os.path.join(folder, module_name)
             print( '> Executable has been created: {}'.format(exec_filepath))
         os.chdir(base_dirpath)
-        return
+        return True
 
     # Create shared library
     try:
