@@ -33,7 +33,11 @@ def test_syntax_errors(f):
 
         assert(errors.num_messages()==0)
 
-@pytest.mark.parametrize("f",get_files_from_folder("semantic"))
+semantic_xfails = {'ex6.py':'different shape not recognised as different type : issue 325'}
+semantic_errors_args = [f if os.path.basename(f) not in semantic_xfails \
+                          else pytest.param(f, marks = pytest.mark.xfail(reason=semantic_xfails[os.path.basename(f)])) \
+                          for f in get_files_from_folder("semantic")]
+@pytest.mark.parametrize("f", semantic_errors_args)
 def test_semantic_errors(f):
     print('> testing {0}'.format(str(f)))
 
