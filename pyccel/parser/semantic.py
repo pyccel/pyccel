@@ -1152,7 +1152,7 @@ class SemanticParser(BasicParser):
         #      - blocking errors
         current_fst = self._current_fst_node
 
-        if hasattr(expr,'fst'):
+        if hasattr(expr,'fst') and expr.fst is not None:
             self._current_fst_node = expr.fst
 
         classes = type(expr).__mro__
@@ -3162,6 +3162,7 @@ class SemanticParser(BasicParser):
             errors.report(UNDEFINED_VARIABLE, symbol=name,
             bounding_box=self._current_fst_node.absolute_bounding_box,
             severity='error', blocker=self.blocking)
+            return BooleanFalse()
 
         var2 = self.get_variable(str(expr.rhs))
         if var2 is None:
