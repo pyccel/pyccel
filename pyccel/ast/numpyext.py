@@ -1257,7 +1257,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
     def __init__(self, x):
         self._shape     = x.shape
         self._rank      = x.rank
-        self._dtype     = 'complex' if x.dtype == 'complex' else 'real'
+        self._dtype     = 'complex' if sp_dtype(x) == 'complex' else 'real'
         self._precision = default_precision[self._dtype]
 
 #------------------------------------------------------------------------------
