@@ -172,11 +172,6 @@ def builtin_function(expr, args=None):
     if name in dic.keys() :
         return dic[name](*args)
 
-    if name in ['complex']:
-        if len(args)==1:
-            args = [args[0], Float(0)]
-        return PythonComplex(args[0],args[1])
-
     if name == 'Not':
         return Not(*args)
 
