@@ -54,7 +54,7 @@ __all__ = (
 # --------- VARIABLES -----------
 #
     'Bool',
-    'Complex',
+    'Cmplx',
     'ComplexList',
     'Generic',
     'Int',
@@ -238,7 +238,7 @@ class FunctionType(DataType):
 Bool    = NativeBool()
 Int     = NativeInteger()
 Real    = NativeReal()
-Complex = NativeComplex()
+Cmplx   = NativeComplex()
 Void    = NativeVoid()
 Nil     = NativeNil()
 String  = NativeString()
@@ -258,7 +258,7 @@ dtype_registry = {'bool': Bool,
                   'int': Int,
                   'integer': Int,
                   'real'   : Real,
-                  'complex': Complex,
+                  'complex': Cmplx,
                   'void': Void,
                   'nil': Nil,
                   'symbol': _Symbol,
