@@ -20,7 +20,7 @@ from .numbers   import Integer
 
 __all__ = (
     'Bool',
-    'Complex',
+    'PythonComplex',
     'Enumerate',
     'PythonFloat',
     'Int',
@@ -86,7 +86,7 @@ class Bool(Function, PyccelAstNode):
         return 'merge(.true., .false., ({}) /= 0)'.format(printer(self.arg))
 
 #==============================================================================
-class Complex(Function, PyccelAstNode):
+class PythonComplex(Function, PyccelAstNode):
     """ Represents a call to Python's native complex() function.
     """
     is_zero = False
@@ -493,7 +493,7 @@ python_builtin_datatypes_dict = {
     'bool'   : Bool,
     'float'  : PythonFloat,
     'int'    : Int,
-    'complex': Complex
+    'complex': PythonComplex
 }
 
 def python_builtin_datatype(name):

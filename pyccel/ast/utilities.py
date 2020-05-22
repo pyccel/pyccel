@@ -15,7 +15,7 @@ from .core import FunctionDef
 from .core import ValuedArgument
 from .core import Constant, Variable, IndexedVariable
 
-from .builtins import Bool, Enumerate, Int, PythonFloat, Len, Map, Range, Zip
+from .builtins import Bool, Enumerate, Int, PythonFloat, PythonComplex, Len, Map, Range, Zip
 
 from .numpyext import Full, Empty, Zeros, Ones
 from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
@@ -140,6 +140,7 @@ builtin_functions_dict = {
     'enumerate': Enumerate,
     'int'      : Int,
     'float'    : PythonFloat,
+    'complex'  : PythonComplex,
     'bool'     : Bool,
     'sum'      : NumpySum,
     'len'      : Len,
@@ -174,7 +175,7 @@ def builtin_function(expr, args=None):
     if name in ['complex']:
         if len(args)==1:
             args = [args[0], Float(0)]
-        return Complex(args[0],args[1])
+        return PythonComplex(args[0],args[1])
 
     if name == 'Not':
         return Not(*args)

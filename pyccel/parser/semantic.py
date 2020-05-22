@@ -917,10 +917,11 @@ class SemanticParser(BasicParser):
                 d_var['precision'  ] = max(d_vars[0]['precision'],
                                            d_vars[1]['precision'])
 
-            elif name in ['Int','Int32','Int64',
-                          'PythonFloat','NumpyFloat','Float32','Float64',
-                          'NumpyInt','NumpyComplex',
-                          'Complex','Complex64','Complex128',
+            elif name in ['Int',
+                          'PythonFloat','PythonComplex',
+                          'NumpyInt','Int32','Int64',
+                          'NumpyFloat','Float32','Float64',
+                          'NumpyComplex', 'Complex64','Complex128',
                           'Real','Imag','Bool']:
 
                 d_var['datatype'   ] = sp_dtype(expr)
@@ -1197,7 +1198,7 @@ class SemanticParser(BasicParser):
             raise TypeError("Float type is not sympy Float or pyccel Float")
     def _visit_String(self, expr, **settings):
         return expr
-    def _visit_Complex(self, expr, **settings):
+    def _visit_PythonComplex(self, expr, **settings):
         return expr
     def _visit_BooleanTrue(self, expr, **settings):
         return expr

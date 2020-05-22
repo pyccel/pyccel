@@ -684,7 +684,7 @@ class FCodePrinter(CodePrinter):
     def _print_Real(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Complex(self, expr):
+    def _print_PythonComplex(self, expr):
         return expr.fprint(self._print)
 
     def _print_Bool(self, expr):

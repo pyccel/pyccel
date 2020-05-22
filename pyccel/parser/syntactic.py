@@ -23,7 +23,7 @@ from redbaron import AssociativeParenthesisNode
 
 #==============================================================================
 
-from pyccel.ast import String, Integer, Float, Complex, BooleanFalse, BooleanTrue
+from pyccel.ast import String, Integer, Float, BooleanFalse, BooleanTrue
 from pyccel.ast import Nil
 from pyccel.ast import DottedName, DottedVariable
 from pyccel.ast import Assign
@@ -59,7 +59,9 @@ from pyccel.ast import create_variable
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
-from pyccel.ast.core  import PyccelOperator, PyccelUnary
+from pyccel.ast.core import PyccelOperator, PyccelUnary
+
+from pyccel.ast.builtins import PythonComplex
 
 from pyccel.parser.utilities import fst_move_directives, preprocess_imports, preprocess_default_args
 from pyccel.parser.utilities import reconstruct_pragma_multilines
@@ -350,7 +352,7 @@ class SyntaxParser(BasicParser):
     def _visit_ComplexNode(self, stmt):
 
         val = complex(strip_ansi_escape.sub('', stmt.value))
-        return Complex(Float(val.real), Float(val.imag))
+        return PythonComplex(Float(val.real), Float(val.imag)) # TODO: use dedicated class for complex number
 
     def _visit_AssignmentNode(self, stmt):
 

@@ -84,7 +84,7 @@ dtype_and_precision_registry = { 'real':('real',default_precision['float']),
                                  'pythonfloat':('real',default_precision['float']), # built-in float
                                  'float32':('real',4),
                                  'float64':('real',8),
-                                 'complex':('complex',default_precision['complex']),
+                                 'pythoncomplex':('complex',default_precision['complex']),
                                  'complex64':('complex',4),
                                  'complex128':('complex',8),
                                  'int8' :('int',1),

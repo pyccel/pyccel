@@ -21,7 +21,7 @@ from .core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelG
 from .core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
 
 from .builtins       import Int as PythonInt
-from .builtins       import PythonFloat, PythonTuple, Complex as PythonComplex
+from .builtins       import PythonFloat, PythonTuple, PythonComplex
 from .datatypes      import dtype_and_precision_registry as dtype_registry
 from .datatypes      import default_precision
 from .datatypes      import datatype
@@ -469,7 +469,7 @@ class Imag(Real):
         return 'imag({0})'.format(str(self.arg))
 
 #==============================================================================
-# TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Complex
+# TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.PythonComplex
 class NumpyComplex(Function, PyccelAstNode):
 
     """Represents a call to  numpy.complex for code generation.
