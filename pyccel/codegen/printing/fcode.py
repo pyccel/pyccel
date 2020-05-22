@@ -64,7 +64,7 @@ from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registe
 
 from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
 from pyccel.ast.numpyext import Real, Where, Mod, PyccelArraySize
-from pyccel.ast.numpyext import Complex
+from pyccel.ast.numpyext import NumpyComplex
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from pyccel.ast.numpyext import Rand
 
@@ -1110,7 +1110,7 @@ class FCodePrinter(CodePrinter):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}'.format(lhs_code, rhs_code)
 
-        if isinstance(rhs, (Int, Real, Complex)):
+        if isinstance(rhs, (Int, Real, NumpyComplex)):
            lhs = self._print(expr.lhs)
            rhs = expr.rhs.fprint(self._print)
            return '{0} = {1}'.format(lhs,rhs)

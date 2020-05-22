@@ -54,6 +54,7 @@ __all__ = (
     'Empty',
     'EmptyLike',
     'NumpyFloat',
+    'NumpyComplex',
     'Float32',
     'Float64',
     'Full',
@@ -460,7 +461,7 @@ class Imag(Real):
 
 #==============================================================================
 # TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Complex
-class Complex(Function, PyccelAstNode):
+class NumpyComplex(Function, PyccelAstNode):
 
     """Represents a call to  numpy.complex for code generation.
 
@@ -1323,12 +1324,12 @@ class NumpyComplex(PythonComplex):
     def __new__(cls, arg0, arg1=Float(0)):
         return PythonComplex.__new__(cls, arg0, arg1)
 
-class Complex64(Complex):
+class Complex64(NumpyComplex):
     @property
     def precision(self):
         return dtype_registry['complex64'][1]
 
-class Complex128(Complex):
+class Complex128(NumpyComplex):
     @property
     def precision(self):
         return dtype_registry['complex128'][1]
