@@ -8,6 +8,7 @@ from .core import Variable, IndexedElement, DottedVariable
 
 from .numbers   import Integer, Float, BooleanFalse, BooleanTrue
 from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
+from .builtins  import List, PythonTuple
 
 from sympy.core.function import Application
 
@@ -30,8 +31,9 @@ def sp_dtype(expr):
                           PyccelGt, PyccelGe, PyccelAnd, PyccelOr,
                           PyccelNot, Is, IsNot)):
         return 'bool'
+
     elif isinstance(expr, (PyccelPow, PyccelAdd, PyccelMul, PyccelMod, 
-                           PyccelFloorDiv)):
+                           PyccelFloorDiv, List)):
         args       = [sp_dtype(a) for a in expr.args]
         is_integer = all(a=='integer' for a in args)
         is_real    = all(a=='integer' or a=='real' for a in args)
@@ -45,6 +47,12 @@ def sp_dtype(expr):
             return 'complex'
         elif is_bool:
             return 'bool'
+
+    elif isinstance(expr, PythonTuple):
+        if expr.is_homogeneous:
+            return expr.homogeneous_dtype
+        return self.dtype
+
     elif isinstance(expr, PyccelDiv):
         args       = [sp_dtype(a) for a in expr.args]
 
