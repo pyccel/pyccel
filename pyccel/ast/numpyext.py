@@ -92,6 +92,8 @@ numpy_constants = {
 #==============================================================================
 # TODO [YG, 18.02.2020]: accept Numpy array argument
 # TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
+# TODO [YG, 22.05.2020]: move dtype & prec processing to __init__
+# TODO [YG, 22.05.2020]: change properties to read _dtype, _prec, _rank, etc...
 class Array(Application, PyccelAstNode):
     """
     Represents a call to  numpy.array for code generation.
@@ -105,18 +107,22 @@ class Array(Application, PyccelAstNode):
         if not isinstance(arg, (list, tuple, Tuple, PythonTuple, List)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
-        prec = 0
-
-        if not dtype is None:
+        # Determine dtype and (if possible) precision
+        if dtype is not None:
             if isinstance(dtype, ValuedArgument):
                 dtype = dtype.value
             dtype = str(dtype).replace('\'', '')
             dtype, prec = dtype_registry[dtype]
+        else:
+            dtype = sp_dtype(arg)
+            prec  = 0
 
-            dtype = datatype('ndarray' + dtype)
-
-        if not prec and dtype:
+        # If necessary, use default precision
+        if not prec:
             prec = default_precision[dtype]
+
+        # Convert dtype from string to Singleton
+        dtype = datatype('ndarray' + dtype)
 
         # ... Determine ordering
         if isinstance(order, ValuedArgument):
@@ -135,7 +141,8 @@ class Array(Application, PyccelAstNode):
         return Basic.__new__(cls, arg, dtype, order, prec)
 
     def __init__(self, arg, dtype=None, order='C'):
-        self._shape = process_shape(numpy.shape(arg))
+        arg_shape   = numpy.asarray(arg).shape
+        self._shape = process_shape(arg_shape)
         self._rank  = len(self._shape)
 
     def _sympystr(self, printer):

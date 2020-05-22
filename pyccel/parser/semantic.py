@@ -857,25 +857,15 @@ class SemanticParser(BasicParser):
                 d_var['precision'  ] = expr.precision
 
             elif name in ['Array']:
-
-                dvar = self._infere_type(expr.arg, **settings)
-
-                if expr.dtype:
-                    dvar['datatype' ] = expr.dtype
-                    dvar['precision'] = expr.precision
-
-                dvar['datatype'] = str_dtype(dvar['datatype'])
-
-
+                d_var['datatype'      ] = expr.dtype
+                d_var['precision'     ] = expr.precision
+                d_var['rank'          ] = expr.rank
+                d_var['shape'         ] = expr.shape
+                d_var['order'         ] = expr.order
                 d_var['allocatable'   ] = True
-                d_var['shape'         ] = dvar['shape']
-                d_var['rank'          ] = dvar['rank']
-                d_var['is_pointer'    ] = False
                 d_var['is_stack_array'] = False
-                d_var['datatype'      ] = 'ndarray' + dvar['datatype']
-                d_var['precision'     ] = dvar['precision']
-
-                d_var['is_target'] = True # ISSUE 177: TODO this should be done using update_variable
+                d_var['is_pointer'    ] = False
+                d_var['is_target'     ] = True # ISSUE 177: TODO this should be done using update_variable
 
             elif name in ['Len']:
                 d_var['datatype'   ] = expr.dtype
