@@ -1884,7 +1884,7 @@ class SemanticParser(BasicParser):
                 know_lhs_shape = lhs.shape or (lhs.rank == 0) \
                         or isinstance(rhs, (Variable, EmptyLike, DottedVariable))
                 if not know_lhs_shape:
-                    msg = "Cannot infer shape of right-hand side for expression {}".format(expr)
+                    msg = "Cannot infer shape of right-hand side for expression {} = {}".format(lhs, rhs)
                     raise NotImplementedError(msg)
 
             else:
