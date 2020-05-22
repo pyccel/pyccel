@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from sympy.core.function import Application
-from sympy import floor
 from sympy import Not, Float
 from sympy import Function
 import scipy.constants as sc_constants
@@ -21,7 +20,7 @@ from .builtins import Bool, Enumerate, Int, PythonFloat, Len, Map, Range, Zip
 from .numpyext import Full, Empty, Zeros, Ones
 from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from .numpyext import Diag, Cross
-from .numpyext import Min, Max, Abs, Norm, Where
+from .numpyext import Min, Max, NumpyAbs, NumpyFloor, Norm, Where
 from .numpyext import Array, Shape, Rand, NumpySum, Matmul, Real, NumpyComplex, Imag, Mod
 from .numpyext import NumpyInt, Int32, Int64, NumpyFloat, Float32, Float64, Complex64, Complex128
 from .numpyext import NumpyExp, NumpyLog, NumpySqrt
@@ -31,8 +30,6 @@ from .numpyext import NumpySinh, NumpyCosh, NumpyTanh
 from .numpyext import NumpyArcsinh, NumpyArccosh, NumpyArctanh
 from .numpyext import numpy_constants, Linspace
 from .numpyext import Product as Prod
-
-from .numpyext import NumpySin
 
 __all__ = (
     'build_types_decorator',
@@ -45,7 +42,7 @@ __all__ = (
 #==============================================================================
 # TODO [YG, 20.05.2020]: Create dedicated classes for 'math' & 'cmath' modules
 math_functions = {
-    'fabs'   : Abs,
+    'fabs'   : NumpyAbs,
     'sqrt'   : NumpySqrt,
     'sin'    : NumpySin,
     'cos'    : NumpyCos,
@@ -59,7 +56,7 @@ math_functions = {
     'sinh'   : NumpySinh,
     'cosh'   : NumpyCosh,
     'tanh'   : NumpyTanh,
-    'floor'  : floor
+    'floor'  : NumpyFloor
     }
 
 # TODO split numpy_functions into multiple dictionaries following
@@ -100,11 +97,11 @@ numpy_functions = {
     'diag'      : Diag,
     'where'     : Where,
     'cross'     : Cross,
-    'floor'     : floor,
     # ---
-    'abs'       : Abs,
-    'absolute'  : Abs,
-    'fabs'      : Abs,
+    'abs'       : NumpyAbs,
+    'floor'     : NumpyFloor,
+    'absolute'  : NumpyAbs,
+    'fabs'      : NumpyAbs,
     'exp'       : NumpyExp,
     'log'       : NumpyLog,
     'sqrt'      : NumpySqrt,
@@ -137,7 +134,7 @@ numpy_random_functions = {
 }
 
 builtin_functions_dict = {
-    'abs'      : Abs,
+    'abs'      : NumpyAbs,  # TODO: create a built-in Abs
     'range'    : Range,
     'zip'      : Zip,
     'enumerate': Enumerate,
@@ -147,13 +144,11 @@ builtin_functions_dict = {
     'sum'      : NumpySum,
     'len'      : Len,
     'Mod'      : Mod,
-    'abs'      : Abs,
     'max'      : Max,
 #    'Max'      : Max,
     'min'      : Min,
 #    'Min'      : Min,
     'not'      : Not,   # TODO [YG, 20.05.2020]: do not use Sympy's Not
-    'floor'    : floor  # TODO [YG, 20.05.2020]: do not use Sympy's floor
 }
 
 scipy_constants = {

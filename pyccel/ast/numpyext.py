@@ -31,7 +31,9 @@ from .type_inference import sp_dtype, str_dtype
 
 
 __all__ = (
-    'Abs',
+    'NumpyAbs',
+    'NumpyFloor',
+    # ---
     'NumpySqrt',
     'NumpySin',
     'NumpyCos',
@@ -1302,11 +1304,21 @@ class NumpyArctanh(NumpyUfuncUnary) : pass
 
 #=======================================================================================
 
-class Abs(Function, PyccelAstNode):
-    def _eval_is_integer(self):
-        return all(i.is_integer for i in self.args)
+class NumpyAbs(NumpyUfuncUnary):
+    def __init__(self, x):
+        self._shape     = x.shape
+        self._rank      = x.rank
+        self._dtype     = 'integer' if sp_dtype(x) == 'integer' else 'real'
+        self._precision = default_precision[self._dtype]
 
-#=======================================================================================
+
+class NumpyFloor(NumpyUfuncUnary):
+    def __init__(self, x):
+        self._shape     = x.shape
+        self._rank      = x.rank
+        self._dtype     = 'real'
+        self._precision = default_precision[self._dtype]
+
 
 class Min(Function, PyccelAstNode):
     def _eval_is_integer(self):

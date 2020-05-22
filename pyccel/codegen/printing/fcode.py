@@ -92,12 +92,15 @@ known_functions = {
     "log": "log",
     "exp": "exp",
     "erf": "erf",
-    "Abs": "abs",
+    "Abs": "abs",   # TODO: this is not used for the moment
     "sign": "sign",
     "conjugate": "conjg"
 }
 
 numpy_ufunc_to_fortran = {
+    'NumpyAbs'  : 'abs',
+    'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
+    # ---
     'NumpyExp' : 'exp',
     'NumpyLog' : 'Log',
     'NumpySqrt': 'Sqrt',

@@ -995,14 +995,14 @@ class SemanticParser(BasicParser):
             elif name in ['EmptyLike', 'ZerosLike', 'OnesLike', 'FullLike']:
                 d_var = self._infere_type(expr.rhs, **settings)
 
-            elif name in ['floor']:
-                d_var = self._infere_type(expr.args[0], **settings)
-                d_var['datatype'] = 'int'
-
-                if expr.args[0].is_complex and not expr.args[0].is_integer:
-                    d_var['precision'] = d_var['precision']//2
-                else:
-                    d_var['precision'] = default_precision['int']
+#            elif name in ['floor']:
+#                d_var = self._infere_type(expr.args[0], **settings)
+#                d_var['datatype'] = 'int'
+#
+#                if expr.args[0].is_complex and not expr.args[0].is_integer:
+#                    d_var['precision'] = d_var['precision']//2
+#                else:
+#                    d_var['precision'] = default_precision['int']
 
             else:
                 raise NotImplementedError('Type of Application : '+type(expr).__name__+' cannot be infered')
