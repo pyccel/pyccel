@@ -967,31 +967,6 @@ class SemanticParser(BasicParser):
                 d_var['is_pointer' ] = False
                 d_var['precision'  ] = expr.precision
 
-            elif name in [
-                    'Abs',
-                    'sin',
-                    'cos',
-                    'exp',
-                    'log',
-                    'csc',
-                    'cos',
-                    'sec',
-                    'tan',
-                    'cot',
-                    'asin',
-                    'acsc',
-                    'acos',
-                    'asec',
-                    'atan',
-                    'acot',
-                    'sinh',
-                    'cosh',
-                    'tanh',
-                    'atan2',
-                    ]:
-                d_var = self._infere_type(expr.args[0], **settings)
-                d_var['datatype'] = sp_dtype(expr)
-
             elif name in ['EmptyLike', 'ZerosLike', 'OnesLike', 'FullLike']:
                 d_var = self._infere_type(expr.rhs, **settings)
 
