@@ -6,21 +6,27 @@ from sympy.core.expr          import Expr
 from sympy.core.numbers       import NegativeOne as sp_NegativeOne
 from .datatypes import default_precision
 
-__all__ = ('BooleanTrue',
-        'BooleanFalse',
-        'Integer',
-        'Float')
+__all__ = (
+    'BooleanTrue',
+    'BooleanFalse',
+    'Integer',
+    'Float',
+    'Complex',
+)
 
+#------------------------------------------------------------------------------
 class BooleanTrue(sp_BooleanTrue, PyccelAstNode):
     _dtype     = 'bool'
     _rank      = 0
     _precision = default_precision['bool']
 
+#------------------------------------------------------------------------------
 class BooleanFalse(sp_BooleanFalse, PyccelAstNode):
     _dtype     = 'bool'
     _rank      = 0
     _precision = default_precision['bool']
 
+#------------------------------------------------------------------------------
 class Integer(sp_Integer, PyccelAstNode):
     _dtype     = 'int'
     _rank      = 0
@@ -31,7 +37,22 @@ class Integer(sp_Integer, PyccelAstNode):
         obj.p = ival
         return obj
 
+#------------------------------------------------------------------------------
 class Float(sp_Float, PyccelAstNode):
     _dtype     = 'real'
     _rank      = 0
     _precision = default_precision['real']
+
+#------------------------------------------------------------------------------
+class Complex(Expr, PyccelAstNode):
+    _dtype     = 'complex'
+    _rank      = 0
+    _precision = default_precision['complex']
+
+    @property
+    def real(self):
+        return self.args[0]
+
+    @property
+    def imag(self):
+        return self.args[1]

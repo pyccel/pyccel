@@ -6,7 +6,7 @@ from .core import PyccelAnd, PyccelOr,  PyccelNot, Is, IsNot, PyccelAssociativeP
 from .core import PyccelUnary
 from .core import Variable, IndexedElement, DottedVariable
 
-from .numbers   import Integer, Float, BooleanFalse, BooleanTrue
+from .numbers   import Integer, Float, Complex, BooleanFalse, BooleanTrue
 from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool
 from .builtins  import List, PythonTuple
 
@@ -70,6 +70,8 @@ def sp_dtype(expr):
         return 'integer'
     elif isinstance(expr, Float):
         return 'real'
+    elif isinstance(expr, Complex):
+        return 'complex'
     elif isinstance(expr, (BooleanFalse, BooleanTrue)):
         return 'bool'
 

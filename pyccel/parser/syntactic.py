@@ -61,6 +61,8 @@ from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
 from pyccel.ast.core import PyccelOperator, PyccelUnary
 
+from pyccel.ast.numbers import Complex
+
 from pyccel.ast.builtins import PythonComplex
 
 from pyccel.parser.utilities import fst_move_directives, preprocess_imports, preprocess_default_args
@@ -352,7 +354,7 @@ class SyntaxParser(BasicParser):
     def _visit_ComplexNode(self, stmt):
 
         val = complex(strip_ansi_escape.sub('', stmt.value))
-        return PythonComplex(Float(val.real), Float(val.imag)) # TODO: use dedicated class for complex number
+        return Complex(Float(val.real), Float(val.imag))
 
     def _visit_AssignmentNode(self, stmt):
 

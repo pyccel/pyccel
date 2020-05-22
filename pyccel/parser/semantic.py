@@ -67,7 +67,7 @@ from pyccel.ast.datatypes import default_precision
 from pyccel.ast.builtins  import python_builtin_datatype
 from pyccel.ast.builtins  import Range, Zip, Enumerate, Map, PythonTuple
 from pyccel.ast.numbers   import BooleanTrue, BooleanFalse
-from pyccel.ast.numbers   import Integer, Float
+from pyccel.ast.numbers   import Integer, Float, Complex
 from pyccel.ast.numpyext  import PyccelArraySize
 from pyccel.ast.numpyext  import NumpyUfuncBase
 from pyccel.ast.utilities import split_positional_keyword_arguments
@@ -697,6 +697,14 @@ class SemanticParser(BasicParser):
             d_var['precision'  ] = default_precision['float']
             return d_var
 
+        elif isinstance(expr, Complex):
+
+            d_var['datatype'   ] = 'complex'
+            d_var['allocatable'] = False
+            d_var['rank'       ] = 0
+            d_var['precision'  ] = default_precision['complex']
+            return d_var
+
         elif isinstance(expr, String):
 
             d_var['datatype'   ] = 'str'
@@ -1196,6 +1204,8 @@ class SemanticParser(BasicParser):
             return Float(expr)
         else:
             raise TypeError("Float type is not sympy Float or pyccel Float")
+    def _visit_Complex(self, expr, **settings):
+        return expr
     def _visit_String(self, expr, **settings):
         return expr
     def _visit_PythonComplex(self, expr, **settings):
