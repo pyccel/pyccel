@@ -175,7 +175,7 @@ class PythonFloat(Function, PyccelAstNode):
 
     @property
     def dtype(self):
-        return 'float'
+        return 'real'
 
     @property
     def shape(self):
