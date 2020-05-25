@@ -2237,7 +2237,6 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
     def _print_NumpyUfuncBase(self, expr):
-        print("WOW")
         type_name = type(expr).__name__
         func_name = numpy_ufunc_to_fortran[type_name]
         code_args = ', '.join(self._print(i) for i in expr.args)
