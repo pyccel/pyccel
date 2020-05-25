@@ -180,7 +180,7 @@ class PyccelOperator(Expr, PyccelAstNode):
     @property
     def rank(self):
         # TODO: Use broadcasting rules to decide shape (https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html)
-        return max(getattr(a,'rank',0) for a in self._args)
+        return max((a.rank or 0) for a in self.args)
 
 class PyccelPow(PyccelOperator):
     p = 4
