@@ -12,7 +12,7 @@ from collections import OrderedDict
 import functools
 import operator
 
-from numpy import shape as numpy_shape
+from numpy import asarray
 
 from sympy.core import Symbol
 from sympy.core import S
@@ -546,7 +546,7 @@ class FCodePrinter(CodePrinter):
         return '!${0} {1}'.format(accel, txt)
 
     def _print_Tuple(self, expr):
-        shape = list(reversed(numpy_shape(expr)))
+        shape = list(reversed(asarray(expr).shape))
         if len(shape)>1:
             arg = functools.reduce(operator.concat, expr)
             elements = ', '.join(self._print(i) for i in arg)

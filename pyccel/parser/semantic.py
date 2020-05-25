@@ -1050,7 +1050,7 @@ class SemanticParser(BasicParser):
 
             d_var['datatype'] = d['datatype']
             d_var['rank'] = d['rank'] + 1
-            d_var['shape'] = numpy.shape(expr)  # TODO improve
+            d_var['shape'] = numpy.asarray(expr).shape  # TODO improve
             d_var['allocatable'] = d['allocatable']
             if isinstance(expr, List):
                 d_var['is_target'] = True
