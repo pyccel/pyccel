@@ -708,6 +708,23 @@ class FCodePrinter(CodePrinter):
     def _print_Int(self, expr):
         return expr.fprint(self._print)
 
+    def _print_MathFloor(self, expr):
+        arg = expr.args[0]
+        arg_code = self._print(arg)
+
+        # math.floor on integer argument is identity,
+        # but we need parentheses around expressions
+        if sp_dtype(arg) == 'integer':
+            return '({})'.format(arg_code)
+
+        prec = expr.precision
+        prec_code = self._print(prec)
+        return 'floor({}, kind={})'.format(arg_code, prec_code)
+
+    def _print_NumpyFloor(self, expr):
+        result_code = self._print_MathFloor(expr)
+        return 'real({})'.format(result_code)
+
     def _print_PythonFloat(self, expr):
         return expr.fprint(self._print)
 
