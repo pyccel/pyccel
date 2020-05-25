@@ -79,22 +79,8 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 __all__ = ["FCodePrinter", "fcode"]
 
 known_functions = {
-    "sin": "sin",
-    "cos": "cos",
-    "tan": "tan",
-    "asin": "asin",
-    "acos": "acos",
-    "atan": "atan",
-    "atan2": "atan2",
-    "sinh": "sinh",
-    "cosh": "cosh",
-    "tanh": "tanh",
-    "log": "log",
-    "exp": "exp",
-    "erf": "erf",
-    "Abs": "abs",   # TODO: this is not used for the moment
-    "sign": "sign",
-    "conjugate": "conjg"
+    "sign": "sign",       # TODO: move to numpyext
+    "conjugate": "conjg"  # TODO: move to numpyext
 }
 
 numpy_ufunc_to_fortran = {
@@ -118,6 +104,53 @@ numpy_ufunc_to_fortran = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
+}
+
+math_function_to_fortran = {
+    'MathAcos'   : 'acos',
+    'MathAcosh'  : 'acosh',
+    'MathAsin'   : 'asin',
+    'MathAsinh'  : 'asinh',
+    'MathAtan'   : 'atan',
+    'MathAtan2'  : 'atan2',
+    'MathAtanh'  : 'atanh',
+#    'MathCopysign': '???', # TODO
+    'MathCos'    : 'cos',
+    'MathCosh'   : 'cosh',
+#    'MathDegrees': '???',  # TODO
+    'MathErf'    : 'erf',
+    'MathErfc'   : 'erfc',
+    'MathExp'    : 'exp',
+#    'MathExpm1'  : '???', # TODO
+    'MathFabs'   : 'abs',
+#    'MathFmod'   : '???',  # TODO
+#    'MathFsum'   : '???',  # TODO
+    'MathGamma'  : 'gamma',
+    'MathHypot'  : 'hypot',
+#    'MathLdexp'  : '???',  # TODO
+    'MathLgamma' : 'log_gamma',
+    'MathLog'    : 'log',
+    'MathLog10'  : 'log10',
+#    'MathLog1p'  : '???', # TODO
+#    'MathLog2'   : '???', # TODO
+#    'MathPow'    : '???', # TODO
+#    'MathRadians': '???', # TODO
+    'MathSin'    : 'sin',
+    'MathSinh'   : 'sinh',
+    'MathSqrt'   : 'sqrt',
+    'MathTan'    : 'tan',
+    'MathTanh'   : 'tanh',
+    # ---
+    'MathCeil'     : 'ceil',
+#    'MathFactorial': '???', # TODO
+    'MathFloor'    : 'floor',
+#    'MathGcd'      : '???', # TODO
+#    'MathTrunc'    : '???', # TODO
+    # ---
+#    'MathIsclose' : '???', # TODO
+#    'MathIsfinite': '???', # TODO
+#    'MathIsinf'   : '???', # TODO
+#    'MathIsnan'   : '???', # TODO
 }
 
 _default_methods = {
@@ -2239,6 +2272,13 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__
         func_name = numpy_ufunc_to_fortran[type_name]
+        code_args = ', '.join(self._print(i) for i in expr.args)
+        code = '{0}({1})'.format(func_name, code_args)
+        return self._get_statement(code)
+
+    def _print_MathFunctionBase(self, expr):
+        type_name = type(expr).__name__
+        func_name = math_function_to_fortran[type_name]
         code_args = ', '.join(self._print(i) for i in expr.args)
         code = '{0}({1})'.format(func_name, code_args)
         return self._get_statement(code)

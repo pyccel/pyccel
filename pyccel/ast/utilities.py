@@ -17,6 +17,8 @@ from .core import Constant, Variable, IndexedVariable
 
 from .builtins import Bool, Enumerate, Int, PythonFloat, PythonComplex, Len, Map, Range, Zip
 
+from .mathext  import math_functions
+
 from .numpyext import Full, Empty, Zeros, Ones
 from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from .numpyext import Diag, Cross
@@ -31,6 +33,7 @@ from .numpyext import NumpyArcsinh, NumpyArccosh, NumpyArctanh
 from .numpyext import numpy_constants, Linspace
 from .numpyext import Product as Prod
 
+
 __all__ = (
     'build_types_decorator',
     'builtin_function',
@@ -40,25 +43,6 @@ __all__ = (
 )
 
 #==============================================================================
-# TODO [YG, 20.05.2020]: Create dedicated classes for 'math' & 'cmath' modules
-math_functions = {
-    'fabs'   : NumpyAbs,
-    'sqrt'   : NumpySqrt,
-    'sin'    : NumpySin,
-    'cos'    : NumpyCos,
-    'exp'    : NumpyExp,
-    'log'    : NumpyLog,
-    'tan'    : NumpyTan,
-    'asin'   : NumpyArcsin,
-    'acos'   : NumpyArccos,
-    'atan'   : NumpyArctan,
-    'atan2'  : NumpyArctan2,
-    'sinh'   : NumpySinh,
-    'cosh'   : NumpyCosh,
-    'tanh'   : NumpyTanh,
-    'floor'  : NumpyFloor
-    }
-
 # TODO split numpy_functions into multiple dictionaries following
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
 # TODO [YG, 20.05.2020]: Move dictionary to 'numpyext' module

@@ -75,6 +75,8 @@ from pyccel.ast.type_inference  import sp_dtype, str_dtype
 from pyccel.parser.errors import Errors
 from pyccel.parser.errors import PyccelSemanticError
 
+from pyccel.ast.mathext   import MathFunctionBase
+
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
 # TODO move or delet extract_subexpressions when we introduce 
@@ -965,6 +967,12 @@ class SemanticParser(BasicParser):
                 d_var['datatype'   ] = expr.dtype
                 d_var['is_pointer' ] = False
                 d_var['precision'  ] = expr.precision
+
+            elif isinstance(expr, MathFunctionBase):
+                d_var['datatype' ] = expr.dtype
+                d_var['precision'] = expr.precision
+                d_var['rank'     ] = expr.rank
+                d_var['shape'    ] = expr.shape
 
             elif name in ['EmptyLike', 'ZerosLike', 'OnesLike', 'FullLike']:
                 d_var = self._infere_type(expr.rhs, **settings)
