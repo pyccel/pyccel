@@ -85,6 +85,7 @@ dtype_and_precision_registry = { 'real':('real',default_precision['float']),
                                  'float32':('real',4),
                                  'float64':('real',8),
                                  'pythoncomplex':('complex',default_precision['complex']),
+                                 'complex':('complex',default_precision['complex']),  # to create numpy array with dtype='complex'
                                  'complex64':('complex',4),
                                  'complex128':('complex',8),
                                  'int8' :('int',1),
