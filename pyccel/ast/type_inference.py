@@ -3,7 +3,7 @@
 from .core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from .core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from .core import PyccelAnd, PyccelOr,  PyccelNot, Is, IsNot, PyccelAssociativeParenthesis
-from .core import PyccelUnary
+from .core import PyccelUnary, FunctionCall, String
 from .core import Variable, IndexedElement, DottedVariable
 
 from .numbers   import Integer, Float, Complex, BooleanFalse, BooleanTrue
@@ -35,18 +35,17 @@ def sp_dtype(expr):
     elif isinstance(expr, (PyccelPow, PyccelAdd, PyccelMul, PyccelMod, 
                            PyccelFloorDiv, List)):
         args       = [sp_dtype(a) for a in expr.args]
-        is_integer = all(a=='integer' for a in args)
-        is_real    = all(a=='integer' or a=='real' for a in args)
-        is_complex = all(a=='integer' or a=='real' or a=='complex' for a in args)
-        is_bool    = any(a=='bool' for a in args)
-        if is_integer:
+
+        if all(a=='integer' for a in args):
             return 'integer'
-        elif is_real:
+        elif all(a=='integer' or a=='real' for a in args):
             return 'real'
-        elif is_complex:
+        elif all(a=='integer' or a=='real' or a=='complex' for a in args):
             return 'complex'
-        elif is_bool:
+        elif any(a=='bool' for a in args):
             return 'bool'
+        elif all(a=='str' for a in args):
+            return 'str'
 
     elif isinstance(expr, PythonTuple):
         if expr.is_homogeneous:
@@ -64,7 +63,7 @@ def sp_dtype(expr):
             return 'complex'
     elif isinstance(expr, (PyccelUnary, PyccelAssociativeParenthesis)):
         return sp_dtype(expr.args[0])
-    elif isinstance(expr, (Variable, IndexedElement, Application, DottedVariable)):
+    elif isinstance(expr, (Variable, IndexedElement, FunctionCall, Application, DottedVariable)):
         return str_dtype(expr.dtype)
     elif isinstance(expr, Integer):
         return 'integer'
@@ -74,6 +73,8 @@ def sp_dtype(expr):
         return 'complex'
     elif isinstance(expr, (BooleanFalse, BooleanTrue)):
         return 'bool'
+    elif isinstance(expr, String):
+        return 'str'
 
     raise TypeError('Unknown datatype {0}'.format(type(expr)))
 

@@ -49,7 +49,6 @@ from pyccel.ast import List, Dlist, Len
 from pyccel.ast import builtin_function as pyccel_builtin_function
 from pyccel.ast import builtin_import as pyccel_builtin_import
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
-from pyccel.ast import Subroutine
 from pyccel.ast import Zeros, Where, Linspace, Diag, EmptyLike
 from pyccel.ast import StarredArguments
 from pyccel.ast import inline, subs, create_variable, extract_subexpressions
@@ -62,7 +61,7 @@ from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.core import PyccelUnary
 
-from pyccel.ast.core      import Product
+from pyccel.ast.core      import Product, FunctionCall
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.builtins  import python_builtin_datatype
 from pyccel.ast.builtins  import Range, Zip, Enumerate, Map, PythonTuple
@@ -107,6 +106,8 @@ errors = Errors()
 from pyccel.parser.base      import BasicParser, Scope
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
+
+from pyccel.ast.basic import PyccelAstNode
 
 #==============================================================================
 
@@ -202,7 +203,7 @@ class SemanticParser(BasicParser):
         ast = self.ast
 
         # we add the try/except to allow the parser to find all possible errors
-
+        PyccelAstNode.stage = 'semantic'
         ast = self._visit(ast, **settings)
 
         self._ast = ast
@@ -683,43 +684,15 @@ class SemanticParser(BasicParser):
 
             return d_var
 
-        elif isinstance(expr, (Integer, int, PyccelArraySize)):
+        elif isinstance(expr, (Integer, Float,Complex,String,
+                               BooleanTrue, BooleanFalse,
+                               PyccelArraySize, Is)):
 
-            d_var['datatype'   ] = 'int'
-            d_var['allocatable'] = False
-            d_var['rank'       ] = 0
-            d_var['precision'  ] = default_precision['int']
-            return d_var
-
-        elif isinstance(expr, (Float, float)):
-
-            d_var['datatype'   ] = DEFAULT_FLOAT
-            d_var['allocatable'] = False
-            d_var['rank'       ] = 0
-            d_var['precision'  ] = default_precision['float']
-            return d_var
-
-        elif isinstance(expr, Complex):
-
-            d_var['datatype'   ] = 'complex'
-            d_var['allocatable'] = False
-            d_var['rank'       ] = 0
-            d_var['precision'  ] = default_precision['complex']
-            return d_var
-
-        elif isinstance(expr, String):
-
-            d_var['datatype'   ] = 'str'
-            d_var['allocatable'] = False
-            d_var['rank'       ] = 0
-            return d_var
-
-        elif isinstance(expr, ImaginaryUnit):
-
-            d_var['datatype'   ] = 'complex'
-            d_var['allocatable'] = False
-            d_var['rank'       ] = 0
-            d_var['precision'  ] = default_precision['complex']
+            d_var['datatype'   ] = expr.dtype
+            d_var['allocatable'] = expr.rank>0
+            d_var['rank'       ] = expr.rank
+            d_var['precision'  ] = expr.precision
+            d_var['shape']       = expr.shape
             return d_var
 
         elif isinstance(expr, Variable):
@@ -735,15 +708,6 @@ class SemanticParser(BasicParser):
             d_var['is_target'     ] = expr.is_target
             d_var['order'         ] = expr.order
             d_var['precision'     ] = expr.precision
-            return d_var
-
-        elif isinstance(expr, (BooleanTrue, BooleanFalse)):
-
-            d_var['datatype'   ] = NativeBool()
-            d_var['allocatable'] = False
-            d_var['is_pointer' ] = False
-            d_var['rank'       ] = 0
-            d_var['precision'  ] = default_precision['bool']
             return d_var
 
         elif isinstance(expr, PythonTuple):
@@ -771,19 +735,10 @@ class SemanticParser(BasicParser):
             d_var_var = self._infere_type(var)
             dtype = var.dtype if not isinstance(var.dtype, NativeTuple) else var.homogeneous_dtype
             d_var['datatype'] = str_dtype(dtype)
-
-            if sympy_iterable(var.shape):
-                shape = []
-                for (s, i) in zip(var.shape, expr.indices):
-                    if isinstance(i, Slice):
-                        shape.append(i)
-            else:
-                shape = ()
-
-            rank = max(0, var.rank - expr.rank)
+            shape = expr.shape
+            rank = expr.rank
             if rank > 0:
-                d_var['allocatable'] = d_var_var['allocatable']
-                d_var['is_pointer' ] = d_var_var['is_pointer' ]
+                d_var['allocatable'] = True
 
             d_var['shape'    ] = shape
             d_var['rank'     ] = rank
@@ -801,14 +756,6 @@ class SemanticParser(BasicParser):
             d_var['shape'      ] = ()
             d_var['rank'       ] = 0
             d_var['cls_base'   ] = expr  # TODO: shall we keep it?
-            return d_var
-
-        elif isinstance(expr, Is):
-
-            d_var['datatype'   ] = NativeBool()
-            d_var['allocatable'] = False
-            d_var['is_pointer' ] = False
-            d_var['rank'       ] = 0
             return d_var
 
         elif isinstance(expr, DottedVariable):
@@ -976,16 +923,6 @@ class SemanticParser(BasicParser):
 
             elif name in ['EmptyLike', 'ZerosLike', 'OnesLike', 'FullLike']:
                 d_var = self._infere_type(expr.rhs, **settings)
-
-#            elif name in ['floor']:
-#                d_var = self._infere_type(expr.args[0], **settings)
-#                d_var['datatype'] = 'int'
-#
-#                if expr.args[0].is_complex and not expr.args[0].is_integer:
-#                    d_var['precision'] = d_var['precision']//2
-#                else:
-#                    d_var['precision'] = default_precision['int']
-
             else:
                 raise NotImplementedError('Type of Application : '+type(expr).__name__+' cannot be infered')
 
@@ -993,60 +930,14 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, GC):
             return self._infere_type(expr.lhs, **settings)
-        elif isinstance(expr, Expr):
-
-            cls = (Application, DottedVariable, Variable,
-                   IndexedVariable,IndexedElement)
-            atoms = _atomic(expr, cls)
-
-            ds = [self._infere_type(i, **settings) for i in
-                  atoms]
-
-            #TODO we should also look for functions call
-            #to collect info about precision and shapes later when we allow
-            # vectorised operations
-            # we only look for atomic expression of type Variable
-            # because we don't allow functions that returns an array in an expression
-
-            allocatables = [d['allocatable'] for d in ds]
-            pointers = [d['is_pointer'] or d['is_target'] for d in ds]
-            ranks = [d['rank'] for d in ds]
-            shapes = [d['shape'] for d in ds]
-            precisions = [d['precision'] for d in ds]
-
-            if all(i.is_integer for i in atoms):
-                if expr.is_complex and not expr.is_integer:
-                    precisions.append(8)
-
-            # TODO improve
-            # ... only scalars and variables of rank 0 can be handled
-
-            if any(ranks):
-                r_min = min(ranks)
-                r_max = max(ranks)
-                if not r_min == r_max:
-                    if not r_min == 0:
-                        msg = 'cannot process arrays of different ranks.'
-                        raise ValueError(msg)
-                rank = r_max
-            else:
-                rank = 0
-
-            shape = ()
-            for s in shapes:
-                if s:
-                    shape = s
-
+        elif isinstance(expr, (Expr, FunctionCall)):
             # ...
-            d_var['datatype'   ] = sp_dtype(expr)
-            d_var['allocatable'] = any(allocatables)
-            d_var['is_pointer' ] = any(pointers)
-            d_var['shape'      ] = shape
-            d_var['rank'       ] = rank
-            if len(precisions)>0:
-                d_var['precision'] = max(precisions)
-            else:
-                d_var['precision'] = default_precision[d_var['datatype']]
+            d_var['datatype'   ] = expr.dtype
+            d_var['allocatable'] = expr.rank>0 if expr.rank else None
+            d_var['is_pointer' ] = False
+            d_var['shape'      ] = expr.shape
+            d_var['rank'       ] = expr.rank
+            d_var['precision'  ] = expr.precision
 
             return d_var
         elif isinstance(expr, (list, List)):
@@ -1376,8 +1267,8 @@ class SemanticParser(BasicParser):
         if var.order == 'C':
             args.reverse()
         args = tuple(args)
-
-        return self._extract_indexed_from_var(var,args, name)
+        print(var, args, name)
+        return self._extract_indexed_from_var(var, args, name)
 
     def _visit_Symbol(self, expr, **settings):
         name = expr.name
@@ -1419,39 +1310,14 @@ class SemanticParser(BasicParser):
                 args = [expr.lhs] + list(args)
                 args = [self._visit(i, **settings) for i in args]
                 args = macro.apply(args)
-                if isinstance(master, FunctionDef):
-                    if master.results:
-                        return UndefinedFunction(str(master.name))(*args)
-                    else:
-                        return Subroutine(str(master.name))(*args)
-                else:
-                    msg = 'TODO case of interface'
-                    raise NotImplementedError(msg)
+                return FunctionCall(master, args)
 
             args = [self._visit(arg, **settings) for arg in
                     expr.rhs.args]
             methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
             for i in methods:
                 if str(i.name) == rhs_name:
-                    if isinstance(i, Interface):
-                        results = i.functions[0].results
-                        if len(results)>0:
-                            raise NotImplementedError('TODO')
-                    else:
-                        results = i.results
-
-                    if len(results) == 1:
-                        d_var = self._infere_type(results[0], **settings)
-                        dtype = d_var['datatype']
-                        assumptions = {str_dtype(dtype): True}
-                        second = UndefinedFunction(rhs_name, **assumptions)(*args)
-
-                    elif len(results) == 0:
-                        second = Subroutine(rhs_name)(*args)
-                    elif len(results) > 1:
-                        msg = 'TODO case multiple return variables'
-                        raise NotImplementedError(msg)
-
+                    second = FunctionCall(i, args)
                     return DottedVariable(first, second)
 
         # look for a class attribute
@@ -1464,7 +1330,7 @@ class SemanticParser(BasicParser):
                 return macro.master
             elif isinstance(macro, MacroFunction):
                 args = macro.apply([first])
-                return UndefinedFunction(str(macro.master.name))(*args)
+                return FunctionCall(macro.master, args)
 
             # Attribute / property
             if isinstance(expr.rhs, Symbol) and first.cls_base:
@@ -1482,47 +1348,21 @@ class SemanticParser(BasicParser):
                     for i in methods:
                         if str(i.name) == expr.rhs.name and 'property' \
                             in i.decorators.keys():
-                            if isinstance(i, Interface):
-                                raise NotImplementedError('TODO')
-                            d_var = self._infere_type(i.results[0], **settings)
-                            dtype = d_var['datatype']
-                            assumptions = {str_dtype(dtype): True}
-                            second = UndefinedFunction(expr.rhs.name, **assumptions)(Nil())
+                            second = FunctionCall(i, [])
                             return DottedVariable(first, second)
 
         # did something go wrong?
         raise ValueError('attribute {} not found'.format(rhs_name))
 
-
     def _visit_PyccelAdd(self, expr, **settings):
-
         #stmts, expr = extract_subexpressions(expr)
-        stmts = []
-        if stmts:
-            stmts = [self._visit(i, **settings) for i in stmts]
-
-        atoms_str = _atomic(expr, String)
-        atoms_ls  = _atomic(expr, List)
-
-        cls       = (Symbol, Indexed, DottedVariable, List)
-
-        atoms = _atomic(expr, cls, ignore=(UndefinedFunction))
-        atoms = [self._visit(a, **settings) for a in atoms]
-        atoms = [a.rhs if isinstance(a, DottedVariable) else a for a in atoms]
-
-        atoms = [self._infere_type(a , **settings) for a in atoms]
-
-        atoms = [a['is_pointer'] or a['is_target'] for a in atoms if a['rank']>0]
-        args  = [self._visit(a, **settings) for a in expr.args]
-
-        if any(atoms) or atoms_ls:
-            return Concatenate(args, True)
-        elif atoms_str:
-            return Concatenate(args, False)
-
+        #stmts = []
+        #if stmts:
+        #    stmts = [self._visit(i, **settings) for i in stmts]
+        args     = [self._visit(a, **settings) for a in expr.args]
         expr_new = expr.func(*args)
-        if stmts:
-            expr_new = CodeBlock(stmts + [expr_new])
+        #if stmts:
+        #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
 
     def _visit_PyccelMul(self, expr, **settings):
@@ -1750,7 +1590,7 @@ class SemanticParser(BasicParser):
 
                     if isinstance(func, FunctionDef):
                         results = func.results
-                        f_args = func.arguments
+                        f_args  = func.arguments
                     elif isinstance(func, Interface):
                         arg_dvar = [self._infere_type(i, **settings) for i in args]
                         f_dvar = [[self._infere_type(j, **settings)
@@ -1777,15 +1617,8 @@ class SemanticParser(BasicParser):
                             msg = 'function not found in the interface'
                             raise SystemExit(msg)
 
-                        if func.hide:
-
-                            # hide means that we print the real function's name
-                            # and not the interface's name
-
-                            name = str(func.functions[j].name)
-
                     # add the messing argument in the case of optional arguments
-
+                    # TODO move this to FunctionCall
                     if not len(args) == len(f_args):
                         n = len(args)
 
@@ -1807,26 +1640,7 @@ class SemanticParser(BasicParser):
                                 raise SyntaxError(msg)
                             missing_f_args.pop(i.name)
 
-
-                    if len(results) == 1:
-
-                        d_var = self._infere_type(results[0], **settings)
-                        dtype = d_var['datatype']
-                        dtype = {str_dtype(dtype): True}
-                        expr = UndefinedFunction(name,**dtype)(*args)
-
-                    elif len(results) == 0:
-                        expr = Subroutine(name)(*args)
-                        #if len(stmts) > 0:
-                        #    stmts.append(expr)
-                        #    return CodeBlock(stmts)
-                        return expr
-                    elif len(results) > 1:
-                        expr = UndefinedFunction(name)(*args)
-                        #if len(stmts) > 0:
-                        #    stmts.append(expr)
-                        #    return CodeBlock(stmts)
-                        return expr
+                    expr = FunctionCall(func, args)
 
                     #if len(stmts) > 0:
                     #    stmts.append(expr)
@@ -1878,7 +1692,7 @@ class SemanticParser(BasicParser):
                 #      lists/tuples.
                 rhs = self.update_variable(rhs, is_target=True)
 
-            lhs = self._create_variable(name,dtype, rhs,d_lhs)
+            lhs = self._create_variable(name,dtype, rhs, d_lhs)
 
             var = self.get_variable_from_scope(name)
 
@@ -1959,7 +1773,6 @@ class SemanticParser(BasicParser):
 
 
     def _visit_Assign(self, expr, **settings):
-
         # TODO unset position at the end of this part
         fst = expr.fst
         if fst:
@@ -1972,7 +1785,6 @@ class SemanticParser(BasicParser):
         rhs = expr.rhs
         lhs = expr.lhs
         assigns = None
-
 
         if isinstance(rhs, Application):
             name = type(rhs).__name__
@@ -2005,8 +1817,7 @@ class SemanticParser(BasicParser):
                             rhs.args]
                 args = macro.apply(args, results=results)
                 if isinstance(master, FunctionDef):
-                    # TODO: fixme for Function
-                    return Subroutine(name)(*args)
+                    return FunctionCall(master, args)
                 else:
                     msg = 'TODO treate interface case'
                     raise NotImplementedError(msg)
@@ -2042,25 +1853,18 @@ class SemanticParser(BasicParser):
                         var = self.get_variable(_name)
                         results.append(var)
 
-                    # ...
-
                     args = rhs.rhs.args
                     args = [rhs.lhs] + list(args)
                     args = [self._visit(i, **settings) for i in args]
 
                     args = macro.apply(args, results=results)
 
-                    # TODO treate interface case
-
-                    if isinstance(master, FunctionDef):
-                        # Distinguish between function and subroutine
-                        if master.results:
-                            rhs = UndefinedFunction(str(master.name))(*args)
-                            return Assign(lhs[0], rhs)
-                        else:
-                            return Subroutine(str(master.name))(*args)
+                    # Distinguish between function
+                    if master.results:
+                        return Assign(lhs[0], FunctionCall(master, args))
                     else:
-                        raise NotImplementedError('TODO')
+                        return FunctionCall(master, args)
+   
         else:
 
             rhs = self._visit(rhs, **settings)
@@ -2134,13 +1938,11 @@ class SemanticParser(BasicParser):
             stmts[-1] = stmt
             return CodeBlock(stmts)
 
-        elif isinstance(rhs, Application):
+        elif isinstance(rhs, FunctionCall):
 
             # ARA: needed for functions defined only with a header
 
-            name = _get_name(rhs)
-            func = self.get_function(name)
-
+            func = rhs.funcdef
             if isinstance(func, FunctionDef):
                 results = func.results
                 if results:
@@ -3213,7 +3015,11 @@ class SemanticParser(BasicParser):
                     d_son = getattr(p.namespace, entry)
                     for t,n in zip(targets,names):
                         if t in d_son:
-                            container[entry][n] = d_son[t]
+                            e = d_son[t]
+                            if t == n:
+                                container[entry][n] = e
+                            else:
+                                container[entry][n] = e.rename(n)
 
                 self.namespace.cls_constructs.update(p.namespace.cls_constructs)
                 self.namespace.macros.update(p.namespace.macros)

@@ -4,7 +4,10 @@ from sympy import Float as sp_Float
 from sympy.logic.boolalg      import BooleanTrue as sp_BooleanTrue, BooleanFalse as sp_BooleanFalse
 from sympy.core.expr          import Expr
 from sympy.core.numbers       import NegativeOne as sp_NegativeOne
-from .datatypes import default_precision
+from pyccel.ast.datatypes     import (datatype, DataType, CustomDataType, NativeSymbol,
+                                  NativeInteger, NativeBool, NativeReal,
+                                  NativeComplex, NativeRange, NativeTensor, NativeString,
+                                  NativeGeneric, NativeTuple, default_precision)
 
 __all__ = (
     'BooleanTrue',
@@ -16,20 +19,23 @@ __all__ = (
 
 #------------------------------------------------------------------------------
 class BooleanTrue(sp_BooleanTrue, PyccelAstNode):
-    _dtype     = 'bool'
+    _dtype     = NativeBool()
     _rank      = 0
+    _shape     = ()
     _precision = default_precision['bool']
 
 #------------------------------------------------------------------------------
 class BooleanFalse(sp_BooleanFalse, PyccelAstNode):
-    _dtype     = 'bool'
+    _dtype     = NativeBool()
     _rank      = 0
+    _shape     = ()
     _precision = default_precision['bool']
 
 #------------------------------------------------------------------------------
 class Integer(sp_Integer, PyccelAstNode):
-    _dtype     = 'int'
+    _dtype     = NativeInteger()
     _rank      = 0
+    _shape     = ()
     _precision = default_precision['int']
     def __new__(cls, val):
         ival = int(val)
@@ -39,14 +45,16 @@ class Integer(sp_Integer, PyccelAstNode):
 
 #------------------------------------------------------------------------------
 class Float(sp_Float, PyccelAstNode):
-    _dtype     = 'real'
+    _dtype     = NativeReal()
     _rank      = 0
+    _shape     = ()
     _precision = default_precision['real']
 
 #------------------------------------------------------------------------------
 class Complex(Expr, PyccelAstNode):
-    _dtype     = 'complex'
+    _dtype     = NativeComplex()
     _rank      = 0
+    _shape     = ()
     _precision = default_precision['complex']
 
     @property

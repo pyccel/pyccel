@@ -5,7 +5,10 @@ from sympy import Function
 
 from pyccel.ast.basic     import PyccelAstNode
 from pyccel.ast.core      import Constant
-from pyccel.ast.datatypes import default_precision
+from pyccel.ast.datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
+                                  NativeInteger, NativeBool, NativeReal,
+                                  NativeComplex, NativeRange, NativeTensor, NativeString,
+                                  NativeGeneric, NativeTuple, default_precision)
 
 __all__ = (
     'math_constants',
@@ -84,15 +87,15 @@ class MathFunctionBase(Function, PyccelAstNode):
     _rank  = 0
 
 class MathFunctionFloat(MathFunctionBase):
-    _dtype = 'real'
+    _dtype = NativeReal()
     _precision = default_precision['real']
 
 class MathFunctionInt(MathFunctionBase):
-    _dtype = 'integer'
+    _dtype = NativeInteger()
     _precision = default_precision['integer']
 
 class MathFunctionBool(MathFunctionBase):
-    _dtype = 'bool'
+    _dtype = NativeBool()
     _precision = default_precision['bool']
 
 #==============================================================================

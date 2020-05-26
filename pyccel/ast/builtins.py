@@ -15,7 +15,10 @@ from sympy.tensor import Indexed, IndexedBase
 from sympy.utilities.iterables          import iterable
 
 from .basic     import Basic, PyccelAstNode
-from .datatypes import default_precision
+from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
+                        NativeInteger, NativeBool, NativeReal,
+                        NativeComplex, NativeRange, NativeTensor, NativeString,
+                        NativeGeneric, NativeTuple, default_precision)
 from .numbers   import Integer
 
 __all__ = (
@@ -48,32 +51,21 @@ local_sympify = {
 class Bool(Function, PyccelAstNode):
     """ Represents a call to Python's native bool() function.
     """
-    is_Boolean = True
 
     def __new__(cls, arg):
         if arg.is_Boolean:
             return arg
         return Basic.__new__(cls, arg)
 
+    def __init__(self, arg):
+        self._rank = 0
+        self._shape = ()
+        self._precision = default_precision['bool']
+        self._dtype = NativeBool()
+
     @property
     def arg(self):
         return self.args[0]
-
-    @property
-    def dtype(self):
-        return 'bool'
-
-    @property
-    def shape(self):
-        return None
-
-    @property
-    def rank(self):
-        return 0
-
-    @property
-    def precision(self):
-        return default_precision['bool']
 
     def __str__(self):
         return 'Bool({})'.format(str(self.arg))
@@ -89,16 +81,15 @@ class Bool(Function, PyccelAstNode):
 class PythonComplex(Function, PyccelAstNode):
     """ Represents a call to Python's native complex() function.
     """
-    is_zero = False
 
     def __new__(cls, arg0, arg1=Float(0)):
         return Basic.__new__(cls, arg0, arg1)
 
     def __init__(self, arg0, arg1=Float(0)):
-        assumptions = {'complex': True}
-        ass_copy = assumptions.copy()
-        self._assumptions = StdFactKB(assumptions)
-        self._assumptions._generator = ass_copy
+        self._rank = 0
+        self._shape = ()
+        self._precision = default_precision['complex']
+        self._dtype = NativeComplex()
 
     @property
     def real_part(self):
@@ -107,22 +98,6 @@ class PythonComplex(Function, PyccelAstNode):
     @property
     def imag_part(self):
         return self._args[1]
-
-    @property
-    def dtype(self):
-        return 'complex'
-
-    @property
-    def shape(self):
-        return None
-
-    @property
-    def rank(self):
-        return 0
-
-    @property
-    def precision(self):
-        return default_precision['complex']
 
     def __str__(self):
         return self.fprint(str)
@@ -159,35 +134,19 @@ class Enumerate(Basic):
 class PythonFloat(Function, PyccelAstNode):
     """ Represents a call to Python's native float() function.
     """
-    is_zero = False
     def __new__(cls, arg):
         return Basic.__new__(cls, arg)
 
     def __init__(self, arg):
-        assumptions = {'real': True}
-        ass_copy = assumptions.copy()
-        self._assumptions = StdFactKB(assumptions)
-        self._assumptions._generator = ass_copy
+        self._rank = 0
+        self._shape = ()
+        self._precision = default_precision['real']
+        self._dtype = NativeReal()
 
     @property
     def arg(self):
         return self._args[0]
 
-    @property
-    def dtype(self):
-        return 'real'
-
-    @property
-    def shape(self):
-        return None
-
-    @property
-    def rank(self):
-        return 0
-
-    @property
-    def precision(self):
-        return default_precision['real']
 
     def __str__(self):
         return 'Float({0})'.format(str(self.arg))
@@ -206,36 +165,19 @@ class PythonFloat(Function, PyccelAstNode):
 class Int(Function, PyccelAstNode):
     """ Represents a call to Python's native int() function.
     """
-    is_zero = False
 
     def __new__(cls, arg):
         return Basic.__new__(cls, arg)
 
     def __init__(self, arg):
-        assumptions = {'integer': True}
-        ass_copy = assumptions.copy()
-        self._assumptions = StdFactKB(assumptions)
-        self._assumptions._generator = ass_copy
+        self._rank = 0
+        self._shape = ()
+        self._precision = default_precision['integer']
+        self._dtype = NativeInteger()
 
     @property
     def arg(self):
         return self._args[0]
-
-    @property
-    def dtype(self):
-        return 'int'
-
-    @property
-    def shape(self):
-        return None
-
-    @property
-    def rank(self):
-        return 0
-
-    @property
-    def precision(self):
-        return default_precision['int']
 
     def fprint(self, printer):
         """Fortran print."""
@@ -251,7 +193,7 @@ class PythonTuple(Function):
     _iterable = True
     _arg_dtypes = None
     _is_homogeneous = False
-    is_zero = False
+
     def __new__(cls, args):
         if not iterable(args):
             args = [args]
@@ -347,28 +289,19 @@ class Len(Function, PyccelAstNode):
     """
     Represents a 'len' expression in the code.
     """
-    is_zero = False
 
     def __new__(cls, arg):
         return Basic.__new__(cls, arg)
 
     def __init__(self, arg):
-        assumptions = {'integer': True}
-        ass_copy = assumptions.copy()
-        self._assumptions = StdFactKB(assumptions)
-        self._assumptions._generator = ass_copy
+        self._rank = 0
+        self._shape = ()
+        self._precision = default_precision['int']
+        self._dtype = NativeInteger()
 
     @property
     def arg(self):
         return self._args[0]
-
-    @property
-    def dtype(self):
-        return 'int'
-
-    @property
-    def rank(self):
-        return 0
 
 #==============================================================================
 class List(Tuple, PyccelAstNode):

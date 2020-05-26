@@ -48,12 +48,12 @@ from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMo
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
 
-from pyccel.ast.core import create_variable
+from pyccel.ast.core import create_variable, FunctionCall
 from pyccel.ast.builtins import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString
-from pyccel.ast.datatypes import NativeInteger
+from pyccel.ast.datatypes import NativeInteger, NativeBool
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.datatypes import default_precision
@@ -512,6 +512,7 @@ class FCodePrinter(CodePrinter):
     def _print_Print(self, expr):
         args = []
         for f in expr.expr:
+            print(f)
             if isinstance(f, str):
                 args.append("'{}'".format(f))
             elif isinstance(f, (Tuple, PythonTuple)):
@@ -1220,19 +1221,16 @@ class FCodePrinter(CodePrinter):
             code_args = ', '.join(self._print(i) for i in rhs.arguments)
             return 'call {0}({1})'.format(rhs_code, code_args)
 
-        if isinstance(rhs, Function):
+        if isinstance(rhs, FunctionCall):
 
             # in the case of a function that returns a list,
             # we should append them to the procedure arguments
             if isinstance(expr.lhs, (tuple, list, Tuple, PythonTuple)):
 
-                name = type(rhs).__name__
-                rhs_code = self._print(name)
-
-                args = rhs.args
+                rhs_code = self._print(rhs.func)
+                args = rhs.arguments
                 code_args = [self._print(i) for i in args]
-
-                func = self.get_function(name)
+                func = rhs.funcdef
                 output_names = func.results
                 lhs_code = [self._print(name) + ' = ' + self._print(i) for (name,i) in zip(output_names,expr.lhs)]
 
@@ -2110,7 +2108,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.rhs, Nil):
             return '.not. present({})'.format(lhs)
 
-        if a.is_Boolean and b.is_Boolean:
+        if a.dtype is NativeBool() and b.dtype is NativeBool():
             return '{} .eqv. {}'.format(lhs, rhs)
 
         raise NotImplementedError(PYCCEL_RESTRICTION_IS_RHS)
@@ -2124,7 +2122,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.rhs, Nil):
             return 'present({})'.format(lhs)
 
-        if a.is_Boolean and b.is_Boolean:
+        if a.dtype is NativeBool() and b.dtype is NativeBool():
             return '{} .neqv. {}'.format(lhs, rhs)
 
         raise NotImplementedError(PYCCEL_RESTRICTION_IS_RHS)
@@ -2300,6 +2298,22 @@ class FCodePrinter(CodePrinter):
         code = '{0}({1})'.format(func_name, code_args)
         return self._get_statement(code)
 
+    def _print_NumpySqrt(self, expr):
+        arg = expr.args[0]
+        code_args = self._print(arg)
+        if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
+            code_args = 'Real({})'.format(code_args)
+        code = 'sqrt({})'.format(code_args)
+        return self._get_statement(code)
+
+    def _print_MathSqrt(self, expr):
+        arg = expr.args[0]
+        code_args = self._print(arg)
+        if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
+            code_args = 'Real({})'.format(code_args)
+        code = 'sqrt({})'.format(code_args)
+        return self._get_statement(code)
+        
     def _print_Function(self, expr):
 
         args = expr.args
@@ -2415,6 +2429,45 @@ class FCodePrinter(CodePrinter):
 
         inds = [self._print(i) for i in inds]
 
+    def _print_IndexedElement(self, expr):
+        if isinstance(expr.base, IndexedVariable):
+            base = expr.base.internal_variable
+        else:
+            base = expr.base
+        if isinstance(base, Application) and not isinstance(base, PythonTuple):
+            indexed_type = base.dtype
+            if isinstance(indexed_type, PythonTuple):
+                base = self._print_Function(expr.base.base)
+            else:
+                if (not self._additional_code):
+                    self._additional_code = ''
+                var = create_variable(base)
+                var = Variable(base.dtype, var.name, is_stack_array = True,
+                        shape=base.shape,precision=base.precision,
+                        order=base.order,rank=base.rank)
+
+                if self._current_function:
+                    name = self._current_function
+                    func = self.get_function(name)
+                    func.local_vars.append(var)
+                else:
+                    self._namespace.variables[var.name] = var
+
+                self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
+                return self._print(IndexedVariable(var, dtype=base.dtype,
+                   shape=base.shape,prec=base.precision,
+                   order=base.order,rank=base.rank).__getitem__(*expr.indices))
+        else:
+            base = self._print(expr.base.label)
+
+        inds = list(expr.indices)
+        #indices of indexedElement of len==1 shouldn't be a Tuple
+        for i, ind in enumerate(inds):
+            if isinstance(ind, Tuple) and len(ind) == 1:
+                inds[i] = ind[0]
+
+        inds = [self._print(i) for i in inds]
+
         return "%s(%s)" % (base, ", ".join(inds))
 
 
@@ -2439,22 +2492,37 @@ class FCodePrinter(CodePrinter):
         func = expr.funcdef
         args = expr.arguments
         results = func.results
-        if func.is_procedure:
-            newargs = list(args)
-            for a in results:
-                if a not in args:
-                    newargs.append(a)
-
-            newargs = ','.join(self._print(i) for i in newargs)
-            code = 'call {name}({args})'.format( name = str(func.name),
-                                                 args = newargs )
-
-        else:
-            assert(len(results) == 1)
+        if len(results) == 1:
             args = ','.join(self._print(i) for i in args)
             code = '{name}({args})'.format( name = str(func.name),
                                             args = args)
 
+        elif len(results)>1:
+            if (not self._additional_code):
+                self._additional_code = ''
+            out_vars = []
+            for r in func.results:
+                var_name = create_variable(r).name
+                var =  r.clone(name = var_name)
+
+                if self._current_function:
+                    name = self._current_function
+                    func = self.get_function(name)
+                    func.local_vars.append(var)
+                else:
+                    self._namespace.variables[var.name] = var
+
+                out_vars.append(var)
+            self._additional_code = self._additional_code + self._print(Assign(Tuple(*out_vars),expr)) + '\n'
+            return self._print(Tuple(*out_vars))
+        else:
+            newargs = list(args)
+            for a in results:
+                if a not in args:
+                    newargs.append(a)
+            newargs = ','.join(self._print(i) for i in newargs)
+            code = 'call {name}({args})'.format( name = str(func.name),
+                                                 args = newargs )
         return code
 
 #=======================================================================================

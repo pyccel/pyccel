@@ -80,7 +80,7 @@ from pyccel.parser.errors import Errors, PyccelSyntaxError
 #      - use OrderedDict whenever it is possible
 
 from pyccel.parser.messages import *
-
+from pyccel.ast.basic       import PyccelAstNode
 #==============================================================================
 
 from sympy.core.function       import Function
@@ -181,6 +181,7 @@ class SyntaxParser(BasicParser):
         red = fst_move_directives(red)
         self._fst = red
 
+
         self.parse(verbose=True)
 
     def parse(self, verbose=False):
@@ -199,8 +200,8 @@ class SyntaxParser(BasicParser):
         errors.set_parser_stage('syntax')
 
         # we add the try/except to allow the parser to find all possible errors
+        PyccelAstNode.stage = 'syntactic'
         ast = self._visit(self.fst)
-
 
         self._ast = ast
 

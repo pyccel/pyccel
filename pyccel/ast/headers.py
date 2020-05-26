@@ -194,15 +194,12 @@ class FunctionHeader(Header):
                 is_pointer = d['is_pointer']
                 precision = d['precision']
                 rank = d['rank']
-                if rank>0 and allocatable:#case of ndarray
-                    if dtype in ['int', 'double', 'float', 'complex']:
-                        allocatable = True
-                        dtype = 'ndarray'+dtype
+
                 order = None
+                shape = None
                 if rank >1:
                     order = d['order']
-
-                shape  = None
+                
                 if isinstance(dtype, str):
                     try:
                         dtype = datatype(dtype)
@@ -214,7 +211,8 @@ class FunctionHeader(Header):
                 arg_name = 'arg_{0}'.format(str(i))
                 arg = Variable(dtype, arg_name,
                                allocatable=allocatable, is_pointer=is_pointer,
-                               rank=rank, shape=shape ,order = order, precision = precision)
+                               rank=rank, shape=shape ,order = order, precision = precision,
+                               is_argument=True)
                 args.append(arg)
 
             # ... factorize the following 2 blocks

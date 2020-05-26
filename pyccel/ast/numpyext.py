@@ -122,7 +122,7 @@ class Array(Application, PyccelAstNode):
             prec = default_precision[dtype]
 
         # Convert dtype from string to Singleton
-        dtype = datatype('ndarray' + dtype)
+        dtype = datatype(dtype)
 
         # ... Determine ordering
         if isinstance(order, ValuedArgument):
@@ -216,23 +216,15 @@ class NumpySum(Function, PyccelAstNode):
         return Basic.__new__(cls, arg)
 
     def __init__(self, arg):
-        dtype = str_dtype(sp_dtype(arg))
-        assumptions = {dtype: True}
-        ass_copy = assumptions.copy()
-        self._assumptions = StdFactKB(assumptions)
-        self._assumptions._generator = ass_copy
+        self._dtype = arg.dtype
+        self._rank  = 0
+        self._shape = ()
+        self._precision = default_precision[str_dtype(self._dtype)]
 
     @property
     def arg(self):
         return self._args[0]
 
-    @property
-    def dtype(self):
-        return self._args[0].dtype
-
-    @property
-    def rank(self):
-        return 0
 
     def fprint(self, printer, lhs=None):
         """Fortran print."""
@@ -255,17 +247,15 @@ class Product(Function, PyccelAstNode):
             raise TypeError('Uknown type of  %s.' % type(arg))
         return Basic.__new__(cls, arg)
 
+    def __init__(self, arg):
+        self._dtype = arg.dtype
+        self._rank  = 0
+        self._shape = ()
+        self._precision = default_precision[str_dtype(self._dtype)]
+
     @property
     def arg(self):
         return self._args[0]
-
-    @property
-    def dtype(self):
-        return self._args[0].dtype
-
-    @property
-    def rank(self):
-        return 0
 
     def fprint(self, printer, lhs=None):
         """Fortran print."""
@@ -345,6 +335,12 @@ class PyccelArraySize(Function, PyccelAstNode):
 
         return Basic.__new__(cls, arg, index)
 
+    def __init__(self, arg, index):
+        self._dtype = NativeInteger()
+        self._rank  = 0
+        self._shape = ()
+        self._precision = default_precision['integer']
+
     @property
     def arg(self):
         return self._args[0]
@@ -352,10 +348,6 @@ class PyccelArraySize(Function, PyccelAstNode):
     @property
     def index(self):
         return self._args[1]
-
-    @property
-    def rank(self):
-        return 0
 
     def _sympystr(self, printer):
         return 'Shape({},{})'.format(str(self.arg), str(self.index))
@@ -408,30 +400,14 @@ class Real(Function, PyccelAstNode):
         return Basic.__new__(cls, arg)
 
     def __init__(self, arg):
-        assumptions = {'real':True}
-        ass_copy = assumptions.copy()
-        self._assumptions = StdFactKB(assumptions)
-        self._assumptions._generator = ass_copy
+        self._dtype = NativeReal()
+        self._rank  = 0
+        self._shape = ()
+        self._precision = default_precision['real']
 
     @property
     def arg(self):
         return self._args[0]
-
-    @property
-    def dtype(self):
-        return 'real'
-
-    @property
-    def shape(self):
-        return None
-
-    @property
-    def rank(self):
-        return 0
-
-    @property
-    def precision(self):
-        return default_precision['real']
 
     def fprint(self, printer):
         """Fortran print."""
@@ -835,17 +811,12 @@ class Rand(Function, PyccelAstNode):
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
 
     """
-    _dtype = 'real'
+    _dtype = NativeReal()
     _precision = default_precision['real']
 
     def __init__(self, *args):
         self._shape = args
         self._rank  = len(self.shape)
-
-        assumptions = {'real':True}
-        ass_copy = assumptions.copy()
-        self._assumptions = StdFactKB(assumptions)
-        self._assumptions._generator = ass_copy
 
     @property
     def order(self):
@@ -905,16 +876,7 @@ class Full(Application, PyccelAstNode):
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
         if (dtype is None) or isinstance(dtype, Nil):
-            if fill_value.is_integer:
-                dtype = 'int'
-            elif fill_value.is_real:
-                dtype = 'float'
-            elif fill_value.is_complex:
-                dtype = 'complex'
-            elif fill_value.is_Boolean:
-                dtype = 'bool'
-            else:
-                raise TypeError('Could not determine dtype from fill_value {}'.format(fill_value))
+            dtype = fill_value.dtype
 
         # Verify dtype and get precision
         dtype, precision = cls._process_dtype(dtype)
@@ -955,7 +917,7 @@ class Full(Application, PyccelAstNode):
 
         dtype = str(dtype).replace('\'', '').lower()
         dtype, precision = dtype_registry[dtype]
-        dtype = datatype('ndarray' + dtype)
+        dtype = datatype(dtype)
 
         return dtype, precision
 
@@ -1201,8 +1163,8 @@ class NumpyUfuncUnary(NumpyUfuncBase):
     def __init__(self, x):
         self._shape     = x.shape
         self._rank      = x.rank
-        self._dtype     = 'complex' if sp_dtype(x) == 'complex' else 'real'
-        self._precision = default_precision[self._dtype]
+        self._dtype     = x.dtype if x.dtype is NativeComplex() else NativeReal()
+        self._precision = default_precision[str_dtype(self._dtype)]
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
@@ -1212,8 +1174,8 @@ class NumpyUfuncBinary(NumpyUfuncBase):
     def __init__(self, x1, x2):
         self._shape     = x1.shape  # TODO ^^
         self._rank      = x1.rank   # TODO ^^
-        self._dtype     = 'real'
-        self._precision = default_precision[self._dtype]
+        self._dtype     = NativeReal()
+        self._precision = default_precision['real']
 
 #------------------------------------------------------------------------------
 # Math operations
@@ -1250,16 +1212,16 @@ class NumpyAbs(NumpyUfuncUnary):
     def __init__(self, x):
         self._shape     = x.shape
         self._rank      = x.rank
-        self._dtype     = 'integer' if sp_dtype(x) == 'integer' else 'real'
-        self._precision = default_precision[self._dtype]
+        self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
+        self._precision = default_precision[str_dtype(self._dtype)]
 
 
 class NumpyFloor(NumpyUfuncUnary):
     def __init__(self, x):
         self._shape     = x.shape
         self._rank      = x.rank
-        self._dtype     = 'real'
-        self._precision = default_precision[self._dtype]
+        self._dtype     = NativeReal()
+        self._precision = default_precision[str_dtype(self._dtype)]
 
 
 class Min(Function, PyccelAstNode):

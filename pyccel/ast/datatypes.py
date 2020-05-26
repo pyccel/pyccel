@@ -34,11 +34,6 @@ __all__ = (
     'NativeSymbol',
     'NativeTensor',
     'NativeVoid',
-#    'NdArray',
-#    'NdArrayBool',
-#    'NdArrayComplex',
-#    'NdArrayInt',
-#    'NdArrayReal',
     'UnionType',
     'VariableType',
     'DataTypeFactory',
@@ -55,18 +50,10 @@ __all__ = (
 #
     'Bool',
     'Cmplx',
-    'ComplexList',
     'Generic',
     'Int',
-    'IntegerList',
-#    'NdArray',
-#    'NdArrayBool',
-#    'NdArrayComplex',
-#    'NdArrayInt',
-#    'NdArrayReal',
     'Nil',
     'Real',
-    'RealList',
     'String',
     'Void',
 #    '_Symbol',
@@ -110,35 +97,27 @@ class DataType(with_metaclass(Singleton, Basic)):
 
 class NativeBool(DataType):
     _name = 'Bool'
-    pass
 
 class NativeInteger(DataType):
     _name = 'Int'
-    pass
 
 class NativeReal(DataType):
     _name = 'Real'
-    pass
 
 class NativeComplex(DataType):
     _name = 'Complex'
-    pass
 
 class NativeString(DataType):
     _name = 'String'
-    pass
 
 class NativeVoid(DataType):
     _name = 'Void'
-    pass
 
 class NativeNil(DataType):
     _name = 'Nil'
-    pass
 
 class NativeList(DataType):
     _name = 'List'
-    pass
 
 class NativeTuple(DataType):
     """Base class representing native datatypes"""
@@ -146,52 +125,40 @@ class NativeTuple(DataType):
 
 class NativeIntegerList(NativeInteger, NativeList):
     _name = 'IntegerList'
-    pass
 
 class NativeRealList(NativeReal, NativeList):
     _name = 'RealList'
-    pass
 
 class NativeComplexList(NativeComplex, NativeList):
     _name = 'ComplexList'
-    pass
 
 class NativeRange(DataType):
     _name = 'Range'
-    pass
 
 class NativeTensor(DataType):
     _name = 'Tensor'
-    pass
 
 class NativeParallelRange(NativeRange):
     _name = 'ParallelRange'
-    pass
 
 class NativeSymbol(DataType):
     _name = 'Symbol'
-    pass
 
 class NdArray(DataType):
     _name = 'NdArray'
-    pass
 
 class NdArrayInt(NdArray, NativeInteger):
     _name = 'int'
-    pass
 
 class NdArrayReal(NdArray, NativeReal):
     _name = 'real'
-    pass
 
 
 class NdArrayComplex(NdArray, NativeComplex):
     _name = 'complex'
-    pass
 
 class NdArrayBool(NdArray, NativeBool):
     _name = 'bool'
-    pass
 
 # TODO to be removed
 class CustomDataType(DataType):
@@ -236,24 +203,15 @@ class FunctionType(DataType):
 
 
 
-Bool    = NativeBool()
-Int     = NativeInteger()
-Real    = NativeReal()
-Cmplx   = NativeComplex()
-Void    = NativeVoid()
-Nil     = NativeNil()
-String  = NativeString()
-_Symbol = NativeSymbol()
-IntegerList = NativeIntegerList()
-RealList = NativeRealList()
-ComplexList = NativeComplexList()
-NdArray = NdArray()
-NdArrayInt = NdArrayInt()
-NdArrayReal = NdArrayReal()
-NdArrayComplex = NdArrayComplex()
-NdArrayBool = NdArrayBool()
-Generic    = NativeGeneric()
-
+Bool           = NativeBool()
+Int            = NativeInteger()
+Real           = NativeReal()
+Cmplx          = NativeComplex()
+Void           = NativeVoid()
+Nil            = NativeNil()
+String         = NativeString()
+_Symbol        = NativeSymbol()
+Generic        = NativeGeneric()
 
 dtype_registry = {'bool': Bool,
                   'int': Int,
@@ -263,14 +221,6 @@ dtype_registry = {'bool': Bool,
                   'void': Void,
                   'nil': Nil,
                   'symbol': _Symbol,
-                  '*int': IntegerList,
-                  '*real': RealList,
-                  '*complex': ComplexList,
-                  'ndarrayint': NdArrayInt,
-                  'ndarrayinteger':NdArrayInt,
-                  'ndarrayreal': NdArrayReal,
-                  'ndarraycomplex': NdArrayComplex,
-                  'ndarraybool': NdArrayBool,
                   '*': Generic,
                   'str': String}
 
