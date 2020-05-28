@@ -259,10 +259,10 @@ class Len(Function, PyccelAstNode):
     Represents a 'len' expression in the code.
     """
 
-    _rank = 0
-    _shape = ()
+    _rank      = 0
+    _shape     = ()
     _precision = default_precision['int']
-    _dtype = NativeInteger()
+    _dtype     = NativeInteger()
 
     def __new__(cls, arg):
         return Basic.__new__(cls, arg)
@@ -304,7 +304,7 @@ class List(Tuple, PyccelAstNode):
             if all(sh is not None for sh in shapes):
                 assert all(sh==shapes[0] for sh in shapes)
                 self._shape = (len(args), ) + shapes[0]
-                self._rank  = len(shape)
+                self._rank  = len(self._shape)
             else:
                 self._rank = max(a.rank for a in args) + 1
 #==============================================================================
