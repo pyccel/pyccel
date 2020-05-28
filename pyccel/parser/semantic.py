@@ -630,17 +630,17 @@ class SemanticParser(BasicParser):
         self._namespace = self._namespace.parent_scope
 
     def _collect_returns_stmt(self, ast):
-        if isinstance(ast,CodeBlock):
+
+        if isinstance(ast, CodeBlock):
             return self._collect_returns_stmt(ast.body)
         vars_ = []
         for stmt in ast:
-            if isinstance(stmt, (For, While)):
+            if isinstance(stmt, (For, While, CodeBlock)):
                 vars_ += self._collect_returns_stmt(stmt.body)
             elif isinstance(stmt, If):
                 vars_ += self._collect_returns_stmt(stmt.bodies)
             elif isinstance(stmt, Return):
                 vars_ += [stmt]
-
         return vars_
 
 ######################################"
@@ -2488,7 +2488,6 @@ class SemanticParser(BasicParser):
                    severity='error', blocker=self.blocking)
 
         # we construct a FunctionDef from its header
-
         if header:
             interfaces = header.create_definition()
 
@@ -2529,7 +2528,7 @@ class SemanticParser(BasicParser):
             global_vars = []
             imports     = []
             arg         = None
-            arguments   = expr.arguments
+            arguments     = expr.arguments
             header_results = m.results
 
             self.create_new_function_scope(name)
@@ -2589,12 +2588,14 @@ class SemanticParser(BasicParser):
 
             if header_results:
                 new_results = []
+
                 for a, ah in zip(results, header_results):
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
                     a_new = Variable(dtype, a.name, **d_var)
                     self.insert_variable(a_new, name=str(a_new.name))
                     new_results.append(a_new)
+
                 results = new_results
 
             if len(interfaces) == 1:
