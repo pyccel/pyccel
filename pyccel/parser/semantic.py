@@ -1563,30 +1563,30 @@ class SemanticParser(BasicParser):
                     #    return CodeBlock(stmts)
                     return expr
                 else:
-                    if isinstance(func, Interface):
-                        arg_dvar = [self._infere_type(i, **settings) for i in args]
-                        f_dvar = [[self._infere_type(j, **settings)
-                                  for j in i.arguments] for i in
-                                  func.functions]
-                        j = -1
-                        for i in f_dvar:
-                            j += 1
-                            found = True
-                            for (idx, dt) in enumerate(arg_dvar):
-                                dtype1 = str_dtype(dt['datatype'])
-                                dtype2 = str_dtype(i[idx]['datatype'])
-                                found = found and (dtype1 in dtype2
-                                              or dtype2 in dtype1)
-                                found = found and dt['rank'] \
-                                              == i[idx]['rank']
-                            if found:
-                                break
-
-                        if found:
-                            f_args = func.functions[j].arguments
-                        else:
-                            msg = 'function not found in the interface'
-                            raise SystemExit(msg)
+                    #if isinstance(func, Interface):
+                    #    arg_dvar = [self._infere_type(i, **settings) for i in args]
+                    #    f_dvar = [[self._infere_type(j, **settings)
+                    #              for j in i.arguments] for i in
+                    #              func.functions]
+                    #    j = -1
+                    #    for i in f_dvar:
+                    #        j += 1
+                    #        found = True
+                    #        for (idx, dt) in enumerate(arg_dvar):
+                    #            dtype1 = str_dtype(dt['datatype'])
+                    #            dtype2 = str_dtype(i[idx]['datatype'])
+                    #            found = found and (dtype1 in dtype2
+                    #                          or dtype2 in dtype1)
+                    #            found = found and dt['rank'] \
+                    #                          == i[idx]['rank']
+                    #        if found:
+                    #            break
+                    #
+                    #    if found:
+                    #        f_args = func.functions[j].arguments
+                    #    else:
+                    #        msg = 'function not found in the interface'
+                    #        raise SystemExit(msg)
 
                     expr = FunctionCall(func, args)
 
