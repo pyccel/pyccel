@@ -225,15 +225,8 @@ class PythonTuple(Expr, PyccelAstNode):
                 shapes = [a.shape for a in args]
                 
                 if all(sh is not None for sh in shapes):
-                    if len(args) == 1:
-                        shape = args[0].shape
-                    else:
-                        shape = broadcast(args[0].shape, args[1].shape)
-                        
-                        for a in args[2:]:
-                            shape = broadcast(shape, a.shape)
-
-                    self._shape = (len(args), ) + shape
+                    assert all(sh==shapes[0] for sh in shapes)
+                    self._shape = (len(args), ) + shapes[0]
                     self._rank  = len(self._shape)
                 else:
                     self._rank = max(a.rank for a in args) + 1
@@ -292,6 +285,7 @@ class List(Tuple, PyccelAstNode):
             self._dtype = NativeString()
             self._rank  = 0
             self._shape = ()
+            assert len(integers + reals + complexes) == 0
         else:
             if complexes:
                 self._dtype     = NativeComplex()
@@ -308,15 +302,8 @@ class List(Tuple, PyccelAstNode):
             shapes = [a.shape for a in args]
             
             if all(sh is not None for sh in shapes):
-                if len(args) == 1:
-                    shape = args[0].shape
-                else:
-                    shape = broadcast(args[0].shape, args[1].shape)
-                    
-                    for a in args[2:]:
-                        shape = broadcast(shape, a.shape)
-
-                self._shape = (len(args), ) + shape
+                assert all(sh==shapes[0] for sh in shapes)
+                self._shape = (len(args), ) + shapes[0]
                 self._rank  = len(shape)
             else:
                 self._rank = max(a.rank for a in args) + 1
@@ -457,33 +444,4 @@ def python_builtin_datatype(name):
         return python_builtin_datatypes_dict[name]
 
     return None
-
-#==============================================================================
-def broadcast(shape_1, shape_2):
-    """ This function broadcast two shapes using numpy broadcasting rules """
-    a = len(shape_1)
-    b = len(shape_2)
-    if a>b:
-        new_shape_2 = (1,)*(a-b) + tuple(shape_2)
-        new_shape_1 = shape_2
-    elif b>a:
-        new_shape_1 = (1,)*(b-a) + tuple(shape_1)
-        new_shape_2 = shape_2
-    else:
-        new_shape_2 = shape_2
-        new_shape_1 = shape_1
-    
-    new_shape = []
-    for e1,e2 in zip(new_shape_1, new_shape_2):
-        if e1 == e2:
-            new_shape.append(e1)
-        elif e1 == 1:
-            new_shape.append(e2)
-        elif e2 == 2:
-            new_shape.append(e1)
-        else:
-            msg = 'operands could not be broadcast together with shapes {} {}'
-            msg = msg.format(shape_1, shape_2)
-            raise ValueError(msg)
-    return tuple(new_shape)
 
