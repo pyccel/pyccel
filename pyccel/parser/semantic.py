@@ -2544,7 +2544,7 @@ class SemanticParser(BasicParser):
             global_vars = []
             imports     = []
             arg         = None
-            arguments = expr.arguments
+            arguments   = expr.arguments
             header_results = m.results
 
             self.create_new_function_scope(name)
@@ -2574,8 +2574,6 @@ class SemanticParser(BasicParser):
                         a_new = ValuedVariable(dtype, str(a.name),
                                     value=a.value, **d_var)
                     else:
-
-                        rank = d_var['rank']
                         a_new = Variable(dtype, a.name, **d_var)
 
                     if additional_args:
@@ -2584,21 +2582,9 @@ class SemanticParser(BasicParser):
                     args.append(a_new)
                     self.insert_variable(a_new, name=str(a_new.name))
 
-            if len(interfaces) == 1:
-                # case of recursive function
-                # TODO improve
-                self.insert_function(interfaces[0])
-
-            # we annotate the body
-            body = self._visit(expr.body)
-
-            # ISSUE 177: must update arguments to get is_target
-            args = [self.get_variable(a.name) for a in args]
-
             # find return stmt and results
 
-            returns = self._collect_returns_stmt(body)
-            results = []
+            returns = self._collect_returns_stmt(expr.body)
 
             # Remove duplicated return expressions, because we cannot have
             # duplicated intent(out) arguments in Fortran.
@@ -2614,6 +2600,29 @@ class SemanticParser(BasicParser):
 
             if len(results) > 0:
                 results = list(results[0])
+
+            if header_results:
+                new_results = []
+                for a, ah in zip(results, header_results):
+                    d_var = self._infere_type(ah, **settings)
+                    dtype = d_var.pop('datatype')
+                    a_new = Variable(dtype, a.name, **d_var)
+                    self.insert_variable(a_new, name=str(a_new.name))
+                    new_results.append(a_new)
+                results = new_results
+
+            if len(interfaces) == 1:
+                # case of recursive function
+                # TODO improve
+                func = FunctionDef(name, args, results, [])
+                self.insert_function(func)
+
+            # we annotate the body
+            body = self._visit(expr.body)
+
+            # ISSUE 177: must update arguments to get is_target
+            args = [self.get_variable(a.name) for a in args]
+
 
             if arg and cls_name:
                 dt       = self.get_class_construct(cls_name)()
@@ -2722,15 +2731,6 @@ class SemanticParser(BasicParser):
                     errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,
                     symbol=r,bounding_box=self._current_fst_node.absolute_bounding_box,
                     severity='fatal')
-
-            for rh,r in zip(header_results, results):
-                # check type compatibility
-                if str(rh.dtype) != str(r.dtype):
-                    txt = '|{name}| {old} <-> {new}'
-                    txt = txt.format(name=name, old=rh.dtype, new=r.dtype)
-                    errors.report(INCOMPATIBLE_RETURN_VALUE_TYPE,
-                    symbol=txt,bounding_box=self._current_fst_node.absolute_bounding_box,
-                    severity='error', blocker=False)
 
 
             func = FunctionDef(name,
