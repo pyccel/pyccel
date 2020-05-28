@@ -675,11 +675,7 @@ class SemanticParser(BasicParser):
         d_var['cls_base'      ] = None
         d_var['cls_parameters'] = None
 
-
-
         # TODO improve => put settings as attribut of Parser
-
-        DEFAULT_FLOAT = settings.pop('default_float', 'real')
 
         if isinstance(expr, type(None)):
 
@@ -1567,14 +1563,7 @@ class SemanticParser(BasicParser):
                     #    return CodeBlock(stmts)
                     return expr
                 else:
-
-                    if 'inline' in func.decorators.keys():
-                        return inline(func,args)
-
-                    if isinstance(func, FunctionDef):
-                        results = func.results
-                        f_args  = func.arguments
-                    elif isinstance(func, Interface):
+                    if isinstance(func, Interface):
                         arg_dvar = [self._infere_type(i, **settings) for i in args]
                         f_dvar = [[self._infere_type(j, **settings)
                                   for j in i.arguments] for i in
@@ -1594,7 +1583,6 @@ class SemanticParser(BasicParser):
                                 break
 
                         if found:
-                            results = func.functions[j].results
                             f_args = func.functions[j].arguments
                         else:
                             msg = 'function not found in the interface'

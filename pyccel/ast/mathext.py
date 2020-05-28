@@ -57,7 +57,7 @@ __all__ = (
     'MathFactorial',
     'MathFloor',
     'MathGcd',
-    'MathTrunc'
+    'MathTrunc',
     # ---
     'MathIsclose',
     'MathIsfinite',

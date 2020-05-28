@@ -15,7 +15,7 @@ from sympy.tensor import Indexed, IndexedBase
 
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
-                        NativeInteger, NativeBool, NativeReal, NativeGeneric,
+                        NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
                         NativeGeneric, NativeTuple, default_precision)
 from .numbers   import Integer

@@ -37,7 +37,7 @@ from sympy.utilities.misc               import filldedent
 from .basic     import Basic, PyccelAstNode
 from .builtins  import Enumerate, Len, List, Map, Range, Zip, PythonTuple
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
-                        NativeInteger, NativeBool, NativeReal, NativeGeneric,
+                        NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
                         NativeGeneric, NativeTuple, default_precision)
 
