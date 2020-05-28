@@ -582,10 +582,9 @@ class SyntaxParser(BasicParser):
         for result in results:
             if not isinstance(result, Symbol):
                 new_vars.append(create_variable(result))
-                stmt      = Assign(new_vars[-1], result)
-                stmt.set_fst(stmt)
-                assigns  += [stmt]
-                assigns[-1].set_fst(stmt)
+                new_stmt  = Assign(new_vars[-1], result)
+                new_stmt.set_fst(stmt)
+                assigns.append(new_stmt)
             else:
                 new_vars.append(result)
 
