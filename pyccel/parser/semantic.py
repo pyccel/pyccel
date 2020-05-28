@@ -2447,31 +2447,16 @@ class SemanticParser(BasicParser):
     def _visit_Return(self, expr, **settings):
 
         results  = expr.expr
-        new_vars = []
-        assigns  = []
-
-        if not isinstance(results, (list, PythonTuple, List)):
-            results = [results]
-
-        for result in results:
-            if not isinstance(result, Symbol):
-                new_vars += [self._get_new_variable(result)]
-                stmt      = Assign(new_vars[-1], result)
-                stmt.set_fst(expr.fst)
-                assigns  += [stmt]
-                assigns[-1].set_fst(expr.fst)
-
-        if len(assigns) == 0:
-            results = [self._visit_Symbol(result, **settings)
-                       for result in results]
-            return Return(results)
+        assigns  = expr.stmt
+        if assigns:
+            assigns  = [self._visit_Assign(assign, **settings) for assign in assigns.body]
+            results  = [self._visit_Symbol(i, **settings) for i in results]
+            expr     = Return(results, CodeBlock(assigns))
         else:
-            assigns  = [self._visit_Assign(assign, **settings)
-                       for assign in assigns]
-            new_vars = [self._visit_Symbol(i, **settings) for i in
-                        new_vars]
-            assigns  = CodeBlock(assigns)
-            return Return(new_vars, assigns)
+            results = [self._visit_Symbol(i, **settings) for i in results]
+            expr    = Return(results)
+
+        return expr
 
     def _visit_FunctionDef(self, expr, **settings):
 
@@ -2589,6 +2574,7 @@ class SemanticParser(BasicParser):
             # Remove duplicated return expressions, because we cannot have
             # duplicated intent(out) arguments in Fortran.
             # TODO [YG, 12.03.2020]: find workaround using temporary variables
+
             for stmt in returns:
                 results += [list(OrderedDict.fromkeys(stmt.expr))]
 
@@ -2621,8 +2607,8 @@ class SemanticParser(BasicParser):
             body = self._visit(expr.body)
 
             # ISSUE 177: must update arguments to get is_target
-            args = [self.get_variable(a.name) for a in args]
-
+            args    = [self.get_variable(a.name) for a in args]
+            results = [self.get_variable(a.name) for a in results]
 
             if arg and cls_name:
                 dt       = self.get_class_construct(cls_name)()

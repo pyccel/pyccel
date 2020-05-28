@@ -574,7 +574,25 @@ class SyntaxParser(BasicParser):
             return ValuedArgument(arg, value)
 
     def _visit_ReturnNode(self, stmt):
-        expr = Return(self._visit(stmt.value))
+        results = self._visit(stmt.value)
+        if not isinstance(results, (list, PythonTuple, List)):
+            results = [results]
+        assigns  = []
+        new_vars = []
+        for result in results:
+            if not isinstance(result, Symbol):
+                new_vars.append(create_variable(result))
+                stmt      = Assign(new_vars[-1], result)
+                stmt.set_fst(stmt)
+                assigns  += [stmt]
+                assigns[-1].set_fst(stmt)
+            else:
+                new_vars.append(result)
+
+        if assigns:
+            expr = Return(new_vars, CodeBlock(assigns))
+        else:
+            expr = Return(new_vars)
         expr.set_fst(stmt)
         return expr
 

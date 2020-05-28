@@ -421,6 +421,7 @@ def test_multiple_results():
 #------------------------------------------------------------------------------
 def test_tuples():
     types = [int]*4 + [bool] + [float] + [int]*9 + [float]*4 + [int] \
-            + [int,bool,complex]*9 + [int,bool] + [int]*3 + [int,bool]*2
+            + [int,bool,complex]*2 + [int,bool] + [int]*3 + [int,bool]*3
     pyccel_test("scripts/runtest_tuples.py",
             output_dtype = types)
+
