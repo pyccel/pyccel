@@ -53,11 +53,10 @@ from pyccel.ast.builtins import Enumerate, Int, Len, Map, Print, Range, Zip, Pyt
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString
-from pyccel.ast.datatypes import NativeInteger, NativeBool
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.datatypes import default_precision
-from pyccel.ast.type_inference import sp_dtype
 from pyccel.ast.numbers import Integer, Float
 
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
@@ -713,7 +712,7 @@ class FCodePrinter(CodePrinter):
 
         # math.floor on integer argument is identity,
         # but we need parentheses around expressions
-        if sp_dtype(arg) == 'integer':
+        if arg.dtype is NativeInteger():
             return '({})'.format(arg_code)
 
         prec = expr.precision
@@ -2171,9 +2170,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_PyccelDiv(self, expr):
         args = [self._print(a) for a in expr.args]
-
-        dtypes = [sp_dtype(a) for a in expr.args]
-        if all(a == 'integer' for a in dtypes):
+        if all(a.dtype is NativeInteger() for a in expr.args):
             return ' / '.join('real({})'.format(a) for a in args)
         return ' / '.join(a for a in args)
 
@@ -2181,13 +2178,13 @@ class FCodePrinter(CodePrinter):
         args = [self._print(a) for a in expr.args]
 
         code   = args[0]
-        dtype  = sp_dtype(expr)
-        bdtype = sp_dtype(expr.args[0])
-        if dtype == 'real' and bdtype == 'integer':
+        is_real  = expr.dtype is NativeReal()
+        bdtype = expr.args[0].dtype
+        if is_real  and bdtype is NativeInteger():
             code = 'real({})'.format(code)
         for b,c in zip(expr.args[1:], args[1:]):
-            bdtype    = sp_dtype(b)
-            if dtype == 'real' and bdtype == 'integer':
+            bdtype    = b.dtype
+            if is_real and bdtype is NativeInteger():
                 c = 'real({})'.format(c)
             code = 'MODULO({},{})'.format(code, c)
         return code
@@ -2196,15 +2193,15 @@ class FCodePrinter(CodePrinter):
         args = [self._print(a) for a in expr.args]
 
         code   = args[0]
-        adtype = sp_dtype(expr.args[0])
-        dtype  = sp_dtype(expr)
+        adtype = expr.args[0].dtype
+        is_real  = expr.dtype is NativeReal()
         for b,c in zip(expr.args[1:],args[1:]):
-            bdtype    = sp_dtype(b)
-            if adtype == 'integer' and bdtype == 'integer':
+            bdtype    = b.dtype
+            if adtype is NativeInteger() and bdtype is NativeInteger():
                 c = 'real({})'.format(c)
             adtype = bdtype
             code = 'FLOOR({}/{},{})'.format(code, c, default_precision['real'])
-            if dtype == 'real':
+            if is_real:
                 code = 'real({})'.format(code)
         return code
 
@@ -2225,20 +2222,20 @@ class FCodePrinter(CodePrinter):
     def _print_PyccelEq(self, expr):
         lhs = self._print(expr.args[0])
         rhs = self._print(expr.args[1])
-        a = sp_dtype(expr.args[0])
-        b = sp_dtype(expr.args[1])
+        a = expr.args[0].dtype
+        b = expr.args[1].dtype
 
-        if a == 'bool' and b == 'bool':
+        if a is NativeBool() and b is NativeBool():
             return '{} .eqv. {}'.format(lhs, rhs)
         return '{0} == {1} '.format(lhs, rhs)
 
     def _print_PyccelNe(self, expr):
         lhs = self._print(expr.args[0])
         rhs = self._print(expr.args[1])
-        a = sp_dtype(expr.args[0])
-        b = sp_dtype(expr.args[1])
+        a = expr.args[0].dtype
+        b = expr.args[1].dtype
 
-        if a == 'bool' and b == 'bool':
+        if a is NativeBool() and b is NativeBool():
             return '{} .neqv. {}'.format(lhs, rhs)
         return '{0} /= {1} '.format(lhs, rhs)
 
@@ -2490,8 +2487,11 @@ class FCodePrinter(CodePrinter):
         func = expr.funcdef
         args = expr.arguments
         results = func.results
+
         if len(results) == 1:
-            args = ','.join(self._print(i) for i in args)
+            args = ['{}={}'.format(self._print(b),self._print(a)) 
+                            for a,b in zip(args, func.arguments) if not isinstance(a, Nil)]
+            args = ','.join(args)
             code = '{name}({args})'.format( name = str(func.name),
                                             args = args)
 
@@ -2515,11 +2515,12 @@ class FCodePrinter(CodePrinter):
             self._additional_code = self._additional_code + self._print(Assign(Tuple(*out_vars),expr)) + '\n'
             return self._print(Tuple(*out_vars))
         else:
-            newargs = list(args)
-            for a in results:
-                if a not in args:
-                    newargs.append(a)
-            newargs = ','.join(self._print(i) for i in newargs)
+            args = ['{}={}'.format(self._print(b),self._print(a)) 
+                            for a,b in zip(args, func.arguments) if not isinstance(a, Nil)]
+            results = ['{0}={0}'.format(self._print(a)) for a in results]
+
+            newargs = ','.join(args+results)
+
             code = 'call {name}({args})'.format( name = str(func.name),
                                                  args = newargs )
         return code

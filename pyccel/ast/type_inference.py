@@ -12,72 +12,7 @@ from .builtins  import List, PythonTuple
 
 from sympy.core.function import Application
 
-__all__ = ('sp_dtype', 'str_dtype')
-
-def sp_dtype(expr):
-    """
-    This function computes the basic datatype of an expression
-
-    Example
-    -------
-    >>> sp_dtype(2):
-    'integer'
-    >>> x = Variable('int','x')
-    >>> sp_dtype(PyccelAdd(x,1))
-    'integer'
-    """
-
-    if isinstance(expr,(PyccelEq,PyccelNe, PyccelLt, PyccelLe,
-                          PyccelGt, PyccelGe, PyccelAnd, PyccelOr,
-                          PyccelNot, Is, IsNot)):
-        return 'bool'
-
-    elif isinstance(expr, (PyccelPow, PyccelAdd, PyccelMul, PyccelMod, 
-                           PyccelFloorDiv, List)):
-        args       = [sp_dtype(a) for a in expr.args]
-
-        if all(a=='integer' for a in args):
-            return 'integer'
-        elif all(a=='integer' or a=='real' for a in args):
-            return 'real'
-        elif all(a=='integer' or a=='real' or a=='complex' for a in args):
-            return 'complex'
-        elif any(a=='bool' for a in args):
-            return 'bool'
-        elif all(a=='str' for a in args):
-            return 'str'
-
-    elif isinstance(expr, PythonTuple):
-        if expr.is_homogeneous:
-            return expr.homogeneous_dtype
-        return self.dtype
-
-    elif isinstance(expr, PyccelDiv):
-        args       = [sp_dtype(a) for a in expr.args]
-
-        is_real    = all(a=='integer' or a=='real' for a in args)
-        is_complex = all(a=='integer' or a=='real' or a=='complex' for a in args)
-        if is_real:
-            return 'real'
-        elif is_complex:
-            return 'complex'
-    elif isinstance(expr, (PyccelUnary, PyccelAssociativeParenthesis)):
-        return sp_dtype(expr.args[0])
-    elif isinstance(expr, (Variable, IndexedElement, FunctionCall, Application, DottedVariable)):
-        return str_dtype(expr.dtype)
-    elif isinstance(expr, Integer):
-        return 'integer'
-    elif isinstance(expr, Float):
-        return 'real'
-    elif isinstance(expr, Complex):
-        return 'complex'
-    elif isinstance(expr, (BooleanFalse, BooleanTrue)):
-        return 'bool'
-    elif isinstance(expr, String):
-        return 'str'
-
-    raise TypeError('Unknown datatype {0}'.format(type(expr)))
-
+__all__ = ('str_dtype',)
 
 def str_dtype(dtype):
 

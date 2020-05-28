@@ -687,7 +687,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, (Integer, Float, Complex, String,
                                BooleanTrue, BooleanFalse,
-                               PyccelArraySize, Is)):
+                               PyccelArraySize, Is, IndexedElement)):
 
             d_var['datatype'   ] = expr.dtype
             d_var['allocatable'] = expr.rank>0
@@ -726,14 +726,6 @@ class SemanticParser(BasicParser):
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
 
-            return d_var
-
-        elif isinstance(expr, IndexedElement):
-            d_var['datatype']    = expr.dtype
-            d_var['allocatable'] = expr.rank>0
-            d_var['shape'    ]   = expr.shape
-            d_var['rank'     ]   = expr.rank
-            d_var['precision']   = expr.precision
             return d_var
 
         elif isinstance(expr, IndexedVariable):

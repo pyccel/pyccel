@@ -27,7 +27,7 @@ from .datatypes      import default_precision
 from .datatypes      import datatype
 from .datatypes      import NativeInteger, NativeReal, NativeComplex, NativeBool
 from .numbers        import Integer, Float
-from .type_inference import sp_dtype, str_dtype
+from .type_inference import str_dtype
 
 
 __all__ = (

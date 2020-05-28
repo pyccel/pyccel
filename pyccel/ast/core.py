@@ -360,7 +360,7 @@ class PyccelNot(Expr, PyccelAstNode):
     _shape = ()
     _precision = default_precision['bool']
 
-class Is(Basic):
+class Is(Basic, PyccelAstNode):
 
     """Represents a is expression in the code.
 
@@ -372,6 +372,10 @@ class Is(Basic):
     >>> Is(x, Nil())
     Is(x, None)
     """
+    _dtype = NativeBool()
+    _rank  = 0
+    _shape = ()
+    _precision = default_precision['bool']
 
     def __new__(cls, lhs, rhs):
         return Basic.__new__(cls, lhs, rhs)
@@ -385,7 +389,7 @@ class Is(Basic):
         return self._args[1]
 
 
-class IsNot(Basic):
+class IsNot(Basic, PyccelAstNode):
 
     """Represents a is expression in the code.
 
@@ -397,6 +401,11 @@ class IsNot(Basic):
     >>> IsNot(x, Nil())
     IsNot(x, None)
     """
+
+    _dtype = NativeBool()
+    _rank  = 0
+    _shape = ()
+    _precision = default_precision['bool']
 
     def __new__(cls, lhs, rhs):
         return Basic.__new__(cls, lhs, rhs)
@@ -4746,7 +4755,7 @@ class If(Basic):
 
         newargs = []
         for ce in args:
-            #if not sp_dtype(cond) == 'bool':
+            #if not cond.dtype == 'bool':
             #    raise TypeError('Cond %s is of type %s, but must be a bool.'
             #                     % (cond, type(cond)))
             cond = ce[0]

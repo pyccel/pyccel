@@ -13,6 +13,7 @@ files = sorted(os.listdir(path_dir))
 files = [f for f in files if (f.endswith(".py"))]
 
 @pytest.mark.parametrize( "f", files )
+@pytest.mark.xfail
 def test_symbolic(f):
 
     pyccel = Parser(f)
