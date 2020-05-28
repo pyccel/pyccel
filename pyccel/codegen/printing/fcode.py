@@ -2489,8 +2489,13 @@ class FCodePrinter(CodePrinter):
         results = func.results
 
         if len(results) == 1:
-            args = ['{}={}'.format(self._print(b),self._print(a)) 
-                            for a,b in zip(args, func.arguments) if not isinstance(a, Nil)]
+            if not func.is_header:
+                #this is a hack add variable names in header files
+                args = ['{}={}'.format(self._print(b),self._print(a))
+                                for a,b in zip(args, func.arguments) if not isinstance(a, Nil)]
+            else:
+                args = ['{}'.format(self._print(a)) for a in args]
+
             args = ','.join(args)
             code = '{name}({args})'.format( name = str(func.name),
                                             args = args)
@@ -2515,9 +2520,13 @@ class FCodePrinter(CodePrinter):
             self._additional_code = self._additional_code + self._print(Assign(Tuple(*out_vars),expr)) + '\n'
             return self._print(Tuple(*out_vars))
         else:
-            args = ['{}={}'.format(self._print(b),self._print(a)) 
-                            for a,b in zip(args, func.arguments) if not isinstance(a, Nil)]
-            results = ['{0}={0}'.format(self._print(a)) for a in results]
+            if not func.is_header:
+                args    = ['{}={}'.format(self._print(b),self._print(a)) 
+                                for a,b in zip(args, func.arguments) if not isinstance(a, Nil)]
+                results = ['{0}={0}'.format(self._print(a)) for a in results]
+            else:
+                args    = ['{}'.format(self._print(a)) for a in args]
+                results = ['{}'.format(self._print(a)) for a in results]
 
             newargs = ','.join(args+results)
 

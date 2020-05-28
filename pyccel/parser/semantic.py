@@ -802,7 +802,7 @@ class SemanticParser(BasicParser):
                 d_var['rank'          ] = expr.rank
                 d_var['shape'         ] = expr.shape
                 d_var['order'         ] = expr.order
-                d_var['allocatable'   ] = True
+                d_var['allocatable'   ] = expr.rank>0
                 d_var['is_stack_array'] = False
                 d_var['is_pointer'    ] = False
                 d_var['is_target'     ] = True # ISSUE 177: TODO this should be done using update_variable
