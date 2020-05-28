@@ -76,7 +76,7 @@ math_constants = {
     'pi' : Constant('real', 'pi' , value=math.pi ),
     'inf': Constant('real', 'inf', value=math.inf),
     'nan': Constant('real', 'nan', value=math.nan),
-    'tau': Constant('real', 'tau', value=math.tau),
+    'tau': Constant('real', 'tau', value=2.*math.pi),
 }
 
 #==============================================================================
