@@ -20,7 +20,7 @@ from .core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelF
 from .core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from .core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
 
-from .builtins       import Int as PythonInt
+from .builtins       import Int as PythonInt, Bool as PythonBool
 from .builtins       import PythonFloat, PythonTuple, PythonComplex
 from .datatypes      import dtype_and_precision_registry as dtype_registry
 from .datatypes      import default_precision
@@ -104,7 +104,7 @@ class Array(Application, PyccelAstNode):
 
     def __new__(cls, arg, dtype=None, order='C'):
 
-        if not isinstance(arg, (list, tuple, Tuple, PythonTuple, List)):
+        if not isinstance(arg, (Tuple, PythonTuple, List)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         # Determine dtype and (if possible) precision
@@ -114,8 +114,8 @@ class Array(Application, PyccelAstNode):
             dtype = str(dtype).replace('\'', '')
             dtype, prec = dtype_registry[dtype]
         else:
-            dtype = sp_dtype(arg)
-            prec  = 0
+            dtype = arg.dtype
+            prec  = arg.precision
 
         # If necessary, use default precision
         if not prec:
@@ -375,11 +375,11 @@ class PyccelArraySize(Function, PyccelAstNode):
 
 def Shape(arg):
     if arg.shape is None:
-        return PythonTuple([PyccelArraySize(arg,i) for i in range(arg.rank)])
+        return PythonTuple(*[PyccelArraySize(arg,i) for i in range(arg.rank)])
     elif isinstance(arg.shape, PythonTuple):
         return arg.shape
     else:
-        return PythonTuple(arg.shape)
+        return PythonTuple(*arg.shape)
 
 #==============================================================================
 # TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Float
@@ -914,10 +914,14 @@ class Full(Application, PyccelAstNode):
     #--------------------------------------------------------------------------
     @staticmethod
     def _process_dtype(dtype):
-
-        dtype = str(dtype).replace('\'', '').lower()
+        if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt, 
+                      Int32, Int64, NumpyComplex, Complex64, Complex128, NumpyFloat,
+                      Float64, Float32):
+            dtype = dtype.__name__.lower()
+        else:
+            dtype            = str(dtype).replace('\'', '').lower()
         dtype, precision = dtype_registry[dtype]
-        dtype = datatype(dtype)
+        dtype            = datatype(dtype)
 
         return dtype, precision
 
@@ -1241,14 +1245,10 @@ class NumpyComplex(PythonComplex):
         return PythonComplex.__new__(cls, arg0, arg1)
 
 class Complex64(NumpyComplex):
-    @property
-    def precision(self):
-        return dtype_registry['complex64'][1]
+    _precision = dtype_registry['complex64'][1]
 
 class Complex128(NumpyComplex):
-    @property
-    def precision(self):
-        return dtype_registry['complex128'][1]
+    _precision = dtype_registry['complex128'][1]
 
 #=======================================================================================
 class NumpyFloat(PythonFloat):
@@ -1260,16 +1260,12 @@ class NumpyFloat(PythonFloat):
 class Float32(NumpyFloat):
     """ Represents a call to numpy.float32() function.
     """
-    @property
-    def precision(self):
-        return dtype_registry['float32'][1]
+    _precision = dtype_registry['float32'][1]
 
 class Float64(NumpyFloat):
     """ Represents a call to numpy.float64() function.
     """
-    @property
-    def precision(self):
-        return dtype_registry['float64'][1]
+    _precision = dtype_registry['float64'][1]
 
 #=======================================================================================
 # TODO [YG, 13.03.2020]: handle case where base != 10
@@ -1282,14 +1278,11 @@ class NumpyInt(PythonInt):
 class Int32(NumpyInt):
     """ Represents a call to numpy.int32() function.
     """
-    @property
-    def precision(self):
-        return dtype_registry['int32'][1]
+    _precision = dtype_registry['int32'][1]
 
 class Int64(NumpyInt):
     """ Represents a call to numpy.int64() function.
     """
-    @property
-    def precision(self):
-        return dtype_registry['int64'][1]
+    _precision = dtype_registry['int64'][1]
+
 

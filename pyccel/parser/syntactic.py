@@ -176,11 +176,11 @@ class SyntaxParser(BasicParser):
                           severity='fatal')
 
         preprocess_imports(red)
-        preprocess_default_args(red)
+        #preprocess_default_args(red)
 
         red = fst_move_directives(red)
         self._fst = red
-
+        
 
         self.parse(verbose=True)
 
@@ -223,7 +223,7 @@ class SyntaxParser(BasicParser):
 
             return List(*ls, sympify=False)
         elif isinstance(stmt, (tuple, TupleNode)):
-            return PythonTuple(ls)
+            return PythonTuple(*ls)
         else:
             return Tuple(*ls, sympify=False)
 
@@ -556,7 +556,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_PrintNode(self, stmt):
         expr = self._visit(stmt.value[0])
-        expr = PythonTuple(expr.args)
+        expr = PythonTuple(*expr.args)
         return Print(expr)
 
     def _visit_AssociativeParenthesisNode(self, stmt):
@@ -584,7 +584,6 @@ class SyntaxParser(BasicParser):
     def _visit_DefNode(self, stmt):
 
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
-
         if isinstance(stmt.parent, ClassNode):
             cls_name = stmt.parent.name
         else:
@@ -661,7 +660,7 @@ class SyntaxParser(BasicParser):
                 header = header.to_static()
 
         body = stmt.value
-
+        
         if 'sympy' in decorators.keys():
             # TODO maybe we should run pylint here
             stmt.decorators.pop()

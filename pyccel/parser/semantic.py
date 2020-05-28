@@ -7,7 +7,6 @@ import traceback
 #==============================================================================
 
 from pyccel.ast import NativeBool
-from pyccel.ast import NativeTuple
 from pyccel.ast import NativeRange
 from pyccel.ast import NativeIntegerList
 from pyccel.ast import NativeRealList
@@ -70,10 +69,12 @@ from pyccel.ast.numbers   import Integer, Float, Complex
 from pyccel.ast.numpyext  import PyccelArraySize
 from pyccel.ast.numpyext  import NumpyUfuncBase
 from pyccel.ast.utilities import split_positional_keyword_arguments
-from pyccel.ast.type_inference  import sp_dtype, str_dtype
+from pyccel.ast.type_inference  import str_dtype
 from pyccel.parser.errors import Errors
 from pyccel.parser.errors import PyccelSemanticError
-
+from pyccel.ast.numpyext  import NumpyInt, Int32, Int64, NumpyComplex, Complex64
+from pyccel.ast.numpyext  import Complex128, NumpyFloat, Float64, Float32
+from pyccel.ast.builtins  import Int as PythonInt, PythonFloat, PythonComplex, Bool as PythonBool
 from pyccel.ast.mathext   import MathFunctionBase
 
 # TODO - remove import * and only import what we need
@@ -562,7 +563,7 @@ class SemanticParser(BasicParser):
             d_var[key] = value
         dtype = d_var.pop('datatype')
         if isinstance(var, TupleVariable):
-            var = TupleVariable(var.get_vars(), name, **d_var)
+            var = TupleVariable(var.get_vars(), dtype, name, **d_var)
         else:
             var = Variable(dtype, name, **d_var)
         # TODO improve to insert in the right namespace
@@ -684,7 +685,7 @@ class SemanticParser(BasicParser):
 
             return d_var
 
-        elif isinstance(expr, (Integer, Float,Complex,String,
+        elif isinstance(expr, (Integer, Float, Complex, String,
                                BooleanTrue, BooleanFalse,
                                PyccelArraySize, Is)):
 
@@ -694,7 +695,15 @@ class SemanticParser(BasicParser):
             d_var['precision'  ] = expr.precision
             d_var['shape']       = expr.shape
             return d_var
+        elif expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt, 
+                      Int32, Int64, NumpyComplex, Complex64, Complex128, NumpyFloat,
+                      Float64, Float32):
 
+            d_var['datatype'   ] = '*'
+            d_var['rank'       ] = 0
+            d_var['precision'  ] = 0
+            return d_var
+            
         elif isinstance(expr, Variable):
 
             d_var['datatype'      ] = expr.dtype
@@ -711,18 +720,8 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, PythonTuple):
-            d_var['datatype'      ] = NativeTuple()
-            d_var['allocatable'   ] = False
-
-            arg_d_vars = []
-            for e in expr:
-                arg_d_vars.append(self._infere_type(e, **settings))
-            expr.set_arg_types(arg_d_vars)
-
-            if expr.is_homogeneous:
-                d_var['datatype' ] = arg_d_vars[0]['datatype' ]
-                d_var['precision'] = arg_d_vars[0]['precision']
-
+            d_var['datatype'      ] = expr.dtype
+            d_var['precision']      = expr.precision
             d_var['is_stack_array'] = True
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
@@ -730,19 +729,11 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, IndexedElement):
-            var = expr.base
-
-            d_var_var = self._infere_type(var)
-            dtype = var.dtype if not isinstance(var.dtype, NativeTuple) else var.homogeneous_dtype
-            d_var['datatype'] = str_dtype(dtype)
-            shape = expr.shape
-            rank = expr.rank
-            if rank > 0:
-                d_var['allocatable'] = True
-
-            d_var['shape'    ] = shape
-            d_var['rank'     ] = rank
-            d_var['precision'] = var.precision
+            d_var['datatype']    = expr.dtype
+            d_var['allocatable'] = expr.rank>0
+            d_var['shape'    ]   = expr.shape
+            d_var['rank'     ]   = expr.rank
+            d_var['precision']   = expr.precision
             return d_var
 
         elif isinstance(expr, IndexedVariable):
@@ -844,7 +835,7 @@ class SemanticParser(BasicParser):
                     d_var['order'      ] = expr.order
 
             elif name in ['NumpySum', 'Product', 'Min', 'Max']:
-                d_var['datatype'   ] = sp_dtype(expr.args[0])
+                d_var['datatype'   ] = expr.args[0].dtype
                 d_var['rank'       ] = 0
                 d_var['allocatable'] = False
                 d_var['is_pointer' ] = False
@@ -881,7 +872,7 @@ class SemanticParser(BasicParser):
                           'NumpyComplex', 'Complex64','Complex128',
                           'Real','Imag','Bool']:
 
-                d_var['datatype'   ] = sp_dtype(expr)
+                d_var['datatype'   ] = expr.dtype
                 d_var['rank'       ] = 0
                 d_var['allocatable'] = False
                 d_var['is_pointer' ] = False
@@ -1050,12 +1041,12 @@ class SemanticParser(BasicParser):
         return Tuple(*ls, sympify=False)
 
     def _visit_tuple(self, expr, **settings):
-        ls = [self._visit(i, **settings) for i in expr]
-        return PythonTuple(ls)
+        ls = tuple(self._visit(i, **settings) for i in expr)
+        return ls
 
     def _visit_PythonTuple(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
-        return PythonTuple(ls)
+        return PythonTuple(*ls)
 
     def _visit_Tuple(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
@@ -1066,8 +1057,11 @@ class SemanticParser(BasicParser):
         return List(*ls, sympify=False)
 
     def _visit_ValuedArgument(self, expr, **settings):
-        expr_value = self._visit(expr.value, **settings)
-        return ValuedArgument(expr.name, expr_value)
+        value = self._visit(expr.value, **settings)
+        d_var      = self._infere_type(value, **settings)
+        dtype      = d_var.pop('datatype')
+        return ValuedVariable(dtype, expr.name,
+                               value=value, **d_var)
 
     def _visit_CodeBlock(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr.body]
@@ -1175,9 +1169,9 @@ class SemanticParser(BasicParser):
                     elif len(selected_vars)<1:
                         return None
                     elif arg is args[0]:
-                        return PythonTuple(selected_vars)
+                        return PythonTuple(*selected_vars)
                     else:
-                        return PythonTuple(self._extract_indexed_from_var(var, args[:len(args)-i-1], name) for var in selected_vars)
+                        return PythonTuple(*[self._extract_indexed_from_var(var, args[:len(args)-i-1], name) for var in selected_vars])
 
                 else:
 
@@ -1197,14 +1191,14 @@ class SemanticParser(BasicParser):
             order = var.order
             rank  = var.rank
 
-            if isinstance(dtype, NativeTuple):
+            if isinstance(var, PythonTuple):
                 if not var.is_homogeneous:
                     errors.report(LIST_OF_TUPLES, symbol=var,
                         bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='error', blocker=self.blocking)
                     dtype = 'int'
                 else:
-                    dtype = var.homogeneous_dtype
+                    dtype = var.dtype
 
             return IndexedVariable(var, dtype=dtype,
                    shape=shape,prec=prec,order=order,rank=rank).__getitem__(*args)
@@ -1267,7 +1261,6 @@ class SemanticParser(BasicParser):
         if var.order == 'C':
             args.reverse()
         args = tuple(args)
-        print(var, args, name)
         return self._extract_indexed_from_var(var, args, name)
 
     def _visit_Symbol(self, expr, **settings):
@@ -1551,7 +1544,6 @@ class SemanticParser(BasicParser):
 
             macro = self.get_macro(name)
             if macro is not None:
-                args = [self._visit(i, **settings) for i in args]
                 func = macro.master
                 name = _get_name(func.name)
                 args = macro.apply(args)
@@ -1573,7 +1565,6 @@ class SemanticParser(BasicParser):
                     for a in kwargs.values():
                         if getattr(a,'dtype',None) == 'tuple':
                             self._infere_type(a, **settings)
-
                     expr = func(*args, **kwargs)
 
                     if isinstance(expr, (Where, Diag, Linspace)):
@@ -1617,29 +1608,6 @@ class SemanticParser(BasicParser):
                             msg = 'function not found in the interface'
                             raise SystemExit(msg)
 
-                    # add the messing argument in the case of optional arguments
-                    # TODO move this to FunctionCall
-                    if not len(args) == len(f_args):
-                        n = len(args)
-
-                        missing_f_args = dict([(f.name,f) for f in f_args])
-                        j = 0
-                        while (j < n):
-                            if isinstance(args[j], ValuedArgument) and args[j].name!=f_args[j].name:
-                                break
-                            elif isinstance(args[j], Nil):
-                                if not isinstance(f_args[j], ValuedVariable):
-                                    msg = 'Expecting a valued variable'
-                                    raise TypeError(msg)
-                                args.append(ValuedArgument(f_args[j].name, f_args[j].value))
-                            missing_f_args.pop(f_args[j].name)
-                            j=j+1
-                        for i in args[j:]:
-                            if not isinstance(i, ValuedArgument):
-                                msg = 'non-default argument follows default argument'
-                                raise SyntaxError(msg)
-                            missing_f_args.pop(i.name)
-
                     expr = FunctionCall(func, args)
 
                     #if len(stmts) > 0:
@@ -1653,26 +1621,31 @@ class SemanticParser(BasicParser):
         raise NotImplementedError(msg)
 
     def _create_variable(self, name, dtype, rhs, d_lhs):
+
         if isinstance(rhs, PythonTuple):
             elem_vars = []
             for i,a in enumerate(rhs):
                 elem_name = self._get_new_variable_name(a,name + '_' + str(i))
                 elem_d_lhs = self._infere_type(rhs[i])
                 elem_dtype = elem_d_lhs.pop('datatype')
-                elem_vars.append(self._create_variable(elem_name, elem_dtype, rhs[i], elem_d_lhs))
+                var        = self._create_variable(elem_name, elem_dtype, rhs[i], elem_d_lhs)
+                elem_vars.append(var)
             d_lhs['is_stack_array'] = True
-            lhs = TupleVariable(elem_vars, name, **d_lhs)
-        elif isinstance(rhs,TupleVariable):
+            lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
+
+        elif isinstance(rhs, TupleVariable):
             elem_vars = []
             for i,a in enumerate(rhs):
                 elem_name = self._get_new_variable_name(a,name + '_' + str(i))
                 elem_d_lhs = self._infere_type(rhs[i])
                 elem_dtype = elem_d_lhs.pop('datatype')
-                elem_vars.append(self._create_variable(elem_name, elem_dtype, rhs[i], elem_d_lhs))
+                var        = self._create_variable(elem_name, elem_dtype, rhs[i], elem_d_lhs)
+                elem_vars.append(var)
             d_lhs['is_stack_array'] = True
-            lhs = TupleVariable(elem_vars, name, **d_lhs)
+            lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
         else:
             lhs = Variable(dtype, name, **d_lhs)
+
         return lhs
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, **settings):
@@ -1692,7 +1665,7 @@ class SemanticParser(BasicParser):
                 #      lists/tuples.
                 rhs = self.update_variable(rhs, is_target=True)
 
-            lhs = self._create_variable(name,dtype, rhs, d_lhs)
+            lhs = self._create_variable(name, dtype, rhs, d_lhs)
 
             var = self.get_variable_from_scope(name)
 
@@ -1866,7 +1839,6 @@ class SemanticParser(BasicParser):
                         return FunctionCall(master, args)
    
         else:
-
             rhs = self._visit(rhs, **settings)
 
         if isinstance(rhs, IfTernaryOperator):
@@ -1957,7 +1929,7 @@ class SemanticParser(BasicParser):
                     # args
 #                   d_var = None
                     func_args = func.arguments
-                    call_args = rhs.args
+                    call_args = rhs.arguments
                     f_ranks = [x.rank for x in func_args]
                     c_ranks = [x.rank for x in call_args]
                     same_ranks = [x==y for (x,y) in zip(f_ranks, c_ranks)]
@@ -1971,7 +1943,7 @@ class SemanticParser(BasicParser):
 
                 # TODO imporve this will not work for
                 # the case of different results types
-                d_var[0]['datatype'] = sp_dtype(rhs)
+                d_var[0]['datatype'] = rhs.dtype
 
             else:
                 d_var = self._infere_type(rhs, **settings)
@@ -2025,37 +1997,38 @@ class SemanticParser(BasicParser):
                         bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='error', blocker=self.blocking)
                     return None
+
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, **settings)
         elif isinstance(lhs, PythonTuple):
             n = len(lhs)
             if isinstance(rhs, PythonTuple):
-                d_var = rhs.arg_types
                 new_lhs = []
                 for i,(l,r) in enumerate(zip(lhs,rhs)):
-                    new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), r, **settings) )
-                lhs = PythonTuple(new_lhs)
-                lhs.set_arg_types(d_var)
+                    d = self._infere_type(r, **settings)
+                    new_lhs.append( self._assign_lhs_variable(l, d, r, **settings) )
+                lhs = PythonTuple(*new_lhs)
+
             elif isinstance(rhs, TupleVariable):
                 new_lhs = []
 
                 if rhs.is_homogeneous:
                     d_var = self._infere_type(rhs[0])
-                    indexed_rhs = IndexedVariable(rhs, dtype=rhs.homogeneous_dtype,
+                    indexed_rhs = IndexedVariable(rhs, dtype=rhs.dtype,
                             shape=rhs.shape,prec=rhs.precision,order=rhs.order,rank=rhs.rank)
                     new_rhs = []
                     for i,l in enumerate(lhs):
                         new_lhs.append( self._assign_lhs_variable(l, d_var.copy(),
                             indexed_rhs.__getitem__(i), **settings) )
                         new_rhs.append(indexed_rhs.__getitem__(i))
-                    rhs = PythonTuple(new_rhs)
+                    rhs = PythonTuple(*new_rhs)
                     d_var = [d_var]
                 else:
                     d_var = [self._infere_type(v) for v in rhs]
                     for i,(l,r) in enumerate(zip(lhs,rhs)):
                         new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), r, **settings) )
 
-                lhs = PythonTuple(new_lhs)
-                lhs.set_arg_types(d_var)
+                lhs = PythonTuple(*new_lhs)
+
 
             elif isinstance(d_var, list) and len(d_var)== n:
                 new_lhs = []
@@ -2065,8 +2038,8 @@ class SemanticParser(BasicParser):
                 else:
                     for i,l in enumerate(lhs):
                         new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs, **settings) )
-                lhs = PythonTuple(new_lhs)
-                lhs.set_arg_types(d_var)
+                lhs = PythonTuple(*new_lhs)
+
             elif d_var['shape'][0]==n:
                 new_lhs = []
                 new_rhs = []
@@ -2076,8 +2049,7 @@ class SemanticParser(BasicParser):
                     new_lhs.append( self._assign_lhs_variable(l, self._infere_type(rhs_i), rhs_i, **settings) )
                     new_rhs.append(rhs_i)
 
-                lhs = PythonTuple(new_lhs)
-                lhs.set_arg_types([d_var])
+                lhs = PythonTuple(*new_lhs)
                 rhs = new_rhs
             else:
                 errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
@@ -2147,7 +2119,7 @@ class SemanticParser(BasicParser):
         is_pointer = is_pointer or isinstance(lhs, (Variable, DottedVariable)) and lhs.is_pointer
 
         # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-        if not (isinstance(lhs, PythonTuple) and isinstance(rhs,(PythonTuple,TupleVariable,list))):
+        if not (isinstance(lhs, PythonTuple) and isinstance(rhs,(PythonTuple, TupleVariable, list))):
             lhs = [lhs]
             rhs = [rhs]
 
@@ -2405,11 +2377,11 @@ class SemanticParser(BasicParser):
         shape = list(d_var['shape'])
         d_var['is_pointer'] = True
         shape.append(dim)
-        d_var['shape'] = PythonTuple(shape)
+        d_var['shape'] = PythonTuple(*shape)
 
         lhs_name = _get_name(expr.lhs)
 
-        if isinstance(dtype,NativeTuple) and not target.is_homogeneous:
+        if isinstance(target, PythonTuple) and not target.is_homogeneous:
             errors.report(LIST_OF_TUPLES, symbol=expr,
                 bounding_box=self._current_fst_node.absolute_bounding_box,
                 severity='error', blocker=self.blocking)
@@ -2604,8 +2576,9 @@ class SemanticParser(BasicParser):
                     if isinstance(a, ValuedArgument):
 
                         # optional argument only if the value is None
+                        if isinstance(a.value, Nil):
+                            d_var['is_optional'] = True
 
-                        d_var['is_optional'] = True
                         a_new = ValuedVariable(dtype, str(a.name),
                                     value=a.value, **d_var)
                     else:
@@ -3129,9 +3102,9 @@ class SemanticParser(BasicParser):
         shape = self._visit(expr.length, **settings)
         if isinstance(val, (TupleVariable, PythonTuple)):
             if isinstance(val, TupleVariable):
-                return PythonTuple(val.get_vars()*shape)
+                return PythonTuple(*(val.get_vars()*shape))
             else:
-                return PythonTuple(val.args*shape)
+                return PythonTuple(*(val.args*shape))
         return Dlist(val[0], shape)
 
     def _visit_StarredArguments(self, expr, **settings):

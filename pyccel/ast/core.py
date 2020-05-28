@@ -4,6 +4,7 @@
 import importlib
 
 from collections.abc import Iterable
+from collections     import OrderedDict
 
 from sympy import sympify
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
@@ -36,7 +37,7 @@ from sympy.utilities.misc               import filldedent
 from .basic     import Basic, PyccelAstNode
 from .builtins  import Enumerate, Len, List, Map, Range, Zip, PythonTuple
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
-                        NativeInteger, NativeBool, NativeReal,
+                        NativeInteger, NativeBool, NativeReal, NativeGeneric,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
                         NativeGeneric, NativeTuple, default_precision)
 
@@ -174,7 +175,6 @@ local_sympify = {
 }
 
 #==============================================================================
-
 def broadcast(shape_1, shape_2):
     """ This function broadcast two shapes using numpy broadcasting rules """
     a = len(shape_1)
@@ -2221,7 +2221,6 @@ class Variable(Symbol, PyccelAstNode):
         precision=0,
         is_argument=False
         ):
-
         if isinstance(dtype, str) or str(dtype) == '*':
 
             dtype = datatype(str(dtype))
@@ -2291,7 +2290,7 @@ class Variable(Symbol, PyccelAstNode):
                 precision = default_precision['complex']
             elif isinstance(dtype, NativeBool):
                 precision = default_precision['bool']
-
+        
         shape = process_shape(shape)
 
         # TODO improve order of arguments
@@ -2646,44 +2645,17 @@ class TupleVariable(Variable):
     n
     """
 
-    def __new__(cls, arg_vars, *args, **kwargs):
+    def __new__(cls, arg_vars, dtype, name, **kwargs):
 
         # if value is not given, we set it to Nil
         # we also remove value from kwargs,
         # since it is not a valid argument for Variable
+        
+        return Variable.__new__(cls, dtype, name, **kwargs)
 
-        return Variable.__new__(cls, NativeTuple(), *args, **kwargs)
-
-    def __init__(self, arg_vars, *args, **kwargs):
-
+    def __init__(self, arg_vars, dtype, *args, **kwargs):
         self._vars = tuple(arg_vars)
-
-        shape = self.shape
-        if (shape[0]!=len(arg_vars)):
-            assert(shape[0]%len(arg_vars)==0)
-            if isinstance(arg_vars[0].dtype,NativeTuple):
-                if arg_vars[0].is_homogeneous:
-                    self._is_homogeneous = True
-                    self._homogeneous_dtype = arg_vars[0].homogeneous_dtype
-                else:
-                    self._is_homogeneous = False
-            else:
-                self._is_homogeneous = True
-                self._homogeneous_dtype = arg_vars[0].dtype
-        else:
-            assert(shape[0]==len(arg_vars))
-            dtypes = [str(v.dtype) for v in self._vars]
-            self._is_homogeneous = len(set(dtypes))==1
-
-            if self._is_homogeneous and isinstance(arg_vars[0].dtype,NativeTuple):
-                self._is_homogeneous = all(a.is_homogeneous for a in arg_vars)
-                if self._is_homogeneous:
-                    dtypes = [str(v.homogeneous_dtype) for v in self._vars]
-                    self._is_homogeneous = len(set(dtypes))==1
-                    if self._is_homogeneous:
-                        self._homogeneous_dtype = arg_vars[0].homogeneous_dtype
-            else:
-                self._homogeneous_dtype = arg_vars[0].dtype
+        self._is_homogeneous = not dtype is NativeGeneric()
 
     def get_vars(self):
         return self._vars
@@ -2707,17 +2679,6 @@ class TupleVariable(Variable):
     def is_homogeneous(self):
         return self._is_homogeneous
 
-    @property
-    def homogeneous_dtype(self):
-        assert(self._is_homogeneous)
-        return self._homogeneous_dtype
-
-    @property
-    def precision(self):
-        if self._is_homogeneous:
-            return self._vars[0].precision
-        else:
-            return Variable.precision
 
 class Constant(ValuedVariable, PyccelAstNode):
 
@@ -2800,18 +2761,34 @@ class FunctionCall(Basic, PyccelAstNode):
         if not isinstance(func, FunctionDef):
             raise TypeError('> expecting a FunctionDef')
 
-        if isinstance(func, FunctionDef):
-            func = func.name
+        name = func.name
         # ...
 
         # ...
         if not isinstance(args, (tuple, list, Tuple)):
             raise TypeError('> expecting an iterable')
 
+        # add the messing argument in the case of optional arguments
+        f_args = func.arguments
+        if not len(args) == len(f_args):
+            f_args_dict = OrderedDict((a.name,a) if isinstance(a, ValuedVariable) else (a.name, None) for a in f_args)
+            keyword_args = []
+            for i,a in enumerate(args):
+                if not isinstance(a, ValuedVariable):
+                    f_args_dict[f_args[i].name] = a
+                else:
+                    keyword_args = args[i:]
+                    break
+
+            for a in keyword_args:
+                f_args_dict[a.name] = a.value
+
+            args = [a.value if isinstance(a, ValuedVariable) else a for a in f_args_dict.values()]
+
         args = Tuple(*args, sympify=False)
         # ...
  
-        return Basic.__new__(cls, func, args)
+        return Basic.__new__(cls, name, args)
 
     def __init__(self, func, args):
 
@@ -3024,8 +3001,6 @@ class FunctionDef(Basic):
         is_header=False,
         arguments_inout=[],
         functions = []):
-
-        # name
 
         if isinstance(name, str):
             name = Symbol(name)
@@ -4564,8 +4539,10 @@ class IndexedElement(Expr, PyccelAstNode):
 class String(Basic, PyccelAstNode):
 
     """Represents the String"""
-    _rank  = 0
-    _shape = ()
+    _rank      = 0
+    _shape     = ()
+    _dtype     = NativeString()
+    _precision = 0
     def __new__(cls, arg):
         if not isinstance(arg, str):
             raise TypeError('arg must be of type str')
@@ -5201,9 +5178,6 @@ def get_iterable_ranges(it, var_name=None):
             _ends.append(i)
     ends = [inits[str(i)] for i in _ends]
 
-    # ...
-
-    # ...
 
     if not len(ends) == len(starts):
         raise ValueError('wrong number of starts/ends')
@@ -5222,7 +5196,7 @@ def process_shape(shape):
 
     new_shape = []
     for s in shape:
-        if isinstance(s,(Py_Integer,Variable,Slice,PyccelAstNode, Function)):
+        if isinstance(s,(Py_Integer,Variable, Slice, PyccelAstNode, Function)):
             new_shape.append(s)
         elif isinstance(s, sp_Integer):
             new_shape.append(Py_Integer(s.p))
@@ -5230,6 +5204,5 @@ def process_shape(shape):
             new_shape.append(Py_Integer(s))
         else:
             raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
-
-    return PythonTuple(new_shape)
+    return tuple(new_shape)
 

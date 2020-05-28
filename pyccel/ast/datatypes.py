@@ -335,7 +335,7 @@ def datatype(arg):
             raise ValueError("Unrecognized datatype " + arg)
         return dtype_registry[arg]
     if isinstance(arg, DataType):
-        return dtype_registry[arg.dtype.name.lower()]
+        return dtype_registry[arg.name.lower()]
     else:
         raise TypeError('Expecting a DataType')
 

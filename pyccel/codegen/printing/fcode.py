@@ -512,7 +512,6 @@ class FCodePrinter(CodePrinter):
     def _print_Print(self, expr):
         args = []
         for f in expr.expr:
-            print(f)
             if isinstance(f, str):
                 args.append("'{}'".format(f))
             elif isinstance(f, (Tuple, PythonTuple)):
@@ -613,7 +612,6 @@ class FCodePrinter(CodePrinter):
     def _print_ValuedArgument(self, expr):
         name = self._print(expr.name)
         value = self._print(expr.value)
-
         code = '{0}={1}'.format(name, value)
         return code
 
@@ -2513,6 +2511,7 @@ class FCodePrinter(CodePrinter):
                     self._namespace.variables[var.name] = var
 
                 out_vars.append(var)
+
             self._additional_code = self._additional_code + self._print(Assign(Tuple(*out_vars),expr)) + '\n'
             return self._print(Tuple(*out_vars))
         else:

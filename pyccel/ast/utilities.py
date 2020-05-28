@@ -12,7 +12,7 @@ from .core import AsName
 from .core import Import
 from .core import Product
 from .core import FunctionDef
-from .core import ValuedArgument
+from .core import ValuedVariable
 from .core import Constant, Variable, IndexedVariable
 
 from .builtins import Bool, Enumerate, Int, PythonFloat, PythonComplex, Len, Map, Range, Zip
@@ -278,15 +278,16 @@ def split_positional_keyword_arguments(*args):
     # Distinguish between positional and keyword arguments
     val_args = ()
     for i, a in enumerate(args):
-        if isinstance(a, ValuedArgument):
+        if isinstance(a, ValuedVariable):
             args, val_args = args[:i], args[i:]
             break
 
     # Convert list of keyword arguments into dictionary
     kwargs = {}
     for v in val_args:
-        key   = str(v.argument.name)
+        key   = str(v.name)
         value = v.value
         kwargs[key] = value
 
     return args, kwargs
+
