@@ -176,7 +176,6 @@ class SyntaxParser(BasicParser):
                           severity='fatal')
 
         preprocess_imports(red)
-        #preprocess_default_args(red)
 
         red = fst_move_directives(red)
         self._fst = red

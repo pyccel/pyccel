@@ -375,7 +375,7 @@ class PyccelArraySize(Function, PyccelAstNode):
 
 def Shape(arg):
     if arg.shape is None:
-        return PythonTuple(*[PyccelArraySize(arg,i) for i in range(arg.rank)])
+        return PythonTuple(*(PyccelArraySize(arg,i) for i in range(arg.rank)))
     elif isinstance(arg.shape, PythonTuple):
         return arg.shape
     else:
