@@ -2072,10 +2072,6 @@ class SemanticParser(BasicParser):
                 lhs[i].rank > 0):
                 allocatable = True
 
-            elif (isinstance(rhs, Variable) and
-                isinstance(rhs.dtype, NativeList)):
-                is_pointer = True
-
             if (isinstance(lhs, Variable) and (allocatable or is_pointer)):
                 lhs[i] = self.update_variable(lhs[i],
                          allocatable=allocatable,

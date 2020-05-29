@@ -272,7 +272,7 @@ class Len(Function, PyccelAstNode):
 #==============================================================================
 class List(Tuple, PyccelAstNode):
     """ Represent lists in the code with dynamic memory management."""
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         if self.stage == 'syntactic':
             return
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
