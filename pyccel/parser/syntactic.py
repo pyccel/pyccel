@@ -65,7 +65,7 @@ from pyccel.ast.numbers import Complex
 
 from pyccel.ast.builtins import PythonComplex
 
-from pyccel.parser.utilities import fst_move_directives, preprocess_imports, preprocess_default_args
+from pyccel.parser.utilities import fst_move_directives, preprocess_imports
 from pyccel.parser.utilities import reconstruct_pragma_multilines
 from pyccel.parser.utilities import read_file
 from pyccel.parser.utilities import get_default_path
