@@ -19,17 +19,14 @@ __all__ = (
     'FunctionType',
     'NativeBool',
     'NativeComplex',
-    'NativeComplexList',
     'NativeGeneric',
     'NativeInteger',
-    'NativeIntegerList',
     'NativeList',
     'NativeTuple',
 #    'NativeNil',
 #    'NativeParallelRange',
     'NativeRange',
     'NativeReal',
-    'NativeRealList',
     'NativeString',
     'NativeSymbol',
     'NativeTensor',
@@ -116,21 +113,9 @@ class NativeVoid(DataType):
 class NativeNil(DataType):
     _name = 'Nil'
 
-class NativeList(DataType):
-    _name = 'List'
-
 class NativeTuple(DataType):
     """Base class representing native datatypes"""
     _name = 'Tuple'
-
-class NativeIntegerList(NativeInteger, NativeList):
-    _name = 'IntegerList'
-
-class NativeRealList(NativeReal, NativeList):
-    _name = 'RealList'
-
-class NativeComplexList(NativeComplex, NativeList):
-    _name = 'ComplexList'
 
 class NativeRange(DataType):
     _name = 'Range'
@@ -144,21 +129,6 @@ class NativeParallelRange(NativeRange):
 class NativeSymbol(DataType):
     _name = 'Symbol'
 
-class NdArray(DataType):
-    _name = 'NdArray'
-
-class NdArrayInt(NdArray, NativeInteger):
-    _name = 'int'
-
-class NdArrayReal(NdArray, NativeReal):
-    _name = 'real'
-
-
-class NdArrayComplex(NdArray, NativeComplex):
-    _name = 'complex'
-
-class NdArrayBool(NdArray, NativeBool):
-    _name = 'bool'
 
 # TODO to be removed
 class CustomDataType(DataType):
