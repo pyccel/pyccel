@@ -21,7 +21,6 @@ __all__ = (
     'NativeComplex',
     'NativeGeneric',
     'NativeInteger',
-    'NativeList',
     'NativeTuple',
 #    'NativeNil',
 #    'NativeParallelRange',

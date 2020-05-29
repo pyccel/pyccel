@@ -8,10 +8,6 @@ import traceback
 
 from pyccel.ast import NativeBool
 from pyccel.ast import NativeRange
-from pyccel.ast import NativeIntegerList
-from pyccel.ast import NativeRealList
-from pyccel.ast import NativeComplexList
-from pyccel.ast import NativeList
 from pyccel.ast import NativeSymbol
 from pyccel.ast import String
 from pyccel.ast import DataTypeFactory
@@ -932,15 +928,9 @@ class SemanticParser(BasicParser):
             d_var['allocatable'] = d['allocatable']
             if isinstance(expr, List):
                 d_var['is_target'] = True
-                dtype = str_dtype(d['datatype'])
-                if dtype == 'integer':
-                    d_var['datatype'] = NativeIntegerList()
-                elif dtype == 'real':
-                    d_var['datatype'] = NativeRealList()
-                elif dtype == 'complex':
-                    d_var['datatype'] = NativeComplexList()
-                else:
-                    raise NotImplementedError('TODO')
+                dtype              = str_dtype(d['datatype'])
+                d_var['datatype']  = dtype
+
             return d_var
         elif isinstance(expr, Concatenate):
             import operator
