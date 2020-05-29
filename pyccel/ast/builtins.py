@@ -56,9 +56,7 @@ class Bool(Expr, PyccelAstNode):
     _dtype = NativeBool()
 
     def __new__(cls, arg):
-        if arg.is_Boolean:
-            return arg
-        return Basic.__new__(cls, arg)
+        return Expr.__new__(cls, arg)
 
     @property
     def arg(self):
@@ -85,7 +83,7 @@ class PythonComplex(Expr, PyccelAstNode):
     _dtype = NativeComplex()
 
     def __new__(cls, arg0, arg1=Float(0)):
-        return Basic.__new__(cls, arg0, arg1)
+        return Expr.__new__(cls, arg0, arg1)
 
     @property
     def real_part(self):
@@ -136,7 +134,7 @@ class PythonFloat(Expr, PyccelAstNode):
     _dtype = NativeReal()
 
     def __new__(cls, arg):
-        return Basic.__new__(cls, arg)
+        return Expr.__new__(cls, arg)
 
     @property
     def arg(self):
@@ -167,7 +165,7 @@ class Int(Expr, PyccelAstNode):
     _dtype     = NativeInteger()
         
     def __new__(cls, arg):
-        return Basic.__new__(cls, arg)
+        return Expr.__new__(cls, arg)
 
     @property
     def arg(self):
@@ -188,9 +186,9 @@ class PythonTuple(Expr, PyccelAstNode):
     _is_homogeneous  = False
 
     def __new__(cls, *args):
-        return Basic.__new__(cls, *args)
+        return Expr.__new__(cls, *args)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args):
         if self.stage == 'syntactic' or len(args) == 0:
             return
         is_homogeneous = all(args[0].dtype==a.dtype for a in args[1:])
@@ -274,7 +272,7 @@ class Len(Function, PyccelAstNode):
 #==============================================================================
 class List(Tuple, PyccelAstNode):
     """ Represent lists in the code with dynamic memory management."""
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args):
         if self.stage == 'syntactic':
             return
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]

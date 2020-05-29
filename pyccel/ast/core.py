@@ -218,6 +218,7 @@ class PyccelOperator(Expr, PyccelAstNode):
             self._dtype = NativeString()
             self._rank  = 0
             self._shape = ()
+            assert len(integers + reals + complexes) == 0
         else:
             if complexes:
                 self._dtype     = NativeComplex()
@@ -2806,7 +2807,6 @@ class FunctionCall(Basic, PyccelAstNode):
         self._rank        = func.results[0].rank if len(func.results) == 1 else None
         self._shape       = func.results[0].shape if len(func.results) == 1 else None
         self._precision   = func.results[0].precision if len(func.results) == 1 else None
-        print(func.name, func.results, self._rank)
 
     @property
     def func(self):
