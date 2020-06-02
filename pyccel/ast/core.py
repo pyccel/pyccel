@@ -2300,7 +2300,7 @@ class Variable(Symbol, PyccelAstNode):
                 precision = default_precision['complex']
             elif isinstance(dtype, NativeBool):
                 precision = default_precision['bool']
-        
+
         shape = process_shape(shape)
 
         # TODO improve order of arguments
@@ -2323,8 +2323,6 @@ class Variable(Symbol, PyccelAstNode):
             is_stack_array,
             is_argument
             )
-
-
 
     @property
     def dtype(self):

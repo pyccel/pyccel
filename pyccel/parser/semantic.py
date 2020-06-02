@@ -1882,8 +1882,6 @@ class SemanticParser(BasicParser):
 
         elif isinstance(rhs, FunctionCall):
 
-            # ARA: needed for functions defined only with a header
-
             func = rhs.funcdef
             if isinstance(func, FunctionDef):
                 results = func.results

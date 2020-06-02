@@ -678,7 +678,7 @@ class SyntaxParser(BasicParser):
                 header = header.to_static()
 
         body = stmt.value
-        
+
         if 'sympy' in decorators.keys():
             # TODO maybe we should run pylint here
             stmt.decorators.pop()

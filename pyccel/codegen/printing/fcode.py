@@ -88,7 +88,7 @@ numpy_ufunc_to_fortran = {
     # ---
     'NumpyExp' : 'exp',
     'NumpyLog' : 'Log',
-    'NumpySqrt': 'Sqrt',
+#    'NumpySqrt': 'Sqrt',  # sqrt is printed using _Print_NumpySqrt
     # ---
     'NumpySin'    : 'sin',
     'NumpyCos'    : 'cos',
@@ -136,7 +136,7 @@ math_function_to_fortran = {
 #    'MathRadians': '???', # TODO
     'MathSin'    : 'sin',
     'MathSinh'   : 'sinh',
-    'MathSqrt'   : 'sqrt',
+#    'MathSqrt'   : 'sqrt', # sqrt is printed using _Print_MathSqrt
     'MathTan'    : 'tan',
     'MathTanh'   : 'tanh',
     # ---

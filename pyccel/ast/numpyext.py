@@ -57,6 +57,8 @@ __all__ = (
     'EmptyLike',
     'NumpyFloat',
     'NumpyComplex',
+    'Complex64',
+    'Complex128',
     'Float32',
     'Float64',
     'Full',
