@@ -12,13 +12,11 @@ from sympy.core.assumptions import StdFactKB
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
 from .basic import PyccelAstNode
-from .core import (Variable, IndexedElement, Slice, Len,
+from .core  import (Variable, IndexedElement, Slice, Len,
                    For, Range, Assign, List, Nil,
                    ValuedArgument, Constant, process_shape)
 
-from .core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
-from .core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from .core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
+from .core           import PyccelPow, PyccelMinus, PyccelAssociativeParenthesis
 
 from .builtins       import Int as PythonInt, Bool as PythonBool
 from .builtins       import PythonFloat, PythonTuple, PythonComplex
@@ -1066,25 +1064,6 @@ class ZerosLike(Application):
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
 
         return Zeros(Shape(a), dtype, order)
-
-#=======================================================================================
-
-class Bounds(Basic, PyccelAstNode):
-
-    """
-    Represents bounds of NdArray.
-
-    Examples
-
-    """
-
-    def __new__(cls, var):
-        # TODO check type of var
-        return Basic.__new__(cls, var)
-
-    @property
-    def var(self):
-        return self._args[0]
 
 #=======================================================================================
 

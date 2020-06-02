@@ -2,7 +2,6 @@
 # pylint: disable=R0201
 
 import redbaron
-import traceback
 import os
 import re
 
@@ -10,7 +9,6 @@ import re
 
 from redbaron import RedBaron
 from redbaron import AssignmentNode
-from redbaron import BinaryOperatorNode
 from redbaron import DefNode
 from redbaron import ClassNode
 from redbaron import TupleNode, ListNode
@@ -19,7 +17,6 @@ from redbaron import DictitemNode
 from redbaron import DotNode
 from redbaron import CallNode
 from redbaron import GetitemNode
-from redbaron import AssociativeParenthesisNode
 
 #==============================================================================
 
@@ -51,7 +48,7 @@ from pyccel.ast import Import
 from pyccel.ast import AsName
 from pyccel.ast import CommentBlock
 from pyccel.ast import With
-from pyccel.ast import List, Dlist
+from pyccel.ast import List
 from pyccel.ast import StarredArguments
 from pyccel.ast import CodeBlock
 from pyccel.ast import create_variable
@@ -62,8 +59,6 @@ from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, Pyccel
 from pyccel.ast.core import PyccelOperator, PyccelUnary
 
 from pyccel.ast.numbers import Complex
-
-from pyccel.ast.builtins import PythonComplex
 
 from pyccel.parser.utilities import fst_move_directives, preprocess_imports
 from pyccel.parser.utilities import reconstruct_pragma_multilines

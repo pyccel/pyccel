@@ -15,10 +15,8 @@ import operator
 from numpy import asarray
 
 from sympy.core import Symbol
-from sympy.core import S
 from sympy.core import Tuple
 from sympy.core.function import Function, Application
-from sympy.printing.precedence import precedence
 from sympy import Atom, Indexed
 from sympy import preorder_traversal
 from sympy.core.numbers import NegativeInfinity as NINF
@@ -44,9 +42,7 @@ from pyccel.ast.core import (Assign, Variable,
                              If)
 
 
-from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
-from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
+from pyccel.ast.core import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
 
 from pyccel.ast.core import create_variable, FunctionCall
 from pyccel.ast.builtins import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
@@ -791,21 +787,6 @@ class FCodePrinter(CodePrinter):
     def _print_Sign(self, expr):
         # TODO use the appropriate precision from rhs
         return self._get_statement('sign(1.0d0,%s)'%(self._print(expr.rhs)))
-
-    def _print_Bounds(self, expr):
-        var = expr.var
-        rank = var.rank
-        bounds = []
-        for i in range(0, rank):
-            l = 'lbound({var},{i})'.format(var=self._print(var),
-                                           i=self._print(i+1))
-            u = 'ubound({var},{i})'.format(var=self._print(var),
-                                           i=self._print(i+1))
-
-            bounds.append('{lbound}:{ubound}'.format(lbound=l, ubound=u))
-        bounds = ','.join(bounds)
-        return bounds
-
 
     # ... MACROS
     def _print_MacroShape(self, expr):
