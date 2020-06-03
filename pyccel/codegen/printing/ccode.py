@@ -174,8 +174,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelDiv(self, expr):
         args = [self._print(a) for a in expr.args]
-        dtypes = [sp_dtype(a) for a in expr.args]
-        if all(a == 'integer' for a in dtypes):
+        if all(a.dtype is NativeInteger() for a in expr.args):
             return ' / '.join('real({})'.format(self._print(a)) for a in args)
         return  ' / '.join(self._print(a) for a in args)
 

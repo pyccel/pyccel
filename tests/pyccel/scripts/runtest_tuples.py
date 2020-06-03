@@ -7,8 +7,11 @@ f,g,h = ai
 i = e[2]
 ai_0 = 44
 
-tup1 = (0, False, 3+1j) * 3
-tup2 = tup1 * 2
+#tup1 = (0, False, 3+1j) * 3
+#tup2 = tup1 * 2
+
+tup1 = (0, False, 3+1j)
+tup2 = tup1
 
 tup3 = ((1,2), (4,False))
 

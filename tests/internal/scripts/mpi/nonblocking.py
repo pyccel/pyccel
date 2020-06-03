@@ -40,22 +40,19 @@ reqs = np.zeros(4, 'int32')
 # ...
 
 # ...
-prev = rank - 1
-next = rank + 1
+before = np.int32(rank - 1)
+after  = np.int32(rank + 1)
 if rank == 0:
-    prev = size - 1
+    before = np.int32(size - 1)
 if rank == size - 1:
-    next = 0
-prev = np.int32(prev)
-next = np.int32(next)
-# ...
+    after  = np.int32(0)
 
 # ...
-mpi_irecv(x, n, MPI_REAL8, prev, tag0, comm, reqs[0], ierr)
-mpi_irecv(y, n, MPI_REAL8, next, tag1, comm, reqs[1], ierr)
+mpi_irecv(x, n, MPI_REAL8, before, tag0, comm, reqs[0], ierr)
+mpi_irecv(y, n, MPI_REAL8, after , tag1, comm, reqs[1], ierr)
 
-mpi_isend(x, n, MPI_REAL8, prev, tag1, comm, reqs[2], ierr)
-mpi_isend(y, n, MPI_REAL8, next, tag0, comm, reqs[3], ierr)
+mpi_isend(x, n, MPI_REAL8, before, tag1, comm, reqs[2], ierr)
+mpi_isend(y, n, MPI_REAL8, after , tag0, comm, reqs[3], ierr)
 # ...
 
 # ...
