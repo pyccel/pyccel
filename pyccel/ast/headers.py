@@ -8,7 +8,7 @@ from sympy import sympify, Tuple
 
 from .core import Basic
 from .core import Variable
-from .core import ValuedArgument
+from .core import ValuedArgument, ValuedVariable
 from .core import FunctionDef, Interface
 from .core import DottedName, DottedVariable
 from .datatypes import datatype, DataTypeFactory, UnionType
@@ -194,15 +194,12 @@ class FunctionHeader(Header):
                 is_pointer = d['is_pointer']
                 precision = d['precision']
                 rank = d['rank']
-                if rank>0 and allocatable:#case of ndarray
-                    if dtype in ['int', 'double', 'float', 'complex']:
-                        allocatable = True
-                        dtype = 'ndarray'+dtype
+
                 order = None
+                shape = None
                 if rank >1:
                     order = d['order']
-
-                shape  = None
+                
                 if isinstance(dtype, str):
                     try:
                         dtype = datatype(dtype)
@@ -214,7 +211,8 @@ class FunctionHeader(Header):
                 arg_name = 'arg_{0}'.format(str(i))
                 arg = Variable(dtype, arg_name,
                                allocatable=allocatable, is_pointer=is_pointer,
-                               rank=rank, shape=shape ,order = order, precision = precision)
+                               rank=rank, shape=shape ,order = order, precision = precision,
+                               is_argument=True)
                 args.append(arg)
 
             # ... factorize the following 2 blocks
@@ -447,9 +445,10 @@ class MacroFunction(Header):
     def apply(self, args, results=None):
         """returns the appropriate arguments."""
         d_arguments = {}
+
         if len(args) > 0:
 
-            sorted_args = []
+            sorted_args   = []
             unsorted_args = []
             j = -1
             for ind, i in enumerate(args):
@@ -461,14 +460,12 @@ class MacroFunction(Header):
             if j>0:
                 unsorted_args = args[j:]
                 for i in unsorted_args:
-                    if not isinstance(i, ValuedArgument):
+                    if not isinstance(i, ValuedVariable):
                         raise ValueError('variable not allowed after an optional argument')
 
             for i in self.arguments[len(sorted_args):]:
-                if not isinstance(i, ValuedArgument):
+                if not isinstance(i, ValuedVariable):
                     raise ValueError('variable not allowed after an optional argument')
-
-
 
             for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
                 if not isinstance(arg, Tuple):
@@ -481,7 +478,7 @@ class MacroFunction(Header):
                         raise ValueError('length mismatch of argument and its value ')
                     elif len(val)<len(arg):
                         for val_ in arg[len(val):]:
-                            if isinstance(val_, ValuedArgument):
+                            if isinstance(val_, ValuedVariable):
                                 val +=Tuple(val_.value,)
                             else:
                                 val +=Tuple(val_)

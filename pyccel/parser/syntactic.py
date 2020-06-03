@@ -2,7 +2,6 @@
 # pylint: disable=R0201
 
 import redbaron
-import traceback
 import os
 import re
 
@@ -10,7 +9,6 @@ import re
 
 from redbaron import RedBaron
 from redbaron import AssignmentNode
-from redbaron import BinaryOperatorNode
 from redbaron import DefNode
 from redbaron import ClassNode
 from redbaron import TupleNode, ListNode
@@ -19,11 +17,10 @@ from redbaron import DictitemNode
 from redbaron import DotNode
 from redbaron import CallNode
 from redbaron import GetitemNode
-from redbaron import AssociativeParenthesisNode
 
 #==============================================================================
 
-from pyccel.ast import String, Integer, Float, Complex, BooleanFalse, BooleanTrue
+from pyccel.ast import String, Integer, Float, BooleanFalse, BooleanTrue
 from pyccel.ast import Nil
 from pyccel.ast import DottedName, DottedVariable
 from pyccel.ast import Assign
@@ -51,7 +48,7 @@ from pyccel.ast import Import
 from pyccel.ast import AsName
 from pyccel.ast import CommentBlock
 from pyccel.ast import With
-from pyccel.ast import List, Dlist
+from pyccel.ast import List
 from pyccel.ast import StarredArguments
 from pyccel.ast import CodeBlock
 from pyccel.ast import create_variable
@@ -59,9 +56,11 @@ from pyccel.ast import create_variable
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
-from pyccel.ast.core  import PyccelOperator, PyccelUnary
+from pyccel.ast.core import PyccelOperator, PyccelUnary
 
-from pyccel.parser.utilities import fst_move_directives, preprocess_imports, preprocess_default_args
+from pyccel.ast.numbers import Complex
+
+from pyccel.parser.utilities import fst_move_directives, preprocess_imports
 from pyccel.parser.utilities import reconstruct_pragma_multilines
 from pyccel.parser.utilities import read_file
 from pyccel.parser.utilities import get_default_path
@@ -76,7 +75,7 @@ from pyccel.parser.errors import Errors, PyccelSyntaxError
 #      - use OrderedDict whenever it is possible
 
 from pyccel.parser.messages import *
-
+from pyccel.ast.basic       import PyccelAstNode
 #==============================================================================
 
 from sympy.core.function       import Function
@@ -172,10 +171,10 @@ class SyntaxParser(BasicParser):
                           severity='fatal')
 
         preprocess_imports(red)
-        preprocess_default_args(red)
 
         red = fst_move_directives(red)
         self._fst = red
+        
 
         self.parse(verbose=True)
 
@@ -195,8 +194,8 @@ class SyntaxParser(BasicParser):
         errors.set_parser_stage('syntax')
 
         # we add the try/except to allow the parser to find all possible errors
+        PyccelAstNode.stage = 'syntactic'
         ast = self._visit(self.fst)
-
 
         self._ast = ast
 
@@ -218,7 +217,7 @@ class SyntaxParser(BasicParser):
 
             return List(*ls, sympify=False)
         elif isinstance(stmt, (tuple, TupleNode)):
-            return PythonTuple(ls)
+            return PythonTuple(*ls)
         else:
             return Tuple(*ls, sympify=False)
 
@@ -551,7 +550,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_PrintNode(self, stmt):
         expr = self._visit(stmt.value[0])
-        expr = PythonTuple(expr.args)
+        expr = PythonTuple(*expr.args)
         return Print(expr)
 
     def _visit_AssociativeParenthesisNode(self, stmt):
@@ -569,7 +568,24 @@ class SyntaxParser(BasicParser):
             return ValuedArgument(arg, value)
 
     def _visit_ReturnNode(self, stmt):
-        expr = Return(self._visit(stmt.value))
+        results = self._visit(stmt.value)
+        if not isinstance(results, (list, PythonTuple, List)):
+            results = [results]
+        assigns  = []
+        new_vars = []
+        for result in results:
+            if not isinstance(result, Symbol):
+                new_vars.append(create_variable(result))
+                new_stmt  = Assign(new_vars[-1], result)
+                new_stmt.set_fst(stmt)
+                assigns.append(new_stmt)
+            else:
+                new_vars.append(result)
+
+        if assigns:
+            expr = Return(new_vars, CodeBlock(assigns))
+        else:
+            expr = Return(new_vars)
         expr.set_fst(stmt)
         return expr
 
@@ -579,7 +595,6 @@ class SyntaxParser(BasicParser):
     def _visit_DefNode(self, stmt):
 
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
-
         if isinstance(stmt.parent, ClassNode):
             cls_name = stmt.parent.name
         else:
@@ -649,8 +664,10 @@ class SyntaxParser(BasicParser):
 
             txt  = '#$ header ' + name
             txt += '(' + ','.join(types) + ')'
+
             if results:
                 txt += ' results(' + ','.join(results) + ')'
+
             header = hdr_parse(stmts=txt)
             if name in self.namespace.static_functions:
                 header = header.to_static()

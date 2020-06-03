@@ -40,15 +40,12 @@ reqs = np.zeros(4, 'int32')
 # ...
 
 # ...
-before = rank - 1
-after  = rank + 1
+before = np.int32(rank - 1)
+after  = np.int32(rank + 1)
 if rank == 0:
-    before = size - 1
+    before = np.int32(size - 1)
 if rank == size - 1:
-    after  = 0
-before = np.int32(before)
-after  = np.int32(after )
-# ...
+    after  = np.int32(0)
 
 # ...
 mpi_irecv(x, n, MPI_REAL8, before, tag0, comm, reqs[0], ierr)
