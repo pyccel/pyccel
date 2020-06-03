@@ -31,13 +31,13 @@ def compare_python_pyccel( p_output, f_output ):
 
     for pth, pycc in zip(p_output, f_output):
 
-        if isinstance(pth, (int, str)):
-            assert(isinstance(pycc,type(pth)))
-            assert(pth==pycc)
-
-        elif isinstance(pth, bool):
+        if isinstance(pth, bool):
             pycc_bool = (pycc == 1)
             assert(pth == pycc_bool)
+
+        elif isinstance(pth, (int, str)):
+            assert(isinstance(pycc,type(pth)))
+            assert(pth==pycc)
 
         else:
             assert(np.isclose(pth,pycc))
