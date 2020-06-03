@@ -31,7 +31,9 @@ before_script:  # Coverage instructions - setup
 
 script:
   - ${PYTHON} -m pytest -rx -m "not parallel and c" --ignore=tests/ast --ignore=tests/printers --ignore=tests/symbolic
+  - coverage combine
   - ${PYTHON} -m pytest -rx -m "not parallel and not c" --ignore=tests/ast --ignore=tests/printers --ignore=tests/symbolic
+  - coverage combine
   - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel -rx
 #  - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest tests/epyccel -v -m parallel -rx
 
