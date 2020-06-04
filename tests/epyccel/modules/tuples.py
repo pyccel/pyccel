@@ -25,7 +25,8 @@ __all__ = [
         'tuple_indexing_basic',
         'tuple_indexing_2d',
         'tuple_visitation',
-        'tuples_have_pointers'
+        'tuples_homogeneous_have_pointers',
+        'tuples_inhomogeneous_have_pointers',
         ]
 
 def homogenous_tuple_int():
@@ -169,10 +170,18 @@ def tuple_visitation():
     for a in ai:
         print(a)
 
-def tuples_have_pointers():
+def tuples_homogeneous_have_pointers():
     from numpy import zeros
     a = zeros(2)
     b = zeros(2)
     c = (a,b)
     a[1] = 4
     return c[0][0], c[0][1], c[1][0], c[1][1]
+
+def tuples_inhomogeneous_have_pointers():
+    from numpy import zeros
+    a = zeros(2)
+    b = zeros(3)
+    c = (a,b)
+    a[1] = 4
+    return c[0][0], c[0][1], c[1][0], c[1][1], c[1][2]
