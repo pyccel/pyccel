@@ -234,6 +234,8 @@ class SemanticParser(BasicParser):
                                 symbol=name, blocker=True,
                                 severity='fatal')
 
+        if errors.is_errors():
+            raise PyccelSemanticError('Semantic step failed')
         errors.check()
         self._semantic_done = True
 
@@ -311,51 +313,6 @@ class SemanticParser(BasicParser):
             severity='fatal', blocker=True)
         else:
             return var
-
-    def replace_variable_from_scope(self, name, new_var):
-        """."""
-        container = self.namespace
-        while container.is_loop:
-            container = container.parent_scope
-
-        return self._replace_variable_from_scope(name, container, new_var)
-
-    def _replace_variable_from_scope(self, name, container, new_var):
-
-        if name in container.variables:
-            container.variables[name] = new_var
-            return True
-
-        for container in container.loops:
-            res = self._replace_variable_from_scope(name, container,new_var)
-            if res:
-                return res
-
-        return False
-
-    def replace_variable(self, name, new_var):
-        """."""
-
-        if self.current_class:
-            for i,v in enumerate(self._current_class.attributes):
-                if str(v.name) == name:
-                    self._current_class.attributes[i] = new_var
-                    return True
-
-        container = self.namespace
-        while container.is_loop:
-            container = container.parent_scope
-
-
-        imports   = container.imports
-        while container:
-            res = self._replace_variable_from_scope(name, container, new_var)
-            if res:
-                return res
-            elif name in container.imports['variables']:
-                container.imports['variables'][name] = new_var
-                return True
-            container = container.parent_scope
 
     def get_variables(self, container):
         # this only works one called the function scope
@@ -2822,9 +2779,9 @@ class SemanticParser(BasicParser):
         var2 = self.check_for_variable(str(expr.rhs))
         if var2 is None:
             if (not var1.is_optional):
-                new_var = var1.clone(str(name),new_class=ValuedVariable,is_optional = True)
-                self.replace_variable(str(name),new_var)
-                var1=new_var
+                errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
+                        bounding_box=self._current_fst_node.absolute_bounding_box,
+                        severity='error', blocker=self.blocking)
             return Is(var1, expr.rhs)
 
         if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
@@ -2832,8 +2789,8 @@ class SemanticParser(BasicParser):
             return Is(var1, var2)
 
         errors.report(PYCCEL_RESTRICTION_IS_RHS,
-        bounding_box=self._current_fst_node.absolute_bounding_box,
-        severity='error', blocker=self.blocking)
+            bounding_box=self._current_fst_node.absolute_bounding_box,
+            severity='error', blocker=self.blocking)
         return Is(var1, expr.rhs)
 
     def _visit_IsNot(self, expr, **settings):
@@ -2846,9 +2803,9 @@ class SemanticParser(BasicParser):
         var2 = self.check_for_variable(str(expr.rhs))
         if var2 is None:
             if (not var1.is_optional):
-                new_var = var1.clone(str(name),new_class=ValuedVariable,is_optional = True)
-                self.replace_variable(str(name),new_var)
-                var1=new_var
+                errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
+                        bounding_box=self._current_fst_node.absolute_bounding_box,
+                        severity='error', blocker=self.blocking)
             return IsNot(var1, expr.rhs)
 
         if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
