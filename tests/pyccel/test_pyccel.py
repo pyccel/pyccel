@@ -190,10 +190,10 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
 # PYTEST MODULE SETUP AND TEARDOWN
 #==============================================================================
 def setup():
-    teardown()
+    _teardown()
 
 #------------------------------------------------------------------------------
-def teardown(path_dir = None):
+def _teardown(path_dir = None):
     if path_dir is None:
         path_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -208,7 +208,7 @@ def teardown(path_dir = None):
         if f == "__pyccel__":
             shutil.rmtree( file_name )
         elif not os.path.isfile(file_name):
-            teardown(file_name)
+            _teardown(file_name)
         elif not f.endswith(".py"):
             os.remove(file_name)
 
