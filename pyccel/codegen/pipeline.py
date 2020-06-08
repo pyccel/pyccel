@@ -4,7 +4,7 @@ import sys
 import shutil
 from collections import OrderedDict
 
-from pyccel.parser.errors               import Errors, PyccelError
+from pyccel.parser.errors               import Errors, PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
 from pyccel.parser                      import Parser
 from pyccel.codegen.codegen             import Codegen
 from pyccel.codegen.utilities           import construct_flags
@@ -119,9 +119,12 @@ def execute_pyccel(fname, *,
     try:
         parser = Parser(pymod_filepath, output_folder=pyccel_dirpath.replace('/','.'), show_traceback=verbose)
         ast = parser.parse()
-    except PyccelError:
+    except PyccelSyntaxError:
         handle_error('parsing (syntax)')
         raise
+    if errors.is_errors():
+        handle_error('parsing (syntax)')
+        raise PyccelSyntaxError('Syntax step failed')
 
     if syntax_only:
         return
@@ -130,9 +133,12 @@ def execute_pyccel(fname, *,
     try:
         settings = {}
         ast = parser.annotate(**settings)
-    except PyccelError:
+    except PyccelSemanticError:
         handle_error('annotation (semantic)')
         raise
+    if errors.is_errors():
+        handle_error('annotation (semantic)')
+        raise PyccelSemanticError('Semantic step failed')
 
     if semantic_only:
         return
@@ -142,9 +148,12 @@ def execute_pyccel(fname, *,
         codegen = Codegen(ast, module_name)
         fname = os.path.join(pyccel_dirpath, module_name)
         fname = codegen.export(fname, language=language)
-    except PyccelError:
+    except PyccelCodegenError:
         handle_error('code generation')
         raise
+    if errors.is_errors():
+        handle_error('code generation')
+        raise PyccelCodegenError('Code generation failed')
 
     #------------------------------------------------------
     # TODO: collect dependencies and proceed recursively

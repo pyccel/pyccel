@@ -234,8 +234,6 @@ class SemanticParser(BasicParser):
                                 symbol=name, blocker=True,
                                 severity='fatal')
 
-        if errors.is_errors():
-            raise PyccelSemanticError('Semantic step failed')
         errors.check()
         self._semantic_done = True
 
@@ -2778,7 +2776,7 @@ class SemanticParser(BasicParser):
 
         var2 = self.check_for_variable(str(expr.rhs))
         if var2 is None:
-            if (not var1.is_optional):
+            if (isinstance(expr.rhs, Nil) and not var1.is_optional):
                 errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
                         bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='error', blocker=self.blocking)
@@ -2802,7 +2800,7 @@ class SemanticParser(BasicParser):
 
         var2 = self.check_for_variable(str(expr.rhs))
         if var2 is None:
-            if (not var1.is_optional):
+            if (isinstance(expr.rhs, Nil) and not var1.is_optional):
                 errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
                         bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='error', blocker=self.blocking)
