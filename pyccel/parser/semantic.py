@@ -57,6 +57,7 @@ from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativePa
 from pyccel.ast.core import PyccelUnary
 
 from pyccel.ast.core      import Product, FunctionCall
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.builtins  import python_builtin_datatype
 from pyccel.ast.builtins  import Range, Zip, Enumerate, Map, PythonTuple
@@ -714,9 +715,11 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, PythonTuple):
             d_var['datatype'      ] = expr.dtype
             d_var['precision']      = expr.precision
-            d_var['is_stack_array'] = True
+            d_var['is_stack_array'] = expr.is_homogeneous
+            #d_var['is_stack_array'] = True
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
+            d_var['is_pointer']     = False
 
             return d_var
 
@@ -1116,51 +1119,55 @@ class SemanticParser(BasicParser):
         # case of Pyccel ast Variable, IndexedVariable
         # if not possible we use symbolic objects
 
+        if not isinstance(var, Variable):
+            assert(hasattr(var,'__getitem__'))
+            if len_args==1:
+                return var[args[0]]
+            else:
+                return self._visit(Indexed(var[args[0]],args[1:]))
+
+        if var.order == 'C':
+            args = args[::-1]
+        args = tuple(args)
+
         if isinstance(var, TupleVariable) and not var.is_homogeneous:
 
-            for i, arg in enumerate(args[::-1]):
-                if (not isinstance(arg, Integer) and
-                        not isinstance(arg, Slice)):
+            arg = args[-1]
+            if (not isinstance(arg, Integer) and
+                    not isinstance(arg, Slice)):
+                errors.report(INDEXED_TUPLE, symbol=var,
+                    bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='fatal', blocker=self.blocking)
+
+            if isinstance(arg, Slice):
+                if ((arg.start is not None and not isinstance(arg.start, Integer)) or
+                        (arg.end is not None and not isinstance(arg.end, Integer))):
                     errors.report(INDEXED_TUPLE, symbol=var,
                         bounding_box=self._current_fst_node.absolute_bounding_box,
-                        severity='error', blocker=self.blocking)
-                    return None
+                        severity='fatal', blocker=self.blocking)
 
-                if isinstance(arg, Slice):
-                    if ((arg.start is not None and not isinstance(arg.start, Integer)) or
-                            (arg.end is not None and not isinstance(arg.end, Integer))):
-                        errors.report(INDEXED_TUPLE, symbol=var,
-                            bounding_box=self._current_fst_node.absolute_bounding_box,
-                            severity='error', blocker=self.blocking)
-                        return None
-
-                    idx = slice(arg.start,arg.end)
-                    selected_vars = var.get_var(idx)
-                    if len(selected_vars)==1:
-                        if arg is args[0]:
-                            return selected_vars[0]
-                        else:
-                            var = selected_vars[0]
-                            if var.is_homogeneous:
-                                args = args[:len(args)-i-1]
-                                break
-                    elif len(selected_vars)<1:
-                        return None
-                    elif arg is args[0]:
-                        return PythonTuple(*selected_vars)
+                idx = slice(arg.start, arg.end)
+                selected_vars = var.get_var(idx)
+                if len(selected_vars)==1:
+                    if len(args) == 1:
+                        return selected_vars[0]
                     else:
-                        return PythonTuple(*[self._extract_indexed_from_var(var, args[:len(args)-i-1], name) for var in selected_vars])
-
+                        var = selected_vars[0]
+                        return self._extract_indexed_from_var(var, args[:-1], name)
+                elif len(selected_vars)<1:
+                    return None
+                elif len(args)==1:
+                    return PythonTuple(*selected_vars)
                 else:
+                    return PythonTuple(*[self._extract_indexed_from_var(var, args[:-1], name) for var in selected_vars])
 
-                    if arg is args[0]:
-                        return var[arg]
+            else:
 
-                    var = var[arg]
+                if len(args)==1:
+                    return var[arg]
 
-                    if var.is_homogeneous:
-                        args = args[:len(args)-i-1]
-                        break
+                var = var[arg]
+                return self._extract_indexed_from_var(var, args[:-1], name)
 
         if hasattr(var, 'dtype'):
             dtype = var.dtype
@@ -1229,16 +1236,6 @@ class SemanticParser(BasicParser):
 
             args = args + [self._visit(Slice(None, None),**settings)]*(var.rank-len(args))
 
-        if not isinstance(var, Variable):
-            assert(hasattr(var,'__getitem__'))
-            if len_args==1:
-                return var[args[0]]
-            else:
-                return self._visit(Indexed(var[args[0]],args[1:]))
-
-        if var.order == 'C':
-            args.reverse()
-        args = tuple(args)
         return self._extract_indexed_from_var(var, args, name)
 
     def _visit_Symbol(self, expr, **settings):
@@ -1592,27 +1589,29 @@ class SemanticParser(BasicParser):
 
     def _create_variable(self, name, dtype, rhs, d_lhs):
 
-        if isinstance(rhs, PythonTuple):
+        if isinstance(rhs, (TupleVariable, PythonTuple)):
             elem_vars = []
-            for i,a in enumerate(rhs):
-                elem_name = self._get_new_variable_name(a,name + '_' + str(i))
-                elem_d_lhs = self._infere_type(rhs[i])
+            is_pointer = d_lhs['is_pointer']
+            for i,r in enumerate(rhs):
+                elem_name = self._get_new_variable_name( r, name + '_' + str(i) )
+                elem_d_lhs = self._infere_type( r )
+
                 elem_dtype = elem_d_lhs.pop('datatype')
-                var        = self._create_variable(elem_name, elem_dtype, rhs[i], elem_d_lhs)
+
+                if elem_d_lhs['allocatable'] and isinstance(r, Variable):
+                    elem_d_lhs['allocatable'] = False
+                    elem_d_lhs['is_pointer' ] = True
+                    is_pointer = True
+
+                    if not r.is_pointer:
+                        r.is_target = True
+
+                var = self._create_variable(elem_name, elem_dtype, r, elem_d_lhs)
                 elem_vars.append(var)
-            d_lhs['is_stack_array'] = True
+
+            d_lhs['is_pointer'] = is_pointer
             lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
 
-        elif isinstance(rhs, TupleVariable):
-            elem_vars = []
-            for i,a in enumerate(rhs):
-                elem_name = self._get_new_variable_name(a,name + '_' + str(i))
-                elem_d_lhs = self._infere_type(rhs[i])
-                elem_dtype = elem_d_lhs.pop('datatype')
-                var        = self._create_variable(elem_name, elem_dtype, rhs[i], elem_d_lhs)
-                elem_vars.append(var)
-            d_lhs['is_stack_array'] = True
-            lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
         else:
             lhs = Variable(dtype, name, **d_lhs)
 
@@ -1633,7 +1632,8 @@ class SemanticParser(BasicParser):
 
                 # TODO uncomment this line, to make rhs target for
                 #      lists/tuples.
-                rhs = self.update_variable(rhs, is_target=True)
+                if not rhs.is_pointer:
+                    rhs = self.update_variable(rhs, is_target=True)
 
             lhs = self._create_variable(name, dtype, rhs, d_lhs)
 
@@ -2083,14 +2083,21 @@ class SemanticParser(BasicParser):
         is_pointer = is_pointer or isinstance(lhs, (Variable, DottedVariable)) and lhs.is_pointer
 
         # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-        if not (isinstance(lhs, PythonTuple) and isinstance(rhs,(PythonTuple, TupleVariable, list))):
+        if not ((isinstance(lhs, PythonTuple) or (isinstance(lhs, TupleVariable) and not lhs.is_homogeneous)) \
+                and isinstance(rhs,(PythonTuple, TupleVariable, list))):
             lhs = [lhs]
             rhs = [rhs]
 
         new_expressions = []
         for l, r in zip(lhs,rhs):
+            is_pointer_i = is_pointer and isinstance(r, (Variable, Dlist, DottedVariable))
+            is_pointer_i = is_pointer or isinstance(l, (Variable, DottedVariable)) and l.is_pointer
             new_expr = Assign(l, r)
-            if is_pointer:
+            if is_pointer_i:
+                if (isinstance(r,(Variable, DottedVariable)) and not (r.is_target or r.is_pointer)):
+                    r.is_target = True
+                if isinstance(r,PythonTuple):
+                    r.is_target = True
                 new_expr = AliasAssign(l, r)
 
             elif isinstance(expr, AugAssign):

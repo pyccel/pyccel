@@ -2663,7 +2663,9 @@ class TupleVariable(Variable):
 
     def __init__(self, arg_vars, dtype, *args, **kwargs):
         self._vars = tuple(arg_vars)
-        self._is_homogeneous = not dtype is NativeGeneric()
+        self._is_homogeneous = not dtype is NativeGeneric() \
+                and not kwargs.get('is_pointer',False) # Fortran restriction
+        Variable.__init__(self, dtype, name, *args, **kwargs)
 
     def get_vars(self):
         return self._vars
@@ -2686,7 +2688,6 @@ class TupleVariable(Variable):
     @property
     def is_homogeneous(self):
         return self._is_homogeneous
-
 
 class Constant(ValuedVariable, PyccelAstNode):
 
