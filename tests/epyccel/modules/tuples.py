@@ -24,7 +24,8 @@ __all__ = [
         'tuple_arg_unpacking',
         'tuple_indexing_basic',
         'tuple_indexing_2d',
-        'tuple_visitation',
+        'tuple_visitation_homogeneous',
+        'tuple_visitation_inhomogeneous',
         'tuples_homogeneous_have_pointers',
         'tuples_inhomogeneous_have_pointers',
         ]
@@ -164,8 +165,13 @@ def tuple_indexing_2d():
             z += ai[0][i]
     return z
 
-def tuple_visitation():
+def tuple_visitation_inhomogeneous():
     ai = (1,3.5, False)
+    for a in ai:
+        print(a)
+
+def tuple_visitation_homogeneous():
+    ai = (1,3.5, 4)
     for a in ai:
         print(a)
 

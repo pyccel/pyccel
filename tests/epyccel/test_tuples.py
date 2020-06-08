@@ -16,7 +16,8 @@ failing_tests = {
         'tuple_multi_indexing_2':'Multi object part of numpy array stored in sympy Tuple',
         'tuple_homogeneous_return':"Can't return a tuple",
         'tuple_inhomogeneous_return':"Can't return a tuple",
-        'tuple_visitation':"Can't iterate over a tuple",
+        'tuple_visitation_homogeneous':"Can't iterate over a tuple",
+        'tuple_visitation_inhomogeneous':"Can't iterate over an inhomogeneous tuple",
         }
 
 def compare_python_pyccel( p_output, f_output ):
