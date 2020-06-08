@@ -25,7 +25,7 @@ before_script:  # Coverage instructions - setup
   - sudo apt-get install default-jre
   - INSTALL_DIR=$(${PYTHON} -c "import pyccel; print(pyccel.__path__[0])")
   - SITE_DIR=$(${PYTHON} -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
-  - echo -e 'import coverage; print("calling pyccel_cov.pth", file=sys.stderr); print("Same process? ",hasattr(coverage.process_startup, "coverage"), file=sys.stderr); coverage.process_startup()' > ${SITE_DIR}/pyccel_cov.pth
+  - echo -e 'import coverage; print("calling pyccel_cov.pth", file=sys.stderr); print("Same process? ",hasattr(coverage.process_startup, "coverage"), file=sys.stderr); coverage.process_startup(); print("Started? ",getattr(coverage.process_startup, "coverage", None), file=sys.stderr)' > ${SITE_DIR}/pyccel_cov.pth
   - echo -e "[run]\nparallel = True\nsource = ${INSTALL_DIR}\n[report]\ninclude = ${INSTALL_DIR}/*\n[xml]\noutput = cobertura.xml" > .coveragerc
   - export COVERAGE_PROCESS_START=$(pwd)/.coveragerc
 
