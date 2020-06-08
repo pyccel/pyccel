@@ -6,7 +6,6 @@ import traceback
 
 #==============================================================================
 
-from pyccel.ast import NativeBool
 from pyccel.ast import NativeRange
 from pyccel.ast import NativeSymbol
 from pyccel.ast import String
