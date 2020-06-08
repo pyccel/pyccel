@@ -2348,6 +2348,12 @@ class Variable(Symbol, PyccelAstNode):
     def allocatable(self):
         return self._allocatable
 
+    @allocatable.setter
+    def allocatable(self, allocatable):
+        if not isinstance(allocatable, bool):
+            raise TypeError('allocatable must be a boolean.')
+        self._allocatable = allocatable
+
     @property
     def cls_base(self):
         return self._cls_base
@@ -2360,9 +2366,21 @@ class Variable(Symbol, PyccelAstNode):
     def is_pointer(self):
         return self._is_pointer
 
+    @is_pointer.setter
+    def is_pointer(self, is_pointer):
+        if not isinstance(is_pointer, bool):
+            raise TypeError('is_pointer must be a boolean.')
+        self._is_pointer = is_pointer
+
     @property
     def is_target(self):
         return self._is_target
+
+    @is_target.setter
+    def is_target(self, is_target):
+        if not isinstance(is_target, bool):
+            raise TypeError('is_target must be a boolean.')
+        self._is_target = is_target
 
     @property
     def is_polymorphic(self):
@@ -2530,13 +2548,25 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
     def allocatable(self):
         return self._args[1].allocatable
 
+    @allocatable.setter
+    def allocatable(self, allocatable):
+        self._args[1].allocatable = allocatable
+
     @property
     def is_pointer(self):
         return self._args[1].is_pointer
 
+    @is_pointer.setter
+    def is_pointer(self, is_pointer):
+        self._args[1].is_pointer = is_pointer
+
     @property
     def is_target(self):
         return self._args[1].is_target
+
+    @is_target.setter
+    def is_target(self, is_target):
+        self._args[1].is_target = is_target
 
     @property
     def name(self):
@@ -2681,6 +2711,29 @@ class TupleVariable(Variable):
     def is_homogeneous(self):
         return self._is_homogeneous
 
+    @Variable.allocatable.setter
+    def allocatable(self, allocatable):
+        if not isinstance(allocatable, bool):
+            raise TypeError('allocatable must be a boolean.')
+        self._allocatable = allocatable
+        for var in self._vars:
+            var.allocatable = allocatable
+
+    @Variable.is_pointer.setter
+    def is_pointer(self, is_pointer):
+        if not isinstance(is_pointer, bool):
+            raise TypeError('is_pointer must be a boolean.')
+        self._is_pointer = is_pointer
+        for var in self._vars:
+            var.is_pointer = is_pointer
+
+    @Variable.is_target.setter
+    def is_target(self, is_target):
+        if not isinstance(is_target, bool):
+            raise TypeError('is_target must be a boolean.')
+        self._is_target = is_target
+        for var in self._vars:
+            var.is_target = is_target
 
 class Constant(ValuedVariable, PyccelAstNode):
 

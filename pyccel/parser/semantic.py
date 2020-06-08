@@ -534,38 +534,6 @@ class SemanticParser(BasicParser):
                 break
             container = container.parent_scope
 
-    def update_variable(self, var, **options):
-        """."""
-
-        name = _get_name(var).split(""".""")
-        var = self.get_variable(name[0])
-        if len(name) > 1:
-            name_ = _get_name(var)
-            for i in var.cls_base.attributes:
-                if str(i.name) == name[1]:
-                    var = i
-            name = name_
-        else:
-            name = name[0]
-        if var is None:
-            msg = 'Undefined variable {name}'
-            msg = msg.format(name=name)
-            raise ValueError(msg)
-
-        # TODO implement a method inside Variable
-
-        d_var = self._infere_type(var)
-        for (key, value) in options.items():
-            d_var[key] = value
-        dtype = d_var.pop('datatype')
-        if isinstance(var, TupleVariable):
-            var = TupleVariable(var.get_vars(), dtype, name, **d_var)
-        else:
-            var = Variable(dtype, name, **d_var)
-        # TODO improve to insert in the right namespace
-        self.insert_variable(var, name)
-        return var
-
     def get_header(self, name):
         """."""
         container = self.namespace
@@ -797,7 +765,7 @@ class SemanticParser(BasicParser):
                 d_var['allocatable'   ] = expr.rank>0
                 d_var['is_stack_array'] = False
                 d_var['is_pointer'    ] = False
-                d_var['is_target'     ] = True # ISSUE 177: TODO this should be done using update_variable
+                d_var['is_target'     ] = True # ISSUE 177: TODO this should be done using setter
 
             elif name in ['Len']:
                 d_var['datatype'   ] = expr.dtype
@@ -1633,7 +1601,7 @@ class SemanticParser(BasicParser):
 
                 # TODO uncomment this line, to make rhs target for
                 #      lists/tuples.
-                rhs = self.update_variable(rhs, is_target=True)
+                rhs.is_target = True
 
             lhs = self._create_variable(name, dtype, rhs, d_lhs)
 
@@ -1701,7 +1669,7 @@ class SemanticParser(BasicParser):
                     d_lhs['allocatable'] = False
                     d_lhs['is_pointer' ] = True
 
-                    rhs = self.update_variable(rhs, is_target=True)
+                    rhs.is_target = True
 
                 member = self._create_variable(n_name, dtype, rhs, d_lhs)
                 lhs    = DottedVariable(var, member)
@@ -2070,15 +2038,14 @@ class SemanticParser(BasicParser):
                 lhs[i].rank > 0):
                 allocatable = True
 
-            if (isinstance(lhs, Variable) and (allocatable or is_pointer)):
-                lhs[i] = self.update_variable(lhs[i],
-                         allocatable=allocatable,
-                         is_pointer=is_pointer)
+            if isinstance(lhs, Variable):
+                lhs[i].allocatable = allocatable
+                lhs[i].is_pointer = is_pointer
 
         if len(lhs) == 1:
             lhs = lhs[0]
 
-
+        # TODO: does is_pointer refer to any/all or last variable in list (currently last)
         is_pointer = is_pointer and isinstance(rhs, (Variable, Dlist, DottedVariable))
         is_pointer = is_pointer or isinstance(lhs, (Variable, DottedVariable)) and lhs.is_pointer
 
