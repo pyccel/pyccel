@@ -2663,8 +2663,8 @@ class TupleVariable(Variable):
 
     def __init__(self, arg_vars, dtype, *args, **kwargs):
         self._vars = tuple(arg_vars)
-        self._is_homogeneous = not dtype is NativeGeneric() \
-                and not kwargs.get('is_pointer',False) # Fortran restriction
+        self._inconsistent_shape = not all(args[0].shape==a.shape   for a in args[1:])
+        self._is_homogeneous = not dtype is NativeGeneric()
         Variable.__init__(self, dtype, name, *args, **kwargs)
 
     def get_vars(self):
@@ -2686,8 +2686,16 @@ class TupleVariable(Variable):
         return len(self._vars)
 
     @property
+    def inconsistent_shape(self):
+        return self._inconsistent_shape
+
+    @property
     def is_homogeneous(self):
         return self._is_homogeneous
+
+    @is_homogeneous.setter
+    def is_homogeneous(self, is_homogeneous):
+        self._is_homogeneous = is_homogeneous
 
 class Constant(ValuedVariable, PyccelAstNode):
 

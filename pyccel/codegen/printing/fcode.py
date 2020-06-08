@@ -34,9 +34,9 @@ from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import Subroutine
 from pyccel.ast.core import ErrorExit
 from pyccel.ast.core import Product
-from pyccel.ast.core import (Assign, Variable,
+from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              TupleVariable, Declare,
-                             IndexedVariable,
+                             IndexedVariable, CodeBlock,
                              IndexedElement, Slice, Dlist,
                              DottedName, AsName, DottedVariable,
                              If)
@@ -242,9 +242,16 @@ class FCodePrinter(CodePrinter):
         rows, cols = mat.shape
         return ((i, j) for j in range(cols) for i in range(rows))
 
+    def _handle_fortran_specific_a_prioris(self, var_list):
+        for v in var_list:
+            if isinstance(v, TupleVariable):
+                if v.is_pointer or v.inconsistent_shape:
+                    v.is_homogeneous = False
+
     # ============ Elements ============ #
 
     def _print_Module(self, expr):
+        self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
 
         name = self._print(expr.name)
         name = name.replace('.', '_')
@@ -314,6 +321,7 @@ class FCodePrinter(CodePrinter):
                                        body=body)
 
     def _print_Program(self, expr):
+        self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
 
         name = 'prog_{0}'.format(self._print(expr.name))
         name = name.replace('.', '_')
@@ -1062,6 +1070,9 @@ class FCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
 
+        if isinstance(lhs, TupleVariable) and not lhs.is_homogeneous:
+            return self._print(CodeBlock([AliasAssign(l, Indexed(rhs,i)) for i,l in enumerate(lhs)]))
+
         if isinstance(rhs, Dlist):
             pattern = 'allocate({lhs}(0:{length}-1))\n{lhs} = {init_value}'
             code = pattern.format(lhs=self._print(lhs),
@@ -1391,6 +1402,9 @@ class FCodePrinter(CodePrinter):
         return func
 
     def _print_FunctionDef(self, expr):
+        self._handle_fortran_specific_a_prioris(list(expr.local_vars) +
+                                                list(expr.arguments)  +
+                                                list(expr.results))
         # ... we don't print 'hidden' functions
         if expr.hide:
             return ''
@@ -2433,6 +2447,14 @@ class FCodePrinter(CodePrinter):
                 return self._print(IndexedVariable(var, dtype=base.dtype,
                    shape=base.shape,prec=base.precision,
                    order=base.order,rank=base.rank).__getitem__(*expr.indices))
+        elif isinstance(base, TupleVariable) and not base.is_homogeneous:
+            if len(expr.indices)==1:
+                return self._print(base[expr.indices[0]])
+            else:
+                var = base[expr.indices[-1]]
+                return self._print(IndexedVariable(var, dtype = var.dtype,
+                    shape = var.shape, prec = var.precision,
+                    order = var.order, rank = var.rank).__getitem__(*expr.indices[:-1]))
         else:
             base = self._print(expr.base.label)
 

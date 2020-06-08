@@ -193,8 +193,7 @@ class PythonTuple(Expr, PyccelAstNode):
             return
         is_homogeneous = all(args[0].dtype==a.dtype for a in args[1:])
         is_homogeneous = is_homogeneous and all(args[0].rank==a.rank   for a in args[1:])
-        # Fortran restriction
-        is_homogeneous = is_homogeneous and all(args[0].shape==a.shape   for a in args[1:])
+        self._inconsistent_shape = not all(args[0].shape==a.shape   for a in args[1:])
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
             integers  = [a for a in args if a.dtype is NativeInteger()]
@@ -251,6 +250,10 @@ class PythonTuple(Expr, PyccelAstNode):
     @property
     def is_homogeneous(self):
         return self._is_homogeneous
+
+    @property
+    def inconsistent_shape(self):
+        return self._inconsistent_shape
 
 #==============================================================================
 class Len(Function, PyccelAstNode):
