@@ -34,6 +34,7 @@ script:
   - coverage combine
   - ${PYTHON} -m pytest -rx -sv -m "not parallel and not c" --ignore=tests/ast --ignore=tests/printers --ignore=tests/symbolic
   - ls -a
+  - ${PYTHON} -c "import glob; print(glob.glob('**/.coverage*',recursive=True))"
   - coverage combine
   - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel -rx
   - ls -a
