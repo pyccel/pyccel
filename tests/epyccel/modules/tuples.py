@@ -15,8 +15,8 @@ __all__ = [
         'tuple_unpacking_1',
         'tuple_unpacking_2',
         'tuple_name_clash',
-        'tuple_indexing_basic',
-        'tuple_indexing_var',
+        'tuples_as_indexing_basic',
+        'tuples_as_indexing_var',
         'tuple_multi_indexing_1',
         'tuple_multi_indexing_2',
         'tuple_inhomogeneous_return',
@@ -87,7 +87,7 @@ def tuple_name_clash():
     ai_0 = 44
     return ai_0, ai[0], ai[1], ai[2]
 
-def tuple_indexing_basic():
+def tuples_as_indexing_basic():
     from numpy import ones
     x = ones((2,3,2))
     for z in range(2):
@@ -97,7 +97,7 @@ def tuple_indexing_basic():
     idx = (1,1,0)
     return x[idx]
 
-def tuple_indexing_var():
+def tuples_as_indexing_var():
     from numpy import ones
     x = ones((2,3,2))
     for z in range(2):
@@ -116,7 +116,6 @@ def tuple_multi_indexing_1():
             for w in range(2):
                 x[z,y,w] = w+y*2+z*6
     idx = (1,1,0)
-    idx_2 = (0,1,2)
     ai = x[idx,0,1]
     return ai[0], ai[1], ai[2]
 
