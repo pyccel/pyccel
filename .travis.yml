@@ -33,8 +33,8 @@ before_script:  # Coverage instructions - setup
   - cd tests
 
 script:
-  - ${PYTHON} -m pytest -rx -m "not parallel and c" --ignore=tests --ignore=printers --ignore=symbolic
-  - ${PYTHON} -m pytest -rx -m "not parallel and not c" --ignore=tests --ignore=printers --ignore=symbolic
+  - ${PYTHON} -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic
+  - ${PYTHON} -m pytest -rx -m "not parallel and not c" --ignore=ast --ignore=printers --ignore=symbolic
   - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel -rx
 #  - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest tests/epyccel -v -m parallel -rx
 
