@@ -27,7 +27,10 @@ before_script:  # Coverage instructions - setup
   - SITE_DIR=$(${PYTHON} -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
   - echo -e 'import coverage; coverage.process_startup()' > ${SITE_DIR}/pyccel_cov.pth
   - echo -e "[run]\nparallel = True\ndata_file = $(pwd)/.coverage\n[xml]\noutput = cobertura.xml" > .coveragerc
+  - echo ${INSTALL_DIR}
+  - echo ${SITE_DIR}
   - export COVERAGE_PROCESS_START=$(pwd)/.coveragerc
+  - cd tests
 
 script:
   - ${PYTHON} -m pytest -rx -m "not parallel and c" --ignore=tests/ast --ignore=tests/printers --ignore=tests/symbolic
@@ -40,6 +43,7 @@ after_script:  # Coverage instructions - collections
   - coverage combine
   - coverage xml
   - coverage report -i
+  - cd ..
   - rm ${SITE_DIR}/pyccel_cov.pth
   - bash <(wget -q -O - https://coverage.codacy.com/get.sh)
 
