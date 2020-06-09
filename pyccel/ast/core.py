@@ -2297,14 +2297,22 @@ class Variable(Symbol, PyccelAstNode):
             raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
         self._name = name
 
+        if allocatable is None:
+            allocatable = False
         self.allocatable = allocatable
 
-        if not isinstance(is_stack_array, bool):
+        if is_stack_array is None:
+            is_stack_array = False
+        elif not isinstance(is_stack_array, bool):
             raise TypeError('is_stack_array must be a boolean.')
         self._is_stack_array = is_stack_array
 
+        if is_pointer is None:
+            is_pointer = False
         self.is_pointer = is_pointer
 
+        if is_target is None:
+            is_target = False
         self.is_target = is_target
 
         if is_polymorphic is None:
@@ -2316,7 +2324,9 @@ class Variable(Symbol, PyccelAstNode):
             raise TypeError('is_polymorphic must be a boolean.')
         self._is_polymorphic = is_polymorphic
 
-        if not isinstance(is_optional, bool):
+        if is_optional is None:
+            is_optional = False
+        elif not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
         self._is_optional = is_optional
 
