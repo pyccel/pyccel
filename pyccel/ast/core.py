@@ -2217,7 +2217,20 @@ class Variable(Symbol, PyccelAstNode):
         cls,
         dtype,
         name,
-        **kwargs
+        *,
+        rank=0,
+        allocatable=False,
+        is_stack_array = False,
+        is_pointer=False,
+        is_target=False,
+        is_polymorphic=None,
+        is_optional=False,
+        shape=None,
+        cls_base=None,
+        cls_parameters=None,
+        order='C',
+        precision=0,
+        is_argument=False
         ):
         return Basic.__new__(cls)
 
@@ -2225,7 +2238,20 @@ class Variable(Symbol, PyccelAstNode):
         self,
         dtype,
         name,
-        **kwargs
+        *,
+        rank=0,
+        allocatable=False,
+        is_stack_array = False,
+        is_pointer=False,
+        is_target=False,
+        is_polymorphic=None,
+        is_optional=False,
+        shape=None,
+        cls_base=None,
+        cls_parameters=None,
+        order='C',
+        precision=0,
+        is_argument=False
         ):
 
         # ------------ PyccelAstNode Properties ---------------
@@ -2234,10 +2260,6 @@ class Variable(Symbol, PyccelAstNode):
             dtype = datatype(str(dtype))
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
-
-        rank      = kwargs.pop('rank',0)
-        shape     = kwargs.pop('shape',None)
-        precision = kwargs.pop('precision',0)
 
         if not isinstance(rank, int):
             raise TypeError('rank must be an instance of int.')
@@ -2275,36 +2297,34 @@ class Variable(Symbol, PyccelAstNode):
             raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
         self._name = name
 
-        self.allocatable = kwargs.pop('allocatable',False)
+        self.allocatable = allocatable
 
-        is_stack_array = kwargs.pop('is_stack_array',False)
         if not isinstance(is_stack_array, bool):
             raise TypeError('is_stack_array must be a boolean.')
         self._is_stack_array = is_stack_array
 
-        self.is_pointer = kwargs.pop('is_pointer',False)
+        self.is_pointer = is_pointer
 
-        self.is_target = kwargs.pop('is_target',False)
+        self.is_target = is_target
 
-        is_polymorphic = kwargs.pop('is_polymorphic', dtype.is_polymorphic
-                                                    if isinstance(dtype, CustomDataType)
-                                                    else False)
-        if not isinstance(is_polymorphic, bool):
+        if is_polymorphic is None:
+            if isinstance(dtype, CustomDataType):
+                is_polymorphic = dtype.is_polymorphic
+            else:
+                is_polymorphic = False
+        elif not isinstance(is_polymorphic, bool):
             raise TypeError('is_polymorphic must be a boolean.')
         self._is_polymorphic = is_polymorphic
 
-        is_optional = kwargs.pop('is_optional', False)
         if not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
         self._is_optional = is_optional
 
-        self._cls_base       = kwargs.pop('cls_base', None)
-        self._cls_parameters = kwargs.pop('cls_parameters', None) 
-        self._order          = kwargs.pop('order', 'C')
-        self._is_argument    = kwargs.pop('is_argument', False)
+        self._cls_base       = cls_base
+        self._cls_parameters = cls_parameters
+        self._order          = order
+        self._is_argument    = is_argument
 
-        if len(kwargs)>0:
-            raise TypeError('Variable got an unexpected keyword argument: '+', '.join(kwargs.keys()))
 
     @property
     def name(self):
