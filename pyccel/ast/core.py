@@ -2661,11 +2661,11 @@ class TupleVariable(Variable):
         
         return Variable.__new__(cls, dtype, name, **kwargs)
 
-    def __init__(self, arg_vars, dtype, *args, **kwargs):
+    def __init__(self, arg_vars, dtype, name, **kwargs):
         self._vars = tuple(arg_vars)
-        self._inconsistent_shape = not all(args[0].shape==a.shape   for a in args[1:])
+        self._inconsistent_shape = not all(arg_vars[0].shape==a.shape   for a in arg_vars[1:])
         self._is_homogeneous = not dtype is NativeGeneric()
-        Variable.__init__(self, dtype, name, *args, **kwargs)
+        Variable.__init__(self, dtype, name, **kwargs)
 
     def get_vars(self):
         return self._vars
