@@ -39,10 +39,10 @@ script:
 #  - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest tests/epyccel -v -m parallel -rx
 
 after_script:  # Coverage instructions - collections
+  - cd ..
   - coverage combine
   - coverage xml
   - coverage report -i
-  - cd ..
   - rm ${SITE_DIR}/pyccel_cov.pth
   - bash <(wget -q -O - https://coverage.codacy.com/get.sh)
 
