@@ -2235,12 +2235,12 @@ class Variable(Symbol, PyccelAstNode):
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
 
-        if not isinstance(rank, int):
-            raise TypeError('rank must be an instance of int.')
-
         rank      = kwargs.pop('rank',0)
         shape     = kwargs.pop('shape',None)
         precision = kwargs.pop('precision',0)
+
+        if not isinstance(rank, int):
+            raise TypeError('rank must be an instance of int.')
 
         if rank == 0:
             shape = ()
@@ -2286,14 +2286,14 @@ class Variable(Symbol, PyccelAstNode):
 
         self.is_target = kwargs.pop('is_target',False)
 
-        is_polymorphic = kwargs.pop(is_polymorphic, dtype.is_polymorphic
+        is_polymorphic = kwargs.pop('is_polymorphic', dtype.is_polymorphic
                                                     if isinstance(dtype, CustomDataType)
                                                     else False)
         if not isinstance(is_polymorphic, bool):
             raise TypeError('is_polymorphic must be a boolean.')
         self._is_polymorphic = is_polymorphic
 
-        is_optional = kwargs.pop(is_optional, False)
+        is_optional = kwargs.pop('is_optional', False)
         if not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
         self._is_optional = is_optional
