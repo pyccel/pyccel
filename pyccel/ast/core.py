@@ -2217,20 +2217,7 @@ class Variable(Symbol, PyccelAstNode):
         cls,
         dtype,
         name,
-        *,
-        rank=0,
-        allocatable=False,
-        is_stack_array = False,
-        is_pointer=False,
-        is_target=False,
-        is_polymorphic=None,
-        is_optional=False,
-        shape=None,
-        cls_base=None,
-        cls_parameters=None,
-        order='C',
-        precision=0,
-        is_argument=False
+        **kwargs
         ):
         return Basic.__new__(cls)
 
