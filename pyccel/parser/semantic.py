@@ -1541,13 +1541,20 @@ class SemanticParser(BasicParser):
 
             d_lhs = d_var.copy()
             # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-            if isinstance(rhs, Variable) and rhs.allocatable:
+            if isinstance(rhs, (Variable, DottedVariable)) and rhs.allocatable:
                 d_lhs['allocatable'] = False
                 d_lhs['is_pointer' ] = True
 
                 # TODO uncomment this line, to make rhs target for
                 #      lists/tuples.
                 rhs.is_target = True
+            if isinstance(rhs, IndexedElement) and rhs.base.internal_variable.allocatable:
+                d_lhs['allocatable'] = False
+                d_lhs['is_pointer' ] = True
+
+                # TODO uncomment this line, to make rhs target for
+                #      lists/tuples.
+                rhs.base.internal_variable.is_target = True
 
             var = self.get_variable_from_scope(name)
 
