@@ -1073,9 +1073,7 @@ class FCodePrinter(CodePrinter):
         op = '=>'
         shape_code = ''
         if lhs.rank > 0:
-            shape = lhs.shape if lhs.order == 'F' else lhs.shape[::-1]
-
-            shape_code = ', '.join('0:' + self._print(PyccelMinus(i, Integer(1))) for i in shape)
+            shape_code = ', '.join('0:' for i in range(lhs.rank))
             shape_code = '({s_c})'.format(s_c = shape_code)
 
 
