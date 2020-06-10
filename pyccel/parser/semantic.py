@@ -629,7 +629,6 @@ class SemanticParser(BasicParser):
             d_var['datatype'      ] = expr.dtype
             d_var['precision']      = expr.precision
             d_var['is_stack_array'] = expr.is_homogeneous
-            #d_var['is_stack_array'] = True
             d_var['shape'         ] = expr.shape
             d_var['rank'          ] = expr.rank
             d_var['is_pointer']     = False
