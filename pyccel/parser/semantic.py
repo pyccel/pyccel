@@ -1549,12 +1549,12 @@ class SemanticParser(BasicParser):
                 #      lists/tuples.
                 rhs.is_target = True
 
-            lhs = self._create_variable(name, dtype, rhs, d_lhs)
-
             var = self.get_variable_from_scope(name)
 
             # Variable not yet declared (hence array not yet allocated)
             if var is None:
+
+                lhs = self._create_variable(name, dtype, rhs, d_lhs)
 
                 # Add variable to scope
                 self.insert_variable(lhs, name=lhs.name)
@@ -1570,9 +1570,9 @@ class SemanticParser(BasicParser):
             else:
 
                 # TODO improve check type compatibility
-                if str(lhs.dtype) != str(var.dtype):
+                if str(dtype) != str(var.dtype):
                     txt = '|{name}| {old} <-> {new}'
-                    txt = txt.format(name=name, old=var.dtype, new=lhs.dtype)
+                    txt = txt.format(name=name, old=var.dtype, new=dtype)
 
                     errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
                     symbol=txt,bounding_box=self._current_fst_node.absolute_bounding_box,
@@ -1856,6 +1856,7 @@ class SemanticParser(BasicParser):
                 if __name__.startswith('Pyccel'):
                     __name__ = __name__[6:]
                     d['cls_base'] = self.get_class(__name__)
+                    #TODO: Avoid writing the default variables here
                     d['is_pointer'] = d_var.get('is_target',False) or d_var.get('is_pointer',False)
 
                     # TODO if we want to use pointers then we set target to true
