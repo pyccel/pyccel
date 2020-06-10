@@ -1968,11 +1968,11 @@ class SemanticParser(BasicParser):
         if len(lhs) == 1:
             lhs = lhs[0]
 
-        if isinstance(lhs, Variable):
+        if isinstance(lhs, (Variable, DottedVariable)):
             is_pointer = lhs.is_pointer
         elif isinstance(lhs, IndexedElement):
             is_pointer = False
-        elif isinstance(lhs, PythonTuple):
+        elif isinstance(lhs, (PythonTuple, List)):
             is_pointer = any(l.is_pointer for l in lhs)
 
         # TODO: does is_pointer refer to any/all or last variable in list (currently last)
