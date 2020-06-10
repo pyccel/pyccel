@@ -1071,7 +1071,10 @@ class FCodePrinter(CodePrinter):
         rhs = expr.rhs
 
         if isinstance(lhs, TupleVariable) and not lhs.is_homogeneous:
-            return self._print(CodeBlock([AliasAssign(l, Indexed(rhs,i)) for i,l in enumerate(lhs)]))
+            if isinstance(rhs, TupleVariable):
+                return self._print(CodeBlock([AliasAssign(l, rhs[i]) for i,l in enumerate(lhs)]))
+            else:
+                return self._print(CodeBlock([AliasAssign(l, Indexed(rhs,i)) for i,l in enumerate(lhs)]))
 
         if isinstance(rhs, Dlist):
             pattern = 'allocate({lhs}(0:{length}-1))\n{lhs} = {init_value}'
