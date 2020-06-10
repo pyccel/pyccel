@@ -312,51 +312,6 @@ class SemanticParser(BasicParser):
         else:
             return var
 
-    def replace_variable_from_scope(self, name, new_var):
-        """."""
-        container = self.namespace
-        while container.is_loop:
-            container = container.parent_scope
-
-        return self._replace_variable_from_scope(name, container, new_var)
-
-    def _replace_variable_from_scope(self, name, container, new_var):
-
-        if name in container.variables:
-            container.variables[name] = new_var
-            return True
-
-        for container in container.loops:
-            res = self._replace_variable_from_scope(name, container,new_var)
-            if res:
-                return res
-
-        return False
-
-    def replace_variable(self, name, new_var):
-        """."""
-
-        if self.current_class:
-            for i,v in enumerate(self._current_class.attributes):
-                if str(v.name) == name:
-                    self._current_class.attributes[i] = new_var
-                    return True
-
-        container = self.namespace
-        while container.is_loop:
-            container = container.parent_scope
-
-
-        imports   = container.imports
-        while container:
-            res = self._replace_variable_from_scope(name, container, new_var)
-            if res:
-                return res
-            elif name in container.imports['variables']:
-                container.imports['variables'][name] = new_var
-                return True
-            container = container.parent_scope
-
     def get_variables(self, container):
         # this only works one called the function scope
         # TODO needs more tests when we have nested functions
@@ -534,38 +489,6 @@ class SemanticParser(BasicParser):
                 break
             container = container.parent_scope
 
-    def update_variable(self, var, **options):
-        """."""
-
-        name = _get_name(var).split(""".""")
-        var = self.get_variable(name[0])
-        if len(name) > 1:
-            name_ = _get_name(var)
-            for i in var.cls_base.attributes:
-                if str(i.name) == name[1]:
-                    var = i
-            name = name_
-        else:
-            name = name[0]
-        if var is None:
-            msg = 'Undefined variable {name}'
-            msg = msg.format(name=name)
-            raise ValueError(msg)
-
-        # TODO implement a method inside Variable
-
-        d_var = self._infere_type(var)
-        for (key, value) in options.items():
-            d_var[key] = value
-        dtype = d_var.pop('datatype')
-        if isinstance(var, TupleVariable):
-            var = TupleVariable(var.get_vars(), dtype, name, **d_var)
-        else:
-            var = Variable(dtype, name, **d_var)
-        # TODO improve to insert in the right namespace
-        self.insert_variable(var, name)
-        return var
-
     def get_header(self, name):
         """."""
         container = self.namespace
@@ -657,19 +580,10 @@ class SemanticParser(BasicParser):
             print ('*** type inference for : ', type(expr))
 
         d_var = {}
-
         d_var['datatype'      ] = NativeSymbol()
         d_var['precision'     ] = 0
         d_var['shape'         ] = ()
         d_var['rank'          ] = 0
-        d_var['allocatable'   ] = None
-        d_var['is_stack_array'] = None
-        d_var['is_pointer'    ] = None
-        d_var['is_target'     ] = None
-        d_var['is_polymorphic'] = None
-        d_var['is_optional'   ] = None
-        d_var['cls_base'      ] = None
-        d_var['cls_parameters'] = None
 
         # TODO improve => put settings as attribut of Parser
 
@@ -799,7 +713,7 @@ class SemanticParser(BasicParser):
                 d_var['allocatable'   ] = expr.rank>0
                 d_var['is_stack_array'] = False
                 d_var['is_pointer'    ] = False
-                d_var['is_target'     ] = True # ISSUE 177: TODO this should be done using update_variable
+                d_var['is_target'     ] = True # ISSUE 177: TODO this should be done using setter
 
             elif name in ['Len']:
                 d_var['datatype'   ] = expr.dtype
@@ -1625,21 +1539,27 @@ class SemanticParser(BasicParser):
 
             d_lhs = d_var.copy()
             # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-            if d_lhs['allocatable'] and isinstance(rhs, Variable):
+            if isinstance(rhs, (Variable, DottedVariable)) and rhs.allocatable:
                 d_lhs['allocatable'] = False
                 d_lhs['is_pointer' ] = True
 
                 # TODO uncomment this line, to make rhs target for
                 #      lists/tuples.
-                if not rhs.is_pointer:
-                    rhs = self.update_variable(rhs, is_target=True)
+                rhs.is_target = True
+            if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.internal_variable.allocatable:
+                d_lhs['allocatable'] = False
+                d_lhs['is_pointer' ] = True
 
-            lhs = self._create_variable(name, dtype, rhs, d_lhs)
+                # TODO uncomment this line, to make rhs target for
+                #      lists/tuples.
+                rhs.base.internal_variable.is_target = True
 
             var = self.get_variable_from_scope(name)
 
             # Variable not yet declared (hence array not yet allocated)
             if var is None:
+
+                lhs = self._create_variable(name, dtype, rhs, d_lhs)
 
                 # Add variable to scope
                 self.insert_variable(lhs, name=lhs.name)
@@ -1655,9 +1575,9 @@ class SemanticParser(BasicParser):
             else:
 
                 # TODO improve check type compatibility
-                if str(lhs.dtype) != str(var.dtype):
+                if str(dtype) != str(var.dtype):
                     txt = '|{name}| {old} <-> {new}'
-                    txt = txt.format(name=name, old=var.dtype, new=lhs.dtype)
+                    txt = txt.format(name=name, old=var.dtype, new=dtype)
 
                     errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
                     symbol=txt,bounding_box=self._current_fst_node.absolute_bounding_box,
@@ -1696,11 +1616,11 @@ class SemanticParser(BasicParser):
 
 
                 # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-                if d_lhs['allocatable'] and isinstance(rhs, Variable):
+                if isinstance(rhs, Variable) and rhs.allocatable:
                     d_lhs['allocatable'] = False
                     d_lhs['is_pointer' ] = True
 
-                    rhs = self.update_variable(rhs, is_target=True)
+                    rhs.is_target = True
 
                 member = self._create_variable(n_name, dtype, rhs, d_lhs)
                 lhs    = DottedVariable(var, member)
@@ -1941,18 +1861,18 @@ class SemanticParser(BasicParser):
                 if __name__.startswith('Pyccel'):
                     __name__ = __name__[6:]
                     d['cls_base'] = self.get_class(__name__)
-                    d['is_pointer'] = d['is_target'] or d['is_pointer']
+                    #TODO: Avoid writing the default variables here
+                    d['is_pointer'] = d_var.get('is_target',False) or d_var.get('is_pointer',False)
 
                     # TODO if we want to use pointers then we set target to true
                     # in the ConsturcterCall
 
                     d['is_polymorphic'] = False
 
-                if d['is_target']:
+                if isinstance(rhs, Variable) and rhs.is_target:
                     # case of rhs is a target variable the lhs must be a pointer
-                    if isinstance(rhs, Symbol):
-                        d['is_target' ] = False
-                        d['is_pointer'] = True
+                    d['is_target' ] = False
+                    d['is_pointer'] = True
 
         lhs = expr.lhs
         if isinstance(lhs, (Symbol, DottedVariable)):
@@ -2051,33 +1971,17 @@ class SemanticParser(BasicParser):
             if isinstance(d_var,dict):
                 d_var = [d_var]
 
-        for (i, dic) in enumerate(d_var):
-
-            allocatable = False
-            is_pointer  = False
-            if dic['allocatable']:
-                allocatable = True
-
-            if dic['is_pointer']:
-                is_pointer = True
-
-            if ('is_target' in dic.keys() and dic['is_target']  and
-                isinstance(rhs, Variable)):
-                is_pointer = True
-
-            if (isinstance(rhs, IndexedElement) and
-                lhs[i].rank > 0):
-                allocatable = True
-
-            if (isinstance(lhs, Variable) and (allocatable or is_pointer)):
-                lhs[i] = self.update_variable(lhs[i],
-                         allocatable=allocatable,
-                         is_pointer=is_pointer)
-
         if len(lhs) == 1:
             lhs = lhs[0]
 
+        if isinstance(lhs, (Variable, DottedVariable)):
+            is_pointer = lhs.is_pointer
+        elif isinstance(lhs, IndexedElement):
+            is_pointer = False
+        elif isinstance(lhs, (PythonTuple, List)):
+            is_pointer = any(l.is_pointer for l in lhs)
 
+        # TODO: does is_pointer refer to any/all or last variable in list (currently last)
         is_pointer = is_pointer and isinstance(rhs, (Variable, Dlist, DottedVariable))
         is_pointer = is_pointer or isinstance(lhs, (Variable, DottedVariable)) and lhs.is_pointer
 
@@ -2860,10 +2764,10 @@ class SemanticParser(BasicParser):
 
         var2 = self.check_for_variable(str(expr.rhs))
         if var2 is None:
-            if (not var1.is_optional):
-                new_var = var1.clone(str(name),new_class=ValuedVariable,is_optional = True)
-                self.replace_variable(str(name),new_var)
-                var1=new_var
+            if (isinstance(expr.rhs, Nil) and not var1.is_optional):
+                errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
+                        bounding_box=self._current_fst_node.absolute_bounding_box,
+                        severity='error', blocker=self.blocking)
             return Is(var1, expr.rhs)
 
         if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
@@ -2871,8 +2775,8 @@ class SemanticParser(BasicParser):
             return Is(var1, var2)
 
         errors.report(PYCCEL_RESTRICTION_IS_RHS,
-        bounding_box=self._current_fst_node.absolute_bounding_box,
-        severity='error', blocker=self.blocking)
+            bounding_box=self._current_fst_node.absolute_bounding_box,
+            severity='error', blocker=self.blocking)
         return Is(var1, expr.rhs)
 
     def _visit_IsNot(self, expr, **settings):
@@ -2884,10 +2788,10 @@ class SemanticParser(BasicParser):
 
         var2 = self.check_for_variable(str(expr.rhs))
         if var2 is None:
-            if (not var1.is_optional):
-                new_var = var1.clone(str(name),new_class=ValuedVariable,is_optional = True)
-                self.replace_variable(str(name),new_var)
-                var1=new_var
+            if (isinstance(expr.rhs, Nil) and not var1.is_optional):
+                errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
+                        bounding_box=self._current_fst_node.absolute_bounding_box,
+                        severity='error', blocker=self.blocking)
             return IsNot(var1, expr.rhs)
 
         if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and

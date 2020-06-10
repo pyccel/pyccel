@@ -45,12 +45,12 @@ def test_syntax_errors(f):
 
     assert(errors.is_errors())
 
-semantic_xfails = {'ex6.py':'different shape not recognised as different type : issue 325'}
-semantic_errors_args = [f if os.path.basename(f) not in semantic_xfails \
-                          else pytest.param(f, marks = pytest.mark.xfail(reason=semantic_xfails[os.path.basename(f)])) \
-                          for f in get_files_from_folder("semantic")]
-@pytest.mark.parametrize("f", semantic_errors_args)
-def test_semantic_errors(f):
+semantic_blocking_xfails = {'ex6.py':'different shape not recognised as different type : issue 325'}
+semantic_blocking_errors_args = [f if os.path.basename(f) not in semantic_blocking_xfails \
+                          else pytest.param(f, marks = pytest.mark.xfail(reason=semantic_blocking_xfails[os.path.basename(f)])) \
+                          for f in get_files_from_folder("semantic/blocking")]
+@pytest.mark.parametrize("f", semantic_blocking_errors_args)
+def test_semantic_blocking_errors(f):
     print('> testing {0}'.format(str(f)))
 
     # reset Errors singleton
@@ -63,6 +63,23 @@ def test_semantic_errors(f):
     settings = {}
     with pytest.raises(PyccelSemanticError):
         ast = pyccel.annotate(**settings)
+
+    assert(errors.is_errors())
+
+semantic_non_blocking_errors_args = [f for f in get_files_from_folder("semantic/non_blocking")]
+@pytest.mark.parametrize("f", semantic_non_blocking_errors_args)
+def test_semantic_non_blocking_errors(f):
+    print('> testing {0}'.format(str(f)))
+
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+
+    pyccel = Parser(f, show_traceback=False)
+    ast = pyccel.parse()
+
+    settings = {}
+    ast = pyccel.annotate(**settings)
 
     assert(errors.is_errors())
 
