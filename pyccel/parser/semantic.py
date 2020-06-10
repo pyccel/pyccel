@@ -1034,7 +1034,7 @@ class SemanticParser(BasicParser):
 
         if not isinstance(var, Variable):
             assert(hasattr(var,'__getitem__'))
-            if len_args==1:
+            if len(args)==1:
                 return var[args[0]]
             else:
                 return self._visit(Indexed(var[args[0]],args[1:]))
@@ -1985,8 +1985,11 @@ class SemanticParser(BasicParser):
 
         new_expressions = []
         for l, r in zip(lhs,rhs):
+            is_pointer_i = l.is_pointer if isinstance(l, (Variable, DottedVariable)) else is_pointer
+
             new_expr = Assign(l, r)
-            if l.is_pointer:
+
+            if is_pointer_i:
                 new_expr = AliasAssign(l, r)
 
             elif isinstance(expr, AugAssign):
