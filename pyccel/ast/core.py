@@ -2263,8 +2263,8 @@ class Variable(Symbol, PyccelAstNode):
                 precision = default_precision['complex']
             elif isinstance(dtype, NativeBool):
                 precision = default_precision['bool']
-        if not isinstance(precision,int):
-            raise TypeError('precision must be an integer.')
+        if not isinstance(precision,int) and precision is not None:
+            raise TypeError('precision must be an integer or None.')
 
         self._dtype = dtype
         self._shape = process_shape(shape)
