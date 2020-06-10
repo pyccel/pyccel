@@ -2217,13 +2217,22 @@ class Variable(Symbol, PyccelAstNode):
         cls,
         dtype,
         name,
+        **kwargs
+        ):
+        return Basic.__new__(cls)
+
+    def __init__(
+        self,
+        dtype,
+        name,
+        *,
         rank=0,
         allocatable=False,
         is_stack_array = False,
         is_pointer=False,
         is_target=False,
         is_polymorphic=None,
-        is_optional=None,
+        is_optional=False,
         shape=None,
         cls_base=None,
         cls_parameters=None,
@@ -2231,59 +2240,13 @@ class Variable(Symbol, PyccelAstNode):
         precision=0,
         is_argument=False
         ):
+
+        # ------------ PyccelAstNode Properties ---------------
         if isinstance(dtype, str) or str(dtype) == '*':
 
             dtype = datatype(str(dtype))
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
-
-        if allocatable is None:
-            allocatable = False
-        elif not isinstance(allocatable, bool):
-            raise TypeError('allocatable must be a boolean.')
-
-        if is_pointer is None:
-            is_pointer = False
-        elif not isinstance(is_pointer, bool):
-            raise TypeError('is_pointer must be a boolean.')
-
-        if is_target is None:
-            is_target = False
-        elif not isinstance(is_target, bool):
-            raise TypeError('is_target must be a boolean.')
-
-        if is_stack_array is None:
-            is_stack_array = False
-        elif not isinstance(is_stack_array, bool):
-            raise TypeError('is_stack_array must be a boolean.')
-
-        if is_polymorphic is None:
-            if isinstance(dtype, CustomDataType):
-                is_polymorphic = dtype.is_polymorphic
-            else:
-                is_polymorphic = False
-        elif not isinstance(is_polymorphic, bool):
-            raise TypeError('is_polymorphic must be a boolean.')
-
-        if is_optional is None:
-            is_optional = False
-        elif not isinstance(is_optional, bool):
-            raise TypeError('is_optional must be a boolean.')
-
-        if not isinstance(precision,int):
-            raise TypeError('precision must be an integer.')
-
-        # if class attribut
-
-        if isinstance(name, str):
-            name = name.split(""".""")
-            if len(name) == 1:
-                name = name[0]
-            else:
-                name = DottedName(*name)
-
-        if not isinstance(name, (str, DottedName)):
-            raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
 
         if not isinstance(rank, int):
             raise TypeError('rank must be an instance of int.')
@@ -2300,89 +2263,127 @@ class Variable(Symbol, PyccelAstNode):
                 precision = default_precision['complex']
             elif isinstance(dtype, NativeBool):
                 precision = default_precision['bool']
+        if not isinstance(precision,int):
+            raise TypeError('precision must be an integer.')
 
-        shape = process_shape(shape)
+        self._dtype = dtype
+        self._shape = process_shape(shape)
+        self._rank  = rank
+        self._precision = precision
 
-        # TODO improve order of arguments
+        # ------------ Variable Properties ---------------
+        # if class attribute
+        if isinstance(name, str):
+            name = name.split(""".""")
+            if len(name) == 1:
+                name = name[0]
+            else:
+                name = DottedName(*name)
 
-        return Basic.__new__(
-            cls,
-            dtype,
-            name,
-            rank,
-            allocatable,
-            shape,
-            cls_base,
-            cls_parameters,
-            is_pointer,
-            is_target,
-            is_polymorphic,
-            is_optional,
-            order,
-            precision,
-            is_stack_array,
-            is_argument
-            )
+        if not isinstance(name, (str, DottedName)):
+            raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
+        self._name = name
 
-    @property
-    def dtype(self):
-        return self._args[0]
+        if allocatable is None:
+            allocatable = False
+        self.allocatable = allocatable
+
+        if is_stack_array is None:
+            is_stack_array = False
+        elif not isinstance(is_stack_array, bool):
+            raise TypeError('is_stack_array must be a boolean.')
+        self._is_stack_array = is_stack_array
+
+        if is_pointer is None:
+            is_pointer = False
+        self.is_pointer = is_pointer
+
+        if is_target is None:
+            is_target = False
+        self.is_target = is_target
+
+        if is_polymorphic is None:
+            if isinstance(dtype, CustomDataType):
+                is_polymorphic = dtype.is_polymorphic
+            else:
+                is_polymorphic = False
+        elif not isinstance(is_polymorphic, bool):
+            raise TypeError('is_polymorphic must be a boolean.')
+        self._is_polymorphic = is_polymorphic
+
+        if is_optional is None:
+            is_optional = False
+        elif not isinstance(is_optional, bool):
+            raise TypeError('is_optional must be a boolean.')
+        self._is_optional = is_optional
+
+        self._cls_base       = cls_base
+        self._cls_parameters = cls_parameters
+        self._order          = order
+        self._is_argument    = is_argument
+
 
     @property
     def name(self):
-        return self._args[1]
-
-    @property
-    def rank(self):
-        return self._args[2]
+        return self._name
 
     @property
     def allocatable(self):
-        return self._args[3]
+        return self._allocatable
 
-    @property
-    def shape(self):
-        return self._args[4]
+    @allocatable.setter
+    def allocatable(self, allocatable):
+        if not isinstance(allocatable, bool):
+            raise TypeError('allocatable must be a boolean.')
+        self._allocatable = allocatable
 
     @property
     def cls_base(self):
-        return self._args[5]
+        return self._cls_base
 
     @property
     def cls_parameters(self):
-        return self._args[6]
+        return self._cls_parameters
 
     @property
     def is_pointer(self):
-        return self._args[7]
+        return self._is_pointer
+
+    @is_pointer.setter
+    def is_pointer(self, is_pointer):
+        if not isinstance(is_pointer, bool):
+            raise TypeError('is_pointer must be a boolean.')
+        self._is_pointer = is_pointer
 
     @property
     def is_target(self):
-        return self._args[8]
+        return self._is_target
+
+    @is_target.setter
+    def is_target(self, is_target):
+        if not isinstance(is_target, bool):
+            raise TypeError('is_target must be a boolean.')
+        self._is_target = is_target
 
     @property
     def is_polymorphic(self):
-        return self._args[9]
+        return self._is_polymorphic
 
     @property
     def is_optional(self):
-        return self._args[10]
+        return self._is_optional
 
     @property
     def order(self):
-        return self._args[11]
-
-    @property
-    def precision(self):
-        return self._args[12]
+        return self._order
 
     @property
     def is_stack_array(self):
-        return self._args[13]
+        return self._is_stack_array
 
     @property
     def is_argument(self):
-        return self._args[14]
+        return self._is_argument
 
     @property
     def is_ndarray(self):
@@ -2527,24 +2528,28 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
         return self._args[1]
 
     @property
-    def rank(self):
-        return self._args[1].rank
-
-    @property
-    def dtype(self):
-        return self._args[1].dtype
-
-    @property
     def allocatable(self):
         return self._args[1].allocatable
+
+    @allocatable.setter
+    def allocatable(self, allocatable):
+        self._args[1].allocatable = allocatable
 
     @property
     def is_pointer(self):
         return self._args[1].is_pointer
 
+    @is_pointer.setter
+    def is_pointer(self, is_pointer):
+        self._args[1].is_pointer = is_pointer
+
     @property
     def is_target(self):
         return self._args[1].is_target
+
+    @is_target.setter
+    def is_target(self, is_target):
+        self._args[1].is_target = is_target
 
     @property
     def name(self):
@@ -2622,6 +2627,7 @@ class ValuedVariable(Variable):
 
         # if value is not given, we set it to Nil
         self._value = kwargs.pop('value', Nil())
+        Variable.__init__(self, *args, **kwargs)
 
     @property
     def value(self):
@@ -2653,17 +2659,18 @@ class TupleVariable(Variable):
     n
     """
 
-    def __new__(cls, arg_vars, dtype, name, **kwargs):
+    def __new__(cls, arg_vars, dtype, name, *args, **kwargs):
 
         # if value is not given, we set it to Nil
         # we also remove value from kwargs,
         # since it is not a valid argument for Variable
         
-        return Variable.__new__(cls, dtype, name, **kwargs)
+        return Variable.__new__(cls, dtype, name, *args, **kwargs)
 
-    def __init__(self, arg_vars, dtype, *args, **kwargs):
+    def __init__(self, arg_vars, dtype, name, *args, **kwargs):
         self._vars = tuple(arg_vars)
         self._is_homogeneous = not dtype is NativeGeneric()
+        Variable.__init__(self, dtype, name, *args, **kwargs)
 
     def get_vars(self):
         return self._vars
@@ -2687,6 +2694,29 @@ class TupleVariable(Variable):
     def is_homogeneous(self):
         return self._is_homogeneous
 
+    @Variable.allocatable.setter
+    def allocatable(self, allocatable):
+        if not isinstance(allocatable, bool):
+            raise TypeError('allocatable must be a boolean.')
+        self._allocatable = allocatable
+        for var in self._vars:
+            var.allocatable = allocatable
+
+    @Variable.is_pointer.setter
+    def is_pointer(self, is_pointer):
+        if not isinstance(is_pointer, bool):
+            raise TypeError('is_pointer must be a boolean.')
+        self._is_pointer = is_pointer
+        for var in self._vars:
+            var.is_pointer = is_pointer
+
+    @Variable.is_target.setter
+    def is_target(self, is_target):
+        if not isinstance(is_target, bool):
+            raise TypeError('is_target must be a boolean.')
+        self._is_target = is_target
+        for var in self._vars:
+            var.is_target = is_target
 
 class Constant(ValuedVariable, PyccelAstNode):
 
