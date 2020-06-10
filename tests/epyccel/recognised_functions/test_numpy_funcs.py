@@ -367,7 +367,7 @@ def test_arctan2_phrase():
         return a
 
     f2 = epyccel(arctan2_phrase)
-    x = rand()
+    x = -rand()
     y = rand()
     z = rand()
     assert(isclose(f2(x,y,z), arctan2_phrase(x,y,z), rtol=1e-15, atol=1e-15))
