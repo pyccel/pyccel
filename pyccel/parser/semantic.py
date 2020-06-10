@@ -1504,23 +1504,40 @@ class SemanticParser(BasicParser):
 
         if isinstance(rhs, (TupleVariable, PythonTuple)):
             elem_vars = []
-            is_pointer = d_lhs['is_pointer']
             for i,r in enumerate(rhs):
                 elem_name = self._get_new_variable_name( r, name + '_' + str(i) )
                 elem_d_lhs = self._infere_type( r )
+
+                self._ensure_target( r, elem_d_lhs )
 
                 elem_dtype = elem_d_lhs.pop('datatype')
 
                 var = self._create_variable(elem_name, elem_dtype, r, elem_d_lhs)
                 elem_vars.append(var)
 
-            d_lhs['is_pointer'] = is_pointer
+            d_lhs['is_pointer'] = any(v.is_pointer for v in elem_vars)
             lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
 
         else:
             lhs = Variable(dtype, name, **d_lhs)
 
         return lhs
+
+    def _ensure_target(self, rhs, d_lhs):
+        if isinstance(rhs, (Variable, DottedVariable)) and rhs.allocatable:
+            d_lhs['allocatable'] = False
+            d_lhs['is_pointer' ] = True
+
+            # TODO uncomment this line, to make rhs target for
+            #      lists/tuples.
+            rhs.is_target = True
+        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.internal_variable.allocatable:
+            d_lhs['allocatable'] = False
+            d_lhs['is_pointer' ] = True
+
+            # TODO uncomment this line, to make rhs target for
+            #      lists/tuples.
+            rhs.base.internal_variable.is_target = True
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, **settings):
 
@@ -1531,20 +1548,7 @@ class SemanticParser(BasicParser):
 
             d_lhs = d_var.copy()
             # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-            if isinstance(rhs, (Variable, DottedVariable)) and rhs.allocatable:
-                d_lhs['allocatable'] = False
-                d_lhs['is_pointer' ] = True
-
-                # TODO uncomment this line, to make rhs target for
-                #      lists/tuples.
-                rhs.is_target = True
-            if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.internal_variable.allocatable:
-                d_lhs['allocatable'] = False
-                d_lhs['is_pointer' ] = True
-
-                # TODO uncomment this line, to make rhs target for
-                #      lists/tuples.
-                rhs.base.internal_variable.is_target = True
+            self._ensure_target(rhs, d_lhs)
 
             var = self.get_variable_from_scope(name)
 
