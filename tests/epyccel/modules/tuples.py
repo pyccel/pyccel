@@ -171,7 +171,7 @@ def tuple_visitation_inhomogeneous():
         print(a)
 
 def tuple_visitation_homogeneous():
-    ai = (1,3.5, 4)
+    ai = (1,5, 4)
     for a in ai:
         print(a)
 
