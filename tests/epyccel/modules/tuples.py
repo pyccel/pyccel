@@ -28,6 +28,8 @@ __all__ = [
         'tuple_visitation_inhomogeneous',
         'tuples_homogeneous_have_pointers',
         'tuples_inhomogeneous_have_pointers',
+        'tuples_homogeneous_copies_have_pointers',
+        'tuples_inhomogeneous_copies_have_pointers',
         ]
 
 def homogenous_tuple_int():
@@ -190,3 +192,21 @@ def tuples_inhomogeneous_have_pointers():
     c = (a,b)
     a[1] = 4
     return c[0][0], c[0][1], c[1][0], c[1][1], c[1][2]
+
+def tuples_homogeneous_copies_have_pointers():
+    from numpy import zeros
+    a = zeros(2)
+    b = zeros(2)
+    c = (a,b)
+    d = c
+    a[1] = 4
+    return d[0][0], d[0][1], d[1][0], d[1][1]
+
+def tuples_inhomogeneous_copies_have_pointers():
+    from numpy import zeros
+    a = zeros(2)
+    b = zeros(3)
+    c = (a,b)
+    d = c
+    a[1] = 4
+    return d[0][0], d[0][1], d[1][0], d[1][1], d[1][2]
