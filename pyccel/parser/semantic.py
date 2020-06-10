@@ -1548,7 +1548,7 @@ class SemanticParser(BasicParser):
                 # TODO uncomment this line, to make rhs target for
                 #      lists/tuples.
                 rhs.is_target = True
-            if isinstance(rhs, IndexedElement) and rhs.base.internal_variable.allocatable:
+            if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.internal_variable.allocatable:
                 d_lhs['allocatable'] = False
                 d_lhs['is_pointer' ] = True
 
