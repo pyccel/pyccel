@@ -1985,14 +1985,8 @@ class SemanticParser(BasicParser):
 
         new_expressions = []
         for l, r in zip(lhs,rhs):
-            is_pointer_i = is_pointer and isinstance(r, (Variable, Dlist, DottedVariable))
-            is_pointer_i = is_pointer or isinstance(l, (Variable, DottedVariable)) and l.is_pointer
             new_expr = Assign(l, r)
-            if is_pointer_i:
-                if (isinstance(r,(Variable, DottedVariable)) and not (r.is_target or r.is_pointer)):
-                    r.is_target = True
-                if isinstance(r,PythonTuple):
-                    r.is_target = True
+            if l.is_pointer:
                 new_expr = AliasAssign(l, r)
 
             elif isinstance(expr, AugAssign):
