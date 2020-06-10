@@ -580,19 +580,10 @@ class SemanticParser(BasicParser):
             print ('*** type inference for : ', type(expr))
 
         d_var = {}
-
         d_var['datatype'      ] = NativeSymbol()
         d_var['precision'     ] = 0
         d_var['shape'         ] = ()
         d_var['rank'          ] = 0
-        d_var['allocatable'   ] = None
-        d_var['is_stack_array'] = None
-        d_var['is_pointer'    ] = None
-        d_var['is_target'     ] = None
-        d_var['is_polymorphic'] = None
-        d_var['is_optional'   ] = None
-        d_var['cls_base'      ] = None
-        d_var['cls_parameters'] = None
 
         # TODO improve => put settings as attribut of Parser
 
@@ -1550,7 +1541,7 @@ class SemanticParser(BasicParser):
 
             d_lhs = d_var.copy()
             # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-            if d_lhs['allocatable'] and isinstance(rhs, Variable):
+            if isinstance(rhs, Variable) and rhs.allocatable:
                 d_lhs['allocatable'] = False
                 d_lhs['is_pointer' ] = True
 
@@ -1620,7 +1611,7 @@ class SemanticParser(BasicParser):
 
 
                 # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-                if d_lhs['allocatable'] and isinstance(rhs, Variable):
+                if isinstance(rhs, Variable) and rhs.allocatable:
                     d_lhs['allocatable'] = False
                     d_lhs['is_pointer' ] = True
 
@@ -1865,18 +1856,17 @@ class SemanticParser(BasicParser):
                 if __name__.startswith('Pyccel'):
                     __name__ = __name__[6:]
                     d['cls_base'] = self.get_class(__name__)
-                    d['is_pointer'] = d['is_target'] or d['is_pointer']
+                    d['is_pointer'] = d_var.get('is_target',False) or d_var.get('is_pointer',False)
 
                     # TODO if we want to use pointers then we set target to true
                     # in the ConsturcterCall
 
                     d['is_polymorphic'] = False
 
-                if d['is_target']:
+                if isinstance(rhs, Variable) and rhs.is_target:
                     # case of rhs is a target variable the lhs must be a pointer
-                    if isinstance(rhs, Symbol):
-                        d['is_target' ] = False
-                        d['is_pointer'] = True
+                    d['is_target' ] = False
+                    d['is_pointer'] = True
 
         lhs = expr.lhs
         if isinstance(lhs, (Symbol, DottedVariable)):
@@ -1975,30 +1965,15 @@ class SemanticParser(BasicParser):
             if isinstance(d_var,dict):
                 d_var = [d_var]
 
-        for (i, dic) in enumerate(d_var):
-
-            allocatable = False
-            is_pointer  = False
-            if dic['allocatable']:
-                allocatable = True
-
-            if dic['is_pointer']:
-                is_pointer = True
-
-            if ('is_target' in dic.keys() and dic['is_target']  and
-                isinstance(rhs, Variable)):
-                is_pointer = True
-
-            if (isinstance(rhs, IndexedElement) and
-                lhs[i].rank > 0):
-                allocatable = True
-
-            if isinstance(lhs, Variable):
-                lhs[i].allocatable = allocatable
-                lhs[i].is_pointer = is_pointer
-
         if len(lhs) == 1:
             lhs = lhs[0]
+
+        if isinstance(lhs, Variable):
+            is_pointer = lhs.is_pointer
+        elif isinstance(lhs, IndexedElement):
+            is_pointer = False
+        elif isinstance(lhs, PythonTuple):
+            is_pointer = any(l.is_pointer for l in lhs)
 
         # TODO: does is_pointer refer to any/all or last variable in list (currently last)
         is_pointer = is_pointer and isinstance(rhs, (Variable, Dlist, DottedVariable))
