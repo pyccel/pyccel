@@ -440,7 +440,6 @@ def test_floor_phrase():
     y = rand()
     assert(isclose(f2(x,y), floor_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.xfail(reason = "numpy floor returns the same type as the input")
 def test_floor_return_type():
     @types('int')
     def floor_return_type_int(x):
