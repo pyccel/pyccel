@@ -1046,11 +1046,6 @@ class SemanticParser(BasicParser):
         if isinstance(var, TupleVariable) and not var.is_homogeneous:
 
             arg = args[-1]
-            if (not isinstance(arg, Integer) and
-                    not isinstance(arg, Slice)):
-                errors.report(INDEXED_TUPLE, symbol=var,
-                    bounding_box=self._current_fst_node.absolute_bounding_box,
-                    severity='fatal', blocker=self.blocking)
 
             if isinstance(arg, Slice):
                 if ((arg.start is not None and not isinstance(arg.start, Integer)) or
@@ -1074,13 +1069,18 @@ class SemanticParser(BasicParser):
                 else:
                     return PythonTuple(*[self._extract_indexed_from_var(var, args[:-1], name) for var in selected_vars])
 
-            else:
+            elif isinstance(arg, Integer):
 
                 if len(args)==1:
                     return var[arg]
 
                 var = var[arg]
                 return self._extract_indexed_from_var(var, args[:-1], name)
+
+            else:
+                errors.report(INDEXED_TUPLE, symbol=var,
+                    bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='fatal', blocker=self.blocking)
 
         if hasattr(var, 'dtype'):
             dtype = var.dtype
@@ -1510,14 +1510,6 @@ class SemanticParser(BasicParser):
                 elem_d_lhs = self._infere_type( r )
 
                 elem_dtype = elem_d_lhs.pop('datatype')
-
-                if elem_d_lhs['allocatable'] and isinstance(r, Variable):
-                    elem_d_lhs['allocatable'] = False
-                    elem_d_lhs['is_pointer' ] = True
-                    is_pointer = True
-
-                    if not r.is_pointer:
-                        r.is_target = True
 
                 var = self._create_variable(elem_name, elem_dtype, r, elem_d_lhs)
                 elem_vars.append(var)
