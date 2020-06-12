@@ -1683,8 +1683,10 @@ class SemanticParser(BasicParser):
                 if isinstance(master, FunctionDef):
                     return FunctionCall(master, args)
                 else:
-                    msg = 'TODO treate interface case'
-                    raise NotImplementedError(msg)
+                    # TODO treate interface case
+                    errors.report(PYCCEL_RESTRICTION_TODO,
+                                  bounding_box=stmt.absolute_bounding_box,
+                                  severity='fatal')
 
         elif isinstance(rhs, DottedVariable):
             var = rhs.rhs
@@ -2012,7 +2014,9 @@ class SemanticParser(BasicParser):
                 if F is None:
                     self.insert_symbolic_function(new_expr)
                 else:
-                    raise NotImplementedError('TODO')
+                    errors.report(PYCCEL_RESTRICTION_TODO,
+                                  bounding_box=stmt.absolute_bounding_box,
+                                  severity='fatal')
             new_expressions.append(new_expr)
         if (len(new_expressions)==1):
             new_expressions = new_expressions[0]
@@ -2205,7 +2209,9 @@ class SemanticParser(BasicParser):
                 var  = Variable(dtype, var.name, **dvar)
                 stop = a.shape[0]
             else:
-                raise NotImplementedError('TODO')
+                errors.report(PYCCEL_RESTRICTION_TODO,
+                              bounding_box=stmt.absolute_bounding_box,
+                              severity='fatal')
             self.insert_variable(var)
 
             size = (stop - start) / step
@@ -2230,7 +2236,9 @@ class SemanticParser(BasicParser):
             dim   = Summation(dim, (indices[i-1], 0, size-1))
             dim   = dim.doit()
         if isinstance(dim, Summation):
-            raise NotImplementedError('TODO')
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                          bounding_box=stmt.absolute_bounding_box,
+                          severity='fatal')
 
         # TODO find a faster way to calculate dim
         # when step>1 and not isinstance(dim, Sum)
@@ -2458,7 +2466,9 @@ class SemanticParser(BasicParser):
                 #case of multiple return
                 # with different variable name
                 msg = 'TODO not available yet'
-                raise PyccelSemanticError(msg)
+                errors.report(PYCCEL_RESTRICTION_TODO,
+                              bounding_box=stmt.absolute_bounding_box,
+                              severity='fatal')
 
             if len(results) > 0:
                 results = list(results[0])
@@ -2820,7 +2830,9 @@ class SemanticParser(BasicParser):
                             errors.report(FOUND_DUPLICATED_IMPORT,
                                         symbol=name, severity='warning')
                         else:
-                            raise NotImplementedError('must report error')
+                            errors.report(PYCCEL_RESTRICTION_TODO,
+                                          bounding_box=stmt.absolute_bounding_box,
+                                          severity='fatal')
             else:
 
                 # in some cases (blas, lapack, openmp and openacc level-0)
@@ -2939,7 +2951,9 @@ class SemanticParser(BasicParser):
 
         master = expr.master
         if isinstance(master, DottedName):
-            raise NotImplementedError('TODO')
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                          bounding_box=stmt.absolute_bounding_box,
+                          severity='fatal')
         header = self.get_header(master)
         if header is None:
             var = self.get_variable(master)
