@@ -238,7 +238,51 @@ class SyntaxParser(BasicParser):
 
 
     def _visit_RedBaron(self, stmt):
-        code = CodeBlock([self._visit(i) for i in stmt])
+        prog = []
+        mod  = []
+        start = []
+        current_file = start
+        targets = []
+        n_empty_lines = 0
+        for i in stmt:
+            v = self._visit(i)
+            if n_empty_lines > 3:
+                current_file = start
+            if isinstance(v,(FunctionDef, ClassDef)):
+                n_empty_lines = 0
+                mod.append(v)
+                targets.append(v.name)
+                current_file = mod
+            elif isinstance(v, (NewLine, EmptyLine)):
+                current_file.append(v)
+                n_empty_lines += 1
+            elif isinstance(v, Import):
+                n_empty_lines = 0
+                mod.append(v)
+                prog.append(v)
+            else:
+                n_empty_lines = 0
+                prog.append(v)
+                current_file = prog
+            if len(start)>0 and current_file is not None:
+                current_file[0:0] = start
+                start = []
+        current_mod_name = os.path.splitext(os.path.basename(self._filename))[0]
+        prog_name = 'prog_' + current_mod_name
+        mod_code = CodeBlock(mod) if len(mod)>0 else None
+        if len(prog)>0:
+            if mod_code:
+                expr = Import(targets, source=current_mod_name)
+                prog.insert(0,expr)
+            prog_code = CodeBlock(prog)
+            prog_code.set_fst(stmt)
+        else:
+            prog_code = None
+        from pyccel.ast import ParserResult
+        code = ParserResult(program   = prog_code,
+                            module    = mod_code,
+                            prog_name = prog_name,
+                            mod_name  = current_mod_name)
         code.set_fst(stmt)
         return code
 
