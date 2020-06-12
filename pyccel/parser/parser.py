@@ -30,6 +30,10 @@ class Parser(object):
         self._input_folder = os.path.dirname(filename)
 
     @property
+    def semantic_parser(self):
+        return self._semantic_parser
+
+    @property
     def filename(self):
         """ Python file to be parsed. """
         return self._filename
@@ -81,8 +85,33 @@ class Parser(object):
         parser = SyntaxParser(self._filename, **self._kwargs)
         self._syntax_parser = parser
 
+        parse_result = parser.ast
+
         if d_parsers is None:
-            d_parsers = OrderedDict()
+            d_parsers = self._d_parsers
+
+        if parse_result.has_additional_module():
+            new_mod_filename = os.path.join(os.path.dirname(self._filename),parse_result.mod_name+'.py')
+            q = Parser(new_mod_filename)
+            import copy
+            q._d_parsers = d_parsers
+            q._syntax_parser = copy.copy(parser)
+            q._syntax_parser._namespace = copy.deepcopy(parser.namespace)
+            q._syntax_parser._ast = parse_result.module
+            d_parsers[parse_result.mod_name] = q
+
+            q.append_parent(self)
+            self.append_son(q)
+            new_prog_filename = os.path.join(os.path.dirname(self._filename),parse_result.prog_name+'.py')
+            self._filename = new_prog_filename
+
+            parser._ast = parse_result.program
+
+            self.module_parser = q
+        else:
+            parser._ast = parse_result.get_focus()
+            self.module_parser = None
+
         self._d_parsers = self._parse_sons(d_parsers, verbose=verbose)
 
         return parser.ast
@@ -92,6 +121,7 @@ class Parser(object):
         # If the semantic parser already exists, do nothing
         if self._semantic_parser:
             return self._semantic_parser
+
 
         # we first treat all sons to get imports
         verbose = settings.pop('verbose', False)
