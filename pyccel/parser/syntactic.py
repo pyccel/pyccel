@@ -155,7 +155,6 @@ class SyntaxParser(BasicParser):
                 errors.report(INVALID_FILE_EXTENSION, symbol=ext,
                               severity='fatal')
                 errors.check()
-                raise SystemExit(0)
 
             code = read_file(inputs)
             self._filename = inputs
@@ -234,8 +233,9 @@ class SyntaxParser(BasicParser):
             return getattr(self, syntax_method)(stmt)
 
         # Unknown object, we raise an error.
-        raise PyccelSyntaxError('{node} not yet available'.format(node=type(stmt)))
-
+        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+                      bounding_box=stmt.absolute_bounding_box,
+                      severity='fatal')
 
     def _visit_RedBaron(self, stmt):
         code = CodeBlock([self._visit(i) for i in stmt])
@@ -301,7 +301,7 @@ class SyntaxParser(BasicParser):
         d = {}
         for i in stmt.value:
             if not isinstance(i, DictitemNode):
-                raise PyccelSyntaxError('Expecting a DictitemNode')
+                raise TypeError('Expecting a DictitemNode')
 
             key = self._visit(i.key)
             value = self._visit(i.value)
@@ -453,9 +453,9 @@ class SyntaxParser(BasicParser):
                           bounding_box=stmt.absolute_bounding_box,
                           severity='error')
         else:
-            msg = 'unknown/unavailable unary operator {node}'
-            msg = msg.format(node=type(stmt.value))
-            raise PyccelSyntaxError(msg)
+            errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+                          bounding_box=stmt.absolute_bounding_box,
+                          severity='fatal')
 
     def _visit_BinaryOperatorNode(self, stmt):
 
@@ -490,9 +490,9 @@ class SyntaxParser(BasicParser):
             expr = PyccelMod(first, second)
             return change_priority(expr)
         else:
-            msg = 'unknown/unavailable BinaryOperatorNode {node}'
-            msg = msg.format(node=type(stmt.value))
-            raise PyccelSyntaxError(msg)
+            errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+                          bounding_box=stmt.absolute_bounding_box,
+                          severity='fatal')
 
     def _visit_BooleanOperatorNode(self, stmt):
 
@@ -515,9 +515,9 @@ class SyntaxParser(BasicParser):
             else:
                 return PyccelOr(first, second)
 
-        msg = 'unknown/unavailable BooleanOperatorNode {node}'
-        msg = msg.format(node=type(stmt.value))
-        raise PyccelSyntaxError(msg)
+        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+                      bounding_box=stmt.absolute_bounding_box,
+                      severity='fatal')
 
     def _visit_ComparisonNode(self, stmt):
 
@@ -544,9 +544,9 @@ class SyntaxParser(BasicParser):
         if op == 'is not':
             return IsNot(first, second)
 
-        msg = 'unknown/unavailable binary operator {node}'
-        msg = msg.format(node=op)
-        raise PyccelSyntaxError(msg)
+        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+                      bounding_box=stmt.absolute_bounding_box,
+                      severity='fatal')
 
     def _visit_PrintNode(self, stmt):
         expr = self._visit(stmt.value[0])
@@ -652,13 +652,18 @@ class SyntaxParser(BasicParser):
                     arg  = arg.value
                     container = results
                     if not arg_name == 'results':
-                        msg = '> Wrong argument, given {}'.format(arg_name)
-                        raise NotImplementedError(msg)
-                    ls = arg if isinstance(arg, PythonTuple) else [arg]
-                    i = -1
+                        msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
+                        errors.report(msg,
+                                      bounding_box=stmt.absolute_bounding_box,
+                                      severity='error')
+                    else:
+                        ls = arg if isinstance(arg, PythonTuple) else [arg]
+                        i = -1
                 else:
-                    msg = '> Wrong type, given {}'.format(type(arg))
-                    raise NotImplementedError(msg)
+                    msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
+                    errors.report(msg,
+                                  bounding_box=stmt.absolute_bounding_box,
+                                  severity='error')
 
                 i = i+1
 
@@ -901,7 +906,9 @@ class SyntaxParser(BasicParser):
         elif name == 'max':
             expr = FunctionalMax(body, result, lhs, indices, None)
         else:
-            raise NotImplementedError('TODO')
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                          bounding_box=stmt.absolute_bounding_box,
+                          severity='fatal')
 
         expr.set_fst(stmt)
         return expr
