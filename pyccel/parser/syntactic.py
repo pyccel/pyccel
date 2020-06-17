@@ -246,6 +246,7 @@ class SyntaxParser(BasicParser):
         current_file = start
         targets = []
         n_empty_lines = 0
+        is_prog = False
         for i in stmt:
             v = self._visit(i)
             if n_empty_lines > 3:
@@ -267,6 +268,7 @@ class SyntaxParser(BasicParser):
                 mod.append(v)
                 prog.append(v)
             else:
+                is_prog = True
                 n_empty_lines = 0
                 prog.append(v)
                 current_file = prog
@@ -276,7 +278,7 @@ class SyntaxParser(BasicParser):
         current_mod_name = os.path.splitext(os.path.basename(self._filename))[0]
         prog_name = 'prog_' + current_mod_name
         mod_code = CodeBlock(mod) if len(targets)>0 else None
-        if len(prog)>0:
+        if is_prog:
             if mod_code:
                 expr = Import(targets, source=current_mod_name)
                 prog.insert(0,expr)
