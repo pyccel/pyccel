@@ -596,19 +596,8 @@ class SemanticParser(BasicParser):
         # TODO improve => put settings as attribut of Parser
 
         if isinstance(expr, type(None)):
-
             return d_var
 
-        elif isinstance(expr, (Integer, Float, Complex, String,
-                               BooleanTrue, BooleanFalse,
-                               PyccelArraySize, Is, IndexedElement)):
-
-            d_var['datatype'   ] = expr.dtype
-            d_var['allocatable'] = expr.rank>0
-            d_var['rank'       ] = expr.rank
-            d_var['precision'  ] = expr.precision
-            d_var['shape']       = expr.shape
-            return d_var
         elif expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt, 
                       Int32, Int64, NumpyComplex, Complex64, Complex128, NumpyFloat,
                       Float64, Float32):
@@ -692,36 +681,6 @@ class SemanticParser(BasicParser):
             d_var['is_pointer'    ] = False
             return d_var
 
-        elif isinstance(expr ,(Array, Full)):
-            d_var['datatype'   ] = expr.dtype
-            d_var['allocatable'] = expr.rank>0
-            d_var['shape'      ] = expr.shape
-            d_var['rank'       ] = expr.rank
-            d_var['order'      ] = expr.order
-            d_var['precision'  ] = expr.precision
-            return d_var
-
-        elif isinstance(expr, Len):
-            d_var['datatype'   ] = expr.dtype
-            d_var['rank'       ] = expr.rank
-            d_var['allocatable'] = expr.rank>0
-            return d_var
-
-        elif isinstance(expr, Rand):
-            d_var['datatype'   ] = expr.dtype
-            d_var['rank'       ] = expr.rank
-            d_var['precision'  ] = expr.precision
-            d_var['allocatable'] = expr.rank>0
-            d_var['shape'      ] = expr.shape
-            d_var['order'      ] = expr.order
-            return d_var
-
-        elif isinstance(expr, (NumpySum, Product, NumpyMin, NumpyMax)):
-            d_var['datatype'   ] = expr.args[0].dtype
-            d_var['rank'       ] = expr.rank
-            d_var['allocatable'] = expr.rank>0
-            return d_var
-
         elif isinstance(expr, Matmul):
 
             d_vars = [self._infere_type(arg,**settings) for arg in expr.args]
@@ -747,30 +706,18 @@ class SemanticParser(BasicParser):
                                        d_vars[1]['precision'])
             return d_var
 
-        elif isinstance(expr, (PythonInt,
-                       PythonFloat, PythonComplex,
-                       NumpyInt, Int32, Int64,
-                       NumpyFloat, Float32, Float64,
-                       NumpyComplex, Complex64, Complex128,
-                       Real, Imag, PythonBool)):
+        elif isinstance(expr ,(Array, Full, Len, Rand, NumpySum, Product,
+                               NumpyMin, NumpyMax, PythonInt, NumpyMod,
+                               PythonFloat, PythonComplex,
+                               NumpyInt, Int32, Int64,
+                               NumpyFloat, Float32, Float64,
+                               NumpyComplex, Complex64, Complex128,
+                               Real, Imag, PythonBool, Norm,
+                               NumpyUfuncBase, MathFunctionBase, Expr, FunctionCall,
+                               Integer, Float, Complex, String,
+                               BooleanTrue, BooleanFalse,
+                               PyccelArraySize, Is, IndexedElement)):
 
-            d_var['datatype'   ] = expr.dtype
-            d_var['rank'       ] = expr.rank
-            d_var['allocatable'] = expr.rank>0
-            d_var['precision'  ] = expr.precision
-            return d_var
-
-        elif isinstance(expr, NumpyMod):
-
-            d_var['datatype'   ] = expr.dtype
-            d_var['rank'       ] = expr.rank
-            d_var['shape'      ] = expr.shape
-            d_var['allocatable'] = expr.rank>0
-            d_var['precision'  ] = expr.precision
-
-            return d_var
-
-        elif isinstance(expr, Norm):
             d_var['datatype'   ] = expr.dtype
             d_var['allocatable'] = expr.rank>0
             d_var['shape'      ] = expr.shape
@@ -779,38 +726,7 @@ class SemanticParser(BasicParser):
             d_var['precision'  ] = expr.precision
             return d_var
 
-        elif isinstance(expr, NumpyUfuncBase):
-            d_var['datatype'   ] = expr.dtype
-            d_var['allocatable'] = expr.rank>0
-            d_var['shape'      ] = expr.shape
-            d_var['rank'       ] = expr.rank
-            d_var['order'      ] = expr.order
-            d_var['precision'  ] = expr.precision
-            return d_var
-
-        elif isinstance(expr, MathFunctionBase):
-            d_var['datatype' ] = expr.dtype
-            d_var['precision'] = expr.precision
-            d_var['rank'     ] = expr.rank
-            d_var['shape'    ] = expr.shape
-            return d_var
-
-        elif isinstance(expr, (EmptyLike, ZerosLike, OnesLike, FullLike)):
-            return self._infere_type(expr.rhs, **settings)
-
-        elif isinstance(expr, GC):
-            return self._infere_type(expr.lhs, **settings)
-
-        elif isinstance(expr, (Expr, FunctionCall)):
-            # ...
-            d_var['datatype'   ] = expr.dtype
-            d_var['allocatable'] = expr.rank>0
-            d_var['shape'      ] = expr.shape
-            d_var['rank'       ] = expr.rank
-            d_var['precision'  ] = expr.precision
-            return d_var
-
-        elif isinstance(expr, (list, List)):
+        elif isinstance(expr, List):
 
             import numpy
             d = self._infere_type(expr[0], **settings)
@@ -828,32 +744,6 @@ class SemanticParser(BasicParser):
 
             return d_var
 
-        elif isinstance(expr, Concatenate):
-            import operator
-            d_vars = [self._infere_type(a, **settings) for a in expr.args]
-            ls = any(d['is_pointer'] or d['is_target'] for d in d_vars)
-
-            if ls:
-                shapes = [d['shape'] for d in d_vars if d['shape']]
-                shapes = zip(*shapes)
-                shape = tuple(sum(s) for s in shapes)
-                if not shape:
-                    shape = (sum(map(Len,expr.args)),)
-                d_vars[0]['shape'     ] = shape
-                d_vars[0]['rank'      ] = 1
-                d_vars[0]['is_target' ] = True
-                d_vars[0]['is_pointer'] = False
-
-            else:
-                d_vars[0]['datatype'] = 'str'
-            return d_vars[0]
-
-
-            if not (d_var_left['datatype'] == 'str'
-                    or d_var_right['datatype'] == 'str'):
-                d_var_left['shape'] = tuple(map(operator.add,
-                        d_var_right['shape'], d_var_left['shape']))
-            return d_var_left
         elif isinstance(expr, ValuedArgument):
             return self._infere_type(expr.value)
 
