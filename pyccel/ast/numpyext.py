@@ -1202,27 +1202,15 @@ class NumpyFloor(NumpyUfuncUnary):
 
 class NumpyMod(NumpyUfuncBinary):
     def __init__(self, x1, x2):
-        self._shape     = x1.shape
-        self._rank      = x1.rank
-        self._dtype     = x1.dtype
-        self._precision = x1.precision
-        self._order     = x1.order
+        self.copy(x1)
 
 class NumpyMin(NumpyUfuncUnary):
     def __init__(self, x):
-        self._shape     = x.shape
-        self._rank      = x.rank
-        self._dtype     = x.dtype
-        self._precision = x.precision
-        self._order     = x.order
+        self.copy(x)
 
 class NumpyMax(NumpyUfuncUnary):
     def __init__(self, x):
-        self._shape     = x.shape
-        self._rank      = x.rank
-        self._dtype     = x.dtype
-        self._precision = x.precision
-        self._order     = x.order
+        self.copy(x)
 
 #=======================================================================================
 class NumpyComplex(PythonComplex):

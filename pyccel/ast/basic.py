@@ -42,3 +42,11 @@ class PyccelAstNode:
     @property
     def order(self):
         return self._order
+
+    def copy(self, x):
+        self._shape     = x.shape
+        self._rank      = x.rank
+        self._dtype     = x.dtype
+        self._precision = x.precision
+        self._order     = x.order
+
