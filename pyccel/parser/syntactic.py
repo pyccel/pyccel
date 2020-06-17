@@ -778,7 +778,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_ClassNode(self, stmt):
 
-        name = self._visit(stmt.name)
+        name = stmt.name
         methods = [i for i in stmt.value if isinstance(i, DefNode)]
         methods = self._visit(methods)
         attributes = methods[0].arguments
