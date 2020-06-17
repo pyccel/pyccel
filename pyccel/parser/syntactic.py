@@ -263,6 +263,8 @@ class SyntaxParser(BasicParser):
             elif isinstance(v, (NewLine, EmptyLine)):
                 current_file.append(v)
                 n_empty_lines += 1
+            elif isinstance(v, Comment):
+                current_file.append(v)
             elif isinstance(v, Import):
                 n_empty_lines = 0
                 mod.append(v)
