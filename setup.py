@@ -53,10 +53,7 @@ def setup_package():
     setup(packages=packages, \
           include_package_data=True, \
           install_requires=install_requires, \
-          entry_points={'console_scripts': ['pyccel = pyccel.commands.console:pyccel',
-                                            'ipyccel = pyccel.commands.ipyccel:ipyccel',
-                                            'pyccel-quickstart = pyccel.commands.quickstart:main',
-                                            'pyccel-build = pyccel.commands.build:main']}, \
+          entry_points={'console_scripts': ['pyccel = pyccel.commands.console:pyccel']}, \
           **setup_args)
 
 if __name__ == "__main__":
