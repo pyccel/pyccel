@@ -1071,21 +1071,14 @@ class FCodePrinter(CodePrinter):
 
         # TODO improve
         op = '=>'
-        if isinstance(lhs, Variable) and (lhs.rank > 0)  and (not lhs.is_pointer or not isinstance(rhs, Atom)):
-            if not isinstance(rhs, Atom) and not isinstance(rhs, Indexed):
-                # case of rhs an expression and lhs is pointer we then allocate the memory for it
-                for i in list(preorder_traversal(rhs)):
-                    if isinstance(i, (Variable, DottedVariable)) and i.rank>0:
-                        rhs = i
-                        break
-            #TODO improve we only need to allocate the variable without setting it to zero
-            #TODO [YG, 12.03.2020] Use EmptyLike and change call signature
-            stmt = ZerosLike(lhs=lhs, rhs=rhs)
-            code += self._print(stmt)
-            code += '\n'
-            op = '='
+        shape_code = ''
+        if lhs.rank > 0:
+            shape_code = ', '.join('0:' for i in range(lhs.rank))
+            shape_code = '({s_c})'.format(s_c = shape_code)
 
-        code += '{lhs} {op} {rhs}'.format(lhs=self._print(expr.lhs),
+
+        code += '{lhs}{s_c} {op} {rhs}'.format(lhs=self._print(expr.lhs),
+                                          s_c = shape_code,
                                           op=op,
                                           rhs=self._print(expr.rhs))
 
