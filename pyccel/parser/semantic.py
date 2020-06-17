@@ -705,26 +705,6 @@ class SemanticParser(BasicParser):
                                        d_vars[1]['precision'])
             return d_var
 
-        elif isinstance(expr ,(Array, Full, Len, Rand, NumpySum, Product,
-                               NumpyMin, NumpyMax, PythonInt, NumpyMod,
-                               PythonFloat, PythonComplex,
-                               NumpyInt, Int32, Int64,
-                               NumpyFloat, Float32, Float64,
-                               NumpyComplex, Complex64, Complex128,
-                               Real, Imag, PythonBool, Norm,
-                               NumpyUfuncBase, MathFunctionBase, Expr, FunctionCall,
-                               Integer, Float, Complex, String,
-                               BooleanTrue, BooleanFalse,
-                               PyccelArraySize, Is, IndexedElement)):
-
-            d_var['datatype'   ] = expr.dtype
-            d_var['allocatable'] = expr.rank>0
-            d_var['shape'      ] = expr.shape
-            d_var['rank'       ] = expr.rank
-            d_var['order'      ] = expr.order
-            d_var['precision'  ] = expr.precision
-            return d_var
-
         elif isinstance(expr, List):
 
             import numpy
@@ -761,6 +741,26 @@ class SemanticParser(BasicParser):
             d_var['shape'      ] = (expr.length, )
             d_var['allocatable'] = False
             d_var['is_pointer' ] = True
+            return d_var
+
+        elif isinstance(expr ,(Array, Full, Len, Rand, NumpySum, Product,
+                               NumpyMin, NumpyMax, PythonInt, NumpyMod,
+                               PythonFloat, PythonComplex,
+                               NumpyInt, Int32, Int64,
+                               NumpyFloat, Float32, Float64,
+                               NumpyComplex, Complex64, Complex128,
+                               Real, Imag, PythonBool, Norm,
+                               NumpyUfuncBase, MathFunctionBase, Expr, FunctionCall,
+                               Integer, Float, Complex, String,
+                               BooleanTrue, BooleanFalse,
+                               PyccelArraySize, Is, IndexedElement)):
+
+            d_var['datatype'   ] = expr.dtype
+            d_var['allocatable'] = expr.rank>0
+            d_var['shape'      ] = expr.shape
+            d_var['rank'       ] = expr.rank
+            d_var['order'      ] = expr.order
+            d_var['precision'  ] = expr.precision
             return d_var
 
         else:

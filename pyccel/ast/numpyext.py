@@ -1202,15 +1202,15 @@ class NumpyFloor(NumpyUfuncUnary):
 
 class NumpyMod(NumpyUfuncBinary):
     def __init__(self, x1, x2):
-        self.copy(x1)
+        self.copy_attributes(x1)
 
 class NumpyMin(NumpyUfuncUnary):
     def __init__(self, x):
-        self.copy(x)
+        self.copy_attributes(x)
 
 class NumpyMax(NumpyUfuncUnary):
     def __init__(self, x):
-        self.copy(x)
+        self.copy_attributes(x)
 
 #=======================================================================================
 class NumpyComplex(PythonComplex):
