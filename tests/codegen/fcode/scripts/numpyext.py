@@ -3,7 +3,7 @@ from numpy import ones
 from numpy import sum as np_sum
 from numpy import array
 from numpy import shape
-from numpy import diag
+#from numpy import diag
 from numpy import zeros_like
 from numpy import full_like
 

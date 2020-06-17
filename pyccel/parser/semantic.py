@@ -606,7 +606,7 @@ class SemanticParser(BasicParser):
             d_var['rank'       ] = 0
             d_var['precision'  ] = 0
             return d_var
-            
+
         elif isinstance(expr, Variable):
 
             d_var['datatype'      ] = expr.dtype
@@ -678,7 +678,6 @@ class SemanticParser(BasicParser):
 
             d_var['is_polymorphic'] = False
             d_var['cls_base'      ] = cls
-            d_var['is_pointer'    ] = False
             return d_var
 
         elif isinstance(expr, Matmul):
