@@ -172,7 +172,10 @@ class Parser(object):
 
             q = Parser(filename)
             q.parse(d_parsers=d_parsers)
-            d_parsers[source] = q
+            if q.module_parser:
+                d_parsers[source] = q.module_parser
+            else:
+                d_parsers[source] = q
 
         # link self to its sons
         for source in imports:
