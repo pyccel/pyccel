@@ -3,6 +3,7 @@
 #
 #from expressions import ad, bd
 #xd = ad * bd
+xi = 2
 
 from functions import decr
 yi = decr(xi)
