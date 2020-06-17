@@ -33,6 +33,13 @@ def get_exe(filename):
     exefile = os.path.splitext(filename)[0]
     if sys.platform == "win32":
         exefile = exefile + ".exe"
+    if not os.path.isfile(exefile):
+        dirname = os.path.dirname(filename)
+        basename = "prog_"+os.path.basename(filename)
+        exefile = os.path.join(dirname, os.path.splitext(basename)[0])
+        if sys.platform == "win32":
+            exefile = exefile + ".exe"
+        assert(os.path.isfile(exefile))
     return exefile
 
 #------------------------------------------------------------------------------
@@ -86,7 +93,6 @@ def compile_fortran(path_dir,test_file,dependencies):
 
 #------------------------------------------------------------------------------
 def get_fortran_output(abs_path):
-    assert(os.path.isfile(abs_path))
     p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
     out, _ = p.communicate()
     assert(p.returncode==0)
