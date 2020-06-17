@@ -58,6 +58,8 @@ from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
 from pyccel.ast.core import PyccelOperator, PyccelUnary
 
+from pyccel.ast.headers import Header
+
 from pyccel.ast.numbers import Complex
 
 from pyccel.parser.utilities import fst_move_directives, preprocess_imports
@@ -253,6 +255,10 @@ class SyntaxParser(BasicParser):
                 mod.append(v)
                 targets.append(v.name)
                 current_file = mod
+            elif isinstance(v,Header):
+                n_empty_lines = 0
+                mod.append(v)
+                current_file = mod
             elif isinstance(v, (NewLine, EmptyLine)):
                 current_file.append(v)
                 n_empty_lines += 1
@@ -269,7 +275,7 @@ class SyntaxParser(BasicParser):
                 start = []
         current_mod_name = os.path.splitext(os.path.basename(self._filename))[0]
         prog_name = 'prog_' + current_mod_name
-        mod_code = CodeBlock(mod) if len(mod)>0 else None
+        mod_code = CodeBlock(mod) if len(targets)>0 else None
         if len(prog)>0:
             if mod_code:
                 expr = Import(targets, source=current_mod_name)
