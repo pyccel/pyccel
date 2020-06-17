@@ -44,7 +44,6 @@ from pyccel.ast import List, Dlist, Len
 from pyccel.ast import builtin_function as pyccel_builtin_function
 from pyccel.ast import builtin_import as pyccel_builtin_import
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
-from pyccel.ast import Zeros, Where, Linspace, Diag, EmptyLike
 from pyccel.ast import StarredArguments
 from pyccel.ast import inline, subs, create_variable, extract_subexpressions
 from pyccel.ast.core import get_assigned_symbols
@@ -55,6 +54,17 @@ from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMo
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.core import PyccelUnary
+
+from pyccel.ast.numpyext  import Full, Array, Rand, NumpySum
+from pyccel.ast.numpyext  import EmptyLike, FullLike, OnesLike, ZerosLike
+from pyccel.ast.numpyext  import NumpySum, NumpyMin, NumpyMax, NumpyMod
+from pyccel.ast.numpyext  import Matmul, Norm
+
+from pyccel.ast.builtins import Int as PythonInt, Bool as PythonBool, PythonFloat, PythonComplex
+from pyccel.ast.numpyext import NumpyInt, Int32, Int64
+from pyccel.ast.numpyext import NumpyFloat, Float32, Float64
+from pyccel.ast.numpyext import NumpyComplex, Complex64, Complex128
+from pyccel.ast.numpyext import Real, Imag, Where, Diag, Linspace
 
 from pyccel.ast.core      import Product, FunctionCall
 from pyccel.ast.datatypes import default_precision
@@ -68,9 +78,7 @@ from pyccel.ast.utilities import split_positional_keyword_arguments
 from pyccel.ast.type_inference  import str_dtype
 from pyccel.parser.errors import Errors
 from pyccel.parser.errors import PyccelSemanticError
-from pyccel.ast.numpyext  import NumpyInt, Int32, Int64, NumpyComplex, Complex64
-from pyccel.ast.numpyext  import Complex128, NumpyFloat, Float64, Float32
-from pyccel.ast.builtins  import Int as PythonInt, PythonFloat, PythonComplex, Bool as PythonBool
+
 from pyccel.ast.mathext   import MathFunctionBase
 
 # TODO - remove import * and only import what we need
@@ -657,7 +665,6 @@ class SemanticParser(BasicParser):
             self._current_class = None
             return d_var
 
-
         elif isinstance(expr, Lambda):
 
             d_var['datatype'   ] = NativeSymbol()
@@ -685,150 +692,124 @@ class SemanticParser(BasicParser):
             d_var['is_pointer'    ] = False
             return d_var
 
-        elif isinstance(expr, Application):
-
-            name = type(expr).__name__
-            func = self.get_function(name)
-            if isinstance(func, FunctionDef):
-                d_var = self._infere_type(func.results[0], **settings)
-
-            elif name in ['Full', 'Empty', 'Zeros', 'Ones', 'Diag',
-                          'Cross', 'Linspace', 'Where']:
-                d_var['datatype'   ] = expr.dtype
-                d_var['allocatable'] = True
-                d_var['shape'      ] = expr.shape
-                d_var['rank'       ] = expr.rank
-                d_var['is_pointer' ] = False
-                d_var['order'      ] = expr.order
-                d_var['precision'  ] = expr.precision
-
-            elif name in ['Array']:
-                d_var['datatype'      ] = expr.dtype
-                d_var['precision'     ] = expr.precision
-                d_var['rank'          ] = expr.rank
-                d_var['shape'         ] = expr.shape
-                d_var['order'         ] = expr.order
-                d_var['allocatable'   ] = expr.rank>0
-                d_var['is_stack_array'] = False
-                d_var['is_pointer'    ] = False
-                d_var['is_target'     ] = True # ISSUE 177: TODO this should be done using setter
-
-            elif name in ['Len']:
-                d_var['datatype'   ] = expr.dtype
-                d_var['rank'       ] = 0
-                d_var['allocatable'] = False
-                d_var['is_pointer' ] = False
-
-            elif name in ['Rand']:
-                d_var['datatype'   ] = expr.dtype
-                d_var['rank'       ] = expr.rank
-                d_var['is_pointer' ] = False
-                d_var['precision'  ] = expr.precision
-
-                if expr.rank == 0:
-                    d_var['allocatable'] = False
-                else:
-                    d_var['shape'      ] = expr.shape
-                    d_var['allocatable'] = True
-                    d_var['order'      ] = expr.order
-
-            elif name in ['NumpySum', 'Product', 'Min', 'Max']:
-                d_var['datatype'   ] = expr.args[0].dtype
-                d_var['rank'       ] = 0
-                d_var['allocatable'] = False
-                d_var['is_pointer' ] = False
-
-            elif name in ['Matmul']:
-
-                d_vars = [self._infere_type(arg,**settings) for arg in expr.args]
-
-                var0_is_vector = d_vars[0]['rank'] < 2
-                var1_is_vector = d_vars[1]['rank'] < 2
-
-                if(d_vars[0]['shape'] is None or d_vars[1]['shape'] is None):
-                    d_var['shape'] = None
-                else:
-
-                    m = 1 if var0_is_vector else d_vars[0]['shape'][0]
-                    n = 1 if var1_is_vector else d_vars[1]['shape'][1]
-                    d_var['shape'] = [m, n]
-
-                d_var['datatype'   ] = d_vars[0]['datatype']
-                if var0_is_vector or var1_is_vector:
-                    d_var['rank'   ] = 1
-                else:
-                    d_var['rank'   ] = 2
-                d_var['allocatable'] = False
-                d_var['is_pointer' ] = False
-                d_var['precision'  ] = max(d_vars[0]['precision'],
-                                           d_vars[1]['precision'])
-
-            elif name in ['Int',
-                          'PythonFloat','PythonComplex',
-                          'NumpyInt','Int32','Int64',
-                          'NumpyFloat','Float32','Float64',
-                          'NumpyComplex', 'Complex64','Complex128',
-                          'Real','Imag','Bool']:
-
-                d_var['datatype'   ] = expr.dtype
-                d_var['rank'       ] = 0
-                d_var['allocatable'] = False
-                d_var['is_pointer' ] = False
-                d_var['precision'  ] = expr.precision
-
-            elif name in ['Mod']:
-
-                # Determine output type/rank/shape
-                # TODO [YG, 10.10.2018]: use Numpy broadcasting rules
-                d_vars = [self._infere_type(arg,**settings) for arg in expr.args]
-                i = 0 if (d_vars[0]['rank'] >= d_vars[1]['rank']) else 1
-
-                d_var['datatype'   ] = d_vars[i]['datatype']
-                d_var['rank'       ] = d_vars[i]['rank']
-                d_var['shape'      ] = d_vars[i]['shape']
-                d_var['allocatable'] = d_vars[i]['allocatable']
-                d_var['is_pointer' ] = False
-                d_var['precision'  ] = d_vars[i].pop('precision',4)
-
-            elif name in ['Norm']:
-                d_var = self._infere_type(expr.arg,**settings)
-
-                d_var['shape'] = expr.shape(d_var['shape'])
-                d_var['rank' ] = len(d_var['shape'])
-                d_var['allocatable'] = d_var['rank']>0
-                d_var['is_pointer' ] = False
-
-            elif isinstance(expr, NumpyUfuncBase):
-                d_var = self._infere_type(expr.args[0], **settings)
-                d_var['datatype'   ] = expr.dtype
-                d_var['is_pointer' ] = False
-                d_var['precision'  ] = expr.precision
-
-            elif isinstance(expr, MathFunctionBase):
-                d_var['datatype' ] = expr.dtype
-                d_var['precision'] = expr.precision
-                d_var['rank'     ] = expr.rank
-                d_var['shape'    ] = expr.shape
-
-            elif name in ['EmptyLike', 'ZerosLike', 'OnesLike', 'FullLike']:
-                d_var = self._infere_type(expr.rhs, **settings)
-            else:
-                raise NotImplementedError('Type of Application : '+type(expr).__name__+' cannot be infered')
-
-            return d_var
-
-        elif isinstance(expr, GC):
-            return self._infere_type(expr.lhs, **settings)
-        elif isinstance(expr, (Expr, FunctionCall)):
-            # ...
+        elif isinstance(expr ,(Array, Full)):
             d_var['datatype'   ] = expr.dtype
-            d_var['allocatable'] = expr.rank>0 if expr.rank else None
-            d_var['is_pointer' ] = False
+            d_var['allocatable'] = expr.rank>0
             d_var['shape'      ] = expr.shape
             d_var['rank'       ] = expr.rank
+            d_var['order'      ] = expr.order
+            d_var['precision'  ] = expr.precision
+            return d_var
+
+        elif isinstance(expr, Len):
+            d_var['datatype'   ] = expr.dtype
+            d_var['rank'       ] = expr.rank
+            d_var['allocatable'] = expr.rank>0
+            return d_var
+
+        elif isinstance(expr, Rand):
+            d_var['datatype'   ] = expr.dtype
+            d_var['rank'       ] = expr.rank
+            d_var['precision'  ] = expr.precision
+            d_var['allocatable'] = expr.rank>0
+            d_var['shape'      ] = expr.shape
+            d_var['order'      ] = expr.order
+            return d_var
+
+        elif isinstance(expr, (NumpySum, Product, NumpyMin, NumpyMax)):
+            d_var['datatype'   ] = expr.args[0].dtype
+            d_var['rank'       ] = expr.rank
+            d_var['allocatable'] = expr.rank>0
+            return d_var
+
+        elif isinstance(expr, Matmul):
+
+            d_vars = [self._infere_type(arg,**settings) for arg in expr.args]
+
+            var0_is_vector = d_vars[0]['rank'] < 2
+            var1_is_vector = d_vars[1]['rank'] < 2
+
+            if(d_vars[0]['shape'] is None or d_vars[1]['shape'] is None):
+                d_var['shape'] = None
+            else:
+
+                m = 1 if var0_is_vector else d_vars[0]['shape'][0]
+                n = 1 if var1_is_vector else d_vars[1]['shape'][1]
+                d_var['shape'] = [m, n]
+
+            d_var['datatype'   ] = d_vars[0]['datatype']
+            if var0_is_vector or var1_is_vector:
+                d_var['rank'   ] = 1
+            else:
+                d_var['rank'   ] = 2
+            d_var['allocatable'] = False
+            d_var['precision'  ] = max(d_vars[0]['precision'],
+                                       d_vars[1]['precision'])
+            return d_var
+
+        elif isinstance(expr, (PythonInt,
+                       PythonFloat, PythonComplex,
+                       NumpyInt, Int32, Int64,
+                       NumpyFloat, Float32, Float64,
+                       NumpyComplex, Complex64, Complex128,
+                       Real, Imag, PythonBool)):
+
+            d_var['datatype'   ] = expr.dtype
+            d_var['rank'       ] = expr.rank
+            d_var['allocatable'] = expr.rank>0
+            d_var['precision'  ] = expr.precision
+            return d_var
+
+        elif isinstance(expr, NumpyMod):
+
+            d_var['datatype'   ] = expr.dtype
+            d_var['rank'       ] = expr.rank
+            d_var['shape'      ] = expr.shape
+            d_var['allocatable'] = expr.rank>0
             d_var['precision'  ] = expr.precision
 
             return d_var
+
+        elif isinstance(expr, Norm):
+            d_var['datatype'   ] = expr.dtype
+            d_var['allocatable'] = expr.rank>0
+            d_var['shape'      ] = expr.shape
+            d_var['rank'       ] = expr.rank
+            d_var['order'      ] = expr.order
+            d_var['precision'  ] = expr.precision
+            return d_var
+
+        elif isinstance(expr, NumpyUfuncBase):
+            d_var['datatype'   ] = expr.dtype
+            d_var['allocatable'] = expr.rank>0
+            d_var['shape'      ] = expr.shape
+            d_var['rank'       ] = expr.rank
+            d_var['order'      ] = expr.order
+            d_var['precision'  ] = expr.precision
+            return d_var
+
+        elif isinstance(expr, MathFunctionBase):
+            d_var['datatype' ] = expr.dtype
+            d_var['precision'] = expr.precision
+            d_var['rank'     ] = expr.rank
+            d_var['shape'    ] = expr.shape
+            return d_var
+
+        elif isinstance(expr, (EmptyLike, ZerosLike, OnesLike, FullLike)):
+            return self._infere_type(expr.rhs, **settings)
+
+        elif isinstance(expr, GC):
+            return self._infere_type(expr.lhs, **settings)
+
+        elif isinstance(expr, (Expr, FunctionCall)):
+            # ...
+            d_var['datatype'   ] = expr.dtype
+            d_var['allocatable'] = expr.rank>0
+            d_var['shape'      ] = expr.shape
+            d_var['rank'       ] = expr.rank
+            d_var['precision'  ] = expr.precision
+            return d_var
+
         elif isinstance(expr, (list, List)):
 
             import numpy
@@ -846,6 +827,7 @@ class SemanticParser(BasicParser):
                 d_var['datatype']  = dtype
 
             return d_var
+
         elif isinstance(expr, Concatenate):
             import operator
             d_vars = [self._infere_type(a, **settings) for a in expr.args]
@@ -877,6 +859,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, IfTernaryOperator):
             return self._infere_type(expr.args[0][1].body[0])
+
         elif isinstance(expr, Dlist):
 
             import numpy

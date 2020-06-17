@@ -67,9 +67,9 @@ __all__ = (
     'Int64',
     'Linspace',
     'Matmul',
-    'Max',
-    'Min',
-    'Mod',
+    'NumpyMax',
+    'NumpyMin',
+    'NumpyMod',
     'Norm',
     'NumpySum',
     'Ones',
@@ -1121,15 +1121,6 @@ class Sqrt(PyccelPow):
 
 #====================================================
 
-class Mod(Function, PyccelAstNode):
-    def __new__(cls,*args):
-        return Basic.__new__(cls, *args)
-
-    def __init__(self,*args):
-        assumptions={'integer':True}
-        ass_copy = assumptions.copy()
-        self._assumptions = StdFactKB(assumptions)
-        self._assumptions._generator = ass_copy
 
 #==============================================================================
 # Numpy universal functions
@@ -1199,6 +1190,7 @@ class NumpyAbs(NumpyUfuncUnary):
         self._rank      = x.rank
         self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
         self._precision = default_precision[str_dtype(self._dtype)]
+        self._order     = x.order
 
 
 class NumpyFloor(NumpyUfuncUnary):
@@ -1208,15 +1200,29 @@ class NumpyFloor(NumpyUfuncUnary):
         self._dtype     = NativeReal()
         self._precision = default_precision[str_dtype(self._dtype)]
 
+class NumpyMod(NumpyUfuncBinary):
+    def __init__(self, x1, x2):
+        self._shape     = x1.shape
+        self._rank      = x1.rank
+        self._dtype     = x1.dtype
+        self._precision = x1.precision
+        self._order     = x1.order
 
-class Min(Function, PyccelAstNode):
-    def _eval_is_integer(self):
-        return all(i.is_integer for i in self.args)
+class NumpyMin(NumpyUfuncUnary):
+    def __init__(self, x):
+        self._shape     = x.shape
+        self._rank      = x.rank
+        self._dtype     = x.dtype
+        self._precision = x.precision
+        self._order     = x.order
 
-class Max(Function, PyccelAstNode):
-    def _eval_is_integer(self):
-        return all(i.is_integer for i in self.args)
-
+class NumpyMax(NumpyUfuncUnary):
+    def __init__(self, x):
+        self._shape     = x.shape
+        self._rank      = x.rank
+        self._dtype     = x.dtype
+        self._precision = x.precision
+        self._order     = x.order
 
 #=======================================================================================
 class NumpyComplex(PythonComplex):
