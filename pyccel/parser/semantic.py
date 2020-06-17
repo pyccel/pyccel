@@ -55,7 +55,7 @@ from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.core import PyccelUnary
 
-from pyccel.ast.numpyext  import Full, Array, Rand, NumpySum
+from pyccel.ast.numpyext  import Full, Array, Rand
 from pyccel.ast.numpyext  import EmptyLike, FullLike, OnesLike, ZerosLike
 from pyccel.ast.numpyext  import NumpySum, NumpyMin, NumpyMax, NumpyMod
 from pyccel.ast.numpyext  import Matmul, Norm

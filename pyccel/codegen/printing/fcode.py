@@ -57,7 +57,7 @@ from pyccel.ast.numbers   import Integer, Float
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
-from pyccel.ast.numpyext import Real, Where, NumpyMod, PyccelArraySize
+from pyccel.ast.numpyext import Real, Where, PyccelArraySize
 from pyccel.ast.numpyext import NumpyComplex, NumpyMod
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from pyccel.ast.numpyext import Rand
