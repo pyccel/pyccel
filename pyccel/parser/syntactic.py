@@ -256,15 +256,13 @@ class SyntaxParser(BasicParser):
                 mod.append(v)
                 targets.append(v.name)
                 current_file = mod
-            elif isinstance(v,Header):
+            elif isinstance(v,(Header,Comment)):
                 n_empty_lines = 0
-                mod.append(v)
-                current_file = mod
+                current_file = start
+                current_file.append(v)
             elif isinstance(v, (NewLine, EmptyLine)):
                 current_file.append(v)
                 n_empty_lines += 1
-            elif isinstance(v, Comment):
-                current_file.append(v)
             elif isinstance(v, Import):
                 n_empty_lines = 0
                 mod.append(v)
@@ -274,8 +272,8 @@ class SyntaxParser(BasicParser):
                 n_empty_lines = 0
                 prog.append(v)
                 current_file = prog
-            if len(start)>0 and current_file is not None:
-                current_file[0:0] = start
+            if len(start)>0 and current_file is not start:
+                current_file[-1:-1] = start
                 start = []
         current_mod_name = os.path.splitext(os.path.basename(self._filename))[0]
         prog_name = 'prog_' + current_mod_name
@@ -288,6 +286,9 @@ class SyntaxParser(BasicParser):
             prog_code.set_fst(stmt)
         else:
             prog_code = None
+            if mod_code is None:
+                mod_code = CodeBlock(mod+start)
+        assert( mod_code is not None or prog_code is not None)
         from pyccel.ast import ParserResult
         code = ParserResult(program   = prog_code,
                             module    = mod_code,
