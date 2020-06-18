@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import copy
 from collections import OrderedDict
 
 from pyccel.parser.base      import get_filename_from_import
@@ -82,6 +83,8 @@ class Parser(object):
         return self._syntax_parser.fst
 
     def parse(self, d_parsers=None, verbose=False):
+        if self._syntax_parser:
+            return self._syntax_parser.ast
         parser = SyntaxParser(self._filename, **self._kwargs)
         self._syntax_parser = parser
 
@@ -90,11 +93,12 @@ class Parser(object):
         if d_parsers is None:
             d_parsers = self._d_parsers
 
+        self._d_parsers = self._parse_sons(d_parsers, verbose=verbose)
+
         if parse_result.has_additional_module():
             new_mod_filename = os.path.join(os.path.dirname(self._filename),parse_result.mod_name+'.py')
             q = Parser(new_mod_filename)
-            import copy
-            q._d_parsers = d_parsers
+            q._d_parsers = copy.copy(self._d_parsers)
             q._syntax_parser = copy.copy(parser)
             q._syntax_parser._namespace = copy.deepcopy(parser.namespace)
             q._syntax_parser._ast = parse_result.module
@@ -112,8 +116,6 @@ class Parser(object):
             parser._ast = parse_result.get_focus()
             self.module_parser = None
 
-        self._d_parsers = self._parse_sons(d_parsers, verbose=verbose)
-
         return parser.ast
 
     def annotate(self, **settings):
@@ -121,7 +123,6 @@ class Parser(object):
         # If the semantic parser already exists, do nothing
         if self._semantic_parser:
             return self._semantic_parser
-
 
         # we first treat all sons to get imports
         verbose = settings.pop('verbose', False)
