@@ -410,7 +410,7 @@ def test_import_syntax( test_file ):
                                         "scripts/import_syntax/import_mod_as_user_func.py",
                                         ] )
 def test_import_syntax_user( test_file ):
-    pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py")
+    pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py", pyccel_commands = "--verbose")
 
 #------------------------------------------------------------------------------
 def test_numpy_kernels_compile():
