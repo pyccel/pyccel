@@ -19,7 +19,7 @@ __all__ = ['random_string', 'get_source_function', 'epyccel_seq', 'epyccel']
 def random_string( n ):
     # we remove uppercase letters because of f2py
     chars    = string.ascii_lowercase + string.digits
-    selector = random.SystemRandom()
+    selector = random.Random()
     return ''.join( selector.choice( chars ) for _ in range( n ) )
 
 #==============================================================================
