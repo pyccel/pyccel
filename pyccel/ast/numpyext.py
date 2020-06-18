@@ -634,7 +634,6 @@ class Diag(Application, PyccelAstNode):
         rank = 1 if self.array.rank == 2 else 2
         return rank
 
-
     def fprint(self, printer, lhs):
         """Fortran print."""
 
@@ -1224,7 +1223,7 @@ class NumpyFloor(NumpyUfuncUnary):
         self._precision = default_precision[str_dtype(self._dtype)]
 
 class NumpyMod(NumpyUfuncBinary):
-    def __init__(self, x1, x1):
+    def __init__(self, x1, x2):
         args      = (x1, x2)
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
         reals     = [a for a in args if a.dtype is NativeReal()]
