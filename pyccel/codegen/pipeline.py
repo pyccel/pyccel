@@ -269,8 +269,8 @@ def execute_pyccel(fname, *,
         shutil.move(sharedlib_filepath, target)
         sharedlib_filepath = target
 
-        # Change working directory back to starting point
-        os.chdir(base_dirpath)
-
         if verbose:
             print( '> Shared library has been created: {}'.format(sharedlib_filepath))
+
+    # Change working directory back to starting point
+    os.chdir(base_dirpath)
