@@ -97,17 +97,18 @@ class Parser(object):
 
         if parse_result.has_additional_module():
             new_mod_filename = os.path.join(os.path.dirname(self._filename),parse_result.mod_name+'.py')
+            new_prog_filename = os.path.join(os.path.dirname(self._filename),parse_result.prog_name+'.py')
+            self._filename = new_prog_filename
+
             q = Parser(new_mod_filename)
-            q._d_parsers = copy.copy(self._d_parsers)
             q._syntax_parser = copy.copy(parser)
             q._syntax_parser._namespace = copy.deepcopy(parser.namespace)
+            q._d_parsers = q._parse_sons(self._d_parsers)
             q._syntax_parser._ast = parse_result.module
             d_parsers[parse_result.mod_name] = q
 
             q.append_parent(self)
             self.append_son(q)
-            new_prog_filename = os.path.join(os.path.dirname(self._filename),parse_result.prog_name+'.py')
-            self._filename = new_prog_filename
 
             parser._ast = parse_result.program
 
