@@ -571,6 +571,7 @@ class SemanticParser(BasicParser):
         return vars_
 
 #==============================================================================
+
     def _infere_type(self, expr, **settings):
         """
         type inference for expressions
@@ -622,9 +623,31 @@ class SemanticParser(BasicParser):
 
             return d_var
 
-        elif isinstance(expr, IndexedVariable):
+        elif isinstance(expr, Dlist):
+            import numpy
+            d = self._infere_type(expr.val, **settings)
 
-            return self._infere_type(expr.internal_variable)
+            # TODO must check that it is consistent with pyccel's rules
+            # TODO improve
+            d_var['datatype'   ] = d['datatype']
+            d_var['rank'       ] = d['rank'] + 1
+            d_var['shape'      ] = (expr.length, )
+            d_var['allocatable'] = False
+            d_var['is_pointer' ] = True
+            return d_var
+
+        elif isinstance(expr, PyccelAstNode):
+
+            d_var['datatype'   ] = expr.dtype
+            d_var['allocatable'] = expr.rank>0
+            d_var['shape'      ] = expr.shape
+            d_var['rank'       ] = expr.rank
+            d_var['order'      ] = expr.order
+            d_var['precision'  ] = expr.precision
+            return d_var
+
+        elif isinstance(expr, IfTernaryOperator):
+            return self._infere_type(expr.args[0][1].body[0])
 
         elif isinstance(expr, Range):
 
@@ -633,16 +656,6 @@ class SemanticParser(BasicParser):
             d_var['shape'      ] = ()
             d_var['rank'       ] = 0
             d_var['cls_base'   ] = expr  # TODO: shall we keep it?
-            return d_var
-
-        elif isinstance(expr, DottedVariable):
-
-            if isinstance(expr.lhs, DottedVariable):
-                self._current_class = expr.lhs.rhs.cls_base
-            else:
-                self._current_class = expr.lhs.cls_base
-            d_var = self._infere_type(expr.rhs)
-            self._current_class = None
             return d_var
 
         elif isinstance(expr, Lambda):
@@ -669,32 +682,6 @@ class SemanticParser(BasicParser):
 
             d_var['is_polymorphic'] = False
             d_var['cls_base'      ] = cls
-            return d_var
-
-        elif isinstance(expr, IfTernaryOperator):
-            return self._infere_type(expr.args[0][1].body[0])
-
-        elif isinstance(expr, Dlist):
-            import numpy
-            d = self._infere_type(expr.val, **settings)
-
-            # TODO must check that it is consistent with pyccel's rules
-            # TODO improve
-            d_var['datatype'   ] = d['datatype']
-            d_var['rank'       ] = d['rank'] + 1
-            d_var['shape'      ] = (expr.length, )
-            d_var['allocatable'] = False
-            d_var['is_pointer' ] = True
-            return d_var
-
-        elif isinstance(expr, PyccelAstNode):
-
-            d_var['datatype'   ] = expr.dtype
-            d_var['allocatable'] = expr.rank>0
-            d_var['shape'      ] = expr.shape
-            d_var['rank'       ] = expr.rank
-            d_var['order'      ] = expr.order
-            d_var['precision'  ] = expr.precision
             return d_var
 
         else:
