@@ -147,7 +147,7 @@ def execute_pyccel(fname, *,
         parsers = [parser.module_parser, parser]
         additional_module_name = os.path.basename(os.path.splitext(parser.module_parser.filename)[0])
         program_name = os.path.basename(os.path.splitext(parser.filename)[0])
-        module_names = [additional_module_name, program_name]
+        module_names = [module_name, program_name]
     else:
         parsers = [parser]
         module_names = [module_name]
