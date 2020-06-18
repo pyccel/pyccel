@@ -3,7 +3,6 @@ import pytest
 import numpy as np
 
 from pyccel.epyccel import epyccel
-from conftest       import *
 
 #==============================================================================
 @pytest.mark.parallel
