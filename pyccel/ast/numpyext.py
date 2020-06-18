@@ -1224,7 +1224,8 @@ class NumpyFloor(NumpyUfuncUnary):
         self._precision = default_precision[str_dtype(self._dtype)]
 
 class NumpyMod(NumpyUfuncBinary):
-    def __init__(self, *args):
+    def __init__(self, x1, x1):
+        args      = (x1, x2)
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
         reals     = [a for a in args if a.dtype is NativeReal()]
         others    = [a for a in args if a not in integers+reals]
@@ -1259,11 +1260,18 @@ class NumpyMod(NumpyUfuncBinary):
 
 class NumpyMin(NumpyUfuncUnary):
     def __init__(self, x):
-        self.copy_attributes(x)
+        self._shape     = ()
+        self._rank      = 0
+        self._dtype     = x.dtype
+        self._precision = x.precision
 
 class NumpyMax(NumpyUfuncUnary):
     def __init__(self, x):
-        self.copy_attributes(x)
+        self._shape     = ()
+        self._rank      = 0
+        self._dtype     = x.dtype
+        self._precision = x.precision
+
 
 #=======================================================================================
 class NumpyComplex(PythonComplex):
