@@ -671,9 +671,6 @@ class SemanticParser(BasicParser):
             d_var['cls_base'      ] = cls
             return d_var
 
-        elif isinstance(expr, ValuedArgument):
-            return self._infere_type(expr.value)
-
         elif isinstance(expr, IfTernaryOperator):
             return self._infere_type(expr.args[0][1].body[0])
 
