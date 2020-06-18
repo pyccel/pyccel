@@ -365,18 +365,20 @@ def test_in_specified():
     pyccel_test("scripts/runtest_degree_in.py")
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/fib.py",
+@pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/hope_fib.py",
                                         "scripts/hope_benchmarks/quicksort.py",
-                                        "scripts/hope_benchmarks/pisum.py",
-                                        "scripts/hope_benchmarks/ln_python.py",
-                                        "scripts/hope_benchmarks/pairwise_python.py",
+                                        "scripts/hope_benchmarks/hope_pisum.py",
+                                        "scripts/hope_benchmarks/hope_ln_python.py",
+                                        "scripts/hope_benchmarks/hope_pairwise_python.py",
                                         "scripts/hope_benchmarks/point_spread_func.py",
                                         "scripts/hope_benchmarks/simplify.py",
-                                        "scripts/hope_benchmarks_decorators/ln_python.py",
-                                        "scripts/hope_benchmarks_decorators/pairwise_python.py",
+                                        pytest.param("scripts/hope_benchmarks/fib.py",
+                                            marks = pytest.mark.xfail(reason="Issue 344 : Functions and modules cannot share the same name")),
+                                        "scripts/hope_benchmarks_decorators/hope_ln_python.py",
+                                        "scripts/hope_benchmarks_decorators/hope_pairwise_python.py",
                                         "scripts/hope_benchmarks_decorators/point_spread_func.py",
                                         "scripts/hope_benchmarks_decorators/simplify.py",
-                                        "scripts/hope_benchmarks_decorators/fib.py",
+                                        "scripts/hope_benchmarks_decorators/hope_fib.py",
                                         "scripts/hope_benchmarks_decorators/quicksort.py",
 
                                         ] )
