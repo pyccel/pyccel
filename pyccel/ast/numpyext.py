@@ -17,6 +17,7 @@ from .core  import (Variable, IndexedElement, Slice, Len,
                    ValuedArgument, Constant, process_shape)
 
 from .core           import PyccelPow, PyccelMinus, PyccelAssociativeParenthesis
+from .core           import broadcast
 
 from .builtins       import Int as PythonInt, Bool as PythonBool
 from .builtins       import PythonFloat, PythonTuple, PythonComplex
@@ -1201,8 +1202,38 @@ class NumpyFloor(NumpyUfuncUnary):
         self._precision = default_precision[str_dtype(self._dtype)]
 
 class NumpyMod(NumpyUfuncBinary):
-    def __init__(self, x1, x2):
-        self.copy_attributes(x1)
+    def __init__(self, *args):
+        integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
+        reals     = [a for a in args if a.dtype is NativeReal()]
+        others    = [a for a in args if a not in integers+reals]
+
+        if others:
+            raise TypeError('{} not supported'.format(others[0].dtype))
+
+        if reals:
+            self._dtype     = NativeReal()
+            self._precision = max(a.precision for a in reals)
+        elif integers:
+            self._dtype     = NativeInteger()
+            self._precision = max(a.precision for a in integers)
+        else:
+            raise TypeError('cannot determine the type of {}'.format(self))
+
+        shapes = [a.shape for a in args]
+
+        if all(sh is not None for sh in shapes):
+            if len(args) == 1:
+                shape = args[0].shape
+            else:
+                shape = broadcast(args[0].shape, args[1].shape)
+
+                for a in args[2:]:
+                    shape = broadcast(shape, a.shape)
+
+            self._shape = shape
+            self._rank  = len(shape)
+        else:
+            self._rank = max(a.rank for a in args)
 
 class NumpyMin(NumpyUfuncUnary):
     def __init__(self, x):
