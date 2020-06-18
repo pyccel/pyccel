@@ -588,17 +588,9 @@ class SemanticParser(BasicParser):
             print ('*** type inference for : ', type(expr))
 
         d_var = {}
-        d_var['datatype'      ] = NativeSymbol()
-        d_var['precision'     ] = 0
-        d_var['shape'         ] = ()
-        d_var['rank'          ] = 0
-
         # TODO improve => put settings as attribut of Parser
 
-        if isinstance(expr, type(None)):
-            return d_var
-
-        elif expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt, 
+        if expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt,
                       Int32, Int64, NumpyComplex, Complex64, Complex128, NumpyFloat,
                       Float64, Float32):
 
