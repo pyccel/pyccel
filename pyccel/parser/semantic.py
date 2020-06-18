@@ -570,8 +570,7 @@ class SemanticParser(BasicParser):
                 vars_ += [stmt]
         return vars_
 
-######################################"
-
+#==============================================================================
     def _infere_type(self, expr, **settings):
         """
         type inference for expressions
@@ -672,49 +671,6 @@ class SemanticParser(BasicParser):
             d_var['cls_base'      ] = cls
             return d_var
 
-        elif isinstance(expr, Matmul):
-
-            d_vars = [self._infere_type(arg,**settings) for arg in expr.args]
-
-            var0_is_vector = d_vars[0]['rank'] < 2
-            var1_is_vector = d_vars[1]['rank'] < 2
-
-            if(d_vars[0]['shape'] is None or d_vars[1]['shape'] is None):
-                d_var['shape'] = None
-            else:
-
-                m = 1 if var0_is_vector else d_vars[0]['shape'][0]
-                n = 1 if var1_is_vector else d_vars[1]['shape'][1]
-                d_var['shape'] = [m, n]
-
-            d_var['datatype'   ] = d_vars[0]['datatype']
-            if var0_is_vector or var1_is_vector:
-                d_var['rank'   ] = 1
-            else:
-                d_var['rank'   ] = 2
-            d_var['allocatable'] = False
-            d_var['precision'  ] = max(d_vars[0]['precision'],
-                                       d_vars[1]['precision'])
-            return d_var
-
-        elif isinstance(expr, List):
-
-            import numpy
-            d = self._infere_type(expr[0], **settings)
-
-            # TODO must check that it is consistent with pyccel's rules
-
-            d_var['datatype'] = d['datatype']
-            d_var['rank'] = d['rank'] + 1
-            d_var['shape'] = numpy.asarray(expr).shape  # TODO improve
-            d_var['allocatable'] = d['allocatable']
-            if isinstance(expr, List):
-                d_var['is_target'] = True
-                dtype              = str_dtype(d['datatype'])
-                d_var['datatype']  = dtype
-
-            return d_var
-
         elif isinstance(expr, ValuedArgument):
             return self._infere_type(expr.value)
 
@@ -722,7 +678,6 @@ class SemanticParser(BasicParser):
             return self._infere_type(expr.args[0][1].body[0])
 
         elif isinstance(expr, Dlist):
-
             import numpy
             d = self._infere_type(expr.val, **settings)
 
@@ -753,7 +708,6 @@ class SemanticParser(BasicParser):
 #==============================================================================
 #==============================================================================
 #==============================================================================
-
 
 
     def _visit(self, expr, **settings):
