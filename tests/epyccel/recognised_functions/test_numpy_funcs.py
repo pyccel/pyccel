@@ -3,6 +3,7 @@ from pyccel import epyccel
 import pytest
 from numpy.random import rand, randint
 from numpy import isclose
+from conftest       import *
 
 # Functions still to be tested:
 #    full_like

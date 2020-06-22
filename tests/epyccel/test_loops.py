@@ -4,6 +4,7 @@ import platform
 
 from pyccel.epyccel import epyccel
 from modules        import loops
+from conftest       import *
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),

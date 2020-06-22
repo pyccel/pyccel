@@ -4,6 +4,7 @@ import sys
 
 from pyccel.epyccel import epyccel
 from modules        import arrays
+from conftest       import *
 
 #==============================================================================
 # TEST: 1D ARRAYS OF INT-32
