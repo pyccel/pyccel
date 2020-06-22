@@ -1,5 +1,6 @@
 from pyccel.epyccel import epyccel
 import numpy as np
+from conftest       import *
 
 def test_module_1():
     import modules.Module_1 as mod
