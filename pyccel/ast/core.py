@@ -120,6 +120,7 @@ __all__ = (
     'Nil',
     'ParallelBlock',
     'ParallelRange',
+    'ParserResult',
     'Pass',
     'Product',
     'Program',
@@ -5232,6 +5233,74 @@ def get_iterable_ranges(it, var_name=None):
     # ...
 
     return [Range(s, e, 1) for (s, e) in zip(starts, ends)]
+
+class ParserResult(Basic):
+    def __new__(
+        self,
+        program=None,
+        module=None,
+        mod_name = None,
+        prog_name = None,
+        ):
+        return Basic.__new__(self)
+
+    def __init__(
+        self,
+        program=None,
+        module=None,
+        mod_name = None,
+        prog_name = None,
+        ):
+
+        if program is not None  and not isinstance(program, CodeBlock):
+            raise TypeError('Program must be a CodeBlock')
+
+        if module is not None  and not isinstance(module, CodeBlock):
+            raise TypeError('Module must be a CodeBlock')
+
+        if program is not None and module is not None:
+            if mod_name is None:
+                raise TypeError('Please provide module name')
+            elif not isinstance(mod_name, str):
+                raise TypeError('Module name must be a string')
+            if prog_name is None:
+                raise TypeError('Please provide program name')
+            elif not isinstance(prog_name, str):
+                raise TypeError('Program name must be a string')
+
+        self._program   = program
+        self._module    = module
+        self._prog_name = prog_name
+        self._mod_name  = mod_name
+
+
+    @property
+    def program(self):
+        return self._program
+
+    @property
+    def module(self):
+        return self._module
+
+    @property
+    def prog_name(self):
+        return self._prog_name
+
+    @property
+    def mod_name(self):
+        return self._mod_name
+
+    def has_additional_module(self):
+        return self.program is not None and self.module is not None
+
+    def is_program(self):
+        return self.program is not None
+
+    def get_focus(self):
+        if self.is_program():
+            return self.program
+        else:
+            return self.module
 
 
 #==============================================================================

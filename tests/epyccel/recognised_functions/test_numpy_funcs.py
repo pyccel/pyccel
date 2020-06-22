@@ -347,9 +347,8 @@ def test_tanh_phrase():
     y = rand()
     assert(isclose(f2(x,y), tanh_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.xfail(reason = "scipy translation error (see issue #207)")
 def test_arctan2_call():
-    @types('real')
+    @types('real','real')
     def arctan2_call(x,y):
         from numpy import arctan2
         return arctan2(x,y)
@@ -359,7 +358,6 @@ def test_arctan2_call():
     y = rand()
     assert(isclose(f1(x,y), arctan2_call(x,y), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.xfail(reason = "scipy translation error (see issue #207)")
 def test_arctan2_phrase():
     @types('real','real','real')
     def arctan2_phrase(x,y,z):
