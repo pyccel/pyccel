@@ -5,6 +5,7 @@ import shutil
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
+from conftest       import *
 
 
 def clean_test():
