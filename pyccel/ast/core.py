@@ -2263,8 +2263,8 @@ class Variable(Symbol, PyccelAstNode):
                 precision = default_precision['complex']
             elif isinstance(dtype, NativeBool):
                 precision = default_precision['bool']
-        if not isinstance(precision,int):
-            raise TypeError('precision must be an integer.')
+        if not isinstance(precision,int) and precision is not None:
+            raise TypeError('precision must be an integer or None.')
 
         self._dtype = dtype
         self._shape = process_shape(shape)
@@ -2669,6 +2669,7 @@ class TupleVariable(Variable):
 
     def __init__(self, arg_vars, dtype, name, *args, **kwargs):
         self._vars = tuple(arg_vars)
+        self._inconsistent_shape = not all(arg_vars[0].shape==a.shape   for a in arg_vars[1:])
         self._is_homogeneous = not dtype is NativeGeneric()
         Variable.__init__(self, dtype, name, *args, **kwargs)
 
@@ -2691,8 +2692,16 @@ class TupleVariable(Variable):
         return len(self._vars)
 
     @property
+    def inconsistent_shape(self):
+        return self._inconsistent_shape
+
+    @property
     def is_homogeneous(self):
         return self._is_homogeneous
+
+    @is_homogeneous.setter
+    def is_homogeneous(self, is_homogeneous):
+        self._is_homogeneous = is_homogeneous
 
     @Variable.allocatable.setter
     def allocatable(self, allocatable):
