@@ -2476,7 +2476,7 @@ class FCodePrinter(CodePrinter):
         if (expr.end is None) or isinstance(expr.end, Nil):
             end = ''
         else:
-            end = PyccelAdd(expr.end, Integer(-1))
+            end = PyccelMinus(expr.end, Integer(1))
             end = self._print(end)
         return '{0}:{1}'.format(start, end)
 
