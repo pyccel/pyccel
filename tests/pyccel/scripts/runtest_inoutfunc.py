@@ -15,7 +15,7 @@ def add_2(a,b):
 import numpy as np
 
 x = np.ones(4)
-y = np.full_like(x,5)
+y = np.full_like(x,6)
 
 add_2(x,y)
 
