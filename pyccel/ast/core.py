@@ -4994,6 +4994,13 @@ def get_assigned_symbols(expr):
 #            print(type(expr.lhs), expr.lhs)
 #            print(expr)
 #            raise SystemExit('ERROR')
+    elif isinstance(expr, FunctionCall):
+        f = expr.funcdef
+        symbols = []
+        for func_arg, inout in zip(expr.arguments,f.arguments_inout):
+            if inout:
+                symbols.append(func_arg)
+        return symbols
 
     return []
 

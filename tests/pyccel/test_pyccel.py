@@ -327,6 +327,10 @@ def test_funcs(language):
     pyccel_test("scripts/runtest_funcs.py", language = language)
 
 #------------------------------------------------------------------------------
+def test_inout_func():
+    pyccel_test("scripts/runtest_inoutfunc.py")
+
+#------------------------------------------------------------------------------
 def test_bool():
     pyccel_test("scripts/bool_comp.py", output_dtype = bool)
 
