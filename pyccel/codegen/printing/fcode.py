@@ -842,7 +842,8 @@ class FCodePrinter(CodePrinter):
             elif prec==8:
                 return 'MPI_INTEGER8'
             else:
-                raise NotImplementedError('TODO')
+                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                    severity='fatal', blocker=self.blocking)
 
         elif dtype == 'real':
             if prec==8:
@@ -850,10 +851,12 @@ class FCodePrinter(CodePrinter):
             if prec==4:
                 return 'MPI_FLOAT'
             else:
-                raise NotImplementedError('TODO')
+                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                    severity='fatal', blocker=self.blocking)
 
         else:
-            raise NotImplementedError('TODO')
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                severity='fatal', blocker=self.blocking)
 
     def _print_MacroCount(self, expr):
 
@@ -894,7 +897,8 @@ class FCodePrinter(CodePrinter):
             rank = len(shape)
 
         else:
-            raise NotImplementedError('TODO')
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                severity='fatal', blocker=self.blocking)
 
         if rank == 0:
                 return '1'
@@ -1032,7 +1036,8 @@ class FCodePrinter(CodePrinter):
 
             rankstr = '(' + rankstr + ')'
 #        else:
-#            raise NotImplementedError('Not treated yet')
+#            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+#                severity='fatal', blocker=self.blocking)
 
 
         if not is_static:
@@ -1537,9 +1542,8 @@ class FCodePrinter(CodePrinter):
                 else:
                     code = 'deallocate({0}){1}'.format(self._print(var), code)
             else:
-                msg  = 'Only Variable is treated.'
-                msg += ' Given {0}'.format(type(var))
-                raise NotImplementedError(msg)
+                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                    severity='fatal', blocker=self.blocking)
         return code
 
     def _print_ClassDef(self, expr):
@@ -1671,8 +1675,9 @@ class FCodePrinter(CodePrinter):
 
         def _do_range(target, iterable, prolog, epilog):
             if not isinstance(iterable, Range):
-                msg = "Only iterable currently supported is Range"
-                raise NotImplementedError(msg)
+                # Only iterable currently supported is Range
+                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                    severity='fatal', blocker=self.blocking)
 
             tar        = self._print(target)
             range_code = self._print(iterable)
@@ -1684,8 +1689,9 @@ class FCodePrinter(CodePrinter):
         # ...
 
         if not isinstance(expr.iterable, (Range, Product , Zip, Enumerate, Map)):
-            msg  = "Only iterable currently supported are Range or Product "
-            raise NotImplementedError(msg)
+            # Only iterable currently supported are Range or Product
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                severity='fatal', blocker=self.blocking)
 
         if isinstance(expr.iterable, Range):
             prolog, epilog = _do_range(expr.target, expr.iterable, \
@@ -2101,7 +2107,8 @@ class FCodePrinter(CodePrinter):
         if a.dtype is NativeBool() and b.dtype is NativeBool():
             return '{} .eqv. {}'.format(lhs, rhs)
 
-        raise NotImplementedError(PYCCEL_RESTRICTION_IS_RHS)
+        errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
+            severity='fatal', blocker=self.blocking)
 
     def _print_IsNot(self, expr):
         lhs = self._print(expr.lhs)
@@ -2115,7 +2122,8 @@ class FCodePrinter(CodePrinter):
         if a.dtype is NativeBool() and b.dtype is NativeBool():
             return '{} .neqv. {}'.format(lhs, rhs)
 
-        raise NotImplementedError(PYCCEL_RESTRICTION_IS_RHS)
+        errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
+            severity='fatal', blocker=self.blocking)
 
     def _print_If(self, expr):
         # ...

@@ -4992,9 +4992,6 @@ def get_assigned_symbols(expr):
             # TODO must raise an Exception here
             #      this occurs only when parsing lapack.pyh
             raise ValueError('Unable to extract assigned variable')
-#            print(type(expr.lhs), expr.lhs)
-#            print(expr)
-#            raise SystemExit('ERROR')
     elif isinstance(expr, FunctionCall):
         f = expr.funcdef
         symbols = []

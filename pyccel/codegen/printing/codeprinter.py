@@ -19,6 +19,8 @@ from pyccel.ast import Real
 
 __all__ = ["CodePrinter"]
 
+errors = Errors()
+
 class CodePrinter(StrPrinter):
     """
     The base class for code-printing subclasses.
@@ -92,7 +94,8 @@ class CodePrinter(StrPrinter):
         return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
 
     def _print_not_supported(self, expr):
-        raise TypeError("{0} not supported in {1}".format(type(expr), self.language))
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol = expr,
+                severity='fatal')
 
     # Number constants
     _print_Catalan = _print_NumberSymbol
