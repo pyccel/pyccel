@@ -1373,7 +1373,7 @@ class SemanticParser(BasicParser):
                         or isinstance(rhs, (Variable, EmptyLike, DottedVariable))
                 if not know_lhs_shape:
                     msg = "Cannot infer shape of right-hand side for expression {} = {}".format(lhs, rhs)
-                    errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=var,
+                    errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
                         bounding_box=self._current_fst_node.absolute_bounding_box,
                         severity='fatal', blocker=self.blocking)
 
@@ -1485,7 +1485,7 @@ class SemanticParser(BasicParser):
                 else:
                     # TODO treate interface case
                     errors.report(PYCCEL_RESTRICTION_TODO,
-                                  bounding_box=stmt.absolute_bounding_box,
+                                  bounding_box=self._current_fst_node.absolute_bounding_box,
                                   severity='fatal')
 
         elif isinstance(rhs, DottedVariable):
@@ -1816,7 +1816,7 @@ class SemanticParser(BasicParser):
                     self.insert_symbolic_function(new_expr)
                 else:
                     errors.report(PYCCEL_RESTRICTION_TODO,
-                                  bounding_box=stmt.absolute_bounding_box,
+                                  bounding_box=self._current_fst_node.absolute_bounding_box,
                                   severity='fatal')
             new_expressions.append(new_expr)
         if (len(new_expressions)==1):
@@ -2011,7 +2011,7 @@ class SemanticParser(BasicParser):
                 stop = a.shape[0]
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO,
-                              bounding_box=stmt.absolute_bounding_box,
+                              bounding_box=self._current_fst_node.absolute_bounding_box,
                               severity='fatal')
             self.insert_variable(var)
 
@@ -2038,7 +2038,7 @@ class SemanticParser(BasicParser):
             dim   = dim.doit()
         if isinstance(dim, Summation):
             errors.report(PYCCEL_RESTRICTION_TODO,
-                          bounding_box=stmt.absolute_bounding_box,
+                          bounding_box=self._current_fst_node.absolute_bounding_box,
                           severity='fatal')
 
         # TODO find a faster way to calculate dim
@@ -2268,9 +2268,8 @@ class SemanticParser(BasicParser):
             if not all(i == results[0] for i in results):
                 #case of multiple return
                 # with different variable name
-                msg = 'TODO not available yet'
                 errors.report(PYCCEL_RESTRICTION_TODO,
-                              bounding_box=stmt.absolute_bounding_box,
+                              bounding_box=self._current_fst_node.absolute_bounding_box,
                               severity='fatal')
 
             if len(results) > 0:
@@ -2638,7 +2637,7 @@ class SemanticParser(BasicParser):
                                         symbol=name, severity='warning')
                         else:
                             errors.report(PYCCEL_RESTRICTION_TODO,
-                                          bounding_box=stmt.absolute_bounding_box,
+                                          bounding_box=self._current_fst_node.absolute_bounding_box,
                                           severity='fatal')
             else:
 
@@ -2760,7 +2759,7 @@ class SemanticParser(BasicParser):
         master = expr.master
         if isinstance(master, DottedName):
             errors.report(PYCCEL_RESTRICTION_TODO,
-                          bounding_box=stmt.absolute_bounding_box,
+                          bounding_box=self._current_fst_node.absolute_bounding_box,
                           severity='fatal')
         header = self.get_header(master)
         if header is None:
