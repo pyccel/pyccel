@@ -157,11 +157,15 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
     # ...
 
     # ...
-    if not files:
-        raise ValueError("a python filename must be provided.")
 
     if len(files) > 1:
-        raise ValueError('Expecting one single file for the moment.')
+        errors = Errors()
+        # severity is error to avoid needing to catch exception
+        errors.report('Pyccel can currently only handle 1 file at a time',
+                      symbol=filename,
+                      severity='error')
+        errors.check()
+        sys.exit(1)
     # ...
 
     filename = files[0]
@@ -173,24 +177,32 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
         ext = filename.split('.')[-1]
         if not(ext in ['py', 'pyh']):
             errors = Errors()
+            # severity is error to avoid needing to catch exception
             errors.report(INVALID_FILE_EXTENSION,
                           symbol=ext,
-                          severity='fatal')
+                          severity='error')
             errors.check()
-            raise SystemExit(0)
+            sys.exit(1)
     else:
         # we use Pyccel error manager, although we can do it in other ways
         errors = Errors()
+        # severity is error to avoid needing to catch exception
         errors.report(INVALID_FILE_DIRECTORY,
                       symbol=filename,
-                      severity='fatal')
+                      severity='error')
         errors.check()
-        raise SystemExit(0)
+        sys.exit(1)
     # ...
 
     if compiler:
         if _which(compiler) is None:
-            raise ValueError('Could not find {0}'.format(compiler))
+            errors = Errors()
+            # severity is error to avoid needing to catch exception
+            errors.report('Could not find {0}'.format(compiler),
+                          symbol=filename,
+                          severity='error')
+            errors.check()
+            sys.exit(1)
 
     accelerator = None
     if openmp:
