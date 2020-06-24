@@ -79,6 +79,9 @@ PYCCEL_RESTRICTION_OPTIONAL_NONE = 'Variables cannot be equal to None unless the
 PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX = 'Pyccel has encountered syntax that it does not recognise'
 PYCCEL_RESTRICTION_TODO = "Pyccel has encountered syntax that has not been implemented yet. Please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem."
 
+# Fortran limitation
+FORTRAN_ALLOCATABLE_IN_EXPRESSION = 'An allocatable function cannot be used in an expression'
+
 # other Pyccel messages
 PYCCEL_INVALID_HEADER = 'Annotated comments must start with omp, acc or header'
 PYCCEL_MISSING_HEADER = 'Cannot find associated header'

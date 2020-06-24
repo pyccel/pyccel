@@ -61,6 +61,7 @@ from pyccel.ast.numpyext import Real, Where, PyccelArraySize
 from pyccel.ast.numpyext import NumpyComplex, NumpyMod
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from pyccel.ast.numpyext import Rand
+from pyccel.ast.numpyext import PyccelAllocatableObject
 
 from pyccel.parser.errors import Errors
 from pyccel.parser.messages import *
@@ -2536,6 +2537,14 @@ class FCodePrinter(CodePrinter):
 
 #=======================================================================================
 
+    def _print_Application(self, expr):
+        if isinstance(expr, PyccelAllocatableObject):
+            errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
+                          symbol=expr, severity='fatal')
+        else:
+            return self._print_not_supported(expr)
+
+#=======================================================================================
 
     def _pad_leading_columns(self, lines):
         result = []
