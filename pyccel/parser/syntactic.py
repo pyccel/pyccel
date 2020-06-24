@@ -17,6 +17,7 @@ from redbaron import DictitemNode
 from redbaron import DotNode
 from redbaron import CallNode
 from redbaron import GetitemNode
+from redbaron import CommentNode
 
 #==============================================================================
 
@@ -688,6 +689,8 @@ class SyntaxParser(BasicParser):
         # TODO improve later
         decorators = {}
         for i in stmt.decorators:
+            if isinstance(i,CommentNode):
+                continue
             decorators.update(self._visit(i))
 
         if 'bypass' in decorators:
