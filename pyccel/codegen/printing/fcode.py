@@ -42,10 +42,9 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              If)
 
 
-from pyccel.ast.core import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-
-from pyccel.ast.core import create_variable, FunctionCall
-from pyccel.ast.builtins import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
+from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
+from pyccel.ast.core      import create_variable, FunctionCall
+from pyccel.ast.builtins  import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString
@@ -53,13 +52,13 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.datatypes import default_precision
-from pyccel.ast.numbers import Integer, Float
+from pyccel.ast.numbers   import Integer, Float
 
 from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
-from pyccel.ast.numpyext import Real, Where, Mod, PyccelArraySize
-from pyccel.ast.numpyext import NumpyComplex
+from pyccel.ast.numpyext import Real, Where, PyccelArraySize
+from pyccel.ast.numpyext import NumpyComplex, NumpyMod
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from pyccel.ast.numpyext import Rand
 
@@ -80,6 +79,8 @@ known_functions = {
 
 numpy_ufunc_to_fortran = {
     'NumpyAbs'  : 'abs',
+    'NumpyMin'  : 'minval',
+    'NumpyMax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
     # ---
     'NumpyExp' : 'exp',
@@ -1170,7 +1171,7 @@ class FCodePrinter(CodePrinter):
 
             return rhs.fprint(self._print, expr.lhs, stack_array)
 
-        if isinstance(rhs, Mod):
+        if isinstance(rhs, NumpyMod):
             lhs = self._print(expr.lhs)
             args = ','.join(self._print(i) for i in rhs.args)
             rhs  = 'modulo({})'.format(args)
