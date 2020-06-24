@@ -119,8 +119,10 @@ def _get_name(var):
         return type(var).__name__
     if isinstance(var, AsName):
         return var.name
-    msg = 'Uncovered type {dtype}'.format(dtype=type(var))
-    raise NotImplementedError(msg)
+    msg = 'Name of Object : {} cannot be determined'.format(type(var).__name__)
+    errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=var,
+        bounding_box=self._current_fst_node.absolute_bounding_box,
+        severity='fatal', blocker=self.blocking)
 
 #==============================================================================
 
@@ -506,7 +508,10 @@ class SemanticParser(BasicParser):
                 return container.cls_constructs[name]
             container = container.parent_scope
 
-        raise PyccelSemanticError('class construct {} not found'.format(name))
+        msg = 'class construct {} not found'.format(name)
+        errors.report(msg,
+            bounding_box=self._current_fst_node.absolute_bounding_box,
+            severity='fatal', blocker=self.blocking)
 
 
     def set_class_construct(self, name, value):
@@ -814,7 +819,10 @@ class SemanticParser(BasicParser):
             elif name in ['EmptyLike', 'ZerosLike', 'OnesLike', 'FullLike']:
                 d_var = self._infere_type(expr.rhs, **settings)
             else:
-                raise NotImplementedError('Type of Application : '+type(expr).__name__+' cannot be infered')
+                msg = 'Type of Application : {} cannot be infered'.format(type(expr).__name__)
+                errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=expr,
+                    bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='fatal', blocker=self.blocking)
 
             return d_var
 
@@ -893,8 +901,10 @@ class SemanticParser(BasicParser):
             return d_var
 
         else:
-            msg = '{expr} not yet available'.format(expr=type(expr))
-            raise NotImplementedError(msg)
+            msg = 'Type of Object : {} cannot be infered'.format(type(expr).__name__)
+            errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=expr,
+                bounding_box=self._current_fst_node.absolute_bounding_box,
+                severity='fatal', blocker=self.blocking)
 
 
 #==============================================================================
@@ -927,7 +937,9 @@ class SemanticParser(BasicParser):
 
         # Unknown object, we raise an error.
 
-        raise PyccelSemanticError('{expr} not yet available'.format(expr=type(expr)))
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+            bounding_box=self._current_fst_node.absolute_bounding_box,
+            severity='fatal', blocker=self.blocking)
 
     def _visit_list(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
@@ -1489,7 +1501,10 @@ class SemanticParser(BasicParser):
                     #        f_args = func.functions[j].arguments
                     #    else:
                     #        msg = 'function not found in the interface'
-                    #        raise SystemExit(msg)
+                    #        # TODO: Add message to parser/messages.py
+                    #        errors.report(msg,
+                    #            bounding_box=self._current_fst_node.absolute_bounding_box,
+                    #            severity='fatal', blocker=self.blocking)
 
                     expr = FunctionCall(func, args)
 
@@ -1499,9 +1514,9 @@ class SemanticParser(BasicParser):
                     return expr
 
     def _visit_Expr(self, expr, **settings):
-        msg = '{expr} not yet available'
-        msg = msg.format(expr=type(expr))
-        raise NotImplementedError(msg)
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+            bounding_box=self._current_fst_node.absolute_bounding_box,
+            severity='fatal', blocker=self.blocking)
 
     def _create_variable(self, name, dtype, rhs, d_lhs):
 
@@ -1569,7 +1584,9 @@ class SemanticParser(BasicParser):
                         or isinstance(rhs, (Variable, EmptyLike, DottedVariable))
                 if not know_lhs_shape:
                     msg = "Cannot infer shape of right-hand side for expression {} = {}".format(lhs, rhs)
-                    raise NotImplementedError(msg)
+                    errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=var,
+                        bounding_box=self._current_fst_node.absolute_bounding_box,
+                        severity='fatal', blocker=self.blocking)
 
             else:
 
@@ -1636,12 +1653,9 @@ class SemanticParser(BasicParser):
     def _visit_Assign(self, expr, **settings):
         # TODO unset position at the end of this part
         fst = expr.fst
+        assert(fst)
         if fst:
             self._current_fst_node = fst
-        else:
-            msg = 'Found a node without fst member ({})'
-            msg = msg.format(type(expr))
-            raise PyccelSemanticError(msg)
 
         rhs = expr.rhs
         lhs = expr.lhs
