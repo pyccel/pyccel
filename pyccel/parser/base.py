@@ -440,7 +440,7 @@ class BasicParser(object):
 
             txt = tabulate(table, tablefmt='rst')
             print (txt)
-        except:
+        except NotImplementedError:
 
             print ('------- namespace.{} -------'.format(entry))
             for (k, v) in self.namespace[entry].items():
