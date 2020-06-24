@@ -1,8 +1,9 @@
-from expressions import ai
-xi = ai + 1
-
-from expressions import ad, bd
-xd = ad * bd
+#from expressions import ai
+#xi = ai + 1
+#
+#from expressions import ad, bd
+#xd = ad * bd
+xi = 2
 
 from functions import decr
 yi = decr(xi)

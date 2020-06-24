@@ -58,6 +58,8 @@ from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
 from pyccel.ast.core import PyccelOperator, PyccelUnary
 
+from pyccel.ast.headers import Header
+
 from pyccel.ast.numbers import Complex
 
 from pyccel.parser.utilities import fst_move_directives, preprocess_imports
@@ -238,7 +240,74 @@ class SyntaxParser(BasicParser):
                       severity='fatal')
 
     def _visit_RedBaron(self, stmt):
-        code = CodeBlock([self._visit(i) for i in stmt])
+        """ Visits the ast and splits the result into elements relevant for the module or the program"""
+        prog = []
+        mod  = []
+        start = []
+        current_file = start
+        targets = []
+        n_empty_lines = 0
+        is_prog = False
+        for i in stmt:
+            v = self._visit(i)
+            if n_empty_lines > 3:
+                current_file = start
+            if isinstance(v,(FunctionDef, ClassDef)):
+                # Functions and classes are always defined in a module
+                n_empty_lines = 0
+                mod.append(v)
+                targets.append(v.name)
+                current_file = mod
+            elif isinstance(v,(Header,Comment)):
+                # Headers and Comments are defined in the same block as the following object
+                n_empty_lines = 0
+                current_file = start
+                current_file.append(v)
+            elif isinstance(v, (NewLine, EmptyLine)):
+                # EmptyLines are defined in the same block as the previous line
+                current_file.append(v)
+                n_empty_lines += 1
+            elif isinstance(v, Import):
+                # Imports are defined in both the module and the program
+                n_empty_lines = 0
+                mod.append(v)
+                prog.append(v)
+            else:
+                # Everything else is defined in a module
+                is_prog = True
+                n_empty_lines = 0
+                prog.append(v)
+                current_file = prog
+
+            # If the current file is now a program or a module. Add headers and comments before the line we just read
+            if len(start)>0 and current_file is not start:
+                current_file[-1:-1] = start
+                start = []
+        if len(start)>0:
+            mod.extend(start)
+
+        # Define the names of the module and program
+        # The module name allows it to be correctly referenced from an import command
+        current_mod_name = os.path.splitext(os.path.basename(self._filename))[0]
+        prog_name = 'prog_' + current_mod_name
+        mod_code = CodeBlock(mod) if len(targets)>0 else None
+        if is_prog:
+            if mod_code:
+                expr = Import(targets, source=current_mod_name)
+                prog.insert(0,expr)
+            prog_code = CodeBlock(prog)
+            prog_code.set_fst(stmt)
+        else:
+            prog_code = None
+            # If the file only contains headers
+            if mod_code is None:
+                mod_code = CodeBlock(mod)
+        assert( mod_code is not None or prog_code is not None)
+        from pyccel.ast import ParserResult
+        code = ParserResult(program   = prog_code,
+                            module    = mod_code,
+                            prog_name = prog_name,
+                            mod_name  = current_mod_name)
         code.set_fst(stmt)
         return code
 
@@ -733,7 +802,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_ClassNode(self, stmt):
 
-        name = self._visit(stmt.name)
+        name = stmt.name
         methods = [i for i in stmt.value if isinstance(i, DefNode)]
         methods = self._visit(methods)
         attributes = methods[0].arguments
