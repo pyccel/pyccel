@@ -4819,9 +4819,10 @@ class If(Basic):
 class IfTernaryOperator(If):
 
     """class for the Ternery operator"""
-    def __init__(cls, *args):
-        if len(self._args[1].body)!=1:
-            raise TypeError('IfTernary body must be of length 1')
+    def __init__(self, *args):
+        for arg in self.args:
+            if len(arg[1].body)!=1:
+                raise TypeError('IfTernary body must be of length 1')
 
     pass
 
