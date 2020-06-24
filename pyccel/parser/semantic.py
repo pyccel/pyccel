@@ -1246,7 +1246,7 @@ class SemanticParser(BasicParser):
                 # TODO [SH, 25.02.2020] Report error
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
                 bounding_box=self._current_fst_node.absolute_bounding_box,
-                severity='error', blocker=self.blocking)
+                severity='fatal', blocker=self.blocking)
             else:
                 if not isinstance(func, (FunctionDef, Interface)):
 
