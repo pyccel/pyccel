@@ -74,7 +74,7 @@ class Parser(object):
     @property
     def imports(self):
         if self._semantic_parser:
-            raise NotImplementedError('TODO')
+            return self._semantic_parser.namespace.imports['imports']
         else:
             return self._syntax_parser.namespace.imports['imports']
 
