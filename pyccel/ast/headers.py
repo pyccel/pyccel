@@ -203,7 +203,7 @@ class FunctionHeader(Header):
                 if isinstance(dtype, str):
                     try:
                         dtype = datatype(dtype)
-                    except:
+                    except ValueError:
                         #TODO check if it's a class type before
                         if isinstance(dtype, str):
                             dtype =  DataTypeFactory(str(dtype), ("_name"))()
