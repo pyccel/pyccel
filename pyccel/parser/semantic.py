@@ -1232,7 +1232,9 @@ class SemanticParser(BasicParser):
                             return DottedVariable(first, second)
 
         # did something go wrong?
-        raise ValueError('attribute {} not found'.format(rhs_name))
+        errors.report('Attribute {} not found'.format(rhs_name),
+            bounding_box=self._current_fst_node.absolute_bounding_box,
+            severity='fatal', blocker=True)
 
     def _visit_PyccelAdd(self, expr, **settings):
         #stmts, expr = extract_subexpressions(expr)
@@ -1356,15 +1358,17 @@ class SemanticParser(BasicParser):
         expr_names = set(map(str, expr.expr.atoms(Symbol)))
         var_names = map(str, expr.variables)
         if len(expr_names.difference(var_names)) > 0:
-            msg = 'Unknown variables in lambda definition'
-            raise ValueError(msg)
+            errors.report(UNDEFINED_LAMBDA_VARIABLE, symbol = expr_names.difference(var_names),
+                bounding_box=self._current_fst_node.absolute_bounding_box,
+                severity='fatal', blocker=True)
         funcs = expr.expr.atoms(Application)
         for func in funcs:
             name = _get_name(func)
             f = self.get_symbolic_function(name)
             if f is None:
-                msg = 'Unknown function in lambda definition'
-                raise ValueError(msg)
+                errors.report(UNDEFINED_LAMBDA_FUNCTION, symbol=name,
+                    bounding_box=self._current_fst_node.absolute_bounding_box,
+                    severity='fatal', blocker=True)
             else:
 
                 f = f(*func.args)
@@ -1731,9 +1735,6 @@ class SemanticParser(BasicParser):
             args = rhs.args
             new_args = []
             for arg in args:
-                if len(arg[1].body) != 1:
-                    msg = 'IfTernary body must be of length 1'
-                    raise ValueError(msg)
                 result = arg[1].body[0]
                 if isinstance(expr, Assign):
                     body = Assign(lhs, result)
@@ -2321,7 +2322,9 @@ class SemanticParser(BasicParser):
                     funcs += [container[i]]
 
         if name is None:
-            raise ValueError('inteface functions {} not found'.format(expr.funcs))
+            errors.report(UNDEFINED_INTERFACE_FUNCTION, symbol=expr.funcs,
+                   bounding_box=self._current_fst_node.absolute_bounding_box,
+                   severity='fatal', blocker=self.blocking)
         expr            = Interface(name, funcs, hide=True)
         container[name] = expr
         return expr
@@ -2675,7 +2678,10 @@ class SemanticParser(BasicParser):
 
         # TODO fix: not yet working because of mpi examples
 #        if not test:
-#            raise ValueError('all arguments must be either symbolic or none of them')
+#            # TODO: Add description to parser/messages.py
+#            errors.report('Either all arguments must be symbolic or none of them can be',
+#                   bounding_box=self._current_fst_node.absolute_bounding_box,
+#                   severity='fatal', blocker=self.blocking)
 
         if is_symbolic(args[0]):
             _args = []
@@ -2735,8 +2741,9 @@ class SemanticParser(BasicParser):
         header = self.get_header(name)
 
         if not header:
-            msg = 'Expecting a header class for {classe} but could not find it.'
-            raise ValueError(msg.format(classe=name))
+            errors.report(PYCCEL_MISSING_HEADER, symbol=name,
+                   bounding_box=self._current_fst_node.absolute_bounding_box,
+                   severity='fatal', blocker=self.blocking)
 
         options    = header.options
         attributes = self.get_class(name).attributes
@@ -2902,8 +2909,9 @@ class SemanticParser(BasicParser):
         domaine = self._visit(expr.test, **settings)
         parent  = domaine.cls_base
         if not parent.is_with_construct:
-            msg = '__enter__ or __exit__ methods not found'
-            raise ValueError(msg)
+            errors.report(UNDEFINED_WITH_ACCES,
+                   bounding_box=self._current_fst_node.absolute_bounding_box,
+                   severity='fatal', blocker=self.blocking)
 
         body = self._visit(expr.body, **settings)
         return With(domaine, body, None).block
