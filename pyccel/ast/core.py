@@ -120,6 +120,7 @@ __all__ = (
     'Nil',
     'ParallelBlock',
     'ParallelRange',
+    'ParserResult',
     'Pass',
     'Product',
     'Program',
@@ -2263,8 +2264,8 @@ class Variable(Symbol, PyccelAstNode):
                 precision = default_precision['complex']
             elif isinstance(dtype, NativeBool):
                 precision = default_precision['bool']
-        if not isinstance(precision,int):
-            raise TypeError('precision must be an integer.')
+        if not isinstance(precision,int) and precision is not None:
+            raise TypeError('precision must be an integer or None.')
 
         self._dtype = dtype
         self._shape = process_shape(shape)
@@ -2669,6 +2670,7 @@ class TupleVariable(Variable):
 
     def __init__(self, arg_vars, dtype, name, *args, **kwargs):
         self._vars = tuple(arg_vars)
+        self._inconsistent_shape = not all(arg_vars[0].shape==a.shape   for a in arg_vars[1:])
         self._is_homogeneous = not dtype is NativeGeneric()
         Variable.__init__(self, dtype, name, *args, **kwargs)
 
@@ -2691,8 +2693,16 @@ class TupleVariable(Variable):
         return len(self._vars)
 
     @property
+    def inconsistent_shape(self):
+        return self._inconsistent_shape
+
+    @property
     def is_homogeneous(self):
         return self._is_homogeneous
+
+    @is_homogeneous.setter
+    def is_homogeneous(self, is_homogeneous):
+        self._is_homogeneous = is_homogeneous
 
     @Variable.allocatable.setter
     def allocatable(self, allocatable):
@@ -4984,6 +4994,13 @@ def get_assigned_symbols(expr):
 #            print(type(expr.lhs), expr.lhs)
 #            print(expr)
 #            raise SystemExit('ERROR')
+    elif isinstance(expr, FunctionCall):
+        f = expr.funcdef
+        symbols = []
+        for func_arg, inout in zip(expr.arguments,f.arguments_inout):
+            if inout:
+                symbols.append(func_arg)
+        return symbols
 
     return []
 
@@ -5223,6 +5240,74 @@ def get_iterable_ranges(it, var_name=None):
     # ...
 
     return [Range(s, e, 1) for (s, e) in zip(starts, ends)]
+
+class ParserResult(Basic):
+    def __new__(
+        self,
+        program=None,
+        module=None,
+        mod_name = None,
+        prog_name = None,
+        ):
+        return Basic.__new__(self)
+
+    def __init__(
+        self,
+        program=None,
+        module=None,
+        mod_name = None,
+        prog_name = None,
+        ):
+
+        if program is not None  and not isinstance(program, CodeBlock):
+            raise TypeError('Program must be a CodeBlock')
+
+        if module is not None  and not isinstance(module, CodeBlock):
+            raise TypeError('Module must be a CodeBlock')
+
+        if program is not None and module is not None:
+            if mod_name is None:
+                raise TypeError('Please provide module name')
+            elif not isinstance(mod_name, str):
+                raise TypeError('Module name must be a string')
+            if prog_name is None:
+                raise TypeError('Please provide program name')
+            elif not isinstance(prog_name, str):
+                raise TypeError('Program name must be a string')
+
+        self._program   = program
+        self._module    = module
+        self._prog_name = prog_name
+        self._mod_name  = mod_name
+
+
+    @property
+    def program(self):
+        return self._program
+
+    @property
+    def module(self):
+        return self._module
+
+    @property
+    def prog_name(self):
+        return self._prog_name
+
+    @property
+    def mod_name(self):
+        return self._mod_name
+
+    def has_additional_module(self):
+        return self.program is not None and self.module is not None
+
+    def is_program(self):
+        return self.program is not None
+
+    def get_focus(self):
+        if self.is_program():
+            return self.program
+        else:
+            return self.module
 
 
 #==============================================================================
