@@ -349,7 +349,7 @@ def reconstruct_pragma_multilines(header):
         # we use tr/except to avoid treating nodes without .value
         try:
             return x.value.rstrip().endswith('&')
-        except:
+        except AttributeError:
             return False
 
     condition = lambda x: (_is_multiline(x.parent) and (_is_pragma(x) or _ignore_stmt(x)))

@@ -96,7 +96,7 @@ def get_filename_from_import(module,input_folder=''):
     try:
         package = importlib.import_module(source)
         package_dir = str(package.__path__[0])
-    except:
+    except ImportError:
         errors = Errors()
         errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=source,
                       severity='fatal')
@@ -458,7 +458,7 @@ if __name__ == '__main__':
 
     try:
         filename = sys.argv[1]
-    except:
+    except IndexError:
         raise ValueError('Expecting an argument for filename')
 
     parser = BasicParser(filename)

@@ -22,7 +22,7 @@ try:
 
     def make_symbol(s):
         return colored(str(s), attrs=['bold'])
-except:
+except ImportError:
     ERROR = 'error'
     INTERNAL = 'internal'
     WARNING = 'warning'

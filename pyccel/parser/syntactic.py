@@ -167,7 +167,7 @@ class SyntaxParser(BasicParser):
         try:
             code = self.code
             red = RedBaron(code)
-        except Exception as e:
+        except Exception:
             errors = Errors()
             errors.report(INVALID_PYTHON_SYNTAX, symbol='\n' + str(e),
                           severity='fatal')
@@ -1170,7 +1170,7 @@ if __name__ == '__main__':
 
     try:
         filename = sys.argv[1]
-    except:
+    except IndexError:
         raise ValueError('Expecting an argument for filename')
 
     parser = SyntaxParser(filename)

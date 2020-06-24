@@ -1463,7 +1463,7 @@ class Tensor(Basic):
 
         try:
             name = kwargs['name']
-        except:
+        except KeyError:
             name = 'tensor'
 
         args = list(args) + [name]
@@ -3945,16 +3945,13 @@ class Load(Basic):
 
     def execute(self):
         module = str(self.module)
-        try:
-            package = importlib.import_module(module)
-        except:
-            raise ImportError('could not import {0}'.format(module))
+        package = importlib.import_module(module)
 
         ls = []
         for f in self.funcs:
             try:
                 m = getattr(package, '{0}'.format(str(f)))
-            except:
+            except AttributeError:
                 raise ImportError('could not import {0}'.format(f))
 
             # TODO improve
