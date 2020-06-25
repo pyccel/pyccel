@@ -135,7 +135,10 @@ class CCodePrinter(CodePrinter):
             #rank  = result.rank
             ret_type = dtype_registry[(dtype, prec)]
         elif len(expr.results) > 1:
-            raise ValueError("C doesn't support multiple return values.")
+            # TODO: Use fortran example to add pointer arguments for multiple output
+            msg = 'Multiple output arguments is not yet supported in c'
+            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO, symbol=expr,
+                severity='fatal', blocker=self.blocking)
         else:
             ret_type = self._print(datatype('void'))
         name = expr.name
