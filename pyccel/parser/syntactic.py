@@ -102,7 +102,6 @@ redbaron.ipython_behavior = False
 #==============================================================================
 
 from pyccel.parser.base import BasicParser
-from pyccel.parser.base import is_ignored_module
 
 def change_priority( expr ):
     """
@@ -495,9 +494,6 @@ class SyntaxParser(BasicParser):
                               severity='error')
 
             targets.append(s)
-
-        if is_ignored_module(source):
-            return EmptyLine()
 
         expr = Import(targets, source=source)
         expr.set_fst(stmt)

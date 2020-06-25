@@ -40,13 +40,6 @@ redbaron.ipython_behavior = False
 
 #==============================================================================
 
-def is_ignored_module(name):
-    if isinstance(name, DottedName):
-        if str(name) in ['pyccel.decorators']:
-            return True
-
-    return False
-
 
 def get_filename_from_import(module,input_folder=''):
     """Returns a valid filename with absolute path, that corresponds to the
