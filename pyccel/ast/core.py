@@ -182,7 +182,7 @@ def broadcast(shape_1, shape_2):
     b = len(shape_2)
     if a>b:
         new_shape_2 = (1,)*(a-b) + tuple(shape_2)
-        new_shape_1 = shape_2
+        new_shape_1 = shape_1
     elif b>a:
         new_shape_1 = (1,)*(b-a) + tuple(shape_1)
         new_shape_2 = shape_2
