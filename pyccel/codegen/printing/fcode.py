@@ -228,7 +228,8 @@ class FCodePrinter(CodePrinter):
             if name in container.functions:
                 return container.functions[name]
             container = container.parent_scope
-        raise ValueError('function {} not found'.format(name))
+        errors.report(UNDEFINED_FUNCTION, symbol=name,
+            severity='fatal', blocker=self.blocking)
 
 
     def _get_statement(self, codestring):
