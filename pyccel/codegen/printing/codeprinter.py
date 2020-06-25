@@ -14,6 +14,7 @@ from sympy.printing.str import StrPrinter
 from pyccel.ast.core import Assign
 from pyccel.ast import Real
 
+from pyccel.parser.errors     import Errors
 
 # TODO: add examples
 

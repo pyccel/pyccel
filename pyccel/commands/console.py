@@ -162,7 +162,6 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
         errors = Errors()
         # severity is error to avoid needing to catch exception
         errors.report('Pyccel can currently only handle 1 file at a time',
-                      symbol=filename,
                       severity='error')
         errors.check()
         sys.exit(1)
@@ -198,8 +197,8 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
         if _which(compiler) is None:
             errors = Errors()
             # severity is error to avoid needing to catch exception
-            errors.report('Could not find {0}'.format(compiler),
-                          symbol=filename,
+            errors.report('Could not find compiler',
+                          symbol=compiler,
                           severity='error')
             errors.check()
             sys.exit(1)
