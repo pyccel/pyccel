@@ -244,7 +244,6 @@ class SemanticParser(BasicParser):
                                 symbol=name, blocker=True,
                                 severity='fatal')
 
-        errors.check()
         self._semantic_done = True
 
         return ast
