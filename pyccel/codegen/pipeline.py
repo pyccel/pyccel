@@ -5,7 +5,9 @@ import shutil
 from collections import OrderedDict
 
 from pyccel.parser.errors               import Errors, PyccelError
+from pyccel.parser.errors               import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
 from pyccel.parser                      import Parser
+from pyccel.parser.messages             import PYCCEL_RESTRICTION_TODO
 from pyccel.codegen.codegen             import Codegen
 from pyccel.codegen.utilities           import construct_flags
 from pyccel.codegen.utilities           import compile_files
@@ -119,6 +121,10 @@ def execute_pyccel(fname, *,
     try:
         parser = Parser(pymod_filepath, output_folder=pyccel_dirpath.replace('/','.'), show_traceback=verbose)
         parser.parse(verbose=verbose)
+    except NotImplementedError as error:
+        msg = str(error)
+        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+            severity='error')
     except PyccelError:
         handle_error('parsing (syntax)')
         raise
@@ -133,6 +139,10 @@ def execute_pyccel(fname, *,
     try:
         settings = {'verbose':verbose}
         parser.annotate(**settings)
+    except NotImplementedError as error:
+        msg = str(error)
+        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+            severity='error')
     except PyccelError:
         handle_error('annotation (semantic)')
         raise
@@ -158,6 +168,10 @@ def execute_pyccel(fname, *,
             codegen = Codegen(semantic_parser, module_name)
             fname = os.path.join(pyccel_dirpath, module_name)
             fname = codegen.export(fname, language=language)
+        except NotImplementedError as error:
+            msg = str(error)
+            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+                severity='error')
         except PyccelError:
             handle_error('code generation')
             raise
