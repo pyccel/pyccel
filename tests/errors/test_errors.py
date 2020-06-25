@@ -8,7 +8,7 @@
 
 from pyccel.parser import Parser
 from pyccel.codegen import Codegen
-from pyccel.parser.errors import Errors, PyccelSemanticError, PyccelSyntaxError
+from pyccel.errors.errors import Errors, PyccelSemanticError, PyccelSyntaxError
 import os
 import pytest
 

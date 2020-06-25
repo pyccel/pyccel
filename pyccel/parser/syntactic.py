@@ -72,12 +72,12 @@ from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp  import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
-from pyccel.parser.errors import Errors, PyccelSyntaxError
+from pyccel.errors.errors import Errors, PyccelSyntaxError
 
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
 
-from pyccel.parser.messages import *
+from pyccel.errors.messages import *
 from pyccel.ast.basic       import PyccelAstNode
 #==============================================================================
 

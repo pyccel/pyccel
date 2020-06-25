@@ -4,10 +4,10 @@ import sys
 import shutil
 from collections import OrderedDict
 
-from pyccel.parser.errors               import Errors, PyccelError
-from pyccel.parser.errors               import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
+from pyccel.errors.errors               import Errors, PyccelError
+from pyccel.errors.errors               import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
+from pyccel.errors.messages             import PYCCEL_RESTRICTION_TODO
 from pyccel.parser                      import Parser
-from pyccel.parser.messages             import PYCCEL_RESTRICTION_TODO
 from pyccel.codegen.codegen             import Codegen
 from pyccel.codegen.utilities           import construct_flags
 from pyccel.codegen.utilities           import compile_files

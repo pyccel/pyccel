@@ -63,8 +63,8 @@ from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from pyccel.ast.numpyext import Rand
 from pyccel.ast.numpyext import PyccelAllocatableObject
 
-from pyccel.parser.errors import Errors
-from pyccel.parser.messages import *
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import *
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 

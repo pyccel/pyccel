@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from pyccel.parser.errors import Errors
+from pyccel.errors.errors import Errors
 from pyccel.parser import Parser
 import os
 import pytest

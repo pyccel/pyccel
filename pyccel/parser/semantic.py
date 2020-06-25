@@ -76,8 +76,8 @@ from pyccel.ast.numpyext  import PyccelArraySize
 from pyccel.ast.numpyext  import NumpyUfuncBase
 from pyccel.ast.utilities import split_positional_keyword_arguments
 from pyccel.ast.type_inference  import str_dtype
-from pyccel.parser.errors import Errors
-from pyccel.parser.errors import PyccelSemanticError
+from pyccel.errors.errors import Errors
+from pyccel.errors.errors import PyccelSemanticError
 
 from pyccel.ast.mathext   import MathFunctionBase
 
@@ -85,7 +85,7 @@ from pyccel.ast.mathext   import MathFunctionBase
 #      - use OrderedDict whenever it is possible
 # TODO move or delet extract_subexpressions when we introduce 
 #   Functional programming
-from pyccel.parser.messages import *
+from pyccel.errors.messages import *
 
 #==============================================================================
 

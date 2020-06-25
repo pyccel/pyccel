@@ -19,6 +19,11 @@ from pyccel.ast.core import SeparatorComment
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import *
+
+errors = Errors()
+
 # TODO: add examples
 
 __all__ = ["CCodePrinter", "ccode"]

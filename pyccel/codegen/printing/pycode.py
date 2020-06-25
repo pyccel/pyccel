@@ -18,8 +18,8 @@ from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.utilities  import build_types_decorator
 from pyccel.ast.core       import CodeBlock
 
-from pyccel.parser.errors import Errors
-from pyccel.parser.messages import *
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import *
 
 errors = Errors()
 

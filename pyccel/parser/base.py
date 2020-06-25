@@ -17,12 +17,12 @@ from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registe
 
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
-from pyccel.parser.errors import Errors
+from pyccel.errors.errors import Errors
 
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
 
-from pyccel.parser.messages import *
+from pyccel.errors.messages import *
 
 #==============================================================================
 

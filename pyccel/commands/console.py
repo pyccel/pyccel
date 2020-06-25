@@ -134,9 +134,9 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
     # ...
 
     # Imports
-    from pyccel.parser.errors     import Errors, PyccelError
-    from pyccel.parser.errors     import ErrorsMode
-    from pyccel.parser.messages   import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
+    from pyccel.errors.errors     import Errors, PyccelError
+    from pyccel.errors.errors     import ErrorsMode
+    from pyccel.errors.messages   import INVALID_FILE_DIRECTORY, INVALID_FILE_EXTENSION
     from pyccel.codegen.pipeline  import execute_pyccel
 
     # ...

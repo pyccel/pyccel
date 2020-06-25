@@ -304,7 +304,7 @@ class Errors:
         return text
 
 if __name__ == '__main__':
-    from pyccel.parser.messages import NO_RETURN_VALUE_EXPECTED
+    from pyccel.errors.messages import NO_RETURN_VALUE_EXPECTED
     from pyccel.parser.messages import INCOMPATIBLE_RETURN_VALUE_TYPE
     from pyccel.parser.messages import UNDEFINED_VARIABLE
 

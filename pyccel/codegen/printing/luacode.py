@@ -30,7 +30,7 @@ from sympy.sets.fancysets import Range
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
-from pyccel.parser.errors import Errors
+from pyccel.errors.errors import Errors
 
 __all__ = ["LuaCodePrinter", "lua_code"]
 
