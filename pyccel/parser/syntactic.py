@@ -236,7 +236,7 @@ class SyntaxParser(BasicParser):
             return getattr(self, syntax_method)(stmt)
 
         # Unknown object, we raise an error.
-        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=stmt,
                       bounding_box=stmt.absolute_bounding_box,
                       severity='fatal')
 
