@@ -1037,69 +1037,45 @@ class SemanticParser(BasicParser):
             bounding_box=self._current_fst_node.absolute_bounding_box,
             severity='fatal', blocker=True)
 
-    def _visit_PyccelAdd(self, expr, **settings):
+    def _handle_PyccelOperator(self, expr, **settings):
         #stmts, expr = extract_subexpressions(expr)
         #stmts = []
         #if stmts:
         #    stmts = [self._visit(i, **settings) for i in stmts]
         args     = [self._visit(a, **settings) for a in expr.args]
-        expr_new = expr.func(*args)
+        try:
+            expr_new = expr.func(*args)
+        except PyccelSemanticError as err:
+            msg = str(err)
+            errors.report(msg, symbol=expr,
+                bounding_box=self._current_fst_node.absolute_bounding_box,
+                severity='fatal', blocker=True)
         #if stmts:
         #    expr_new = CodeBlock(stmts + [expr_new])
         return expr_new
 
+    def _visit_PyccelAdd(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
     def _visit_PyccelMul(self, expr, **settings):
-        #stmts, expr = extract_subexpressions(expr)
-        #if stmts:
-        #    stmts = [self._visit(i, **settings) for i in stmts]
         args = [self._visit(a, **settings) for a in expr.args]
         if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, List)):
             expr_new = self._visit(Dlist(expr.args[0], expr.args[1]))
         else:
-            expr_new = PyccelMul(*args)
-        #if stmts:
-        #    expr_new = CodeBlock(stmts + [expr_new])
+            expr_new = self._handle_PyccelOperator(expr, **settings)
         return expr_new
 
     def _visit_PyccelDiv(self, expr, **settings):
-        #stmts, expr = extract_subexpressions(expr)
-        #if stmts:
-        #    stmts = [self._visit(i, **settings) for i in stmts]
-        args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = PyccelDiv(*args)
-        #if stmts:
-        #    expr_new = CodeBlock(stmts + [expr_new])
-        return expr_new
+        return self._handle_PyccelOperator(expr, **settings)
 
     def _visit_PyccelMod(self, expr, **settings):
-        #stmts, expr = extract_subexpressions(expr)
-        #if stmts:
-        #    stmts = [self._visit(i, **settings) for i in stmts]
-        args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = PyccelMod(*args)
-        #if stmts:
-        #    expr_new = CodeBlock(stmts + [expr_new])
-        return expr_new
+        return self._handle_PyccelOperator(expr, **settings)
 
     def _visit_PyccelFloorDiv(self, expr, **settings):
-        #stmts, expr = extract_subexpressions(expr)
-        #if stmts:
-        #    stmts = [self._visit(i, **settings) for i in stmts]
-        args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = PyccelFloorDiv(*args)
-        #if stmts:
-        #    expr_new = CodeBlock(stmts + [expr_new])
-        return expr_new
+        return self._handle_PyccelOperator(expr, **settings)
 
     def _visit_PyccelPow(self, expr, **settings):
-        #stmts, expr = extract_subexpressions(expr)
-        #if stmts:
-        #    stmts = [self._visit(i, **settings) for i in stmts]
-        args     = [self._visit(a, **settings) for a in expr.args]
-        expr_new = PyccelPow(*args)
-        #if stmts:
-        #    expr_new = CodeBlock(stmts + [expr_new])
-        return expr_new
+        return self._handle_PyccelOperator(expr, **settings)
 
     def _visit_PyccelAssociativeParenthesis(self, expr, **settings):
         return PyccelAssociativeParenthesis(self._visit(expr.args[0]))
