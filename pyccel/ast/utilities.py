@@ -229,7 +229,7 @@ def builtin_import(expr):
 
         elif source == 'pyccel.decorators':
             funcs = [f[0] for f in inspect.getmembers(pyccel_decorators, inspect.isfunction)]
-            if target not in funcs:
+            if str(target) not in funcs:
                 errors = Errors()
                 errors.report("{} does not exist in pyccel.decorators".format(target),
                         symbol = expr, severity='error')
