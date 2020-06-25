@@ -198,7 +198,7 @@ def broadcast(shape_1, shape_2):
             new_shape.append(e1)
         elif e1 == 1:
             new_shape.append(e2)
-        elif e2 == 2:
+        elif e2 == 1:
             new_shape.append(e1)
         else:
             msg = 'operands could not be broadcast together with shapes {} {}'
