@@ -264,7 +264,7 @@ def get_default_value(dtype):
     return value
 
 
-# TODO improve and remove try/except
+# TODO improve
 def is_with_construct_datatype(dtype):
     """Returns True if dtype is an with_construct class."""
     if is_pyccel_datatype(dtype):
