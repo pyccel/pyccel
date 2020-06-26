@@ -715,11 +715,8 @@ def create_variable(expr):
     """."""
 
     import numpy as np
-    try:
-        name = 'Dummy_' + str(abs(hash(expr)
-                                  + np.random.randint(500)))[-4:]
-    except:
-        name = 'Dymmy_' + str(abs(np.random.randint(500)))[-4:]
+    name = 'Dummy_' + str(abs(hash(expr)
+                              + np.random.randint(500)))[-4:]
 
     return Symbol(name)
 
@@ -4973,27 +4970,20 @@ def get_assigned_symbols(expr):
         if expr.lhs is None:
             raise TypeError('Found None lhs')
 
-        try:
-            var = expr.lhs
-            symbols = []
-            if isinstance(var, DottedVariable):
-                var = expr.lhs.lhs
-                while isinstance(var, DottedVariable):
-                    var = var.lhs
+        var = expr.lhs
+        symbols = []
+        if isinstance(var, DottedVariable):
+            var = expr.lhs.lhs
+            while isinstance(var, DottedVariable):
+                var = var.lhs
+            symbols.append(var)
+        elif isinstance(var, IndexedElement):
+            var = var.base
+            symbols.append(var)
+        elif isinstance(var, Variable):
+            if var.rank:
                 symbols.append(var)
-            elif isinstance(var, IndexedElement):
-                var = var.base
-                symbols.append(var)
-            elif isinstance(var, Variable):
-                if var.rank:
-                    symbols.append(var)
-            return symbols
-        except:
-            #TODO should we keep the try/except clause ?
-
-            # TODO must raise an Exception here
-            #      this occurs only when parsing lapack.pyh
-            raise ValueError('Unable to extract assigned variable')
+        return symbols
     elif isinstance(expr, FunctionCall):
         f = expr.funcdef
         symbols = []
