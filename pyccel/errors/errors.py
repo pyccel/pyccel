@@ -305,8 +305,8 @@ class Errors:
 
 if __name__ == '__main__':
     from pyccel.errors.messages import NO_RETURN_VALUE_EXPECTED
-    from pyccel.parser.messages import INCOMPATIBLE_RETURN_VALUE_TYPE
-    from pyccel.parser.messages import UNDEFINED_VARIABLE
+    from pyccel.errors.messages import INCOMPATIBLE_RETURN_VALUE_TYPE
+    from pyccel.errors.messages import UNDEFINED_VARIABLE
 
     errors = Errors()
     errors.set_parser_stage('semantic')
