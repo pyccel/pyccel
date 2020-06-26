@@ -96,5 +96,5 @@ class Range(object):
             i = self.i
             self.i = self.i + 1
         else:
-            raise 'StopIteration'
+            raise StopIteration
 
