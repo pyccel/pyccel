@@ -2686,7 +2686,7 @@ class SemanticParser(BasicParser):
         domaine = self._visit(expr.test, **settings)
         parent  = domaine.cls_base
         if not parent.is_with_construct:
-            errors.report(UNDEFINED_WITH_ACCES,
+            errors.report(UNDEFINED_WITH_ACCESS,
                    bounding_box=self._current_fst_node.absolute_bounding_box,
                    severity='fatal', blocker=self.blocking)
 

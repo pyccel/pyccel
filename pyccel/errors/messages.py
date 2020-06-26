@@ -61,7 +61,7 @@ UNDEFINED_LAMBDA_FUNCTION = 'Unknown function in lambda function'
 
 UNDEFINED_INTERFACE_FUNCTION = 'Interface functions not found'
 
-UNDEFINED_WITH_ACCES = 'The __enter__ or __exit__ method for the with construct cannot be found'
+UNDEFINED_WITH_ACCESS = 'The __enter__ or __exit__ method for the with construct cannot be found'
 
 # sympy limitation
 SYMPY_RESTRICTION_DICT_KEYS = 'sympy does not allow dictionary keys to be strings'
