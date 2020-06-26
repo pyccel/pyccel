@@ -90,7 +90,7 @@ numpy_constants = {
     'pi': Constant('real', 'pi', value=numpy.pi),
 }
 
-class PyccelAllocatableObject(PyccelAstNode):
+class NumpyNewArray(PyccelAstNode):
     pass
 
 #==============================================================================
@@ -98,7 +98,7 @@ class PyccelAllocatableObject(PyccelAstNode):
 # TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
 # TODO [YG, 22.05.2020]: move dtype & prec processing to __init__
 # TODO [YG, 22.05.2020]: change properties to read _dtype, _prec, _rank, etc...
-class Array(Application, PyccelAllocatableObject):
+class Array(Application, NumpyNewArray):
     """
     Represents a call to  numpy.array for code generation.
 
@@ -471,7 +471,7 @@ class Imag(Real):
         return 'imag({0})'.format(str(self.arg))
 
 #==============================================================================
-class Linspace(Application, PyccelAllocatableObject):
+class Linspace(Application, NumpyNewArray):
 
     """
     Represents numpy.linspace.
@@ -574,7 +574,7 @@ class Linspace(Application, PyccelAllocatableObject):
         return code
 
 #==============================================================================
-class Diag(Application, PyccelAllocatableObject):
+class Diag(Application, NumpyNewArray):
 
     """
     Represents numpy.diag.
@@ -663,7 +663,7 @@ class Diag(Application, PyccelAllocatableObject):
         return alloc + '\n' + code
 
 #==============================================================================
-class Cross(Application, PyccelAllocatableObject):
+class Cross(Application, NumpyNewArray):
 
     """
     Represents numpy.cross.
@@ -783,7 +783,7 @@ class Cross(Application, PyccelAllocatableObject):
         return code
 
 #==============================================================================
-class Where(Application, PyccelAllocatableObject):
+class Where(Application, NumpyNewArray):
     """ Represents a call to  numpy.where """
 
     def __new__(cls, mask):
@@ -830,7 +830,7 @@ class Where(Application, PyccelAllocatableObject):
         return alloc +'\n' + stmt
 
 #==============================================================================
-class Rand(Function, PyccelAllocatableObject):
+class Rand(Function, NumpyNewArray):
 
     """
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
@@ -872,7 +872,7 @@ class Rand(Function, PyccelAllocatableObject):
 
 
 #==============================================================================
-class Full(Application, PyccelAllocatableObject):
+class Full(Application, NumpyNewArray):
     """
     Represents a call to numpy.full for code generation.
 

@@ -61,7 +61,7 @@ from pyccel.ast.numpyext import Real, Where, PyccelArraySize
 from pyccel.ast.numpyext import NumpyComplex, NumpyMod
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from pyccel.ast.numpyext import Rand
-from pyccel.ast.numpyext import PyccelAllocatableObject
+from pyccel.ast.numpyext import NumpyNewArray
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -2547,7 +2547,7 @@ class FCodePrinter(CodePrinter):
 #=======================================================================================
 
     def _print_Application(self, expr):
-        if isinstance(expr, PyccelAllocatableObject):
+        if isinstance(expr, NumpyNewArray):
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
         else:
