@@ -56,10 +56,10 @@ WRONG_NUMBER_OUTPUT_ARGS = 'Number of output arguments does not match number of 
 INDEXED_TUPLE = 'Tuples must be indexed with constant integers for the type inference to work'
 LIST_OF_TUPLES = 'Cannot create list of non-homogeneous tuples'
 
-UNDEFINED_LAMBDA_VARIABLE = 'Unknown variables in lambda function'
+UNDEFINED_LAMBDA_VARIABLE = 'Unknown variable(s) in lambda function'
 UNDEFINED_LAMBDA_FUNCTION = 'Unknown function in lambda function'
 
-UNDEFINED_INTERFACE_FUNCTION = 'Interface functions not found'
+UNDEFINED_INTERFACE_FUNCTION = 'Interface function(s) not found'
 
 UNDEFINED_WITH_ACCESS = 'The __enter__ or __exit__ method for the with construct cannot be found'
 
