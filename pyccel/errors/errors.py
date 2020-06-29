@@ -40,10 +40,6 @@ _severity_registry = {'error': ERROR,
                       'warning': WARNING}
 
 
-def make_symbol(s):
-    return str(s)
-
-
 class PyccelError(Exception):
     def __init__(self, message, errors=''):
 
