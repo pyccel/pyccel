@@ -74,7 +74,7 @@ class Parser(object):
     @property
     def imports(self):
         if self._semantic_parser:
-            raise NotImplementedError('TODO')
+            return self._semantic_parser.namespace.imports['imports']
         else:
             return self._syntax_parser.namespace.imports['imports']
 
@@ -213,7 +213,7 @@ if __name__ == '__main__':
 
     try:
         filename = sys.argv[1]
-    except:
+    except IndexError:
         raise ValueError('Expecting an argument for filename')
 
     pyccel = Parser(filename)

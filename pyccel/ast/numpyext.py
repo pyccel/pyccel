@@ -90,12 +90,15 @@ numpy_constants = {
     'pi': Constant('real', 'pi', value=numpy.pi),
 }
 
+class NumpyNewArray(PyccelAstNode):
+    pass
+
 #==============================================================================
 # TODO [YG, 18.02.2020]: accept Numpy array argument
 # TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
 # TODO [YG, 22.05.2020]: move dtype & prec processing to __init__
 # TODO [YG, 22.05.2020]: change properties to read _dtype, _prec, _rank, etc...
-class Array(Application, PyccelAstNode):
+class Array(Application, NumpyNewArray):
     """
     Represents a call to  numpy.array for code generation.
 
@@ -468,7 +471,7 @@ class Imag(Real):
         return 'imag({0})'.format(str(self.arg))
 
 #==============================================================================
-class Linspace(Application, PyccelAstNode):
+class Linspace(Application, NumpyNewArray):
 
     """
     Represents numpy.linspace.
@@ -571,7 +574,7 @@ class Linspace(Application, PyccelAstNode):
         return code
 
 #==============================================================================
-class Diag(Application, PyccelAstNode):
+class Diag(Application, NumpyNewArray):
 
     """
     Represents numpy.diag.
@@ -660,7 +663,7 @@ class Diag(Application, PyccelAstNode):
         return alloc + '\n' + code
 
 #==============================================================================
-class Cross(Application, PyccelAstNode):
+class Cross(Application, NumpyNewArray):
 
     """
     Represents numpy.cross.
@@ -780,7 +783,7 @@ class Cross(Application, PyccelAstNode):
         return code
 
 #==============================================================================
-class Where(Application, PyccelAstNode):
+class Where(Application, NumpyNewArray):
     """ Represents a call to  numpy.where """
 
     def __new__(cls, mask):
@@ -827,7 +830,7 @@ class Where(Application, PyccelAstNode):
         return alloc +'\n' + stmt
 
 #==============================================================================
-class Rand(Function, PyccelAstNode):
+class Rand(Function, NumpyNewArray):
 
     """
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
@@ -869,7 +872,7 @@ class Rand(Function, PyccelAstNode):
 
 
 #==============================================================================
-class Full(Application, PyccelAstNode):
+class Full(Application, NumpyNewArray):
     """
     Represents a call to numpy.full for code generation.
 

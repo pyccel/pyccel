@@ -14,7 +14,7 @@ from sympy.core.assumptions import StdFactKB
 from sympy.tensor import Indexed, IndexedBase
 
 from .basic     import Basic, PyccelAstNode
-from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
+from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
                         NativeGeneric, NativeTuple, default_precision)
@@ -417,7 +417,7 @@ class Zip(Basic):
         if not isinstance(args, (tuple, list, Tuple)):
             raise TypeError('args must be an iterable')
         elif len(args) < 2:
-            raise ValueError('args must be of lenght > 2')
+            raise ValueError('args must be of length > 2')
         return Basic.__new__(cls, *args)
 
     @property

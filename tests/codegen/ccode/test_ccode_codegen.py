@@ -5,7 +5,7 @@
 
 from pyccel.parser import Parser
 from pyccel.codegen import Codegen
-from pyccel.parser.errors import Errors
+from pyccel.errors.errors import Errors
 import pytest
 import os
 

@@ -4,7 +4,9 @@ import sys
 import shutil
 from collections import OrderedDict
 
-from pyccel.parser.errors               import Errors, PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
+from pyccel.errors.errors               import Errors, PyccelError
+from pyccel.errors.errors               import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
+from pyccel.errors.messages             import PYCCEL_RESTRICTION_TODO
 from pyccel.parser                      import Parser
 from pyccel.codegen.codegen             import Codegen
 from pyccel.codegen.utilities           import construct_flags
@@ -119,7 +121,11 @@ def execute_pyccel(fname, *,
     try:
         parser = Parser(pymod_filepath, output_folder=pyccel_dirpath.replace('/','.'), show_traceback=verbose)
         parser.parse(verbose=verbose)
-    except PyccelSyntaxError:
+    except NotImplementedError as error:
+        msg = str(error)
+        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+            severity='error')
+    except PyccelError:
         handle_error('parsing (syntax)')
         raise
     if errors.is_errors():
@@ -133,7 +139,11 @@ def execute_pyccel(fname, *,
     try:
         settings = {'verbose':verbose}
         parser.annotate(**settings)
-    except PyccelSemanticError:
+    except NotImplementedError as error:
+        msg = str(error)
+        errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+            severity='error')
+    except PyccelError:
         handle_error('annotation (semantic)')
         raise
     if errors.is_errors():
@@ -158,7 +168,11 @@ def execute_pyccel(fname, *,
             codegen = Codegen(semantic_parser, module_name)
             fname = os.path.join(pyccel_dirpath, module_name)
             fname = codegen.export(fname, language=language)
-        except PyccelCodegenError:
+        except NotImplementedError as error:
+            msg = str(error)
+            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+                severity='error')
+        except PyccelError:
             handle_error('code generation')
             raise
         if errors.is_errors():

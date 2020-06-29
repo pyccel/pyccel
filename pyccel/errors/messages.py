@@ -56,6 +56,13 @@ WRONG_NUMBER_OUTPUT_ARGS = 'Number of output arguments does not match number of 
 INDEXED_TUPLE = 'Tuples must be indexed with constant integers for the type inference to work'
 LIST_OF_TUPLES = 'Cannot create list of non-homogeneous tuples'
 
+UNDEFINED_LAMBDA_VARIABLE = 'Unknown variable(s) in lambda function'
+UNDEFINED_LAMBDA_FUNCTION = 'Unknown function in lambda function'
+
+UNDEFINED_INTERFACE_FUNCTION = 'Interface function(s) not found'
+
+UNDEFINED_WITH_ACCESS = 'The __enter__ or __exit__ method for the with construct cannot be found'
+
 # sympy limitation
 SYMPY_RESTRICTION_DICT_KEYS = 'sympy does not allow dictionary keys to be strings'
 
@@ -69,6 +76,11 @@ PYCCEL_RESTRICTION_IMPORT = 'Import must be inside a def statement or a module'
 PYCCEL_RESTRICTION_IMPORT_IN_DEF = 'Only From Import is allowed inside a def statement'
 PYCCEL_RESTRICTION_IMPORT_STAR = 'import * not allowed'
 PYCCEL_RESTRICTION_OPTIONAL_NONE = 'Variables cannot be equal to None unless they are optional arguments and None is the default value'
+PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX = 'Pyccel has encountered syntax that it does not recognise'
+PYCCEL_RESTRICTION_TODO = "Pyccel has encountered syntax that has not been implemented yet. Please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem. Do not forget to specify your target language"
+
+# Fortran limitation
+FORTRAN_ALLOCATABLE_IN_EXPRESSION = 'An allocatable function cannot be used in an expression'
 
 # other Pyccel messages
 PYCCEL_INVALID_HEADER = 'Annotated comments must start with omp, acc or header'
