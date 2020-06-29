@@ -1,11 +1,9 @@
 # coding: utf-8
 
-# TODO raise StopIteration() instead of 'StopIteration'
-
-#$ header class StopIteration(public, hide)
-#$ header method __init__(StopIteration)
-#$ header method __del__(StopIteration)
-class StopIteration(object):
+#$ header class PyccelStopIteration(public, hide)
+#$ header method __init__(PyccelStopIteration)
+#$ header method __del__(PyccelStopIteration)
+class PyccelStopIteration(object):
 
     def __init__(self):
         pass
