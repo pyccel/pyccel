@@ -173,7 +173,7 @@ class SyntaxParser(BasicParser):
 
         preprocess_imports(red)
 
-        red = fst_move_directives(red)
+#        red = fst_move_directives(red)
         self._fst = red
         
 
