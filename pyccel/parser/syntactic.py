@@ -19,50 +19,60 @@ from redbaron import CallNode
 from redbaron import GetitemNode
 from redbaron import CommentNode
 
+from sympy.core.function import Function
+from sympy import Symbol
+from sympy import IndexedBase
+from sympy import Tuple
+from sympy import Lambda
+from sympy import Dict
+
 #==============================================================================
 
-from pyccel.ast import String, Integer, Float, BooleanFalse, BooleanTrue
-from pyccel.ast import Nil
-from pyccel.ast import DottedName, DottedVariable
-from pyccel.ast import Assign
-from pyccel.ast import AugAssign
-from pyccel.ast import Return
-from pyccel.ast import Pass
-from pyccel.ast import FunctionDef
-from pyccel.ast import PythonFunction, SympyFunction
-from pyccel.ast import ClassDef
-from pyccel.ast import For, FunctionalFor
-from pyccel.ast import FunctionalSum, FunctionalMax, FunctionalMin
-from pyccel.ast import If, IfTernaryOperator
-from pyccel.ast import While
-from pyccel.ast import Print
-from pyccel.ast import Del
-from pyccel.ast import Assert
-from pyccel.ast import PythonTuple
-from pyccel.ast import Comment, EmptyLine, NewLine
-from pyccel.ast import Break, Continue
-from pyccel.ast import Slice
-from pyccel.ast import MetaVariable
-from pyccel.ast import Argument, ValuedArgument
-from pyccel.ast import Is, IsNot
-from pyccel.ast import Import
-from pyccel.ast import AsName
-from pyccel.ast import CommentBlock
-from pyccel.ast import With
-from pyccel.ast import List
-from pyccel.ast import StarredArguments
-from pyccel.ast import CodeBlock
-from pyccel.ast import create_variable
+from pyccel.ast.basic import PyccelAstNode
+
+from pyccel.ast.core import ParserResult
+from pyccel.ast.core import String
+from pyccel.ast.core import Nil
+from pyccel.ast.core import DottedName, DottedVariable
+from pyccel.ast.core import Assign
+from pyccel.ast.core import AugAssign
+from pyccel.ast.core import Return
+from pyccel.ast.core import Pass
+from pyccel.ast.core import FunctionDef
+from pyccel.ast.core import PythonFunction, SympyFunction
+from pyccel.ast.core import ClassDef
+from pyccel.ast.core import For, FunctionalFor
+from pyccel.ast.core import If, IfTernaryOperator
+from pyccel.ast.core import While
+from pyccel.ast.core import Del
+from pyccel.ast.core import Assert
+from pyccel.ast.core import PythonTuple
+from pyccel.ast.core import Comment, EmptyLine, NewLine
+from pyccel.ast.core import Break, Continue
+from pyccel.ast.core import Slice
+from pyccel.ast.core import Argument, ValuedArgument
+from pyccel.ast.core import Is, IsNot
+from pyccel.ast.core import Import
+from pyccel.ast.core import AsName
+from pyccel.ast.core import CommentBlock
+from pyccel.ast.core import With
+from pyccel.ast.core import List
+from pyccel.ast.core import StarredArguments
+from pyccel.ast.core import CodeBlock
+from pyccel.ast.core import create_variable
 
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
 from pyccel.ast.core import PyccelOperator, PyccelUnary
 
-from pyccel.ast.headers import Header
+from pyccel.ast.builtins import Print
+from pyccel.ast.headers  import Header, MetaVariable
+from pyccel.ast.numbers  import Integer, Float, Complex, BooleanFalse, BooleanTrue
+from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 
-from pyccel.ast.numbers import Complex
-
+from pyccel.parser.base import BasicParser
+from pyccel.parser.base import BasicParser
 from pyccel.parser.utilities import fst_move_directives, preprocess_imports
 from pyccel.parser.utilities import reconstruct_pragma_multilines
 from pyccel.parser.utilities import read_file
@@ -76,19 +86,9 @@ from pyccel.errors.errors import Errors, PyccelSyntaxError
 
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
-
 from pyccel.errors.messages import *
-from pyccel.ast.basic       import PyccelAstNode
+
 #==============================================================================
-
-from sympy.core.function       import Function
-
-from sympy import Symbol
-from sympy import IndexedBase
-from sympy import Tuple
-from sympy import Lambda
-from sympy import Dict
-
 errors = Errors()
 #==============================================================================
 
@@ -100,8 +100,6 @@ redbaron.ipython_behavior = False
 # Useful for very coarse version differentiation.
 
 #==============================================================================
-
-from pyccel.parser.base import BasicParser
 
 def change_priority( expr ):
     """
@@ -303,7 +301,6 @@ class SyntaxParser(BasicParser):
             if mod_code is None:
                 mod_code = CodeBlock(mod)
         assert( mod_code is not None or prog_code is not None)
-        from pyccel.ast import ParserResult
         code = ParserResult(program   = prog_code,
                             module    = mod_code,
                             prog_name = prog_name,

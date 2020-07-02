@@ -4,9 +4,9 @@
 from sympy import count_ops as sympy_count_ops
 from sympy import Tuple
 
-from pyccel.ast import (For, Assign, NewLine,
-                        Zeros, Ones, PythonTuple, CodeBlock)
-
+from pyccel.ast.core     import For, Assign, NewLine, CodeBlock
+from pyccel.ast.numpyext import Zeros, Ones
+from pyccel.ast.builtins import PythonTuple
 from pyccel.complexity.basic import Complexity
 
 __all__ = ["count_ops", "OpComplexity"]

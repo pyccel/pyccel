@@ -4,14 +4,14 @@ import sys
 import shutil
 from collections import OrderedDict
 
-from pyccel.errors.errors               import Errors, PyccelError
-from pyccel.errors.errors               import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
-from pyccel.errors.messages             import PYCCEL_RESTRICTION_TODO
-from pyccel.parser                      import Parser
-from pyccel.codegen.codegen             import Codegen
-from pyccel.codegen.utilities           import construct_flags
-from pyccel.codegen.utilities           import compile_files
-from pyccel.codegen.python_wrapper      import create_shared_library
+from pyccel.errors.errors          import Errors, PyccelError
+from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
+from pyccel.errors.messages        import PYCCEL_RESTRICTION_TODO
+from pyccel.parser.parser          import Parser
+from pyccel.codegen.codegen        import Codegen
+from pyccel.codegen.utilities      import construct_flags
+from pyccel.codegen.utilities      import compile_files
+from pyccel.codegen.python_wrapper import create_shared_library
 
 __all__ = ['execute_pyccel']
 
