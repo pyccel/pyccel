@@ -258,7 +258,7 @@ class SyntaxParser(BasicParser):
                 mod.append(v)
                 targets.append(v.name)
                 current_file = mod
-            elif isinstance(v,(Header,Comment)):
+            elif isinstance(v,(Header, Comment, CommentBlock)):
                 # Headers and Comments are defined in the same block as the following object
                 n_empty_lines = 0
                 current_file = start
