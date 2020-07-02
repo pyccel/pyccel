@@ -1,5 +1,5 @@
 from pyccel.decorators import types
-from pyccel import epyccel
+from pyccel.epyccel import epyccel
 import shutil
 
 def clean_test():

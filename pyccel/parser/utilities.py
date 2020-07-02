@@ -8,7 +8,7 @@ from redbaron import (CommentNode, ForNode, DefNode, WithNode,
                       CallNode, RedBaron, AtomtrailersNode)
 
 from sympy import srepr
-from pyccel.ast import DottedName
+from pyccel.ast.core import DottedName
 from pyccel.ast.core import create_variable
 from sympy import Symbol
 import os

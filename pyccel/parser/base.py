@@ -8,12 +8,12 @@ import re
 
 #==============================================================================
 
-from pyccel.ast import DottedName
-from pyccel.ast import SymbolicAssign
-from pyccel.ast import FunctionDef, Interface
-from pyccel.ast import PythonFunction, SympyFunction
-from pyccel.ast import Import
-from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.core import DottedName
+from pyccel.ast.core import SymbolicAssign
+from pyccel.ast.core import FunctionDef, Interface
+from pyccel.ast.core import PythonFunction, SympyFunction
+from pyccel.ast.core import Import
+from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 

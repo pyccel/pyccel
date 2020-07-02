@@ -12,7 +12,6 @@ from sympy.core.mul import _keep_coeff
 from sympy.printing.str import StrPrinter
 
 from pyccel.ast.core import Assign
-from pyccel.ast import Real
 
 from pyccel.errors.errors     import Errors
 

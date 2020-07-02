@@ -2,9 +2,9 @@ import pytest
 import inspect
 import numpy as np
 
-from pyccel import epyccel
+from pyccel.epyccel import epyccel
 from modules import pointers as pointers_module
-from conftest       import *
+from conftest import *
 
 pointers_funcs = [(f, getattr(pointers_module,f)) for f in pointers_module.__all__ if inspect.isfunction(getattr(pointers_module,f))]
 
