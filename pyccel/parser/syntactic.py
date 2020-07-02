@@ -163,17 +163,21 @@ class SyntaxParser(BasicParser):
 
         self._code = code
 
+        self._scope = []
+
         try:
             code = self.code
-            red = RedBaron(code)
+            #red = RedBaron(code)
+            import ast
+            red = ast.parse(code)
         except Exception:
             errors = Errors()
             errors.report(INVALID_PYTHON_SYNTAX, symbol='\n' + str(e),
                           severity='fatal')
 
-        preprocess_imports(red)
+        #preprocess_imports(red)
 
-        red = fst_move_directives(red)
+        #red = fst_move_directives(red)
         self._fst = red
         
 
@@ -231,15 +235,20 @@ class SyntaxParser(BasicParser):
 
         cls = type(stmt)
         syntax_method = '_visit_' + cls.__name__
+        print(syntax_method)
         if hasattr(self, syntax_method):
-            return getattr(self, syntax_method)(stmt)
+            self._scope.append(cls)
+            result = getattr(self, syntax_method)(stmt)
+            self._scope.pop()
+            return result
 
         # Unknown object, we raise an error.
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=stmt,
                       bounding_box=stmt.absolute_bounding_box,
                       severity='fatal')
 
-    def _visit_RedBaron(self, stmt):
+    #def _visit_RedBaron(self, stmt):
+    def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
         prog = []
         mod  = []
@@ -248,7 +257,7 @@ class SyntaxParser(BasicParser):
         targets = []
         n_empty_lines = 0
         is_prog = False
-        for i in stmt:
+        for i in stmt.body:
             v = self._visit(i)
             if n_empty_lines > 3:
                 current_file = start
@@ -433,6 +442,10 @@ class SyntaxParser(BasicParser):
 
         expr.set_fst(stmt)
         return expr
+
+    def _visit_arg(self, stmt):
+        val = strip_ansi_escape.sub('', stmt.arg)
+        return Symbol(val)
 
     def _visit_NameNode(self, stmt):
         if stmt.value == 'None':
@@ -658,10 +671,13 @@ class SyntaxParser(BasicParser):
     def _visit_PassNode(self, stmt):
         return Pass()
 
-    def _visit_DefNode(self, stmt):
+    #def _visit_DefNode(self, stmt):
+    def _visit_FunctionDef(self, stmt):
 
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
-        if isinstance(stmt.parent, ClassNode):
+        #if isinstance(stmt.parent, ClassNode):
+        from ast import ClassDef
+        if isinstance(self._scope[-1], ClassDef):
             cls_name = stmt.parent.name
         else:
             cls_name = None
@@ -670,7 +686,11 @@ class SyntaxParser(BasicParser):
         name = name.replace("'", '')
         name = strip_ansi_escape.sub('', name)
 
-        arguments    = self._visit(stmt.arguments)
+        arguments    = []
+        if stmt.args.args:
+            arguments += self._visit(stmt.args.args)
+        elif stmt.args.kwarg:
+            arguments += self._visit(stmt.args.kwarg)
         results      = []
         local_vars   = []
         global_vars  = []
@@ -684,7 +704,7 @@ class SyntaxParser(BasicParser):
 
         # TODO improve later
         decorators = {}
-        for i in stmt.decorators:
+        for i in stmt.decorator_list:
             if isinstance(i,CommentNode):
                 continue
             decorators.update(self._visit(i))
@@ -745,7 +765,7 @@ class SyntaxParser(BasicParser):
             if name in self.namespace.static_functions:
                 header = header.to_static()
 
-        body = stmt.value
+        body = stmt.body
 
         if 'sympy' in decorators.keys():
             # TODO maybe we should run pylint here
