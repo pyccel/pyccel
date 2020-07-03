@@ -54,6 +54,15 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
     parser.add_argument('files', metavar='N', type=str, nargs='+',
                         help='a Pyccel file')
 
+    #... Version
+    import pyccel
+    version = pyccel.__version__
+    libpath = pyccel.__path__[0]
+    python  = 'python {}.{}'.format(*sys.version_info)
+    message = "pyccel {} from {} ({})".format(version, libpath, python)
+    parser.add_argument('-V', '--version', action='version', version=message)
+    # ...
+
     # ... compiler syntax, semantic and codegen
     group = parser.add_argument_group('Pyccel compiling stages')
     group.add_argument('-x', '--syntax-only', action='store_true',

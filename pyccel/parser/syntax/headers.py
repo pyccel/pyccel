@@ -10,11 +10,11 @@ from sympy import sympify
 from sympy import Tuple
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
-from pyccel.ast import MetaVariable , UnionType, InterfaceHeader
-from pyccel.ast import construct_macro, MacroFunction, MacroVariable
-from pyccel.ast import ValuedArgument
-from pyccel.ast import DottedName, String
+from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
+from pyccel.ast.headers   import MetaVariable , UnionType, InterfaceHeader
+from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
+from pyccel.ast.core      import ValuedArgument
+from pyccel.ast.core      import DottedName, String
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
 
 DEBUG = False

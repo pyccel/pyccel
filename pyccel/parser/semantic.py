@@ -4,91 +4,6 @@
 from collections import OrderedDict
 import traceback
 
-#==============================================================================
-
-from pyccel.ast import NativeRange
-from pyccel.ast import NativeSymbol
-from pyccel.ast import String
-from pyccel.ast import DataTypeFactory
-from pyccel.ast import Nil
-from pyccel.ast import Variable
-from pyccel.ast import TupleVariable
-from pyccel.ast import DottedName, DottedVariable
-from pyccel.ast import Assign, AliasAssign, SymbolicAssign
-from pyccel.ast import AugAssign, CodeBlock
-from pyccel.ast import Return
-from pyccel.ast import ConstructorCall
-from pyccel.ast import FunctionDef, Interface
-from pyccel.ast import ClassDef
-from pyccel.ast import For, FunctionalFor, ForIterator
-from pyccel.ast import GeneratorComprehension as GC
-from pyccel.ast import FunctionalSum, FunctionalMax, FunctionalMin
-from pyccel.ast import If, IfTernaryOperator
-from pyccel.ast import While
-from pyccel.ast import Print
-from pyccel.ast import SymbolicPrint
-from pyccel.ast import Del
-from pyccel.ast import EmptyLine
-from pyccel.ast import Slice, IndexedVariable, IndexedElement
-from pyccel.ast import FunctionHeader, ClassHeader, MethodHeader
-from pyccel.ast import MacroFunction, MacroVariable
-from pyccel.ast import Concatenate
-from pyccel.ast import ValuedVariable
-from pyccel.ast import ValuedArgument
-from pyccel.ast import Is, IsNot
-from pyccel.ast import Import
-from pyccel.ast import AsName
-from pyccel.ast import With, Block
-from pyccel.ast import List, Dlist, Len
-from pyccel.ast import builtin_function as pyccel_builtin_function
-from pyccel.ast import builtin_import as pyccel_builtin_import
-from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
-from pyccel.ast import StarredArguments
-from pyccel.ast import inline, subs, create_variable, extract_subexpressions
-from pyccel.ast.core import get_assigned_symbols
-
-from pyccel.ast.core      import _atomic
-
-from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
-from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
-from pyccel.ast.core import PyccelUnary
-
-from pyccel.ast.numpyext  import Full, Array, Rand
-from pyccel.ast.numpyext  import EmptyLike, FullLike, OnesLike, ZerosLike
-from pyccel.ast.numpyext  import NumpySum, NumpyMin, NumpyMax, NumpyMod
-from pyccel.ast.numpyext  import Matmul, Norm
-
-from pyccel.ast.builtins import Int as PythonInt, Bool as PythonBool, PythonFloat, PythonComplex
-from pyccel.ast.numpyext import NumpyInt, Int32, Int64
-from pyccel.ast.numpyext import NumpyFloat, Float32, Float64
-from pyccel.ast.numpyext import NumpyComplex, Complex64, Complex128
-from pyccel.ast.numpyext import Real, Imag, Where, Diag, Linspace
-
-from pyccel.ast.core      import Product, FunctionCall
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString
-from pyccel.ast.datatypes import default_precision
-from pyccel.ast.builtins  import python_builtin_datatype
-from pyccel.ast.builtins  import Range, Zip, Enumerate, Map, PythonTuple
-from pyccel.ast.numbers   import BooleanTrue, BooleanFalse
-from pyccel.ast.numbers   import Integer, Float, Complex
-from pyccel.ast.numpyext  import PyccelArraySize
-from pyccel.ast.numpyext  import NumpyUfuncBase
-from pyccel.ast.utilities import split_positional_keyword_arguments
-from pyccel.ast.type_inference  import str_dtype
-from pyccel.errors.errors import Errors
-from pyccel.errors.errors import PyccelSemanticError
-
-from pyccel.ast.mathext   import MathFunctionBase
-
-# TODO - remove import * and only import what we need
-#      - use OrderedDict whenever it is possible
-# TODO move or delet extract_subexpressions when we introduce 
-#   Functional programming
-from pyccel.errors.messages import *
-
-#==============================================================================
-
 from sympy.core.function       import Application, UndefinedFunction
 from sympy.core.numbers        import ImaginaryUnit
 from sympy.utilities.iterables import iterable as sympy_iterable
@@ -99,20 +14,108 @@ from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float
 from sympy import Indexed, IndexedBase
 from sympy import ceiling
-
 from sympy import oo  as INF
 from sympy import Tuple
 from sympy import Lambda
 from sympy import Expr
 from sympy.core import cache
 
-errors = Errors()
+#==============================================================================
+
+from pyccel.ast.basic import PyccelAstNode
+
+from pyccel.ast.core import String
+from pyccel.ast.core import Nil
+from pyccel.ast.core import Variable
+from pyccel.ast.core import TupleVariable
+from pyccel.ast.core import DottedName, DottedVariable
+from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
+from pyccel.ast.core import AugAssign, CodeBlock
+from pyccel.ast.core import Return
+from pyccel.ast.core import ConstructorCall
+from pyccel.ast.core import FunctionDef, Interface
+from pyccel.ast.core import ClassDef
+from pyccel.ast.core import For, FunctionalFor, ForIterator
+from pyccel.ast.core import If, IfTernaryOperator
+from pyccel.ast.core import While
+from pyccel.ast.core import SymbolicPrint
+from pyccel.ast.core import Del
+from pyccel.ast.core import EmptyLine
+from pyccel.ast.core import Slice, IndexedVariable, IndexedElement
+from pyccel.ast.core import Concatenate
+from pyccel.ast.core import ValuedVariable
+from pyccel.ast.core import ValuedArgument
+from pyccel.ast.core import Is, IsNot
+from pyccel.ast.core import Import
+from pyccel.ast.core import AsName
+from pyccel.ast.core import With, Block
+from pyccel.ast.core import List, Dlist, Len
+from pyccel.ast.core import StarredArguments
+from pyccel.ast.core import inline, subs, create_variable, extract_subexpressions
+from pyccel.ast.core import get_assigned_symbols
+from pyccel.ast.core import _atomic
+from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
+from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
+from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
+from pyccel.ast.core import PyccelUnary
+from pyccel.ast.core import Product, FunctionCall
+
+from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
+from pyccel.ast.functionalexpr import GeneratorComprehension as GC
+
+from pyccel.ast.datatypes import NativeRange
+from pyccel.ast.datatypes import NativeSymbol
+from pyccel.ast.datatypes import DataTypeFactory
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString
+from pyccel.ast.datatypes import default_precision
+
+from pyccel.ast.type_inference  import str_dtype
+
+from pyccel.ast.numbers import BooleanTrue, BooleanFalse
+from pyccel.ast.numbers import Integer, Float, Complex
+
+from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
+from pyccel.ast.headers import MacroFunction, MacroVariable
+
+from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
+from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
+from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.utilities import split_positional_keyword_arguments
+
+from pyccel.ast.builtins import Print
+from pyccel.ast.builtins import Int as PythonInt, Bool as PythonBool, PythonFloat, PythonComplex
+from pyccel.ast.builtins import python_builtin_datatype
+from pyccel.ast.builtins import Range, Zip, Enumerate, Map, PythonTuple
+
+from pyccel.ast.numpyext import Full, Array, Rand
+from pyccel.ast.numpyext import EmptyLike, FullLike, OnesLike, ZerosLike
+from pyccel.ast.numpyext import NumpySum, NumpyMin, NumpyMax, NumpyMod
+from pyccel.ast.numpyext import Matmul, Norm
+from pyccel.ast.numpyext import NumpyInt, Int32, Int64
+from pyccel.ast.numpyext import NumpyFloat, Float32, Float64
+from pyccel.ast.numpyext import NumpyComplex, Complex64, Complex128
+from pyccel.ast.numpyext import Real, Imag, Where, Diag, Linspace
+from pyccel.ast.numpyext import PyccelArraySize
+from pyccel.ast.numpyext import NumpyUfuncBase
+
+from pyccel.ast.mathext  import MathFunctionBase
+
+from pyccel.errors.errors import Errors
+from pyccel.errors.errors import PyccelSemanticError
+
+# TODO - remove import * and only import what we need
+#      - use OrderedDict whenever it is possible
+# TODO move or delet extract_subexpressions when we introduce 
+#   Functional programming
+from pyccel.errors.messages import *
 
 from pyccel.parser.base      import BasicParser, Scope
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
 
-from pyccel.ast.basic import PyccelAstNode
+#==============================================================================
+
+errors = Errors()
 
 #==============================================================================
 

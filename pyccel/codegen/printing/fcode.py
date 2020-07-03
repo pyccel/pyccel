@@ -54,7 +54,7 @@ from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.numbers   import Integer, Float
 
-from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
 from pyccel.ast.numpyext import Real, Where, PyccelArraySize
