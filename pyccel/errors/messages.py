@@ -63,6 +63,8 @@ UNDEFINED_INTERFACE_FUNCTION = 'Interface function(s) not found'
 
 UNDEFINED_WITH_ACCESS = 'The __enter__ or __exit__ method for the with construct cannot be found'
 
+VARARGS = 'An undefined number of input arguments is not covered by Pyccel'
+
 # sympy limitation
 SYMPY_RESTRICTION_DICT_KEYS = 'sympy does not allow dictionary keys to be strings'
 
