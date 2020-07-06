@@ -241,10 +241,9 @@ class SyntaxParser(BasicParser):
 
         # Unknown object, we raise an error.
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=stmt,
-                      bounding_box=stmt.absolute_bounding_box,
+                      bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='fatal')
 
-    #def _visit_RedBaron(self, stmt):
     def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
         prog = []
@@ -350,17 +349,16 @@ class SyntaxParser(BasicParser):
 
             return DottedName(*names)
 
-    def _visit_NameAsNameNode(self, stmt):
-
-        if not isinstance(stmt.value, str):
+    def _visit_alias(self, stmt):
+        if not isinstance(stmt.name, str):
             raise TypeError('Expecting a string')
 
-        value = strip_ansi_escape.sub('', stmt.value)
-        if not stmt.target:
+        value = strip_ansi_escape.sub('', stmt.name)
+        if not stmt.asname:
             return value
 
         old = value
-        new = self._visit(stmt.target)
+        new = self._visit(stmt.asname)
 
         # TODO improve
 
@@ -457,23 +455,29 @@ class SyntaxParser(BasicParser):
             val = strip_ansi_escape.sub('', stmt.value)
             return Symbol(val)
 
-    def _visit_ImportNode(self, stmt):
+    def _visit_Import(self, stmt):
         errors.report(PYCCEL_UNEXPECTED_IMPORT,
-                      bounding_box=stmt.absolute_bounding_box,
+                      bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='error')
 
-        ls = self._visit(stmt.value)
-        ls = get_default_path(ls)
-        expr = Import(ls)
-        expr.set_fst(stmt)
-        self.insert_import(expr)
-        return expr
+        ls = [self._visit(n) for n in stmt.names]
+        ls = [get_default_path(l) for l in ls]
+        expr = [Import(i) for i in ls]
+        for e in expr:
+            e.set_fst(stmt)
+            self.insert_import(e)
+        if len(expr)==1:
+            return expr[0]
+        else:
+            expr = Codegen(expr)
+            expr.set_fst(stmt)
+            return expr
 
     def _visit_FromImportNode(self, stmt):
 
         if not isinstance(stmt.parent, (RedBaron, DefNode)):
             errors.report(PYCCEL_RESTRICTION_IMPORT,
-                          bounding_box=stmt.absolute_bounding_box,
+                          bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='error')
 
         source = self._visit(stmt.value)
@@ -499,7 +503,7 @@ class SyntaxParser(BasicParser):
             s = self._visit(i)
             if s == '*':
                 errors.report(PYCCEL_RESTRICTION_IMPORT_STAR,
-                              bounding_box=stmt.absolute_bounding_box,
+                              bounding_box=(stmt.lineno, stmt.col_offset),
                               severity='error')
 
             targets.append(s)
@@ -525,11 +529,11 @@ class SyntaxParser(BasicParser):
         elif stmt.value == '~':
 
             errors.report(PYCCEL_RESTRICTION_UNARY_OPERATOR,
-                          bounding_box=stmt.absolute_bounding_box,
+                          bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='error')
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
-                          bounding_box=stmt.absolute_bounding_box,
+                          bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
 
     def _visit_BinaryOperatorNode(self, stmt):
@@ -566,7 +570,7 @@ class SyntaxParser(BasicParser):
             return change_priority(expr)
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
-                          bounding_box=stmt.absolute_bounding_box,
+                          bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
 
     def _visit_BooleanOperatorNode(self, stmt):
@@ -591,7 +595,7 @@ class SyntaxParser(BasicParser):
                 return PyccelOr(first, second)
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
-                      bounding_box=stmt.absolute_bounding_box,
+                      bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='fatal')
 
     def _visit_ComparisonNode(self, stmt):
@@ -620,7 +624,7 @@ class SyntaxParser(BasicParser):
             return IsNot(first, second)
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
-                      bounding_box=stmt.absolute_bounding_box,
+                      bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='fatal')
 
     def _visit_PrintNode(self, stmt):
@@ -738,7 +742,7 @@ class SyntaxParser(BasicParser):
                     if not arg_name == 'results':
                         msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
                         errors.report(msg,
-                                      bounding_box=stmt.absolute_bounding_box,
+                                      bounding_box=(stmt.lineno, stmt.col_offset),
                                       severity='error')
                     else:
                         ls = arg if isinstance(arg, PythonTuple) else [arg]
@@ -746,7 +750,7 @@ class SyntaxParser(BasicParser):
                 else:
                     msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
                     errors.report(msg,
-                                  bounding_box=stmt.absolute_bounding_box,
+                                  bounding_box=(stmt.lineno, stmt.col_offset),
                                   severity='error')
 
                 i = i+1
@@ -991,7 +995,7 @@ class SyntaxParser(BasicParser):
             expr = FunctionalMax(body, result, lhs, indices, None)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO,
-                          bounding_box=stmt.absolute_bounding_box,
+                          bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
 
         expr.set_fst(stmt)
@@ -1084,7 +1088,7 @@ class SyntaxParser(BasicParser):
         else:
 
 #                    errors.report(PYCCEL_INVALID_HEADER,
-#                                  bounding_box=stmt.absolute_bounding_box,
+#                                  bounding_box=(stmt.lineno, stmt.col_offset),
 #                                  severity='error')
 
             # TODO improve
@@ -1153,22 +1157,22 @@ class SyntaxParser(BasicParser):
     def _visit_TryNode(self, stmt):
         # this is a blocking error, since we don't want to convert the try body
         errors.report(PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY,
-                      bounding_box=stmt.absolute_bounding_box,
+                      bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='error')
 
     def _visit_RaiseNode(self, stmt):
         errors.report(PYCCEL_RESTRICTION_RAISE,
-                      bounding_box=stmt.absolute_bounding_box,
+                      bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='error')
 
     def _visit_YieldAtomNode(self, stmt):
         errors.report(PYCCEL_RESTRICTION_YIELD,
-                      bounding_box=stmt.absolute_bounding_box,
+                      bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='error')
 
     def _visit_YieldNode(self, stmt):
         errors.report(PYCCEL_RESTRICTION_YIELD,
-                      bounding_box=stmt.absolute_bounding_box,
+                      bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='error')
 
     def _visit_ListArgumentNode(self, stmt):
