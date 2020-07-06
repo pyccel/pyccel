@@ -5,6 +5,7 @@ import redbaron
 import os
 import re
 
+import ast
 #==============================================================================
 
 from redbaron import RedBaron
@@ -165,7 +166,6 @@ class SyntaxParser(BasicParser):
         try:
             code = self.code
             #red = RedBaron(code)
-            import ast
             red = ast.parse(code)
         except Exception:
             errors = Errors()
@@ -324,8 +324,8 @@ class SyntaxParser(BasicParser):
     def _visit_NodeList(self, stmt):
         return self._treat_iterable(stmt)
 
-    def _visit_TupleNode(self, stmt):
-        return self._treat_iterable(stmt)
+    def _visit_Tuple(self, stmt):
+        return self._treat_iterable(stmt.elts)
 
     def _visit_ListNode(self, stmt):
         return self._treat_iterable(stmt)
@@ -423,16 +423,37 @@ class SyntaxParser(BasicParser):
         val = complex(strip_ansi_escape.sub('', stmt.value))
         return Complex(Float(val.real), Float(val.imag))
 
-    def _visit_AssignmentNode(self, stmt):
+    def _visit_Assign(self, stmt):
 
-        lhs = self._visit(stmt.target)
+        lhs = self._visit(stmt.targets)
         rhs = self._visit(stmt.value)
-        if stmt.operator in ['+', '-', '*', '/']:
-            expr = AugAssign(lhs, stmt.operator, rhs)
-        else:
-            expr = Assign(lhs, rhs)
+        expr = Assign(lhs, rhs)
 
-            # we set the fst to keep track of needed information for errors
+        # we set the fst to keep track of needed information for errors
+
+        expr.set_fst(stmt)
+        return expr
+
+    def _visit_AugAssign(self, stmt):
+
+        lhs = self._visit(stmt.targets)
+        rhs = self._visit(stmt.value)
+        if isinstance(stmt.op, ast.Add):
+            expr = AugAssign(lhs, '+', rhs)
+        elif isinstance(stmt.op, ast.Sub):
+            expr = AugAssign(lhs, '-', rhs)
+        elif isinstance(stmt.op, ast.Mult):
+            expr = AugAssign(lhs, '*', rhs)
+        elif isinstance(stmt.op, ast.Div):
+            expr = AugAssign(lhs, '/', rhs)
+        elif isinstance(stmt.op, ast.Mod):
+            expr = AugAssign(lhs, '%', rhs)
+        else:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
+                      bounding_box=(stmt.lineno, stmt.col_offset),
+                      severity='fatal')
+
+        # we set the fst to keep track of needed information for errors
 
         expr.set_fst(stmt)
         return expr
@@ -671,13 +692,10 @@ class SyntaxParser(BasicParser):
     def _visit_PassNode(self, stmt):
         return Pass()
 
-    #def _visit_DefNode(self, stmt):
     def _visit_FunctionDef(self, stmt):
 
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
-        #if isinstance(stmt.parent, ClassNode):
-        from ast import ClassDef
-        if isinstance(self._scope[-1], ClassDef):
+        if isinstance(self._scope[-1], ast.ClassDef):
             cls_name = stmt.parent.name
         else:
             cls_name = None
