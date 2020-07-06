@@ -37,6 +37,12 @@ def get_comments(code):
 def extend_tree(code):
     comment_lines_no, comments, else_no = get_comments(code)
     tree = parse(code)
+    if len(tree.body) == 0:
+        if len(comments) > 0:
+            tree.body        = [comments[0]]
+            comment_lines_no = comment_lines_no[1:]
+            comments         = comments[1:]
+
     insert_comments(tree, comment_lines_no, comments, else_no)
     return tree
 
