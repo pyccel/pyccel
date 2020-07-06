@@ -460,18 +460,22 @@ class SyntaxParser(BasicParser):
         val = stmt.arg
         return Symbol(val)
 
-    def _visit_Name(self, stmt):
-        if stmt.id == 'None':
+    def _visit_NameConstant(self, stmt):
+        if stmt.value is None:
             return Nil()
 
-        elif stmt.id == 'True':
+        elif stmt.value is True:
             return BooleanTrue()
 
-        elif stmt.id == 'False':
+        elif stmt.value is False:
             return BooleanFalse()
 
         else:
-            return Symbol(stmt.id)
+            raise NotImplementedError("Unknown NameConstant : {}".format(stmt.value))
+
+
+    def _visit_Name(self, stmt):
+        return Symbol(stmt.id)
 
     def _visit_Import(self, stmt):
         errors.report(PYCCEL_UNEXPECTED_IMPORT,
@@ -601,29 +605,31 @@ class SyntaxParser(BasicParser):
                       bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='fatal')
 
-    def _visit_ComparisonNode(self, stmt):
+    def _visit_Compare(self, stmt):
+        if len(stmt.ops)>1:
+            errors.report(PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS,
+                      bounding_box=(stmt.lineno, stmt.col_offset),
+                      severity='fatal')
 
-        first = self._visit(stmt.first)
-        second = self._visit(stmt.second)
-        op = stmt.value.first
-        if(stmt.value.second):
-            op = op + ' ' + stmt.value.second
+        first = self._visit(stmt.left)
+        second = self._visit(stmt.comparators[0])
+        op = stmt.ops[0]
 
-        if op == '==':
+        if isinstance(op, ast.Eq):
             return PyccelEq(first, second)
-        if op == '!=':
+        if isinstance(op, ast.NotEq):
             return PyccelNe(first, second)
-        if op == '<':
+        if isinstance(op, ast.Lt):
             return PyccelLt(first, second)
-        if op == '>':
+        if isinstance(op, ast.Gt):
             return PyccelGt(first, second)
-        if op == '<=':
+        if isinstance(op, ast.LtE):
             return PyccelLe(first, second)
-        if op == '>=':
+        if isinstance(op, ast.GtE):
             return PyccelGe(first, second)
-        if op == 'is':
+        if isinstance(op, ast.Is):
             return Is(first, second)
-        if op == 'is not':
+        if isinstance(op, ast.IsNot):
             return IsNot(first, second)
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
@@ -812,13 +818,13 @@ class SyntaxParser(BasicParser):
         func.set_fst(stmt)
         return func
 
-    def _visit_ClassNode(self, stmt):
+    def _visit_ClassDef(self, stmt):
 
         name = stmt.name
-        methods = [i for i in stmt.value if isinstance(i, DefNode)]
+        methods = [i for i in stmt.body if isinstance(i, ast.FunctionDef)]
         methods = self._visit(methods)
         attributes = methods[0].arguments
-        parent = [i.value for i in stmt.inherit_from]
+        parent = [self._visit(i) for i in stmt.bases]
         expr = ClassDef(name=name, attributes=attributes,
                         methods=methods, parent=parent)
 
@@ -990,27 +996,17 @@ class SyntaxParser(BasicParser):
         expr.set_fst(stmt)
         return expr
 
-    def _visit_IfelseblockNode(self, stmt):
-
-        args = self._visit(stmt.value)
-        return If(*args)
-
-    def _visit_IfNode(self, stmt):
+    def _visit_If(self, stmt):
 
         test = self._visit(stmt.test)
-        body = self._visit(stmt.value)
-        return Tuple(test, body, sympify=False)
+        body = self._visit(stmt.body)
+        orelse = self._visit(stmt.orelse)
+        if isinstance(orelse,If):
+            orelse = orelse._args
+        else:
+            orelse = Tuple(BooleanTrue(), orelse, sympify=False)
 
-    def _visit_ElifNode(self, stmt):
-        test = self._visit(stmt.test)
-        body = self._visit(stmt.value)
-        return Tuple(test, body, sympify=False)
-
-    def _visit_ElseNode(self, stmt):
-
-        test = BooleanTrue()
-        body = self._visit(stmt.value)
-        return Tuple(test, body, sympify=False)
+        return If(Tuple(test, body, sympify=False), orelse)
 
     def _visit_TernaryOperatorNode(self, stmt):
 
