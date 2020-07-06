@@ -493,16 +493,12 @@ class SyntaxParser(BasicParser):
 
     def _visit_ImportFrom(self, stmt):
 
-        source = self._visit(stmt.module)
+        source = stmt.module
 
-        if isinstance(source, DottedVariable):
-            source = DottedName(*source.names)
-
-        if stmt.module.count('.')>0:
-            if isinstance(source, DottedName):
-                source = DottedName(dots[:-1], *source.name)
-            else:
-                source = Symbol(dots + str(source.name))
+        if stmt.module.count('.') == 0:
+            source = Symbol(stmt.module)
+        else:
+            source = DottedName(*stmt.module.split('.'))
 
         source = get_default_path(source)
         targets = []
@@ -648,7 +644,7 @@ class SyntaxParser(BasicParser):
             value = self._visit(stmt.value)
             return ValuedArgument(arg, value)
 
-    def _visit_ReturnNode(self, stmt):
+    def _visit_Return(self, stmt):
         results = self._visit(stmt.value)
         if not isinstance(results, (list, PythonTuple, List)):
             results = [results]
@@ -701,17 +697,16 @@ class SyntaxParser(BasicParser):
         imports      = []
 
         # TODO improve later
-        decorators = {}
-        for i in stmt.decorator_list:
-            if isinstance(i,CommentNode):
-                continue
-            decorators.update(self._visit(i))
+        visited_decs = self._visit(stmt.decorator_list)
+
+        decorators = {str(d) if isinstance(d,Symbol) else str(type(d)): d \
+                            for d in self._visit(stmt.decorator_list)}
 
         if 'bypass' in decorators:
             return EmptyLine()
 
         if 'stack_array' in decorators:
-            args = decorators['stack_array']
+            args = decorators['stack_array'].args
             for i in range(len(args)):
                 args[i] = str(args[i]).replace("'", '')
             decorators['stack_array'] = args
@@ -721,8 +716,8 @@ class SyntaxParser(BasicParser):
             results = []
             container = types
             i = 0
-            n = len(decorators['types'])
-            ls = decorators['types']
+            n = len(decorators['types'].args)
+            ls = decorators['types'].args
             while i<len(ls) :
                 arg = ls[i]
 
@@ -931,19 +926,11 @@ class SyntaxParser(BasicParser):
 
         return val
 
-    def _visit_DecoratorNode(self, stmt):
+    def _visit_For(self, stmt):
 
-        name = strip_ansi_escape.sub('', stmt.value.dumps())
-        args = []
-        if stmt.call:
-            args = [self._visit(i) for i in stmt.call.value]
-        return {name: args}
-
-    def _visit_ForNode(self, stmt):
-
-        iterator = self._visit(stmt.iterator)
-        iterable = self._visit(stmt.target)
-        body = list(self._visit(stmt.value))
+        iterator = self._visit(stmt.target)
+        iterable = self._visit(stmt.iter)
+        body = self._visit(stmt.body)
         expr = For(iterator, iterable, body, strict=False)
         expr.set_fst(stmt)
         return expr
