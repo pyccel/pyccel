@@ -462,18 +462,18 @@ class SyntaxParser(BasicParser):
         val = strip_ansi_escape.sub('', stmt.arg)
         return Symbol(val)
 
-    def _visit_NameNode(self, stmt):
-        if stmt.value == 'None':
+    def _visit_Name(self, stmt):
+        if stmt.id == 'None':
             return Nil()
 
-        elif stmt.value == 'True':
+        elif stmt.id == 'True':
             return BooleanTrue()
 
-        elif stmt.value == 'False':
+        elif stmt.id == 'False':
             return BooleanFalse()
 
         else:
-            val = strip_ansi_escape.sub('', stmt.value)
+            val = strip_ansi_escape.sub('', stmt.id)
             return Symbol(val)
 
     def _visit_Import(self, stmt):
