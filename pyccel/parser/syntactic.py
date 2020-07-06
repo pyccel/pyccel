@@ -458,9 +458,21 @@ class SyntaxParser(BasicParser):
         expr.set_fst(stmt)
         return expr
 
-    def _visit_arg(self, stmt):
-        val = stmt.arg
-        return Symbol(val)
+    def _visit_arguments(self, stmt):
+        arguments = []
+        if stmt.vararg or stmt.kwarg:
+            errors.report(VARARGS, symbol = stmt,
+                    bounding_box=(stmt.lineno, stmt.col_offset),
+                    severity='fatal')
+
+        if stmt.args:
+            n_expl = len(stmt.args)-len(stmt.defaults)
+            arguments += [Argument(a.arg) for a in stmt.args[:n_expl]]
+            arguments += [ValuedArgument(Argument(a.arg),self._visit(d)) for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
+        elif stmt.kwonlyargs:
+            arguments += [ValuedArgument(Argument(a.arg),self._visit(d)) for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults)]
+
+        return arguments
 
     def _visit_NameConstant(self, stmt):
         if stmt.value is None:
@@ -688,11 +700,7 @@ class SyntaxParser(BasicParser):
         name = self._visit(stmt.name)
         name = name.replace("'", '')
 
-        arguments    = []
-        if stmt.args.args:
-            arguments += self._visit(stmt.args.args)
-        elif stmt.args.kwarg:
-            arguments += self._visit(stmt.args.kwarg)
+        arguments    = self._visit(stmt.args)
         results      = []
         local_vars   = []
         global_vars  = []
