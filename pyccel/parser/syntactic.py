@@ -241,8 +241,12 @@ class SyntaxParser(BasicParser):
             return result
 
         # Unknown object, we raise an error.
+        if hasattr(stmt, 'lineno'):
+            bounding_box = (stmt.lineno, stmt.col_offset)
+        else:
+            bounding_box = None
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=stmt,
-                      bounding_box=(stmt.lineno, stmt.col_offset),
+                      bounding_box=bounding_box,
                       severity='fatal')
 
     def _visit_Module(self, stmt):
@@ -436,7 +440,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_AugAssign(self, stmt):
 
-        lhs = self._visit(stmt.targets)
+        lhs = self._visit(stmt.target)
         rhs = self._visit(stmt.value)
         if isinstance(stmt.op, ast.Add):
             expr = AugAssign(lhs, '+', rhs)
@@ -847,24 +851,30 @@ class SyntaxParser(BasicParser):
 
         return self._visit(stmt.value)
 
-    def _visit_GetitemNode(self, stmt):
+    def _visit_Subscript(self, stmt):
 
         ch = stmt
         args = []
-        while isinstance(ch, GetitemNode):
-            val = self._visit(ch.value)
+        while isinstance(ch, ast.Subscript):
+            val = self._visit(ch.slice)
             if isinstance(val, (Tuple, PythonTuple)):
                 args += val
             else:
                 args.insert(0, val)
-            ch = ch.previous
+            ch = ch.value
         args = tuple(args)
-        return args
+        var = self._visit(ch)
+        var = IndexedBase(var)[args]
+        return var
 
-    def _visit_SliceNode(self, stmt):
+    def _visit_Slice(self, stmt):
 
         upper = self._visit(stmt.upper)
         lower = self._visit(stmt.lower)
+
+        if stmt.step is not None:
+            raise NotImplementedError("Steps in slices are not implemented")
+
         if not isinstance(upper, Nil) and not isinstance(lower, Nil):
 
             return Slice(lower, upper)
@@ -877,6 +887,9 @@ class SyntaxParser(BasicParser):
         else:
 
             return Slice(None, None)
+
+    def _visit_Index(self, stmt):
+        return self._visit(stmt.value)
 
     def _visit_DotProxyList(self, stmt):
 
@@ -1043,12 +1056,12 @@ class SyntaxParser(BasicParser):
 
         return NewLine()
 
-    def _visit_CommentNode(self, stmt):
+    def _visit_CommentLine(self, stmt):
 
         # if annotated comment
 
-        if stmt.value.startswith('#$'):
-            env = stmt.value[2:].lstrip()
+        if stmt.s.startswith('#$'):
+            env = stmt.s[2:].lstrip()
             if env.startswith('omp'):
                 txt = reconstruct_pragma_multilines(stmt)
                 return omp_parse(stmts=txt)
@@ -1088,7 +1101,7 @@ class SyntaxParser(BasicParser):
 
             # TODO improve
 
-            txt = stmt.value[1:].lstrip()
+            txt = stmt.s[1:].lstrip()
             return Comment(txt)
 
     def _visit_BreakNode(self, stmt):
