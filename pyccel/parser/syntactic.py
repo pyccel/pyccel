@@ -315,6 +315,8 @@ class SyntaxParser(BasicParser):
                             prog_name = prog_name,
                             mod_name  = current_mod_name)
         code.set_fst(stmt)
+        code._fst.lineno=1
+        code._fst.col_offset=1
         return code
 
     def _visit_Expr(self, stmt):
@@ -358,7 +360,7 @@ class SyntaxParser(BasicParser):
         if not isinstance(stmt.name, str):
             raise TypeError('Expecting a string')
 
-        value = strip_ansi_escape.sub('', stmt.name)
+        value = stmt.name
         if not stmt.asname:
             return value
 
@@ -458,7 +460,7 @@ class SyntaxParser(BasicParser):
         return expr
 
     def _visit_arg(self, stmt):
-        val = strip_ansi_escape.sub('', stmt.arg)
+        val = stmt.arg
         return Symbol(val)
 
     def _visit_Name(self, stmt):
@@ -472,8 +474,7 @@ class SyntaxParser(BasicParser):
             return BooleanFalse()
 
         else:
-            val = strip_ansi_escape.sub('', stmt.id)
-            return Symbol(val)
+            return Symbol(stmt.id)
 
     def _visit_Import(self, stmt):
         errors.report(PYCCEL_UNEXPECTED_IMPORT,
@@ -696,7 +697,6 @@ class SyntaxParser(BasicParser):
 
         name = self._visit(stmt.name)
         name = name.replace("'", '')
-        name = strip_ansi_escape.sub('', name)
 
         arguments    = []
         if stmt.args.args:
