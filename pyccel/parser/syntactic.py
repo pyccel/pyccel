@@ -8,7 +8,7 @@ import re
 import ast
 #==============================================================================
 from pyccel.parser.extend_tree import extend_tree
-
+from pyccel.parser.extend_tree import CommentLine
 #==============================================================================
 
 from redbaron import RedBaron
