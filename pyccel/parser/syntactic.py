@@ -332,7 +332,7 @@ class SyntaxParser(BasicParser):
         return self._treat_iterable(stmt)
 
     def _visit_Tuple(self, stmt):
-        return self._treat_iterable(stmt.elts)
+        return PythonTuple(*self._treat_iterable(stmt.elts))
 
     def _visit_ListNode(self, stmt):
         return self._treat_iterable(stmt)
@@ -401,9 +401,9 @@ class SyntaxParser(BasicParser):
 
         return repr(stmt)
 
-    def _visit_StringNode(self, stmt):
-        val =  stmt.value
-        if isinstance(stmt.parent,(RedBaron, DefNode)):
+    def _visit_Str(self, stmt):
+        val =  stmt.s
+        if isinstance(self._scope[-1],(ast.Module, ast.FunctionDef)):
             return CommentBlock(val)
         return String(val)
 
@@ -494,25 +494,14 @@ class SyntaxParser(BasicParser):
             expr.set_fst(stmt)
             return expr
 
-    def _visit_FromImportNode(self, stmt):
+    def _visit_ImportFrom(self, stmt):
 
-        if not isinstance(stmt.parent, (RedBaron, DefNode)):
-            errors.report(PYCCEL_RESTRICTION_IMPORT,
-                          bounding_box=(stmt.lineno, stmt.col_offset),
-                          severity='error')
-
-        source = self._visit(stmt.value)
-
-        st     = stmt.value[0]
-        dots   = ''
-        while isinstance(st.previous, DotNode):
-            dots  = dots + '.'
-            st    = st.previous
+        source = self._visit(stmt.module)
 
         if isinstance(source, DottedVariable):
             source = DottedName(*source.names)
 
-        if len(dots)>1:
+        if stmt.module.count('.')>0:
             if isinstance(source, DottedName):
                 source = DottedName(dots[:-1], *source.name)
             else:
@@ -520,7 +509,7 @@ class SyntaxParser(BasicParser):
 
         source = get_default_path(source)
         targets = []
-        for i in stmt.targets:
+        for i in stmt.names:
             s = self._visit(i)
             if s == '*':
                 errors.report(PYCCEL_RESTRICTION_IMPORT_STAR,
