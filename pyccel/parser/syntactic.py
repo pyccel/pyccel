@@ -245,7 +245,7 @@ class SyntaxParser(BasicParser):
             bounding_box = (stmt.lineno, stmt.col_offset)
         else:
             bounding_box = None
-        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=stmt,
+        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=ast.dump(stmt),
                       bounding_box=bounding_box,
                       severity='fatal')
 
@@ -363,20 +363,13 @@ class SyntaxParser(BasicParser):
         if not isinstance(stmt.name, str):
             raise TypeError('Expecting a string')
 
-        value = stmt.name
-        if not stmt.asname:
-            return value
+        old = self._visit(stmt.name)
 
-        old = value
-        new = self._visit(stmt.asname)
-
-        # TODO improve
-
-        if isinstance(old, str):
-            old = old.replace("'", '')
-        if isinstance(new, str):
-            new = new.replace("'", '')
-        return AsName(new, old)
+        if stmt.asname:
+            new = self._visit(stmt.asname)
+            return AsName(new, old)
+        else:
+            return old
 
     def _visit_DictNode(self, stmt):
 
@@ -726,10 +719,10 @@ class SyntaxParser(BasicParser):
             return EmptyLine()
 
         if 'stack_array' in decorators:
-            args = decorators['stack_array'].args
+            args = list(decorators['stack_array'].args)
             for i in range(len(args)):
                 args[i] = str(args[i]).replace("'", '')
-            decorators['stack_array'] = args
+            decorators['stack_array'] = tuple(args)
         # extract the types to construct a header
         if 'types' in decorators:
             types = []
@@ -867,6 +860,9 @@ class SyntaxParser(BasicParser):
         var = IndexedBase(var)[args]
         return var
 
+    def _visit_ExtSlice(self, stmt):
+        return self._visit(tuple(stmt.dims))
+
     def _visit_Slice(self, stmt):
 
         upper = self._visit(stmt.upper)
@@ -945,15 +941,11 @@ class SyntaxParser(BasicParser):
 
         return func
 
-    def _visit_CallArgumentNode(self, stmt):
+    def _visit_keyword(self, stmt):
 
-        target = stmt.target
+        target = stmt.arg
         val = self._visit(stmt.value)
-        if target:
-            target = self._visit(target)
-            return ValuedArgument(target, val)
-
-        return val
+        return ValuedArgument(target, val)
 
     def _visit_For(self, stmt):
 
