@@ -215,7 +215,9 @@ class SyntaxParser(BasicParser):
 
         ls = [self._visit(i) for i in stmt]
 
-        if isinstance(stmt, (list, ListNode)):
+        if isinstance(stmt, list):
+            return ls
+        elif isinstance(stmt, (list, ListNode)):
 
             return List(*ls, sympify=False)
         elif isinstance(stmt, (tuple, TupleNode)):
@@ -315,6 +317,9 @@ class SyntaxParser(BasicParser):
         code.set_fst(stmt)
         return code
 
+    def _visit_Expr(self, stmt):
+        return self._visit(stmt.value)
+
     def _visit_LineProxyList(self, stmt):
         return self._treat_iterable(stmt)
 
@@ -400,32 +405,26 @@ class SyntaxParser(BasicParser):
             return CommentBlock(val)
         return String(val)
 
-    def _visit_IntNode(self, stmt):
+    def _visit_Num(self, stmt):
+        val = stmt.n
 
-        val = strip_ansi_escape.sub('', stmt.value)
-        return Integer(val)
-
-    def _visit_FloatNode(self, stmt):
-
-        val = strip_ansi_escape.sub('', stmt.value)
-
-        val = val[:20] if len(val)>20 else val
-        return Float(val)
-
-    def _visit_FloatExponantNode(self, stmt):
-
-        val = strip_ansi_escape.sub('', stmt.value)
-        val = val[:20] if len(val)>20 else val
-        return Float(val)
-
-    def _visit_ComplexNode(self, stmt):
-
-        val = complex(strip_ansi_escape.sub('', stmt.value))
-        return Complex(Float(val.real), Float(val.imag))
+        if isinstance(val, int):
+            return Integer(val)
+        elif isinstance(val, float):
+            return Float(val)
+        elif isinstance(val, complex):
+            return Complex(Float(val.real), Float(val.imag))
+        else:
+            raise NotImplementedError('Num type {} not recognised'.format(type(val)))
 
     def _visit_Assign(self, stmt):
 
         lhs = self._visit(stmt.targets)
+        if len(lhs)==1:
+            lhs = lhs[0]
+        else:
+            lhs = PythonTuple(*lhs)
+
         rhs = self._visit(stmt.value)
         expr = Assign(lhs, rhs)
 
@@ -538,16 +537,16 @@ class SyntaxParser(BasicParser):
         arg = self._visit(stmt.value)
         return Del(arg)
 
-    def _visit_UnitaryOperatorNode(self, stmt):
+    def _visit_UnaryOp(self, stmt):
 
-        target = self._visit(stmt.target)
-        if stmt.value == 'not':
+        target = self._visit(stmt.operand)
+        if isinstance(stmt.op, ast.Not):
             return PyccelUnary(PyccelNot(target))
-        elif stmt.value == '+':
+        if isinstance(stmt.op, ast.UAdd):
             return PyccelUnary(target)
-        elif stmt.value == '-':
+        if isinstance(stmt.op, ast.USub):
             return PyccelUnary(PyccelMinus(target))
-        elif stmt.value == '~':
+        if isinstance(stmt.op, ast.Invert):
 
             errors.report(PYCCEL_RESTRICTION_UNARY_OPERATOR,
                           bounding_box=(stmt.lineno, stmt.col_offset),
@@ -557,36 +556,36 @@ class SyntaxParser(BasicParser):
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
 
-    def _visit_BinaryOperatorNode(self, stmt):
+    def _visit_BinOp(self, stmt):
 
-        first  = self._visit(stmt.first)
-        second = self._visit(stmt.second)
+        first  = self._visit(stmt.left)
+        second = self._visit(stmt.right)
 
-        if stmt.value == '+':
+        if isinstance(stmt.op, ast.Add):
             expr = PyccelAdd(first, second)
             return change_priority(expr)
 
-        elif stmt.value == '*':
+        elif isinstance(stmt.op, ast.Mult):
             expr = PyccelMul(first, second)
             return change_priority(expr)
 
-        elif stmt.value == '-':
+        elif isinstance(stmt.op, ast.Sub):
             expr = PyccelMinus(first, second)
             return change_priority(expr)
 
-        elif stmt.value == '/':
+        elif isinstance(stmt.op, ast.Div):
             expr = PyccelDiv(first, second)
             return change_priority(expr)
 
-        elif stmt.value == '**':
+        elif isinstance(stmt.op, ast.Pow):
             expr = PyccelPow(first, second)
             return change_priority(expr)
 
-        elif stmt.value == '//':
+        elif isinstance(stmt.op, ast.FloorDiv):
             expr = PyccelFloorDiv(first, second)
             return change_priority(expr)
 
-        elif stmt.value == '%':
+        elif isinstance(stmt.op, ast.Mod):
             expr = PyccelMod(first, second)
             return change_priority(expr)
         else:
@@ -647,11 +646,6 @@ class SyntaxParser(BasicParser):
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='fatal')
-
-    def _visit_PrintNode(self, stmt):
-        expr = self._visit(stmt.value[0])
-        expr = PythonTuple(*expr.args)
-        return Print(expr)
 
     def _visit_AssociativeParenthesisNode(self, stmt):
         return PyccelAssociativeParenthesis(self._visit(stmt.value))
@@ -923,18 +917,22 @@ class SyntaxParser(BasicParser):
             expr = var
         return expr
 
-    def _visit_CallNode(self, stmt):
+    def _visit_Call(self, stmt):
 
-        if len(stmt.value) > 0 and isinstance(stmt.value[0],
-                ArgumentGeneratorComprehensionNode):
-            return self._visit(stmt.value[0])
-
-        args = self._visit(stmt.value)
-        f_name = str(stmt.previous.value)
-        f_name = strip_ansi_escape.sub('', f_name)
+        args = []
+        if stmt.args:
+            args += self._visit(stmt.args)
+        if stmt.keywords:
+            args += self._visit(stmt.keywords)
+        f_name = self._visit(stmt.func)
         if len(args) == 0:
             args = ( )
-        func = Function(f_name)(*args)
+
+        if str(f_name) == "print":
+            func = Print(PythonTuple(*args))
+        else:
+            func = Function(f_name)(*args)
+
         return func
 
     def _visit_CallArgumentNode(self, stmt):
