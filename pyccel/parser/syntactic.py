@@ -7,6 +7,9 @@ import re
 
 import ast
 #==============================================================================
+from pyccel.parser.extend_tree import extend_tree
+
+#==============================================================================
 
 from redbaron import RedBaron
 from redbaron import AssignmentNode
@@ -165,8 +168,7 @@ class SyntaxParser(BasicParser):
 
         try:
             code = self.code
-            #red = RedBaron(code)
-            red = ast.parse(code)
+            tree = extend_tree(code)
         except Exception:
             errors = Errors()
             errors.report(INVALID_PYTHON_SYNTAX, symbol='\n' + str(e),
@@ -175,7 +177,7 @@ class SyntaxParser(BasicParser):
         #preprocess_imports(red)
 
         #red = fst_move_directives(red)
-        self._fst = red
+        self._fst = tree
         
 
         self.parse(verbose=True)
