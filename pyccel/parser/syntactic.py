@@ -217,9 +217,6 @@ class SyntaxParser(BasicParser):
 
         if isinstance(stmt, list):
             return ls
-        elif isinstance(stmt, (list, ListNode)):
-
-            return List(*ls, sympify=False)
         elif isinstance(stmt, (tuple, TupleNode)):
             return PythonTuple(*ls)
         else:
@@ -334,8 +331,8 @@ class SyntaxParser(BasicParser):
     def _visit_Tuple(self, stmt):
         return PythonTuple(*self._treat_iterable(stmt.elts))
 
-    def _visit_ListNode(self, stmt):
-        return self._treat_iterable(stmt)
+    def _visit_List(self, stmt):
+        return List(*self._treat_iterable(stmt.elts), sympify=False)
 
     def _visit_tuple(self, stmt):
         return self._treat_iterable(stmt)
@@ -399,7 +396,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_str(self, stmt):
 
-        return repr(stmt)
+        return stmt
 
     def _visit_Str(self, stmt):
         val =  stmt.s
@@ -673,7 +670,7 @@ class SyntaxParser(BasicParser):
         expr.set_fst(stmt)
         return expr
 
-    def _visit_PassNode(self, stmt):
+    def _visit_Pass(self, stmt):
         return Pass()
 
     def _visit_FunctionDef(self, stmt):
