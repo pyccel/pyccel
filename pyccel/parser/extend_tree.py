@@ -139,13 +139,16 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
                 comment_lines_no = comment_lines_no[k:]
                 comments         = comments[k:]
 
+            k = -1
             for k in range(len(comment_lines_no)):
                 if next_node_lineno<comment_lines_no[k]:
-                    body             = body[:ind] + comments[:k].tolist() + body[ind:]
-                    comment_lines_no = comment_lines_no[k:]
-                    comments         = comments[k:]
-                    ind             += k
                     break
+            else:
+                k = k+1
+            body             = body[:ind] + comments[:k].tolist() + body[ind:]
+            comment_lines_no = comment_lines_no[k:]
+            comments         = comments[k:]
+            ind             += k
 
     last_stmt = body[-1]
     if hasattr( last_stmt, 'body'):
