@@ -356,7 +356,7 @@ def reconstruct_pragma_multilines(header):
     # ...
 
     if not _is_multiline(header):
-        return header.value
+        return header.s
 
     ls = []
     node = header.next
