@@ -1302,7 +1302,8 @@ class FCodePrinter(CodePrinter):
         return '.False.'
 
     def _print_String(self, expr):
-        return expr.arg
+        formatted_str = expr.arg.replace("'","''")
+        return "'{}'".format(formatted_str)
 
     def _print_Interface(self, expr):
         # ... we don't print 'hidden' functions

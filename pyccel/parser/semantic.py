@@ -1063,7 +1063,7 @@ class SemanticParser(BasicParser):
     def _visit_PyccelMul(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
         if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, List)):
-            expr_new = self._visit(Dlist(expr.args[0], expr.args[1]))
+            expr_new = self._visit(Dlist(args[0], args[1]))
         else:
             expr_new = self._handle_PyccelOperator(expr, **settings)
         return expr_new
@@ -2753,15 +2753,16 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_Dlist(self, expr, **settings):
+        # Arguments have been treated in PyccelMul
 
-        val = self._visit(expr.val, **settings)
-        shape = self._visit(expr.length, **settings)
+        val = expr.args[0]
+        shape = expr.args[1]
         if isinstance(val, (TupleVariable, PythonTuple)):
             if isinstance(val, TupleVariable):
                 return PythonTuple(*(val.get_vars()*shape))
             else:
                 return PythonTuple(*(val.args*shape))
-        return Dlist(val[0], shape)
+        return Dlist(val, shape)
 
     def _visit_StarredArguments(self, expr, **settings):
         name = expr.args_var

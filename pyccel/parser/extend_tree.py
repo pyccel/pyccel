@@ -89,8 +89,8 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
             continue
 
         if not hasattr(previous_stmt, 'body'):
-            for k in range(len(comment_lines_no)):
-                if next_node_lineno<comment_lines_no[k]:
+            for k, comment_line_no_k in enumerate(comment_lines_no):
+                if next_node_lineno<comment_line_no_k:
                     body             = body[:ind]+ comments[:k].tolist() + body[ind:]
                     comment_lines_no = comment_lines_no[k:]
                     comments         = comments[k:]
@@ -106,8 +106,8 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
                 previous_stmt_body_last_lineno  = get_last_lineno(previous_stmt.body[-1])
 
             k = -1
-            for k in range(len(comment_lines_no)):
-                if previous_stmt_body_last_lineno<comment_lines_no[k]:
+            for k, comment_line_no_k in enumerate(comment_lines_no):
+                if previous_stmt_body_last_lineno<comment_line_no_k:
                     if orelse and elif_orelse:
                         break
                     elif col_offset >= comments[k].col_offset and not orelse:
@@ -128,8 +128,8 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
                 previous_stmt_orelse_last_lineno  = get_last_lineno(previous_stmt.orelse[-1])
 
                 k = -1
-                for k in range(len(comment_lines_no)):
-                    if previous_stmt_orelse_last_lineno<comment_lines_no[k]:
+                for k, comment_line_no_k in enumerate(comment_lines_no):
+                    if previous_stmt_orelse_last_lineno<comment_line_no_k:
                         if col_offset >= comments[k].col_offset:
                             break
                 else:
@@ -140,8 +140,8 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
                 comments         = comments[k:]
 
             k = -1
-            for k in range(len(comment_lines_no)):
-                if next_node_lineno<comment_lines_no[k]:
+            for k, comment_line_no_k in enumerate(comment_lines_no):
+                if next_node_lineno<comment_line_no_k:
                     break
             else:
                 k = k+1
@@ -161,8 +161,8 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
             body_last_lineno  = get_last_lineno(last_stmt.body[-1])
 
         k = -1
-        for k in range(len(comment_lines_no)):
-            if body_last_lineno<comment_lines_no[k]:
+        for k, comment_line_no_k in enumerate(comment_lines_no):
+            if body_last_lineno<comment_line_no_k:
                 if orelse and elif_orelse:
                     break
                 if col_offset >= comments[k].col_offset and not orelse:
@@ -183,8 +183,8 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
         if orelse:
             orelse_last_lineno  = get_last_lineno(last_stmt.orelse[-1])
             k = -1
-            for k in range(len(comment_lines_no)):
-                if orelse_last_lineno<comment_lines_no[k]:
+            for k, comment_line_no_k in enumerate(comment_lines_no):
+                if orelse_last_lineno<comment_line_no_k:
                     if col_offset >= comments[k].col_offset:
                         break
             else:

@@ -169,7 +169,7 @@ class SyntaxParser(BasicParser):
         try:
             code = self.code
             tree = extend_tree(code)
-        except Exception:
+        except Exception as e:
             errors = Errors()
             errors.report(INVALID_PYTHON_SYNTAX, symbol='\n' + str(e),
                           severity='fatal')
@@ -233,7 +233,6 @@ class SyntaxParser(BasicParser):
 
         cls = type(stmt)
         syntax_method = '_visit_' + cls.__name__
-        print(syntax_method)
         if hasattr(self, syntax_method):
             self._scope.append(cls)
             result = getattr(self, syntax_method)(stmt)
@@ -245,7 +244,7 @@ class SyntaxParser(BasicParser):
             bounding_box = (stmt.lineno, stmt.col_offset)
         else:
             bounding_box = None
-        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=stmt,
+        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=ast.dump(stmt),
                       bounding_box=bounding_box,
                       severity='fatal')
 
@@ -363,34 +362,25 @@ class SyntaxParser(BasicParser):
         if not isinstance(stmt.name, str):
             raise TypeError('Expecting a string')
 
-        value = stmt.name
-        if not stmt.asname:
-            return value
+        old = self._visit(stmt.name)
 
-        old = value
-        new = self._visit(stmt.asname)
+        if stmt.asname:
+            new = self._visit(stmt.asname)
+            return AsName(new, old)
+        else:
+            return old
 
-        # TODO improve
-
-        if isinstance(old, str):
-            old = old.replace("'", '')
-        if isinstance(new, str):
-            new = new.replace("'", '')
-        return AsName(new, old)
-
-    def _visit_DictNode(self, stmt):
+    def _visit_Dict(self, stmt):
 
         d = {}
-        for i in stmt.value:
-            if not isinstance(i, DictitemNode):
-                raise TypeError('Expecting a DictitemNode')
+        for key, value in zip(stmt.keys, stmt.values):
 
-            key = self._visit(i.key)
-            value = self._visit(i.value)
+            key = self._visit(key)
+            value = self._visit(value)
 
             # sympy does not allow keys to be strings
 
-            if isinstance(key, str):
+            if isinstance(key, String):
                 errors.report(SYMPY_RESTRICTION_DICT_KEYS,
                               severity='error')
 
@@ -478,6 +468,32 @@ class SyntaxParser(BasicParser):
 
         return arguments
 
+    def _visit_Constant(self, stmt):
+        # New in python3.8 this class contains NameConstant, Num, and String types
+        if stmt.value is None:
+            return Nil()
+
+        elif stmt.value is True:
+            return BooleanTrue()
+
+        elif stmt.value is False:
+            return BooleanFalse()
+
+        elif isinstance(stmt.value, int):
+            return Integer(stmt.value)
+
+        elif isinstance(stmt.value, float):
+            return Float(stmt.value)
+
+        elif isinstance(stmt.value, complex):
+            return Complex(Float(stmt.value.real), Float(stmt.value.imag))
+
+        elif isinstance(stmt.value, str):
+            return self._visit_Str(stmt)
+
+        else:
+            raise NotImplementedError('Constant type {} not recognised'.format(type(stmt.value)))
+
     def _visit_NameConstant(self, stmt):
         if stmt.value is None:
             return Nil()
@@ -509,7 +525,7 @@ class SyntaxParser(BasicParser):
         if len(expr)==1:
             return expr[0]
         else:
-            expr = Codegen(expr)
+            expr = CodeBlock(expr)
             expr.set_fst(stmt)
             return expr
 
@@ -538,8 +554,8 @@ class SyntaxParser(BasicParser):
         self.insert_import(expr)
         return expr
 
-    def _visit_DelNode(self, stmt):
-        arg = self._visit(stmt.value)
+    def _visit_Delete(self, stmt):
+        arg = self._visit(stmt.targets)
         return Del(arg)
 
     def _visit_UnaryOp(self, stmt):
@@ -598,12 +614,12 @@ class SyntaxParser(BasicParser):
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
 
-    def _visit_BooleanOperatorNode(self, stmt):
+    def _visit_BoolOp(self, stmt):
 
-        first = self._visit(stmt.first)
-        second = self._visit(stmt.second)
+        first = self._visit(stmt.values[0])
+        second = self._visit(stmt.values[1])
 
-        if stmt.value == 'and':
+        if isinstance(stmt.op, ast.And):
             if isinstance(second, PyccelOr):
                 args  = second.args
                 first = PyccelAnd(first, args[0]  )
@@ -611,7 +627,7 @@ class SyntaxParser(BasicParser):
             else:
                 return PyccelAnd(first, second)
 
-        if stmt.value == 'or':
+        if isinstance(stmt.op, ast.Or):
             if isinstance(second, PyccelAnd):
                 args  = second.args
                 first = PyccelOr(first, args[0])
@@ -620,6 +636,7 @@ class SyntaxParser(BasicParser):
                 return PyccelOr(first, second)
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+                      symbol = ast.dump(stmt.op),
                       bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='fatal')
 
@@ -717,8 +734,6 @@ class SyntaxParser(BasicParser):
         imports      = []
 
         # TODO improve later
-        visited_decs = self._visit(stmt.decorator_list)
-
         decorators = {str(d) if isinstance(d,Symbol) else str(type(d)): d \
                             for d in self._visit(stmt.decorator_list)}
 
@@ -726,17 +741,16 @@ class SyntaxParser(BasicParser):
             return EmptyLine()
 
         if 'stack_array' in decorators:
-            args = decorators['stack_array'].args
+            args = list(decorators['stack_array'].args)
             for i in range(len(args)):
                 args[i] = str(args[i]).replace("'", '')
-            decorators['stack_array'] = args
+            decorators['stack_array'] = tuple(args)
         # extract the types to construct a header
         if 'types' in decorators:
             types = []
             results = []
             container = types
             i = 0
-            n = len(decorators['types'].args)
             ls = decorators['types'].args
             while i<len(ls) :
                 arg = ls[i]
@@ -867,6 +881,9 @@ class SyntaxParser(BasicParser):
         var = IndexedBase(var)[args]
         return var
 
+    def _visit_ExtSlice(self, stmt):
+        return self._visit(tuple(stmt.dims))
+
     def _visit_Slice(self, stmt):
 
         upper = self._visit(stmt.upper)
@@ -945,15 +962,11 @@ class SyntaxParser(BasicParser):
 
         return func
 
-    def _visit_CallArgumentNode(self, stmt):
+    def _visit_keyword(self, stmt):
 
-        target = stmt.target
+        target = stmt.arg
         val = self._visit(stmt.value)
-        if target:
-            target = self._visit(target)
-            return ValuedArgument(target, val)
-
-        return val
+        return ValuedArgument(target, val)
 
     def _visit_For(self, stmt):
 
@@ -1042,14 +1055,14 @@ class SyntaxParser(BasicParser):
         expr.set_fst(stmt)
         return expr
 
-    def _visit_WhileNode(self, stmt):
+    def _visit_While(self, stmt):
 
         test = self._visit(stmt.test)
-        body = self._visit(stmt.value)
+        body = self._visit(stmt.body)
         return While(test, body)
 
-    def _visit_AssertNode(self, stmt):
-        expr = self._visit(stmt.value)
+    def _visit_Assert(self, stmt):
+        expr = self._visit(stmt.test)
         return Assert(expr)
 
     def _visit_EndlNode(self, stmt):
@@ -1104,7 +1117,7 @@ class SyntaxParser(BasicParser):
             txt = stmt.s[1:].lstrip()
             return Comment(txt)
 
-    def _visit_BreakNode(self, stmt):
+    def _visit_Break(self, stmt):
         return Break()
 
     def _visit_ContinueNode(self, stmt):
