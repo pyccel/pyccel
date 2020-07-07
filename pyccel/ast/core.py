@@ -795,6 +795,10 @@ class Dlist(Basic, PyccelAstNode):
     def __new__(cls, val, length):
         return Basic.__new__(cls, val, length)
 
+    def __init__(self, val, length):
+        self._rank = val.rank + 1
+        self._shape = val.shape + (length,)
+
     @property
     def val(self):
         return self._args[0]
