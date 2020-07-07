@@ -233,7 +233,6 @@ class SyntaxParser(BasicParser):
 
         cls = type(stmt)
         syntax_method = '_visit_' + cls.__name__
-        print(syntax_method)
         if hasattr(self, syntax_method):
             self._scope.append(cls)
             result = getattr(self, syntax_method)(stmt)
