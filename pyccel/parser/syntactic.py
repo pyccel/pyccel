@@ -471,6 +471,25 @@ class SyntaxParser(BasicParser):
 
         return arguments
 
+    def _visit_Constant(self, stmt):
+        # New in python3.8 this class contains NameConstant, Num, and String types
+        if isinstance(stmt.value, None):
+            return Nil()
+        elif stmt.value is True:
+            return BooleanTrue()
+        elif stmt.value is False:
+            return BooleanFalse()
+        elif isinstance(stmt.value, int):
+            return Integer(val)
+        elif isinstance(stmt.value, float):
+            return Float(val)
+        elif isinstance(stmt.value, complex):
+            return Complex(Float(val.real), Float(val.imag))
+        elif isinstance(stmt.value, str):
+            return self._visit_Str(stmt)
+        else:
+            raise NotImplementedError('Constant type {} not recognised'.format(type(stmt.value)))
+
     def _visit_NameConstant(self, stmt):
         if stmt.value is None:
             return Nil()
