@@ -169,7 +169,7 @@ class SyntaxParser(BasicParser):
         try:
             code = self.code
             tree = extend_tree(code)
-        except Exception:
+        except Exception as e:
             errors = Errors()
             errors.report(INVALID_PYTHON_SYNTAX, symbol='\n' + str(e),
                           severity='fatal')
