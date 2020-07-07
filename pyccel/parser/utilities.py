@@ -72,11 +72,11 @@ def header_statement(stmt, accel):
         ...
 
     """
-    if not isinstance(stmt, CommentLine): None
-    if not stmt.value.startswith('#$'): None
+    if not isinstance(stmt, CommentLine): return None
+    if not stmt.value.startswith('#$'): return None
 
     header = stmt.value[2:].lstrip()
-    if not directive.startswith('header'): None
+    if not directive.startswith('header'): return None
 
     return stmt.value
 #  ...
@@ -93,11 +93,11 @@ def accelerator_statement(stmt, accel):
     """
     assert(accel in ['omp', 'acc'])
 
-    if not isinstance(stmt, CommentLine): None
-    if not stmt.value.startswith('#$'): None
+    if not isinstance(stmt, CommentLine): return None
+    if not stmt.value.startswith('#$'): return None
 
     directive = stmt.value[2:].lstrip()
-    if not directive.startswith(accel): None
+    if not directive.startswith(accel): return None
 
     return stmt.value
 
