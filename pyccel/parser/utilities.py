@@ -2,10 +2,12 @@
 
 """This file contains different utilities for the Parser."""
 
-from redbaron import (CommentNode, ForNode, DefNode, WithNode,
+from redbaron import (ForNode, DefNode, WithNode,
                       IfNode, ElseNode, ElifNode, IfelseblockNode,
                       EndlNode, DottedAsNameNode, NameNode,
                       CallNode, RedBaron, AtomtrailersNode)
+
+from pyccel.parser.extend_tree import CommentLine
 
 from sympy import srepr
 from pyccel.ast.core import DottedName
@@ -70,7 +72,7 @@ def header_statement(stmt, accel):
         ...
 
     """
-    if not isinstance(stmt, CommentNode): None
+    if not isinstance(stmt, CommentLine): None
     if not stmt.value.startswith('#$'): None
 
     header = stmt.value[2:].lstrip()
@@ -91,7 +93,7 @@ def accelerator_statement(stmt, accel):
     """
     assert(accel in ['omp', 'acc'])
 
-    if not isinstance(stmt, CommentNode): None
+    if not isinstance(stmt, CommentLine): None
     if not stmt.value.startswith('#$'): None
 
     directive = stmt.value[2:].lstrip()
@@ -104,7 +106,7 @@ acc_statement = lambda x: accelerator_statement(x, 'acc')
 # ...
 
 # ... preprocess fst for comments
-get_comments = lambda y: y.filter(lambda x: isinstance(x, CommentNode))
+get_comments = lambda y: y.filter(lambda x: isinstance(x, CommentLine))
 get_loops = lambda y: y.filter(lambda x: isinstance(x, ForNode))
 get_defs = lambda y: y.filter(lambda x: isinstance(x, DefNode))
 get_withs = lambda y: y.filter(lambda x: isinstance(x, WithNode))
@@ -153,7 +155,7 @@ def fst_move_directives(x):
         fst_move_directives(stmt.value)
         i_son = x.index(stmt)
 
-        while len(stmt.value)>0 and isinstance(stmt.value[-1], (CommentNode, EndlNode)):
+        while len(stmt.value)>0 and isinstance(stmt.value[-1], (CommentLine, EndlNode)):
             cmt = stmt.value[-1]
 
             stmt.value.remove(cmt)
@@ -172,7 +174,7 @@ def fst_move_directives(x):
         for stmt in ifblock.value:
             fst_move_directives(stmt.value)
 
-            while len(stmt.value)>0 and isinstance(stmt.value[-1], (CommentNode, EndlNode)):
+            while len(stmt.value)>0 and isinstance(stmt.value[-1], (CommentLine, EndlNode)):
                 cmt = stmt.value[-1]
                 stmt.value.remove(cmt)
                 # insert right after the function
@@ -335,7 +337,7 @@ def reconstruct_pragma_multilines(header):
 
     # ...
     def _is_pragma(x):
-        if not(isinstance(x, CommentNode) and x.value.startswith('#$')):
+        if not(isinstance(x, CommentLine) and x.value.startswith('#$')):
             return False
         env = x.value[2:].lstrip()
         if (env.startswith('header') or
@@ -344,11 +346,11 @@ def reconstruct_pragma_multilines(header):
             return False
         return True
 
-    _ignore_stmt = lambda x: isinstance(x, (EndlNode, CommentNode)) and not _is_pragma(x)
+    _ignore_stmt = lambda x: isinstance(x, (EndlNode, CommentLine)) and not _is_pragma(x)
     def _is_multiline(x):
         # we use tr/except to avoid treating nodes without .value
         try:
-            return x.value.rstrip().endswith('&')
+            return x.s.rstrip().endswith('&')
         except AttributeError:
             return False
 
