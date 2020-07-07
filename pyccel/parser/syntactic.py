@@ -473,7 +473,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Constant(self, stmt):
         # New in python3.8 this class contains NameConstant, Num, and String types
-        if isinstance(stmt.value, None):
+        if stmt.value is None:
             return Nil()
         elif stmt.value is True:
             return BooleanTrue()
