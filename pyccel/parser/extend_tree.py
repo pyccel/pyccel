@@ -89,8 +89,8 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
             continue
 
         if not hasattr(previous_stmt, 'body'):
-            for k in range(len(comment_lines_no)):
-                if next_node_lineno<comment_lines_no[k]:
+            for k, comment_line_no_k in enumerate(comment_lines_no):
+                if next_node_lineno<comment_line_no_k:
                     body             = body[:ind]+ comments[:k].tolist() + body[ind:]
                     comment_lines_no = comment_lines_no[k:]
                     comments         = comments[k:]

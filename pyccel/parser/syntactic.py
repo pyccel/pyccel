@@ -729,8 +729,6 @@ class SyntaxParser(BasicParser):
         imports      = []
 
         # TODO improve later
-        visited_decs = self._visit(stmt.decorator_list)
-
         decorators = {str(d) if isinstance(d,Symbol) else str(type(d)): d \
                             for d in self._visit(stmt.decorator_list)}
 
@@ -748,7 +746,6 @@ class SyntaxParser(BasicParser):
             results = []
             container = types
             i = 0
-            n = len(decorators['types'].args)
             ls = decorators['types'].args
             while i<len(ls) :
                 arg = ls[i]
