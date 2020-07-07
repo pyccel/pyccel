@@ -371,19 +371,17 @@ class SyntaxParser(BasicParser):
         else:
             return old
 
-    def _visit_DictNode(self, stmt):
+    def _visit_Dict(self, stmt):
 
         d = {}
-        for i in stmt.value:
-            if not isinstance(i, DictitemNode):
-                raise TypeError('Expecting a DictitemNode')
+        for key, value in zip(stmt.keys, stmt.values):
 
-            key = self._visit(i.key)
-            value = self._visit(i.value)
+            key = self._visit(key)
+            value = self._visit(value)
 
             # sympy does not allow keys to be strings
 
-            if isinstance(key, str):
+            if isinstance(key, String):
                 errors.report(SYMPY_RESTRICTION_DICT_KEYS,
                               severity='error')
 
@@ -528,7 +526,7 @@ class SyntaxParser(BasicParser):
         if len(expr)==1:
             return expr[0]
         else:
-            expr = Codegen(expr)
+            expr = CodeBlock(expr)
             expr.set_fst(stmt)
             return expr
 
@@ -557,8 +555,8 @@ class SyntaxParser(BasicParser):
         self.insert_import(expr)
         return expr
 
-    def _visit_DelNode(self, stmt):
-        arg = self._visit(stmt.value)
+    def _visit_Delete(self, stmt):
+        arg = self._visit(stmt.targets)
         return Del(arg)
 
     def _visit_UnaryOp(self, stmt):
@@ -617,12 +615,12 @@ class SyntaxParser(BasicParser):
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
 
-    def _visit_BooleanOperatorNode(self, stmt):
+    def _visit_BoolOp(self, stmt):
 
-        first = self._visit(stmt.first)
-        second = self._visit(stmt.second)
+        first = self._visit(stmt.values[0])
+        second = self._visit(stmt.values[1])
 
-        if stmt.value == 'and':
+        if isinstance(stmt.op, ast.And):
             if isinstance(second, PyccelOr):
                 args  = second.args
                 first = PyccelAnd(first, args[0]  )
@@ -630,7 +628,7 @@ class SyntaxParser(BasicParser):
             else:
                 return PyccelAnd(first, second)
 
-        if stmt.value == 'or':
+        if isinstance(stmt.op, ast.Or):
             if isinstance(second, PyccelAnd):
                 args  = second.args
                 first = PyccelOr(first, args[0])
@@ -639,6 +637,7 @@ class SyntaxParser(BasicParser):
                 return PyccelOr(first, second)
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+                      symbol = ast.dump(stmt.op),
                       bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='fatal')
 
@@ -1057,14 +1056,14 @@ class SyntaxParser(BasicParser):
         expr.set_fst(stmt)
         return expr
 
-    def _visit_WhileNode(self, stmt):
+    def _visit_While(self, stmt):
 
         test = self._visit(stmt.test)
-        body = self._visit(stmt.value)
+        body = self._visit(stmt.body)
         return While(test, body)
 
-    def _visit_AssertNode(self, stmt):
-        expr = self._visit(stmt.value)
+    def _visit_Assert(self, stmt):
+        expr = self._visit(stmt.test)
         return Assert(expr)
 
     def _visit_EndlNode(self, stmt):
@@ -1119,7 +1118,7 @@ class SyntaxParser(BasicParser):
             txt = stmt.s[1:].lstrip()
             return Comment(txt)
 
-    def _visit_BreakNode(self, stmt):
+    def _visit_Break(self, stmt):
         return Break()
 
     def _visit_ContinueNode(self, stmt):
