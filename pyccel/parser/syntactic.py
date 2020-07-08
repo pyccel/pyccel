@@ -124,15 +124,16 @@ def change_priority( expr ):
     """
     first  = expr.args[0]
     second = expr.args[1]
-    if isinstance(second, PyccelOperator) and second.p<=expr.p:
-            a    = first
-            b    = second.args[0]
-            c    = second.args[1]
-            a    = expr.func(a,b)
-            a    = change_priority(a)
-            return second.func(a,c)
-    else:
-        return expr
+
+    if isinstance(first,  PyccelOperator) and first.p  < expr.p:
+        first = PyccelAssociativeParenthesis(first)
+
+    if isinstance(second, PyccelOperator) and second.p < expr.p:
+        second = PyccelAssociativeParenthesis(second)
+
+    expr = expr.func(first, second)
+
+    return expr
 
 class SyntaxParser(BasicParser):
 
@@ -669,9 +670,6 @@ class SyntaxParser(BasicParser):
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='fatal')
-
-    def _visit_AssociativeParenthesisNode(self, stmt):
-        return PyccelAssociativeParenthesis(self._visit(stmt.value))
 
     def _visit_DefArgumentNode(self, stmt):
         name = str(self._visit(stmt.target))
