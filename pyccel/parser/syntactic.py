@@ -390,7 +390,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Str(self, stmt):
         val =  stmt.s
-        if isinstance(self._scope[-1],(ast.Module, ast.FunctionDef)):
+        if self._scope[-2] is ast.Expr:
             return CommentBlock(val)
         return String(val)
 
@@ -712,7 +712,7 @@ class SyntaxParser(BasicParser):
     def _visit_FunctionDef(self, stmt):
 
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
-        if isinstance(self._scope[-1], ast.ClassDef):
+        if self._scope[-2] is ast.ClassDef:
             cls_name = stmt.parent.name
         else:
             cls_name = None
