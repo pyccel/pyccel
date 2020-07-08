@@ -1102,9 +1102,6 @@ class SyntaxParser(BasicParser):
     def _visit_ContinueNode(self, stmt):
         return Continue()
 
-    def _visit_StarNode(self, stmt):
-        return '*'
-
     def _visit_Lambda(self, stmt):
 
         expr = self._visit(stmt.body)
@@ -1171,7 +1168,7 @@ class SyntaxParser(BasicParser):
                       bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='error')
 
-    def _visit_ListArgumentNode(self, stmt):
+    def _visit_Starred(self, stmt):
         return StarredArguments(self._visit(stmt.value))
 
 #==============================================================================
