@@ -2485,9 +2485,9 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
     Represents a dotted variable.
     """
 
-    def __new__(cls, *args):
+    def __new__(cls, lhs, rhs):
 
-        if not isinstance(args[0], (
+        if not isinstance(lhs, (
             Variable,
             Symbol,
             IndexedVariable,
@@ -2497,10 +2497,10 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
             Function,
             DottedVariable,
             )):
-            raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(args[0]),
-                            type(args[0])))
+            raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
+                            type(lhs)))
 
-        if not isinstance(args[1], (
+        if not isinstance(rhs, (
             Variable,
             Symbol,
             IndexedVariable,
@@ -2510,18 +2510,18 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
             FunctionCall,
             Function,
             )):
-            raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(args[1]),
-                            type(args[1])))
+            raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
+                            type(rhs)))
 
-        return Basic.__new__(cls, args[0], args[1])
+        return Basic.__new__(cls, lhs, rhs)
 
-    def __init__(self, *args):
+    def __init__(self, lhs, rhs):
         if self.stage == 'syntactic':
             return
-        self._dtype     = args[-1].dtype
-        self._rank      = args[-1].rank
-        self._precision = args[-1].precision
-        self._shape     = args[-1].shape
+        self._dtype     = rhs.dtype
+        self._rank      = rhs.rank
+        self._precision = rhs.precision
+        self._shape     = rhs.shape
 
     @property
     def lhs(self):
