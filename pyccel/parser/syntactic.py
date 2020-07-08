@@ -902,15 +902,11 @@ class SyntaxParser(BasicParser):
     def _visit_Index(self, stmt):
         return self._visit(stmt.value)
 
-    def _visit_Attribute(self, node):
-        attr  = Symbol(node.attr)
-        value = self._visit(node.value)
+    def _visit_Attribute(self, stmt):
+        val  = self._visit(stmt.value)
+        attr = Symbol(stmt.attr)
+        return DottedVariable(val, attr)
 
-        if isinstance(value, DottedVariable):
-            expr = DottedVariable(*value.args, attr)
-        else:
-            expr = DottedVariable(value, attr)
-        return expr
 
     def _visit_Call(self, stmt):
 
@@ -932,9 +928,9 @@ class SyntaxParser(BasicParser):
             else:
                 func = Function(f_name)(*args)
         elif isinstance(func, DottedVariable):
-            f_name = func.args[-1].name
-            f      = Function(f_name)(*args)
-            func   = DottedVariable(*func.args[:-1], f)
+            f_name = func.rhs
+            func_attr = Function(f_name)(*args)
+            func = DottedVariable(func.lhs, func_attr)
         else:
             raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
 
