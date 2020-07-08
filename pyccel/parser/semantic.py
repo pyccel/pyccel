@@ -1156,6 +1156,71 @@ class SemanticParser(BasicParser):
                 expr = Lambda(tuple(expr.variables), expr_new)
         return expr
 
+    def _handle_function_args(self, arguments, **settings):
+        args  = []
+        for arg in arguments:
+            a = self._visit(arg, **settings)
+            if isinstance(a, StarredArguments):
+                args.extend(a.args_var)
+            else:
+                args.append(a)
+        return args
+
+    def _handle_function(self, func, args, **settings):
+        if not isinstance(func, (FunctionDef, Interface)):
+
+            args, kwargs = split_positional_keyword_arguments(*args)
+            for a in args:
+                if getattr(a,'dtype',None) == 'tuple':
+                    self._infere_type(a, **settings)
+            for a in kwargs.values():
+                if getattr(a,'dtype',None) == 'tuple':
+                    self._infere_type(a, **settings)
+            expr = func(*args, **kwargs)
+
+            if isinstance(expr, (Where, Diag, Linspace)):
+                self.insert_variable(expr.index)
+
+            #if len(stmts) > 0:
+            #    stmts.append(expr)
+            #    return CodeBlock(stmts)
+            return expr
+        else:
+            #if isinstance(func, Interface):
+            #    arg_dvar = [self._infere_type(i, **settings) for i in args]
+            #    f_dvar = [[self._infere_type(j, **settings)
+            #              for j in i.arguments] for i in
+            #              func.functions]
+            #    j = -1
+            #    for i in f_dvar:
+            #        j += 1
+            #        found = True
+            #        for (idx, dt) in enumerate(arg_dvar):
+            #            dtype1 = str_dtype(dt['datatype'])
+            #            dtype2 = str_dtype(i[idx]['datatype'])
+            #            found = found and (dtype1 in dtype2
+            #                          or dtype2 in dtype1)
+            #            found = found and dt['rank'] \
+            #                          == i[idx]['rank']
+            #        if found:
+            #            break
+            #
+            #    if found:
+            #        f_args = func.functions[j].arguments
+            #    else:
+            #        msg = 'function not found in the interface'
+            #        # TODO: Add message to parser/messages.py
+            #        errors.report(msg,
+            #            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+            #            severity='fatal', blocker=self.blocking)
+
+            expr = FunctionCall(func, args)
+
+            #if len(stmts) > 0:
+            #    stmts.append(expr)
+            #    return CodeBlock(stmts)
+            return expr
+
     def _visit_Application(self, expr, **settings):
         name     = type(expr).__name__
         func     = self.get_function(name)
@@ -1163,13 +1228,7 @@ class SemanticParser(BasicParser):
         #stmts, new_args = extract_subexpressions(expr.args)
         #stmts = [self._visit(stmt, **settings) for stmt in stmts]
 
-        args  = []
-        for arg in expr.args:
-            a = self._visit(arg, **settings)
-            if isinstance(a, StarredArguments):
-                args.extend(a.args_var)
-            else:
-                args.append(a)
+        args = self._handle_function_args(expr.args, **settings)
 
         if name == 'lambdify':
             args = self.get_symbolic_function(str(expr.args[0]))
@@ -1227,59 +1286,7 @@ class SemanticParser(BasicParser):
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal', blocker=self.blocking)
             else:
-                if not isinstance(func, (FunctionDef, Interface)):
-
-                    args, kwargs = split_positional_keyword_arguments(*args)
-                    for a in args:
-                        if getattr(a,'dtype',None) == 'tuple':
-                            self._infere_type(a, **settings)
-                    for a in kwargs.values():
-                        if getattr(a,'dtype',None) == 'tuple':
-                            self._infere_type(a, **settings)
-                    expr = func(*args, **kwargs)
-
-                    if isinstance(expr, (Where, Diag, Linspace)):
-                        self.insert_variable(expr.index)
-
-                    #if len(stmts) > 0:
-                    #    stmts.append(expr)
-                    #    return CodeBlock(stmts)
-                    return expr
-                else:
-                    #if isinstance(func, Interface):
-                    #    arg_dvar = [self._infere_type(i, **settings) for i in args]
-                    #    f_dvar = [[self._infere_type(j, **settings)
-                    #              for j in i.arguments] for i in
-                    #              func.functions]
-                    #    j = -1
-                    #    for i in f_dvar:
-                    #        j += 1
-                    #        found = True
-                    #        for (idx, dt) in enumerate(arg_dvar):
-                    #            dtype1 = str_dtype(dt['datatype'])
-                    #            dtype2 = str_dtype(i[idx]['datatype'])
-                    #            found = found and (dtype1 in dtype2
-                    #                          or dtype2 in dtype1)
-                    #            found = found and dt['rank'] \
-                    #                          == i[idx]['rank']
-                    #        if found:
-                    #            break
-                    #
-                    #    if found:
-                    #        f_args = func.functions[j].arguments
-                    #    else:
-                    #        msg = 'function not found in the interface'
-                    #        # TODO: Add message to parser/messages.py
-                    #        errors.report(msg,
-                    #            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    #            severity='fatal', blocker=self.blocking)
-
-                    expr = FunctionCall(func, args)
-
-                    #if len(stmts) > 0:
-                    #    stmts.append(expr)
-                    #    return CodeBlock(stmts)
-                    return expr
+                return self._handle_function(func, args, **settings)
 
     def _visit_Expr(self, expr, **settings):
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
