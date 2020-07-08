@@ -2606,44 +2606,56 @@ class SemanticParser(BasicParser):
         #        imported
         #      - should not use namespace
 
-        if expr.source:
-            container = self.namespace.imports
+        container = self.namespace.imports
 
-            if str(expr.source) in pyccel_builtin_import_registery:
+        if isinstance(expr.source, AsName):
+            source        = str(expr.source.name)
+            source_target = str(expr.source.target)
+        else:
+            source        = str(expr.source)
+            source_target = source
 
-                imports = pyccel_builtin_import(expr)
+        if source in pyccel_builtin_import_registery:
+            imports = pyccel_builtin_import(expr)
+
+            def _insert_obj(location, target, obj):
+                F = self.check_for_variable(source)
+
+                if F is None:
+                    container[location][target] = obj
+                elif target in container:
+                    errors.report(FOUND_DUPLICATED_IMPORT,
+                                symbol=name, severity='warning')
+                else:
+                    errors.report(PYCCEL_RESTRICTION_TODO,
+                                  bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                                  severity='fatal')
+
+            if expr.target:
                 for (name, atom) in imports:
                     if not name is None:
-                        F = self.check_for_variable(name)
-
-                        if F is None:
-                            container['functions'][name] = atom
-                        elif name in container:
-                            errors.report(FOUND_DUPLICATED_IMPORT,
-                                        symbol=name, severity='warning')
-                        else:
-                            errors.report(PYCCEL_RESTRICTION_TODO,
-                                          bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                                          severity='fatal')
+                        _insert_obj('functions', name, atom)
             else:
+                _insert_obj('variables', source_target, imports)
+        else:
 
-                # in some cases (blas, lapack, openmp and openacc level-0)
-                # the import should not appear in the final file
-                # all metavars here, will have a prefix and suffix = __
+            # in some cases (blas, lapack, openmp and openacc level-0)
+            # the import should not appear in the final file
+            # all metavars here, will have a prefix and suffix = __
 
-                __ignore_at_import__ = False
-                __module_name__      = None
-                __import_all__       = False
-                __print__            = False
+            __ignore_at_import__ = False
+            __module_name__      = None
+            __import_all__       = False
+            __print__            = False
 
-                # we need to use str here since source has been defined
-                # using repr.
-                # TODO shall we improve it?
-                source = str(expr.source)
+            # we need to use str here since source has been defined
+            # using repr.
+            # TODO shall we improve it?
 
+            p       = self.d_parsers[source_target]
+            if expr.target:
                 targets = [i.target if isinstance(i,AsName) else i.name for i in expr.target]
                 names = [i.name for i in expr.target]
-                p       = self.d_parsers[source]
                 for entry in ['variables', 'classes', 'functions']:
                     d_son = getattr(p.namespace, entry)
                     for t,n in zip(targets,names):
@@ -2653,40 +2665,49 @@ class SemanticParser(BasicParser):
                                 container[entry][t] = e
                             else:
                                 container[entry][t] = e.rename(t)
+            else:
+                imported_dict = []
+                for entry in ['variables', 'classes', 'functions']:
+                    d_son = getattr(p.namespace, entry)
+                    imported_dict.extend(d_son.items())
+                container['variables'][source_target] = dict(imported_dict)
 
-                self.namespace.cls_constructs.update(p.namespace.cls_constructs)
-                self.namespace.macros.update(p.namespace.macros)
+            self.namespace.cls_constructs.update(p.namespace.cls_constructs)
+            self.namespace.macros.update(p.namespace.macros)
 
-                # ... meta variables
+            # ... meta variables
 
-                if 'ignore_at_import' in list(p.metavars.keys()):
-                    __ignore_at_import__ = p.metavars['ignore_at_import']
+            if 'ignore_at_import' in list(p.metavars.keys()):
+                __ignore_at_import__ = p.metavars['ignore_at_import']
 
-                if 'import_all' in list(p.metavars.keys()):
-                    __import_all__ = p.metavars['import_all']
+            if 'import_all' in list(p.metavars.keys()):
+                __import_all__ = p.metavars['import_all']
 
-                if 'module_name' in list(p.metavars.keys()):
-                    __module_name__ = p.metavars['module_name']
+            if 'module_name' in list(p.metavars.keys()):
+                __module_name__ = p.metavars['module_name']
 
-                if 'print' in list(p.metavars.keys()):
-                    __print__ = True
+            if 'print' in list(p.metavars.keys()):
+                __print__ = True
 
-                if __import_all__:
-                    expr = Import(__module_name__)
-                    container['imports'][__module_name__] = expr
+            if len(expr.target) == 0 and isinstance(expr.source,AsName):
+                expr = Import(expr.source.name)
 
-                elif __module_name__:
-                    expr = Import(expr.target, __module_name__)
-                    container['imports'][__module_name__] = expr
+            if __import_all__:
+                expr = Import(__module_name__)
+                container['imports'][source_target] = expr
 
-                # ...
-                elif __print__ in p.metavars.keys():
-                    source = str(expr.source).split('.')[-1]
-                    source = 'mod_' + source
-                    expr   = Import(expr.target, source=source)
-                    container['imports'][source] = expr
-                elif not __ignore_at_import__:
-                    container['imports'][source] = expr
+            elif __module_name__:
+                expr = Import(__module_name__, expr.target)
+                container['imports'][source_target] = expr
+
+            # ...
+            elif __print__ in p.metavars.keys():
+                source = str(expr.source).split('.')[-1]
+                source = 'mod_' + source
+                expr   = Import(source, expr.target)
+                container['imports'][source_target] = expr
+            elif not __ignore_at_import__:
+                container['imports'][source_target] = expr
 
         return EmptyLine()
 
