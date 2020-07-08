@@ -5,6 +5,8 @@
 
 from numpy import array, logical_and, where
 from ast   import AST, If as IfNode, parse
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import INVALID_PYTHON_SYNTAX
 
 class CommentLine(AST):
     """"New AST node representing a comment line"""
@@ -36,7 +38,12 @@ def get_comments(code):
 
 def extend_tree(code):
     comment_lines_no, comments, else_no = get_comments(code)
-    tree = parse(code)
+    try:
+        tree = parse(code)
+    except SyntaxError as e:
+        errors = Errors()
+        errors.report(INVALID_PYTHON_SYNTAX, symbol='\n' + str(e),
+                      severity='fatal')
     if len(tree.body) == 0:
         if len(comments) > 0:
             tree.body        = [comments[0]]
@@ -48,7 +55,7 @@ def extend_tree(code):
 
 def get_last_lineno(ast):
     while hasattr(ast, 'body'):
-        if ast.orelse:
+        if hasattr(ast, 'orelse') and ast.orelse:
             ast = ast.orelse[-1]
         else:
             ast = ast.body[-1]

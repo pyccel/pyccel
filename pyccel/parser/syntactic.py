@@ -166,13 +166,7 @@ class SyntaxParser(BasicParser):
 
         self._scope = []
 
-        try:
-            code = self.code
-            tree = extend_tree(code)
-        except Exception as e:
-            errors = Errors()
-            errors.report(INVALID_PYTHON_SYNTAX, symbol='\n' + str(e),
-                          severity='fatal')
+        tree = extend_tree(code)
 
         #preprocess_imports(red)
 
