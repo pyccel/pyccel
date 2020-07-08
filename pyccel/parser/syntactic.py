@@ -908,40 +908,14 @@ class SyntaxParser(BasicParser):
     def _visit_Index(self, stmt):
         return self._visit(stmt.value)
 
-    def _visit_DotProxyList(self, stmt):
+    def _visit_Attribute(self, node):
+        attr  = Symbol(node.attr)
+        value = self._visit(node.value)
 
-        n = len(stmt) - 1
-        ls = []
-        while n > -1:
-            if isinstance(stmt[n], GetitemNode):
-                args = self._visit(stmt[n])
-                while isinstance(stmt[n].previous, GetitemNode):
-                    n = n - 1
-                var = self._visit(stmt[:n])
-                var = IndexedBase(var)[args]
-                n = 0
-            elif isinstance(stmt[n], CallNode):
-                var = self._visit(stmt[n])
-                n = n - 1
-            else:
-                while n > 0 and not isinstance(stmt[n].previous,
-                        DotNode) and not isinstance(stmt[n], (CallNode)):
-                    n = n - 1
-                var = self._visit(stmt[n])
-            ls.insert(0,var)
-            n = n - 1
-
-        if len(ls) == 1:
-            expr = ls[0]
+        if isinstance(value, DottedVariable):
+            expr = DottedVariable(*value.args, attr)
         else:
-            n = 0
-            var = DottedVariable(ls[0], ls[1])
-            n = 2
-            while n < len(ls):
-                var = DottedVariable(var, ls[n])
-                n = n + 1
-
-            expr = var
+            expr = DottedVariable(value, attr)
         return expr
 
     def _visit_Call(self, stmt):
@@ -951,14 +925,24 @@ class SyntaxParser(BasicParser):
             args += self._visit(stmt.args)
         if stmt.keywords:
             args += self._visit(stmt.keywords)
-        f_name = self._visit(stmt.func)
-        if len(args) == 0:
-            args = ( )
 
-        if str(f_name) == "print":
-            func = Print(PythonTuple(*args))
+        if len(args) == 0:
+            args = ()
+
+        func = self._visit(stmt.func)
+
+        if isinstance(func, Symbol):
+            f_name = func.name
+            if str(f_name) == "print":
+                func = Print(PythonTuple(*args))
+            else:
+                func = Function(f_name)(*args)
+        elif isinstance(func, DottedVariable):
+            f_name = func.args[-1].name
+            f      = Function(f_name)(*args)
+            func   = DottedVariable(*func.args[:-1], f)
         else:
-            func = Function(f_name)(*args)
+            raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
 
         return func
 
