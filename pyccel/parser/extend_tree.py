@@ -96,6 +96,7 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
             continue
 
         if not hasattr(previous_stmt, 'body'):
+            #TODO accelerate this part with pyccel
             k = -1
             for k, comment_line_no_k in enumerate(comment_lines_no):
                 if next_node_lineno<comment_line_no_k:
@@ -115,7 +116,7 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
                 elif_orelse = len(previous_stmt.orelse) == 1 and isinstance(previous_stmt.orelse[0], IfNode)
             else:
                 previous_stmt_body_last_lineno  = get_last_lineno(previous_stmt.body[-1])
-
+            #TODO accelerate this part with pyccel
             k = -1
             for k, comment_line_no_k in enumerate(comment_lines_no):
                 if previous_stmt_body_last_lineno<comment_line_no_k:
@@ -137,7 +138,7 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
 
             if orelse:
                 previous_stmt_orelse_last_lineno  = get_last_lineno(previous_stmt.orelse[-1])
-
+                #TODO accelerate this part with pyccel
                 k = -1
                 for k, comment_line_no_k in enumerate(comment_lines_no):
                     if previous_stmt_orelse_last_lineno<comment_line_no_k:
@@ -149,7 +150,7 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
                 insert_comments(previous_stmt, comment_lines_no[:k], comments[:k], else_no, 'orelse', col_offset)
                 comment_lines_no = comment_lines_no[k:]
                 comments         = comments[k:]
-
+            #TODO accelerate this part with pyccel
             k = -1
             for k, comment_line_no_k in enumerate(comment_lines_no):
                 if next_node_lineno<comment_line_no_k:
@@ -170,7 +171,7 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
             elif_orelse = len(last_stmt.orelse) == 1 and isinstance(last_stmt.orelse[0], IfNode)
         else:
             body_last_lineno  = get_last_lineno(last_stmt.body[-1])
-
+        #TODO accelerate this part with pyccel
         k = -1
         for k, comment_line_no_k in enumerate(comment_lines_no):
             if body_last_lineno<comment_line_no_k:
@@ -193,6 +194,7 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
 
         if orelse:
             orelse_last_lineno  = get_last_lineno(last_stmt.orelse[-1])
+            #TODO accelerate this part with pyccel
             k = -1
             for k, comment_line_no_k in enumerate(comment_lines_no):
                 if orelse_last_lineno<comment_line_no_k:
