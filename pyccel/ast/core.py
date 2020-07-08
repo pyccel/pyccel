@@ -3808,41 +3808,42 @@ class Import(Basic):
     import foo, foo.bar.baz
     """
 
-    def __new__(cls, target, source=None):
-
-        def _format(i):
-            if isinstance(i, str):
-                if '.' in i:
-                    return DottedName(*i.split('.'))
-                else:
-                    return Symbol(i)
-            if isinstance(i, (DottedName, AsName)):
-                return i
-            elif isinstance(i, Symbol):
-                return i
-            else:
-                raise TypeError('Expecting a string, Symbol DottedName, given {}'.format(type(i)))
-
-        _target = []
-        if isinstance(target, (str, Symbol, DottedName, AsName)):
-            _target = [_format(target)]
-        elif iterable(target):
-            for i in target:
-                _target.append(_format(i))
-        target = Tuple(*_target, sympify=False)
+    def __new__(cls, source, target = None):
 
         if not source is None:
-            source = _format(source)
+            source = Import._format(source)
 
-        return Basic.__new__(cls, target, source)
+        return Basic.__new__(cls, source)
+
+    def __init__(self, source, target = None):
+        self._target = []
+        if isinstance(target, (str, Symbol, DottedName, AsName)):
+            self._target = [Import._format(target)]
+        elif iterable(target):
+            for i in target:
+                self._target.append(Import._format(i))
+
+    @staticmethod
+    def _format(i):
+        if isinstance(i, str):
+            if '.' in i:
+                return DottedName(*i.split('.'))
+            else:
+                return Symbol(i)
+        if isinstance(i, (DottedName, AsName)):
+            return i
+        elif isinstance(i, Symbol):
+            return i
+        else:
+            raise TypeError('Expecting a string, Symbol DottedName, given {}'.format(type(i)))
 
     @property
     def target(self):
-        return self._args[0]
+        return self._target
 
     @property
     def source(self):
-        return self._args[1]
+        return self._args[0]
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -3854,6 +3855,8 @@ class Import(Basic):
             return 'from {source} import {target}'.format(source=source,
                     target=target)
 
+    def define_target(self, new_target):
+        self._target.append(new_target)
 
 class TupleImport(Basic):
 

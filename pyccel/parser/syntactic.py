@@ -296,7 +296,7 @@ class SyntaxParser(BasicParser):
         mod_code = CodeBlock(mod) if len(targets)>0 else None
         if is_prog:
             if mod_code:
-                expr = Import(targets, source=current_mod_name)
+                expr = Import(source=current_mod_name, target = targets)
                 prog.insert(0,expr)
             prog_code = CodeBlock(prog)
             prog_code.set_fst(stmt)
@@ -505,17 +505,28 @@ class SyntaxParser(BasicParser):
     def _visit_Name(self, stmt):
         return Symbol(stmt.id)
 
-    def _visit_Import(self, stmt):
-        errors.report(PYCCEL_UNEXPECTED_IMPORT,
-                      bounding_box=(stmt.lineno, stmt.col_offset),
-                      severity='error')
+    def _treat_import_source(self, source):
+        source = str(source)
+        if source.count('.') == 0:
+            source = Symbol(source)
+        else:
+            source = DottedName(*source.split('.'))
 
-        ls = [self._visit(n) for n in stmt.names]
-        ls = [get_default_path(l) for l in ls]
-        expr = [Import(i) for i in ls]
-        for e in expr:
-            e.set_fst(stmt)
-            self.insert_import(e)
+        return get_default_path(source)
+
+    def _visit_Import(self, stmt):
+        expr = []
+        for name in stmt.names:
+            imp = self._visit(name)
+            if isinstance(imp, AsName):
+                source = AsName(self._treat_import_source(imp.name), imp.target)
+            else:
+                source = self._treat_import_source(imp)
+            import_line = Import(source)
+            import_line.set_fst(stmt)
+            self.insert_import(import_line)
+            expr.append(import_line)
+
         if len(expr)==1:
             return expr[0]
         else:
@@ -525,14 +536,8 @@ class SyntaxParser(BasicParser):
 
     def _visit_ImportFrom(self, stmt):
 
-        source = stmt.module
+        source = self._treat_import_source(stmt.module)
 
-        if stmt.module.count('.') == 0:
-            source = Symbol(stmt.module)
-        else:
-            source = DottedName(*stmt.module.split('.'))
-
-        source = get_default_path(source)
         targets = []
         for i in stmt.names:
             s = self._visit(i)
@@ -543,7 +548,7 @@ class SyntaxParser(BasicParser):
 
             targets.append(s)
 
-        expr = Import(targets, source=source)
+        expr = Import(source, targets)
         expr.set_fst(stmt)
         self.insert_import(expr)
         return expr
