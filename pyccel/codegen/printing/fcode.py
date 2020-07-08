@@ -335,7 +335,7 @@ class FCodePrinter(CodePrinter):
         # TODO should we find a better way to do this?
         imports = list(expr.imports)
         for i in expr.imports:
-            if 'mpi4py' == str(i.target[0]):
+            if 'mpi4py' == str(getattr(i.source,'name',i.source)):
                 mpi = True
 
         imports = '\n'.join(self._print(i) for i in imports)
@@ -451,7 +451,7 @@ class FCodePrinter(CodePrinter):
         # importing of pyccel extensions is not printed
         if source in pyccel_builtin_import_registery:
             return ''
-        if 'mpi4py' == str(expr.target[0]):
+        if 'mpi4py' == str(getattr(i.source,'name',i.source)):
             return '\n'.join(['use mpi', 'use mpiext'])
 
         code = ''
