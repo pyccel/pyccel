@@ -99,6 +99,7 @@ IMPORTING_EXISTING_IDENTIFIED = \
 UNDEFINED_FUNCTION = 'Undefined function'
 UNDEFINED_VARIABLE = 'Undefined variable'
 UNDEFINED_INDEXED_VARIABLE = 'Undefined indexed variable'
+UNDEFINED_IMPORT_OBJECT = 'Could not find {} in imported module {}'
 
 REDEFINING_VARIABLE = 'Variable already defined'
 

@@ -123,7 +123,7 @@ errors = Errors()
 def _get_name(var):
     """."""
 
-    if isinstance(var, (Symbol, IndexedVariable, IndexedBase)):
+    if isinstance(var, (Symbol, IndexedVariable, IndexedBase, DottedVariable)):
         return str(var)
     if isinstance(var, (IndexedElement, Indexed)):
         return str(var.base)
@@ -283,6 +283,9 @@ class SemanticParser(BasicParser):
         if name in container.variables:
             return container.variables[name]
 
+        if name in container.imports['variables']:
+            return container.imports['variables'][name]
+
         for container in container.loops:
             var = self._get_variable_from_scope(name, container)
             if var:
@@ -433,6 +436,22 @@ class SemanticParser(BasicParser):
 
         return func
 
+
+    def get_import(self, name):
+        """."""
+
+        imp = None
+
+        container = self.namespace
+        while container:
+
+            if name in container.imports['imports']:
+                imp =  container.imports['imports'][name]
+                break
+            container = container.parent_scope
+
+
+        return imp
 
 
     def get_symbolic_function(self, name):
@@ -976,9 +995,33 @@ class SemanticParser(BasicParser):
 
     def _visit_DottedVariable(self, expr, **settings):
 
+        var = self.check_for_variable(_get_name(expr))
+        if var:
+            return var
+
         first = self._visit(expr.lhs)
         rhs_name = _get_name(expr.rhs)
         attr_name = []
+
+        if isinstance(first, dict):
+            # Imported object
+
+            if rhs_name in first:
+                imp = self.get_import(_get_name(expr.lhs))
+                if imp is not None:
+                    imp.define_target(Symbol(rhs_name))
+
+                if isinstance(expr.rhs, Application):
+                    args  = self._handle_function_args(expr.rhs.args, **settings)
+                    return self._handle_function(first[rhs_name],args, **settings)
+                else:
+                    return first[rhs_name]
+            else:
+                errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(expr.lhs)),
+                        sybol=expr,
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='fatal', blocker=True)
+
         if first.cls_base:
             attr_name = [i.name for i in first.cls_base.attributes]
         name = None
@@ -1366,7 +1409,12 @@ class SemanticParser(BasicParser):
             else:
 
                 # TODO improve check type compatibility
-                if str(dtype) != str(var.dtype):
+                if not hasattr(var, 'dtype'):
+                    errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
+                            symbol = '|{name}| <module> -> {rhs}'.format(name=name, rhs=rhs),
+                            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                            severity='fatal', blocker=False)
+                elif str(dtype) != str(getattr(var, 'dtype', 'None')):
                     txt = '|{name}| {old} <-> {new}'
                     txt = txt.format(name=name, old=var.dtype, new=dtype)
 
