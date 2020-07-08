@@ -451,7 +451,7 @@ class FCodePrinter(CodePrinter):
         # importing of pyccel extensions is not printed
         if source in pyccel_builtin_import_registery:
             return ''
-        if 'mpi4py' == str(getattr(i.source,'name',i.source)):
+        if 'mpi4py' == str(getattr(expr.source,'name',expr.source)):
             return '\n'.join(['use mpi', 'use mpiext'])
 
         code = ''
