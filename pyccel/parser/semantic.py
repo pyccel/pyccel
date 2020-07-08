@@ -1018,7 +1018,7 @@ class SemanticParser(BasicParser):
                     return first[rhs_name]
             else:
                 errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(expr.lhs)),
-                        sybol=expr,
+                        symbol=expr,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=True)
 

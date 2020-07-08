@@ -388,11 +388,9 @@ class BasicParser(object):
             if isinstance(expr.source, AsName):
                 name   = expr.source
                 source = str(expr.source.name)
-                target = expr.source.target
             else:
                 name   = str(expr.source)
                 source = name
-                target = name
 
             if not source in pyccel_builtin_import_registery:
                 container[name] = []
