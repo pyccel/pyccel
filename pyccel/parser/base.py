@@ -12,7 +12,7 @@ from pyccel.ast.core import DottedName
 from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface
 from pyccel.ast.core import PythonFunction, SympyFunction
-from pyccel.ast.core import Import
+from pyccel.ast.core import Import, AsName
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
@@ -49,6 +49,8 @@ def get_filename_from_import(module,input_folder=''):
         - python files (extension == py)
     """
 
+    if (isinstance(module, AsName)):
+        module = str(module.name)
     filename = module.replace('.','/')
 
     # relative imports
@@ -382,13 +384,20 @@ class BasicParser(object):
         container = self.namespace.imports['imports']
         
         # if source is not specified, imported things are treated as sources
-        source = expr.source
-        if source is None:
-            for t in expr.target:
-                name = str(t)
+        if len(expr.target) == 0:
+            if isinstance(expr.source, AsName):
+                name   = expr.source
+                source = str(expr.source.name)
+                target = expr.source.target
+            else:
+                name   = str(expr.source)
+                source = name
+                target = name
+
+            if not source in pyccel_builtin_import_registery:
                 container[name] = []
         else:
-            source = str(source)
+            source = str(expr.source)
             if not source in pyccel_builtin_import_registery:
                 for t in expr.target:
                     name = [str(t)]

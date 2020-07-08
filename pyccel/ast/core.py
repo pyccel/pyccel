@@ -779,6 +779,15 @@ class AsName(Basic):
         sstr = printer.doprint
         return '{0} as {1}'.format(sstr(self.name), sstr(self.target))
 
+    def __eq__(self, string):
+        if isinstance(string, str):
+            return string == self.target
+        else:
+            return self is string
+
+    def __hash__(self):
+        return hash(self.target)
+
 
 class Dlist(Basic, PyccelAstNode):
 
