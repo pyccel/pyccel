@@ -1105,14 +1105,10 @@ class SyntaxParser(BasicParser):
     def _visit_StarNode(self, stmt):
         return '*'
 
-    def _visit_LambdaNode(self, stmt):
+    def _visit_Lambda(self, stmt):
 
-        expr = self._visit(stmt.value)
-        args = []
-
-        for i in stmt.arguments:
-            var = self._visit(i.name)
-            args += [var]
+        expr = self._visit(stmt.body)
+        args = self._visit(stmt.args)
 
         return Lambda(tuple(args), expr)
 
@@ -1154,7 +1150,7 @@ class SyntaxParser(BasicParser):
         return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
                              indices, index)
 
-    def _visit_TryNode(self, stmt):
+    def _visit_Try(self, stmt):
         # this is a blocking error, since we don't want to convert the try body
         errors.report(PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY,
                       bounding_box=(stmt.lineno, stmt.col_offset),
