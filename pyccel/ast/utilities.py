@@ -191,8 +191,8 @@ def builtin_import(expr):
     imports = []
     for target in expr.target:
         if isinstance(target, AsName):
-            import_name = target.target
-            code_name = target.name
+            import_name = target.name
+            code_name = target.target
         else:
             import_name = str(target)
             code_name = import_name

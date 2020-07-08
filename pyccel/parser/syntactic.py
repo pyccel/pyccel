@@ -360,7 +360,7 @@ class SyntaxParser(BasicParser):
 
         if stmt.asname:
             new = self._visit(stmt.asname)
-            return AsName(new, old)
+            return AsName(old, new)
         else:
             return old
 

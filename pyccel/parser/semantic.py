@@ -130,7 +130,7 @@ def _get_name(var):
     if isinstance(var, Application):
         return type(var).__name__
     if isinstance(var, AsName):
-        return var.name
+        return var.target
     msg = 'Name of Object : {} cannot be determined'.format(type(var).__name__)
     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=var,
         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
@@ -2640,12 +2640,12 @@ class SemanticParser(BasicParser):
                 for entry in ['variables', 'classes', 'functions']:
                     d_son = getattr(p.namespace, entry)
                     for t,n in zip(targets,names):
-                        if t in d_son:
-                            e = d_son[t]
+                        if n in d_son:
+                            e = d_son[n]
                             if t == n:
-                                container[entry][n] = e
+                                container[entry][t] = e
                             else:
-                                container[entry][n] = e.rename(n)
+                                container[entry][t] = e.rename(t)
 
                 self.namespace.cls_constructs.update(p.namespace.cls_constructs)
                 self.namespace.macros.update(p.namespace.macros)

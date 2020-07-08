@@ -757,8 +757,8 @@ class AsName(Basic):
     Examples
     --------
     >>> from pyccel.ast.core import AsName
-    >>> AsName('new', 'old')
-    new as old
+    >>> AsName('old', 'new')
+    old as new
     """
 
     def __new__(cls, name, target):

@@ -457,8 +457,8 @@ class FCodePrinter(CodePrinter):
         code = ''
         for i in expr.target:
             if isinstance(i, AsName):
-                target = '{name} => {target}'.format(name=self._print(i.name),
-                                                     target=self._print(i.target))
+                target = '{target} => {name}'.format(target=self._print(i.target),
+                                                     name=self._print(i.name))
                 line = '{prefix} {target}'.format(prefix=prefix,
                                                   target=target)
 
