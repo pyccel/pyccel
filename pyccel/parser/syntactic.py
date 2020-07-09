@@ -506,8 +506,8 @@ class SyntaxParser(BasicParser):
     def _visit_Name(self, stmt):
         return Symbol(stmt.id)
 
-    def _treat_import_source(self, source):
-        source = str(source)
+    def _treat_import_source(self, source, level):
+        source = '.'*level + str(source)
         if source.count('.') == 0:
             source = Symbol(source)
         else:
@@ -520,9 +520,9 @@ class SyntaxParser(BasicParser):
         for name in stmt.names:
             imp = self._visit(name)
             if isinstance(imp, AsName):
-                source = AsName(self._treat_import_source(imp.name), imp.target)
+                source = AsName(self._treat_import_source(imp.name, 0), imp.target)
             else:
-                source = self._treat_import_source(imp)
+                source = self._treat_import_source(imp, 0)
             import_line = Import(source)
             import_line.set_fst(stmt)
             self.insert_import(import_line)
@@ -537,7 +537,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_ImportFrom(self, stmt):
 
-        source = self._treat_import_source(stmt.module)
+        source = self._treat_import_source(stmt.module, stmt.level)
 
         targets = []
         for i in stmt.names:
