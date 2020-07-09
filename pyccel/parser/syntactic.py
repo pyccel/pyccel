@@ -1021,11 +1021,11 @@ class SyntaxParser(BasicParser):
 
         return If(Tuple(test, body, sympify=False), orelse)
 
-    def _visit_TernaryOperatorNode(self, stmt):
+    def _visit_IfExp(self, stmt):
 
-        test1 = self._visit(stmt.value)
-        first = self._visit(stmt.first)
-        second = self._visit(stmt.second)
+        test1 = self._visit(stmt.test)
+        first = self._visit(stmt.body)
+        second = self._visit(stmt.orelse)
         args = [Tuple(test1, [first], sympify=False),
                 Tuple(BooleanTrue(), [second], sympify=False)]
         expr = IfTernaryOperator(*args)
