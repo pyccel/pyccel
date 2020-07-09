@@ -719,10 +719,6 @@ class SyntaxParser(BasicParser):
     def _visit_FunctionDef(self, stmt):
 
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
-        if self._scope[-2] is ast.ClassDef:
-            cls_name = stmt.parent.name
-        else:
-            cls_name = None
 
         name = self._visit(stmt.name)
         name = name.replace("'", '')
@@ -839,7 +835,6 @@ class SyntaxParser(BasicParser):
                body,
                local_vars=local_vars,
                global_vars=global_vars,
-               cls_name=cls_name,
                hide=hide,
                kind=kind,
                is_pure=is_pure,
@@ -855,8 +850,8 @@ class SyntaxParser(BasicParser):
     def _visit_ClassDef(self, stmt):
 
         name = stmt.name
-        methods = [i for i in stmt.body if isinstance(i, ast.FunctionDef)]
-        methods = self._visit(methods)
+        methods = [self._visit(i) for i in stmt.body if isinstance(i, ast.FunctionDef)]
+        [i.set_cls_name(name) for i in methods]
         attributes = methods[0].arguments
         parent = [self._visit(i) for i in stmt.bases]
         expr = ClassDef(name=name, attributes=attributes,
