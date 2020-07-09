@@ -431,8 +431,7 @@ class SemanticParser(BasicParser):
 
 
         if func and self._current_function == name and not func.is_recursive:
-            func = func.set_recursive()
-            container.functions[name] = func
+            func.set_recursive()
 
         return func
 
