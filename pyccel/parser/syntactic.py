@@ -1111,9 +1111,19 @@ class SyntaxParser(BasicParser):
 
         return Lambda(tuple(args), expr)
 
-    def _visit_WithNode(self, stmt):
-        domain = self._visit(stmt.contexts[0].value)
-        body = self._visit(stmt.value)
+    def _visit_withitem(self, stmt):
+        # stmt.optional_vars
+        context = self._visit(stmt.context_expr)
+        if stmt.optional_vars:
+            return AsName(context, stmt.optional_vars)
+        else:
+            return context
+
+    def _visit_With(self, stmt):
+        domain = self._visit(stmt.items)
+        if len(domain) == 1:
+            domain = domain[0]
+        body = self._visit(stmt.body)
         settings = None
         return With(domain, body, settings)
 
