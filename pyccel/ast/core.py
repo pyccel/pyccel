@@ -3045,6 +3045,7 @@ class FunctionDef(Basic):
         arguments,
         results,
         body,
+        *args,
         **kwargs
         ):
         return Basic.__new__(cls)
@@ -3283,6 +3284,22 @@ class FunctionDef(Basic):
     def set_cls_name(self, cls_name):
         self._cls_name = cls_name
 
+    def clone(self, newname):
+        """
+        Create an identical FunctionDef with name
+        newname.
+
+        Parameters
+        ----------
+        newname: str
+            new name for the FunctionDef
+        """
+        args = self.__getnewargs__()
+        new_func = FunctionDef(*args)
+        new_func.rename(newname)
+        return new_func
+
+
     def rename(self, newname):
         """
         Rename the FunctionDef name
@@ -3295,7 +3312,6 @@ class FunctionDef(Basic):
         """
 
         self._name = newname
-        return self
 
     def vectorize(self, body , header):
         """ return vectorized FunctionDef """
@@ -3359,20 +3375,26 @@ class FunctionDef(Basic):
         """used for Pickling self."""
 
         args = (
-            self.name,
-            self.arguments,
-            self.results,
-            self.body,
-            self.local_vars,
-            self.global_vars,
-            self.cls_name,
-            self.hide,
-            self.kind,
-            self.is_static,
-            self.imports,
-            self.decorators,
-            self.header,
-            self.is_recursive,
+                self._name,
+                self._arguments,
+                self._results,
+                self._body,
+                self._local_vars,
+                self._global_vars,
+                self._cls_name,
+                self._hide,
+                self._kind,
+                self._is_static,
+                self._imports,
+                self._decorators,
+                self._header,
+                self._is_recursive,
+                self._is_pure,
+                self._is_elemental,
+                self._is_private,
+                self._is_header,
+                self._arguments_inout,
+                self._functions
             )
         return args
 
