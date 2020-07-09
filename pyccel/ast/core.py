@@ -3045,6 +3045,16 @@ class FunctionDef(Basic):
         arguments,
         results,
         body,
+        **kwargs
+        ):
+        return Basic.__new__(cls)
+
+    def __init__(
+        self,
+        name,
+        arguments,
+        results,
+        body,
         local_vars=[],
         global_vars=[],
         cls_name=None,
@@ -3158,108 +3168,106 @@ class FunctionDef(Basic):
                 if not isinstance(i, FunctionDef):
                     raise TypeError('Expecting a FunctionDef')
 
-        return Basic.__new__(
-            cls,
-            name,
-            arguments,
-            results,
-            body,
-            local_vars,
-            global_vars,
-            cls_name,
-            hide,
-            kind,
-            is_static,
-            imports,
-            decorators,
-            header,
-            is_recursive,
-            is_pure,
-            is_elemental,
-            is_private,
-            is_header,
-            arguments_inout,
-            functions,)
+        self._name            = name
+        self._arguments       = arguments
+        self._results         = results
+        self._body            = body
+        self._local_vars      = local_vars
+        self._global_vars     = global_vars
+        self._cls_name        = cls_name
+        self._hide            = hide
+        self._kind            = kind
+        self._is_static       = is_static
+        self._imports         = imports
+        self._decorators      = decorators
+        self._header          = header
+        self._is_recursive    = is_recursive
+        self._is_pure         = is_pure
+        self._is_elemental    = is_elemental
+        self._is_private      = is_private
+        self._is_header       = is_header
+        self._arguments_inout = arguments_inout
+        self._functions       = functions
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def arguments(self):
-        return self._args[1]
+        return self._arguments
 
     @property
     def results(self):
-        return self._args[2]
+        return self._results
 
     @property
     def body(self):
-        return self._args[3]
+        return self._body
 
     @property
     def local_vars(self):
-        return self._args[4]
+        return self._local_vars
 
     @property
     def global_vars(self):
-        return self._args[5]
+        return self._global_vars
 
     @property
     def cls_name(self):
-        return self._args[6]
+        return self._cls_name
 
     @property
     def hide(self):
-        return self._args[7]
+        return self._hide
 
     @property
     def kind(self):
-        return self._args[8]
+        return self._kind
 
     @property
     def is_static(self):
-        return self._args[9]
+        return self._is_static
 
     @property
     def imports(self):
-        return self._args[10]
+        return self._imports
 
     @property
     def decorators(self):
-        return self._args[11]
+        return self._decorators
 
     @property
     def header(self):
-        return self._args[12]
+        return self._header
 
     @property
     def is_recursive(self):
-        return self._args[13]
+        return self._is_recursive
 
     @property
     def is_pure(self):
-        return self._args[14]
+        return self._is_pure
 
     @property
     def is_elemental(self):
-        return self._args[15]
+        return self._is_elemental
 
     @property
     def is_private(self):
-        return self._args[16]
+        return self._is_private
 
     @property
     def is_header(self):
-        return self._args[17]
+        return self._is_header
 
     @property
     def arguments_inout(self):
-        return self._args[18]
+        return self._arguments_inout
 
     @property
     def functions(self):
-        return self._args[19]
+        return self._functions
 
     @property
     def doc_string(self):
@@ -3269,31 +3277,15 @@ class FunctionDef(Basic):
         for s in self.body:
             print(s)
 
-    # TODO is there a better way to do this, avoiding copying args? => bad for
-    # maintenance!
-    #      must be done everywhere
     def set_recursive(self):
-        return FunctionDef(
-            self.name,
-            self.arguments,
-            self.results,
-            self.body,
-            local_vars=self.local_vars,
-            global_vars=self.global_vars,
-            cls_name=self.cls_name,
-            hide=self.hide,
-            kind=self.kind,
-            is_static=self.is_static,
-            header=self.header,
-            imports = self.imports,
-            decorators = self.decorators,
-            is_recursive=True,
-            functions=self.functions,
-            )
+        self._is_recursive = True
+
+    def set_cls_name(self, cls_name):
+        self._cls_name = cls_name
 
     def rename(self, newname):
         """
-        Rename the FunctionDef name by creating a new FunctionDef with
+        Rename the FunctionDef name
         newname.
 
         Parameters
@@ -3302,42 +3294,21 @@ class FunctionDef(Basic):
             new name for the FunctionDef
         """
 
-        return FunctionDef(
-            newname,
-            self.arguments,
-            self.results,
-            self.body,
-            local_vars=self.local_vars,
-            global_vars=self.global_vars,
-            cls_name=self.cls_name,
-            hide=self.hide,
-            kind=self.kind,
-            is_static=self.is_static,
-            header=self.header,
-            imports = self.imports,
-            decorators = self.decorators,
-            is_recursive=self.is_recursive,
-            functions=self.functions,)
+        self._name = newname
+        return self
 
     def vectorize(self, body , header):
         """ return vectorized FunctionDef """
         decorators = self.decorators
         decorators.pop('vectorize')
-        return FunctionDef(
-            'vec_'+str(self.name),
-            self.arguments,
-            [],
-            body,
-            local_vars=self.local_vars,
-            global_vars=self.global_vars,
-            cls_name=self.cls_name,
-            hide=self.hide,
-            kind='procedure',
-            is_static=self.is_static,
-            header=header,
-            imports = self.imports,
-            decorators = decorators,
-            is_recursive=self.is_recursive)
+
+        self._name       = 'vec_'+str(self.name)
+        self._results    = []
+        self._body       = body
+        self._kind       = procedure
+        self._header     = header
+        self._decorators = decorators
+        return self
 
     @property
     def is_procedure(self):
