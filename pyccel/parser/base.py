@@ -51,15 +51,16 @@ def get_filename_from_import(module,input_folder=''):
 
     if (isinstance(module, AsName)):
         module = str(module.name)
+
+    # Remove first '.' as it doesn't represent a folder change
+    if module[0] == '.':
+        module = module[1:]
     filename = module.replace('.','/')
 
     # relative imports
-    sl   = '//'
-    dots = '..'
-    while sl in filename:
-        filename = filename.replace(sl, dots + '/')
-        sl   = sl + '/'
-        dots = dots + '.'
+    folder_above = '../'
+    while filename.startswith('/'):
+        filename = folder_above + filename[1:]
 
     filename_pyh = '{}.pyh'.format(filename)
     filename_py  = '{}.py'.format(filename)
