@@ -125,10 +125,10 @@ def change_priority( expr ):
     first  = expr.args[0]
     second = expr.args[1]
 
-    if isinstance(first,  PyccelOperator) and first.p  < expr.p:
+    if isinstance(first,  PyccelOperator) and first.p  <= expr.p:
         first = PyccelAssociativeParenthesis(first)
 
-    if isinstance(second, PyccelOperator) and second.p < expr.p:
+    if isinstance(second, PyccelOperator) and second.p <= expr.p:
         second = PyccelAssociativeParenthesis(second)
 
     expr = expr.func(first, second)
