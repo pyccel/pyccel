@@ -561,21 +561,30 @@ class SyntaxParser(BasicParser):
     def _visit_UnaryOp(self, stmt):
 
         target = self._visit(stmt.operand)
+
         if isinstance(stmt.op, ast.Not):
-            return PyccelUnary(PyccelNot(target))
-        if isinstance(stmt.op, ast.UAdd):
-            return PyccelUnary(target)
-        if isinstance(stmt.op, ast.USub):
-            return PyccelUnary(PyccelMinus(target))
-        if isinstance(stmt.op, ast.Invert):
+            Func = PyccelNot
+
+        elif isinstance(stmt.op, ast.UAdd):
+            Func = PyccelUnary
+
+        elif isinstance(stmt.op, ast.USub):
+            Func = PyccelMinus
+
+        elif isinstance(stmt.op, ast.Invert):
 
             errors.report(PYCCEL_RESTRICTION_UNARY_OPERATOR,
                           bounding_box=(stmt.lineno, stmt.col_offset),
-                          severity='error')
+                          severity='fatal')
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
+
+        if isinstance(target,  PyccelOperator) and target.p  <= Func.p:
+            target = PyccelAssociativeParenthesis(target)
+
+        return PyccelUnary(Func(target))
 
     def _visit_BinOp(self, stmt):
 
