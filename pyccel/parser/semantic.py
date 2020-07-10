@@ -1003,17 +1003,20 @@ class SemanticParser(BasicParser):
         attr_name = []
 
         if isinstance(first, dict):
-            # Imported object
+            # Imported module
 
             if rhs_name in first:
                 imp = self.get_import(_get_name(expr.lhs))
                 if imp is not None:
+                    # Save the import target that has been used
                     imp.define_target(Symbol(rhs_name))
 
                 if isinstance(expr.rhs, Application):
+                    # If object is a function
                     args  = self._handle_function_args(expr.rhs.args, **settings)
                     return self._handle_function(first[rhs_name],args, **settings)
                 else:
+                    # If object is something else (eg. constant, dict)
                     return first[rhs_name]
             else:
                 errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(expr.lhs)),
