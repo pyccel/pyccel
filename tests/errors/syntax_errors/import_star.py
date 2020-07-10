@@ -1,3 +1,3 @@
-from ex1 import *
+from empty_import import *
 
 print(a)
