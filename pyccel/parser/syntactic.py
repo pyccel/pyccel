@@ -63,7 +63,6 @@ from pyccel.ast.numbers  import Integer, Float, Complex, BooleanFalse, BooleanTr
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 
 from pyccel.parser.base import BasicParser
-from pyccel.parser.utilities import fst_move_directives, preprocess_imports
 from pyccel.parser.utilities import reconstruct_pragma_multilines
 from pyccel.parser.utilities import read_file
 from pyccel.parser.utilities import get_default_path
@@ -154,9 +153,6 @@ class SyntaxParser(BasicParser):
 
         tree = extend_tree(code)
 
-        #preprocess_imports(red)
-
-        #red = fst_move_directives(red)
         self._fst = tree
         
 
