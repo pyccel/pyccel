@@ -439,20 +439,21 @@ class FCodePrinter(CodePrinter):
         if str(expr.source) in pyccel_builtin_import_registery:
             return ''
 
-        if expr.source is None:
-            prefix = 'use'
+        if isinstance(expr.source, DottedName):
+            source = expr.source.name[-1]
         else:
-            if isinstance(expr.source, DottedName):
-                source = expr.source.name[-1]
-            else:
-                source = self._print(expr.source)
-            prefix = 'use {}, only:'.format(source)
+            source = self._print(expr.source)
 
         # importing of pyccel extensions is not printed
         if source in pyccel_builtin_import_registery:
             return ''
         if 'mpi4py' == str(getattr(expr.source,'name',expr.source)):
             return '\n'.join(['use mpi', 'use mpiext'])
+
+        if len(expr.target) == 0:
+            return 'use {}'.format(source)
+
+        prefix = 'use {}, only:'.format(source)
 
         code = ''
         for i in expr.target:

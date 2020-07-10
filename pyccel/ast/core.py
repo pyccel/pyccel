@@ -3849,11 +3849,11 @@ class Import(Basic):
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        target = ', '.join([sstr(i) for i in self.target])
-        if self.source is None:
-            return 'import {target}'.format(target=target)
+        source = sstr(self.source)
+        if len(self.target) == 0:
+            return 'import {source}'.format(source=source)
         else:
-            source = sstr(self.source)
+            target = ', '.join([sstr(i) for i in self.target])
             return 'from {source} import {target}'.format(source=source,
                     target=target)
 
