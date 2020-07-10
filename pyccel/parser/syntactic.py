@@ -851,7 +851,8 @@ class SyntaxParser(BasicParser):
 
         name = stmt.name
         methods = [self._visit(i) for i in stmt.body if isinstance(i, ast.FunctionDef)]
-        [i.set_cls_name(name) for i in methods]
+        for i in methods:
+            i.set_cls_name(name)
         attributes = methods[0].arguments
         parent = [self._visit(i) for i in stmt.bases]
         expr = ClassDef(name=name, attributes=attributes,
