@@ -2,11 +2,6 @@
 
 """This file contains different utilities for the Parser."""
 
-from redbaron import (ForNode, DefNode, WithNode,
-                      IfNode, ElseNode, ElifNode, IfelseblockNode,
-                      EndlNode, DottedAsNameNode, NameNode,
-                      CallNode, RedBaron, AtomtrailersNode)
-
 from pyccel.parser.extend_tree import CommentLine
 
 from sympy import srepr
@@ -76,7 +71,7 @@ def header_statement(stmt, accel):
     if not stmt.value.startswith('#$'): return None
 
     header = stmt.value[2:].lstrip()
-    if not directive.startswith('header'): return None
+    if not header.startswith('header'): return None
 
     return stmt.value
 #  ...
@@ -129,7 +124,7 @@ def reconstruct_pragma_multilines(header):
             return False
         return True
 
-    _ignore_stmt = lambda x: isinstance(x, (EndlNode, CommentLine)) and not _is_pragma(x)
+    _ignore_stmt = lambda x: isinstance(x, CommentLine) and not _is_pragma(x)
     def _is_multiline(x):
         # we use tr/except to avoid treating nodes without .value
         try:
