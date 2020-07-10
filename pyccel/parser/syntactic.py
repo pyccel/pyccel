@@ -163,7 +163,7 @@ class SyntaxParser(BasicParser):
         self.parse(verbose=True)
 
     def parse(self, verbose=False):
-        """converts redbaron fst to sympy ast."""
+        """converts python ast to sympy ast."""
 
         if self.syntax_done:
             print ('> syntax analysis already done')
@@ -188,18 +188,7 @@ class SyntaxParser(BasicParser):
 
     def _treat_iterable(self, stmt):
 
-        """
-        since redbaron puts the first comments after a block statement
-        inside the block, we need to remove them. this is in particular the
-        case when using openmp/openacc pragmas like #$ omp end loop
-        """
-
-        ls = [self._visit(i) for i in stmt]
-
-        if isinstance(stmt, list):
-            return ls
-        else:
-            return Tuple(*ls, sympify=False)
+        return [self._visit(i) for i in stmt]
 
     def _visit(self, stmt):
         """Creates AST from FST."""
@@ -301,15 +290,6 @@ class SyntaxParser(BasicParser):
     def _visit_Expr(self, stmt):
         return self._visit(stmt.value)
 
-    def _visit_LineProxyList(self, stmt):
-        return self._treat_iterable(stmt)
-
-    def _visit_CommaProxyList(self, stmt):
-        return self._treat_iterable(stmt)
-
-    def _visit_NodeList(self, stmt):
-        return self._treat_iterable(stmt)
-
     def _visit_Tuple(self, stmt):
         return PythonTuple(*self._treat_iterable(stmt.elts))
 
@@ -317,7 +297,7 @@ class SyntaxParser(BasicParser):
         return List(*self._treat_iterable(stmt.elts), sympify=False)
 
     def _visit_tuple(self, stmt):
-        return self._treat_iterable(stmt)
+        return Tuple(*self._treat_iterable(stmt), sympify=False)
 
     def _visit_list(self, stmt):
         return self._treat_iterable(stmt)
@@ -649,17 +629,6 @@ class SyntaxParser(BasicParser):
                       bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='fatal')
 
-    def _visit_DefArgumentNode(self, stmt):
-        name = str(self._visit(stmt.target))
-        name = strip_ansi_escape.sub('', name)
-        arg = Argument(name)
-        if stmt.value is None:
-            return arg
-        else:
-
-            value = self._visit(stmt.value)
-            return ValuedArgument(arg, value)
-
     def _visit_Return(self, stmt):
         results = self._visit(stmt.value)
         if not isinstance(results, (list, PythonTuple, List)):
@@ -831,10 +800,6 @@ class SyntaxParser(BasicParser):
 
         expr.set_fst(stmt)
         return expr
-
-    def _visit_AtomtrailersNode(self, stmt):
-
-        return self._visit(stmt.value)
 
     def _visit_Subscript(self, stmt):
 
