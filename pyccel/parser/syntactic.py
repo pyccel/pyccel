@@ -229,7 +229,7 @@ class SyntaxParser(BasicParser):
         cls = type(stmt)
         syntax_method = '_visit_' + cls.__name__
         if hasattr(self, syntax_method):
-            self._scope.append(cls)
+            self._scope.append(stmt)
             result = getattr(self, syntax_method)(stmt)
             self._scope.pop()
             return result
@@ -391,7 +391,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Str(self, stmt):
         val =  stmt.s
-        if self._scope[-2] is ast.Expr:
+        if isinstance(self._scope[-2], ast.Expr):
             return CommentBlock(val)
         return String(val)
 
@@ -958,14 +958,60 @@ class SyntaxParser(BasicParser):
         expr.set_fst(stmt)
         return expr
 
-    def _visit_ComprehensionLoopNode(self, stmt):
+    def _visit_comprehension(self, stmt):
 
-        iterator = self._visit(stmt.iterator)
-        iterable = self._visit(stmt.target)
+        iterator = self._visit(stmt.target)
+        iterable = self._visit(stmt.iter)
         ifs = stmt.ifs
         expr = For(iterator, iterable, [], strict=False)
         expr.set_fst(stmt)
         return expr
+
+    def _visit_ListComp(self, stmt):
+
+        import numpy as np
+        result = self._visit(stmt.elt)
+        generators = list(self._visit(stmt.generators))
+
+        if not isinstance(self._scope[-2],ast.Assign):
+            errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN,
+                          symbol = ast.dump(stmt),
+                          bounding_box=(stmt.lineno, stmt.col_offset),
+                          severity='error')
+            lhs = create_variable(result)
+        else:
+            lhs = self._visit(self._scope[-2].targets)
+            if len(lhs)==1:
+                lhs = lhs[0]
+            else:
+                raise NotImplementedError("A list comprehension cannot be unpacked")
+
+        index = create_variable(lhs)
+
+        if isinstance(result, (PythonTuple, Tuple, list, tuple)):
+            rank = len(np.shape(result))
+        else:
+            rank = 0
+        args = [Slice(None, None)] * rank
+        args.append(index)
+        target = IndexedBase(lhs)[args]
+        target = Assign(target, result)
+        assign1 = Assign(index, Integer(0))
+        assign1.set_fst(stmt)
+        target.set_fst(stmt)
+        generators[-1].insert2body(target)
+        assign2 = Assign(index, PyccelAdd(index, Integer(1)))
+        assign2.set_fst(stmt)
+        generators[-1].insert2body(assign2)
+
+        indices = [generators[-1].target]
+        while len(generators) > 1:
+            F = generators.pop()
+            generators[-1].insert2body(F)
+            indices.append(generators[-1].target)
+        indices = indices[::-1]
+        return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
+                             indices, index)
 
     def _visit_ArgumentGeneratorComprehensionNode(self, stmt):
 
@@ -1126,38 +1172,6 @@ class SyntaxParser(BasicParser):
         body = self._visit(stmt.body)
         settings = None
         return With(domain, body, settings)
-
-    def _visit_ListComprehensionNode(self, stmt):
-
-        import numpy as np
-        result = self._visit(stmt.result)
-        generators = list(self._visit(stmt.generators))
-        lhs = self._visit(stmt.parent.target)
-        index = create_variable(lhs)
-        if isinstance(result, (PythonTuple, Tuple, list, tuple)):
-            rank = len(np.shape(result))
-        else:
-            rank = 0
-        args = [Slice(None, None)] * rank
-        args.append(index)
-        target = IndexedBase(lhs)[args]
-        target = Assign(target, result)
-        assign1 = Assign(index, Integer(0))
-        assign1.set_fst(stmt)
-        target.set_fst(stmt)
-        generators[-1].insert2body(target)
-        assign2 = Assign(index, PyccelAdd(index, Integer(1)))
-        assign2.set_fst(stmt)
-        generators[-1].insert2body(assign2)
-
-        indices = [generators[-1].target]
-        while len(generators) > 1:
-            F = generators.pop()
-            generators[-1].insert2body(F)
-            indices.append(generators[-1].target)
-        indices = indices[::-1]
-        return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
-                             indices, index)
 
     def _visit_Try(self, stmt):
         # this is a blocking error, since we don't want to convert the try body
