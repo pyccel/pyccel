@@ -1612,7 +1612,7 @@ class FCodePrinter(CodePrinter):
         return 'exit'
 
     def _print_Continue(self, expr):
-        return 'continue'
+        return 'cycle'
 
     def _print_AugAssign(self, expr):
         lhs    = expr.lhs
