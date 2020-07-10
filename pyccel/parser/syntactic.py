@@ -192,7 +192,6 @@ class SyntaxParser(BasicParser):
             errors.set_target(self.filename, 'file')
         errors.set_parser_stage('syntax')
 
-        # we add the try/except to allow the parser to find all possible errors
         PyccelAstNode.stage = 'syntactic'
         ast = self._visit(self.fst)
 
@@ -1001,22 +1000,27 @@ class SyntaxParser(BasicParser):
         return FunctionalFor([assign1, generators[-1]],target.rhs, target.lhs,
                              indices, index)
 
-    def _visit_ArgumentGeneratorComprehensionNode(self, stmt):
+    def _visit_GeneratorExp(self, stmt):
 
-        result = self._visit(stmt.result)
+        result = self._visit(stmt.elt)
 
         generators = self._visit(stmt.generators)
-        parent = stmt.parent.parent.parent
+        parent = self._scope[-3]
+        if not isinstance(parent, ast.Call):
+            raise NotImplementedError("GeneratorExp is not the argument of a function call")
 
-        if isinstance(parent, AssignmentNode):
-            lhs = self._visit(parent.target)
-            name = strip_ansi_escape.sub('', parent.value[0].value)
+        name = str(self._visit(parent.func))
+
+        grandparent = self._scope[-4]
+        if isinstance(grandparent, ast.Assign):
+            if len(grandparent.targets) != 1:
+                raise NotImplementedError("Cannot unpack function with generator expression argument")
+            lhs = self._visit(grandparent.targets[0])
             cond = False
         else:
             lhs = create_variable(result)
-            name = stmt.parent.parent
-            name = strip_ansi_escape.sub('', name.value[0].value)
             cond = True
+
         body = result
         if name == 'sum':
             body = AugAssign(lhs, '+', body)
@@ -1041,6 +1045,7 @@ class SyntaxParser(BasicParser):
             expr = FunctionalMax(body, result, lhs, indices, None)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO,
+                          symbol = name,
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
 
