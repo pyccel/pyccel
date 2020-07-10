@@ -90,9 +90,8 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 
 def change_priority( expr ):
     """
-       RedBaron parses an expression from right to left
-       this function makes sure that we evaluate our expression
-       from left to right based in the priority of the operator.
+       Python ast does not parse parentheses.
+       This function inserts parentheses if they are required
 
        Examples
        --------
