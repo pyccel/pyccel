@@ -866,7 +866,10 @@ class SyntaxParser(BasicParser):
             ch = ch.value
         args = tuple(args)
         var = self._visit(ch)
-        var = IndexedBase(var)[args]
+        if isinstance(var, DottedVariable):
+            var = DottedVariable(var.lhs, IndexedBase(var.rhs)[args])
+        else:
+            var = IndexedBase(var)[args]
         return var
 
     def _visit_ExtSlice(self, stmt):
