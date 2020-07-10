@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=R0201
 
-import redbaron
 import os
 import re
 
@@ -10,18 +9,6 @@ import ast
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.extend_tree import CommentLine
 #==============================================================================
-
-from redbaron import RedBaron
-from redbaron import AssignmentNode
-from redbaron import DefNode
-from redbaron import ClassNode
-from redbaron import TupleNode, ListNode
-from redbaron import ArgumentGeneratorComprehensionNode
-from redbaron import DictitemNode
-from redbaron import DotNode
-from redbaron import CallNode
-from redbaron import GetitemNode
-from redbaron import CommentNode
 
 from sympy.core.function import Function
 from sympy import Symbol
@@ -96,8 +83,6 @@ errors = Errors()
 #==============================================================================
 
 strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
-
-redbaron.ipython_behavior = False
 
 # use this to delete ansi_escape characters from a string
 # Useful for very coarse version differentiation.
