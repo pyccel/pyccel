@@ -53,6 +53,7 @@ from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.numbers   import Integer, Float
+from pyccel.ast.numbers   import BooleanTrue
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
@@ -2135,7 +2136,7 @@ class FCodePrinter(CodePrinter):
         for i, (c, e) in enumerate(expr.args):
             if i == 0:
                 lines.append("if (%s) then" % self._print(c))
-            elif i == len(expr.args) - 1 and c == True:
+            elif i == len(expr.args) - 1 and c is BooleanTrue():
                 lines.append("else")
             else:
                 lines.append("else if (%s) then" % self._print(c))

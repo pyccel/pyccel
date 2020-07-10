@@ -998,12 +998,13 @@ class SyntaxParser(BasicParser):
         test = self._visit(stmt.test)
         body = self._visit(stmt.body)
         orelse = self._visit(stmt.orelse)
-        if isinstance(orelse,If):
-            orelse = orelse._args
+
+        if len(orelse)==1 and isinstance(orelse[0],If):
+            orelse = orelse[0]._args
+            return If(Tuple(test, body, sympify=False), *orelse)
         else:
             orelse = Tuple(BooleanTrue(), orelse, sympify=False)
-
-        return If(Tuple(test, body, sympify=False), orelse)
+            return If(Tuple(test, body, sympify=False), orelse)
 
     def _visit_IfExp(self, stmt):
 
