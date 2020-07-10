@@ -2484,10 +2484,16 @@ class SemanticParser(BasicParser):
             for i,f in enumerate(funcs):
                 #TODO add new scope for the interface
                 self.namespace.sons_scopes[name+'_'+ str(i)] = self.namespace.sons_scopes[name]
-                new_funcs.append(f.rename(name+'_'+ str(i)))
+                new_funcs.append(f.clone(name+'_'+ str(i)))
 
             funcs = Interface(name, new_funcs)
             self.insert_function(funcs)
+            msg = "Interfaces are currently not fully supported\n"
+            msg += "See issue #301 at https://github.com/pyccel/pyccel/issues"
+            errors.report(msg,
+                    symbol = expr,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='fatal', blocker=True)
 #        TODO move this to codegen
 #        if vec_func:
 #           self._visit_FunctionDef(vec_func, **settings)
