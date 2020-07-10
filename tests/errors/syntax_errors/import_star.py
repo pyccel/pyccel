@@ -1,3 +1,3 @@
-from empty_import import *
+from dict_str_keys import *
 
 print(a)
