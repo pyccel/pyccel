@@ -1,2 +1,3 @@
 
-yield 1
+def get_one():
+    yield 1
