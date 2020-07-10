@@ -340,19 +340,6 @@ class SyntaxParser(BasicParser):
     def _visit_list(self, stmt):
         return self._treat_iterable(stmt)
 
-
-    def _visit_DottedAsNameNode(self, stmt):
-
-        names = []
-        for a in stmt.value:
-            names.append(strip_ansi_escape.sub('', a.value))
-
-        if len(names) == 1:
-            return names[0]
-        else:
-
-            return DottedName(*names)
-
     def _visit_alias(self, stmt):
         if not isinstance(stmt.name, str):
             raise TypeError('Expecting a string')
@@ -1093,10 +1080,6 @@ class SyntaxParser(BasicParser):
         expr = self._visit(stmt.test)
         return Assert(expr)
 
-    def _visit_EndlNode(self, stmt):
-
-        return NewLine()
-
     def _visit_CommentLine(self, stmt):
 
         # if annotated comment
@@ -1148,7 +1131,7 @@ class SyntaxParser(BasicParser):
     def _visit_Break(self, stmt):
         return Break()
 
-    def _visit_ContinueNode(self, stmt):
+    def _visit_Continue(self, stmt):
         return Continue()
 
     def _visit_Lambda(self, stmt):
