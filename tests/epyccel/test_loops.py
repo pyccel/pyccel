@@ -135,6 +135,32 @@ def test_loop_on_real_array():
 
     assert np.array_equal( out1, out2 )
 
+def test_breaks():
+    f1 = loops.fizzbuzz_search_with_breaks
+    f2 = epyccel( f1 )
+
+    fizz = 2
+    buzz = 3
+    max_val = 12
+
+    out1 = f1(fizz, buzz, max_val)
+    out2 = f2(fizz, buzz, max_val)
+
+    assert( out1 == out2 )
+
+def test_continue():
+    f1 = loops.fizzbuzz_sum_with_continue
+    f2 = epyccel( f1 )
+
+    fizz = 2
+    buzz = 3
+    max_val = 12
+
+    out1 = f1(fizz, buzz, max_val)
+    out2 = f2(fizz, buzz, max_val)
+
+    assert( out1 == out2 )
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
