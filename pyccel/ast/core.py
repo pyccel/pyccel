@@ -715,8 +715,12 @@ def create_variable(expr):
     """."""
 
     import numpy as np
-    name = 'Dummy_' + str(abs(hash(expr)
-                              + np.random.randint(500)))[-4:]
+    try:
+        name = 'Dummy_' + str(abs(hash(expr)
+                                  + np.random.randint(500)))[-4:]
+    except TypeError:
+        # Catch unhashable type (e.g. list, FunctionalSum)
+        name = 'Dummy_' + str(abs(np.random.randint(10000)))[-4:]
 
     return Symbol(name)
 
