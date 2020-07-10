@@ -86,7 +86,7 @@ numpy_functions = {
     'linspace'  : Linspace,
     'diag'      : Diag,
     'where'     : Where,
-    'cross'     : Cross,
+#    'cross'     : Cross,   # Currently not correctly implemented
     # ---
     'abs'       : NumpyAbs,
     'floor'     : NumpyFloor,
