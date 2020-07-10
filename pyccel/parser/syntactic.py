@@ -1163,17 +1163,12 @@ class SyntaxParser(BasicParser):
                       bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='error')
 
-    def _visit_RaiseNode(self, stmt):
+    def _visit_Raise(self, stmt):
         errors.report(PYCCEL_RESTRICTION_RAISE,
                       bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='error')
 
-    def _visit_YieldAtomNode(self, stmt):
-        errors.report(PYCCEL_RESTRICTION_YIELD,
-                      bounding_box=(stmt.lineno, stmt.col_offset),
-                      severity='error')
-
-    def _visit_YieldNode(self, stmt):
+    def _visit_Yield(self, stmt):
         errors.report(PYCCEL_RESTRICTION_YIELD,
                       bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='error')
