@@ -198,8 +198,6 @@ class SyntaxParser(BasicParser):
 
         if isinstance(stmt, list):
             return ls
-        elif isinstance(stmt, (tuple, TupleNode)):
-            return PythonTuple(*ls)
         else:
             return Tuple(*ls, sympify=False)
 
