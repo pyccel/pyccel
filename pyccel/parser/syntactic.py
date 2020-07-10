@@ -978,12 +978,7 @@ class SyntaxParser(BasicParser):
 
         index = create_variable(lhs)
 
-        if isinstance(result, (PythonTuple, Tuple, list, tuple)):
-            rank = len(np.shape(result))
-        else:
-            rank = 0
-        args = [Slice(None, None)] * rank
-        args.append(index)
+        args = [index]
         target = IndexedBase(lhs)[args]
         target = Assign(target, result)
         assign1 = Assign(index, Integer(0))
