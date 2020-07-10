@@ -1953,6 +1953,11 @@ class SemanticParser(BasicParser):
 
 
     def _visit_GeneratorComprehension(self, expr, **settings):
+        msg = "Generator expressions as args are not currently correctly implemented\n"
+        msg += "See issue #272 at https://github.com/pyccel/pyccel/issues"
+        errors.report(msg, symbol = expr,
+                  bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                  severity='fatal')
 
         result   = expr.expr
         lhs_name = _get_name(expr.lhs)
