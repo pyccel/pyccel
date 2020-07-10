@@ -2711,7 +2711,7 @@ class SemanticParser(BasicParser):
                             if t == n:
                                 container[entry][t] = e
                             else:
-                                container[entry][t] = e.rename(t)
+                                container[entry][t] = e.clone(t)
             else:
                 imported_dict = []
                 for entry in ['variables', 'classes', 'functions']:
