@@ -657,8 +657,8 @@ class SemanticParser(BasicParser):
             # TODO must check that it is consistent with pyccel's rules
             # TODO improve
             d_var['datatype'   ] = d['datatype']
-            d_var['rank'       ] = d['rank'] + 1
-            d_var['shape'      ] = (expr.length, )
+            d_var['rank'       ] = expr.rank
+            d_var['shape'      ] = expr.shape
             d_var['allocatable'] = False
             d_var['is_pointer' ] = True
             return d_var
@@ -2831,13 +2831,13 @@ class SemanticParser(BasicParser):
         # Arguments have been treated in PyccelMul
 
         val = expr.args[0]
-        shape = expr.args[1]
+        length = expr.args[1]
         if isinstance(val, (TupleVariable, PythonTuple)):
             if isinstance(val, TupleVariable):
-                return PythonTuple(*(val.get_vars()*shape))
+                return PythonTuple(*(val.get_vars()*length))
             else:
-                return PythonTuple(*(val.args*shape))
-        return Dlist(val, shape)
+                return PythonTuple(*(val.args*length))
+        return Dlist(val, length)
 
     def _visit_StarredArguments(self, expr, **settings):
         name = expr.args_var

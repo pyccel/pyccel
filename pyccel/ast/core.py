@@ -805,8 +805,8 @@ class Dlist(Basic, PyccelAstNode):
         return Basic.__new__(cls, val, length)
 
     def __init__(self, val, length):
-        self._rank = val.rank + 1
-        self._shape = val.shape + (length,)
+        self._rank = val.rank
+        self._shape = tuple(s if i!= 0 else s*length for i,s in enumerate(val.shape))
 
     @property
     def val(self):
@@ -4452,7 +4452,7 @@ class IndexedVariable(IndexedBase, PyccelAstNode):
     def __getitem__(self, *args):
 
         if self.shape and len(self.shape) != len(args):
-            raise IndexException('Rank mismatch.')
+            raise IndexError('Rank mismatch.')
         obj = IndexedElement(self, *args)
         return obj
 
