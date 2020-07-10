@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from collections import OrderedDict
-import redbaron
 import importlib
 import os
 import re
@@ -32,8 +31,6 @@ errors = Errors()
 #==============================================================================
 
 strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
-
-redbaron.ipython_behavior = False
 
 # use this to delete ansi_escape characters from a string
 # Useful for very coarse version differentiation.
