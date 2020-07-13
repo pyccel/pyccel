@@ -7,7 +7,7 @@ import re
 import ast
 #==============================================================================
 from pyccel.parser.extend_tree import extend_tree
-from pyccel.parser.extend_tree import CommentLine
+from pyccel.parser.extend_tree import CommentLine, CommentMultiLine
 #==============================================================================
 
 from sympy.core.function import Function
@@ -1027,6 +1027,46 @@ class SyntaxParser(BasicParser):
         expr = self._visit(stmt.test)
         return Assert(expr)
 
+    def _visit_CommentMultiLine(self, stmt):
+
+        exprs = []
+        # if annotated comment
+        for com in stmt.s.split('\n'):
+            if com.startswith('#$'):
+                env = com[2:].lstrip()
+                if env.startswith('omp'):
+                    exprs.append(omp_parse(stmts=com))
+                elif env.startswith('acc'):
+                    exprs.append(acc_parse(stmts=com))
+                elif env.startswith('header'):
+                    expr = hdr_parse(stmts=com)
+                    if isinstance(expr, MetaVariable):
+
+                        # a metavar will not appear in the semantic stage.
+                        # but can be used to modify the ast
+
+                        self._metavars[str(expr.name)] = str(expr.value)
+                        expr = EmptyLine()
+                    else:
+                        expr.set_fst(stmt)
+
+                    exprs.append(expr)
+                else:
+                    errors.report(PYCCEL_INVALID_HEADER,
+                                 bounding_box=(stmt.lineno, stmt.col_offset),
+                                  severity='error')
+
+                    return NewLine()
+            else:
+
+                txt = com[1:].lstrip()
+                exprs.append(Comment(txt))
+
+        if len(exprs) == 1:
+            return exprs[0]
+        else:
+            return CodeBlock(exprs)
+
     def _visit_CommentLine(self, stmt):
 
         # if annotated comment
@@ -1034,25 +1074,17 @@ class SyntaxParser(BasicParser):
         if stmt.s.startswith('#$'):
             env = stmt.s[2:].lstrip()
             if env.startswith('omp'):
-                txt = reconstruct_pragma_multilines(stmt)
-                return omp_parse(stmts=txt)
+                return omp_parse(stmts=stmt.s)
             elif env.startswith('acc'):
-
-                txt = reconstruct_pragma_multilines(stmt)
-                return acc_parse(stmts=txt)
+                return acc_parse(stmts=stmt.s)
             elif env.startswith('header'):
-
-                txt = reconstruct_pragma_multilines(stmt)
-                expr = hdr_parse(stmts=txt)
+                expr = hdr_parse(stmts=stmt.s)
                 if isinstance(expr, MetaVariable):
 
                     # a metavar will not appear in the semantic stage.
                     # but can be used to modify the ast
 
                     self._metavars[str(expr.name)] = str(expr.value)
-
-                    # return NewLine()
-
                     expr = EmptyLine()
                 else:
                     expr.set_fst(stmt)
@@ -1060,18 +1092,11 @@ class SyntaxParser(BasicParser):
                 return expr
             else:
 
-                # TODO an info should be reported saying that either we
-                # found a multiline pragma or an invalid pragma statement
+                errors.report(PYCCEL_INVALID_HEADER,
+                              bounding_box=(stmt.lineno, stmt.col_offset),
+                              severity='error')
 
-                return NewLine()
         else:
-
-#                    errors.report(PYCCEL_INVALID_HEADER,
-#                                  bounding_box=(stmt.lineno, stmt.col_offset),
-#                                  severity='error')
-
-            # TODO improve
-
             txt = stmt.s[1:].lstrip()
             return Comment(txt)
 

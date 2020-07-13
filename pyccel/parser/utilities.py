@@ -108,55 +108,6 @@ def get_module_name( dotted_as_node ):
         import_name = dotted_as_node.value
         return import_name.dumps().split('.')
 
-# ...
-def reconstruct_pragma_multilines(header):
-    """Must be called once we visit an annotated comment, to get the remaining
-    parts of a statement written on multiple lines."""
-
-    # ...
-    def _is_pragma(x):
-        if not(isinstance(x, CommentLine) and x.value.startswith('#$')):
-            return False
-        env = x.value[2:].lstrip()
-        if (env.startswith('header') or
-            env.startswith('omp') or
-            env.startswith('acc')):
-            return False
-        return True
-
-    _ignore_stmt = lambda x: isinstance(x, CommentLine) and not _is_pragma(x)
-    def _is_multiline(x):
-        # we use tr/except to avoid treating nodes without .value
-        try:
-            return x.s.rstrip().endswith('&')
-        except AttributeError:
-            return False
-
-    condition = lambda x: (_is_multiline(x.parent) and (_is_pragma(x) or _ignore_stmt(x)))
-    # ...
-
-    if not _is_multiline(header):
-        return header.s
-
-    ls = []
-    node = header.next
-    while condition(node):
-        # append the pragma stmt
-        if _is_pragma(node):
-            ls.append(node.value)
-
-        # look if there are comments or empty lines
-        node = node.next
-        if _ignore_stmt(node):
-            node = node.next
-
-    txt = ' '.join(i for i in ls)
-    txt = txt.replace('#$', '')
-    txt = txt.replace('&', '')
-    txt = '{} {}'.format(header.value.replace('&', ''), txt)
-    return txt
-# ...
-
 
 #  ... utilities
 def view_tree(expr):
