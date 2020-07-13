@@ -210,15 +210,25 @@ class SyntaxParser(BasicParser):
 
     def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
-        prog = []
-        mod  = []
-        start = []
-        current_file = start
-        targets = []
+        prog          = []
+        mod           = []
+        start         = []
+        current_file  = start
+        targets       = []
         n_empty_lines = 0
-        is_prog = False
-        for i in stmt.body:
-            v = self._visit(i)
+        is_prog       = False
+        body          = [self._visit(v) for v in stmt.body]
+
+        new_body      = []
+        for i in body:
+            if isinstance(i, CodeBlock):
+                new_body += list(i.body)
+            else:
+                new_body.append(i)
+
+        body = new_body
+        for v in body:
+
             if n_empty_lines > 3:
                 current_file = start
             if isinstance(v,(FunctionDef, ClassDef)):
@@ -867,7 +877,7 @@ class SyntaxParser(BasicParser):
             else:
                 func = Function(f_name)(*args)
         elif isinstance(func, DottedVariable):
-            f_name = func.rhs
+            f_name = func.rhs.name
             func_attr = Function(f_name)(*args)
             func = DottedVariable(func.lhs, func_attr)
         else:
@@ -1054,8 +1064,6 @@ class SyntaxParser(BasicParser):
                     errors.report(PYCCEL_INVALID_HEADER,
                                  bounding_box=(stmt.lineno, stmt.col_offset),
                                   severity='error')
-
-                    return NewLine()
             else:
 
                 txt = com[1:].lstrip()
