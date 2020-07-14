@@ -648,10 +648,12 @@ class SyntaxParser(BasicParser):
     def _visit_FunctionDef(self, stmt):
 
         #  TODO check all inputs and which ones should be treated in stage 1 or 2
+
         name = self._visit(stmt.name)
         name = name.replace("'", '')
 
         arguments    = self._visit(stmt.args)
+
         local_vars   = []
         global_vars  = []
         header       = None
@@ -946,6 +948,7 @@ class SyntaxParser(BasicParser):
                              indices, index)
 
     def _visit_GeneratorExp(self, stmt):
+
 
         result = self._visit(stmt.elt)
 
