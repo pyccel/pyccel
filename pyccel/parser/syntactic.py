@@ -757,9 +757,8 @@ class SyntaxParser(BasicParser):
 
         returns = [i.expr for i in _atomic(body, cls=Return)]
         assert all(len(i) == len(returns[0]) for i in returns)
-        returns = list(zip(*returns))
         results = []
-        for i in returns:
+        for i in zip(*returns):
             if not all(i[0]==j for j in i) or not isinstance(i[0], Symbol):
                 results.append(create_variable(i[0]))
             else:

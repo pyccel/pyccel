@@ -202,7 +202,7 @@ def test_multiple_returns_f11():
             return ackermann(m - 1, ackermann(m, n - 1))
 
     f = epyccel(ackermann)
-    assert abs(f(2,3)-ackermann(2,3))<1e-16
+    assert f(2,3) == ackermann(2,3)
 
 def test_multiple_returns_f12():
     @types('int')
@@ -215,6 +215,17 @@ def test_multiple_returns_f12():
     f = epyccel(non_negative)
     assert f(2) == non_negative(2)
     assert f(-1) == non_negative(-1)
+
+def test_multiple_returns_f13():
+    @types('int', 'int')
+    def get_min(a, b):
+        if a<b:
+            return a
+        else:
+           return b
+
+    f = epyccel(get_min)
+    assert f(2,3) == get_min(2,3)
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
