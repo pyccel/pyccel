@@ -746,7 +746,6 @@ class SemanticParser(BasicParser):
                 return obj
 
         # Unknown object, we raise an error.
-
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal', blocker=self.blocking)
@@ -2175,16 +2174,21 @@ class SemanticParser(BasicParser):
 
     def _visit_Return(self, expr, **settings):
 
-        results  = expr.expr
-        assigns  = expr.stmt
-        if assigns:
-            assigns  = [self._visit_Assign(assign, **settings) for assign in assigns.body]
-            results  = [self._visit_Symbol(i, **settings) for i in results]
-            expr     = Return(results, CodeBlock(assigns))
-        else:
-            results = [self._visit_Symbol(i, **settings) for i in results]
-            expr    = Return(results)
+        results     = expr.expr
+        return_vars = self.get_function(self._current_function).results
+        assigns     = []
+        for v,r in zip(return_vars, results):
+            if not (isinstance(r, Symbol) and r.name == v.name):
+                assigns.append(Assign(v,r))
+                assigns[-1].set_fst(expr.fst)
 
+        assigns = [self._visit_Assign(e) for e in assigns]
+        results = [self._visit_Symbol(i, **settings) for i in return_vars]
+
+        if assigns:
+            expr  = Return(results, CodeBlock(assigns))
+        else:
+            expr  = Return(results)
         return expr
 
     def _visit_FunctionDef(self, expr, **settings):
@@ -2251,13 +2255,13 @@ class SemanticParser(BasicParser):
 
 
         for m in interfaces:
-            args        = []
-            results     = []
-            local_vars  = []
-            global_vars = []
-            imports     = []
-            arg         = None
-            arguments     = expr.arguments
+            args           = []
+            results        = []
+            local_vars     = []
+            global_vars    = []
+            imports        = []
+            arg            = None
+            arguments      = expr.arguments
             header_results = m.results
 
             self.create_new_function_scope(name)
@@ -2295,26 +2299,11 @@ class SemanticParser(BasicParser):
                     args.append(a_new)
                     self.insert_variable(a_new, name=str(a_new.name))
 
-            # find return stmt and results
-
-            returns = self._collect_returns_stmt(expr.body)
-
             # Remove duplicated return expressions, because we cannot have
             # duplicated intent(out) arguments in Fortran.
             # TODO [YG, 12.03.2020]: find workaround using temporary variables
 
-            for stmt in returns:
-                results += [list(OrderedDict.fromkeys(stmt.expr))]
-
-            if not all(i == results[0] for i in results):
-                #case of multiple return
-                # with different variable name
-                errors.report(PYCCEL_RESTRICTION_TODO,
-                              bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                              severity='fatal')
-
-            if len(results) > 0:
-                results = list(results[0])
+            results = expr.results
 
             if header_results:
                 new_results = []
@@ -2339,7 +2328,7 @@ class SemanticParser(BasicParser):
 
             # ISSUE 177: must update arguments to get is_target
             args    = [self.get_variable(a.name) for a in args]
-            results = [self.get_variable(a.name) for a in results]
+            results = list(OrderedDict((a.name,self.get_variable(a.name)) for a in results).values())
 
             if arg and cls_name:
                 dt       = self.get_class_construct(cls_name)()
