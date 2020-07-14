@@ -53,6 +53,7 @@ from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.numbers   import Integer, Float
+from pyccel.ast.numbers   import BooleanTrue
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
@@ -335,7 +336,7 @@ class FCodePrinter(CodePrinter):
         # TODO should we find a better way to do this?
         imports = list(expr.imports)
         for i in expr.imports:
-            if 'mpi4py' == str(i.target[0]):
+            if 'mpi4py' == str(getattr(i.source,'name',i.source)):
                 mpi = True
 
         imports = '\n'.join(self._print(i) for i in imports)
@@ -439,26 +440,27 @@ class FCodePrinter(CodePrinter):
         if str(expr.source) in pyccel_builtin_import_registery:
             return ''
 
-        if expr.source is None:
-            prefix = 'use'
+        if isinstance(expr.source, DottedName):
+            source = expr.source.name[-1]
         else:
-            if isinstance(expr.source, DottedName):
-                source = expr.source.name[-1]
-            else:
-                source = self._print(expr.source)
-            prefix = 'use {}, only:'.format(source)
+            source = self._print(expr.source)
 
         # importing of pyccel extensions is not printed
         if source in pyccel_builtin_import_registery:
             return ''
-        if 'mpi4py' == str(expr.target[0]):
+        if 'mpi4py' == str(getattr(expr.source,'name',expr.source)):
             return '\n'.join(['use mpi', 'use mpiext'])
+
+        if len(expr.target) == 0:
+            return 'use {}'.format(source)
+
+        prefix = 'use {}, only:'.format(source)
 
         code = ''
         for i in expr.target:
             if isinstance(i, AsName):
-                target = '{name} => {target}'.format(name=self._print(i.name),
-                                                     target=self._print(i.target))
+                target = '{target} => {name}'.format(target=self._print(i.target),
+                                                     name=self._print(i.name))
                 line = '{prefix} {target}'.format(prefix=prefix,
                                                   target=target)
 
@@ -1302,7 +1304,8 @@ class FCodePrinter(CodePrinter):
         return '.False.'
 
     def _print_String(self, expr):
-        return expr.arg
+        formatted_str = expr.arg.replace("'","''")
+        return "'{}'".format(formatted_str)
 
     def _print_Interface(self, expr):
         # ... we don't print 'hidden' functions
@@ -1592,9 +1595,9 @@ class FCodePrinter(CodePrinter):
 
         sep = self._print(SeparatorComment(40))
         # we rename all methods because of the aliasing
-        cls_methods = [i.rename('{0}'.format(i.name)) for i in expr.methods]
+        cls_methods = [i.clone('{0}'.format(i.name)) for i in expr.methods]
         for i in expr.interfaces:
-            cls_methods +=  [j.rename('{0}'.format(j.name)) for j in i.functions]
+            cls_methods +=  [j.clone('{0}'.format(j.name)) for j in i.functions]
 
 
         methods = ''
@@ -1610,7 +1613,7 @@ class FCodePrinter(CodePrinter):
         return 'exit'
 
     def _print_Continue(self, expr):
-        return 'continue'
+        return 'cycle'
 
     def _print_AugAssign(self, expr):
         lhs    = expr.lhs
@@ -2133,7 +2136,7 @@ class FCodePrinter(CodePrinter):
         for i, (c, e) in enumerate(expr.args):
             if i == 0:
                 lines.append("if (%s) then" % self._print(c))
-            elif i == len(expr.args) - 1 and c == True:
+            elif i == len(expr.args) - 1 and c is BooleanTrue():
                 lines.append("else")
             else:
                 lines.append("else if (%s) then" % self._print(c))

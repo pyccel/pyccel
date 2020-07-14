@@ -157,10 +157,10 @@ def as_static_function_call(func, mod_name, name=None):
     assert isinstance(mod_name, str)
 
     # create function alias by prepending 'mod_' to its name
-    func_alias = func.rename('mod_' + str(func.name))
+    func_alias = func.clone('mod_' + str(func.name))
 
     # from module import func as func_alias
-    imports = [Import(target=AsName(func_alias.name, func.name), source=mod_name)]
+    imports = [Import(target=AsName(func.name, func_alias.name), source=mod_name)]
 
     # function arguments
     args = sanitize_arguments(func.arguments)

@@ -218,10 +218,8 @@ class Errors:
 
         # TODO improve. it is assumed here that tl and br have the same line
         if bounding_box:
-            tl = bounding_box.top_left
-            br = bounding_box.bottom_right
-            line = tl.line
-            column = (tl.column, br.column)
+            line   = bounding_box[0]
+            column = bounding_box[1]
 
         info = ErrorInfo(filename,
                          line=line,

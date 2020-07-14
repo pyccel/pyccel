@@ -86,7 +86,7 @@ numpy_functions = {
     'linspace'  : Linspace,
     'diag'      : Diag,
     'where'     : Where,
-    'cross'     : Cross,
+#    'cross'     : Cross,   # Currently not correctly implemented
     # ---
     'abs'       : NumpyAbs,
     'floor'     : NumpyFloor,
@@ -172,69 +172,57 @@ def builtin_function(expr, args=None):
 
     return None
 
+
 # TODO add documentation
-builtin_import_registery = ('numpy', 'numpy.linalg', 'numpy.random', 'scipy.constants', 'itertools', 'math', 'pyccel.decorators')
+builtin_import_registery = {'numpy': {**numpy_functions, **numpy_constants, 'linalg':numpy_linalg_functions, 'random':numpy_random_functions},
+        'numpy.linalg': numpy_linalg_functions,
+        'numpy.random': numpy_random_functions,
+        'scipy.constants': scipy_constants,
+        'itertools': {'product': Product},
+        'math': math_functions,
+        'pyccel.decorators': None}
 
 #==============================================================================
+def collect_relevant_imports(func_dictionary, targets):
+    if len(targets) == 0:
+        return func_dictionary
+
+    imports = []
+    for target in targets:
+        if isinstance(target, AsName):
+            import_name = target.name
+            code_name = target.target
+        else:
+            import_name = str(target)
+            code_name = import_name
+
+        if import_name in func_dictionary.keys():
+            imports.append((code_name, func_dictionary[import_name]))
+    return imports
+
 def builtin_import(expr):
     """Returns a builtin pyccel-extension function/object from an import."""
 
     if not isinstance(expr, Import):
         raise TypeError('Expecting an Import expression')
 
-    if expr.source is None:
-        return []
+    if isinstance(expr.source, AsName):
+        source = str(expr.source.name)
+    else:
+        source = str(expr.source)
 
-    source = str(expr.source)
-
-        # TODO imrove
-    imports = []
-    for target in expr.target:
-        if isinstance(target, AsName):
-            import_name = target.target
-            code_name = target.name
-        else:
-            import_name = str(target)
-            code_name = import_name
-        if source == 'numpy':
-
-            if import_name in numpy_functions.keys():
-                imports.append((code_name, numpy_functions[import_name]))
-
-            elif import_name in numpy_constants.keys():
-                imports.append((code_name, numpy_constants[import_name]))
-
-        elif source == 'numpy.linalg':
-
-            if import_name in numpy_linalg_functions.keys():
-                imports.append((code_name, numpy_linalg_functions[import_name]))
-
-        elif source == 'numpy.random':
-
-            if import_name in numpy_random_functions.keys():
-                imports.append((code_name, numpy_random_functions[import_name]))
-
-        elif source == 'math':
-
-            if import_name in math_functions.keys():
-                imports.append((code_name, math_functions[import_name]))
-
-        elif source == 'scipy.constants':
-            if import_name in scipy_constants.keys():
-                imports.append((code_name, scipy_constants[import_name]))
-        elif source == 'itertools':
-
-            if import_name == 'product':
-                imports.append((code_name, Product))
-
-        elif source == 'pyccel.decorators':
-            funcs = [f[0] for f in inspect.getmembers(pyccel_decorators, inspect.isfunction)]
+    if source == 'pyccel.decorators':
+        funcs = [f[0] for f in inspect.getmembers(pyccel_decorators, inspect.isfunction)]
+        for target in expr.target:
             if str(target) not in funcs:
                 errors = Errors()
                 errors.report("{} does not exist in pyccel.decorators".format(target),
                         symbol = expr, severity='error')
 
-    return imports
+    elif source in builtin_import_registery:
+        return collect_relevant_imports(builtin_import_registery[source], expr.target)
+
+    return []
 
 #==============================================================================
 def get_function_from_ast(ast, func_name):

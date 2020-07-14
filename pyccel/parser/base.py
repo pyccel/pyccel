@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from collections import OrderedDict
-import redbaron
 import importlib
 import os
 import re
@@ -12,7 +11,7 @@ from pyccel.ast.core import DottedName
 from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface
 from pyccel.ast.core import PythonFunction, SympyFunction
-from pyccel.ast.core import Import
+from pyccel.ast.core import Import, AsName
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
@@ -33,8 +32,6 @@ errors = Errors()
 
 strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 
-redbaron.ipython_behavior = False
-
 # use this to delete ansi_escape characters from a string
 # Useful for very coarse version differentiation.
 
@@ -49,15 +46,18 @@ def get_filename_from_import(module,input_folder=''):
         - python files (extension == py)
     """
 
+    if (isinstance(module, AsName)):
+        module = str(module.name)
+
+    # Remove first '.' as it doesn't represent a folder change
+    if module[0] == '.':
+        module = module[1:]
     filename = module.replace('.','/')
 
     # relative imports
-    sl   = '//'
-    dots = '..'
-    while sl in filename:
-        filename = filename.replace(sl, dots + '/')
-        sl   = sl + '/'
-        dots = dots + '.'
+    folder_above = '../'
+    while filename.startswith('/'):
+        filename = folder_above + filename[1:]
 
     filename_pyh = '{}.pyh'.format(filename)
     filename_py  = '{}.py'.format(filename)
@@ -382,13 +382,18 @@ class BasicParser(object):
         container = self.namespace.imports['imports']
         
         # if source is not specified, imported things are treated as sources
-        source = expr.source
-        if source is None:
-            for t in expr.target:
-                name = str(t)
+        if len(expr.target) == 0:
+            if isinstance(expr.source, AsName):
+                name   = expr.source
+                source = str(expr.source.name)
+            else:
+                name   = str(expr.source)
+                source = name
+
+            if not source in pyccel_builtin_import_registery:
                 container[name] = []
         else:
-            source = str(source)
+            source = str(expr.source)
             if not source in pyccel_builtin_import_registery:
                 for t in expr.target:
                     name = [str(t)]

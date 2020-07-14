@@ -8,7 +8,7 @@ class Basic(sp_Basic):
     _fst = None
 
     def set_fst(self, fst):
-        """Sets the redbaron fst."""
+        """Sets the python.ast fst."""
         self._fst = fst
 
     @property
