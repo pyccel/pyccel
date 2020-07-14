@@ -756,6 +756,7 @@ class SyntaxParser(BasicParser):
             is_private = True
 
         returns = [i.expr for i in _atomic(body, cls=Return)]
+        assert all(len(i) == len(returns[0]) for i in returns)
         returns = list(zip(*returns))
         results = []
         for i in returns:

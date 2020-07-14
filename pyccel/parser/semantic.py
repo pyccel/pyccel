@@ -582,20 +582,6 @@ class SemanticParser(BasicParser):
     def exit_loop_scope(self):
         self._namespace = self._namespace.parent_scope
 
-    def _collect_returns_stmt(self, ast):
-
-        if isinstance(ast, CodeBlock):
-            return self._collect_returns_stmt(ast.body)
-        vars_ = []
-        for stmt in ast:
-            if isinstance(stmt, (For, While, CodeBlock)):
-                vars_ += self._collect_returns_stmt(stmt.body)
-            elif isinstance(stmt, If):
-                vars_ += self._collect_returns_stmt(stmt.bodies)
-            elif isinstance(stmt, Return):
-                vars_ += [stmt]
-        return vars_
-
 #==============================================================================
 
     def _infere_type(self, expr, **settings):
@@ -2175,7 +2161,11 @@ class SemanticParser(BasicParser):
     def _visit_Return(self, expr, **settings):
 
         results     = expr.expr
-        return_vars = self.get_function(self._current_function).results
+        f_name      = self._current_function
+        if isinstance(f_name, DottedName):
+            f_name = f_name.name[-1]
+
+        return_vars = self.get_function(f_name).results
         assigns     = []
         for v,r in zip(return_vars, results):
             if not (isinstance(r, Symbol) and r.name == v.name):
