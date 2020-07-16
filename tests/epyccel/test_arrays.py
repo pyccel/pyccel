@@ -1348,6 +1348,25 @@ def test_array_kwargs_ones():
     f2 = epyccel( f1 )
     assert f1() == f2()
 
+#==============================================================================
+# TEST: shape initialisation
+#==============================================================================
+
+def test_array_random_size():
+    f1 = arrays.array_random_size
+    f2 = epyccel( f1 )
+    s1, s2 = f2()
+    assert s1 == s2
+
+def test_array_variable_size():
+    f1 = arrays.array_variable_size
+    f2 = epyccel( f1 )
+    from numpy.random import randint
+    n = randint(1, 10)
+    m = randint(11,20)
+    s1, s2 = f2(n,m)
+    assert s1 == s2
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
