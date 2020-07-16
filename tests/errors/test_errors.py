@@ -87,7 +87,7 @@ def test_semantic_non_blocking_errors(f):
 
 
 @pytest.mark.parametrize("f",get_files_from_folder("codegen/fortran"))
-def test_syntax_errors(f):
+def test_codegen_errors(f):
     # reset Errors singleton
     errors = Errors()
     errors.reset()
