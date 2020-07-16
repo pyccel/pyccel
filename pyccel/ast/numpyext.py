@@ -1207,7 +1207,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
     """Numpy's universal function with one argument.
     """
     def __new__(self, x, dtype = None):
-        return NumpyUfuncBase.__new__(self, x, dtype)
+        return NumpyUfuncBase.__new__(self, x)
 
     def __init__(self, x, dtype = None):
         self._shape      = x.shape
