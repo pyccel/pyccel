@@ -126,6 +126,7 @@ __all__ = (
     'Pass',
     'Product',
     'Program',
+    'PyccelArraySize',
     'PythonFunction',
     'Random',
     'Return',
