@@ -1153,21 +1153,11 @@ class NumpyUfuncBase(Function, PyccelAstNode):
 class NumpyUfuncUnary(NumpyUfuncBase):
     """Numpy's universal function with one argument.
     """
-    def __new__(self, x, dtype = None):
-        return NumpyUfuncBase.__new__(self, x)
-
-    def __init__(self, x, dtype = None):
+    def __init__(self, x):
         self._shape      = x.shape
         self._rank       = x.rank
-
-        if dtype is None:
-            dtype     = x.dtype if x.dtype is NativeComplex() else NativeReal()
-            precision = default_precision[str_dtype(dtype)]
-        else:
-            dtype, precision = process_dtype(dtype)
-
-        self._dtype     = dtype
-        self._precision = precision
+        self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeReal()
+        self._precision  = default_precision[str_dtype(dtype)]
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
@@ -1212,22 +1202,19 @@ class NumpyArctanh(NumpyUfuncUnary) : pass
 #=======================================================================================
 
 class NumpyAbs(NumpyUfuncUnary):
-    def __init__(self, x, **kwargs):
+    def __init__(self, x):
         self._shape     = x.shape
         self._rank      = x.rank
-        if 'dtype' not in kwargs:
-            self._dtype = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
-        else:
-            self._dtype = kwargs.dtype
+        self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
         self._precision = default_precision[str_dtype(self._dtype)]
         self._order     = x.order
 
 
 class NumpyFloor(NumpyUfuncUnary):
-    def __init__(self, x, **kwargs):
+    def __init__(self, x):
         self._shape     = x.shape
         self._rank      = x.rank
-        self._dtype     = kwargs.pop('dtype', NativeReal())
+        self._dtype     = NativeReal()
         self._precision = default_precision[str_dtype(self._dtype)]
 
 class NumpyMod(NumpyUfuncBinary):
@@ -1266,17 +1253,17 @@ class NumpyMod(NumpyUfuncBinary):
             self._rank = max(a.rank for a in args)
 
 class NumpyMin(NumpyUfuncUnary):
-    def __init__(self, x, **kwargs):
+    def __init__(self, x):
         self._shape     = ()
         self._rank      = 0
-        self._dtype     = kwargs.pop('dtype', x.dtype)
+        self._dtype     = x.dtype
         self._precision = x.precision
 
 class NumpyMax(NumpyUfuncUnary):
-    def __init__(self, x, **kwargs):
+    def __init__(self, x):
         self._shape     = ()
         self._rank      = 0
-        self._dtype     = kwargs.pop('dtype', x.dtype)
+        self._dtype     = x.dtype
         self._precision = x.precision
 
 

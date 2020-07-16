@@ -730,25 +730,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyFloor(self, expr):
         result_code = self._print_MathFloor(expr)
-        if isinstance(expr.dtype, NativeInteger):
-            return result_code
-        elif isinstance(expr.dtype, NativeReal):
-            return 'real({})'.format(result_code)
-        elif isinstance(expr.dtype, NativeComplex):
-            return 'cmplx({})'.format(result_code)
-        else:
-            raise NotImplementedError
-
-    def _print_NumpyUfuncUnary(self, expr):
-        result_code = self.__print_NumpyUfuncBase(expr)
-        if isinstance(expr.dtype, NativeInteger):
-            return 'int({})'.format(result_code)
-        elif isinstance(expr.dtype, NativeReal):
-            return result_code
-        elif isinstance(expr.dtype, NativeComplex):
-            return 'cmplx({})'.format(result_code)
-        else:
-            raise NotImplementedError
+        return 'real({})'.format(result_code)
 
     def _print_PythonFloat(self, expr):
         return expr.fprint(self._print)
