@@ -17,8 +17,10 @@ from .core  import (Variable, IndexedElement, Slice, Len,
                    ValuedArgument, Constant, process_shape)
 
 from .core           import PyccelPow, PyccelMinus, PyccelAssociativeParenthesis
-from .core           import PyccelMul
+from .core           import PyccelMul, PyccelAdd
 from .core           import broadcast
+from .core           import create_variable
+from .core           import CodeBlock
 
 from .builtins       import Int as PythonInt, Bool as PythonBool
 from .builtins       import PythonFloat, PythonTuple, PythonComplex
@@ -80,6 +82,7 @@ __all__ = (
     'Product',
     'PyccelArraySize',
     'Rand',
+    'RandInt',
     'Real',
     'Shape',
     'Where',
@@ -873,17 +876,46 @@ class Rand(Function, NumpyNewArray):
         return '\n'.join(stmts)
 
 #==============================================================================
+class RandInt(Function, NumpyNewArray):
 
-def RandInt(low, high = None, size = None, dtype = None):
-    if dtype is not None:
-        raise NotImplementedError("The dtype parameter of randint is not yet implemented")
-    if size is None:
-        size = ()
+    """
+      Represents a call to  numpy.random.random or numpy.random.rand for code generation.
 
-    if high is None:
-        return MathFloor(PyccelMul(low, Rand(*size)))
-    else:
-        return MathFloor(PyccelMul(PyccelMinus(high, low), Rand(*size)))
+    """
+    _dtype = NativeInteger()
+    _precision = default_precision['integer']
+
+    def __new__(cls, low, high = None, size = None, dtype = None):
+        return Function.__new__(cls)
+
+    def __init__(self, low, high = None, size = None, dtype = None):
+        if size is None:
+            size = ()
+        if not hasattr(size,'__iter__'):
+            size = (size,)
+
+        self._shape   = size
+        self._rank    = len(self.shape)
+        self._rand    = Rand(*size)
+        self._low     = low
+        self._high    = high
+        if dtype is not None:
+            self._dtype = dtype
+
+    @property
+    def order(self):
+        return 'C'
+
+    @property
+    def rand_expr(self):
+        return self._rand
+
+    def fprint(self, printer):
+        assert(self._rank == 0)
+        if self._high is None:
+            return printer(NumpyFloor(PyccelMul(self._low, Rand()), dtype = NativeInteger()))
+        else:
+            return printer(NumpyFloor(PyccelAdd(PyccelMul(PyccelAssociativeParenthesis(PyccelMinus(self._high, self._low)), Rand()), self._low), dtype = NativeInteger()))
 
 #==============================================================================
 class Full(Application, NumpyNewArray):
@@ -1175,10 +1207,16 @@ class NumpyUfuncBase(Function, PyccelAstNode):
 class NumpyUfuncUnary(NumpyUfuncBase):
     """Numpy's universal function with one argument.
     """
-    def __init__(self, x):
+    def __new__(self, x, dtype = None):
+        return NumpyUfuncBase.__new__(self, x, dtype)
+
+    def __init__(self, x, dtype = None):
         self._shape     = x.shape
         self._rank      = x.rank
-        self._dtype     = x.dtype if x.dtype is NativeComplex() else NativeReal()
+        if dtype is not None:
+            self._dtype = dtype
+        else:
+            self._dtype     = x.dtype if x.dtype is NativeComplex() else NativeReal()
         self._precision = default_precision[str_dtype(self._dtype)]
 
 #------------------------------------------------------------------------------
@@ -1224,19 +1262,22 @@ class NumpyArctanh(NumpyUfuncUnary) : pass
 #=======================================================================================
 
 class NumpyAbs(NumpyUfuncUnary):
-    def __init__(self, x):
+    def __init__(self, x, **kwargs):
         self._shape     = x.shape
         self._rank      = x.rank
-        self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
+        if 'dtype' not in kwargs:
+            self._dtype = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
+        else:
+            self._dtype = kwargs.dtype
         self._precision = default_precision[str_dtype(self._dtype)]
         self._order     = x.order
 
 
 class NumpyFloor(NumpyUfuncUnary):
-    def __init__(self, x):
+    def __init__(self, x, **kwargs):
         self._shape     = x.shape
         self._rank      = x.rank
-        self._dtype     = NativeReal()
+        self._dtype     = kwargs.pop('dtype', NativeReal())
         self._precision = default_precision[str_dtype(self._dtype)]
 
 class NumpyMod(NumpyUfuncBinary):
@@ -1275,17 +1316,17 @@ class NumpyMod(NumpyUfuncBinary):
             self._rank = max(a.rank for a in args)
 
 class NumpyMin(NumpyUfuncUnary):
-    def __init__(self, x):
+    def __init__(self, x, **kwargs):
         self._shape     = ()
         self._rank      = 0
-        self._dtype     = x.dtype
+        self._dtype     = kwargs.pop('dtype', x.dtype)
         self._precision = x.precision
 
 class NumpyMax(NumpyUfuncUnary):
-    def __init__(self, x):
+    def __init__(self, x, **kwargs):
         self._shape     = ()
         self._rank      = 0
-        self._dtype     = x.dtype
+        self._dtype     = kwargs.pop('dtype', x.dtype)
         self._precision = x.precision
 
 
