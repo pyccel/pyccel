@@ -2332,13 +2332,10 @@ class SemanticParser(BasicParser):
                     var_name = var.name
                     if var_name in decorators['stack_array']:
                         d_var = self._infere_type(var, **settings)
-                        d_var['is_stack_array'] = True
-                        d_var['allocatable'] = False
-                        d_var['is_pointer']  = False
-                        d_var['is_target']   = False
-                        dtype = d_var.pop('datatype')
-                        var   = Variable(dtype, var_name, **d_var)
-                        local_vars[i] = var
+                        var.is_stack_array = True
+                        var.allocatable    = False
+                        var.is_pointer     = False
+                        var.is_target      = False
 
             # TODO should we add all the variables or only the ones used in the function
             container = self._namespace.parent_scope
