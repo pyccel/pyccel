@@ -945,7 +945,7 @@ class FCodePrinter(CodePrinter):
         var = expr.variable
         rank        = var.rank
         allocatable = var.allocatable
-        shape       = var.shape
+        shape       = var.alloc_shape
         is_pointer = var.is_pointer
         is_target = var.is_target
         is_stack_array = var.is_stack_array

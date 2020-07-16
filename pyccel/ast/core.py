@@ -2289,6 +2289,7 @@ class Variable(Symbol, PyccelAstNode):
         if not isinstance(precision,int) and precision is not None:
             raise TypeError('precision must be an integer or None.')
 
+        self._alloc_shape = shape
         self._dtype = dtype
         self._shape = self.process_shape(shape)
         self._rank  = rank
@@ -2368,6 +2369,10 @@ class Variable(Symbol, PyccelAstNode):
         return self._name
 
     @property
+    def alloc_shape(self):
+        return self._alloc_shape
+
+    @property
     def allocatable(self):
         return self._allocatable
 
@@ -2420,6 +2425,10 @@ class Variable(Symbol, PyccelAstNode):
     @property
     def is_stack_array(self):
         return self._is_stack_array
+
+    @is_stack_array.setter
+    def is_stack_array(self, is_stack_array):
+        self._is_stack_array = is_stack_array
 
     @property
     def is_argument(self):
