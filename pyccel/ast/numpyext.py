@@ -1213,11 +1213,11 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         self._shape      = x.shape
         self._rank       = x.rank
 
-        if dtype is not None:
-            dtype, precision = process_dtype(dtype)
-        else:
+        if dtype is None:
             dtype     = x.dtype if x.dtype is NativeComplex() else NativeReal()
-            precision = default_precision[str_dtype(self._dtype)]
+            precision = default_precision[str_dtype(dtype)]
+        else:
+            dtype, precision = process_dtype(dtype)
 
         self._dtype     = dtype
         self._precision = precision
