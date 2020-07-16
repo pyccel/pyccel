@@ -882,9 +882,12 @@ class NumpyRandint(Function, NumpyNewArray):
     def fprint(self, printer):
         assert(self._rank == 0)
         if self._high is None:
-            return printer(NumpyFloor(PyccelMul(self._low, Rand()), dtype = NativeInteger()))
+            randreal = printer(PyccelMul(self._low, Rand()))
         else:
-            return printer(NumpyFloor(PyccelAdd(PyccelMul(PyccelAssociativeParenthesis(PyccelMinus(self._high, self._low)), Rand()), self._low), dtype = NativeInteger()))
+            randreal = printer(PyccelAdd(PyccelMul(PyccelAssociativeParenthesis(PyccelMinus(self._high, self._low)), Rand()), self._low))
+
+        prec_code = printer(self.precision)
+        return 'floor({}, kind={})'.format(randreal, prec_code)
 
 #==============================================================================
 class Full(Application, NumpyNewArray):
