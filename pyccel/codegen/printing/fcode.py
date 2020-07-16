@@ -39,7 +39,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              IndexedVariable, CodeBlock,
                              IndexedElement, Slice, Dlist,
                              DottedName, AsName, DottedVariable,
-                             If)
+                             If, PyccelArraySize)
 
 
 from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
@@ -58,10 +58,10 @@ from pyccel.ast.numbers   import BooleanTrue
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
-from pyccel.ast.numpyext import Real, Where, PyccelArraySize
+from pyccel.ast.numpyext import Real, Where
 from pyccel.ast.numpyext import NumpyComplex, NumpyMod
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
-from pyccel.ast.numpyext import Rand, RandInt
+from pyccel.ast.numpyext import Rand, NumpyRandInt
 from pyccel.ast.numpyext import NumpyNewArray
 
 from pyccel.errors.errors import Errors
@@ -787,7 +787,7 @@ class FCodePrinter(CodePrinter):
         self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
         return self._print(var)
 
-    def _print_RandInt(self, expr):
+    def _print_NumpyRandInt(self, expr):
         if expr.rank != 0:
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
@@ -1181,7 +1181,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, (Range, Product)):
             return ''
 
-        if isinstance(rhs, (Len, RandInt)):
+        if isinstance(rhs, (Len, NumpyRandInt)):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}'.format(lhs_code, rhs_code)
 

@@ -60,6 +60,7 @@ from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.core import PyccelUnary
 from pyccel.ast.core import Product, FunctionCall
+from pyccel.ast.core import PyccelArraySize
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 from pyccel.ast.functionalexpr import GeneratorComprehension as GC
@@ -96,7 +97,6 @@ from pyccel.ast.numpyext import NumpyInt, Int32, Int64
 from pyccel.ast.numpyext import NumpyFloat, Float32, Float64
 from pyccel.ast.numpyext import NumpyComplex, Complex64, Complex128
 from pyccel.ast.numpyext import Real, Imag, Where, Diag, Linspace
-from pyccel.ast.numpyext import PyccelArraySize
 from pyccel.ast.numpyext import NumpyUfuncBase
 
 from pyccel.ast.mathext  import MathFunctionBase
