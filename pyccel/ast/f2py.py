@@ -98,6 +98,8 @@ def as_static_function(func, name=None):
                               rank        = a.rank,
                               order       = a.order,
                               precision   = a.precision)
+            # Force Variable to have size designated by a non-constant variable
+            a_new._shape = shape_new
 
             if not( a.name in results_names ):
                 _args += [a_new]
