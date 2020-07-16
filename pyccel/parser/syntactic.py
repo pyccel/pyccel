@@ -763,6 +763,8 @@ class SyntaxParser(BasicParser):
         for i in zip(*returns):
             if not all(i[0]==j for j in i) or not isinstance(i[0], Symbol):
                 results.append(create_variable(i[0]))
+            elif isinstance(i[0], Symbol) and any(i[0].name==x.name for x in arguments):
+                results.append(create_variable(i[0]))
             else:
                 results.append(i[0])
 

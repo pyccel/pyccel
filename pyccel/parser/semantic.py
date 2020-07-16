@@ -429,10 +429,6 @@ class SemanticParser(BasicParser):
                 break
             container = container.parent_scope
 
-
-        if func and self._current_function == name and not func.is_recursive:
-            func.set_recursive()
-
         return func
 
 
@@ -1024,14 +1020,14 @@ class SemanticParser(BasicParser):
                 args = [expr.lhs] + list(args)
                 args = [self._visit(i, **settings) for i in args]
                 args = macro.apply(args)
-                return FunctionCall(master, args)
+                return FunctionCall(master, args, self._current_function)
 
             args = [self._visit(arg, **settings) for arg in
                     expr.rhs.args]
             methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
             for i in methods:
                 if str(i.name) == rhs_name:
-                    second = FunctionCall(i, args)
+                    second = FunctionCall(i, args, self._current_function)
                     return DottedVariable(first, second)
 
         # look for a class attribute
@@ -1044,7 +1040,7 @@ class SemanticParser(BasicParser):
                 return macro.master
             elif isinstance(macro, MacroFunction):
                 args = macro.apply([first])
-                return FunctionCall(macro.master, args)
+                return FunctionCall(macro.master, args, self._current_function)
 
             # Attribute / property
             if isinstance(expr.rhs, Symbol) and first.cls_base:
@@ -1062,7 +1058,7 @@ class SemanticParser(BasicParser):
                     for i in methods:
                         if str(i.name) == expr.rhs.name and 'property' \
                             in i.decorators.keys():
-                            second = FunctionCall(i, [])
+                            second = FunctionCall(i, [], self._current_function)
                             return DottedVariable(first, second)
 
         # did something go wrong?
@@ -1244,7 +1240,7 @@ class SemanticParser(BasicParser):
             #            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             #            severity='fatal', blocker=self.blocking)
 
-            expr = FunctionCall(func, args)
+            expr = FunctionCall(func, args, self._current_function)
 
             #if len(stmts) > 0:
             #    stmts.append(expr)
@@ -1502,7 +1498,7 @@ class SemanticParser(BasicParser):
                             rhs.args]
                 args = macro.apply(args, results=results)
                 if isinstance(master, FunctionDef):
-                    return FunctionCall(master, args)
+                    return FunctionCall(master, args, self._current_function)
                 else:
                     # TODO treate interface case
                     errors.report(PYCCEL_RESTRICTION_TODO,
@@ -1548,9 +1544,9 @@ class SemanticParser(BasicParser):
 
                     # Distinguish between function
                     if master.results:
-                        return Assign(lhs[0], FunctionCall(master, args))
+                        return Assign(lhs[0], FunctionCall(master, args, self._current_function))
                     else:
-                        return FunctionCall(master, args)
+                        return FunctionCall(master, args, self._current_function)
    
         else:
             rhs = self._visit(rhs, **settings)
@@ -2289,12 +2285,7 @@ class SemanticParser(BasicParser):
                     args.append(a_new)
                     self.insert_variable(a_new, name=str(a_new.name))
 
-            # Remove duplicated return expressions, because we cannot have
-            # duplicated intent(out) arguments in Fortran.
-            # TODO [YG, 12.03.2020]: find workaround using temporary variables
-
             results = expr.results
-
             if header_results:
                 new_results = []
 
@@ -2308,8 +2299,9 @@ class SemanticParser(BasicParser):
                 results = new_results
 
             if len(interfaces) == 1:
-                # case of recursive function
-                # TODO improve
+                # insert the FunctionDef into the scope
+                # to handle the case of a recursive function
+                # TODO improve in the case of an interface
                 func = FunctionDef(name, args, results, [])
                 self.insert_function(func)
 
@@ -2351,15 +2343,14 @@ class SemanticParser(BasicParser):
                 if not var in args + results + local_vars:
                     global_vars += [var]
 
-            is_recursive = False
-
             # get the imports
             imports   = self.namespace.imports['imports'].values()
             imports   = list(set(imports))
-
-            func_   = self.namespace.functions.pop(name, None)
-
-            if not func_ is None and func_.is_recursive:
+            # remove the FunctionDef from the function scope
+            func_     = self.namespace.functions.pop(name)
+            is_recursive = False
+            # check if the function is recursive if it was called on the same scope
+            if func_.is_recursive:
                 is_recursive = True
 
             sub_funcs = [i for i in self.namespace.functions.values() if not i.is_header]

@@ -227,6 +227,14 @@ def test_multiple_returns_f13():
     f = epyccel(get_min)
     assert f(2,3) == get_min(2,3)
 
+def test_multiple_returns_f14():
+    @types('int', 'int')
+    def g(x, y):
+        return x,y,y,y,x
+
+    f = epyccel(g)
+    assert f(2,1) == g(2,1)
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
