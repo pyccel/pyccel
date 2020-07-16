@@ -1157,7 +1157,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         self._shape      = x.shape
         self._rank       = x.rank
         self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeReal()
-        self._precision  = default_precision[str_dtype(dtype)]
+        self._precision  = default_precision[str_dtype(self._dtype)]
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
