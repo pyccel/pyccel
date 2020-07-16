@@ -252,7 +252,8 @@ class PyccelOperator(Expr, PyccelAstNode):
                 self._shape = shape
                 self._rank  = len(shape)
             else:
-                self._rank = max(a.rank for a in args)
+                self._rank  = max(a.rank for a in args)
+                self._shape = [None]*self._rank
 
 class PyccelPow(PyccelOperator):
     p = 4
@@ -292,7 +293,8 @@ class PyccelDiv(PyccelOperator):
             self._shape = shape
             self._rank  = len(shape)
         else:
-            self._rank = max(a.rank for a in args)
+            self._rank  = max(a.rank for a in args)
+            self._shape = [None]*self._rank
 
 class PyccelMod(PyccelOperator):
     p = 2
