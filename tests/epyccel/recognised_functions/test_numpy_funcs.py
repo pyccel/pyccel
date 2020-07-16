@@ -1503,3 +1503,54 @@ def test_randint_expr():
     assert(all([yi >= 42 for yi in y]))
     assert(all([isinstance(yi,int) for yi in y]))
     assert(len(set(y))>1)
+
+def test_randint_basic_types():
+    @types('int')
+    def create_val(high):
+        from numpy.random import randint # pylint: disable=reimported
+        return randint(high, dtype = float)
+
+    @types('int','int')
+    def create_val_low(low, high):
+        from numpy.random import randint # pylint: disable=reimported
+        return randint(low, high, dtype = float)
+
+    @types('int')
+    def create_val_cmplx(high):
+        from numpy.random import randint # pylint: disable=reimported
+        return randint(high, dtype = complex)
+
+    @types('int','int')
+    def create_val_low_cmplx(low, high):
+        from numpy.random import randint # pylint: disable=reimported
+        return randint(low, high, dtype = complex)
+
+    f1 = epyccel(create_val)
+    y = [f1(100) for i in range(10)]
+    assert(all([yi <  100 for yi in y]))
+    assert(all([yi >= 0 for yi in y]))
+    assert(all([isinstance(yi,float) for yi in y]))
+    assert(len(set(y))>1)
+
+    f2 = epyccel(create_val_low)
+    y = [f2(25, 100) for i in range(10)]
+    assert(all([yi <  100 for yi in y]))
+    assert(all([yi >= 25 for yi in y]))
+    assert(all([isinstance(yi,float) for yi in y]))
+    assert(len(set(y))>1)
+
+    f3 = epyccel(create_val_cmplx)
+    y = [f3(100) for i in range(10)]
+    assert(all([isinstance(yi,complex) for yi in y]))
+    assert(all([yi.real <  100 for yi in y]))
+    assert(all([yi.real >= 0 for yi in y]))
+    assert(all([yi.imag == 0 for yi in y]))
+    assert(len(set(y))>1)
+
+    f4 = epyccel(create_val_low_cmplx)
+    y = [f4(25, 100) for i in range(10)]
+    assert(all([isinstance(yi,complex) for yi in y]))
+    assert(all([yi.real <  100 for yi in y]))
+    assert(all([yi.real >= 25 for yi in y]))
+    assert(all([yi.imag == 0 for yi in y]))
+    assert(len(set(y))>1)
