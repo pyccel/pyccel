@@ -2819,7 +2819,7 @@ class FunctionCall(Basic, PyccelAstNode):
     """Represents a function call in the code.
     """
 
-    def __new__(cls, func, args):
+    def __new__(cls, func, args, current_function=None):
 
         # ...
         if not isinstance(func, FunctionDef):
@@ -2827,8 +2827,12 @@ class FunctionCall(Basic, PyccelAstNode):
 
         name = func.name
         # ...
+        if isinstance(current_function, DottedName):
+            current_function = current_function.name[-1]
 
-        # ...
+        if str(current_function) == str(name):
+            func.set_recursive()
+
         if not isinstance(args, (tuple, list, Tuple)):
             raise TypeError('> expecting an iterable')
 
@@ -2854,7 +2858,7 @@ class FunctionCall(Basic, PyccelAstNode):
  
         return Basic.__new__(cls, name, args)
 
-    def __init__(self, func, args):
+    def __init__(self, func, args, current_function=None):
 
         self._funcdef     = func
         self._dtype       = func.results[0].dtype if len(func.results) == 1 else NativeTuple()

@@ -191,6 +191,50 @@ def test_arguments_f10():
     f(x_expected)
     assert np.array_equal(x, x_expected)
 
+def test_multiple_returns_f11():
+    @types('int', 'int', results='int')
+    def ackermann(m, n):
+        if m == 0:
+            return n + 1
+        elif n == 0:
+            return ackermann(m - 1, 1)
+        else:
+            return ackermann(m - 1, ackermann(m, n - 1))
+
+    f = epyccel(ackermann)
+    assert f(2,3) == ackermann(2,3)
+
+def test_multiple_returns_f12():
+    @types('int')
+    def non_negative(i):
+        if i < 0:
+            return False
+        else:
+            return True
+
+    f = epyccel(non_negative)
+    assert f(2) == non_negative(2)
+    assert f(-1) == non_negative(-1)
+
+def test_multiple_returns_f13():
+    @types('int', 'int')
+    def get_min(a, b):
+        if a<b:
+            return a
+        else:
+           return b
+
+    f = epyccel(get_min)
+    assert f(2,3) == get_min(2,3)
+
+def test_multiple_returns_f14():
+    @types('int', 'int')
+    def g(x, y):
+        return x,y,y,y,x
+
+    f = epyccel(g)
+    assert f(2,1) == g(2,1)
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
