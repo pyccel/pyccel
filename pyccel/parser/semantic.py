@@ -2347,10 +2347,11 @@ class SemanticParser(BasicParser):
             imports   = self.namespace.imports['imports'].values()
             imports   = list(set(imports))
             # remove the FunctionDef from the function scope
-            func_     = self.namespace.functions.pop(name)
+            # TODO improve func_ is None in the case of an interface
+            func_     = self.namespace.functions.pop(name, None)
             is_recursive = False
             # check if the function is recursive if it was called on the same scope
-            if func_.is_recursive:
+            if func_ and func_.is_recursive:
                 is_recursive = True
 
             sub_funcs = [i for i in self.namespace.functions.values() if not i.is_header]
