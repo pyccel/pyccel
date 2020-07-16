@@ -61,7 +61,7 @@ from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
 from pyccel.ast.numpyext import Real, Where, PyccelArraySize
 from pyccel.ast.numpyext import NumpyComplex, NumpyMod
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
-from pyccel.ast.numpyext import Rand
+from pyccel.ast.numpyext import Rand, RandInt
 from pyccel.ast.numpyext import NumpyNewArray
 
 from pyccel.errors.errors import Errors
@@ -230,7 +230,7 @@ class FCodePrinter(CodePrinter):
                 return container.functions[name]
             container = container.parent_scope
         errors.report(UNDEFINED_FUNCTION, symbol=name,
-            severity='fatal', blocker=self.blocking)
+            severity='fatal')
 
 
     def _get_statement(self, codestring):
@@ -748,7 +748,9 @@ class FCodePrinter(CodePrinter):
         return expr.fprint(self._print)
 
     def _print_Rand(self, expr):
-        assert(expr.rank==0)
+        if expr.rank != 0:
+            errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
+                          symbol=expr, severity='fatal')
 
         if (not self._additional_code):
             self._additional_code = ''
@@ -766,6 +768,12 @@ class FCodePrinter(CodePrinter):
 
         self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
         return self._print(var)
+
+    def _print_RandInt(self, expr):
+        if expr.rank != 0:
+            errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
+                          symbol=expr, severity='fatal')
+        return expr.fprint(self._print)
 
     def _print_Min(self, expr):
         args = expr.args
@@ -846,7 +854,7 @@ class FCodePrinter(CodePrinter):
                 return 'MPI_INTEGER8'
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                    severity='fatal', blocker=self.blocking)
+                    severity='fatal')
 
         elif dtype == 'real':
             if prec==8:
@@ -855,11 +863,11 @@ class FCodePrinter(CodePrinter):
                 return 'MPI_FLOAT'
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                    severity='fatal', blocker=self.blocking)
+                    severity='fatal')
 
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal', blocker=self.blocking)
+                severity='fatal')
 
     def _print_MacroCount(self, expr):
 
@@ -901,7 +909,7 @@ class FCodePrinter(CodePrinter):
 
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal', blocker=self.blocking)
+                severity='fatal')
 
         if rank == 0:
                 return '1'
@@ -1040,7 +1048,7 @@ class FCodePrinter(CodePrinter):
             rankstr = '(' + rankstr + ')'
 #        else:
 #            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-#                severity='fatal', blocker=self.blocking)
+#                severity='fatal')
 
 
         if not is_static:
@@ -1155,7 +1163,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, (Range, Product)):
             return ''
 
-        if isinstance(rhs, Len):
+        if isinstance(rhs, (Len, RandInt)):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}'.format(lhs_code, rhs_code)
 
@@ -1547,7 +1555,7 @@ class FCodePrinter(CodePrinter):
                     code = 'deallocate({0}){1}'.format(self._print(var), code)
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                    severity='fatal', blocker=self.blocking)
+                    severity='fatal')
         return code
 
     def _print_ClassDef(self, expr):
@@ -1681,7 +1689,7 @@ class FCodePrinter(CodePrinter):
             if not isinstance(iterable, Range):
                 # Only iterable currently supported is Range
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                    severity='fatal', blocker=self.blocking)
+                    severity='fatal')
 
             tar        = self._print(target)
             range_code = self._print(iterable)
@@ -1695,7 +1703,7 @@ class FCodePrinter(CodePrinter):
         if not isinstance(expr.iterable, (Range, Product , Zip, Enumerate, Map)):
             # Only iterable currently supported are Range or Product
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal', blocker=self.blocking)
+                severity='fatal')
 
         if isinstance(expr.iterable, Range):
             prolog, epilog = _do_range(expr.target, expr.iterable, \
@@ -2112,7 +2120,7 @@ class FCodePrinter(CodePrinter):
             return '{} .eqv. {}'.format(lhs, rhs)
 
         errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
-            severity='fatal', blocker=self.blocking)
+            severity='fatal')
 
     def _print_IsNot(self, expr):
         lhs = self._print(expr.lhs)
@@ -2127,7 +2135,7 @@ class FCodePrinter(CodePrinter):
             return '{} .neqv. {}'.format(lhs, rhs)
 
         errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
-            severity='fatal', blocker=self.blocking)
+            severity='fatal')
 
     def _print_If(self, expr):
         # ...
