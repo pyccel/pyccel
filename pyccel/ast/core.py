@@ -239,8 +239,8 @@ class PyccelOperator(Expr, PyccelAstNode):
                 raise TypeError('cannot determine the type of {}'.format(self))
             
             shapes = [a.shape for a in args]
-            
-            if all(sh is not None for sh in shapes):
+
+            if all(not isinstance(sh, PyccelArraySize) for tup in shapes for sh in tup):
                 if len(args) == 1:
                     shape = args[0].shape
                 else:
@@ -283,7 +283,7 @@ class PyccelDiv(PyccelOperator):
 
         shapes = [a.shape for a in args]
         
-        if all(sh is not None for sh in shapes):
+        if all(not isinstance(sh, PyccelArraySize) for tup in shapes for sh in tup):
             shape = broadcast(args[0].shape, args[1].shape)
             
             for a in args[2:]:
@@ -4596,9 +4596,11 @@ class IndexedElement(Expr, PyccelAstNode):
                 if isinstance(a, Slice):
                     start = a.start
                     end   = a.end
-                    start = Py_Integer(0) if start is None else start
                     end   = s if end   is None else end
-                    new_shape.append(PyccelMinus(end, start))
+                    if start is None:
+                        new_shape.append(end)
+                    else:
+                        new_shape.append(PyccelMinus(end, start))
             self._shape = tuple(new_shape)
             self._rank  = len(new_shape)
         else:
