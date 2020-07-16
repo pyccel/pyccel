@@ -45,7 +45,9 @@ from .numbers        import BooleanTrue, BooleanFalse, Integer as Py_Integer
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
-from pyccel.errors.errors import PyccelSemanticError
+from pyccel.errors.errors import Errors
+
+errors = Errors()
 
 # TODO [YG, 12.03.2020]: Move non-Python constructs to other modules
 # TODO [YG, 12.03.2020]: Rename classes to avoid name clashes in pyccel/ast
@@ -204,7 +206,7 @@ def broadcast(shape_1, shape_2):
         else:
             msg = 'operands could not be broadcast together with shapes {} {}'
             msg = msg.format(shape_1, shape_2)
-            raise PyccelSemanticError(msg)
+            errors.report(msg,severity='fatal')
     return tuple(new_shape)
 
 class PyccelOperator(Expr, PyccelAstNode):
