@@ -89,7 +89,7 @@ from pyccel.ast.builtins import Int as PythonInt, Bool as PythonBool, PythonFloa
 from pyccel.ast.builtins import python_builtin_datatype
 from pyccel.ast.builtins import Range, Zip, Enumerate, Map, PythonTuple
 
-from pyccel.ast.numpyext import Full, Array, Rand
+from pyccel.ast.numpyext import Full, Array, Rand, Empty
 from pyccel.ast.numpyext import EmptyLike, FullLike, OnesLike, ZerosLike
 from pyccel.ast.numpyext import NumpySum, NumpyMin, NumpyMax, NumpyMod
 from pyccel.ast.numpyext import Matmul, Norm
@@ -1591,10 +1591,10 @@ class SemanticParser(BasicParser):
             expr = Block(rhs.name, rhs.variables, body)
             return expr
 
-        elif isinstance(rhs, FunctionalFor):
-            return rhs
-
         elif isinstance(rhs, CodeBlock):
+            if len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
+                return rhs
+
             # case of complex stmt
             # that needs to be splitted
             # into a list of stmts
@@ -2081,19 +2081,22 @@ class SemanticParser(BasicParser):
 
         lhs_name = _get_name(expr.lhs)
 
+        lhs_empty = Empty(shape, dtype = dtype)
+        lhs       = self._create_variable(lhs_name, dtype, lhs_empty, d_var)
+        self.insert_variable(lhs)
+        lhs_assign = Assign(lhs, lhs_empty)
+
+        lhs = self.get_variable(lhs_name)
+
         if isinstance(target, PythonTuple) and not target.is_homogeneous:
             errors.report(LIST_OF_TUPLES, symbol=expr,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='error', blocker=self.blocking)
-            lhs      = self._create_variable(lhs_name, target[0].dtype, target, d_var)
-        else:
-            lhs      = self._create_variable(lhs_name, dtype, target, d_var)
-        self.insert_variable(lhs)
 
         loops = [self._visit(i, **settings) for i in expr.loops]
         index = self._visit(index, **settings)
 
-        return FunctionalFor(loops, lhs=lhs, indices=indices, index=index)
+        return CodeBlock([lhs_assign, FunctionalFor(loops, lhs=lhs, indices=indices, index=index)])
 
     def _visit_While(self, expr, **settings):
 
