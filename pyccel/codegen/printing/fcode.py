@@ -61,7 +61,7 @@ from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
 from pyccel.ast.numpyext import Real, Where
 from pyccel.ast.numpyext import NumpyComplex, NumpyMod
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
-from pyccel.ast.numpyext import Rand, NumpyRandInt
+from pyccel.ast.numpyext import Rand, NumpyRandint
 from pyccel.ast.numpyext import NumpyNewArray
 
 from pyccel.errors.errors import Errors
@@ -787,7 +787,7 @@ class FCodePrinter(CodePrinter):
         self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
         return self._print(var)
 
-    def _print_NumpyRandInt(self, expr):
+    def _print_NumpyRandint(self, expr):
         if expr.rank != 0:
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
@@ -1181,7 +1181,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, (Range, Product)):
             return ''
 
-        if isinstance(rhs, (Len, NumpyRandInt)):
+        if isinstance(rhs, (Len, NumpyRandint)):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}'.format(lhs_code, rhs_code)
 

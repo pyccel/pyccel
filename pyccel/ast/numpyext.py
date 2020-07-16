@@ -81,7 +81,7 @@ __all__ = (
     'OnesLike',
     'Product',
     'Rand',
-    'NumpyRandInt',
+    'NumpyRandint',
     'Real',
     'Shape',
     'Where',
@@ -844,7 +844,7 @@ class Rand(Function, NumpyNewArray):
         return '\n'.join(stmts)
 
 #==============================================================================
-class NumpyRandInt(Function, NumpyNewArray):
+class NumpyRandint(Function, NumpyNewArray):
 
     """
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
