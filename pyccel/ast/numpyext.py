@@ -95,8 +95,32 @@ numpy_constants = {
     'pi': Constant('real', 'pi', value=numpy.pi),
 }
 
+def process_dtype(dtype):
+    if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt, 
+                  Int32, Int64, NumpyComplex, Complex64, Complex128, NumpyFloat,
+                  Float64, Float32):
+        dtype = dtype.__name__.lower()
+    else:
+        dtype            = str(dtype).replace('\'', '').lower()
+    dtype, precision = dtype_registry[dtype]
+    dtype            = datatype(dtype)
+
+    return dtype, precision
+
+
 class NumpyNewArray(PyccelAstNode):
-    pass
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def _process_order(order):
+
+        if (order is None) or isinstance(order, Nil):
+            return None
+
+        order = str(order).strip('\'"')
+        if order not in ('C', 'F'):
+            raise ValueError('unrecognized order = {}'.format(order))
+        return order
 
 #==============================================================================
 # TODO [YG, 18.02.2020]: accept Numpy array argument
@@ -899,8 +923,9 @@ class RandInt(Function, NumpyNewArray):
         self._rand    = Rand(*size)
         self._low     = low
         self._high    = high
+
         if dtype is not None:
-            self._dtype = dtype
+            self._dtype, self._precision = process_dtype(dtype)
 
     @property
     def order(self):
@@ -950,10 +975,10 @@ class Full(Application, NumpyNewArray):
             dtype = fill_value.dtype
 
         # Verify dtype and get precision
-        dtype, precision = cls._process_dtype(dtype)
+        dtype, precision = process_dtype(dtype)
 
         # Verify array ordering
-        order = cls._process_order(order)
+        order = NumpyNewArray._process_order(order)
 
         return Basic.__new__(cls, shape, dtype, order, precision, fill_value)
 
@@ -981,32 +1006,6 @@ class Full(Application, NumpyNewArray):
     @property
     def rank(self):
         return len(self.shape)
-
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def _process_dtype(dtype):
-        if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt, 
-                      Int32, Int64, NumpyComplex, Complex64, Complex128, NumpyFloat,
-                      Float64, Float32):
-            dtype = dtype.__name__.lower()
-        else:
-            dtype            = str(dtype).replace('\'', '').lower()
-        dtype, precision = dtype_registry[dtype]
-        dtype            = datatype(dtype)
-
-        return dtype, precision
-
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def _process_order(order):
-
-        if (order is None) or isinstance(order, Nil):
-            return None
-
-        order = str(order).strip('\'"')
-        if order not in ('C', 'F'):
-            raise ValueError('unrecognized order = {}'.format(order))
-        return order
 
     #--------------------------------------------------------------------------
     def fprint(self, printer, lhs, stack_array=False):
@@ -1043,7 +1042,7 @@ class Empty(Full):
         shape = process_shape(shape)
 
         # Verify dtype and get precision
-        dtype, precision = cls._process_dtype(dtype)
+        dtype, precision = process_dtype(dtype)
 
         # Verify array ordering
         order = cls._process_order(order)
@@ -1211,13 +1210,17 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         return NumpyUfuncBase.__new__(self, x, dtype)
 
     def __init__(self, x, dtype = None):
-        self._shape     = x.shape
-        self._rank      = x.rank
+        self._shape      = x.shape
+        self._rank       = x.rank
+
         if dtype is not None:
-            self._dtype = dtype
+            dtype, precision = process_dtype(dtype)
         else:
-            self._dtype     = x.dtype if x.dtype is NativeComplex() else NativeReal()
-        self._precision = default_precision[str_dtype(self._dtype)]
+            dtype     = x.dtype if x.dtype is NativeComplex() else NativeReal()
+            precision = default_precision[str_dtype(self._dtype)]
+
+        self._dtype     = dtype
+        self._precision = precision
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
