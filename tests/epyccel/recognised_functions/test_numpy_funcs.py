@@ -1477,94 +1477,6 @@ def test_randint_basic():
     assert(all([isinstance(yi,int) for yi in y]))
     assert(len(set(y))>1)
 
-def test_randint_args():
-
-    @types('int','int')
-    def create_array_size_1d(high, n):
-        from numpy.random import randint # pylint: disable=reimported
-        from numpy import shape
-        a = randint(high, size = n)
-        return shape(a)[0]
-
-    @types('int','int','int')
-    def create_array_size_2d(high, n,m):
-        from numpy.random import randint # pylint: disable=reimported
-        from numpy import shape
-        a = randint(high, size = (n,m))
-        return shape(a)[0], shape(a)[1]
-
-    @types('int','int','int','int')
-    def create_array_size_3d(high, n,m,p):
-        from numpy.random import randint # pylint: disable=reimported
-        from numpy import shape
-        a = randint(high, size = (n,m,p))
-        return shape(a)[0], shape(a)[1], shape(a)[2]
-
-    @types('int')
-    def create_array_vals_1d(high):
-        from numpy.random import randint # pylint: disable=reimported
-        a = randint(high, size = 4)
-        return a[0], a[1], a[2], a[3]
-
-    @types('int')
-    def create_array_vals_2d(high):
-        from numpy.random import randint # pylint: disable=reimported
-        a = randint(high, size = (2,2))
-        return a[0,0], a[0,1], a[1,0], a[1,1]
-
-    @types('int','int')
-    def create_array_vals_1d_low(low, high):
-        from numpy.random import randint # pylint: disable=reimported
-        a = randint(low, high, 4)
-        return a[0], a[1], a[2], a[3]
-
-    @types('int','int')
-    def create_array_vals_2d_low(low, high):
-        from numpy.random import randint # pylint: disable=reimported
-        a = randint(low, high, size = (2,2))
-        return a[0,0], a[0,1], a[1,0], a[1,1]
-
-    high = randint(70)
-    n = randint(10)
-    m = randint(10)
-    p = randint(5)
-    f_1d = epyccel(create_array_size_1d)
-    assert( f_1d(high, n)       == create_array_size_1d(high, n)      )
-
-    f_2d = epyccel(create_array_size_2d)
-    assert( f_2d(high, n, m)    == create_array_size_2d(high, n, m)   )
-
-    f_3d = epyccel(create_array_size_3d)
-    assert( f_3d(high, n, m, p) == create_array_size_3d(high, n, m, p))
-
-    g_1d = epyccel(create_array_vals_1d)
-    y = g_1d(20)
-    assert(all([yi <  20 for yi in y]))
-    assert(all([yi >= 0  for yi in y]))
-    assert(all([isinstance(yi,float) for yi in y]))
-    assert(len(set(y))>1)
-
-    h_1d = epyccel(create_array_vals_1d_low)
-    y = h_1d(22, 68)
-    assert(all([yi <  68 for yi in y]))
-    assert(all([yi >= 22 for yi in y]))
-    assert(all([isinstance(yi,float) for yi in y]))
-    assert(len(set(y))>1)
-
-    g_2d = epyccel(create_array_vals_2d)
-    y = g_2d(42)
-    assert(all([yi <  42 for yi in y]))
-    assert(all([yi >= 0  for yi in y]))
-    assert(all([isinstance(yi,float) for yi in y]))
-    assert(len(set(y))>1)
-
-    h_2d = epyccel(create_array_vals_2d_low)
-    y = h_2d(42, 89)
-    assert(all([yi <  89 for yi in y]))
-    assert(all([yi >= 42 for yi in y]))
-    assert(all([isinstance(yi,float) for yi in y]))
-    assert(len(set(y))>1)
-
 def test_randint_expr():
     @types('int')
     def create_val(high):
@@ -1572,8 +1484,8 @@ def test_randint_expr():
         x = 2*randint(high)
         return x
 
-    @types('int')
-    def create_val_low(high):
+    @types('int','int')
+    def create_val_low(low, high):
         from numpy.random import randint # pylint: disable=reimported
         x = 2*randint(low, high)
         return x
@@ -1582,12 +1494,12 @@ def test_randint_expr():
     y = [f1(27) for i in range(10)]
     assert(all([yi <  54 for yi in y]))
     assert(all([yi >= 0  for yi in y]))
-    assert(all([isinstance(yi,float) for yi in y]))
+    assert(all([isinstance(yi,int) for yi in y]))
     assert(len(set(y))>1)
 
     f2 = epyccel(create_val_low)
-    y = [f1(21,46) for i in range(10)]
+    y = [f2(21,46) for i in range(10)]
     assert(all([yi <  92 for yi in y]))
     assert(all([yi >= 42 for yi in y]))
-    assert(all([isinstance(yi,float) for yi in y]))
+    assert(all([isinstance(yi,int) for yi in y]))
     assert(len(set(y))>1)
