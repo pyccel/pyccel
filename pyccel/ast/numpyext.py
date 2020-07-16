@@ -17,6 +17,7 @@ from .core  import (Variable, IndexedElement, Slice, Len,
                    ValuedArgument, Constant, process_shape)
 
 from .core           import PyccelPow, PyccelMinus, PyccelAssociativeParenthesis
+from .core           import PyccelMul
 from .core           import broadcast
 
 from .builtins       import Int as PythonInt, Bool as PythonBool
@@ -25,6 +26,7 @@ from .datatypes      import dtype_and_precision_registry as dtype_registry
 from .datatypes      import default_precision
 from .datatypes      import datatype
 from .datatypes      import NativeInteger, NativeReal, NativeComplex, NativeBool
+from .mathext        import MathFloor
 from .numbers        import Integer, Float
 from .type_inference import str_dtype
 
@@ -870,6 +872,18 @@ class Rand(Function, NumpyNewArray):
 
         return '\n'.join(stmts)
 
+#==============================================================================
+
+def RandInt(low, high = None, size = None, dtype = None):
+    if dtype is not None:
+        raise NotImplementedError("The dtype parameter of randint is not yet implemented")
+    if size is None:
+        size = ()
+
+    if high is None:
+        return MathFloor(PyccelMul(low, Rand(*size)))
+    else:
+        return MathFloor(PyccelMul(PyccelMinus(high, low), Rand(*size)))
 
 #==============================================================================
 class Full(Application, NumpyNewArray):
