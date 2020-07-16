@@ -2351,14 +2351,14 @@ class Variable(Symbol, PyccelAstNode):
 
         new_shape = []
         for i,s in enumerate(shape):
-            if s is None or isinstance(s,(Variable, Slice, PyccelAstNode, Function)):
-                new_shape.append(PyccelArraySize(self, i))
-            elif isinstance(s,Py_Integer):
+            if isinstance(s,Py_Integer):
                 new_shape.append(s)
             elif isinstance(s, sp_Integer):
                 new_shape.append(Py_Integer(s.p))
             elif isinstance(s, int):
                 new_shape.append(Py_Integer(s))
+            elif s is None or isinstance(s,(Variable, Slice, PyccelAstNode, Function)):
+                new_shape.append(PyccelArraySize(self, i))
             else:
                 raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
         return tuple(new_shape)
