@@ -80,7 +80,6 @@ __all__ = (
     'Ones',
     'OnesLike',
     'Product',
-    'PyccelArraySize',
     'Rand',
     'RandInt',
     'Real',
@@ -375,63 +374,8 @@ class Matmul(Application, PyccelAstNode):
 
 #==============================================================================
 
-class PyccelArraySize(Function, PyccelAstNode):
-    def __new__(cls, arg, index):
-        if not isinstance(arg, (list,
-                                tuple,
-                                Tuple,
-                                PythonTuple,
-                                List,
-                                Array,
-                                Variable,
-                                IndexedElement,
-                                IndexedBase)):
-            raise TypeError('Uknown type of  %s.' % type(arg))
-
-        return Basic.__new__(cls, arg, index)
-
-    def __init__(self, arg, index):
-        self._dtype = NativeInteger()
-        self._rank  = 0
-        self._shape = ()
-        self._precision = default_precision['integer']
-
-    @property
-    def arg(self):
-        return self._args[0]
-
-    @property
-    def index(self):
-        return self._args[1]
-
-    def _sympystr(self, printer):
-        return 'Shape({},{})'.format(str(self.arg), str(self.index))
-
-    def fprint(self, printer, lhs = None):
-        """Fortran print."""
-
-        lhs_code = printer(lhs)
-        if isinstance(self.arg, Array):
-            init_value = printer(self.arg.arg)
-        else:
-            init_value = printer(self.arg)
-
-        if self.arg.order == 'C':
-            index = printer(self.arg.rank - self.index)
-        else:
-            index = printer(self.index + 1)
-
-        if lhs:
-            code_init = '{0} = size({1}, {2})'.format(lhs_code, init_value, index)
-        else:
-            code_init = 'size({0}, {1})'.format(init_value, index)
-
-        return code_init
-
 def Shape(arg):
-    if arg.shape is None:
-        return PythonTuple(*(PyccelArraySize(arg,i) for i in range(arg.rank)))
-    elif isinstance(arg.shape, PythonTuple):
+    if isinstance(arg.shape, PythonTuple):
         return arg.shape
     else:
         return PythonTuple(*arg.shape)

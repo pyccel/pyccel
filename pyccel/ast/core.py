@@ -2271,6 +2271,9 @@ class Variable(Symbol, PyccelAstNode):
         if rank == 0:
             shape = ()
 
+        if shape is None:
+            shape = tuple(None for i in range(rank))
+
         if not precision:
             if isinstance(dtype, NativeInteger):
                 precision = default_precision['int']
@@ -2284,7 +2287,7 @@ class Variable(Symbol, PyccelAstNode):
             raise TypeError('precision must be an integer or None.')
 
         self._dtype = dtype
-        self._shape = process_shape(shape)
+        self._shape = self.process_shape(shape)
         self._rank  = rank
         self._precision = precision
 
@@ -2339,6 +2342,23 @@ class Variable(Symbol, PyccelAstNode):
         self._order          = order
         self._is_argument    = is_argument
 
+    def process_shape(self, shape):
+        if not hasattr(shape,'__iter__'):
+            shape = [shape]
+
+        new_shape = []
+        for i,s in enumerate(shape):
+            if s is None or isinstance(s,(Variable, Slice, PyccelAstNode, Function)):
+                new_shape.append(PyccelArraySize(self, i))
+            elif isinstance(s,Py_Integer):
+                new_shape.append(s)
+            elif isinstance(s, sp_Integer):
+                new_shape.append(Py_Integer(s.p))
+            elif isinstance(s, int):
+                new_shape.append(Py_Integer(s))
+            else:
+                raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
+        return tuple(new_shape)
 
     @property
     def name(self):
@@ -5315,8 +5335,6 @@ class ParserResult(Basic):
 
 #==============================================================================
 def process_shape(shape):
-    if shape is None:
-        return None
     if not hasattr(shape,'__iter__'):
         shape = [shape]
 
@@ -5332,3 +5350,52 @@ def process_shape(shape):
             raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
     return tuple(new_shape)
 
+
+class PyccelArraySize(Function, PyccelAstNode):
+    def __new__(cls, arg, index):
+        if not isinstance(arg, (list,
+                                tuple,
+                                Tuple,
+                                PythonTuple,
+                                List,
+                                Variable,
+                                IndexedElement,
+                                IndexedBase)):
+            raise TypeError('Uknown type of  %s.' % type(arg))
+
+        return Basic.__new__(cls, arg, index)
+
+    def __init__(self, arg, index):
+        self._dtype = NativeInteger()
+        self._rank  = 0
+        self._shape = ()
+        self._precision = default_precision['integer']
+
+    @property
+    def arg(self):
+        return self._args[0]
+
+    @property
+    def index(self):
+        return self._args[1]
+
+    def _sympystr(self, printer):
+        return 'Shape({},{})'.format(str(self.arg), str(self.index))
+
+    def fprint(self, printer, lhs = None):
+        """Fortran print."""
+
+        lhs_code = printer(lhs)
+        init_value = printer(self.arg)
+
+        if self.arg.order == 'C':
+            index = printer(self.arg.rank - self.index)
+        else:
+            index = printer(self.index + 1)
+
+        if lhs:
+            code_init = '{0} = size({1}, {2})'.format(lhs_code, init_value, index)
+        else:
+            code_init = 'size({0}, {1})'.format(init_value, index)
+
+        return code_init
