@@ -853,10 +853,10 @@ class NumpyRandint(Function, NumpyNewArray):
     _dtype = NativeInteger()
     _precision = default_precision['integer']
 
-    def __new__(cls, low, high = None, size = None, dtype = None):
+    def __new__(cls, low, high = None, size = None):
         return Function.__new__(cls)
 
-    def __init__(self, low, high = None, size = None, dtype = None):
+    def __init__(self, low, high = None, size = None):
         if size is None:
             size = ()
         if not hasattr(size,'__iter__'):
@@ -867,9 +867,6 @@ class NumpyRandint(Function, NumpyNewArray):
         self._rand    = Rand(*size)
         self._low     = low
         self._high    = high
-
-        if dtype is not None:
-            self._dtype, self._precision = process_dtype(dtype)
 
     @property
     def order(self):
