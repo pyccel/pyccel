@@ -1503,7 +1503,7 @@ def test_randint_args():
     @types('int')
     def create_array_vals_1d(high):
         from numpy.random import randint # pylint: disable=reimported
-        a = randint(high, 4)
+        a = randint(high, size = 4)
         return a[0], a[1], a[2], a[3]
 
     @types('int')
