@@ -61,6 +61,7 @@ from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativePa
 from pyccel.ast.core import PyccelUnary
 from pyccel.ast.core import Product, FunctionCall
 from pyccel.ast.core import PyccelArraySize
+from pyccel.ast.core import PyccelOperator
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 from pyccel.ast.functionalexpr import GeneratorComprehension as GC
@@ -1358,7 +1359,7 @@ class SemanticParser(BasicParser):
             #      lists/tuples.
             rhs.base.internal_variable.is_target = True
 
-    def _assign_lhs_variable(self, lhs, d_var, rhs, **settings):
+    def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, **settings):
 
         if isinstance(lhs, Symbol):
 
@@ -1381,14 +1382,18 @@ class SemanticParser(BasicParser):
 
                 # Not yet supported for arrays: x=y+z, x=b[:]
                 # Because we cannot infer shape of right-hand side yet
-                know_lhs_shape = lhs.shape or (lhs.rank == 0) \
+                know_lhs_shape = all(sh is not None for sh in lhs.alloc_shape) \
+                        or (lhs.rank == 0) \
                         or isinstance(rhs, (Variable, EmptyLike, DottedVariable))
                 if not know_lhs_shape:
                     msg = "Cannot infer shape of right-hand side for expression {} = {}".format(lhs, rhs)
                     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=self.blocking)
-
+                elif lhs.rank>0 and isinstance(rhs, PyccelOperator):
+                    #TODO: Provide order once issue #335 is fixed
+                    #stmts.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, lhs.order)))
+                    new_expressions.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, 'C')))
             else:
 
                 # TODO improve check type compatibility
@@ -1453,11 +1458,13 @@ class SemanticParser(BasicParser):
                 self.insert_class(new_cls, parent=True)
             else:
                 lhs = self._visit_DottedVariable(lhs, **settings)
+
         return lhs
 
 
     def _visit_Assign(self, expr, **settings):
         # TODO unset position at the end of this part
+        new_expressions = []
         fst = expr.fst
         assert(fst)
         if fst:
@@ -1703,14 +1710,14 @@ class SemanticParser(BasicParser):
                         severity='error', blocker=self.blocking)
                     return None
 
-            lhs = self._assign_lhs_variable(lhs, d_var, rhs, **settings)
+            lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, **settings)
         elif isinstance(lhs, PythonTuple):
             n = len(lhs)
             if isinstance(rhs, PythonTuple):
                 new_lhs = []
                 for i,(l,r) in enumerate(zip(lhs,rhs)):
                     d = self._infere_type(r, **settings)
-                    new_lhs.append( self._assign_lhs_variable(l, d, r, **settings) )
+                    new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, **settings) )
                 lhs = PythonTuple(*new_lhs)
 
             elif isinstance(rhs, TupleVariable):
@@ -1723,14 +1730,15 @@ class SemanticParser(BasicParser):
                     new_rhs = []
                     for i,l in enumerate(lhs):
                         new_lhs.append( self._assign_lhs_variable(l, d_var.copy(),
-                            indexed_rhs.__getitem__(i), **settings) )
+                            indexed_rhs.__getitem__(i), new_expressions, **settings) )
+
                         new_rhs.append(indexed_rhs.__getitem__(i))
                     rhs = PythonTuple(*new_rhs)
                     d_var = [d_var]
                 else:
                     d_var = [self._infere_type(v) for v in rhs]
                     for i,(l,r) in enumerate(zip(lhs,rhs)):
-                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), r, **settings) )
+                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), r, new_expressions, **settings) )
 
                 lhs = PythonTuple(*new_lhs)
 
@@ -1739,10 +1747,10 @@ class SemanticParser(BasicParser):
                 new_lhs = []
                 if hasattr(rhs,'__getitem__'):
                     for i,l in enumerate(lhs):
-                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs[i], **settings) )
+                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs[i], new_expressions, **settings) )
                 else:
                     for i,l in enumerate(lhs):
-                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs, **settings) )
+                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs, new_expressions, **settings) )
                 lhs = PythonTuple(*new_lhs)
 
             elif d_var['shape'][0]==n:
@@ -1751,7 +1759,7 @@ class SemanticParser(BasicParser):
 
                 for i,l in enumerate(lhs):
                     rhs_i = self._visit(Indexed(rhs,i))
-                    new_lhs.append( self._assign_lhs_variable(l, self._infere_type(rhs_i), rhs_i, **settings) )
+                    new_lhs.append( self._assign_lhs_variable(l, self._infere_type(rhs_i), rhs_i, new_expressions, **settings) )
                     new_rhs.append(rhs_i)
 
                 lhs = PythonTuple(*new_lhs)
@@ -1809,7 +1817,6 @@ class SemanticParser(BasicParser):
             lhs = [lhs]
             rhs = [rhs]
 
-        new_expressions = []
         for l, r in zip(lhs,rhs):
             is_pointer_i = l.is_pointer if isinstance(l, (Variable, DottedVariable)) else is_pointer
 
