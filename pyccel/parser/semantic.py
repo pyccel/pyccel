@@ -2266,6 +2266,7 @@ class SemanticParser(BasicParser):
             if arguments:
                 for (a, ah) in zip(arguments, m.arguments):
                     d_var = self._infere_type(ah, **settings)
+                    d_var['shape'] = ah.alloc_shape
                     dtype = d_var.pop('datatype')
 
                     # this is needed for the static case
