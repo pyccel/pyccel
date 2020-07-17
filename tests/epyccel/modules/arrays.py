@@ -371,20 +371,20 @@ def array_real_2d_F_initialization(a):
 
 @types( 'int32[:]', 'int32[:]' )
 def array_int32_1d_complex_3d_expr( x, y ):
-    from numpy import full
-    z = full(3,5, dtype=np.int32)
+    from numpy import full, int32
+    z = full(3,5, dtype=int32)
     x[:] = (x // y) * x + z
 
 @types( 'int32[:,:]', 'int32[:,:]' )
 def array_int32_2d_C_complex_3d_expr( x, y ):
-    from numpy import full
-    z = full((2,3),5, dtype=np.int32)
+    from numpy import full, int32
+    z = full((2,3),5, dtype=int32)
     x[:] = (x // y) * x + z
 
 @types( 'int32[:,:](order=F)', 'int32[:,:](order=F)' )
 def array_int32_2d_F_complex_3d_expr( x, y ):
-    from numpy import full
-    z = full((2,3),5,order='F', dtype=np.int32)
+    from numpy import full, int32
+    z = full((2,3),5,order='F', dtype=int32)
     x[:] = (x // y) * x + z
 
 @types( 'real[:]', 'real[:]' )
