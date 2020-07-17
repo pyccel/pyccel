@@ -46,6 +46,7 @@ after_script:  # Coverage instructions - collections
 cache:
   directories:
     - /usr/local/Homebrew/
+    - $HOME/Library/Caches/Homebrew/
 
 #==============================================================================
 # Job matrix (including Windows build)
