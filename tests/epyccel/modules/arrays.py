@@ -470,3 +470,23 @@ def array_kwargs_ones():
     d = ones(dtype=int, shape=2+n)
 
     return np_sum(a) + np_sum(b) + np_sum(c) + np_sum(d)
+
+
+#==============================================================================
+# SHAPE INITIALISATION
+#==============================================================================
+
+def array_random_size():
+    import numpy as np
+    a = np.zeros(np.random.randint(23))
+    c = np.zeros_like(a)
+    return np.shape(a)[0], np.shape(c)[0]
+
+@types('int','int')
+def array_variable_size(n,m):
+    import numpy as np
+    s = n
+    a = np.zeros(s)
+    s = m
+    c = np.zeros_like(a)
+    return np.shape(a)[0], np.shape(c)[0]

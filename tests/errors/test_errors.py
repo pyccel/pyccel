@@ -11,7 +11,7 @@ import pytest
 
 from pyccel.parser.parser   import Parser
 from pyccel.codegen.codegen import Codegen
-from pyccel.errors.errors   import Errors, PyccelSyntaxError, PyccelSemanticError
+from pyccel.errors.errors   import Errors, PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
 
 
 def get_files_from_folder(foldername):
@@ -85,6 +85,27 @@ def test_semantic_non_blocking_errors(f):
 
     assert(errors.is_errors())
 
+
+@pytest.mark.parametrize("f",get_files_from_folder("codegen/fortran"))
+def test_codegen_errors(f):
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+
+    pyccel = Parser(f)
+    ast = pyccel.parse()
+
+    settings = {}
+    ast = pyccel.annotate(**settings)
+
+    name = os.path.basename(f)
+    name = os.path.splitext(name)[0]
+
+    codegen = Codegen(ast, name)
+    with pytest.raises(PyccelCodegenError):
+        codegen.doprint()
+
+    assert(errors.is_errors())
 
 ######################
 if __name__ == '__main__':
