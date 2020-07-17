@@ -81,6 +81,8 @@ jobs:
       - brew install open-mpi
     before_script: null
     after_script : null
+    before_cache:
+      - brew cleanup
 
   - os: windows
     language: c  # Python not supported, "language: generic" doesn't start VM
