@@ -67,6 +67,11 @@ jobs:
     env: PYTHON=python3 MPI_OPTS="--oversubscribe"
     before_install:
       - brew update
+      # Avoid upgrade of useless packages that depend on open-mpi
+      # We only let upgrading: hdf5 netcdf numpy openblas python3
+      - brew pin ansible cairo cgal gdal geos glib gnupg gnutls libdap
+      - brew pin libpq libxml2 libspatialite libssh mercurial nettle
+      - brew pin poppler postgis postgresql pyenv sfcgal unbound
 #      - brew install gcc openblas lapack
       - brew install open-mpi
     before_script: null
