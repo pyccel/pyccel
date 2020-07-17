@@ -2354,7 +2354,7 @@ class Variable(Symbol, PyccelAstNode):
 
         new_shape = []
         for i,s in enumerate(shape):
-            if isinstance(s,Py_Integer):
+            if isinstance(s,(Py_Integer, PyccelArraySize)):
                 new_shape.append(s)
             elif isinstance(s, sp_Integer):
                 new_shape.append(Py_Integer(s.p))
