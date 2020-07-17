@@ -70,7 +70,10 @@ class Bool(Expr, PyccelAstNode):
 
     def fprint(self, printer):
         """ Fortran printer. """
-        return 'merge(.true., .false., ({}) /= 0)'.format(printer(self.arg))
+        if isinstance(self.arg.dtype, NativeBool):
+            return 'logical({}, kind = {prec})'.format(printer(self.arg), prec = self.precision)
+        else:
+            return 'merge(.true., .false., ({}) /= 0)'.format(printer(self.arg))
 
 #==============================================================================
 class PythonComplex(Expr, PyccelAstNode):
