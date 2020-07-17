@@ -25,7 +25,7 @@ from .numpyext import Full, Empty, Zeros, Ones
 from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from .numpyext import Diag, Cross
 from .numpyext import NumpyMin, NumpyMax, NumpyAbs, NumpyFloor, Norm, Where
-from .numpyext import Array, Shape, Rand, NumpySum, Matmul, Real, NumpyComplex, Imag, NumpyMod
+from .numpyext import Array, Shape, Rand, NumpyRandint, NumpySum, Matmul, Real, NumpyComplex, Imag, NumpyMod
 from .numpyext import NumpyInt, Int32, Int64, NumpyFloat, Float32, Float64, Complex64, Complex128
 from .numpyext import NumpyExp, NumpyLog, NumpySqrt
 from .numpyext import NumpySin, NumpyCos, NumpyTan
@@ -121,6 +121,7 @@ numpy_linalg_functions = {
 numpy_random_functions = {
     'rand'      : Rand,
     'random'    : Rand,
+    'randint'   : NumpyRandint,
 }
 
 builtin_functions_dict = {

@@ -60,6 +60,7 @@ from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.core import PyccelUnary
 from pyccel.ast.core import Product, FunctionCall
+from pyccel.ast.core import PyccelArraySize
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 from pyccel.ast.functionalexpr import GeneratorComprehension as GC
@@ -88,7 +89,7 @@ from pyccel.ast.builtins import Int as PythonInt, Bool as PythonBool, PythonFloa
 from pyccel.ast.builtins import python_builtin_datatype
 from pyccel.ast.builtins import Range, Zip, Enumerate, Map, PythonTuple
 
-from pyccel.ast.numpyext import Full, Array, Rand
+from pyccel.ast.numpyext import Full, Array, Rand, Empty
 from pyccel.ast.numpyext import EmptyLike, FullLike, OnesLike, ZerosLike
 from pyccel.ast.numpyext import NumpySum, NumpyMin, NumpyMax, NumpyMod
 from pyccel.ast.numpyext import Matmul, Norm
@@ -96,7 +97,6 @@ from pyccel.ast.numpyext import NumpyInt, Int32, Int64
 from pyccel.ast.numpyext import NumpyFloat, Float32, Float64
 from pyccel.ast.numpyext import NumpyComplex, Complex64, Complex128
 from pyccel.ast.numpyext import Real, Imag, Where, Diag, Linspace
-from pyccel.ast.numpyext import PyccelArraySize
 from pyccel.ast.numpyext import NumpyUfuncBase
 
 from pyccel.ast.mathext  import MathFunctionBase
@@ -1591,10 +1591,10 @@ class SemanticParser(BasicParser):
             expr = Block(rhs.name, rhs.variables, body)
             return expr
 
-        elif isinstance(rhs, FunctionalFor):
-            return rhs
-
         elif isinstance(rhs, CodeBlock):
+            if len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
+                return rhs
+
             # case of complex stmt
             # that needs to be splitted
             # into a list of stmts
@@ -2081,19 +2081,22 @@ class SemanticParser(BasicParser):
 
         lhs_name = _get_name(expr.lhs)
 
+        lhs_empty = Empty(shape, dtype = dtype)
+        lhs       = self._create_variable(lhs_name, dtype, lhs_empty, d_var)
+        self.insert_variable(lhs)
+        lhs_assign = Assign(lhs, lhs_empty)
+
+        lhs = self.get_variable(lhs_name)
+
         if isinstance(target, PythonTuple) and not target.is_homogeneous:
             errors.report(LIST_OF_TUPLES, symbol=expr,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='error', blocker=self.blocking)
-            lhs      = self._create_variable(lhs_name, target[0].dtype, target, d_var)
-        else:
-            lhs      = self._create_variable(lhs_name, dtype, target, d_var)
-        self.insert_variable(lhs)
 
         loops = [self._visit(i, **settings) for i in expr.loops]
         index = self._visit(index, **settings)
 
-        return FunctionalFor(loops, lhs=lhs, indices=indices, index=index)
+        return CodeBlock([lhs_assign, FunctionalFor(loops, lhs=lhs, indices=indices, index=index)])
 
     def _visit_While(self, expr, **settings):
 
@@ -2329,13 +2332,10 @@ class SemanticParser(BasicParser):
                     var_name = var.name
                     if var_name in decorators['stack_array']:
                         d_var = self._infere_type(var, **settings)
-                        d_var['is_stack_array'] = True
-                        d_var['allocatable'] = False
-                        d_var['is_pointer']  = False
-                        d_var['is_target']   = False
-                        dtype = d_var.pop('datatype')
-                        var   = Variable(dtype, var_name, **d_var)
-                        local_vars[i] = var
+                        var.is_stack_array = True
+                        var.allocatable    = False
+                        var.is_pointer     = False
+                        var.is_target      = False
 
             # TODO should we add all the variables or only the ones used in the function
             container = self._namespace.parent_scope
