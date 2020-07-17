@@ -1201,7 +1201,7 @@ def test_array_int32_in_bool_out_1d_complex_3d_expr():
 
     x  = np.array( [1,2,3], dtype=np.int32 )
     a  = np.array( [-1,-2,-3], dtype=np.int32 )
-    r1 = np.empty( 3 , dtype=np.bool )
+    r1 = np.empty( 3 , dtype=np.int32 )
     r2 = np.copy(r1)
 
     f1(x, a, r1)
@@ -1216,7 +1216,7 @@ def test_array_int32_in_bool_out_2d_C_complex_3d_expr():
 
     x  = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
     a  = np.array( [[-1,-2,-3], [-4,-5,-6]], dtype=np.int32 )
-    r1 = np.empty( (2,3) , dtype=np.bool )
+    r1 = np.empty( (2,3) , dtype=np.int32 )
     r2 = np.copy(r1)
 
     f1(x, a, r1)
@@ -1231,7 +1231,7 @@ def test_array_int32_in_bool_out_2d_F_complex_3d_expr():
 
     x  = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
     a  = np.array( [[-1,-2,-3], [-4,-5,-6]], dtype=np.int32, order='F' )
-    r1 = np.empty( (2,3) , dtype=np.bool, order='F' )
+    r1 = np.empty( (2,3) , dtype=np.int32, order='F' )
     r2 = np.copy(r1)
 
     f1(x, a, r1)
