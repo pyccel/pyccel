@@ -66,3 +66,9 @@ def test_compare_is_nil():
 @pytest.mark.xfail(reason="f2py does not support optional arguments https://github.com/numpy/numpy/issues/4013")
 def test_compare_is_not_nil():
     compare_epyccel(base.is_not_nil, True, None)
+
+def test_cast_int():
+    compare_epyccel(base.cast_int, 4)
+
+def test_cast_bool():
+    compare_epyccel(base.cast_bool, True)
