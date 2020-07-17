@@ -365,6 +365,65 @@ def array_real_2d_F_initialization(a):
 
 
 #==============================================================================
+# COMPLEX EXPRESSIONS IN 3D : TEST CONSTANT AND UNKNOWN SHAPES
+#==============================================================================
+
+
+@types( 'int32[:]', 'int32[:]' )
+def array_int32_1d_complex_3d_expr( x, y ):
+    from numpy import full
+    z = full(3,5, dtype=np.int32)
+    x[:] = (x // y) * x + z
+
+@types( 'int32[:,:]', 'int32[:,:]' )
+def array_int32_2d_C_complex_3d_expr( x, y ):
+    from numpy import full
+    z = full((2,3),5, dtype=np.int32)
+    x[:] = (x // y) * x + z
+
+@types( 'int32[:,:](order=F)', 'int32[:,:](order=F)' )
+def array_int32_2d_F_complex_3d_expr( x, y ):
+    from numpy import full
+    z = full((2,3),5,order='F', dtype=np.int32)
+    x[:] = (x // y) * x + z
+
+@types( 'real[:]', 'real[:]' )
+def array_real_1d_complex_3d_expr( x, y ):
+    from numpy import full
+    z = full(3,5)
+    x[:] = (x // y) * x + z
+
+@types( 'real[:,:]', 'real[:,:]' )
+def array_real_2d_C_complex_3d_expr( x, y ):
+    from numpy import full
+    z = full((2,3),5)
+    x[:] = (x // y) * x + z
+
+@types( 'real[:,:](order=F)', 'real[:,:](order=F)' )
+def array_real_2d_F_complex_3d_expr( x, y ):
+    from numpy import full
+    z = full((2,3),5,order='F')
+    x[:] = (x // y) * x + z
+
+@types( 'int32[:]', 'int32[:]', 'bool[:]' )
+def array_int32_in_bool_out_1d_complex_3d_expr( x, y, r ):
+    from numpy import full, int32
+    z = full(3,5, dtype=int32)
+    r[:] = (x // y) * x > z
+
+@types( 'int32[:,:]', 'int32[:,:]', 'bool[:,:]' )
+def array_int32_in_bool_out_2d_C_complex_3d_expr( x, y, r ):
+    from numpy import full, int32
+    z = full((2,3),5, dtype=int32)
+    r[:] = (x // y) * x > z
+
+@types( 'int32[:,:](order=F)', 'int32[:,:](order=F)', 'bool[:,:](order=F)' )
+def array_int32_in_bool_out_2d_F_complex_3d_expr( x, y, r ):
+    from numpy import full, int32
+    z = full((2,3),5,order='F', dtype=int32)
+    r[:] = (x // y) * x > z
+
+#==============================================================================
 # 1D STACK ARRAYS OF REAL
 #==============================================================================
 
