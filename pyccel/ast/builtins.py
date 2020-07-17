@@ -280,7 +280,8 @@ class List(Tuple, PyccelAstNode):
     def __init__(self, *args, **kwargs):
         if self.stage == 'syntactic':
             return
-        integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
+        bools     = [a for a in args if a.dtype is NativeBool()]
+        integers  = [a for a in args if a.dtype is NativeInteger()]
         reals     = [a for a in args if a.dtype is NativeReal()]
         complexes = [a for a in args if a.dtype is NativeComplex()]
         strs      = [a for a in args if a.dtype is NativeString()]
@@ -299,6 +300,9 @@ class List(Tuple, PyccelAstNode):
             elif integers:
                 self._dtype     = NativeInteger()
                 self._precision = max(a.precision for a in integers)
+            elif bools:
+                self._dtype     = NativeBool()
+                self._precision  = max(a.precision for a in bools)
             else:
                 raise TypeError('cannot determine the type of {}'.format(self))
             
