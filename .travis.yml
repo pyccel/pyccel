@@ -67,8 +67,7 @@ jobs:
     env: PYTHON=python3 MPI_OPTS="--oversubscribe"
     before_install:
       - brew update
-#      - brew install gcc
-      - brew install openblas lapack
+#      - brew install gcc openblas lapack
       - brew install open-mpi
     before_script: null
     after_script : null
