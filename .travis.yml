@@ -66,6 +66,7 @@ jobs:
     language: c  #'language: python' is an error on Travis CI macOS
     env: PYTHON=python3 MPI_OPTS="--oversubscribe"
     before_install:
+      - brew update
 #      - brew install gcc
       - brew install openblas lapack
       - brew install open-mpi
