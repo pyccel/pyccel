@@ -131,7 +131,7 @@ jobs:
     before_script:
       # Call f2py once (it will fail) to clear some cache
       - echo -e "subroutine foo()\nend subroutine\n" > faily.f90
-      - ${PYTHON} -m numpy.f2py -c -m faily faily.f90 || :
+      - ${PYTHON} -m numpy.f2py -c -m faily faily.f90 || true
       - rm faily.f90
 
     after_script : null
