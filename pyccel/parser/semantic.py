@@ -1085,7 +1085,15 @@ class SemanticParser(BasicParser):
         return expr_new
 
     def _visit_PyccelAdd(self, expr, **settings):
-        return self._handle_PyccelOperator(expr, **settings)
+        args = [self._visit(a, **settings) for a in expr.args]
+        if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, List)):
+            expr_new = Concatenate(args, True)
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal', blocker=self.blocking)
+        else:
+            expr_new = self._handle_PyccelOperator(expr, **settings)
+        return expr_new
 
     def _visit_PyccelMul(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
@@ -1322,7 +1330,7 @@ class SemanticParser(BasicParser):
 
     def _create_variable(self, name, dtype, rhs, d_lhs):
 
-        if isinstance(rhs, (TupleVariable, PythonTuple)):
+        if isinstance(rhs, (TupleVariable, PythonTuple, List)):
             elem_vars = []
             for i,r in enumerate(rhs):
                 elem_name = self._get_new_variable_name( r, name + '_' + str(i) )
