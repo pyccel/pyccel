@@ -835,7 +835,7 @@ class SemanticParser(BasicParser):
         # case of Pyccel ast Variable, IndexedVariable
         # if not possible we use symbolic objects
 
-        if not isinstance(var, Variable):
+        if not isinstance(var, (Variable, DottedVariable)):
             assert(hasattr(var,'__getitem__'))
             if len(args)==1:
                 return var[args[0]]
@@ -2073,7 +2073,12 @@ class SemanticParser(BasicParser):
             indices[i] = var
 
         dim = dims[-1][0]
+        if len(dims) > 1:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                          bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                          severity='fatal')
         for i in range(len(dims) - 1, 0, -1):
+            # TODO: Remove sympy expressions
             size  = dims[i - 1][0]
             step  = dims[i - 1][1]
             start = dims[i - 1][2]
