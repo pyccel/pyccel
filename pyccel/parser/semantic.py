@@ -55,7 +55,7 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import inline, subs, create_variable, extract_subexpressions
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import _atomic
-from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
+from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.core import PyccelUnary
@@ -2052,10 +2052,19 @@ class SemanticParser(BasicParser):
                               severity='fatal')
             self.insert_variable(var)
 
-            size = (stop - start) / step
+            # size = (stop - start) / step
+            if start == Integer(0):
+                size = stop
+            else:
+                size = PyccelMinus(stop,start)
+            if step != Integer(1):
+                size = PyccelDiv(PyccelAssociativeParenthesis(size), step)
+
+            if size.dtype != NativeInteger():
+                size = PythonInt(size)
+
             body = body.body[0]
             dims.append((size, step, start, stop))
-
 
         # we now calculate the size of the array which will be allocated
 
