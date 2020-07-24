@@ -643,12 +643,8 @@ class FCodePrinter(CodePrinter):
         return ' % '.join(self._print(n) for n in expr.name)
 
     def _print_Concatenate(self, expr):
-         if expr.is_list:
-             code = ', '.join(self._print(a) for a in expr.args)
-             return '[' + code + ']'
-         else:
-             code = '//'.join('trim('+self._print(a)+')' for a in expr.args)
-             return code
+         code = ', '.join(self._print(a) for a in expr.args)
+         return '[' + code + ']'
 
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
@@ -2164,7 +2160,10 @@ class FCodePrinter(CodePrinter):
         return '{} ** {}'.format(base_c, e_c)
 
     def _print_PyccelAdd(self, expr):
-        return ' + '.join(self._print(a) for a in expr.args)
+        if expr.dtype is NativeString():
+            return '//'.join('trim('+self._print(a)+')' for a in expr.args)
+        else:
+            return ' + '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelMinus(self, expr):
         args = [self._print(a) for a in expr.args]
