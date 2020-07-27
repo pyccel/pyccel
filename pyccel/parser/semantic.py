@@ -107,7 +107,7 @@ from pyccel.errors.errors import PyccelSemanticError
 
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
-# TODO move or delet extract_subexpressions when we introduce 
+# TODO move or delete extract_subexpressions when we introduce
 #   Functional programming
 from pyccel.errors.messages import *
 
@@ -1409,6 +1409,15 @@ class SemanticParser(BasicParser):
                     errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
                     symbol=txt,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='error', blocker=False)
+                elif d_var['shape'] != str(getattr(var, 'shape', 'None')):
+                    txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
+                    format_shape = lambda s: "" if len(s)==0 else s
+                    txt = txt.format(name=name, dtype=dtype,
+                            old=format_shape(var.shape), new=format_shape(d_var['shape']))
+
+                    errors.report(INCOMPATIBLE_REDEFINITION,
+                        symbol=txt,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='error', blocker=False)
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.
@@ -1554,7 +1563,7 @@ class SemanticParser(BasicParser):
                         return Assign(lhs[0], FunctionCall(master, args, self._current_function))
                     else:
                         return FunctionCall(master, args, self._current_function)
-   
+
         else:
             rhs = self._visit(rhs, **settings)
 
