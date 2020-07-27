@@ -1409,7 +1409,7 @@ class SemanticParser(BasicParser):
                     errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
                     symbol=txt,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='error', blocker=False)
-                elif d_var['shape'] != str(getattr(var, 'shape', 'None')):
+                elif d_var['shape'] != getattr(var, 'shape', 'None'):
                     txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
                     format_shape = lambda s: "" if len(s)==0 else s
                     txt = txt.format(name=name, dtype=dtype,
