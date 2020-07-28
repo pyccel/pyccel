@@ -107,7 +107,7 @@ from pyccel.errors.errors import PyccelSemanticError
 
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
-# TODO move or delet extract_subexpressions when we introduce 
+# TODO move or delete extract_subexpressions when we introduce
 #   Functional programming
 from pyccel.errors.messages import *
 
@@ -1359,7 +1359,7 @@ class SemanticParser(BasicParser):
             #      lists/tuples.
             rhs.base.internal_variable.is_target = True
 
-    def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, **settings):
+    def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign, **settings):
 
         if isinstance(lhs, Symbol):
 
@@ -1409,6 +1409,15 @@ class SemanticParser(BasicParser):
                     errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
                     symbol=txt,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='error', blocker=False)
+                elif not is_augassign and d_var['shape'] != getattr(var, 'shape', 'None'):
+                    txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
+                    format_shape = lambda s: "" if len(s)==0 else s
+                    txt = txt.format(name=name, dtype=dtype,
+                            old=format_shape(var.shape), new=format_shape(d_var['shape']))
+
+                    errors.report(INCOMPATIBLE_REDEFINITION,
+                        symbol=txt,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='error', blocker=False)
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.
@@ -1554,7 +1563,7 @@ class SemanticParser(BasicParser):
                         return Assign(lhs[0], FunctionCall(master, args, self._current_function))
                     else:
                         return FunctionCall(master, args, self._current_function)
-   
+
         else:
             rhs = self._visit(rhs, **settings)
 
@@ -1710,14 +1719,14 @@ class SemanticParser(BasicParser):
                         severity='error', blocker=self.blocking)
                     return None
 
-            lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, **settings)
+            lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign), **settings)
         elif isinstance(lhs, PythonTuple):
             n = len(lhs)
             if isinstance(rhs, PythonTuple):
                 new_lhs = []
                 for i,(l,r) in enumerate(zip(lhs,rhs)):
                     d = self._infere_type(r, **settings)
-                    new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, **settings) )
+                    new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign), **settings) )
                 lhs = PythonTuple(*new_lhs)
 
             elif isinstance(rhs, TupleVariable):
@@ -1730,15 +1739,14 @@ class SemanticParser(BasicParser):
                     new_rhs = []
                     for i,l in enumerate(lhs):
                         new_lhs.append( self._assign_lhs_variable(l, d_var.copy(),
-                            indexed_rhs.__getitem__(i), new_expressions, **settings) )
-
+                            indexed_rhs.__getitem__(i), new_expressions, isinstance(expr, AugAssign), **settings) )
                         new_rhs.append(indexed_rhs.__getitem__(i))
                     rhs = PythonTuple(*new_rhs)
                     d_var = [d_var]
                 else:
                     d_var = [self._infere_type(v) for v in rhs]
                     for i,(l,r) in enumerate(zip(lhs,rhs)):
-                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), r, new_expressions, **settings) )
+                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), r, new_expressions, isinstance(expr, AugAssign), **settings) )
 
                 lhs = PythonTuple(*new_lhs)
 
@@ -1747,10 +1755,10 @@ class SemanticParser(BasicParser):
                 new_lhs = []
                 if hasattr(rhs,'__getitem__'):
                     for i,l in enumerate(lhs):
-                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs[i], new_expressions, **settings) )
+                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs[i], new_expressions, isinstance(expr, AugAssign), **settings) )
                 else:
                     for i,l in enumerate(lhs):
-                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs, new_expressions, **settings) )
+                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs, new_expressions, isinstance(expr, AugAssign), **settings) )
                 lhs = PythonTuple(*new_lhs)
 
             elif d_var['shape'][0]==n:
@@ -1759,7 +1767,7 @@ class SemanticParser(BasicParser):
 
                 for i,l in enumerate(lhs):
                     rhs_i = self._visit(Indexed(rhs,i))
-                    new_lhs.append( self._assign_lhs_variable(l, self._infere_type(rhs_i), rhs_i, new_expressions, **settings) )
+                    new_lhs.append( self._assign_lhs_variable(l, self._infere_type(rhs_i), rhs_i, new_expressions, isinstance(expr, AugAssign), **settings) )
                     new_rhs.append(rhs_i)
 
                 lhs = PythonTuple(*new_lhs)
