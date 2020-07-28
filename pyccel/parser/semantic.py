@@ -1767,7 +1767,7 @@ class SemanticParser(BasicParser):
 
                 for i,l in enumerate(lhs):
                     rhs_i = self._visit(Indexed(rhs,i))
-                    new_lhs.append( self._assign_lhs_variable(l, self._infere_type(rhs_i), rhs_i, new_expressions,, isinstance(expr, AugAssign) **settings) )
+                    new_lhs.append( self._assign_lhs_variable(l, self._infere_type(rhs_i), rhs_i, new_expressions, isinstance(expr, AugAssign) **settings) )
                     new_rhs.append(rhs_i)
 
                 lhs = PythonTuple(*new_lhs)
