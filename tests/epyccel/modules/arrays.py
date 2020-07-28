@@ -410,7 +410,7 @@ def array_int32_in_bool_out_1d_complex_3d_expr( x, y, ri ):
     from numpy import full, int32, empty
     z = full(3,5, dtype=int32)
     r = empty(3, dtype=bool)
-    r = (x // y) * x > z
+    r[:] = (x // y) * x > z
     ri[:] = r
 
 @types( 'int32[:,:]', 'int32[:,:]', 'int32[:,:]' )
