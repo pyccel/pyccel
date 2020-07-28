@@ -1392,7 +1392,7 @@ class SemanticParser(BasicParser):
                         severity='fatal', blocker=self.blocking)
                 elif lhs.rank>0 and isinstance(rhs, PyccelOperator):
                     #TODO: Provide order once issue #335 is fixed
-                    #stmts.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, lhs.order)))
+                    #new_expressions.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, lhs.order)))
                     new_expressions.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, 'C')))
             else:
 
