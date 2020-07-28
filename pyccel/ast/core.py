@@ -240,7 +240,7 @@ class PyccelOperator(Expr, PyccelAstNode):
             
             shapes = [a.shape for a in args]
 
-            if all(not isinstance(sh, PyccelArraySize) for tup in shapes for sh in tup):
+            if all(not (sh is None or isinstance(sh, PyccelArraySize)) for tup in shapes for sh in tup):
                 if len(args) == 1:
                     shape = args[0].shape
                 else:
@@ -284,7 +284,7 @@ class PyccelDiv(PyccelOperator):
 
         shapes = [a.shape for a in args]
         
-        if all(not isinstance(sh, PyccelArraySize) for tup in shapes for sh in tup):
+        if all(not (sh is None or isinstance(sh, PyccelArraySize)) for tup in shapes for sh in tup):
             shape = broadcast(args[0].shape, args[1].shape)
             
             for a in args[2:]:
@@ -310,7 +310,7 @@ class PyccelBooleanOperator(Expr, PyccelAstNode):
         self._precision = default_precision['bool']
         
         shapes = [a.shape for a in args]
-        if all(sh is not None for sh in shapes):
+        if all(not (sh is None or isinstance(sh, PyccelArraySize)) for tup in shapes for sh in tup):
             shape = broadcast(args[0].shape, args[1].shape)
             for a in args[2:]:
                 shape = broadcast(shape, a.shape)
@@ -319,6 +319,7 @@ class PyccelBooleanOperator(Expr, PyccelAstNode):
             self._rank  = len(shape)
         else:
             self._rank = max(a.rank for a in args)
+            self._shape = [None]*self._rank
 
 class PyccelEq(PyccelBooleanOperator):
     pass
@@ -2354,7 +2355,7 @@ class Variable(Symbol, PyccelAstNode):
 
         new_shape = []
         for i,s in enumerate(shape):
-            if isinstance(s,Py_Integer):
+            if isinstance(s,(Py_Integer, PyccelArraySize)):
                 new_shape.append(s)
             elif isinstance(s, sp_Integer):
                 new_shape.append(Py_Integer(s.p))

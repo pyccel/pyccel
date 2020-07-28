@@ -365,6 +365,71 @@ def array_real_2d_F_initialization(a):
 
 
 #==============================================================================
+# COMPLEX EXPRESSIONS IN 3D : TEST CONSTANT AND UNKNOWN SHAPES
+#==============================================================================
+
+
+@types( 'int32[:]', 'int32[:]' )
+def array_int32_1d_complex_3d_expr( x, y ):
+    from numpy import full, int32
+    z = full(3,5, dtype=int32)
+    x[:] = (x // y) * x + z
+
+@types( 'int32[:,:]', 'int32[:,:]' )
+def array_int32_2d_C_complex_3d_expr( x, y ):
+    from numpy import full, int32
+    z = full((2,3),5, dtype=int32)
+    x[:] = (x // y) * x + z
+
+@types( 'int32[:,:](order=F)', 'int32[:,:](order=F)' )
+def array_int32_2d_F_complex_3d_expr( x, y ):
+    from numpy import full, int32
+    z = full((2,3),5,order='F', dtype=int32)
+    x[:] = (x // y) * x + z
+
+@types( 'real[:]', 'real[:]' )
+def array_real_1d_complex_3d_expr( x, y ):
+    from numpy import full
+    z = full(3,5)
+    x[:] = (x // y) * x + z
+
+@types( 'real[:,:]', 'real[:,:]' )
+def array_real_2d_C_complex_3d_expr( x, y ):
+    from numpy import full
+    z = full((2,3),5)
+    x[:] = (x // y) * x + z
+
+@types( 'real[:,:](order=F)', 'real[:,:](order=F)' )
+def array_real_2d_F_complex_3d_expr( x, y ):
+    from numpy import full
+    z = full((2,3),5,order='F')
+    x[:] = (x // y) * x + z
+
+@types( 'int32[:]', 'int32[:]', 'int32[:]' )
+def array_int32_in_bool_out_1d_complex_3d_expr( x, y, ri ):
+    from numpy import full, int32, empty
+    z = full(3,5, dtype=int32)
+    r = empty(3, dtype=bool)
+    r[:] = (x // y) * x > z
+    ri[:] = r
+
+@types( 'int32[:,:]', 'int32[:,:]', 'int32[:,:]' )
+def array_int32_in_bool_out_2d_C_complex_3d_expr( x, y, ri ):
+    from numpy import full, int32
+    z = full((2,3),5, dtype=int32)
+    r = full((2,3),5,order='F', dtype=bool)
+    r[:] = (x // y) * x > z
+    ri[:] = r
+
+@types( 'int32[:,:](order=F)', 'int32[:,:](order=F)', 'int32[:,:](order=F)' )
+def array_int32_in_bool_out_2d_F_complex_3d_expr( x, y, ri ):
+    from numpy import full, int32
+    z = full((2,3),5,order='F', dtype=int32)
+    r = full((2,3),5,order='F', dtype=bool)
+    r[:] = (x // y) * x > z
+    ri[:] = r
+
+#==============================================================================
 # 1D STACK ARRAYS OF REAL
 #==============================================================================
 

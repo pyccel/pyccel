@@ -139,22 +139,10 @@ class Array(Application, NumpyNewArray):
         if not isinstance(arg, (Tuple, PythonTuple, List)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
-        # Determine dtype and (if possible) precision
-        if dtype is not None:
-            if isinstance(dtype, ValuedArgument):
-                dtype = dtype.value
-            dtype = str(dtype).replace('\'', '')
-            dtype, prec = dtype_registry[dtype]
-        else:
+        # Verify dtype and get precision
+        if dtype is None:
             dtype = arg.dtype
-            prec  = arg.precision
-
-        # If necessary, use default precision
-        if not prec:
-            prec = default_precision[dtype]
-
-        # Convert dtype from string to Singleton
-        dtype = datatype(dtype)
+        dtype, prec = process_dtype(dtype)
 
         # ... Determine ordering
         if isinstance(order, ValuedArgument):
