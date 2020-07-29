@@ -55,7 +55,7 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import inline, subs, create_variable, extract_subexpressions
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import _atomic
-from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
+from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.core import PyccelUnary
@@ -835,7 +835,7 @@ class SemanticParser(BasicParser):
         # case of Pyccel ast Variable, IndexedVariable
         # if not possible we use symbolic objects
 
-        if not isinstance(var, Variable):
+        if not isinstance(var, (Variable, DottedVariable)):
             assert(hasattr(var,'__getitem__'))
             if len(args)==1:
                 return var[args[0]]
@@ -1085,7 +1085,15 @@ class SemanticParser(BasicParser):
         return expr_new
 
     def _visit_PyccelAdd(self, expr, **settings):
-        return self._handle_PyccelOperator(expr, **settings)
+        args = [self._visit(a, **settings) for a in expr.args]
+        if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, List)):
+            expr_new = Concatenate(args, True)
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal', blocker=self.blocking)
+        else:
+            expr_new = self._handle_PyccelOperator(expr, **settings)
+        return expr_new
 
     def _visit_PyccelMul(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
@@ -1322,7 +1330,7 @@ class SemanticParser(BasicParser):
 
     def _create_variable(self, name, dtype, rhs, d_lhs):
 
-        if isinstance(rhs, (TupleVariable, PythonTuple)):
+        if isinstance(rhs, (TupleVariable, PythonTuple, List)):
             elem_vars = []
             for i,r in enumerate(rhs):
                 elem_name = self._get_new_variable_name( r, name + '_' + str(i) )
@@ -2052,10 +2060,19 @@ class SemanticParser(BasicParser):
                               severity='fatal')
             self.insert_variable(var)
 
-            size = (stop - start) / step
+            # size = (stop - start) / step
+            if start == Integer(0):
+                size = stop
+            else:
+                size = PyccelMinus(stop,start)
+            if step != Integer(1):
+                size = PyccelDiv(PyccelAssociativeParenthesis(size), step)
+
+            if size.dtype != NativeInteger():
+                size = PythonInt(size)
+
             body = body.body[0]
             dims.append((size, step, start, stop))
-
 
         # we now calculate the size of the array which will be allocated
 
@@ -2064,7 +2081,12 @@ class SemanticParser(BasicParser):
             indices[i] = var
 
         dim = dims[-1][0]
+        if len(dims) > 1:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                          bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                          severity='fatal')
         for i in range(len(dims) - 1, 0, -1):
+            # TODO: Remove sympy expressions
             size  = dims[i - 1][0]
             step  = dims[i - 1][1]
             start = dims[i - 1][2]

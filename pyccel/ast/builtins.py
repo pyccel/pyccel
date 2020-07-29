@@ -370,9 +370,9 @@ class Range(Basic):
     """
 
     def __new__(cls, *args):
-        start = 0
+        start = Integer(0)
         stop = None
-        step = 1
+        step = Integer(1)
 
         _valid_args = (Integer, Symbol, Indexed)
 
