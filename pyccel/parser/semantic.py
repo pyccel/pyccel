@@ -255,10 +255,12 @@ class SemanticParser(BasicParser):
         return ast
 
     def _get_new_name(self, current_name):
+        if current_name not in self._possible_names:
+            return current_name
+        current_name = current_name + '_'
         while current_name in self._possible_names:
-            # Generate random name. Remove dummy
-            new_suffix = '_' + create_variable(r).name
-            current_name = current_name + new_suffix
+            # Generate random name based on the original name
+            current_name = current_name + create_random_string(r)
         self._possible_names.add(current_name)
         return current_name
 
