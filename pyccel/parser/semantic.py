@@ -25,6 +25,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import PyccelAstNode
 
+from pyccel.ast.core import Constant
 from pyccel.ast.core import String
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Variable
@@ -271,11 +272,7 @@ class SemanticParser(BasicParser):
         return var
 
     def _get_new_variable_name(self, obj, start_name = None):
-        name = start_name if start_name is not None else create_variable(obj).name
-        while name in self._possible_names:
-            name = create_variable(obj).name
-        self._possible_names.add(name)
-        return name
+        return self._get_new_variable(obj) if start_name is None else self._get_new_name(current_name)
 
     def get_variable_from_scope(self, name):
         """."""
@@ -998,18 +995,17 @@ class SemanticParser(BasicParser):
             if rhs_name in first:
                 imp = self.get_import(_get_name(expr.lhs))
 
-                # Is this error possible if a dict has been found?
-                assert(imp is not None)
+                # If pyccelized file
+                if imp is not None:
+                    new_name = imp.find_module_target(rhs_name)
+                    if new_name is None:
+                        new_name = self._get_new_name(rhs_name)
 
-                new_name = imp.find_module_target(rhs_name)
-                if new_name is None:
-                    new_name = self._get_new_name(rhs_name)
-
-                    # Save the import target that has been used
-                    if new_name == rhs_name:
-                        imp.define_target(Symbol(rhs_name))
-                    else:
-                        imp.define_target(AsName(Symbol(rhs_name), Symbol(new_name)))
+                        # Save the import target that has been used
+                        if new_name == rhs_name:
+                            imp.define_target(Symbol(rhs_name))
+                        else:
+                            imp.define_target(AsName(Symbol(rhs_name), Symbol(new_name)))
 
                 if isinstance(expr.rhs, Application):
                     # If object is a function
@@ -2726,7 +2722,10 @@ class SemanticParser(BasicParser):
             if expr.target:
                 for (name, atom) in imports:
                     if not name is None:
-                        _insert_obj('functions', name, atom)
+                        if isinstance(atom, Constant):
+                            _insert_obj('variables', name, atom)
+                        else:
+                            _insert_obj('functions', name, atom)
             else:
                 _insert_obj('variables', source_target, imports)
         else:
