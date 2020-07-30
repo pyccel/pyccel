@@ -260,7 +260,7 @@ class SemanticParser(BasicParser):
         current_name = current_name + '_'
         while current_name in self._possible_names:
             # Generate random name based on the original name
-            current_name = current_name + create_random_string(r)
+            current_name = current_name + create_random_string(current_name)
         self._possible_names.add(current_name)
         return current_name
 
