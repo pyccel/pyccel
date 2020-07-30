@@ -995,6 +995,7 @@ class SemanticParser(BasicParser):
             if rhs_name in first:
                 imp = self.get_import(_get_name(expr.lhs))
 
+                new_name = rhs_name
                 # If pyccelized file
                 if imp is not None:
                     new_name = imp.find_module_target(rhs_name)
@@ -1011,7 +1012,7 @@ class SemanticParser(BasicParser):
                     # If object is a function
                     args  = self._handle_function_args(expr.rhs.args, **settings)
                     func  = first[rhs_name]
-                    if new_name and new_name is not rhs_name:
+                    if new_name != rhs_name:
                         func  = func.clone(new_name)
                     return self._handle_function(func, args, **settings)
                 else:
