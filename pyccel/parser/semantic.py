@@ -272,7 +272,7 @@ class SemanticParser(BasicParser):
         return var
 
     def _get_new_variable_name(self, obj, start_name = None):
-        return self._get_new_variable(obj) if start_name is None else self._get_new_name(current_name)
+        return self._get_new_variable(obj) if start_name is None else self._get_new_name(start_name)
 
     def get_variable_from_scope(self, name):
         """."""
