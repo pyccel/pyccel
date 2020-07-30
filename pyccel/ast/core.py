@@ -805,7 +805,7 @@ class AsName(Basic):
         return '{0} as {1}'.format(sstr(self.name), sstr(self.target))
 
     def __eq__(self, string):
-        if isinstance(string, str):
+        if isinstance(string, (str, Symbol)):
             return string == self.target
         else:
             return self is string
@@ -3917,6 +3917,14 @@ class Import(Basic):
 
     def define_target(self, new_target):
         self._target.append(new_target)
+
+    def find_module_target(self, new_target):
+        for t in self._target:
+            if isinstance(t, AsName) and new_target == str(t.name):
+                return t.target
+            elif new_target == str(t):
+                return t
+        return None
 
 class TupleImport(Basic):
 
