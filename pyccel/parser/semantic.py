@@ -1011,7 +1011,8 @@ class SemanticParser(BasicParser):
                     # If object is a function
                     args  = self._handle_function_args(expr.rhs.args, **settings)
                     func  = first[rhs_name]
-                    func  = func.clone(new_name)
+                    if new_name and new_name is not rhs_name:
+                        func  = func.clone(new_name)
                     return self._handle_function(func, args, **settings)
                 else:
                     # If object is something else (eg. constant, dict)
