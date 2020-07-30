@@ -53,7 +53,7 @@ from pyccel.ast.core import AsName
 from pyccel.ast.core import With, Block
 from pyccel.ast.core import List, Dlist, Len
 from pyccel.ast.core import StarredArguments
-from pyccel.ast.core import inline, subs, create_variable, extract_subexpressions
+from pyccel.ast.core import inline, subs, create_random_string, create_variable, extract_subexpressions
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import _atomic
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
@@ -257,7 +257,7 @@ class SemanticParser(BasicParser):
     def _get_new_name(self, current_name):
         while current_name in self._possible_names:
             # Generate random name. Remove dummy
-            new_suffix = create_variable(current_name).name[5:]
+            new_suffix = '_' + create_variable(r).name
             current_name = current_name + new_suffix
         self._possible_names.add(current_name)
         return current_name

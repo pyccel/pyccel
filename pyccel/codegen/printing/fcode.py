@@ -43,7 +43,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
 
 
 from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-from pyccel.ast.core      import create_variable, FunctionCall
+from pyccel.ast.core      import create_random_string, create_variable, FunctionCall
 from pyccel.ast.builtins  import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
@@ -2335,7 +2335,7 @@ class FCodePrinter(CodePrinter):
                 self._additional_code = ''
             out_vars = []
             for r in func.results:
-                var_name = create_variable(r).name
+                var_name = 'Dummy_' + create_random_string(r)
                 var =  r.clone(name = var_name)
 
                 if self._current_function:
@@ -2521,7 +2521,7 @@ class FCodePrinter(CodePrinter):
                 self._additional_code = ''
             out_vars = []
             for r in func.results:
-                var_name = create_variable(r).name
+                var_name = 'Dummy_' + create_random_string(r)
                 var =  r.clone(name = var_name)
 
                 if self._current_function:

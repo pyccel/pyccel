@@ -156,6 +156,7 @@ __all__ = (
     '_atomic',
 #    'allocatable_like',
     'create_variable',
+    'create_random_string',
     'extract_subexpressions',
 #    'float2int',
     'get_assigned_symbols',
@@ -732,16 +733,20 @@ def int2float(expr):
 def float2int(expr):
     return expr
 
+def create_random_string(expr):
+    import numpy as np
+    try:
+        randstr = str(abs(hash(expr)
+                                  + np.random.randint(500)))[-4:]
+    except TypeError:
+        # Catch unhashable type (e.g. list, FunctionalSum)
+        randstr = str(abs(np.random.randint(10000)))[-4:]
+
 def create_variable(expr):
     """."""
 
     import numpy as np
-    try:
-        name = 'Dummy_' + str(abs(hash(expr)
-                                  + np.random.randint(500)))[-4:]
-    except TypeError:
-        # Catch unhashable type (e.g. list, FunctionalSum)
-        name = 'Dummy_' + str(abs(np.random.randint(10000)))[-4:]
+    name = 'Dummy_' + create_random_string(expr)
 
     return Symbol(name)
 
