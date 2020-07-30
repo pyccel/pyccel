@@ -1015,10 +1015,14 @@ class SemanticParser(BasicParser):
                     if new_name != rhs_name:
                         func  = func.clone(new_name)
                     return self._handle_function(func, args, **settings)
-                else:
-                    # If object is something else (eg. constant, dict)
+                elif isinstance(expr.rhs, Constant):
                     var = first[rhs_name]
-                    var.name = new_name
+                    if new_name != rhs_name:
+                        var.name = new_name
+                    return var
+                else:
+                    # If object is something else (eg. dict)
+                    var = first[rhs_name]
                     return var
             else:
                 errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(expr.lhs)),
