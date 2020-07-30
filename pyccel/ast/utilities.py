@@ -19,7 +19,7 @@ from .core import Constant, Variable, IndexedVariable
 
 from .builtins import Bool, Enumerate, Int, PythonFloat, PythonComplex, Len, Map, Range, Zip
 
-from .mathext  import math_functions
+from .mathext  import math_functions, math_constants
 
 from .numpyext import Full, Empty, Zeros, Ones
 from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
@@ -180,7 +180,7 @@ builtin_import_registery = {'numpy': {**numpy_functions, **numpy_constants, 'lin
         'numpy.random': numpy_random_functions,
         'scipy.constants': scipy_constants,
         'itertools': {'product': Product},
-        'math': math_functions,
+        'math': {**math_functions, ** math_constants},
         'pyccel.decorators': None}
 
 #==============================================================================
