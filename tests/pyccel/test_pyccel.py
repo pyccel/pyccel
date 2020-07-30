@@ -398,7 +398,7 @@ def test_hope_benchmarks( test_file ):
                                         "scripts/import_syntax/from_mod_import_as_func.py",
                                         "scripts/import_syntax/import_mod_func.py",
                                         "scripts/import_syntax/import_mod_as_func.py",
-                                        "scripts/import_syntax/collisions.py"
+                                        "scripts/import_syntax/collisions.py",
                                         "scripts/import_syntax/collisions3.py"
                                         ] )
 def test_import_syntax( test_file ):
