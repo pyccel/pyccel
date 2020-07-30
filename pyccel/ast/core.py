@@ -741,6 +741,7 @@ def create_random_string(expr):
     except TypeError:
         # Catch unhashable type (e.g. list, FunctionalSum)
         randstr = str(abs(np.random.randint(10000)))[-4:]
+    return randstr
 
 def create_variable(expr):
     """."""
