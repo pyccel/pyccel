@@ -253,6 +253,14 @@ class SemanticParser(BasicParser):
 
         return ast
 
+    def _get_new_name(self, current_name):
+        while current_name in self._possible_names:
+            # Generate random name. Remove dummy
+            new_suffix = create_variable(current_name).name[5:]
+            current_name = current_name + new_suffix
+        self._possible_names.add(current_name)
+        return current_name
+
     def _get_new_variable(self, obj):
         var = create_variable(obj)
         name = var.name
@@ -989,17 +997,31 @@ class SemanticParser(BasicParser):
 
             if rhs_name in first:
                 imp = self.get_import(_get_name(expr.lhs))
-                if imp is not None:
+
+                # Is this error possible if a dict has been found?
+                assert(imp is not None)
+
+                new_name = imp.find_module_target(rhs_name)
+                if new_name is None:
+                    new_name = self._get_new_name(rhs_name)
+
                     # Save the import target that has been used
-                    imp.define_target(Symbol(rhs_name))
+                    if new_name == rhs_name:
+                        imp.define_target(Symbol(rhs_name))
+                    else:
+                        imp.define_target(AsName(Symbol(rhs_name), Symbol(new_name)))
 
                 if isinstance(expr.rhs, Application):
                     # If object is a function
                     args  = self._handle_function_args(expr.rhs.args, **settings)
-                    return self._handle_function(first[rhs_name],args, **settings)
+                    func  = first[rhs_name]
+                    func  = func.clone(new_name)
+                    return self._handle_function(func, args, **settings)
                 else:
                     # If object is something else (eg. constant, dict)
-                    return first[rhs_name]
+                    var = first[rhs_name]
+                    var.name = new_name
+                    return var
             else:
                 errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(expr.lhs)),
                         symbol=expr,
