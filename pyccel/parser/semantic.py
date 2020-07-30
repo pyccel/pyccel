@@ -25,6 +25,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import PyccelAstNode
 
+from pyccel.ast.core import Constant
 from pyccel.ast.core import String
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Variable
@@ -52,7 +53,7 @@ from pyccel.ast.core import AsName
 from pyccel.ast.core import With, Block
 from pyccel.ast.core import List, Dlist, Len
 from pyccel.ast.core import StarredArguments
-from pyccel.ast.core import inline, subs, create_variable, extract_subexpressions
+from pyccel.ast.core import inline, subs, create_random_string, create_variable, extract_subexpressions
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import _atomic
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
@@ -253,6 +254,16 @@ class SemanticParser(BasicParser):
 
         return ast
 
+    def _get_new_name(self, current_name):
+        if current_name not in self._possible_names:
+            return current_name
+        current_name = current_name + '_' + create_random_string(current_name)
+        while current_name in self._possible_names:
+            # Generate random name based on the original name
+            current_name = current_name + create_random_string(current_name)
+        self._possible_names.add(current_name)
+        return current_name
+
     def _get_new_variable(self, obj):
         var = create_variable(obj)
         name = var.name
@@ -263,11 +274,7 @@ class SemanticParser(BasicParser):
         return var
 
     def _get_new_variable_name(self, obj, start_name = None):
-        name = start_name if start_name is not None else create_variable(obj).name
-        while name in self._possible_names:
-            name = create_variable(obj).name
-        self._possible_names.add(name)
-        return name
+        return self._get_new_variable(obj) if start_name is None else self._get_new_name(start_name)
 
     def get_variable_from_scope(self, name):
         """."""
@@ -989,17 +996,36 @@ class SemanticParser(BasicParser):
 
             if rhs_name in first:
                 imp = self.get_import(_get_name(expr.lhs))
+
+                new_name = rhs_name
+                # If pyccelized file
                 if imp is not None:
-                    # Save the import target that has been used
-                    imp.define_target(Symbol(rhs_name))
+                    new_name = imp.find_module_target(rhs_name)
+                    if new_name is None:
+                        new_name = self._get_new_name(rhs_name)
+
+                        # Save the import target that has been used
+                        if new_name == rhs_name:
+                            imp.define_target(Symbol(rhs_name))
+                        else:
+                            imp.define_target(AsName(Symbol(rhs_name), Symbol(new_name)))
 
                 if isinstance(expr.rhs, Application):
                     # If object is a function
                     args  = self._handle_function_args(expr.rhs.args, **settings)
-                    return self._handle_function(first[rhs_name],args, **settings)
+                    func  = first[rhs_name]
+                    if new_name != rhs_name:
+                        func  = func.clone(new_name)
+                    return self._handle_function(func, args, **settings)
+                elif isinstance(expr.rhs, Constant):
+                    var = first[rhs_name]
+                    if new_name != rhs_name:
+                        var.name = new_name
+                    return var
                 else:
-                    # If object is something else (eg. constant, dict)
-                    return first[rhs_name]
+                    # If object is something else (eg. dict)
+                    var = first[rhs_name]
+                    return var
             else:
                 errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(expr.lhs)),
                         symbol=expr,
@@ -2704,7 +2730,10 @@ class SemanticParser(BasicParser):
             if expr.target:
                 for (name, atom) in imports:
                     if not name is None:
-                        _insert_obj('functions', name, atom)
+                        if isinstance(atom, Constant):
+                            _insert_obj('variables', name, atom)
+                        else:
+                            _insert_obj('functions', name, atom)
             else:
                 _insert_obj('variables', source_target, imports)
         else:
