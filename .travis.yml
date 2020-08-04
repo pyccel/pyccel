@@ -17,7 +17,7 @@ before_install:
 
 install:
   - ${PYTHON} -m pip install .
-  - ${PYTHON} -m pip install -vvv --only-binary mpi4py mpi4py
+  - ${PYTHON} -m pip install mpi4py
   - ${PYTHON} -m pip install "pytest>=4.5"
 
 before_script:  # Coverage instructions - setup
@@ -90,8 +90,6 @@ jobs:
       - choco install anaconda3  --version 2020.02
       - source /c/tools/Anaconda3/etc/profile.d/conda.sh
 #      - source .travis/RefreshEnv.sh
-      - conda search python
-      - conda install python=3.7.1 # Use python3.7 as there is no mpi4py wheel for 3.8
       - conda activate
       #
       # Change default C compiler from M$ to mingw in distutils.cfg
