@@ -91,8 +91,8 @@ jobs:
       - choco install anaconda3
       - source /c/tools/Anaconda3/etc/profile.d/conda.sh
 #      - source .travis/RefreshEnv.sh
-      - conda create -n py37 python=3.7 anaconda # Use python3.7 as there is no mpi4py wheel for 3.8
-      - conda activate py37
+      - conda install python=3.7 # Use python3.7 as there is no mpi4py wheel for 3.8
+      - conda activate
       #
       # Change default C compiler from M$ to mingw in distutils.cfg
       - echo -e "[build]\ncompiler = mingw32" >> /c/tools/Anaconda3/Lib/distutils/distutils.cfg
