@@ -17,7 +17,8 @@ before_install:
 
 install:
   - ${PYTHON} -m pip install .
-  - ${PYTHON} -m pip debug install mpi4py -vv
+  - ${PYTHON} -m pip debug -vvv
+  - ${PYTHON} -m pip install -vvv --only-binary mpi4py mpi4py
   - ${PYTHON} -m pip install "pytest>=4.5"
 
 before_script:  # Coverage instructions - setup
