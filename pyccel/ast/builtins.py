@@ -194,7 +194,7 @@ class PythonTuple(Expr, PyccelAstNode):
     def __init__(self, *args):
         if self.stage == 'syntactic' or len(args) == 0:
             return
-        is_homogeneous = all(args[0].dtype==a.dtype for a in args[1:])
+        is_homogeneous = all(False if a.dtype is NativeGeneric() else args[0].dtype==a.dtype for a in args[1:])
         is_homogeneous = is_homogeneous and all(args[0].rank==a.rank   for a in args[1:])
         self._inconsistent_shape = not all(args[0].shape==a.shape   for a in args[1:])
         self._is_homogeneous = is_homogeneous
