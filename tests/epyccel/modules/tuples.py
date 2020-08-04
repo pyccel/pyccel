@@ -38,6 +38,13 @@ __all__ = [
         'tuples_add_homogeneous',
         'tuples_add_homogeneous_variables',
         'tuples_add_homogeneous_with_variables',
+        'tuples_add_inhomogeneous',
+        'tuples_add_inhomogeneous_variables',
+        'tuples_add_inhomogeneous_with_variables',
+        'tuples_add_mixed_homogeneous',
+        'tuples_add_mixed_homogeneous_variables',
+        'tuples_add_mixed_homogeneous_with_variables',
+        'tuples_2d_sum',
         ]
 
 def homogenous_tuple_int():
@@ -261,3 +268,38 @@ def tuples_add_homogeneous_with_variables():
     a = (1,2,3)
     c = a + (4,5,6)
     return c[0], c[1], c[2], c[3], c[4], c[5]
+
+def tuples_add_inhomogeneous():
+    a = (1,2,True) + (False,5,6)
+    return a[0], a[1], a[2], a[3], a[4], a[5]
+
+def tuples_add_inhomogeneous_variables():
+    a = (1,2,False)
+    b = (4,5,True)
+    c = a + b
+    return c[0], c[1], c[2], c[3], c[4], c[5]
+
+def tuples_add_inhomogeneous_with_variables():
+    a = (1,2,True)
+    c = a + (4,False,6)
+    return c[0], c[1], c[2], c[3], c[4], c[5]
+
+def tuples_add_mixed_homogeneous():
+    a = (1,2,3) + (False,5,6)
+    return a[0], a[1], a[2], a[3], a[4], a[5]
+
+def tuples_add_mixed_homogeneous_variables():
+    a = (1,2,3)
+    b = (4,5,True)
+    c = a + b
+    return c[0], c[1], c[2], c[3], c[4], c[5]
+
+def tuples_add_mixed_homogeneous_with_variables():
+    a = (1,2,3)
+    c = a + (4,False,6)
+    return c[0], c[1], c[2], c[3], c[4], c[5]
+
+def tuples_2d_sum():
+    a = ((1,2), (3,4))
+    b = a + ((5,6),)
+    return b[0][0], b[0][1], b[1][0], b[1][1], b[2][0], b[2][1]
