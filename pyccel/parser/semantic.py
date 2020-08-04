@@ -1114,10 +1114,10 @@ class SemanticParser(BasicParser):
     def _visit_PyccelAdd(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
         if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, List)):
-            expr_new = Concatenate(args, True)
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal', blocker=self.blocking)
+            tuple_args = []
+            for a in args:
+                tuple_args += a.get_vars() if isinstance(a, TupleVariable) else a.args
+            expr_new = PythonTuple(*tuple_args)
         else:
             expr_new = self._handle_PyccelOperator(expr, **settings)
         return expr_new
