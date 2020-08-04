@@ -40,7 +40,6 @@ install_requires = [
     'numpy',
     'scipy',
     'sympy>=1.2',
-    'tabulate',
     'termcolor',
     'textx>=1.6',
 ]
