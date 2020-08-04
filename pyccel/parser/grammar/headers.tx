@@ -77,7 +77,7 @@ AvailableMacro:
 
 FunctionMacroStmt: 
   'macro' ('(' results*=ID[','] ')' ',')?
-  name+=ID['.'] ('(' args*=MacroArg[','] ')')? 
+  dotted_name+=ID['.'] ('(' args*=MacroArg[','] ')')?
   ':='
   master_name+=ID['.'] ('(' master_args*=MacroValue[','] ')')?
 ;
