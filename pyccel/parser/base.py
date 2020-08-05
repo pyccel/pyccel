@@ -410,41 +410,6 @@ class BasicParser(object):
             print ('{var} \t :: \t {dtype}'.format(var=k, dtype=type(v)))
         print ('-------------------------')
 
-    def view_namespace(self, entry):
-
-        # TODO improve
-
-        try:
-            from tabulate import tabulate
-
-            table = []
-            for (k, v) in self.namespace[entry].items():
-                k_str = '{}'.format(k)
-                if entry == 'imports':
-                    if v is None:
-                        v_str = '*'
-                    else:
-                        v_str = '{}'.format(v)
-                elif entry == 'variables':
-                    v_str = '{}'.format(type(v))
-                else:
-                    raise NotImplementedError('TODO')
-
-                line = [k_str, v_str]
-                table.append(line)
-            headers = ['module', 'target']
-
-#            txt = tabulate(table, headers, tablefmt="rst")
-
-            txt = tabulate(table, tablefmt='rst')
-            print (txt)
-        except NotImplementedError:
-
-            print ('------- namespace.{} -------'.format(entry))
-            for (k, v) in self.namespace[entry].items():
-                print ('{var} \t :: \t {value}'.format(var=k, value=v))
-            print ('-------------------------')
-
     def _visit(self, expr, **settings):
         raise NotImplementedError('Must be implemented by the extension')
 
