@@ -1115,7 +1115,7 @@ class SemanticParser(BasicParser):
         args = [self._visit(a, **settings) for a in expr.args]
         if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, List)):
             get_vars = lambda a: a.get_vars() if isinstance(a, TupleVariable) else a.args
-            tuple_args = [ai for a in args for ai in f(a)]
+            tuple_args = [ai for a in args for ai in get_vars(a)]
             expr_new = PythonTuple(*tuple_args)
         else:
             expr_new = self._handle_PyccelOperator(expr, **settings)
