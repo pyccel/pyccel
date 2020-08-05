@@ -87,7 +87,7 @@ jobs:
   - os: windows
     language: c  # Python not supported, "language: generic" doesn't start VM
     before_install:
-      - choco install anaconda3  --version 2020.02
+      - choco install anaconda3
       - source /c/tools/Anaconda3/etc/profile.d/conda.sh
 #      - source .travis/RefreshEnv.sh
       - conda activate
