@@ -38,7 +38,6 @@ packages = find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"])
 # Dependencies
 install_requires = [
     'numpy',
-    'scipy',
     'sympy>=1.2',
     'termcolor',
     'textx>=1.6',
