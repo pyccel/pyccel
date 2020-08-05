@@ -2747,7 +2747,13 @@ class TupleVariable(Variable):
         Variable.__init__(self, dtype, name, *args, **kwargs)
 
     def get_vars(self):
-        return self._vars
+        if self._is_homogeneous:
+            indexed_var = IndexedVariable(self, dtype=self.dtype, shape=self.shape,
+                prec=self.precision, order=self.order, rank=self. rank)
+            args = [Slice(None,None)]*(self.rank-1)
+            return [indexed_var.__getitem__(*args, i) for i in range(len(self._vars))]
+        else:
+            return self._vars
 
     def get_var(self, variable_idx):
         return self._vars[variable_idx]
@@ -4632,6 +4638,8 @@ class IndexedElement(Expr, PyccelAstNode):
             raise TypeError('Undefined datatype')
 
         if shape is not None:
+            if self.order == 'C':
+                shape = shape[::-1]
             new_shape = []
             for a,s in zip(args, shape):
                 if isinstance(a, Slice):
