@@ -100,6 +100,7 @@ from pyccel.ast.numpyext import NumpyFloat, Float32, Float64
 from pyccel.ast.numpyext import NumpyComplex, Complex64, Complex128
 from pyccel.ast.numpyext import Real, Imag, Where, Diag, Linspace
 from pyccel.ast.numpyext import NumpyUfuncBase
+from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
 
 from pyccel.ast.mathext  import MathFunctionBase
 
@@ -654,6 +655,15 @@ class SemanticParser(BasicParser):
             d_var['is_pointer' ] = True
             return d_var
 
+        elif isinstance(expr, NumpyNewArray):
+            d_var['datatype'   ] = expr.dtype
+            d_var['allocatable'] = expr.rank>0
+            d_var['shape'      ] = expr.shape
+            d_var['rank'       ] = expr.rank
+            d_var['order'      ] = expr.order
+            d_var['precision'  ] = expr.precision
+            d_var['cls_base'   ] = NumpyArrayClass
+            return d_var
         elif isinstance(expr, PyccelAstNode):
 
             d_var['datatype'   ] = expr.dtype
@@ -1055,8 +1065,12 @@ class SemanticParser(BasicParser):
             methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
             for i in methods:
                 if str(i.name) == rhs_name:
-                    second = FunctionCall(i, args, self._current_function)
-                    return DottedVariable(first, second)
+                    if 'numpy_wrapper' in i.decorators.keys():
+                        func = i.decorators['numpy_wrapper']
+                        return func(first, *args)
+                    else:
+                        second = FunctionCall(i, args, self._current_function)
+                        return DottedVariable(first, second)
 
         # look for a class attribute / property
         elif isinstance(expr.rhs, Symbol) and first.cls_base:
@@ -1072,10 +1086,14 @@ class SemanticParser(BasicParser):
             else:
                 methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
                 for i in methods:
-                    if str(i.name) == expr.rhs.name and 'property' \
-                        in i.decorators.keys():
-                        second = FunctionCall(i, [], self._current_function)
-                        return DottedVariable(first, second)
+                    if str(i.name) == expr.rhs.name and \
+                            'property' in i.decorators.keys():
+                        if 'numpy_wrapper' in i.decorators.keys():
+                            func = i.decorators['numpy_wrapper']
+                            return func(first)
+                        else:
+                            second = FunctionCall(i, [], self._current_function)
+                            return DottedVariable(first, second)
 
         # look for a macro
         else:
