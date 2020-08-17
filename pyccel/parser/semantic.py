@@ -2090,27 +2090,12 @@ class SemanticParser(BasicParser):
                               severity='fatal')
             self.insert_variable(var)
 
-            # size = (stop - start) / step
-            if start == Integer(0):
-                size = stop
-            else:
-                size = PyccelMinus(stop,start)
-            if step != Integer(1):
-                size = PyccelDiv(PyccelAssociativeParenthesis(size), step)
-
-            if size.dtype is not NativeInteger():
-                size = MathCeil(size)
-            #TODO: Raise warning if start!=0? This can be a problem
-            # e.g. a = [i*j for i in range(1,3) for j in range(1,4) for k in range(i,j)]
-            # does not work as the size of the k part is wrong when j<i
-            # (See https://docs.sympy.org/latest/modules/concrete.html#sympy.concrete.summations.Sum
-            #  Karr's convention )
-
-            body = body.body[0]
-            size  = pyccel_to_sympy(size , idx_subs)
             step  = pyccel_to_sympy(step , idx_subs)
             start = pyccel_to_sympy(start, idx_subs)
             stop  = pyccel_to_sympy(stop , idx_subs)
+            size = ceiling((stop - start) / step)
+
+            body = body.body[0]
             dims.append((size, step, start, stop))
 
         # we now calculate the size of the array which will be allocated
