@@ -103,6 +103,8 @@ from pyccel.ast.numpyext import NumpyUfuncBase
 
 from pyccel.ast.mathext  import MathFunctionBase, MathCeil
 
+from pyccel.ast.sympy_helper import sympy_to_pyccel
+
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
 
@@ -2047,11 +2049,13 @@ class SemanticParser(BasicParser):
         dims    = []
         body    = expr.loops[1]
 
+        idx_subs = dict()
+
         while isinstance(body, For):
 
             stop  = None
-            start = 0
-            step  = 1
+            start = Integer(0)
+            step  = Integer(1)
             var   = body.target
             a     = self._visit(body.iterable, **settings)
             if isinstance(a, Range):
@@ -2086,19 +2090,28 @@ class SemanticParser(BasicParser):
                               severity='fatal')
             self.insert_variable(var)
 
-            # size = (stop - start) / step
-            if start == Integer(0):
-                size = stop
+            if isinstance(stop, Integer):
+                stop_sym = stop
             else:
-                size = PyccelMinus(stop,start)
-            if step != Integer(1):
-                size = PyccelDiv(PyccelAssociativeParenthesis(size), step)
+                stop_sym = Symbol('stop_'+create_random_string(stop))
+                idx_subs[stop_sym] = stop
 
-            if size.dtype != NativeInteger():
-                size = MathCeil(size)
+            if isinstance(start, Integer):
+                start_sym = start
+            else:
+                start_sym = Symbol('start_'+create_random_string(start))
+                idx_subs[start_sym] = start
+
+            if isinstance(step, Integer):
+                step_sym = step
+            else:
+                step_sym = Symbol('step_'+create_random_string(step))
+                idx_subs[step_sym] = step
+
+            size = ceiling((stop_sym - start_sym) / step_sym)
 
             body = body.body[0]
-            dims.append((size, step, start, stop))
+            dims.append((size, step_sym, start_sym, stop_sym))
 
         # we now calculate the size of the array which will be allocated
 
@@ -2107,10 +2120,7 @@ class SemanticParser(BasicParser):
             indices[i] = var
 
         dim = dims[-1][0]
-        if len(dims) > 1:
-            errors.report(PYCCEL_RESTRICTION_TODO,
-                          bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                          severity='fatal')
+
         for i in range(len(dims) - 1, 0, -1):
             # TODO: Remove sympy expressions
             size  = dims[i - 1][0]
@@ -2119,7 +2129,10 @@ class SemanticParser(BasicParser):
             dim   = dim.subs(indices[i-1], start+step*indices[i-1])
             dim   = Summation(dim, (indices[i-1], 0, size-1))
             dim   = dim.doit()
-        if isinstance(dim, Summation):
+
+        try:
+            dim = sympy_to_pyccel(dim, idx_subs)
+        except TypeError as t:
             errors.report(PYCCEL_RESTRICTION_TODO,
                           bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                           severity='fatal')
@@ -2139,6 +2152,7 @@ class SemanticParser(BasicParser):
         d_var['allocatable'] = True
         shape.append(dim)
         d_var['shape'] = PythonTuple(*shape)
+        d_var['is_stack_array'] = False # PythonTuples can be stack arrays
 
         lhs_name = _get_name(expr.lhs)
 
