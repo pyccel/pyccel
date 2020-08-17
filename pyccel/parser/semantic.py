@@ -992,8 +992,8 @@ class SemanticParser(BasicParser):
         rhs_name = _get_name(expr.rhs)
         attr_name = []
 
+        # Handle case of imported module
         if isinstance(first, dict):
-            # Imported module
 
             if rhs_name in first:
                 imp = self.get_import(_get_name(expr.lhs))
@@ -1058,7 +1058,26 @@ class SemanticParser(BasicParser):
                     second = FunctionCall(i, args, self._current_function)
                     return DottedVariable(first, second)
 
-        # look for a class attribute
+        # look for a class attribute / property
+        elif isinstance(expr.rhs, Symbol) and first.cls_base:
+
+            # standard class attribute
+            if expr.rhs.name in attr_name:
+                self._current_class = first.cls_base
+                second = self._visit(expr.rhs, **settings)
+                self._current_class = None
+                return DottedVariable(first, second)
+
+            # class property?
+            else:
+                methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
+                for i in methods:
+                    if str(i.name) == expr.rhs.name and 'property' \
+                        in i.decorators.keys():
+                        second = FunctionCall(i, [], self._current_function)
+                        return DottedVariable(first, second)
+
+        # look for a macro
         else:
 
             macro = self.get_macro(rhs_name)
@@ -1069,25 +1088,6 @@ class SemanticParser(BasicParser):
             elif isinstance(macro, MacroFunction):
                 args = macro.apply([first])
                 return FunctionCall(macro.master, args, self._current_function)
-
-            # Attribute / property
-            if isinstance(expr.rhs, Symbol) and first.cls_base:
-
-                # standard class attribute
-                if expr.rhs.name in attr_name:
-                    self._current_class = first.cls_base
-                    second = self._visit(expr.rhs, **settings)
-                    self._current_class = None
-                    return DottedVariable(first, second)
-
-                # class property?
-                else:
-                    methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
-                    for i in methods:
-                        if str(i.name) == expr.rhs.name and 'property' \
-                            in i.decorators.keys():
-                            second = FunctionCall(i, [], self._current_function)
-                            return DottedVariable(first, second)
 
         # did something go wrong?
         errors.report('Attribute {} not found'.format(rhs_name),
