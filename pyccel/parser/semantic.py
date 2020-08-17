@@ -2136,7 +2136,7 @@ class SemanticParser(BasicParser):
         dtype = d_var.pop('datatype')
         d_var['rank'] += 1
         shape = list(d_var['shape'])
-        d_var['is_pointer'] = True
+        d_var['allocatable'] = True
         shape.append(dim)
         d_var['shape'] = PythonTuple(*shape)
 
