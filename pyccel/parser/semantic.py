@@ -2151,7 +2151,7 @@ class SemanticParser(BasicParser):
 
         try:
             dim = sympy_to_pyccel(dim, idx_subs)
-        except TypeError as t:
+        except TypeError:
             errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE + '\n Deduced size : {}'.format(dim),
                           bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                           severity='fatal')
