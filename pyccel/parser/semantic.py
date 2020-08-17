@@ -2107,6 +2107,10 @@ class SemanticParser(BasicParser):
             #  Karr's convention )
 
             body = body.body[0]
+            size  = pyccel_to_sympy(size , idx_subs)
+            step  = pyccel_to_sympy(step , idx_subs)
+            start = pyccel_to_sympy(start, idx_subs)
+            stop  = pyccel_to_sympy(stop , idx_subs)
             dims.append((size, step, start, stop))
 
         # we now calculate the size of the array which will be allocated
@@ -2115,16 +2119,49 @@ class SemanticParser(BasicParser):
             var = self.get_variable(idx.name)
             idx_subs[idx] = var
 
-        dim = pyccel_to_sympy(dims[-1][0], idx_subs)
 
-        for i in range(len(dims) - 1, 0, -1):
-            size  = pyccel_to_sympy(dims[i - 1][0], idx_subs)
-            step  = pyccel_to_sympy(dims[i - 1][1], idx_subs)
-            start = pyccel_to_sympy(dims[i - 1][2], idx_subs)
+        dim = sp_Integer(1)
+
+        for i in reversed(range(len(dims))):
+            size  = dims[i][0]
+            step  = dims[i][1]
+            start = dims[i][2]
+            stop  = dims[i][3]
+
+            # For complicated cases we must ensure that the upper bound is never smaller than the
+            # lower bound as this leads to too little memory being allocated
+            min_size = size
+            # Collect all uses of other indices
+            start_idx = [-1] + [indices.index(a) for a in start.atoms(Symbol) if a in indices]
+            stop_idx  = [-1] + [indices.index(a) for a in  stop.atoms(Symbol) if a in indices]
+            start_idx.sort()
+            stop_idx.sort()
+
+            # Find the minimum size
+            while max(len(start_idx),len(stop_idx))>1:
+                # Use the maximum value of the start
+                if start_idx[-1] > stop_idx[-1]:
+                    s = start_idx.pop()
+                    min_size = min_size.subs(indices[s], dims[s][3])
+                # and the minimum value of the stop
+                else:
+                    s = stop_idx.pop()
+                    min_size = min_size.subs(indices[s], dims[s][2])
+
+            # While the min_size is not a known integer, assume that the bounds are positive
+            j = 0
+            while not isinstance(min_size, sp_Integer) and j<=i:
+                min_size = min_size.subs(dims[j][3]-dims[j][2], 1).simplify()
+                j+=1
+            # If the min_size is negative then the size will be wrong and an error is raised
+            if isinstance(min_size, sp_Integer) and min_size < 0:
+                errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS.format(indices[i]),
+                          bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                          severity='error')
 
             # sympy is necessary to carry out the summation
-            dim   = dim.subs(indices[i-1], start+step*indices[i-1])
-            dim   = Summation(dim, (indices[i-1], 0, size-1))
+            dim   = dim.subs(indices[i], start+step*indices[i])
+            dim   = Summation(dim, (indices[i], 0, size-1))
             dim   = dim.doit()
 
         try:
