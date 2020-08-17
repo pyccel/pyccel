@@ -682,7 +682,11 @@ class FCodePrinter(CodePrinter):
         return str(expr)
 
     def _print_Len(self, expr):
-        return 'size(%s,1)'%(self._print(expr.arg))
+        if (expr.arg.order == 'F'):
+            return 'size(%s,1)'%(self._print(expr.arg))
+        else:
+            return 'size({var},{idx})'.format(var = self._print(expr.arg),
+                                              idx = self._print(expr.arg.rank))
 
     def _print_NumpySum(self, expr):
         return expr.fprint(self._print)
