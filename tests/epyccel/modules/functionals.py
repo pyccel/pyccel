@@ -41,7 +41,5 @@ def functional_for_2d_array_range(idx):
     return len(a), a[idx][0], a[idx][1], a[idx][2]
 
 def functional_for_3d_range():
-    # Option 1 does not work as sympy finds a negative range for k
-    #a = [i*j for i in range(1,3) for j in range(1,4) for k in range(i,j)]
     a = [i*j for i in range(1,3) for j in range(i,4) for k in range(i,j)]
     return len(a), a[0], a[1], a[2], a[3]
