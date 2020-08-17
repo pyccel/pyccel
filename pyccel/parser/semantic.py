@@ -103,7 +103,7 @@ from pyccel.ast.numpyext import NumpyUfuncBase
 
 from pyccel.ast.mathext  import MathFunctionBase, MathCeil
 
-from pyccel.ast.sympy_helper import sympy_to_pyccel
+from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
@@ -2090,42 +2090,39 @@ class SemanticParser(BasicParser):
                               severity='fatal')
             self.insert_variable(var)
 
-            if isinstance(stop, Integer):
-                stop_sym = stop
+            # size = (stop - start) / step
+            if start == Integer(0):
+                size = stop
             else:
-                stop_sym = Symbol('stop_'+create_random_string(stop))
-                idx_subs[stop_sym] = stop
+                size = PyccelMinus(stop,start)
+            if step != Integer(1):
+                size = PyccelDiv(PyccelAssociativeParenthesis(size), step)
 
-            if isinstance(start, Integer):
-                start_sym = start
-            else:
-                start_sym = Symbol('start_'+create_random_string(start))
-                idx_subs[start_sym] = start
-
-            if isinstance(step, Integer):
-                step_sym = step
-            else:
-                step_sym = Symbol('step_'+create_random_string(step))
-                idx_subs[step_sym] = step
-
-            size = ceiling((stop_sym - start_sym) / step_sym)
+            if size.dtype is not NativeInteger():
+                size = MathCeil(size)
+            #TODO: Raise warning if start!=0? This can be a problem
+            # e.g. a = [i*j for i in range(1,3) for j in range(1,4) for k in range(i,j)]
+            # does not work as the size of the k part is wrong when j<i
+            # (See https://docs.sympy.org/latest/modules/concrete.html#sympy.concrete.summations.Sum
+            #  Karr's convention )
 
             body = body.body[0]
-            dims.append((size, step_sym, start_sym, stop_sym))
+            dims.append((size, step, start, stop))
 
         # we now calculate the size of the array which will be allocated
 
-        for i in range(len(indices)):
-            var = self.get_variable(indices[i].name)
-            indices[i] = var
+        for idx in indices:
+            var = self.get_variable(idx.name)
+            idx_subs[idx] = var
 
-        dim = dims[-1][0]
+        dim = pyccel_to_sympy(dims[-1][0], idx_subs)
 
         for i in range(len(dims) - 1, 0, -1):
-            # TODO: Remove sympy expressions
-            size  = dims[i - 1][0]
-            step  = dims[i - 1][1]
-            start = dims[i - 1][2]
+            size  = pyccel_to_sympy(dims[i - 1][0], idx_subs)
+            step  = pyccel_to_sympy(dims[i - 1][1], idx_subs)
+            start = pyccel_to_sympy(dims[i - 1][2], idx_subs)
+
+            # sympy is necessary to carry out the summation
             dim   = dim.subs(indices[i-1], start+step*indices[i-1])
             dim   = Summation(dim, (indices[i-1], 0, size-1))
             dim   = dim.doit()
@@ -2133,7 +2130,7 @@ class SemanticParser(BasicParser):
         try:
             dim = sympy_to_pyccel(dim, idx_subs)
         except TypeError as t:
-            errors.report(PYCCEL_RESTRICTION_TODO,
+            errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE + '\n Deduced size : {}'.format(dim),
                           bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                           severity='fatal')
 
@@ -2156,7 +2153,7 @@ class SemanticParser(BasicParser):
         d_var['rank'] += 1
         shape = list(d_var['shape'])
         d_var['allocatable'] = True
-        shape.append(dim)
+        shape.insert(0, dim)
         d_var['shape'] = PythonTuple(*shape)
         d_var['is_stack_array'] = False # PythonTuples can be stack arrays
 
