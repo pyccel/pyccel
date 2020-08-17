@@ -3,6 +3,7 @@ from sympy.core.numbers import One, NegativeOne, Zero, Half
 
 from .core      import PyccelAdd, PyccelMul, PyccelPow
 from .core      import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
+from .core      import Variable, create_random_string, PyccelArraySize
 
 from .mathext   import MathCeil
 
@@ -30,6 +31,8 @@ def sympy_to_pyccel(expr, symbol_map):
         return PyccelFloat(expr)
     elif isinstance(expr, Half):
         return PyccelFloat(0.5)
+    elif isinstance(expr, sp.Rational):
+        return PyccelFloat(expr)
     elif isinstance(expr, sp.Symbol) and expr in symbol_map:
         return symbol_map[expr]
 
@@ -79,5 +82,62 @@ def sympy_to_pyccel(expr, symbol_map):
             return arg
         else:
             return MathCeil(arg)
+    else:
+        raise TypeError(str(type(expr)))
+
+#==============================================================================
+def pyccel_to_sympy(expr, symbol_map):
+    """
+    Convert a sympy expression to a pyccel expression replacing sympy symbols with
+    pyccel expressions provided in a symbol_map
+    """
+
+    #Constants
+    if isinstance(expr, PyccelInteger):
+        return sp.Integer(expr)
+
+    elif isinstance(expr, PyccelFloat):
+        return sp.Float(expr)
+
+    #Operators
+    elif isinstance(expr, PyccelDiv):
+        args = [pyccel_to_sympy(e, symbol_map) for e in expr.args]
+        return args[0] / args[1]
+
+    elif isinstance(expr, PyccelMul):
+        args = [pyccel_to_sympy(e, symbol_map) for e in expr.args]
+        return sp.Mul(*args)
+
+    elif isinstance(expr, PyccelMinus):
+        args = [pyccel_to_sympy(e, symbol_map) for e in expr.args]
+        return args[0] - args[1]
+
+    elif isinstance(expr, PyccelAdd):
+        args = [pyccel_to_sympy(e, symbol_map) for e in expr.args]
+        return sp.Add(*args)
+
+    elif isinstance(expr, PyccelPow):
+        args = [pyccel_to_sympy(e, symbol_map) for e in expr.args]
+        return sp.Pow(*args)
+
+    elif isinstance(expr, PyccelAssociativeParenthesis):
+        return pyccel_to_sympy(expr.args[0], symbol_map)
+
+    elif isinstance(expr, MathCeil):
+        return sp.ceiling(pyccel_to_sympy(expr.args[0], symbol_map))
+
+    elif expr in symbol_map.values():
+        return list(symbol_map.keys())[list(symbol_map.values()).index(expr)]
+
+    elif isinstance(expr, Variable):
+        sym = sp.Symbol(expr.name)
+        symbol_map[sym] = expr
+        return sym
+
+    elif isinstance(expr, PyccelArraySize):
+        sym = sp.Symbol('tmp_size_' + create_random_string(expr))
+        symbol_map[sym] = expr
+        return sym
+
     else:
         raise TypeError(str(type(expr)))
