@@ -2093,7 +2093,9 @@ class SemanticParser(BasicParser):
             step  = pyccel_to_sympy(step , idx_subs)
             start = pyccel_to_sympy(start, idx_subs)
             stop  = pyccel_to_sympy(stop , idx_subs)
-            size = ceiling((stop - start) / step)
+            size = (stop - start) / step
+            if (step != 1):
+                size = ceiling(size)
 
             body = body.body[0]
             dims.append((size, step, start, stop))
