@@ -139,7 +139,7 @@ math_function_to_fortran = {
     'MathTan'    : 'tan',
     'MathTanh'   : 'tanh',
     # ---
-    'MathCeil'     : 'ceil',
+    'MathCeil'     : 'ceiling',
 #    'MathFactorial': '???', # TODO
     'MathFloor'    : 'floor',
 #    'MathGcd'      : '???', # TODO
