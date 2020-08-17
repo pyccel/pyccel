@@ -70,7 +70,7 @@ from pyccel.ast.functionalexpr import GeneratorComprehension as GC
 from pyccel.ast.datatypes import NativeRange
 from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import DataTypeFactory
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric
 from pyccel.ast.datatypes import default_precision
 
 from pyccel.ast.type_inference  import str_dtype
@@ -2147,6 +2147,12 @@ class SemanticParser(BasicParser):
         d_var = self._infere_type(target, **settings)
 
         dtype = d_var.pop('datatype')
+
+        if dtype is NativeGeneric():
+            errors.report(LIST_OF_TUPLES,
+                          bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                          severity='fatal')
+
         d_var['rank'] += 1
         shape = list(d_var['shape'])
         d_var['allocatable'] = True
