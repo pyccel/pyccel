@@ -101,7 +101,7 @@ from pyccel.ast.numpyext import NumpyComplex, Complex64, Complex128
 from pyccel.ast.numpyext import Real, Imag, Where, Diag, Linspace
 from pyccel.ast.numpyext import NumpyUfuncBase
 
-from pyccel.ast.mathext  import MathFunctionBase
+from pyccel.ast.mathext  import MathFunctionBase, MathCeil
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
@@ -2095,7 +2095,7 @@ class SemanticParser(BasicParser):
                 size = PyccelDiv(PyccelAssociativeParenthesis(size), step)
 
             if size.dtype != NativeInteger():
-                size = PythonInt(size)
+                size = MathCeil(size)
 
             body = body.body[0]
             dims.append((size, step, start, stop))
@@ -2116,8 +2116,6 @@ class SemanticParser(BasicParser):
             size  = dims[i - 1][0]
             step  = dims[i - 1][1]
             start = dims[i - 1][2]
-            size  = ceiling(size)
-            dim   = ceiling(dim)
             dim   = dim.subs(indices[i-1], start+step*indices[i-1])
             dim   = Summation(dim, (indices[i-1], 0, size-1))
             dim   = dim.doit()
