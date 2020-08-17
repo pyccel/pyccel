@@ -81,6 +81,8 @@ numpy_functions = {
     'complex64' : Complex64,
     'matmul'    : Matmul,
     'sum'       : NumpySum,
+    'max'      : NumpyMax,
+    'min'      : NumpyMin,
     'prod'      : Prod,
     'product'   : Prod,
     'linspace'  : Linspace,
