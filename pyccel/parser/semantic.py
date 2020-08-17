@@ -2349,6 +2349,8 @@ class SemanticParser(BasicParser):
                     d_var = self._infere_type(ah, **settings)
                     d_var['shape'] = ah.alloc_shape
                     dtype = d_var.pop('datatype')
+                    if d_var['rank']>0:
+                        d_var['cls_base'] = NumpyArrayClass
 
                     # this is needed for the static case
 
