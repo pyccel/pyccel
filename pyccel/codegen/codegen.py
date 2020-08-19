@@ -233,7 +233,7 @@ class Codegen(object):
         language = settings.pop('language', 'fortran')
 
         if not language in ['fortran', 'c', 'python']:
-            raise ValueError('the language {} not available'.format(lanugage))
+            raise ValueError('{} language is not available'.format(language))
 
         self._language = language
 
