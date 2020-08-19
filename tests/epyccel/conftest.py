@@ -3,6 +3,17 @@ import shutil
 
 __all__ = ['setup', 'teardown']
 
+@pytest.fixture( params=[
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.c]
+        )
+    ],
+    scope='module'
+)
+def language(request):
+    return request.param
+
 def setup():
     teardown()
 
