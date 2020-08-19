@@ -17,7 +17,7 @@ Code here
 ```
 
 **Expected behavior**
-A clear and concise description of what you expected to happen.
+If the code produced is incorrect, a clear and concise description of what you expected to happen.
 
 **Language**
 Please specify which language the python code is translated to (Fortran by default)
