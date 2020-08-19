@@ -21,6 +21,7 @@ from .core           import PyccelMul, PyccelAdd
 from .core           import broadcast
 from .core           import create_variable
 from .core           import CodeBlock
+from .core           import ClassDef, FunctionDef
 
 from .builtins       import Int as PythonInt, Bool as PythonBool
 from .builtins       import PythonFloat, PythonTuple, PythonComplex
@@ -34,6 +35,7 @@ from .type_inference import str_dtype
 
 
 __all__ = (
+    'NumpyArrayClass',
     'NumpyAbs',
     'NumpyFloor',
     # ---
@@ -105,7 +107,6 @@ def process_dtype(dtype):
     dtype            = datatype(dtype)
 
     return dtype, precision
-
 
 class NumpyNewArray(PyccelAstNode):
 
@@ -1301,3 +1302,20 @@ class Int64(NumpyInt):
     _precision = dtype_registry['int64'][1]
 
 
+
+NumpyArrayClass = ClassDef('numpy.ndarray',
+        methods=[
+            FunctionDef('shape',[],[],body=[],
+                decorators={'property':'property', 'numpy_wrapper':Shape}),
+            FunctionDef('sum',[],[],body=[],
+                decorators={'numpy_wrapper':NumpySum}),
+            FunctionDef('min',[],[],body=[],
+                decorators={'numpy_wrapper':NumpyMin}),
+            FunctionDef('max',[],[],body=[],
+                decorators={'numpy_wrapper':NumpyMax}),
+            FunctionDef('imag',[],[],body=[],
+                decorators={'property':'property', 'numpy_wrapper':Imag}),
+            FunctionDef('real',[],[],body=[],
+                decorators={'property':'property', 'numpy_wrapper':Real}),
+            FunctionDef('diagonal',[],[],body=[],
+                decorators={'numpy_wrapper':Diag})])
