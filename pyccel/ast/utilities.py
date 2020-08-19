@@ -6,7 +6,7 @@ import inspect
 from sympy.core.function import Application
 from sympy import Not
 from sympy import Function
-import scipy.constants as sc_constants
+from numpy import pi
 
 from pyccel.symbolic import lambdify
 
@@ -141,7 +141,7 @@ builtin_functions_dict = {
 }
 
 scipy_constants = {
-    'pi': Constant('real', 'pi', value=sc_constants.pi),
+    'pi': Constant('real', 'pi', value=pi),
                   }
 
 #==============================================================================
