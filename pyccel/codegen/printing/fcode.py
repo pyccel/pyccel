@@ -139,7 +139,7 @@ math_function_to_fortran = {
     'MathTan'    : 'tan',
     'MathTanh'   : 'tanh',
     # ---
-    'MathCeil'     : 'ceil',
+    'MathCeil'     : 'ceiling',
 #    'MathFactorial': '???', # TODO
     'MathFloor'    : 'floor',
 #    'MathGcd'      : '???', # TODO
@@ -682,7 +682,9 @@ class FCodePrinter(CodePrinter):
         return str(expr)
 
     def _print_Len(self, expr):
-        return 'size(%s,1)'%(self._print(expr.arg))
+        var = expr.arg
+        idx = 1 if var.order == 'F' else var.rank
+        return 'size({},{})'.format(self._print(var), self._print(idx))
 
     def _print_NumpySum(self, expr):
         return expr.fprint(self._print)
