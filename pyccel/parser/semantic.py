@@ -70,7 +70,7 @@ from pyccel.ast.functionalexpr import GeneratorComprehension as GC
 from pyccel.ast.datatypes import NativeRange
 from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import DataTypeFactory
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric
 from pyccel.ast.datatypes import default_precision
 
 from pyccel.ast.type_inference  import str_dtype
@@ -101,7 +101,9 @@ from pyccel.ast.numpyext import NumpyComplex, Complex64, Complex128
 from pyccel.ast.numpyext import Real, Imag, Where, Diag, Linspace
 from pyccel.ast.numpyext import NumpyUfuncBase
 
-from pyccel.ast.mathext  import MathFunctionBase
+from pyccel.ast.mathext  import MathFunctionBase, MathCeil
+
+from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
@@ -2047,11 +2049,13 @@ class SemanticParser(BasicParser):
         dims    = []
         body    = expr.loops[1]
 
+        idx_subs = dict()
+
         while isinstance(body, For):
 
             stop  = None
-            start = 0
-            step  = 1
+            start = Integer(0)
+            step  = Integer(1)
             var   = body.target
             a     = self._visit(body.iterable, **settings)
             if isinstance(a, Range):
@@ -2086,43 +2090,71 @@ class SemanticParser(BasicParser):
                               severity='fatal')
             self.insert_variable(var)
 
-            # size = (stop - start) / step
-            if start == Integer(0):
-                size = stop
-            else:
-                size = PyccelMinus(stop,start)
-            if step != Integer(1):
-                size = PyccelDiv(PyccelAssociativeParenthesis(size), step)
-
-            if size.dtype != NativeInteger():
-                size = PythonInt(size)
+            step  = pyccel_to_sympy(step , idx_subs)
+            start = pyccel_to_sympy(start, idx_subs)
+            stop  = pyccel_to_sympy(stop , idx_subs)
+            size = (stop - start) / step
+            if (step != 1):
+                size = ceiling(size)
 
             body = body.body[0]
             dims.append((size, step, start, stop))
 
         # we now calculate the size of the array which will be allocated
 
-        for i in range(len(indices)):
-            var = self.get_variable(indices[i].name)
-            indices[i] = var
+        for idx in indices:
+            var = self.get_variable(idx.name)
+            idx_subs[idx] = var
 
-        dim = dims[-1][0]
-        if len(dims) > 1:
-            errors.report(PYCCEL_RESTRICTION_TODO,
+
+        dim = sp_Integer(1)
+
+        for i in reversed(range(len(dims))):
+            size  = dims[i][0]
+            step  = dims[i][1]
+            start = dims[i][2]
+            stop  = dims[i][3]
+
+            # For complicated cases we must ensure that the upper bound is never smaller than the
+            # lower bound as this leads to too little memory being allocated
+            min_size = size
+            # Collect all uses of other indices
+            start_idx = [-1] + [indices.index(a) for a in start.atoms(Symbol) if a in indices]
+            stop_idx  = [-1] + [indices.index(a) for a in  stop.atoms(Symbol) if a in indices]
+            start_idx.sort()
+            stop_idx.sort()
+
+            # Find the minimum size
+            while max(len(start_idx),len(stop_idx))>1:
+                # Use the maximum value of the start
+                if start_idx[-1] > stop_idx[-1]:
+                    s = start_idx.pop()
+                    min_size = min_size.subs(indices[s], dims[s][3])
+                # and the minimum value of the stop
+                else:
+                    s = stop_idx.pop()
+                    min_size = min_size.subs(indices[s], dims[s][2])
+
+            # While the min_size is not a known integer, assume that the bounds are positive
+            j = 0
+            while not isinstance(min_size, sp_Integer) and j<=i:
+                min_size = min_size.subs(dims[j][3]-dims[j][2], 1).simplify()
+                j+=1
+            # If the min_size is negative then the size will be wrong and an error is raised
+            if isinstance(min_size, sp_Integer) and min_size < 0:
+                errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS.format(indices[i]),
                           bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                          severity='fatal')
-        for i in range(len(dims) - 1, 0, -1):
-            # TODO: Remove sympy expressions
-            size  = dims[i - 1][0]
-            step  = dims[i - 1][1]
-            start = dims[i - 1][2]
-            size  = ceiling(size)
-            dim   = ceiling(dim)
-            dim   = dim.subs(indices[i-1], start+step*indices[i-1])
-            dim   = Summation(dim, (indices[i-1], 0, size-1))
+                          severity='error')
+
+            # sympy is necessary to carry out the summation
+            dim   = dim.subs(indices[i], start+step*indices[i])
+            dim   = Summation(dim, (indices[i], 0, size-1))
             dim   = dim.doit()
-        if isinstance(dim, Summation):
-            errors.report(PYCCEL_RESTRICTION_TODO,
+
+        try:
+            dim = sympy_to_pyccel(dim, idx_subs)
+        except TypeError:
+            errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE + '\n Deduced size : {}'.format(dim),
                           bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                           severity='fatal')
 
@@ -2136,11 +2168,18 @@ class SemanticParser(BasicParser):
         d_var = self._infere_type(target, **settings)
 
         dtype = d_var.pop('datatype')
+
+        if dtype is NativeGeneric():
+            errors.report(LIST_OF_TUPLES,
+                          bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                          severity='fatal')
+
         d_var['rank'] += 1
         shape = list(d_var['shape'])
-        d_var['is_pointer'] = True
-        shape.append(dim)
+        d_var['allocatable'] = True
+        shape.insert(0, dim)
         d_var['shape'] = PythonTuple(*shape)
+        d_var['is_stack_array'] = False # PythonTuples can be stack arrays
 
         lhs_name = _get_name(expr.lhs)
 
