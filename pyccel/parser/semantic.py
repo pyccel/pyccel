@@ -100,6 +100,7 @@ from pyccel.ast.numpyext import NumpyFloat, Float32, Float64
 from pyccel.ast.numpyext import NumpyComplex, Complex64, Complex128
 from pyccel.ast.numpyext import Real, Imag, Where, Diag, Linspace
 from pyccel.ast.numpyext import NumpyUfuncBase
+from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
 
 from pyccel.ast.mathext  import MathFunctionBase, MathCeil
 
@@ -656,6 +657,15 @@ class SemanticParser(BasicParser):
             d_var['is_pointer' ] = True
             return d_var
 
+        elif isinstance(expr, NumpyNewArray):
+            d_var['datatype'   ] = expr.dtype
+            d_var['allocatable'] = expr.rank>0
+            d_var['shape'      ] = expr.shape
+            d_var['rank'       ] = expr.rank
+            d_var['order'      ] = expr.order
+            d_var['precision'  ] = expr.precision
+            d_var['cls_base'   ] = NumpyArrayClass
+            return d_var
         elif isinstance(expr, PyccelAstNode):
 
             d_var['datatype'   ] = expr.dtype
@@ -994,8 +1004,8 @@ class SemanticParser(BasicParser):
         rhs_name = _get_name(expr.rhs)
         attr_name = []
 
+        # Handle case of imported module
         if isinstance(first, dict):
-            # Imported module
 
             if rhs_name in first:
                 imp = self.get_import(_get_name(expr.lhs))
@@ -1057,10 +1067,37 @@ class SemanticParser(BasicParser):
             methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
             for i in methods:
                 if str(i.name) == rhs_name:
-                    second = FunctionCall(i, args, self._current_function)
-                    return DottedVariable(first, second)
+                    if 'numpy_wrapper' in i.decorators.keys():
+                        func = i.decorators['numpy_wrapper']
+                        return func(first, *args)
+                    else:
+                        second = FunctionCall(i, args, self._current_function)
+                        return DottedVariable(first, second)
 
-        # look for a class attribute
+        # look for a class attribute / property
+        elif isinstance(expr.rhs, Symbol) and first.cls_base:
+
+            # standard class attribute
+            if expr.rhs.name in attr_name:
+                self._current_class = first.cls_base
+                second = self._visit(expr.rhs, **settings)
+                self._current_class = None
+                return DottedVariable(first, second)
+
+            # class property?
+            else:
+                methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
+                for i in methods:
+                    if str(i.name) == expr.rhs.name and \
+                            'property' in i.decorators.keys():
+                        if 'numpy_wrapper' in i.decorators.keys():
+                            func = i.decorators['numpy_wrapper']
+                            return func(first)
+                        else:
+                            second = FunctionCall(i, [], self._current_function)
+                            return DottedVariable(first, second)
+
+        # look for a macro
         else:
 
             macro = self.get_macro(rhs_name)
@@ -1071,25 +1108,6 @@ class SemanticParser(BasicParser):
             elif isinstance(macro, MacroFunction):
                 args = macro.apply([first])
                 return FunctionCall(macro.master, args, self._current_function)
-
-            # Attribute / property
-            if isinstance(expr.rhs, Symbol) and first.cls_base:
-
-                # standard class attribute
-                if expr.rhs.name in attr_name:
-                    self._current_class = first.cls_base
-                    second = self._visit(expr.rhs, **settings)
-                    self._current_class = None
-                    return DottedVariable(first, second)
-
-                # class property?
-                else:
-                    methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
-                    for i in methods:
-                        if str(i.name) == expr.rhs.name and 'property' \
-                            in i.decorators.keys():
-                            second = FunctionCall(i, [], self._current_function)
-                            return DottedVariable(first, second)
 
         # did something go wrong?
         errors.report('Attribute {} not found'.format(rhs_name),
@@ -2370,6 +2388,8 @@ class SemanticParser(BasicParser):
                     d_var = self._infere_type(ah, **settings)
                     d_var['shape'] = ah.alloc_shape
                     dtype = d_var.pop('datatype')
+                    if d_var['rank']>0:
+                        d_var['cls_base'] = NumpyArrayClass
 
                     # this is needed for the static case
 
