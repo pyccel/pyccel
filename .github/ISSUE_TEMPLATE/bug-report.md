@@ -1,8 +1,8 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Report a problem
 title: ''
-labels: ''
+labels: bug
 assignees: ''
 
 ---
@@ -16,8 +16,13 @@ Provide code to reproduce the behavior:
 Code here
 ```
 
+Provide the generated code, or the error message:
+```bash/fortran/c
+Translated code here
+```
+
 **Expected behavior**
-If the code produced is incorrect, a clear and concise description of what you expected to happen.
+A clear and concise description of what you expected to happen.
 
 **Language**
 Please specify which language the python code is translated to (Fortran by default)
