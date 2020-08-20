@@ -1427,7 +1427,7 @@ class FCodePrinter(CodePrinter):
         args_decs = OrderedDict()
         # ... local variables declarations
         func_end  = ''
-        rec = 'recursive ' if expr.is_recursive else ''
+        rec = 'recursive' if expr.is_recursive else ''
         if is_procedure:
             func_type = 'subroutine'
             out_args = list(expr.results)
@@ -1491,22 +1491,24 @@ class FCodePrinter(CodePrinter):
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in expr.arguments):
                 args_decs[str(v)] = Declare(v.dtype,v)
+        prelude = '\n'.join(self._print(i) for i in args_decs.values())
 
-        prelude   = '\n'.join(self._print(i) for i in args_decs.values())
         if len(functions)>0:
             functions_code = '\n'.join(self._print(i) for  i in functions)
-            body_code = body_code +'\ncontains \n' +functions_code
-        body_code = prelude + '\n\n' + body_code
+            body_code = body_code +'\ncontains\n' + functions_code
+
         imports = '\n'.join(self._print(i) for i in expr.imports)
 
         self.set_current_function(None)
-        func = ('{0}({1}) {2}\n'
-                '{3}\n'
-                'implicit none\n'
-                '{4}\n'
-                'end {5}').format(sig, arg_code, func_end, imports, body_code, func_type)
 
-        return func
+        parts = ['{0}({1}) {2}'.format(sig, arg_code, func_end),
+                 imports,
+                'implicit none',
+                 prelude,
+                 body_code,
+                 'end {}'.format(func_type)]
+
+        return '\n\n'.join(a for a in parts if a)
 
     def _print_Pass(self, expr):
         return ''
