@@ -16,6 +16,7 @@ from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.builtins  import Range
 from pyccel.ast.core import Declare
 from pyccel.ast.core import SeparatorComment
+from pyccel.ast.datatypes import NativeInteger
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
