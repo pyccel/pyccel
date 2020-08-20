@@ -284,18 +284,10 @@ class FCodePrinter(CodePrinter):
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces if not i.hide)
             for interface in expr.interfaces:
                 if not interface.hide:
-                    for i in interface.functions:
-                        body = ('{body}\n'
-                                '{sep}\n'
-                                '{f}\n'
-                                '{sep}\n').format(body=body, sep=sep, f=self._print(i))
+                    body += '\n\n'.join('\n'.join([sep, self._print(i), sep]) for i in interface.functions)
 
         if expr.funcs:
-            for i in expr.funcs:
-                body = ('{body}\n'
-                         '{sep}\n'
-                         '{f}\n'
-                         '{sep}\n').format(body=body, sep=sep, f=self._print(i))
+            body += '\n\n'.join('\n'.join([sep, self._print(i), sep]) for i in expr.funcs)
         # ...
 
         # ...
@@ -306,23 +298,19 @@ class FCodePrinter(CodePrinter):
             body = '{0}\n{1}\n'.format(body, c_funcs)
         # ...
 
+        contains = 'contains' if (expr.funcs or expr.classes or expr.interfaces) else ''
 
-        if expr.funcs or expr.classes or expr.interfaces:
-            body = '\n contains\n{0}'.format(body)
+        parts = ['module {}'.format(name),
+                 imports,
+                 'implicit none',
+                 private,
+                 decs,
+                 interfaces,
+                 contains,
+                 body,
+                 'end module\n']
 
-        return ('module {name}\n'
-                '{imports}\n'
-                'implicit none\n'
-                '{private}\n'
-                '{decs}\n'
-                '{interfaces}\n'
-                '{body}\n'
-                'end module\n').format(name=name,
-                                       imports=imports,
-                                       decs=decs,
-                                       private=private,
-                                       interfaces=interfaces,
-                                       body=body)
+        return '\n\n'.join([a for a in parts if a])
 
     def _print_Program(self, expr):
         self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
