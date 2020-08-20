@@ -2496,7 +2496,7 @@ class FCodePrinter(CodePrinter):
             else:
                 args = ['{}'.format(self._print(a)) for a in args]
 
-            args = ','.join(args)
+            args = ', '.join(args)
             code = '{name}({args})'.format( name = str(func.name),
                                             args = args)
 
@@ -2528,7 +2528,7 @@ class FCodePrinter(CodePrinter):
                 args    = ['{}'.format(self._print(a)) for a in args]
                 results = ['{}'.format(self._print(a)) for a in results]
 
-            newargs = ','.join(args+results)
+            newargs = ', '.join(args+results)
 
             code = 'call {name}({args})'.format( name = str(func.name),
                                                  args = newargs )
