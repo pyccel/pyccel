@@ -996,47 +996,23 @@ class FCodePrinter(CodePrinter):
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
         s = '0'
-        enable_alloc = True
         if not(is_static) and (allocatable or (var.shape is None)):
             s = ''
 
-        rankstr =  ''
+        # Default empty strings
+        intentstr      = ''
         allocatablestr = ''
+        optionalstr    = ''
+        rankstr        = ''
 
-        # TODO improve
-
-        if ((rank == 1) and (isinstance(shape, (int, Integer, Variable, PyccelAdd))) and
-            (not(allocatable or is_pointer) or is_static or is_stack_array)):
-            rankstr =  '({0}:{1}-1)'.format(self._print(s), self._print(shape))
-            enable_alloc = False
-
-        elif ((rank > 0) and (isinstance(shape, (PythonTuple, Tuple, tuple))) and
-            (not(allocatable or is_pointer) or is_static or is_stack_array)):
-            #TODO fix bug when we inclue shape of type list
-
-            if var.order=='C':
-                rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
-                                                    self._print(i)) for i in shape[::-1])
+        # Compute intent string
+        if intent:
+            if intent == 'in' and rank == 0 and is_static == False:
+                intentstr = ', value'
             else:
-                rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
-                                                     self._print(i)) for i in shape)
-            rankstr = '({rank})'.format(rank=rankstr)
+                intentstr = ', intent({})'.format(intent)
 
-            enable_alloc = False
-
-        elif (rank > 0) and allocatable and intent:
-            rankstr = ','.join('0:' for f in range(0, rank))
-            rankstr = '(' + rankstr + ')'
-
-        elif (rank > 0) and (allocatable or is_pointer):
-            rankstr = ','.join(':' for f in range(0, rank))
-
-            rankstr = '(' + rankstr + ')'
-#        else:
-#            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-#                severity='fatal')
-
-
+        # Compute allocatable string
         if not is_static:
             if is_pointer:
                 allocatablestr = ', pointer'
@@ -1048,26 +1024,42 @@ class FCodePrinter(CodePrinter):
             if is_target:
                 allocatablestr = '{}, target'.format(allocatablestr)
 
-
-        optionalstr = ''
+        # Compute optional string
         if is_optional:
             optionalstr = ', optional'
 
-        if intent and rank>0:
-            decs.append('{0}, intent({1}) {2} {3}:: {4} {5}'.
-                        format(dtype, intent, allocatablestr, optionalstr, vstr, rankstr))
-        elif intent and  intent == 'in' and not is_static and rank == 0:
-            decs.append('{0}, value {1} :: {2}'.
-                        format(dtype, optionalstr, vstr))
-        elif intent:
-            decs.append('{0}, intent({1}) {2} :: {3} {4}'.
-                        format(dtype, intent, optionalstr, vstr, rankstr))
-        else:
-            args = [dtype, allocatablestr, optionalstr, vstr, rankstr, code_value]
-            decs.append('{0}{1} {2} :: {3} {4} {5}'.
-                        format(*args))
+        # Compute rank string
+        # TODO: improve
+        if ((rank == 1) and (isinstance(shape, (int, Integer, Variable, PyccelAdd))) and
+            (not(allocatable or is_pointer) or is_static or is_stack_array)):
+            rankstr = '({0}:{1}-1)'.format(self._print(s), self._print(shape))
 
-        return '\n'.join(decs)
+        elif ((rank > 0) and (isinstance(shape, (PythonTuple, Tuple, tuple))) and
+            (not(allocatable or is_pointer) or is_static or is_stack_array)):
+            #TODO fix bug when we include shape of type list
+
+            if var.order == 'C':
+                rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
+                                                    self._print(i)) for i in shape[::-1])
+            else:
+                rankstr =  ','.join('{0}:{1}-1'.format(self._print(s),
+                                                     self._print(i)) for i in shape)
+            rankstr = '({rank})'.format(rank=rankstr)
+
+        elif (rank > 0) and allocatable and intent:
+            rankstr = '({})'.format(','.join(['0:'] * rank))
+
+        elif (rank > 0) and (allocatable or is_pointer):
+            rankstr = '({})'.format(','.join( [':'] * rank))
+
+#        else:
+#            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+#                severity='fatal')
+
+        # Construct declaration
+        left  = dtype + intentstr + allocatablestr + optionalstr
+        right = vstr + rankstr + code_value
+        return '{} :: {}'.format(left, right)
 
     def _print_AliasAssign(self, expr):
         code = ''
