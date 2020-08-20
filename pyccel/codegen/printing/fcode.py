@@ -2219,7 +2219,7 @@ class FCodePrinter(CodePrinter):
 
         if a is NativeBool() and b is NativeBool():
             return '{} .eqv. {}'.format(lhs, rhs)
-        return '{0} == {1} '.format(lhs, rhs)
+        return '{0} == {1}'.format(lhs, rhs)
 
     def _print_PyccelNe(self, expr):
         lhs = self._print(expr.args[0])
@@ -2229,7 +2229,7 @@ class FCodePrinter(CodePrinter):
 
         if a is NativeBool() and b is NativeBool():
             return '{} .neqv. {}'.format(lhs, rhs)
-        return '{0} /= {1} '.format(lhs, rhs)
+        return '{0} /= {1}'.format(lhs, rhs)
 
     def _print_PyccelLt(self, expr):
         lhs = self._print(expr.args[0])
