@@ -1,6 +1,11 @@
 # coding: utf-8
 # pylint: disable=R0201
 
+from sympy.core import Tuple
+from pyccel.ast.numbers   import BooleanTrue
+from pyccel.ast.builtins import PythonTuple
+from pyccel.ast.core import If
+
 from sympy.core import S
 from sympy.printing.precedence import precedence
 
@@ -103,6 +108,76 @@ class CCodePrinter(CodePrinter):
 
     def _print_Module(self, expr):
         return '\n\n'.join(self._print(i) for i in expr.body)
+
+    def _print_If(self, expr):
+        lines = []
+        for i, (c, e) in enumerate(expr.args):
+            #change this line (removes an extra empty else{})
+            if (self._print(e) == ''):
+                break
+            if i == 0:
+                lines.append("if (%s){" % self._print(c))
+            elif i == len(expr.args) - 1 and c is BooleanTrue():
+                lines.append("else{")
+            else:
+                lines.append("else if (%s){" % self._print(c))
+            #e can be a tuple when one python statement
+            #results in multiple c statements
+            if isinstance(e, (list, tuple, Tuple, PythonTuple)):
+                for ee in e:
+                    lines.append("%s" % self._print(ee))
+            else:
+                lines.append("%s" % self._print(e))
+            lines.append('}')
+        return "\n".join(lines)
+
+    def _print_BooleanTrue(self, expr):
+        return '1'
+
+    def _print_BooleanFalse(self, expr):
+        return '0'
+
+    def _print_PyccelAnd(self, expr):
+        args = [self._print(a) for a in expr.args]
+        return ' && '.join(a for a in args)
+
+    def _print_PyccelOr(self, expr):
+        args = [self._print(a) for a in expr.args]
+        return ' || '.join(a for a in args)
+
+    def _print_PyccelEq(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        a = expr.args[0].dtype
+        b = expr.args[1].dtype
+        return '{0} == {1}'.format(lhs, rhs)
+
+    def _print_PyccelNe(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        a = expr.args[0].dtype
+        b = expr.args[1].dtype
+        return '{0} != {1}'.format(lhs, rhs)  
+
+    def _print_PyccelLt(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} < {1}'.format(lhs, rhs)
+
+    def _print_PyccelLe(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} <= {1}'.format(lhs, rhs)
+
+    def _print_PyccelGt(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} > {1}'.format(lhs, rhs)
+
+    def _print_PyccelGe(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} >= {1}'.format(lhs, rhs)
 
     def _print_Import(self, expr):
          imports = ['#include "{0}"'.format(i) for i in expr.target]
