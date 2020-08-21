@@ -327,9 +327,10 @@ class FCodePrinter(CodePrinter):
             if 'mpi4py' == str(getattr(i.source,'name',i.source)):
                 mpi = True
 
-        imports = '\n'.join(self._print(i) for i in imports)
-        funcs   = ''
-        body    = self._print(expr.body)
+        imports  = '\n'.join(self._print(i) for i in imports)
+        body     = self._print(expr.body)
+        contains = ''
+        funcs    = ''
 
         # ... TODO add other elements
         private_funcs = [f.name for f in expr.funcs if f.is_private]
@@ -342,6 +343,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         decs    = expr.declarations
+
         vars_to_print = self.parser.get_variables(self._namespace)
         for v in vars_to_print:
             if v not in expr.variables:
@@ -352,6 +354,7 @@ class FCodePrinter(CodePrinter):
                 if isinstance(i, FunctionDef):
                     func_in_func = True
                     break
+
         if expr.classes or expr.interfaces or func_in_func:
             # TODO shall we use expr.variables? or have a more involved algo
             #      we will need to walk through the expression and see what are
@@ -383,18 +386,14 @@ class FCodePrinter(CodePrinter):
 
             # ...
             sep = self._print(SeparatorComment(40))
-            funcs = ''
-            if expr.funcs:
-                for i in expr.funcs:
-                    funcs = ('{funcs}\n'
-                             '{sep}\n'
-                             '{f}\n'
-                             '{sep}\n').format(funcs=funcs, sep=sep, f=self._print(i))
 
-                funcs = 'contains\n{0}'.format(funcs)
+            if expr.funcs:
+                contains = 'contains'
+                funcs = '\n\n'.join('\n'.join([sep, self._print(i), sep]) for i in expr.funcs)
             # ...
 
         decs = '\n'.join(self._print(i) for i in decs)
+
         if mpi:
             #TODO shuold we add them like this ?
             body = 'call mpi_init(ierr)\n'+\
@@ -406,21 +405,18 @@ class FCodePrinter(CodePrinter):
             decs += '\ninteger :: ierr = -1' +\
                     '\n integer, allocatable :: status (:)'
 
-        return ('{modules}\n'
-                'program {name}\n'
-                '{imports}\n'
-                'implicit none\n'
-                '{private}\n'
-                '{decs}\n'
-                '{body}\n'
-                '{funcs}\n'
-                'end program {name}\n').format(name=name,
-                                               imports=imports,
-                                               private=private,
-                                               decs=decs,
-                                               body=body,
-                                               funcs=funcs,
-                                               modules=modules)
+        parts = [modules,
+                'program {}'.format(name),
+                 imports,
+                'implicit none',
+                 private,
+                 decs,
+                 body,
+                 contains,
+                 funcs,
+                'end program {}\n'.format(name)]
+
+        return '\n\n'.join(a for a in parts if a)
 
     def _print_Import(self, expr):
 
