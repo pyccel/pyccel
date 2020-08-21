@@ -16,7 +16,7 @@ from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.builtins  import Range
 from pyccel.ast.core import Declare
 from pyccel.ast.core import SeparatorComment
-from pyccel.ast.datatypes import NativeInteger
+from pyccel.ast.datatypes import NativeInteger, NativeBool
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -99,7 +99,7 @@ math_function_to_c = {
     'MathErfc'   : 'erfc',
     'MathExp'    : 'exp',
     # 'MathExpm1'  : '???', # TODO
-    'MathFabs'   : 'abs',
+    'MathFabs'   : 'fabs',
     # 'MathFmod'   : '???',  # TODO
     # 'MathFsum'   : '???',  # TODO
     'MathGamma'  : 'gamma',
@@ -269,7 +269,7 @@ class CCodePrinter(CodePrinter):
 
         Example:
         --------
-            math.abs(x, y) ==> abs(x, y)
+            math.sin(x) ==> sin(x)
 
         """
 
@@ -277,6 +277,13 @@ class CCodePrinter(CodePrinter):
         func_name = math_function_to_c[type_name]
         code_args = ', '.join(self._print(i) for i in expr.args)
         return '{0}({1})'.format(func_name, code_args)
+
+    def _print_MathSqrt(self, expr):
+        arg = expr.args[0]
+        code_args = self._print(arg)
+        if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
+            code_args = 'Real({})'.format(code_args)
+        return 'sqrt({})'.format(code_args)
 
     def _print_FunctionDef(self, expr):
 
