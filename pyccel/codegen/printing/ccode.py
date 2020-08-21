@@ -109,6 +109,12 @@ class CCodePrinter(CodePrinter):
     def _print_Module(self, expr):
         return '\n\n'.join(self._print(i) for i in expr.body)
 
+    def _print_While(self,expr):
+        #print(expr.test)
+        code = "while (%s)\n{" % self._print(expr.test)
+        code = code + "\n %s" % self._print(expr.body) + "\n}"
+        return (code)
+
     def _print_If(self, expr):
         lines = []
         for i, (c, e) in enumerate(expr.args):
@@ -139,25 +145,21 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelAnd(self, expr):
         args = [self._print(a) for a in expr.args]
-        return ' && '.join(a for a in args)
+        return '(' + ' && '.join(a for a in args) + ')'
 
     def _print_PyccelOr(self, expr):
         args = [self._print(a) for a in expr.args]
-        return ' || '.join(a for a in args)
+        return '(' + ' || '.join(a for a in args) + ')'
 
     def _print_PyccelEq(self, expr):
         lhs = self._print(expr.args[0])
         rhs = self._print(expr.args[1])
-        a = expr.args[0].dtype
-        b = expr.args[1].dtype
         return '{0} == {1}'.format(lhs, rhs)
 
     def _print_PyccelNe(self, expr):
         lhs = self._print(expr.args[0])
         rhs = self._print(expr.args[1])
-        a = expr.args[0].dtype
-        b = expr.args[1].dtype
-        return '{0} != {1}'.format(lhs, rhs)  
+        return '{0} != {1}'.format(lhs, rhs)
 
     def _print_PyccelLt(self, expr):
         lhs = self._print(expr.args[0])
@@ -178,6 +180,10 @@ class CCodePrinter(CodePrinter):
         lhs = self._print(expr.args[0])
         rhs = self._print(expr.args[1])
         return '{0} >= {1}'.format(lhs, rhs)
+
+    def _print_PyccelNot(self, expr):
+        a = self._print(expr.args[0])
+        return '!{}'.format(a)
 
     def _print_Import(self, expr):
          imports = ['#include "{0}"'.format(i) for i in expr.target]
