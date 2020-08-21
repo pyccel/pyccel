@@ -542,5 +542,5 @@ def ccode(expr, assign_to=None, **settings):
         For example, if ``dereference=[a]``, the resulting code would print
         ``(*a)`` instead of ``a``.
     """
-
-    return CCodePrinter(settings).doprint(expr, assign_to)
+    libs = "#include <math.h>\n\n"
+    return libs + CCodePrinter(settings).doprint(expr, assign_to)
