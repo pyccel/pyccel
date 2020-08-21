@@ -220,7 +220,7 @@ class CCodePrinter(CodePrinter):
             # TODO: Use fortran example to add pointer arguments for multiple output
             msg = 'Multiple output arguments is not yet supported in c'
             errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal', blocker=self.blocking)
+                severity='fatal')
         else:
             ret_type = self._print(datatype('void'))
         name = expr.name
