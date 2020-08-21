@@ -469,9 +469,7 @@ class FCodePrinter(CodePrinter):
                 raise TypeError('Expecting str, Symbol, DottedName or AsName, '
                                 'given {}'.format(type(i)))
 
-            # TODO keep `\n` ?
-#            code = '{code}{line}'.format(code=code, line=line)
-            code = '{code}\n{line}'.format(code=code, line=line)
+            code = (code + '\n' + line) if code else line
 
         # in some cases, the source is given as a string (when using metavar)
         code = code.replace("'", '')
