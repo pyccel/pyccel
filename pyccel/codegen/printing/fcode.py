@@ -2112,19 +2112,26 @@ class FCodePrinter(CodePrinter):
         # ...
 
         lines = []
+
         for i, (c, e) in enumerate(expr.args):
+
+            if (not e) or (isinstance(e, CodeBlock) and not e.body):
+                continue
+
             if i == 0:
                 lines.append("if (%s) then\n" % self._print(c))
             elif i == len(expr.args) - 1 and c is BooleanTrue():
                 lines.append("else\n")
             else:
                 lines.append("else if (%s) then\n" % self._print(c))
+
             if isinstance(e, (list, tuple, Tuple, PythonTuple)):
-                for ee in e:
-                    lines.append(self._print(ee))
+                lines.extend(self._print(e) for e in ee)
             else:
                 lines.append(self._print(e))
+
         lines.append("end if\n")
+
         return ''.join(lines)
 
     def _print_MatrixElement(self, expr):
