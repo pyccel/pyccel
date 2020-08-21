@@ -110,7 +110,7 @@ class CCodePrinter(CodePrinter):
         return '\n\n'.join(self._print(i) for i in expr.body)
 
     def _print_While(self,expr):
-        #print(expr.test)
+        print(expr.test)
         code = "while (%s)\n{" % self._print(expr.test)
         code = code + "\n %s" % self._print(expr.body) + "\n}"
         return (code)
@@ -145,11 +145,11 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelAnd(self, expr):
         args = [self._print(a) for a in expr.args]
-        return '(' + ' && '.join(a for a in args) + ')'
+        return ' && '.join(a for a in args)
 
     def _print_PyccelOr(self, expr):
         args = [self._print(a) for a in expr.args]
-        return '(' + ' || '.join(a for a in args) + ')'
+        return ' || '.join(a for a in args)
 
     def _print_PyccelEq(self, expr):
         lhs = self._print(expr.args[0])
