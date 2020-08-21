@@ -551,7 +551,7 @@ class FCodePrinter(CodePrinter):
                 '{1}\n'
                 '{2}').format(top, body, bottom)
 
-    def _print_EmptyLine(self, expr):
+    def _print_EmptyNode(self, expr):
         return ''
 
     def _print_NewLine(self, expr):

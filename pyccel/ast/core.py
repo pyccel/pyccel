@@ -96,7 +96,7 @@ __all__ = (
     'DoConcurrent',
     'DottedName',
     'DottedVariable',
-    'EmptyLine',
+    'EmptyNode',
     'ErrorExit',
     'Eval',
     'Exit',
@@ -4292,9 +4292,13 @@ class Del(Basic):
         return self._args[0]
 
 
-class EmptyLine(Basic):
-
-    """Represents a EmptyLine in the code.
+class EmptyNode(Basic):
+    """
+    Represents an empty node in the abstract syntax tree (AST).
+    When a subtree is removed from the AST, we replace it with an EmptyNode
+    object that acts as a placeholder. Using an EmptyNode instead of None
+    is more explicit and avoids confusion. Further, finding a None in the AST
+    is signal of an internal bug.
 
     Parameters
     ----------
@@ -4303,8 +4307,8 @@ class EmptyLine(Basic):
 
     Examples
     --------
-    >>> from pyccel.ast.core import EmptyLine
-    >>> EmptyLine()
+    >>> from pyccel.ast.core import EmptyNode
+    >>> EmptyNode()
 
     """
 

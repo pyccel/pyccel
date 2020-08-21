@@ -42,7 +42,7 @@ from pyccel.ast.core import If, IfTernaryOperator
 from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
-from pyccel.ast.core import EmptyLine
+from pyccel.ast.core import EmptyNode
 from pyccel.ast.core import Slice, IndexedVariable, IndexedElement
 from pyccel.ast.core import Concatenate
 from pyccel.ast.core import ValuedVariable
@@ -786,7 +786,7 @@ class SemanticParser(BasicParser):
 
     def _visit_Nil(self, expr, **settings):
         return expr
-    def _visit_EmptyLine(self, expr, **settings):
+    def _visit_EmptyNode(self, expr, **settings):
         return expr
     def _visit_NewLine(self, expr, **settings):
         return expr
@@ -1648,7 +1648,7 @@ class SemanticParser(BasicParser):
         elif isinstance(rhs, Block):
             #case of inline
             results = _atomic(rhs.body,Return)
-            sub = list(zip(results,[EmptyLine()]*len(results)))
+            sub = list(zip(results,[EmptyNode()]*len(results)))
             body = rhs.body
             body = subs(body,sub)
             results = [i.expr for i in results]
@@ -2608,7 +2608,7 @@ class SemanticParser(BasicParser):
 #               funcs = [funcs, vec_func]
 #           funcs = Interface(name, funcs)
 #           self.insert_function(funcs)
-        return EmptyLine()
+        return EmptyNode()
 
     def _visit_Print(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.expr]
@@ -2700,7 +2700,7 @@ class SemanticParser(BasicParser):
               interfaces=interfaces, parent=parent)
         self.insert_class(cls)
 
-        return EmptyLine()
+        return EmptyNode()
 
     def _visit_Del(self, expr, **settings):
 
@@ -2867,7 +2867,7 @@ class SemanticParser(BasicParser):
             elif not __ignore_at_import__:
                 container['imports'][source_target] = expr
 
-        return EmptyLine()
+        return EmptyNode()
 
 
 

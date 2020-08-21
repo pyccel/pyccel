@@ -38,7 +38,7 @@ from pyccel.ast.core import While
 from pyccel.ast.core import Del
 from pyccel.ast.core import Assert
 from pyccel.ast.core import PythonTuple
-from pyccel.ast.core import Comment, EmptyLine, NewLine
+from pyccel.ast.core import Comment, EmptyNode, NewLine
 from pyccel.ast.core import Break, Continue
 from pyccel.ast.core import Slice
 from pyccel.ast.core import Argument, ValuedArgument
@@ -243,8 +243,8 @@ class SyntaxParser(BasicParser):
                 n_empty_lines = 0
                 current_file = start
                 current_file.append(v)
-            elif isinstance(v, (NewLine, EmptyLine)):
-                # EmptyLines are defined in the same block as the previous line
+            elif isinstance(v, (NewLine, EmptyNode)):
+                # EmptyNodes are defined in the same block as the previous line
                 current_file.append(v)
                 n_empty_lines += 1
             elif isinstance(v, Import):
@@ -669,7 +669,7 @@ class SyntaxParser(BasicParser):
                             for d in self._visit(stmt.decorator_list)}
 
         if 'bypass' in decorators:
-            return EmptyLine()
+            return EmptyNode()
 
         if 'stack_array' in decorators:
             args = list(decorators['stack_array'].args)
@@ -732,7 +732,7 @@ class SyntaxParser(BasicParser):
                     [stmt.__str__()])
             func.set_fst(stmt)
             self.insert_function(func)
-            return EmptyLine()
+            return EmptyNode()
 
         elif 'python' in decorators.keys():
 
@@ -743,7 +743,7 @@ class SyntaxParser(BasicParser):
                     [stmt.__str__()])
             func.set_fst(stmt)
             self.insert_function(func)
-            return EmptyLine()
+            return EmptyNode()
 
         else:
             body = self._visit(body)
@@ -1051,7 +1051,7 @@ class SyntaxParser(BasicParser):
                         # but can be used to modify the ast
 
                         self._metavars[str(expr.name)] = str(expr.value)
-                        expr = EmptyLine()
+                        expr = EmptyNode()
                     else:
                         expr.set_fst(stmt)
 
@@ -1088,7 +1088,7 @@ class SyntaxParser(BasicParser):
                     # but can be used to modify the ast
 
                     self._metavars[str(expr.name)] = str(expr.value)
-                    expr = EmptyLine()
+                    expr = EmptyNode()
                 else:
                     expr.set_fst(stmt)
 
