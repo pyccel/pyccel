@@ -1374,19 +1374,20 @@ class FCodePrinter(CodePrinter):
             dec = Declare(result.dtype, result, static=True)
             args_decs[str(result.name)] = dec
         # ...
+
         arg_code  = ', '.join(self._print(i) for i in chain( arguments, results ))
+        imports   = ''.join(self._print(i) for i in expr.imports)
+        prelude   = ''.join(self._print(i) for i in args_decs.values())
         body_code = self._print(expr.body)
-        prelude   = '\n'.join(self._print(i) for i in args_decs.values())
-        body_code = prelude + '\n\n' + body_code
-        imports = '\n'.join(self._print(i) for i in expr.imports)
 
-        func = ('{0} {1} ({2}) {3}\n'
-                '{4}\n'
-                'implicit none\n'
-                '{5}\n'
-                'end {6}').format(func_type, name, arg_code, func_end, imports, body_code, func_type)
+        parts = ['{0} {1}({2}) {3}\n'.format(func_type, name, arg_code, func_end),
+                 imports,
+                'implicit none\n',
+                 prelude,
+                 body_code,
+                 'end {}\n'.format(func_type)]
 
-        return func
+        return '\n'.join(parts)
 
     def _print_FunctionDef(self, expr):
         self._handle_fortran_specific_a_prioris(list(expr.local_vars) +
