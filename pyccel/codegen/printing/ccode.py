@@ -253,8 +253,7 @@ class CCodePrinter(CodePrinter):
         type_name = type(expr).__name__
         func_name = numpy_ufunc_to_c[type_name]
         code_args = ', '.join(self._print(i) for i in expr.args)
-        code = '{0}({1})'.format(func_name, code_args)
-        return self._get_statement(code)
+        return '{0}({1})'.format(func_name, code_args)
 
     def _print_MathFunctionBase(self, expr):
         """ convert a python expresion with a math function call to c
@@ -277,8 +276,7 @@ class CCodePrinter(CodePrinter):
         type_name = type(expr).__name__
         func_name = math_function_to_c[type_name]
         code_args = ', '.join(self._print(i) for i in expr.args)
-        code = '{0}({1})'.format(func_name, code_args)
-        return self._get_statement(code)
+        return '{0}({1})'.format(func_name, code_args)
 
     def _print_FunctionDef(self, expr):
 
