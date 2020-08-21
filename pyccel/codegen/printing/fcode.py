@@ -2553,7 +2553,7 @@ class FCodePrinter(CodePrinter):
         """Wrap long Fortran lines
 
            Argument:
-             lines  --  a list of lines (without \\n character)
+             lines  --  a list of lines (ending with a \\n character)
 
            A comment line is split at white space. Code lines are split with a more
            complex rule to give nice results.
@@ -2576,6 +2576,7 @@ class FCodePrinter(CodePrinter):
                 if pos == 0:
                     return endpos
             return pos
+
         # split line by line and add the splitted lines to result
         result = []
         trailing = ' &'
@@ -2601,7 +2602,9 @@ class FCodePrinter(CodePrinter):
                     result.append("%s%s"%("      " , hunk))
             else:
                 result.append(line)
-        return result
+
+        # make sure that all lines end with a carriage return
+        return [l if l.endswith('\n') else l+'\n' for l in result]
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
