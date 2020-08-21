@@ -308,7 +308,7 @@ class FCodePrinter(CodePrinter):
                  interfaces,
                  contains,
                  body,
-                 'end module\n']
+                 'end module {}\n'.format(name)]
 
         return '\n\n'.join([a for a in parts if a])
 
