@@ -54,6 +54,82 @@ known_functions = {
     "ceiling": "ceil",
 }
 
+# dictionary mapping numpy function to (argument_conditions, C_function).
+# Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
+numpy_ufunc_to_c = {
+    'NumpyAbs'  : 'abs',
+    'NumpyMin'  : 'minval',
+    'NumpyMax'  : 'maxval',
+    'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
+    # ---
+    'NumpyExp' : 'exp',
+    'NumpyLog' : 'Log',
+    # 'NumpySqrt': 'Sqrt',  # sqrt is printed using _Print_NumpySqrt
+    # ---
+    'NumpySin'    : 'sin',
+    'NumpyCos'    : 'cos',
+    'NumpyTan'    : 'tan',
+    'NumpyArcsin' : 'asin',
+    'NumpyArccos' : 'acos',
+    'NumpyArctan' : 'atan',
+    'NumpyArctan2': 'atan2',
+    'NumpySinh'   : 'sinh',
+    'NumpyCosh'   : 'cosh',
+    'NumpyTanh'   : 'tanh',
+    'NumpyArcsinh': 'asinh',
+    'NumpyArccosh': 'acosh',
+    'NumpyArctanh': 'atanh',
+}
+
+# dictionary mapping Math function to (argument_conditions, C_function).
+# Used in CCodePrinter._print_MathFunctionBase(self, expr)
+math_function_to_c = {
+    'MathAcos'   : 'acos',
+    'MathAcosh'  : 'acosh',
+    'MathAsin'   : 'asin',
+    'MathAsinh'  : 'asinh',
+    'MathAtan'   : 'atan',
+    'MathAtan2'  : 'atan2',
+    'MathAtanh'  : 'atanh',
+    # 'MathCopysign': '???', # TODO
+    'MathCos'    : 'cos',
+    'MathCosh'   : 'cosh',
+    # 'MathDegrees': '???',  # TODO
+    'MathErf'    : 'erf',
+    'MathErfc'   : 'erfc',
+    'MathExp'    : 'exp',
+    # 'MathExpm1'  : '???', # TODO
+    'MathFabs'   : 'abs',
+    # 'MathFmod'   : '???',  # TODO
+    # 'MathFsum'   : '???',  # TODO
+    'MathGamma'  : 'gamma',
+    'MathHypot'  : 'hypot',
+    # 'MathLdexp'  : '???',  # TODO
+    'MathLgamma' : 'log_gamma',
+    'MathLog'    : 'log',
+    'MathLog10'  : 'log10',
+    # 'MathLog1p'  : '???', # TODO
+    # 'MathLog2'   : '???', # TODO
+    # 'MathPow'    : '???', # TODO
+    # 'MathRadians': '???', # TODO
+    'MathSin'    : 'sin',
+    'MathSinh'   : 'sinh',
+    # 'MathSqrt'   : 'sqrt', # sqrt is printed using _Print_MathSqrt
+    'MathTan'    : 'tan',
+    'MathTanh'   : 'tanh',
+    # ---
+    'MathCeil'     : 'ceiling',
+    # 'MathFactorial': '???', # TODO
+    'MathFloor'    : 'floor',
+    # 'MathGcd'      : '???', # TODO
+    # 'MathTrunc'    : '???', # TODO
+    #     ---
+    # 'MathIsclose' : '???', # TODO
+    # 'MathIsfinite': '???', # TODO
+    # 'MathIsinf'   : '???', # TODO
+    # 'MathIsnan'   : '???', # TODO
+}
+
 dtype_registry = {('real',8)    : 'double',
                   ('real',4)    : 'float',
                   ('complex',8) : 'double complex',
@@ -155,6 +231,54 @@ class CCodePrinter(CodePrinter):
         arg_code   = ', '.join(dtype + ' ' + arg for dtype,arg in zip(arg_dtypes,arguments))
 
         return '{0} {1}({2})'.format(ret_type, name, arg_code)
+
+    def _print_NumpyUfuncBase(self, expr):
+        """ convert a python expresion with a numpy function call to c
+        function call
+
+        Parameters:
+        -----------
+            expr (Pyccel ast node): python expresion with a numpy function call
+
+        Returns:
+        --------
+            string: equivalent of the expression in c language
+
+        Example:
+        -------
+            numpy.cos(x) ==> cos(x)
+
+        """
+
+        type_name = type(expr).__name__
+        func_name = numpy_ufunc_to_c[type_name]
+        code_args = ', '.join(self._print(i) for i in expr.args)
+        code = '{0}({1})'.format(func_name, code_args)
+        return self._get_statement(code)
+
+    def _print_MathFunctionBase(self, expr):
+        """ convert a python expresion with a math function call to c
+        function call
+
+        Parameters:
+        -----------
+            expr (Pyccel ast node): python expresion with a Math function call
+
+        Returns:
+        --------
+            string: equivalent of the expression in c language
+
+        Example:
+        --------
+            math.abs(x, y) ==> abs(x, y)
+
+        """
+
+        type_name = type(expr).__name__
+        func_name = math_function_to_c[type_name]
+        code_args = ', '.join(self._print(i) for i in expr.args)
+        code = '{0}({1})'.format(func_name, code_args)
+        return self._get_statement(code)
 
     def _print_FunctionDef(self, expr):
 
