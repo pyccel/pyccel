@@ -1385,7 +1385,7 @@ class FCodePrinter(CodePrinter):
                 'implicit none\n',
                  prelude,
                  body_code,
-                 'end {}\n'.format(func_type)]
+                 'end {} {}\n'.format(func_type, name)]
 
         return '\n'.join(parts)
 
@@ -1501,7 +1501,7 @@ class FCodePrinter(CodePrinter):
                 'implicit none\n',
                  prelude,
                  body_code,
-                 'end {}\n'.format(func_type)]
+                 'end {} {}\n'.format(func_type, name)]
 
         return '\n'.join(a for a in parts if a)
 
