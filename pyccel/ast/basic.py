@@ -16,12 +16,13 @@ class Basic(sp_Basic):
         return self._fst
 
 class PyccelAstNode:
-    stage      = None
-    _shape     = None
-    _rank      = None
-    _dtype     = None
-    _precision = None
-    _order     = None
+    stage       = None
+    _shape      = None
+    _rank       = None
+    _dtype      = None
+    _precision  = None
+    _order      = None
+    _precedence = 17
 
     @property
     def shape(self):
@@ -43,10 +44,15 @@ class PyccelAstNode:
     def order(self):
         return self._order
 
+    @property
+    def precedence(self):
+        return self._precedence
+
     def copy_attributes(self, x):
-        self._shape     = x.shape
-        self._rank      = x.rank
-        self._dtype     = x.dtype
-        self._precision = x.precision
-        self._order     = x.order
+        self._shape      = x.shape
+        self._rank       = x.rank
+        self._dtype      = x.dtype
+        self._precision  = x.precision
+        self._order      = x.order
+        self._precedence = x.precedence
 
