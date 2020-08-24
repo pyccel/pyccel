@@ -122,11 +122,11 @@ class CCodePrinter(CodePrinter):
             if (var == ''):
                 break
             if i == 0:
-                lines.append("if (%s){" % self._print(c))
+                lines.append("if (%s)\n{" % self._print(c))
             elif i == len(expr.args) - 1 and c is BooleanTrue():
-                lines.append("else{")
+                lines.append("else\n{")
             else:
-                lines.append("else if (%s){" % self._print(c))
+                lines.append("else if (%s)\n{" % self._print(c))
             #e can be a tuple when one python statement
             #results in multiple c statements
             if isinstance(e, (list, tuple, Tuple, PythonTuple)):
@@ -243,7 +243,7 @@ class CCodePrinter(CodePrinter):
         decs       = '\n'.join(self._print(i) for i in decs)
         body       = '\n'.join(self._print(i) for i in expr.body.body)
 
-        return '{0} {{\n{1}\n{2}\n}}'.format(self.function_signature(expr), decs, body)
+        return '{0}\n{{\n{1}\n{2}\n}}'.format(self.function_signature(expr), decs, body)
 
     def _print_Return(self, expr):
         code = ''
@@ -292,7 +292,7 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError("Only iterable currently supported is Range")
         body = '\n'.join(self._print(i) for i in expr.body.body)
         return ('for ({target} = {start}; {target} < {stop}; {target} += '
-                '{step}) {{\n{body}\n}}').format(target=target, start=start,
+                '{step})\n{{\n{body}\n}}').format(target=target, start=start,
                 stop=stop, step=step, body=body)
 
     def _print_CodeBlock(self, expr):
