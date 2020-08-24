@@ -22,11 +22,15 @@ def write_python_wrapper(expr, printer):
     results_decs = '\n    '.join(printer._print(i) for i in results_decs)
     code += '{0}\n    {1}\n    '.format(arg_decs, results_decs)
 
-    code += "if (!PyArg_ParseTuple(args, \""
-    code += ''.join(pytype_registry[str_dtype(arg.dtype)] for arg in expr.arguments)
-    code += "\", "
-    code += ', '.join("&" + printer._print(arg) for arg in expr.arguments)
-    code += "))\n        return NULL;\n    "
+    # Check if the function with No arguments
+    if not expr.arguments:
+        code += "if (!PyArg_ParseTuple(args, \"\"))\n        return NULL;\n    "
+    else:
+        code += "if (!PyArg_ParseTuple(args, \""
+        code += ''.join(pytype_registry[str_dtype(arg.dtype)] for arg in expr.arguments)
+        code += "\", "
+        code += ', '.join("&" + printer._print(arg) for arg in expr.arguments)
+        code += "))\n        return NULL;\n    "
 
     if len(expr.results)==0:
         func_call = UndefinedFunction(str(expr.name))(*expr.arguments)
