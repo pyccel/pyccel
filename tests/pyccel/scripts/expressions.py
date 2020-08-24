@@ -58,6 +58,10 @@ g2 = True or True and False
 g3 = not True or True and False
 g4 = not (True or True and False)
 g5 = True and True or False
+g6 = x==1 or y == 3 or x == 7 or y == 4
+g7 = x==10 and y == 4 and x == 7
+g8 = True and True or False and False
+g9 = False or True and False or True
 
 print(a1)
 print(a2)
@@ -113,3 +117,7 @@ print(g2)
 print(g3)
 print(g4)
 print(g5)
+print(g6)
+print(g7)
+print(g8)
+print(g9)
