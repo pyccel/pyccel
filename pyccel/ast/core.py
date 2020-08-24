@@ -210,11 +210,28 @@ def broadcast(shape_1, shape_2):
             errors.report(msg,severity='fatal')
     return tuple(new_shape)
 
+def handle_precedence(args, my_precedence):
+    precedence = [getattr(a, 'precedence', 17) for a in args]
+
+    if min(precedence) <= my_precedence:
+
+        new_args = []
+
+        for i, (a,p) in enumerate(zip(args, precedence)):
+            if (p < my_precedence or (p == my_precedence and i != 0)):
+                new_args.append(PyccelAssociativeParenthesis(a))
+            else:
+                new_args.append(a)
+        args = tuple(new_args)
+
+    return args
+
 class PyccelOperator(Expr, PyccelAstNode):
 
     def __init__(self, *args):
 
         if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
             return
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
         reals     = [a for a in args if a.dtype is NativeReal()]
@@ -260,18 +277,24 @@ class PyccelOperator(Expr, PyccelAstNode):
                 self._rank  = max(a.rank for a in args)
                 self._shape = [None]*self._rank
 
+    @property
+    def precedence(self):
+        return self._precedence
+
 class PyccelPow(PyccelOperator):
-    p = 4
+    _precedence  = 15
 class PyccelAdd(PyccelOperator):
-    p = 1
+    _precedence = 12
 class PyccelMul(PyccelOperator):
-    p = 2
+    _precedence = 13
 class PyccelMinus(PyccelAdd):
     pass
 class PyccelDiv(PyccelOperator):
-    p = 2
+    _precedence = 13
     def __init__(self, *args):
+
         if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
             return
 
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
@@ -307,15 +330,19 @@ class PyccelDiv(PyccelOperator):
             self._shape = [None]*self._rank
 
 class PyccelMod(PyccelOperator):
-    p = 2
+    _precedence = 13
 class PyccelFloorDiv(PyccelOperator):
-    p = 2
+    _precedence = 13
 
 class PyccelBooleanOperator(Expr, PyccelAstNode):
+    _precedence = 7
 
     def __init__(self, *args):
+
         if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
             return
+
         self._dtype = NativeBool()
         self._precision = default_precision['bool']
         
@@ -337,6 +364,10 @@ class PyccelBooleanOperator(Expr, PyccelAstNode):
             self._rank = max(a.rank for a in args)
             self._shape = [None]*self._rank
 
+    @property
+    def precedence(self):
+        return self._precedence
+
 class PyccelEq(PyccelBooleanOperator):
     pass
 class PyccelNe(PyccelBooleanOperator):
@@ -351,6 +382,7 @@ class PyccelGe(PyccelBooleanOperator):
     pass
 
 class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
+    _precedence = 18
     def __init__(self, a):
         if self.stage == 'syntactic':
             return
@@ -359,32 +391,74 @@ class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
         self._precision = a.precision
         self._shape     = a.shape
 
+    @property
+    def precedence(self):
+        return self._precedence
+
 class PyccelUnary(Expr, PyccelAstNode):
+    _precedence = 14
+
     def __init__(self, a):
+
         if self.stage == 'syntactic':
+            if (getattr(a, 'precedence', 17) <= self.precedence):
+                a = PyccelAssociativeParenthesis(a)
+                self._args = (a,)
             return
+
         self._dtype     = a.dtype
         self._rank      = a.rank
         self._precision = a.precision
         self._shape     = a.shape
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 class PyccelAnd(Expr, PyccelAstNode):
     _dtype = NativeBool()
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 5
+
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 class PyccelOr(Expr, PyccelAstNode):
     _dtype = NativeBool()
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 4
+
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 class PyccelNot(Expr, PyccelAstNode):
     _dtype = NativeBool()
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 6
+
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 class Is(Basic, PyccelAstNode):
 
@@ -402,9 +476,11 @@ class Is(Basic, PyccelAstNode):
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 7
 
-    def __new__(cls, lhs, rhs):
-        return Basic.__new__(cls, lhs, rhs)
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
 
     @property
     def lhs(self):
@@ -413,6 +489,10 @@ class Is(Basic, PyccelAstNode):
     @property
     def rhs(self):
         return self._args[1]
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 
 class IsNot(Basic, PyccelAstNode):
@@ -432,9 +512,11 @@ class IsNot(Basic, PyccelAstNode):
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 7
 
-    def __new__(cls, lhs, rhs):
-        return Basic.__new__(cls, lhs, rhs)
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
 
     @property
     def lhs(self):
@@ -443,6 +525,10 @@ class IsNot(Basic, PyccelAstNode):
     @property
     def rhs(self):
         return self._args[1]
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 
 Relational = (PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe, PyccelAnd, PyccelOr,  PyccelNot, Is, IsNot)
