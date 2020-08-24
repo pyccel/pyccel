@@ -210,7 +210,7 @@ def broadcast(shape_1, shape_2):
             errors.report(msg,severity='fatal')
     return tuple(new_shape)
 
-def handle_precedence(args, my_precedence, commutative = False):
+def handle_precedence(args, my_precedence):
     precedence = [getattr(a, 'precedence', 17) for a in args]
 
     if min(precedence) <= my_precedence:
@@ -231,7 +231,7 @@ class PyccelOperator(Expr, PyccelAstNode):
     def __init__(self, *args):
 
         if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence, self._commutative)
+            self._args = handle_precedence(args, self.precedence)
             return
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
         reals     = [a for a in args if a.dtype is NativeReal()]
@@ -283,23 +283,18 @@ class PyccelOperator(Expr, PyccelAstNode):
 
 class PyccelPow(PyccelOperator):
     _precedence  = 15
-    _commutative = False
 class PyccelAdd(PyccelOperator):
     _precedence = 12
-    _commutative = True
 class PyccelMul(PyccelOperator):
     _precedence = 13
-    _commutative = True
 class PyccelMinus(PyccelAdd):
-    _commutative = False
     pass
 class PyccelDiv(PyccelOperator):
     _precedence = 13
-    _commutative = False
     def __init__(self, *args):
 
         if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence, self._commutative)
+            self._args = handle_precedence(args, self.precedence)
             return
 
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
@@ -336,10 +331,8 @@ class PyccelDiv(PyccelOperator):
 
 class PyccelMod(PyccelOperator):
     _precedence = 13
-    _commutative = False
 class PyccelFloorDiv(PyccelOperator):
     _precedence = 13
-    _commutative = False
 
 class PyccelBooleanOperator(Expr, PyccelAstNode):
     _precedence = 7
@@ -347,7 +340,7 @@ class PyccelBooleanOperator(Expr, PyccelAstNode):
     def __init__(self, *args):
 
         if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence, self._commutative)
+            self._args = handle_precedence(args, self.precedence)
             return
 
         self._dtype = NativeBool()
@@ -376,22 +369,16 @@ class PyccelBooleanOperator(Expr, PyccelAstNode):
         return self._precedence
 
 class PyccelEq(PyccelBooleanOperator):
-    _commutative = True
     pass
 class PyccelNe(PyccelBooleanOperator):
-    _commutative = True
     pass
 class PyccelLt(PyccelBooleanOperator):
-    _commutative = True
     pass
 class PyccelLe(PyccelBooleanOperator):
-    _commutative = True
     pass
 class PyccelGt(PyccelBooleanOperator):
-    _commutative = True
     pass
 class PyccelGe(PyccelBooleanOperator):
-    _commutative = True
     pass
 
 class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
@@ -437,7 +424,7 @@ class PyccelAnd(Expr, PyccelAstNode):
 
     def __init__(self, *args):
         if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence, True)
+            self._args = handle_precedence(args, self.precedence)
 
     @property
     def precedence(self):
@@ -452,7 +439,7 @@ class PyccelOr(Expr, PyccelAstNode):
 
     def __init__(self, *args):
         if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence, True)
+            self._args = handle_precedence(args, self.precedence)
 
     @property
     def precedence(self):
