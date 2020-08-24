@@ -406,7 +406,7 @@ class PyccelUnary(Expr, PyccelAstNode):
     def __init__(self, a):
 
         if self.stage == 'syntactic':
-            if (a.precedence <= self.precedence):
+            if (getattr(a, 'precedence', 17) <= self.precedence):
                 a = PyccelAssociativeParenthesis(a)
                 self._args = (a,)
             return
