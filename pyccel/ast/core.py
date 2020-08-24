@@ -210,9 +210,28 @@ def broadcast(shape_1, shape_2):
             errors.report(msg,severity='fatal')
     return tuple(new_shape)
 
+def handle_precedence(args, my_precedence):
+    precedence = [getattr(a, 'precedence', 17) for a in args]
+    max_precedence = min(precedence)
+
+    if min(precedence) <= my_precedence:
+
+        new_args = []
+
+        for a in args:
+            if a.precedence <= my_precedence:
+                new_args.append(PyccelAssociativeParenthesis(a))
+            else:
+                new_args.append(a)
+        args = tuple(new_args)
+
+    return args
+
 class PyccelOperator(Expr, PyccelAstNode):
 
     def __init__(self, *args):
+        args = handle_precedence(args, self.precedence)
+        self._args = tuple(args)
 
         if self.stage == 'syntactic':
             return
@@ -261,16 +280,19 @@ class PyccelOperator(Expr, PyccelAstNode):
                 self._shape = [None]*self._rank
 
 class PyccelPow(PyccelOperator):
-    p = 4
+    _precedence = 15
 class PyccelAdd(PyccelOperator):
-    p = 1
+    _precedence = 12
 class PyccelMul(PyccelOperator):
-    p = 2
+    _precedence = 13
 class PyccelMinus(PyccelAdd):
     pass
 class PyccelDiv(PyccelOperator):
-    p = 2
+    _precedence = 13
     def __init__(self, *args):
+        args = handle_precedence(args, self.precedence)
+        self._args = tuple(args)
+
         if self.stage == 'syntactic':
             return
 
@@ -307,15 +329,20 @@ class PyccelDiv(PyccelOperator):
             self._shape = [None]*self._rank
 
 class PyccelMod(PyccelOperator):
-    p = 2
+    _precedence = 13
 class PyccelFloorDiv(PyccelOperator):
-    p = 2
+    _precedence = 13
 
 class PyccelBooleanOperator(Expr, PyccelAstNode):
+    _precedence = 7
 
     def __init__(self, *args):
+        args = handle_precedence(args, self.precedence)
+        self._args = tuple(args)
+
         if self.stage == 'syntactic':
             return
+
         self._dtype = NativeBool()
         self._precision = default_precision['bool']
         
@@ -351,6 +378,7 @@ class PyccelGe(PyccelBooleanOperator):
     pass
 
 class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
+    _precedence = 18
     def __init__(self, a):
         if self.stage == 'syntactic':
             return
@@ -360,7 +388,13 @@ class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
         self._shape     = a.shape
 
 class PyccelUnary(Expr, PyccelAstNode):
+    _precedence = 14
+
     def __init__(self, a):
+        if (a.precedence <= self.precedence):
+            a = PyccelAssociativeParenthesis(a)
+            self._args = (a,)
+
         if self.stage == 'syntactic':
             return
         self._dtype     = a.dtype
@@ -373,18 +407,33 @@ class PyccelAnd(Expr, PyccelAstNode):
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 5
+
+    def __init__(cls, *args):
+        args = handle_precedence(args, self.precedence)
+        self._args = tuple(args)
 
 class PyccelOr(Expr, PyccelAstNode):
     _dtype = NativeBool()
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 4
+
+    def __init__(cls, *args):
+        args = handle_precedence(args, self.precedence)
+        self._args = tuple(args)
 
 class PyccelNot(Expr, PyccelAstNode):
     _dtype = NativeBool()
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 6
+
+    def __init__(cls, *args):
+        args = handle_precedence(args, self.precedence)
+        self._args = tuple(args)
 
 class Is(Basic, PyccelAstNode):
 
@@ -402,9 +451,11 @@ class Is(Basic, PyccelAstNode):
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 7
 
-    def __new__(cls, lhs, rhs):
-        return Basic.__new__(cls, lhs, rhs)
+    def __init__(cls, *args):
+        args = handle_precedence(args, self.precedence)
+        self._args = tuple(args)
 
     @property
     def lhs(self):
@@ -432,9 +483,11 @@ class IsNot(Basic, PyccelAstNode):
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 7
 
-    def __new__(cls, lhs, rhs):
-        return Basic.__new__(cls, lhs, rhs)
+    def __init__(cls, *args):
+        args = handle_precedence(args, self.precedence)
+        self._args = tuple(args)
 
     @property
     def lhs(self):
