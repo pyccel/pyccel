@@ -539,14 +539,13 @@ class SyntaxParser(BasicParser):
 
     def _visit_BoolOp(self, stmt):
 
-        first = self._visit(stmt.values[0])
-        second = self._visit(stmt.values[1])
+        args = [self._visit(a) for a in stmt.values]
 
         if isinstance(stmt.op, ast.And):
-            return PyccelAnd(first, second)
+            return PyccelAnd(*args)
 
         if isinstance(stmt.op, ast.Or):
-            return PyccelOr(first, second)
+            return PyccelOr(*args)
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       symbol = ast.dump(stmt.op),
