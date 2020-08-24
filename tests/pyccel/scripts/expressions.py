@@ -15,6 +15,7 @@ a10 = 1.*10j
 b1 = 1-1-2-4-5
 b2 = 1-1-2j-4.-5
 b3 = 1-1-2j-5
+b4 = 1-(1-1)
 
 c1 = 2**2
 c2 = 2**2.
@@ -64,6 +65,7 @@ print(a10)
 print(b1)
 print(b2)
 print(b3)
+print(b4)
 
 print(c1)
 print(c2)
