@@ -217,8 +217,8 @@ def handle_precedence(args, my_precedence):
 
         new_args = []
 
-        for a,p in zip(args, precedence):
-            if (p < my_precedence or (not commutative and p == my_precedence)):
+        for i, (a,p) in enumerate(zip(args, precedence)):
+            if (p < my_precedence or (p == my_precedence and i != 0)):
                 new_args.append(PyccelAssociativeParenthesis(a))
             else:
                 new_args.append(a)
