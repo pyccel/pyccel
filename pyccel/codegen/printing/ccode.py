@@ -110,7 +110,6 @@ class CCodePrinter(CodePrinter):
         return '\n\n'.join(self._print(i) for i in expr.body)
 
     def _print_While(self,expr):
-        print(expr.test)
         code = "while (%s)\n{" % self._print(expr.test)
         code = code + "\n %s" % self._print(expr.body) + "\n}"
         return (code)
