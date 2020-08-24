@@ -681,7 +681,7 @@ def extract_subexpressions(expr):
             return args
 
         else:
-            raise TypeError('statment {} not supported yet'.format(type(expr)))
+            raise TypeError('statement {} not supported yet'.format(type(expr)))
 
 
     new_expr  = substitute(expr)

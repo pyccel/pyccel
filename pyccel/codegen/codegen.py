@@ -53,7 +53,7 @@ class Codegen(object):
         for key in _structs:
             self._stmts[key] = []
 
-        self._collect_statments()
+        self._collect_statements()
         self._set_kind()
 
 
@@ -151,8 +151,8 @@ class Codegen(object):
 
         return self._code
 
-    def _collect_statments(self):
-        """Collects statments and split them into routines, classes, etc."""
+    def _collect_statements(self):
+        """Collects statements and split them into routines, classes, etc."""
 
         namespace  = self.parser.namespace
 
@@ -173,8 +173,6 @@ class Codegen(object):
         self._stmts['classes'   ] = list(namespace.classes.values())
         self._stmts['interfaces'] = interfaces
         self._stmts['body']       = self.ast
-
-
 
 
     def _set_kind(self):
