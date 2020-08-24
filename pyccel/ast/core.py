@@ -279,6 +279,10 @@ class PyccelOperator(Expr, PyccelAstNode):
                 self._rank  = max(a.rank for a in args)
                 self._shape = [None]*self._rank
 
+    @property
+    def precedence(self):
+        return self._precedence
+
 class PyccelPow(PyccelOperator):
     _precedence  = 15
     _commutative = False
@@ -371,6 +375,10 @@ class PyccelBooleanOperator(Expr, PyccelAstNode):
             self._rank = max(a.rank for a in args)
             self._shape = [None]*self._rank
 
+    @property
+    def precedence(self):
+        return self._precedence
+
 class PyccelEq(PyccelBooleanOperator):
     _commutative = True
     pass
@@ -400,6 +408,10 @@ class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
         self._precision = a.precision
         self._shape     = a.shape
 
+    @property
+    def precedence(self):
+        return self._precedence
+
 class PyccelUnary(Expr, PyccelAstNode):
     _precedence = 14
 
@@ -416,6 +428,10 @@ class PyccelUnary(Expr, PyccelAstNode):
         self._precision = a.precision
         self._shape     = a.shape
 
+    @property
+    def precedence(self):
+        return self._precedence
+
 class PyccelAnd(Expr, PyccelAstNode):
     _dtype = NativeBool()
     _rank  = 0
@@ -427,6 +443,10 @@ class PyccelAnd(Expr, PyccelAstNode):
         if self.stage == 'syntactic':
             args = handle_precedence(args, self.precedence, True)
             self._args = tuple(args)
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 class PyccelOr(Expr, PyccelAstNode):
     _dtype = NativeBool()
@@ -440,6 +460,10 @@ class PyccelOr(Expr, PyccelAstNode):
             args = handle_precedence(args, self.precedence, True)
             self._args = tuple(args)
 
+    @property
+    def precedence(self):
+        return self._precedence
+
 class PyccelNot(Expr, PyccelAstNode):
     _dtype = NativeBool()
     _rank  = 0
@@ -451,6 +475,10 @@ class PyccelNot(Expr, PyccelAstNode):
         if self.stage == 'syntactic':
             args = handle_precedence(args, self.precedence)
             self._args = tuple(args)
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 class Is(Basic, PyccelAstNode):
 
@@ -482,6 +510,10 @@ class Is(Basic, PyccelAstNode):
     @property
     def rhs(self):
         return self._args[1]
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 
 class IsNot(Basic, PyccelAstNode):
@@ -515,6 +547,10 @@ class IsNot(Basic, PyccelAstNode):
     @property
     def rhs(self):
         return self._args[1]
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 
 Relational = (PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe, PyccelAnd, PyccelOr,  PyccelNot, Is, IsNot)
