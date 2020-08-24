@@ -476,30 +476,6 @@ class FCodePrinter(CodePrinter):
         code = '\n'.join(self._print(i) for i in expr.imports)
         return self._get_statement(code) + '\n'
 
-
-    # TODO
-    def _print_FromImport(self, expr):
-        fil = self._print(expr.fil)
-        if isinstance(expr.fil, DottedName):
-            # pyccel-extension case
-            if expr.fil.name[0] == 'pyccelext':
-                fil = '_'.join(self._print(i) for i in expr.fil.name)
-                fil = 'mod_{0}'.format(fil)
-            else:
-                fil = '_'.join(self._print(i) for i in expr.fil.name)
-                fil = 'mod_{0}'.format(fil)
-
-        if not expr.funcs:
-            return 'use {0}\n'.format(fil)
-        elif isinstance(expr.funcs, str):
-            funcs = self._print(expr.funcs)
-            return 'use {0}, only: {1}\n'.format(fil, funcs)
-        elif isinstance(expr.funcs, (tuple, list, Tuple)):
-            funcs = ', '.join(self._print(f) for f in expr.funcs)
-            return 'use {0}, only: {1}\n'.format(fil, funcs)
-        else:
-            raise TypeError('Wrong type for funcs')
-
     def _print_Print(self, expr):
         args = []
         for f in expr.expr:
@@ -522,11 +498,9 @@ class FCodePrinter(CodePrinter):
         code = '\n'.join("print *, 'sympy> {}'".format(a) for a in expr.expr)
         return self._get_statement(code) + '\n'
 
-
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
         return '!' + comments + '\n'
-
 
     def _print_CommentBlock(self, expr):
         txts = expr.comments
