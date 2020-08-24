@@ -42,7 +42,12 @@ def write_python_wrapper(expr, printer):
 
     results_dtypes = ''.join(pytype_registry[str_dtype(arg.dtype)] for arg in expr.results)
     result_names = ', '.join(res.name for res in expr.results)
-    code += "    return Py_BuildValue(\"{0}\", {1});\n".format(results_dtypes,result_names)
+    code += "    return Py_BuildValue("
+    if not expr.results: # case of function with no return value
+        code += "\"\""
+    else: # function with return value
+        code += "\"{0}\", {1}".format(results_dtypes,result_names)
+    code += ");\n"
     code += "}\n"
     return code
 
