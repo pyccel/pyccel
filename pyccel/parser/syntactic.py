@@ -88,36 +88,6 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 
 #==============================================================================
 
-def change_priority( expr ):
-    """
-       Python ast does not parse parentheses.
-       This function inserts parentheses if they are required
-
-       Examples
-       --------
-       >>> change_priority(PyccelMinus(1,PyccelMinus(1,1)))
-       PyccelMinus(PyccelMinus(1,1),1)
-
-       >>> change_priority(PyccelMinus(1,PyccelMul(1,1)))
-       PyccelMinus(1,PyccelMul(1,1))
-
-       >>> change_priority(PyccelDiv(1,PyccelMul(1,1)))
-       PyccelMul(PyccelDiv(1, 1), 1)
-
-    """
-    first  = expr.args[0]
-    second = expr.args[1]
-
-    if isinstance(first,  PyccelOperator) and first.p  <= expr.p:
-        first = PyccelAssociativeParenthesis(first)
-
-    if isinstance(second, PyccelOperator) and second.p <= expr.p:
-        second = PyccelAssociativeParenthesis(second)
-
-    expr = expr.func(first, second)
-
-    return expr
-
 class SyntaxParser(BasicParser):
 
     """ Class for a Syntax Parser.
@@ -535,10 +505,7 @@ class SyntaxParser(BasicParser):
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
 
-        if isinstance(target,  PyccelOperator) and target.p  <= Func.p:
-            target = PyccelAssociativeParenthesis(target)
-
-        return PyccelUnary(Func(target))
+        return Func(PyccelUnary(target))
 
     def _visit_BinOp(self, stmt):
 
@@ -546,32 +513,25 @@ class SyntaxParser(BasicParser):
         second = self._visit(stmt.right)
 
         if isinstance(stmt.op, ast.Add):
-            expr = PyccelAdd(first, second)
-            return change_priority(expr)
+            return PyccelAdd(first, second)
 
         elif isinstance(stmt.op, ast.Mult):
-            expr = PyccelMul(first, second)
-            return change_priority(expr)
+            return PyccelMul(first, second)
 
         elif isinstance(stmt.op, ast.Sub):
-            expr = PyccelMinus(first, second)
-            return change_priority(expr)
+            return PyccelMinus(first, second)
 
         elif isinstance(stmt.op, ast.Div):
-            expr = PyccelDiv(first, second)
-            return change_priority(expr)
+            return PyccelDiv(first, second)
 
         elif isinstance(stmt.op, ast.Pow):
-            expr = PyccelPow(first, second)
-            return change_priority(expr)
+            return PyccelPow(first, second)
 
         elif isinstance(stmt.op, ast.FloorDiv):
-            expr = PyccelFloorDiv(first, second)
-            return change_priority(expr)
+            return PyccelFloorDiv(first, second)
 
         elif isinstance(stmt.op, ast.Mod):
-            expr = PyccelMod(first, second)
-            return change_priority(expr)
+            return PyccelMod(first, second)
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                           bounding_box=(stmt.lineno, stmt.col_offset),
