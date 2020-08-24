@@ -117,8 +117,9 @@ class CCodePrinter(CodePrinter):
     def _print_If(self, expr):
         lines = []
         for i, (c, e) in enumerate(expr.args):
+            var = self._print(e)
             #change this line (removes an extra empty else{})
-            if (self._print(e) == ''):
+            if (var == ''):
                 break
             if i == 0:
                 lines.append("if (%s){" % self._print(c))
@@ -132,7 +133,7 @@ class CCodePrinter(CodePrinter):
                 for ee in e:
                     lines.append("%s" % self._print(ee))
             else:
-                lines.append("%s" % self._print(e))
+                lines.append("%s" % var)
             lines.append('}')
         return "\n".join(lines)
 
