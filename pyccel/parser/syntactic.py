@@ -543,20 +543,10 @@ class SyntaxParser(BasicParser):
         second = self._visit(stmt.values[1])
 
         if isinstance(stmt.op, ast.And):
-            if isinstance(second, PyccelOr):
-                args  = second.args
-                first = PyccelAnd(first, args[0]  )
-                return  PyccelOr (first, *args[1:])
-            else:
-                return PyccelAnd(first, second)
+            return PyccelAnd(first, second)
 
         if isinstance(stmt.op, ast.Or):
-            if isinstance(second, PyccelAnd):
-                args  = second.args
-                first = PyccelOr(first, args[0])
-                return  PyccelAnd(first, *args[1:])
-            else:
-                return PyccelOr(first, second)
+            return PyccelOr(first, second)
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       symbol = ast.dump(stmt.op),
