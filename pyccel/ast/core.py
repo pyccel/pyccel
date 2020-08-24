@@ -212,7 +212,6 @@ def broadcast(shape_1, shape_2):
 
 def handle_precedence(args, my_precedence, commutative = False):
     precedence = [getattr(a, 'precedence', 17) for a in args]
-    max_precedence = min(precedence)
 
     if min(precedence) <= my_precedence:
 
