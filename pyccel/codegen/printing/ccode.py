@@ -435,7 +435,7 @@ class CCodePrinter(CodePrinter):
 
         return ('{imports}\n'
                 '{funcs}\n'
-                'int main(){{\n'
+                'int main()\n{{\n'
                 '{decs}\n'
                 '{body}\n'
                 'return 0;\n'
