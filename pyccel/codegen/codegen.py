@@ -208,9 +208,6 @@ class Codegen(object):
             expr = Program(
                 self.name,
                 self.variables,
-                self.routines,
-                self.interfaces,
-                self.classes,
                 self.body.body,
                 imports=self.imports,
                 modules=self.modules)

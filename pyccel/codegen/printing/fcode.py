@@ -315,105 +315,40 @@ class FCodePrinter(CodePrinter):
     def _print_Program(self, expr):
         self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
 
-        name = 'prog_{0}'.format(self._print(expr.name))
-        name = name.replace('.', '_')
-        modules = ''
-        mpi = False
-        #we use this to detect of we are using so that we can add
-        # mpi_init and mpi_finalize in the code instruction
-        # TODO should we find a better way to do this?
-        imports = list(expr.imports)
-        for i in expr.imports:
-            if 'mpi4py' == str(getattr(i.source,'name',i.source)):
-                mpi = True
-
-        imports  = ''.join(self._print(i) for i in imports)
-        body     = self._print(expr.body)
-        contains = ''
-        funcs    = ''
-
-        # ... TODO add other elements
-        private_funcs = [f.name for f in expr.funcs if f.is_private]
-        private = private_funcs
-        if private:
-            private = ','.join(self._print(i) for i in private)
-            private = 'private :: {}\n'.format(private)
-        else:
-            private = ''
-        # ...
-
-        decs    = expr.declarations
+        name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
+        imports = ''.join(self._print(i) for i in expr.imports)
+        decs    = ''.join(self._print(i) for i in expr.declarations)
+        body    = self._print(expr.body)
 
         vars_to_print = self.parser.get_variables(self._namespace)
         for v in vars_to_print:
             if v not in expr.variables:
                 decs.append(Declare(v.dtype,v))
-        func_in_func = False
-        for func in expr.funcs:
-            for i in func.body.body:
-                if isinstance(i, FunctionDef):
-                    func_in_func = True
-                    break
 
-        if expr.classes or expr.interfaces or func_in_func:
-            # TODO shall we use expr.variables? or have a more involved algo
-            #      we will need to walk through the expression and see what are
-            #      the variables that are needed in the definitions of classes
-            variables = []
-            for i in expr.interfaces:
-                variables += i.functions[0].global_vars
-            for i in expr.funcs:
-                variables += i.global_vars
-            variables =list(set(variables))
-            for i,d in enumerate(decs):
-                #remove variables that are declared in the modules
-                if d.variable in variables:
-                    decs[i] = None
-            decs = [i for i in decs if i]
-
-            module_utils = Module(expr.name, list(variables),
-                                  expr.funcs, expr.interfaces, expr.classes,
-                                  imports=expr.imports)
-            modules = self._print(module_utils)
-
-            imports = ('{imports}\n'
-                       'use mod_{name}\n').format(imports=imports, name=expr.name)
-
-        else:
-            # ... uncomment this later and remove it from the top
-#            decs    = '\n'.join(self._print(i) for i in expr.declarations)
-            # ...
-
-            # ...
-            sep = self._print(SeparatorComment(40))
-
-            if expr.funcs:
-                contains = 'contains'
-                funcs = '\n'.join(''.join([sep, self._print(i), sep]) for i in expr.funcs)
-            # ...
-
-        decs = ''.join(self._print(i) for i in decs)
+        mpi = False
+        #we use this to detect of we are using so that we can add
+        # mpi_init and mpi_finalize in the code instruction
+        # TODO should we find a better way to do this?
+        for i in expr.imports:
+            if 'mpi4py' == str(getattr(i.source,'name',i.source)):
+                mpi = True
 
         if mpi:
             #TODO shuold we add them like this ?
             body = 'call mpi_init(ierr)\n'+\
                    '\nallocate(status(0:-1 + mpi_status_size)) '+\
-                   '\n status = 0\n'+\
+                   '\nstatus = 0\n'+\
                    body +\
                    '\ncall mpi_finalize(ierr)'
 
             decs += '\ninteger :: ierr = -1' +\
-                    '\n integer, allocatable :: status (:)'
+                    '\ninteger, allocatable :: status (:)'
 
-        parts = [modules,
-                'program {}\n'.format(name),
+        parts = ['program {}\n'.format(name),
                  imports,
                 'implicit none\n',
-                 private,
                  decs,
                  body,
-                 contains,
-                 funcs,
                 'end program {}\n'.format(name)]
 
         return '\n'.join(a for a in parts if a)

@@ -1796,52 +1796,20 @@ class Program(Basic):
     declarations: list
         list of declarations of the variables that appear in the block.
 
-    funcs: list
-        a list of FunctionDef instances
-
-    classes: list
-        a list of ClassDef instances
-
     body: list
         a list of statements
 
     imports: list, tuple
         list of needed imports
 
-    modules: list, tuple
-        list of needed modules
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable, Assign
-    >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
-    >>> z = Variable('real', 'z')
-    >>> t = Variable('real', 't')
-    >>> a = Variable('real', 'a')
-    >>> b = Variable('real', 'b')
-    >>> body = [Assign(y,x+a)]
-    >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
-    >>> attributs   = [x,y]
-    >>> methods     = [translate]
-    >>> Point = ClassDef('Point', attributs, methods)
-    >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
-    >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
-    >>> Module('my_module', [], [incr, decr], [Point])
-    Module(my_module, [], [FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function), FunctionDef(decr, (x,), (y,), [y := -1 + x], [], [], None, False, function)], [ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])])
     """
 
     def __new__(
         cls,
         name,
         variables,
-        funcs,
-        interfaces,
-        classes,
         body,
         imports=[],
-        modules=[],
         ):
 
         if not isinstance(name, str):
@@ -1854,57 +1822,22 @@ class Program(Basic):
             if not isinstance(i, Variable):
                 raise TypeError('Only a Variable instance is allowed.')
 
-        if not iterable(funcs):
-            raise TypeError('funcs must be an iterable')
-        for i in funcs:
-            if not isinstance(i, FunctionDef):
-                raise TypeError('Only a FunctionDef instance is allowed.'
-                                )
-
-        if not iterable(interfaces):
-            raise TypeError('interfaces must be an iterable')
-        for i in interfaces:
-            if not isinstance(i, Interface):
-                raise TypeError('Only a Interface instance is allowed.')
-
         if not iterable(body):
             raise TypeError('body must be an iterable')
         body = CodeBlock(body)
 
-        if not iterable(classes):
-            raise TypeError('classes must be an iterable')
-        for i in classes:
-            if not isinstance(i, ClassDef):
-                raise TypeError('Only a ClassDef instance is allowed.')
-
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
 
-        for i in funcs:
-            imports += i.imports
-        for i in classes:
-            imports += i.imports
         imports = set(imports)  # for unicity
         imports = Tuple(*imports, sympify=False)
-
-        if not iterable(modules):
-            raise TypeError('modules must be an iterable')
-
-        # TODO
-#        elif isinstance(stmt, list):
-#            for s in stmt:
-#                body += printer(s) + "\n"
 
         return Basic.__new__(
             cls,
             name,
             variables,
-            funcs,
-            interfaces,
-            classes,
             body,
             imports,
-            modules,
             )
 
     @property
@@ -1916,28 +1849,12 @@ class Program(Basic):
         return self._args[1]
 
     @property
-    def funcs(self):
+    def body(self):
         return self._args[2]
 
     @property
-    def interfaces(self):
-        return self._args[3]
-
-    @property
-    def classes(self):
-        return self._args[4]
-
-    @property
-    def body(self):
-        return self._args[5]
-
-    @property
     def imports(self):
-        return self._args[6]
-
-    @property
-    def modules(self):
-        return self._args[7]
+        return self._args[3]
 
     @property
     def declarations(self):
