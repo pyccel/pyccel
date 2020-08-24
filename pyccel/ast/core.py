@@ -210,7 +210,7 @@ def broadcast(shape_1, shape_2):
             errors.report(msg,severity='fatal')
     return tuple(new_shape)
 
-def handle_precedence(args, my_precedence):
+def handle_precedence(args, my_precedence, commutative = False):
     precedence = [getattr(a, 'precedence', 17) for a in args]
     max_precedence = min(precedence)
 
@@ -218,8 +218,8 @@ def handle_precedence(args, my_precedence):
 
         new_args = []
 
-        for a in args:
-            if a.precedence <= my_precedence:
+        for a,p in zip(args, precedence):
+            if (p < my_precedence or (not commutative and p == my_precedence)):
                 new_args.append(PyccelAssociativeParenthesis(a))
             else:
                 new_args.append(a)
@@ -230,10 +230,10 @@ def handle_precedence(args, my_precedence):
 class PyccelOperator(Expr, PyccelAstNode):
 
     def __init__(self, *args):
-        args = handle_precedence(args, self.precedence)
-        self._args = tuple(args)
 
         if self.stage == 'syntactic':
+            args = handle_precedence(args, self.precedence, self._commutative)
+            self._args = tuple(args)
             return
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
         reals     = [a for a in args if a.dtype is NativeReal()]
@@ -280,20 +280,25 @@ class PyccelOperator(Expr, PyccelAstNode):
                 self._shape = [None]*self._rank
 
 class PyccelPow(PyccelOperator):
-    _precedence = 15
+    _precedence  = 15
+    _commutative = False
 class PyccelAdd(PyccelOperator):
     _precedence = 12
+    _commutative = True
 class PyccelMul(PyccelOperator):
     _precedence = 13
+    _commutative = True
 class PyccelMinus(PyccelAdd):
+    _commutative = False
     pass
 class PyccelDiv(PyccelOperator):
     _precedence = 13
+    _commutative = False
     def __init__(self, *args):
-        args = handle_precedence(args, self.precedence)
-        self._args = tuple(args)
 
         if self.stage == 'syntactic':
+            args = handle_precedence(args, self.precedence, self._commutative)
+            self._args = tuple(args)
             return
 
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
@@ -330,17 +335,19 @@ class PyccelDiv(PyccelOperator):
 
 class PyccelMod(PyccelOperator):
     _precedence = 13
+    _commutative = False
 class PyccelFloorDiv(PyccelOperator):
     _precedence = 13
+    _commutative = False
 
 class PyccelBooleanOperator(Expr, PyccelAstNode):
     _precedence = 7
 
     def __init__(self, *args):
-        args = handle_precedence(args, self.precedence)
-        self._args = tuple(args)
 
         if self.stage == 'syntactic':
+            args = handle_precedence(args, self.precedence, self._commutative)
+            self._args = tuple(args)
             return
 
         self._dtype = NativeBool()
@@ -365,16 +372,22 @@ class PyccelBooleanOperator(Expr, PyccelAstNode):
             self._shape = [None]*self._rank
 
 class PyccelEq(PyccelBooleanOperator):
+    _commutative = True
     pass
 class PyccelNe(PyccelBooleanOperator):
+    _commutative = True
     pass
 class PyccelLt(PyccelBooleanOperator):
+    _commutative = True
     pass
 class PyccelLe(PyccelBooleanOperator):
+    _commutative = True
     pass
 class PyccelGt(PyccelBooleanOperator):
+    _commutative = True
     pass
 class PyccelGe(PyccelBooleanOperator):
+    _commutative = True
     pass
 
 class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
@@ -391,12 +404,13 @@ class PyccelUnary(Expr, PyccelAstNode):
     _precedence = 14
 
     def __init__(self, a):
-        if (a.precedence <= self.precedence):
-            a = PyccelAssociativeParenthesis(a)
-            self._args = (a,)
 
         if self.stage == 'syntactic':
+            if (a.precedence <= self.precedence):
+                a = PyccelAssociativeParenthesis(a)
+                self._args = (a,)
             return
+
         self._dtype     = a.dtype
         self._rank      = a.rank
         self._precision = a.precision
@@ -409,9 +423,10 @@ class PyccelAnd(Expr, PyccelAstNode):
     _precision = default_precision['bool']
     _precedence = 5
 
-    def __init__(cls, *args):
-        args = handle_precedence(args, self.precedence)
-        self._args = tuple(args)
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            args = handle_precedence(args, self.precedence, True)
+            self._args = tuple(args)
 
 class PyccelOr(Expr, PyccelAstNode):
     _dtype = NativeBool()
@@ -420,9 +435,10 @@ class PyccelOr(Expr, PyccelAstNode):
     _precision = default_precision['bool']
     _precedence = 4
 
-    def __init__(cls, *args):
-        args = handle_precedence(args, self.precedence)
-        self._args = tuple(args)
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            args = handle_precedence(args, self.precedence, True)
+            self._args = tuple(args)
 
 class PyccelNot(Expr, PyccelAstNode):
     _dtype = NativeBool()
@@ -431,9 +447,10 @@ class PyccelNot(Expr, PyccelAstNode):
     _precision = default_precision['bool']
     _precedence = 6
 
-    def __init__(cls, *args):
-        args = handle_precedence(args, self.precedence)
-        self._args = tuple(args)
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            args = handle_precedence(args, self.precedence)
+            self._args = tuple(args)
 
 class Is(Basic, PyccelAstNode):
 
@@ -453,9 +470,10 @@ class Is(Basic, PyccelAstNode):
     _precision = default_precision['bool']
     _precedence = 7
 
-    def __init__(cls, *args):
-        args = handle_precedence(args, self.precedence)
-        self._args = tuple(args)
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            args = handle_precedence(args, self.precedence)
+            self._args = tuple(args)
 
     @property
     def lhs(self):
@@ -485,9 +503,10 @@ class IsNot(Basic, PyccelAstNode):
     _precision = default_precision['bool']
     _precedence = 7
 
-    def __init__(cls, *args):
-        args = handle_precedence(args, self.precedence)
-        self._args = tuple(args)
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            args = handle_precedence(args, self.precedence)
+            self._args = tuple(args)
 
     @property
     def lhs(self):
