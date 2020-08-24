@@ -918,7 +918,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         if isinstance(expr.variable, TupleVariable) and not expr.variable.is_homogeneous:
-            return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable) + '\n'
+            return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
         # ... TODO improve
         # Group the variables by intent
