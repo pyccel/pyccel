@@ -231,8 +231,7 @@ class PyccelOperator(Expr, PyccelAstNode):
     def __init__(self, *args):
 
         if self.stage == 'syntactic':
-            args = handle_precedence(args, self.precedence, self._commutative)
-            self._args = args
+            self._args = handle_precedence(args, self.precedence, self._commutative)
             return
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
         reals     = [a for a in args if a.dtype is NativeReal()]
@@ -300,8 +299,7 @@ class PyccelDiv(PyccelOperator):
     def __init__(self, *args):
 
         if self.stage == 'syntactic':
-            args = handle_precedence(args, self.precedence, self._commutative)
-            self._args = args
+            self._args = handle_precedence(args, self.precedence, self._commutative)
             return
 
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
@@ -349,8 +347,7 @@ class PyccelBooleanOperator(Expr, PyccelAstNode):
     def __init__(self, *args):
 
         if self.stage == 'syntactic':
-            args = handle_precedence(args, self.precedence, self._commutative)
-            self._args = args
+            self._args = handle_precedence(args, self.precedence, self._commutative)
             return
 
         self._dtype = NativeBool()
@@ -440,8 +437,7 @@ class PyccelAnd(Expr, PyccelAstNode):
 
     def __init__(self, *args):
         if self.stage == 'syntactic':
-            args = handle_precedence(args, self.precedence, True)
-            self._args = args
+            self._args = handle_precedence(args, self.precedence, True)
 
     @property
     def precedence(self):
@@ -456,8 +452,7 @@ class PyccelOr(Expr, PyccelAstNode):
 
     def __init__(self, *args):
         if self.stage == 'syntactic':
-            args = handle_precedence(args, self.precedence, True)
-            self._args = args
+            self._args = handle_precedence(args, self.precedence, True)
 
     @property
     def precedence(self):
@@ -472,8 +467,7 @@ class PyccelNot(Expr, PyccelAstNode):
 
     def __init__(self, *args):
         if self.stage == 'syntactic':
-            args = handle_precedence(args, self.precedence)
-            self._args = args
+            self._args = handle_precedence(args, self.precedence)
 
     @property
     def precedence(self):
@@ -499,8 +493,7 @@ class Is(Basic, PyccelAstNode):
 
     def __init__(self, *args):
         if self.stage == 'syntactic':
-            args = handle_precedence(args, self.precedence)
-            self._args = args
+            self._args = handle_precedence(args, self.precedence)
 
     @property
     def lhs(self):
@@ -536,8 +529,7 @@ class IsNot(Basic, PyccelAstNode):
 
     def __init__(self, *args):
         if self.stage == 'syntactic':
-            args = handle_precedence(args, self.precedence)
-            self._args = args
+            self._args = handle_precedence(args, self.precedence)
 
     @property
     def lhs(self):
