@@ -209,8 +209,7 @@ class Codegen(object):
                 self.name,
                 self.variables,
                 self.body.body,
-                imports=self.imports,
-                modules=self.modules)
+                imports=self.imports)
 
         else:
             raise NotImplementedError('TODO')
