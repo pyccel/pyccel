@@ -325,17 +325,13 @@ class FCodePrinter(CodePrinter):
         variables = self.parser.get_variables(self._namespace)
         decs = ''.join(self._print_Declare(Declare(v.dtype, v)) for v in variables)
 
-        mpi = False
-        #we use this to detect of we are using so that we can add
-        # mpi_init and mpi_finalize in the code instruction
+        # Detect if we are using mpi4py
         # TODO should we find a better way to do this?
-        for i in expr.imports:
-            if 'mpi4py' == str(getattr(i.source,'name',i.source)):
-                mpi = True
+        mpi = any('mpi4py' == str(getattr(i.source, 'name', i.source)) for i in expr.imports)
 
         # Additional code and variable declarations for MPI usage
+        # TODO: check if we should really add them like this
         if mpi:
-            #TODO shuold we add them like this ?
             body = 'call mpi_init(ierr)\n'+\
                    '\nallocate(status(0:-1 + mpi_status_size)) '+\
                    '\nstatus = 0\n'+\
