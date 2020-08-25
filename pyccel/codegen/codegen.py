@@ -168,7 +168,7 @@ class Codegen(object):
                 interfaces.append(i)
 
         self._stmts['imports'   ] = list(namespace.imports['imports'].values())
-        self._stmts['variables' ] = list(set(self.parser.get_variables(namespace)))
+        self._stmts['variables' ] = list(self.parser.get_variables(namespace))
         self._stmts['routines'  ] = funcs
         self._stmts['classes'   ] = list(namespace.classes.values())
         self._stmts['interfaces'] = interfaces
