@@ -20,7 +20,7 @@ while x:
     x = x - 1
 
 while not(x):
-    x = x - 1
+    x = x + 1
 
 while not x or x < 4:
-    x = x - 1
+    x = x + 1
