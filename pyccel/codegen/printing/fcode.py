@@ -317,13 +317,13 @@ class FCodePrinter(CodePrinter):
 
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
-        decs    = ''.join(self._print(i) for i in expr.declarations)
         body    = self._print(expr.body)
 
-        vars_to_print = self.parser.get_variables(self._namespace)
-        for v in vars_to_print:
-            if v not in expr.variables:
-                decs.append(Declare(v.dtype,v))
+        # Print the declarations of all variables in the namespace, which include:
+        #  - user-defined variables (available in Program.variables)
+        #  - pyccel-generated variables added to Scope when printing 'expr.body'
+        variables = self.parser.get_variables(self._namespace)
+        decs = ''.join(self._print_Declare(Declare(v.dtype, v)) for v in variables)
 
         mpi = False
         #we use this to detect of we are using so that we can add
@@ -333,6 +333,7 @@ class FCodePrinter(CodePrinter):
             if 'mpi4py' == str(getattr(i.source,'name',i.source)):
                 mpi = True
 
+        # Additional code and variable declarations for MPI usage
         if mpi:
             #TODO shuold we add them like this ?
             body = 'call mpi_init(ierr)\n'+\
