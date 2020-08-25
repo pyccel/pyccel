@@ -12,6 +12,7 @@ from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMo
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 
+from pyccel.ast.datatypes import NativeInteger
 
 from pyccel.ast.builtins  import Range
 from pyccel.ast.core import Declare
