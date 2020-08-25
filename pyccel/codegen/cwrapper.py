@@ -1,4 +1,4 @@
-from sympy.core.function       import UndefinedFunction
+from pyccel.ast.core import FunctionCall
 
 from pyccel.codegen.printing.ccode import CCodePrinter, dtype_registry
 from pyccel.ast.core import Module, Declare, Assign
@@ -33,11 +33,12 @@ def write_python_wrapper(expr, printer):
         code += "))\n        return NULL;\n    "
 
     if len(expr.results)==0:
-        func_call = UndefinedFunction(str(expr.name))(*expr.arguments)
+        func_call = FunctionCall(expr, expr.arguments)
+
         code += printer._print(func_call) + ';'
     else:
         results = expr.results if len(expr.results)>1 else expr.results[0]
-        func_call = Assign(results,UndefinedFunction(str(expr.name))(*expr.arguments))
+        func_call = Assign(results,FunctionCall(expr, expr.arguments))
         code += printer._print(func_call)
     code += '\n'
 
