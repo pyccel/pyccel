@@ -164,6 +164,14 @@ class CCodePrinter(CodePrinter):
 
         return '{0} {{\n{1}\n{2}\n}}'.format(self.function_signature(expr), decs, body)
 
+    def _print_FunctionCall(self, expr):
+        func = expr.funcdef
+        # currently support only function with one or zero output
+        args = ','.join(['{}'.format(self._print(a)) for a in expr.arguments])
+        if not func.results:
+            return '{}({});'.format(func.name, args)
+        return '{}({})'.format(func.name, args)
+
     def _print_Return(self, expr):
         code = ''
         if expr.stmt:
