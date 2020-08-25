@@ -148,11 +148,13 @@ class CCodePrinter(CodePrinter):
         else:
             ret_type = self._print(datatype('void'))
         name = expr.name
-
-        arg_dtypes = [self._print(i.dtype) for i in expr.arguments]
-        arg_dtypes = [dtype_registry[(dtype, arg.precision)] for dtype,arg in zip(arg_dtypes, expr.arguments)]
-        arguments  = [self._print(i) for i in expr.arguments]
-        arg_code   = ', '.join(dtype + ' ' + arg for dtype,arg in zip(arg_dtypes,arguments))
+        if not expr.arguments:
+            arg_code = 'void'
+        else:
+            arg_dtypes = [self._print(i.dtype) for i in expr.arguments]
+            arg_dtypes = [dtype_registry[(dtype, arg.precision)] for dtype,arg in zip(arg_dtypes, expr.arguments)]
+            arguments  = [self._print(i) for i in expr.arguments]
+            arg_code   = ', '.join(dtype + ' ' + arg for dtype,arg in zip(arg_dtypes,arguments))
 
         return '{0} {1}({2})'.format(ret_type, name, arg_code)
 
