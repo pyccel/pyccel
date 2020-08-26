@@ -20,8 +20,8 @@ def test_func_no_args_1(language):
         return gift
 
     c_gift = epyccel(free_gift, language=language)
-    assert free_gift() == c_gift()
-    assert isinstance(free_gift(), type(c_gift()))
+    assert c_gift() == free_gift()
+    assert isinstance(c_gift(), type(free_gift()))
     unexpected_arg = 0
     with pytest.raises(TypeError):
         c_gift(unexpected_arg)
@@ -33,11 +33,11 @@ def test_func_no_args_2(language):
         return lose
 
     c_lose = epyccel(p_lose, language=language)
-    assert p_lose() == c_lose()
-    assert isinstance(p_lose(), type(c_lose()))
+    assert c_lose() == p_lose()
+    assert isinstance(c_lose(), type(p_lose()))
     unexpected_arg = 0
     with pytest.raises(TypeError):
-        p_lose(unexpected_arg)
+        c_lose(unexpected_arg)
 
 def test_func_no_return_1(language):
     '''Test function with args and no return '''
@@ -47,10 +47,10 @@ def test_func_no_return_1(language):
 
     c_func = epyccel(p_func, language=language)
     x = np.random.randint(100)
-    assert p_func(x) == c_func(x)
+    assert c_func(x) == p_func(x)
     # Test type return sould be NoneType
     x = np.random.randint(100)
-    assert isinstance(p_func(x), type(c_func(x)))
+    assert isinstance(c_func(x), type(p_func(x)))
 
 def test_func_no_return_2(language):
     '''Test function with no args and no return '''
@@ -59,8 +59,8 @@ def test_func_no_return_2(language):
         x *= 2
 
     c_func = epyccel(p_func, language=language)
-    assert p_func() == c_func()
-    assert isinstance(p_func(), type(c_func()))
+    assert c_func() == p_func()
+    assert isinstance(c_func(), type(p_func()))
     unexpected_arg = 0
     with pytest.raises(TypeError):
         c_func(unexpected_arg)
