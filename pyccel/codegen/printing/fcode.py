@@ -640,7 +640,7 @@ class FCodePrinter(CodePrinter):
 
         if (not self._additional_code):
             self._additional_code = ''
-        var_name = parser.get_new_name()
+        var_name = self.parser.get_new_name()
         var = Variable(expr.dtype, var_name, is_stack_array = all([s.is_constant for s in expr.shape]),
                 shape = expr.shape, precision = expr.precision,
                 order = expr.order, rank = expr.rank)
@@ -2256,7 +2256,7 @@ class FCodePrinter(CodePrinter):
             else:
                 if (not self._additional_code):
                     self._additional_code = ''
-                var_name = parser.get_new_name()
+                var_name = self.parser.get_new_name()
                 var = Variable(base.dtype, var_name, is_stack_array = True,
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
@@ -2295,7 +2295,7 @@ class FCodePrinter(CodePrinter):
             else:
                 if (not self._additional_code):
                     self._additional_code = ''
-                var_name = parser.get_new_name()
+                var_name = self.parser.get_new_name()
                 var = Variable(base.dtype, var_name, is_stack_array = True,
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
@@ -2372,7 +2372,7 @@ class FCodePrinter(CodePrinter):
                 self._additional_code = ''
             out_vars = []
             for r in func.results:
-                var_name = parser.get_new_name()
+                var_name = self.parser.get_new_name()
                 var =  r.clone(name = var_name)
 
                 if self._current_function:
