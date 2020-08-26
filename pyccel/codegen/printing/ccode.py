@@ -126,14 +126,7 @@ class CCodePrinter(CodePrinter):
                 lines.append("else\n{")
             else:
                 lines.append("else if (%s)\n{" % self._print(c))
-            #e can be a tuple when one python statement
-            #results in multiple c statements
-            if isinstance(e, (list, tuple, Tuple, PythonTuple)):
-                for ee in e:
-                    lines.append("%s" % self._print(ee))
-            else:
-                lines.append("%s" % var)
-            lines.append('}')
+            lines.append("%s\n}" % var)
         return "\n".join(lines)
 
     def _print_BooleanTrue(self, expr):
