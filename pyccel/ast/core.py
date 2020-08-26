@@ -819,7 +819,7 @@ def int2float(expr):
 def float2int(expr):
     return expr
 
-def create_random_string(forbidden_exprs, prefix = None):
+def create_random_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
     assert(isinstance(forbidden_exprs, set))
     import numpy as np
     nDigits = 2
@@ -827,21 +827,24 @@ def create_random_string(forbidden_exprs, prefix = None):
     if prefix is None:
         prefix = 'Dummy'
 
-    max_val = 10**nDigits
-
-    prefix += '_'
-
-    name = prefix + str(np.random.randint(max_val))
+    name_format = "{prefix}_{counter:0="+str(nDigits)+"d}"
+    name = name_format.format(prefix=prefix, counter = counter)
+    counter += 1
     while name in forbidden_exprs:
-        name = prefix + str(np.random.randint(max_val))
-    return name
+        name = name_format.format(prefix=prefix, counter = counter)
+        counter += 1
 
-def create_variable(forbidden_names, prefix = None):
+    forbidden_exprs.add(name)
+
+    return name, counter
+
+def create_variable(forbidden_names, prefix = None, counter = 1):
     """."""
 
-    name = create_random_string(forbidden_names, prefix)
+    name, counter = create_random_string(forbidden_names, prefix, counter = counter)
+    print(counter)
 
-    return Symbol(name)
+    return Symbol(name), counter
 
 class DottedName(Basic):
 
