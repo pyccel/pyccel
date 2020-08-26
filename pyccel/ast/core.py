@@ -822,7 +822,7 @@ def float2int(expr):
 def create_random_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
     assert(isinstance(forbidden_exprs, set))
     import numpy as np
-    nDigits = 2
+    nDigits = 4
 
     if prefix is None:
         prefix = 'Dummy'
@@ -842,7 +842,6 @@ def create_variable(forbidden_names, prefix = None, counter = 1):
     """."""
 
     name, counter = create_random_string(forbidden_names, prefix, counter = counter)
-    print(counter)
 
     return Symbol(name), counter
 
