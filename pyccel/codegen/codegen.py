@@ -264,7 +264,7 @@ class Codegen(object):
                 f.write(line)
 
         for line in code:
-            print(line)
+            sys.stdout.write(line)
 
         return filename
 
