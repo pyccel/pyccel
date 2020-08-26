@@ -12,7 +12,7 @@ from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface
 from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import Import, AsName
-from pyccel.ast.core import create_random_string, create_variable
+from pyccel.ast.core import create_incremented_string, create_variable
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
@@ -348,9 +348,9 @@ class BasicParser(object):
             return current_name
 
         if current_name is not None:
-            new_name, self._dummy_counter = create_random_string(self._used_names, prefix = current_name, counter = self._dummy_counter)
+            new_name, self._dummy_counter = create_incremented_string(self._used_names, prefix = current_name, counter = self._dummy_counter)
         else:
-            new_name,_ = create_random_string(self._used_names, prefix = current_name)
+            new_name,_ = create_incremented_string(self._used_names, prefix = current_name)
         return new_name
 
     def get_new_variable(self, prefix = None):

@@ -156,7 +156,7 @@ __all__ = (
     '_atomic',
 #    'allocatable_like',
     'create_variable',
-    'create_random_string',
+    'create_incremented_string',
     'extract_subexpressions',
 #    'float2int',
     'get_assigned_symbols',
@@ -819,7 +819,7 @@ def int2float(expr):
 def float2int(expr):
     return expr
 
-def create_random_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
+def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
     assert(isinstance(forbidden_exprs, set))
     import numpy as np
     nDigits = 4
@@ -841,7 +841,7 @@ def create_random_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
 def create_variable(forbidden_names, prefix = None, counter = 1):
     """."""
 
-    name, counter = create_random_string(forbidden_names, prefix, counter = counter)
+    name, counter = create_incremented_string(forbidden_names, prefix, counter = counter)
 
     return Symbol(name), counter
 

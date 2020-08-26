@@ -3,7 +3,7 @@ from sympy.core.numbers import One, NegativeOne, Zero, Half
 
 from .core      import PyccelAdd, PyccelMul, PyccelPow
 from .core      import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
-from .core      import Variable, create_random_string, PyccelArraySize
+from .core      import Variable, create_incremented_string, PyccelArraySize
 
 from .mathext   import MathCeil
 
@@ -135,7 +135,7 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         return sym
 
     elif isinstance(expr, PyccelArraySize):
-        sym_name,_ = create_random_string(used_names, prefix = 'tmp_size')
+        sym_name,_ = create_incremented_string(used_names, prefix = 'tmp_size')
         sym = sp.Symbol(sym_name)
         symbol_map[sym] = expr
         return sym
