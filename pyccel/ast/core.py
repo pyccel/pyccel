@@ -819,9 +819,12 @@ def int2float(expr):
 def float2int(expr):
     return expr
 
-def create_random_string(forbidden_exprs : set, prefix = 'Dummy', nDigits : int = 2):
+def create_random_string(forbidden_exprs : set, prefix = None, nDigits : int = 2):
     assert(isinstance(forbidden_exprs, set))
     import numpy as np
+
+    if prefix is None:
+        prefix = 'Dummy'
 
     max_val = 10**nDigits
 
@@ -832,10 +835,10 @@ def create_random_string(forbidden_exprs : set, prefix = 'Dummy', nDigits : int 
         name = prefix + str(np.random.randint(max_val))
     return name
 
-def create_variable(forbidden_names):
+def create_variable(forbidden_names, prefix = None):
     """."""
 
-    name = create_random_string(forbidden_names)
+    name = create_random_string(forbidden_names, prefix)
 
     return Symbol(name)
 

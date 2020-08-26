@@ -349,8 +349,8 @@ class BasicParser(object):
         self._used_names.add(new_name)
         return new_name
 
-    def get_new_variable(self):
-        var = create_variable(self._used_names)
+    def get_new_variable(self, prefix = None):
+        var = create_variable(self._used_names, prefix)
         self._used_names.add(var.name)
         return var
 
