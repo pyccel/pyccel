@@ -89,7 +89,7 @@ math_function_to_c = {
     # ---------- Number-theoretic and representation functions ------------
     'MathCeil'     : 'ceill',
     # 'MathComb'   : 'com' # TODO
-    # 'MathCopysign': 'copysignl', boolean type issue #390
+    'MathCopysign': 'copysignl',
     'MathFabs'   : 'fabsl',
     # 'MathFactorial': '???', # TODO
     'MathFloor'    : 'floorl',
