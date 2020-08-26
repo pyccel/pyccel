@@ -1613,7 +1613,7 @@ class FCodePrinter(CodePrinter):
         body = self._print(expr.body)
 
         return ('{prolog}'
-                '{body}\n'
+                '{body}'
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
 
     # .....................................................
