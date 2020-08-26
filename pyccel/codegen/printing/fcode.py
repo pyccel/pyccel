@@ -43,7 +43,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
 
 
 from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-from pyccel.ast.core      import create_random_string, create_variable, FunctionCall
+from pyccel.ast.core      import create_random_string, FunctionCall
 from pyccel.ast.builtins  import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
@@ -199,6 +199,7 @@ class FCodePrinter(CodePrinter):
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
         self._current_function = None
+        self._used_names = parser.used_names
 
         self._additional_code = None
 
@@ -640,8 +641,8 @@ class FCodePrinter(CodePrinter):
 
         if (not self._additional_code):
             self._additional_code = ''
-        var = create_variable(expr)
-        var = Variable(expr.dtype, var.name, is_stack_array = all([s.is_constant for s in expr.shape]),
+        var_name = create_random_string(self._used_names, prefix = 'Dummy_')
+        var = Variable(expr.dtype, var_name, is_stack_array = all([s.is_constant for s in expr.shape]),
                 shape = expr.shape, precision = expr.precision,
                 order = expr.order, rank = expr.rank)
 
@@ -2227,7 +2228,7 @@ class FCodePrinter(CodePrinter):
                 self._additional_code = ''
             out_vars = []
             for r in func.results:
-                var_name = 'Dummy_' + create_random_string(r)
+                var_name = create_random_string(self._used_names, prefix='Dummy_')
                 var =  r.clone(name = var_name)
 
                 if self._current_function:
@@ -2297,8 +2298,8 @@ class FCodePrinter(CodePrinter):
             else:
                 if (not self._additional_code):
                     self._additional_code = ''
-                var = create_variable(base)
-                var = Variable(base.dtype, var.name, is_stack_array = True,
+                var_name = create_random_string(self._used_names)
+                var = Variable(base.dtype, var_name, is_stack_array = True,
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
 
@@ -2336,8 +2337,8 @@ class FCodePrinter(CodePrinter):
             else:
                 if (not self._additional_code):
                     self._additional_code = ''
-                var = create_variable(base)
-                var = Variable(base.dtype, var.name, is_stack_array = True,
+                var_name = create_random_string(self._used_names)
+                var = Variable(base.dtype, var_name, is_stack_array = True,
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
 
@@ -2413,7 +2414,7 @@ class FCodePrinter(CodePrinter):
                 self._additional_code = ''
             out_vars = []
             for r in func.results:
-                var_name = 'Dummy_' + create_random_string(r)
+                var_name = create_random_string(self._used_names, prefix='Dummy_')
                 var =  r.clone(name = var_name)
 
                 if self._current_function:
