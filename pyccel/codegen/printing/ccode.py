@@ -17,6 +17,7 @@ from pyccel.ast.builtins  import Range
 from pyccel.ast.core import Declare
 from pyccel.ast.core import SeparatorComment
 from pyccel.ast.datatypes import NativeInteger, NativeBool
+from pyccel.ast.numbers import Float
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -83,51 +84,74 @@ numpy_ufunc_to_c = {
 
 # dictionary mapping Math function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_MathFunctionBase(self, expr)
+# Math function ref https://docs.python.org/3/library/math.html
 math_function_to_c = {
-    'MathAcos'   : 'acos',
-    'MathAcosh'  : 'acosh',
-    'MathAsin'   : 'asin',
-    'MathAsinh'  : 'asinh',
-    'MathAtan'   : 'atan',
-    'MathAtan2'  : 'atan2',
-    'MathAtanh'  : 'atanh',
-    # 'MathCopysign': '???', # TODO
-    'MathCos'    : 'cos',
-    'MathCosh'   : 'cosh',
-    # 'MathDegrees': '???',  # TODO
-    'MathErf'    : 'erf',
-    'MathErfc'   : 'erfc',
-    'MathExp'    : 'exp',
-    # 'MathExpm1'  : '???', # TODO
-    'MathFabs'   : 'fabs',
-    # 'MathFmod'   : '???',  # TODO
-    # 'MathFsum'   : '???',  # TODO
-    'MathGamma'  : 'gamma',
-    'MathHypot'  : 'hypot',
-    # 'MathLdexp'  : '???',  # TODO
-    'MathLgamma' : 'log_gamma',
-    'MathLog'    : 'log',
-    'MathLog10'  : 'log10',
-    # 'MathLog1p'  : '???', # TODO
-    # 'MathLog2'   : '???', # TODO
-    # 'MathPow'    : '???', # TODO
-    # 'MathRadians': '???', # TODO
-    'MathSin'    : 'sin',
-    'MathSinh'   : 'sinh',
-    # 'MathSqrt'   : 'sqrt', # sqrt is printed using _Print_MathSqrt
-    'MathTan'    : 'tan',
-    'MathTanh'   : 'tanh',
-    # ---
-    'MathCeil'     : 'ceiling',
+    # ---------- Number-theoretic and representation functions ------------
+    'MathCeil'     : 'ceill',
+    # 'MathComb'   : 'com' # TODO
+    # 'MathCopysign': 'copysignl', boolean type issue #390
+    'MathFabs'   : 'fabsl',
     # 'MathFactorial': '???', # TODO
-    'MathFloor'    : 'floor',
-    # 'MathGcd'      : '???', # TODO
-    # 'MathTrunc'    : '???', # TODO
-    #     ---
-    # 'MathIsclose' : '???', # TODO
-    # 'MathIsfinite': '???', # TODO
-    # 'MathIsinf'   : '???', # TODO
-    # 'MathIsnan'   : '???', # TODO
+    'MathFloor'    : 'floorl',
+    # 'MathFmod'   : '???',  # TODO
+    # 'MathRexp'   : '???'   TODO requires two output
+    # 'MathFsum'   : '???',  # TODO
+    # 'MathGcd'   : '???',  # TODO
+    # 'MathIsclose' : '???',  # TODO
+    'MathIsfinite': 'isfinite', # int isfinite(real-floating x);
+    'MathIsinf'   : 'isinf', # int isinf(real-floating x);
+    'MathIsnan'   : 'isnan', # int isnan(real-floating x);
+    # 'MathIsqrt'  : '???' TODO
+    'MathLdexp'  : 'ldexpl',
+    # 'MathModf'  : '???' TODO return two value
+    # 'MathPerm'  : '???' TODO
+    # 'MathProd'  : '???' TODO
+    'MathRemainder'  : 'remainderl',
+    'MathTrunc'  : 'truncl',
+
+    # ----------------- Power and logarithmic functions -----------------------
+
+    'MathExp'    : 'expl',
+    'MathExpm1'  : 'expm1l',
+    'MathLog'    : 'logl',      # take also an option arg [base]
+    'MathLog1p'  : 'log1pl',
+    'MathLog2'  : 'log2l',
+    'MathLog10'  : 'log10l',
+    'MathPow'    : 'powl',
+    # 'MathSqrt'   : 'sqrt',    # sqrt is printed using _Print_MathSqrt
+
+    # --------------------- Trigonometric functions ---------------------------
+
+    'MathAcos'   : 'acosl',
+    'MathAsin'   : 'asinl',
+    'MathAtan'   : 'atanl',
+    'MathAtan2'  : 'atan2l',
+    'MathCos'    : 'cosl',
+    # 'MathDist'  : '???', TODO
+    'MathHypot'  : 'hypotl',
+    'MathSin'    : 'sinl',
+    'MathTan'    : 'tanl',
+
+    # -------------------------- Angular conversion ---------------------------
+
+    # 'MathDegrees': '???',  # TODO
+    # 'MathRadians': '???', # TODO
+
+    # -------------------------- Hyperbolic functions -------------------------
+
+    'MathAcosh'  : 'acoshl',
+    'MathAsinh'  : 'asinhl',
+    'MathAtanh'  : 'atanhl',
+    'MathCosh'   : 'coshl',
+    'MathSinh'   : 'sinhl',
+    'MathTanh'   : 'tanhl',
+
+    # --------------------------- Special functions ---------------------------
+
+    'MathErf'    : 'erfl',
+    'MathErfc'   : 'erfcl',
+    'MathGamma'  : 'tgammal',
+    'MathLgamma' : 'lgammal',
 }
 
 dtype_registry = {('real',8)    : 'double',
@@ -272,7 +296,6 @@ class CCodePrinter(CodePrinter):
             math.sin(x) ==> sin(x)
 
         """
-
         type_name = type(expr).__name__
         func_name = math_function_to_c[type_name]
         code_args = ', '.join(self._print(i) for i in expr.args)
@@ -282,8 +305,8 @@ class CCodePrinter(CodePrinter):
         arg = expr.args[0]
         code_args = self._print(arg)
         if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
-            code_args = 'Real({})'.format(code_args)
-        return 'sqrt({})'.format(code_args)
+            code_args = '(long double)({})'.format(code_args)
+        return 'sqrtl({})'.format(code_args)
 
     def _print_FunctionDef(self, expr):
 
@@ -293,6 +316,26 @@ class CCodePrinter(CodePrinter):
         body       = '\n'.join(self._print(i) for i in expr.body.body)
 
         return '{0} {{\n{1}\n{2}\n}}'.format(self.function_signature(expr), decs, body)
+
+    def _print_Constant(self, expr):
+        """ convert a python expresion with a math constant call to c
+        function call
+
+        Parameters:
+        -----------
+            expr (Pyccel ast node): python expresion with a Math constant
+
+        Returns:
+        --------
+            string: string represent the value of the constant
+
+        Example:
+        --------
+            math.pi ==> 3.14159265358979
+
+        """
+        val = Float(expr.value)
+        return self._print(val)
 
     def _print_Return(self, expr):
         code = ''
@@ -434,7 +477,6 @@ class CCodePrinter(CodePrinter):
         comments = self._print(expr.text)
 
         return '/*' + comments + '*/'
-
 
     def _print_CommentBlock(self, expr):
         txts = expr.comments
