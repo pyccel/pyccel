@@ -118,7 +118,6 @@ class CCodePrinter(CodePrinter):
         lines = []
         for i, (c, e) in enumerate(expr.args):
             var = self._print(e)
-            #change this line (removes an extra empty else{})
             if (var == ''):
                 break
             if i == 0:
