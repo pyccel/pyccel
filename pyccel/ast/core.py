@@ -819,7 +819,7 @@ def int2float(expr):
 def float2int(expr):
     return expr
 
-def create_random_string(forbidden_exprs : set, prefix = 'Dummy', nDigits : int = 1):
+def create_random_string(forbidden_exprs : set, prefix = 'Dummy', nDigits : int = 2):
     assert(isinstance(forbidden_exprs, set))
     import numpy as np
 
