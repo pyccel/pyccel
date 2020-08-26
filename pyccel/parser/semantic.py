@@ -174,6 +174,7 @@ class SemanticParser(BasicParser):
         self._namespace = parser._namespace
         self._namespace.imports['imports'] = OrderedDict()
         self._used_names = parser.used_names
+        self._dummy_counter = parser._dummy_counter
 
         # we use it to detect the current method or function
 
@@ -2044,6 +2045,8 @@ class SemanticParser(BasicParser):
 
         idx_subs = dict()
 
+        # The symbols created to represent unknown valued objects are temporary
+        tmp_used_names = self.used_names.copy()
         while isinstance(body, For):
 
             stop  = None
@@ -2083,9 +2086,9 @@ class SemanticParser(BasicParser):
                               severity='fatal')
             self.insert_variable(var)
 
-            step  = pyccel_to_sympy(step , idx_subs, self.used_names)
-            start = pyccel_to_sympy(start, idx_subs, self.used_names)
-            stop  = pyccel_to_sympy(stop , idx_subs, self.used_names)
+            step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
+            start = pyccel_to_sympy(start, idx_subs, tmp_used_names)
+            stop  = pyccel_to_sympy(stop , idx_subs, tmp_used_names)
             size = (stop - start) / step
             if (step != 1):
                 size = ceiling(size)
