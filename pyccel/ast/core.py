@@ -819,7 +819,7 @@ def int2float(expr):
 def float2int(expr):
     return expr
 
-def create_random_string(forbidden_exprs : set, prefix = '', nDigits : int = 1):
+def create_random_string(forbidden_exprs : set, prefix = 'Dummy_', nDigits : int = 1):
     assert(isinstance(forbidden_exprs, set))
     import numpy as np
 
@@ -833,7 +833,7 @@ def create_random_string(forbidden_exprs : set, prefix = '', nDigits : int = 1):
 def create_variable(forbidden_names):
     """."""
 
-    name = create_random_string(forbidden_names, 'Dummy_')
+    name = create_random_string(forbidden_names)
 
     return Symbol(name)
 

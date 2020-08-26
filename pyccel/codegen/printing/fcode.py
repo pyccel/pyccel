@@ -641,7 +641,7 @@ class FCodePrinter(CodePrinter):
 
         if (not self._additional_code):
             self._additional_code = ''
-        var_name = create_random_string(self._used_names, prefix = 'Dummy_')
+        var_name = create_random_string(self._used_names)
         var = Variable(expr.dtype, var_name, is_stack_array = all([s.is_constant for s in expr.shape]),
                 shape = expr.shape, precision = expr.precision,
                 order = expr.order, rank = expr.rank)
@@ -2228,7 +2228,7 @@ class FCodePrinter(CodePrinter):
                 self._additional_code = ''
             out_vars = []
             for r in func.results:
-                var_name = create_random_string(self._used_names, prefix='Dummy_')
+                var_name = create_random_string(self._used_names)
                 var =  r.clone(name = var_name)
 
                 if self._current_function:
@@ -2414,7 +2414,7 @@ class FCodePrinter(CodePrinter):
                 self._additional_code = ''
             out_vars = []
             for r in func.results:
-                var_name = create_random_string(self._used_names, prefix='Dummy_')
+                var_name = create_random_string(self._used_names)
                 var =  r.clone(name = var_name)
 
                 if self._current_function:

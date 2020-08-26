@@ -135,7 +135,7 @@ def pyccel_to_sympy(expr, symbol_map):
         return sym
 
     elif isinstance(expr, PyccelArraySize):
-        sym = sp.Symbol('tmp_size_' + create_random_string(expr))
+        sym = sp.Symbol(create_random_string(expr, prefix = 'tmp_size_'))
         symbol_map[sym] = expr
         return sym
 
