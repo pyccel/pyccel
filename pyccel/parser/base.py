@@ -341,7 +341,7 @@ class BasicParser(object):
         return self._used_names
 
     def get_new_name(self, current_name = None):
-        if current_name not in self._used_names:
+        if current_name is not None and current_name not in self._used_names:
             self._used_names.add(current_name)
             return current_name
 
