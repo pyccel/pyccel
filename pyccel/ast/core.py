@@ -819,11 +819,13 @@ def int2float(expr):
 def float2int(expr):
     return expr
 
-def create_random_string(forbidden_exprs : set, prefix = 'Dummy_', nDigits : int = 1):
+def create_random_string(forbidden_exprs : set, prefix = 'Dummy', nDigits : int = 1):
     assert(isinstance(forbidden_exprs, set))
     import numpy as np
 
     max_val = 10**nDigits
+
+    prefix += '_'
 
     name = prefix + str(np.random.randint(max_val))
     while name in forbidden_exprs:

@@ -341,15 +341,11 @@ class BasicParser(object):
         return self._used_names
 
     def get_new_name(self, current_name = None):
-        if current_name is None:
-            current_name = 'Dummy_'
-        elif current_name not in self._used_names:
+        if current_name not in self._used_names:
             self._used_names.add(current_name)
             return current_name
-        else:
-            current_name += '_'
 
-        new_name = create_random_string(self._used_names, prefix = current_name+'_')
+        new_name = create_random_string(self._used_names, prefix = current_name)
         self._used_names.add(new_name)
         return new_name
 
