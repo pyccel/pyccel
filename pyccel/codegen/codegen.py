@@ -263,6 +263,9 @@ class Codegen(object):
             for line in code:
                 f.write(line)
 
+        for line in code:
+            print(line)
+
         return filename
 
 
