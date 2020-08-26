@@ -819,22 +819,21 @@ def int2float(expr):
 def float2int(expr):
     return expr
 
-def create_random_string(expr):
+def create_random_string(forbidden_exprs : set, prefix = '', nDigits : int = 1):
+    assert(isinstance(forbidden_exprs, set))
     import numpy as np
-    return str(np.random.randint(10))
-    try:
-        randstr = str(abs(hash(expr)
-                                  + np.random.randint(500)))[-4:]
-    except TypeError:
-        # Catch unhashable type (e.g. list, FunctionalSum)
-        randstr = str(abs(np.random.randint(10000)))[-4:]
-    return randstr
 
-def create_variable(expr):
+    max_val = 10**nDigits
+
+    name = prefix + str(np.random.randint(max_val))
+    while name in forbidden_exprs:
+        name = prefix + str(np.random.randint(max_val))
+    return name
+
+def create_variable(forbidden_names):
     """."""
 
-    import numpy as np
-    name = 'Dummy_' + create_random_string(expr)
+    name = create_random_string(forbidden_names, 'Dummy_')
 
     return Symbol(name)
 
