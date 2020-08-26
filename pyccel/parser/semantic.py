@@ -1901,14 +1901,14 @@ class SemanticParser(BasicParser):
         iterator = expr.target
 
         if isinstance(iterable, Variable):
-            indx   = self.get_new_variable(iterable)
+            indx   = self.get_new_variable()
             assign = Assign(iterator, IndexedBase(iterable)[indx])
             assign.set_fst(expr.fst)
             iterator = indx
             body     = [assign] + body
 
         elif isinstance(iterable, Map):
-            indx   = self.get_new_variable(iterable)
+            indx   = self.get_new_variable()
             func   = iterable.args[0]
             args   = [IndexedBase(arg)[indx] for arg in iterable.args[1:]]
             assing = assign = Assign(iterator, func(*args))
@@ -1918,7 +1918,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(iterable, Zip):
             args = iterable.args
-            indx = self.get_new_variable(args)
+            indx = self.get_new_variable()
             for i in range(len(args)):
                 assign = Assign(iterator[i], IndexedBase(args[i])[indx])
                 assign.set_fst(expr.fst)
@@ -1938,7 +1938,7 @@ class SemanticParser(BasicParser):
             iterator = list(iterator)
             for i in range(len(args)):
                 if not isinstance(args[i], Range):
-                    indx   = self.get_new_variable(i)
+                    indx   = self.get_new_variable()
                     assign = Assign(iterator[i], IndexedBase(args[i])[indx])
 
                     assign.set_fst(expr.fst)
@@ -2083,9 +2083,9 @@ class SemanticParser(BasicParser):
                               severity='fatal')
             self.insert_variable(var)
 
-            step  = pyccel_to_sympy(step , idx_subs)
-            start = pyccel_to_sympy(start, idx_subs)
-            stop  = pyccel_to_sympy(stop , idx_subs)
+            step  = pyccel_to_sympy(step , idx_subs, self.used_names)
+            start = pyccel_to_sympy(start, idx_subs, self.used_names)
+            stop  = pyccel_to_sympy(stop , idx_subs, self.used_names)
             size = (stop - start) / step
             if (step != 1):
                 size = ceiling(size)
@@ -2327,7 +2327,7 @@ class SemanticParser(BasicParser):
 #            index_arg = args.index(arg)
 #            arg       = Symbol(arg)
 #            vec_arg   = IndexedBase(arg)
-#            index     = self.get_new_variable(expr.body)
+#            index     = self.get_new_variable()
 #            range_    = Function('range')(Function('len')(arg))
 #            args      = symbols(args)
 #            args[index_arg] = vec_arg[index]
