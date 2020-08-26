@@ -263,6 +263,7 @@ class Codegen(object):
             for line in code:
                 f.write(line)
 
+        import sys
         for line in code:
             sys.stdout.write(line)
 
