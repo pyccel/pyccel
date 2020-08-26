@@ -821,6 +821,7 @@ def float2int(expr):
 
 def create_random_string(expr):
     import numpy as np
+    return str(np.random.randint(10))
     try:
         randstr = str(abs(hash(expr)
                                   + np.random.randint(500)))[-4:]
