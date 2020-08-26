@@ -50,7 +50,6 @@ from pyccel.ast.core import With
 from pyccel.ast.core import List
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
-from pyccel.ast.core import create_variable
 from pyccel.ast.core import _atomic
 
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
@@ -123,7 +122,8 @@ class SyntaxParser(BasicParser):
         tree = extend_tree(code)
 
         self._fst = tree
-        
+
+        self._used_names = set([str(a.id) for a in ast.walk(self._fst) if isinstance(a, ast.Name)])
 
         self.parse(verbose=True)
 
@@ -711,9 +711,9 @@ class SyntaxParser(BasicParser):
         results = []
         for i in zip(*returns):
             if not all(i[0]==j for j in i) or not isinstance(i[0], Symbol):
-                results.append(create_variable(i[0]))
+                results.append(self.get_new_variable())
             elif isinstance(i[0], Symbol) and any(i[0].name==x.name for x in arguments):
-                results.append(create_variable(i[0]))
+                results.append(self.get_new_variable())
             else:
                 results.append(i[0])
 
@@ -864,7 +864,7 @@ class SyntaxParser(BasicParser):
                           symbol = ast.dump(stmt),
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='error')
-            lhs = create_variable(result)
+            lhs = self.get_new_variable()
         else:
             lhs = self._visit(self._scope[-2].targets)
             if len(lhs)==1:
@@ -872,7 +872,7 @@ class SyntaxParser(BasicParser):
             else:
                 raise NotImplementedError("A list comprehension cannot be unpacked")
 
-        index = create_variable(lhs)
+        index = self.get_new_variable()
 
         args = [index]
         target = IndexedBase(lhs)[args]
@@ -913,7 +913,7 @@ class SyntaxParser(BasicParser):
             lhs = self._visit(grandparent.targets[0])
             cond = False
         else:
-            lhs = create_variable(result)
+            lhs = self.get_new_variable()
             cond = True
 
         body = result
