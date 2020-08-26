@@ -245,6 +245,8 @@ class BasicParser(object):
         self._syntax_done   = False
         self._semantic_done = False
 
+        self._dummy_counter = 1
+
         # current position for errors
 
         self._current_fst_node = None
@@ -345,13 +347,17 @@ class BasicParser(object):
             self._used_names.add(current_name)
             return current_name
 
-        new_name = create_random_string(self._used_names, prefix = current_name)
-        self._used_names.add(new_name)
+        if current_name is not None:
+            new_name, self._dummy_counter = create_random_string(self._used_names, prefix = current_name, counter = self._dummy_counter)
+        else:
+            new_name,_ = create_random_string(self._used_names, prefix = current_name)
         return new_name
 
     def get_new_variable(self, prefix = None):
-        var = create_variable(self._used_names, prefix)
-        self._used_names.add(var.name)
+        if prefix is not None:
+            var,_ = create_variable(self._used_names, prefix)
+        else:
+            var, self._dummy_counter = create_variable(self._used_names, prefix, counter = self._dummy_counter)
         return var
 
     # TODO shall we need to export the Parser too?
