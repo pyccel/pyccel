@@ -2062,7 +2062,7 @@ class FCodePrinter(CodePrinter):
 
         if len(args) == 1:
             return '-{}'.format(args[0])
-        return ' - '.join(a for a in args)
+        return ' - '.join(args)
 
     def _print_PyccelMul(self, expr):
         args = [self._print(a) for a in expr.args]
