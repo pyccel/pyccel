@@ -12,6 +12,7 @@ from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface
 from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import Import, AsName
+from pyccel.ast.core import create_random_string, create_variable
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
@@ -231,6 +232,7 @@ class BasicParser(object):
         self._metavars  = OrderedDict()
         self._namespace = Scope()
 
+        self._used_names = None
 
         self._output_folder    = output_folder
 
@@ -333,6 +335,28 @@ class BasicParser(object):
     @property
     def show_traceback(self):
         return self._show_traceback
+
+    @property
+    def used_names(self):
+        return self._used_names
+
+    def get_new_name(self, current_name = None):
+        if current_name is None:
+            current_name = 'Dummy_'
+        elif current_name not in self._used_names:
+            self._used_names.add(current_name)
+            return current_name
+        else:
+            current_name += '_'
+
+        new_name = create_random_string(self._used_names, prefix = current_name+'_')
+        self._used_names.add(new_name)
+        return new_name
+
+    def get_new_variable(self):
+        var = create_variable(self._used_names)
+        self._used_names.add(var.name)
+        return var
 
     # TODO shall we need to export the Parser too?
 
