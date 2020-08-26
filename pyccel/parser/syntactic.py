@@ -51,6 +51,7 @@ from pyccel.ast.core import List
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import _atomic
+from pyccel.ast.core import create_variable
 
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
@@ -124,6 +125,7 @@ class SyntaxParser(BasicParser):
         self._fst = tree
 
         self._used_names = set([str(a.id) for a in ast.walk(self._fst) if isinstance(a, ast.Name)])
+        self._dummy_counter = 1
 
         self.parse(verbose=True)
 
@@ -709,11 +711,18 @@ class SyntaxParser(BasicParser):
         returns = [i.expr for i in _atomic(body, cls=Return)]
         assert all(len(i) == len(returns[0]) for i in returns)
         results = []
+        result_counter = 1
         for i in zip(*returns):
             if not all(i[0]==j for j in i) or not isinstance(i[0], Symbol):
-                results.append(self.get_new_variable())
+                result_name, result_counter = create_variable(self._used_names,
+                                                              prefix = 'Out',
+                                                              counter = result_counter)
+                results.append(result_name)
             elif isinstance(i[0], Symbol) and any(i[0].name==x.name for x in arguments):
-                results.append(self.get_new_variable())
+                result_name, result_counter = create_variable(self._used_names,
+                                                              prefix = 'Out',
+                                                              counter = result_counter)
+                results.append(result_name)
             else:
                 results.append(i[0])
 
