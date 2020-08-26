@@ -2209,47 +2209,6 @@ class FCodePrinter(CodePrinter):
             code_args = 'Real({})'.format(code_args)
         code = 'sqrt({})'.format(code_args)
         return self._get_statement(code)
-        
-    def _print_Function(self, expr):
-
-        args = expr.args
-        name = type(expr).__name__
-
-        # Get function without raising an error for None
-        func = None
-        container = self._namespace
-        while container:
-            if name in container.functions:
-                func = container.functions[name]
-            container = container.parent_scope
-
-        if isinstance(func,FunctionDef) and len(func.results)>1:
-            if (not self._additional_code):
-                self._additional_code = ''
-            out_vars = []
-            for r in func.results:
-                var_name = create_random_string(self._used_names)
-                var =  r.clone(name = var_name)
-
-                if self._current_function:
-                    name = self._current_function
-                    func = self.get_function(name)
-                    func.local_vars.append(var)
-                else:
-                    self._namespace.variables[var.name] = var
-
-                out_vars.append(var)
-            self._additional_code = self._additional_code + self._print(Assign(Tuple(*out_vars),expr)) + '\n'
-            return self._print(Tuple(*out_vars))
-        else:
-
-            code_args = ', '.join(self._print(i) for i in args if not isinstance(i,Nil))
-
-            code = '{0}({1})'.format(name, code_args)
-            if isinstance(expr.func, Subroutine):
-                code = 'call ' + code
-
-            return self._get_statement(code) + '\n'
 
     def _print_ImaginaryUnit(self, expr):
         # purpose: print complex numbers nicely in Fortran.
