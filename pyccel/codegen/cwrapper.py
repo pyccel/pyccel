@@ -22,7 +22,7 @@ def write_python_wrapper(expr, printer):
     results_decs = '\n    '.join(printer._print(i) for i in results_decs)
     code += '{0}\n    {1}\n    '.format(arg_decs, results_decs)
 
-    # Check if the function with No arguments
+    # Check if the function has No arguments
     if not expr.arguments:
         code += "if (!PyArg_ParseTuple(args, \"\"))\n        return NULL;\n    "
     else:
