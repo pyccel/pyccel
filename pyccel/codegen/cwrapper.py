@@ -34,12 +34,10 @@ def write_python_wrapper(expr, printer):
 
     if len(expr.results)==0:
         func_call = FunctionCall(expr, expr.arguments)
-
-        code += printer._print(func_call) + ';'
     else:
         results = expr.results if len(expr.results)>1 else expr.results[0]
         func_call = Assign(results,FunctionCall(expr, expr.arguments))
-        code += printer._print(func_call)
+    code += printer._print(func_call)
     code += '\n'
 
     results_dtypes = ''.join(pytype_registry[str_dtype(arg.dtype)] for arg in expr.results)
