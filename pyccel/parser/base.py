@@ -205,7 +205,8 @@ class BasicParser(object):
     """ Class for a base Parser.
     This class contains functions and properties which are common to SyntacticParser and SemanticParser
 
-    Parser constructor:
+    Parameters
+    ----------
 
         debug: bool
             True if in debug mode.
@@ -219,7 +220,7 @@ class BasicParser(object):
         show_traceback: bool
             prints Traceback exception if True
 
-        """
+    """
 
     def __init__(self,
                  debug=False,
