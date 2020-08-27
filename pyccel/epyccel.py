@@ -18,10 +18,10 @@ __all__ = ['random_string', 'get_source_function', 'epyccel_seq', 'epyccel']
 #==============================================================================
 random_selector = random.SystemRandom()
 
-def random_string( n, prefix = '' ):
+def random_string( n ):
     # we remove uppercase letters because of f2py
     chars    = string.ascii_lowercase + string.digits
-    return prefix + ''.join( random_selector.choice( chars ) for _ in range(n) )
+    return ''.join( random_selector.choice( chars ) for _ in range(n) )
 
 #==============================================================================
 def get_source_function(func):
@@ -64,9 +64,12 @@ def epyccel_seq(function_or_module,
         pyfunc = function_or_module
         code = get_source_function(pyfunc)
 
-        module_name = random_string(prefix='mod_', n=8)
+        tag = random_string(8)
+        module_name = 'mod_{}'.format(tag)
+
         while module_name in sys.modules.keys():
-            module_name = random_string(prefix='mod_', n=8)
+            tag = random_string(8)
+            module_name = 'mod_{}'.format(tag)
 
         pymod_filename = '{}.py'.format(module_name)
         pymod_filepath = os.path.abspath(pymod_filename)
@@ -78,7 +81,7 @@ def epyccel_seq(function_or_module,
         lines = inspect.getsourcelines(pymod)[0]
         code = ''.join(lines)
 
-        tag = random_string(n=8)
+        tag = random_string(8)
         module_import_prefix = pymod.__name__ + '_'
         while module_import_prefix + tag in sys.modules.keys():
             tag = random_string(n=8)
