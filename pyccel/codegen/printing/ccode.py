@@ -1,6 +1,7 @@
 # coding: utf-8
 # pylint: disable=R0201
 
+from pyccel.ast.numbers   import BooleanTrue
 from pyccel.ast.core import If
 
 from sympy.core import S
