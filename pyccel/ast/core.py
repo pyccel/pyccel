@@ -156,7 +156,7 @@ __all__ = (
     '_atomic',
 #    'allocatable_like',
     'create_variable',
-    'create_random_string',
+    'create_incremented_string',
     'extract_subexpressions',
 #    'float2int',
     'get_assigned_symbols',
@@ -819,23 +819,79 @@ def int2float(expr):
 def float2int(expr):
     return expr
 
-def create_random_string(expr):
-    import numpy as np
-    try:
-        randstr = str(abs(hash(expr)
-                                  + np.random.randint(500)))[-4:]
-    except TypeError:
-        # Catch unhashable type (e.g. list, FunctionalSum)
-        randstr = str(abs(np.random.randint(10000)))[-4:]
-    return randstr
+def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
+    """This function takes a prefix and a counter and uses them to construct
+    a new name of the form:
+            prefix_counter
+    Where counter is formatted to fill 4 characters
+    The new name is checked against a list of forbidden expressions. If the
+    constructed name is forbidden then the counter is incremented until a valid
+    name is found
 
-def create_variable(expr):
-    """."""
+      Parameters
+      ----------
+      forbidden_exprs : Set
+                        A set of all the values which are not valid solutions to this problem
+      prefix          : str
+                        The prefix used to begin the string
+      counter         : int
+                        The expected value of the next name
 
-    import numpy as np
-    name = 'Dummy_' + create_random_string(expr)
+      Returns
+      ----------
+      name            : str
+                        The incremented string name
+      counter         : int
+                        The expected value of the next name
 
-    return Symbol(name)
+    """
+    assert(isinstance(forbidden_exprs, set))
+    nDigits = 4
+
+    if prefix is None:
+        prefix = 'Dummy'
+
+    name_format = "{prefix}_{counter:0="+str(nDigits)+"d}"
+    name = name_format.format(prefix=prefix, counter = counter)
+    counter += 1
+    while name in forbidden_exprs:
+        name = name_format.format(prefix=prefix, counter = counter)
+        counter += 1
+
+    forbidden_exprs.add(name)
+
+    return name, counter
+
+def create_variable(forbidden_names, prefix = None, counter = 1):
+    """This function takes a prefix and a counter and uses them to construct
+    a Symbol with a name of the form:
+            prefix_counter
+    Where counter is formatted to fill 4 characters
+    The new name is checked against a list of forbidden expressions. If the
+    constructed name is forbidden then the counter is incremented until a valid
+    name is found
+
+      Parameters
+      ----------
+      forbidden_exprs : Set
+                        A set of all the values which are not valid solutions to this problem
+      prefix          : str
+                        The prefix used to begin the string
+      counter         : int
+                        The expected value of the next name
+
+      Returns
+      ----------
+      name            : sympy.Symbol
+                        A sympy Symbol with the incremented string name
+      counter         : int
+                        The expected value of the next name
+
+    """
+
+    name, counter = create_incremented_string(forbidden_names, prefix, counter = counter)
+
+    return Symbol(name), counter
 
 class DottedName(Basic):
 
