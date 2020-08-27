@@ -407,8 +407,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Program(self, expr):
 
-        name = 'prog_{0}'.format(self._print(expr.name))
-        name = name.replace('.', '_')
+        name = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
 
         imports  = list(expr.imports)
         imports += [Import('stdlib.h')]
@@ -416,25 +415,14 @@ class CCodePrinter(CodePrinter):
         body     = '\n'.join(self._print(i) for i in expr.body.body)
         decs     = '\n'.join(self._print(i) for i in expr.declarations)
 
-        sep = self._print(SeparatorComment(40))
-
-        funcs = ''
-        for i in expr.funcs:
-            funcs = ('{funcs}\n'
-                     '{sep}\n'
-                     '{f}\n'
-                     '{sep}\n').format(funcs=funcs, sep=sep, f=self._print(i))
-
         return ('{imports}\n'
-                '{funcs}\n'
                 'int main()\n{{\n'
                 '{decs}\n'
                 '{body}\n'
                 'return 0;\n'
                 '}}').format(imports=imports,
                                     decs=decs,
-                                    body=body,
-                                    funcs=funcs)
+                                    body=body)
 
 
 
