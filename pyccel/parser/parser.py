@@ -27,7 +27,6 @@ class Parser(object):
         self._syntax_parser = None
         self._semantic_parser = None
 
-        self._output_folder = kwargs.pop('output_folder', '')
         self._input_folder = os.path.dirname(filename)
 
     @property
