@@ -204,15 +204,8 @@ class BasicParser(object):
 
     """ Class for a base Parser.
     This class contains functions and properties which are common to SyntacticParser and SemanticParser
-    """
 
-    def __init__(self,
-                 debug=False,
-                 headers=None,
-                 static=None,
-                 show_traceback=False,
-                 output_folder=''):
-        """Parser constructor.
+    Parser constructor:
 
         debug: bool
             True if in debug mode.
@@ -227,6 +220,12 @@ class BasicParser(object):
             prints Traceback exception if True
 
         """
+
+    def __init__(self,
+                 debug=False,
+                 headers=None,
+                 static=None,
+                 show_traceback=False):
         self._fst = None
         self._ast = None
 
@@ -235,8 +234,6 @@ class BasicParser(object):
         self._namespace = Scope()
 
         self._used_names = None
-
-        self._output_folder    = output_folder
 
         # represent the namespace of a function
 
