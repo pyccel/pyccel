@@ -1,4 +1,4 @@
-from sympy.core.function       import UndefinedFunction
+from pyccel.ast.core import FunctionCall
 
 from pyccel.codegen.printing.ccode import CCodePrinter, dtype_registry
 from pyccel.ast.core import Module, Declare, Assign
@@ -22,23 +22,32 @@ def write_python_wrapper(expr, printer):
     results_decs = '\n    '.join(printer._print(i) for i in results_decs)
     code += '{0}\n    {1}\n    '.format(arg_decs, results_decs)
 
-    code += "if (!PyArg_ParseTuple(args, \""
-    code += ''.join(pytype_registry[str_dtype(arg.dtype)] for arg in expr.arguments)
-    code += "\", "
-    code += ', '.join("&" + printer._print(arg) for arg in expr.arguments)
-    code += "))\n        return NULL;\n    "
+    # Check if the function has No arguments
+    if not expr.arguments:
+        code += "if (!PyArg_ParseTuple(args, \"\"))\n        return NULL;\n    "
+    else:
+        code += "if (!PyArg_ParseTuple(args, \""
+        code += ''.join(pytype_registry[str_dtype(arg.dtype)] for arg in expr.arguments)
+        code += "\", "
+        code += ', '.join("&" + printer._print(arg) for arg in expr.arguments)
+        code += "))\n        return NULL;\n    "
 
     if len(expr.results)==0:
-        func_call = UndefinedFunction(str(expr.name))(*expr.arguments)
+        func_call = FunctionCall(expr, expr.arguments)
     else:
         results = expr.results if len(expr.results)>1 else expr.results[0]
-        func_call = Assign(results,UndefinedFunction(str(expr.name))(*expr.arguments))
+        func_call = Assign(results,FunctionCall(expr, expr.arguments))
     code += printer._print(func_call)
     code += '\n'
 
     results_dtypes = ''.join(pytype_registry[str_dtype(arg.dtype)] for arg in expr.results)
     result_names = ', '.join(res.name for res in expr.results)
-    code += "    return Py_BuildValue(\"{0}\", {1});\n".format(results_dtypes,result_names)
+    code += "    return Py_BuildValue("
+    if not expr.results: # case of function with no return value
+        code += "\"\""
+    else: # function with return value
+        code += "\"{0}\", {1}".format(results_dtypes,result_names)
+    code += ");\n"
     code += "}\n"
     return code
 
