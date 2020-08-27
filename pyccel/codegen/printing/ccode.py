@@ -407,7 +407,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_Program(self, expr):
 
-        name = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
+        name = 'prog_{0}'.format(self._print(expr.name))
+        name = name.replace('.', '_')
 
         imports  = list(expr.imports)
         imports += [Import('stdlib.h')]
