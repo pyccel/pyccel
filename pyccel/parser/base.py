@@ -353,6 +353,14 @@ class BasicParser(object):
         If no current_name is provided, then the standard prefix is used, and the
         dummy counter is used and updated to facilitate finding the next value of
         this common case
+
+          Parameters
+          ----------
+          current_name : str
+
+          Returns
+          -------
+          new_name     : str
         """
         if current_name is not None and current_name not in self.used_names:
             self.used_names.add(current_name)
@@ -369,6 +377,14 @@ class BasicParser(object):
         Creates a new sympy Symbol using the prefix provided. If this prefix is None,
         then the standard prefix is used, and the dummy counter is used and updated
         to facilitate finding the next value of this common case
+
+          Parameters
+          ----------
+          prefix   : str
+
+          Returns
+          -------
+          variable : sympy.Symbol
         """
         if prefix is not None:
             var,_ = create_variable(self._used_names, prefix)

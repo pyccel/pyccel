@@ -882,7 +882,7 @@ def create_variable(forbidden_names, prefix = None, counter = 1):
 
       Returns
       ----------
-      name            : Symbol
+      name            : sympy.Symbol
                         A sympy Symbol with the incremented string name
       counter         : int
                         The expected value of the next name
