@@ -105,6 +105,18 @@ class CCodePrinter(CodePrinter):
 
     # ============ Elements ============ #
 
+    def _print_PythonFloat(self, expr):
+        value = self._print(expr.arg)
+        return '(double)({0})'.format(value)
+
+    def _print_Int(self, expr):
+        value = self._print(expr.arg)
+        return '(int)({0})'.format(value)
+
+    def _print_Bool(self, expr):
+        value = self._print(expr.arg)
+        return '{} ? 1 : 0'.format(value)
+
     def _print_Module(self, expr):
         return '\n\n'.join(self._print(i) for i in expr.body)
 
