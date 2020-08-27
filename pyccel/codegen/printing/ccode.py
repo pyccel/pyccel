@@ -406,10 +406,6 @@ class CCodePrinter(CodePrinter):
 
 
     def _print_Program(self, expr):
-
-        name = 'prog_{0}'.format(self._print(expr.name))
-        name = name.replace('.', '_')
-
         imports  = list(expr.imports)
         imports += [Import('stdlib.h')]
         imports  = '\n'.join(self._print(i) for i in imports)
