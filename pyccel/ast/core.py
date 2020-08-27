@@ -821,7 +821,6 @@ def float2int(expr):
 
 def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
     assert(isinstance(forbidden_exprs, set))
-    import numpy as np
     nDigits = 4
 
     if prefix is None:
