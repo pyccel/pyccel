@@ -10,17 +10,9 @@ if (x==2 or y==1) and z>3 :
     x = 3
     y = 4
 
-while x>2 and y<1:
-    x = x-1
-    y = 4
-
 if x>2 or y<=1:
     x = x-1
     y = y-1
-
-while x>2 or y<1:
-    x = 1
-    y = 3
 
 if True:
     x = 5
