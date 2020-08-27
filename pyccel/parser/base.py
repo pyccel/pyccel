@@ -202,7 +202,9 @@ class Scope(object):
 
 class BasicParser(object):
 
-    """ Class for a base Parser."""
+    """ Class for a base Parser.
+    This class contains functions and properties which are common to SyntacticParser and SemanticParser
+    """
 
     def __init__(self,
                  debug=False,
@@ -222,7 +224,7 @@ class BasicParser(object):
             a list of 'static' functions as strings
 
         show_traceback: bool
-            prints Tracebacke exception if True
+            prints Traceback exception if True
 
         """
         self._fst = None
@@ -245,6 +247,7 @@ class BasicParser(object):
         self._syntax_done   = False
         self._semantic_done = False
 
+        # the next expected Dummy variable
         self._dummy_counter = 1
 
         # current position for errors
@@ -340,20 +343,36 @@ class BasicParser(object):
 
     @property
     def used_names(self):
+        """Returns a set of all names used in the current file.
+        The set is used to prevent name collisions when creating new variables
+        """
         return self._used_names
 
     def get_new_name(self, current_name = None):
-        if current_name is not None and current_name not in self._used_names:
-            self._used_names.add(current_name)
+        """
+        Creates a new name. A current_name can be provided indicating the name the
+        user would like to use if possible. If this name is not available then it
+        will be used as a prefix for the new name.
+        If no current_name is provided, then the standard prefix is used, and the
+        dummy counter is used and updated to facilitate finding the next value of
+        this common case
+        """
+        if current_name is not None and current_name not in self.used_names:
+            self.used_names.add(current_name)
             return current_name
 
         if current_name is not None:
-            new_name, self._dummy_counter = create_incremented_string(self._used_names, prefix = current_name, counter = self._dummy_counter)
+            new_name, self._dummy_counter = create_incremented_string(self.used_names, prefix = current_name, counter = self._dummy_counter)
         else:
-            new_name,_ = create_incremented_string(self._used_names, prefix = current_name)
+            new_name,_ = create_incremented_string(self.used_names, prefix = current_name)
         return new_name
 
     def get_new_variable(self, prefix = None):
+        """
+        Creates a new sympy Symbol using the prefix provided. If this prefix is None,
+        then the standard prefix is used, and the dummy counter is used and updated
+        to facilitate finding the next value of this common case
+        """
         if prefix is not None:
             var,_ = create_variable(self._used_names, prefix)
         else:
