@@ -63,7 +63,7 @@ dtype_registry = {('real',8)    : 'double',
                   ('complex',4) : 'float complex',
                   ('int',4)     : 'int',
                   ('int',8)     : 'long',
-                  ('bool',1)    : 'int'}
+                  ('bool',4)    : 'int'}
 
 
 class CCodePrinter(CodePrinter):

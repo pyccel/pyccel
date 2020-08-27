@@ -8,7 +8,7 @@ pytype_registry = {
         'integer': 'l',
         'real': 'd',
         'complex':'c',
-        'bool':'p',
+        'bool':'i',
         'str':'s'
         }
 
