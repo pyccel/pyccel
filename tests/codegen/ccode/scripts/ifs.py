@@ -1,25 +1,18 @@
-from numpy import zeros
 
 x = 0
 y = 0
 z = 3
-b = zeros(64,'int')
 
 if 1<0:
     x=4
-
-if len(b)>5:
-    x = len(b)
 
 if (x==2 or y==1) and z>3 :
     x = 3
     y = 4
 
-
 if x>2 or y<=1:
     x = x-1
     y = y-1
-
 
 if True:
     x = 5
