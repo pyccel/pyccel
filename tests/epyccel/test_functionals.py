@@ -22,7 +22,7 @@ def test_functional_for_1d_var():
 def test_functional_for_2d_range():
     compare_epyccel(functionals.functional_for_2d_range)
 
-def test_functional_for_2d_var_var_range():
+def test_functional_for_2d_var_range():
     y = randint(99, size = 3)
     compare_epyccel(functionals.functional_for_2d_var_range, y)
 

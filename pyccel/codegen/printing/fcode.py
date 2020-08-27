@@ -43,7 +43,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
 
 
 from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-from pyccel.ast.core      import create_random_string, create_variable, FunctionCall
+from pyccel.ast.core      import FunctionCall
 from pyccel.ast.builtins  import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
@@ -640,8 +640,8 @@ class FCodePrinter(CodePrinter):
 
         if (not self._additional_code):
             self._additional_code = ''
-        var = create_variable(expr)
-        var = Variable(expr.dtype, var.name, is_stack_array = all([s.is_constant for s in expr.shape]),
+        var_name = self.parser.get_new_name()
+        var = Variable(expr.dtype, var_name, is_stack_array = all([s.is_constant for s in expr.shape]),
                 shape = expr.shape, precision = expr.precision,
                 order = expr.order, rank = expr.rank)
 
@@ -1613,7 +1613,7 @@ class FCodePrinter(CodePrinter):
         body = self._print(expr.body)
 
         return ('{prolog}'
-                '{body}\n'
+                '{body}'
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
 
     # .....................................................
@@ -2062,7 +2062,7 @@ class FCodePrinter(CodePrinter):
 
         if len(args) == 1:
             return '-{}'.format(args[0])
-        return ' - '.join(a for a in args)
+        return ' - '.join(args)
 
     def _print_PyccelMul(self, expr):
         args = [self._print(a) for a in expr.args]
@@ -2208,47 +2208,6 @@ class FCodePrinter(CodePrinter):
             code_args = 'Real({})'.format(code_args)
         code = 'sqrt({})'.format(code_args)
         return self._get_statement(code)
-        
-    def _print_Function(self, expr):
-
-        args = expr.args
-        name = type(expr).__name__
-
-        # Get function without raising an error for None
-        func = None
-        container = self._namespace
-        while container:
-            if name in container.functions:
-                func = container.functions[name]
-            container = container.parent_scope
-
-        if isinstance(func,FunctionDef) and len(func.results)>1:
-            if (not self._additional_code):
-                self._additional_code = ''
-            out_vars = []
-            for r in func.results:
-                var_name = 'Dummy_' + create_random_string(r)
-                var =  r.clone(name = var_name)
-
-                if self._current_function:
-                    name = self._current_function
-                    func = self.get_function(name)
-                    func.local_vars.append(var)
-                else:
-                    self._namespace.variables[var.name] = var
-
-                out_vars.append(var)
-            self._additional_code = self._additional_code + self._print(Assign(Tuple(*out_vars),expr)) + '\n'
-            return self._print(Tuple(*out_vars))
-        else:
-
-            code_args = ', '.join(self._print(i) for i in args if not isinstance(i,Nil))
-
-            code = '{0}({1})'.format(name, code_args)
-            if isinstance(expr.func, Subroutine):
-                code = 'call ' + code
-
-            return self._get_statement(code) + '\n'
 
     def _print_ImaginaryUnit(self, expr):
         # purpose: print complex numbers nicely in Fortran.
@@ -2297,8 +2256,8 @@ class FCodePrinter(CodePrinter):
             else:
                 if (not self._additional_code):
                     self._additional_code = ''
-                var = create_variable(base)
-                var = Variable(base.dtype, var.name, is_stack_array = True,
+                var_name = self.parser.get_new_name()
+                var = Variable(base.dtype, var_name, is_stack_array = True,
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
 
@@ -2336,8 +2295,8 @@ class FCodePrinter(CodePrinter):
             else:
                 if (not self._additional_code):
                     self._additional_code = ''
-                var = create_variable(base)
-                var = Variable(base.dtype, var.name, is_stack_array = True,
+                var_name = self.parser.get_new_name()
+                var = Variable(base.dtype, var_name, is_stack_array = True,
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
 
@@ -2413,7 +2372,7 @@ class FCodePrinter(CodePrinter):
                 self._additional_code = ''
             out_vars = []
             for r in func.results:
-                var_name = 'Dummy_' + create_random_string(r)
+                var_name = self.parser.get_new_name()
                 var =  r.clone(name = var_name)
 
                 if self._current_function:

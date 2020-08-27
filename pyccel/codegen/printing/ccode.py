@@ -15,6 +15,7 @@ from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMo
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 
+from pyccel.ast.datatypes import NativeInteger
 
 from pyccel.ast.builtins  import Range
 from pyccel.ast.core import Declare
@@ -218,11 +219,13 @@ class CCodePrinter(CodePrinter):
         else:
             ret_type = self._print(datatype('void'))
         name = expr.name
-
-        arg_dtypes = [self._print(i.dtype) for i in expr.arguments]
-        arg_dtypes = [dtype_registry[(dtype, arg.precision)] for dtype,arg in zip(arg_dtypes, expr.arguments)]
-        arguments  = [self._print(i) for i in expr.arguments]
-        arg_code   = ', '.join(dtype + ' ' + arg for dtype,arg in zip(arg_dtypes,arguments))
+        if not expr.arguments:
+            arg_code = 'void'
+        else:
+            arg_dtypes = [self._print(i.dtype) for i in expr.arguments]
+            arg_dtypes = [dtype_registry[(dtype, arg.precision)] for dtype,arg in zip(arg_dtypes, expr.arguments)]
+            arguments  = [self._print(i) for i in expr.arguments]
+            arg_code   = ', '.join(dtype + ' ' + arg for dtype,arg in zip(arg_dtypes,arguments))
 
         return '{0} {1}({2})'.format(ret_type, name, arg_code)
 
@@ -235,6 +238,14 @@ class CCodePrinter(CodePrinter):
 
         return '{0}\n{{\n{1}\n{2}\n}}'.format(self.function_signature(expr), decs, body)
 
+    def _print_FunctionCall(self, expr):
+        func = expr.funcdef
+        # currently support only function with one or zero output
+        args = ','.join(['{}'.format(self._print(a)) for a in expr.arguments])
+        if not func.results:
+            return '{}({});'.format(func.name, args)
+        return '{}({})'.format(func.name, args)
+
     def _print_Return(self, expr):
         code = ''
         if expr.stmt:
@@ -246,7 +257,10 @@ class CCodePrinter(CodePrinter):
         return ' + '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelMinus(self, expr):
-        return ' - '.join(self._print(a) for a in expr.args)
+        args = [self._print(a) for a in expr.args]
+        if len(args) == 1:
+            return '-{}'.format(args[0])
+        return ' - '.join(args)
 
     def _print_PyccelMul(self, expr):
         return ' * '.join(self._print(a) for a in expr.args)

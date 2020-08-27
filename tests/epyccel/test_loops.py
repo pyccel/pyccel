@@ -6,17 +6,6 @@ from pyccel.epyccel import epyccel
 from modules        import loops
 from conftest       import *
 
-@pytest.fixture( params=[
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.c]
-        )
-    ],
-    scope='module'
-)
-def language(request):
-    return request.param
-
 #==============================================================================
 
 def test_sum_natural_numbers(language):
