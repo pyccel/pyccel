@@ -16,6 +16,17 @@ def sympy_to_pyccel(expr, symbol_map):
     """
     Convert a sympy expression to a pyccel expression replacing sympy symbols with
     pyccel expressions provided in a symbol_map
+
+      Parameters
+      ----------
+      expr       : PyccelAstNode
+                   The pyccel node to be translated
+      symbol_map : dict
+                   Dictionary mapping sympy symbols to pyccel objects
+
+      Returns
+      ----------
+      expr       : pyccel Object
     """
 
     #Constants
@@ -88,8 +99,23 @@ def sympy_to_pyccel(expr, symbol_map):
 #==============================================================================
 def pyccel_to_sympy(expr, symbol_map, used_names):
     """
-    Convert a sympy expression to a pyccel expression replacing sympy symbols with
-    pyccel expressions provided in a symbol_map
+    Convert a pyccel expression to a sympy expression saving any pyccel objects
+    converted to sympy symbols in a dictionary to allow the reverse conversion
+    to be carried out later
+
+      Parameters
+      ----------
+      expr       : PyccelAstNode
+                   The pyccel node to be translated
+      symbol_map : dict
+                   Dictionary containing any pyccel objects converted to sympy symbols
+      used_names : Set
+                   A set of all the names which already exist and therefore cannot
+                   be used to create new symbols
+
+      Returns
+      ----------
+      expr       : sympy Object
     """
 
     #Constants
