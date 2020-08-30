@@ -119,7 +119,7 @@ def execute_pyccel(fname, *,
 
     # Parse Python file
     try:
-        parser = Parser(pymod_filepath, output_folder=pyccel_dirpath.replace('/','.'), show_traceback=verbose)
+        parser = Parser(pymod_filepath, show_traceback=verbose)
         parser.parse(verbose=verbose)
     except NotImplementedError as error:
         msg = str(error)

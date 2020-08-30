@@ -337,9 +337,9 @@ def test_bool():
 #------------------------------------------------------------------------------
 def test_expressions():
     types = [float, complex, int, float, float, int] + [float]*3 + \
-            [complex, int, complex, complex, int, float] + [complex]*3 + \
+            [complex, int, complex, complex, int, int, float] + [complex]*3 + \
             [float]*3 + [int] + [float]*2 + [int] + [float]*3 + [int] + \
-            [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex]
+            [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex] + [bool]*9
     pyccel_test("scripts/expressions.py",
                 output_dtype = types)
 
