@@ -2752,15 +2752,15 @@ class SemanticParser(BasicParser):
             imports = pyccel_builtin_import(expr)
 
             def _insert_obj(location, target, obj):
-                F = self.check_for_variable(source)
+                F = self.check_for_variable(target)
 
-                if F is None:
-                    container[location][target] = obj
-                elif target in container:
+                if obj is F:
                     errors.report(FOUND_DUPLICATED_IMPORT,
-                                symbol=name, severity='warning')
+                                symbol=target, severity='warning')
+                elif F is None or isinstance(F, dict):
+                    container[location][target] = obj
                 else:
-                    errors.report(PYCCEL_RESTRICTION_TODO,
+                    errors.report(IMPORTING_EXISTING_IDENTIFIED,
                                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                                   severity='fatal')
 
