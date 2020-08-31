@@ -639,6 +639,8 @@ def test_ldexp_return_type(language = 'c'): # ldexp
 
 #--------------------------- remainder function ------------------------------#
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason="requires python3.7 or higher")
 def test_remainder_call(language = 'c'): # remainder
     @types('real', 'real')
     def remainder_call(x, y):
@@ -657,6 +659,8 @@ def test_remainder_call(language = 'c'): # remainder
     assert(isclose(remainder_call(x, -y), f1(x, -y), rtol=1e-15, atol=1e-15))
     assert(isclose(remainder_call(-x, y), f1(-x, y), rtol=1e-15, atol=1e-15))
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason="requires python3.7 or higher")
 def test_remainder_return_type(language = 'c'): # remainder
     @types('real', 'real')
     def remainder_type(x, y):
