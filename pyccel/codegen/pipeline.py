@@ -179,6 +179,9 @@ def execute_pyccel(fname, *,
             handle_error('code generation')
             raise PyccelCodegenError('Code generation failed')
 
+        if errors.has_warnings():
+            errors.check()
+
         #------------------------------------------------------
         # TODO: collect dependencies and proceed recursively
     #    if recursive:
