@@ -128,7 +128,7 @@ def execute_pyccel(fname, *,
     except PyccelError:
         handle_error('parsing (syntax)')
         raise
-    if errors.is_errors():
+    if errors.has_errors():
         handle_error('parsing (syntax)')
         raise PyccelSyntaxError('Syntax step failed')
 
@@ -146,7 +146,7 @@ def execute_pyccel(fname, *,
     except PyccelError:
         handle_error('annotation (semantic)')
         raise
-    if errors.is_errors():
+    if errors.has_errors():
         handle_error('annotation (semantic)')
         raise PyccelSemanticError('Semantic step failed')
 
@@ -175,7 +175,7 @@ def execute_pyccel(fname, *,
         except PyccelError:
             handle_error('code generation')
             raise
-        if errors.is_errors():
+        if errors.has_errors():
             handle_error('code generation')
             raise PyccelCodegenError('Code generation failed')
 
