@@ -69,6 +69,11 @@ def test_compare_is_not_nil():
 
 def test_cast_int():
     compare_epyccel(base.cast_int, 4)
+    compare_epyccel(base.cast_float_to_int, 4.5)
 
 def test_cast_bool():
     compare_epyccel(base.cast_bool, True)
+
+def test_cast_float():
+    compare_epyccel(base.cast_float, 4.5)
+    compare_epyccel(base.cast_int_to_float, 4)

@@ -100,3 +100,18 @@ def cast_int(a):
 def cast_bool(a):
     b = bool(a)
     return b
+
+@types('float')
+def cast_float(a):
+    b = float(a)
+    return b
+
+@types('float')
+def cast_float_to_int(a):
+    b = int(a)
+    return b
+
+@types('int')
+def cast_int_to_float(a):
+    b = float(a)
+    return b
