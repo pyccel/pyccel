@@ -36,10 +36,10 @@ def get_files_from_folder(foldername):
 def test_semantic_warnings(f):
 
     pyccel = Parser(f, show_traceback=False)
-    ast = pyccel.parse()
+    pyccel.parse()
 
     settings = {}
-    ast = pyccel.annotate(**settings)
+    pyccel.annotate(**settings)
 
     # reset Errors singleton
     errors = Errors()
