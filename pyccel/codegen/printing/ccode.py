@@ -63,6 +63,8 @@ dtype_registry = {('real',8)    : 'double',
                   ('complex',4) : 'float complex',
                   ('int',4)     : 'int',
                   ('int',8)     : 'long',
+                  ('int',2)     : 'int',
+                  ('int',1)     : 'int',
                   ('bool',4)    : 'int'}
 
 
@@ -111,7 +113,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Int(self, expr):
         value = self._print(expr.arg)
-        return '(int)({0})'.format(value)
+        return '(long)({0})'.format(value)
 
     def _print_Bool(self, expr):
         value = self._print(expr.arg)
