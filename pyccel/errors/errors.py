@@ -256,7 +256,7 @@ class Errors:
         return sum(len(x) for x in self.error_info_map.values())
 
     def has_warnings(self):
-        """Are the any errors that are warnings?"""
+        """Are there any errors that are warnings?"""
         return any(err for errs in self.error_info_map.values() for err in errs if err.severity == 'warning')
 
     def has_errors(self):
@@ -264,7 +264,7 @@ class Errors:
         return any(err for errs in self.error_info_map.values() for err in errs if err.severity != 'warning')
 
     def has_blockers(self):
-        """Are the any errors that are blockers?"""
+        """Are there any errors that are blockers?"""
         return any(err for errs in self.error_info_map.values() for err in errs if err.blocker)
 
     def blocker_filename(self):
