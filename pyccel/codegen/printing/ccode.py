@@ -15,7 +15,7 @@ from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMo
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 
-from pyccel.ast.datatypes import NativeInteger
+from pyccel.ast.datatypes import NativeInteger, NativeReal
 
 from pyccel.ast.builtins  import Range
 from pyccel.ast.core import Declare
@@ -372,7 +372,13 @@ class CCodePrinter(CodePrinter):
         """
         type_name = type(expr).__name__
         func_name = math_function_to_c[type_name]
-        code_args = ', '.join(self._print(i) for i in expr.args)
+        args = []
+        for arg in expr.args:
+            if arg.dtype is not NativeReal:
+                args.append('(long double)(' + self._print(arg) + ')')
+            else:
+                args.append(self._print(arg))
+        code_args = ', '.join(args)
         return '{0}({1})'.format(func_name, code_args)
 
     def _print_MathSqrt(self, expr):
