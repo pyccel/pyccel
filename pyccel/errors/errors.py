@@ -257,7 +257,7 @@ class Errors:
 
     def has_warnings(self):
         """Are the any errors that are warnings?"""
-        return any(err for errs in self.error_info_map.values() for err in errs if err.severity = 'warning')
+        return any(err for errs in self.error_info_map.values() for err in errs if err.severity == 'warning')
 
     def has_errors(self):
         """Are there any generated errors?"""
