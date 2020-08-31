@@ -74,13 +74,13 @@ def test_func_no_args_f1():
     f = epyccel(f1)
     assert abs(f()-f1()) < 1e-13
 #------------------------------------------------------------------------------
-def test_decorator_f1():
+def test_decorator_f1(language):
     @types('int')
     def f1(x):
         y = x - 1
         return y
 
-    f = epyccel(f1)
+    f = epyccel(f1, language=language)
 
     # ...
     assert f(3) == f1(3)
@@ -200,13 +200,13 @@ def test_decorator_f7():
     # ...
 
 #------------------------------------------------------------------------------
-def test_decorator_f8():
+def test_decorator_f8(language):
     @types('int','bool')
     def f8(x,b):
         a = x if b else 2
         return a
 
-    f = epyccel(f8)
+    f = epyccel(f8, language=language)
 
     # ...
     assert f(3,True)  == f8(3,True)
@@ -285,6 +285,19 @@ def test_multiple_returns_f14():
 
     f = epyccel(g)
     assert f(2,1) == g(2,1)
+
+
+def test_decorator_f15(language):
+    @types('bool', 'int8', 'int16', 'int32', 'int64')
+    def f15(a,b,c,d,e):
+        if a:
+            return b + c
+        else:
+            return d + e
+
+    f = epyccel(f15, language=language)
+    assert f(True, 1, 2, 3, 4)  == f15(True, 1, 2, 3, 4)
+    assert f(False, 1, 2, 3, 4)  == f15(False, 1, 2, 3, 4)
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
