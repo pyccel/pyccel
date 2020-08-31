@@ -67,7 +67,8 @@ def test_codegen_warnings(f):
 
     # reset Errors singleton
     errors = Errors()
-    assert(errors.num_messages()!=0)
+    assert(errors.has_warnings())
+    assert(!errors.has_errors())
     errors.reset()
 
 ######################
