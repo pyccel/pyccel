@@ -31,20 +31,20 @@ def get_files_from_folder(foldername):
 #    errors = Errors()
 #    assert(errors.num_messages()!=0)
 #    errors.reset()
-#
-#@pytest.mark.parametrize("f",get_files_from_folder('semantic'))
-#def test_semantic_warnings():
-#
-#    pyccel = Parser(f, show_traceback=False)
-#    ast = pyccel.parse()
-#
-#    settings = {}
-#    ast = pyccel.annotate(**settings)
-#
-#    # reset Errors singleton
-#    errors = Errors()
-#    assert(errors.num_messages()!=0)
-#    errors.reset()
+
+@pytest.mark.parametrize("f",get_files_from_folder('semantic'))
+def test_semantic_warnings(f):
+
+    pyccel = Parser(f, show_traceback=False)
+    ast = pyccel.parse()
+
+    settings = {}
+    ast = pyccel.annotate(**settings)
+
+    # reset Errors singleton
+    errors = Errors()
+    assert(errors.num_messages()!=0)
+    errors.reset()
 
 codegen_xfails = {'is.py':"warning only valid in program is not yet implemented"}
 codegen_errors_args = [f if os.path.basename(f) not in codegen_xfails \
