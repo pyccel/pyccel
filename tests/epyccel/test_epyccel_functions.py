@@ -255,7 +255,7 @@ def test_multiple_returns_f11():
     f = epyccel(ackermann)
     assert f(2,3) == ackermann(2,3)
 
-def test_multiple_returns_f12():
+def test_multiple_returns_f12(language):
     @types('int')
     def non_negative(i):
         if i < 0:
@@ -263,11 +263,11 @@ def test_multiple_returns_f12():
         else:
             return True
 
-    f = epyccel(non_negative)
+    f = epyccel(non_negative, language=language)
     assert f(2) == non_negative(2)
     assert f(-1) == non_negative(-1)
 
-def test_multiple_returns_f13():
+def test_multiple_returns_f13(language):
     @types('int', 'int')
     def get_min(a, b):
         if a<b:
@@ -275,7 +275,7 @@ def test_multiple_returns_f13():
         else:
            return b
 
-    f = epyccel(get_min)
+    f = epyccel(get_min, language=language)
     assert f(2,3) == get_min(2,3)
 
 def test_multiple_returns_f14():

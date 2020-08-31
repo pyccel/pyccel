@@ -61,7 +61,7 @@ def test_output_types_2(language):
         return b
 
     f = epyccel(cast_to_float,language= language)
-    assert(type(cast_to_float(5)) ==  type(f(5)))    
+    assert(type(cast_to_float(5)) == type(f(5)))    
 
 def test_output_types_3(language):
     @types('int')
