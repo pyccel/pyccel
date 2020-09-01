@@ -240,8 +240,6 @@ class Codegen(object):
 
         code = printer(self.expr, parser=self.parser, **settings)
 
-        errors.check()
-
         self._code = code
 
         return code
