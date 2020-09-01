@@ -5,15 +5,9 @@ from pyccel.epyccel import epyccel
 from modules import base
 from conftest       import *
 
-#To delete after solve issue (is and is not not working in c) 
-def tmp_compare_epyccel(language, f, *args):
-    f2 = epyccel(f, language=language)
-    out1 = f(*args)
-    out2 = f2(*args)
-    assert np.equal(out1, out2)
 
-def compare_epyccel(f, *args):
-    f2 = epyccel(f)
+def compare_epyccel(f, *args, language='fortran'):
+    f2 = epyccel(f, language=language)
     out1 = f(*args)
     out2 = f2(*args)
     assert np.equal(out1, out2)
@@ -75,12 +69,12 @@ def test_compare_is_not_nil():
     compare_epyccel(base.is_not_nil, True, None)
 
 def test_cast_int(language):
-    tmp_compare_epyccel(language, base.cast_int, 4)
-    tmp_compare_epyccel(language, base.cast_float_to_int, 4.5)
+    compare_epyccel(base.cast_int, 4, language=language)
+    compare_epyccel(base.cast_float_to_int, 4.5, language=language)
 
 def test_cast_bool(language):
-    tmp_compare_epyccel(language, base.cast_bool, True)
+    compare_epyccel(base.cast_bool, True, language=language)
 
 def test_cast_float(language):
-    tmp_compare_epyccel(language, base.cast_float, 4.5)
-    tmp_compare_epyccel(language, base.cast_int_to_float, 4)
+    compare_epyccel(base.cast_float, 4.5, language=language)
+    compare_epyccel(base.cast_int_to_float, 4, language=language)

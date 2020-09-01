@@ -52,7 +52,7 @@ def test_output_types_1(language):
         return b
 
     f = epyccel(cast_to_int, language = language)
-    assert(type(cast_to_int(5.2)) == type(f(5.2)))
+    assert(type(cast_to_int(5.2)) == type(f(5.2))) # pylint: disable=unidiomatic-typecheck
 
 def test_output_types_2(language):
     @types('int')
@@ -61,7 +61,7 @@ def test_output_types_2(language):
         return b
 
     f = epyccel(cast_to_float,language= language)
-    assert(type(cast_to_float(5)) == type(f(5)))    
+    assert(type(cast_to_float(5)) == type(f(5)))    # pylint: disable=unidiomatic-typecheck 
 
 def test_output_types_3(language):
     @types('int')
