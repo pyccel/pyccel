@@ -40,25 +40,25 @@ def test_not_true():
     compare_epyccel(base.not_true, True)
     compare_epyccel(base.not_true, False)
 
-def test_eq_false():
-    compare_epyccel(base.eq_false, True)
-    compare_epyccel(base.eq_false, False)
+def test_eq_false(language):
+    compare_epyccel(base.eq_false, True, language=language)
+    compare_epyccel(base.eq_false, False, language=language)
 
-def test_eq_true():
-    compare_epyccel(base.eq_true, True)
-    compare_epyccel(base.eq_true, False)
+def test_eq_true(language):
+    compare_epyccel(base.eq_true, True, language=language)
+    compare_epyccel(base.eq_true, False, language=language)
 
-def test_neq_false():
-    compare_epyccel(base.eq_false, True)
-    compare_epyccel(base.eq_false, False)
+def test_neq_false(language):
+    compare_epyccel(base.eq_false, True, language=language)
+    compare_epyccel(base.eq_false, False, language=language)
 
-def test_neq_true():
-    compare_epyccel(base.eq_true, True)
-    compare_epyccel(base.eq_true, False)
+def test_neq_true(language):
+    compare_epyccel(base.eq_true, True, language=language)
+    compare_epyccel(base.eq_true, False, language=language)
 
-def test_not():
-    compare_epyccel(base.not_val, True)
-    compare_epyccel(base.not_val, False)
+def test_not(language):
+    compare_epyccel(base.not_val, True, language=language)
+    compare_epyccel(base.not_val, False, language=language)
 
 @pytest.mark.xfail(reason="f2py does not support optional arguments https://github.com/numpy/numpy/issues/4013")
 def test_compare_is_nil():
