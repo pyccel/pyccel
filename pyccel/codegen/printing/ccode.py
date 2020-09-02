@@ -63,8 +63,8 @@ dtype_registry = {('real',8)    : 'double',
                   ('complex',4) : 'float complex',
                   ('int',4)     : 'int',
                   ('int',8)     : 'long',
-                  ('int',2)     : 'int',    
-                  ('int',1)     : 'int',
+                  ('int',2)     : 'int',
+                  ('int',1)     : 'int',  
                   ('bool',4)    : 'int'}
 
 
@@ -198,10 +198,10 @@ class CCodePrinter(CodePrinter):
         dtype = self._print(expr.dtype)
         prec  = expr.variable.precision
         rank  = expr.variable.rank
-        try : 
+        try :
             dtype = dtype_registry[(dtype, prec)]
-        except : 
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=(dtype, prec), severity='fatal')
+        except :
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,severity='fatal')
         variable = self._print(expr.variable)
         if rank > 0:
             return '{0} *{1};'.format(dtype, variable)
@@ -229,7 +229,7 @@ class CCodePrinter(CodePrinter):
             try :
                 ret_type = dtype_registry[(dtype, prec)]
             except :
-                errors.report(PYCCEL_RESTRICTION_TODO, symbol=(dtype, prec), severity='fatal')
+                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,severity='fatal')
         elif len(expr.results) > 1:
             # TODO: Use fortran example to add pointer arguments for multiple output
             msg = 'Multiple output arguments is not yet supported in c'
@@ -242,7 +242,10 @@ class CCodePrinter(CodePrinter):
             arg_code = 'void'
         else:
             arg_dtypes = [self._print(i.dtype) for i in expr.arguments]
-            arg_dtypes = [dtype_registry[(dtype, arg.precision)] for dtype,arg in zip(arg_dtypes, expr.arguments)]
+            try :
+                arg_dtypes = [dtype_registry[(dtype, arg.precision)] for dtype,arg in zip(arg_dtypes, expr.arguments)]
+            except :
+                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,severity='fatal')
             arguments  = [self._print(i) for i in expr.arguments]
             arg_code   = ', '.join(dtype + ' ' + arg for dtype,arg in zip(arg_dtypes,arguments))
 
