@@ -35,7 +35,7 @@ from sympy.utilities.misc               import filldedent
 
 
 from .basic     import Basic, PyccelAstNode
-from .builtins  import Enumerate, Len, List, Map, Range, Zip, PythonTuple
+from .builtins  import Enumerate, Len, List, Map, Range, Zip, PythonTuple, Bool
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
@@ -1462,6 +1462,10 @@ class While(Basic):
 
     def __new__(cls, test, body, local_vars=[]):
         test = sympify(test, locals=local_sympify)
+
+        if PyccelAstNode.stage == 'semantic':
+            if not test.dtype == 'bool':
+                test = Bool(test)
 
         if iterable(body):
             body = CodeBlock((sympify(i, locals=local_sympify) for i in body))
@@ -4944,10 +4948,9 @@ class If(Basic):
 
         newargs = []
         for ce in args:
-            #if not cond.dtype == 'bool':
-            #    raise TypeError('Cond %s is of type %s, but must be a bool.'
-            #                     % (cond, type(cond)))
             cond = ce[0]
+            if PyccelAstNode.stage == 'semantic' and not cond.dtype == 'bool':
+                cond = Bool(cond)
             if isinstance(ce[1], (list, Tuple, tuple)):
                 body = CodeBlock(ce[1])
             elif isinstance(ce[1], CodeBlock):
