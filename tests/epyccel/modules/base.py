@@ -100,3 +100,17 @@ def cast_int(a):
 def cast_bool(a):
     b = bool(a)
     return b
+
+@types('int')
+def if_0_int(a):
+    if a:
+        return True
+    else:
+        return False
+
+@types('real')
+def if_0_real(a):
+    if a:
+        return True
+    else:
+        return False
