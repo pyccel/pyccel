@@ -1464,7 +1464,7 @@ class While(Basic):
         test = sympify(test, locals=local_sympify)
 
         if PyccelAstNode.stage == 'semantic':
-            if not test.dtype == 'bool':
+            if test.dtype is not NativeBool():
                 test = Bool(test)
 
         if iterable(body):
@@ -4949,7 +4949,7 @@ class If(Basic):
         newargs = []
         for ce in args:
             cond = ce[0]
-            if PyccelAstNode.stage == 'semantic' and not cond.dtype == 'bool':
+            if PyccelAstNode.stage == 'semantic' and cond.dtype is not NativeBool():
                 cond = Bool(cond)
             if isinstance(ce[1], (list, Tuple, tuple)):
                 body = CodeBlock(ce[1])
