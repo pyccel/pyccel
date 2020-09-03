@@ -229,7 +229,7 @@ class PythonTuple(Expr, PyccelAstNode):
                 shapes = [a.shape for a in args]
                 
                 if all(sh is not None for sh in shapes):
-                    self._shape = (len(args), ) + shapes[0]
+                    self._shape = (Integer(len(args)), ) + shapes[0]
                     self._rank  = len(self._shape)
                 else:
                     self._rank = max(a.rank for a in args) + 1
@@ -237,7 +237,7 @@ class PythonTuple(Expr, PyccelAstNode):
             self._rank      = max(a.rank for a in args) + 1
             self._dtype     = NativeGeneric()
             self._precision = 0
-            self._shape     = (len(args), ) + args[0].shape
+            self._shape     = (Integer(len(args)), ) + args[0].shape
 
     def __getitem__(self,i):
         return self._args[i]

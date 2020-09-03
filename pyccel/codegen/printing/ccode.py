@@ -1,6 +1,9 @@
 # coding: utf-8
 # pylint: disable=R0201
 
+from pyccel.ast.numbers   import BooleanTrue
+from pyccel.ast.core import If
+
 from sympy.core import S
 from sympy.printing.precedence import precedence
 
@@ -12,6 +15,7 @@ from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMo
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 
+from pyccel.ast.datatypes import NativeInteger
 
 from pyccel.ast.builtins  import Range
 from pyccel.ast.core import Declare
@@ -104,6 +108,74 @@ class CCodePrinter(CodePrinter):
     def _print_Module(self, expr):
         return '\n\n'.join(self._print(i) for i in expr.body)
 
+    def _print_While(self,expr):
+        code = "while (%s)\n{" % self._print(expr.test)
+        code = code + "\n %s" % self._print(expr.body) + "\n}"
+        return (code)
+
+    def _print_If(self, expr):
+        lines = []
+        for i, (c, e) in enumerate(expr.args):
+            var = self._print(e)
+            if (var == ''):
+                break
+            if i == 0:
+                lines.append("if (%s)\n{" % self._print(c))
+            elif i == len(expr.args) - 1 and c is BooleanTrue():
+                lines.append("else\n{")
+            else:
+                lines.append("else if (%s)\n{" % self._print(c))
+            lines.append("%s\n}" % var)
+        return "\n".join(lines)
+
+    def _print_BooleanTrue(self, expr):
+        return '1'
+
+    def _print_BooleanFalse(self, expr):
+        return '0'
+
+    def _print_PyccelAnd(self, expr):
+        args = [self._print(a) for a in expr.args]
+        return ' && '.join(a for a in args)
+
+    def _print_PyccelOr(self, expr):
+        args = [self._print(a) for a in expr.args]
+        return ' || '.join(a for a in args)
+
+    def _print_PyccelEq(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} == {1}'.format(lhs, rhs)
+
+    def _print_PyccelNe(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} != {1}'.format(lhs, rhs)
+
+    def _print_PyccelLt(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} < {1}'.format(lhs, rhs)
+
+    def _print_PyccelLe(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} <= {1}'.format(lhs, rhs)
+
+    def _print_PyccelGt(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} > {1}'.format(lhs, rhs)
+
+    def _print_PyccelGe(self, expr):
+        lhs = self._print(expr.args[0])
+        rhs = self._print(expr.args[1])
+        return '{0} >= {1}'.format(lhs, rhs)
+
+    def _print_PyccelNot(self, expr):
+        a = self._print(expr.args[0])
+        return '!{}'.format(a)
+
     def _print_Import(self, expr):
          imports = ['#include "{0}"'.format(i) for i in expr.target]
          return '\n'.join(i for i in imports)
@@ -147,11 +219,13 @@ class CCodePrinter(CodePrinter):
         else:
             ret_type = self._print(datatype('void'))
         name = expr.name
-
-        arg_dtypes = [self._print(i.dtype) for i in expr.arguments]
-        arg_dtypes = [dtype_registry[(dtype, arg.precision)] for dtype,arg in zip(arg_dtypes, expr.arguments)]
-        arguments  = [self._print(i) for i in expr.arguments]
-        arg_code   = ', '.join(dtype + ' ' + arg for dtype,arg in zip(arg_dtypes,arguments))
+        if not expr.arguments:
+            arg_code = 'void'
+        else:
+            arg_dtypes = [self._print(i.dtype) for i in expr.arguments]
+            arg_dtypes = [dtype_registry[(dtype, arg.precision)] for dtype,arg in zip(arg_dtypes, expr.arguments)]
+            arguments  = [self._print(i) for i in expr.arguments]
+            arg_code   = ', '.join(dtype + ' ' + arg for dtype,arg in zip(arg_dtypes,arguments))
 
         return '{0} {1}({2})'.format(ret_type, name, arg_code)
 
@@ -162,7 +236,15 @@ class CCodePrinter(CodePrinter):
         decs       = '\n'.join(self._print(i) for i in decs)
         body       = '\n'.join(self._print(i) for i in expr.body.body)
 
-        return '{0} {{\n{1}\n{2}\n}}'.format(self.function_signature(expr), decs, body)
+        return '{0}\n{{\n{1}\n{2}\n}}'.format(self.function_signature(expr), decs, body)
+
+    def _print_FunctionCall(self, expr):
+        func = expr.funcdef
+        # currently support only function with one or zero output
+        args = ','.join(['{}'.format(self._print(a)) for a in expr.arguments])
+        if not func.results:
+            return '{}({});'.format(func.name, args)
+        return '{}({})'.format(func.name, args)
 
     def _print_Return(self, expr):
         code = ''
@@ -175,7 +257,10 @@ class CCodePrinter(CodePrinter):
         return ' + '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelMinus(self, expr):
-        return ' - '.join(self._print(a) for a in expr.args)
+        args = [self._print(a) for a in expr.args]
+        if len(args) == 1:
+            return '-{}'.format(args[0])
+        return ' - '.join(args)
 
     def _print_PyccelMul(self, expr):
         return ' * '.join(self._print(a) for a in expr.args)
@@ -211,7 +296,7 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError("Only iterable currently supported is Range")
         body = '\n'.join(self._print(i) for i in expr.body.body)
         return ('for ({target} = {start}; {target} < {stop}; {target} += '
-                '{step}) {{\n{body}\n}}').format(target=target, start=start,
+                '{step})\n{{\n{body}\n}}').format(target=target, start=start,
                 stop=stop, step=step, body=body)
 
     def _print_CodeBlock(self, expr):
@@ -325,7 +410,7 @@ class CCodePrinter(CodePrinter):
                 '{1}\n'
                 '{2}').format(top, body, bottom)
 
-    def _print_EmptyLine(self, expr):
+    def _print_EmptyNode(self, expr):
         return ''
 
     def _print_NewLine(self, expr):
@@ -333,35 +418,20 @@ class CCodePrinter(CodePrinter):
 
 
     def _print_Program(self, expr):
-
-        name = 'prog_{0}'.format(self._print(expr.name))
-        name = name.replace('.', '_')
-
         imports  = list(expr.imports)
         imports += [Import('stdlib.h')]
         imports  = '\n'.join(self._print(i) for i in imports)
         body     = '\n'.join(self._print(i) for i in expr.body.body)
         decs     = '\n'.join(self._print(i) for i in expr.declarations)
 
-        sep = self._print(SeparatorComment(40))
-
-        funcs = ''
-        for i in expr.funcs:
-            funcs = ('{funcs}\n'
-                     '{sep}\n'
-                     '{f}\n'
-                     '{sep}\n').format(funcs=funcs, sep=sep, f=self._print(i))
-
         return ('{imports}\n'
-                '{funcs}\n'
-                'int main(){{\n'
+                'int main()\n{{\n'
                 '{decs}\n'
                 '{body}\n'
                 'return 0;\n'
                 '}}').format(imports=imports,
                                     decs=decs,
-                                    body=body,
-                                    funcs=funcs)
+                                    body=body)
 
 
 

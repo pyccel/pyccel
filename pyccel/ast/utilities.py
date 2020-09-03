@@ -4,7 +4,7 @@
 import inspect
 
 from sympy.core.function import Application
-from sympy import Not, Float
+from sympy import Not
 from sympy import Function
 from numpy import pi
 
@@ -81,6 +81,8 @@ numpy_functions = {
     'complex64' : Complex64,
     'matmul'    : Matmul,
     'sum'       : NumpySum,
+    'max'      : NumpyMax,
+    'min'      : NumpyMin,
     'prod'      : Prod,
     'product'   : Prod,
     'linspace'  : Linspace,
@@ -289,4 +291,3 @@ def split_positional_keyword_arguments(*args):
         kwargs[key] = value
 
     return args, kwargs
-

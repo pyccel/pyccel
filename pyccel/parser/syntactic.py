@@ -38,7 +38,7 @@ from pyccel.ast.core import While
 from pyccel.ast.core import Del
 from pyccel.ast.core import Assert
 from pyccel.ast.core import PythonTuple
-from pyccel.ast.core import Comment, EmptyLine, NewLine
+from pyccel.ast.core import Comment, EmptyNode, NewLine
 from pyccel.ast.core import Break, Continue
 from pyccel.ast.core import Slice
 from pyccel.ast.core import Argument, ValuedArgument
@@ -50,8 +50,8 @@ from pyccel.ast.core import With
 from pyccel.ast.core import List
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
-from pyccel.ast.core import create_variable
 from pyccel.ast.core import _atomic
+from pyccel.ast.core import create_variable
 
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
@@ -88,36 +88,6 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 
 #==============================================================================
 
-def change_priority( expr ):
-    """
-       Python ast does not parse parentheses.
-       This function inserts parentheses if they are required
-
-       Examples
-       --------
-       >>> change_priority(PyccelMinus(1,PyccelMinus(1,1)))
-       PyccelMinus(PyccelMinus(1,1),1)
-
-       >>> change_priority(PyccelMinus(1,PyccelMul(1,1)))
-       PyccelMinus(1,PyccelMul(1,1))
-
-       >>> change_priority(PyccelDiv(1,PyccelMul(1,1)))
-       PyccelMul(PyccelDiv(1, 1), 1)
-
-    """
-    first  = expr.args[0]
-    second = expr.args[1]
-
-    if isinstance(first,  PyccelOperator) and first.p  <= expr.p:
-        first = PyccelAssociativeParenthesis(first)
-
-    if isinstance(second, PyccelOperator) and second.p <= expr.p:
-        second = PyccelAssociativeParenthesis(second)
-
-    expr = expr.func(first, second)
-
-    return expr
-
 class SyntaxParser(BasicParser):
 
     """ Class for a Syntax Parser.
@@ -136,13 +106,6 @@ class SyntaxParser(BasicParser):
             # we don't use is_valid_filename_py since it uses absolute path
             # file extension
 
-            ext = inputs.split(""".""")[-1]
-            if not ext in ['py', 'pyh']:
-                errors = Errors()
-                errors.report(INVALID_FILE_EXTENSION, symbol=ext,
-                              severity='fatal')
-                errors.check()
-
             code = read_file(inputs)
             self._filename = inputs
 
@@ -153,7 +116,9 @@ class SyntaxParser(BasicParser):
         tree = extend_tree(code)
 
         self._fst = tree
-        
+
+        self._used_names = set([str(a.id) for a in ast.walk(self._fst) if isinstance(a, ast.Name)])
+        self._dummy_counter = 1
 
         self.parse(verbose=True)
 
@@ -243,8 +208,8 @@ class SyntaxParser(BasicParser):
                 n_empty_lines = 0
                 current_file = start
                 current_file.append(v)
-            elif isinstance(v, (NewLine, EmptyLine)):
-                # EmptyLines are defined in the same block as the previous line
+            elif isinstance(v, (NewLine, EmptyNode)):
+                # EmptyNodes are defined in the same block as the previous line
                 current_file.append(v)
                 n_empty_lines += 1
             elif isinstance(v, Import):
@@ -535,10 +500,7 @@ class SyntaxParser(BasicParser):
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
 
-        if isinstance(target,  PyccelOperator) and target.p  <= Func.p:
-            target = PyccelAssociativeParenthesis(target)
-
-        return PyccelUnary(Func(target))
+        return Func(PyccelUnary(target))
 
     def _visit_BinOp(self, stmt):
 
@@ -546,32 +508,25 @@ class SyntaxParser(BasicParser):
         second = self._visit(stmt.right)
 
         if isinstance(stmt.op, ast.Add):
-            expr = PyccelAdd(first, second)
-            return change_priority(expr)
+            return PyccelAdd(first, second)
 
         elif isinstance(stmt.op, ast.Mult):
-            expr = PyccelMul(first, second)
-            return change_priority(expr)
+            return PyccelMul(first, second)
 
         elif isinstance(stmt.op, ast.Sub):
-            expr = PyccelMinus(first, second)
-            return change_priority(expr)
+            return PyccelMinus(first, second)
 
         elif isinstance(stmt.op, ast.Div):
-            expr = PyccelDiv(first, second)
-            return change_priority(expr)
+            return PyccelDiv(first, second)
 
         elif isinstance(stmt.op, ast.Pow):
-            expr = PyccelPow(first, second)
-            return change_priority(expr)
+            return PyccelPow(first, second)
 
         elif isinstance(stmt.op, ast.FloorDiv):
-            expr = PyccelFloorDiv(first, second)
-            return change_priority(expr)
+            return PyccelFloorDiv(first, second)
 
         elif isinstance(stmt.op, ast.Mod):
-            expr = PyccelMod(first, second)
-            return change_priority(expr)
+            return PyccelMod(first, second)
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                           bounding_box=(stmt.lineno, stmt.col_offset),
@@ -579,24 +534,13 @@ class SyntaxParser(BasicParser):
 
     def _visit_BoolOp(self, stmt):
 
-        first = self._visit(stmt.values[0])
-        second = self._visit(stmt.values[1])
+        args = [self._visit(a) for a in stmt.values]
 
         if isinstance(stmt.op, ast.And):
-            if isinstance(second, PyccelOr):
-                args  = second.args
-                first = PyccelAnd(first, args[0]  )
-                return  PyccelOr (first, *args[1:])
-            else:
-                return PyccelAnd(first, second)
+            return PyccelAnd(*args)
 
         if isinstance(stmt.op, ast.Or):
-            if isinstance(second, PyccelAnd):
-                args  = second.args
-                first = PyccelOr(first, args[0])
-                return  PyccelAnd(first, *args[1:])
-            else:
-                return PyccelOr(first, second)
+            return PyccelOr(*args)
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       symbol = ast.dump(stmt.op),
@@ -669,7 +613,7 @@ class SyntaxParser(BasicParser):
                             for d in self._visit(stmt.decorator_list)}
 
         if 'bypass' in decorators:
-            return EmptyLine()
+            return EmptyNode()
 
         if 'stack_array' in decorators:
             args = list(decorators['stack_array'].args)
@@ -732,7 +676,7 @@ class SyntaxParser(BasicParser):
                     [stmt.__str__()])
             func.set_fst(stmt)
             self.insert_function(func)
-            return EmptyLine()
+            return EmptyNode()
 
         elif 'python' in decorators.keys():
 
@@ -743,7 +687,7 @@ class SyntaxParser(BasicParser):
                     [stmt.__str__()])
             func.set_fst(stmt)
             self.insert_function(func)
-            return EmptyLine()
+            return EmptyNode()
 
         else:
             body = self._visit(body)
@@ -760,11 +704,18 @@ class SyntaxParser(BasicParser):
         returns = [i.expr for i in _atomic(body, cls=Return)]
         assert all(len(i) == len(returns[0]) for i in returns)
         results = []
+        result_counter = 1
         for i in zip(*returns):
             if not all(i[0]==j for j in i) or not isinstance(i[0], Symbol):
-                results.append(create_variable(i[0]))
+                result_name, result_counter = create_variable(self._used_names,
+                                                              prefix = 'Out',
+                                                              counter = result_counter)
+                results.append(result_name)
             elif isinstance(i[0], Symbol) and any(i[0].name==x.name for x in arguments):
-                results.append(create_variable(i[0]))
+                result_name, result_counter = create_variable(self._used_names,
+                                                              prefix = 'Out',
+                                                              counter = result_counter)
+                results.append(result_name)
             else:
                 results.append(i[0])
 
@@ -915,7 +866,7 @@ class SyntaxParser(BasicParser):
                           symbol = ast.dump(stmt),
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='error')
-            lhs = create_variable(result)
+            lhs = self.get_new_variable()
         else:
             lhs = self._visit(self._scope[-2].targets)
             if len(lhs)==1:
@@ -923,7 +874,7 @@ class SyntaxParser(BasicParser):
             else:
                 raise NotImplementedError("A list comprehension cannot be unpacked")
 
-        index = create_variable(lhs)
+        index = self.get_new_variable()
 
         args = [index]
         target = IndexedBase(lhs)[args]
@@ -964,7 +915,7 @@ class SyntaxParser(BasicParser):
             lhs = self._visit(grandparent.targets[0])
             cond = False
         else:
-            lhs = create_variable(result)
+            lhs = self.get_new_variable()
             cond = True
 
         body = result
@@ -1051,7 +1002,7 @@ class SyntaxParser(BasicParser):
                         # but can be used to modify the ast
 
                         self._metavars[str(expr.name)] = str(expr.value)
-                        expr = EmptyLine()
+                        expr = EmptyNode()
                     else:
                         expr.set_fst(stmt)
 
@@ -1088,7 +1039,7 @@ class SyntaxParser(BasicParser):
                     # but can be used to modify the ast
 
                     self._metavars[str(expr.name)] = str(expr.value)
-                    expr = EmptyLine()
+                    expr = EmptyNode()
                 else:
                     expr.set_fst(stmt)
 
