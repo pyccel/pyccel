@@ -4592,12 +4592,12 @@ class IndexedVariable(IndexedBase, PyccelAstNode):
 
     def __getitem__(self, *args):
 
+        if len(args) == 1 and isinstance(args[0], (Tuple, tuple, list)):
+            args = args[0]
+
         if self.shape and len(self.shape) != len(args):
 
             raise IndexException('Rank mismatch.')
-
-        if len(args) == 1 and isinstance(args[0], (Tuple, tuple, list)):
-            args = args[0]
 
 
         obj = IndexedElement(self, *args)
