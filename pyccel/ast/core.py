@@ -2810,7 +2810,7 @@ class TupleVariable(Variable):
             indexed_var = IndexedVariable(self, dtype=self.dtype, shape=self.shape,
                 prec=self.precision, order=self.order, rank=self. rank)
             args = [Slice(None,None)]*(self.rank-1)
-            return [indexed_var.__getitem__(*args, i) for i in range(len(self._vars))]
+            return [indexed_var[args + [i]] for i in range(len(self._vars))]
         else:
             return self._vars
 
