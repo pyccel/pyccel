@@ -65,7 +65,7 @@ dtype_registry = {('real',8)    : 'double',
                   ('int',8)     : 'long',
                   ('int',2)     : 'int',
                   ('int',1)     : 'int',  
-                  ('bool',4)    : 'int'}
+                  ('bool',4)    : '_Bool'} #using GNU extension to change into bool when <stdbool.h> is included
 
 
 class CCodePrinter(CodePrinter):
