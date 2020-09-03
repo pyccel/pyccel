@@ -4,17 +4,7 @@ import platform
 
 from pyccel.epyccel import epyccel
 from modules        import loops
-
-@pytest.fixture( params=[
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.c]
-        )
-    ],
-    scope='module'
-)
-def language(request):
-    return request.param
+from conftest       import *
 
 #==============================================================================
 
@@ -30,6 +20,26 @@ def test_factorial(language):
 
 def test_fibonacci(language):
     f1 = loops.fibonacci
+    f2 = epyccel( f1, language = language, verbose = True )
+    assert f1( 42 ) == f2( 42 )
+
+def test_sum_nat_numbers_while(language):
+    f1 = loops.sum_nat_numbers_while
+    f2 = epyccel( f1, language = language, verbose = True )
+    assert f1( 42 ) == f2( 42 )
+
+def test_factorial_while(language):
+    f1 = loops.factorial_while
+    f2 = epyccel( f1, language = language, verbose = True )
+    assert f1( 10 ) == f2( 10 )
+
+def test_double_while_sum(language):
+    f1 = loops.double_while_sum
+    f2 = epyccel( f1, language = language, verbose = True )
+    assert f1( 10, 10 ) == f2( 10, 10 )
+
+def test_fibonacci_while(language):
+    f1 = loops.fibonacci_while
     f2 = epyccel( f1, language = language, verbose = True )
     assert f1( 42 ) == f2( 42 )
 
@@ -133,6 +143,32 @@ def test_loop_on_real_array():
     f2(z2, out2)
 
     assert np.array_equal( out1, out2 )
+
+def test_breaks():
+    f1 = loops.fizzbuzz_search_with_breaks
+    f2 = epyccel( f1 )
+
+    fizz = 2
+    buzz = 3
+    max_val = 12
+
+    out1 = f1(fizz, buzz, max_val)
+    out2 = f2(fizz, buzz, max_val)
+
+    assert( out1 == out2 )
+
+def test_continue():
+    f1 = loops.fizzbuzz_sum_with_continue
+    f2 = epyccel( f1 )
+
+    fizz = 2
+    buzz = 3
+    max_val = 12
+
+    out1 = f1(fizz, buzz, max_val)
+    out2 = f2(fizz, buzz, max_val)
+
+    assert( out1 == out2 )
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS

@@ -6,12 +6,64 @@ import shutil
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
+from conftest       import *
 
 
 def clean_test():
     shutil.rmtree('__pycache__', ignore_errors=True)
     shutil.rmtree('__epyccel__', ignore_errors=True)
 
+def test_func_no_args_1(language):
+    '''test function with return value but no args'''
+    def free_gift():
+        gift = 10
+        return gift
+
+    c_gift = epyccel(free_gift, language=language)
+    assert c_gift() == free_gift()
+    assert isinstance(c_gift(), type(free_gift()))
+    unexpected_arg = 0
+    with pytest.raises(TypeError):
+        c_gift(unexpected_arg)
+
+def test_func_no_args_2(language):
+    '''test function with negative return value but no args'''
+    def p_lose():
+        lose = -10
+        return lose
+
+    c_lose = epyccel(p_lose, language=language)
+    assert c_lose() == p_lose()
+    assert isinstance(c_lose(), type(p_lose()))
+    unexpected_arg = 0
+    with pytest.raises(TypeError):
+        c_lose(unexpected_arg)
+
+def test_func_no_return_1(language):
+    '''Test function with args and no return '''
+    @types(int)
+    def p_func(x):
+        x *= 2
+
+    c_func = epyccel(p_func, language=language)
+    x = np.random.randint(100)
+    assert c_func(x) == p_func(x)
+    # Test type return sould be NoneType
+    x = np.random.randint(100)
+    assert isinstance(c_func(x), type(p_func(x)))
+
+def test_func_no_return_2(language):
+    '''Test function with no args and no return '''
+    def p_func():
+        x = 2
+        x *= 2
+
+    c_func = epyccel(p_func, language=language)
+    assert c_func() == p_func()
+    assert isinstance(c_func(), type(p_func()))
+    unexpected_arg = 0
+    with pytest.raises(TypeError):
+        c_func(unexpected_arg)
 
 def test_func_no_args_f1():
     def f1():
@@ -189,6 +241,50 @@ def test_arguments_f10():
     f10(x)
     f(x_expected)
     assert np.array_equal(x, x_expected)
+
+def test_multiple_returns_f11():
+    @types('int', 'int', results='int')
+    def ackermann(m, n):
+        if m == 0:
+            return n + 1
+        elif n == 0:
+            return ackermann(m - 1, 1)
+        else:
+            return ackermann(m - 1, ackermann(m, n - 1))
+
+    f = epyccel(ackermann)
+    assert f(2,3) == ackermann(2,3)
+
+def test_multiple_returns_f12():
+    @types('int')
+    def non_negative(i):
+        if i < 0:
+            return False
+        else:
+            return True
+
+    f = epyccel(non_negative)
+    assert f(2) == non_negative(2)
+    assert f(-1) == non_negative(-1)
+
+def test_multiple_returns_f13():
+    @types('int', 'int')
+    def get_min(a, b):
+        if a<b:
+            return a
+        else:
+           return b
+
+    f = epyccel(get_min)
+    assert f(2,3) == get_min(2,3)
+
+def test_multiple_returns_f14():
+    @types('int', 'int')
+    def g(x, y):
+        return x,y,y,y,x
+
+    f = epyccel(g)
+    assert f(2,1) == g(2,1)
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS

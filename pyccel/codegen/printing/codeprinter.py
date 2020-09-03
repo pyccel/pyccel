@@ -12,12 +12,15 @@ from sympy.core.mul import _keep_coeff
 from sympy.printing.str import StrPrinter
 
 from pyccel.ast.core import Assign
-from pyccel.ast import Real
 
+from pyccel.errors.errors     import Errors
+from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
 
 # TODO: add examples
 
 __all__ = ["CodePrinter"]
+
+errors = Errors()
 
 class CodePrinter(StrPrinter):
     """
@@ -54,10 +57,10 @@ class CodePrinter(StrPrinter):
             expr = _sympify(expr)
 
         # Do the actual printing
-        lines = self._print(expr).splitlines()
+        lines = self._print(expr).splitlines(True)
 
         # Format the output
-        return "\n".join(self._format_code(lines))
+        return ''.join(self._format_code(lines))
 
 
 
@@ -92,7 +95,8 @@ class CodePrinter(StrPrinter):
         return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
 
     def _print_not_supported(self, expr):
-        raise TypeError("{0} not supported in {1}".format(type(expr), self.language))
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol = expr,
+                severity='fatal')
 
     # Number constants
     _print_Catalan = _print_NumberSymbol

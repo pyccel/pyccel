@@ -1,15 +1,17 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from pyccel.codegen.printing import fcode, ccode, pycode
+from pyccel.codegen.printing.fcode  import fcode
+from pyccel.codegen.printing.ccode  import ccode
+from pyccel.codegen.printing.pycode import pycode
 
-from pyccel.ast import FunctionDef, Module, Program, Interface
-from pyccel.ast import Header, EmptyLine, NewLine, Comment, CommentBlock
-from pyccel.parser.errors import Errors
+from pyccel.ast.core      import FunctionDef, Module, Program, Interface
+from pyccel.ast.core      import EmptyNode, NewLine, Comment, CommentBlock
+from pyccel.ast.headers   import Header
+from pyccel.errors.errors import Errors
 
 # TODO improve this import
-
-from pyccel.parser.messages import *
+from pyccel.errors.messages import *
 
 _extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
 printer_registry    = {'fortran':fcode, 'c':ccode, 'python':pycode}
@@ -51,7 +53,7 @@ class Codegen(object):
         for key in _structs:
             self._stmts[key] = []
 
-        self._collect_statments()
+        self._collect_statements()
         self._set_kind()
 
 
@@ -149,8 +151,8 @@ class Codegen(object):
 
         return self._code
 
-    def _collect_statments(self):
-        """Collects statments and split them into routines, classes, etc."""
+    def _collect_statements(self):
+        """Collects statements and split them into routines, classes, etc."""
 
         namespace  = self.parser.namespace
 
@@ -166,20 +168,18 @@ class Codegen(object):
                 interfaces.append(i)
 
         self._stmts['imports'   ] = list(namespace.imports['imports'].values())
-        self._stmts['variables' ] = list(set(self.parser.get_variables(namespace)))
+        self._stmts['variables' ] = list(self.parser.get_variables(namespace))
         self._stmts['routines'  ] = funcs
         self._stmts['classes'   ] = list(namespace.classes.values())
         self._stmts['interfaces'] = interfaces
         self._stmts['body']       = self.ast
 
 
-
-
     def _set_kind(self):
         """Finds the source code kind."""
 
 
-        cls = (Header, EmptyLine, NewLine, Comment, CommentBlock, Module)
+        cls = (Header, EmptyNode, NewLine, Comment, CommentBlock, Module)
         is_module = all(isinstance(i,cls) for i in self.ast.body)
 
 
@@ -208,12 +208,8 @@ class Codegen(object):
             expr = Program(
                 self.name,
                 self.variables,
-                self.routines,
-                self.interfaces,
-                self.classes,
                 self.body.body,
-                imports=self.imports,
-                modules=self.modules)
+                imports=self.imports)
 
         else:
             raise NotImplementedError('TODO')
@@ -231,7 +227,7 @@ class Codegen(object):
         language = settings.pop('language', 'fortran')
 
         if not language in ['fortran', 'c', 'python']:
-            raise ValueError('the language {} not available'.format(lanugage))
+            raise ValueError('{} language is not available'.format(language))
 
         self._language = language
 
@@ -243,8 +239,6 @@ class Codegen(object):
         errors.set_parser_stage('codegen')
 
         code = printer(self.expr, parser=self.parser, **settings)
-
-        errors.check()
 
         self._code = code
 

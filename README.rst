@@ -46,7 +46,7 @@ Finally, Pyccel supports distributed-memory parallel programming through the Mes
 
 We recommend using GFortran and Open-MPI.
 
-Pyccel also depends on several Python3 packages, which are automatically downloaded by pip, the Python Package Installer, during the installation process. In addition to these, unit tests require the *mpi4py*, *pytest* and *coverage* packages, while building the documentation requires Sphinx <http://www.sphinx-doc.org/>.
+Pyccel also depends on several Python3 packages, which are automatically downloaded by pip, the Python Package Installer, during the installation process. In addition to these, unit tests require the *scipy*, *mpi4py*, *pytest* and *coverage* packages, while building the documentation requires Sphinx <http://www.sphinx-doc.org/>.
 
 Linux Debian/Ubuntu/Mint
 ************************
@@ -186,8 +186,9 @@ Any required Python packages will be installed automatically from PyPI.
 Additional packages
 ===================
 
-In order to run the unit tests and to get a coverage report, three additional Python packages should be installed:::
+In order to run the unit tests and to get a coverage report, four additional Python packages should be installed:::
 
+  pip3 install --user scipy
   pip3 install --user mpi4py
   pip3 install --user pytest
   pip3 install --user coverage

@@ -18,6 +18,11 @@ from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.utilities  import build_types_decorator
 from pyccel.ast.core       import CodeBlock
 
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import *
+
+errors = Errors()
+
 #==============================================================================
 def _construct_header(func_name, args):
     args = build_types_decorator(args, order='F')
@@ -54,7 +59,8 @@ class PythonCodePrinter(SympyPythonCodePrinter):
             indices = [self._print(i) for i in indices]
             indices = ','.join(i for i in indices)
         else:
-            raise NotImplementedError('TODO')
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+                severity='fatal', blocker=self.blocking)
 
         base = self._print(expr.base)
         return '{base}[{indices}]'.format(base=base, indices=indices)
@@ -72,7 +78,8 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
         decorators = expr.decorators
         if decorators:
-            for n,args in decorators.items():
+            for n,func in decorators.items():
+                args = func.args
                 if args:
                     args = ','.join("{}".format(i) for i in args)
                     dec = '@{name}({args})'.format(name=n, args=args)
@@ -99,7 +106,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         txt = self._print(expr.text)
         return '# {0} '.format(txt)
 
-    def _print_EmptyLine(self, expr):
+    def _print_EmptyNode(self, expr):
         return ''
 
     def _print_NewLine(self, expr):

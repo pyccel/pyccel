@@ -33,6 +33,13 @@ def get_exe(filename):
     exefile = os.path.splitext(filename)[0]
     if sys.platform == "win32":
         exefile = exefile + ".exe"
+    if not os.path.isfile(exefile):
+        dirname = os.path.dirname(filename)
+        basename = "prog_"+os.path.basename(filename)
+        exefile = os.path.join(dirname, os.path.splitext(basename)[0])
+        if sys.platform == "win32":
+            exefile = exefile + ".exe"
+        assert(os.path.isfile(exefile))
     return exefile
 
 #------------------------------------------------------------------------------
@@ -86,7 +93,6 @@ def compile_fortran(path_dir,test_file,dependencies):
 
 #------------------------------------------------------------------------------
 def get_fortran_output(abs_path):
-    assert(os.path.isfile(abs_path))
     p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
     out, _ = p.communicate()
     assert(p.returncode==0)
@@ -321,15 +327,19 @@ def test_funcs(language):
     pyccel_test("scripts/runtest_funcs.py", language = language)
 
 #------------------------------------------------------------------------------
+def test_inout_func():
+    pyccel_test("scripts/runtest_inoutfunc.py")
+
+#------------------------------------------------------------------------------
 def test_bool():
     pyccel_test("scripts/bool_comp.py", output_dtype = bool)
 
 #------------------------------------------------------------------------------
 def test_expressions():
     types = [float, complex, int, float, float, int] + [float]*3 + \
-            [complex, int, complex, complex, int, float] + [complex]*3 + \
+            [complex, int, complex, complex, int, int, float] + [complex]*3 + \
             [float]*3 + [int] + [float]*2 + [int] + [float]*3 + [int] + \
-            [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex]
+            [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex] + [bool]*9
     pyccel_test("scripts/expressions.py",
                 output_dtype = types)
 
@@ -359,18 +369,20 @@ def test_in_specified():
     pyccel_test("scripts/runtest_degree_in.py")
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/fib.py",
+@pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/hope_fib.py",
                                         "scripts/hope_benchmarks/quicksort.py",
-                                        "scripts/hope_benchmarks/pisum.py",
-                                        "scripts/hope_benchmarks/ln_python.py",
-                                        "scripts/hope_benchmarks/pairwise_python.py",
+                                        "scripts/hope_benchmarks/hope_pisum.py",
+                                        "scripts/hope_benchmarks/hope_ln_python.py",
+                                        "scripts/hope_benchmarks/hope_pairwise_python.py",
                                         "scripts/hope_benchmarks/point_spread_func.py",
                                         "scripts/hope_benchmarks/simplify.py",
-                                        "scripts/hope_benchmarks_decorators/ln_python.py",
-                                        "scripts/hope_benchmarks_decorators/pairwise_python.py",
+                                        pytest.param("scripts/hope_benchmarks/fib.py",
+                                            marks = pytest.mark.xfail(reason="Issue 344 : Functions and modules cannot share the same name")),
+                                        "scripts/hope_benchmarks_decorators/hope_ln_python.py",
+                                        "scripts/hope_benchmarks_decorators/hope_pairwise_python.py",
                                         "scripts/hope_benchmarks_decorators/point_spread_func.py",
                                         "scripts/hope_benchmarks_decorators/simplify.py",
-                                        "scripts/hope_benchmarks_decorators/fib.py",
+                                        "scripts/hope_benchmarks_decorators/hope_fib.py",
                                         "scripts/hope_benchmarks_decorators/quicksort.py",
 
                                         ] )
@@ -386,7 +398,10 @@ def test_hope_benchmarks( test_file ):
                                         "scripts/import_syntax/from_mod_import_as_func.py",
                                         "scripts/import_syntax/import_mod_func.py",
                                         "scripts/import_syntax/import_mod_as_func.py",
-                                        "scripts/import_syntax/collisions.py"
+                                        "scripts/import_syntax/collisions.py",
+                                        "scripts/import_syntax/collisions3.py",
+                                        "scripts/import_syntax/collisions5.py",
+                                        "scripts/import_syntax/collisions6.py",
                                         ] )
 def test_import_syntax( test_file ):
     pyccel_test(test_file)
@@ -400,9 +415,14 @@ def test_import_syntax( test_file ):
                                         "scripts/import_syntax/from_mod_import_as_user_func.py",
                                         "scripts/import_syntax/import_mod_user_func.py",
                                         "scripts/import_syntax/import_mod_as_user_func.py",
+                                        "scripts/import_syntax/collisions2.py"
                                         ] )
 def test_import_syntax_user( test_file ):
     pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py")
+
+#------------------------------------------------------------------------------
+def test_import_collisions():
+    pyccel_test("scripts/import_syntax/collisions4.py", dependencies = ["scripts/import_syntax/user_mod.py", "scripts/import_syntax/user_mod2.py"])
 
 #------------------------------------------------------------------------------
 def test_numpy_kernels_compile():
@@ -417,11 +437,3 @@ def test_multiple_results():
                 int,bool,float,float,float,float,float,float,
                 float,float,float,float,float,float,
                 float,float,float,float,float,float])
-
-#------------------------------------------------------------------------------
-def test_tuples():
-    types = [int]*4 + [bool] + [float] + [int]*9 + [float]*4 + [int] \
-            + [int,bool,complex]*2 + [int,bool] + [int]*3 + [int,bool]*3
-    pyccel_test("scripts/runtest_tuples.py",
-            output_dtype = types)
-

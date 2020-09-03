@@ -6,11 +6,13 @@
 # TODO - syntax errors tests
 #      - expected errors in log files for every script
 
-from pyccel.parser import Parser
-from pyccel.codegen import Codegen
-from pyccel.parser.errors import Errors, PyccelSemanticError, PyccelSyntaxError
 import os
 import pytest
+
+from pyccel.parser.parser   import Parser
+from pyccel.codegen.codegen import Codegen
+from pyccel.errors.errors   import Errors, PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError, PyccelError
+
 
 def get_files_from_folder(foldername):
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -31,7 +33,7 @@ def test_syntax_blockers(f):
     with pytest.raises(PyccelSyntaxError):
         ast = pyccel.parse()
 
-    assert(errors.is_blockers())
+    assert(errors.has_blockers())
 
 @pytest.mark.parametrize("f",get_files_from_folder("syntax_errors"))
 def test_syntax_errors(f):
@@ -43,14 +45,10 @@ def test_syntax_errors(f):
 
     ast = pyccel.parse()
 
-    assert(errors.is_errors())
+    assert(errors.has_errors())
 
-semantic_xfails = {'ex6.py':'different shape not recognised as different type : issue 325'}
-semantic_errors_args = [f if os.path.basename(f) not in semantic_xfails \
-                          else pytest.param(f, marks = pytest.mark.xfail(reason=semantic_xfails[os.path.basename(f)])) \
-                          for f in get_files_from_folder("semantic")]
-@pytest.mark.parametrize("f", semantic_errors_args)
-def test_semantic_errors(f):
+@pytest.mark.parametrize("f",get_files_from_folder("semantic/blocking"))
+def test_semantic_blocking_errors(f):
     print('> testing {0}'.format(str(f)))
 
     # reset Errors singleton
@@ -64,8 +62,67 @@ def test_semantic_errors(f):
     with pytest.raises(PyccelSemanticError):
         ast = pyccel.annotate(**settings)
 
-    assert(errors.is_errors())
+    assert(errors.has_blockers())
 
+semantic_non_blocking_errors_args = [f for f in get_files_from_folder("semantic/non_blocking")]
+@pytest.mark.parametrize("f", semantic_non_blocking_errors_args)
+def test_semantic_non_blocking_errors(f):
+    print('> testing {0}'.format(str(f)))
+
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+
+    pyccel = Parser(f, show_traceback=False)
+    ast = pyccel.parse()
+
+    settings = {}
+    ast = pyccel.annotate(**settings)
+
+    assert(errors.has_errors())
+
+
+@pytest.mark.parametrize("f",get_files_from_folder("codegen/fortran"))
+def test_codegen_errors(f):
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+
+    pyccel = Parser(f)
+    ast = pyccel.parse()
+
+    settings = {}
+    ast = pyccel.annotate(**settings)
+
+    name = os.path.basename(f)
+    name = os.path.splitext(name)[0]
+
+    codegen = Codegen(ast, name)
+    with pytest.raises(PyccelCodegenError):
+        codegen.doprint()
+
+    assert(errors.has_errors())
+
+@pytest.mark.parametrize("f",get_files_from_folder("known_bugs"))
+def test_neat_errors_for_known_bugs(f):
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+
+    pyccel = Parser(f)
+    with pytest.raises(PyccelError):
+        ast = pyccel.parse()
+
+        settings = {}
+        ast = pyccel.annotate(**settings)
+
+        name = os.path.basename(f)
+        name = os.path.splitext(name)[0]
+
+        codegen = Codegen(ast, name)
+        codegen.doprint()
+
+    assert(errors.has_errors())
 
 ######################
 if __name__ == '__main__':

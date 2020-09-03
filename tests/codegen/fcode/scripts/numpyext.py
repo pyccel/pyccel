@@ -3,7 +3,7 @@ from numpy import ones
 from numpy import sum as np_sum
 from numpy import array
 from numpy import shape
-from numpy import diag
+#from numpy import diag
 from numpy import zeros_like
 from numpy import full_like
 
@@ -47,8 +47,8 @@ x17 = ones((n,m,2), 'double')
 print(np_sum(x17)==n*m*2)
 
 x18 = zeros((3, 3))
-x19 = diag(x18)
-x20 = diag(x18)
+#x19 = diag(x18)
+#x20 = diag(x18)
 #x21 = cross(x19, x20)
 
 from numpy.random import random

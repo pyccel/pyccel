@@ -17,29 +17,37 @@ before_install:
 
 install:
   - ${PYTHON} -m pip install .
+  - ${PYTHON} -m pip install scipy
   - ${PYTHON} -m pip install mpi4py
   - ${PYTHON} -m pip install "pytest>=4.5"
 
 before_script:  # Coverage instructions - setup
   - ${PYTHON} -m pip install coverage
   - sudo apt-get install default-jre
-  - INSTALL_DIR=$(${PYTHON} -c "import pyccel; print(pyccel.__path__[0])")
+  - INSTALL_DIR=$(cd tests; ${PYTHON} -c "import pyccel; print(pyccel.__path__[0])")
   - SITE_DIR=$(${PYTHON} -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
   - echo -e "import coverage; coverage.process_startup()" > ${SITE_DIR}/pyccel_cov.pth
-  - echo -e "[run]\nparallel = True\nsource = ${INSTALL_DIR}\n[report]\ninclude = ${INSTALL_DIR}/*\n[xml]\noutput = cobertura.xml" > .coveragerc
+  - echo -e "[run]\nparallel = True\nsource = ${INSTALL_DIR}\ndata_file = $(pwd)/.coverage\n[report]\ninclude = ${INSTALL_DIR}/*\n[xml]\noutput = cobertura.xml" > .coveragerc
   - export COVERAGE_PROCESS_START=$(pwd)/.coveragerc
 
 script:
-  - ${PYTHON} -m pytest -rx -m "not parallel and c" --ignore=tests/ast --ignore=tests/printers --ignore=tests/symbolic
-  - ${PYTHON} -m pytest -rx -m "not parallel and not c" --ignore=tests/ast --ignore=tests/printers --ignore=tests/symbolic
-  - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest tests/epyccel/test_epyccel_mpi_modules.py -v -m parallel -rx
-#  - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest tests/epyccel -v -m parallel -rx
+  - cd tests
+  - ${PYTHON} -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic
+  - ${PYTHON} -m pytest -rx -m "not parallel and not c" --ignore=ast --ignore=printers --ignore=symbolic
+  - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest epyccel/test_epyccel_mpi_modules.py -v -m parallel -rx
+#  - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest epyccel -v -m parallel -rx
+  - cd ..
 
 after_script:  # Coverage instructions - collections
   - coverage combine
   - coverage xml
   - rm ${SITE_DIR}/pyccel_cov.pth
   - bash <(wget -q -O - https://coverage.codacy.com/get.sh)
+
+cache:
+  directories:
+    - /usr/local/Homebrew/
+    - $HOME/Library/Caches/Homebrew/
 
 #==============================================================================
 # Job matrix (including Windows build)
@@ -64,11 +72,18 @@ jobs:
     language: c  #'language: python' is an error on Travis CI macOS
     env: PYTHON=python3 MPI_OPTS="--oversubscribe"
     before_install:
-#      - brew install gcc
-      - brew install openblas lapack
+      - brew update
+      # Avoid upgrade of useless packages that depend on open-mpi
+      # We only let upgrading: hdf5 netcdf numpy openblas python3
+      - brew pin ansible cairo cgal gdal geos glib gnupg gnutls libdap
+      - brew pin libpq libxml2 libspatialite libssh mercurial nettle
+      - brew pin poppler postgis postgresql pyenv sfcgal unbound
+#      - brew install gcc openblas lapack
       - brew install open-mpi
     before_script: null
     after_script : null
+    before_cache:
+      - brew cleanup
 
   - os: windows
     language: c  # Python not supported, "language: generic" doesn't start VM
@@ -124,7 +139,7 @@ jobs:
     before_script:
       # Call f2py once (it will fail) to clear some cache
       - echo -e "subroutine foo()\nend subroutine\n" > faily.f90
-      - ${PYTHON} -m numpy.f2py -c -m faily faily.f90
+      - ${PYTHON} -m numpy.f2py -c -m faily faily.f90 || true
       - rm faily.f90
 
     after_script : null

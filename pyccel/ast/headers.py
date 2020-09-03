@@ -203,11 +203,10 @@ class FunctionHeader(Header):
                 if isinstance(dtype, str):
                     try:
                         dtype = datatype(dtype)
-                    except:
+                    except ValueError:
                         #TODO check if it's a class type before
-                        if isinstance(dtype, str):
-                            dtype =  DataTypeFactory(str(dtype), ("_name"))()
-                            is_pointer = True
+                        dtype =  DataTypeFactory(str(dtype), ("_name"))()
+                        is_pointer = True
                 arg_name = 'arg_{0}'.format(str(i))
                 arg = Variable(dtype, arg_name,
                                allocatable=allocatable, is_pointer=is_pointer,

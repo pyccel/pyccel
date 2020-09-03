@@ -14,7 +14,7 @@ from sympy.core.assumptions import StdFactKB
 from sympy.tensor import Indexed, IndexedBase
 
 from .basic     import Basic, PyccelAstNode
-from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
+from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
                         NativeGeneric, NativeTuple, default_precision)
@@ -70,7 +70,10 @@ class Bool(Expr, PyccelAstNode):
 
     def fprint(self, printer):
         """ Fortran printer. """
-        return 'merge(.true., .false., ({}) /= 0)'.format(printer(self.arg))
+        if isinstance(self.arg.dtype, NativeBool):
+            return 'logical({}, kind = {prec})'.format(printer(self.arg), prec = self.precision)
+        else:
+            return 'merge(.true., .false., ({}) /= 0)'.format(printer(self.arg))
 
 #==============================================================================
 class PythonComplex(Expr, PyccelAstNode):
@@ -191,8 +194,10 @@ class PythonTuple(Expr, PyccelAstNode):
     def __init__(self, *args):
         if self.stage == 'syntactic' or len(args) == 0:
             return
-        is_homogeneous = all(args[0].dtype==a.dtype for a in args[1:])
-        is_homogeneous = is_homogeneous and all(args[0].rank==a.rank   for a in args[1:])
+        is_homogeneous = all(a.dtype is not NativeGeneric() and \
+                             args[0].dtype == a.dtype and \
+                             args[0].rank  == a.rank  for a in args[1:])
+        self._inconsistent_shape = not all(args[0].shape==a.shape   for a in args[1:])
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
             integers  = [a for a in args if a.dtype is NativeInteger()]
@@ -219,12 +224,12 @@ class PythonTuple(Expr, PyccelAstNode):
                     self._precision  = max(a.precision for a in bools)
                 else:
                     raise TypeError('cannot determine the type of {}'.format(self))
+
                 
                 shapes = [a.shape for a in args]
                 
                 if all(sh is not None for sh in shapes):
-                    assert all(sh==shapes[0] for sh in shapes)
-                    self._shape = (len(args), ) + shapes[0]
+                    self._shape = (Integer(len(args)), ) + shapes[0]
                     self._rank  = len(self._shape)
                 else:
                     self._rank = max(a.rank for a in args) + 1
@@ -232,7 +237,7 @@ class PythonTuple(Expr, PyccelAstNode):
             self._rank      = max(a.rank for a in args) + 1
             self._dtype     = NativeGeneric()
             self._precision = 0
-            self._shape     = (len(args), ) + args[0].shape
+            self._shape     = (Integer(len(args)), ) + args[0].shape
 
     def __getitem__(self,i):
         return self._args[i]
@@ -249,6 +254,10 @@ class PythonTuple(Expr, PyccelAstNode):
     @property
     def is_homogeneous(self):
         return self._is_homogeneous
+
+    @property
+    def inconsistent_shape(self):
+        return self._inconsistent_shape
 
 #==============================================================================
 class Len(Function, PyccelAstNode):
@@ -275,7 +284,8 @@ class List(Tuple, PyccelAstNode):
     def __init__(self, *args, **kwargs):
         if self.stage == 'syntactic':
             return
-        integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
+        bools     = [a for a in args if a.dtype is NativeBool()]
+        integers  = [a for a in args if a.dtype is NativeInteger()]
         reals     = [a for a in args if a.dtype is NativeReal()]
         complexes = [a for a in args if a.dtype is NativeComplex()]
         strs      = [a for a in args if a.dtype is NativeString()]
@@ -294,6 +304,9 @@ class List(Tuple, PyccelAstNode):
             elif integers:
                 self._dtype     = NativeInteger()
                 self._precision = max(a.precision for a in integers)
+            elif bools:
+                self._dtype     = NativeBool()
+                self._precision  = max(a.precision for a in bools)
             else:
                 raise TypeError('cannot determine the type of {}'.format(self))
             
@@ -358,9 +371,9 @@ class Range(Basic):
     """
 
     def __new__(cls, *args):
-        start = 0
+        start = Integer(0)
         stop = None
-        step = 1
+        step = Integer(1)
 
         _valid_args = (Integer, Symbol, Indexed)
 
@@ -412,7 +425,7 @@ class Zip(Basic):
         if not isinstance(args, (tuple, list, Tuple)):
             raise TypeError('args must be an iterable')
         elif len(args) < 2:
-            raise ValueError('args must be of lenght > 2')
+            raise ValueError('args must be of length > 2')
         return Basic.__new__(cls, *args)
 
     @property

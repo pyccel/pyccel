@@ -3,11 +3,12 @@
 # Note that we need to change the directory for tests involving the import
 # statement
 
-from pyccel.parser import Parser
-from pyccel.codegen import Codegen
-from pyccel.parser.errors import Errors
 import pytest
 import os
+
+from pyccel.parser.parser   import Parser
+from pyccel.codegen.codegen import Codegen
+from pyccel.errors.errors   import Errors
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 path_dir = os.path.join(base_dir, 'scripts')

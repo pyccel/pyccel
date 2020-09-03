@@ -1,8 +1,10 @@
-from pyccel.decorators import types
-from pyccel import epyccel
 import pytest
 from numpy.random import rand, randint
 from numpy import isclose
+
+from pyccel.decorators import types
+from pyccel.epyccel import epyccel
+from conftest import *
 
 def test_fabs_call():
     @types('real')
@@ -26,7 +28,6 @@ def test_fabs_phrase():
     y = rand()
     assert(isclose(f2(x,y) ,  fabs_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.xfail(reason = "fabs returns a float")
 def test_fabs_return_type():
     @types('int')
     def fabs_return_type(x):

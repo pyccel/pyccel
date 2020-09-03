@@ -90,3 +90,13 @@ def is_not_nil(a):
     if a is not None:
         c = True
     return c
+
+@types('int')
+def cast_int(a):
+    b = bool(a)
+    return b
+
+@types('bool')
+def cast_bool(a):
+    b = bool(a)
+    return b

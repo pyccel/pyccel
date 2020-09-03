@@ -141,3 +141,70 @@ def product_loop_on_real_array( z, out ):
 
     for i in range(n):
         out[i] = z[i]**2
+
+# ...
+@types('int,int,int')
+def fizzbuzz_search_with_breaks( fizz, buzz, max_val ):
+    for i in range(1,max_val+1):
+        if i%fizz == 0 and i%buzz == 0:
+            break
+    return i
+
+# ...
+@types('int,int,int')
+def fizzbuzz_sum_with_continue( fizz, buzz, max_val ):
+    fizzbuzz_sum = 0
+    for i in range(1,max_val+1):
+        if i%fizz != 0:
+            continue
+        if i%buzz != 0:
+            continue
+        fizzbuzz_sum += i
+    return fizzbuzz_sum
+
+# ...
+@types(int)
+def fibonacci_while(n):
+    x = 0
+    y = 1
+    i = 1
+    while i <= n:
+        z = x+y
+        x = y
+        y = z
+        i = i + 1
+    return x
+
+# ...
+@types(int)
+def sum_nat_numbers_while(n):
+    x = 0
+    i = 0
+    while i <= n:
+        x += i
+        i = i + 1
+    return x
+
+# ...
+@types(int,int)
+def double_while_sum(n, m):
+    x = 0
+    y = 0
+    i = 0
+    while x <= n:
+        while y <= m:
+            i += y
+            y = y + 1
+        i += x
+        x = x + 1
+    return i
+
+# ...
+@types( int )
+def factorial_while( n ):
+    x = 1
+    i = 1
+    while i <= n:
+        x = i * x
+        i = i + 1
+    return x

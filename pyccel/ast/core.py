@@ -45,6 +45,10 @@ from .numbers        import BooleanTrue, BooleanFalse, Integer as Py_Integer
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
+from pyccel.errors.errors import Errors
+
+errors = Errors()
+
 # TODO [YG, 12.03.2020]: Move non-Python constructs to other modules
 # TODO [YG, 12.03.2020]: Rename classes to avoid name clashes in pyccel/ast
 # NOTE: commented-out symbols are never used in Pyccel
@@ -92,7 +96,7 @@ __all__ = (
     'DoConcurrent',
     'DottedName',
     'DottedVariable',
-    'EmptyLine',
+    'EmptyNode',
     'ErrorExit',
     'Eval',
     'Exit',
@@ -120,9 +124,11 @@ __all__ = (
     'Nil',
     'ParallelBlock',
     'ParallelRange',
+    'ParserResult',
     'Pass',
     'Product',
     'Program',
+    'PyccelArraySize',
     'PythonFunction',
     'Random',
     'Return',
@@ -150,6 +156,7 @@ __all__ = (
     '_atomic',
 #    'allocatable_like',
     'create_variable',
+    'create_incremented_string',
     'extract_subexpressions',
 #    'float2int',
     'get_assigned_symbols',
@@ -181,7 +188,7 @@ def broadcast(shape_1, shape_2):
     b = len(shape_2)
     if a>b:
         new_shape_2 = (1,)*(a-b) + tuple(shape_2)
-        new_shape_1 = shape_2
+        new_shape_1 = shape_1
     elif b>a:
         new_shape_1 = (1,)*(b-a) + tuple(shape_1)
         new_shape_2 = shape_2
@@ -195,19 +202,36 @@ def broadcast(shape_1, shape_2):
             new_shape.append(e1)
         elif e1 == 1:
             new_shape.append(e2)
-        elif e2 == 2:
+        elif e2 == 1:
             new_shape.append(e1)
         else:
             msg = 'operands could not be broadcast together with shapes {} {}'
             msg = msg.format(shape_1, shape_2)
-            raise ValueError(msg)
+            errors.report(msg,severity='fatal')
     return tuple(new_shape)
+
+def handle_precedence(args, my_precedence):
+    precedence = [getattr(a, 'precedence', 17) for a in args]
+
+    if min(precedence) <= my_precedence:
+
+        new_args = []
+
+        for i, (a,p) in enumerate(zip(args, precedence)):
+            if (p < my_precedence or (p == my_precedence and i != 0)):
+                new_args.append(PyccelAssociativeParenthesis(a))
+            else:
+                new_args.append(a)
+        args = tuple(new_args)
+
+    return args
 
 class PyccelOperator(Expr, PyccelAstNode):
 
     def __init__(self, *args):
 
         if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
             return
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
         reals     = [a for a in args if a.dtype is NativeReal()]
@@ -231,10 +255,14 @@ class PyccelOperator(Expr, PyccelAstNode):
                 self._precision = max(a.precision for a in integers)
             else:
                 raise TypeError('cannot determine the type of {}'.format(self))
-            
+
+            ranks  = [a.rank for a in args]
             shapes = [a.shape for a in args]
-            
-            if all(sh is not None for sh in shapes):
+
+            if None in ranks:
+                self._rank  = None
+                self._shape = None
+            elif all(not (sh is None or isinstance(sh, PyccelArraySize)) for tup in shapes for sh in tup):
                 if len(args) == 1:
                     shape = args[0].shape
                 else:
@@ -246,20 +274,27 @@ class PyccelOperator(Expr, PyccelAstNode):
                 self._shape = shape
                 self._rank  = len(shape)
             else:
-                self._rank = max(a.rank for a in args)
+                self._rank  = max(a.rank for a in args)
+                self._shape = [None]*self._rank
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 class PyccelPow(PyccelOperator):
-    p = 4
+    _precedence  = 15
 class PyccelAdd(PyccelOperator):
-    p = 1
+    _precedence = 12
 class PyccelMul(PyccelOperator):
-    p = 2
+    _precedence = 13
 class PyccelMinus(PyccelAdd):
     pass
 class PyccelDiv(PyccelOperator):
-    p = 2
+    _precedence = 13
     def __init__(self, *args):
+
         if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
             return
 
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
@@ -275,9 +310,14 @@ class PyccelDiv(PyccelOperator):
             self._dtype     = NativeReal()
             self._precision = default_precision['real']
 
+        ranks  = [a.rank for a in args]
         shapes = [a.shape for a in args]
+
+        if None in ranks:
+            self._rank  = None
+            self._shape = None
         
-        if all(sh is not None for sh in shapes):
+        elif all(not (sh is None or isinstance(sh, PyccelArraySize)) for tup in shapes for sh in tup):
             shape = broadcast(args[0].shape, args[1].shape)
             
             for a in args[2:]:
@@ -286,23 +326,34 @@ class PyccelDiv(PyccelOperator):
             self._shape = shape
             self._rank  = len(shape)
         else:
-            self._rank = max(a.rank for a in args)
+            self._rank  = max(a.rank for a in args)
+            self._shape = [None]*self._rank
 
 class PyccelMod(PyccelOperator):
-    p = 2
+    _precedence = 13
 class PyccelFloorDiv(PyccelOperator):
-    p = 2
+    _precedence = 13
 
 class PyccelBooleanOperator(Expr, PyccelAstNode):
+    _precedence = 7
 
     def __init__(self, *args):
+
         if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
             return
+
         self._dtype = NativeBool()
         self._precision = default_precision['bool']
         
+        ranks  = [a.rank for a in args]
         shapes = [a.shape for a in args]
-        if all(sh is not None for sh in shapes):
+
+        if None in ranks:
+            self._rank  = None
+            self._shape = None
+
+        elif all(not (sh is None or isinstance(sh, PyccelArraySize)) for tup in shapes for sh in tup):
             shape = broadcast(args[0].shape, args[1].shape)
             for a in args[2:]:
                 shape = broadcast(shape, a.shape)
@@ -311,6 +362,11 @@ class PyccelBooleanOperator(Expr, PyccelAstNode):
             self._rank  = len(shape)
         else:
             self._rank = max(a.rank for a in args)
+            self._shape = [None]*self._rank
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 class PyccelEq(PyccelBooleanOperator):
     pass
@@ -326,6 +382,7 @@ class PyccelGe(PyccelBooleanOperator):
     pass
 
 class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
+    _precedence = 18
     def __init__(self, a):
         if self.stage == 'syntactic':
             return
@@ -334,32 +391,74 @@ class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
         self._precision = a.precision
         self._shape     = a.shape
 
+    @property
+    def precedence(self):
+        return self._precedence
+
 class PyccelUnary(Expr, PyccelAstNode):
+    _precedence = 14
+
     def __init__(self, a):
+
         if self.stage == 'syntactic':
+            if (getattr(a, 'precedence', 17) <= self.precedence):
+                a = PyccelAssociativeParenthesis(a)
+                self._args = (a,)
             return
+
         self._dtype     = a.dtype
         self._rank      = a.rank
         self._precision = a.precision
         self._shape     = a.shape
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 class PyccelAnd(Expr, PyccelAstNode):
     _dtype = NativeBool()
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 5
+
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 class PyccelOr(Expr, PyccelAstNode):
     _dtype = NativeBool()
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 4
+
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 class PyccelNot(Expr, PyccelAstNode):
     _dtype = NativeBool()
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 6
+
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 class Is(Basic, PyccelAstNode):
 
@@ -377,9 +476,11 @@ class Is(Basic, PyccelAstNode):
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 7
 
-    def __new__(cls, lhs, rhs):
-        return Basic.__new__(cls, lhs, rhs)
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
 
     @property
     def lhs(self):
@@ -388,6 +489,10 @@ class Is(Basic, PyccelAstNode):
     @property
     def rhs(self):
         return self._args[1]
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 
 class IsNot(Basic, PyccelAstNode):
@@ -407,9 +512,11 @@ class IsNot(Basic, PyccelAstNode):
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+    _precedence = 7
 
-    def __new__(cls, lhs, rhs):
-        return Basic.__new__(cls, lhs, rhs)
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
 
     @property
     def lhs(self):
@@ -418,6 +525,10 @@ class IsNot(Basic, PyccelAstNode):
     @property
     def rhs(self):
         return self._args[1]
+
+    @property
+    def precedence(self):
+        return self._precedence
 
 
 Relational = (PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe, PyccelAnd, PyccelOr,  PyccelNot, Is, IsNot)
@@ -656,7 +767,7 @@ def extract_subexpressions(expr):
             return args
 
         else:
-            raise TypeError('statment {} not supported yet'.format(type(expr)))
+            raise TypeError('statement {} not supported yet'.format(type(expr)))
 
 
     new_expr  = substitute(expr)
@@ -708,17 +819,79 @@ def int2float(expr):
 def float2int(expr):
     return expr
 
-def create_variable(expr):
-    """."""
+def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
+    """This function takes a prefix and a counter and uses them to construct
+    a new name of the form:
+            prefix_counter
+    Where counter is formatted to fill 4 characters
+    The new name is checked against a list of forbidden expressions. If the
+    constructed name is forbidden then the counter is incremented until a valid
+    name is found
 
-    import numpy as np
-    try:
-        name = 'Dummy_' + str(abs(hash(expr)
-                                  + np.random.randint(500)))[-4:]
-    except:
-        name = 'Dymmy_' + str(abs(np.random.randint(500)))[-4:]
+      Parameters
+      ----------
+      forbidden_exprs : Set
+                        A set of all the values which are not valid solutions to this problem
+      prefix          : str
+                        The prefix used to begin the string
+      counter         : int
+                        The expected value of the next name
 
-    return Symbol(name)
+      Returns
+      ----------
+      name            : str
+                        The incremented string name
+      counter         : int
+                        The expected value of the next name
+
+    """
+    assert(isinstance(forbidden_exprs, set))
+    nDigits = 4
+
+    if prefix is None:
+        prefix = 'Dummy'
+
+    name_format = "{prefix}_{counter:0="+str(nDigits)+"d}"
+    name = name_format.format(prefix=prefix, counter = counter)
+    counter += 1
+    while name in forbidden_exprs:
+        name = name_format.format(prefix=prefix, counter = counter)
+        counter += 1
+
+    forbidden_exprs.add(name)
+
+    return name, counter
+
+def create_variable(forbidden_names, prefix = None, counter = 1):
+    """This function takes a prefix and a counter and uses them to construct
+    a Symbol with a name of the form:
+            prefix_counter
+    Where counter is formatted to fill 4 characters
+    The new name is checked against a list of forbidden expressions. If the
+    constructed name is forbidden then the counter is incremented until a valid
+    name is found
+
+      Parameters
+      ----------
+      forbidden_exprs : Set
+                        A set of all the values which are not valid solutions to this problem
+      prefix          : str
+                        The prefix used to begin the string
+      counter         : int
+                        The expected value of the next name
+
+      Returns
+      ----------
+      name            : sympy.Symbol
+                        A sympy Symbol with the incremented string name
+      counter         : int
+                        The expected value of the next name
+
+    """
+
+    name, counter = create_incremented_string(forbidden_names, prefix, counter = counter)
+
+    return Symbol(name), counter
 
 class DottedName(Basic):
 
@@ -757,8 +930,8 @@ class AsName(Basic):
     Examples
     --------
     >>> from pyccel.ast.core import AsName
-    >>> AsName('new', 'old')
-    new as old
+    >>> AsName('old', 'new')
+    old as new
     """
 
     def __new__(cls, name, target):
@@ -779,6 +952,15 @@ class AsName(Basic):
         sstr = printer.doprint
         return '{0} as {1}'.format(sstr(self.name), sstr(self.target))
 
+    def __eq__(self, string):
+        if isinstance(string, (str, Symbol)):
+            return string == self.target
+        else:
+            return self is string
+
+    def __hash__(self):
+        return hash(self.target)
+
 
 class Dlist(Basic, PyccelAstNode):
 
@@ -794,6 +976,10 @@ class Dlist(Basic, PyccelAstNode):
 
     def __new__(cls, val, length):
         return Basic.__new__(cls, val, length)
+
+    def __init__(self, val, length):
+        self._rank = val.rank
+        self._shape = tuple(s if i!= 0 else s*length for i,s in enumerate(val.shape))
 
     @property
     def val(self):
@@ -1462,7 +1648,7 @@ class Tensor(Basic):
 
         try:
             name = kwargs['name']
-        except:
+        except KeyError:
             name = 'tensor'
 
         args = list(args) + [name]
@@ -1752,52 +1938,20 @@ class Program(Basic):
     declarations: list
         list of declarations of the variables that appear in the block.
 
-    funcs: list
-        a list of FunctionDef instances
-
-    classes: list
-        a list of ClassDef instances
-
     body: list
         a list of statements
 
     imports: list, tuple
         list of needed imports
 
-    modules: list, tuple
-        list of needed modules
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable, Assign
-    >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
-    >>> x = Variable('real', 'x')
-    >>> y = Variable('real', 'y')
-    >>> z = Variable('real', 'z')
-    >>> t = Variable('real', 't')
-    >>> a = Variable('real', 'a')
-    >>> b = Variable('real', 'b')
-    >>> body = [Assign(y,x+a)]
-    >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
-    >>> attributs   = [x,y]
-    >>> methods     = [translate]
-    >>> Point = ClassDef('Point', attributs, methods)
-    >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
-    >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
-    >>> Module('my_module', [], [incr, decr], [Point])
-    Module(my_module, [], [FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function), FunctionDef(decr, (x,), (y,), [y := -1 + x], [], [], None, False, function)], [ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])])
     """
 
     def __new__(
         cls,
         name,
         variables,
-        funcs,
-        interfaces,
-        classes,
         body,
         imports=[],
-        modules=[],
         ):
 
         if not isinstance(name, str):
@@ -1810,57 +1964,22 @@ class Program(Basic):
             if not isinstance(i, Variable):
                 raise TypeError('Only a Variable instance is allowed.')
 
-        if not iterable(funcs):
-            raise TypeError('funcs must be an iterable')
-        for i in funcs:
-            if not isinstance(i, FunctionDef):
-                raise TypeError('Only a FunctionDef instance is allowed.'
-                                )
-
-        if not iterable(interfaces):
-            raise TypeError('interfaces must be an iterable')
-        for i in interfaces:
-            if not isinstance(i, Interface):
-                raise TypeError('Only a Interface instance is allowed.')
-
         if not iterable(body):
             raise TypeError('body must be an iterable')
         body = CodeBlock(body)
 
-        if not iterable(classes):
-            raise TypeError('classes must be an iterable')
-        for i in classes:
-            if not isinstance(i, ClassDef):
-                raise TypeError('Only a ClassDef instance is allowed.')
-
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
 
-        for i in funcs:
-            imports += i.imports
-        for i in classes:
-            imports += i.imports
         imports = set(imports)  # for unicity
         imports = Tuple(*imports, sympify=False)
-
-        if not iterable(modules):
-            raise TypeError('modules must be an iterable')
-
-        # TODO
-#        elif isinstance(stmt, list):
-#            for s in stmt:
-#                body += printer(s) + "\n"
 
         return Basic.__new__(
             cls,
             name,
             variables,
-            funcs,
-            interfaces,
-            classes,
             body,
             imports,
-            modules,
             )
 
     @property
@@ -1872,28 +1991,12 @@ class Program(Basic):
         return self._args[1]
 
     @property
-    def funcs(self):
+    def body(self):
         return self._args[2]
 
     @property
-    def interfaces(self):
-        return self._args[3]
-
-    @property
-    def classes(self):
-        return self._args[4]
-
-    @property
-    def body(self):
-        return self._args[5]
-
-    @property
     def imports(self):
-        return self._args[6]
-
-    @property
-    def modules(self):
-        return self._args[7]
+        return self._args[3]
 
     @property
     def declarations(self):
@@ -2217,13 +2320,22 @@ class Variable(Symbol, PyccelAstNode):
         cls,
         dtype,
         name,
+        **kwargs
+        ):
+        return Basic.__new__(cls)
+
+    def __init__(
+        self,
+        dtype,
+        name,
+        *,
         rank=0,
         allocatable=False,
         is_stack_array = False,
         is_pointer=False,
         is_target=False,
         is_polymorphic=None,
-        is_optional=None,
+        is_optional=False,
         shape=None,
         cls_base=None,
         cls_parameters=None,
@@ -2231,65 +2343,22 @@ class Variable(Symbol, PyccelAstNode):
         precision=0,
         is_argument=False
         ):
+
+        # ------------ PyccelAstNode Properties ---------------
         if isinstance(dtype, str) or str(dtype) == '*':
 
             dtype = datatype(str(dtype))
         elif not isinstance(dtype, DataType):
             raise TypeError('datatype must be an instance of DataType.')
 
-        if allocatable is None:
-            allocatable = False
-        elif not isinstance(allocatable, bool):
-            raise TypeError('allocatable must be a boolean.')
-
-        if is_pointer is None:
-            is_pointer = False
-        elif not isinstance(is_pointer, bool):
-            raise TypeError('is_pointer must be a boolean.')
-
-        if is_target is None:
-            is_target = False
-        elif not isinstance(is_target, bool):
-            raise TypeError('is_target must be a boolean.')
-
-        if is_stack_array is None:
-            is_stack_array = False
-        elif not isinstance(is_stack_array, bool):
-            raise TypeError('is_stack_array must be a boolean.')
-
-        if is_polymorphic is None:
-            if isinstance(dtype, CustomDataType):
-                is_polymorphic = dtype.is_polymorphic
-            else:
-                is_polymorphic = False
-        elif not isinstance(is_polymorphic, bool):
-            raise TypeError('is_polymorphic must be a boolean.')
-
-        if is_optional is None:
-            is_optional = False
-        elif not isinstance(is_optional, bool):
-            raise TypeError('is_optional must be a boolean.')
-
-        if not isinstance(precision,int):
-            raise TypeError('precision must be an integer.')
-
-        # if class attribut
-
-        if isinstance(name, str):
-            name = name.split(""".""")
-            if len(name) == 1:
-                name = name[0]
-            else:
-                name = DottedName(*name)
-
-        if not isinstance(name, (str, DottedName)):
-            raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
-
         if not isinstance(rank, int):
             raise TypeError('rank must be an instance of int.')
 
         if rank == 0:
             shape = ()
+
+        if shape is None:
+            shape = tuple(None for i in range(rank))
 
         if not precision:
             if isinstance(dtype, NativeInteger):
@@ -2300,89 +2369,153 @@ class Variable(Symbol, PyccelAstNode):
                 precision = default_precision['complex']
             elif isinstance(dtype, NativeBool):
                 precision = default_precision['bool']
+        if not isinstance(precision,int) and precision is not None:
+            raise TypeError('precision must be an integer or None.')
 
-        shape = process_shape(shape)
+        self._alloc_shape = shape
+        self._dtype = dtype
+        self._shape = self.process_shape(shape)
+        self._rank  = rank
+        self._precision = precision
 
-        # TODO improve order of arguments
+        # ------------ Variable Properties ---------------
+        # if class attribute
+        if isinstance(name, str):
+            name = name.split(""".""")
+            if len(name) == 1:
+                name = name[0]
+            else:
+                name = DottedName(*name)
 
-        return Basic.__new__(
-            cls,
-            dtype,
-            name,
-            rank,
-            allocatable,
-            shape,
-            cls_base,
-            cls_parameters,
-            is_pointer,
-            is_target,
-            is_polymorphic,
-            is_optional,
-            order,
-            precision,
-            is_stack_array,
-            is_argument
-            )
+        if not isinstance(name, (str, DottedName)):
+            raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
+        self._name = name
 
-    @property
-    def dtype(self):
-        return self._args[0]
+        if allocatable is None:
+            allocatable = False
+        self.allocatable = allocatable
+
+        if is_stack_array is None:
+            is_stack_array = False
+        elif not isinstance(is_stack_array, bool):
+            raise TypeError('is_stack_array must be a boolean.')
+        self._is_stack_array = is_stack_array
+
+        if is_pointer is None:
+            is_pointer = False
+        self.is_pointer = is_pointer
+
+        if is_target is None:
+            is_target = False
+        self.is_target = is_target
+
+        if is_polymorphic is None:
+            if isinstance(dtype, CustomDataType):
+                is_polymorphic = dtype.is_polymorphic
+            else:
+                is_polymorphic = False
+        elif not isinstance(is_polymorphic, bool):
+            raise TypeError('is_polymorphic must be a boolean.')
+        self._is_polymorphic = is_polymorphic
+
+        if is_optional is None:
+            is_optional = False
+        elif not isinstance(is_optional, bool):
+            raise TypeError('is_optional must be a boolean.')
+        self._is_optional = is_optional
+
+        self._cls_base       = cls_base
+        self._cls_parameters = cls_parameters
+        self._order          = order
+        self._is_argument    = is_argument
+
+    def process_shape(self, shape):
+        if not hasattr(shape,'__iter__'):
+            shape = [shape]
+
+        new_shape = []
+        for i,s in enumerate(shape):
+            if isinstance(s,(Py_Integer, PyccelArraySize)):
+                new_shape.append(s)
+            elif isinstance(s, sp_Integer):
+                new_shape.append(Py_Integer(s.p))
+            elif isinstance(s, int):
+                new_shape.append(Py_Integer(s))
+            elif s is None or isinstance(s,(Variable, Slice, PyccelAstNode, Function)):
+                new_shape.append(PyccelArraySize(self, i))
+            else:
+                raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
+        return tuple(new_shape)
 
     @property
     def name(self):
-        return self._args[1]
+        return self._name
 
     @property
-    def rank(self):
-        return self._args[2]
+    def alloc_shape(self):
+        return self._alloc_shape
 
     @property
     def allocatable(self):
-        return self._args[3]
+        return self._allocatable
 
-    @property
-    def shape(self):
-        return self._args[4]
+    @allocatable.setter
+    def allocatable(self, allocatable):
+        if not isinstance(allocatable, bool):
+            raise TypeError('allocatable must be a boolean.')
+        self._allocatable = allocatable
 
     @property
     def cls_base(self):
-        return self._args[5]
+        return self._cls_base
 
     @property
     def cls_parameters(self):
-        return self._args[6]
+        return self._cls_parameters
 
     @property
     def is_pointer(self):
-        return self._args[7]
+        return self._is_pointer
+
+    @is_pointer.setter
+    def is_pointer(self, is_pointer):
+        if not isinstance(is_pointer, bool):
+            raise TypeError('is_pointer must be a boolean.')
+        self._is_pointer = is_pointer
 
     @property
     def is_target(self):
-        return self._args[8]
+        return self._is_target
+
+    @is_target.setter
+    def is_target(self, is_target):
+        if not isinstance(is_target, bool):
+            raise TypeError('is_target must be a boolean.')
+        self._is_target = is_target
 
     @property
     def is_polymorphic(self):
-        return self._args[9]
+        return self._is_polymorphic
 
     @property
     def is_optional(self):
-        return self._args[10]
+        return self._is_optional
 
     @property
     def order(self):
-        return self._args[11]
-
-    @property
-    def precision(self):
-        return self._args[12]
+        return self._order
 
     @property
     def is_stack_array(self):
-        return self._args[13]
+        return self._is_stack_array
+
+    @is_stack_array.setter
+    def is_stack_array(self, is_stack_array):
+        self._is_stack_array = is_stack_array
 
     @property
     def is_argument(self):
-        return self._args[14]
+        return self._is_argument
 
     @property
     def is_ndarray(self):
@@ -2480,9 +2613,9 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
     Represents a dotted variable.
     """
 
-    def __new__(cls, *args):
+    def __new__(cls, lhs, rhs):
 
-        if not isinstance(args[0], (
+        if not isinstance(lhs, (
             Variable,
             Symbol,
             IndexedVariable,
@@ -2492,10 +2625,10 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
             Function,
             DottedVariable,
             )):
-            raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(args[0]),
-                            type(args[0])))
+            raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
+                            type(lhs)))
 
-        if not isinstance(args[1], (
+        if not isinstance(rhs, (
             Variable,
             Symbol,
             IndexedVariable,
@@ -2505,18 +2638,18 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
             FunctionCall,
             Function,
             )):
-            raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(args[1]),
-                            type(args[1])))
+            raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
+                            type(rhs)))
 
-        return Basic.__new__(cls, args[0], args[1])
+        return Basic.__new__(cls, lhs, rhs)
 
-    def __init__(self, *args):
+    def __init__(self, lhs, rhs):
         if self.stage == 'syntactic':
             return
-        self._dtype     = args[-1].dtype
-        self._rank      = args[-1].rank
-        self._precision = args[-1].precision
-        self._shape     = args[-1].shape
+        self._dtype     = rhs.dtype
+        self._rank      = rhs.rank
+        self._precision = rhs.precision
+        self._shape     = rhs.shape
 
     @property
     def lhs(self):
@@ -2527,24 +2660,28 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
         return self._args[1]
 
     @property
-    def rank(self):
-        return self._args[1].rank
-
-    @property
-    def dtype(self):
-        return self._args[1].dtype
-
-    @property
     def allocatable(self):
         return self._args[1].allocatable
+
+    @allocatable.setter
+    def allocatable(self, allocatable):
+        self._args[1].allocatable = allocatable
 
     @property
     def is_pointer(self):
         return self._args[1].is_pointer
 
+    @is_pointer.setter
+    def is_pointer(self, is_pointer):
+        self._args[1].is_pointer = is_pointer
+
     @property
     def is_target(self):
         return self._args[1].is_target
+
+    @is_target.setter
+    def is_target(self, is_target):
+        self._args[1].is_target = is_target
 
     @property
     def name(self):
@@ -2622,6 +2759,7 @@ class ValuedVariable(Variable):
 
         # if value is not given, we set it to Nil
         self._value = kwargs.pop('value', Nil())
+        Variable.__init__(self, *args, **kwargs)
 
     @property
     def value(self):
@@ -2653,20 +2791,28 @@ class TupleVariable(Variable):
     n
     """
 
-    def __new__(cls, arg_vars, dtype, name, **kwargs):
+    def __new__(cls, arg_vars, dtype, name, *args, **kwargs):
 
         # if value is not given, we set it to Nil
         # we also remove value from kwargs,
         # since it is not a valid argument for Variable
         
-        return Variable.__new__(cls, dtype, name, **kwargs)
+        return Variable.__new__(cls, dtype, name, *args, **kwargs)
 
-    def __init__(self, arg_vars, dtype, *args, **kwargs):
+    def __init__(self, arg_vars, dtype, name, *args, **kwargs):
         self._vars = tuple(arg_vars)
+        self._inconsistent_shape = not all(arg_vars[0].shape==a.shape   for a in arg_vars[1:])
         self._is_homogeneous = not dtype is NativeGeneric()
+        Variable.__init__(self, dtype, name, *args, **kwargs)
 
     def get_vars(self):
-        return self._vars
+        if self._is_homogeneous:
+            indexed_var = IndexedVariable(self, dtype=self.dtype, shape=self.shape,
+                prec=self.precision, order=self.order, rank=self. rank)
+            args = [Slice(None,None)]*(self.rank-1)
+            return [indexed_var.__getitem__(*args, i) for i in range(len(self._vars))]
+        else:
+            return self._vars
 
     def get_var(self, variable_idx):
         return self._vars[variable_idx]
@@ -2684,9 +2830,40 @@ class TupleVariable(Variable):
         return len(self._vars)
 
     @property
+    def inconsistent_shape(self):
+        return self._inconsistent_shape
+
+    @property
     def is_homogeneous(self):
         return self._is_homogeneous
 
+    @is_homogeneous.setter
+    def is_homogeneous(self, is_homogeneous):
+        self._is_homogeneous = is_homogeneous
+
+    @Variable.allocatable.setter
+    def allocatable(self, allocatable):
+        if not isinstance(allocatable, bool):
+            raise TypeError('allocatable must be a boolean.')
+        self._allocatable = allocatable
+        for var in self._vars:
+            var.allocatable = allocatable
+
+    @Variable.is_pointer.setter
+    def is_pointer(self, is_pointer):
+        if not isinstance(is_pointer, bool):
+            raise TypeError('is_pointer must be a boolean.')
+        self._is_pointer = is_pointer
+        for var in self._vars:
+            var.is_pointer = is_pointer
+
+    @Variable.is_target.setter
+    def is_target(self, is_target):
+        if not isinstance(is_target, bool):
+            raise TypeError('is_target must be a boolean.')
+        self._is_target = is_target
+        for var in self._vars:
+            var.is_target = is_target
 
 class Constant(ValuedVariable, PyccelAstNode):
 
@@ -2763,7 +2940,7 @@ class FunctionCall(Basic, PyccelAstNode):
     """Represents a function call in the code.
     """
 
-    def __new__(cls, func, args):
+    def __new__(cls, func, args, current_function=None):
 
         # ...
         if not isinstance(func, FunctionDef):
@@ -2771,8 +2948,12 @@ class FunctionCall(Basic, PyccelAstNode):
 
         name = func.name
         # ...
+        if isinstance(current_function, DottedName):
+            current_function = current_function.name[-1]
 
-        # ...
+        if str(current_function) == str(name):
+            func.set_recursive()
+
         if not isinstance(args, (tuple, list, Tuple)):
             raise TypeError('> expecting an iterable')
 
@@ -2798,7 +2979,7 @@ class FunctionCall(Basic, PyccelAstNode):
  
         return Basic.__new__(cls, name, args)
 
-    def __init__(self, func, args):
+    def __init__(self, func, args, current_function=None):
 
         self._funcdef     = func
         self._dtype       = func.results[0].dtype if len(func.results) == 1 else NativeTuple()
@@ -2993,6 +3174,17 @@ class FunctionDef(Basic):
         arguments,
         results,
         body,
+        *args,
+        **kwargs
+        ):
+        return Basic.__new__(cls)
+
+    def __init__(
+        self,
+        name,
+        arguments,
+        results,
+        body,
         local_vars=[],
         global_vars=[],
         cls_name=None,
@@ -3106,108 +3298,106 @@ class FunctionDef(Basic):
                 if not isinstance(i, FunctionDef):
                     raise TypeError('Expecting a FunctionDef')
 
-        return Basic.__new__(
-            cls,
-            name,
-            arguments,
-            results,
-            body,
-            local_vars,
-            global_vars,
-            cls_name,
-            hide,
-            kind,
-            is_static,
-            imports,
-            decorators,
-            header,
-            is_recursive,
-            is_pure,
-            is_elemental,
-            is_private,
-            is_header,
-            arguments_inout,
-            functions,)
+        self._name            = name
+        self._arguments       = arguments
+        self._results         = results
+        self._body            = body
+        self._local_vars      = local_vars
+        self._global_vars     = global_vars
+        self._cls_name        = cls_name
+        self._hide            = hide
+        self._kind            = kind
+        self._is_static       = is_static
+        self._imports         = imports
+        self._decorators      = decorators
+        self._header          = header
+        self._is_recursive    = is_recursive
+        self._is_pure         = is_pure
+        self._is_elemental    = is_elemental
+        self._is_private      = is_private
+        self._is_header       = is_header
+        self._arguments_inout = arguments_inout
+        self._functions       = functions
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def arguments(self):
-        return self._args[1]
+        return self._arguments
 
     @property
     def results(self):
-        return self._args[2]
+        return self._results
 
     @property
     def body(self):
-        return self._args[3]
+        return self._body
 
     @property
     def local_vars(self):
-        return self._args[4]
+        return self._local_vars
 
     @property
     def global_vars(self):
-        return self._args[5]
+        return self._global_vars
 
     @property
     def cls_name(self):
-        return self._args[6]
+        return self._cls_name
 
     @property
     def hide(self):
-        return self._args[7]
+        return self._hide
 
     @property
     def kind(self):
-        return self._args[8]
+        return self._kind
 
     @property
     def is_static(self):
-        return self._args[9]
+        return self._is_static
 
     @property
     def imports(self):
-        return self._args[10]
+        return self._imports
 
     @property
     def decorators(self):
-        return self._args[11]
+        return self._decorators
 
     @property
     def header(self):
-        return self._args[12]
+        return self._header
 
     @property
     def is_recursive(self):
-        return self._args[13]
+        return self._is_recursive
 
     @property
     def is_pure(self):
-        return self._args[14]
+        return self._is_pure
 
     @property
     def is_elemental(self):
-        return self._args[15]
+        return self._is_elemental
 
     @property
     def is_private(self):
-        return self._args[16]
+        return self._is_private
 
     @property
     def is_header(self):
-        return self._args[17]
+        return self._is_header
 
     @property
     def arguments_inout(self):
-        return self._args[18]
+        return self._arguments_inout
 
     @property
     def functions(self):
-        return self._args[19]
+        return self._functions
 
     @property
     def doc_string(self):
@@ -3217,31 +3407,31 @@ class FunctionDef(Basic):
         for s in self.body:
             print(s)
 
-    # TODO is there a better way to do this, avoiding copying args? => bad for
-    # maintenance!
-    #      must be done everywhere
     def set_recursive(self):
-        return FunctionDef(
-            self.name,
-            self.arguments,
-            self.results,
-            self.body,
-            local_vars=self.local_vars,
-            global_vars=self.global_vars,
-            cls_name=self.cls_name,
-            hide=self.hide,
-            kind=self.kind,
-            is_static=self.is_static,
-            header=self.header,
-            imports = self.imports,
-            decorators = self.decorators,
-            is_recursive=True,
-            functions=self.functions,
-            )
+        self._is_recursive = True
+
+    def set_cls_name(self, cls_name):
+        self._cls_name = cls_name
+
+    def clone(self, newname):
+        """
+        Create an identical FunctionDef with name
+        newname.
+
+        Parameters
+        ----------
+        newname: str
+            new name for the FunctionDef
+        """
+        args = self.__getnewargs__()
+        new_func = FunctionDef(*args)
+        new_func.rename(newname)
+        return new_func
+
 
     def rename(self, newname):
         """
-        Rename the FunctionDef name by creating a new FunctionDef with
+        Rename the FunctionDef name
         newname.
 
         Parameters
@@ -3250,42 +3440,20 @@ class FunctionDef(Basic):
             new name for the FunctionDef
         """
 
-        return FunctionDef(
-            newname,
-            self.arguments,
-            self.results,
-            self.body,
-            local_vars=self.local_vars,
-            global_vars=self.global_vars,
-            cls_name=self.cls_name,
-            hide=self.hide,
-            kind=self.kind,
-            is_static=self.is_static,
-            header=self.header,
-            imports = self.imports,
-            decorators = self.decorators,
-            is_recursive=self.is_recursive,
-            functions=self.functions,)
+        self._name = newname
 
     def vectorize(self, body , header):
         """ return vectorized FunctionDef """
         decorators = self.decorators
         decorators.pop('vectorize')
-        return FunctionDef(
-            'vec_'+str(self.name),
-            self.arguments,
-            [],
-            body,
-            local_vars=self.local_vars,
-            global_vars=self.global_vars,
-            cls_name=self.cls_name,
-            hide=self.hide,
-            kind='procedure',
-            is_static=self.is_static,
-            header=header,
-            imports = self.imports,
-            decorators = decorators,
-            is_recursive=self.is_recursive)
+
+        self._name       = 'vec_'+str(self.name)
+        self._results    = []
+        self._body       = body
+        self._kind       = procedure
+        self._header     = header
+        self._decorators = decorators
+        return self
 
     @property
     def is_procedure(self):
@@ -3336,20 +3504,26 @@ class FunctionDef(Basic):
         """used for Pickling self."""
 
         args = (
-            self.name,
-            self.arguments,
-            self.results,
-            self.body,
-            self.local_vars,
-            self.global_vars,
-            self.cls_name,
-            self.hide,
-            self.kind,
-            self.is_static,
-            self.imports,
-            self.decorators,
-            self.header,
-            self.is_recursive,
+                self._name,
+                self._arguments,
+                self._results,
+                self._body,
+                self._local_vars,
+                self._global_vars,
+                self._cls_name,
+                self._hide,
+                self._kind,
+                self._is_static,
+                self._imports,
+                self._decorators,
+                self._header,
+                self._is_recursive,
+                self._is_pure,
+                self._is_elemental,
+                self._is_private,
+                self._is_header,
+                self._arguments_inout,
+                self._functions
             )
         return args
 
@@ -3765,52 +3939,63 @@ class Import(Basic):
     import foo, foo.bar.baz
     """
 
-    def __new__(cls, target, source=None):
-
-        def _format(i):
-            if isinstance(i, str):
-                if '.' in i:
-                    return DottedName(*i.split('.'))
-                else:
-                    return Symbol(i)
-            if isinstance(i, (DottedName, AsName)):
-                return i
-            elif isinstance(i, Symbol):
-                return i
-            else:
-                raise TypeError('Expecting a string, Symbol DottedName, given {}'.format(type(i)))
-
-        _target = []
-        if isinstance(target, (str, Symbol, DottedName, AsName)):
-            _target = [_format(target)]
-        elif iterable(target):
-            for i in target:
-                _target.append(_format(i))
-        target = Tuple(*_target, sympify=False)
+    def __new__(cls, source, target = None):
 
         if not source is None:
-            source = _format(source)
+            source = Import._format(source)
 
-        return Basic.__new__(cls, target, source)
+        return Basic.__new__(cls, source)
+
+    def __init__(self, source, target = None):
+        self._target = []
+        if isinstance(target, (str, Symbol, DottedName, AsName)):
+            self._target = [Import._format(target)]
+        elif iterable(target):
+            for i in target:
+                self._target.append(Import._format(i))
+
+    @staticmethod
+    def _format(i):
+        if isinstance(i, str):
+            if '.' in i:
+                return DottedName(*i.split('.'))
+            else:
+                return Symbol(i)
+        if isinstance(i, (DottedName, AsName)):
+            return i
+        elif isinstance(i, Symbol):
+            return i
+        else:
+            raise TypeError('Expecting a string, Symbol DottedName, given {}'.format(type(i)))
 
     @property
     def target(self):
-        return self._args[0]
+        return self._target
 
     @property
     def source(self):
-        return self._args[1]
+        return self._args[0]
 
     def _sympystr(self, printer):
         sstr = printer.doprint
-        target = ', '.join([sstr(i) for i in self.target])
-        if self.source is None:
-            return 'import {target}'.format(target=target)
+        source = sstr(self.source)
+        if len(self.target) == 0:
+            return 'import {source}'.format(source=source)
         else:
-            source = sstr(self.source)
+            target = ', '.join([sstr(i) for i in self.target])
             return 'from {source} import {target}'.format(source=source,
                     target=target)
 
+    def define_target(self, new_target):
+        self._target.append(new_target)
+
+    def find_module_target(self, new_target):
+        for t in self._target:
+            if isinstance(t, AsName) and new_target == str(t.name):
+                return t.target
+            elif new_target == str(t):
+                return t
+        return None
 
 class TupleImport(Basic):
 
@@ -3905,16 +4090,13 @@ class Load(Basic):
 
     def execute(self):
         module = str(self.module)
-        try:
-            package = importlib.import_module(module)
-        except:
-            raise ImportError('could not import {0}'.format(module))
+        package = importlib.import_module(module)
 
         ls = []
         for f in self.funcs:
             try:
                 m = getattr(package, '{0}'.format(str(f)))
-            except:
+            except AttributeError:
                 raise ImportError('could not import {0}'.format(f))
 
             # TODO improve
@@ -4169,9 +4351,13 @@ class Del(Basic):
         return self._args[0]
 
 
-class EmptyLine(Basic):
-
-    """Represents a EmptyLine in the code.
+class EmptyNode(Basic):
+    """
+    Represents an empty node in the abstract syntax tree (AST).
+    When a subtree is removed from the AST, we replace it with an EmptyNode
+    object that acts as a placeholder. Using an EmptyNode instead of None
+    is more explicit and avoids confusion. Further, finding a None in the AST
+    is signal of an internal bug.
 
     Parameters
     ----------
@@ -4180,8 +4366,8 @@ class EmptyLine(Basic):
 
     Examples
     --------
-    >>> from pyccel.ast.core import EmptyLine
-    >>> EmptyLine()
+    >>> from pyccel.ast.core import EmptyNode
+    >>> EmptyNode()
 
     """
 
@@ -4407,7 +4593,7 @@ class IndexedVariable(IndexedBase, PyccelAstNode):
     def __getitem__(self, *args):
 
         if self.shape and len(self.shape) != len(args):
-            raise IndexException('Rank mismatch.')
+            raise IndexError('Rank mismatch.')
         obj = IndexedElement(self, *args)
         return obj
 
@@ -4515,14 +4701,18 @@ class IndexedElement(Expr, PyccelAstNode):
             raise TypeError('Undefined datatype')
 
         if shape is not None:
+            if self.order == 'C':
+                shape = shape[::-1]
             new_shape = []
             for a,s in zip(args, shape):
                 if isinstance(a, Slice):
                     start = a.start
                     end   = a.end
-                    start = Py_Integer(0) if start is None else start
                     end   = s if end   is None else end
-                    new_shape.append(PyccelMinus(end, start))
+                    if start is None:
+                        new_shape.append(end)
+                    else:
+                        new_shape.append(PyccelMinus(end, start))
             self._shape = tuple(new_shape)
             self._rank  = len(new_shape)
         else:
@@ -4779,6 +4969,10 @@ class If(Basic):
 class IfTernaryOperator(If):
 
     """class for the Ternery operator"""
+    def __init__(self, *args):
+        for arg in self.args:
+            if len(arg[1].body)!=1:
+                raise TypeError('IfTernary body must be of length 1')
 
     pass
 
@@ -4930,30 +5124,27 @@ def get_assigned_symbols(expr):
         if expr.lhs is None:
             raise TypeError('Found None lhs')
 
-        try:
-            var = expr.lhs
-            symbols = []
-            if isinstance(var, DottedVariable):
-                var = expr.lhs.lhs
-                while isinstance(var, DottedVariable):
-                    var = var.lhs
+        var = expr.lhs
+        symbols = []
+        if isinstance(var, DottedVariable):
+            var = expr.lhs.lhs
+            while isinstance(var, DottedVariable):
+                var = var.lhs
+            symbols.append(var)
+        elif isinstance(var, IndexedElement):
+            var = var.base
+            symbols.append(var)
+        elif isinstance(var, Variable):
+            if var.rank:
                 symbols.append(var)
-            elif isinstance(var, IndexedElement):
-                var = var.base
-                symbols.append(var)
-            elif isinstance(var, Variable):
-                if var.rank:
-                    symbols.append(var)
-            return symbols
-        except:
-            #TODO should we keep the try/except clause ?
-
-            # TODO must raise an Exception here
-            #      this occurs only when parsing lapack.pyh
-            raise ValueError('Unable to extract assigned variable')
-#            print(type(expr.lhs), expr.lhs)
-#            print(expr)
-#            raise SystemExit('ERROR')
+        return symbols
+    elif isinstance(expr, FunctionCall):
+        f = expr.funcdef
+        symbols = []
+        for func_arg, inout in zip(expr.arguments,f.arguments_inout):
+            if inout:
+                symbols.append(func_arg)
+        return symbols
 
     return []
 
@@ -5194,11 +5385,77 @@ def get_iterable_ranges(it, var_name=None):
 
     return [Range(s, e, 1) for (s, e) in zip(starts, ends)]
 
+class ParserResult(Basic):
+    def __new__(
+        self,
+        program=None,
+        module=None,
+        mod_name = None,
+        prog_name = None,
+        ):
+        return Basic.__new__(self)
+
+    def __init__(
+        self,
+        program=None,
+        module=None,
+        mod_name = None,
+        prog_name = None,
+        ):
+
+        if program is not None  and not isinstance(program, CodeBlock):
+            raise TypeError('Program must be a CodeBlock')
+
+        if module is not None  and not isinstance(module, CodeBlock):
+            raise TypeError('Module must be a CodeBlock')
+
+        if program is not None and module is not None:
+            if mod_name is None:
+                raise TypeError('Please provide module name')
+            elif not isinstance(mod_name, str):
+                raise TypeError('Module name must be a string')
+            if prog_name is None:
+                raise TypeError('Please provide program name')
+            elif not isinstance(prog_name, str):
+                raise TypeError('Program name must be a string')
+
+        self._program   = program
+        self._module    = module
+        self._prog_name = prog_name
+        self._mod_name  = mod_name
+
+
+    @property
+    def program(self):
+        return self._program
+
+    @property
+    def module(self):
+        return self._module
+
+    @property
+    def prog_name(self):
+        return self._prog_name
+
+    @property
+    def mod_name(self):
+        return self._mod_name
+
+    def has_additional_module(self):
+        return self.program is not None and self.module is not None
+
+    def is_program(self):
+        return self.program is not None
+
+    def get_focus(self):
+        if self.is_program():
+            return self.program
+        else:
+            return self.module
+
 
 #==============================================================================
 def process_shape(shape):
-    if shape is None:
-        return None
     if not hasattr(shape,'__iter__'):
         shape = [shape]
 
@@ -5214,3 +5471,52 @@ def process_shape(shape):
             raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
     return tuple(new_shape)
 
+
+class PyccelArraySize(Function, PyccelAstNode):
+    def __new__(cls, arg, index):
+        if not isinstance(arg, (list,
+                                tuple,
+                                Tuple,
+                                PythonTuple,
+                                List,
+                                Variable,
+                                IndexedElement,
+                                IndexedBase)):
+            raise TypeError('Uknown type of  %s.' % type(arg))
+
+        return Basic.__new__(cls, arg, index)
+
+    def __init__(self, arg, index):
+        self._dtype = NativeInteger()
+        self._rank  = 0
+        self._shape = ()
+        self._precision = default_precision['integer']
+
+    @property
+    def arg(self):
+        return self._args[0]
+
+    @property
+    def index(self):
+        return self._args[1]
+
+    def _sympystr(self, printer):
+        return 'Shape({},{})'.format(str(self.arg), str(self.index))
+
+    def fprint(self, printer, lhs = None):
+        """Fortran print."""
+
+        lhs_code = printer(lhs)
+        init_value = printer(self.arg)
+
+        if self.arg.order == 'C':
+            index = printer(self.arg.rank - self.index)
+        else:
+            index = printer(self.index + 1)
+
+        if lhs:
+            code_init = '{0} = size({1}, {2})'.format(lhs_code, init_value, index)
+        else:
+            code_init = 'size({0}, {1})'.format(init_value, index)
+
+        return code_init

@@ -1,28 +1,28 @@
 # -*- coding: utf-8 -*-
 
 from collections import OrderedDict
-import redbaron
 import importlib
 import os
 import re
 
 #==============================================================================
 
-from pyccel.ast import DottedName
-from pyccel.ast import SymbolicAssign
-from pyccel.ast import FunctionDef, Interface
-from pyccel.ast import PythonFunction, SympyFunction
-from pyccel.ast import Import
-from pyccel.ast import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.core import DottedName
+from pyccel.ast.core import SymbolicAssign
+from pyccel.ast.core import FunctionDef, Interface
+from pyccel.ast.core import PythonFunction, SympyFunction
+from pyccel.ast.core import Import, AsName
+from pyccel.ast.core import create_incremented_string, create_variable
+from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
 
-from pyccel.parser.errors import Errors
+from pyccel.errors.errors import Errors
 
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
 
-from pyccel.parser.messages import *
+from pyccel.errors.messages import *
 
 #==============================================================================
 
@@ -33,19 +33,10 @@ errors = Errors()
 
 strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 
-redbaron.ipython_behavior = False
-
 # use this to delete ansi_escape characters from a string
 # Useful for very coarse version differentiation.
 
 #==============================================================================
-
-def is_ignored_module(name):
-    if isinstance(name, DottedName):
-        if str(name) in ['pyccel.decorators']:
-            return True
-
-    return False
 
 
 def get_filename_from_import(module,input_folder=''):
@@ -56,15 +47,18 @@ def get_filename_from_import(module,input_folder=''):
         - python files (extension == py)
     """
 
+    if (isinstance(module, AsName)):
+        module = str(module.name)
+
+    # Remove first '.' as it doesn't represent a folder change
+    if module[0] == '.':
+        module = module[1:]
     filename = module.replace('.','/')
 
     # relative imports
-    sl   = '//'
-    dots = '..'
-    while sl in filename:
-        filename = filename.replace(sl, dots + '/')
-        sl   = sl + '/'
-        dots = dots + '.'
+    folder_above = '../'
+    while filename.startswith('/'):
+        filename = folder_above + filename[1:]
 
     filename_pyh = '{}.pyh'.format(filename)
     filename_py  = '{}.py'.format(filename)
@@ -96,7 +90,7 @@ def get_filename_from_import(module,input_folder=''):
     try:
         package = importlib.import_module(source)
         package_dir = str(package.__path__[0])
-    except:
+    except ImportError:
         errors = Errors()
         errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=source,
                       severity='fatal')
@@ -208,15 +202,11 @@ class Scope(object):
 
 class BasicParser(object):
 
-    """ Class for a base Parser."""
+    """ Class for a base Parser.
+    This class contains functions and properties which are common to SyntacticParser and SemanticParser
 
-    def __init__(self,
-                 debug=False,
-                 headers=None,
-                 static=None,
-                 show_traceback=False,
-                 output_folder=''):
-        """Parser constructor.
+    Parameters
+    ----------
 
         debug: bool
             True if in debug mode.
@@ -228,9 +218,15 @@ class BasicParser(object):
             a list of 'static' functions as strings
 
         show_traceback: bool
-            prints Tracebacke exception if True
+            prints Traceback exception if True
 
-        """
+    """
+
+    def __init__(self,
+                 debug=False,
+                 headers=None,
+                 static=None,
+                 show_traceback=False):
         self._fst = None
         self._ast = None
 
@@ -238,8 +234,7 @@ class BasicParser(object):
         self._metavars  = OrderedDict()
         self._namespace = Scope()
 
-
-        self._output_folder    = output_folder
+        self._used_names = None
 
         # represent the namespace of a function
 
@@ -249,6 +244,9 @@ class BasicParser(object):
         # the following flags give us a status on the parsing stage
         self._syntax_done   = False
         self._semantic_done = False
+
+        # the next expected Dummy variable
+        self._dummy_counter = 1
 
         # current position for errors
 
@@ -341,6 +339,60 @@ class BasicParser(object):
     def show_traceback(self):
         return self._show_traceback
 
+    @property
+    def used_names(self):
+        """Returns a set of all names used in the current file.
+        The set is used to prevent name collisions when creating new variables
+        """
+        return self._used_names
+
+    def get_new_name(self, current_name = None):
+        """
+        Creates a new name. A current_name can be provided indicating the name the
+        user would like to use if possible. If this name is not available then it
+        will be used as a prefix for the new name.
+        If no current_name is provided, then the standard prefix is used, and the
+        dummy counter is used and updated to facilitate finding the next value of
+        this common case
+
+          Parameters
+          ----------
+          current_name : str
+
+          Returns
+          -------
+          new_name     : str
+        """
+        if current_name is not None and current_name not in self.used_names:
+            self.used_names.add(current_name)
+            return current_name
+
+        if current_name is not None:
+            new_name, self._dummy_counter = create_incremented_string(self.used_names, prefix = current_name, counter = self._dummy_counter)
+        else:
+            new_name,_ = create_incremented_string(self.used_names, prefix = current_name)
+        return new_name
+
+    def get_new_variable(self, prefix = None):
+        """
+        Creates a new sympy Symbol using the prefix provided. If this prefix is None,
+        then the standard prefix is used, and the dummy counter is used and updated
+        to facilitate finding the next value of this common case
+
+          Parameters
+          ----------
+          prefix   : str
+
+          Returns
+          -------
+          variable : sympy.Symbol
+        """
+        if prefix is not None:
+            var,_ = create_variable(self._used_names, prefix)
+        else:
+            var, self._dummy_counter = create_variable(self._used_names, prefix, counter = self._dummy_counter)
+        return var
+
     # TODO shall we need to export the Parser too?
 
 
@@ -389,13 +441,18 @@ class BasicParser(object):
         container = self.namespace.imports['imports']
         
         # if source is not specified, imported things are treated as sources
-        source = expr.source
-        if source is None:
-            for t in expr.target:
-                name = str(t)
+        if len(expr.target) == 0:
+            if isinstance(expr.source, AsName):
+                name   = expr.source
+                source = str(expr.source.name)
+            else:
+                name   = str(expr.source)
+                source = name
+
+            if not source in pyccel_builtin_import_registery:
                 container[name] = []
         else:
-            source = str(source)
+            source = str(expr.source)
             if not source in pyccel_builtin_import_registery:
                 for t in expr.target:
                     name = [str(t)]
@@ -412,41 +469,6 @@ class BasicParser(object):
             print ('{var} \t :: \t {dtype}'.format(var=k, dtype=type(v)))
         print ('-------------------------')
 
-    def view_namespace(self, entry):
-
-        # TODO improve
-
-        try:
-            from tabulate import tabulate
-
-            table = []
-            for (k, v) in self.namespace[entry].items():
-                k_str = '{}'.format(k)
-                if entry == 'imports':
-                    if v is None:
-                        v_str = '*'
-                    else:
-                        v_str = '{}'.format(v)
-                elif entry == 'variables':
-                    v_str = '{}'.format(type(v))
-                else:
-                    raise NotImplementedError('TODO')
-
-                line = [k_str, v_str]
-                table.append(line)
-            headers = ['module', 'target']
-
-#            txt = tabulate(table, headers, tablefmt="rst")
-
-            txt = tabulate(table, tablefmt='rst')
-            print (txt)
-        except:
-
-            print ('------- namespace.{} -------'.format(entry))
-            for (k, v) in self.namespace[entry].items():
-                print ('{var} \t :: \t {value}'.format(var=k, value=v))
-            print ('-------------------------')
-
     def _visit(self, expr, **settings):
         raise NotImplementedError('Must be implemented by the extension')
 
@@ -458,7 +480,7 @@ if __name__ == '__main__':
 
     try:
         filename = sys.argv[1]
-    except:
+    except IndexError:
         raise ValueError('Expecting an argument for filename')
 
     parser = BasicParser(filename)

@@ -1,10 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import inspect
+
 from sympy.core.function import Application
-from sympy import Not, Float
+from sympy import Not
 from sympy import Function
-import scipy.constants as sc_constants
+from numpy import pi
 
 from pyccel.symbolic import lambdify
 
@@ -17,13 +19,13 @@ from .core import Constant, Variable, IndexedVariable
 
 from .builtins import Bool, Enumerate, Int, PythonFloat, PythonComplex, Len, Map, Range, Zip
 
-from .mathext  import math_functions
+from .mathext  import math_functions, math_constants
 
 from .numpyext import Full, Empty, Zeros, Ones
 from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from .numpyext import Diag, Cross
-from .numpyext import Min, Max, NumpyAbs, NumpyFloor, Norm, Where
-from .numpyext import Array, Shape, Rand, NumpySum, Matmul, Real, NumpyComplex, Imag, Mod
+from .numpyext import NumpyMin, NumpyMax, NumpyAbs, NumpyFloor, Norm, Where
+from .numpyext import Array, Shape, Rand, NumpyRandint, NumpySum, Matmul, Real, NumpyComplex, Imag, NumpyMod
 from .numpyext import NumpyInt, Int32, Int64, NumpyFloat, Float32, Float64, Complex64, Complex128
 from .numpyext import NumpyExp, NumpyLog, NumpySqrt
 from .numpyext import NumpySin, NumpyCos, NumpyTan
@@ -32,6 +34,10 @@ from .numpyext import NumpySinh, NumpyCosh, NumpyTanh
 from .numpyext import NumpyArcsinh, NumpyArccosh, NumpyArctanh
 from .numpyext import numpy_constants, Linspace
 from .numpyext import Product as Prod
+
+import pyccel.decorators as pyccel_decorators
+
+from pyccel.errors.errors import Errors
 
 
 __all__ = (
@@ -65,7 +71,7 @@ numpy_functions = {
     'imag'      : Imag,
     'float'     : NumpyFloat,
     'double'    : Float64,
-    'mod'       : Mod,
+    'mod'       : NumpyMod,
     'float32'   : Float32,
     'float64'   : Float64,
     'int32'     : Int32,
@@ -75,12 +81,14 @@ numpy_functions = {
     'complex64' : Complex64,
     'matmul'    : Matmul,
     'sum'       : NumpySum,
+    'max'      : NumpyMax,
+    'min'      : NumpyMin,
     'prod'      : Prod,
     'product'   : Prod,
     'linspace'  : Linspace,
     'diag'      : Diag,
     'where'     : Where,
-    'cross'     : Cross,
+#    'cross'     : Cross,   # Currently not correctly implemented
     # ---
     'abs'       : NumpyAbs,
     'floor'     : NumpyFloor,
@@ -115,6 +123,7 @@ numpy_linalg_functions = {
 numpy_random_functions = {
     'rand'      : Rand,
     'random'    : Rand,
+    'randint'   : NumpyRandint,
 }
 
 builtin_functions_dict = {
@@ -128,16 +137,13 @@ builtin_functions_dict = {
     'bool'     : Bool,
     'sum'      : NumpySum,
     'len'      : Len,
-    'Mod'      : Mod,
-    'max'      : Max,
-#    'Max'      : Max,
-    'min'      : Min,
-#    'Min'      : Min,
+    'max'      : NumpyMax,
+    'min'      : NumpyMin,
     'not'      : Not,   # TODO [YG, 20.05.2020]: do not use Sympy's Not
 }
 
 scipy_constants = {
-    'pi': Constant('real', 'pi', value=sc_constants.pi),
+    'pi': Constant('real', 'pi', value=pi),
                   }
 
 #==============================================================================
@@ -169,62 +175,57 @@ def builtin_function(expr, args=None):
 
     return None
 
+
 # TODO add documentation
-builtin_import_registery = ('numpy', 'numpy.linalg', 'numpy.random', 'scipy.constants', 'itertools', 'math')
+builtin_import_registery = {'numpy': {**numpy_functions, **numpy_constants, 'linalg':numpy_linalg_functions, 'random':numpy_random_functions},
+        'numpy.linalg': numpy_linalg_functions,
+        'numpy.random': numpy_random_functions,
+        'scipy.constants': scipy_constants,
+        'itertools': {'product': Product},
+        'math': {**math_functions, ** math_constants},
+        'pyccel.decorators': None}
 
 #==============================================================================
+def collect_relevant_imports(func_dictionary, targets):
+    if len(targets) == 0:
+        return func_dictionary
+
+    imports = []
+    for target in targets:
+        if isinstance(target, AsName):
+            import_name = target.name
+            code_name = target.target
+        else:
+            import_name = str(target)
+            code_name = import_name
+
+        if import_name in func_dictionary.keys():
+            imports.append((code_name, func_dictionary[import_name]))
+    return imports
+
 def builtin_import(expr):
     """Returns a builtin pyccel-extension function/object from an import."""
 
     if not isinstance(expr, Import):
         raise TypeError('Expecting an Import expression')
 
-    if expr.source is None:
-        return []
+    if isinstance(expr.source, AsName):
+        source = str(expr.source.name)
+    else:
+        source = str(expr.source)
 
-    source = str(expr.source)
+    if source == 'pyccel.decorators':
+        funcs = [f[0] for f in inspect.getmembers(pyccel_decorators, inspect.isfunction)]
+        for target in expr.target:
+            if str(target) not in funcs:
+                errors = Errors()
+                errors.report("{} does not exist in pyccel.decorators".format(target),
+                        symbol = expr, severity='error')
 
-        # TODO imrove
-    imports = []
-    for target in expr.target:
-        if isinstance(target, AsName):
-            import_name = target.target
-            code_name = target.name
-        else:
-            import_name = str(target)
-            code_name = import_name
-        if source == 'numpy':
+    elif source in builtin_import_registery:
+        return collect_relevant_imports(builtin_import_registery[source], expr.target)
 
-            if import_name in numpy_functions.keys():
-                imports.append((code_name, numpy_functions[import_name]))
-
-            elif import_name in numpy_constants.keys():
-                imports.append((code_name, numpy_constants[import_name]))
-
-        elif source == 'numpy.linalg':
-
-            if import_name in numpy_linalg_functions.keys():
-                imports.append((code_name, numpy_linalg_functions[import_name]))
-
-        elif source == 'numpy.random':
-
-            if import_name in numpy_random_functions.keys():
-                imports.append((code_name, numpy_random_functions[import_name]))
-
-        elif source == 'math':
-
-            if import_name in math_functions.keys():
-                imports.append((code_name, math_functions[import_name]))
-
-        elif source == 'scipy.constants':
-            if import_name in scipy_constants.keys():
-                imports.append((code_name, scipy_constants[import_name]))
-        elif source == 'itertools':
-
-            if import_name == 'product':
-                imports.append((code_name, Product))
-
-    return imports
+    return []
 
 #==============================================================================
 def get_function_from_ast(ast, func_name):
@@ -290,4 +291,3 @@ def split_positional_keyword_arguments(*args):
         kwargs[key] = value
 
     return args, kwargs
-
