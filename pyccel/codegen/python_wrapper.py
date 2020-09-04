@@ -189,7 +189,8 @@ def create_shared_library(codegen,
             print(out)
         if len(err)>0:
             print(err)
-            raise RuntimeError("Failed to build module")
+            if p.returncode != 0:
+                raise RuntimeError("Failed to build module")
 
         sharedlib_folder += 'build/lib*/'
 
