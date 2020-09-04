@@ -200,13 +200,13 @@ def test_decorator_f7():
     # ...
 
 #------------------------------------------------------------------------------
-def test_decorator_f8(language):
+def test_decorator_f8():
     @types('int','bool')
     def f8(x,b):
         a = x if b else 2
         return a
 
-    f = epyccel(f8, language=language)
+    f = epyccel(f8)
 
     # ...
     assert f(3,True)  == f8(3,True)
@@ -255,7 +255,7 @@ def test_multiple_returns_f11():
     f = epyccel(ackermann)
     assert f(2,3) == ackermann(2,3)
 
-def test_multiple_returns_f12(language):
+def test_multiple_returns_f12():
     @types('int')
     def non_negative(i):
         if i < 0:
@@ -263,7 +263,7 @@ def test_multiple_returns_f12(language):
         else:
             return True
 
-    f = epyccel(non_negative, language=language)
+    f = epyccel(non_negative)
     assert f(2) == non_negative(2)
     assert f(-1) == non_negative(-1)
 
@@ -295,9 +295,47 @@ def test_decorator_f15(language):
         else:
             return d + e
 
-    f = epyccel(f15, language=language)
+    f = epyccel(f15)
     assert f(True, 1, 2, 3, 4)  == f15(True, 1, 2, 3, 4)
     assert f(False, 1, 2, 3, 4)  == f15(False, 1, 2, 3, 4)
+
+
+def test_decorator_f16(language):
+    @types('int16')
+    def f16(a):
+        b = a
+        return b
+    f = epyccel(f16, language=language)
+    assert f(1) == f16(1)
+
+def test_decorator_f17(language):
+    @types('int8')
+    def f17(a):
+        b = a
+        return b
+    f = epyccel(f17, language=language)
+    assert f(1) == f17(1)
+
+def test_decorator_f18(language):
+    @types('int32')
+    def f18(a):
+        b = a
+        return b
+    f = epyccel(f18, language=language)
+    assert f(1) == f18(1)
+
+def test_decorator_f19(language):
+    @types('int64')
+    def f19(a):
+        b = a
+        return b
+    f = epyccel(f19, language=language)
+    assert f(1) == f19(1)
+
+
+
+
+
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
@@ -305,4 +343,3 @@ def test_decorator_f15(language):
 #
 #def teardown_module():
 #    clean_test()
-#

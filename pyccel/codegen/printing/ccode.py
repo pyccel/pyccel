@@ -200,7 +200,7 @@ class CCodePrinter(CodePrinter):
         rank  = expr.variable.rank
         try :
             dtype = dtype_registry[(dtype, prec)]
-        except :
+        except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,severity='fatal')
         variable = self._print(expr.variable)
         if rank > 0:
@@ -228,7 +228,7 @@ class CCodePrinter(CodePrinter):
             #rank  = result.rank
             try :
                 ret_type = dtype_registry[(dtype, prec)]
-            except :
+            except KeyError:
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,severity='fatal')
         elif len(expr.results) > 1:
             # TODO: Use fortran example to add pointer arguments for multiple output
@@ -244,7 +244,7 @@ class CCodePrinter(CodePrinter):
             arg_dtypes = [self._print(i.dtype) for i in expr.arguments]
             try :
                 arg_dtypes = [dtype_registry[(dtype, arg.precision)] for dtype,arg in zip(arg_dtypes, expr.arguments)]
-            except :
+            except KeyError:
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,severity='fatal')
             arguments  = [self._print(i) for i in expr.arguments]
             arg_code   = ', '.join(dtype + ' ' + arg for dtype,arg in zip(arg_dtypes,arguments))
