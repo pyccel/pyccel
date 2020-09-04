@@ -14,7 +14,8 @@ pytype_registry = {
     ('int',8)     : 'l',
     ('int',2)     : 'i',
     ('int',1)     : 'i',
-    ('bool',4)    : 'i'
+    ('bool',4)    : 'p',
+    ('str',0)     : 's'
 }
 
 def write_python_wrapper(expr, printer):

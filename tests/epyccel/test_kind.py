@@ -41,7 +41,7 @@ def test_input_output_matching_types():
         c = a+b
         return c
 
-    epyc_add_real = epyccel(add_real , fflags="-Werror -Wconversion-extra")
+    epyc_add_real = epyccel(add_real, fflags="-Werror -Wconversion-extra")
 
     assert(add_real(1.0,2.0)==epyc_add_real(1.0,2.0))
 
@@ -80,3 +80,4 @@ def test_output_types_3():
 
 def teardown_module():
     clean_test()
+
