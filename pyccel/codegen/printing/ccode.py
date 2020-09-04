@@ -91,12 +91,12 @@ numpy_ufunc_to_c = {
 # Math function ref https://docs.python.org/3/library/math.html
 math_function_to_c = {
     # ---------- Number-theoretic and representation functions ------------
-    'MathCeil'     : 'ceill',
+    'MathCeil'     : 'ceil',
     # 'MathComb'   : 'com' # TODO
-    'MathCopysign': 'copysignl',
-    'MathFabs'   : 'fabsl',
+    'MathCopysign': 'copysign',
+    'MathFabs'   : 'fabs',
     # 'MathFactorial': '???', # TODO
-    'MathFloor'    : 'floorl',
+    'MathFloor'    : 'floor',
     # 'MathFmod'   : '???',  # TODO
     # 'MathRexp'   : '???'   TODO requires two output
     # 'MathFsum'   : '???',  # TODO
@@ -106,35 +106,35 @@ math_function_to_c = {
     'MathIsinf'   : 'isinf', # int isinf(real-floating x);
     'MathIsnan'   : 'isnan', # int isnan(real-floating x);
     # 'MathIsqrt'  : '???' TODO
-    'MathLdexp'  : 'ldexpl',
+    'MathLdexp'  : 'ldexp',
     # 'MathModf'  : '???' TODO return two value
     # 'MathPerm'  : '???' TODO
     # 'MathProd'  : '???' TODO
-    'MathRemainder'  : 'remainderl',
-    'MathTrunc'  : 'truncl',
+    'MathRemainder'  : 'remainder',
+    'MathTrunc'  : 'trunc',
 
     # ----------------- Power and logarithmic functions -----------------------
 
-    'MathExp'    : 'expl',
-    'MathExpm1'  : 'expm1l',
-    'MathLog'    : 'logl',      # take also an option arg [base]
-    'MathLog1p'  : 'log1pl',
-    'MathLog2'  : 'log2l',
-    'MathLog10'  : 'log10l',
-    'MathPow'    : 'powl',
+    'MathExp'    : 'exp',
+    'MathExpm1'  : 'expm1',
+    'MathLog'    : 'log',      # take also an option arg [base]
+    'MathLog1p'  : 'log1p',
+    'MathLog2'  : 'log2',
+    'MathLog10'  : 'log10',
+    'MathPow'    : 'pow',
     # 'MathSqrt'   : 'sqrt',    # sqrt is printed using _Print_MathSqrt
 
     # --------------------- Trigonometric functions ---------------------------
 
-    'MathAcos'   : 'acosl',
-    'MathAsin'   : 'asinl',
-    'MathAtan'   : 'atanl',
-    'MathAtan2'  : 'atan2l',
-    'MathCos'    : 'cosl',
+    'MathAcos'   : 'acos',
+    'MathAsin'   : 'asin',
+    'MathAtan'   : 'atan',
+    'MathAtan2'  : 'atan2',
+    'MathCos'    : 'cos',
     # 'MathDist'  : '???', TODO
-    'MathHypot'  : 'hypotl',
-    'MathSin'    : 'sinl',
-    'MathTan'    : 'tanl',
+    'MathHypot'  : 'hypot',
+    'MathSin'    : 'sin',
+    'MathTan'    : 'tan',
 
     # -------------------------- Angular conversion ---------------------------
 
@@ -143,19 +143,19 @@ math_function_to_c = {
 
     # -------------------------- Hyperbolic functions -------------------------
 
-    'MathAcosh'  : 'acoshl',
-    'MathAsinh'  : 'asinhl',
-    'MathAtanh'  : 'atanhl',
-    'MathCosh'   : 'coshl',
-    'MathSinh'   : 'sinhl',
-    'MathTanh'   : 'tanhl',
+    'MathAcosh'  : 'acosh',
+    'MathAsinh'  : 'asinh',
+    'MathAtanh'  : 'atanh',
+    'MathCosh'   : 'cosh',
+    'MathSinh'   : 'sinh',
+    'MathTanh'   : 'tanh',
 
     # --------------------------- Special functions ---------------------------
 
-    'MathErf'    : 'erfl',
-    'MathErfc'   : 'erfcl',
-    'MathGamma'  : 'tgammal',
-    'MathLgamma' : 'lgammal',
+    'MathErf'    : 'erf',
+    'MathErfc'   : 'erfc',
+    'MathGamma'  : 'tgamma',
+    'MathLgamma' : 'lgamma',
 }
 
 dtype_registry = {('real',8)    : 'double',
