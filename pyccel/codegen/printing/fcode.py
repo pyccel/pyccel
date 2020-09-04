@@ -2271,7 +2271,7 @@ class FCodePrinter(CodePrinter):
                 self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
                 return self._print(IndexedVariable(var, dtype=base.dtype,
                    shape=base.shape,prec=base.precision,
-                   order=base.order,rank=base.rank).__getitem__(*expr.indices))
+                   order=base.order,rank=base.rank)[expr.indices])
         else:
             base = self._print(expr.base.label)
 
@@ -2310,7 +2310,7 @@ class FCodePrinter(CodePrinter):
                 self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
                 return self._print(IndexedVariable(var, dtype=base.dtype,
                    shape=base.shape,prec=base.precision,
-                   order=base.order,rank=base.rank).__getitem__(*expr.indices))
+                   order=base.order,rank=base.rank)[expr.indices])
         elif isinstance(base, TupleVariable) and not base.is_homogeneous:
             if len(expr.indices)==1:
                 return self._print(base[expr.indices[0]])
@@ -2318,7 +2318,7 @@ class FCodePrinter(CodePrinter):
                 var = base[expr.indices[-1]]
                 return self._print(IndexedVariable(var, dtype = var.dtype,
                     shape = var.shape, prec = var.precision,
-                    order = var.order, rank = var.rank).__getitem__(*expr.indices[:-1]))
+                    order = var.order, rank = var.rank)[expr.indices[:-1]])
         else:
             base = self._print(expr.base.label)
 
