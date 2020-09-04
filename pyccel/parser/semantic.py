@@ -898,9 +898,9 @@ class SemanticParser(BasicParser):
                     dtype = var.dtype
 
             return IndexedVariable(var, dtype=dtype,
-                   shape=shape,prec=prec,order=order,rank=rank).__getitem__(*args)
+                   shape=shape,prec=prec,order=order,rank=rank)[args]
         else:
-            return IndexedVariable(name, dtype=dtype).__getitem__(args)
+            return IndexedVariable(name, dtype=dtype)[args]
 
     def _visit_IndexedBase(self, expr, **settings):
         return self._visit(expr.label)
@@ -1769,8 +1769,8 @@ class SemanticParser(BasicParser):
                     new_rhs = []
                     for i,l in enumerate(lhs):
                         new_lhs.append( self._assign_lhs_variable(l, d_var.copy(),
-                            indexed_rhs.__getitem__(i), new_expressions, isinstance(expr, AugAssign), **settings) )
-                        new_rhs.append(indexed_rhs.__getitem__(i))
+                            indexed_rhs[i], new_expressions, isinstance(expr, AugAssign), **settings) )
+                        new_rhs.append(indexed_rhs[i])
                     rhs = PythonTuple(*new_rhs)
                     d_var = [d_var]
                 else:
