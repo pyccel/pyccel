@@ -93,7 +93,7 @@ def is_not_nil(a):
 
 @types('int')
 def cast_int(a):
-    b = bool(a)
+    b = int(a)
     return b
 
 @types('bool')
