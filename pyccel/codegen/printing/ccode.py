@@ -62,13 +62,13 @@ known_functions = {
 # dictionary mapping numpy function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
 numpy_ufunc_to_c = {
-    'NumpyAbs'  : 'abs',
+    'NumpyAbs'  : 'fabs',
     'NumpyMin'  : 'minval',
     'NumpyMax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
     # ---
     'NumpyExp' : 'exp',
-    'NumpyLog' : 'Log',
+    'NumpyLog' : 'log',
     # 'NumpySqrt': 'Sqrt',  # sqrt is printed using _Print_NumpySqrt
     # ---
     'NumpySin'    : 'sin',
@@ -353,7 +353,13 @@ class CCodePrinter(CodePrinter):
 
         type_name = type(expr).__name__
         func_name = numpy_ufunc_to_c[type_name]
-        code_args = ', '.join(self._print(i) for i in expr.args)
+        args = []
+        for arg in expr.args:
+            if arg.dtype is not NativeReal:
+                args.append('(long double)(' + self._print(arg) + ')')
+            else:
+                args.append(self._print(arg))
+        code_args = ', '.join(args)
         return '{0}({1})'.format(func_name, code_args)
 
     def _print_MathFunctionBase(self, expr):
@@ -385,6 +391,13 @@ class CCodePrinter(CodePrinter):
                 args.append(self._print(arg))
         code_args = ', '.join(args)
         return '{0}({1})'.format(func_name, code_args)
+
+    def _print_NumpySqrt(self, expr):
+        arg = expr.args[0]
+        code_args = self._print(arg)
+        if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
+            code_args = '(long double)({})'.format(code_args)
+        return 'sqrtl({})'.format(code_args)
 
     def _print_MathSqrt(self, expr):
         # add necessary include
