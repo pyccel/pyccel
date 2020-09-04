@@ -8,7 +8,7 @@ from conftest import *
 
 import sys
 
-max_float = sys.float_info.max  # Maximum positive float
+max_float = 3.40282e+38         # maximum positive float
 min_float = sys.float_info.min  # Minimum positive float
 
 def test_fabs_call(language):
@@ -742,7 +742,7 @@ def test_expm1_call_special_case(language = 'c'): # expm1
     # should give result accurate to full precision better than exp()
     x = 1e-5
     f1 = epyccel(expm1_call, language = language)
-    assert(f1(x) ==  expm1_call(x))
+    assert(isclose(f1(x), expm1_call(x), rtol=1e-15, atol=1e-15))
 
 def test_expm1_phrase(language = 'c'): # expm1
     @types('real','real')
