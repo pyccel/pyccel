@@ -190,6 +190,7 @@ class CCodePrinter(CodePrinter):
         self.known_functions.update(userfuncs)
         self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
+        self.includes = set() # Containe necessary lib to include
 
     def _get_statement(self, codestring):
         return "%s;" % codestring
@@ -207,7 +208,9 @@ class CCodePrinter(CodePrinter):
     # ============ Elements ============ #
 
     def _print_Module(self, expr):
-        return '\n\n'.join(self._print(i) for i in expr.body)
+        functions = '\n\n'.join(self._print(i) for i in expr.body)
+        includes = '\n'.join(["#include <{}>".format(lib) for lib in self.includes])
+        return  "{}\n\n{}".format(includes, functions)
 
     def _print_While(self,expr):
         code = "while (%s)\n{" % self._print(expr.test)
@@ -370,6 +373,8 @@ class CCodePrinter(CodePrinter):
             math.sin(x) ==> sin(x)
 
         """
+        # add necessary include
+        self.includes.add('math.h')
         type_name = type(expr).__name__
         func_name = math_function_to_c[type_name]
         args = []
@@ -382,6 +387,8 @@ class CCodePrinter(CodePrinter):
         return '{0}({1})'.format(func_name, code_args)
 
     def _print_MathSqrt(self, expr):
+        # add necessary include
+        self.includes.add('math.h')
         arg = expr.args[0]
         code_args = self._print(arg)
         if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
@@ -665,5 +672,4 @@ def ccode(expr, assign_to=None, **settings):
         For example, if ``dereference=[a]``, the resulting code would print
         ``(*a)`` instead of ``a``.
     """
-    libs = "#include <math.h>\n\n"
-    return libs + CCodePrinter(settings).doprint(expr, assign_to)
+    return CCodePrinter(settings).doprint(expr, assign_to)
