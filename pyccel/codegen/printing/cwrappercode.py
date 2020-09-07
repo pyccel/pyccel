@@ -1,4 +1,5 @@
 from pyccel.codegen.printing.ccode import CCodePrinter
+from pyccel.ast.core import Variable
 from pyccel.ast.datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 
@@ -52,7 +53,7 @@ class CWrapperCodePrinter(CCodePrinter):
         parse_args = []
         type_keys = ''
         for a in expr.arguments:
-            collect_type, cast_func = get_PyArgParseTypeTranslation(a.dtype)
+            collect_type, cast_func = self.get_PyArgParseType(a.dtype)
             if cast_func is not None:
                 # TODO: Add other properties
                 collect_var = Variable(dtype=collect_type,
@@ -90,7 +91,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_Module(self, expr):
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.funcs)
 
-        function_defs = '\n'.join(self._print(expr.funcs))
+        function_defs = '\n'.join(self._print(f) for f in expr.funcs)
 
         #TODO: Print ModuleDef (see cwrapper.py L69)
 
