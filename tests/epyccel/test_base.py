@@ -32,6 +32,18 @@ def test_compare_is_not():
     compare_epyccel(base.compare_is_not, False, True)
     compare_epyccel(base.compare_is_not, False, False)
 
+def test_compare_is_int():
+    compare_epyccel(base.compare_is_int, True, 1)
+    compare_epyccel(base.compare_is_int, True, 0)
+    compare_epyccel(base.compare_is_int, False, 1)
+    compare_epyccel(base.compare_is_int, False, 0)
+
+def test_compare_is_not_int():
+    compare_epyccel(base.compare_is_not_int, True, 1)
+    compare_epyccel(base.compare_is_not_int, True, 0)
+    compare_epyccel(base.compare_is_not_int, False, 1)
+    compare_epyccel(base.compare_is_not_int, False, 0)
+
 def test_not_false():
     compare_epyccel(base.not_false, True)
     compare_epyccel(base.not_false, False)

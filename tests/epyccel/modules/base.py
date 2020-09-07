@@ -28,6 +28,20 @@ def compare_is_not(a, b):
         c = True
     return c
 
+@types('bool', 'int')
+def compare_is_int(a, b):
+    c = False
+    if a is bool(b):
+        c = True
+    return c
+
+@types('bool', 'int')
+def compare_is_not_int(a, b):
+    c = False
+    if a is not bool(b):
+        c = True
+    return c
+
 @types('bool')
 def not_false(a):
     c = False
