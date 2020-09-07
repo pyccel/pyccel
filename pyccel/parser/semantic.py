@@ -2698,16 +2698,16 @@ class SemanticParser(BasicParser):
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='error', blocker=self.blocking)
 
-        if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
-            (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
-            return Is(var1, var2)
-
         if isinstance(var2, Nil):
             if not var1.is_optional:
                 errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='error', blocker=self.blocking)
             return Is(var1, expr.rhs)
+
+        if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
+            (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
+            return Is(var1, var2)
 
         errors.report(PYCCEL_RESTRICTION_IS_RHS,
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
