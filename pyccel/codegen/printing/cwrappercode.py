@@ -1,5 +1,6 @@
-from pyccel.codegen.printing.ccodeprinter import CCodePrinter
-from pyccel.ast.datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeStr, PyccelPyObject
+from pyccel.codegen.printing.ccode import CCodePrinter
+from pyccel.ast.datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
+from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -13,7 +14,7 @@ pytype_registry = {
         NativeReal(): 'd',
         NativeComplex():'c',
         NativeBool():'p',
-        NativeStr():'s',
+        NativeString():'s',
         PyccelPyObject():'O'
         }
 
@@ -86,9 +87,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return CWrapper._print_FunctionDef(wrapper_func)
 
-    #TODO: Create class
-    def _print_ModuleDef(self, expr):
-        function_defs = '\n'.join(self._print(expr.functions))
+    def _print_Module(self, expr):
+        function_defs = '\n'.join(self._print(expr.funcs))
 
         #TODO: Print ModuleDef (see cwrapper.py L69)
 
@@ -96,14 +96,14 @@ class CWrapperCodePrinter(CCodePrinter):
                 'PyObject *m;\n\n'
                 'm = PyModule_Create(&{mod_name});\n'
                 'if (m == NULL) return NULL;\n\n'
-                'return m;\n}}'.format(mod_name=expr.mod_name)
+                'return m;\n}}'.format(mod_name=expr.mod_name))
 
         return ('{function_defs}\n'
                 '{module_def}\n'
                 '{init_func}\n'.format(
                     function_defs = function_defs,
                     module_def = module_def,
-                    init_func = init_func)
+                    init_func = init_func))
 
 def cwrappercode(expr, assign_to=None, **settings):
     """Converts an expr to a string of c wrapper code
