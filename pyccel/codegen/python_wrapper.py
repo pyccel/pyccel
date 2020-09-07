@@ -5,9 +5,10 @@ import subprocess
 import os
 import glob
 
-from pyccel.ast.f2py                import as_static_function_call
-from pyccel.ast.core                import SeparatorComment
-from pyccel.codegen.printing.fcode  import fcode
+from pyccel.ast.f2py                        import as_static_function_call
+from pyccel.ast.core                        import SeparatorComment
+from pyccel.codegen.printing.fcode          import fcode
+from pyccel.codegen.printing.cwrappercode   import cwrappercode
 from .utilities import language_extension
 from .cwrapper import create_c_wrapper, create_c_setup
 
@@ -167,7 +168,8 @@ def create_shared_library(codegen,
     sharedlib_folder = ''
 
     if language == 'c':
-        wrapper_code = create_c_wrapper(sharedlib_modname, codegen)
+        #wrapper_code = create_c_wrapper(sharedlib_modname, codegen)
+        wrapper_code = cwrappercode(codegen.expr)
         wrapper_filename_root = '{}_wrapper'.format(module_name)
         wrapper_filename = '{}.c'.format(wrapper_filename_root)
 
