@@ -12,8 +12,8 @@ pytype_registry = {
     ('complex',4) : 'D',
     ('int',4)     : 'i',
     ('int',8)     : 'l',
-    ('int',2)     : 'i',
-    ('int',1)     : 'i',
+    ('int',2)     : 'h',
+    ('int',1)     : 'b',
     ('bool',4)    : 'p',
     ('str',0)     : 's'
 }

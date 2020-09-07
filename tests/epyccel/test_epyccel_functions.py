@@ -306,7 +306,7 @@ def test_decorator_f16(language):
         b = a
         return b
     f = epyccel(f16, language=language)
-    assert f(1) == f16(1)
+    assert f(np.int16(17)) == f16(np.int16(17))
 
 def test_decorator_f17(language):
     @types('int8')
@@ -314,7 +314,7 @@ def test_decorator_f17(language):
         b = a
         return b
     f = epyccel(f17, language=language)
-    assert f(1) == f17(1)
+    assert f(np.int8(2)) == f17(np.int8(2))
 
 def test_decorator_f18(language):
     @types('int32')
@@ -322,7 +322,7 @@ def test_decorator_f18(language):
         b = a
         return b
     f = epyccel(f18, language=language)
-    assert f(1) == f18(1)
+    assert f(np.int32(5)) == f18(np.int32(5))
 
 def test_decorator_f19(language):
     @types('int64')
@@ -330,7 +330,7 @@ def test_decorator_f19(language):
         b = a
         return b
     f = epyccel(f19, language=language)
-    assert f(1) == f19(1)
+    assert f(np.int64(1)) == f19(np.int64(1))
 
 
 
@@ -343,4 +343,3 @@ def test_decorator_f19(language):
 #
 #def teardown_module():
 #    clean_test()
-#

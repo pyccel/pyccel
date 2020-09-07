@@ -63,8 +63,8 @@ dtype_registry = {('real',8)    : 'double',
                   ('complex',4) : 'float complex',
                   ('int',4)     : 'int',
                   ('int',8)     : 'long',
-                  ('int',2)     : 'int',
-                  ('int',1)     : 'int',  
+                  ('int',2)     : 'short int',
+                  ('int',1)     : 'char',  
                   ('bool',4)    : 'int'}
 
 
