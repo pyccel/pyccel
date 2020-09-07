@@ -2693,10 +2693,8 @@ class SemanticParser(BasicParser):
         var1 = self._visit(expr.lhs)
         var2 = self._visit(expr.rhs)
 
-        if not isinstance(var1, Variable):
-            errors.report(PYCCEL_RESTRICTION_IS_LHS,
-                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='error', blocker=self.blocking)
+        if isinstance(var1, Nil):
+            var1, var2 = var2, var1
 
         if isinstance(var2, Nil):
             if not var1.is_optional:
