@@ -2685,53 +2685,38 @@ class SemanticParser(BasicParser):
         ls = [self._visit(i, **settings) for i in expr.variables]
         return Del(ls)
 
-    def _visit_Is(self, expr, **settings):
+    def _handle_is_operator(self, IsClass, expr, **settings):
 
         # TODO ERROR wrong position ??
 
         name = expr.lhs
-        var1 = self.get_variable(str(expr.lhs))
+        var1 = self._visit(expr.lhs)
+        var2 = self._visit(expr.rhs)
 
-        var2 = self.check_for_variable(str(expr.rhs))
-        if var2 is None:
-            if (isinstance(expr.rhs, Nil) and not var1.is_optional):
+        if isinstance(var1, Nil):
+            var1, var2 = var2, var1
+
+        if isinstance(var2, Nil):
+            if not var1.is_optional:
                 errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='error', blocker=self.blocking)
-            return Is(var1, expr.rhs)
+            return IsClass(var1, expr.rhs)
 
         if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
             (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
-            return Is(var1, var2)
+            return IsClass(var1, var2)
 
         errors.report(PYCCEL_RESTRICTION_IS_RHS,
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='error', blocker=self.blocking)
-        return Is(var1, expr.rhs)
+        return IsClass(var1, var2)
+
+    def _visit_Is(self, expr, **settings):
+        return self._handle_is_operator(Is, expr, **settings)
 
     def _visit_IsNot(self, expr, **settings):
-
-        # TODO ERROR wrong position ??
-
-        name = expr.lhs
-        var1 = self.get_variable(str(expr.lhs))
-
-        var2 = self.check_for_variable(str(expr.rhs))
-        if var2 is None:
-            if (isinstance(expr.rhs, Nil) and not var1.is_optional):
-                errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
-                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='error', blocker=self.blocking)
-            return IsNot(var1, expr.rhs)
-
-        if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
-            (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
-            return IsNot(var1, var2)
-
-        errors.report(PYCCEL_RESTRICTION_IS_RHS,
-            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='error', blocker=self.blocking)
-        return IsNot(var1, expr.rhs)
+        return self._handle_is_operator(IsNot, expr, **settings)
 
     def _visit_Import(self, expr, **settings):
 
