@@ -2685,7 +2685,7 @@ class SemanticParser(BasicParser):
         ls = [self._visit(i, **settings) for i in expr.variables]
         return Del(ls)
 
-    def _handle_is_operator(self, IsClass, expr, **settings)
+    def _handle_is_operator(self, IsClass, expr, **settings):
 
         # TODO ERROR wrong position ??
 
