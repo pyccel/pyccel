@@ -2715,10 +2715,10 @@ class SemanticParser(BasicParser):
         return IsClass(var1, var2)
 
     def _visit_Is(self, expr, **settings):
-        return self._handle_is_operator(Is, expr, settings)
+        return self._handle_is_operator(Is, expr, **settings)
 
     def _visit_IsNot(self, expr, **settings):
-        return self._handle_is_operator(IsNot, expr, settings)
+        return self._handle_is_operator(IsNot, expr, **settings)
 
     def _visit_Import(self, expr, **settings):
 
