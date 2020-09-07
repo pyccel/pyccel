@@ -88,6 +88,8 @@ class CWrapperCodePrinter(CCodePrinter):
         return CWrapper._print_FunctionDef(wrapper_func)
 
     def _print_Module(self, expr):
+        function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.funcs)
+
         function_defs = '\n'.join(self._print(expr.funcs))
 
         #TODO: Print ModuleDef (see cwrapper.py L69)
@@ -98,9 +100,13 @@ class CWrapperCodePrinter(CCodePrinter):
                 'if (m == NULL) return NULL;\n\n'
                 'return m;\n}}'.format(mod_name=expr.mod_name))
 
-        return ('{function_defs}\n'
+        return ('#define PY_SSIZE_T_CLEAN\n'
+                '#include <Python.h>\n'
+                '{function_signatures}\n'
+                '{function_defs}\n'
                 '{module_def}\n'
                 '{init_func}\n'.format(
+                    function_signatures = function_signatures,
                     function_defs = function_defs,
                     module_def = module_def,
                     init_func = init_func))
