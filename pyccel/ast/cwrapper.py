@@ -27,7 +27,18 @@ class PyArg_ParseTupleNode(Basic):
         return self._args[2]
 
 
-class PyBuildValueNode():
-    pass
+class PyBuildValueNode(Basic):
+    def __new__(cls, build_keys='', res_args=None):
+        return Basic.__new__(cls, build_keys, res_args)
+    
+    @property
+    def flags(self):
+        return self._args[0]
+    
+    @property
+    def args(self):
+        return self._args[1]
+
+    
 class PyccelPyObject(DataType):
     _name = 'pyobject'

@@ -10,7 +10,7 @@ from sympy.printing.precedence import precedence
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import CommentBlock, Comment
 
-from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode #PyBuildValueNode
+from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
@@ -119,8 +119,23 @@ class CCodePrinter(CodePrinter):
         pyarg = expr.pyarg
         flags = expr.flags
         args = ','.join(['{}'.format(self._print(a)) for a in expr.args])
-        code = '{name}({pyarg}, "{flags}", {args})'.format(name=name, pyarg=pyarg, flags = flags, args = args)
+        if expr.args:
+            code = '{name}({pyarg}, "{flags}", &{args})'.format(name=name, pyarg=pyarg, flags = flags, args = args)
+        else :
+            code ='{name}({pyarg}, "")'.format(name=name, pyarg=pyarg) 
         return code
+
+    def _print_PyBuildValueNode(self, expr):
+        name = 'Py_BuildValue'
+        flags = expr.flags
+        args = ','.join(['{}'.format(self._print(a)) for a in expr.args])        
+        #to change for args rank 1 +
+        if expr.args:
+            code = '{name}("{flags}", {args})'.format(name=name, flags=flags, args=args)
+        else :
+            code = '{name}("")'.format(name=name)
+        return code
+
 
     def _print_If(self, expr):
         lines = []
