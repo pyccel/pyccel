@@ -70,6 +70,12 @@ __all__ = (
     'PyccelAnd',
     'PyccelOr',
     'PyccelNot',
+    'PyccelRShift'
+    'PyccelLShift'
+    'PyccelBitXor'
+    'PyccelBitOr'
+    'PyccelBitAnd'
+    'PyccelInvert'
     'PyccelAssociativeParenthesis',
     'PyccelUnary',
     'AddOp',
@@ -225,6 +231,43 @@ def handle_precedence(args, my_precedence):
         args = tuple(new_args)
 
     return args
+
+class PyccelBitOperator(Expr, PyccelAstNode):
+    _rank = 0
+    _shape = ()
+    _dtype     = NativeInteger()
+
+    def __init__(self, *args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
+            return
+        
+        integers = [a for a in args if a.dtype is NativeInteger() or ad.dtype is NativeBool]
+        if integers:
+            self._precision = max(a.precision for a in integers)
+        else:
+            raise TypeError('cannot determine the type of {}'.format(self))
+    @property
+    def precedence(self):
+        return self._precedence
+
+class PyccelRShift(PyccelBitOperator):
+    _precedence = 11
+
+class PyccelLShift(PyccelBitOperator):
+    _precedence = 11
+
+class PyccelBitXor(PyccelBitOperator):
+    _precedence = 9
+
+class PyccelBitOr(PyccelBitOperator):
+    _precedence = 8
+
+class PyccelBitAnd(PyccelBitOperator):
+    _precedence = 10
+
+class PyccelInvert(PyccelBitOperator):
+    _precedence = 14
 
 class PyccelOperator(Expr, PyccelAstNode):
 

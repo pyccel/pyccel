@@ -1137,6 +1137,24 @@ class SemanticParser(BasicParser):
     def _visit_PyccelPow(self, expr, **settings):
         return self._handle_PyccelOperator(expr, **settings)
 
+    def _visit_PyccelRShift(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
+    def _visit_PyccelLShift(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
+    def _visit_PyccelBitXor(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
+    def _visit_PyccelBitOr(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
+    def _visit_PyccelBitAnd(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
+    def _visit_PyccelInvert(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
     def _visit_PyccelAssociativeParenthesis(self, expr, **settings):
         return PyccelAssociativeParenthesis(self._visit(expr.args[0]))
 
