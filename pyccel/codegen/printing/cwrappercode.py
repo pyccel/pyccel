@@ -1,11 +1,12 @@
 from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.ast.core import Variable , Assign, FunctionDef
 from pyccel.ast.datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
-from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
+from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode, PyBuildValue
 from pyccel.ast.type_inference import str_dtype
 from pyccel.ast.core import If, Nil, Return, FunctionCall , FunctionDef , PyccelNot
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
+from pyccel.ast.builtins import Bool
 from sympy.logic.boolalg      import Not
 
 errors = Errors()
@@ -17,7 +18,7 @@ pytype_registry = {
         NativeReal(): 'd',
         NativeComplex():'c',
         NativeBool():'p',
-        NativeString():'s', 
+        NativeString():'s',
         PyccelPyObject():'O'
         }
 
@@ -48,7 +49,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
 
     def _print_FunctionDef(self, expr):
-        used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results])
+        used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name.name])
         wrapper_vars = [a for a in expr.arguments] + [r for r in expr.results]
         python_func_args = Variable(dtype=PyccelPyObject(),
                                  name=self.get_new_name(used_names, "args"),
@@ -68,7 +69,7 @@ class CWrapperCodePrinter(CCodePrinter):
             if cast_func is not None:
                 # TODO: Add other properties
                 collect_var = Variable(dtype=collect_type,
-                        name=self.et_new_name(used_names, a.name+"_tmp"))
+                        name=self.get_new_name(used_names, a.name+"_tmp"))
                 wrapper_vars.append(collect_var)
                 parse_args.append(collect_var)
                 wrapper_body.append(cast_func(a, collect_var))
@@ -100,10 +101,13 @@ class CWrapperCodePrinter(CCodePrinter):
                 res_args.append(a)
             build_keys += pytype_registry[a.dtype]
 
+        #func_w = FunctionDef('Py_BuildValue', arguments = [build_keys] + res_args, results = [], body = [])
+        #func_c = FunctionCall(func_w, ['\"{}\"'.format(build_keys)] + res_args)
+        #wrapper_body.append(Assign(wrapper_results[0], func_c))
         wrapper_body.append(Assign(wrapper_results[0],PyBuildValueNode(build_keys, res_args)))
         wrapper_body.append(Return(wrapper_results))
 
-        name = expr.name.name+"_wrapper"
+        name = self.get_new_name(used_names, expr.name.name+"_wrapper")
         #TODO: Create node and add args
         wrapper_func = FunctionDef(name = expr.name.name+"_wrapper" ,
             arguments = wrapper_args,
@@ -141,11 +145,11 @@ class CWrapperCodePrinter(CCodePrinter):
                 'return m;\n}}'.format(mod_name=expr.name))
 
         return ('#define PY_SSIZE_T_CLEAN\n'
-                '#include <Python.h>\n'
-                '{function_signatures}\n'
-                '{function_defs}\n'
-                '{methode_def}'
-                '{module_def}\n'
+                '#include <Python.h>\n\n'
+                '{function_signatures}\n\n'
+                '{function_defs}\n\n'
+                '{methode_def}\n'
+                '{module_def}\n\n'
                 '{init_func}\n'.format(
                     function_signatures = function_signatures,
                     function_defs = function_defs,
@@ -177,4 +181,4 @@ def cwrappercode(expr, assign_to=None, **settings):
         ``(*a)`` instead of ``a``.
     """
 
-    return CWrapperCodePrinter(settings).doprint(expr.expr, assign_to)
+    return CWrapperCodePrinter(settings).doprint(expr, assign_to)

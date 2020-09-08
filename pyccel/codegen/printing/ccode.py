@@ -64,7 +64,7 @@ dtype_registry = {('real',8)    : 'double',
                   ('int',4)     : 'int',
                   ('int',8)     : 'long',
                   ('pyobject', 0) : 'PyObject',
-                  ('bool',1)    : 'int'}
+                  ('bool',4)    : 'int'}
 
 
 class CCodePrinter(CodePrinter):
@@ -378,6 +378,10 @@ class CCodePrinter(CodePrinter):
 
     def _print_NegativeInfinity(self, expr):
         return '-HUGE_VAL'
+
+    def _print_Bool(self, expr):
+        value = self._print(expr.arg)
+        return '{} != 0'.format(value)
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:

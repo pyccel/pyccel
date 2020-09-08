@@ -2386,6 +2386,7 @@ class Variable(Symbol, PyccelAstNode):
                 name = name[0]
             else:
                 name = DottedName(*name)
+
         if not isinstance(name, (str, DottedName)):
             raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
         self._name = name
