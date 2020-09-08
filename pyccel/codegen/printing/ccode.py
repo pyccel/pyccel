@@ -130,7 +130,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Bool(self, expr):
         value = self._print(expr.arg)
-        return '{} != 0'.format(value)
+        return '({} != 0)'.format(value)
 
     def _print_BooleanTrue(self, expr):
         return '1'
@@ -420,6 +420,17 @@ class CCodePrinter(CodePrinter):
     def _print_NewLine(self, expr):
         return '\n'
 
+    def _print_IsNot(self, expr):
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        a = expr.args[0]
+        b = expr.args[1]
+
+        if a.dtype is NativeBool() and b.dtype is NativeBool():
+            return '{} != {}'.format(lhs, rhs)
+
+        errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
+            severity='fatal')
 
     def _print_Is(self, expr):
         lhs = self._print(expr.lhs)
