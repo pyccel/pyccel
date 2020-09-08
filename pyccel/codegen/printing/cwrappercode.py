@@ -1,10 +1,12 @@
 from pyccel.codegen.printing.ccode import CCodePrinter
-from pyccel.ast.core import Variable
+from pyccel.ast.core import Variable , Assign, FunctionDef
 from pyccel.ast.datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
-from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
-
+from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode #PyBuildValueNode
+from pyccel.ast.type_inference import str_dtype
+from pyccel.ast.core import If, Nil, Return, FunctionCall , FunctionDef , PyccelNot
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
+from sympy.logic.boolalg      import Not
 
 errors = Errors()
 
@@ -15,7 +17,7 @@ pytype_registry = {
         NativeReal(): 'd',
         NativeComplex():'c',
         NativeBool():'p',
-        NativeString():'s',
+        NativeString():'s', 
         PyccelPyObject():'O'
         }
 
@@ -28,7 +30,8 @@ class CWrapperCodePrinter(CCodePrinter):
             used_names.add(requested_name)
             return requested_name
         else:
-            return create_incremented_string(used_names, prefix=requested_name)
+            return 'random_name'
+       #     return create_incremented_string(used_names, prefix=requested_name)
 
     def get_PyArgParseType(self, dtype):
         #TODO: Depends on type, rank, etc
@@ -40,15 +43,15 @@ class CWrapperCodePrinter(CCodePrinter):
         used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results])
         wrapper_vars = [a for a in expr.arguments] + [r for r in expr.results]
         python_func_args = Variable(dtype=PyccelPyObject(),
-                                 name=get_new_name(used_names, "args"),
-                                 is_pointer=True)
+                                 name=self.get_new_name(used_names, "args"),
+                                 is_pointer=True, rank=1)
         wrapper_args = [Variable(dtype=PyccelPyObject(),
-                                 name=get_new_name(used_names, "self"),
-                                 is_pointer=True),
+                                 name=self.get_new_name(used_names, "self"),
+                                 is_pointer=True, rank=1),
                         python_func_args]
         wrapper_results = [Variable(dtype=PyccelPyObject(),
-                                    name=get_new_name(used_names, "result"),
-                                    is_pointer=True)]
+                                    name=self.get_new_name(used_names, "result"),
+                                    is_pointer=True, rank=1)]
         wrapper_body = []
         parse_args = []
         type_keys = ''
@@ -57,16 +60,16 @@ class CWrapperCodePrinter(CCodePrinter):
             if cast_func is not None:
                 # TODO: Add other properties
                 collect_var = Variable(dtype=collect_type,
-                        name=get_new_name(used_names, a.name+"_tmp"))
+                        name=self.et_new_name(used_names, a.name+"_tmp"))
                 wrapper_vars.append(collect_var)
                 parse_args.append(collect_var)
                 wrapper_body.append(cast_func(a, collect_var))
             else:
                 parse_args.append(a)
-            type_keys.append(pytype_registry[str_dtype(arg.dtype)])
+            type_keys += pytype_registry[a.dtype]
 
         # TODO: Create PyArg_ParseTupleNode
-        wrapper_body.insert(0,If((Not(PyArg_ParseTupleNode(python_func_args, type_keys, parse_args)), Return(Nil))))
+        wrapper_body.insert(0,If((PyccelNot(PyArg_ParseTupleNode(python_func_args, type_keys, parse_args)), [Return([Nil])])))
 
         if len(expr.results)==0:
             func_call = FunctionCall(expr, expr.arguments)
@@ -74,32 +77,34 @@ class CWrapperCodePrinter(CCodePrinter):
             results = expr.results if len(expr.results)>1 else expr.results[0]
             func_call = Assign(results,FunctionCall(expr, expr.arguments))
         wrapper_body.append(func_call)
-
         #TODO: Loop over results to carry out necessary casts and collect Py_BuildValue type string
-
+        name = expr.name.name+"_wrapper"
         #TODO: Create node and add args
-        wrapper_body.append(Return(PyBuildValueNode()))
-
-        wrapper_func = FunctionDef(name = self.parser.get_new_name(expr.name+"_wrapper"),
+        wrapper_func = FunctionDef(name = expr.name.name+"_wrapper" ,
             arguments = wrapper_args,
             results = wrapper_results,
             body = wrapper_body,
             local_vars = wrapper_vars)
-
-        return CWrapper._print_FunctionDef(wrapper_func)
+        return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.funcs)
 
         function_defs = '\n'.join(self._print(f) for f in expr.funcs)
 
-        #TODO: Print ModuleDef (see cwrapper.py L69)
+        module_def = ('static struct PyModuleDef {mod_name}_module = {{\n'
+                '   PyModuleDef_HEAD_INIT,\n'
+                '   \"{mod_name}\",   /* name of module */\n'
+                '   NULL, /* module documentation, may be NULL */\n'
+                '   -1,       /* size of per-interpreter state of the module,*/\n'
+                '   {mod_name}_methods\n'
+                '}};\n\n'.format(mod_name = expr.name))
 
         init_func = ('PyMODINIT_FUNC PyInit_{mod_name}(void)\n{{\n'
                 'PyObject *m;\n\n'
                 'm = PyModule_Create(&{mod_name});\n'
                 'if (m == NULL) return NULL;\n\n'
-                'return m;\n}}'.format(mod_name=expr.mod_name))
+                'return m;\n}}'.format(mod_name=expr.name))
 
         return ('#define PY_SSIZE_T_CLEAN\n'
                 '#include <Python.h>\n'
@@ -136,4 +141,4 @@ def cwrappercode(expr, assign_to=None, **settings):
         ``(*a)`` instead of ``a``.
     """
 
-    return CWrapperCodePrinter(settings).doprint(expr, assign_to)
+    return CWrapperCodePrinter(settings).doprint(expr.expr, assign_to)

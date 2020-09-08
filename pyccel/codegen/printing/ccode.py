@@ -10,7 +10,7 @@ from sympy.printing.precedence import precedence
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import CommentBlock, Comment
 
-
+from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode #PyBuildValueNode
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
@@ -63,6 +63,7 @@ dtype_registry = {('real',8)    : 'double',
                   ('complex',4) : 'float complex',
                   ('int',4)     : 'int',
                   ('int',8)     : 'long',
+                  ('pyobject', 0) : 'PyObject',
                   ('bool',1)    : 'int'}
 
 
@@ -112,6 +113,14 @@ class CCodePrinter(CodePrinter):
         code = "while (%s)\n{" % self._print(expr.test)
         code = code + "\n %s" % self._print(expr.body) + "\n}"
         return (code)
+
+    def _print_PyArg_ParseTupleNode(self, expr):
+        name = 'PyArg_ParseTuple'
+        pyarg = expr.pyarg
+        flags = expr.flags
+        args = ','.join(['{}'.format(self._print(a)) for a in expr.args])
+        code = '{name}({pyarg}, "{flags}", {args})'.format(name=name, pyarg=pyarg, flags = flags, args = args)
+        return code
 
     def _print_If(self, expr):
         lines = []
@@ -195,6 +204,9 @@ class CCodePrinter(CodePrinter):
     def _print_NativeBool(self, expr):
         return 'bool'
 
+    def _print_PyccelPyObject(self, expr):
+        return 'pyobject'
+
     def _print_NativeInteger(self, expr):
         return 'int'
 
@@ -222,10 +234,14 @@ class CCodePrinter(CodePrinter):
         if not expr.arguments:
             arg_code = 'void'
         else:
-            arg_dtypes = [self._print(i.dtype) for i in expr.arguments]
-            arg_dtypes = [dtype_registry[(dtype, arg.precision)] for dtype,arg in zip(arg_dtypes, expr.arguments)]
-            arguments  = [self._print(i) for i in expr.arguments]
-            arg_code   = ', '.join(dtype + ' ' + arg for dtype,arg in zip(arg_dtypes,arguments))
+            #to change for arguments with ranks * ** etc...
+            #arg_dtypes = [self._print(i.dtype) for i in expr.arguments]
+            #arg_dtypes = [dtype_registry[(dtype, arg.precision)] for dtype,arg in zip(arg_dtypes, expr.arguments)]
+            #arguments  = [self._print(i) for i in expr.arguments]
+            #arg_code   = ', '.join(dtype + ' ' + arg for dtype,arg in zip(arg_dtypes,arguments))
+            argument_declare = [Declare(i.dtype, i) for i in expr.arguments]
+            argument = [self._print(i) for i in argument_declare]
+            arg_code = ', '.join(i[:-1] for i in argument)
 
         return '{0} {1}({2})'.format(ret_type, name, arg_code)
 
@@ -252,6 +268,9 @@ class CCodePrinter(CodePrinter):
             code += self._print(expr.stmt)+'\n'
         code +='return {0};'.format(self._print(expr.expr[0]))
         return code
+
+    def _print_Nil(self, expr):
+        return 'NULL'
 
     def _print_PyccelAdd(self, expr):
         return ' + '.join(self._print(a) for a in expr.args)
@@ -487,5 +506,4 @@ def ccode(expr, assign_to=None, **settings):
         For example, if ``dereference=[a]``, the resulting code would print
         ``(*a)`` instead of ``a``.
     """
-
     return CCodePrinter(settings).doprint(expr, assign_to)

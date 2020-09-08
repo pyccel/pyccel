@@ -169,7 +169,7 @@ def create_shared_library(codegen,
 
     if language == 'c':
         #wrapper_code = create_c_wrapper(sharedlib_modname, codegen)
-        wrapper_code = cwrappercode(codegen.expr)
+        wrapper_code = cwrappercode(codegen)
         wrapper_filename_root = '{}_wrapper'.format(module_name)
         wrapper_filename = '{}.c'.format(wrapper_filename_root)
 
