@@ -69,7 +69,7 @@ class CWrapperCodePrinter(CCodePrinter):
             type_keys += pytype_registry[a.dtype]
 
         # TODO: Create PyArg_ParseTupleNode
-        wrapper_body.insert(0,If((PyccelNot(PyArg_ParseTupleNode(python_func_args, type_keys, parse_args)), [Return([Nil])])))
+        wrapper_body.insert(0,If((PyccelNot(PyArg_ParseTupleNode(python_func_args, type_keys, parse_args)), [Return([Nil()])])))
 
         if len(expr.results)==0:
             func_call = FunctionCall(expr, expr.arguments)

@@ -217,11 +217,12 @@ class CCodePrinter(CodePrinter):
         return 'void'
 
     def function_signature(self, expr):
+        rank = 0
         if len(expr.results) == 1:
             result = expr.results[0]
             dtype = self._print(result.dtype)
             prec  = result.precision
-            #rank  = result.rank
+            rank  = result.rank
             ret_type = dtype_registry[(dtype, prec)]
         elif len(expr.results) > 1:
             # TODO: Use fortran example to add pointer arguments for multiple output
@@ -242,7 +243,8 @@ class CCodePrinter(CodePrinter):
             argument_declare = [Declare(i.dtype, i) for i in expr.arguments]
             argument = [self._print(i) for i in argument_declare]
             arg_code = ', '.join(i[:-1] for i in argument)
-
+        if rank == 1:
+            return '{0}* {1}({2})'.format(ret_type, name, arg_code)        
         return '{0} {1}({2})'.format(ret_type, name, arg_code)
 
     def _print_FunctionDef(self, expr):
