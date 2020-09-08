@@ -15,7 +15,6 @@ from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMo
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 
-from pyccel.ast.datatypes import NativeInteger
 from pyccel.ast.datatypes import NativeInteger, NativeBool
 
 from pyccel.ast.builtins  import Range
@@ -64,7 +63,7 @@ dtype_registry = {('real',8)    : 'double',
                   ('complex',4) : 'float complex',
                   ('int',4)     : 'int',
                   ('int',8)     : 'long',
-                  ('bool',1)    : 'int'}
+                  ('bool',4)    : 'int'}
 
 
 class CCodePrinter(CodePrinter):
@@ -128,6 +127,10 @@ class CCodePrinter(CodePrinter):
                 lines.append("else if (%s)\n{" % self._print(c))
             lines.append("%s\n}" % var)
         return "\n".join(lines)
+
+    def _print_Bool(self, expr):
+        value = self._print(expr.arg)
+        return '{} != 0'.format(value)
 
     def _print_BooleanTrue(self, expr):
         return '1'
