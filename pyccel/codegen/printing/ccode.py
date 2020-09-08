@@ -108,7 +108,7 @@ class CCodePrinter(CodePrinter):
     def _print_Module(self, expr):
         return '\n\n'.join(self._print(i) for i in expr.body)
 
-    def _print_While(self,expr):
+    def _print_While(self, expr):
         code = "while (%s)\n{" % self._print(expr.test)
         code = code + "\n %s" % self._print(expr.body) + "\n}"
         return (code)
@@ -270,6 +270,25 @@ class CCodePrinter(CodePrinter):
         if all(a.dtype is NativeInteger() for a in expr.args):
             return ' / '.join('real({})'.format(self._print(a)) for a in args)
         return  ' / '.join(self._print(a) for a in args)
+
+    def _print_PyccelRShift(self, expr):
+        return ' >> '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelLShift(self, expr):
+        return ' << '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelBitXor(self, expr):
+        return ' ^ '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelBitOr(self, expr):
+        return ' | '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelBitAnd(self, expr):
+        return ' & '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelInvert(self, expr):
+        a = self._print(expr.args[0])
+        return '~{}'.format(a)
 
     def _print_PyccelAssociativeParenthesis(self, expr):
         return '({})'.format(self._print(expr.args[0]))
