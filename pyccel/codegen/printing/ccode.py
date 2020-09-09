@@ -426,7 +426,8 @@ class CCodePrinter(CodePrinter):
         a = expr.args[0]
         b = expr.args[1]
 
-        if a.dtype is NativeBool() and b.dtype is NativeBool():
+        if ((a.dtype is NativeBool() and b.dtype is NativeBool()) or
+            (a.dtype is NativeInteger() and b.dtype is NativeInteger())):
             return '{} != {}'.format(lhs, rhs)
 
         errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
@@ -438,7 +439,8 @@ class CCodePrinter(CodePrinter):
         a = expr.args[0]
         b = expr.args[1]
 
-        if a.dtype is NativeBool() and b.dtype is NativeBool():
+        if ((a.dtype is NativeBool() and b.dtype is NativeBool()) or
+            (a.dtype is NativeInteger() and b.dtype is NativeInteger())):
             return '{} == {}'.format(lhs, rhs)
 
         errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,

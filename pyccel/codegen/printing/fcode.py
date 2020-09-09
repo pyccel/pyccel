@@ -1993,8 +1993,9 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.rhs, Nil):
             return '.not. present({})'.format(lhs)
 
-        if a.dtype is NativeBool() and b.dtype is NativeBool():
-            return '{} .eqv. {}'.format(lhs, rhs)
+        if ((a.dtype is NativeBool() and b.dtype is NativeBool()) or
+            (a.dtype is NativeInteger() and b.dtype is NativeInteger())):
+            return '{} == {}'.format(lhs, rhs)
 
         errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
             severity='fatal')
@@ -2388,7 +2389,7 @@ class FCodePrinter(CodePrinter):
             return self._print(Tuple(*out_vars))
         else:
             if not func.is_header:
-                args    = ['{}={}'.format(self._print(b),self._print(a)) 
+                args    = ['{}={}'.format(self._print(b),self._print(a))
                                 for a,b in zip(args, func.arguments) if not isinstance(a, Nil)]
                 results = ['{0}={0}'.format(self._print(a)) for a in results]
             else:
