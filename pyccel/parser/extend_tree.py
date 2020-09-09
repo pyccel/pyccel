@@ -79,9 +79,8 @@ def extend_tree(code):
                       severity='fatal')
     if len(tree.body) == 0:
         if len(comments) > 0:
-            tree.body        = [comments[0]]
-            comment_lines_no = comment_lines_no[1:]
-            comments         = comments[1:]
+            tree.body  = list(comments)
+        return tree
 
     insert_comments(tree, comment_lines_no, comments, else_no)
     return tree

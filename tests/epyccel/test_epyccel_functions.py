@@ -74,13 +74,13 @@ def test_func_no_args_f1():
     f = epyccel(f1)
     assert abs(f()-f1()) < 1e-13
 #------------------------------------------------------------------------------
-def test_decorator_f1():
+def test_decorator_f1(language):
     @types('int')
     def f1(x):
         y = x - 1
         return y
 
-    f = epyccel(f1)
+    f = epyccel(f1, language=language)
 
     # ...
     assert f(3) == f1(3)
@@ -267,7 +267,7 @@ def test_multiple_returns_f12():
     assert f(2) == non_negative(2)
     assert f(-1) == non_negative(-1)
 
-def test_multiple_returns_f13():
+def test_multiple_returns_f13(language):
     @types('int', 'int')
     def get_min(a, b):
         if a<b:
@@ -275,7 +275,7 @@ def test_multiple_returns_f13():
         else:
            return b
 
-    f = epyccel(get_min)
+    f = epyccel(get_min, language=language)
     assert f(2,3) == get_min(2,3)
 
 def test_multiple_returns_f14():
@@ -286,10 +286,60 @@ def test_multiple_returns_f14():
     f = epyccel(g)
     assert f(2,1) == g(2,1)
 
+
+def test_decorator_f15():
+    @types('bool', 'int8', 'int16', 'int32', 'int64')
+    def f15(a,b,c,d,e):
+        if a:
+            return b + c
+        else:
+            return d + e
+
+    f = epyccel(f15)
+    assert f(True, 1, 2, 3, 4)  == f15(True, 1, 2, 3, 4)
+    assert f(False, 1, 2, 3, 4)  == f15(False, 1, 2, 3, 4)
+
+
+def test_decorator_f16(language):
+    @types('int16')
+    def f16(a):
+        b = a
+        return b
+    f = epyccel(f16, language=language)
+    assert f(np.int16(17)) == f16(np.int16(17))
+
+def test_decorator_f17(language):
+    @types('int8')
+    def f17(a):
+        b = a
+        return b
+    f = epyccel(f17, language=language)
+    assert f(np.int8(2)) == f17(np.int8(2))
+
+def test_decorator_f18(language):
+    @types('int32')
+    def f18(a):
+        b = a
+        return b
+    f = epyccel(f18, language=language)
+    assert f(np.int32(5)) == f18(np.int32(5))
+
+def test_decorator_f19(language):
+    @types('int64')
+    def f19(a):
+        b = a
+        return b
+    f = epyccel(f19, language=language)
+    assert f(np.int64(1)) == f19(np.int64(1))
+
+
+
+
+
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
 #
 #def teardown_module():
 #    clean_test()
-#

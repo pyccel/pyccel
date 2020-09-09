@@ -2814,7 +2814,7 @@ class TupleVariable(Variable):
             indexed_var = IndexedVariable(self, dtype=self.dtype, shape=self.shape,
                 prec=self.precision, order=self.order, rank=self. rank)
             args = [Slice(None,None)]*(self.rank-1)
-            return [indexed_var.__getitem__(*args, i) for i in range(len(self._vars))]
+            return [indexed_var[args + [i]] for i in range(len(self._vars))]
         else:
             return self._vars
 
@@ -4596,8 +4596,12 @@ class IndexedVariable(IndexedBase, PyccelAstNode):
 
     def __getitem__(self, *args):
 
+        if len(args) == 1 and isinstance(args[0], (Tuple, tuple, list)):
+            args = args[0]
+
         if self.shape and len(self.shape) != len(args):
             raise IndexError('Rank mismatch.')
+
         obj = IndexedElement(self, *args)
         return obj
 
