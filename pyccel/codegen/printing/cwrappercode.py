@@ -5,7 +5,7 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.builtins import Bool
 
-from pyccel.ast.core import Variable , Assign, FunctionDef
+from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string
 
@@ -59,27 +59,29 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_vars = [a for a in expr.arguments] + [r for r in expr.results]
         python_func_args = Variable(dtype=PyccelPyObject(),
                                  name=self.get_new_name(used_names, "args"),
-                                 is_pointer=True, rank=1)
+                                 is_pointer=True)
         python_func_kwargs = Variable(dtype=PyccelPyObject(),
                                  name=self.get_new_name(used_names, "kwargs"),
-                                 is_pointer=True, rank=1)
+                                 is_pointer=True)
         wrapper_args = [Variable(dtype=PyccelPyObject(),
                                  name=self.get_new_name(used_names, "self"),
-                                 is_pointer=True, rank=1),
+                                 is_pointer=True),
                         python_func_args, python_func_kwargs]
         wrapper_results = [Variable(dtype=PyccelPyObject(),
                                     name=self.get_new_name(used_names, "result"),
-                                    is_pointer=True, rank=1)]
+                                    is_pointer=True)]
 
         arg_names = [a.name for a in expr.arguments]
         keyword_list_name = self.get_new_name(used_names,'kwlist')
         keyword_list = PyArgKeywords(keyword_list_name, arg_names)
 
         wrapper_body = [keyword_list]
+        wrapper_body_translations = []
 
         parse_args = []
         type_keys = ''
-        # TODO: Simplify to 1 line
+        # TODO: Simplify (to 1 line?)
+        # TODO: Handle optional args
         for a in expr.arguments:
             collect_type, cast_func = self.get_PyArgParseType(a.dtype)
             if cast_func is not None:
@@ -88,22 +90,23 @@ class CWrapperCodePrinter(CCodePrinter):
                         name=self.get_new_name(used_names, a.name+"_tmp"))
                 wrapper_vars.append(collect_var)
                 parse_args.append(collect_var)
-                wrapper_body.append(cast_func(a, collect_var))
+                wrapper_body_translations.append(cast_func(a, collect_var))
             else:
                 parse_args.append(a)
-
-        #TODO
-        arg_names = None
+            # TODO: Handle assignment to PyObject for default variables
+            if isinstance(a, ValuedVariable):
+                wrapper_body.append(Assign(parse_args[-1],a.value))
 
         parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, expr.arguments, parse_args, keyword_list)
-        wrapper_body.insert(1,If((PyccelNot(parse_node), [Return([Nil()])])))
+        wrapper_body.append(If((PyccelNot(parse_node), [Return([Nil()])])))
+        wrapper_body.extend(wrapper_body_translations)
 
 
         if len(expr.results)==0:
             func_call = FunctionCall(expr, expr.arguments)
         else:
             results = expr.results if len(expr.results)>1 else expr.results[0]
-            func_call = Assign(results,FunctionCall(expr, expr.arguments))
+            func_call = AliasAssign(results,FunctionCall(expr, expr.arguments))
         wrapper_body.append(func_call)
         #TODO: Loop over results to carry out necessary casts and collect Py_BuildValue type string
         res_args = []
@@ -118,12 +121,11 @@ class CWrapperCodePrinter(CCodePrinter):
             else :
                 res_args.append(a)
             build_keys += pytype_registry[a.dtype]
-        #TODO: Set default values
 
         #func_w = FunctionDef('Py_BuildValue', arguments = [build_keys] + res_args, results = [], body = [])
         #func_c = FunctionCall(func_w, ['\"{}\"'.format(build_keys)] + res_args)
         #wrapper_body.append(Assign(wrapper_results[0], func_c))
-        wrapper_body.append(Assign(wrapper_results[0],PyBuildValueNode(build_keys, res_args)))
+        wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(build_keys, res_args)))
         wrapper_body.append(Return(wrapper_results))
 
         wrapper_name = self.get_new_name(used_names, expr.name.name+"_wrapper")
