@@ -501,15 +501,15 @@ class FCodePrinter(CodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
+    def _print_ValuedVariable(self, expr):
+        if expr.is_argument:
+            return self._print_Variable(expr)
+        else:
+            return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
+
     def _print_Constant(self, expr):
         val = Float(expr.value)
         return self._print(val)
-
-    def _print_ValuedArgument(self, expr):
-        name = self._print(expr.name)
-        value = self._print(expr.value)
-        code = '{0}={1}'.format(name, value)
-        return code
 
     def _print_DottedVariable(self, expr):
         if isinstance(expr.args[1], Function):
@@ -2356,12 +2356,7 @@ class FCodePrinter(CodePrinter):
         results = func.results
 
         if len(results) == 1:
-            if not func.is_header:
-                #this is a hack add variable names in header files
-                args = ['{}={}'.format(self._print(b),self._print(a))
-                                for a,b in zip(args, func.arguments) if not isinstance(a, Nil)]
-            else:
-                args = ['{}'.format(self._print(a)) for a in args]
+            args = ['{}'.format(self._print(a)) for a in args]
 
             args = ', '.join(args)
             code = '{name}({args})'.format( name = str(func.name),
@@ -2387,12 +2382,10 @@ class FCodePrinter(CodePrinter):
             self._additional_code = self._additional_code + self._print(Assign(Tuple(*out_vars),expr)) + '\n'
             return self._print(Tuple(*out_vars))
         else:
+            args    = ['{}'.format(self._print(a)) for a in args]
             if not func.is_header:
-                args    = ['{}={}'.format(self._print(b),self._print(a)) 
-                                for a,b in zip(args, func.arguments) if not isinstance(a, Nil)]
                 results = ['{0}={0}'.format(self._print(a)) for a in results]
             else:
-                args    = ['{}'.format(self._print(a)) for a in args]
                 results = ['{}'.format(self._print(a)) for a in results]
 
             newargs = ', '.join(args+results)
