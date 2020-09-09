@@ -1993,9 +1993,11 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.rhs, Nil):
             return '.not. present({})'.format(lhs)
 
-        if ((a.dtype is NativeBool() and b.dtype is NativeBool()) or
-            (a.dtype is NativeInteger() and b.dtype is NativeInteger())):
-            return '{} == {}'.format(lhs, rhs)
+        if (a.dtype is NativeBool() and b.dtype is NativeBool()):
+            return '{} .eqv. {}'.format(lhs, rhs)
+
+        if (a.dtype is NativeInteger() and b.dtype is NativeInteger()):
+            return '{} .eq. {}'.format(lhs, rhs)
 
         errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
             severity='fatal')
