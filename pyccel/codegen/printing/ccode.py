@@ -143,7 +143,11 @@ class CCodePrinter(CodePrinter):
                             kwlist = expr.arg_names.name,
                             args = args)
         else :
-            code ='{name}({pyarg}, "")'.format(name=name, pyarg=pyarg) 
+            code ='{name}({pyarg}, {pykwarg}, "", {kwlist})'.format(
+                    name=name,
+                    pyarg=pyarg,
+                    pykwarg=pykwarg,
+                    kwlist = expr.arg_names.name)
         return code
 
     def _print_PyBuildValueNode(self, expr):
