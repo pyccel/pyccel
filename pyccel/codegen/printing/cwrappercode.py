@@ -119,11 +119,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 wrapper_body.append(cast_func(a , collect_var))
             else :
                 res_args.append(a)
-            build_keys += pytype_parse_registry [a.dtype]
-
-        #func_w = FunctionDef('Py_BuildValue', arguments = [build_keys] + res_args, results = [], body = [])
-        #func_c = FunctionCall(func_w, ['\"{}\"'.format(build_keys)] + res_args)
-        #wrapper_body.append(Assign(wrapper_results[0], func_c))
+            build_keys += pytype_parse_registry [(a.dtype, a.precision)]
+ 
         wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(build_keys, res_args)))
         wrapper_body.append(Return(wrapper_results))
 

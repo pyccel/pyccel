@@ -35,6 +35,20 @@ class PyArgKeywords(Basic):
         return self._arg_names
 
 pytype_parse_registry = {
+    (NativeInteger(), 4) : 'i',
+    (NativeInteger(), 8) : 'l',
+    (NativeInteger(), 2) : 'h',
+    (NativeInteger(), 1) : 'b',    
+    (NativeReal(), 8)    : 'd',
+    (NativeReal(), 4)    : 'f',
+    (NativeComplex(), 4) : 'D',    
+    (NativeComplex(), 8) : 'D',
+    (NativeBool(), 4)    : 'p',
+    (NativeString(), 0)  : 's',
+    (PyccelPyObject(), 0): 'O'
+    }
+"""
+pytype_parse_registry = {
         NativeInteger(): 'l',
         NativeReal(): 'd',
         NativeComplex():'c',
@@ -42,7 +56,7 @@ pytype_parse_registry = {
         NativeString():'s',
         PyccelPyObject():'O'
         }
-
+"""
 class PyArg_ParseTupleNode(Basic):
 
     def __init__(self, python_func_args, python_func_kwargs, c_func_args, parse_args, arg_names):
@@ -67,12 +81,12 @@ class PyArg_ParseTupleNode(Basic):
         self._flags      = ''
         i = 0
         while i < len(c_func_args) and not isinstance(c_func_args[i], ValuedVariable):
-            self._flags += pytype_parse_registry[c_func_args[i].dtype]
+            self._flags += pytype_parse_registry[(c_func_args[i].dtype, c_func_args[i].precision)]
             i+=1
         if i < len(c_func_args):
             self._flags += '|'
         while i < len(c_func_args):
-            self._flags += pytype_parse_registry[c_func_args[i].dtype]
+            self._flags += pytype_parse_registry[(c_func_args[i].dtype, c_func_args[i].precision)]
             i+=1
 
         # Restriction as of python 3.8
