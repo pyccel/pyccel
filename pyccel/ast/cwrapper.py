@@ -1,5 +1,6 @@
 from .basic     import Basic
 from .datatypes import DataType
+from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
 from .core      import FunctionCall, FunctionDef, Variable
 
 __all__ = (
@@ -10,6 +11,23 @@ __all__ = (
     'PyArg_ParseTupleNode',
     'PyBuildValueNode'
 )
+
+class PyccelPyObject(DataType):
+    _name = 'pyobject'
+
+#TODO: Is there an equivalent to static so this can be a static list of strings?
+class PyArgKeywords(Basic):
+    def __init__(self, name, arg_names):
+        self._name = name
+        self._arg_names = arg_names
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def arg_names(self):
+        return self._arg_names
 
 pytype_parse_registry = {
         NativeInteger(): 'l',
@@ -30,6 +48,8 @@ class PyArg_ParseTupleNode(Basic):
             raise TypeError('C func args should be a list of Variables')
         if not isinstance(parse_args, list) and any(not isinstance(c, Variable) for c in parse_args):
             raise TypeError('Parse args should be a list of Variables')
+        if not isinstance(arg_names, PyArgKeywords):
+            raise TypeError('Parse args should be a list of Variables')
 
         if len(parse_args) != len(c_func_args):
             raise TypeError('There should be the same number of c_func_args and parse_args')
@@ -38,12 +58,15 @@ class PyArg_ParseTupleNode(Basic):
         self._parse_args = parse_args
         self._arg_names  = arg_names
         self._flags      = ''
+        i = 0
         while i < len(c_func_args) and not c_func_args[i].is_kwonly:
             self._flags += pytype_parse_registry[c_func_args[i].dtype]
+            i+=1
         if i < len(c_func_args):
             self._flags += '|'
         while i < len(c_func_args):
             self._flags += pytype_parse_registry[c_func_args[i].dtype]
+            i+=1
 
     @property
     def pyarg(self):
@@ -56,6 +79,10 @@ class PyArg_ParseTupleNode(Basic):
     @property
     def args(self):
         return self._parse_args
+
+    @property
+    def arg_names(self):
+        return self._arg_names
 
 #testing
 class PyBuildValue(FunctionDef):
@@ -76,6 +103,3 @@ class PyBuildValueNode(Basic):
     def args(self):
         return self._args[1]
 
-
-class PyccelPyObject(DataType):
-    _name = 'pyobject'
