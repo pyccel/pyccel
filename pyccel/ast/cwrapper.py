@@ -61,7 +61,7 @@ class PyArg_ParseTupleNode(Basic):
         self._arg_names  = arg_names
         self._flags      = ''
         i = 0
-        while i < len(c_func_args) and not c_func_args[i].is_kwonly:
+        while i < len(c_func_args) and not isinstance(c_func_args[i], ValuedVariable):
             self._flags += pytype_parse_registry[c_func_args[i].dtype]
             i+=1
         if i < len(c_func_args):
@@ -69,6 +69,11 @@ class PyArg_ParseTupleNode(Basic):
         while i < len(c_func_args):
             self._flags += pytype_parse_registry[c_func_args[i].dtype]
             i+=1
+
+        # Restriction as of python 3.8
+        if any([isinstance(a, Variable) and a.is_kwonly for a in c_func_args]):
+            errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
+                          symbol=c_func_args, severity='warning')
 
     @property
     def pyarg(self):
