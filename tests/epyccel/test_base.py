@@ -87,9 +87,9 @@ def test_cast_int(language):
 def test_cast_bool():
     compare_epyccel(base.cast_bool, True)
 
-def test_compare_is_int_compare():
-    compare_epyccel(base.compare_is_int_compare, 2, 2)
-    compare_epyccel(base.compare_is_int_compare, 1, 2)
+def test_compare_is_int_int():
+    compare_epyccel(base.compare_is_int_int, 2, 2)
+    compare_epyccel(base.compare_is_int_int, 1, 2)
 
 def test_cast_float(language):
     compare_epyccel(base.cast_float, 4.5, language=language)

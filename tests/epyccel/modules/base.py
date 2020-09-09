@@ -43,7 +43,7 @@ def compare_is_not_int(a, b):
     return c
 
 @types('int', 'int')
-def compare_is_int_compare(a, b):
+def compare_is_int_int(a, b):
     c = False
     if a is b:
         c = True
