@@ -107,10 +107,39 @@ def is_not_nil(a):
 
 @types('int')
 def cast_int(a):
-    b = bool(a)
+    b = int(a)
     return b
 
 @types('bool')
 def cast_bool(a):
     b = bool(a)
     return b
+
+@types('float')
+def cast_float(a):
+    b = float(a)
+    return b
+
+@types('float')
+def cast_float_to_int(a):
+    b = int(a)
+    return b
+
+@types('int')
+def cast_int_to_float(a):
+    b = float(a)
+    return b
+
+@types('int')
+def if_0_int(a):
+    if a:
+        return True
+    else:
+        return False
+
+@types('real')
+def if_0_real(a):
+    if a:
+        return True
+    else:
+        return False
