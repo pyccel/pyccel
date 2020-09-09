@@ -15,7 +15,7 @@ from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMo
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 
-from pyccel.ast.datatypes import NativeInteger
+from pyccel.ast.datatypes import NativeInteger, NativeBool
 
 from pyccel.ast.builtins  import Range
 from pyccel.ast.core import Declare
@@ -63,6 +63,8 @@ dtype_registry = {('real',8)    : 'double',
                   ('complex',4) : 'float complex',
                   ('int',4)     : 'int',
                   ('int',8)     : 'long',
+                  ('int',2)     : 'short int',
+                  ('int',1)     : 'char',  
                   ('pyobject', 0) : 'PyObject',
                   ('bool',4)    : 'int'}
 
@@ -105,6 +107,18 @@ class CCodePrinter(CodePrinter):
         return ((i, j) for i in range(rows) for j in range(cols))
 
     # ============ Elements ============ #
+
+    def _print_PythonFloat(self, expr):
+        value = self._print(expr.arg)
+        return '(double)({0})'.format(value)
+
+    def _print_Int(self, expr):
+        value = self._print(expr.arg)
+        return '(long)({0})'.format(value)
+
+    def _print_Bool(self, expr):
+        value = self._print(expr.arg)
+        return '{} != 0'.format(value)
 
     def _print_Module(self, expr):
         return '\n\n'.join(self._print(i) for i in expr.body)
@@ -213,7 +227,10 @@ class CCodePrinter(CodePrinter):
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         rank  = expr.rank
-        dtype = dtype_registry[(dtype, prec)]
+        try :
+            dtype = dtype_registry[(dtype, prec)]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,severity='fatal')
 
         if rank > 0:
             return '{0} *'.format(dtype)
