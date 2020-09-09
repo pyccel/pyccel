@@ -73,7 +73,7 @@ PYCCEL_RESTRICTION_UNARY_OPERATOR = 'Invert unary operator is not covered by Pyc
 PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY = 'Uncovered try/except/finally statements by Pyccel'
 PYCCEL_RESTRICTION_RAISE = 'Uncovered raise statement by Pyccel'
 PYCCEL_RESTRICTION_YIELD = 'Uncovered yield statement by Pyccel'
-PYCCEL_RESTRICTION_IS_RHS = 'Only booleans and None are allowed as rhs for is statement'
+PYCCEL_RESTRICTION_IS_RHS = 'Only booleans, integers and None are allowed as rhs for is statement'
 PYCCEL_RESTRICTION_IMPORT = 'Import must be inside a def statement or a module'
 PYCCEL_RESTRICTION_IMPORT_IN_DEF = 'Only From Import is allowed inside a def statement'
 PYCCEL_RESTRICTION_IMPORT_STAR = 'import * not allowed'
@@ -117,4 +117,3 @@ INVALID_PYTHON_SYNTAX = 'Python syntax error'
 UNDEFINED_INIT_METHOD = 'Undefined `__init__` method'
 FOUND_SYMBOLIC_ASSIGN = 'Found symbolic assignment [Ignored]'
 FOUND_IS_IN_ASSIGN = 'Found `is` statement in assignment [Ignored]'
-
