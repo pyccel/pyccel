@@ -105,16 +105,17 @@ class PyArg_ParseTupleNode(Basic):
     def arg_names(self):
         return self._arg_names
 
-
 class PyBuildValueNode(Basic):
-    def __new__(cls, build_keys='', res_args=None):
-        return Basic.__new__(cls, build_keys, res_args)
+    def __init__(self, result_args = []):
+        self._flags = '' 
+        self._result_args = result_args
+        for i in result_args:
+            self._flags += pytype_parse_registry[(i.dtype, i.precision)]
 
     @property
     def flags(self):
-        return self._args[0]
-
+        return self._flags
+    
     @property
     def args(self):
-        return self._args[1]
-
+        return self._result_args

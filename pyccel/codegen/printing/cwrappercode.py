@@ -11,8 +11,8 @@ from pyccel.ast.core import create_incremented_string
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool
 
-from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode, pytype_parse_registry
-from pyccel.ast.cwrapper import PyBuildValue, PyArgKeywords
+from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
+from pyccel.ast.cwrapper import PyArgKeywords
 
 from pyccel.ast.type_inference import str_dtype
 
@@ -144,7 +144,6 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.append(func_call)
         #TODO: Loop over results to carry out necessary casts and collect Py_BuildValue type string
         res_args = []
-        build_keys = ""
         for a in expr.results :
             collect_type, cast_func = self.get_PyBuildeValue(a.dtype)
             if cast_func is not None :
@@ -154,9 +153,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 wrapper_body.append(cast_func(a , collect_var))
             else :
                 res_args.append(a)
-            build_keys += pytype_parse_registry [(a.dtype, a.precision)]
  
-        wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(build_keys, res_args)))
+        wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
         wrapper_body.append(Return(wrapper_results))
 
         wrapper_name = self.get_new_name(used_names, expr.name.name+"_wrapper")
