@@ -22,15 +22,6 @@ errors = Errors()
 
 __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 
-pytype_registry = {
-        NativeInteger(): 'l',
-        NativeReal(): 'd',
-        NativeComplex():'c',
-        NativeBool():'p',
-        NativeString():'s',
-        PyccelPyObject():'O'
-        }
-
 class CWrapperCodePrinter(CCodePrinter):
     def __init__(self, parser, settings={}):
         CCodePrinter.__init__(self, parser,settings)
@@ -72,6 +63,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body = []
         parse_args = []
         type_keys = ''
+        # TODO: Simplify to 1 line
         for a in expr.arguments:
             collect_type, cast_func = self.get_PyArgParseType(a.dtype)
             if cast_func is not None:
@@ -83,10 +75,9 @@ class CWrapperCodePrinter(CCodePrinter):
                 wrapper_body.append(cast_func(a, collect_var))
             else:
                 parse_args.append(a)
-            type_keys += pytype_registry[a.dtype]
 
-        # TODO: Create PyArg_ParseTupleNode
-        wrapper_body.insert(0,If((PyccelNot(PyArg_ParseTupleNode(python_func_args, type_keys, parse_args)), [Return([Nil()])])))
+        parse_node = PyArg_ParseTupleNode(python_func_args, expr.arguments, parse_args)
+        wrapper_body.insert(0,If((PyccelNot(parse_node), [Return([Nil()])])))
 
 
         if len(expr.results)==0:
