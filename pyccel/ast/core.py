@@ -70,12 +70,12 @@ __all__ = (
     'PyccelAnd',
     'PyccelOr',
     'PyccelNot',
-    'PyccelRShift'
-    'PyccelLShift'
-    'PyccelBitXor'
-    'PyccelBitOr'
-    'PyccelBitAnd'
-    'PyccelInvert'
+    'PyccelRShift',
+    'PyccelLShift',
+    'PyccelBitXor',
+    'PyccelBitOr',
+    'PyccelBitAnd',
+    'PyccelInvert',
     'PyccelAssociativeParenthesis',
     'PyccelUnary',
     'AddOp',
