@@ -1,13 +1,22 @@
+# coding: utf-8
+# pylint: disable=R0201
+
 from pyccel.codegen.printing.ccode import CCodePrinter
+
+from pyccel.ast.builtins import Bool
+
 from pyccel.ast.core import Variable , Assign, FunctionDef
+from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
+from pyccel.ast.core import create_incremented_string
+
 from pyccel.ast.datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
+
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode, PyBuildValue
+
 from pyccel.ast.type_inference import str_dtype
-from pyccel.ast.core import If, Nil, Return, FunctionCall , FunctionDef , PyccelNot
+
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
-from pyccel.ast.builtins import Bool
-from sympy.logic.boolalg      import Not
 
 errors = Errors()
 
@@ -31,8 +40,7 @@ class CWrapperCodePrinter(CCodePrinter):
             used_names.add(requested_name)
             return requested_name
         else:
-            return 'random_name'
-       #     return create_incremented_string(used_names, prefix=requested_name)
+            return create_incremented_string(used_names, prefix=requested_name)
 
     def get_PyArgParseType(self, dtype):
         #TODO: Depends on type, rank, etc
