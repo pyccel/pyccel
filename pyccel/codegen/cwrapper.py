@@ -4,13 +4,19 @@ from pyccel.codegen.printing.ccode import CCodePrinter, dtype_registry
 from pyccel.ast.core import Module, Declare, Assign
 from pyccel.ast.type_inference import str_dtype
 
+#using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
 pytype_registry = {
-        'integer': 'l',
-        'real': 'd',
-        'complex':'c',
-        'bool':'p',
-        'str':'s'
-        }
+    ('real',8)    : 'd',
+    ('real',4)    : 'f',
+    ('complex',8) : 'D',
+    ('complex',4) : 'D',
+    ('int',4)     : 'i',
+    ('int',8)     : 'l',
+    ('int',2)     : 'h',
+    ('int',1)     : 'b',
+    ('bool',4)    : 'p',
+    ('str',0)     : 's'
+}
 
 def write_python_wrapper(expr, printer):
     code  = "static PyObject * "+str(expr.name)+"_wrapper(PyObject *self, PyObject *args)\n{\n    "
@@ -27,7 +33,7 @@ def write_python_wrapper(expr, printer):
         code += "if (!PyArg_ParseTuple(args, \"\"))\n        return NULL;\n    "
     else:
         code += "if (!PyArg_ParseTuple(args, \""
-        code += ''.join(pytype_registry[str_dtype(arg.dtype)] for arg in expr.arguments)
+        code += ''.join(pytype_registry[(printer._print(arg.dtype), arg.precision)] for arg in expr.arguments)
         code += "\", "
         code += ', '.join("&" + printer._print(arg) for arg in expr.arguments)
         code += "))\n        return NULL;\n    "
@@ -40,7 +46,7 @@ def write_python_wrapper(expr, printer):
     code += printer._print(func_call)
     code += '\n'
 
-    results_dtypes = ''.join(pytype_registry[str_dtype(arg.dtype)] for arg in expr.results)
+    results_dtypes = ''.join(pytype_registry[(printer._print(arg.dtype), arg.precision)] for arg in expr.results)
     result_names = ', '.join(res.name for res in expr.results)
     code += "    return Py_BuildValue("
     if not expr.results: # case of function with no return value
