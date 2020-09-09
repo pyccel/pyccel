@@ -84,3 +84,7 @@ def test_cast_int():
 
 def test_cast_bool():
     compare_epyccel(base.cast_bool, True)
+
+def test_compare_is_int_compare():
+    compare_epyccel(base.compare_is_int_compare, 2, 2)
+    compare_epyccel(base.compare_is_int_compare, 1, 2)
