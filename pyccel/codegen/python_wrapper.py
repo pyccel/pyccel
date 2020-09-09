@@ -12,6 +12,11 @@ from pyccel.codegen.printing.cwrappercode   import cwrappercode
 from .utilities import language_extension
 from .cwrapper import create_c_wrapper, create_c_setup
 
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import *
+
+errors = Errors()
+
 __all__ = ['compile_f2py', 'create_shared_library']
 
 #==============================================================================
@@ -170,6 +175,8 @@ def create_shared_library(codegen,
     if language == 'c':
         #wrapper_code = create_c_wrapper(sharedlib_modname, codegen)
         wrapper_code = cwrappercode(codegen.expr)
+        errors.check()
+        errors.reset()
         wrapper_filename_root = '{}_wrapper'.format(module_name)
         wrapper_filename = '{}.c'.format(wrapper_filename_root)
 
