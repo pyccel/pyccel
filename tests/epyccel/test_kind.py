@@ -2,6 +2,7 @@ from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 import shutil
 
+from conftest import *
 def clean_test():
     shutil.rmtree('__pycache__', ignore_errors=True)
     shutil.rmtree('__epyccel__', ignore_errors=True)
@@ -43,6 +44,35 @@ def test_input_output_matching_types():
     epyc_add_real = epyccel(add_real, fflags="-Werror -Wconversion-extra")
 
     assert(add_real(1.0,2.0)==epyc_add_real(1.0,2.0))
+
+def test_output_types_1(language):
+    @types('float32')
+    def cast_to_int(a):
+        b = int(a)
+        return b
+
+    f = epyccel(cast_to_int, language = language)
+    assert(type(cast_to_int(5.2)) == type(f(5.2))) # pylint: disable=unidiomatic-typecheck
+
+def test_output_types_2(language):
+    @types('int')
+    def cast_to_float(a):
+        b = float(a)
+        return b
+
+    f = epyccel(cast_to_float,language= language)
+    assert(type(cast_to_float(5)) == type(f(5)))    # pylint: disable=unidiomatic-typecheck 
+
+def test_output_types_3():
+    @types('int')
+    def cast_to_bool(a):
+        b = bool(a)
+        return b
+    
+    f = epyccel(cast_to_bool)
+    assert(cast_to_bool(1) == f(1))
+
+
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
