@@ -204,17 +204,22 @@ class CCodePrinter(CodePrinter):
          imports = ['#include "{0}"'.format(i) for i in expr.target]
          return '\n'.join(i for i in imports)
 
-    def _print_Declare(self, expr):
+    def get_declare_type(self, expr):
         dtype = self._print(expr.dtype)
         prec  = expr.variable.precision
         rank  = expr.variable.rank
         dtype = dtype_registry[(dtype, prec)]
-        variable = self._print(expr.variable)
 
         if rank > 0:
-            return '{0} *{1};'.format(dtype, variable)
+            return '{0} *'.format(dtype)
+        else:
+            return '{0} '.format(dtype)
 
-        return '{0} {1};'.format(dtype, variable)
+    def _print_Declare(self, expr):
+        declaration_type = self.get_declare_type(expr)
+        variable = self._print(expr.variable)
+
+        return '{0}{1};'.format(declaration_type, variable)
 
     def _print_NativeBool(self, expr):
         return 'bool'
@@ -234,11 +239,7 @@ class CCodePrinter(CodePrinter):
     def function_signature(self, expr):
         rank = 0
         if len(expr.results) == 1:
-            result = expr.results[0]
-            dtype = self._print(result.dtype)
-            prec  = result.precision
-            rank  = result.rank
-            ret_type = dtype_registry[(dtype, prec)]
+            self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
             # TODO: Use fortran example to add pointer arguments for multiple output
             msg = 'Multiple output arguments is not yet supported in c'
@@ -250,17 +251,8 @@ class CCodePrinter(CodePrinter):
         if not expr.arguments:
             arg_code = 'void'
         else:
-            #to change for arguments with ranks * ** etc...
-            #arg_dtypes = [self._print(i.dtype) for i in expr.arguments]
-            #arg_dtypes = [dtype_registry[(dtype, arg.precision)] for dtype,arg in zip(arg_dtypes, expr.arguments)]
-            #arguments  = [self._print(i) for i in expr.arguments]
-            #arg_code   = ', '.join(dtype + ' ' + arg for dtype,arg in zip(arg_dtypes,arguments))
-            argument_declare = [Declare(i.dtype, i) for i in expr.arguments]
-            argument = [self._print(i) for i in argument_declare]
-            arg_code = ', '.join(i[:-1] for i in argument)
-        if rank == 1:
-            return '{0}* {1}({2})'.format(ret_type, name, arg_code)        
-        return '{0} {1}({2})'.format(ret_type, name, arg_code)
+            arg_code = ', '.join('{0}{1}'.format(self.get_declare_type(i),i) for i in expr.arguments)
+        return '{0}{1}({2})'.format(ret_type, name, arg_code)
 
     def _print_FunctionDef(self, expr):
 
