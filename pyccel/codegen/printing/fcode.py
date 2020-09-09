@@ -2015,7 +2015,7 @@ class FCodePrinter(CodePrinter):
             return '{} .neqv. {}'.format(lhs, rhs)
 
         if (a.dtype is NativeInteger() and b.dtype is NativeInteger()):
-            return '{} .neq. {}'.format(lhs, rhs)
+            return '{} .ne. {}'.format(lhs, rhs)
 
         errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
             severity='fatal')
