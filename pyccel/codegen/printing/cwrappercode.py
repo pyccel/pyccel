@@ -60,6 +60,9 @@ class CWrapperCodePrinter(CCodePrinter):
         python_func_args = Variable(dtype=PyccelPyObject(),
                                  name=self.get_new_name(used_names, "args"),
                                  is_pointer=True, rank=1)
+        python_func_kwargs = Variable(dtype=PyccelPyObject(),
+                                 name=self.get_new_name(used_names, "kwargs"),
+                                 is_pointer=True, rank=1)
         wrapper_args = [Variable(dtype=PyccelPyObject(),
                                  name=self.get_new_name(used_names, "self"),
                                  is_pointer=True, rank=1),
@@ -92,7 +95,7 @@ class CWrapperCodePrinter(CCodePrinter):
         #TODO
         arg_names = None
 
-        parse_node = PyArg_ParseTupleNode(python_func_args, expr.arguments, parse_args, keyword_list)
+        parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, expr.arguments, parse_args, keyword_list)
         wrapper_body.insert(1,If((PyccelNot(parse_node), [Return([Nil()])])))
 
 

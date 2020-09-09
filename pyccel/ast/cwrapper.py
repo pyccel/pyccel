@@ -40,10 +40,11 @@ pytype_parse_registry = {
 
 class PyArg_ParseTupleNode(Basic):
 
-    def __init__(self, python_func_args, c_func_args, parse_args, arg_names):
+    def __init__(self, python_func_args, python_func_kwargs, c_func_args, parse_args, arg_names):
         if not isinstance(python_func_args, Variable):
             raise TypeError('Python func args should be a Variable')
-        self._pyarg = python_func_args
+        if not isinstance(python_func_kwargs, Variable):
+            raise TypeError('Python func kwargs should be a Variable')
         if not isinstance(c_func_args, list) and any(not isinstance(c, Variable) for c in c_func_args):
             raise TypeError('C func args should be a list of Variables')
         if not isinstance(parse_args, list) and any(not isinstance(c, Variable) for c in parse_args):
@@ -55,6 +56,7 @@ class PyArg_ParseTupleNode(Basic):
             raise TypeError('There should be the same number of c_func_args and parse_args')
 
         self._pyarg      = python_func_args
+        self._pykwarg    = python_func_kwargs
         self._parse_args = parse_args
         self._arg_names  = arg_names
         self._flags      = ''
@@ -71,6 +73,10 @@ class PyArg_ParseTupleNode(Basic):
     @property
     def pyarg(self):
         return self._pyarg
+
+    @property
+    def pykwarg(self):
+        return self._pykwarg
 
     @property
     def flags(self):

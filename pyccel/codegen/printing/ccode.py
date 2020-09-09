@@ -131,12 +131,14 @@ class CCodePrinter(CodePrinter):
     def _print_PyArg_ParseTupleNode(self, expr):
         name = 'PyArg_ParseTuple'
         pyarg = expr.pyarg
+        pykwarg = expr.pykwarg
         flags = expr.flags
         args = ','.join(['&{}'.format(self._print(a)) for a in expr.args])
         if expr.args:
-            code = '{name}({pyarg}, "{flags}", {kwlist}, {args})'.format(
+            code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(
                             name=name,
                             pyarg=pyarg,
+                            pykwarg=pykwarg,
                             flags = flags,
                             kwlist = expr.arg_names.name,
                             args = args)
