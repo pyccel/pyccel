@@ -1,7 +1,12 @@
 from .basic     import Basic
 from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
-from .core      import FunctionCall, FunctionDef, Variable
+from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable
+
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import *
+
+errors = Errors()
 
 __all__ = (
 #
