@@ -47,7 +47,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return dtype, None
 
     def _print_PyArgKeywords(self, expr):
-        arg_names = ', \n'.join('"{}"'.format(a) for a in expr.arg_names + [Nil()])
+        arg_names = ', \n'.join(['"{}"'.format(a) for a in expr.arg_names] + [self._print(Nil())])
         return ('static char *{name}[] = {{\n'
                         '{arg_names}\n'
                         '}};\n'.format(name=expr.name, arg_names = arg_names))
