@@ -114,7 +114,6 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body_translations = []
 
         parse_args = []
-        type_keys = ''
         # TODO: Simplify (to 1 line?)
         # TODO: Handle optional args
         for a in expr.arguments:

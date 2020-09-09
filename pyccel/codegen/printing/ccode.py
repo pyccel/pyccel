@@ -227,7 +227,6 @@ class CCodePrinter(CodePrinter):
         return 'void'
 
     def function_signature(self, expr):
-        rank = 0
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:

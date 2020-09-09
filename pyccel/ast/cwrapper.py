@@ -105,12 +105,6 @@ class PyArg_ParseTupleNode(Basic):
     def arg_names(self):
         return self._arg_names
 
-#testing
-class PyBuildValue(FunctionDef):
-    def __new__(cls, flags, args, results = None, body = None):
-        return FunctionDef.__new__(cls, name = 'Py_BuildValue', arguments = [flags] + args, results = results, body = body)
-
-
 
 class PyBuildValueNode(Basic):
     def __new__(cls, build_keys='', res_args=None):
