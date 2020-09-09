@@ -90,3 +90,11 @@ def test_cast_bool():
 def test_cast_float(language):
     compare_epyccel(base.cast_float, 4.5, language=language)
     compare_epyccel(base.cast_int_to_float, 4, language=language)
+
+def test_if_0_int():
+    compare_epyccel(base.if_0_int, 22)
+    compare_epyccel(base.if_0_int, 0)
+
+def test_if_0_real():
+    compare_epyccel(base.if_0_real, 22.3)
+    compare_epyccel(base.if_0_real, 0.0)

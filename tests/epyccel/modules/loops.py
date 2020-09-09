@@ -208,3 +208,9 @@ def factorial_while( n ):
         x = i * x
         i = i + 1
     return x
+
+@types( int )
+def while_not_0( n ):
+    while n:
+        n -= 1
+    return n
