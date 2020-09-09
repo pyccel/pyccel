@@ -129,7 +129,7 @@ class CCodePrinter(CodePrinter):
         return (code)
 
     def _print_PyArg_ParseTupleNode(self, expr):
-        name = 'PyArg_ParseTuple'
+        name = 'PyArg_ParseTupleAndKeywords'
         pyarg = expr.pyarg
         pykwarg = expr.pykwarg
         flags = expr.flags

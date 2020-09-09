@@ -66,7 +66,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_args = [Variable(dtype=PyccelPyObject(),
                                  name=self.get_new_name(used_names, "self"),
                                  is_pointer=True, rank=1),
-                        python_func_args]
+                        python_func_args, python_func_kwargs]
         wrapper_results = [Variable(dtype=PyccelPyObject(),
                                     name=self.get_new_name(used_names, "result"),
                                     is_pointer=True, rank=1)]
@@ -140,7 +140,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         function_defs = '\n'.join(self._print(f) for f in expr.funcs)
 
-        methode_def_func = ',\n'.join("    {{ \"{0}\", {0}_wrapper, METH_VARARGS, \"{1}\" }}".format(
+        methode_def_func = ',\n'.join("    {{ \"{0}\", (PyCFunction){0}_wrapper, METH_VARARGS | METH_KEYWORDS, \"{1}\" }}".format(
             f.name,f.doc_string) for f in expr.funcs)
         
         methode_def = ('static PyMethodDef {mod_name}_methods[] = {{\n'
