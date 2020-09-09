@@ -234,14 +234,14 @@ class CCodePrinter(CodePrinter):
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,severity='fatal')
 
-        if rank > 0:
+        if rank > 0 or expr.is_pointer:
             return '{0} *'.format(dtype)
         else:
             return '{0} '.format(dtype)
 
     def _print_Declare(self, expr):
         declaration_type = self.get_declare_type(expr.variable)
-        variable = self._print(expr.variable)
+        variable = self._print(expr.variable.name)
 
         return '{0}{1};'.format(declaration_type, variable)
 
@@ -299,7 +299,10 @@ class CCodePrinter(CodePrinter):
         code = ''
         if expr.stmt:
             code += self._print(expr.stmt)+'\n'
-        code +='return {0};'.format(self._print(expr.expr[0]))
+        if isinstance(expr.expr[0], Variable) and expr.expr[0].is_pointer:
+            code +='return {0};'.format(self._print(expr.expr[0].name))
+        else:
+            code +='return {0};'.format(self._print(expr.expr[0]))
         return code
 
     def _print_Nil(self, expr):
@@ -337,6 +340,11 @@ class CCodePrinter(CodePrinter):
 
     def _print_Assign(self, expr):
         lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        return '{} = {};'.format(lhs, rhs)
+
+    def _print_AliasAssign(self, expr):
+        lhs = self._print(expr.lhs.name)
         rhs = self._print(expr.rhs)
         return '{} = {};'.format(lhs, rhs)
 
@@ -435,8 +443,8 @@ class CCodePrinter(CodePrinter):
         return "{0}[{1}]".format(expr.parent, expr.j +
                 expr.i*expr.parent.shape[1])
 
-    def _print_Symbol(self, expr):
-        if expr in self._dereference:
+    def _print_Variable(self, expr):
+        if expr in self._dereference or expr.is_pointer:
             return '(*{0})'.format(expr.name)
         else:
             return expr.name
