@@ -2365,6 +2365,8 @@ class SemanticParser(BasicParser):
                 for (a, ah) in zip(arguments, m.arguments):
                     d_var = self._infere_type(ah, **settings)
                     d_var['shape'] = ah.alloc_shape
+                    d_var['is_argument'] = True
+                    d_var['is_kwonly'] = a.is_kwonly
                     dtype = d_var.pop('datatype')
                     if d_var['rank']>0:
                         d_var['cls_base'] = NumpyArrayClass

@@ -2341,7 +2341,8 @@ class Variable(Symbol, PyccelAstNode):
         cls_parameters=None,
         order='C',
         precision=0,
-        is_argument=False
+        is_argument=False,
+        is_kwonly=False
         ):
 
         # ------------ PyccelAstNode Properties ---------------
@@ -2428,6 +2429,7 @@ class Variable(Symbol, PyccelAstNode):
         self._cls_parameters = cls_parameters
         self._order          = order
         self._is_argument    = is_argument
+        self._is_kwonly      = is_kwonly
 
     def process_shape(self, shape):
         if not hasattr(shape,'__iter__'):
@@ -2516,6 +2518,10 @@ class Variable(Symbol, PyccelAstNode):
     @property
     def is_argument(self):
         return self._is_argument
+
+    @property
+    def is_kwonly(self):
+        return self._is_kwonly
 
     @property
     def is_ndarray(self):
@@ -2889,7 +2895,16 @@ class Argument(Symbol, PyccelAstNode):
     n
     """
 
-    pass
+    def __new__(cls, *args, **kwargs):
+        kwargs.pop('kwonly', False)
+        return Symbol.__new__(cls, *args, **kwargs)
+
+    def __init__(self, *args, **kwargs):
+        self._kwonly = kwargs.pop('kwonly', False)
+
+    @property
+    def is_kwonly(self):
+        return self._kwonly
 
 
 class ValuedArgument(Basic):
@@ -2903,8 +2918,11 @@ class ValuedArgument(Basic):
     >>> n
     n=4
     """
+    def __new__(cls, *args, **kwargs):
+        kwargs.pop('kwonly', False)
+        return Basic.__new__(cls, *args, **kwargs)
 
-    def __new__(cls, expr, value):
+    def __init__(self, expr, value, *, kwonly = False):
         if isinstance(expr, str):
             expr = Symbol(expr)
 
@@ -2913,19 +2931,25 @@ class ValuedArgument(Basic):
         if not isinstance(expr, Symbol):
             raise TypeError('Expecting an argument')
 
-        return Basic.__new__(cls, expr, value)
+        self._expr   = expr
+        self._value  = value
+        self._kwonly = kwonly
 
     @property
     def argument(self):
-        return self._args[0]
+        return self._expr
 
     @property
     def value(self):
-        return self._args[1]
+        return self._value
 
     @property
     def name(self):
         return self.argument.name
+
+    @property
+    def is_kwonly(self):
+        return self._kwonly
 
     def _sympystr(self, printer):
         sstr = printer.doprint
