@@ -245,8 +245,6 @@ class PyccelBitOperator(Expr, PyccelAstNode):
         integers = [a for a in args if a.dtype is NativeInteger() or ad.dtype is NativeBool]
         if integers:
             self._precision = max(a.precision for a in integers)
-        else:
-            raise TypeError('cannot determine the type of {}'.format(self))
     @property
     def precedence(self):
         return self._precedence
