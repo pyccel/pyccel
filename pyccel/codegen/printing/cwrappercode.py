@@ -9,9 +9,10 @@ from pyccel.ast.core import Variable , Assign, FunctionDef
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string
 
-from pyccel.ast.datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
+from pyccel.ast.datatypes import NativeInteger, NativeBool
 
-from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode, PyBuildValue
+from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
+from pyccel.ast.cwrapper import PyBuildValue, PyArgKeywords
 
 from pyccel.ast.type_inference import str_dtype
 
@@ -45,6 +46,12 @@ class CWrapperCodePrinter(CCodePrinter):
             return NativeInteger(), lambda arg, tmp: Assign(arg, Bool(tmp))
         return dtype, None
 
+    def _print_PyArgKeywords(self, expr):
+        arg_names = ', \n'.join('"{}"'.format(a) for a in expr.arg_names)
+        return ('static char *{name}[] = {{\n'
+                        '{arg_names},\n'
+                        'NULL\n'
+                        '}};\n'.format(name=expr.name, arg_names = arg_names))
 
 
     def _print_FunctionDef(self, expr):
@@ -60,7 +67,13 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_results = [Variable(dtype=PyccelPyObject(),
                                     name=self.get_new_name(used_names, "result"),
                                     is_pointer=True, rank=1)]
-        wrapper_body = []
+
+        arg_names = [a.name for a in expr.arguments]
+        keyword_list_name = self.get_new_name(used_names,'kwlist')
+        keyword_list = PyArgKeywords(keyword_list_name, arg_names)
+
+        wrapper_body = [keyword_list]
+
         parse_args = []
         type_keys = ''
         # TODO: Simplify to 1 line
@@ -76,8 +89,11 @@ class CWrapperCodePrinter(CCodePrinter):
             else:
                 parse_args.append(a)
 
-        parse_node = PyArg_ParseTupleNode(python_func_args, expr.arguments, parse_args)
-        wrapper_body.insert(0,If((PyccelNot(parse_node), [Return([Nil()])])))
+        #TODO
+        arg_names = None
+
+        parse_node = PyArg_ParseTupleNode(python_func_args, expr.arguments, parse_args, keyword_list)
+        wrapper_body.insert(1,If((PyccelNot(parse_node), [Return([Nil()])])))
 
 
         if len(expr.results)==0:
@@ -99,6 +115,7 @@ class CWrapperCodePrinter(CCodePrinter):
             else :
                 res_args.append(a)
             build_keys += pytype_registry[a.dtype]
+        #TODO: Set default values
 
         #func_w = FunctionDef('Py_BuildValue', arguments = [build_keys] + res_args, results = [], body = [])
         #func_c = FunctionCall(func_w, ['\"{}\"'.format(build_keys)] + res_args)
