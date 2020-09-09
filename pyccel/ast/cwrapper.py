@@ -47,16 +47,7 @@ pytype_parse_registry = {
     (NativeString(), 0)  : 's',
     (PyccelPyObject(), 0): 'O'
     }
-"""
-pytype_parse_registry = {
-        NativeInteger(): 'l',
-        NativeReal(): 'd',
-        NativeComplex():'c',
-        NativeBool():'p',
-        NativeString():'s',
-        PyccelPyObject():'O'
-        }
-"""
+
 class PyArg_ParseTupleNode(Basic):
 
     def __init__(self, python_func_args, python_func_kwargs, c_func_args, parse_args, arg_names):

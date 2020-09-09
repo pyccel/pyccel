@@ -10,7 +10,6 @@ from sympy.printing.precedence import precedence
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import CommentBlock, Comment
 
-from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
@@ -128,40 +127,6 @@ class CCodePrinter(CodePrinter):
         code = code + "\n %s" % self._print(expr.body) + "\n}"
         return (code)
 
-    def _print_PyArg_ParseTupleNode(self, expr):
-        name = 'PyArg_ParseTupleAndKeywords'
-        pyarg = expr.pyarg
-        pykwarg = expr.pykwarg
-        flags = expr.flags
-        args = ','.join(['&{}'.format(self._print(a)) for a in expr.args])
-        if expr.args:
-            code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(
-                            name=name,
-                            pyarg=pyarg,
-                            pykwarg=pykwarg,
-                            flags = flags,
-                            kwlist = expr.arg_names.name,
-                            args = args)
-        else :
-            code ='{name}({pyarg}, {pykwarg}, "", {kwlist})'.format(
-                    name=name,
-                    pyarg=pyarg,
-                    pykwarg=pykwarg,
-                    kwlist = expr.arg_names.name)
-        return code
-
-    def _print_PyBuildValueNode(self, expr):
-        name = 'Py_BuildValue'
-        flags = expr.flags
-        args = ','.join(['{}'.format(self._print(a)) for a in expr.args])        
-        #to change for args rank 1 +
-        if expr.args:
-            code = '{name}("{flags}", {args})'.format(name=name, flags=flags, args=args)
-        else :
-            code = '{name}("")'.format(name=name)
-        return code
-
-
     def _print_If(self, expr):
         lines = []
         for i, (c, e) in enumerate(expr.args):
@@ -251,9 +216,6 @@ class CCodePrinter(CodePrinter):
 
     def _print_NativeBool(self, expr):
         return 'bool'
-
-    def _print_PyccelPyObject(self, expr):
-        return 'pyobject'
 
     def _print_NativeInteger(self, expr):
         return 'int'
