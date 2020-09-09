@@ -118,9 +118,14 @@ class CCodePrinter(CodePrinter):
         name = 'PyArg_ParseTuple'
         pyarg = expr.pyarg
         flags = expr.flags
-        args = ','.join(['{}'.format(self._print(a)) for a in expr.args])
+        args = ','.join(['&{}'.format(self._print(a)) for a in expr.args])
         if expr.args:
-            code = '{name}({pyarg}, "{flags}", &{args})'.format(name=name, pyarg=pyarg, flags = flags, args = args)
+            code = '{name}({pyarg}, "{flags}", {kwlist}, {args})'.format(
+                            name=name,
+                            pyarg=pyarg,
+                            flags = flags,
+                            kwlist = expr.arg_names.name,
+                            args = args)
         else :
             code ='{name}({pyarg}, "")'.format(name=name, pyarg=pyarg) 
         return code
@@ -206,8 +211,8 @@ class CCodePrinter(CodePrinter):
 
     def get_declare_type(self, expr):
         dtype = self._print(expr.dtype)
-        prec  = expr.variable.precision
-        rank  = expr.variable.rank
+        prec  = expr.precision
+        rank  = expr.rank
         dtype = dtype_registry[(dtype, prec)]
 
         if rank > 0:
@@ -216,7 +221,7 @@ class CCodePrinter(CodePrinter):
             return '{0} '.format(dtype)
 
     def _print_Declare(self, expr):
-        declaration_type = self.get_declare_type(expr)
+        declaration_type = self.get_declare_type(expr.variable)
         variable = self._print(expr.variable)
 
         return '{0}{1};'.format(declaration_type, variable)
@@ -239,14 +244,14 @@ class CCodePrinter(CodePrinter):
     def function_signature(self, expr):
         rank = 0
         if len(expr.results) == 1:
-            self.get_declare_type(expr.results[0])
+            ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
             # TODO: Use fortran example to add pointer arguments for multiple output
             msg = 'Multiple output arguments is not yet supported in c'
             errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO, symbol=expr,
                 severity='fatal', blocker=self.blocking)
         else:
-            ret_type = self._print(datatype('void'))
+            ret_type = self._print(datatype('void'))+' '
         name = expr.name
         if not expr.arguments:
             arg_code = 'void'
