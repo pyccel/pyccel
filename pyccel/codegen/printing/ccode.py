@@ -142,10 +142,6 @@ class CCodePrinter(CodePrinter):
             lines.append("%s\n}" % var)
         return "\n".join(lines)
 
-    def _print_Bool(self, expr):
-        value = self._print(expr.arg)
-        return '({} != 0)'.format(value)
-
     def _print_BooleanTrue(self, expr):
         return '1'
 
