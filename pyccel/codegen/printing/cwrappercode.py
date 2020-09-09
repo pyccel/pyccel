@@ -20,7 +20,7 @@ from pyccel.errors.messages import *
 
 errors = Errors()
 
-__all__ = ["CWrapperCodePrinter", "ccode"]
+__all__ = ["CWrapperCodePrinter", "cwrappercode"]
 
 pytype_registry = {
         NativeInteger(): 'l',
@@ -115,9 +115,9 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.append(Assign(wrapper_results[0],PyBuildValueNode(build_keys, res_args)))
         wrapper_body.append(Return(wrapper_results))
 
-        name = self.get_new_name(used_names, expr.name.name+"_wrapper")
+        wrapper_name = self.get_new_name(used_names, expr.name.name+"_wrapper")
         #TODO: Create node and add args
-        wrapper_func = FunctionDef(name = expr.name.name+"_wrapper" ,
+        wrapper_func = FunctionDef(name = wrapper_name,
             arguments = wrapper_args,
             results = wrapper_results,
             body = wrapper_body,
