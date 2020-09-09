@@ -11,7 +11,7 @@ from pyccel.ast.core import create_incremented_string
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool
 
-from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
+from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode, pytype_parse_registry
 from pyccel.ast.cwrapper import PyBuildValue, PyArgKeywords
 
 from pyccel.ast.type_inference import str_dtype
@@ -119,7 +119,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 wrapper_body.append(cast_func(a , collect_var))
             else :
                 res_args.append(a)
-            build_keys += pytype_registry[a.dtype]
+            build_keys += pytype_parse_registry [a.dtype]
 
         #func_w = FunctionDef('Py_BuildValue', arguments = [build_keys] + res_args, results = [], body = [])
         #func_c = FunctionCall(func_w, ['\"{}\"'.format(build_keys)] + res_args)
