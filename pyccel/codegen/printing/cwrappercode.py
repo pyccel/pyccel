@@ -35,17 +35,21 @@ class CWrapperCodePrinter(CCodePrinter):
             incremented_name, counter = create_incremented_string(used_names, prefix=requested_name)
             return incremented_name
 
-    def get_PyArgParseType(self, dtype):
-        #TODO: Depends on type, rank, etc
-        if dtype is NativeBool():
-            return NativeInteger(), lambda arg, tmp: Assign(arg, Bool(tmp))
-        return dtype, None
+    def get_PyArgParseType(self, used_names, variable):
+        if variable.dtype is NativeBool():
+            collect_type = NativeInteger()
+            collect_var = Variable(dtype=collect_type, precision=4, 
+                name=self.get_new_name(used_names, variable.name+"_tmp"))
+            return collect_var , lambda arg, tmp: Assign(arg, Bool(tmp))
+        return variable, None
 
-    def get_PyBuildeValue(self, dtype):
-        #TODO: Depends on type, rank, etc
-        if dtype is NativeBool():
-            return NativeInteger(), lambda arg, tmp: Assign(arg, Bool(tmp))
-        return dtype, None
+    def get_PyBuildeValue(self, used_names, variable):
+        if variable.dtype is NativeBool():
+            collect_type = NativeInteger()
+            collect_var = Variable(dtype=collect_type, precision=4, 
+            name=self.get_new_name(used_names, variable.name+"_tmp"))
+            return collect_var , lambda arg, tmp: Assign(arg, Bool(tmp))
+        return variable, None
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
@@ -118,11 +122,9 @@ class CWrapperCodePrinter(CCodePrinter):
         # TODO: Simplify (to 1 line?)
         # TODO: Handle optional args
         for a in expr.arguments:
-            collect_type, cast_func = self.get_PyArgParseType(a.dtype)
+            collect_var, cast_func = self.get_PyArgParseType(used_names, a)
             if cast_func is not None:
                 # TODO: Add other properties
-                collect_var = Variable(dtype=collect_type,
-                        name=self.get_new_name(used_names, a.name+"_tmp"))
                 wrapper_vars.append(collect_var)
                 parse_args.append(collect_var)
                 wrapper_body_translations.append(cast_func(a, collect_var))
@@ -146,9 +148,8 @@ class CWrapperCodePrinter(CCodePrinter):
         #TODO: Loop over results to carry out necessary casts and collect Py_BuildValue type string
         res_args = []
         for a in expr.results :
-            collect_type, cast_func = self.get_PyBuildeValue(a.dtype)
+            collect_var, cast_func = self.get_PyBuildeValue(used_names, a)
             if cast_func is not None :
-                collect_var = Variable(dtype=collect_type, name=self.get_new_name(used_names, a.name+"_tmp"))
                 wrapper_vars.append(collect_var)
                 res_args.append(collect_var)
                 wrapper_body.append(cast_func(a , collect_var))
