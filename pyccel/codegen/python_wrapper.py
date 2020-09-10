@@ -176,7 +176,7 @@ def create_shared_library(codegen,
         #wrapper_code = create_c_wrapper(sharedlib_modname, codegen)
         module_old_name = codegen.expr.name
         codegen.expr.set_name(sharedlib_modname)
-        wrapper_code = cwrappercode(codegen.expr)
+        wrapper_code = cwrappercode(codegen.expr, codegen.parser)
         codegen.expr.set_name(module_old_name)
         errors.check()
         errors.reset()

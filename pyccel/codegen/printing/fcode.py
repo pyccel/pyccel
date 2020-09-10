@@ -2518,11 +2518,13 @@ class FCodePrinter(CodePrinter):
         return new_code
 
 
-def fcode(expr, parser=None, assign_to=None, **settings):
+def fcode(expr, parser, assign_to=None, **settings):
     """Converts an expr to a string of Fortran code
 
     expr : Expr
-        A sympy expression to be converted.
+        A pyccel expression to be converted.
+    parser : Parser
+        The parser used to collect the expression
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned. Can be a string, ``Symbol``,

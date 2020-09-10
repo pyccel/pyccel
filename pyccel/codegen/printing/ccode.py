@@ -493,11 +493,13 @@ class CCodePrinter(CodePrinter):
         return pretty
 
 
-def ccode(expr, assign_to=None, **settings):
+def ccode(expr, parser, assign_to=None, **settings):
     """Converts an expr to a string of c code
 
     expr : Expr
-        A sympy expression to be converted.
+        A pyccel expression to be converted.
+    parser : Parser
+        The parser used to collect the expression
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned. Can be a string, ``Symbol``,
@@ -516,4 +518,4 @@ def ccode(expr, assign_to=None, **settings):
         For example, if ``dereference=[a]``, the resulting code would print
         ``(*a)`` instead of ``a``.
     """
-    return CCodePrinter(settings).doprint(expr, assign_to)
+    return CCodePrinter(parser, settings).doprint(expr, assign_to)
