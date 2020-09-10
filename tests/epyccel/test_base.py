@@ -81,15 +81,15 @@ def test_compare_is_not_nil(language):
     compare_epyccel(base.is_not_nil, True, None, language=language)
 
 def test_cast_int(language):
-    compare_epyccel(base.cast_int, 4, language=language, language=language)
-    compare_epyccel(base.cast_float_to_int, 4.5, language=language, language=language)
+    compare_epyccel(base.cast_int, 4, language=language)
+    compare_epyccel(base.cast_float_to_int, 4.5, language=language)
 
 def test_cast_bool(language):
     compare_epyccel(base.cast_bool, True, language=language)
 
 def test_cast_float(language):
-    compare_epyccel(base.cast_float, 4.5, language=language, language=language)
-    compare_epyccel(base.cast_int_to_float, 4, language=language, language=language)
+    compare_epyccel(base.cast_float, 4.5, language=language)
+    compare_epyccel(base.cast_int_to_float, 4, language=language)
 
 def test_if_0_int(language):
     compare_epyccel(base.if_0_int, 22, language=language)
