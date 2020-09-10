@@ -47,10 +47,10 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_cast_function(self, used_names, cast_type, from_variable, to_variable):
         cast_function_arg = [from_variable]
         cast_function_result = [to_variable]
-        cast_function_body = [Return(cast_function_result)]
+        cast_function_ret = Return(cast_function_result)
         cast_function_name = self.get_new_name(used_names, cast_type)
         cast_function = CastFunction(cast_function_name, cast_type, 
-                            cast_function_arg, cast_function_body, cast_function_result)
+                            cast_function_arg, cast_function_ret, cast_function_result)
         return cast_function
 
     def get_PyArgParseType(self, used_names, variable):
@@ -64,10 +64,10 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_PyBuildeValue(self, used_names, variable):
         if variable.dtype is NativeBool():
-            collect_type = NativeInteger()
-            collect_var = Variable(dtype=collect_type, precision=4, 
+            collect_type = PyccelPyObject()
+            collect_var = Variable(dtype=collect_type, is_pointer = True,
             name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function(used_names, 'pyint_to_bool', collect_var, variable)
+            cast_function = self.get_cast_function(used_names, 'bool_to_pyobj', variable, collect_var)
             return collect_var , cast_function
         return variable, None
 
@@ -116,7 +116,8 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_CastFunction(self, expr):
         decs = [Declare(i.dtype, i) for i in expr.results]
         decs       = '\n'.join(self._print(i) for i in decs)
-        body = self._print(expr.body[0])
+        body = expr.body 
+        body  += self._print(expr.ret)
         return '{0}\n{{\n{1}\n{2}\n}}\n'.format(self.function_signature(expr), decs, body)
 
     def _print_FunctionDef(self, expr):

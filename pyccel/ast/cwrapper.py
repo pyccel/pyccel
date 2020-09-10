@@ -127,13 +127,23 @@ class CastFunction(FunctionDef):
         name,
         cast_type,
         arguments,
-        body,
+        ret,
         results):
         self._name = name
         self._arguments = arguments
-        self._body = body
+        self._ret = ret
         self._results = results
         self._cast_type = cast_type
+        body_ = ''
+        #TODO I dont know if the build of body shoudl be done here or in the cwrapper
+        #TODO this is just a tmp way of printing this shoudlbe improved later
+        if self._cast_type == 'pyint_to_bool':
+            body_ += '{} = {} != 0;\n'.format(self.results[0].name, self._arguments[0].name)
+
+        elif self.cast_type == 'bool_to_pyobj': 
+            body_ += '{} = {} != 0 ? Py_True : Py_False;\n'.format(self.results[0].name, self._arguments[0].name)
+        self._body = body_
+
 
     def __hash__(self):
         return  hash(self._cast_type)
@@ -154,9 +164,13 @@ class CastFunction(FunctionDef):
         return self._results
 
     @property
-    def body(self):
-        return self._body
+    def ret(self):
+        return self._ret
 
     @property
     def cast_type(self):
         return self._cast_type
+    
+    @property
+    def body(self):
+        return self._body
