@@ -1846,6 +1846,17 @@ class Module(Basic):
         classes=[],
         imports=[],
         ):
+        return Basic.__new__(cls)
+
+    def __init__(
+        self,
+        name,
+        variables,
+        funcs,
+        interfaces=[],
+        classes=[],
+        imports=[],
+        ):
         if not isinstance(name, str):
             raise TypeError('name must be a string')
 
@@ -1883,39 +1894,36 @@ class Module(Basic):
         imports = set(imports)  # for unicity
         imports = Tuple(*imports, sympify=False)
 
-        return Basic.__new__(
-            cls,
-            name,
-            variables,
-            funcs,
-            interfaces,
-            classes,
-            imports,
-            )
+        self._name = name
+        self._variables = variables
+        self._funcs = funcs
+        self._interfaces = interfaces
+        self._classes = classes
+        self._imports = imports
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def variables(self):
-        return self._args[1]
+        return self._variables
 
     @property
     def funcs(self):
-        return self._args[2]
+        return self._funcs
 
     @property
     def interfaces(self):
-        return self._args[3]
+        return self._interfaces
 
     @property
     def classes(self):
-        return self._args[4]
+        return self._classes
 
     @property
     def imports(self):
-        return self._args[5]
+        return self._imports
 
     @property
     def declarations(self):
@@ -1925,6 +1933,8 @@ class Module(Basic):
     def body(self):
         return self.interfaces + self.funcs + self.classes
 
+    def set_name(self, new_name):
+        self._name = new_name
 
 class Program(Basic):
 
