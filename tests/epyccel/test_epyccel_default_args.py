@@ -13,13 +13,13 @@ def clean_test():
     shutil.rmtree('__epyccel__', ignore_errors=True)
 
 #------------------------------------------------------------------------------
-def test_f1():
+def test_f1(language):
     @types('int')
     def f1(x = 1):
         y = x - 1
         return y
 
-    f = epyccel(f1)
+    f = epyccel(f1, language = language)
 
     # ...
     assert f(2) == f1(2)
@@ -55,12 +55,12 @@ def test_f2():
 
 
 #------------------------------------------------------------------------------
-def test_f3():
+def test_f3(language):
     @types('real','real')
     def f3(x = 1.5, y = 2.5):
         return x+y
 
-    f = epyccel(f3)
+    f = epyccel(f3, language=language)
 
     # ...
     assert f(19.2,6.7) == f3(19.2,6.7)
