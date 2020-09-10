@@ -7,7 +7,7 @@ from pyccel.ast.builtins import Bool
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
-from pyccel.ast.core import create_incremented_string
+from pyccel.ast.core import create_incremented_string, Declare
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool
 
@@ -36,6 +36,14 @@ class CWrapperCodePrinter(CCodePrinter):
             incremented_name, counter = create_incremented_string(used_names, prefix=requested_name)
             return incremented_name
 
+    def pop_cast_function(self, cast_func, cast_functions_list):
+        if cast_func in cast_functions_list:
+            for i in cast_functions_list:
+                if i == cast_func:
+                    return i
+        return cast_func
+
+    
     def get_cast_function(self, used_names, cast_type, from_variable, to_variable):
         cast_function_arg = [from_variable]
         cast_function_result = [to_variable]
@@ -105,6 +113,11 @@ class CWrapperCodePrinter(CCodePrinter):
                         '{arg_names}\n'
                         '}};\n'.format(name=expr.name, arg_names = arg_names))
 
+    def _print_CastFunction(self, expr):
+        decs = [Declare(i.dtype, i) for i in expr.results]
+        decs       = '\n'.join(self._print(i) for i in decs)
+        body = self._print(expr.body[0])
+        return '{0}\n{{\n{1}\n{2}\n}}\n'.format(self.function_signature(expr), decs, body)
 
     def _print_FunctionDef(self, expr):
         used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name.name])
@@ -138,12 +151,12 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var, cast_func = self.get_PyArgParseType(used_names, a)
             if cast_func is not None:
                 # TODO: Add other properties
+                cast_func = self.pop_cast_function(cast_func, cast_functions_list)
                 wrapper_vars.append(collect_var)
                 parse_args.append(collect_var)
                 cast_func_call = FunctionCall(cast_func, [collect_var])
                 wrapper_body_translations.append(AliasAssign(a, cast_func_call))
-                if not cast_func in self._cast_functions_set :
-                    cast_functions_list.add(cast_func) 
+                cast_functions_list.add(cast_func) 
             else:
                 parse_args.append(a)
             # TODO: Handle assignment to PyObject for default variables
@@ -166,17 +179,17 @@ class CWrapperCodePrinter(CCodePrinter):
         for a in expr.results :
             collect_var, cast_func = self.get_PyBuildeValue(used_names, a)
             if cast_func is not None :
+                cast_func = self.pop_cast_function(cast_func, cast_functions_list)                
                 wrapper_vars.append(collect_var)
                 res_args.append(collect_var)
                 cast_func_call = FunctionCall(cast_func, [a])
                 wrapper_body.append(AliasAssign(collect_var, cast_func_call))
-                if not cast_func in self._cast_functions_set :
-                    cast_functions_list.add(cast_func) 
+                cast_functions_list.add(cast_func) 
             else :
                 res_args.append(a)
 
+        code = '\n'.join(self._print(i) for i in cast_functions_list if i not in self._cast_functions_set)
         self._cast_functions_set.update(cast_functions_list)
-        print(self._cast_functions_set)
         wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
         wrapper_body.append(Return(wrapper_results))
 
@@ -187,7 +200,8 @@ class CWrapperCodePrinter(CCodePrinter):
             results = wrapper_results,
             body = wrapper_body,
             local_vars = wrapper_vars)
-        return CCodePrinter._print_FunctionDef(self, wrapper_func)
+        code += CCodePrinter._print_FunctionDef(self, wrapper_func)
+        return code
 
     def _print_Module(self, expr):
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.funcs)
