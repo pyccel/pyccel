@@ -32,7 +32,8 @@ class CWrapperCodePrinter(CCodePrinter):
             used_names.add(requested_name)
             return requested_name
         else:
-            return create_incremented_string(used_names, prefix=requested_name)
+            incremented_name, counter = create_incremented_string(used_names, prefix=requested_name)
+            return incremented_name
 
     def get_PyArgParseType(self, dtype):
         #TODO: Depends on type, rank, etc
