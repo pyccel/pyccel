@@ -26,6 +26,7 @@ __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 class CWrapperCodePrinter(CCodePrinter):
     def __init__(self, parser, settings={}):
         CCodePrinter.__init__(self, parser,settings)
+        self._cast_functions_set = set()
 
     def get_new_name(self, used_names, requested_name):
         if requested_name not in used_names:
@@ -125,6 +126,7 @@ class CWrapperCodePrinter(CCodePrinter):
         arg_names = [a.name for a in expr.arguments]
         keyword_list_name = self.get_new_name(used_names,'kwlist')
         keyword_list = PyArgKeywords(keyword_list_name, arg_names)
+        cast_functions_list = set()
 
         wrapper_body = [keyword_list]
         wrapper_body_translations = []
@@ -140,6 +142,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 parse_args.append(collect_var)
                 cast_func_call = FunctionCall(cast_func, [collect_var])
                 wrapper_body_translations.append(AliasAssign(a, cast_func_call))
+                if not cast_func in self._cast_functions_set :
+                    cast_functions_list.add(cast_func) 
             else:
                 parse_args.append(a)
             # TODO: Handle assignment to PyObject for default variables
@@ -166,9 +170,13 @@ class CWrapperCodePrinter(CCodePrinter):
                 res_args.append(collect_var)
                 cast_func_call = FunctionCall(cast_func, [a])
                 wrapper_body.append(AliasAssign(collect_var, cast_func_call))
+                if not cast_func in self._cast_functions_set :
+                    cast_functions_list.add(cast_func) 
             else :
                 res_args.append(a)
- 
+
+        self._cast_functions_set.update(cast_functions_list)
+        print(self._cast_functions_set)
         wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
         wrapper_body.append(Return(wrapper_results))
 
