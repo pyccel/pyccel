@@ -41,7 +41,10 @@ def test_input_output_matching_types(language):
         c = a+b
         return c
 
-    epyc_add_real = epyccel(add_real, fflags="-Werror -Wconversion-extra", language=language)
+    fflags="-Werror -Wconversion"
+    if language=="fortran":
+        fflags=fflags+"-extra"
+    epyc_add_real = epyccel(add_real, fflags=fflags, language=language)
 
     assert(add_real(1.0,2.0)==epyc_add_real(1.0,2.0))
 
