@@ -2352,7 +2352,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
-        args = expr.arguments
+        args = [a for a in expr.arguments if not isinstance(a, Nil)]
         results = func.results
 
         if len(results) == 1:
