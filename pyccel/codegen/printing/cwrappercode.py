@@ -12,7 +12,7 @@ from pyccel.ast.core import create_incremented_string
 from pyccel.ast.datatypes import NativeInteger, NativeBool
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
-from pyccel.ast.cwrapper import PyArgKeywords
+from pyccel.ast.cwrapper import PyArgKeywords, CastFunction
 
 from pyccel.ast.type_inference import str_dtype
 
