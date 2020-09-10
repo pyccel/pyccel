@@ -200,13 +200,13 @@ def test_decorator_f7():
     # ...
 
 #------------------------------------------------------------------------------
-def test_decorator_f8():
+def test_decorator_f8(language):
     @types('int','bool')
     def f8(x,b):
         a = x if b else 2
         return a
 
-    f = epyccel(f8)
+    f = epyccel(f8, language=language)
 
     # ...
     assert f(3,True)  == f8(3,True)
@@ -242,7 +242,7 @@ def test_arguments_f10():
     f(x_expected)
     assert np.array_equal(x, x_expected)
 
-def test_multiple_returns_f11():
+def test_multiple_returns_f11(language):
     @types('int', 'int', results='int')
     def ackermann(m, n):
         if m == 0:
@@ -252,10 +252,10 @@ def test_multiple_returns_f11():
         else:
             return ackermann(m - 1, ackermann(m, n - 1))
 
-    f = epyccel(ackermann)
+    f = epyccel(ackermann, language=language)
     assert f(2,3) == ackermann(2,3)
 
-def test_multiple_returns_f12():
+def test_multiple_returns_f12(language):
     @types('int')
     def non_negative(i):
         if i < 0:
@@ -263,7 +263,7 @@ def test_multiple_returns_f12():
         else:
             return True
 
-    f = epyccel(non_negative)
+    f = epyccel(non_negative, language=language)
     assert f(2) == non_negative(2)
     assert f(-1) == non_negative(-1)
 
@@ -287,7 +287,7 @@ def test_multiple_returns_f14():
     assert f(2,1) == g(2,1)
 
 
-def test_decorator_f15():
+def test_decorator_f15(language):
     @types('bool', 'int8', 'int16', 'int32', 'int64')
     def f15(a,b,c,d,e):
         if a:
@@ -295,7 +295,7 @@ def test_decorator_f15():
         else:
             return d + e
 
-    f = epyccel(f15)
+    f = epyccel(f15, language=language)
     assert f(True, 1, 2, 3, 4)  == f15(True, 1, 2, 3, 4)
     assert f(False, 1, 2, 3, 4)  == f15(False, 1, 2, 3, 4)
 
