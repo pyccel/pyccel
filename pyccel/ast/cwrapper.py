@@ -127,9 +127,11 @@ class CastFunction(Basic):
         name,
         cast_type,
         arguments,
+        body,
         results):
         self._name = name
         self._arguments = arguments
+        self._body = body
         self._results = results
         self._cast_type = cast_type
 
@@ -150,6 +152,10 @@ class CastFunction(Basic):
     @property
     def results(self):
         return self._results
+
+    @property
+    def body(self):
+        return self._body
 
     @property
     def cast_type(self):
