@@ -2107,35 +2107,35 @@ class FCodePrinter(CodePrinter):
 
     def _print_PyccelRShift(self, expr):
         args = [self._print(a) for a in expr.args]
-        code   = args[0]
+        code = args[0]
         for c in args[1:]:
             code = 'RSHIFT({},{})'.format(code, c)
         return code
 
     def _print_PyccelLShift(self, expr):
         args = [self._print(a) for a in expr.args]
-        code   = args[0]
+        code = args[0]
         for c in args[1:]:
             code = 'LSHIFT({},{})'.format(code, c)
         return code
 
     def _print_PyccelBitXor(self, expr):
         args = [self._print(a) for a in expr.args]
-        code   = args[0]
+        code = args[0]
         for c in args[1:]:
             code = 'IEOR({},{})'.format(code, c)
         return code
 
     def _print_PyccelBitOr(self, expr):
         args = [self._print(a) for a in expr.args]
-        code   = args[0]
+        code = args[0]
         for c in args[1:]:
             code = 'IOR({},{})'.format(code, c)
         return code
 
     def _print_PyccelBitAnd(self, expr):
         args = [self._print(a) for a in expr.args]
-        code   = args[0]
+        code = args[0]
         for c in args[1:]:
             code = 'IAND({},{})'.format(code, c)
         return code

@@ -499,7 +499,7 @@ class SyntaxParser(BasicParser):
                           severity='fatal')
 
         return Func(PyccelUnary(target))
-    
+
     def _visit_BinOp(self, stmt):
 
         first  = self._visit(stmt.left)

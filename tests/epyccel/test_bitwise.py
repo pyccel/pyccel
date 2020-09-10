@@ -3,7 +3,7 @@ import numpy as np
 
 from pyccel.epyccel import epyccel
 from modules import bitwise
-from conftest       import *
+from conftest import *
 
 @pytest.mark.parametrize("a, b",[(1, 1),(1, 2)])
 def test_right_shift(language, a, b):
