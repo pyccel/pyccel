@@ -69,7 +69,6 @@ VARARGS = 'An undefined number of input arguments is not covered by Pyccel'
 SYMPY_RESTRICTION_DICT_KEYS = 'sympy does not allow dictionary keys to be strings'
 
 # Pyccel limitation
-PYCCEL_RESTRICTION_UNARY_OPERATOR = 'Invert unary operator is not covered by Pyccel'
 PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY = 'Uncovered try/except/finally statements by Pyccel'
 PYCCEL_RESTRICTION_RAISE = 'Uncovered raise statement by Pyccel'
 PYCCEL_RESTRICTION_YIELD = 'Uncovered yield statement by Pyccel'
