@@ -36,9 +36,9 @@ class CWrapperCodePrinter(CCodePrinter):
             incremented_name, counter = create_incremented_string(used_names, prefix=requested_name)
             return incremented_name
 
-    def pop_cast_function(self, cast_func, cast_functions_list):
-        if cast_func in cast_functions_list:
-            for i in cast_functions_list:
+    def pop_cast_function(self, cast_func):
+        if cast_func in self._cast_functions_set:
+            for i in self._cast_functions_set:
                 if i == cast_func:
                     return i
         return cast_func
@@ -139,8 +139,8 @@ class CWrapperCodePrinter(CCodePrinter):
         arg_names = [a.name for a in expr.arguments]
         keyword_list_name = self.get_new_name(used_names,'kwlist')
         keyword_list = PyArgKeywords(keyword_list_name, arg_names)
-        cast_functions_list = set()
 
+        code = ''
         wrapper_body = [keyword_list]
         wrapper_body_translations = []
 
@@ -151,12 +151,14 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var, cast_func = self.get_PyArgParseType(used_names, a)
             if cast_func is not None:
                 # TODO: Add other properties
-                cast_func = self.pop_cast_function(cast_func, cast_functions_list)
+                cast_func = self.pop_cast_function(cast_func)        
+                if not cast_func in self._cast_functions_set:
+                    code += self._print(cast_func)
+                    self._cast_functions_set.add(cast_func)
                 wrapper_vars.append(collect_var)
                 parse_args.append(collect_var)
                 cast_func_call = FunctionCall(cast_func, [collect_var])
                 wrapper_body_translations.append(AliasAssign(a, cast_func_call))
-                cast_functions_list.add(cast_func) 
             else:
                 parse_args.append(a)
             # TODO: Handle assignment to PyObject for default variables
@@ -179,17 +181,17 @@ class CWrapperCodePrinter(CCodePrinter):
         for a in expr.results :
             collect_var, cast_func = self.get_PyBuildeValue(used_names, a)
             if cast_func is not None :
-                cast_func = self.pop_cast_function(cast_func, cast_functions_list)                
+                cast_func = self.pop_cast_function(cast_func)        
+                if not cast_func in self._cast_functions_set:
+                    code += self._print(cast_func)
+                    self._cast_functions_set.add(cast_func)            
                 wrapper_vars.append(collect_var)
                 res_args.append(collect_var)
                 cast_func_call = FunctionCall(cast_func, [a])
                 wrapper_body.append(AliasAssign(collect_var, cast_func_call))
-                cast_functions_list.add(cast_func) 
             else :
                 res_args.append(a)
 
-        code = '\n'.join(self._print(i) for i in cast_functions_list if i not in self._cast_functions_set)
-        self._cast_functions_set.update(cast_functions_list)
         wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
         wrapper_body.append(Return(wrapper_results))
 
