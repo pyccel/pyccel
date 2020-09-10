@@ -35,20 +35,31 @@ class CWrapperCodePrinter(CCodePrinter):
             incremented_name, counter = create_incremented_string(used_names, prefix=requested_name)
             return incremented_name
 
+    def get_cast_function(self, used_names, cast_type, from_variable, to_variable):
+        cast_function_arg = [from_variable]
+        cast_function_result = [to_variable]
+        cast_function_body = [Return(cast_function_result)]
+        cast_function_name = self.get_new_name(used_names, cast_type)
+        cast_function = CastFunction(cast_function_name, cast_type, 
+                            cast_function_arg, cast_function_body, cast_function_result)
+        return cast_function
+
     def get_PyArgParseType(self, used_names, variable):
         if variable.dtype is NativeBool():
             collect_type = NativeInteger()
             collect_var = Variable(dtype=collect_type, precision=4, 
-                name=self.get_new_name(used_names, variable.name+"_tmp"))
-            return collect_var , lambda arg, tmp: Assign(arg, Bool(tmp))
+                name = self.get_new_name(used_names, variable.name+"_tmp"))
+            cast_function = self.get_cast_function(used_names, 'pyint_to_bool', collect_var, variable)
+            return collect_var , cast_function
         return variable, None
 
     def get_PyBuildeValue(self, used_names, variable):
         if variable.dtype is NativeBool():
             collect_type = NativeInteger()
             collect_var = Variable(dtype=collect_type, precision=4, 
-            name=self.get_new_name(used_names, variable.name+"_tmp"))
-            return collect_var , lambda arg, tmp: Assign(arg, Bool(tmp))
+            name = self.get_new_name(used_names, variable.name+"_tmp"))
+            cast_function = self.get_cast_function(used_names, 'pyint_to_bool', collect_var, variable)
+            return collect_var , cast_function
         return variable, None
 
     def _print_PyccelPyObject(self, expr):
@@ -127,7 +138,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 # TODO: Add other properties
                 wrapper_vars.append(collect_var)
                 parse_args.append(collect_var)
-                wrapper_body_translations.append(cast_func(a, collect_var))
+                cast_func_call = FunctionCall(cast_func, [collect_var])
+                wrapper_body_translations.append(AliasAssign(a, cast_func_call))
             else:
                 parse_args.append(a)
             # TODO: Handle assignment to PyObject for default variables
@@ -152,7 +164,8 @@ class CWrapperCodePrinter(CCodePrinter):
             if cast_func is not None :
                 wrapper_vars.append(collect_var)
                 res_args.append(collect_var)
-                wrapper_body.append(cast_func(a , collect_var))
+                cast_func_call = FunctionCall(cast_func, [a])
+                wrapper_body.append(AliasAssign(collect_var, cast_func_call))
             else :
                 res_args.append(a)
  

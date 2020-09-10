@@ -120,7 +120,7 @@ class PyBuildValueNode(Basic):
     def args(self):
         return self._result_args
 
-class CastFunction(Basic):
+class CastFunction(FunctionDef):
     """Represents a cast function definition."""
 
     def __init__(self,
