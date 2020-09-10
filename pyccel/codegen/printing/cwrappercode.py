@@ -65,7 +65,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_PyBuildeValue(self, used_names, variable):
         if variable.dtype is NativeBool():
             collect_type = PyccelPyObject()
-            collect_var = Variable(dtype=collect_type, is_pointer = True,
+            collect_var = Variable(dtype=collect_type, rank = 1,
             name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'bool_to_pyobj', variable, collect_var)
             return collect_var , cast_function

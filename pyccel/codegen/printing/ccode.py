@@ -65,7 +65,7 @@ dtype_registry = {('real',8)    : 'double',
                   ('int',2)     : 'short int',
                   ('int',1)     : 'char',  
                   ('pyobject', 0) : 'PyObject',
-                  ('bool',4)    : 'int'}
+                  ('bool',4)    : '_Bool'}
 
 
 class CCodePrinter(CodePrinter):
