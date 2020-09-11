@@ -62,7 +62,7 @@ class CWrapperCodePrinter(CCodePrinter):
             return collect_var , cast_function
         return variable, None
 
-    def get_PyBuildeValue(self, used_names, variable):
+    def get_PyBuildValue(self, used_names, variable):
         if variable.dtype is NativeBool():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, rank = 1,
@@ -180,7 +180,7 @@ class CWrapperCodePrinter(CCodePrinter):
         #TODO: Loop over results to carry out necessary casts and collect Py_BuildValue type string
         res_args = []
         for a in expr.results :
-            collect_var, cast_func = self.get_PyBuildeValue(used_names, a)
+            collect_var, cast_func = self.get_PyBuildValue(used_names, a)
             if cast_func is not None :
                 cast_func = self.pop_cast_function(cast_func)        
                 if not cast_func in self._cast_functions_set:
@@ -211,13 +211,13 @@ class CWrapperCodePrinter(CCodePrinter):
 
         function_defs = '\n'.join(self._print(f) for f in expr.funcs)
 
-        methode_def_func = ',\n'.join("    {{ \"{0}\", (PyCFunction){0}_wrapper, METH_VARARGS | METH_KEYWORDS, \"{1}\" }}".format(
+        method_def_func = ',\n'.join("    {{ \"{0}\", (PyCFunction){0}_wrapper, METH_VARARGS | METH_KEYWORDS, \"{1}\" }}".format(
             f.name,f.doc_string) for f in expr.funcs)
         
-        methode_def = ('static PyMethodDef {mod_name}_methods[] = {{\n'
-                        '{methode_def_func}'
+        method_def = ('static PyMethodDef {mod_name}_methods[] = {{\n'
+                        '{method_def_func}'
                         ',\n    {{ NULL, NULL, 0, NULL}}'
-                        '\n}};\n\n'.format(mod_name = expr.name ,methode_def_func = methode_def_func))
+                        '\n}};\n\n'.format(mod_name = expr.name ,method_def_func = method_def_func))
         
         module_def = ('static struct PyModuleDef {mod_name}_module = {{\n'
                 '   PyModuleDef_HEAD_INIT,\n'
@@ -238,12 +238,12 @@ class CWrapperCodePrinter(CCodePrinter):
                 '#include <Python.h>\n\n'
                 '{function_signatures}\n\n'
                 '{function_defs}\n\n'
-                '{methode_def}\n'
+                '{method_def}\n'
                 '{module_def}\n\n'
                 '{init_func}\n'.format(
                     function_signatures = function_signatures,
                     function_defs = function_defs,
-                    methode_def = methode_def,
+                    method_def = method_def,
                     module_def = module_def,
                     init_func = init_func))
 
