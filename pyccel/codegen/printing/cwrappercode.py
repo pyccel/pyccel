@@ -24,6 +24,8 @@ errors = Errors()
 
 __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 
+dtype_registry = {('pyobject', 0) : 'PyObject'}
+
 class CWrapperCodePrinter(CCodePrinter):
     def __init__(self, parser, settings={}):
         CCodePrinter.__init__(self, parser,settings)
@@ -38,6 +40,12 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             incremented_name, _ = create_incremented_string(used_names, prefix=requested_name)
             return incremented_name
+
+    def find_in_dtype_registry(self, dtype, prec):
+        try :
+            return dtype_registry[(dtype, prec)]
+        except KeyError:
+            return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
     def get_cast_function(self, used_names, cast_type, from_variable, to_variable):
         cast_function_arg = [from_variable]
@@ -147,7 +155,6 @@ class CWrapperCodePrinter(CCodePrinter):
         keyword_list_name = self.get_new_name(used_names,'kwlist')
         keyword_list = PyArgKeywords(keyword_list_name, arg_names)
 
-        code = ''
         wrapper_body = [keyword_list]
         wrapper_body_translations = []
 

@@ -64,7 +64,6 @@ dtype_registry = {('real',8)    : 'double',
                   ('int',8)     : 'long',
                   ('int',2)     : 'short int',
                   ('int',1)     : 'char',  
-                  ('pyobject', 0) : 'PyObject',
                   ('bool',4)    : '_Bool'}
 
 
@@ -194,14 +193,17 @@ class CCodePrinter(CodePrinter):
          imports = ['#include "{0}"'.format(i) for i in expr.target]
          return '\n'.join(i for i in imports)
 
+    def find_in_dtype_registry(self, dtype, prec):
+        try :
+            return dtype_registry[(dtype, prec)]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,severity='fatal')
+
     def get_declare_type(self, expr):
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         rank  = expr.rank
-        try :
-            dtype = dtype_registry[(dtype, prec)]
-        except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,severity='fatal')
+        dtype = self.find_in_dtype_registry(dtype,prec)
 
         if rank > 0 or expr.is_pointer:
             return '{0} *'.format(dtype)
