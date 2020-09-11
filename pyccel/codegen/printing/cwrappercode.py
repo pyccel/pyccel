@@ -4,16 +4,17 @@ from collections import OrderedDict
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
+from pyccel.ast.numbers   import BooleanTrue
 from pyccel.ast.builtins import Bool
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
-from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
+from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, Symbol
 from pyccel.ast.core import create_incremented_string, Declare, SeparatorComment
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
-from pyccel.ast.cwrapper import PyArgKeywords, CastFunction
+from pyccel.ast.cwrapper import PyArgKeywords
 
 from pyccel.ast.type_inference import str_dtype
 
@@ -51,12 +52,24 @@ class CWrapperCodePrinter(CCodePrinter):
         if cast_type in self._cast_functions_dict:
             return self._cast_functions_dict[cast_type]
 
+        cast_function_name = self.get_new_name(used_names, cast_type)
         cast_function_arg = [from_variable]
         cast_function_result = [to_variable]
-        cast_function_body = [Return(cast_function_result)]
-        cast_function_name = self.get_new_name(used_names, cast_type)
-        cast_function = CastFunction(cast_function_name, cast_type,
-                            cast_function_arg, cast_function_body, cast_function_result)
+        cast_function_local_vars = [];
+ 
+        #switch case of cast_type
+        if cast_type == 'pyint_to_bool':
+            cast_function_body = [Assign(cast_function_result[0], Bool(cast_function_arg[0]))]
+        elif cast_type == 'bool_to_pyobj':
+            cast_function_body = [If((Bool(cast_function_arg[0]),
+                [Assign(cast_function_result[0], Symbol('Py_True'))]),
+                (BooleanTrue(), [Assign(cast_function_result[0], Symbol('Py_False'))]))]
+        cast_function_body += [Return(cast_function_result)]
+        cast_function = FunctionDef(name = cast_function_name, 
+                                    arguments = cast_function_arg,
+                                    body = cast_function_body, 
+                                    results = cast_function_result,
+                                    local_vars = cast_function_local_vars)
         self._cast_functions_dict[cast_type] = cast_function
         return cast_function
 
@@ -123,12 +136,6 @@ class CWrapperCodePrinter(CCodePrinter):
         return ('static char *{name}[] = {{\n'
                         '{arg_names}\n'
                         '}};\n'.format(name=expr.name, arg_names = arg_names))
-
-    def _print_CastFunction(self, expr):
-        decs = [Declare(i.dtype, i) for i in expr.results]
-        decs       = '\n'.join(self._print(i) for i in decs)
-        body = '\n'.join(self._print(i) for i in expr.body)
-        return '{0}\n{{\n{1}\n{2}\n}}\n'.format(self.function_signature(expr), decs, body)
 
     def _print_FunctionDef(self, expr):
         # Save all used names
@@ -218,7 +225,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         function_defs = '\n\n'.join(self._print(f) for f in expr.funcs)
 
-        cast_functions = '\n\n'.join(self._print(f) for f in self._cast_functions_dict.values())
+        cast_functions = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f) for f in self._cast_functions_dict.values())
 
         method_def_func = ',\n'.join("{{ \"{name}\", (PyCFunction){wrapper_name}, METH_VARARGS | METH_KEYWORDS, \"{doc_string}\" }}".format(
             name = f.name,

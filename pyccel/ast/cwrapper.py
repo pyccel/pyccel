@@ -2,9 +2,6 @@ from .basic     import Basic
 from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable
-from .core      import If, Assign, Symbol
-from .builtins  import Bool
-from pyccel.ast.numbers   import BooleanTrue
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -122,57 +119,4 @@ class PyBuildValueNode(Basic):
     @property
     def args(self):
         return self._result_args
-
-class CastFunction(FunctionDef):
-    """Represents a cast function definition."""
-
-    def __init__(self,
-        name,
-        cast_type,
-        arguments,
-        body,
-        results):
-        self._name = name
-        self._arguments = arguments
-        self._results = results
-        self._cast_type = cast_type
-        body_ = ''
-        #TODO I dont know if the build of body shoudl be done here or in the cwrapper
-        #TODO this is just a tmp way of printing this shoudlbe improved later
-        if self._cast_type == 'pyint_to_bool':
-            body_ = [Assign(self.results[0], Bool(self._arguments[0]))]
-
-        elif self.cast_type == 'bool_to_pyobj':
-            true = Symbol('Py_True')
-            false = Symbol('Py_False')
-            body_ = [If((Bool(self._arguments[0]),
-                [Assign(self._results[0], true)]),
-                (BooleanTrue(), [Assign(self._results[0], false)]))]
-        self._body = body_ + body
-
-
-    def __hash__(self):
-        return  hash(self._cast_type)
-
-    def __eq__(self, other):
-        return (self.cast_type == other.cast_type)
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def arguments(self):
-        return self._arguments
-
-    @property
-    def results(self):
-        return self._results
-
-    @property
-    def cast_type(self):
-        return self._cast_type
-
-    @property
-    def body(self):
-        return self._body
+        
