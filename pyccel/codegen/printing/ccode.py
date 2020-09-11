@@ -58,8 +58,8 @@ known_functions = {
 
 dtype_registry = {('real',8)    : 'double',
                   ('real',4)    : 'float',
-                  ('complex',8) : 'double complex',
-                  ('complex',4) : 'float complex',
+                  ('complex',8) : 'double _Complex',
+                  ('complex',4) : 'float _Complex',
                   ('int',4)     : 'int',
                   ('int',8)     : 'long',
                   ('int',2)     : 'short int',
@@ -227,6 +227,9 @@ class CCodePrinter(CodePrinter):
 
     def _print_NativeVoid(self, expr):
         return 'void'
+
+    def _print_NativeComplex(self, expr)
+        return 'complex'
 
     def function_signature(self, expr):
         if len(expr.results) == 1:

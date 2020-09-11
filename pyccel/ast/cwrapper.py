@@ -13,12 +13,16 @@ __all__ = (
 # --------- CLASSES -----------
 #
     'PyccelPyObject',
+    'PyccelPyComplex',
     'PyArg_ParseTupleNode',
     'PyBuildValueNode'
 )
 
 class PyccelPyObject(DataType):
     _name = 'pyobject'
+
+class PyccelPyComplex(DataType):
+    _name = 'pycomplex'
 
 #TODO: Is there an equivalent to static so this can be a static list of strings?
 class PyArgKeywords(Basic):
