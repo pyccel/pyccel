@@ -38,10 +38,10 @@ pytype_parse_registry = {
     (NativeInteger(), 4) : 'i',
     (NativeInteger(), 8) : 'l',
     (NativeInteger(), 2) : 'h',
-    (NativeInteger(), 1) : 'b',    
+    (NativeInteger(), 1) : 'b',
     (NativeReal(), 8)    : 'd',
     (NativeReal(), 4)    : 'f',
-    (NativeComplex(), 4) : 'D',    
+    (NativeComplex(), 4) : 'D',
     (NativeComplex(), 8) : 'D',
     (NativeBool(), 4)    : 'p',
     (NativeString(), 0)  : 's',
@@ -107,7 +107,7 @@ class PyArg_ParseTupleNode(Basic):
 
 class PyBuildValueNode(Basic):
     def __init__(self, result_args = []):
-        self._flags = '' 
+        self._flags = ''
         self._result_args = result_args
         for i in result_args:
             self._flags += pytype_parse_registry[(i.dtype, i.precision)]
@@ -115,7 +115,7 @@ class PyBuildValueNode(Basic):
     @property
     def flags(self):
         return self._flags
-    
+
     @property
     def args(self):
         return self._result_args
@@ -140,7 +140,7 @@ class CastFunction(FunctionDef):
         if self._cast_type == 'pyint_to_bool':
             body_ += '{} = {} != 0;\n'.format(self.results[0].name, self._arguments[0].name)
 
-        elif self.cast_type == 'bool_to_pyobj': 
+        elif self.cast_type == 'bool_to_pyobj':
             body_ += '{} = {} != 0 ? Py_True : Py_False;\n'.format(self.results[0].name, self._arguments[0].name)
         self._body = body_
 
@@ -170,7 +170,7 @@ class CastFunction(FunctionDef):
     @property
     def cast_type(self):
         return self._cast_type
-    
+
     @property
     def body(self):
         return self._body
