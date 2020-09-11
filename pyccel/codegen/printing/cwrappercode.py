@@ -55,7 +55,7 @@ class CWrapperCodePrinter(CCodePrinter):
         cast_function_name = self.get_new_name(used_names, cast_type)
         cast_function_arg = [from_variable]
         cast_function_result = [to_variable]
-        cast_function_local_vars = [];
+        cast_function_local_vars = []
  
         #switch case of cast_type
         if cast_type == 'pyint_to_bool':
@@ -65,9 +65,9 @@ class CWrapperCodePrinter(CCodePrinter):
                 [Assign(cast_function_result[0], Symbol('Py_True'))]),
                 (BooleanTrue(), [Assign(cast_function_result[0], Symbol('Py_False'))]))]
         cast_function_body += [Return(cast_function_result)]
-        cast_function = FunctionDef(name = cast_function_name, 
+        cast_function = FunctionDef(name = cast_function_name,
                                     arguments = cast_function_arg,
-                                    body = cast_function_body, 
+                                    body = cast_function_body,
                                     results = cast_function_result,
                                     local_vars = cast_function_local_vars)
         self._cast_functions_dict[cast_type] = cast_function
