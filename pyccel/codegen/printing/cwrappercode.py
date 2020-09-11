@@ -35,14 +35,6 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             incremented_name, _ = create_incremented_string(used_names, prefix=requested_name)
             return incremented_name
-
-    def pop_cast_function(self, cast_func):
-        if cast_func in self._cast_functions_set:
-            for i in self._cast_functions_set:
-                if i == cast_func:
-                    return i
-        return cast_func
-
     
     def get_cast_function(self, used_names, cast_type, from_variable, to_variable):
         cast_function_arg = [from_variable]
@@ -59,6 +51,7 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var = Variable(dtype=collect_type, precision=4, 
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'pyint_to_bool', collect_var, variable)
+            self._cast_functions_set.add(cast_function)
             return collect_var , cast_function
         return variable, None
 
@@ -68,6 +61,7 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var = Variable(dtype=collect_type, rank = 1,
             name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'bool_to_pyobj', variable, collect_var)
+            self._cast_functions_set.add(cast_function)
             return collect_var , cast_function
         return variable, None
 
@@ -151,11 +145,6 @@ class CWrapperCodePrinter(CCodePrinter):
         for a in expr.arguments:
             collect_var, cast_func = self.get_PyArgParseType(used_names, a)
             if cast_func is not None:
-                # TODO: Add other properties
-                cast_func = self.pop_cast_function(cast_func)        
-                if not cast_func in self._cast_functions_set:
-                    code += self._print(cast_func)
-                    self._cast_functions_set.add(cast_func)
                 wrapper_vars.append(collect_var)
                 parse_args.append(collect_var)
                 cast_func_call = FunctionCall(cast_func, [collect_var])
@@ -181,11 +170,7 @@ class CWrapperCodePrinter(CCodePrinter):
         res_args = []
         for a in expr.results :
             collect_var, cast_func = self.get_PyBuildValue(used_names, a)
-            if cast_func is not None :
-                cast_func = self.pop_cast_function(cast_func)        
-                if not cast_func in self._cast_functions_set:
-                    code += self._print(cast_func)
-                    self._cast_functions_set.add(cast_func)            
+            if cast_func is not None:
                 wrapper_vars.append(collect_var)
                 res_args.append(collect_var)
                 cast_func_call = FunctionCall(cast_func, [a])
@@ -203,14 +188,15 @@ class CWrapperCodePrinter(CCodePrinter):
             results = wrapper_results,
             body = wrapper_body,
             local_vars = wrapper_vars)
-        code += CCodePrinter._print_FunctionDef(self, wrapper_func)
-        return code
+        return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
         sep = self._print(SeparatorComment(40))
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.funcs)
 
         function_defs = '\n\n'.join(self._print(f) for f in expr.funcs)
+
+        cast_functions = '\n\n'.join(self._print(f) for f in self._cast_functions_set)
 
         method_def_func = ',\n'.join("{{ \"{name}\", (PyCFunction){name}_wrapper, METH_VARARGS | METH_KEYWORDS, \"{doc_string}\" }}".format(
             name = f.name,
@@ -242,6 +228,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 '#include <Python.h>\n\n'
                 '{function_signatures}\n\n'
                 '{sep}\n\n'
+                '{cast_functions}\n\n'
+                '{sep}\n\n'
                 '{function_defs}\n\n'
                 '{method_def}\n\n'
                 '{sep}\n\n'
@@ -250,6 +238,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 '{init_func}\n'.format(
                     function_signatures = function_signatures,
                     sep = sep,
+                    cast_functions = cast_functions,
                     function_defs = function_defs,
                     method_def = method_def,
                     module_def = module_def,
