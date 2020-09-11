@@ -1,5 +1,6 @@
 # coding: utf-8
 # pylint: disable=R0201
+from collections import OrderedDict
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
@@ -26,7 +27,7 @@ __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 class CWrapperCodePrinter(CCodePrinter):
     def __init__(self, parser, settings={}):
         CCodePrinter.__init__(self, parser,settings)
-        self._cast_functions_set = set()
+        self._cast_functions_dict = OrderedDict()
 
     def get_new_name(self, used_names, requested_name):
         if requested_name not in used_names:
@@ -51,7 +52,7 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var = Variable(dtype=collect_type, precision=4, 
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'pyint_to_bool', collect_var, variable)
-            self._cast_functions_set.add(cast_function)
+            self._cast_functions_dict['pyint_to_bool'] = cast_function
             return collect_var , cast_function
         return variable, None
 
@@ -61,7 +62,7 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var = Variable(dtype=collect_type, rank = 1,
             name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'bool_to_pyobj', variable, collect_var)
-            self._cast_functions_set.add(cast_function)
+            self._cast_functions_dict['bool_to_pyobj'] = cast_function
             return collect_var , cast_function
         return variable, None
 
@@ -196,7 +197,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         function_defs = '\n\n'.join(self._print(f) for f in expr.funcs)
 
-        cast_functions = '\n\n'.join(self._print(f) for f in self._cast_functions_set)
+        cast_functions = '\n\n'.join(self._print(f) for f in self._cast_functions_dict.values())
 
         method_def_func = ',\n'.join("{{ \"{name}\", (PyCFunction){name}_wrapper, METH_VARARGS | METH_KEYWORDS, \"{doc_string}\" }}".format(
             name = f.name,
