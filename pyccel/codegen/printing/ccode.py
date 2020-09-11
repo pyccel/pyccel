@@ -324,6 +324,8 @@ class CCodePrinter(CodePrinter):
         rhs = self._print(expr.rhs)
         if isinstance(expr.rhs, Variable) and not expr.rhs.is_pointer:
             rhs = '&{}'.format(rhs)
+        if isinstance(expr.rhs, FunctionCall) and not expr.rhs.func.results[0].is_pointer:
+            raise TypeError("A pointer cannot point to the address of a temporary variable")
         return '{} = {};'.format(lhs, rhs)
 
     def _print_For(self, expr):
