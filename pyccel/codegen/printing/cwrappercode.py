@@ -33,7 +33,7 @@ class CWrapperCodePrinter(CCodePrinter):
             used_names.add(requested_name)
             return requested_name
         else:
-            incremented_name, counter = create_incremented_string(used_names, prefix=requested_name)
+            incremented_name, counter = create_incremented_string(used_names, prefix=requested_name) # pylint: disable=unused-variable
             return incremented_name
 
     def pop_cast_function(self, cast_func):
