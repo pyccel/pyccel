@@ -2697,6 +2697,8 @@ class SemanticParser(BasicParser):
             var1, var2 = var2, var1
 
         if isinstance(var2, Nil):
+            if isinstance(var1, Nil):
+                return IsClass(expr.lhs, expr.rhs)
             if not var1.is_optional:
                 errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
