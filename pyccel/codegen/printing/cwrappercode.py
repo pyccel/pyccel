@@ -57,6 +57,7 @@ class CWrapperCodePrinter(CCodePrinter):
         cast_function_name = self.get_new_name(used_names, cast_type)
         cast_function = CastFunction(cast_function_name, cast_type,
                             cast_function_arg, cast_function_ret, cast_function_result)
+        self._cast_functions_dict[cast_type] = cast_function
         return cast_function
 
     def get_PyArgParseType(self, used_names, variable):
@@ -171,7 +172,7 @@ class CWrapperCodePrinter(CCodePrinter):
             if cast_func is not None:
                 wrapper_vars.append(collect_var)
                 cast_func_call = FunctionCall(cast_func, [collect_var])
-                wrapper_body_translations.append(AliasAssign(a, cast_func_call))
+                wrapper_body_translations.append(Assign(a, cast_func_call))
 
             parse_args.append(collect_var)
 
@@ -187,7 +188,7 @@ class CWrapperCodePrinter(CCodePrinter):
             func_call = FunctionCall(expr, expr.arguments)
         else:
             results = expr.results if len(expr.results)>1 else expr.results[0]
-            func_call = AliasAssign(results,FunctionCall(expr, expr.arguments))
+            func_call = Assign(results,FunctionCall(expr, expr.arguments))
         wrapper_body.append(func_call)
         #TODO: Loop over results to carry out necessary casts and collect Py_BuildValue type string
         res_args = []
@@ -196,7 +197,7 @@ class CWrapperCodePrinter(CCodePrinter):
             if cast_func is not None:
                 wrapper_vars.append(collect_var)
                 cast_func_call = FunctionCall(cast_func, [a])
-                wrapper_body.append(AliasAssign(collect_var, cast_func_call))
+                wrapper_body.append(Assign(collect_var, cast_func_call))
 
             res_args.append(collect_var)
 
