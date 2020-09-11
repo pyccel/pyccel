@@ -8,7 +8,7 @@ from sympy.core import S
 from sympy.printing.precedence import precedence
 
 from pyccel.ast.core import Assign, datatype, Variable, Import
-from pyccel.ast.core import CommentBlock, Comment
+from pyccel.ast.core import CommentBlock, Comment, SeparatorComment
 
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
@@ -247,10 +247,19 @@ class CCodePrinter(CodePrinter):
 
         decs  = [Declare(i.dtype, i) for i in expr.local_vars]
         decs += [Declare(i.dtype, i) for i in expr.results]
-        decs       = '\n'.join(self._print(i) for i in decs)
-        body       = '\n'.join(self._print(i) for i in expr.body.body)
+        decs  = '\n'.join(self._print(i) for i in decs)
+        body  = '\n'.join(self._print(i) for i in expr.body.body)
+        sep = self._print(SeparatorComment(40))
 
-        return '{0}\n{{\n{1}\n{2}\n}}'.format(self.function_signature(expr), decs, body)
+        return ('{sep}\n'
+                '{signature}\n{{\n'
+                '{decs}\n'
+                '{body}\n'
+                '}}\n{sep}'.format(
+                    sep = sep,
+                    signature = self.function_signature(expr),
+                    decs = decs,
+                    body = body))
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
