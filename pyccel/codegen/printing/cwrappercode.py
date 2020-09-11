@@ -48,6 +48,9 @@ class CWrapperCodePrinter(CCodePrinter):
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
     def get_cast_function(self, used_names, cast_type, from_variable, to_variable):
+        if cast_type in self._cast_functions_dict:
+            return self._cast_functions_dict[cast_type]
+
         cast_function_arg = [from_variable]
         cast_function_result = [to_variable]
         cast_function_ret = Return(cast_function_result)
@@ -61,8 +64,9 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = NativeInteger()
             collect_var = Variable(dtype=collect_type, precision=4,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function(used_names, 'pyint_to_bool', collect_var, variable)
-            self._cast_functions_dict['pyint_to_bool'] = cast_function
+
+            cast_function = self.get_cast_function(used_names, 'pyint_to_bool', variable, collect_var)
+
             return collect_var , cast_function
         return variable, None
 
@@ -70,9 +74,10 @@ class CWrapperCodePrinter(CCodePrinter):
         if variable.dtype is NativeBool():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, rank = 1,
-            name = self.get_new_name(used_names, variable.name+"_tmp"))
+                name = self.get_new_name(used_names, variable.name+"_tmp"))
+
             cast_function = self.get_cast_function(used_names, 'bool_to_pyobj', variable, collect_var)
-            self._cast_functions_dict['bool_to_pyobj'] = cast_function
+
             return collect_var , cast_function
         return variable, None
 
