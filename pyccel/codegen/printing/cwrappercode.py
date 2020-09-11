@@ -153,17 +153,16 @@ class CWrapperCodePrinter(CCodePrinter):
 
         parse_args = []
         # TODO: Simplify (to 1 line?)
-        # TODO: Handle optional args
+        # TODO (After PR 422): Handle optional args
         for a in expr.arguments:
             collect_var, cast_func = self.get_PyArgParseType(used_names, a)
             if cast_func is not None:
                 wrapper_vars.append(collect_var)
-                parse_args.append(collect_var)
                 cast_func_call = FunctionCall(cast_func, [collect_var])
                 wrapper_body_translations.append(AliasAssign(a, cast_func_call))
-            else:
-                parse_args.append(a)
-            # TODO: Handle assignment to PyObject for default variables
+
+            parse_args.append(collect_var)
+
             if isinstance(a, ValuedVariable):
                 wrapper_body.append(Assign(parse_args[-1],a.value))
 
@@ -184,11 +183,10 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var, cast_func = self.get_PyBuildValue(used_names, a)
             if cast_func is not None:
                 wrapper_vars.append(collect_var)
-                res_args.append(collect_var)
                 cast_func_call = FunctionCall(cast_func, [a])
                 wrapper_body.append(AliasAssign(collect_var, cast_func_call))
-            else :
-                res_args.append(a)
+
+            res_args.append(collect_var)
 
         wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
         wrapper_body.append(Return(wrapper_results))
