@@ -29,6 +29,7 @@ class CWrapperCodePrinter(CCodePrinter):
         CCodePrinter.__init__(self, parser,settings)
         self._cast_functions_dict = OrderedDict()
         self._function_wrapper_names = dict()
+        self._global_names = set()
 
     def get_new_name(self, used_names, requested_name):
         if requested_name not in used_names:
@@ -37,20 +38,20 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             incremented_name, _ = create_incremented_string(used_names, prefix=requested_name)
             return incremented_name
-    
+
     def get_cast_function(self, used_names, cast_type, from_variable, to_variable):
         cast_function_arg = [from_variable]
         cast_function_result = [to_variable]
         cast_function_ret = Return(cast_function_result)
         cast_function_name = self.get_new_name(used_names, cast_type)
-        cast_function = CastFunction(cast_function_name, cast_type, 
+        cast_function = CastFunction(cast_function_name, cast_type,
                             cast_function_arg, cast_function_ret, cast_function_result)
         return cast_function
 
     def get_PyArgParseType(self, used_names, variable):
         if variable.dtype is NativeBool():
             collect_type = NativeInteger()
-            collect_var = Variable(dtype=collect_type, precision=4, 
+            collect_var = Variable(dtype=collect_type, precision=4,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'pyint_to_bool', collect_var, variable)
             self._cast_functions_dict['pyint_to_bool'] = cast_function
@@ -95,7 +96,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyBuildValueNode(self, expr):
         name = 'Py_BuildValue'
         flags = expr.flags
-        args = ','.join(['{}'.format(self._print(a)) for a in expr.args])        
+        args = ','.join(['{}'.format(self._print(a)) for a in expr.args])
         #to change for args rank 1 +
         if expr.args:
             code = '{name}("{flags}", {args})'.format(name=name, flags=flags, args=args)
@@ -112,12 +113,21 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_CastFunction(self, expr):
         decs = [Declare(i.dtype, i) for i in expr.results]
         decs       = '\n'.join(self._print(i) for i in decs)
-        body = expr.body 
+        body = expr.body
         body  += self._print(expr.ret)
         return '{0}\n{{\n{1}\n{2}\n}}\n'.format(self.function_signature(expr), decs, body)
 
     def _print_FunctionDef(self, expr):
+        # Save all used names
         used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name.name])
+
+        # Find a name for the wrapper function
+        wrapper_name = self.get_new_name(used_names.union(self._global_names), expr.name.name+"_wrapper")
+        self._function_wrapper_names[expr.name] = wrapper_name
+        self._global_names.add(wrapper_name)
+        used_names.add(wrapper_name)
+
+        # Collect local variables
         wrapper_vars = [a for a in expr.arguments] + [r for r in expr.results]
         python_func_args = Variable(dtype=PyccelPyObject(),
                                  name=self.get_new_name(used_names, "args"),
@@ -183,8 +193,6 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
         wrapper_body.append(Return(wrapper_results))
 
-        wrapper_name = self.get_new_name(used_names, expr.name.name+"_wrapper")
-        self._function_wrapper_names[expr.name] = wrapper_name
         #TODO: Create node and add args
         wrapper_func = FunctionDef(name = wrapper_name,
             arguments = wrapper_args,
@@ -194,6 +202,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
+        self._global_names = set([f.name.name for f in expr.funcs])
         sep = self._print(SeparatorComment(40))
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.funcs)
 
@@ -205,28 +214,30 @@ class CWrapperCodePrinter(CCodePrinter):
             name = f.name,
             wrapper_name = self._function_wrapper_names[f.name],
             doc_string = f.doc_string) for f in expr.funcs)
-        
-        method_def = ('static PyMethodDef {mod_name}_methods[] = {{\n'
+
+        method_def_name = self.get_new_name(self._global_names, '{}_methods'.format(expr.name))
+        method_def = ('static PyMethodDef {method_def_name}[] = {{\n'
                         '{method_def_func}'
                         ',\n    {{ NULL, NULL, 0, NULL}}'
-                        '\n}};'.format(mod_name = expr.name ,method_def_func = method_def_func))
-        
-        module_def = ('static struct PyModuleDef {mod_name}_module = {{\n'
-                '   PyModuleDef_HEAD_INIT,\n'
+                        '\n}};'.format(method_def_name = method_def_name ,method_def_func = method_def_func))
+
+        module_def_name = self.get_new_name(self._global_names, '{}_module'.format(expr.name))
+        module_def = ('static struct PyModuleDef {module_def_name} = {{\n'
+                'PyModuleDef_HEAD_INIT,\n'
                 '/* name of module */\n'
                 '\"{mod_name}\",\n'
                 '/* module documentation, may be NULL */\n'
                 'NULL,\n' #TODO: Add documentation
                 '/* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */\n'
                 '-1,\n'
-                '   {mod_name}_methods\n'
-                '}};'.format(mod_name = expr.name))
+                '{method_def_name}\n'
+                '}};'.format(module_def_name = module_def_name, mod_name = expr.name, method_def_name = method_def_name))
 
         init_func = ('PyMODINIT_FUNC PyInit_{mod_name}(void)\n{{\n'
                 'PyObject *m;\n\n'
-                'm = PyModule_Create(&{mod_name}_module);\n'
+                'm = PyModule_Create(&{module_def_name});\n'
                 'if (m == NULL) return NULL;\n\n'
-                'return m;\n}}'.format(mod_name=expr.name))
+                'return m;\n}}'.format(mod_name=expr.name, module_def_name = module_def_name))
 
         return ('#define PY_SSIZE_T_CLEAN\n'
                 '#include <Python.h>\n\n'
