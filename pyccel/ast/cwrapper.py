@@ -123,4 +123,17 @@ class PyBuildValueNode(Basic):
     @property
     def args(self):
         return self._result_args
-        
+
+#funccall to change later
+class FuncCall(Basic):
+    def __init__(self, name, args):
+        self._name = name
+        self._args = args
+    
+    @property
+    def name(self):
+        return self._name
+    
+    @property
+    def args(self):
+        return self.args

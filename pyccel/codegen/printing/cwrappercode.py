@@ -14,7 +14,7 @@ from pyccel.ast.core import create_incremented_string, Declare, SeparatorComment
 from pyccel.ast.datatypes import NativeInteger, NativeBool
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
-from pyccel.ast.cwrapper import PyArgKeywords
+from pyccel.ast.cwrapper import PyArgKeywords, PyccelPyComplex, FuncCall
 
 from pyccel.ast.type_inference import str_dtype
 
@@ -97,6 +97,15 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
+
+    def _print_FuncCall(self, expr):
+        name = expr.name
+        args = ','join(['{}'.format._print(a) for a in expr.args])
+        code = '{name}({args})'.format(
+            name = name,
+            args = args
+        )
+        return code
 
     def _print_PyArg_ParseTupleNode(self, expr):
         name = 'PyArg_ParseTupleAndKeywords'
