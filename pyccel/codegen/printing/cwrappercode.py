@@ -28,6 +28,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def __init__(self, parser, settings={}):
         CCodePrinter.__init__(self, parser,settings)
         self._cast_functions_dict = OrderedDict()
+        self._function_wrapper_names = dict()
 
     def get_new_name(self, used_names, requested_name):
         if requested_name not in used_names:
@@ -183,6 +184,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.append(Return(wrapper_results))
 
         wrapper_name = self.get_new_name(used_names, expr.name.name+"_wrapper")
+        self._function_wrapper_names[expr.name] = wrapper_name
         #TODO: Create node and add args
         wrapper_func = FunctionDef(name = wrapper_name,
             arguments = wrapper_args,
@@ -199,8 +201,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
         cast_functions = '\n\n'.join(self._print(f) for f in self._cast_functions_dict.values())
 
-        method_def_func = ',\n'.join("{{ \"{name}\", (PyCFunction){name}_wrapper, METH_VARARGS | METH_KEYWORDS, \"{doc_string}\" }}".format(
+        method_def_func = ',\n'.join("{{ \"{name}\", (PyCFunction){wrapper_name}, METH_VARARGS | METH_KEYWORDS, \"{doc_string}\" }}".format(
             name = f.name,
+            wrapper_name = self._function_wrapper_names[f.name],
             doc_string = f.doc_string) for f in expr.funcs)
         
         method_def = ('static PyMethodDef {mod_name}_methods[] = {{\n'
