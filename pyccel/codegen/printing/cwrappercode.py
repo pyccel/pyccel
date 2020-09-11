@@ -53,10 +53,10 @@ class CWrapperCodePrinter(CCodePrinter):
 
         cast_function_arg = [from_variable]
         cast_function_result = [to_variable]
-        cast_function_ret = Return(cast_function_result)
+        cast_function_body = [Return(cast_function_result)]
         cast_function_name = self.get_new_name(used_names, cast_type)
         cast_function = CastFunction(cast_function_name, cast_type,
-                            cast_function_arg, cast_function_ret, cast_function_result)
+                            cast_function_arg, cast_function_body, cast_function_result)
         self._cast_functions_dict[cast_type] = cast_function
         return cast_function
 
@@ -127,8 +127,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_CastFunction(self, expr):
         decs = [Declare(i.dtype, i) for i in expr.results]
         decs       = '\n'.join(self._print(i) for i in decs)
-        body = expr.body
-        body  += self._print(expr.ret)
+        body = '\n'.join(self._print(i) for i in expr.body)
         return '{0}\n{{\n{1}\n{2}\n}}\n'.format(self.function_signature(expr), decs, body)
 
     def _print_FunctionDef(self, expr):

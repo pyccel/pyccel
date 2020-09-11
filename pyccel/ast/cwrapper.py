@@ -2,6 +2,9 @@ from .basic     import Basic
 from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable
+from .core      import If, Assign, Symbol
+from .builtins  import Bool
+from pyccel.ast.numbers   import BooleanTrue
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -127,22 +130,25 @@ class CastFunction(FunctionDef):
         name,
         cast_type,
         arguments,
-        ret,
+        body,
         results):
         self._name = name
         self._arguments = arguments
-        self._ret = ret
         self._results = results
         self._cast_type = cast_type
         body_ = ''
         #TODO I dont know if the build of body shoudl be done here or in the cwrapper
         #TODO this is just a tmp way of printing this shoudlbe improved later
         if self._cast_type == 'pyint_to_bool':
-            body_ += '{} = {} != 0;\n'.format(self.results[0].name, self._arguments[0].name)
+            body_ = [Assign(self.results[0], Bool(self._arguments[0]))]
 
         elif self.cast_type == 'bool_to_pyobj':
-            body_ += '{} = {} != 0 ? Py_True : Py_False;\n'.format(self.results[0].name, self._arguments[0].name)
-        self._body = body_
+            true = Symbol('Py_True')
+            false = Symbol('Py_False')
+            body_ = [If((Bool(self._arguments[0]),
+                [Assign(self._results[0], true)]),
+                (BooleanTrue(), [Assign(self._results[0], false)]))]
+        self._body = body_ + body
 
 
     def __hash__(self):
@@ -162,10 +168,6 @@ class CastFunction(FunctionDef):
     @property
     def results(self):
         return self._results
-
-    @property
-    def ret(self):
-        return self._ret
 
     @property
     def cast_type(self):
