@@ -7,7 +7,7 @@ from pyccel.ast.builtins import Bool
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
-from pyccel.ast.core import create_incremented_string, Declare
+from pyccel.ast.core import create_incremented_string, Declare, SeparatorComment
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool
 
@@ -207,26 +207,30 @@ class CWrapperCodePrinter(CCodePrinter):
         return code
 
     def _print_Module(self, expr):
+        sep = self._print(SeparatorComment(40))
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.funcs)
 
-        function_defs = '\n'.join(self._print(f) for f in expr.funcs)
+        function_defs = '\n\n'.join(self._print(f) for f in expr.funcs)
 
-        method_def_func = ',\n'.join("    {{ \"{0}\", (PyCFunction){0}_wrapper, METH_VARARGS | METH_KEYWORDS, \"{1}\" }}".format(
-            f.name,f.doc_string) for f in expr.funcs)
+        method_def_func = ',\n'.join("{{ \"{name}\", (PyCFunction){name}_wrapper, METH_VARARGS | METH_KEYWORDS, \"{doc_string}\" }}".format(
+            name = f.name,
+            doc_string = f.doc_string) for f in expr.funcs)
         
         method_def = ('static PyMethodDef {mod_name}_methods[] = {{\n'
                         '{method_def_func}'
                         ',\n    {{ NULL, NULL, 0, NULL}}'
-                        '\n}};\n\n'.format(mod_name = expr.name ,method_def_func = method_def_func))
+                        '\n}};'.format(mod_name = expr.name ,method_def_func = method_def_func))
         
         module_def = ('static struct PyModuleDef {mod_name}_module = {{\n'
                 '   PyModuleDef_HEAD_INIT,\n'
-                '   \"{mod_name}\",   /* name of module */\n'
-                '   NULL, /* module documentation, may be NULL */\n'
-                '   -1,       /* size of per-interpreter state of the module,\n'
-                '                 or -1 if the module keeps state in global variables. */\n'
+                '/* name of module */\n'
+                '\"{mod_name}\",\n'
+                '/* module documentation, may be NULL */\n'
+                'NULL,\n' #TODO: Add documentation
+                '/* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */\n'
+                '-1,\n'
                 '   {mod_name}_methods\n'
-                '}};\n\n'.format(mod_name = expr.name))
+                '}};'.format(mod_name = expr.name))
 
         init_func = ('PyMODINIT_FUNC PyInit_{mod_name}(void)\n{{\n'
                 'PyObject *m;\n\n'
@@ -237,11 +241,15 @@ class CWrapperCodePrinter(CCodePrinter):
         return ('#define PY_SSIZE_T_CLEAN\n'
                 '#include <Python.h>\n\n'
                 '{function_signatures}\n\n'
+                '{sep}\n\n'
                 '{function_defs}\n\n'
-                '{method_def}\n'
+                '{method_def}\n\n'
+                '{sep}\n\n'
                 '{module_def}\n\n'
+                '{sep}\n\n'
                 '{init_func}\n'.format(
                     function_signatures = function_signatures,
+                    sep = sep,
                     function_defs = function_defs,
                     method_def = method_def,
                     module_def = module_def,
