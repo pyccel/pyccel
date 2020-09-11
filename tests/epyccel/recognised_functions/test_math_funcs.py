@@ -318,24 +318,22 @@ def test_tanh_phrase():
     y = rand()
     assert(isclose(f2(x,y) ,  tanh_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.xfail(reason = "scipy translation error (see issue #207)")
 def test_atan2_call():
-    @types('real')
+    @types('real','real')
     def atan2_call(x,y):
         from math import atan2
-        return atan2(x)
+        return atan2(x,y)
 
     f1 = epyccel(atan2_call)
     x = rand()
     y = rand()
     assert(isclose(f1(x,y) ,  atan2_call(x,y), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.xfail(reason = "scipy translation error (see issue #207)")
 def test_atan2_phrase():
-    @types('real','real')
+    @types('real','real','real')
     def atan2_phrase(x,y,z):
         from math import atan2
-        a = atan2(x,y)+atan2(x,y,z)
+        a = atan2(x,y)+atan2(x,z)
         return a
 
     f2 = epyccel(atan2_phrase)
