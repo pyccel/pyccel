@@ -322,6 +322,8 @@ class CCodePrinter(CodePrinter):
     def _print_AliasAssign(self, expr):
         lhs = self._print(expr.lhs.name)
         rhs = self._print(expr.rhs)
+        if isinstance(expr.rhs, Variable) and not expr.rhs.is_pointer:
+            rhs = '&{}'.format(rhs)
         return '{} = {};'.format(lhs, rhs)
 
     def _print_For(self, expr):
