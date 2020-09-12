@@ -228,7 +228,7 @@ class CCodePrinter(CodePrinter):
     def _print_NativeVoid(self, expr):
         return 'void'
 
-    def _print_NativeComplex(self, expr)
+    def _print_NativeComplex(self, expr):
         return 'complex'
 
     def function_signature(self, expr):

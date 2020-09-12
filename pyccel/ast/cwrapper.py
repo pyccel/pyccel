@@ -45,11 +45,12 @@ pytype_parse_registry = {
     (NativeInteger(), 1) : 'b',
     (NativeReal(), 8)    : 'd',
     (NativeReal(), 4)    : 'f',
-    (NativeComplex(), 4) : 'D',
-    (NativeComplex(), 8) : 'D',
+    (NativeComplex(), 4) : 'O',
+    (NativeComplex(), 8) : 'O',
     (NativeBool(), 4)    : 'p',
     (NativeString(), 0)  : 's',
-    (PyccelPyObject(), 0): 'O'
+    (PyccelPyObject(), 0): 'O',
+    (PyccelPyComplex(), 0): 'D'
     }
 
 class PyArg_ParseTupleNode(Basic):
@@ -136,4 +137,4 @@ class FuncCall(Basic):
     
     @property
     def args(self):
-        return self.args
+        return self._args

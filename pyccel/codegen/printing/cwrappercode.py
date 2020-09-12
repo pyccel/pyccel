@@ -11,7 +11,7 @@ from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, Funct
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, Symbol
 from pyccel.ast.core import create_incremented_string, Declare, SeparatorComment
 
-from pyccel.ast.datatypes import NativeInteger, NativeBool
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper import PyArgKeywords, PyccelPyComplex, FuncCall
@@ -25,7 +25,8 @@ errors = Errors()
 
 __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 
-dtype_registry = {('pyobject', 0) : 'PyObject'}
+dtype_registry = {('pyobject', 0) : 'PyObject',
+                  ('pycomplex', 0) : 'Py_complex'}
 
 class CWrapperCodePrinter(CCodePrinter):
     def __init__(self, parser, settings={}):
@@ -64,6 +65,14 @@ class CWrapperCodePrinter(CCodePrinter):
             cast_function_body = [If((Bool(cast_function_arg[0]),
                 [Assign(cast_function_result[0], Symbol('Py_True'))]),
                 (BooleanTrue(), [Assign(cast_function_result[0], Symbol('Py_False'))]))]
+        elif cast_type == 'pycomplex_to_complex':
+            cast_function_body = [Assign(cast_function_result[0],
+                FuncCall('__builtin_complex', [FuncCall('PyComplex_RealAsDouble', cast_function_arg),
+                                               FuncCall('PyComplex_ImagAsDouble', cast_function_arg)]))]            
+        elif cast_type == 'complex_to_pycomplex':
+            cast_function_body = [Assign(cast_function_result[0],
+                FuncCall('PyComplex_FromDoubles', [FuncCall('__real', cast_function_arg),
+                                                   FuncCall('__imag', cast_function_arg)]))] 
         cast_function_body += [Return(cast_function_result)]
         cast_function = FunctionDef(name = cast_function_name,
                                     arguments = cast_function_arg,
@@ -78,9 +87,13 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = NativeInteger()
             collect_var = Variable(dtype=collect_type, precision=4,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-
             cast_function = self.get_cast_function(used_names, 'pyint_to_bool', variable, collect_var)
-
+            return collect_var , cast_function
+        if variable.dtype is NativeComplex():
+            collect_type = PyccelPyObject()
+            collect_var = Variable(dtype=collect_type, rank = 1,
+                name = self.get_new_name(used_names, variable.name+"_tmp"))             
+            cast_function = self.get_cast_function(used_names, 'pycomplex_to_complex', collect_var, variable)
             return collect_var , cast_function
         return variable, None
 
@@ -89,23 +102,28 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, rank = 1,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-
             cast_function = self.get_cast_function(used_names, 'bool_to_pyobj', variable, collect_var)
-
+            return collect_var , cast_function
+        if variable.dtype is NativeComplex():
+            collect_type = PyccelPyObject()
+            collect_var = Variable(dtype=collect_type, rank = 1,
+                name = self.get_new_name(used_names, variable.name+"_tmp"))
+            cast_function = self.get_cast_function(used_names, 'complex_to_pycomplex', variable, collect_var)        
             return collect_var , cast_function
         return variable, None
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
 
+    def _print_PyccelPyComplex(self, expr):
+        return 'pycomplex'
+
     def _print_FuncCall(self, expr):
         name = expr.name
-        args = ','join(['{}'.format._print(a) for a in expr.args])
-        code = '{name}({args})'.format(
+        args = ','.join(['{}'.format(self._print(a)) for a in expr.args])
+        return ('{name}({args})'.format(
             name = name,
-            args = args
-        )
-        return code
+            args = args))
 
     def _print_PyArg_ParseTupleNode(self, expr):
         name = 'PyArg_ParseTupleAndKeywords'
@@ -193,11 +211,10 @@ class CWrapperCodePrinter(CCodePrinter):
 
             if isinstance(a, ValuedVariable):
                 wrapper_body.append(Assign(parse_args[-1],a.value))
-
+        
         parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, expr.arguments, parse_args, keyword_list)
         wrapper_body.append(If((PyccelNot(parse_node), [Return([Nil()])])))
         wrapper_body.extend(wrapper_body_translations)
-
 
         if len(expr.results)==0:
             func_call = FunctionCall(expr, expr.arguments)
@@ -215,10 +232,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 wrapper_body.append(Assign(collect_var, cast_func_call))
 
             res_args.append(collect_var)
-
         wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
         wrapper_body.append(Return(wrapper_results))
-
         #TODO: Create node and add args
         wrapper_func = FunctionDef(name = wrapper_name,
             arguments = wrapper_args,
@@ -233,9 +248,7 @@ class CWrapperCodePrinter(CCodePrinter):
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.funcs)
 
         function_defs = '\n\n'.join(self._print(f) for f in expr.funcs)
-
         cast_functions = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f) for f in self._cast_functions_dict.values())
-
         method_def_func = ',\n'.join("{{ \"{name}\", (PyCFunction){wrapper_name}, METH_VARARGS | METH_KEYWORDS, \"{doc_string}\" }}".format(
             name = f.name,
             wrapper_name = self._function_wrapper_names[f.name],
