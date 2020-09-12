@@ -13,16 +13,12 @@ __all__ = (
 # --------- CLASSES -----------
 #
     'PyccelPyObject',
-    'PyccelPyComplex',
     'PyArg_ParseTupleNode',
     'PyBuildValueNode'
 )
 
 class PyccelPyObject(DataType):
     _name = 'pyobject'
-
-class PyccelPyComplex(DataType):
-    _name = 'pycomplex'
 
 #TODO: Is there an equivalent to static so this can be a static list of strings?
 class PyArgKeywords(Basic):
@@ -50,7 +46,6 @@ pytype_parse_registry = {
     (NativeBool(), 4)    : 'p',
     (NativeString(), 0)  : 's',
     (PyccelPyObject(), 0): 'O',
-    (PyccelPyComplex(), 0): 'D'
     }
 
 class PyArg_ParseTupleNode(Basic):
@@ -134,7 +129,7 @@ class FuncCall(Basic):
     @property
     def name(self):
         return self._name
-    
+
     @property
     def args(self):
         return self._args
