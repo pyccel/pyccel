@@ -339,12 +339,12 @@ def test_decorator_f20(language):
         return b
     f = epyccel(f20, language=language)
     assert f(complex(1, 2.2) == f20(complex(1, 2.2)))
-   
+ 
 def test_decorator_f21(language):
     @types('complex64')
     def f21(a):
         b = a
-        return a
+        return b
     f = epyccel(f21, language=language)
     assert f(complex(1, 2.2) == f21(complex(1, 2.2)))
 
@@ -352,7 +352,7 @@ def test_decorator_f22(language):
     @types('complex128')
     def f22(a):
         b = a
-        return a
+        return b
     f = epyccel(f22, language=language)
     assert f(complex(1, 2.2) == f22(complex(1, 2.2)))
 

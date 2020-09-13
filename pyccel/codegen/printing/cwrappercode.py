@@ -57,7 +57,7 @@ class CWrapperCodePrinter(CCodePrinter):
         cast_function_arg = [from_variable]
         cast_function_result = [to_variable]
         cast_function_local_vars = []
-    
+
         #switch case of cast_type
         if cast_type == 'pyint_to_bool':
             cast_function_body = [Assign(cast_function_result[0], Bool(cast_function_arg[0]))]
