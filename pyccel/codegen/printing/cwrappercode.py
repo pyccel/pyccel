@@ -8,7 +8,7 @@ from pyccel.ast.numbers   import BooleanTrue
 from pyccel.ast.builtins import Bool
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
-from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, Symbol
+from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, Symbol, Constant
 from pyccel.ast.core import create_incremented_string, Declare, SeparatorComment
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
@@ -56,14 +56,14 @@ class CWrapperCodePrinter(CCodePrinter):
         cast_function_arg = [from_variable]
         cast_function_result = [to_variable]
         cast_function_local_vars = []
- 
+    
         #switch case of cast_type
         if cast_type == 'pyint_to_bool':
             cast_function_body = [Assign(cast_function_result[0], Bool(cast_function_arg[0]))]
         elif cast_type == 'bool_to_pyobj':
             cast_function_body = [If((Bool(cast_function_arg[0]),
-                [Assign(cast_function_result[0], Symbol('Py_True'))]),
-                (BooleanTrue(), [Assign(cast_function_result[0], Symbol('Py_False'))]))]
+                [Assign(cast_function_result[0], 'Py_True')]),
+                (BooleanTrue(), [Assign(cast_function_result[0], 'Py_False')]))]
         elif cast_type == 'pycomplex_to_complex':
             cast_function_body = [Assign(cast_function_result[0],
                 FuncCall('__builtin_complex', [FuncCall('PyComplex_RealAsDouble', cast_function_arg),
