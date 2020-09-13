@@ -12,7 +12,7 @@ from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, Symbol, Co
 from pyccel.ast.core import create_incremented_string, Declare, SeparatorComment
 from pyccel.ast.core import IfTernaryOperator
 
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper import PyArgKeywords, FuncCall
@@ -66,13 +66,24 @@ class CWrapperCodePrinter(CCodePrinter):
                 [Assign(cast_function_result[0], 'Py_True')]),
                 (BooleanTrue(), [Assign(cast_function_result[0], 'Py_False')]))]
         elif cast_type == 'pycomplex_to_complex':
-            cast_function_body = [Assign(cast_function_result[0],
-                FuncCall('__builtin_complex', [FuncCall('PyComplex_RealAsDouble', cast_function_arg),
-                                               FuncCall('PyComplex_ImagAsDouble', cast_function_arg)]))]
+            real_part = Variable(dtype = NativeReal(),
+                            name = self.get_new_name(used_names, 'real_part'))
+            imag_part = Variable(dtype = NativeReal(),
+                            name = self.get_new_name(used_names, 'imag_part'))
+            cast_function_local_vars += [real_part, imag_part]
+            cast_function_body = [Assign(real_part, FuncCall('PyComplex_RealAsDouble', cast_function_arg))]
+            cast_function_body += [Assign(imag_part, FuncCall('PyComplex_ImagAsDouble', cast_function_arg))]
+            cast_function_body += [Assign(cast_function_result[0], FuncCall('__builtin_complex', [real_part, imag_part]))]
         elif cast_type == 'complex_to_pycomplex':
-            cast_function_body = [Assign(cast_function_result[0],
-                FuncCall('PyComplex_FromDoubles', [FuncCall('__real', cast_function_arg),
-                                                   FuncCall('__imag', cast_function_arg)]))]
+            real_part = Variable(dtype = NativeReal(),
+                            name = self.get_new_name(used_names, "real_part"))
+            imag_part = Variable(dtype = NativeReal(),
+                            name = self.get_new_name(used_names, "imag_part"))
+            cast_function_local_vars += [real_part, imag_part]
+            cast_function_body = [Assign(real_part, FuncCall('__real', cast_function_arg))]
+            cast_function_body += [Assign(imag_part, FuncCall('__imag', cast_function_arg))]
+            cast_function_body += [Assign(cast_function_result[0], FuncCall('PyComplex_FromDoubles', [real_part, imag_part]))]
+
         cast_function_body += [Return(cast_function_result)]
         cast_function = FunctionDef(name = cast_function_name,
                                     arguments = cast_function_arg,
@@ -91,7 +102,7 @@ class CWrapperCodePrinter(CCodePrinter):
             return collect_var , cast_function
         if variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
-            collect_var = Variable(dtype=collect_type, rank = 1,
+            collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'pycomplex_to_complex', collect_var, variable)
             return collect_var , cast_function
@@ -100,13 +111,13 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_PyBuildValue(self, used_names, variable):
         if variable.dtype is NativeBool():
             collect_type = PyccelPyObject()
-            collect_var = Variable(dtype=collect_type, rank = 1,
+            collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'bool_to_pyobj', variable, collect_var)
             return collect_var , cast_function
         if variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
-            collect_var = Variable(dtype=collect_type, rank = 1,
+            collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'complex_to_pycomplex', variable, collect_var)
             return collect_var , cast_function
