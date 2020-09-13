@@ -332,10 +332,29 @@ def test_decorator_f19(language):
     f = epyccel(f19, language=language)
     assert f(np.int64(1)) == f19(np.int64(1))
 
+def test_decorator_f20(language):
+    @types('complex')
+    def f20(a):
+        b = a
+        return b
+    f = epyccel(f20, language=language)
+    assert f(complex(1, 2.2) == f20(complex(1, 2.2)))
+   
+def test_decorator_f21(language):
+    @types('complex64')
+    def f21(a):
+        b = a
+        return a
+    f = epyccel(f21, language=language)
+    assert f(complex(1, 2.2) == f21(complex(1, 2.2)))
 
-
-
-
+def test_decorator_f22(language):
+    @types('complex128')
+    def f22(a):
+        b = a
+        return a
+    f = epyccel(f22, language=language)
+    assert f(complex(1, 2.2) == f22(complex(1, 2.2)))
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
