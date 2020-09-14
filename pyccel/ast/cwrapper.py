@@ -26,6 +26,17 @@ class PyccelPyObject(DataType):
 
 #TODO: Is there an equivalent to static so this can be a static list of strings?
 class PyArgKeywords(Basic):
+    """
+    Represents the list containing the names of all arguments to a function.
+    This information allows the function to be called by keyword
+
+    Parameters
+    ----------
+    name : str
+        The name of the variable in which the list is stored
+    arg_names : list of str
+        A list of the names of the function arguments
+    """
     def __init__(self, name, arg_names):
         self._name = name
         self._arg_names = arg_names
@@ -54,6 +65,22 @@ pytype_parse_registry = {
     }
 
 class PyArg_ParseTupleNode(Basic):
+    """
+    Represents a call to the function from Python.h which collects the expected arguments
+
+    Parameters
+    ----------
+    python_func_args: Variable
+        Args provided to the function in python
+    python_func_kwargs: Variable
+        Kwargs provided to the function in python
+    c_func_args: list of Variable
+        List of expected arguments. This helps determine the expected output types
+    parse_args: list of Variable
+        List of arguments into which the result will be collected
+    arg_names : list of str
+        A list of the names of the function arguments
+    """
 
     def __init__(self, python_func_args, python_func_kwargs, c_func_args, parse_args, arg_names):
         if not isinstance(python_func_args, Variable):
