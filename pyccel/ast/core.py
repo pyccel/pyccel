@@ -2989,6 +2989,12 @@ class VariableAddress(Basic, PyccelAstNode):
             raise TypeError('variable must be a variable')
         self._variable = variable
 
+        self._shape     = variable.shape
+        self._rank      = variable.rank
+        self._dtype     = variable.dtype
+        self._precision = variable.precision
+        self._order     = variable.order
+
     @property
     def variable(self):
         return self._variable
