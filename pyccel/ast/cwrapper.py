@@ -34,6 +34,7 @@ class PyArgKeywords(Basic):
     def arg_names(self):
         return self._arg_names
 
+#using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
 pytype_parse_registry = {
     (NativeInteger(), 4) : 'i',
     (NativeInteger(), 8) : 'l',
