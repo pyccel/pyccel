@@ -16,6 +16,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, Nativ
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper import PyArgKeywords, FuncCall
+from pyccel.ast.cwrapper import Py_True, Py_False
 
 from pyccel.ast.type_inference import str_dtype
 
@@ -63,8 +64,8 @@ class CWrapperCodePrinter(CCodePrinter):
             cast_function_body = [Assign(cast_function_result[0], Bool(cast_function_arg[0]))]
         elif cast_type == 'bool_to_pyobj':
             cast_function_body = [IfTernaryOperator((Bool(cast_function_arg[0]),
-                [Assign(cast_function_result[0], 'Py_True')]),
-                (BooleanTrue(), [Assign(cast_function_result[0], 'Py_False')]))]
+                [AliasAssign(cast_function_result[0], Py_True)]),
+                (BooleanTrue(), [AliasAssign(cast_function_result[0], Py_False)]))]
         elif cast_type == 'pycomplex_to_complex':
             real_part = Variable(dtype = NativeReal(),
                             name = self.get_new_name(used_names, 'real_part'))
