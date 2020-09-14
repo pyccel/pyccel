@@ -35,6 +35,7 @@ from pyccel.ast.core import Subroutine
 from pyccel.ast.core import ErrorExit
 from pyccel.ast.core import Product
 from pyccel.ast.core import (Assign, AliasAssign, Variable,
+                             VariableAddress,
                              TupleVariable, Declare,
                              IndexedVariable, CodeBlock,
                              IndexedElement, Slice, Dlist,
@@ -968,6 +969,8 @@ class FCodePrinter(CodePrinter):
         code = ''
         lhs = expr.lhs
         rhs = expr.rhs
+        if isinstance(rhs, VariableAddress):
+            rhs = rhs.variable
 
         if isinstance(lhs, TupleVariable) and not lhs.is_homogeneous:
             if isinstance(rhs, TupleVariable):
@@ -989,6 +992,7 @@ class FCodePrinter(CodePrinter):
             shape_code = ', '.join('0:' for i in range(lhs.rank))
             shape_code = '({s_c})'.format(s_c = shape_code)
 
+        print(expr.rhs, self._print(expr.rhs))
 
         code += '{lhs}{s_c} {op} {rhs}'.format(lhs=self._print(expr.lhs),
                                           s_c = shape_code,
