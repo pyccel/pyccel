@@ -507,6 +507,9 @@ class FCodePrinter(CodePrinter):
         else:
             return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
 
+    def _print_VariableAddress(self, expr):
+        return self._print(expr.variable)
+
     def _print_Constant(self, expr):
         val = Float(expr.value)
         return self._print(val)

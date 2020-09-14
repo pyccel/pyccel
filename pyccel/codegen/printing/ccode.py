@@ -278,10 +278,7 @@ class CCodePrinter(CodePrinter):
         code = ''
         if expr.stmt:
             code += self._print(expr.stmt)+'\n'
-        if isinstance(expr.expr[0], Variable) and expr.expr[0].is_pointer:
-            code +='return {0};'.format(self._print(expr.expr[0].name))
-        else:
-            code +='return {0};'.format(self._print(expr.expr[0]))
+        code +='return {0};'.format(self._print(expr.expr[0]))
         return code
 
     def _print_Nil(self, expr):
@@ -324,15 +321,11 @@ class CCodePrinter(CodePrinter):
 
     def _print_AliasAssign(self, expr):
         lhs = self._print(expr.lhs.name)
-        if isinstance(expr.rhs, Variable):
-            if expr.rhs.is_pointer or expr.rhs.rank > 0:
-                rhs = '{}'.format(expr.rhs.name)
-            else:
-                rhs = '&{}'.format(self._print(expr.rhs))
-        else:
-            rhs = self._print(expr.rhs)
+        rhs = self._print(expr.rhs)
+
         if isinstance(expr.rhs, FunctionCall) and not expr.rhs.funcdef.results[0].is_pointer:
             raise TypeError("A pointer cannot point to the address of a temporary variable")
+
         return '{} = {};'.format(lhs, rhs)
 
     def _print_For(self, expr):
@@ -435,6 +428,12 @@ class CCodePrinter(CodePrinter):
             return '(*{0})'.format(expr.name)
         else:
             return expr.name
+
+    def _print_VariableAddress(self, expr):
+        if expr.variable.is_pointer or expr.variable.rank > 0:
+            return '{}'.format(expr.variable.name)
+        else:
+            return '&{}'.format(expr.variable.name)
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)

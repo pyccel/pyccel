@@ -149,6 +149,7 @@ __all__ = (
     'ValuedArgument',
     'ValuedVariable',
     'Variable',
+    'VariableAddress',
     'Void',
     'VoidFunction',
     'While',
@@ -195,7 +196,7 @@ def broadcast(shape_1, shape_2):
     else:
         new_shape_2 = shape_2
         new_shape_1 = shape_1
-    
+
     new_shape = []
     for e1,e2 in zip(new_shape_1, new_shape_2):
         if e1 == e2:
@@ -237,7 +238,7 @@ class PyccelOperator(Expr, PyccelAstNode):
         reals     = [a for a in args if a.dtype is NativeReal()]
         complexes = [a for a in args if a.dtype is NativeComplex()]
         strs      = [a for a in args if a.dtype is NativeString()]
-        
+
         if strs:
             self._dtype = NativeString()
             self._rank  = 0
@@ -267,7 +268,7 @@ class PyccelOperator(Expr, PyccelAstNode):
                     shape = args[0].shape
                 else:
                     shape = broadcast(args[0].shape, args[1].shape)
-                    
+
                     for a in args[2:]:
                         shape = broadcast(shape, a.shape)
 
@@ -316,10 +317,10 @@ class PyccelDiv(PyccelOperator):
         if None in ranks:
             self._rank  = None
             self._shape = None
-        
+
         elif all(not (sh is None or isinstance(sh, PyccelArraySize)) for tup in shapes for sh in tup):
             shape = broadcast(args[0].shape, args[1].shape)
-            
+
             for a in args[2:]:
                 shape = broadcast(shape, a.shape)
 
@@ -345,7 +346,7 @@ class PyccelBooleanOperator(Expr, PyccelAstNode):
 
         self._dtype = NativeBool()
         self._precision = default_precision['bool']
-        
+
         ranks  = [a.rank for a in args]
         shapes = [a.shape for a in args]
 
@@ -1202,6 +1203,13 @@ class AliasAssign(Basic):
     """
 
     def __new__(cls, lhs, rhs):
+        if PyccelAstNode.stage == 'semantic':
+            if not lhs.is_pointer:
+                raise TypeError('lhs must be a pointer')
+
+        if isinstance(rhs, Variable):
+            rhs = VariableAddress(rhs)
+
         return Basic.__new__(cls, lhs, rhs)
 
     def _sympystr(self, printer):
@@ -2816,7 +2824,7 @@ class TupleVariable(Variable):
         # if value is not given, we set it to Nil
         # we also remove value from kwargs,
         # since it is not a valid argument for Variable
-        
+
         return Variable.__new__(cls, dtype, name, *args, **kwargs)
 
     def __init__(self, arg_vars, dtype, name, *args, **kwargs):
@@ -2972,6 +2980,15 @@ class ValuedArgument(Basic):
         value = sstr(self.value)
         return '{0}={1}'.format(argument, value)
 
+class VariableAddress(Basic, PyccelAstNode):
+    def __init__(self, variable):
+        if not isinstance(variable, Variable):
+            raise TypeError('variable must be a variable')
+        self._variable = variable
+
+    @property
+    def variable(self):
+        return self._variable
 
 class FunctionCall(Basic, PyccelAstNode):
 
@@ -3012,9 +3029,12 @@ class FunctionCall(Basic, PyccelAstNode):
 
             args = [a.value if isinstance(a, ValuedVariable) else a for a in f_args_dict.values()]
 
+        # Ensure the correct syntax is used for pointers
+        args = [VariableAddress(a) if isinstance(a, Variable) and f.is_pointer else a for a,f in zip(args, f_args)]
+
         args = Tuple(*args, sympify=False)
         # ...
- 
+
         return Basic.__new__(cls, name, args)
 
     def __init__(self, func, args, current_function=None):
@@ -3053,6 +3073,13 @@ class Return(Basic):
 
         if stmt and not isinstance(stmt, (Assign, CodeBlock)):
             raise TypeError('stmt should only be of type Assign')
+
+        if PyccelAstNode.stage == 'semantic':
+            if isinstance(expr, list):
+                expr = [VariableAddress(e) if isinstance(e, Variable) and e.is_pointer else e for e in expr]
+            else:
+                if isinstance(expr, Variable) and expr.is_pointer:
+                    expr = VariableAddress(expr)
 
         return Basic.__new__(cls, expr, stmt)
 

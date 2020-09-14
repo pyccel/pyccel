@@ -62,10 +62,12 @@ class CWrapperCodePrinter(CCodePrinter):
         #switch case of cast_type
         if cast_type == 'pyint_to_bool':
             cast_function_body = [Assign(cast_function_result[0], Bool(cast_function_arg[0]))]
+
         elif cast_type == 'bool_to_pyobj':
             cast_function_body = [IfTernaryOperator((Bool(cast_function_arg[0]),
                 [AliasAssign(cast_function_result[0], Py_True)]),
                 (BooleanTrue(), [AliasAssign(cast_function_result[0], Py_False)]))]
+
         elif cast_type == 'pycomplex_to_complex':
             real_part = Variable(dtype = NativeReal(),
                             name = self.get_new_name(used_names, 'real_part'))
@@ -75,6 +77,7 @@ class CWrapperCodePrinter(CCodePrinter):
             cast_function_body = [Assign(real_part, FuncCall('PyComplex_RealAsDouble', cast_function_arg))]
             cast_function_body += [Assign(imag_part, FuncCall('PyComplex_ImagAsDouble', cast_function_arg))]
             cast_function_body += [Assign(cast_function_result[0], FuncCall('__builtin_complex', [real_part, imag_part]))]
+
         elif cast_type == 'complex_to_pycomplex':
             real_part = Variable(dtype = NativeReal(),
                             name = self.get_new_name(used_names, "real_part"))
@@ -95,33 +98,39 @@ class CWrapperCodePrinter(CCodePrinter):
         return cast_function
 
     def get_PyArgParseType(self, used_names, variable):
+
         if variable.dtype is NativeBool():
             collect_type = NativeInteger()
             collect_var = Variable(dtype=collect_type, precision=4,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'pyint_to_bool', collect_var, variable)
             return collect_var , cast_function
+
         if variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'pycomplex_to_complex', collect_var, variable)
             return collect_var , cast_function
+
         return variable, None
 
     def get_PyBuildValue(self, used_names, variable):
+
         if variable.dtype is NativeBool():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'bool_to_pyobj', variable, collect_var)
             return collect_var , cast_function
+
         if variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'complex_to_pycomplex', variable, collect_var)
             return collect_var , cast_function
+
         return variable, None
 
     def _print_PyccelPyObject(self, expr):
@@ -139,7 +148,7 @@ class CWrapperCodePrinter(CCodePrinter):
         pyarg = expr.pyarg
         pykwarg = expr.pykwarg
         flags = expr.flags
-        args = ', '.join(['{}'.format(self._print(a)) if a.is_pointer else '&{}'.format(self._print(a)) for a in expr.args])
+        args = ', '.join(['{}'.format(self._print(VariableAddress(a))) for a in expr.args])
         if expr.args:
             code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(
                             name=name,
@@ -159,7 +168,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyBuildValueNode(self, expr):
         name = 'Py_BuildValue'
         flags = expr.flags
-        args = ','.join(['{}'.format(self._print(a.name)) if a.is_pointer else '{}'.format(self._print(a)) for a in expr.args])
+        args = ','.join(['{}'.format(self._print(VariableAddress(a)) for a in expr.args])
         #to change for args rank 1 +
         if expr.args:
             code = '{name}("{flags}", {args})'.format(name=name, flags=flags, args=args)
