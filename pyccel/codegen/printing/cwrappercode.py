@@ -89,12 +89,14 @@ class CWrapperCodePrinter(CCodePrinter):
             cast_function_body += [Assign(cast_function_result[0], FuncCall('PyComplex_FromDoubles', [real_part, imag_part]))]
 
         cast_function_body += [Return(cast_function_result)]
-        cast_function = FunctionDef(name = cast_function_name,
-                                    arguments = cast_function_arg,
-                                    body = cast_function_body,
-                                    results = cast_function_result,
+        cast_function = FunctionDef(name       = cast_function_name,
+                                    arguments  = cast_function_arg,
+                                    body       = cast_function_body,
+                                    results    = cast_function_result,
                                     local_vars = cast_function_local_vars)
+
         self._cast_functions_dict[cast_type] = cast_function
+
         return cast_function
 
     def get_PyArgParseType(self, used_names, variable):
@@ -138,17 +140,18 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_FuncCall(self, expr):
         name = expr.name
-        args = ','.join(['{}'.format(self._print(a)) for a in expr.args])
+        args = ', '.join(['{}'.format(self._print(a)) for a in expr.args])
         return ('{name}({args})'.format(
             name = name,
             args = args))
 
     def _print_PyArg_ParseTupleNode(self, expr):
-        name = 'PyArg_ParseTupleAndKeywords'
-        pyarg = expr.pyarg
+        name    = 'PyArg_ParseTupleAndKeywords'
+        pyarg   = expr.pyarg
         pykwarg = expr.pykwarg
-        flags = expr.flags
-        args = ', '.join(['{}'.format(self._print(VariableAddress(a))) for a in expr.args])
+        flags   = expr.flags
+        args    = ', '.join(['{}'.format(self._print(VariableAddress(a))) for a in expr.args])
+
         if expr.args:
             code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(
                             name=name,
@@ -163,12 +166,13 @@ class CWrapperCodePrinter(CCodePrinter):
                     pyarg=pyarg,
                     pykwarg=pykwarg,
                     kwlist = expr.arg_names.name)
+
         return code
 
     def _print_PyBuildValueNode(self, expr):
-        name = 'Py_BuildValue'
+        name  = 'Py_BuildValue'
         flags = expr.flags
-        args = ','.join(['{}'.format(self._print(VariableAddress(a)) for a in expr.args])
+        args  = ', '.join(['{}'.format(self._print(VariableAddress(a)) for a in expr.args])
         #to change for args rank 1 +
         if expr.args:
             code = '{name}("{flags}", {args})'.format(name=name, flags=flags, args=args)
@@ -177,7 +181,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return code
 
     def _print_PyArgKeywords(self, expr):
-        arg_names = ', \n'.join(['"{}"'.format(a) for a in expr.arg_names] + [self._print(Nil())])
+        arg_names = ',\n'.join(['"{}"'.format(a) for a in expr.arg_names] + [self._print(Nil())])
         return ('static char *{name}[] = {{\n'
                         '{arg_names}\n'
                         '}};\n'.format(name=expr.name, arg_names = arg_names))
@@ -208,11 +212,11 @@ class CWrapperCodePrinter(CCodePrinter):
                                     name=self.get_new_name(used_names, "result"),
                                     is_pointer=True)]
 
-        arg_names = [a.name for a in expr.arguments]
+        arg_names         = [a.name for a in expr.arguments]
         keyword_list_name = self.get_new_name(used_names,'kwlist')
-        keyword_list = PyArgKeywords(keyword_list_name, arg_names)
+        keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
 
-        wrapper_body = [keyword_list]
+        wrapper_body              = [keyword_list]
         wrapper_body_translations = []
 
         parse_args = []
@@ -240,8 +244,9 @@ class CWrapperCodePrinter(CCodePrinter):
         if len(expr.results)==0:
             func_call = FunctionCall(expr, expr.arguments)
         else:
-            results = expr.results if len(expr.results)>1 else expr.results[0]
+            results   = expr.results if len(expr.results)>1 else expr.results[0]
             func_call = Assign(results,FunctionCall(expr, expr.arguments))
+
         wrapper_body.append(func_call)
         #TODO: Loop over results to carry out necessary casts and collect Py_BuildValue type string
         res_args = []

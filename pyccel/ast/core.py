@@ -1207,6 +1207,9 @@ class AliasAssign(Basic):
             if not lhs.is_pointer:
                 raise TypeError('lhs must be a pointer')
 
+            if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_pointer:
+                raise TypeError("A pointer cannot point to the address of a temporary variable")
+
         if isinstance(rhs, Variable):
             rhs = VariableAddress(rhs)
 
@@ -3030,7 +3033,7 @@ class FunctionCall(Basic, PyccelAstNode):
             args = [a.value if isinstance(a, ValuedVariable) else a for a in f_args_dict.values()]
 
         # Ensure the correct syntax is used for pointers
-        args = [VariableAddress(a) if isinstance(a, Variable) and f.is_pointer else a for a,f in zip(args, f_args)]
+        args = [VariableAddress(a) if isinstance(a, Variable) and f.is_pointer else a for a, f in zip(args, f_args)]
 
         args = Tuple(*args, sympify=False)
         # ...

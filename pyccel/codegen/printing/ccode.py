@@ -240,12 +240,12 @@ class CCodePrinter(CodePrinter):
             errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO, symbol=expr,
                 severity='fatal', blocker=self.blocking)
         else:
-            ret_type = self._print(datatype('void'))+' '
+            ret_type = self._print(datatype('void')) + ' '
         name = expr.name
         if not expr.arguments:
             arg_code = 'void'
         else:
-            arg_code = ', '.join('{0}{1}'.format(self.get_declare_type(i),i) for i in expr.arguments)
+            arg_code = ', '.join('{0}{1}'.format(self.get_declare_type(i), i) for i in expr.arguments)
         return '{0}{1}({2})'.format(ret_type, name, arg_code)
 
     def _print_FunctionDef(self, expr):
@@ -322,9 +322,6 @@ class CCodePrinter(CodePrinter):
     def _print_AliasAssign(self, expr):
         lhs = self._print(expr.lhs.name)
         rhs = self._print(expr.rhs)
-
-        if isinstance(expr.rhs, FunctionCall) and not expr.rhs.funcdef.results[0].is_pointer:
-            raise TypeError("A pointer cannot point to the address of a temporary variable")
 
         return '{} = {};'.format(lhs, rhs)
 
