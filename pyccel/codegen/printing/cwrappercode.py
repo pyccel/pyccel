@@ -219,7 +219,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
             if isinstance(a, ValuedVariable):
                 wrapper_body.append(Assign(parse_args[-1],a.value))
-        
+
         parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, expr.arguments, parse_args, keyword_list)
         wrapper_body.append(If((PyccelNot(parse_node), [Return([Nil()])])))
         wrapper_body.extend(wrapper_body_translations)
