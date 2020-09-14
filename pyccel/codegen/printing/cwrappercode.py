@@ -10,7 +10,7 @@ from pyccel.ast.builtins import Bool
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, Symbol, Constant
 from pyccel.ast.core import create_incremented_string, Declare, SeparatorComment
-from pyccel.ast.core import IfTernaryOperator
+from pyccel.ast.core import IfTernaryOperator, VariableAddress
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
@@ -124,14 +124,14 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'bool_to_pyobj', variable, collect_var)
-            return collect_var , cast_function
+            return VariableAddress(collect_var), cast_function
 
         if variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'complex_to_pycomplex', variable, collect_var)
-            return collect_var , cast_function
+            return VariableAddress(collect_var), cast_function
 
         return variable, None
 
@@ -172,7 +172,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyBuildValueNode(self, expr):
         name  = 'Py_BuildValue'
         flags = expr.flags
-        args  = ', '.join(['{}'.format(self._print(VariableAddress(a)) for a in expr.args])
+        args  = ', '.join(['{}'.format(self._print(a)) for a in expr.args])
         #to change for args rank 1 +
         if expr.args:
             code = '{name}("{flags}", {args})'.format(name=name, flags=flags, args=args)
