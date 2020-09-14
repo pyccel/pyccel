@@ -13,8 +13,12 @@ __all__ = (
 # --------- CLASSES -----------
 #
     'PyccelPyObject',
+    'PyArgKeywords',
     'PyArg_ParseTupleNode',
-    'PyBuildValueNode'
+    'PyBuildValueNode',
+#--------- CONSTANTS ----------
+    'Py_True',
+    'Py_False'
 )
 
 class PyccelPyObject(DataType):
@@ -134,3 +138,6 @@ class FuncCall(Basic):
     @property
     def args(self):
         return self._args
+
+Py_True = Variable(PyccelPyObject(), 'Py_True',is_pointer=True)
+Py_False = Variable(PyccelPyObject(), 'Py_False',is_pointer=True)
