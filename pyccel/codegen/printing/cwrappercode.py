@@ -124,14 +124,14 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'bool_to_pyobj', variable, collect_var)
-            return VariableAddress(collect_var), cast_function
+            return collect_var, cast_function
 
         if variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function(used_names, 'complex_to_pycomplex', variable, collect_var)
-            return VariableAddress(collect_var), cast_function
+            return collect_var, cast_function
 
         return variable, None
 
