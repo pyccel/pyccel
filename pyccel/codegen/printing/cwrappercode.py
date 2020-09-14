@@ -51,6 +51,21 @@ class CWrapperCodePrinter(CCodePrinter):
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
     def get_cast_function(self, used_names, cast_type, from_variable, to_variable):
+        """
+        Represents a call to cast function responsible of the conversion of one data type into another.
+
+        Parameters:
+        ----------
+        used_names: list of strings 
+            List of variable and function names
+        cast_type: string
+            The type of cast function on format 'data type_to_data type'
+        from_variable: variable
+            the variable needed to cast
+        to_variable: variable
+            the result of the cast operation
+        """
+
         if cast_type in self._cast_functions_dict:
             return self._cast_functions_dict[cast_type]
 
@@ -100,6 +115,15 @@ class CWrapperCodePrinter(CCodePrinter):
         return cast_function
 
     def get_PyArgParseType(self, used_names, variable):
+        """
+        Responsible of collecting the python variable into which the result will be collected and the needed cast function 
+
+        Parameters:
+        ---------- 
+        used_names : list of strings
+            List of variable and function names
+        variable : variable
+        """
 
         if variable.dtype is NativeBool():
             collect_type = NativeInteger()
@@ -118,6 +142,15 @@ class CWrapperCodePrinter(CCodePrinter):
         return variable, None
 
     def get_PyBuildValue(self, used_names, variable):
+        """
+        Responsible of collecting the python into needed to build the result and the needed cast function 
+
+        Parameters:
+        ---------- 
+        used_names : list of strings
+            List of variable and function names
+        variable : variable
+        """
 
         if variable.dtype is NativeBool():
             collect_type = PyccelPyObject()
