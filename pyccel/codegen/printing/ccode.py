@@ -324,9 +324,13 @@ class CCodePrinter(CodePrinter):
 
     def _print_AliasAssign(self, expr):
         lhs = self._print(expr.lhs.name)
-        rhs = self._print(expr.rhs)
-        if isinstance(expr.rhs, Variable) and not expr.rhs.is_pointer:
-            rhs = '&{}'.format(rhs)
+        if isinstance(expr.rhs, Variable):
+            if expr.rhs.is_pointer or expr.rhs.rank > 0:
+                rhs = '{}'.format(expr.rhs.name)
+            else:
+                rhs = '&{}'.format(self._print(expr.rhs))
+        else:
+            rhs = self._print(expr.rhs)
         if isinstance(expr.rhs, FunctionCall) and not expr.rhs.funcdef.results[0].is_pointer:
             raise TypeError("A pointer cannot point to the address of a temporary variable")
         return '{} = {};'.format(lhs, rhs)
