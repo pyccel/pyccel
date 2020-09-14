@@ -99,7 +99,7 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = NativeInteger()
             collect_var = Variable(dtype=collect_type, precision=4,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function(used_names, 'pyint_to_bool', variable, collect_var)
+            cast_function = self.get_cast_function(used_names, 'pyint_to_bool', collect_var, variable)
             return collect_var , cast_function
         if variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
@@ -139,7 +139,7 @@ class CWrapperCodePrinter(CCodePrinter):
         pyarg = expr.pyarg
         pykwarg = expr.pykwarg
         flags = expr.flags
-        args = ','.join(['&{}'.format(self._print(a)) for a in expr.args])
+        args = ', '.join(['{}'.format(self._print(a)) if a.is_pointer else '&{}'.format(self._print(a)) for a in expr.args])
         if expr.args:
             code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(
                             name=name,
@@ -159,7 +159,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyBuildValueNode(self, expr):
         name = 'Py_BuildValue'
         flags = expr.flags
-        args = ','.join(['{}'.format(self._print(a)) for a in expr.args])
+        args = ','.join(['{}'.format(self._print(a.name)) if a.is_pointer else '{}'.format(self._print(a)) for a in expr.args])
         #to change for args rank 1 +
         if expr.args:
             code = '{name}("{flags}", {args})'.format(name=name, flags=flags, args=args)
@@ -214,7 +214,10 @@ class CWrapperCodePrinter(CCodePrinter):
             if cast_func is not None:
                 wrapper_vars.append(collect_var)
                 cast_func_call = FunctionCall(cast_func, [collect_var])
-                wrapper_body_translations.append(Assign(a, cast_func_call))
+                if cast_func.results[0].is_pointer:
+                    wrapper_body_translations.append(AliasAssign(a, cast_func_call))
+                else:
+                    wrapper_body_translations.append(Assign(a, cast_func_call))
 
             parse_args.append(collect_var)
 
@@ -238,7 +241,10 @@ class CWrapperCodePrinter(CCodePrinter):
             if cast_func is not None:
                 wrapper_vars.append(collect_var)
                 cast_func_call = FunctionCall(cast_func, [a])
-                wrapper_body.append(Assign(collect_var, cast_func_call))
+                if cast_func.results[0].is_pointer:
+                    wrapper_body.append(AliasAssign(collect_var, cast_func_call))
+                else:
+                    wrapper_body.append(Assign(collect_var, cast_func_call))
 
             res_args.append(collect_var)
         wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
