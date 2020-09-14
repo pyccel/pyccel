@@ -4,15 +4,19 @@
 
 int main(void)
 {
-    double *a;
+    int *a;
+    int i;
 
-    double holder[] = {2, 3, 4, 1};
+    int holder[] = {2, 3, 4, 1};
     a = malloc(sizeof(holder));
-    memcpy((void *)a, (void *)holder, sizeof(holder));
+    for (i = 0; i < 4; ++i)
+        a[i] = 5;
 
-    for (int i = 0; i<sizeof(holder) / sizeof(double); ++i)
+    i = 0;
+    while(i < 4)
     {
-        printf("%f\n",a[i]);
+        printf("%d\n",a[i]);
+        i = i + 1;
     }
     free(a);
     return 0;

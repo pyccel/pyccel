@@ -11,9 +11,11 @@ int main(void)
     a = malloc(sizeof(double) * 4);
     memcpy(a, b, sizeof(b));
 
-    for (i = 0; i< 4; ++i)
+    i = 0;
+    while (i < 4)
     {
-        printf("%f\n",a[i]);
+        printf("%d\n",a[i]);
+        i = i + 1;
     }
     free(a);
     return 0;

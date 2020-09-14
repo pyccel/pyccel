@@ -6,11 +6,9 @@ int main(void)
 {
     int *a;
     int i;
-    
+
     a = malloc(sizeof(int) * 4);
-    for (i = 0; i < 4; ++i)
-        a[i] = 5;
-    
+
     i = 0;
     while (i < 4)
     {

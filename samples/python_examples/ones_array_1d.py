@@ -1,7 +1,7 @@
 from pyccel.decorators import types
-from numpy import array
-    
-a = array([2, 3, 4, 1])
+from numpy import ones
+
+a = ones(4)
 
 i = 0
 while i < 4:

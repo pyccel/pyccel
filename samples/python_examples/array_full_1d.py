@@ -1,10 +1,9 @@
 from pyccel.decorators import types
+from numpy import full
 
-@types('real')
-def array_init_from_list_val():
-    from numpy import full
-    a = full(4, 5)
-    return a
+a = full(4, 5)
 
-for a in array_init_from_list_val():
-    print("%f" % a)
+i = 0
+while i < 4:
+    print(a[i])
+    i = i + 1
