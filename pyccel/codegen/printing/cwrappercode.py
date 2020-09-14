@@ -260,7 +260,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 else:
                     wrapper_body.append(Assign(collect_var, cast_func_call))
 
-            res_args.append(collect_var)
+            res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
         wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
         wrapper_body.append(Return(wrapper_results))
         #TODO: Create node and add args
