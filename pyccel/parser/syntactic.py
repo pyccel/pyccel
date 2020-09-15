@@ -630,7 +630,8 @@ class SyntaxParser(BasicParser):
             args_number = 0
             while i<len(ls) :
                 arg = ls[i]
-                args_number += len(str(arg).split(','))
+                tmp = str(arg).strip().replace(":,:", "")
+                args_number += len(tmp.split(','))
                 if isinstance(arg, Symbol):
                     arg = arg.name
                     container.append(arg)
