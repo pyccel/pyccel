@@ -138,6 +138,14 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return variable, None
 
+    def get_default_assign(self, arg, func_arg):
+        if isinstance(arg.dtype, (NativeReal, NativeInteger, NativeBool)):
+            return Assign(arg, func_arg.value)
+        elif isinstance(arg.dtype, PyccelPyObject) and func_arg.dtype is NativeComplex():
+            return AliasAssign(arg, self.get_cast_function_call('complex_to_pycomplex', func_arg.value))
+        else:
+            raise NotImplementedError('Default values are not implemented for this datatype : {}'.format(func_arg.dtype))
+
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
 
@@ -235,7 +243,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # Write default values
             if isinstance(a, ValuedVariable):
-                wrapper_body.append(Assign(parse_args[-1],a.value))
+                wrapper_body.append(self.get_default_assign(parse_args[-1], a))
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, expr.arguments, parse_args, keyword_list)
