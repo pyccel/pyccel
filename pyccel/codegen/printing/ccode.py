@@ -118,6 +118,11 @@ class CCodePrinter(CodePrinter):
         value = self._print(expr.arg)
         return '{} != 0'.format(value)
 
+    def _print_Complex(self, expr):
+        self._additional_imports.add('complex.h')
+        return self._print(PyccelAdd(expr.real,
+                        PyccelMul(expr.imag, ImaginaryUnit())))
+
     def _print_PythonComplex(self, expr):
         self._additional_imports.add('complex.h')
         return self._print(PyccelAdd(expr.real_part,
