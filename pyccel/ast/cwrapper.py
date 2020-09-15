@@ -27,7 +27,7 @@ __all__ = (
     'Py_True',
     'Py_False',
 #----- C / PYTHON FUNCTIONS ---
-    'pycomplex_real'
+    'pycomplex_real',
     'pycomplex_imag',
     'pycomplex_fromdoubles',
     'complex_real',
