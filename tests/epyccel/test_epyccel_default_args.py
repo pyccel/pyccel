@@ -68,6 +68,37 @@ def test_f3(language):
     assert f(y = 8.2) == f3(y = 8.2)
     assert f() == f3()
     # ...
+
+#------------------------------------------------------------------------------
+def test_f4(language):
+    @types('bool')
+    def f4(x = True):
+        if x:
+            return 1
+        else:
+            return 2
+
+    f = epyccel(f4, language = language)
+
+    # ...
+    assert f(True)  == f4(True)
+    assert f(False) == f4(False)
+    assert f()      == f4()
+    # ...
+
+#------------------------------------------------------------------------------
+def test_f5(language):
+    @types('complex')
+    def f5(x = 1j):
+        y = x - 1
+        return y
+
+    f = epyccel(f5, language = language)
+
+    # ...
+    assert f(2.9+3j) == f5(2.9+3j)
+    assert f()       == f5()
+    # ...
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
