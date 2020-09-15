@@ -1,12 +1,11 @@
 # coding: utf-8
 # pylint: disable=R0201
 
-from pyccel.ast.numbers   import BooleanTrue
-from pyccel.ast.core import If
-
 from sympy.core import S
 from sympy.printing.precedence import precedence
 
+from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit
+from pyccel.ast.core import If
 from pyccel.ast.core import Assign, datatype, Variable, Import, FunctionCall
 from pyccel.ast.core import CommentBlock, Comment, SeparatorComment
 
@@ -119,6 +118,13 @@ class CCodePrinter(CodePrinter):
         value = self._print(expr.arg)
         return '{} != 0'.format(value)
 
+    def _print_PythonComplex(self, expr):
+        self._additional_imports.add('complex.h')
+        return self._print(PyccelAdd(expr.real_part,
+                        PyccelMul(expr.imag_part, ImaginaryUnit())))
+
+    def _print_ImaginaryUnit(self, expr):
+        return '_Complex_I'
     def _print_Module(self, expr):
         imports  = list(expr.imports)
         imports += [Import(s) for s in self._additional_imports]

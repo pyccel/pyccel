@@ -21,7 +21,6 @@ from sympy.core.singleton     import Singleton, S
 from sympy.core.function      import Function, Application
 from sympy.core.function      import Derivative, UndefinedFunction as sp_UndefinedFunction
 from sympy.core.function      import _coeff_isneg
-from sympy.core.numbers       import ImaginaryUnit
 from sympy.core.expr          import Expr, AtomicExpr
 from sympy.logic.boolalg      import And as sp_And, Not as sp_Not, Or as sp_Or
 from sympy.logic.boolalg      import Boolean as sp_Boolean
@@ -41,7 +40,7 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
                         NativeGeneric, NativeTuple, default_precision)
 
-from .numbers        import BooleanTrue, BooleanFalse, Integer as Py_Integer
+from .numbers        import BooleanTrue, BooleanFalse, Integer as Py_Integer, ImaginaryUnit
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
