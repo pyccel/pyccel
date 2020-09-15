@@ -1,16 +1,12 @@
 # coding: utf-8
 
 import numpy as np
+import pytest
 import shutil
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 from conftest       import *
-
-
-def clean_test():
-    shutil.rmtree('__pycache__', ignore_errors=True)
-    shutil.rmtree('__epyccel__', ignore_errors=True)
 
 #------------------------------------------------------------------------------
 def test_f1(language):
@@ -73,9 +69,8 @@ def test_f3(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="f2py does not handle bool default values"),
-            pytest.mark.fortran],
+            pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c)
-        )
     )
 )
 def test_f4(language):
@@ -98,9 +93,8 @@ def test_f4(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="Complex default value not written in a f2py readable manner"),
-            pytest.mark.fortran],
+            pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c)
-        )
     )
 )
 def test_f5(language):
@@ -115,10 +109,3 @@ def test_f5(language):
     assert f(2.9+3j) == f5(2.9+3j)
     assert f()       == f5()
     # ...
-##==============================================================================
-## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
-##==============================================================================
-#
-#def teardown_module():
-#    clean_test()
-#
