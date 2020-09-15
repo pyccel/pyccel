@@ -660,7 +660,7 @@ class SyntaxParser(BasicParser):
 
             if (len(arguments) != args_number):
                 msg = 'The number of arguments in the function ({}) {} and the types decorator ({}) {} don\'t match.'.format(len(arguments), arguments, args_number, decorators['types'].args)
-                if (len(arguments) < len(decorators['types'].args)):
+                if (len(arguments) < args_number):
                     errors.report(msg, severity='warning')
                 else:
                     errors.report(msg, severity='error')
