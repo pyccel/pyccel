@@ -90,6 +90,7 @@ class CCodePrinter(CodePrinter):
         self.known_functions.update(userfuncs)
         self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
+        self._additional_imports = set('stdlib.h')
 
     def _get_statement(self, codestring):
         return "%s;" % codestring
@@ -119,7 +120,14 @@ class CCodePrinter(CodePrinter):
         return '{} != 0'.format(value)
 
     def _print_Module(self, expr):
-        return '\n\n'.join(self._print(i) for i in expr.body)
+        imports  = list(expr.imports)
+        imports += [Import(s) for s in self._additional_imports]
+        imports = ''.join(self._print(i) for i in imports)
+        body    = '\n\n'.join(self._print(i) for i in expr.body)
+        return ('{imports}\n\n'
+                '{body}').format(
+                        imports = imports,
+                        body    = body)
 
     def _print_While(self,expr):
         code = "while (%s)\n{" % self._print(expr.test)
@@ -465,7 +473,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Program(self, expr):
         imports  = list(expr.imports)
-        imports += [Import('stdlib.h')]
+        imports += [Import(s) for s in self._additional_imports]
         imports  = '\n'.join(self._print(i) for i in imports)
         body     = '\n'.join(self._print(i) for i in expr.body.body)
         decs     = '\n'.join(self._print(i) for i in expr.declarations)
