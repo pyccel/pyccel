@@ -56,7 +56,7 @@ class CWrapperCodePrinter(CCodePrinter):
         except KeyError:
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
-    def get_cast_function(self, used_names, cast_type):
+    def get_cast_function(self, cast_type):
         """
         Represents a call to cast function responsible of the conversion of one data type into another.
 
@@ -75,7 +75,7 @@ class CWrapperCodePrinter(CCodePrinter):
         if cast_type in self._cast_functions_dict:
             return self._cast_functions_dict[cast_type]
 
-        cast_function_name = self.get_new_name(used_names, cast_type)
+        cast_function_name = self.get_new_name(self._global_names, cast_type)
 
         cast_function = cast_function_registry[cast_type](cast_function_name)
 
@@ -97,14 +97,14 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = NativeInteger()
             collect_var = Variable(dtype=collect_type, precision=4,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function(used_names, 'pyint_to_bool')
+            cast_function = self.get_cast_function('pyint_to_bool')
             return collect_var , cast_function
 
         if variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function(used_names, 'pycomplex_to_complex')
+            cast_function = self.get_cast_function('pycomplex_to_complex')
             return collect_var , cast_function
 
         return variable, None
@@ -124,14 +124,14 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function(used_names, 'bool_to_pyobj')
+            cast_function = self.get_cast_function('bool_to_pyobj')
             return collect_var, cast_function
 
         if variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function(used_names, 'complex_to_pycomplex')
+            cast_function = self.get_cast_function('complex_to_pycomplex')
             return collect_var, cast_function
 
         return variable, None
