@@ -662,9 +662,9 @@ class SyntaxParser(BasicParser):
             if (len(arguments) != args_number):
                 msg = 'The number of arguments in the function ({}) {} and the types decorator ({}) {} don\'t match.'.format(len(arguments), arguments, args_number, decorators['types'].args)
                 if (len(arguments) < args_number):
-                    errors.report(msg, severity='warning')
+                    errors.report(msg, symbol=arguments, bounding_box=(stmt.lineno, stmt.col_offset), severity='warning')
                 else:
-                    errors.report(msg, severity='error')
+                    errors.report(msg, symbol=arguments, bounding_box=(stmt.lineno, stmt.col_offset), severity='fatal')
 
             txt  = '#$ header ' + name
             txt += '(' + ','.join(types) + ')'
