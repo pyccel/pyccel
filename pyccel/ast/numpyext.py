@@ -6,7 +6,6 @@ from sympy import Basic, Function, Tuple
 from sympy import Integer as sp_Integer
 from sympy import Expr
 from sympy import Rational as sp_Rational
-from sympy import IndexedBase
 from sympy.core.function import Application
 from sympy.core.assumptions import StdFactKB
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
@@ -607,16 +606,16 @@ class Diag(Application, NumpyNewArray):
         index = printer(self.index)
 
         if rank == 2:
-            lhs   = IndexedBase(lhs)[self.index]
-            rhs   = IndexedBase(self.array)[self.index,self.index]
+            lhs   = IndexedVariable(lhs)[self.index]
+            rhs   = IndexedVariable(self.array)[self.index,self.index]
             body  = [Assign(lhs, rhs)]
             body  = For(self.index, Range(Len(self.array)), body)
             code  = printer(body)
             alloc = 'allocate({0}(0: size({1},1)-1))'.format(lhs.base, array)
         elif rank == 1:
 
-            lhs   = IndexedBase(lhs)[self.index, self.index]
-            rhs   = IndexedBase(self.array)[self.index]
+            lhs   = IndexedVariable(lhs)[self.index, self.index]
+            rhs   = IndexedVariable(self.array)[self.index]
             body  = [Assign(lhs, rhs)]
             body  = For(self.index, Range(Len(self.array)), body)
             code  = printer(body)
@@ -683,8 +682,8 @@ class Cross(Application, NumpyNewArray):
     def fprint(self, printer, lhs=None):
         """Fortran print."""
 
-        a     = IndexedBase(self.first)
-        b     = IndexedBase(self.second)
+        a     = IndexedVariable(self.first)
+        b     = IndexedVariable(self.second)
         slc   = Slice(None, None)
         rank  = self.rank
 
