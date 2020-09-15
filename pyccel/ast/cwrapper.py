@@ -1,7 +1,7 @@
 from .basic     import Basic
 
-from pyccel.ast.numbers   import BooleanTrue
-from .builtins  import Bool, PythonComplex
+from pyccel.ast.numbers   import BooleanTrue, Complex
+from .builtins  import Bool
 
 from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
@@ -255,7 +255,7 @@ def pycomplex_to_complex(cast_function_name):
 
     cast_function_body = [Assign(real_part, FunctionCall(pycomplex_real, [cast_function_argument])),
                           Assign(imag_part, FunctionCall(pycomplex_imag, [cast_function_argument])),
-                          Assign(cast_function_result, PythonComplex(real_part, imag_part)),
+                          Assign(cast_function_result, Complex(real_part, imag_part)),
                           Return([cast_function_result])]
     return FunctionDef(name      = cast_function_name,
                        arguments = [cast_function_argument],
