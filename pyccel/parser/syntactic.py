@@ -622,20 +622,15 @@ class SyntaxParser(BasicParser):
             decorators['stack_array'] = tuple(args)
         # extract the types to construct a header
         if 'types' in decorators:
-            if (len(arguments) != len(decorators['types'].args)):
-                msg = 'The number of arguments in the function ({}) and the types decorator ({}) don\'t match'.format(len(arguments), len(decorators['types'].args))
-                if (len(arguments) < len(decorators['types'].args)):
-                    errors.report(msg, severity='warning')
-                else:
-                    errors.report(msg, severity='error')
             types = []
             results = []
             container = types
             i = 0
             ls = decorators['types'].args
+            args_number = 0
             while i<len(ls) :
                 arg = ls[i]
-
+                args_number += len(str(arg).split(','))
                 if isinstance(arg, Symbol):
                     arg = arg.name
                     container.append(arg)
@@ -662,6 +657,13 @@ class SyntaxParser(BasicParser):
                                   severity='error')
 
                 i = i+1
+
+            if (len(arguments) != args_number):
+                msg = 'The number of arguments in the function ({}) {} and the types decorator ({}) {} don\'t match.'.format(len(arguments), arguments, args_number, decorators['types'].args)
+                if (len(arguments) < len(decorators['types'].args)):
+                    errors.report(msg, severity='warning')
+                else:
+                    errors.report(msg, severity='error')
 
             txt  = '#$ header ' + name
             txt += '(' + ','.join(types) + ')'
