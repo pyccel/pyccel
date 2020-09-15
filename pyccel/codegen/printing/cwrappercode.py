@@ -154,7 +154,9 @@ class CWrapperCodePrinter(CCodePrinter):
         pyarg   = expr.pyarg
         pykwarg = expr.pykwarg
         flags   = expr.flags
-        args    = ', '.join(['{}'.format(self._print(VariableAddress(a))) for a in expr.args])
+        # All args are modified so even pointers are passed by address
+        args    = ', '.join(['&{}'.format(self._print(VariableAddress(a))) if a.is_pointer
+                        else self._print(VariableAddress(a)) for a in expr.args])
 
         if expr.args:
             code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(
