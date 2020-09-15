@@ -17,6 +17,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, Nativ
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper import PyArgKeywords, FuncCall
 from pyccel.ast.cwrapper import Py_True, Py_False
+from pyccel.ast.cwrapper import cast_function_registry
 
 from pyccel.ast.type_inference import str_dtype
 
@@ -56,7 +57,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         Parameters:
         ----------
-        used_names: list of strings 
+        used_names: list of strings
             List of variable and function names
         cast_type: string
             The type of cast function on format 'data type_to_data type'
@@ -70,56 +71,21 @@ class CWrapperCodePrinter(CCodePrinter):
             return self._cast_functions_dict[cast_type]
 
         cast_function_name = self.get_new_name(used_names, cast_type)
-        cast_function_arg = [from_variable]
+        cast_function_args = [from_variable]
         cast_function_result = [to_variable]
-        cast_function_local_vars = []
 
-        #switch case of cast_type
-        if cast_type == 'pyint_to_bool':
-            cast_function_body = [Assign(cast_function_result[0], Bool(cast_function_arg[0]))]
-
-        elif cast_type == 'bool_to_pyobj':
-            cast_function_body = [IfTernaryOperator((Bool(cast_function_arg[0]),
-                [AliasAssign(cast_function_result[0], Py_True)]),
-                (BooleanTrue(), [AliasAssign(cast_function_result[0], Py_False)]))]
-
-        elif cast_type == 'pycomplex_to_complex':
-            real_part = Variable(dtype = NativeReal(),
-                            name = self.get_new_name(used_names, 'real_part'))
-            imag_part = Variable(dtype = NativeReal(),
-                            name = self.get_new_name(used_names, 'imag_part'))
-            cast_function_local_vars += [real_part, imag_part]
-            cast_function_body = [Assign(real_part, FuncCall('PyComplex_RealAsDouble', cast_function_arg))]
-            cast_function_body += [Assign(imag_part, FuncCall('PyComplex_ImagAsDouble', cast_function_arg))]
-            cast_function_body += [Assign(cast_function_result[0], FuncCall('__builtin_complex', [real_part, imag_part]))]
-
-        elif cast_type == 'complex_to_pycomplex':
-            real_part = Variable(dtype = NativeReal(),
-                            name = self.get_new_name(used_names, "real_part"))
-            imag_part = Variable(dtype = NativeReal(),
-                            name = self.get_new_name(used_names, "imag_part"))
-            cast_function_local_vars += [real_part, imag_part]
-            cast_function_body = [Assign(real_part, FuncCall('__real', cast_function_arg))]
-            cast_function_body += [Assign(imag_part, FuncCall('__imag', cast_function_arg))]
-            cast_function_body += [Assign(cast_function_result[0], FuncCall('PyComplex_FromDoubles', [real_part, imag_part]))]
-
-        cast_function_body += [Return(cast_function_result)]
-        cast_function = FunctionDef(name       = cast_function_name,
-                                    arguments  = cast_function_arg,
-                                    body       = cast_function_body,
-                                    results    = cast_function_result,
-                                    local_vars = cast_function_local_vars)
+        cast_function = cast_function_registry[cast_type](cast_function_name,
+                                        cast_function_args, cast_function_result)
 
         self._cast_functions_dict[cast_type] = cast_function
-
         return cast_function
 
     def get_PyArgParseType(self, used_names, variable):
         """
-        Responsible of collecting the python variable into which the result will be collected and the needed cast function 
+        Responsible of collecting the python variable into which the result will be collected and the needed cast function
 
         Parameters:
-        ---------- 
+        ----------
         used_names : list of strings
             List of variable and function names
         variable : variable
@@ -143,10 +109,10 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_PyBuildValue(self, used_names, variable):
         """
-        Responsible of collecting the python into needed to build the result and the needed cast function 
+        Responsible of collecting the python into needed to build the result and the needed cast function
 
         Parameters:
-        ---------- 
+        ----------
         used_names : list of strings
             List of variable and function names
         variable : variable
