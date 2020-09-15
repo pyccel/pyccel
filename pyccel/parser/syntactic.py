@@ -615,6 +615,13 @@ class SyntaxParser(BasicParser):
         if 'bypass' in decorators:
             return EmptyNode()
 
+        if (len(arguments) != len(decorators['types'].args)):
+            msg = 'The number of arguments in the function ({}) and the types decorator ({}) don\'t match'.format(len(arguments), len(decorators['types'].args))
+            if (len(arguments) < len(decorators['types'].args)):
+                errors.report(msg, severity='warning')
+            else:
+                errors.report(msg, severity='error')
+
         if 'stack_array' in decorators:
             args = list(decorators['stack_array'].args)
             for i in range(len(args)):
