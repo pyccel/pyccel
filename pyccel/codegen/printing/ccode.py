@@ -57,13 +57,13 @@ known_functions = {
 
 dtype_registry = {('real',8)    : 'double',
                   ('real',4)    : 'float',
-                  ('complex',8) : 'double _Complex',
-                  ('complex',4) : 'float _Complex',
+                  ('complex',8) : 'double complex',
+                  ('complex',4) : 'float complex',
                   ('int',4)     : 'int',
                   ('int',8)     : 'long',
                   ('int',2)     : 'short int',
                   ('int',1)     : 'char',
-                  ('bool',4)    : '_Bool'}
+                  ('bool',4)    : 'bool'}
 
 
 class CCodePrinter(CodePrinter):
@@ -119,12 +119,10 @@ class CCodePrinter(CodePrinter):
         return '{} != 0'.format(value)
 
     def _print_Complex(self, expr):
-        self._additional_imports.add('complex.h')
         return self._print(PyccelAdd(expr.real,
                         PyccelMul(expr.imag, ImaginaryUnit())))
 
     def _print_PythonComplex(self, expr):
-        self._additional_imports.add('complex.h')
         return self._print(PyccelAdd(expr.real_part,
                         PyccelMul(expr.imag_part, ImaginaryUnit())))
 
@@ -137,7 +135,7 @@ class CCodePrinter(CodePrinter):
         # Print imports last to be sure that all additional_imports have been collected
         imports  = list(expr.imports)
         imports += [Import(s) for s in self._additional_imports]
-        imports = ''.join(self._print(i) for i in imports)
+        imports = '\n'.join(self._print(i) for i in imports)
         return ('{imports}\n\n'
                 '{body}').format(
                         imports = imports,
@@ -238,6 +236,7 @@ class CCodePrinter(CodePrinter):
         return '{0}{1};'.format(declaration_type, variable)
 
     def _print_NativeBool(self, expr):
+        self._additional_imports.add('stdbool.h')
         return 'bool'
 
     def _print_NativeInteger(self, expr):
@@ -250,6 +249,7 @@ class CCodePrinter(CodePrinter):
         return 'void'
 
     def _print_NativeComplex(self, expr):
+        self._additional_imports.add('complex.h')
         return 'complex'
 
     def function_signature(self, expr):
@@ -403,14 +403,12 @@ class CCodePrinter(CodePrinter):
 
     def _print_Real(self, expr):
         if expr.arg.dtype is NativeComplex():
-            self._additional_imports.add('complex.h')
             return 'creal({})'.format(self._print(expr.arg))
         else:
             return self._print(expr.arg)
 
     def _print_Imag(self, expr):
         if expr.arg.dtype is NativeComplex():
-            self._additional_imports.add('complex.h')
             return 'cimag({})'.format(self._print(expr.arg))
         else:
             return '0'
