@@ -180,29 +180,6 @@ class PyBuildValueNode(Basic):
     def args(self):
         return self._result_args
 
-#funccall to change later
-class FuncCall(Basic):
-    """
-    Represents a function call in the code.
-
-    Parameters
-    ----------
-    name  : name of the function
-    args  : list of variable
-    """
-
-    def __init__(self, name, args):
-        self._name = name
-        self._args = args
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def args(self):
-        return self._args
-
 #Python.h object  representing Booleans True and False
 Py_True = Variable(PyccelPyObject(), 'Py_True',is_pointer=True)
 Py_False = Variable(PyccelPyObject(), 'Py_False',is_pointer=True)
