@@ -130,6 +130,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_ImaginaryUnit(self, expr):
         return '_Complex_I'
+
     def _print_Module(self, expr):
         body    = '\n\n'.join(self._print(i) for i in expr.body)
 
@@ -399,10 +400,6 @@ class CCodePrinter(CodePrinter):
 
     def _print_NegativeInfinity(self, expr):
         return '-HUGE_VAL'
-
-    def _print_Bool(self, expr):
-        value = self._print(expr.arg)
-        return '{} != 0'.format(value)
 
     def _print_Real(self, expr):
         if expr.arg.dtype is NativeComplex():
