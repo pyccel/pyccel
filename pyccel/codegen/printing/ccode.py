@@ -190,8 +190,7 @@ class CCodePrinter(CodePrinter):
         return '!{}'.format(a)
 
     def _print_Import(self, expr):
-         imports = ['#include "{0}"'.format(i) for i in expr.target]
-         return '\n'.join(i for i in imports)
+        return '#include "{0}"'.format(expr.source)
 
     def find_in_dtype_registry(self, dtype, prec):
         try :
