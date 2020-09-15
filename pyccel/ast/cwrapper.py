@@ -1,7 +1,7 @@
 from .basic     import Basic
 
 from pyccel.ast.numbers   import BooleanTrue
-from .builtins  import Bool
+from .builtins  import Bool, PythonComplex
 
 from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
@@ -9,6 +9,8 @@ from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, Nat
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable
 from .core      import AliasAssign, Assign, Return
 from .core      import If, IfTernaryOperator
+
+from .numpyext  import Real as NumpyReal, Imag as NumpyImag
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -199,22 +201,6 @@ pycomplex_fromdoubles = FunctionDef(name      = 'PyComplex_FromDoubles',
                                         Variable(dtype=NativeReal(), name = 'i')],
                            results   = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)])
 
-#C complex function managing complex data type
-#TODO change __real__ to creal, and __imag__ to cimag, and __builtin_complex to CMPLX
-complex_real = FunctionDef(name      = '__real__',
-                           body      = [],
-                           arguments = [Variable(dtype=NativeComplex(), name = 'c')],
-                           results   = [Variable(dtype=NativeReal(), name = 'r')])
-complex_imag = FunctionDef(name      = '__imag__',
-                           body      = [],
-                           arguments = [Variable(dtype=NativeComplex(), name = 'c')],
-                           results   = [Variable(dtype=NativeReal(), name = 'r')])
-complex_fromdoubles = FunctionDef(name      = '__builtin_complex',
-                           body      = [],
-                           arguments = [Variable(dtype=NativeReal(), name = 'r'),
-                                        Variable(dtype=NativeReal(), name = 'i')],
-                           results   = [Variable(dtype=NativeComplex(), name = 'c')])
-
 # Casting functions
 # Represents type of cast function responsible of the conversion of one data type into another.
 # Parameters :
@@ -252,8 +238,8 @@ def complex_to_pycomplex(cast_function_name):
     imag_part = Variable(dtype = NativeReal(), name = 'imag_part')
     cast_function_local_vars = [real_part, imag_part]
 
-    cast_function_body = [Assign(real_part, FunctionCall(complex_real, [cast_function_argument])),
-                          Assign(imag_part, FunctionCall(complex_imag, [cast_function_argument])),
+    cast_function_body = [Assign(real_part, NumpyReal(cast_function_argument)),
+                          Assign(imag_part, NumpyImag(cast_function_argument)),
                           AliasAssign(cast_function_result,
                               FunctionCall(pycomplex_fromdoubles, [real_part, imag_part])),
                           Return([cast_function_result])]
@@ -272,8 +258,7 @@ def pycomplex_to_complex(cast_function_name):
 
     cast_function_body = [Assign(real_part, FunctionCall(pycomplex_real, [cast_function_argument])),
                           Assign(imag_part, FunctionCall(pycomplex_imag, [cast_function_argument])),
-                          Assign(cast_function_result,
-                              FunctionCall(complex_fromdoubles, [real_part, imag_part])),
+                          Assign(cast_function_result, PythonComplex(real_part, imag_part)),
                           Return([cast_function_result])]
     return FunctionDef(name      = cast_function_name,
                        arguments = [cast_function_argument],
