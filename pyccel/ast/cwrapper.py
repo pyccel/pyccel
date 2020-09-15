@@ -32,9 +32,6 @@ __all__ = (
     'pycomplex_real',
     'pycomplex_imag',
     'pycomplex_fromdoubles',
-    'complex_real',
-    'complex_imag',
-    'complex_fromdoubles',
 #------- CAST FUNCTIONS ------
     'pyint_to_bool',
     'bool_to_pyobj',
