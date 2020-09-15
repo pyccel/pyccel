@@ -13,7 +13,7 @@ from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMo
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 
-from pyccel.ast.datatypes import NativeInteger, NativeBool
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
 
 from pyccel.ast.builtins  import Range
 from pyccel.ast.core import Declare
@@ -89,7 +89,7 @@ class CCodePrinter(CodePrinter):
         self.known_functions.update(userfuncs)
         self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
-        self._additional_imports = set('stdlib.h')
+        self._additional_imports = set(['stdlib.h'])
 
     def _get_statement(self, codestring):
         return "%s;" % codestring
@@ -396,6 +396,20 @@ class CCodePrinter(CodePrinter):
     def _print_Bool(self, expr):
         value = self._print(expr.arg)
         return '{} != 0'.format(value)
+
+    def _print_Real(self, expr):
+        if expr.arg.dtype is NativeComplex():
+            self._additional_imports.add('complex.h')
+            return 'creal({})'.format(self._print(expr.arg))
+        else:
+            return self._print(expr.arg)
+
+    def _print_Imag(self, expr):
+        if expr.arg.dtype is NativeComplex():
+            self._additional_imports.add('complex.h')
+            return 'cimag({})'.format(self._print(expr.arg))
+        else:
+            return '0'
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
