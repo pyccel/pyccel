@@ -185,85 +185,100 @@ Py_True = Variable(PyccelPyObject(), 'Py_True',is_pointer=True)
 Py_False = Variable(PyccelPyObject(), 'Py_False',is_pointer=True)
 
 #Python.h function managing complex data type
-def pycomplex_real(args, res):
-    return FunctionDef(name = 'PyComplex_RealAsDouble', body = [], arguments = args, results = res)
-
-def pycomplex_imag(args, res):
-    return FunctionDef(name = 'PyComplex_ImagAsDouble', body = [], arguments = args, results = res)
-
-def pycomplex_fromdoubles(args, res):
-    return FunctionDef(name = 'PyComplex_FromDoubles', body = [], arguments = args, results = res)
+pycomplex_real = FunctionDef(name      = 'PyComplex_RealAsDouble',
+                           body      = [],
+                           arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                           results   = [Variable(dtype=NativeReal(), name = 'r')])
+pycomplex_imag = FunctionDef(name      = 'PyComplex_ImagAsDouble',
+                           body      = [],
+                           arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                           results   = [Variable(dtype=NativeReal(), name = 'r')])
+pycomplex_fromdoubles = FunctionDef(name      = 'PyComplex_FromDoubles',
+                           body      = [],
+                           arguments = [Variable(dtype=NativeReal(), name = 'r'),
+                                        Variable(dtype=NativeReal(), name = 'i')],
+                           results   = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)])
 
 #C complex function managing complex data type
 #TODO change __real__ to creal, and __imag__ to cimag, and __builtin_complex to CMPLX
-def complex_real(args, res):
-    return FunctionDef(name = '__real__', body = [], arguments = args, results = res)
-
-def complex_imag(args, res):
-    return FunctionDef(name = '__imag__', body = [], arguments = args, results = res)
-
-def complex_fromdoubles(args, res):
-    return FunctionDef(name = '__builtin_complex', body = [], arguments = args, results = res)
+complex_real = FunctionDef(name      = '__real__',
+                           body      = [],
+                           arguments = [Variable(dtype=NativeComplex(), name = 'c')],
+                           results   = [Variable(dtype=NativeReal(), name = 'r')])
+complex_imag = FunctionDef(name      = '__imag__',
+                           body      = [],
+                           arguments = [Variable(dtype=NativeComplex(), name = 'c')],
+                           results   = [Variable(dtype=NativeReal(), name = 'r')])
+complex_fromdoubles = FunctionDef(name      = '__builtin_complex',
+                           body      = [],
+                           arguments = [Variable(dtype=NativeReal(), name = 'r'),
+                                        Variable(dtype=NativeReal(), name = 'i')],
+                           results   = [Variable(dtype=NativeComplex(), name = 'c')])
 
 # Casting functions
 # Represents type of cast function responsible of the conversion of one data type into another.
 # Parameters :
 # name of function , list of arguments ,  list of results
 
-def pyint_to_bool(cast_function_name, cast_function_args, cast_function_result):
-    cast_function_body = [Assign(cast_function_result[0], Bool(cast_function_args[0]))]
-    cast_function_body += [Return(cast_function_result)]
+def pyint_to_bool(cast_function_name):
+    cast_function_argument = Variable(dtype=NativeInteger(), name = 'i', precision=4)
+    cast_function_result   = Variable(dtype=NativeBool(), name = 'b')
+    cast_function_body     = [Assign(cast_function_result, Bool(cast_function_argument)),
+                              Return([cast_function_result])  ]
     return FunctionDef(name      = cast_function_name,
-                       arguments = cast_function_args,
+                       arguments = [cast_function_argument],
                        body      = cast_function_body,
-                       results   = cast_function_result)
+                       results   = [cast_function_result])
 
-def bool_to_pyobj(cast_function_name, cast_function_args, cast_function_result):
-    cast_function_body = [IfTernaryOperator((Bool(cast_function_args[0]),
-                [AliasAssign(cast_function_result[0], Py_True)]),
-                (BooleanTrue(), [AliasAssign(cast_function_result[0], Py_False)]))]
-    cast_function_body += [Return(cast_function_result)]
+def bool_to_pyobj(cast_function_name):
+    cast_function_argument = Variable(dtype=NativeBool(), name = 'b')
+    cast_function_result   = Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)
+    cast_function_body = [IfTernaryOperator(
+                            (Bool(cast_function_argument),
+                                [AliasAssign(cast_function_result, Py_True)]),
+                            (BooleanTrue(),
+                                [AliasAssign(cast_function_result, Py_False)])
+                          ),
+                          Return([cast_function_result])]
     return FunctionDef(name      = cast_function_name,
-                       arguments = cast_function_args,
+                       arguments = [cast_function_argument],
                        body      = cast_function_body,
-                       results   = cast_function_result)
+                       results   = [cast_function_result])
 
-def complex_to_pycomplex(cast_function_name, cast_function_args, cast_function_result):
+def complex_to_pycomplex(cast_function_name):
+    cast_function_argument = Variable(dtype=NativeComplex(), name = 'c')
+    cast_function_result   = Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)
     real_part = Variable(dtype = NativeReal(), name = 'real_part')
     imag_part = Variable(dtype = NativeReal(), name = 'imag_part')
     cast_function_local_vars = [real_part, imag_part]
 
-    cast_function_body = [Assign(real_part,
-                FunctionCall(complex_real(cast_function_args, cast_function_result), cast_function_args))]
-    cast_function_body += [Assign(imag_part,
-                FunctionCall(complex_imag(cast_function_args, cast_function_result), cast_function_args))]
-    cast_function_body += [AliasAssign(cast_function_result[0],
-                FunctionCall(pycomplex_fromdoubles([real_part, imag_part], cast_function_result),
-                            [real_part, imag_part]))]
-    cast_function_body += [Return(cast_function_result)]
-    return FunctionDef(name      = cast_function_name,
-                       arguments = cast_function_args,
-                       body      = cast_function_body,
-                       results   = cast_function_result,
-                       local_vars= cast_function_local_vars)
+    cast_function_body = [Assign(real_part, FunctionCall(complex_real, [cast_function_argument])),
+                          Assign(imag_part, FunctionCall(complex_imag, [cast_function_argument])),
+                          AliasAssign(cast_function_result,
+                              FunctionCall(pycomplex_fromdoubles, [real_part, imag_part])),
+                          Return([cast_function_result])]
+    return FunctionDef(name       = cast_function_name,
+                       arguments  = [cast_function_argument],
+                       body       = cast_function_body,
+                       results    = [cast_function_result],
+                       local_vars = cast_function_local_vars)
 
-def pycomplex_to_complex(cast_function_name, cast_function_args, cast_function_result):
+def pycomplex_to_complex(cast_function_name):
+    cast_function_argument = Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)
+    cast_function_result   = Variable(dtype=NativeComplex(), name = 'c')
     real_part = Variable(dtype = NativeReal(), name = 'real_part')
     imag_part = Variable(dtype = NativeReal(), name = 'imag_part')
     cast_function_local_vars = [real_part, imag_part]
 
-    cast_function_body = [Assign(real_part,
-                FunctionCall(pycomplex_real(cast_function_args, cast_function_result), cast_function_args))]
-    cast_function_body += [Assign(imag_part,
-                FunctionCall(pycomplex_imag(cast_function_args, cast_function_result), cast_function_args))]
-    cast_function_body += [Assign(cast_function_result[0],
-                FunctionCall(complex_fromdoubles([real_part, imag_part], cast_function_result),
-                            [real_part, imag_part]))]
-    cast_function_body += [Return(cast_function_result)]
+    cast_function_body = [Assign(real_part, FunctionCall(pycomplex_real, [cast_function_argument])),
+                          Assign(imag_part, FunctionCall(pycomplex_imag, [cast_function_argument])),
+                          Assign(cast_function_result,
+                              FunctionCall(complex_fromdoubles, [real_part, imag_part])),
+                          Return([cast_function_result])]
     return FunctionDef(name      = cast_function_name,
-                       arguments = cast_function_args,
+                       arguments = [cast_function_argument],
                        body      = cast_function_body,
-                       results   = cast_function_result,
+                       results   = [cast_function_result],
                        local_vars= cast_function_local_vars)
 
 cast_function_registry = {
