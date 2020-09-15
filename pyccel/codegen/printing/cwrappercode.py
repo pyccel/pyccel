@@ -10,7 +10,7 @@ from pyccel.ast.builtins import Bool
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, Symbol, Constant
 from pyccel.ast.core import create_incremented_string, Declare, SeparatorComment
-from pyccel.ast.core import IfTernaryOperator, VariableAddress
+from pyccel.ast.core import IfTernaryOperator, VariableAddress, Import
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
@@ -302,8 +302,12 @@ class CWrapperCodePrinter(CCodePrinter):
                 'if (m == NULL) return NULL;\n\n'
                 'return m;\n}}'.format(mod_name=expr.name, module_def_name = module_def_name))
 
+        imports  = [Import(s) for s in self._additional_imports]
+        imports += [Import('Python.h')]
+        imports  = '\n'.join(self._print(i) for i in imports)
+
         return ('#define PY_SSIZE_T_CLEAN\n'
-                '#include <Python.h>\n\n'
+                '{imports}\n\n'
                 '{function_signatures}\n\n'
                 '{sep}\n\n'
                 '{cast_functions}\n\n'
@@ -314,6 +318,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 '{module_def}\n\n'
                 '{sep}\n\n'
                 '{init_func}\n'.format(
+                    imports = imports,
                     function_signatures = function_signatures,
                     sep = sep,
                     cast_functions = cast_functions,
