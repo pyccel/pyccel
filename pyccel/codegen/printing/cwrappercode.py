@@ -56,7 +56,7 @@ class CWrapperCodePrinter(CCodePrinter):
         except KeyError:
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
-    def get_cast_function(self, cast_type):
+    def get_cast_function_call(self, cast_type, arg):
         """
         Represents a call to cast function responsible of the conversion of one data type into another.
 
@@ -73,14 +73,16 @@ class CWrapperCodePrinter(CCodePrinter):
         """
 
         if cast_type in self._cast_functions_dict:
-            return self._cast_functions_dict[cast_type]
+            cast_function = self._cast_functions_dict[cast_type]
 
-        cast_function_name = self.get_new_name(self._global_names, cast_type)
+        else:
+            cast_function_name = self.get_new_name(self._global_names, cast_type)
 
-        cast_function = cast_function_registry[cast_type](cast_function_name)
+            cast_function = cast_function_registry[cast_type](cast_function_name)
 
-        self._cast_functions_dict[cast_type] = cast_function
-        return cast_function
+            self._cast_functions_dict[cast_type] = cast_function
+
+        return FunctionCall(cast_function, [arg])
 
     def get_PyArgParseType(self, used_names, variable):
         """
@@ -97,15 +99,15 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = NativeInteger()
             collect_var = Variable(dtype=collect_type, precision=4,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function('pyint_to_bool')
-            return collect_var , cast_function
+            cast_function = self.get_cast_function_call('pyint_to_bool', collect_var)
+            return collect_var, Assign(variable, cast_function)
 
         if variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function('pycomplex_to_complex')
-            return collect_var , cast_function
+            cast_function = self.get_cast_function_call('pycomplex_to_complex', collect_var)
+            return collect_var, Assign(variable, cast_function)
 
         return variable, None
 
@@ -124,15 +126,15 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function('bool_to_pyobj')
-            return collect_var, cast_function
+            cast_function = self.get_cast_function_call('bool_to_pyobj', variable)
+            return collect_var, AliasAssign(collect_var, cast_function)
 
         if variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function('complex_to_pycomplex')
-            return collect_var, cast_function
+            cast_function = self.get_cast_function_call('complex_to_pycomplex', variable)
+            return collect_var, AliasAssign(collect_var, cast_function)
 
         return variable, None
 
@@ -222,11 +224,7 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var, cast_func = self.get_PyArgParseType(used_names, a)
             if cast_func is not None:
                 wrapper_vars.append(collect_var)
-                cast_func_call = FunctionCall(cast_func, [collect_var])
-                if cast_func.results[0].is_pointer:
-                    wrapper_body_translations.append(AliasAssign(a, cast_func_call))
-                else:
-                    wrapper_body_translations.append(Assign(a, cast_func_call))
+                wrapper_body_translations.append(cast_func)
             parse_args.append(collect_var)
 
             if isinstance(a, ValuedVariable):
@@ -243,19 +241,16 @@ class CWrapperCodePrinter(CCodePrinter):
             func_call = Assign(results,FunctionCall(expr, expr.arguments))
 
         wrapper_body.append(func_call)
-        #TODO: Loop over results to carry out necessary casts and collect Py_BuildValue type string
+        # Loop over results to carry out necessary casts and collect Py_BuildValue type string
         res_args = []
         for a in expr.results :
             collect_var, cast_func = self.get_PyBuildValue(used_names, a)
             if cast_func is not None:
                 wrapper_vars.append(collect_var)
-                cast_func_call = FunctionCall(cast_func, [a])
-                if cast_func.results[0].is_pointer:
-                    wrapper_body.append(AliasAssign(collect_var, cast_func_call))
-                else:
-                    wrapper_body.append(Assign(collect_var, cast_func_call))
+                wrapper_body.append(cast_func)
 
             res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
+
         wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
         wrapper_body.append(Return(wrapper_results))
         #TODO: Create node and add args
