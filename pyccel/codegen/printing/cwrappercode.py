@@ -45,6 +45,11 @@ class CWrapperCodePrinter(CCodePrinter):
             incremented_name, _ = create_incremented_string(used_names, prefix=requested_name)
             return incremented_name
 
+    def get_new_PyObject(self, name, used_names):
+        return Variable(dtype=PyccelPyObject(),
+                        name=self.get_new_name(used_names, name),
+                        is_pointer=True)
+
     def find_in_dtype_registry(self, dtype, prec):
         try :
             return dtype_registry[(dtype, prec)]
@@ -197,19 +202,12 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Collect local variables
         wrapper_vars = [a for a in expr.arguments] + [r for r in expr.results]
-        python_func_args = Variable(dtype=PyccelPyObject(),
-                                 name=self.get_new_name(used_names, "args"),
-                                 is_pointer=True)
-        python_func_kwargs = Variable(dtype=PyccelPyObject(),
-                                 name=self.get_new_name(used_names, "kwargs"),
-                                 is_pointer=True)
-        wrapper_args = [Variable(dtype=PyccelPyObject(),
-                                 name=self.get_new_name(used_names, "self"),
-                                 is_pointer=True),
-                        python_func_args, python_func_kwargs]
-        wrapper_results = [Variable(dtype=PyccelPyObject(),
-                                    name=self.get_new_name(used_names, "result"),
-                                    is_pointer=True)]
+        python_func_args = self.get_new_PyObject("args", used_names)
+        python_func_kwargs = self.get_new_PyObject("kwargs", used_names)
+        python_func_selfarg = self.get_new_PyObject("self", used_names)
+
+        wrapper_args = [python_func_selfarg, python_func_args, python_func_kwargs]
+        wrapper_results = [self.get_new_PyObject("result", used_names)]
 
         arg_names         = [a.name for a in expr.arguments]
         keyword_list_name = self.get_new_name(used_names,'kwlist')
@@ -230,7 +228,6 @@ class CWrapperCodePrinter(CCodePrinter):
                     wrapper_body_translations.append(AliasAssign(a, cast_func_call))
                 else:
                     wrapper_body_translations.append(Assign(a, cast_func_call))
-
             parse_args.append(collect_var)
 
             if isinstance(a, ValuedVariable):
