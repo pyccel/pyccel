@@ -5,7 +5,6 @@ from collections import OrderedDict
 import traceback
 
 from sympy.core.function       import Application, UndefinedFunction
-from sympy.core.numbers        import ImaginaryUnit
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
