@@ -2230,7 +2230,7 @@ class FCodePrinter(CodePrinter):
 
     # TODO: Use expr.precision once the precision is correctly defined
     def _print_Integer(self, expr):
-        return "{0}_{1}".format(str(expr.p), default_precision['int'])
+        return "{0}_{1}".format(str(expr.p), expr.precision)
 
     def _print_Zero(self, expr):
         return "0_{0}".format(default_precision['int'])
