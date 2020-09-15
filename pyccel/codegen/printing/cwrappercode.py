@@ -202,14 +202,16 @@ class CWrapperCodePrinter(CCodePrinter):
         used_names.add(wrapper_name)
 
         # Collect local variables
-        wrapper_vars = [a for a in expr.arguments] + [r for r in expr.results]
-        python_func_args = self.get_new_PyObject("args", used_names)
-        python_func_kwargs = self.get_new_PyObject("kwargs", used_names)
-        python_func_selfarg = self.get_new_PyObject("self", used_names)
+        wrapper_vars        = [a for a in expr.arguments] + [r for r in expr.results]
+        python_func_args    = self.get_new_PyObject("args"  , used_names)
+        python_func_kwargs  = self.get_new_PyObject("kwargs", used_names)
+        python_func_selfarg = self.get_new_PyObject("self"  , used_names)
 
-        wrapper_args = [python_func_selfarg, python_func_args, python_func_kwargs]
+        # Collect arguments and results
+        wrapper_args    = [python_func_selfarg, python_func_args, python_func_kwargs]
         wrapper_results = [self.get_new_PyObject("result", used_names)]
 
+        # Collect argument names for PyArgParse
         arg_names         = [a.name for a in expr.arguments]
         keyword_list_name = self.get_new_name(used_names,'kwlist')
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
@@ -218,22 +220,29 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body_translations = []
 
         parse_args = []
-        # TODO: Simplify (to 1 line?)
         # TODO (After PR 422): Handle optional args
         for a in expr.arguments:
             collect_var, cast_func = self.get_PyArgParseType(used_names, a)
+
+            # If the variable cannot be collected from PyArgParse directly
             if cast_func is not None:
+                # Save intermediate variable
                 wrapper_vars.append(collect_var)
+                # Save cast to argument variable
                 wrapper_body_translations.append(cast_func)
+
             parse_args.append(collect_var)
 
+            # Write default values
             if isinstance(a, ValuedVariable):
                 wrapper_body.append(Assign(parse_args[-1],a.value))
 
+        # Parse arguments
         parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, expr.arguments, parse_args, keyword_list)
         wrapper_body.append(If((PyccelNot(parse_node), [Return([Nil()])])))
         wrapper_body.extend(wrapper_body_translations)
 
+        # Call function
         if len(expr.results)==0:
             func_call = FunctionCall(expr, expr.arguments)
         else:
@@ -241,6 +250,8 @@ class CWrapperCodePrinter(CCodePrinter):
             func_call = Assign(results,FunctionCall(expr, expr.arguments))
 
         wrapper_body.append(func_call)
+
+
         # Loop over results to carry out necessary casts and collect Py_BuildValue type string
         res_args = []
         for a in expr.results :
@@ -251,9 +262,11 @@ class CWrapperCodePrinter(CCodePrinter):
 
             res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
 
+        # Call PyBuildNode
         wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
         wrapper_body.append(Return(wrapper_results))
-        #TODO: Create node and add args
+
+        # Create FunctionDef and write using classic method
         wrapper_func = FunctionDef(name = wrapper_name,
             arguments = wrapper_args,
             results = wrapper_results,
@@ -267,17 +280,24 @@ class CWrapperCodePrinter(CCodePrinter):
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.funcs)
 
         function_defs = '\n\n'.join(self._print(f) for f in expr.funcs)
-        cast_functions = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f) for f in self._cast_functions_dict.values())
-        method_def_func = ',\n'.join("{{ \"{name}\", (PyCFunction){wrapper_name}, METH_VARARGS | METH_KEYWORDS, \"{doc_string}\" }}".format(
-            name = f.name,
-            wrapper_name = self._function_wrapper_names[f.name],
-            doc_string = f.doc_string) for f in expr.funcs)
+        cast_functions = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f)
+                                        for f in self._cast_functions_dict.values())
+        method_def_func = ',\n'.join(('{{\n'
+                                     '"{name}",\n'
+                                     '(PyCFunction){wrapper_name},\n'
+                                     'METH_VARARGS | METH_KEYWORDS,\n'
+                                     '"{doc_string}"\n'
+                                     '}}').format(
+                                            name = f.name,
+                                            wrapper_name = self._function_wrapper_names[f.name],
+                                            doc_string = f.doc_string)
+                                     for f in expr.funcs)
 
         method_def_name = self.get_new_name(self._global_names, '{}_methods'.format(expr.name))
         method_def = ('static PyMethodDef {method_def_name}[] = {{\n'
-                        '{method_def_func}'
-                        ',\n    {{ NULL, NULL, 0, NULL}}'
-                        '\n}};'.format(method_def_name = method_def_name ,method_def_func = method_def_func))
+                        '{method_def_func},\n'
+                        '{{ NULL, NULL, 0, NULL}}\n'
+                        '}};'.format(method_def_name = method_def_name ,method_def_func = method_def_func))
 
         module_def_name = self.get_new_name(self._global_names, '{}_module'.format(expr.name))
         module_def = ('static struct PyModuleDef {module_def_name} = {{\n'
@@ -297,6 +317,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 'if (m == NULL) return NULL;\n\n'
                 'return m;\n}}'.format(mod_name=expr.name, module_def_name = module_def_name))
 
+        # Print imports last to be sure that all additional_imports have been collected
         imports  = [Import(s) for s in self._additional_imports]
         imports += [Import('Python.h')]
         imports  = '\n'.join(self._print(i) for i in imports)

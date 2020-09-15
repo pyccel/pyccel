@@ -126,10 +126,12 @@ class CCodePrinter(CodePrinter):
     def _print_ImaginaryUnit(self, expr):
         return '_Complex_I'
     def _print_Module(self, expr):
+        body    = '\n\n'.join(self._print(i) for i in expr.body)
+
+        # Print imports last to be sure that all additional_imports have been collected
         imports  = list(expr.imports)
         imports += [Import(s) for s in self._additional_imports]
         imports = ''.join(self._print(i) for i in imports)
-        body    = '\n\n'.join(self._print(i) for i in expr.body)
         return ('{imports}\n\n'
                 '{body}').format(
                         imports = imports,
@@ -492,11 +494,13 @@ class CCodePrinter(CodePrinter):
 
 
     def _print_Program(self, expr):
+        body     = '\n'.join(self._print(i) for i in expr.body.body)
+        decs     = '\n'.join(self._print(i) for i in expr.declarations)
+
+        # Print imports last to be sure that all additional_imports have been collected
         imports  = list(expr.imports)
         imports += [Import(s) for s in self._additional_imports]
         imports  = '\n'.join(self._print(i) for i in imports)
-        body     = '\n'.join(self._print(i) for i in expr.body.body)
-        decs     = '\n'.join(self._print(i) for i in expr.declarations)
 
         return ('{imports}\n'
                 'int main()\n{{\n'
