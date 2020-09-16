@@ -350,13 +350,13 @@ class CCodePrinter(CodePrinter):
             numpy.cos(x) ==> cos(x)
 
         """
-
+        self.includes.add('math.h')
         type_name = type(expr).__name__
         func_name = numpy_ufunc_to_c[type_name]
         args = []
         for arg in expr.args:
             if arg.dtype is not NativeReal:
-                args.append('(long double)(' + self._print(arg) + ')')
+                args.append('(double)(' + self._print(arg) + ')')
             else:
                 args.append(self._print(arg))
         code_args = ', '.join(args)
@@ -386,18 +386,20 @@ class CCodePrinter(CodePrinter):
         args = []
         for arg in expr.args:
             if arg.dtype is not NativeReal:
-                args.append('(long double)(' + self._print(arg) + ')')
+                args.append('(double)(' + self._print(arg) + ')')
             else:
                 args.append(self._print(arg))
         code_args = ', '.join(args)
         return '{0}({1})'.format(func_name, code_args)
 
     def _print_NumpySqrt(self, expr):
+        # add necessary include
+        self.includes.add('math.h')
         arg = expr.args[0]
         code_args = self._print(arg)
         if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
-            code_args = '(long double)({})'.format(code_args)
-        return 'sqrtl({})'.format(code_args)
+            code_args = '(double)({})'.format(code_args)
+        return 'sqrt({})'.format(code_args)
 
     def _print_MathSqrt(self, expr):
         # add necessary include
