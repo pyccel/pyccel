@@ -2927,10 +2927,10 @@ class Argument(Symbol, PyccelAstNode):
     n
     """
 
-    def __new__(cls, *args, *, kwonly=False, **assumptions):
-        return Symbol.__new__(cls, *args, **assumptions)
+    def __new__(cls, name, *, kwonly=False, **assumptions):
+        return Symbol.__new__(cls, name, **assumptions)
 
-    def __init__(self, *args, *, kwonly=False, **assumptions):
+    def __init__(self, name, *, kwonly=False, **assumptions):
         self._kwonly = kwonly
 
     @property
