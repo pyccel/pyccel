@@ -2948,7 +2948,7 @@ class ValuedArgument(Basic):
     n=4
     """
     def __new__(cls, *args, **kwargs):
-        return Basic.__new__(cls, *args)
+        return Basic.__new__(cls)
 
     def __init__(self, expr, value, *, kwonly = False):
         if isinstance(expr, str):
