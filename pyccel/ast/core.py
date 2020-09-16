@@ -2931,7 +2931,7 @@ class Argument(Symbol, PyccelAstNode):
         return Symbol.__new__(cls, *args, **assumptions)
 
     def __init__(self, *args, kwonly=False, **assumptions):
-        self._kwonly = kwargs.pop('kwonly', False)
+        self._kwonly = kwonly
 
     @property
     def is_kwonly(self):
