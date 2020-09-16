@@ -413,6 +413,15 @@ class CCodePrinter(CodePrinter):
             return '0'
 
     def _print_IsNot(self, expr):
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        a = expr.args[0]
+        b = expr.args[1]
+
+        if ((a.dtype is NativeBool() and b.dtype is NativeBool()) or
+            (a.dtype is NativeInteger() and b.dtype is NativeInteger())):
+            return '{} != {}'.format(lhs, rhs)
+
         if Nil() in expr.args:
             lhs = VariableAddress(expr.lhs) if isinstance(expr.lhs, Variable) else expr.lhs
             rhs = VariableAddress(expr.rhs) if isinstance(expr.rhs, Variable) else expr.rhs
@@ -422,7 +431,28 @@ class CCodePrinter(CodePrinter):
 
             return '{} != {}'.format(lhs, rhs)
         else:
-            raise NotImplementedError
+            raise NotImplementedError("Only booleans, integers and None are currently supported for comparison")
+
+    def _print_Is(self, expr):
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        a = expr.args[0]
+        b = expr.args[1]
+
+        if ((a.dtype is NativeBool() and b.dtype is NativeBool()) or
+            (a.dtype is NativeInteger() and b.dtype is NativeInteger())):
+            return '{} == {}'.format(lhs, rhs)
+
+        if Nil() in expr.args:
+            lhs = VariableAddress(expr.lhs) if isinstance(expr.lhs, Variable) else expr.lhs
+            rhs = VariableAddress(expr.rhs) if isinstance(expr.rhs, Variable) else expr.rhs
+
+            lhs = self._print(lhs)
+            rhs = self._print(rhs)
+
+            return '{} == {}'.format(lhs, rhs)
+        else:
+            raise NotImplementedError("Only booleans, integers and None are currently supported for comparison")
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
@@ -502,32 +532,6 @@ class CCodePrinter(CodePrinter):
 
     def _print_NewLine(self, expr):
         return '\n'
-
-    def _print_IsNot(self, expr):
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
-        a = expr.args[0]
-        b = expr.args[1]
-
-        if ((a.dtype is NativeBool() and b.dtype is NativeBool()) or
-            (a.dtype is NativeInteger() and b.dtype is NativeInteger())):
-            return '{} != {}'.format(lhs, rhs)
-
-        errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
-            severity='fatal')
-
-    def _print_Is(self, expr):
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
-        a = expr.args[0]
-        b = expr.args[1]
-
-        if ((a.dtype is NativeBool() and b.dtype is NativeBool()) or
-            (a.dtype is NativeInteger() and b.dtype is NativeInteger())):
-            return '{} == {}'.format(lhs, rhs)
-
-        errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
-            severity='fatal')
 
     def _print_Program(self, expr):
         body     = '\n'.join(self._print(i) for i in expr.body.body)
