@@ -1818,11 +1818,11 @@ class Module(Basic):
     variables: list
         list of the variables that appear in the block.
 
-    declarations: list
-        list of declarations of the variables that appear in the block.
-
     funcs: list
         a list of FunctionDef instances
+
+    interfaces: list
+        a list of Interface instances
 
     classes: list
         a list of ClassDef instances
@@ -1847,8 +1847,8 @@ class Module(Basic):
     >>> Point = ClassDef('Point', attributs, methods)
     >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
     >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
-    >>> Module('my_module', [], [incr, decr], [Point])
-    Module(my_module, [], [FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function), FunctionDef(decr, (x,), (y,), [y := -1 + x], [], [], None, False, function)], [ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])])
+    >>> Module('my_module', [], [incr, decr], classes = [Point])
+    Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
     """
 
     def __new__(
