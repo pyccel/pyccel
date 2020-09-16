@@ -86,13 +86,25 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_PyArgParseType(self, used_names, variable):
         """
-        Responsible of collecting the python variable into which the result will be collected and the needed cast function
+        Responsible for creating any necessary intermediate variables which are used
+        to collect the result of PyArgParse, and collecting the required cast function
 
         Parameters:
         ----------
         used_names : list of strings
-            List of variable and function names
-        variable : variable
+            List of variable and function names to avoid name collisions
+
+        variable : Variable
+            The variable which will be passed to the translated function
+
+        Returns
+        -------
+        collect_var : Variable
+            The variable which will be used to collect the argument
+
+        cast_func_stmts : list
+            A list of statements to be carried out after parsing the arguments.
+            These handle casting collect_var to variable if necessary
         """
 
         if variable.dtype is NativeBool():
@@ -119,13 +131,25 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_PyBuildValue(self, used_names, variable):
         """
-        Responsible of collecting the python into needed to build the result and the needed cast function
+        Responsible for collecting the variable required to build the result
+        and the necessary cast function
 
         Parameters:
         ----------
         used_names : list of strings
-            List of variable and function names
-        variable : variable
+            List of variable and function names to avoid name collisions
+
+        variable : Variable
+            The variable returned by the translated function
+
+        Returns
+        -------
+        collect_var : Variable
+            The variable which will be provided to PyBuild
+
+        cast_func_stmts : list
+            A list of statements to be carried out before building the return tuple.
+            These handle casting variable to collect_var if necessary
         """
 
         if variable.dtype is NativeBool():
