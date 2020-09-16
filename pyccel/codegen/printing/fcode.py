@@ -1998,9 +1998,6 @@ class FCodePrinter(CodePrinter):
         b = expr.args[1]
 
         if isinstance(expr.rhs, Nil):
-            if isinstance(expr.lhs, Nil):
-                errors.report(PYCCEL_RESTRICTION_NONE, symbol=expr,
-                    severity='fatal')
             return '.not. present({})'.format(lhs)
 
         if (a.dtype is NativeBool() and b.dtype is NativeBool()):
@@ -2018,9 +2015,6 @@ class FCodePrinter(CodePrinter):
         b = expr.args[1]
 
         if isinstance(expr.rhs, Nil):
-            if isinstance(expr.lhs, Nil):
-                errors.report(PYCCEL_RESTRICTION_NONE, symbol=expr,
-                    severity='fatal')
             return 'present({})'.format(lhs)
 
         if a.dtype is NativeBool() and b.dtype is NativeBool():
