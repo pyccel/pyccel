@@ -2989,6 +2989,13 @@ class ValuedArgument(Basic):
         return '{0}={1}'.format(argument, value)
 
 class VariableAddress(Basic, PyccelAstNode):
+
+    """Represents the address of a variable.
+    E.g. In C
+    VariableAddress(Variable('int','a'))                     is  &a
+    VariableAddress(Variable('int','a', is_pointer=True))    is   a
+    """
+
     def __init__(self, variable):
         if not isinstance(variable, Variable):
             raise TypeError('variable must be a variable')
