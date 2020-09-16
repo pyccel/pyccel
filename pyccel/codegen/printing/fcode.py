@@ -2009,8 +2009,7 @@ class FCodePrinter(CodePrinter):
         if (a.dtype is NativeInteger() and b.dtype is NativeInteger()):
             return '{} .eq. {}'.format(lhs, rhs)
 
-        errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
-            severity='fatal')
+        raise NotImplementedError("Only booleans, integers and None are currently supported for comparison")
 
     def _print_IsNot(self, expr):
         lhs = self._print(expr.lhs)
@@ -2030,8 +2029,7 @@ class FCodePrinter(CodePrinter):
         if (a.dtype is NativeInteger() and b.dtype is NativeInteger()):
             return '{} .ne. {}'.format(lhs, rhs)
 
-        errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
-            severity='fatal')
+        raise NotImplementedError("Only booleans, integers and None are currently supported for comparison")
 
     def _print_If(self, expr):
         # ...
