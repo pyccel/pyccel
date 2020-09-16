@@ -597,7 +597,7 @@ def subs(expr, new_elements):
 
 def allocatable_like(expr, verbose=False):
     """
-    finds attributs of an expression
+    finds attributes of an expression
 
     Parameters
     ----------
@@ -1842,9 +1842,9 @@ class Module(Basic):
     >>> b = Variable('real', 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
-    >>> attributs   = [x,y]
+    >>> attributes   = [x,y]
     >>> methods     = [translate]
-    >>> Point = ClassDef('Point', attributs, methods)
+    >>> Point = ClassDef('Point', attributes, methods)
     >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
     >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
     >>> Module('my_module', [], [incr, decr], classes = [Point])
@@ -3742,8 +3742,8 @@ class ClassDef(Basic):
     name : str
         The name of the class.
 
-    attributs: iterable
-        The attributs to the class.
+    attributes: iterable
+        The attributes to the class.
 
     methods: iterable
         Class methods
@@ -3769,9 +3769,9 @@ class ClassDef(Basic):
     >>> b = Variable('real', 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
-    >>> attributs   = [x,y]
+    >>> attributes   = [x,y]
     >>> methods     = [translate]
-    >>> ClassDef('Point', attributs, methods)
+    >>> ClassDef('Point', attributes, methods)
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
 
@@ -3793,10 +3793,10 @@ class ClassDef(Basic):
         elif not isinstance(name, Symbol):
             raise TypeError('Function name must be Symbol or string')
 
-        # attributs
+        # attributes
 
         if not iterable(attributes):
-            raise TypeError('attributs must be an iterable')
+            raise TypeError('attributes must be an iterable')
         attributes = Tuple(*attributes, sympify=False)
 
         # methods
@@ -3838,7 +3838,7 @@ class ClassDef(Basic):
 
             # constructs the __del__ method if not provided
          #   args = []
-         #   for a in attributs:
+         #   for a in attributes:
          #       if isinstance(a, Variable):
          #           if a.allocatable:
          #              args.append(a)
@@ -3908,7 +3908,7 @@ class ClassDef(Basic):
 
     @property
     def attributes_as_dict(self):
-        """Returns a dictionary that contains all attributs, where the key is the
+        """Returns a dictionary that contains all attributes, where the key is the
         attribut's name."""
 
         d_attributes = {}
