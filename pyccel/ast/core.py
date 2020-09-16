@@ -2309,7 +2309,7 @@ class Variable(Symbol, PyccelAstNode):
 
     name : str, list, DottedName
         The sympy object the variable represents. This can be either a string
-        or a dotted name, when using a Class attribut.
+        or a dotted name, when using a Class attribute.
 
     rank : int
         used for arrays. [Default value: 0]
@@ -3915,7 +3915,7 @@ class ClassDef(Basic):
     @property
     def attributes_as_dict(self):
         """Returns a dictionary that contains all attributes, where the key is the
-        attribut's name."""
+        attribute's name."""
 
         d_attributes = {}
         for i in self.attributes:
@@ -3941,7 +3941,7 @@ class ClassDef(Basic):
             attributes[str(i.name)] = i
 
         if not attr in attributes:
-            raise ValueError('{0} is not an attribut of {1}'.format(attr,
+            raise ValueError('{0} is not an attribute of {1}'.format(attr,
                              str(self)))
 
         var = attributes[attr]
@@ -4248,7 +4248,7 @@ class Declare(Basic):
                 raise ValueError("intent must be one among {'in', 'out', 'inout'}")
 
         if not isinstance(static, bool):
-            raise TypeError('Expecting a boolean for static attribut')
+            raise TypeError('Expecting a boolean for static attribute')
 
         return Basic.__new__(
             cls,
