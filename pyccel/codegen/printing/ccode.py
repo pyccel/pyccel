@@ -5,9 +5,9 @@ from sympy.core import S
 from sympy.printing.precedence import precedence
 
 from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit
-from pyccel.ast.core import If
+from pyccel.ast.core import If, Nil
 from pyccel.ast.core import Assign, datatype, Variable, Import, FunctionCall
-from pyccel.ast.core import CommentBlock, Comment, SeparatorComment
+from pyccel.ast.core import CommentBlock, Comment, SeparatorComment, VariableAddress
 
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
@@ -412,6 +412,18 @@ class CCodePrinter(CodePrinter):
             return 'cimag({})'.format(self._print(expr.arg))
         else:
             return '0'
+
+    def _print_IsNot(self, expr):
+        if Nil() in expr.args:
+            lhs = VariableAddress(expr.lhs) if isinstance(expr.lhs, Variable) else expr.lhs
+            rhs = VariableAddress(expr.rhs) if isinstance(expr.rhs, Variable) else expr.rhs
+
+            lhs = self._print(lhs)
+            rhs = self._print(rhs)
+
+            return '{} != {}'.format(lhs, rhs)
+        else:
+            raise NotImplementedError
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
