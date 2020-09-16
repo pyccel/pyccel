@@ -2311,33 +2311,58 @@ class Variable(Symbol, PyccelAstNode):
     rank : int
         used for arrays. [Default value: 0]
 
-    allocatable: False
+    allocatable: bool
         used for arrays, if we need to allocate memory [Default value: False]
+
+    is_stack_array: bool
+        used for arrays, if memory should be allocated on the stack [Default value: False]
+
+    is_pointer: bool
+        if object is a pointer [Default value: False]
+
+    is_target: bool
+        if object is pointed to by another variable [Default value: False]
+
+    is_polymorphic: bool
+        if object can be instance of class or any inherited class [Default value: False]
+
+    is_optional: bool
+        if object is an optional argument of a function [Default value: False]
 
     shape: int or list
         shape of the array. [Default value: None]
 
     cls_base: class
-        class base if variable is an object or an object member
+        class base if variable is an object or an object member [Default value: None]
+
+    cls_parameters: list
+        [Default value: None]
+
+    order : str
+        used for arrays. Indicates whether the data is stored in C or Fortran format in memory [Default value: 'C']
+
+    precision : str
+        Precision of the data type [Default value: depends on the datatype]
+
+    is_argument: bool
+        if object is the argument of a function [Default value: False]
+
+    is_kwonly: bool
+        if object is an argument which can only by specified using its keyword
 
     Examples
     --------
-    >>> from sympy import symbols
     >>> from pyccel.ast.core import Variable
     >>> Variable('int', 'n')
     n
-    >>> Variable('real', x, rank=2, shape=(n,2), allocatable=True)
+    >>> n = 4
+    >>> Variable('real', 'x', rank=2, shape=(n,2), allocatable=True)
     x
-    >>> Variable('int', ('matrix', 'n_rows'))
+    >>> Variable('int', DottedName('matrix', 'n_rows'))
     matrix.n_rows
     """
 
-    def __new__(
-        cls,
-        dtype,
-        name,
-        **kwargs
-        ):
+    def __new__( cls, *args, **kwargs ):
         return Basic.__new__(cls)
 
     def __init__(
