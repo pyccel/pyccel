@@ -2335,9 +2335,6 @@ class Variable(Symbol, PyccelAstNode):
     cls_base: class
         class base if variable is an object or an object member [Default value: None]
 
-    cls_parameters: list
-        [Default value: None]
-
     order : str
         used for arrays. Indicates whether the data is stored in C or Fortran format in memory [Default value: 'C']
 
@@ -2379,7 +2376,6 @@ class Variable(Symbol, PyccelAstNode):
         is_optional=False,
         shape=None,
         cls_base=None,
-        cls_parameters=None,
         order='C',
         precision=0,
         is_argument=False,
@@ -2467,7 +2463,6 @@ class Variable(Symbol, PyccelAstNode):
         self._is_optional = is_optional
 
         self._cls_base       = cls_base
-        self._cls_parameters = cls_parameters
         self._order          = order
         self._is_argument    = is_argument
         self._is_kwonly      = is_kwonly
@@ -2511,10 +2506,6 @@ class Variable(Symbol, PyccelAstNode):
     @property
     def cls_base(self):
         return self._cls_base
-
-    @property
-    def cls_parameters(self):
-        return self._cls_parameters
 
     @property
     def is_pointer(self):
@@ -2599,7 +2590,6 @@ class Variable(Symbol, PyccelAstNode):
         print( '  allocatable    = {}'.format(self.allocatable))
         print( '  shape          = {}'.format(self.shape))
         print( '  cls_base       = {}'.format(self.cls_base))
-        print( '  cls_parameters = {}'.format(self.cls_parameters))
         print( '  is_pointer     = {}'.format(self.is_pointer))
         print( '  is_target      = {}'.format(self.is_target))
         print( '  is_polymorphic = {}'.format(self.is_polymorphic))
@@ -2626,7 +2616,6 @@ class Variable(Symbol, PyccelAstNode):
             is_polymorphic=kwargs.pop('is_polymorphic',self.is_polymorphic),
             is_optional=kwargs.pop('is_optional',self.is_optional),
             cls_base=kwargs.pop('cls_base',self.cls_base),
-            cls_parameters=kwargs.pop('cls_parameters',self.cls_parameters),
             )
 
     def __getnewargs__(self):
@@ -2642,7 +2631,6 @@ class Variable(Symbol, PyccelAstNode):
             self.is_optional,
             self.shape,
             self.cls_base,
-            self.cls_parameters,
             )
         return args
 
@@ -5304,7 +5292,6 @@ def get_iterable_ranges(it, var_name=None):
 
             return ranges
 
-        params = [str(i) for i in it.cls_parameters]
     elif isinstance(it, ConstructorCall):
         cls_base = it.this.cls_base
 
