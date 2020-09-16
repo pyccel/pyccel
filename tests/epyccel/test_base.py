@@ -12,45 +12,45 @@ def compare_epyccel(f, *args, language='fortran'):
     out2 = f2(*args)
     assert np.equal(out1, out2)
 
-def test_is_false():
-    compare_epyccel(base.is_false, True)
-    compare_epyccel(base.is_false, False)
+def test_is_false(language):
+    compare_epyccel(base.is_false, True, language=language)
+    compare_epyccel(base.is_false, False, language=language)
 
-def test_is_true():
-    compare_epyccel(base.is_true, True)
-    compare_epyccel(base.is_true, False)
+def test_is_true(language):
+    compare_epyccel(base.is_true, True, language=language)
+    compare_epyccel(base.is_true, False, language=language)
 
-def test_compare_is():
-    compare_epyccel(base.compare_is, True, True)
-    compare_epyccel(base.compare_is, True, False)
-    compare_epyccel(base.compare_is, False, True)
-    compare_epyccel(base.compare_is, False, False)
+def test_compare_is(language):
+    compare_epyccel(base.compare_is, True, True, language=language)
+    compare_epyccel(base.compare_is, True, False, language=language)
+    compare_epyccel(base.compare_is, False, True, language=language)
+    compare_epyccel(base.compare_is, False, False, language=language)
 
-def test_compare_is_not():
-    compare_epyccel(base.compare_is_not, True, True)
-    compare_epyccel(base.compare_is_not, True, False)
-    compare_epyccel(base.compare_is_not, False, True)
-    compare_epyccel(base.compare_is_not, False, False)
+def test_compare_is_not(language):
+    compare_epyccel(base.compare_is_not, True, True, language=language)
+    compare_epyccel(base.compare_is_not, True, False, language=language)
+    compare_epyccel(base.compare_is_not, False, True, language=language)
+    compare_epyccel(base.compare_is_not, False, False, language=language)
 
-def test_compare_is_int():
-    compare_epyccel(base.compare_is_int, True, 1)
-    compare_epyccel(base.compare_is_int, True, 0)
-    compare_epyccel(base.compare_is_int, False, 1)
-    compare_epyccel(base.compare_is_int, False, 0)
+def test_compare_is_int(language):
+    compare_epyccel(base.compare_is_int, True, 1, language=language)
+    compare_epyccel(base.compare_is_int, True, 0, language=language)
+    compare_epyccel(base.compare_is_int, False, 1, language=language)
+    compare_epyccel(base.compare_is_int, False, 0, language=language)
 
-def test_compare_is_not_int():
-    compare_epyccel(base.compare_is_not_int, True, 1)
-    compare_epyccel(base.compare_is_not_int, True, 0)
-    compare_epyccel(base.compare_is_not_int, False, 1)
-    compare_epyccel(base.compare_is_not_int, False, 0)
+def test_compare_is_not_int(language):
+    compare_epyccel(base.compare_is_not_int, True, 1, language=language)
+    compare_epyccel(base.compare_is_not_int, True, 0, language=language)
+    compare_epyccel(base.compare_is_not_int, False, 1, language=language)
+    compare_epyccel(base.compare_is_not_int, False, 0, language=language)
 
-def test_not_false():
-    compare_epyccel(base.not_false, True)
-    compare_epyccel(base.not_false, False)
+def test_not_false(language):
+    compare_epyccel(base.not_false, True, language=language)
+    compare_epyccel(base.not_false, False, language=language)
 
-def test_not_true():
-    compare_epyccel(base.not_true, True)
-    compare_epyccel(base.not_true, False)
+def test_not_true(language):
+    compare_epyccel(base.not_true, True, language=language)
+    compare_epyccel(base.not_true, False, language=language)
 
 def test_eq_false(language):
     compare_epyccel(base.eq_false, True, language=language)
@@ -87,13 +87,13 @@ def test_cast_int(language):
 def test_cast_bool(language):
     compare_epyccel(base.cast_bool, True, language=language)
 
-def test_compare_is_int_int():
-    compare_epyccel(base.compare_is_int_int, 2, 2)
-    compare_epyccel(base.compare_is_int_int, 1, 2)
+def test_compare_is_int_int(language):
+    compare_epyccel(base.compare_is_int_int, 2, 2, language=language)
+    compare_epyccel(base.compare_is_int_int, 1, 2, language=language)
 
-def test_compare_isnot_int_int():
-    compare_epyccel(base.compare_isnot_int_int, 2, 2)
-    compare_epyccel(base.compare_isnot_int_int, 1, 2)
+def test_compare_isnot_int_int(language):
+    compare_epyccel(base.compare_isnot_int_int, 2, 2, language=language)
+    compare_epyccel(base.compare_isnot_int_int, 1, 2, language=language)
 
 def test_cast_float(language):
     compare_epyccel(base.cast_float, 4.5, language=language)
