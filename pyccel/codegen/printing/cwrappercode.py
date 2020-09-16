@@ -10,7 +10,7 @@ from pyccel.ast.builtins import Bool
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, Symbol, Constant
 from pyccel.ast.core import create_incremented_string, Declare, SeparatorComment
-from pyccel.ast.core import IfTernaryOperator, VariableAddress, Import
+from pyccel.ast.core import IfTernaryOperator, VariableAddress, Import, IsNot
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
@@ -108,10 +108,11 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function_call('pycomplex_to_complex', collect_var)
-            body = [Assign(variable, cast_function)]
             if isinstance(variable, ValuedVariable):
-                # Decrement PyObject counter which was incremented by PyComplex_FromDoubles
-                body += [FunctionCall(Py_DECREF, [collect_var])]
+                body = [If((IsNot(collect_var, Nil()), [Assign(variable, cast_function)]),
+                           (BooleanTrue(),             [Assign(variable, variable.value)]))]
+            else:
+                body = [Assign(variable, cast_function)]
             return collect_var, body
 
         return variable, []
@@ -146,8 +147,8 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_default_assign(self, arg, func_arg):
         if isinstance(arg.dtype, (NativeReal, NativeInteger, NativeBool)):
             return Assign(arg, func_arg.value)
-        elif isinstance(arg.dtype, PyccelPyObject) and func_arg.dtype is NativeComplex():
-            return AliasAssign(arg, self.get_cast_function_call('complex_to_pycomplex', func_arg.value))
+        elif isinstance(arg.dtype, PyccelPyObject):
+            return AliasAssign(arg, Nil())
         else:
             raise NotImplementedError('Default values are not implemented for this datatype : {}'.format(func_arg.dtype))
 
