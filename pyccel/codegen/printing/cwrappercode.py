@@ -15,7 +15,7 @@ from pyccel.ast.core import IfTernaryOperator, VariableAddress, Import, IsNot
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
-from pyccel.ast.cwrapper import PyArgKeywords, Py_DECREF
+from pyccel.ast.cwrapper import PyArgKeywords
 from pyccel.ast.cwrapper import Py_True, Py_False
 from pyccel.ast.cwrapper import cast_function_registry
 

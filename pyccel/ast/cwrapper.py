@@ -32,7 +32,6 @@ __all__ = (
     'pycomplex_real',
     'pycomplex_imag',
     'pycomplex_fromdoubles',
-    'Py_DECREF',
 #------- CAST FUNCTIONS ------
     'pyint_to_bool',
     'bool_to_pyobj',
@@ -183,10 +182,6 @@ class PyBuildValueNode(Basic):
 #-------------------------------------------------------------------
 #                      Python.h functions
 #-------------------------------------------------------------------
-Py_DECREF = FunctionDef(name = 'Py_DECREF',
-                        body = [],
-                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                        results = [])
 
 # Python.h object  representing Booleans True and False
 Py_True = Variable(PyccelPyObject(), 'Py_True',is_pointer=True)
