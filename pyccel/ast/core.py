@@ -1851,15 +1851,7 @@ class Module(Basic):
     Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
     """
 
-    def __new__(
-        cls,
-        name,
-        variables,
-        funcs,
-        interfaces=[],
-        classes=[],
-        imports=[],
-        ):
+    def __new__(cls, *args, **kwargs):
         return Basic.__new__(cls)
 
     def __init__(
