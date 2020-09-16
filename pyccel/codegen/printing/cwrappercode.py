@@ -15,7 +15,7 @@ from pyccel.ast.core import IfTernaryOperator, VariableAddress, Import
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
-from pyccel.ast.cwrapper import PyArgKeywords
+from pyccel.ast.cwrapper import PyArgKeywords, Py_DECREF
 from pyccel.ast.cwrapper import Py_True, Py_False
 from pyccel.ast.cwrapper import cast_function_registry
 
@@ -100,16 +100,21 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var = Variable(dtype=collect_type, precision=4,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function_call('pyint_to_bool', collect_var)
-            return collect_var, Assign(variable, cast_function)
+            body = [Assign(variable, cast_function)]
+            return collect_var, body
 
         if variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function_call('pycomplex_to_complex', collect_var)
-            return collect_var, Assign(variable, cast_function)
+            body = [Assign(variable, cast_function)]
+            if isinstance(variable, ValuedVariable):
+                # Decrement PyObject counter which was incremented by PyComplex_FromDoubles
+                body += [FunctionCall(Py_DECREF, [collect_var])]
+            return collect_var, body
 
-        return variable, None
+        return variable, []
 
     def get_PyBuildValue(self, used_names, variable):
         """
@@ -210,7 +215,8 @@ class CWrapperCodePrinter(CCodePrinter):
         used_names.add(wrapper_name)
 
         # Collect local variables
-        wrapper_vars        = [a for a in expr.arguments] + [r for r in expr.results]
+        wrapper_vars        = {a.name : a for a in expr.arguments}
+        wrapper_vars.update({r.name : r for r in expr.results})
         python_func_args    = self.get_new_PyObject("args"  , used_names)
         python_func_kwargs  = self.get_new_PyObject("kwargs", used_names)
         python_func_selfarg = self.get_new_PyObject("self"  , used_names)
@@ -233,11 +239,10 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var, cast_func = self.get_PyArgParseType(used_names, a)
 
             # If the variable cannot be collected from PyArgParse directly
-            if cast_func is not None:
-                # Save intermediate variable
-                wrapper_vars.append(collect_var)
-                # Save cast to argument variable
-                wrapper_body_translations.append(cast_func)
+            wrapper_vars[collect_var.name] = collect_var
+
+            # Save cast to argument variable
+            wrapper_body_translations.extend(cast_func)
 
             parse_args.append(collect_var)
 
@@ -265,7 +270,7 @@ class CWrapperCodePrinter(CCodePrinter):
         for a in expr.results :
             collect_var, cast_func = self.get_PyBuildValue(used_names, a)
             if cast_func is not None:
-                wrapper_vars.append(collect_var)
+                wrapper_vars[collect_var.name] = collect_var
                 wrapper_body.append(cast_func)
 
             res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
@@ -279,7 +284,7 @@ class CWrapperCodePrinter(CCodePrinter):
             arguments = wrapper_args,
             results = wrapper_results,
             body = wrapper_body,
-            local_vars = wrapper_vars)
+            local_vars = wrapper_vars.values())
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
