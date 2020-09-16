@@ -1815,6 +1815,9 @@ class Module(Basic):
 
     Parameters
     ----------
+    name: str
+        name of the module
+
     variables: list
         list of the variables that appear in the block.
 
@@ -2345,7 +2348,7 @@ class Variable(Symbol, PyccelAstNode):
         if object is the argument of a function [Default value: False]
 
     is_kwonly: bool
-        if object is an argument which can only by specified using its keyword
+        if object is an argument which can only be specified using its keyword
 
     Examples
     --------
@@ -2924,11 +2927,10 @@ class Argument(Symbol, PyccelAstNode):
     n
     """
 
-    def __new__(cls, *args, **kwargs):
-        kwargs.pop('kwonly', False)
-        return Symbol.__new__(cls, *args, **kwargs)
+    def __new__(cls, *args, kwonly=False, **assumptions):
+        return Symbol.__new__(cls, *args, **assumptions)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, kwonly=False, **assumptions):
         self._kwonly = kwargs.pop('kwonly', False)
 
     @property
