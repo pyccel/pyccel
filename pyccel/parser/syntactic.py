@@ -377,8 +377,9 @@ class SyntaxParser(BasicParser):
             n_expl = len(stmt.args)-len(stmt.defaults)
             arguments += [Argument(a.arg) for a in stmt.args[:n_expl]]
             arguments += [ValuedArgument(Argument(a.arg),self._visit(d)) for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
-        elif stmt.kwonlyargs:
-            arguments += [ValuedArgument(Argument(a.arg),self._visit(d)) for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults)]
+        if stmt.kwonlyargs:
+            arguments += [ValuedArgument(Argument(a.arg),self._visit(d), kwonly=True) if d is not None
+                        else Argument(a.arg, kwonly=True) for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults)]
 
         return arguments
 

@@ -46,6 +46,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
+    def _print_VariableAddress(self, expr):
+        return self._print(expr.variable)
+
     def _print_Idx(self, expr):
         return self._print(expr.name)
 
