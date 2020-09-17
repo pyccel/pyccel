@@ -667,7 +667,7 @@ class SyntaxParser(BasicParser):
                 if (len(arguments) < args_number):
                     errors.report(msg, symbol=arguments, bounding_box=(stmt.lineno, stmt.col_offset), severity='warning')
                 else:
-                    errors.report(msg, symbol=arguments, bounding_box=(stmt.lineno, stmt.col_offset), severity='fatal')
+                    errors.report(msg, symbol=arguments, bounding_box=(stmt.lineno, stmt.col_offset), severity='error')
 
             txt  = '#$ header ' + name
             txt += '(' + ','.join(types) + ')'
