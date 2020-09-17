@@ -628,10 +628,13 @@ class SyntaxParser(BasicParser):
             i = 0
             ls = decorators['types'].args
             args_number = 0
+            for x in ls:
+                tmp = str(x)
+                if "results=" not in tmp:
+                    tmp = tmp.strip().replace(":,", "")
+                    args_number += len(tmp.split(','))
             while i<len(ls) :
                 arg = ls[i]
-                tmp = str(arg).strip().replace(":,", "")
-                args_number += len(tmp.split(','))
                 if isinstance(arg, Symbol):
                     arg = arg.name
                     container.append(arg)
