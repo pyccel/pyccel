@@ -35,6 +35,7 @@ from pyccel.ast.core import Subroutine
 from pyccel.ast.core import ErrorExit
 from pyccel.ast.core import Product
 from pyccel.ast.core import (Assign, AliasAssign, Variable,
+                             VariableAddress,
                              TupleVariable, Declare,
                              IndexedVariable, CodeBlock,
                              IndexedElement, Slice, Dlist,
@@ -501,15 +502,18 @@ class FCodePrinter(CodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
+    def _print_ValuedVariable(self, expr):
+        if expr.is_argument:
+            return self._print_Variable(expr)
+        else:
+            return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
+
+    def _print_VariableAddress(self, expr):
+        return self._print(expr.variable)
+
     def _print_Constant(self, expr):
         val = Float(expr.value)
         return self._print(val)
-
-    def _print_ValuedArgument(self, expr):
-        name = self._print(expr.name)
-        value = self._print(expr.value)
-        code = '{0}={1}'.format(name, value)
-        return code
 
     def _print_DottedVariable(self, expr):
         if isinstance(expr.args[1], Function):
@@ -965,6 +969,8 @@ class FCodePrinter(CodePrinter):
         code = ''
         lhs = expr.lhs
         rhs = expr.rhs
+        if isinstance(rhs, VariableAddress):
+            rhs = rhs.variable
 
         if isinstance(lhs, TupleVariable) and not lhs.is_homogeneous:
             if isinstance(rhs, TupleVariable):
@@ -986,6 +992,7 @@ class FCodePrinter(CodePrinter):
             shape_code = ', '.join('0:' for i in range(lhs.rank))
             shape_code = '({s_c})'.format(s_c = shape_code)
 
+        print(expr.rhs, self._print(expr.rhs))
 
         code += '{lhs}{s_c} {op} {rhs}'.format(lhs=self._print(expr.lhs),
                                           s_c = shape_code,
@@ -2391,16 +2398,11 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
-        args = expr.arguments
+        args = [a for a in expr.arguments if not isinstance(a, Nil)]
         results = func.results
 
         if len(results) == 1:
-            if not func.is_header:
-                #this is a hack add variable names in header files
-                args = ['{}={}'.format(self._print(b),self._print(a))
-                                for a,b in zip(args, func.arguments) if not isinstance(a, Nil)]
-            else:
-                args = ['{}'.format(self._print(a)) for a in args]
+            args = ['{}'.format(self._print(a)) for a in args]
 
             args = ', '.join(args)
             code = '{name}({args})'.format( name = str(func.name),
@@ -2426,12 +2428,10 @@ class FCodePrinter(CodePrinter):
             self._additional_code = self._additional_code + self._print(Assign(Tuple(*out_vars),expr)) + '\n'
             return self._print(Tuple(*out_vars))
         else:
+            args    = ['{}'.format(self._print(a)) for a in args]
             if not func.is_header:
-                args    = ['{}={}'.format(self._print(b),self._print(a)) 
-                                for a,b in zip(args, func.arguments) if not isinstance(a, Nil)]
                 results = ['{0}={0}'.format(self._print(a)) for a in results]
             else:
-                args    = ['{}'.format(self._print(a)) for a in args]
                 results = ['{}'.format(self._print(a)) for a in results]
 
             newargs = ', '.join(args+results)
@@ -2564,11 +2564,13 @@ class FCodePrinter(CodePrinter):
         return new_code
 
 
-def fcode(expr, parser=None, assign_to=None, **settings):
+def fcode(expr, parser, assign_to=None, **settings):
     """Converts an expr to a string of Fortran code
 
     expr : Expr
-        A sympy expression to be converted.
+        A pyccel expression to be converted.
+    parser : Parser
+        The parser used to collect the expression
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned. Can be a string, ``Symbol``,
