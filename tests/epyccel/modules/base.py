@@ -157,3 +157,16 @@ def if_0_real(a):
         return True
     else:
         return False
+
+
+@types('int','float')
+def is_types(x,y):
+    if x is y:
+        return True
+    return False
+
+@types('int','float')
+def isnot_types(x,y):
+    if x is not y:
+        return True
+    return False
