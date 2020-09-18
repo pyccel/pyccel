@@ -2707,6 +2707,12 @@ class SemanticParser(BasicParser):
                         severity='error', blocker=self.blocking)
             return IsClass(var1, expr.rhs)
 
+        if (var1.dtype != var2.dtype):
+            if IsClass == Is:
+                return BooleanFalse()
+            elif IsClass == IsNot:
+                return BooleanTrue()
+
         if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
             (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
             return IsClass(var1, var2)
