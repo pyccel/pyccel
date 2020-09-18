@@ -112,3 +112,9 @@ def test_is_types(language):
 
 def test_isnot_types(language):
     compare_epyccel(base.isnot_types, 1, 1.0, language=language)
+
+def test_none_is_none(language):
+    compare_epyccel(base.none_is_none, language=language)
+
+def test_none_isnot_none(language):
+    compare_epyccel(base.none_isnot_none, language=language)

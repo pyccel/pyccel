@@ -170,3 +170,13 @@ def isnot_types(x,y):
     if x is not y:
         return True
     return False
+
+def none_is_none():
+    if None is None:
+        return True
+    return False
+
+def none_isnot_none():
+    if None is not None:
+        return True
+    return False
