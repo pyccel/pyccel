@@ -2699,8 +2699,10 @@ class SemanticParser(BasicParser):
 
         if isinstance(var2, Nil):
             if isinstance(var1, Nil):
-                errors.report(PYCCEL_RESTRICTION_NONE, symbol=expr,
-                    severity='fatal')
+                if IsClass == IsNot:
+                    return BooleanFalse()
+                elif IsClass == Is:
+                    return BooleanTrue()
             if not var1.is_optional:
                 errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
