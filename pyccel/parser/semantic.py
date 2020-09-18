@@ -2715,7 +2715,7 @@ class SemanticParser(BasicParser):
             (var2.is_integer or isinstance(var2.dtype, NativeInteger))):
             return IsClass(var1, var2)
 
-        errors.report(PYCCEL_RESTRICTION_IS_RHS,
+        errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='error', blocker=self.blocking)
         return IsClass(var1, var2)
