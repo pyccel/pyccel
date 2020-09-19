@@ -44,17 +44,11 @@ def compare_is_not_int(a, b):
 
 @types('int', 'int')
 def compare_is_int_int(a, b):
-    c = False
-    if a is b:
-        c = True
-    return c
+    return a is b
 
 @types('int', 'int')
 def compare_isnot_int_int(a, b):
-    c = False
-    if a is not b:
-        c = True
-    return c
+    return a is not b
 
 @types('bool')
 def not_false(a):
@@ -158,25 +152,16 @@ def if_0_real(a):
     else:
         return False
 
-
 @types('int','float')
 def is_types(x,y):
-    if x is y:
-        return True
-    return False
+    return x is y
 
 @types('int','float')
 def isnot_types(x,y):
-    if x is not y:
-        return True
-    return False
+    return x is not y
 
 def none_is_none():
-    if None is None:
-        return True
-    return False
+    return None is None
 
 def none_isnot_none():
-    if None is not None:
-        return True
-    return False
+    return None is not None
