@@ -241,7 +241,7 @@ class PyccelBitOperator(Expr, PyccelAstNode):
         if self.stage == 'syntactic':
             self._args = handle_precedence(args, self.precedence)
             return
-        
+
         integers = [a for a in args if a.dtype is NativeInteger() or ad.dtype is NativeBool]
         if integers:
             self._precision = max(a.precision for a in integers)
