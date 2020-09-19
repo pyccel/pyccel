@@ -431,7 +431,8 @@ class CCodePrinter(CodePrinter):
 
             return '{} != {}'.format(lhs, rhs)
         else:
-            raise NotImplementedError("Only booleans, integers and None are currently supported for comparison")
+            errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
+                          symbol=expr, severity='fatal')
 
     def _print_Is(self, expr):
         lhs = self._print(expr.lhs)
@@ -452,7 +453,8 @@ class CCodePrinter(CodePrinter):
 
             return '{} == {}'.format(lhs, rhs)
         else:
-            raise NotImplementedError("Only booleans, integers and None are currently supported for comparison")
+            errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
+                          symbol=expr, severity='fatal')
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
