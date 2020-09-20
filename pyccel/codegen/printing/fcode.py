@@ -2116,35 +2116,41 @@ class FCodePrinter(CodePrinter):
         args = [self._print(a) for a in expr.args]
         code = args[0]
         for c in args[1:]:
-            code = 'RSHIFT({},{})'.format(code, c)
+            code = 'RSHIFT({}, {})'.format(code, c)
         return code
 
     def _print_PyccelLShift(self, expr):
         args = [self._print(a) for a in expr.args]
         code = args[0]
         for c in args[1:]:
-            code = 'LSHIFT({},{})'.format(code, c)
+            code = 'LSHIFT({}, {})'.format(code, c)
         return code
 
     def _print_PyccelBitXor(self, expr):
+        if (all(a.dtype is NativeBool() for a in expr.args)):
+            return ' .neqv. '.join(self._print(a) for a in expr.args)
         args = [self._print(a) for a in expr.args]
         code = args[0]
         for c in args[1:]:
-            code = 'IEOR({},{})'.format(code, c)
+            code = 'IEOR({}, {})'.format(code, c)
         return code
 
     def _print_PyccelBitOr(self, expr):
+        if (all(a.dtype is NativeBool() for a in expr.args)):
+            return ' .or. '.join(self._print(a) for a in expr.args)
         args = [self._print(a) for a in expr.args]
         code = args[0]
         for c in args[1:]:
-            code = 'IOR({},{})'.format(code, c)
+            code = 'IOR({}, {})'.format(code, c)
         return code
 
     def _print_PyccelBitAnd(self, expr):
+        if (all(a.dtype is NativeBool() for a in expr.args)):
+            return ' .and. '.join(self._print(a) for a in expr.args)
         args = [self._print(a) for a in expr.args]
         code = args[0]
         for c in args[1:]:
-            code = 'IAND({},{})'.format(code, c)
+            code = 'IAND({}, {})'.format(code, c)
         return code
 
     def _print_PyccelInvert(self, expr):
