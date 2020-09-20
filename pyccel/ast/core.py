@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import importlib
-
 from collections.abc import Iterable
 from collections     import OrderedDict
 
@@ -45,6 +44,8 @@ from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
 from pyccel.errors.errors import Errors
+
+from pyccel.ast.builtins import Int
 
 errors = Errors()
 
@@ -232,40 +233,100 @@ def handle_precedence(args, my_precedence):
 
     return args
 
+def bool2int(a):
+    if a.dtype is not NativeInteger():
+        return Int(a)
+    else:
+        return a 
+
 class PyccelBitOperator(Expr, PyccelAstNode):
     _rank = 0
     _shape = ()
-    _dtype = NativeInteger()
 
-    def __init__(self, *args):
+    def __init__(self, args):
         if self.stage == 'syntactic':
             self._args = handle_precedence(args, self.precedence)
             return
 
-        integers = [a for a in args if a.dtype is NativeInteger() or ad.dtype is NativeBool]
-        if integers:
-            self._precision = max(a.precision for a in integers)
+        max_precision = 0
+        for a in args:
+            if a.dtype is NativeInteger() or a.dtype is NativeBool():
+                max_precision = max(a.precision, max_precision)
+            else:
+                raise TypeError('unsupported operand type(s): {}'.format(self))
+        self._precision = max_precision
     @property
     def precedence(self):
         return self._precedence
 
 class PyccelRShift(PyccelBitOperator):
     _precedence = 11
+    _dtype = NativeInteger()
+    def __init__(self, *args):
+        super(PyccelRShift, self).__init__(args)
+        if self.stage == 'syntactic':
+            return
+        self._args = [bool2int(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelLShift(PyccelBitOperator):
     _precedence = 11
+    _dtype = NativeInteger()
+    def __init__(self, *args):
+        super(PyccelLShift, self).__init__(args)
+        if self.stage == 'syntactic':
+            return
+        self._args = [bool2int(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelBitXor(PyccelBitOperator):
     _precedence = 9
+    def __init__(self, *args):
+        super(PyccelBitXor, self).__init__(args)
+        if self.stage == 'syntactic':
+            return
+        if all(a.dtype is NativeInteger() for a in args):
+            self._dtype = NativeInteger()
+        elif all(a.dtype is NativeBool() for a in args):
+            self._dtype = NativeBool()
+        else:
+            self._dtype = NativeInteger()
+            self._args = [bool2int(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelBitOr(PyccelBitOperator):
     _precedence = 8
+    def __init__(self, *args):
+        super(PyccelBitOr, self).__init__(args)
+        if self.stage == 'syntactic':
+            return
+        if all(a.dtype is NativeInteger() for a in args):
+            self._dtype = NativeInteger()
+        elif all(a.dtype is NativeBool() for a in args):
+            self._dtype = NativeBool()
+        else:
+            self._dtype = NativeInteger()
+            self._args = [bool2int(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelBitAnd(PyccelBitOperator):
     _precedence = 10
+    def __init__(self, *args):
+        super(PyccelBitAnd, self).__init__(args)
+        if self.stage == 'syntactic':
+            return
+        if all(a.dtype is NativeInteger() for a in args):
+            self._dtype = NativeInteger()
+        elif all(a.dtype is NativeBool() for a in args):
+            self._dtype = NativeBool()
+        else:
+            self._dtype = NativeInteger()
+            self._args = [bool2int(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelInvert(PyccelBitOperator):
     _precedence = 14
+    _dtype = NativeInteger()
+    def __init__(self, *args):
+        super(PyccelInvert, self).__init__(args)
+        if self.stage == 'syntactic':
+            return
+        self._args = [bool2int(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelOperator(Expr, PyccelAstNode):
 
