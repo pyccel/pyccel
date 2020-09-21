@@ -66,7 +66,7 @@ numpy_ufunc_to_c = {
     # ---
     'NumpyExp' : 'exp',
     'NumpyLog' : 'log',
-    # 'NumpySqrt': 'Sqrt',  # sqrt is printed using _Print_NumpySqrt
+    'NumpySqrt': 'sqrt',  # sqrt is printed using _Print_NumpySqrt
     # ---
     'NumpySin'    : 'sin',
     'NumpyCos'    : 'cos',
@@ -309,9 +309,9 @@ class CCodePrinter(CodePrinter):
         return '!{}'.format(a)
 
     def _print_Import(self, expr):
-        return '#include "{0}"'.format(expr.source)
+        return '#include <{0}>'.format(expr.source)
 
-    def find_in_dtype_registry(self, dtype, prec):
+    def find_in_dtype_registry(self, dtype, prec, expr):
         try :
             return dtype_registry[(dtype, prec)]
         except KeyError:
@@ -321,7 +321,7 @@ class CCodePrinter(CodePrinter):
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         rank  = expr.rank
-        dtype = self.find_in_dtype_registry(dtype,prec)
+        dtype = self.find_in_dtype_registry(dtype, prec, expr)
 
         if rank > 0 or expr.is_pointer:
             return '{0} *'.format(dtype)
@@ -425,22 +425,14 @@ class CCodePrinter(CodePrinter):
         code_args = ', '.join(args)
         return '{0}({1})'.format(func_name, code_args)
 
-    def _print_NumpySqrt(self, expr):
+
+    def _print_MathSqrt(self, expr):
         # add necessary include
         arg = expr.args[0]
         code_args = self._print(arg)
         if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
             code_args = '(double)({})'.format(code_args)
         return 'sqrt({})'.format(code_args)
-
-    def _print_MathSqrt(self, expr):
-        # add necessary include
-        self.includes.add('math.h')
-        arg = expr.args[0]
-        code_args = self._print(arg)
-        if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
-            code_args = '(long double)({})'.format(code_args)
-        return 'sqrtl({})'.format(code_args)
 
     def _print_FunctionDef(self, expr):
 
