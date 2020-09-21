@@ -311,7 +311,7 @@ class CCodePrinter(CodePrinter):
     def _print_Import(self, expr):
         return '#include <{0}>'.format(expr.source)
 
-    def find_in_dtype_registry(self, dtype, prec, expr):
+    def find_in_dtype_registry(self, dtype, prec):
         try :
             return dtype_registry[(dtype, prec)]
         except KeyError:
@@ -321,7 +321,7 @@ class CCodePrinter(CodePrinter):
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         rank  = expr.rank
-        dtype = self.find_in_dtype_registry(dtype, prec, expr)
+        dtype = self.find_in_dtype_registry(dtype, prec)
 
         if rank > 0 or expr.is_pointer:
             return '{0} *'.format(dtype)
