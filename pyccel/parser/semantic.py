@@ -1431,7 +1431,7 @@ class SemanticParser(BasicParser):
                             symbol = '|{name}| <module> -> {rhs}'.format(name=name, rhs=rhs),
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
-                elif str(dtype) != str(getattr(var, 'dtype', 'None')):
+                elif not is_augassign and str(dtype) != str(getattr(var, 'dtype', 'None')):
                     txt = '|{name}| {old} <-> {new}'
                     txt = txt.format(name=name, old=var.dtype, new=dtype)
 
