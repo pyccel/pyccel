@@ -47,7 +47,14 @@ def test_left_shift_b_b(language, a, b):
     assert f1(a, b) == f2(a, b)
     assert(type(f1(a, b)) == type(f2(a, b))) # pylint: disable=unidiomatic-typecheck
 
-@pytest.mark.parametrize("language",['c',pytest.param('fortran', marks = pytest.mark.xfail(reason="problem in wrapping"))])
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="problem in wrapping issue #370"),
+            pytest.mark.fortran]
+        )
+    ]
+)
 def test_bit_xor_b_b(language):
     f1 = bitwise.bit_xor_b_b
     f2 = epyccel( f1, language = language, verbose = True )
@@ -88,7 +95,14 @@ def test_bit_or_i_i(language, a, b):
     assert f1(a, b) == f2(a, b)
     assert(type(f1(a, b)) == type(f2(a, b))) # pylint: disable=unidiomatic-typecheck
 
-@pytest.mark.parametrize("language",['c',pytest.param('fortran', marks = pytest.mark.xfail(reason="problem in wrapping"))])
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="problem in wrapping issue #370"),
+            pytest.mark.fortran]
+        )
+   ]
+)
 def test_bit_or_b_b(language):
     f1 = bitwise.bit_or_b_b
     f2 = epyccel( f1, language = language, verbose = True )
@@ -109,7 +123,15 @@ def test_bit_and_i_i(language, a, b):
     assert f1(a, b) == f2(a, b)
     assert(type(f1(a, b)) == type(f2(a, b))) # pylint: disable=unidiomatic-typecheck
 
-@pytest.mark.parametrize("language",['c',pytest.param('fortran', marks = pytest.mark.xfail(reason="problem in wrapping"))])
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="problem in wrapping issue #370"),
+            pytest.mark.fortran]
+        )
+    ]
+)
 def test_bit_and_b_b(language):
     f1 = bitwise.bit_and_b_b
     f2 = epyccel( f1, language = language, verbose = True )
