@@ -28,6 +28,20 @@ def compare_is_not(a, b):
         c = True
     return c
 
+@types('bool', 'int')
+def compare_is_int(a, b):
+    c = False
+    if a is bool(b):
+        c = True
+    return c
+
+@types('bool', 'int')
+def compare_is_not_int(a, b):
+    c = False
+    if a is not bool(b):
+        c = True
+    return c
+
 @types('bool')
 def not_false(a):
     c = False
@@ -93,10 +107,39 @@ def is_not_nil(a):
 
 @types('int')
 def cast_int(a):
-    b = bool(a)
+    b = int(a)
     return b
 
 @types('bool')
 def cast_bool(a):
     b = bool(a)
     return b
+
+@types('float')
+def cast_float(a):
+    b = float(a)
+    return b
+
+@types('float')
+def cast_float_to_int(a):
+    b = int(a)
+    return b
+
+@types('int')
+def cast_int_to_float(a):
+    b = float(a)
+    return b
+
+@types('int')
+def if_0_int(a):
+    if a:
+        return True
+    else:
+        return False
+
+@types('real')
+def if_0_real(a):
+    if a:
+        return True
+    else:
+        return False

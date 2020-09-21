@@ -106,13 +106,6 @@ class SyntaxParser(BasicParser):
             # we don't use is_valid_filename_py since it uses absolute path
             # file extension
 
-            ext = inputs.split(""".""")[-1]
-            if not ext in ['py', 'pyh']:
-                errors = Errors()
-                errors.report(INVALID_FILE_EXTENSION, symbol=ext,
-                              severity='fatal')
-                errors.check()
-
             code = read_file(inputs)
             self._filename = inputs
 
@@ -384,8 +377,9 @@ class SyntaxParser(BasicParser):
             n_expl = len(stmt.args)-len(stmt.defaults)
             arguments += [Argument(a.arg) for a in stmt.args[:n_expl]]
             arguments += [ValuedArgument(Argument(a.arg),self._visit(d)) for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
-        elif stmt.kwonlyargs:
-            arguments += [ValuedArgument(Argument(a.arg),self._visit(d)) for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults)]
+        if stmt.kwonlyargs:
+            arguments += [ValuedArgument(Argument(a.arg),self._visit(d), kwonly=True) if d is not None
+                        else Argument(a.arg, kwonly=True) for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults)]
 
         return arguments
 

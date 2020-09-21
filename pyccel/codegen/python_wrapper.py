@@ -5,11 +5,17 @@ import subprocess
 import os
 import glob
 
-from pyccel.ast.f2py                import as_static_function_call
-from pyccel.ast.core                import SeparatorComment
-from pyccel.codegen.printing.fcode  import fcode
+from pyccel.ast.f2py                        import as_static_function_call
+from pyccel.ast.core                        import SeparatorComment
+from pyccel.codegen.printing.fcode          import fcode
+from pyccel.codegen.printing.cwrappercode   import cwrappercode
 from .utilities import language_extension
-from .cwrapper import create_c_wrapper, create_c_setup
+from .cwrapper import create_c_setup
+
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import *
+
+errors = Errors()
 
 __all__ = ['compile_f2py', 'create_shared_library']
 
@@ -167,7 +173,12 @@ def create_shared_library(codegen,
     sharedlib_folder = ''
 
     if language == 'c':
-        wrapper_code = create_c_wrapper(sharedlib_modname, codegen)
+        module_old_name = codegen.expr.name
+        codegen.expr.set_name(sharedlib_modname)
+        wrapper_code = cwrappercode(codegen.expr, codegen.parser)
+        codegen.expr.set_name(module_old_name)
+        errors.check()
+        errors.reset()
         wrapper_filename_root = '{}_wrapper'.format(module_name)
         wrapper_filename = '{}.c'.format(wrapper_filename_root)
 
@@ -189,7 +200,8 @@ def create_shared_library(codegen,
             print(out)
         if len(err)>0:
             print(err)
-            raise RuntimeError("Failed to build module")
+            if p.returncode != 0:
+                raise RuntimeError("Failed to build module")
 
         sharedlib_folder += 'build/lib*/'
 

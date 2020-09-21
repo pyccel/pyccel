@@ -5,7 +5,6 @@ from collections import OrderedDict
 import traceback
 
 from sympy.core.function       import Application, UndefinedFunction
-from sympy.core.numbers        import ImaginaryUnit
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
@@ -898,9 +897,9 @@ class SemanticParser(BasicParser):
                     dtype = var.dtype
 
             return IndexedVariable(var, dtype=dtype,
-                   shape=shape,prec=prec,order=order,rank=rank).__getitem__(*args)
+                   shape=shape,prec=prec,order=order,rank=rank)[args]
         else:
-            return IndexedVariable(name, dtype=dtype).__getitem__(args)
+            return IndexedVariable(name, dtype=dtype)[args]
 
     def _visit_IndexedBase(self, expr, **settings):
         return self._visit(expr.label)
@@ -1769,8 +1768,8 @@ class SemanticParser(BasicParser):
                     new_rhs = []
                     for i,l in enumerate(lhs):
                         new_lhs.append( self._assign_lhs_variable(l, d_var.copy(),
-                            indexed_rhs.__getitem__(i), new_expressions, isinstance(expr, AugAssign), **settings) )
-                        new_rhs.append(indexed_rhs.__getitem__(i))
+                            indexed_rhs[i], new_expressions, isinstance(expr, AugAssign), **settings) )
+                        new_rhs.append(indexed_rhs[i])
                     rhs = PythonTuple(*new_rhs)
                     d_var = [d_var]
                 else:
@@ -2365,6 +2364,8 @@ class SemanticParser(BasicParser):
                 for (a, ah) in zip(arguments, m.arguments):
                     d_var = self._infere_type(ah, **settings)
                     d_var['shape'] = ah.alloc_shape
+                    d_var['is_argument'] = True
+                    d_var['is_kwonly'] = a.is_kwonly
                     dtype = d_var.pop('datatype')
                     if d_var['rank']>0:
                         d_var['cls_base'] = NumpyArrayClass
@@ -2685,53 +2686,38 @@ class SemanticParser(BasicParser):
         ls = [self._visit(i, **settings) for i in expr.variables]
         return Del(ls)
 
-    def _visit_Is(self, expr, **settings):
+    def _handle_is_operator(self, IsClass, expr, **settings):
 
         # TODO ERROR wrong position ??
 
         name = expr.lhs
-        var1 = self.get_variable(str(expr.lhs))
+        var1 = self._visit(expr.lhs)
+        var2 = self._visit(expr.rhs)
 
-        var2 = self.check_for_variable(str(expr.rhs))
-        if var2 is None:
-            if (isinstance(expr.rhs, Nil) and not var1.is_optional):
+        if isinstance(var1, Nil):
+            var1, var2 = var2, var1
+
+        if isinstance(var2, Nil):
+            if not var1.is_optional:
                 errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='error', blocker=self.blocking)
-            return Is(var1, expr.rhs)
+            return IsClass(var1, expr.rhs)
 
         if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
             (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
-            return Is(var1, var2)
+            return IsClass(var1, var2)
 
         errors.report(PYCCEL_RESTRICTION_IS_RHS,
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='error', blocker=self.blocking)
-        return Is(var1, expr.rhs)
+        return IsClass(var1, var2)
+
+    def _visit_Is(self, expr, **settings):
+        return self._handle_is_operator(Is, expr, **settings)
 
     def _visit_IsNot(self, expr, **settings):
-
-        # TODO ERROR wrong position ??
-
-        name = expr.lhs
-        var1 = self.get_variable(str(expr.lhs))
-
-        var2 = self.check_for_variable(str(expr.rhs))
-        if var2 is None:
-            if (isinstance(expr.rhs, Nil) and not var1.is_optional):
-                errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
-                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='error', blocker=self.blocking)
-            return IsNot(var1, expr.rhs)
-
-        if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
-            (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
-            return IsNot(var1, var2)
-
-        errors.report(PYCCEL_RESTRICTION_IS_RHS,
-            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='error', blocker=self.blocking)
-        return IsNot(var1, expr.rhs)
+        return self._handle_is_operator(IsNot, expr, **settings)
 
     def _visit_Import(self, expr, **settings):
 
@@ -2752,15 +2738,15 @@ class SemanticParser(BasicParser):
             imports = pyccel_builtin_import(expr)
 
             def _insert_obj(location, target, obj):
-                F = self.check_for_variable(source)
+                F = self.check_for_variable(target)
 
-                if F is None:
-                    container[location][target] = obj
-                elif target in container:
+                if obj is F:
                     errors.report(FOUND_DUPLICATED_IMPORT,
-                                symbol=name, severity='warning')
+                                symbol=target, severity='warning')
+                elif F is None or isinstance(F, dict):
+                    container[location][target] = obj
                 else:
-                    errors.report(PYCCEL_RESTRICTION_TODO,
+                    errors.report(IMPORTING_EXISTING_IDENTIFIED,
                                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                                   severity='fatal')
 
