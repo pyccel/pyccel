@@ -329,23 +329,22 @@ class CCodePrinter(CodePrinter):
         return ' << '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelBitXor(self, expr):
-        if (all(a.dtype is NativeBool() for a in expr.args)):
+        if expr.dtype is NativeBool():
             return '{0} != {1}'.format(self._print(expr.args[0]), self._print(expr.args[1]))
         return ' ^ '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelBitOr(self, expr):
-        if (all(a.dtype is NativeBool() for a in expr.args)):
+        if expr.dtype is NativeBool():
             return ' || '.join(self._print(a) for a in expr.args)
         return ' | '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelBitAnd(self, expr):
-        if (all(a.dtype is NativeBool() for a in expr.args)):
+        if expr.dtype is NativeBool():
             return ' && '.join(self._print(a) for a in expr.args)
         return ' & '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelInvert(self, expr):
-        a = self._print(expr.args[0])
-        return '~{}'.format(a)
+        return '~{}'.format(self._print(expr.args[0]))
 
     def _print_PyccelAssociativeParenthesis(self, expr):
         return '({})'.format(self._print(expr.args[0]))

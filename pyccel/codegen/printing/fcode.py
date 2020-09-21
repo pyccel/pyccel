@@ -2113,49 +2113,28 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_PyccelRShift(self, expr):
-        args = [self._print(a) for a in expr.args]
-        code = args[0]
-        for c in args[1:]:
-            code = 'RSHIFT({}, {})'.format(code, c)
-        return code
+        return 'RSHIFT({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
 
     def _print_PyccelLShift(self, expr):
-        args = [self._print(a) for a in expr.args]
-        code = args[0]
-        for c in args[1:]:
-            code = 'LSHIFT({}, {})'.format(code, c)
-        return code
+        return 'LSHIFT({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
 
     def _print_PyccelBitXor(self, expr):
-        if (all(a.dtype is NativeBool() for a in expr.args)):
+        if expr.dtype is NativeBool():
             return ' .neqv. '.join(self._print(a) for a in expr.args)
-        args = [self._print(a) for a in expr.args]
-        code = args[0]
-        for c in args[1:]:
-            code = 'IEOR({}, {})'.format(code, c)
-        return code
+        return 'IEOR({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
 
     def _print_PyccelBitOr(self, expr):
-        if (all(a.dtype is NativeBool() for a in expr.args)):
+        if expr.dtype is NativeBool():
             return ' .or. '.join(self._print(a) for a in expr.args)
-        args = [self._print(a) for a in expr.args]
-        code = args[0]
-        for c in args[1:]:
-            code = 'IOR({}, {})'.format(code, c)
-        return code
+        return 'IOR({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
 
     def _print_PyccelBitAnd(self, expr):
-        if (all(a.dtype is NativeBool() for a in expr.args)):
+        if expr.dtype is NativeBool():
             return ' .and. '.join(self._print(a) for a in expr.args)
-        args = [self._print(a) for a in expr.args]
-        code = args[0]
-        for c in args[1:]:
-            code = 'IAND({}, {})'.format(code, c)
-        return code
+        return 'IAND({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
 
     def _print_PyccelInvert(self, expr):
-        a = self._print(expr.args[0])
-        return 'NOT({})'.format(a)
+        return 'NOT({})'.format(self._print(expr.args[0]))
 
     def _print_PyccelAssociativeParenthesis(self, expr):
         return '({})'.format(self._print(expr.args[0]))
