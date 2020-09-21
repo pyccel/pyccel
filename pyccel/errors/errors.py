@@ -224,8 +224,8 @@ class Errors:
 
         if symbol is not None:
             if isinstance(symbol, ast_stmt):
-                line   = fst.lineno
-                column = fst.col_offset
+                line   = symbol.lineno
+                column = symbol.col_offset
                 symbol = ast_dump(symbol)
             else:
                 fst = getattr(symbol, 'fst', None)
