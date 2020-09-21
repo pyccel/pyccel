@@ -262,7 +262,7 @@ class PyccelOperator(Expr, PyccelAstNode):
             if None in ranks:
                 self._rank  = None
                 self._shape = None
-            elif all(not (sh is None or isinstance(sh, PyccelArraySize)) for tup in shapes for sh in tup):
+            elif all(sh is not None for tup in shapes for sh in tup):
                 if len(args) == 1:
                     shape = args[0].shape
                 else:
@@ -317,7 +317,7 @@ class PyccelDiv(PyccelOperator):
             self._rank  = None
             self._shape = None
 
-        elif all(not (sh is None or isinstance(sh, PyccelArraySize)) for tup in shapes for sh in tup):
+        elif all(sh is not None for tup in shapes for sh in tup):
             shape = broadcast(args[0].shape, args[1].shape)
 
             for a in args[2:]:
@@ -353,7 +353,7 @@ class PyccelBooleanOperator(Expr, PyccelAstNode):
             self._rank  = None
             self._shape = None
 
-        elif all(not (sh is None or isinstance(sh, PyccelArraySize)) for tup in shapes for sh in tup):
+        elif all(sh is not None for tup in shapes for sh in tup):
             shape = broadcast(args[0].shape, args[1].shape)
             for a in args[2:]:
                 shape = broadcast(shape, a.shape)
