@@ -638,6 +638,7 @@ class SyntaxParser(BasicParser):
                         msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
                         errors.report(msg,
                                       symbol = decorators['types'],
+                                      bounding_box = (stmt.lineno, stmt.col_offset),
                                       severity='error')
                     else:
                         ls = arg if isinstance(arg, PythonTuple) else [arg]
@@ -646,6 +647,7 @@ class SyntaxParser(BasicParser):
                     msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
                     errors.report(msg,
                                   symbol = decorators['types'],
+                                  bounding_box = (stmt.lineno, stmt.col_offset),
                                   severity='error')
 
                 i = i+1
