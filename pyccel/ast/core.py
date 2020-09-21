@@ -204,6 +204,8 @@ def broadcast(shape_1, shape_2):
             new_shape.append(e2)
         elif e2 == 1:
             new_shape.append(e1)
+        elif isinstance(e1, PyccelArraySize) and isinstance(e2, PyccelArraySize):
+            new_shape.append(e1)
         else:
             msg = 'operands could not be broadcast together with shapes {} {}'
             msg = msg.format(shape_1, shape_2)
