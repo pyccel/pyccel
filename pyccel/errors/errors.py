@@ -223,7 +223,7 @@ class Errors:
             column = bounding_box[1]
 
         if symbol is not None:
-            if symbol.__module__ == '_ast':
+            if getattr(symbol, '__module__', '') == '_ast':
                 line   = symbol.lineno
                 column = symbol.col_offset
                 symbol = ast_dump(symbol)
