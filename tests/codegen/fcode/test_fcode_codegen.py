@@ -24,6 +24,7 @@ files = [os.path.join(path_dir,f) \
 @pytest.mark.parametrize("f", files)
 def test_codegen(f):
 
+    # reset Errors singleton
     errors = Errors()
     errors.reset()
 
