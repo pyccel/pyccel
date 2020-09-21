@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from ast import stmt as ast_stmt, dump as ast_dump
+from ast import dump as ast_dump
 
 # ...
 #ERROR = 'error'
@@ -223,7 +223,7 @@ class Errors:
             column = bounding_box[1]
 
         if symbol is not None:
-            if isinstance(symbol, ast_stmt):
+            if symbol.__module__ == '_ast':
                 line   = symbol.lineno
                 column = symbol.col_offset
                 symbol = ast_dump(symbol)
