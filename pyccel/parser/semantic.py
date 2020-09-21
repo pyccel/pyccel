@@ -1686,6 +1686,11 @@ class SemanticParser(BasicParser):
                     if not all(same_ranks):
                         _name = _get_name(lhs)
                         var = self.get_variable(_name)
+                        c_shape = [x.shape for x in call_args]
+                        assert(len(c_shape) == 1)
+                        for d in d_var:
+                            d['shape'] = c_shape[0]
+                            d['rank' ] = c_ranks[0]
 
             elif isinstance(func, Interface):
                 d_var = [self._infere_type(i, **settings) for i in
