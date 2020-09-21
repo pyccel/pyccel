@@ -233,12 +233,6 @@ def handle_precedence(args, my_precedence):
 
     return args
 
-def bool2int(a):
-    if a.dtype is not NativeInteger():
-        return Int(a)
-    else:
-        return a 
-
 class PyccelBitOperator(Expr, PyccelAstNode):
     _rank = 0
     _shape = ()
@@ -266,7 +260,7 @@ class PyccelRShift(PyccelBitOperator):
         super(PyccelRShift, self).__init__(args)
         if self.stage == 'syntactic':
             return
-        self._args = [bool2int(a) if a.dtype is NativeBool() else a for a in args]
+        self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelLShift(PyccelBitOperator):
     _precedence = 11
@@ -275,7 +269,7 @@ class PyccelLShift(PyccelBitOperator):
         super(PyccelLShift, self).__init__(args)
         if self.stage == 'syntactic':
             return
-        self._args = [bool2int(a) if a.dtype is NativeBool() else a for a in args]
+        self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelBitXor(PyccelBitOperator):
     _precedence = 9
@@ -289,7 +283,7 @@ class PyccelBitXor(PyccelBitOperator):
             self._dtype = NativeBool()
         else:
             self._dtype = NativeInteger()
-            self._args = [bool2int(a) if a.dtype is NativeBool() else a for a in args]
+            self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelBitOr(PyccelBitOperator):
     _precedence = 8
@@ -303,7 +297,7 @@ class PyccelBitOr(PyccelBitOperator):
             self._dtype = NativeBool()
         else:
             self._dtype = NativeInteger()
-            self._args = [bool2int(a) if a.dtype is NativeBool() else a for a in args]
+            self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelBitAnd(PyccelBitOperator):
     _precedence = 10
@@ -317,7 +311,7 @@ class PyccelBitAnd(PyccelBitOperator):
             self._dtype = NativeBool()
         else:
             self._dtype = NativeInteger()
-            self._args = [bool2int(a) if a.dtype is NativeBool() else a for a in args]
+            self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelInvert(PyccelBitOperator):
     _precedence = 14
@@ -326,7 +320,7 @@ class PyccelInvert(PyccelBitOperator):
         super(PyccelInvert, self).__init__(args)
         if self.stage == 'syntactic':
             return
-        self._args = [bool2int(a) if a.dtype is NativeBool() else a for a in args]
+        self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelOperator(Expr, PyccelAstNode):
 
