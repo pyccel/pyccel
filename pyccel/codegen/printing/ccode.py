@@ -412,7 +412,7 @@ class CCodePrinter(CodePrinter):
         else:
             return '0'
 
-    def _print_is_operator(self, Op, expr):
+    def _handle_is_operator(self, Op, expr):
 
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
@@ -435,10 +435,10 @@ class CCodePrinter(CodePrinter):
                           symbol=expr, severity='fatal')
 
     def _print_IsNot(self, expr):
-        return self._print_is_operator("!=", expr)
+        return self._handle_is_operator("!=", expr)
 
     def _print_Is(self, expr):
-        return self._print_is_operator("==", expr)
+        return self._handle_is_operator("==", expr)
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
