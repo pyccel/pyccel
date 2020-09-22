@@ -1419,8 +1419,7 @@ class SemanticParser(BasicParser):
                     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=self.blocking)
-                elif lhs.rank>0 and ( isinstance(rhs, (PyccelOperator)) or
-                                     (isinstance(rhs, FunctionCall) and rhs.funcdef and rhs.funcdef.is_elemental)):
+                elif lhs.rank>0 and not isinstance(rhs, NumpyNewArray):
                     #TODO: Provide order once issue #335 is fixed
                     #new_expressions.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, lhs.order)))
                     new_expressions.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, 'C')))
