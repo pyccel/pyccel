@@ -418,8 +418,15 @@ def test_ceil_phrase(language):
     assert(isclose(ceil_phrase(x, y), f2(x, y), rtol=1e-15, atol=1e-15))
 
 #------------------------------- copysign function -------------------------------#
-
-def test_copysign_call(language = 'c'):
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="copysign not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_copysign_call(language):
     @types('real', 'real')
     def copysign_call(x, y):
         from math import copysign
@@ -435,7 +442,15 @@ def test_copysign_call(language = 'c'):
     assert(isclose(copysign_call(-x, y), f1(-x, y), rtol=1e-15, atol=1e-15))
     assert(isclose(copysign_call(x, -y), f1(x, -y), rtol=1e-15, atol=1e-15))
 
-def test_copysign_call_zero_case(language = 'c'):
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="copysign not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_copysign_call_zero_case(language):
     @types('int', 'int')
     def copysign_zero_case(x, y):
         from math import copysign
@@ -451,7 +466,15 @@ def test_copysign_call_zero_case(language = 'c'):
     assert(isclose(copysign_zero_case(-x, y), f1(-x, y), rtol=1e-15, atol=1e-15))
     assert(isclose(copysign_zero_case(x, -y), f1(x, -y), rtol=1e-15, atol=1e-15))
 
-def test_copysign_return_type_1(language = 'c'): # copysign
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="copysign not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_copysign_return_type_1(language): # copysign
     '''test type copysign(real, real) => should return real number'''
     @types('real', 'real')
     def copysign_return_type(x, y):
@@ -470,7 +493,15 @@ def test_copysign_return_type_1(language = 'c'): # copysign
     assert(type(f1(-x, y)) == type(copysign_return_type(-x, y)))
     assert(type(f1(x, -y)) == type(copysign_return_type(x, -y)))
 
-def test_copysign_return_type_2(language = 'c'): # copysign
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="copysign not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_copysign_return_type_2(language): # copysign
     '''test type copysign(int, int) => should return real type'''
     @types('int', 'int')
     def copysign_return_type(x, y):
@@ -490,7 +521,15 @@ def test_copysign_return_type_2(language = 'c'): # copysign
     assert(type(f1(-x, y)) == type(copysign_return_type(-x, y)))
     assert(type(f1(x, -y)) == type(copysign_return_type(x, -y)))
 
-def test_copysign_return_type_3(language = 'c'): # copysign
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="copysign not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_copysign_return_type_3(language): # copysign
     '''test type copysign(int, real) => should return real type'''
     @types('int', 'real')
     def copysign_return_type(x, y):
@@ -510,7 +549,15 @@ def test_copysign_return_type_3(language = 'c'): # copysign
     assert(type(f1(-x, y)) == type(copysign_return_type(-x, y)))
     assert(type(f1(x, -y)) == type(copysign_return_type(x, -y)))
 
-def test_copysign_return_type_4(language = 'c'): # copysign
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="copysign not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_copysign_return_type_4(language): # copysign
     '''test type copysign(real, int) => should return real type'''
     @types('real', 'int')
     def copysign_return_type(x, y):
@@ -532,9 +579,15 @@ def test_copysign_return_type_4(language = 'c'): # copysign
 
 
 #----------------------------- isfinite function -----------------------------#
-
-@pytest.mark.xfail(reason = "pyccel non implemented data type issues #388-390")
-def test_isfinite_call(language = 'c'): # isfinite
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="isfinite not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_isfinite_call(language): # isfinite
     @types('real')
     def isfinite_call(x):
         from math import isfinite
@@ -554,9 +607,15 @@ def test_isfinite_call(language = 'c'): # isfinite
     assert(isfinite_call(-inf) == f1(-inf))
 
 #------------------------------- isinf function ------------------------------#
-
-@pytest.mark.xfail(reason = "pyccel non implemented data type issues #388-390")
-def test_isinf_call(language = 'c'): # isinf
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="isinf not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_isinf_call(language): # isinf
     @types('real')
     def isinf_call(x):
         from math import isinf
@@ -576,9 +635,15 @@ def test_isinf_call(language = 'c'): # isinf
     assert(isinf_call(-inf) == f1(-inf))
 
 #------------------------------- isnan function ------------------------------#
-
-@pytest.mark.xfail(reason = "pyccel non implemented data type issues #388-390")
-def test_isnan_call(language = 'c'): # isnan
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="isnan not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_isnan_call(language): # isnan
     @types('real')
     def isnan_call(x):
         from math import isnan
@@ -598,8 +663,15 @@ def test_isnan_call(language = 'c'): # isnan
     assert(isnan_call(-inf) == f1(-inf))
 
 #------------------------------- ldexp function ------------------------------#
-
-def test_ldexp_call(language = 'c'): # ldexp
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="ldexp not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_ldexp_call(language): # ldexp
     @types('real', 'int')
     def ldexp_call(x, exp):
         from math import ldexp
@@ -618,7 +690,15 @@ def test_ldexp_call(language = 'c'): # ldexp
     # Negative value and negative exponent
     assert(isclose(ldexp_call(-x, -exp), f1(-x, -exp), rtol=1e-15, atol=1e-15))
 
-def test_ldexp_return_type(language = 'c'): # ldexp
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="ldexp not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_ldexp_return_type(language): # ldexp
     @types('real', 'int')
     def ldexp_type(x, exp):
         from math import ldexp
@@ -639,9 +719,15 @@ def test_ldexp_return_type(language = 'c'): # ldexp
 
 #--------------------------- remainder function ------------------------------#
 
-@pytest.mark.skipif(sys.version_info < (3, 7),
-                    reason="requires python3.7 or higher")
-def test_remainder_call(language = 'c'): # remainder
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="remainder not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_remainder_call(language): # remainder
     @types('real', 'real')
     def remainder_call(x, y):
         from math import remainder
@@ -659,9 +745,15 @@ def test_remainder_call(language = 'c'): # remainder
     assert(isclose(remainder_call(x, -y), f1(x, -y), rtol=1e-15, atol=1e-15))
     assert(isclose(remainder_call(-x, y), f1(-x, y), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.skipif(sys.version_info < (3, 7),
-                    reason="requires python3.7 or higher")
-def test_remainder_return_type(language = 'c'): # remainder
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="remainder not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_remainder_return_type(language): # remainder
     @types('real', 'real')
     def remainder_type(x, y):
         from math import remainder
@@ -680,8 +772,15 @@ def test_remainder_return_type(language = 'c'): # remainder
     assert(type(remainder_type(-x, y)) == type(f1(-x, y)))
 
 #----------------------------- trunc function --------------------------------#
-
-def test_trunc_call(language = 'c'): # trunc
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="trunc not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_trunc_call(language): # trunc
     @types('real')
     def trunc_call(x):
         from math import trunc
@@ -695,7 +794,15 @@ def test_trunc_call(language = 'c'): # trunc
     # Negative number
     assert(trunc_call(-x) == f1(-x))
 
-def test_trunc_call_int(language = 'c'): # trunc
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="trunc not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_trunc_call_int(language): # trunc
     @types('int')
     def trunc_call(x):
         from math import trunc
@@ -710,7 +817,15 @@ def test_trunc_call_int(language = 'c'): # trunc
     # Negative number
     assert(trunc_call(-x) == f1(-x))
 
-def test_trunc_return_type(language = 'c'): # trunc
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="trunc not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_trunc_return_type(language): # trunc
     @types('real')
     def trunc_type(x):
         from math import trunc
@@ -723,8 +838,15 @@ def test_trunc_return_type(language = 'c'): # trunc
     assert(type(trunc_type(-x)) == type(f1(-x)))
 
 #--------------------------- expm1 function ------------------------------#
-
-def test_expm1_call(language = 'c'): # expm1
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="expm1 not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_expm1_call(language): # expm1
     @types('real')
     def expm1_call(x):
         from math import expm1
@@ -734,7 +856,15 @@ def test_expm1_call(language = 'c'): # expm1
     x = rand()
     assert(isclose(f1(x) ,  expm1_call(x), rtol=1e-15, atol=1e-15))
 
-def test_expm1_call_special_case(language = 'c'): # expm1
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="expm1 not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_expm1_call_special_case(language): # expm1
     @types('real')
     def expm1_call(x):
         from math import expm1
@@ -744,7 +874,15 @@ def test_expm1_call_special_case(language = 'c'): # expm1
     f1 = epyccel(expm1_call, language = language)
     assert(isclose(f1(x), expm1_call(x), rtol=1e-15, atol=1e-15))
 
-def test_expm1_phrase(language = 'c'): # expm1
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="expm1 not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_expm1_phrase(language): # expm1
     @types('real','real')
     def expm1_phrase(x,y):
         from math import expm1
@@ -756,7 +894,15 @@ def test_expm1_phrase(language = 'c'): # expm1
     y = rand()
     assert(isclose(f2(x,y) ,  expm1_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_expm1_return_type(language = 'c'): # expm1 # expm1
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="expm1 not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_expm1_return_type(language): # expm1 # expm1
     @types('real')
     def expm1_type(x):
         from math import expm1
@@ -770,7 +916,15 @@ def test_expm1_return_type(language = 'c'): # expm1 # expm1
 
 #--------------------------- log1p function ------------------------------#
 
-def test_log1p_call(language = 'c'):
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="log1p not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_log1p_call(language):
     @types('real')
     def log1p_call(x):
         from math import log1p
@@ -781,7 +935,15 @@ def test_log1p_call(language = 'c'):
     assert(isclose(f1(x) ,  log1p_call(x), rtol=1e-15, atol=1e-15))
     assert isinstance(f1(x), type(log1p_call(x)))
 
-def test_log1p_phrase(language = 'c'):
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="log1p not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_log1p_phrase(language):
     @types('real','real')
     def log1p_phrase(x,y):
         from math import log1p
@@ -794,8 +956,15 @@ def test_log1p_phrase(language = 'c'):
     assert(isclose(f2(x,y) ,  log1p_phrase(x,y), rtol=1e-15, atol=1e-15))
 
 #--------------------------- log2 function ------------------------------#
-
-def test_log2_call(language = 'c'):
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="log2 not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_log2_call(language):
     @types('real')
     def log2_call(x):
         from math import log2
@@ -808,7 +977,15 @@ def test_log2_call(language = 'c'):
     assert(isclose(f1(x) ,  log2_call(x), rtol=1e-15, atol=1e-15))
     assert isinstance(f1(x), type(log2_call(x)))
 
-def test_log2_phrase(language = 'c'):
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="log2 not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_log2_phrase(language):
     @types('real','real')
     def log2_phrase(x,y):
         from math import log2
@@ -852,12 +1029,19 @@ def test_log10_phrase(language):
     assert(isclose(f2(x,y) ,  log10_phrase(x,y), rtol=1e-15, atol=1e-15))
 
 #--------------------------------- Pow function ------------------------------#
-
-def test_pow_call(language = 'c'):
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="pow not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_pow_call(language):
     @types('real', 'real')
     def pow_call(x, y):
-        from math import pow
-        return pow(x, y)
+        from math import pow as my_pow
+        return my_pow(x, y)
 
     f1 = epyccel(pow_call, language = language)
     high = 10
@@ -878,8 +1062,15 @@ def test_pow_call(language = 'c'):
     assert(isclose(f1(x, y), pow_call(x, y), rtol=1e-15, atol=1e-15))
 
 #------------------------------- Hypot function ------------------------------#
-
-def test_hypot_call(language = 'c'):
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="hypot not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_hypot_call(language):
     @types('real', 'real')
     def hypot_call(x, y):
         from math import hypot
@@ -1093,7 +1284,7 @@ def test_lgamma_call(language):
     x = uniform(low=min_float)
     assert(isclose(f1(x) , lgamma_call(x), rtol=1e-15, atol=1e-15))
     from math import modf
-    i, f = modf(x)
+    _, f = modf(x)
     # make fractional part different from zero to test negative case
     if f == 0:
         x += - 0.1

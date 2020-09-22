@@ -406,8 +406,6 @@ def test_sqrt_return_type_r(language):
     assert(type(f1(x)) == type(sqrt_return_type_real(x).item())) # pylint: disable=unidiomatic-typecheck
 
 def test_sqrt_return_type_c(language):
-    if (language == 'c'):
-        pytest.xfail(reason="complex type not implimented yet")
     @types('complex')
     def sqrt_return_type_comp(x):
         from numpy import sqrt
@@ -465,9 +463,15 @@ def test_floor_return_type(language):
     assert(isclose(f1(x), floor_return_type_real(x), rtol=1e-15, atol=1e-15))
     assert(type(f1(x)) == type(floor_return_type_real(x).item())) # pylint: disable=unidiomatic-typecheck
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_shape_indexed(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int[:]')
     def test_shape_1d(f):
         from numpy import shape
@@ -490,9 +494,15 @@ def test_shape_indexed(language):
     assert(f1(x1) == test_shape_1d(x1))
     assert(f2(x2) == test_shape_2d(x2))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_shape_property(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int[:]')
     def test_shape_1d(f):
         return f.shape[0]
@@ -513,9 +523,15 @@ def test_shape_property(language):
     assert(f1(x1) == test_shape_1d(x1))
     assert(all(isclose(f2(x2), test_shape_2d(x2))))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_shape_tuple_output(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int[:]')
     def test_shape_1d(f):
         from numpy import shape
@@ -547,9 +563,15 @@ def test_shape_tuple_output(language):
     f2 = epyccel(test_shape_2d, language = language)
     assert(f2(x2)   == test_shape_2d(x2))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_shape_real(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('real[:]')
     def test_shape_1d(f):
         from numpy import shape
@@ -573,9 +595,15 @@ def test_shape_real(language):
     assert(f1(x1) == test_shape_1d(x1))
     assert(f2(x2) == test_shape_2d(x2))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_shape_int(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int[:]')
     def test_shape_1d(f):
         from numpy import shape
@@ -600,9 +628,15 @@ def test_shape_int(language):
     assert(f1(x1) == test_shape_1d(x1))
     assert(f2(x2) == test_shape_2d(x2))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_shape_bool(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('bool[:]')
     def test_shape_1d(f):
         from numpy import shape
@@ -626,9 +660,15 @@ def test_shape_bool(language):
     assert(f1(x1) == test_shape_1d(x1))
     assert(f2(x2) == test_shape_2d(x2))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_full_basic_int(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int')
     def create_full_shape_1d(n):
         from numpy import full, shape
@@ -668,9 +708,15 @@ def test_full_basic_int(language):
     assert(f_arg_names(size) == create_full_arg_names(size))
     assert(type(f_arg_names(size)[0]) == type(create_full_arg_names(size)[0].item())) # pylint: disable=unidiomatic-typecheck
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_full_basic_real(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int')
     def create_full_shape_1d(n):
         from numpy import full, shape
@@ -753,9 +799,15 @@ def test_full_basic_bool(language):
     assert(f_arg_names(val)     == create_full_arg_names(val))
     assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0])) # pylint: disable=unidiomatic-typecheck
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_full_order(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int','int')
     def create_full_shape_C(n,m):
         from numpy import full, shape
@@ -778,9 +830,15 @@ def test_full_order(language):
     f_shape_F  = epyccel(create_full_shape_F, language = language)
     assert(f_shape_F(size_1,size_2) == create_full_shape_F(size_1,size_2))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_full_dtype(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int')
     def create_full_val_int_int(val):
         from numpy import full
@@ -857,9 +915,15 @@ def test_full_dtype(language):
     assert(isclose(     f_real_complex128(val_float)       ,      create_full_val_real_complex128(val_float), rtol=1e-15, atol=1e-15))
     assert(type(f_real_complex128(val_float))       == type(create_full_val_real_complex128(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_full_combined_args(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     def create_full_1_shape():
         from numpy import full, shape
         a = full((2,1),4.0,int,'F')
@@ -906,9 +970,15 @@ def test_full_combined_args(language):
     assert(isclose(     f3_val()  ,      create_full_3_val()        , rtol=1e-15, atol=1e-15))
     assert(type(f3_val())  == type(create_full_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_empty_basic(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int')
     def create_empty_shape_1d(n):
         from numpy import empty, shape
@@ -930,9 +1000,15 @@ def test_empty_basic(language):
     f_shape_2d  = epyccel(create_empty_shape_2d, language = language)
     assert(     f_shape_2d(size)      ==      create_empty_shape_2d(size))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_empty_order(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int','int')
     def create_empty_shape_C(n,m):
         from numpy import empty, shape
@@ -955,9 +1031,15 @@ def test_empty_order(language):
     f_shape_F  = epyccel(create_empty_shape_F, language = language)
     assert(     f_shape_F(size_1,size_2) == create_empty_shape_F(size_1,size_2))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_empty_dtype(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     def create_empty_val_int():
         from numpy import empty
         a = empty(3,int)
@@ -1015,9 +1097,15 @@ def test_empty_dtype(language):
     f_real_complex128   = epyccel(create_empty_val_complex128, language = language)
     assert(type(f_real_complex128()) == type(create_empty_val_complex128().item())) # pylint: disable=unidiomatic-typecheck
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_empty_combined_args(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     def create_empty_1_shape():
         from numpy import empty, shape
         a = empty((2,1),int,'F')
@@ -1061,9 +1149,15 @@ def test_empty_combined_args(language):
     assert(all(isclose(     f3_shape(),      create_empty_3_shape()      )))
     assert(type(f3_val())  == type(create_empty_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_ones_basic(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int')
     def create_ones_shape_1d(n):
         from numpy import ones, shape
@@ -1085,9 +1179,15 @@ def test_ones_basic(language):
     f_shape_2d  = epyccel(create_ones_shape_2d, language = language)
     assert(     f_shape_2d(size)      ==      create_ones_shape_2d(size))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_ones_order(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int','int')
     def create_ones_shape_C(n,m):
         from numpy import ones, shape
@@ -1178,9 +1278,15 @@ def test_ones_dtype(language):
     assert(isclose(     f_real_complex128() ,      create_ones_val_complex128(), rtol=1e-15, atol=1e-15))
     assert(type(f_real_complex128()) == type(create_ones_val_complex128().item())) # pylint: disable=unidiomatic-typecheck
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_ones_combined_args(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     def create_ones_1_shape():
         from numpy import ones, shape
         a = ones((2,1),int,'F')
@@ -1227,9 +1333,15 @@ def test_ones_combined_args(language):
     assert(isclose(     f3_val()  ,      create_ones_3_val()        , rtol=1e-15, atol=1e-15))
     assert(type(f3_val())  == type(create_ones_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_zeros_basic(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int')
     def create_zeros_shape_1d(n):
         from numpy import zeros, shape
@@ -1251,9 +1363,15 @@ def test_zeros_basic(language):
     f_shape_2d  = epyccel(create_zeros_shape_2d, language = language)
     assert(     f_shape_2d(size)      ==      create_zeros_shape_2d(size))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_zeros_order(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int','int')
     def create_zeros_shape_C(n,m):
         from numpy import zeros, shape
@@ -1276,9 +1394,15 @@ def test_zeros_order(language):
     f_shape_F  = epyccel(create_zeros_shape_F, language = language)
     assert(     f_shape_F(size_1,size_2) == create_zeros_shape_F(size_1,size_2))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_zeros_dtype(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     def create_zeros_val_int():
         from numpy import zeros
         a = zeros(3,int)
@@ -1344,9 +1468,15 @@ def test_zeros_dtype(language):
     assert(isclose(     f_real_complex128() ,      create_zeros_val_complex128(), rtol=1e-15, atol=1e-15))
     assert(type(f_real_complex128()) == type(create_zeros_val_complex128().item())) # pylint: disable=unidiomatic-typecheck
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_zeros_combined_args(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     def create_zeros_1_shape():
         from numpy import zeros, shape
         a = zeros((2,1),int,'F')
@@ -1393,9 +1523,15 @@ def test_zeros_combined_args(language):
     assert(isclose(     f3_val()  ,      create_zeros_3_val()        , rtol=1e-15, atol=1e-15))
     assert(type(f3_val())  == type(create_zeros_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_array(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     def create_array_list_val():
         from numpy import array
         a = array([[1,2,3],[4,5,6]])
@@ -1425,9 +1561,15 @@ def test_array(language):
     assert(f2_val()   == create_array_tuple_val())
     assert(type(f2_val()) == type(create_array_tuple_val().item())) # pylint: disable=unidiomatic-typecheck
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_rand_basic(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     def create_val():
         from numpy.random import rand # pylint: disable=reimported
         return rand()
@@ -1439,9 +1581,15 @@ def test_rand_basic(language):
     assert(all([isinstance(yi,float) for yi in y]))
     assert(len(set(y))>1)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_rand_args(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int')
     def create_array_size_1d(n):
         from numpy.random import rand # pylint: disable=reimported
@@ -1499,9 +1647,15 @@ def test_rand_args(language):
     assert(all([isinstance(yi,float) for yi in y]))
     assert(len(set(y))>1)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_rand_expr(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     def create_val():
         from numpy.random import rand # pylint: disable=reimported
         x = 2*rand()
@@ -1528,9 +1682,15 @@ def test_rand_expr_array(language):
     assert(all([isinstance(yi,float) for yi in y]))
     assert(len(set(y))>1)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_randint_basic(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int')
     def create_val(high):
         from numpy.random import randint # pylint: disable=reimported
@@ -1555,9 +1715,15 @@ def test_randint_basic(language):
     assert(all([isinstance(yi,int) for yi in y]))
     assert(len(set(y))>1)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_randint_expr(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int')
     def create_val(high):
         from numpy.random import randint # pylint: disable=reimported
@@ -1584,9 +1750,15 @@ def test_randint_expr(language):
     assert(all([isinstance(yi,int) for yi in y]))
     assert(len(set(y))>1)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_sum_int(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int[:]')
     def sum_call(x):
         from numpy import sum as np_sum
@@ -1596,9 +1768,15 @@ def test_sum_int(language):
     x = randint(99,size=10)
     assert(f1(x) == sum_call(x))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_sum_real(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('real[:]')
     def sum_call(x):
         from numpy import sum as np_sum
@@ -1608,9 +1786,15 @@ def test_sum_real(language):
     x = rand(10)
     assert(isclose(f1(x), sum_call(x), rtol=1e-15, atol=1e-15))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_sum_phrase(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('real[:]','real[:]')
     def sum_phrase(x,y):
         from numpy import sum as np_sum
@@ -1622,9 +1806,15 @@ def test_sum_phrase(language):
     y = rand(15)
     assert(isclose(f2(x,y), sum_phrase(x,y), rtol=1e-15, atol=1e-15))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_sum_property(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int[:]')
     def sum_call(x):
         return x.sum()
@@ -1633,9 +1823,15 @@ def test_sum_property(language):
     x = randint(99,size=10)
     assert(f1(x) == sum_call(x))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_min_int(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int[:]')
     def min_call(x):
         from numpy import min as np_min
@@ -1645,9 +1841,15 @@ def test_min_int(language):
     x = randint(99,size=10)
     assert(f1(x) == min_call(x))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_min_real(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('real[:]')
     def min_call(x):
         from numpy import min as np_min
@@ -1657,9 +1859,15 @@ def test_min_real(language):
     x = rand(10)
     assert(isclose(f1(x), min_call(x), rtol=1e-15, atol=1e-15))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_min_phrase(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('real[:]','real[:]')
     def min_phrase(x,y):
         from numpy import min as np_min
@@ -1671,9 +1879,15 @@ def test_min_phrase(language):
     y = rand(15)
     assert(isclose(f2(x,y), min_phrase(x,y), rtol=1e-15, atol=1e-15))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_min_property(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int[:]')
     def min_call(x):
         return x.min()
@@ -1682,9 +1896,15 @@ def test_min_property(language):
     x = randint(99,size=10)
     assert(f1(x) == min_call(x))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_max_int(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int[:]')
     def max_call(x):
         from numpy import max as np_max
@@ -1694,9 +1914,15 @@ def test_max_int(language):
     x = randint(99,size=10)
     assert(f1(x) == max_call(x))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_max_real(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('real[:]')
     def max_call(x):
         from numpy import max as np_max
@@ -1706,9 +1932,15 @@ def test_max_real(language):
     x = rand(10)
     assert(isclose(f1(x), max_call(x), rtol=1e-15, atol=1e-15))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_max_phrase(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('real[:]','real[:]')
     def max_phrase(x,y):
         from numpy import max as np_max
@@ -1720,9 +1952,15 @@ def test_max_phrase(language):
     y = rand(15)
     assert(isclose(f2(x,y), max_phrase(x,y), rtol=1e-15, atol=1e-15))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="arrays not implemented"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_max_property(language):
-    if (language == 'c'):
-        pytest.xfail(reason="arrays not implimented yet")
     @types('int[:]')
     def max_call(x):
         return x.max()
