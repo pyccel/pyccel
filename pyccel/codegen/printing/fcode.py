@@ -2000,11 +2000,11 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.rhs, Nil):
             return '.not. present({})'.format(lhs)
 
-        if a.dtype is NativeBool() and b.dtype is NativeBool():
+        if (a.dtype is NativeBool() and b.dtype is NativeBool()):
             return '{} .eqv. {}'.format(lhs, rhs)
 
-        errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
-            severity='fatal')
+        errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
+                      symbol=expr, severity='fatal')
 
     def _print_IsNot(self, expr):
         lhs = self._print(expr.lhs)
@@ -2018,8 +2018,8 @@ class FCodePrinter(CodePrinter):
         if a.dtype is NativeBool() and b.dtype is NativeBool():
             return '{} .neqv. {}'.format(lhs, rhs)
 
-        errors.report(PYCCEL_RESTRICTION_IS_RHS, symbol=expr,
-            severity='fatal')
+        errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
+                      symbol=expr, severity='fatal')
 
     def _print_If(self, expr):
         # ...
