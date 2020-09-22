@@ -189,7 +189,7 @@ class CCodePrinter(CodePrinter):
         self.known_functions.update(userfuncs)
         self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
-        self._additional_imports = set(['stdlib.h', 'math.h'])
+        self._additional_imports = set(['stdlib.h'])
 
     def _get_statement(self, codestring):
         return "%s;" % codestring
@@ -385,12 +385,14 @@ class CCodePrinter(CodePrinter):
             numpy.cos(x) ==> cos(x)
 
         """
+        # add necessary include
+        self._additional_imports.add('math.h')
         type_name = type(expr).__name__
         func_name = numpy_ufunc_to_c[type_name]
         args = []
         for arg in expr.args:
             if arg.dtype is not NativeReal:
-                args.append('(double)(' + self._print(arg) + ')')
+                args.append('(' + self._print(arg) + ')')
             else:
                 args.append(self._print(arg))
         code_args = ', '.join(args)
@@ -414,12 +416,13 @@ class CCodePrinter(CodePrinter):
 
         """
         # add necessary include
+        self._additional_imports.add('math.h')
         type_name = type(expr).__name__
         func_name = math_function_to_c[type_name]
         args = []
         for arg in expr.args:
             if arg.dtype is not NativeReal:
-                args.append('(double)(' + self._print(arg) + ')')
+                args.append('(' + self._print(arg) + ')')
             else:
                 args.append(self._print(arg))
         code_args = ', '.join(args)
@@ -428,6 +431,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_MathSqrt(self, expr):
         # add necessary include
+        self._additional_imports.add('math.h')
         arg = expr.args[0]
         code_args = self._print(arg)
         if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
