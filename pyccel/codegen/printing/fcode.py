@@ -2003,9 +2003,6 @@ class FCodePrinter(CodePrinter):
         if (a.dtype is NativeBool() and b.dtype is NativeBool()):
             return '{} .eqv. {}'.format(lhs, rhs)
 
-        if (a.dtype is NativeInteger() and b.dtype is NativeInteger()):
-            return '{} .eq. {}'.format(lhs, rhs)
-
         errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
                       symbol=expr, severity='fatal')
 
@@ -2020,9 +2017,6 @@ class FCodePrinter(CodePrinter):
 
         if a.dtype is NativeBool() and b.dtype is NativeBool():
             return '{} .neqv. {}'.format(lhs, rhs)
-
-        if (a.dtype is NativeInteger() and b.dtype is NativeInteger()):
-            return '{} .ne. {}'.format(lhs, rhs)
 
         errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
                       symbol=expr, severity='fatal')

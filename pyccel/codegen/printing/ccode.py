@@ -418,8 +418,7 @@ class CCodePrinter(CodePrinter):
         a = expr.args[0]
         b = expr.args[1]
 
-        if ((a.dtype is NativeBool() and b.dtype is NativeBool()) or
-            (a.dtype is NativeInteger() and b.dtype is NativeInteger())):
+        if (a.dtype is NativeBool() and b.dtype is NativeBool()):
             return '{} != {}'.format(lhs, rhs)
 
         if Nil() in expr.args:
@@ -440,8 +439,7 @@ class CCodePrinter(CodePrinter):
         a = expr.args[0]
         b = expr.args[1]
 
-        if ((a.dtype is NativeBool() and b.dtype is NativeBool()) or
-            (a.dtype is NativeInteger() and b.dtype is NativeInteger())):
+        if (a.dtype is NativeBool() and b.dtype is NativeBool()):
             return '{} == {}'.format(lhs, rhs)
 
         if Nil() in expr.args:
