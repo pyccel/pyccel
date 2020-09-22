@@ -2719,8 +2719,11 @@ class SemanticParser(BasicParser):
             (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
             return IsClass(var1, var2)
 
-        if ((var1.is_integer or isinstance(var1.dtype, NativeInteger)) and
-            (var2.is_integer or isinstance(var2.dtype, NativeInteger))):
+        lst = ["string", "complex", "real", "int"]
+        if (str(var1.dtype) in lst and str(var2.dtype) in lst):
+            errors.report(PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, symbol=expr,
+            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+            severity='error', blocker=self.blocking)
             return IsClass(var1, var2)
 
         errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
