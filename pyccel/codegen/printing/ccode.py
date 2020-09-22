@@ -66,7 +66,7 @@ numpy_ufunc_to_c = {
     # ---
     'NumpyExp' : 'exp',
     'NumpyLog' : 'log',
-    'NumpySqrt': 'sqrt',  # sqrt is printed using _Print_NumpySqrt
+    # 'NumpySqrt': 'sqrt',  # sqrt is printed using _Print_NumpySqrt
     # ---
     'NumpySin'    : 'sin',
     'NumpyCos'    : 'cos',
@@ -207,11 +207,11 @@ class CCodePrinter(CodePrinter):
     # ============ Elements ============ #
 
     def _print_PythonFloat(self, expr):
-        value = self._print(expr.arg)
+        value = self._print(expr)
         return '(double)({0})'.format(value)
 
     def _print_Int(self, expr):
-        value = self._print(expr.arg)
+        value = self._print(expr)
         return '(long)({0})'.format(value)
 
     def _print_Bool(self, expr):
@@ -391,8 +391,8 @@ class CCodePrinter(CodePrinter):
         func_name = numpy_ufunc_to_c[type_name]
         args = []
         for arg in expr.args:
-            if arg.dtype is not NativeReal:
-                args.append('(' + self._print(arg) + ')')
+            if arg.dtype is not NativeReal():
+                args.append('(' + self._print_PythonFloat(arg) + ')')
             else:
                 args.append(self._print(arg))
         code_args = ', '.join(args)
@@ -421,13 +421,24 @@ class CCodePrinter(CodePrinter):
         func_name = math_function_to_c[type_name]
         args = []
         for arg in expr.args:
-            if arg.dtype is not NativeReal:
-                args.append('(' + self._print(arg) + ')')
+            if arg.dtype is not NativeReal():
+                args.append('(' + self._print_PythonFloat(arg) + ')')
             else:
                 args.append(self._print(arg))
         code_args = ', '.join(args)
         return '{0}({1})'.format(func_name, code_args)
 
+
+    def _print_NumpySqrt(self, expr):
+        # add necessary include
+        self._additional_imports.add('math.h')
+        arg = expr.args[0]
+        code_args = self._print(arg)
+        if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
+            code_args = self._print_PythonFloat(arg)
+        elif arg.dtype is NativeComplex():
+            return 'csqrt({})'.format(code_args)
+        return 'sqrt({})'.format(code_args)
 
     def _print_MathSqrt(self, expr):
         # add necessary include
