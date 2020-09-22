@@ -2088,11 +2088,11 @@ class FCodePrinter(CodePrinter):
         is_real  = expr.dtype is NativeReal()
         bdtype = expr.args[0].dtype
         if is_real  and bdtype is NativeInteger():
-            code = 'real({})'.format(code)
+            code = 'dble({})'.format(code)
         for b,c in zip(expr.args[1:], args[1:]):
             bdtype    = b.dtype
             if is_real and bdtype is NativeInteger():
-                c = 'real({})'.format(c)
+                c = 'dble({})'.format(c)
             code = 'MODULO({},{})'.format(code, c)
         return code
 
