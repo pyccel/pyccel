@@ -706,6 +706,11 @@ class SyntaxParser(BasicParser):
 
         if 'elemental' in decorators.keys():
             is_elemental = True
+            if len(arguments) > 1:
+                errors.report(FORTRAN_ELEMENTAL_SINGLE_ARGUMENT,
+                              symbol=decorators['elemental'],
+                              bounding_box=(stmt.lineno, stmt.col_offset),
+                              severity='error')
 
         if 'private' in decorators.keys():
             is_private = True

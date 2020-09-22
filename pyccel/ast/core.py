@@ -212,6 +212,12 @@ def broadcast(shape_1, shape_2):
             new_shape.append(e2)
         elif e2 == 1:
             new_shape.append(e1)
+        elif isinstance(e1, PyccelArraySize) and isinstance(e2, PyccelArraySize):
+            new_shape.append(e1)
+        elif isinstance(e1, PyccelArraySize):
+            new_shape.append(e2)
+        elif isinstance(e2, PyccelArraySize):
+            new_shape.append(e1)
         else:
             msg = 'operands could not be broadcast together with shapes {} {}'
             msg = msg.format(shape_1, shape_2)
@@ -359,7 +365,7 @@ class PyccelOperator(Expr, PyccelAstNode):
             if None in ranks:
                 self._rank  = None
                 self._shape = None
-            elif all(not (sh is None or isinstance(sh, PyccelArraySize)) for tup in shapes for sh in tup):
+            elif all(sh is not None for tup in shapes for sh in tup):
                 if len(args) == 1:
                     shape = args[0].shape
                 else:
@@ -414,7 +420,7 @@ class PyccelDiv(PyccelOperator):
             self._rank  = None
             self._shape = None
 
-        elif all(not (sh is None or isinstance(sh, PyccelArraySize)) for tup in shapes for sh in tup):
+        elif all(sh is not None for tup in shapes for sh in tup):
             shape = broadcast(args[0].shape, args[1].shape)
 
             for a in args[2:]:
@@ -450,7 +456,7 @@ class PyccelBooleanOperator(Expr, PyccelAstNode):
             self._rank  = None
             self._shape = None
 
-        elif all(not (sh is None or isinstance(sh, PyccelArraySize)) for tup in shapes for sh in tup):
+        elif all(sh is not None for tup in shapes for sh in tup):
             shape = broadcast(args[0].shape, args[1].shape)
             for a in args[2:]:
                 shape = broadcast(shape, a.shape)
