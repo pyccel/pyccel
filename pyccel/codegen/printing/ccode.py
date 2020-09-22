@@ -208,6 +208,11 @@ class CCodePrinter(CodePrinter):
         a = self._print(expr.args[0])
         return '!{}'.format(a)
 
+    def _print_PyccelMod(self, expr):
+        first   = self._print(expr.args[0])
+        second  = self._print(expr.args[1])
+        return "fmod({}, {})".format(first, second)
+
     def _print_Import(self, expr):
         return '#include "{0}"'.format(expr.source)
 
