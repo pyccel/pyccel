@@ -72,7 +72,6 @@ VARARGS = 'An undefined number of input arguments is not covered by Pyccel'
 SYMPY_RESTRICTION_DICT_KEYS = 'sympy does not allow dictionary keys to be strings'
 
 # Pyccel limitation
-PYCCEL_RESTRICTION_UNARY_OPERATOR = 'Invert unary operator is not covered by Pyccel'
 PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY = 'Uncovered try/except/finally statements by Pyccel'
 PYCCEL_RESTRICTION_RAISE = 'Uncovered raise statement by Pyccel'
 PYCCEL_RESTRICTION_YIELD = 'Uncovered yield statement by Pyccel'
@@ -91,6 +90,7 @@ PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS = 'Pyccel cannot handle this list c
 # Fortran limitation
 FORTRAN_ALLOCATABLE_IN_EXPRESSION = 'An allocatable function cannot be used in an expression'
 FORTRAN_RANDINT_ALLOCATABLE_IN_EXPRESSION = "Numpy's randint function does not have a fortran equivalent. It can be expressed as '(high-low)*rand(size)+low' using numpy's rand, however allocatable function cannot be used in an expression"
+FORTRAN_ELEMENTAL_SINGLE_ARGUMENT = 'Elemental functions are defined as scalar operators, with a single dummy argument'
 
 # other Pyccel messages
 PYCCEL_INVALID_HEADER = 'Annotated comments must start with omp, acc or header'

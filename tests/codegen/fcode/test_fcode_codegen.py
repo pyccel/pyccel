@@ -24,11 +24,21 @@ files = [os.path.join(path_dir,f) \
 @pytest.mark.parametrize("f", files)
 def test_codegen(f):
 
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+
     pyccel = Parser(f)
     ast = pyccel.parse()
 
+    # Assert syntactic success
+    assert(not errors.has_errors())
+
     settings = {}
     ast = pyccel.annotate(**settings)
+
+    # Assert semantic success
+    assert(not errors.has_errors())
 
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
@@ -36,9 +46,8 @@ def test_codegen(f):
     codegen = Codegen(ast, name)
     codegen.doprint()
 
-    # reset Errors singleton
-    errors = Errors()
-    errors.reset()
+    # Assert codegen success
+    assert(not errors.has_errors())
 
 ######################
 if __name__ == '__main__':
