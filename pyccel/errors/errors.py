@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from os.path import basename
 from ast import dump as ast_dump
 
 # ...
@@ -71,7 +72,7 @@ class ErrorInfo:
                  symbol=None,
                  blocker=False):
         # The source file that was the source of this error.
-        self.filename = filename
+        self.filename = basename(filename)
         # The line number related to this error within file.
         self.line = line
         # The column number related to this error with file.
@@ -94,10 +95,12 @@ class ErrorInfo:
 
         if self.line:
             if not self.column:
-                text = '{text}: {line}'.format(text=text, line=self.line)
+                text = '{text}: {filename} [{line}]'.format(text=text,
+                        filename = self.filename, line=self.line)
             else:
-                text = '{text}: [{line},{column}]'.format(text=text, line=self.line,
-                                                     column=self.column)
+                text = '{text}: {filename} [{line},{column}]'.format(text=text,
+                        filename = self.filename, line=self.line,
+                        column=self.column)
 
         text = '{text}| {msg}'.format(text=text, msg=self.message)
 
