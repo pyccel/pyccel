@@ -412,14 +412,15 @@ class CCodePrinter(CodePrinter):
         else:
             return '0'
 
-    def _print_IsNot(self, expr):
+    def _print_is_operator(self, Op, expr):
+
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         a = expr.args[0]
         b = expr.args[1]
 
         if (a.dtype is NativeBool() and b.dtype is NativeBool()):
-            return '{} != {}'.format(lhs, rhs)
+            return '{} {} {}'.format(lhs, Op, rhs)
 
         if Nil() in expr.args:
             lhs = VariableAddress(expr.lhs) if isinstance(expr.lhs, Variable) else expr.lhs
@@ -428,31 +429,16 @@ class CCodePrinter(CodePrinter):
             lhs = self._print(lhs)
             rhs = self._print(rhs)
 
-            return '{} != {}'.format(lhs, rhs)
+            return '{} {} {}'.format(lhs, Op, rhs)
         else:
             errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
                           symbol=expr, severity='fatal')
+
+    def _print_IsNot(self, expr):
+        return self._print_is_operator("!=", expr)
 
     def _print_Is(self, expr):
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
-        a = expr.args[0]
-        b = expr.args[1]
-
-        if (a.dtype is NativeBool() and b.dtype is NativeBool()):
-            return '{} == {}'.format(lhs, rhs)
-
-        if Nil() in expr.args:
-            lhs = VariableAddress(expr.lhs) if isinstance(expr.lhs, Variable) else expr.lhs
-            rhs = VariableAddress(expr.rhs) if isinstance(expr.rhs, Variable) else expr.rhs
-
-            lhs = self._print(lhs)
-            rhs = self._print(rhs)
-
-            return '{} == {}'.format(lhs, rhs)
-        else:
-            errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
-                          symbol=expr, severity='fatal')
+        return self._print_is_operator("==", expr)
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
