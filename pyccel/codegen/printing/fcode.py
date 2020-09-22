@@ -1071,7 +1071,7 @@ class FCodePrinter(CodePrinter):
                 if lhs_name in vars_dict:
                     stack_array = vars_dict[lhs_name].is_stack_array
 
-            return rhs.fprint(self._print, expr.lhs, stack_array) + '\n'
+            return rhs.fprint(self._print, expr.lhs, stack_array)
 
         if isinstance(rhs, NumpyMod):
             lhs = self._print(expr.lhs)

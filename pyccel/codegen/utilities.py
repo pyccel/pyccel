@@ -57,11 +57,11 @@ def construct_flags(compiler,
     flags = str(fflags)
     if compiler == "gfortran":
         if debug:
-            flags += " -fbounds-check"
+            flags += " -fcheck=bounds"
 
     if compiler == "mpif90":
         if debug:
-            flags += " -fbounds-check"
+            flags += " -fcheck=bounds"
         if sys.platform == "win32":
             mpiinc = os.environ["MSMPI_INC"].rstrip('\\')
             mpilib = os.environ["MSMPI_LIB64"].rstrip('\\')
