@@ -2112,6 +2112,30 @@ class FCodePrinter(CodePrinter):
                 code = 'real({})'.format(code)
         return code
 
+    def _print_PyccelRShift(self, expr):
+        return 'RSHIFT({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_PyccelLShift(self, expr):
+        return 'LSHIFT({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_PyccelBitXor(self, expr):
+        if expr.dtype is NativeBool():
+            return ' .neqv. '.join(self._print(a) for a in expr.args)
+        return 'IEOR({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_PyccelBitOr(self, expr):
+        if expr.dtype is NativeBool():
+            return ' .or. '.join(self._print(a) for a in expr.args)
+        return 'IOR({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_PyccelBitAnd(self, expr):
+        if expr.dtype is NativeBool():
+            return ' .and. '.join(self._print(a) for a in expr.args)
+        return 'IAND({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_PyccelInvert(self, expr):
+        return 'NOT({})'.format(self._print(expr.args[0]))
+
     def _print_PyccelAssociativeParenthesis(self, expr):
         return '({})'.format(self._print(expr.args[0]))
 

@@ -140,7 +140,7 @@ class CCodePrinter(CodePrinter):
                         imports = imports,
                         body    = body)
 
-    def _print_While(self,expr):
+    def _print_While(self, expr):
         code = "while (%s)\n{" % self._print(expr.test)
         code = code + "\n %s" % self._print(expr.body) + "\n}"
         return (code)
@@ -321,6 +321,30 @@ class CCodePrinter(CodePrinter):
         if all(a.dtype is NativeInteger() for a in expr.args):
             return ' / '.join('real({})'.format(self._print(a)) for a in args)
         return  ' / '.join(self._print(a) for a in args)
+
+    def _print_PyccelRShift(self, expr):
+        return ' >> '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelLShift(self, expr):
+        return ' << '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelBitXor(self, expr):
+        if expr.dtype is NativeBool():
+            return '{0} != {1}'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+        return ' ^ '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelBitOr(self, expr):
+        if expr.dtype is NativeBool():
+            return ' || '.join(self._print(a) for a in expr.args)
+        return ' | '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelBitAnd(self, expr):
+        if expr.dtype is NativeBool():
+            return ' && '.join(self._print(a) for a in expr.args)
+        return ' & '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelInvert(self, expr):
+        return '~{}'.format(self._print(expr.args[0]))
 
     def _print_PyccelAssociativeParenthesis(self, expr):
         return '({})'.format(self._print(expr.args[0]))
