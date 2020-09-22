@@ -13,6 +13,5 @@ b = square(a)
 print(b)
 
 xs = array([1., 2., 3.])
-ys = zeros_like(xs)
 ys = square(xs)
 print(ys)
