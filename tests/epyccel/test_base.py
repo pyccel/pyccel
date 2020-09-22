@@ -99,6 +99,29 @@ def test_if_0_real(language):
     compare_epyccel(base.if_0_real, 22.3, language=language)
     compare_epyccel(base.if_0_real, 0.0, language=language)
 
+def test_same_int(language):
+    compare_epyccel(base.is_same_int, 22, language=language)
+    compare_epyccel(base.isnot_same_int, 22, language=language)
+
+def test_same_float(language):
+    compare_epyccel(base.is_same_float, 22.2, language=language)
+    compare_epyccel(base.isnot_same_float, 22.2, language=language)
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Strings are not yet implemented for C language"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
+def test_same_string(language):
+    compare_epyccel(base.is_same_string, language=language)
+    compare_epyccel(base.isnot_same_string, language=language)
+
+def test_same_comlex(language):
+    compare_epyccel(base.is_same_complex, complex(2,3), language=language)
+    compare_epyccel(base.isnot_same_complex, complex(2,3), language=language)
+
 def test_is_types(language):
     compare_epyccel(base.is_types, 1, 1.0, language=language)
 
