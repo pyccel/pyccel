@@ -118,7 +118,7 @@ def test_same_string(language):
     compare_epyccel(base.is_same_string, language=language)
     compare_epyccel(base.isnot_same_string, language=language)
 
-def test_same_comlex(language):
+def test_same_complex(language):
     compare_epyccel(base.is_same_complex, complex(2,3), language=language)
     compare_epyccel(base.isnot_same_complex, complex(2,3), language=language)
 
