@@ -42,14 +42,6 @@ def compare_is_not_int(a, b):
         c = True
     return c
 
-@types('int', 'int')
-def compare_is_int_int(a, b):
-    return a is b
-
-@types('int', 'int')
-def compare_isnot_int_int(a, b):
-    return a is not b
-
 @types('bool')
 def not_false(a):
     c = False
