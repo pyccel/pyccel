@@ -68,7 +68,7 @@ from pyccel.ast.functionalexpr import GeneratorComprehension as GC
 from pyccel.ast.datatypes import NativeRange
 from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import DataTypeFactory
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric, NativeComplex
 from pyccel.ast.datatypes import default_precision
 
 from pyccel.ast.type_inference  import str_dtype
@@ -2694,15 +2694,16 @@ class SemanticParser(BasicParser):
         var1 = self._visit(expr.lhs)
         var2 = self._visit(expr.rhs)
 
+        if (var1 == var2):
+            if IsClass == IsNot:
+                return BooleanFalse()
+            elif IsClass == Is:
+                return BooleanTrue()
+
         if isinstance(var1, Nil):
             var1, var2 = var2, var1
 
         if isinstance(var2, Nil):
-            if isinstance(var1, Nil):
-                if IsClass == IsNot:
-                    return BooleanFalse()
-                elif IsClass == Is:
-                    return BooleanTrue()
             if not var1.is_optional:
                 errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
@@ -2719,8 +2720,8 @@ class SemanticParser(BasicParser):
             (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
             return IsClass(var1, var2)
 
-        lst = ["string", "complex", "real", "int"]
-        if (str(var1.dtype) in lst and str(var2.dtype) in lst):
+        lst = [NativeString(), NativeComplex(), NativeReal(), NativeInteger()]
+        if (var1.dtype in lst):
             errors.report(PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, symbol=expr,
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='error', blocker=self.blocking)
