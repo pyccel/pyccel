@@ -166,12 +166,7 @@ class SyntaxParser(BasicParser):
             return result
 
         # Unknown object, we raise an error.
-        if hasattr(stmt, 'lineno'):
-            bounding_box = (stmt.lineno, stmt.col_offset)
-        else:
-            bounding_box = None
-        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=ast.dump(stmt),
-                      bounding_box=bounding_box,
+        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=stmt,
                       severity='fatal')
 
     def _visit_Module(self, stmt):
@@ -358,7 +353,6 @@ class SyntaxParser(BasicParser):
             expr = AugAssign(lhs, '%', rhs)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
-                      bounding_box=(stmt.lineno, stmt.col_offset),
                       severity='fatal')
 
         # we set the fst to keep track of needed information for errors
@@ -370,7 +364,6 @@ class SyntaxParser(BasicParser):
         arguments = []
         if stmt.vararg or stmt.kwarg:
             errors.report(VARARGS, symbol = stmt,
-                    bounding_box=(stmt.lineno, stmt.col_offset),
                     severity='fatal')
 
         if stmt.args:
@@ -498,7 +491,7 @@ class SyntaxParser(BasicParser):
                           severity='fatal')
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
-                          bounding_box=(stmt.lineno, stmt.col_offset),
+                          symbol = stmt,
                           severity='fatal')
 
         return Func(PyccelUnary(target))
@@ -530,7 +523,7 @@ class SyntaxParser(BasicParser):
             return PyccelMod(first, second)
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
-                          bounding_box=(stmt.lineno, stmt.col_offset),
+                          symbol = stmt,
                           severity='fatal')
 
     def _visit_BoolOp(self, stmt):
@@ -544,14 +537,13 @@ class SyntaxParser(BasicParser):
             return PyccelOr(*args)
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
-                      symbol = ast.dump(stmt.op),
-                      bounding_box=(stmt.lineno, stmt.col_offset),
+                      symbol = stmt.op,
                       severity='fatal')
 
     def _visit_Compare(self, stmt):
         if len(stmt.ops)>1:
             errors.report(PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS,
-                      bounding_box=(stmt.lineno, stmt.col_offset),
+                      symbol = stmt,
                       severity='fatal')
 
         first = self._visit(stmt.left)
@@ -576,7 +568,7 @@ class SyntaxParser(BasicParser):
             return IsNot(first, second)
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
-                      bounding_box=(stmt.lineno, stmt.col_offset),
+                      symbol = stmt,
                       severity='fatal')
 
     def _visit_Return(self, stmt):
@@ -645,7 +637,8 @@ class SyntaxParser(BasicParser):
                     if not arg_name == 'results':
                         msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
                         errors.report(msg,
-                                      bounding_box=(stmt.lineno, stmt.col_offset),
+                                      symbol = decorators['types'],
+                                      bounding_box = (stmt.lineno, stmt.col_offset),
                                       severity='error')
                     else:
                         ls = arg if isinstance(arg, PythonTuple) else [arg]
@@ -653,7 +646,8 @@ class SyntaxParser(BasicParser):
                 else:
                     msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
                     errors.report(msg,
-                                  bounding_box=(stmt.lineno, stmt.col_offset),
+                                  symbol = decorators['types'],
+                                  bounding_box = (stmt.lineno, stmt.col_offset),
                                   severity='error')
 
                 i = i+1
@@ -869,8 +863,7 @@ class SyntaxParser(BasicParser):
 
         if not isinstance(self._scope[-2],ast.Assign):
             errors.report(PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN,
-                          symbol = ast.dump(stmt),
-                          bounding_box=(stmt.lineno, stmt.col_offset),
+                          symbol = stmt,
                           severity='error')
             lhs = self.get_new_variable()
         else:
@@ -1015,7 +1008,7 @@ class SyntaxParser(BasicParser):
                     exprs.append(expr)
                 else:
                     errors.report(PYCCEL_INVALID_HEADER,
-                                 bounding_box=(stmt.lineno, stmt.col_offset),
+                                  symbol = stmt,
                                   severity='error')
             else:
 
@@ -1053,7 +1046,7 @@ class SyntaxParser(BasicParser):
             else:
 
                 errors.report(PYCCEL_INVALID_HEADER,
-                              bounding_box=(stmt.lineno, stmt.col_offset),
+                              symbol = stmt,
                               severity='error')
 
         else:

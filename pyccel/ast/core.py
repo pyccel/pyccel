@@ -45,6 +45,7 @@ from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
 from pyccel.errors.errors import Errors
+from pyccel.errors.messages import *
 
 errors = Errors()
 
@@ -3066,6 +3067,10 @@ class FunctionCall(Basic, PyccelAstNode):
 
     def __init__(self, func, args, current_function=None):
 
+        if str(current_function) == str(func.name):
+            if len(func.results)>0 and not isinstance(func.results[0], PyccelAstNode):
+                errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
+
         self._funcdef     = func
         self._dtype       = func.results[0].dtype if len(func.results) == 1 else NativeTuple()
         self._rank        = func.results[0].rank if len(func.results) == 1 else None
@@ -3626,6 +3631,14 @@ class FunctionDef(Basic):
     # TODO
     def check_elemental(self):
         raise NotImplementedError('')
+
+    def __str__(self):
+        result = 'None' if len(self.results) == 0 else \
+                    ', '.join(str(r) for r in self.results)
+        return '{name}({args}) -> {result}'.format(
+                name   = self.name,
+                args   = ', '.join(self.args),
+                result = result)
 
 
 class SympyFunction(FunctionDef):
