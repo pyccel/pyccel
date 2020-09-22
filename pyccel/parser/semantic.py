@@ -2699,7 +2699,7 @@ class SemanticParser(BasicParser):
         var1 = self._visit(expr.lhs)
         var2 = self._visit(expr.rhs)
 
-        if (var1 == var2):
+        if (var1 is var2):
             if IsClass == IsNot:
                 return BooleanFalse()
             elif IsClass == Is:
