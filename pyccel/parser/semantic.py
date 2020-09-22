@@ -1419,7 +1419,8 @@ class SemanticParser(BasicParser):
                     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=self.blocking)
-                elif lhs.rank>0 and isinstance(rhs, PyccelOperator):
+                elif lhs.rank>0 and ( isinstance(rhs, (PyccelOperator)) or
+                                     (isinstance(rhs, FunctionCall) and rhs.funcdef and rhs.funcdef.is_elemental)):
                     #TODO: Provide order once issue #335 is fixed
                     #new_expressions.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, lhs.order)))
                     new_expressions.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, 'C')))
@@ -1684,13 +1685,12 @@ class SemanticParser(BasicParser):
                     c_ranks = [x.rank for x in call_args]
                     same_ranks = [x==y for (x,y) in zip(f_ranks, c_ranks)]
                     if not all(same_ranks):
-                        _name = _get_name(lhs)
-                        var = self.get_variable(_name)
-                        c_shape = [x.shape for x in call_args]
-                        assert(len(c_shape) == 1)
+                        assert(len(c_ranks) == 1)
                         for d in d_var:
-                            d['shape'] = c_shape[0]
-                            d['rank' ] = c_ranks[0]
+                            d['shape'      ] = call_args[0].shape
+                            d['rank'       ] = call_args[0].rank
+                            d['allocatable'] = call_args[0].allocatable
+                            d['order'      ] = call_args[0].order
 
             elif isinstance(func, Interface):
                 d_var = [self._infere_type(i, **settings) for i in
@@ -1741,6 +1741,7 @@ class SemanticParser(BasicParser):
                     # case of rhs is a target variable the lhs must be a pointer
                     d['is_target' ] = False
                     d['is_pointer'] = True
+
 
         lhs = expr.lhs
         if isinstance(lhs, (Symbol, DottedVariable)):
