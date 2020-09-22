@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from ast import dump as ast_dump
 
 # ...
 #ERROR = 'error'
@@ -220,6 +221,17 @@ class Errors:
         if bounding_box:
             line   = bounding_box[0]
             column = bounding_box[1]
+
+        if symbol is not None:
+            if getattr(symbol, '__module__', '') == '_ast':
+                line   = symbol.lineno
+                column = symbol.col_offset
+                symbol = ast_dump(symbol)
+            else:
+                fst = getattr(symbol, 'fst', None)
+                if fst is not None:
+                    line   = fst.lineno
+                    column = fst.col_offset
 
         info = ErrorInfo(filename,
                          line=line,
