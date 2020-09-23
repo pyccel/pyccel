@@ -518,6 +518,9 @@ class PyccelUnary(Expr, PyccelAstNode):
     def precedence(self):
         return self._precedence
 
+class PyccelUnarySub(PyccelUnary):
+    pass
+
 class PyccelAnd(Expr, PyccelAstNode):
     _dtype = NativeBool()
     _rank  = 0
