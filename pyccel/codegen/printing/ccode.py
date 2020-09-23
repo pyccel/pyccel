@@ -140,7 +140,7 @@ class CCodePrinter(CodePrinter):
                         imports = imports,
                         body    = body)
 
-    def _print_While(self,expr):
+    def _print_While(self, expr):
         code = "while (%s)\n{" % self._print(expr.test)
         code = code + "\n %s" % self._print(expr.body) + "\n}"
         return (code)
@@ -348,6 +348,30 @@ class CCodePrinter(CodePrinter):
             return ' / '.join('real({})'.format(self._print(a)) for a in args)
         return  ' / '.join(self._print(a) for a in args)
 
+    def _print_PyccelRShift(self, expr):
+        return ' >> '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelLShift(self, expr):
+        return ' << '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelBitXor(self, expr):
+        if expr.dtype is NativeBool():
+            return '{0} != {1}'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+        return ' ^ '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelBitOr(self, expr):
+        if expr.dtype is NativeBool():
+            return ' || '.join(self._print(a) for a in expr.args)
+        return ' | '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelBitAnd(self, expr):
+        if expr.dtype is NativeBool():
+            return ' && '.join(self._print(a) for a in expr.args)
+        return ' & '.join(self._print(a) for a in expr.args)
+
+    def _print_PyccelInvert(self, expr):
+        return '~{}'.format(self._print(expr.args[0]))
+
     def _print_PyccelAssociativeParenthesis(self, expr):
         return '({})'.format(self._print(expr.args[0]))
 
@@ -438,7 +462,16 @@ class CCodePrinter(CodePrinter):
         else:
             return '0'
 
-    def _print_IsNot(self, expr):
+    def _handle_is_operator(self, Op, expr):
+
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        a = expr.args[0]
+        b = expr.args[1]
+
+        if (a.dtype is NativeBool() and b.dtype is NativeBool()):
+            return '{} {} {}'.format(lhs, Op, rhs)
+
         if Nil() in expr.args:
             lhs = VariableAddress(expr.lhs) if isinstance(expr.lhs, Variable) else expr.lhs
             rhs = VariableAddress(expr.rhs) if isinstance(expr.rhs, Variable) else expr.rhs
@@ -446,9 +479,16 @@ class CCodePrinter(CodePrinter):
             lhs = self._print(lhs)
             rhs = self._print(rhs)
 
-            return '{} != {}'.format(lhs, rhs)
+            return '{} {} {}'.format(lhs, Op, rhs)
         else:
-            raise NotImplementedError
+            errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
+                          symbol=expr, severity='fatal')
+
+    def _print_IsNot(self, expr):
+        return self._handle_is_operator("!=", expr)
+
+    def _print_Is(self, expr):
+        return self._handle_is_operator("==", expr)
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
@@ -528,7 +568,6 @@ class CCodePrinter(CodePrinter):
 
     def _print_NewLine(self, expr):
         return '\n'
-
 
     def _print_Program(self, expr):
         body     = '\n'.join(self._print(i) for i in expr.body.body)
