@@ -209,6 +209,7 @@ class CCodePrinter(CodePrinter):
         return '!{}'.format(a)
 
     def _print_PyccelMod(self, expr):
+        self._additional_imports.add("math.h")
         first   = self._print(expr.args[0])
         second  = self._print(expr.args[1])
         return "fmod({}, {})".format(first, second)
