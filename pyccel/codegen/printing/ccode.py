@@ -223,6 +223,20 @@ class CCodePrinter(CodePrinter):
             second = self._print(PythonFloat(expr.args[1]))
         return "fmod({}, {})".format(first, second)
 
+    def _print_PyccelPow(self, expr):
+        self._additional_imports.add("math.h")
+        if expr.args[0].dtype is NativeInteger():
+            base = self._print(PythonFloat(expr.args[0]))
+        else:
+            base = self._print(expr.args[0])
+        if expr.args[1].dtype is NativeInteger():
+            e = self._print(PythonFloat(expr.args[1]))
+        else:
+            e = self._print(expr.args[1])
+        if expr.dtype is NativeInteger():
+            return '(({}) <= 0.0 ? pow({}, {}) : ( (long)pow({}, {})) )'.format(e, base, e, base, e)
+        return 'pow({}, {})'.format(base, e)
+
     def _print_Import(self, expr):
         return '#include <{0}>'.format(expr.source)
 
