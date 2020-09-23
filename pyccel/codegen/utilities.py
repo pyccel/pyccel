@@ -7,6 +7,7 @@ This file contains some useful functions to compile the generated fortran code
 import os
 import subprocess
 import sys
+import warnings
 
 __all__ = ['construct_flags', 'compile_files']
 
@@ -131,10 +132,18 @@ def compile_files(filename, compiler, flags,
     if verbose:
         print(cmd)
 
-    output = subprocess.check_output(cmd, shell=True)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, universal_newlines=True)
+    output, err = p.communicate()
 
-    if output:
+    if p.returncode != 0:
+        err_msg = "Failed to build module"
+        if verbose:
+            err_msg += "\n" + err
+        raise RuntimeError(err_msg)
+    if verbose:
         print(output)
+    if err:
+        warnings.warn(UserWarning(err))
 
     # TODO shall we uncomment this?
 #    # write and save a log file in .pyccel/'filename'.log
