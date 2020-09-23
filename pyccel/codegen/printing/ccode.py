@@ -15,7 +15,7 @@ from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
 
-from pyccel.ast.builtins  import Range
+from pyccel.ast.builtins  import Range, PythonFloat
 from pyccel.ast.core import Declare
 from pyccel.ast.core import SeparatorComment
 
@@ -210,8 +210,17 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelMod(self, expr):
         self._additional_imports.add("math.h")
-        first   = self._print(expr.args[0])
-        second  = self._print(expr.args[1])
+
+        first = self._print(expr.args[0])
+        second = self._print(expr.args[1])
+
+        if expr.dtype is NativeInteger():
+            return "{} % {}".format(first, second)
+        
+        if expr.args[0].dtype is NativeInteger():
+            first = self._print(PythonFloat(expr.args[0]))
+        if expr.args[1].dtype is NativeInteger():
+            second = self._print(PythonFloat(expr.args[1]))
         return "fmod({}, {})".format(first, second)
 
     def _print_Import(self, expr):
