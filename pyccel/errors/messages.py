@@ -72,11 +72,11 @@ VARARGS = 'An undefined number of input arguments is not covered by Pyccel'
 SYMPY_RESTRICTION_DICT_KEYS = 'sympy does not allow dictionary keys to be strings'
 
 # Pyccel limitation
-PYCCEL_RESTRICTION_UNARY_OPERATOR = 'Invert unary operator is not covered by Pyccel'
 PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY = 'Uncovered try/except/finally statements by Pyccel'
 PYCCEL_RESTRICTION_RAISE = 'Uncovered raise statement by Pyccel'
 PYCCEL_RESTRICTION_YIELD = 'Uncovered yield statement by Pyccel'
-PYCCEL_RESTRICTION_IS_RHS = 'Only booleans and None are allowed as rhs for is statement'
+PYCCEL_RESTRICTION_IS_ISNOT = 'Only booleans and None are allowed as rhs/lhs for is/isnot statement'
+PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE = 'Cannot translate "is" comparison, because function "id()" is not implemented for basic types "int", "float", "complex" and "str". Please use "==" for comparison instead.'
 PYCCEL_RESTRICTION_IMPORT = 'Import must be inside a def statement or a module'
 PYCCEL_RESTRICTION_IMPORT_IN_DEF = 'Only From Import is allowed inside a def statement'
 PYCCEL_RESTRICTION_IMPORT_STAR = 'import * not allowed'
@@ -91,6 +91,7 @@ PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS = 'Pyccel cannot handle this list c
 # Fortran limitation
 FORTRAN_ALLOCATABLE_IN_EXPRESSION = 'An allocatable function cannot be used in an expression'
 FORTRAN_RANDINT_ALLOCATABLE_IN_EXPRESSION = "Numpy's randint function does not have a fortran equivalent. It can be expressed as '(high-low)*rand(size)+low' using numpy's rand, however allocatable function cannot be used in an expression"
+FORTRAN_ELEMENTAL_SINGLE_ARGUMENT = 'Elemental functions are defined as scalar operators, with a single dummy argument'
 
 # other Pyccel messages
 PYCCEL_INVALID_HEADER = 'Annotated comments must start with omp, acc or header'
@@ -120,4 +121,3 @@ INVALID_PYTHON_SYNTAX = 'Python syntax error'
 UNDEFINED_INIT_METHOD = 'Undefined `__init__` method'
 FOUND_SYMBOLIC_ASSIGN = 'Found symbolic assignment [Ignored]'
 FOUND_IS_IN_ASSIGN = 'Found `is` statement in assignment [Ignored]'
-

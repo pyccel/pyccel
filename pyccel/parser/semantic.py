@@ -68,7 +68,7 @@ from pyccel.ast.functionalexpr import GeneratorComprehension as GC
 from pyccel.ast.datatypes import NativeRange
 from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import DataTypeFactory
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric, NativeComplex
 from pyccel.ast.datatypes import default_precision
 
 from pyccel.ast.type_inference  import str_dtype
@@ -1136,6 +1136,24 @@ class SemanticParser(BasicParser):
     def _visit_PyccelPow(self, expr, **settings):
         return self._handle_PyccelOperator(expr, **settings)
 
+    def _visit_PyccelRShift(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
+    def _visit_PyccelLShift(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
+    def _visit_PyccelBitXor(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
+    def _visit_PyccelBitOr(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
+    def _visit_PyccelBitAnd(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
+    def _visit_PyccelInvert(self, expr, **settings):
+        return self._handle_PyccelOperator(expr, **settings)
+
     def _visit_PyccelAssociativeParenthesis(self, expr, **settings):
         return PyccelAssociativeParenthesis(self._visit(expr.args[0]))
 
@@ -1419,7 +1437,7 @@ class SemanticParser(BasicParser):
                     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=self.blocking)
-                elif lhs.rank>0 and isinstance(rhs, PyccelOperator):
+                elif lhs.rank>0 and not isinstance(rhs, (NumpyNewArray, TupleVariable, PythonTuple)):
                     #TODO: Provide order once issue #335 is fixed
                     #new_expressions.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, lhs.order)))
                     new_expressions.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, 'C')))
@@ -1431,7 +1449,7 @@ class SemanticParser(BasicParser):
                             symbol = '|{name}| <module> -> {rhs}'.format(name=name, rhs=rhs),
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
-                elif str(dtype) != str(getattr(var, 'dtype', 'None')):
+                elif not is_augassign and str(dtype) != str(getattr(var, 'dtype', 'None')):
                     txt = '|{name}| {old} <-> {new}'
                     txt = txt.format(name=name, old=var.dtype, new=dtype)
 
@@ -1684,8 +1702,12 @@ class SemanticParser(BasicParser):
                     c_ranks = [x.rank for x in call_args]
                     same_ranks = [x==y for (x,y) in zip(f_ranks, c_ranks)]
                     if not all(same_ranks):
-                        _name = _get_name(lhs)
-                        var = self.get_variable(_name)
+                        assert(len(c_ranks) == 1)
+                        for d in d_var:
+                            d['shape'      ] = call_args[0].shape
+                            d['rank'       ] = call_args[0].rank
+                            d['allocatable'] = call_args[0].allocatable
+                            d['order'      ] = call_args[0].order
 
             elif isinstance(func, Interface):
                 d_var = [self._infere_type(i, **settings) for i in
@@ -1736,6 +1758,7 @@ class SemanticParser(BasicParser):
                     # case of rhs is a target variable the lhs must be a pointer
                     d['is_target' ] = False
                     d['is_pointer'] = True
+
 
         lhs = expr.lhs
         if isinstance(lhs, (Symbol, DottedVariable)):
@@ -2694,6 +2717,12 @@ class SemanticParser(BasicParser):
         var1 = self._visit(expr.lhs)
         var2 = self._visit(expr.rhs)
 
+        if (var1 is var2) or (isinstance(var2, Nil) and isinstance(var1, Nil)):
+            if IsClass == IsNot:
+                return BooleanFalse()
+            elif IsClass == Is:
+                return BooleanTrue()
+
         if isinstance(var1, Nil):
             var1, var2 = var2, var1
 
@@ -2704,11 +2733,24 @@ class SemanticParser(BasicParser):
                         severity='error', blocker=self.blocking)
             return IsClass(var1, expr.rhs)
 
+        if (var1.dtype != var2.dtype):
+            if IsClass == Is:
+                return BooleanFalse()
+            elif IsClass == IsNot:
+                return BooleanTrue()
+
         if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
             (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
             return IsClass(var1, var2)
 
-        errors.report(PYCCEL_RESTRICTION_IS_RHS,
+        lst = [NativeString(), NativeComplex(), NativeReal(), NativeInteger()]
+        if (var1.dtype in lst):
+            errors.report(PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, symbol=expr,
+            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+            severity='error', blocker=self.blocking)
+            return IsClass(var1, var2)
+
+        errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='error', blocker=self.blocking)
         return IsClass(var1, var2)

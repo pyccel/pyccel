@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import importlib
-
 from collections.abc import Iterable
 from collections     import OrderedDict
 
@@ -47,6 +46,8 @@ from .functionalexpr import FunctionalFor
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
 
+from pyccel.ast.builtins import Int
+
 errors = Errors()
 
 # TODO [YG, 12.03.2020]: Move non-Python constructs to other modules
@@ -70,6 +71,12 @@ __all__ = (
     'PyccelAnd',
     'PyccelOr',
     'PyccelNot',
+    'PyccelRShift',
+    'PyccelLShift',
+    'PyccelBitXor',
+    'PyccelBitOr',
+    'PyccelBitAnd',
+    'PyccelInvert',
     'PyccelAssociativeParenthesis',
     'PyccelUnary',
     'AddOp',
@@ -205,6 +212,12 @@ def broadcast(shape_1, shape_2):
             new_shape.append(e2)
         elif e2 == 1:
             new_shape.append(e1)
+        elif isinstance(e1, PyccelArraySize) and isinstance(e2, PyccelArraySize):
+            new_shape.append(e1)
+        elif isinstance(e1, PyccelArraySize):
+            new_shape.append(e2)
+        elif isinstance(e2, PyccelArraySize):
+            new_shape.append(e1)
         else:
             msg = 'operands could not be broadcast together with shapes {} {}'
             msg = msg.format(shape_1, shape_2)
@@ -226,6 +239,95 @@ def handle_precedence(args, my_precedence):
         args = tuple(new_args)
 
     return args
+
+class PyccelBitOperator(Expr, PyccelAstNode):
+    _rank = 0
+    _shape = ()
+
+    def __init__(self, args):
+        if self.stage == 'syntactic':
+            self._args = handle_precedence(args, self.precedence)
+            return
+
+        max_precision = 0
+        for a in args:
+            if a.dtype is NativeInteger() or a.dtype is NativeBool():
+                max_precision = max(a.precision, max_precision)
+            else:
+                raise TypeError('unsupported operand type(s): {}'.format(self))
+        self._precision = max_precision
+    @property
+    def precedence(self):
+        return self._precedence
+
+class PyccelRShift(PyccelBitOperator):
+    _precedence = 11
+    _dtype = NativeInteger()
+    def __init__(self, *args):
+        super(PyccelRShift, self).__init__(args)
+        if self.stage == 'syntactic':
+            return
+        self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+
+class PyccelLShift(PyccelBitOperator):
+    _precedence = 11
+    _dtype = NativeInteger()
+    def __init__(self, *args):
+        super(PyccelLShift, self).__init__(args)
+        if self.stage == 'syntactic':
+            return
+        self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+
+class PyccelBitXor(PyccelBitOperator):
+    _precedence = 9
+    def __init__(self, *args):
+        super(PyccelBitXor, self).__init__(args)
+        if self.stage == 'syntactic':
+            return
+        if all(a.dtype is NativeInteger() for a in args):
+            self._dtype = NativeInteger()
+        elif all(a.dtype is NativeBool() for a in args):
+            self._dtype = NativeBool()
+        else:
+            self._dtype = NativeInteger()
+            self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+
+class PyccelBitOr(PyccelBitOperator):
+    _precedence = 8
+    def __init__(self, *args):
+        super(PyccelBitOr, self).__init__(args)
+        if self.stage == 'syntactic':
+            return
+        if all(a.dtype is NativeInteger() for a in args):
+            self._dtype = NativeInteger()
+        elif all(a.dtype is NativeBool() for a in args):
+            self._dtype = NativeBool()
+        else:
+            self._dtype = NativeInteger()
+            self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+
+class PyccelBitAnd(PyccelBitOperator):
+    _precedence = 10
+    def __init__(self, *args):
+        super(PyccelBitAnd, self).__init__(args)
+        if self.stage == 'syntactic':
+            return
+        if all(a.dtype is NativeInteger() for a in args):
+            self._dtype = NativeInteger()
+        elif all(a.dtype is NativeBool() for a in args):
+            self._dtype = NativeBool()
+        else:
+            self._dtype = NativeInteger()
+            self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+
+class PyccelInvert(PyccelBitOperator):
+    _precedence = 14
+    _dtype = NativeInteger()
+    def __init__(self, *args):
+        super(PyccelInvert, self).__init__(args)
+        if self.stage == 'syntactic':
+            return
+        self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelOperator(Expr, PyccelAstNode):
 
@@ -263,7 +365,7 @@ class PyccelOperator(Expr, PyccelAstNode):
             if None in ranks:
                 self._rank  = None
                 self._shape = None
-            elif all(not (sh is None or isinstance(sh, PyccelArraySize)) for tup in shapes for sh in tup):
+            elif all(sh is not None for tup in shapes for sh in tup):
                 if len(args) == 1:
                     shape = args[0].shape
                 else:
@@ -318,7 +420,7 @@ class PyccelDiv(PyccelOperator):
             self._rank  = None
             self._shape = None
 
-        elif all(not (sh is None or isinstance(sh, PyccelArraySize)) for tup in shapes for sh in tup):
+        elif all(sh is not None for tup in shapes for sh in tup):
             shape = broadcast(args[0].shape, args[1].shape)
 
             for a in args[2:]:
@@ -354,7 +456,7 @@ class PyccelBooleanOperator(Expr, PyccelAstNode):
             self._rank  = None
             self._shape = None
 
-        elif all(not (sh is None or isinstance(sh, PyccelArraySize)) for tup in shapes for sh in tup):
+        elif all(sh is not None for tup in shapes for sh in tup):
             shape = broadcast(args[0].shape, args[1].shape)
             for a in args[2:]:
                 shape = broadcast(shape, a.shape)

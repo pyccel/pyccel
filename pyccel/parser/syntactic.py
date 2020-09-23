@@ -53,6 +53,7 @@ from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import _atomic
 from pyccel.ast.core import create_variable
 
+from pyccel.ast.core import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
@@ -485,10 +486,7 @@ class SyntaxParser(BasicParser):
             Func = PyccelMinus
 
         elif isinstance(stmt.op, ast.Invert):
-
-            errors.report(PYCCEL_RESTRICTION_UNARY_OPERATOR,
-                          bounding_box=(stmt.lineno, stmt.col_offset),
-                          severity='fatal')
+            Func = PyccelInvert
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                           symbol = stmt,
@@ -521,6 +519,22 @@ class SyntaxParser(BasicParser):
 
         elif isinstance(stmt.op, ast.Mod):
             return PyccelMod(first, second)
+
+        elif isinstance(stmt.op, ast.RShift):
+            return PyccelRShift(first, second)
+
+        elif isinstance(stmt.op, ast.LShift):
+            return PyccelLShift(first, second)
+
+        elif isinstance(stmt.op, ast.BitXor):
+            return PyccelBitXor(first, second)
+
+        elif isinstance(stmt.op, ast.BitOr):
+            return PyccelBitOr(first, second)
+
+        elif isinstance(stmt.op, ast.BitAnd):
+            return PyccelBitAnd(first, second)
+
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                           symbol = stmt,
@@ -692,6 +706,11 @@ class SyntaxParser(BasicParser):
 
         if 'elemental' in decorators.keys():
             is_elemental = True
+            if len(arguments) > 1:
+                errors.report(FORTRAN_ELEMENTAL_SINGLE_ARGUMENT,
+                              symbol=decorators['elemental'],
+                              bounding_box=(stmt.lineno, stmt.col_offset),
+                              severity='error')
 
         if 'private' in decorators.keys():
             is_private = True
