@@ -39,7 +39,8 @@ def compile_f2py( filename, *,
                   accelerator=None,
                   includes = '',
                   only = (),
-                  pyf = '' ):
+                  pyf = '',
+                  verbose = False ):
 
     args_pattern = """  -c {compilers} --f90flags="{f90flags}" {opt} {libs} -m {modulename} {pyf} {filename} {libdirs} {extra_args} {includes} {only}"""
 
@@ -252,7 +253,8 @@ def create_shared_library(codegen,
                          extra_args  = extra_args,
                          compiler    = compiler,
                          mpi_compiler= mpi_compiler,
-                         accelerator = accelerator)
+                         accelerator = accelerator,
+                         verbose     = verbose )
 
     # Obtain absolute path of newly created shared library
 
