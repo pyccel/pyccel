@@ -705,7 +705,7 @@ def test_ldexp_return_type(language): # ldexp
         return ldexp(x, exp)
 
     f1 = epyccel(ldexp_type, language = language)
-    high = 100 
+    high = 100
     x = rand()
     exp = randint(high)
 
@@ -1291,7 +1291,6 @@ def test_lgamma_call(language):
     if f == 0:
         x += - 0.1
     assert(isclose(f1(-x) , lgamma_call(-x), rtol=1e-15, atol=1e-15))
-    
     assert isinstance(f1(x), type(lgamma_call(x)))
 
 def test_lgamma_phrase(language):
