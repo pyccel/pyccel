@@ -57,7 +57,7 @@ from pyccel.ast.core import _atomic
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
-from pyccel.ast.core import PyccelUnary
+from pyccel.ast.core import PyccelUnary, PyccelUnarySub
 from pyccel.ast.core import Product, FunctionCall
 from pyccel.ast.core import PyccelArraySize
 from pyccel.ast.core import PyccelOperator
@@ -1159,6 +1159,9 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelUnary(self, expr, **settings):
         return PyccelUnary(self._visit(expr.args[0]))
+
+    def _visit_PyccelUnarySub(self, expr, **settings):
+        return PyccelUnarySub(self._visit(expr.args[0]))
 
     def _visit_PyccelAnd(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]

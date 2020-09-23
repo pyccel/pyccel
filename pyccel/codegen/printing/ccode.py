@@ -379,7 +379,10 @@ class CCodePrinter(CodePrinter):
         return '({})'.format(self._print(expr.args[0]))
 
     def _print_PyccelUnary(self, expr):
-        return '({})'.format(self._print(expr.args[0]))
+        return '+{}'.format(self._print(expr.args[0]))
+
+    def _print_PyccelUnarySub(self, expr):
+        return '-{}'.format(self._print(expr.args[0]))
 
     def _print_AugAssign(self, expr):
         lhs_code = self._print(expr.lhs)
