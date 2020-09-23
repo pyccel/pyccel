@@ -719,6 +719,7 @@ def test_ldexp_return_type(language): # ldexp
 
 #--------------------------- remainder function ------------------------------#
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python3.7 or higher")
 @pytest.mark.parametrize( 'language', (
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = [
@@ -745,6 +746,7 @@ def test_remainder_call(language): # remainder
     assert(isclose(remainder_call(x, -y), f1(x, -y), rtol=1e-15, atol=1e-15))
     assert(isclose(remainder_call(-x, y), f1(-x, y), rtol=1e-15, atol=1e-15))
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python3.7 or higher")
 @pytest.mark.parametrize( 'language', (
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = [
