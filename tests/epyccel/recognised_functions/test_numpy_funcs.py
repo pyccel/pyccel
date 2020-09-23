@@ -464,10 +464,10 @@ def test_floor_return_type(language):
     assert(type(f1(x)) == type(floor_return_type_real(x).item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -495,10 +495,10 @@ def test_shape_indexed(language):
     assert(f2(x2) == test_shape_2d(x2))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -524,10 +524,10 @@ def test_shape_property(language):
     assert(all(isclose(f2(x2), test_shape_2d(x2))))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -564,10 +564,10 @@ def test_shape_tuple_output(language):
     assert(f2(x2)   == test_shape_2d(x2))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -596,10 +596,10 @@ def test_shape_real(language):
     assert(f2(x2) == test_shape_2d(x2))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -629,10 +629,10 @@ def test_shape_int(language):
     assert(f2(x2) == test_shape_2d(x2))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -661,10 +661,10 @@ def test_shape_bool(language):
     assert(f2(x2) == test_shape_2d(x2))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -709,10 +709,10 @@ def test_full_basic_int(language):
     assert(type(f_arg_names(size)[0]) == type(create_full_arg_names(size)[0].item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -800,10 +800,10 @@ def test_full_basic_bool(language):
     assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0])) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -831,10 +831,10 @@ def test_full_order(language):
     assert(f_shape_F(size_1,size_2) == create_full_shape_F(size_1,size_2))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -916,10 +916,10 @@ def test_full_dtype(language):
     assert(type(f_real_complex128(val_float))       == type(create_full_val_real_complex128(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -971,10 +971,10 @@ def test_full_combined_args(language):
     assert(type(f3_val())  == type(create_full_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1001,10 +1001,10 @@ def test_empty_basic(language):
     assert(     f_shape_2d(size)      ==      create_empty_shape_2d(size))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1032,10 +1032,10 @@ def test_empty_order(language):
     assert(     f_shape_F(size_1,size_2) == create_empty_shape_F(size_1,size_2))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1098,10 +1098,10 @@ def test_empty_dtype(language):
     assert(type(f_real_complex128()) == type(create_empty_val_complex128().item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1150,10 +1150,10 @@ def test_empty_combined_args(language):
     assert(type(f3_val())  == type(create_empty_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1180,10 +1180,10 @@ def test_ones_basic(language):
     assert(     f_shape_2d(size)      ==      create_ones_shape_2d(size))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1279,10 +1279,10 @@ def test_ones_dtype(language):
     assert(type(f_real_complex128()) == type(create_ones_val_complex128().item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1334,10 +1334,10 @@ def test_ones_combined_args(language):
     assert(type(f3_val())  == type(create_ones_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1364,10 +1364,10 @@ def test_zeros_basic(language):
     assert(     f_shape_2d(size)      ==      create_zeros_shape_2d(size))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1395,10 +1395,10 @@ def test_zeros_order(language):
     assert(     f_shape_F(size_1,size_2) == create_zeros_shape_F(size_1,size_2))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1469,10 +1469,10 @@ def test_zeros_dtype(language):
     assert(type(f_real_complex128()) == type(create_zeros_val_complex128().item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1524,10 +1524,10 @@ def test_zeros_combined_args(language):
     assert(type(f3_val())  == type(create_zeros_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1562,10 +1562,10 @@ def test_array(language):
     assert(type(f2_val()) == type(create_array_tuple_val().item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1582,10 +1582,10 @@ def test_rand_basic(language):
     assert(len(set(y))>1)
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1648,10 +1648,10 @@ def test_rand_args(language):
     assert(len(set(y))>1)
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1683,10 +1683,10 @@ def test_rand_expr_array(language):
     assert(len(set(y))>1)
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1716,10 +1716,10 @@ def test_randint_basic(language):
     assert(len(set(y))>1)
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1751,10 +1751,10 @@ def test_randint_expr(language):
     assert(len(set(y))>1)
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1769,10 +1769,10 @@ def test_sum_int(language):
     assert(f1(x) == sum_call(x))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1787,10 +1787,10 @@ def test_sum_real(language):
     assert(isclose(f1(x), sum_call(x), rtol=1e-15, atol=1e-15))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1807,10 +1807,10 @@ def test_sum_phrase(language):
     assert(isclose(f2(x,y), sum_phrase(x,y), rtol=1e-15, atol=1e-15))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1824,10 +1824,10 @@ def test_sum_property(language):
     assert(f1(x) == sum_call(x))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1842,10 +1842,10 @@ def test_min_int(language):
     assert(f1(x) == min_call(x))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1860,10 +1860,10 @@ def test_min_real(language):
     assert(isclose(f1(x), min_call(x), rtol=1e-15, atol=1e-15))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1880,10 +1880,10 @@ def test_min_phrase(language):
     assert(isclose(f2(x,y), min_phrase(x,y), rtol=1e-15, atol=1e-15))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1897,10 +1897,10 @@ def test_min_property(language):
     assert(f1(x) == min_call(x))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1915,10 +1915,10 @@ def test_max_int(language):
     assert(f1(x) == max_call(x))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1933,10 +1933,10 @@ def test_max_real(language):
     assert(isclose(f1(x), max_call(x), rtol=1e-15, atol=1e-15))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
@@ -1953,10 +1953,10 @@ def test_max_phrase(language):
     assert(isclose(f2(x,y), max_phrase(x,y), rtol=1e-15, atol=1e-15))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="arrays not implemented"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
