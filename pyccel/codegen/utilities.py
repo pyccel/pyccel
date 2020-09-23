@@ -132,7 +132,7 @@ def compile_files(filename, compiler, flags,
     if verbose:
         print(cmd)
 
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, universal_newlines=True)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     output, err = p.communicate()
 
     if p.returncode != 0:

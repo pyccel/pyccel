@@ -125,7 +125,7 @@ def compile_f2py( filename, *,
     cmd = """{} -m numpy.f2py {}"""
     cmd = cmd.format(sys.executable, args)
 
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, universal_newlines=True)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     output, err = p.communicate()
 
     if p.returncode != 0:
