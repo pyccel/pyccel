@@ -224,7 +224,7 @@ class CCodePrinter(CodePrinter):
         return "fmod({}, {})".format(first, second)
 
     def _print_Import(self, expr):
-        return '#include "{0}"'.format(expr.source)
+        return '#include <{0}>'.format(expr.source)
 
     def find_in_dtype_registry(self, dtype, prec):
         try :
