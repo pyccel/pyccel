@@ -135,8 +135,8 @@ def compile_f2py( filename, *,
         raise RuntimeError(err_msg)
     if verbose:
         print(output)
-    if err:
-        warnings.warn(UserWarning(err))
+        if err:
+            warnings.warn(UserWarning(err))
 
 #    # .... TODO: TO REMOVE
 #    pattern_1 = 'f2py  {modulename}.f90 -h {modulename}.pyf -m {modulename}'
