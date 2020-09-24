@@ -125,6 +125,7 @@ __all__ = (
     'Load',
     'ModOp',
     'Module',
+    'ModuleHeader',
     'MulOp',
     'NativeOp',
     'NewLine',
@@ -2047,6 +2048,47 @@ class Module(Basic):
 
     def set_name(self, new_name):
         self._name = new_name
+
+class ModuleHeader(Basic):
+
+    """Represents the header file for a module
+
+    Parameters
+    ----------
+    module: Module
+        the module
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
+    >>> z = Variable('real', 'z')
+    >>> t = Variable('real', 't')
+    >>> a = Variable('real', 'a')
+    >>> b = Variable('real', 'b')
+    >>> body = [Assign(y,x+a)]
+    >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
+    >>> attributes   = [x,y]
+    >>> methods     = [translate]
+    >>> Point = ClassDef('Point', attributes, methods)
+    >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
+    >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
+    >>> mod = Module('my_module', [], [incr, decr], classes = [Point])
+    >>> ModuleHeader(mod)
+    Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
+    """
+
+    def __init__(self, module):
+        if not isinstance(module, Module):
+            raise TypeError('module must be a Module')
+
+        self._module = module
+
+    @property
+    def module(self):
+        return self._module
 
 class Program(Basic):
 
