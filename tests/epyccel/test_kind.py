@@ -1,6 +1,7 @@
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 import shutil
+import platform
 
 from conftest import *
 def clean_test():
@@ -41,7 +42,9 @@ def test_input_output_matching_types(language):
         c = a+b
         return c
 
-    fflags="-Werror -Wconversion -Wno-error=unused-command-line-argument"
+    fflags="-Werror -Wconversion"
+    if platform.system() == 'Darwin': # If macosx
+        fflags=fflags+" -Wno-error=unused-command-line-argument"
     if language=="fortran":
         fflags=fflags+"-extra"
     epyc_add_real = epyccel(add_real, fflags=fflags, language=language)
