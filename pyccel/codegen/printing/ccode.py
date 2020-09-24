@@ -16,7 +16,7 @@ from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeString
 
 from pyccel.ast.builtins  import Range, Print, PythonTuple
-from pyccel.ast.core import Declare
+from pyccel.ast.core import Declare, ValuedVariable
 from pyccel.ast.core import SeparatorComment
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -217,22 +217,31 @@ class CCodePrinter(CodePrinter):
     def _print_Print(self, expr):
         self._additional_imports.add("stdio.h")
         args = []
-        args_format = ""
+        args_format = []
+        end = '\\n'
+        sep = ' '
         for f in expr.expr:
-            if f.dtype is NativeBool():
-                args_format += "%s"
-                args.append('"True"' if f is BooleanTrue() else '"False"')
+            if isinstance(f, ValuedVariable):
+                if f.name == 'sep'      :   sep = str(f.value)
+                elif f.name == 'end'    :   end = str(f.value)
+            elif f.dtype is NativeBool():
+                args_format.append("%s")
+                args.append('({}) ? "True" : "False"'.format(self._print(f)))
             elif f.dtype is NativeInteger():
-                args_format += "%ld"
+                args_format.append("%ld")
                 args.append(self._print(f))
             elif f.dtype is NativeReal():
-                args_format += "%lf"
+                args_format.append("%lf")
                 args.append(self._print(f))
             elif f.dtype is NativeString():
-                args_format += "%s"
+                args_format.append("%s")
                 args.append(self._print(f))
             else :
+                print("type is ", f.dtype)
                 raise ("{} type is not supported currently").format(f.dtype)
+        
+        args_format = sep.join(args_format)
+        args_format += end
         args_format = '"{}"'.format(args_format)
         code = ', '.join([args_format, *args])
         return self._get_statement("printf({})".format(code)) + '\n'
