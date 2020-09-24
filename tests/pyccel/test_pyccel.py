@@ -185,7 +185,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
     if compile_with_pyccel:
         compile_pyccel(cwd, test_file, pyccel_commands)
     else:
-        compile_pyccel (cwd, test_file, pyccel_commands+"-t")
+        compile_pyccel (cwd, test_file, pyccel_commands+" -t")
         compile_fortran(cwd, test_file, dependencies)
 
     fort_out = get_fortran_output(get_exe(test_file))
