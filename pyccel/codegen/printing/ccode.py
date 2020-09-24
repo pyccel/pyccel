@@ -20,6 +20,8 @@ from pyccel.ast.core import Declare
 from pyccel.ast.core import SeparatorComment
 from pyccel.ast.numbers import Float
 
+from pyccel.ast.numpyext import NumpyComplex, NumpyFloat
+
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors import Errors
@@ -58,7 +60,7 @@ known_functions = {
 
 # dictionary mapping numpy function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
-numpy_ufunc_to_c = {
+numpy_ufunc_to_c_real = {
     'NumpyAbs'  : 'fabs',
     'NumpyMin'  : 'minval',
     'NumpyMax'  : 'maxval',
@@ -66,7 +68,7 @@ numpy_ufunc_to_c = {
     # ---
     'NumpyExp' : 'exp',
     'NumpyLog' : 'log',
-    # 'NumpySqrt': 'sqrt',  # sqrt is printed using _Print_NumpySqrt
+    'NumpySqrt': 'sqrt',
     # ---
     'NumpySin'    : 'sin',
     'NumpyCos'    : 'cos',
@@ -81,6 +83,30 @@ numpy_ufunc_to_c = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
+}
+
+numpy_ufunc_to_c_complex = {
+    'NumpyAbs'  : 'cabs',
+    'NumpyMin'  : 'minval',
+    'NumpyMax'  : 'maxval',
+    'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
+    # ---
+    'NumpyExp' : 'cexp',
+    'NumpyLog' : 'clog',
+    'NumpySqrt': 'csqrt',
+    # ---
+    'NumpySin'    : 'csin',
+    'NumpyCos'    : 'ccos',
+    'NumpyTan'    : 'ctan',
+    'NumpyArcsin' : 'casin',
+    'NumpyArccos' : 'cacos',
+    'NumpyArctan' : 'catan',
+    'NumpySinh'   : 'csinh',
+    'NumpyCosh'   : 'ccosh',
+    'NumpyTanh'   : 'ctanh',
+    'NumpyArcsinh': 'casinh',
+    'NumpyArccosh': 'cacosh',
+    'NumpyArctanh': 'catanh',
 }
 
 # dictionary mapping Math function to (argument_conditions, C_function).
@@ -388,10 +414,17 @@ class CCodePrinter(CodePrinter):
         # add necessary include
         self._additional_imports.add('math.h')
         type_name = type(expr).__name__
-        func_name = numpy_ufunc_to_c[type_name]
+        func_name = numpy_ufunc_to_c_real[type_name]
         args = []
         for arg in expr.args:
-            args.append(self._print(arg))
+            if arg.dtype is NativeComplex():
+                self._additional_imports.add('complex.h')
+                func_name = numpy_ufunc_to_c_complex[type_name]
+                args.append(self._print(arg))
+            elif arg.dtype is not NativeReal():
+                args.append(self._print(NumpyFloat(arg)))
+            else :
+                args.append(self._print(arg))
         code_args = ', '.join(args)
         return '{0}({1})'.format(func_name, code_args)
 
@@ -418,27 +451,20 @@ class CCodePrinter(CodePrinter):
         func_name = math_function_to_c[type_name]
         args = []
         for arg in expr.args:
+            if arg.dtype is not NativeReal():
+                args.append(self._print(NumpyFloat(arg)))
+            else :
                 args.append(self._print(arg))
         code_args = ', '.join(args)
         return '{0}({1})'.format(func_name, code_args)
-
-
-    def _print_NumpySqrt(self, expr):
-        # add necessary include
-        self._additional_imports.add('math.h')
-        arg = expr.args[0]
-        code_args = self._print(arg)
-        if arg.dtype is NativeComplex():
-            return 'csqrt({})'.format(code_args)
-        return 'sqrt({})'.format(code_args)
 
     def _print_MathSqrt(self, expr):
         # add necessary include
         self._additional_imports.add('math.h')
         arg = expr.args[0]
         code_args = self._print(arg)
-        if arg.dtype is NativeComplex():
-            return 'csqrt({})'.format(code_args)
+        if arg.dtype is not NativeReal():
+            code_args = self._print(NumpyFloat(arg))
         return 'sqrt({})'.format(code_args)
 
     def _print_FunctionDef(self, expr):
