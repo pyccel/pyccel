@@ -89,7 +89,7 @@ class CCodePrinter(CodePrinter):
         self.known_functions.update(userfuncs)
         self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
-        self._additional_imports = set(['stdlib.h'])
+        self._additional_imports = set(['stdlib'])
 
     def _get_statement(self, codestring):
         return "%s;" % codestring
@@ -229,7 +229,7 @@ class CCodePrinter(CodePrinter):
         return '!{}'.format(a)
 
     def _print_Import(self, expr):
-        return '#include "{0}"'.format(expr.source)
+        return '#include "{0}.h"'.format(expr.source)
 
     def find_in_dtype_registry(self, dtype, prec):
         try :
@@ -255,7 +255,7 @@ class CCodePrinter(CodePrinter):
         return '{0}{1};'.format(declaration_type, variable)
 
     def _print_NativeBool(self, expr):
-        self._additional_imports.add('stdbool.h')
+        self._additional_imports.add('stdbool')
         return 'bool'
 
     def _print_NativeInteger(self, expr):
@@ -268,7 +268,7 @@ class CCodePrinter(CodePrinter):
         return 'void'
 
     def _print_NativeComplex(self, expr):
-        self._additional_imports.add('complex.h')
+        self._additional_imports.add('complex')
         return 'complex'
 
     def function_signature(self, expr):
