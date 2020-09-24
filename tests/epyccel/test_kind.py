@@ -45,7 +45,7 @@ def test_input_output_matching_types(language):
     fflags="-Werror -Wconversion"
     if language=="fortran":
         fflags=fflags+"-extra"
-    if platform.system() == 'Darwin': # If macosx
+    if platform.system() == 'Darwin' and language=='c': # If macosx
         fflags=fflags+" -Wno-error=unused-command-line-argument"
     epyc_add_real = epyccel(add_real, fflags=fflags, language=language)
 
