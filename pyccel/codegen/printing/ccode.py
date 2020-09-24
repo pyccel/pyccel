@@ -129,6 +129,26 @@ class CCodePrinter(CodePrinter):
     def _print_ImaginaryUnit(self, expr):
         return '_Complex_I'
 
+    def _print_ModuleHeader(self, expr):
+        name = expr.module.name
+        # TODO: Add classes and interfaces
+        funcs = '\n\n'.join(self.function_signature(f) for f in expr.module.funcs)
+
+        # Print imports last to be sure that all additional_imports have been collected
+        imports  = [*expr.imports, *map(Import, self._additional_imports)]
+        imports = '\n'.join(self._print(i) for i in imports)
+
+        return ('#ifndef {name}_H\n'
+                '#define {name}_H\n\n'
+                '{imports}\n\n'
+                #'{classes}\n\n'
+                '{funcs}\n\n'
+                #'{interfaces}\n\n'
+                '#endif // {name}_H').format(
+                        name    = name,
+                        imports = imports,
+                        funcs   = funcs)
+
     def _print_Module(self, expr):
         body    = '\n\n'.join(self._print(i) for i in expr.body)
 
