@@ -2314,15 +2314,18 @@ class SemanticParser(BasicParser):
         is_private   = expr.is_private
 
         header = expr.header
+        args_number = len(expr.arguments)
         if header is None:
             if cls_name:
                 header = self.get_header(cls_name +'.'+ name)
+                args_number -= 1
             else:
                 header = self.get_header(name)
+
         if header:
-            if (len(expr.arguments) != len(header.dtypes)):
-                msg = 'The number of arguments in the function ({}) and the types decorator ({}) don\'t match.'.format(len(expr.arguments), len(header.dtypes))
-                if (len(expr.arguments) < len(header.dtypes)):
+            if (args_number != len(header.dtypes)):
+                msg = 'The number of arguments in the function {} ({}) and the types decorator ({}) don\'t match.'.format(name ,args_number, len(header.dtypes))
+                if (args_number < len(header.dtypes)):
                     errors.report(msg, symbol=expr.arguments, severity='warning')
                 else:
                     errors.report(msg, symbol=expr.arguments, severity='fatal')
@@ -2368,7 +2371,7 @@ class SemanticParser(BasicParser):
 #            header_vec = header.vectorize(index_arg)
 #            vec_func   = expr.vectorize(body_vec, header_vec)
 
-
+        print(interfaces)
         for m in interfaces:
             args           = []
             results        = []
