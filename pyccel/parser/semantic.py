@@ -951,7 +951,6 @@ class SemanticParser(BasicParser):
 
     def _visit_Symbol(self, expr, **settings):
         name = expr.name
-
         var = self.check_for_variable(name)
 
         if var is None:
@@ -2320,6 +2319,13 @@ class SemanticParser(BasicParser):
                 header = self.get_header(cls_name +'.'+ name)
             else:
                 header = self.get_header(name)
+        if header:
+            if (len(expr.arguments) != len(header.dtypes)):
+                msg = 'The number of arguments in the function ({}) and the types decorator ({}) don\'t match.'.format(len(expr.arguments), len(header.dtypes))
+                if (len(expr.arguments) < len(header.dtypes)):
+                    errors.report(msg, symbol=expr.arguments, severity='warning')
+                else:
+                    errors.report(msg, symbol=expr.arguments, severity='fatal')
 
         if expr.arguments and not header:
 

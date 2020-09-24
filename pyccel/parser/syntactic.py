@@ -634,12 +634,6 @@ class SyntaxParser(BasicParser):
             container = types
             i = 0
             ls = decorators['types'].args
-            args_number = 0
-            for x in ls:
-                tmp = str(x)
-                if "results=" not in tmp:
-                    tmp = tmp.strip().replace(":,", "")
-                    args_number += len(tmp.split(','))
             while i<len(ls) :
                 arg = ls[i]
                 if isinstance(arg, Symbol):
@@ -670,13 +664,6 @@ class SyntaxParser(BasicParser):
                                   severity='error')
 
                 i = i+1
-
-            if (len(arguments) != args_number):
-                msg = 'The number of arguments in the function ({}) {} and the types decorator ({}) {} don\'t match.'.format(len(arguments), arguments, args_number, decorators['types'].args)
-                if (len(arguments) < args_number):
-                    errors.report(msg, symbol=arguments, bounding_box=(stmt.lineno, stmt.col_offset), severity='warning')
-                else:
-                    errors.report(msg, symbol=arguments, bounding_box=(stmt.lineno, stmt.col_offset), severity='error')
 
             txt  = '#$ header ' + name
             txt += '(' + ','.join(types) + ')'
