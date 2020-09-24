@@ -357,7 +357,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports  = [Import(s) for s in self._additional_imports]
-        imports += [Import('Python.h')]
+        imports += [Import('Python')]
         imports  = '\n'.join(self._print(i) for i in imports)
 
         return ('#define PY_SSIZE_T_CLEAN\n'
