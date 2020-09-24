@@ -2371,7 +2371,6 @@ class SemanticParser(BasicParser):
 #            header_vec = header.vectorize(index_arg)
 #            vec_func   = expr.vectorize(body_vec, header_vec)
 
-        print(interfaces)
         for m in interfaces:
             args           = []
             results        = []
