@@ -240,18 +240,17 @@ def execute_pyccel(fname, *,
         # TODO: stop at object files, do not compile executable
         #       This allows for properly linking program to modules
         #
-        if not (language == "c" and codegen.is_module):
-            try:
-                compile_files(fname, f90exec, flags,
-                                binary=None,
-                                verbose=verbose,
-                                modules=modules,
-                                is_module=codegen.is_module,
-                                output=pyccel_dirpath,
-                                libs=libs)
-            except Exception:
-                handle_error('Fortran compilation')
-                raise
+        try:
+            compile_files(fname, f90exec, flags,
+                            binary=None,
+                            verbose=verbose,
+                            modules=modules,
+                            is_module=codegen.is_module,
+                            output=pyccel_dirpath,
+                            libs=libs)
+        except Exception:
+            handle_error('Fortran compilation')
+            raise
 
         # For a program stop here
         if codegen.is_program:
