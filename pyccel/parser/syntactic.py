@@ -1128,3 +1128,4 @@ if __name__ == '__main__':
 
     parser = SyntaxParser(filename)
     print(parser.ast)
+
