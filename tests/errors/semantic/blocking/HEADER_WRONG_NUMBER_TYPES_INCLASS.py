@@ -1,10 +1,10 @@
 #$ header class Point(public)
-#$ header method __init__(Point, int)
-#$ header method incr(Point, int)
+#$ header method __init__(Point)
+#$ header method __del__(Point)
 
 class Point(object):
-    def __init__(self, x , y):
-        return x
+    def __init__(self, x):
+        self.x = x
 
-    def incr(self, x, y):
-        x   =  x + 1
+    def __del__(self):
+        pass
