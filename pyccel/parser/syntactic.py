@@ -636,6 +636,7 @@ class SyntaxParser(BasicParser):
             ls = decorators['types'].args
             while i<len(ls) :
                 arg = ls[i]
+
                 if isinstance(arg, Symbol):
                     arg = arg.name
                     container.append(arg)
