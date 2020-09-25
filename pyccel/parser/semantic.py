@@ -2324,7 +2324,7 @@ class SemanticParser(BasicParser):
 
         if header:
             if (args_number != len(header.dtypes)):
-                msg = 'The number of arguments in the function {} ({}) and the types decorator/header ({}) don\'t match.'.format(name ,args_number, len(header.dtypes))
+                msg = 'The number of arguments in the function {} ({}) does not match the the number of types in decorator/header ({}).'.format(name ,args_number, len(header.dtypes))
                 if (args_number < len(header.dtypes)):
                     errors.report(msg, symbol=expr.arguments, severity='warning')
                 else:
