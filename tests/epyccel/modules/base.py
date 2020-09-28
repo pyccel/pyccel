@@ -28,6 +28,20 @@ def compare_is_not(a, b):
         c = True
     return c
 
+@types('bool', 'int')
+def compare_is_int(a, b):
+    c = False
+    if a is bool(b):
+        c = True
+    return c
+
+@types('bool', 'int')
+def compare_is_not_int(a, b):
+    c = False
+    if a is not bool(b):
+        c = True
+    return c
+
 @types('bool')
 def not_false(a):
     c = False
@@ -93,10 +107,85 @@ def is_not_nil(a):
 
 @types('int')
 def cast_int(a):
-    b = bool(a)
+    b = int(a)
     return b
 
 @types('bool')
 def cast_bool(a):
     b = bool(a)
     return b
+
+@types('float')
+def cast_float(a):
+    b = float(a)
+    return b
+
+@types('float')
+def cast_float_to_int(a):
+    b = int(a)
+    return b
+
+@types('int')
+def cast_int_to_float(a):
+    b = float(a)
+    return b
+
+@types('int')
+def if_0_int(a):
+    if a:
+        return True
+    else:
+        return False
+
+@types('real')
+def if_0_real(a):
+    if a:
+        return True
+    else:
+        return False
+
+@types('int','float')
+def is_types(x,y):
+    return x is y
+
+@types('int','float')
+def isnot_types(x,y):
+    return x is not y
+
+@types('int')
+def is_same_int(x):
+    return x is x
+
+@types('int')
+def isnot_same_int(x):
+    return x is not x
+
+@types('float')
+def is_same_float(x):
+    return x is x
+
+@types('float')
+def isnot_same_float(x):
+    return x is not x
+
+@types('complex')
+def is_same_complex(x):
+    return x is x
+
+@types('complex')
+def isnot_same_complex(x):
+    return x is not x
+
+def is_same_string():
+    x = 'hello world'
+    return x is x
+
+def isnot_same_string():
+    x = 'hello world'
+    return x is not x
+
+def none_is_none():
+    return None is None
+
+def none_isnot_none():
+    return None is not None
