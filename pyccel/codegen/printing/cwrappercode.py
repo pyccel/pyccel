@@ -10,13 +10,13 @@ from pyccel.ast.builtins import Bool
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, Symbol, Constant
 from pyccel.ast.core import create_incremented_string, Declare, SeparatorComment
-from pyccel.ast.core import IfTernaryOperator, VariableAddress, Import, IsNot
+from pyccel.ast.core import IfTernaryOperator, VariableAddress, Import, IsNot, PyccelNe
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper import PyArgKeywords
-from pyccel.ast.cwrapper import Py_True, Py_False
+from pyccel.ast.cwrapper import Py_True, Py_False, Py_None
 from pyccel.ast.cwrapper import cast_function_registry
 
 from pyccel.ast.type_inference import str_dtype
@@ -121,8 +121,9 @@ class CWrapperCodePrinter(CCodePrinter):
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function_call('pycomplex_to_complex', collect_var)
             if isinstance(variable, ValuedVariable):
-                body = [If((IsNot(collect_var, Nil()), [Assign(variable, cast_function)]),
-                           (BooleanTrue(),             [Assign(variable, variable.value)]))]
+                body = [If((PyccelNe(VariableAddress(collect_var), VariableAddress(Py_None)),
+                        [Assign(variable, cast_function)]),
+                        (BooleanTrue(), [Assign(variable, variable.value)]))]
             else:
                 body = [Assign(variable, cast_function)]
             return collect_var, body
@@ -172,7 +173,7 @@ class CWrapperCodePrinter(CCodePrinter):
         if isinstance(arg.dtype, (NativeReal, NativeInteger, NativeBool)):
             return Assign(arg, func_arg.value)
         elif isinstance(arg.dtype, PyccelPyObject):
-            return AliasAssign(arg, Nil())
+            return AliasAssign(arg, Py_None)
         else:
             raise NotImplementedError('Default values are not implemented for this datatype : {}'.format(func_arg.dtype))
 
