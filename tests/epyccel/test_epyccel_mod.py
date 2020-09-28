@@ -12,8 +12,8 @@ def test_modulo_int_int(language):
         return x % y
     
     f = epyccel(modulo_i_i, language=language)
-    x = randint(1e10)
-    y = randint(1e10) + 1
+    x = randint(1e6)
+    y = randint(1e6) + 1
 
     assert f(x, y) == modulo_i_i(x, y)
     assert isinstance(f(x, y), type(modulo_i_i(x, y)))
@@ -24,8 +24,8 @@ def test_modulo_real_real(language):
         return x % y
     
     f = epyccel(modulo_r_r, language=language)
-    x = uniform(high=1e10)
-    y = uniform(high=1e10) + 1
+    x = uniform(high=1e6)
+    y = uniform(high=1e6) + 1
 
     assert(isclose(f(x, y), modulo_r_r(x, y), rtol=1e-15, atol=1e-15))
     assert isinstance(f(x, y), type(modulo_r_r(x, y)))
@@ -36,8 +36,8 @@ def test_modulo_real_int(language):
         return x % y
     
     f = epyccel(modulo_r_i, language=language)
-    x = uniform(high=1e10)
-    y = randint(1e10) + 1
+    x = uniform(high=1e6)
+    y = randint(1e6) + 1
 
     assert(isclose(f(x, y), modulo_r_i(x, y), rtol=1e-15, atol=1e-15))
     assert isinstance(f(x, y), type(modulo_r_i(x, y)))
@@ -48,8 +48,8 @@ def test_modulo_int_real(language):
         return x % y
     
     f = epyccel(modulo_i_r, language=language)
-    x = randint(1e10)
-    y = uniform(high=1e10) + 1
+    x = randint(1e6)
+    y = uniform(high=1e6) + 1
 
     assert(isclose(f(x, y), modulo_i_r(x, y), rtol=1e-15, atol=1e-15))
     assert isinstance(f(x, y), type(modulo_i_r(x, y)))
@@ -60,9 +60,9 @@ def test_modulo_multiple(language):
         return x % y % z
     
     f = epyccel(modulo_multiple, language=language)
-    x = randint(1e10)
-    y = uniform(high=1e10) + 1
-    z = randint(1e10)
+    x = randint(1e6)
+    y = uniform(high=1e6) + 1
+    z = randint(1e6)
 
     assert(isclose(f(x, y, z), modulo_multiple(x, y, z), rtol=1e-15, atol=1e-15))
     assert isinstance(f(x, y, z), type(modulo_multiple(x, y, z)))
