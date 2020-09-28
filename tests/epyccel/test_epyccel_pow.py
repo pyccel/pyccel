@@ -16,60 +16,54 @@ def test_pow_int_int(language):
     y = randint(10)
 
     assert f(x, y) == f_call(x, y)
-    # negative cases
-    assert f(-x, -y) == f_call(-x, -y)
-    assert f(x, -y) == f_call(x, -y)
+    # negative base
     assert f(-x, y) == f_call(-x, y)
 
     assert isinstance(f(x, y), type(f_call(x, y)))
 
-# def test_pow_real_real(language):
-#     @types('real', 'real')
-#     def pow_r_r(x, y):
-#         return x ** y
+def test_pow_real_real(language):
+    @types('real', 'real')
+    def pow_r_r(x, y):
+        return x ** y
     
-#     f = epyccel(pow_r_r, language=language)
-#     x = rand()
-#     y = rand()
+    f = epyccel(pow_r_r, language=language)
+    x = rand()
+    y = rand()
 
-#     assert(isclose(f(x, y), pow_r_r(x, y), rtol=1e-15, atol=1e-15))
-#     # negative cases
-#     assert(isclose(f(-x, -y), pow_r_r(-x, -y), rtol=1e-15, atol=1e-15))
-#     assert(isclose(f(-x, y), pow_r_r(-x, y), rtol=1e-15, atol=1e-15))
-#     assert(isclose(f(x, -y), pow_r_r(x, -y), rtol=1e-15, atol=1e-15))
-
-#     assert isinstance(f(x, y), type(pow_r_r(x, y)))
-
-# def test_pow_real_int(language):
-#     @types('real', 'int')
-#     def pow_r_i(x, y):
-#         return x ** y
+    assert(isclose(f(x, y), pow_r_r(x, y), rtol=1e-15, atol=1e-15))
     
-#     f = epyccel(pow_r_i, language=language)
-#     x = uniform()
-#     y = randint()
+    assert isinstance(f(x, y), type(pow_r_r(x, y)))
 
-#     assert(isclose(f(x, y), pow_r_i(x, y), rtol=1e-15, atol=1e-15))
-#     # negative cases
-#     assert(isclose(f(-x, -y), pow_r_r(-x, -y), rtol=1e-15, atol=1e-15))
-#     assert(isclose(f(-x, y), pow_r_r(-x, y), rtol=1e-15, atol=1e-15))
-#     assert(isclose(f(x, -y), pow_r_r(x, -y), rtol=1e-15, atol=1e-15))
-
-#     assert isinstance(f(x, y), type(pow_r_i(x, y)))
-
-# def test_pow_int_real(language):
-#     @types('int', 'real')
-#     def pow_i_r(x, y):
-#         return x ** y
+def test_pow_real_int(language):
+    @types('real', 'int')
+    def pow_r_i(x, y):
+        return x ** y
     
-#     f = epyccel(pow_i_r, language=language)
-#     x = randint(40)
-#     y = uniform()
+    f = epyccel(pow_r_i, language=language)
+    x = uniform()
+    y = randint(5)
 
-#     assert(isclose(f(x, y), pow_i_r(x, y), rtol=1e-15, atol=1e-15))
-#     # negative cases
-#     assert(isclose(f(-x, -y), pow_r_r(-x, -y), rtol=1e-15, atol=1e-15))
-#     assert(isclose(f(-x, y), pow_r_r(-x, y), rtol=1e-15, atol=1e-15))
-#     assert(isclose(f(x, -y), pow_r_r(x, -y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(x, y), pow_r_i(x, y), rtol=1e-15, atol=1e-15))
+    assert isinstance(f(x, y), type(pow_r_i(x, y)))
 
-#     assert isinstance(f(x, y), type(pow_i_r(x, y)))
+def test_pow_int_real(language):
+    @types('int', 'real')
+    def pow_i_r(x, y):
+        return x ** y
+    
+    f = epyccel(pow_i_r, language=language)
+    x = randint(40)
+    y = uniform()
+
+    assert(isclose(f(x, y), pow_i_r(x, y), rtol=1e-15, atol=1e-15))
+    assert isinstance(f(x, y), type(pow_i_r(x, y)))
+
+def test_pow_special_cases(language):
+    @types('real', 'real')
+    def pow_sp(x, y):
+        return x ** y
+    
+    f = epyccel(pow_sp, language=language)
+    e = uniform()
+    assert(isclose(f(0.0, e), pow_sp(0.0, e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(0.0, e), pow_sp(0.0, e), rtol=1e-15, atol=1e-15))
