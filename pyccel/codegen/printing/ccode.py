@@ -371,9 +371,13 @@ class CCodePrinter(CodePrinter):
         return '{} = {};'.format(lhs, rhs)
 
     def _print_AliasAssign(self, expr):
-        lhs = self._print(expr.lhs.name)
-        rhs = self._print(expr.rhs)
+        lhs = expr.lhs
+        rhs = expr.rhs
+        if isinstance(rhs, Variable):
+            rhs = VariableAddress(rhs)
 
+        lhs = self._print(lhs.name)
+        rhs = self._print(rhs)
         return '{} = {};'.format(lhs, rhs)
 
     def _print_For(self, expr):

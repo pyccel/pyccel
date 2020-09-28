@@ -1312,9 +1312,6 @@ class AliasAssign(Basic):
             if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_pointer:
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
 
-        if isinstance(rhs, Variable):
-            rhs = VariableAddress(rhs)
-
         return Basic.__new__(cls, lhs, rhs)
 
     def _sympystr(self, printer):
