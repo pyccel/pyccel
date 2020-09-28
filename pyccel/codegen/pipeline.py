@@ -240,7 +240,7 @@ def execute_pyccel(fname, *,
         # TODO: stop at object files, do not compile executable
         #       This allows for properly linking program to modules
         #
-        if language == "fortran" and codegen.is_module:
+        if language == "fortran":
             try:
                 compile_files(fname, f90exec, flags,
                                 binary=None,
