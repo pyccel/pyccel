@@ -286,6 +286,11 @@ class CCodePrinter(CodePrinter):
                     decs = decs,
                     body = body))
 
+    def stored_in_c_pointer(self, a):
+        if not isinstance(a, Variable):
+            return False
+        return a.is_pointer
+
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
         # currently support only function with one or zero output
