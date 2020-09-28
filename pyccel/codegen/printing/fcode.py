@@ -45,7 +45,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
 
 from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
 from pyccel.ast.core      import FunctionCall
-from pyccel.ast.builtins  import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple
+from pyccel.ast.builtins  import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple, PythonFloat
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString
@@ -2082,19 +2082,17 @@ class FCodePrinter(CodePrinter):
         return ' / '.join(a for a in args)
 
     def _print_PyccelMod(self, expr):
-        args = [self._print(a) for a in expr.args]
+        first = self._print(expr.args[0])
+        second = self._print(expr.args[1])
 
-        code   = args[0]
-        is_real  = expr.dtype is NativeReal()
-        bdtype = expr.args[0].dtype
-        if is_real  and bdtype is NativeInteger():
-            code = 'dble({})'.format(code)
-        for b,c in zip(expr.args[1:], args[1:]):
-            bdtype    = b.dtype
-            if is_real and bdtype is NativeInteger():
-                c = 'dble({})'.format(c)
-            code = 'MODULO({},{})'.format(code, c)
-        return code
+        if expr.dtype is NativeInteger():
+            return "MODULO({},{})".format(first, second)
+        
+        if expr.args[0].dtype is NativeInteger():
+            first = self._print(PythonFloat(expr.args[0]))
+        if expr.args[1].dtype is NativeInteger():
+            second = self._print(PythonFloat(expr.args[1]))
+        return "MODULO({}, {})".format(first, second)
 
     def _print_PyccelFloorDiv(self, expr):
         args = [self._print(a) for a in expr.args]
