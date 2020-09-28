@@ -233,6 +233,8 @@ class CCodePrinter(CodePrinter):
             e = self._print(PythonFloat(expr.args[1]))
         else:
             e = self._print(expr.args[1])
+        if expr.dtype is NativeInteger():
+            return '(long)pow({}, {})'.format(base, e)
         return 'pow({}, {})'.format(base, e)
 
     def _print_Import(self, expr):
