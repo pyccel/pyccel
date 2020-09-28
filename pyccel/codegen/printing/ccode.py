@@ -293,8 +293,10 @@ class CCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
+         # Ensure the correct syntax is used for pointers
+        args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.arguments]
         # currently support only function with one or zero output
-        args = ','.join(['{}'.format(self._print(a)) for a in expr.arguments])
+        args = ','.join(['{}'.format(self._print(a)) for a in args])
         if not func.results:
             return '{}({});'.format(func.name, args)
         return '{}({})'.format(func.name, args)
