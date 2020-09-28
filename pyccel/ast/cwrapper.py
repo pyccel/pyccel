@@ -28,6 +28,7 @@ __all__ = (
 #--------- CONSTANTS ----------
     'Py_True',
     'Py_False',
+    'Py_None',
 #----- C / PYTHON FUNCTIONS ---
     'pycomplex_real',
     'pycomplex_imag',
@@ -186,6 +187,9 @@ class PyBuildValueNode(Basic):
 # Python.h object  representing Booleans True and False
 Py_True = Variable(PyccelPyObject(), 'Py_True',is_pointer=True)
 Py_False = Variable(PyccelPyObject(), 'Py_False',is_pointer=True)
+
+# Python.h object representing None
+Py_None = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
 
 # Python.h function managing complex data type
 pycomplex_real = FunctionDef(name      = 'PyComplex_RealAsDouble',
