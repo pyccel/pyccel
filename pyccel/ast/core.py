@@ -3196,13 +3196,6 @@ class Return(Basic):
         if stmt and not isinstance(stmt, (Assign, CodeBlock)):
             raise TypeError('stmt should only be of type Assign')
 
-        if PyccelAstNode.stage == 'semantic':
-            if isinstance(expr, list):
-                expr = [VariableAddress(e) if isinstance(e, Variable) and e.is_pointer else e for e in expr]
-            else:
-                if isinstance(expr, Variable) and expr.is_pointer:
-                    expr = VariableAddress(expr)
-
         return Basic.__new__(cls, expr, stmt)
 
     @property

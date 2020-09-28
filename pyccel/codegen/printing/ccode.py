@@ -303,9 +303,10 @@ class CCodePrinter(CodePrinter):
 
     def _print_Return(self, expr):
         code = ''
+        args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
         if expr.stmt:
             code += self._print(expr.stmt)+'\n'
-        code +='return {0};'.format(self._print(expr.expr[0]))
+        code +='return {0};'.format(self._print(args[0]))
         return code
 
     def _print_Nil(self, expr):
