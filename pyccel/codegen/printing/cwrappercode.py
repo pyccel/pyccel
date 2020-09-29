@@ -106,29 +106,36 @@ class CWrapperCodePrinter(CCodePrinter):
             A list of statements to be carried out after parsing the arguments.
             These handle casting collect_var to variable if necessary
         """
+        body = []
+        collect_var = variable
+        cast_function = None
 
         if variable.dtype is NativeBool():
             collect_type = NativeInteger()
             collect_var = Variable(dtype=collect_type, precision=4,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function_call('pyint_to_bool', collect_var)
-            body = [Assign(variable, cast_function)]
-            return collect_var, body
+            cast_function = 'pyint_to_bool'
+            body = [Assign(variable, self.get_cast_function_call(cast_function, collect_var))]
 
         if variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function_call('pycomplex_to_complex', collect_var)
-            if isinstance(variable, ValuedVariable):
-                body = [If((PyccelNe(VariableAddress(collect_var), VariableAddress(Py_None)),
-                        [Assign(variable, cast_function)]),
-                        (BooleanTrue(), [Assign(variable, variable.value)]))]
-            else:
-                body = [Assign(variable, cast_function)]
-            return collect_var, body
+            cast_function = 'pycomplex_to_complex'
+            body = [Assign(variable, self.get_cast_function_call(cast_function, collect_var))]
 
-        return variable, []
+        if isinstance(variable, ValuedVariable) and isinstance(variable.value, Nil):
+            collect_type = PyccelPyObject()
+            collect_var = Variable(dtype=collect_type, is_pointer=True,
+                name = self.get_new_name(used_names, variable.name+"_tmp"))
+            default_value = VariableAddress(Py_None)
+            if cast_function is not None:
+                body = [Assign(variable, self.get_cast_function_call(cast_function, collect_var))]
+            else:
+                body = [Assign(variable, 'NULL')]
+            body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
+            (BooleanTrue(), [Assign(variable, variable.value)]))]
+        return collect_var, body
 
     def get_PyBuildValue(self, used_names, variable):
         """
