@@ -122,13 +122,14 @@ class PyArg_ParseTupleNode(Basic):
         self._arg_names  = arg_names
         self._flags      = ''
         i = 0
+
         while i < len(c_func_args) and not isinstance(c_func_args[i], ValuedVariable):
-            self._flags += pytype_parse_registry[(c_func_args[i].dtype, c_func_args[i].precision)]
+            self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
             i+=1
         if i < len(c_func_args):
             self._flags += '|'
         while i < len(c_func_args):
-            self._flags += pytype_parse_registry[(c_func_args[i].dtype, c_func_args[i].precision)]
+            self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
             i+=1
 
         # Restriction as of python 3.8
