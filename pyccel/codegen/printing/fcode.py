@@ -2220,7 +2220,10 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__
-        func_name = numpy_ufunc_to_fortran[type_name]
+        try:
+            func_name = numpy_ufunc_to_fortran[type_name]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
         code_args = ', '.join(self._print(i) for i in expr.args)
         code = '{0}({1})'.format(func_name, code_args)
         return self._get_statement(code)

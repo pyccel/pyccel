@@ -413,7 +413,10 @@ class CCodePrinter(CodePrinter):
         # add necessary include
         self._additional_imports.add('math.h')
         type_name = type(expr).__name__
-        func_name = numpy_ufunc_to_c_real[type_name]
+        try:
+            func_name = numpy_ufunc_to_c_real[type_name]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
         args = []
         for arg in expr.args:
             if arg.dtype is NativeComplex():
@@ -450,7 +453,10 @@ class CCodePrinter(CodePrinter):
         # add necessary include
         self._additional_imports.add('math.h')
         type_name = type(expr).__name__
-        func_name = math_function_to_c[type_name]
+        try:
+            func_name = math_function_to_c[type_name]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
         args = []
         for arg in expr.args:
             if arg.dtype is NativeComplex():
