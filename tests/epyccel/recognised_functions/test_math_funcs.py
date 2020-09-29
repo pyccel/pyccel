@@ -8,7 +8,7 @@ from conftest import *
 
 import sys
 
-max_float = 3.40282e+38         # maximum positive float
+max_float = 3.40282e5        # maximum positive float
 min_float = sys.float_info.min  # Minimum positive float
 
 def test_fabs_call(language):
@@ -405,6 +405,18 @@ def test_ceil_call(language):
 
     assert isinstance(ceil_call(x), type(f1(x)))
 
+def test_ceil_call(language):
+    @types('int')
+    def ceil_call(x):
+        from math import ceil
+        return ceil(x)
+
+    f1 = epyccel(ceil_call, language = language)
+    x = randint(10)
+    assert(ceil_call(x) == f1(x))
+
+    assert isinstance(ceil_call(x), type(f1(x)))
+
 def test_ceil_phrase(language):
     @types('real','real')
     def ceil_phrase(x,y):
@@ -434,6 +446,9 @@ def test_copysign_call(language):
     # Different sign
     assert(isclose(copysign_call(-x, y), f1(-x, y), rtol=1e-15, atol=1e-15))
     assert(isclose(copysign_call(x, -y), f1(x, -y), rtol=1e-15, atol=1e-15))
+    # x =/= 0, y = 0 and x = 0, y =/= 0
+    assert(isclose(copysign_call(x, 0), f1(x, 0), rtol=1e-15, atol=1e-15))
+    assert(isclose(copysign_call(0, y), f1(0, y), rtol=1e-15, atol=1e-15))
 
 def test_copysign_call_zero_case(language):
     @types('int', 'int')
