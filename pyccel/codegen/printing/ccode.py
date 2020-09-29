@@ -89,7 +89,6 @@ numpy_ufunc_to_c_complex = {
     'NumpyAbs'  : 'cabs',
     'NumpyMin'  : 'minval',
     'NumpyMax'  : 'maxval',
-    'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
     # ---
     'NumpyExp' : 'cexp',
     'NumpyLog' : 'clog',
@@ -419,8 +418,11 @@ class CCodePrinter(CodePrinter):
         for arg in expr.args:
             if arg.dtype is NativeComplex():
                 self._additional_imports.add('complex.h')
-                func_name = numpy_ufunc_to_c_complex[type_name]
-                args.append(self._print(arg))
+                try:
+                    func_name = numpy_ufunc_to_c_complex[type_name]
+                    args.append(self._print(arg))
+                except KeyError:
+                    errors.report(INCOMPATIBLE_TYPEVAR_TO_FUNC.format(type_name) ,severity='fatal')
             elif arg.dtype is not NativeReal():
                 args.append(self._print(NumpyFloat(arg)))
             else :
@@ -451,6 +453,8 @@ class CCodePrinter(CodePrinter):
         func_name = math_function_to_c[type_name]
         args = []
         for arg in expr.args:
+            if arg.dtype is NativeComplex():
+                self._additional_imports.add('complex.h')
             if arg.dtype is not NativeReal():
                 args.append(self._print(NumpyFloat(arg)))
             else :
