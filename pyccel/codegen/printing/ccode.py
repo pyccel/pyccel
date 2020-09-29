@@ -354,6 +354,8 @@ class CCodePrinter(CodePrinter):
             return '{0} '.format(dtype)
 
     def _print_Declare(self, expr):
+        if expr.variable.rank > 0:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
         declaration_type = self.get_declare_type(expr.variable)
         variable = self._print(expr.variable.name)
 
