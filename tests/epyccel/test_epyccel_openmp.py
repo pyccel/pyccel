@@ -9,6 +9,8 @@ def test_module_1():
 
     mod = epyccel(openmp, accelerator='openmp')
     mod.set_num_threads(4)
+    assert mod.get_num_threads() == 4
+
     assert mod.f1(0) == 0
     assert mod.f1(1) == 1
     assert mod.f1(2) == 2
@@ -17,5 +19,7 @@ def test_module_1():
     assert mod.f1(5) == -1
 
     mod.set_num_threads(8)
+    assert mod.get_num_threads() == 4
+
     assert mod.f1(5) == 5
 
