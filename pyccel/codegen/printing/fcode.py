@@ -2228,9 +2228,12 @@ class FCodePrinter(CodePrinter):
     def _print_MathFunctionBase(self, expr):
         type_name = type(expr).__name__
         if type_name == "MathPow":
-            code = self._print_Pow(expr)
+            code = self._print_PyccelPow(expr)
             return code
-        func_name = math_function_to_fortran[type_name]
+        try:
+            func_name = math_function_to_fortran[type_name]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
         args = []
         for arg in expr.args:
             if arg.dtype is not NativeReal():
