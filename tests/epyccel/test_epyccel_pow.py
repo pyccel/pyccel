@@ -70,15 +70,41 @@ def test_pow_special_cases(language):
 
 # ---------------------------- Complex numbers ----------------------------- #
 
-def test_pow_special_cases(language):
+def test_pow_c_c(language):
     @types('complex', 'complex')
-    def pow_sp(x, y):
+    def pow_c_c(x, y):
         return x ** y
 
-    f = epyccel(pow_sp, language=language)
+    f = epyccel(pow_c_c, language=language)
     b = complex(rand(), rand())
     e = complex(rand(), rand())
-    assert(isclose(f(b, e), pow_sp(b, e), rtol=1e-15, atol=1e-15))
-    assert(isclose(f(-b, e), pow_sp(-b, e), rtol=1e-15, atol=1e-15))
-    assert(isclose(f(b, -e), pow_sp(b, -e), rtol=1e-15, atol=1e-15))
-    assert(isclose(f(-b, -e), pow_sp(-b, -e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(b, e), pow_c_c(b, e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(-b, e), pow_c_c(-b, e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(b, -e), pow_c_c(b, -e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(-b, -e), pow_c_c(-b, -e), rtol=1e-15, atol=1e-15))
+
+def test_pow_c_i(language):
+    @types('complex', 'int')
+    def pow_c_i(x, y):
+        return x ** y
+
+    f = epyccel(pow_c_i, language=language)
+    b = complex(rand(), rand())
+    e = randint(10)
+    assert(isclose(f(b, e), pow_c_i(b, e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(-b, e), pow_c_i(-b, e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(b, -e), pow_c_i(b, -e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(-b, -e), pow_c_i(-b, -e), rtol=1e-15, atol=1e-15))
+
+def test_pow_c_r(language):
+    @types('complex', 'real')
+    def pow_c_r(x, y):
+        return x ** y
+
+    f = epyccel(pow_c_r, language=language)
+    b = complex(rand(), rand())
+    e = rand()
+    assert(isclose(f(b, e), pow_c_r(b, e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(-b, e), pow_c_r(-b, e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(b, -e), pow_c_r(b, -e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(-b, -e), pow_c_r(-b, -e), rtol=1e-15, atol=1e-15))
