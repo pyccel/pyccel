@@ -3670,29 +3670,6 @@ class FunctionDef(Basic):
             or len(set(self.results).intersection(self.arguments)) > 0
         return flag
 
-    def is_compatible_header(self, header):
-        """
-        Returns True if the header is compatible with the given FunctionDef.
-
-        Parameters
-        ----------
-        header: Header
-            a pyccel header suppose to describe the FunctionDef
-        """
-
-        cond_args = len(self.arguments) == len(header.dtypes)
-        cond_results = len(self.results) == len(header.results)
-
-        header_with_results = len(header.results) > 0
-
-        if not cond_args:
-            return False
-
-        if header_with_results and not cond_results:
-            return False
-
-        return True
-
     def __getnewargs__(self):
         """used for Pickling self."""
 
