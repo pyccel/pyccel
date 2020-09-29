@@ -951,7 +951,6 @@ class SemanticParser(BasicParser):
 
     def _visit_Symbol(self, expr, **settings):
         name = expr.name
-
         var = self.check_for_variable(name)
 
         if var is None:
@@ -2318,11 +2317,21 @@ class SemanticParser(BasicParser):
         is_private   = expr.is_private
 
         header = expr.header
+        args_number = len(expr.arguments)
         if header is None:
             if cls_name:
                 header = self.get_header(cls_name +'.'+ name)
+                args_number -= 1
             else:
                 header = self.get_header(name)
+
+        if header:
+            if (args_number != len(header.dtypes)):
+                msg = 'The number of arguments in the function {} ({}) does not match the number of types in decorator/header ({}).'.format(name ,args_number, len(header.dtypes))
+                if (args_number < len(header.dtypes)):
+                    errors.report(msg, symbol=expr.arguments, severity='warning')
+                else:
+                    errors.report(msg, symbol=expr.arguments, severity='fatal')
 
         if expr.arguments and not header:
 
@@ -2364,7 +2373,6 @@ class SemanticParser(BasicParser):
 #            body_vec   = [For(index, range_, [body_vec], strict=False)]
 #            header_vec = header.vectorize(index_arg)
 #            vec_func   = expr.vectorize(body_vec, header_vec)
-
 
         for m in interfaces:
             args           = []
