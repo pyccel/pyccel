@@ -216,7 +216,7 @@ class CCodePrinter(CodePrinter):
 
         if expr.dtype is NativeInteger():
             return "{} % {}".format(first, second)
-        
+
         if expr.args[0].dtype is NativeInteger():
             first = self._print(PythonFloat(expr.args[0]))
         if expr.args[1].dtype is NativeInteger():
@@ -224,18 +224,21 @@ class CCodePrinter(CodePrinter):
         return "fmod({}, {})".format(first, second)
 
     def _print_PyccelPow(self, expr):
-        self._additional_imports.add("math.h")
-        if expr.args[0].dtype is NativeInteger():
-            base = self._print(PythonFloat(expr.args[0]))
+        dtype = self._print(expr.dtype)
+        prec  = expr.precision
+
+        b = self._print(expr.args[0])
+        e = self._print(expr.args[1])
+
+        if expr.dtype is NativeComplex():
+            self._additional_imports.add("complex.h")
+            return 'cpow({}, {})'.format(b, e)
+        elif expr.dtype is NativeInteger():
+            self._additional_imports.add("math.h")
+            return '({})pow({}, {})'.format(self.find_in_dtype_registry(dtype, prec), b, e)
         else:
-            base = self._print(expr.args[0])
-        if expr.args[1].dtype is NativeInteger():
-            e = self._print(PythonFloat(expr.args[1]))
-        else:
-            e = self._print(expr.args[1])
-        if expr.dtype is NativeInteger():
-            return '(long)pow({}, {})'.format(base, e)
-        return 'pow({}, {})'.format(base, e)
+            self._additional_imports.add("math.h")
+            return 'pow({}, {})'.format(b, e)
 
     def _print_Import(self, expr):
         return '#include <{0}>'.format(expr.source)
@@ -244,7 +247,7 @@ class CCodePrinter(CodePrinter):
         try :
             return dtype_registry[(dtype, prec)]
         except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,severity='fatal')
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
 
     def get_declare_type(self, expr):
         dtype = self._print(expr.dtype)
