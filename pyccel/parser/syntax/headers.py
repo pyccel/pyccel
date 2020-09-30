@@ -28,6 +28,50 @@ class Header(object):
         """
         self.statements = kwargs.pop('statements', [])
 
+class FuncType(BasicStmt):
+
+    def __init__(self, **kwargs):
+        self.arg = kwargs.pop('args')
+        self.ret = kwargs.pop('ret')
+
+        super(FuncType, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        arg = []
+        if self.arg:
+            arg = self.args[0].expr
+
+        ret = []
+        if self.ret:
+            ret = self.ret[0].expr
+        
+        d_var = {}
+
+        d_var['ret_datatype'] = ret['datatype']
+        d_var['ret_rank'] = ret['rank']
+        d_var['ret_is_pointer'] = ret['is_pointer'] 
+        d_var['ret_allocatable'] = ret['allocatable']
+        d_var['ret_precision'] = ret['precision']
+        d_var['ret_order'] = 'C'
+
+        d_var['arg_datatype'] = arg['datatype']
+        d_var['arg_rank'] = arg['rank']
+        d_var['arg_is_pointer'] = arg['is_pointer']
+        d_var['arg_allocatable'] = arg['allocatable']
+        d_var['arg_precision'] = arg['precision']
+        d_var['arg_order'] = 'C'
+        
+        d_var['datatype'] = ret['datatype']
+        d_var['rank'] = ret['rank']
+        d_var['is_pointer'] = ret['is_pointer'] 
+        d_var['allocatable'] = ret['allocatable']
+        d_var['precision'] = ret['precision']
+        d_var['order'] = 'C'
+        d_var['isfunc'] = True
+        
+        return d_var
+
 class ListType(BasicStmt):
     """Base class representing a  ListType in the grammar."""
 
@@ -54,7 +98,8 @@ class ListType(BasicStmt):
         d_var['is_pointer'] = len(dtypes)>0
         d_var['allocatable'] = False
         d_var['precision'] = max(precisions)
-        if not(d_var['precision']):
+        d_var['order'] = 'C'
+        if not(d_var['preCision']):
             if d_var['datatype'] in ['double','float','complex','int']:
                 d_var['precision'] = default_precision[d_var['datatype']]
         return d_var
@@ -96,6 +141,7 @@ class Type(BasicStmt):
         d_var['allocatable'] = len(trailer)>0
         d_var['is_pointer'] = False
         d_var['precision']  = precision
+        d_var['isfunc'] = False
         if not(precision):
             if dtype in ['double' ,'float','complex', 'int']:
                 d_var['precision'] = default_precision[dtype]
@@ -209,7 +255,7 @@ class FunctionHeaderStmt(BasicStmt):
         for dec in self.decs:
             if isinstance(dec,UnionTypeStmt):
                 dtypes += [dec.expr]
-
+ 
         if self.kind is None:
             kind = 'function'
         else:
@@ -450,7 +496,7 @@ class FunctionMacroStmt(BasicStmt):
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
 hdr_classes = [Header, TypeHeader,
-               Type, ListType, UnionTypeStmt,
+               Type, ListType, UnionTypeStmt, FuncType,
                HeaderResults,
                FunctionHeaderStmt,
                ClassHeaderStmt,
