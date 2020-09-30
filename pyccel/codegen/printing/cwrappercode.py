@@ -139,7 +139,7 @@ class CWrapperCodePrinter(CCodePrinter):
             else:
                 body = [Assign(variable, 'NULL')]
             body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
-            (BooleanTrue(), [Assign(variable, variable.value)]))]
+            (BooleanTrue(), [AliasAssign(variable, variable.value)]))]
         return collect_var, body
 
     def get_PyBuildValue(self, used_names, variable):
