@@ -1309,6 +1309,9 @@ class AliasAssign(Basic):
             if not lhs.is_pointer:
                 raise TypeError('lhs must be a pointer')
 
+            #should results be the same type ?
+            #function should return a pointer
+            #will be used in x = functioncall
             if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_pointer:
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
 
@@ -3114,6 +3117,36 @@ class VariableAddress(Basic, PyccelAstNode):
     def variable(self):
         return self._variable
 
+class FunctionAddress(Variable):
+
+    def __init__(
+            self,
+            ret,
+            arg,
+            dtype,
+            name,
+            *args,
+            **kwargs
+            ):
+        Variable.__init__(self, dtype, name, *args, **kwargs)
+        #must be a tuple of variables
+        if not isinstance(ret, Variable):
+            raise TypeError('rets must be a variable')
+        if not isinstance(arg, Variable):
+            raise TypeError('args must be a variable')
+        
+        self._ret = ret
+        self._arg = arg
+        self._is_pointer = True
+
+    @property
+    def ret(self):
+        return self._ret
+
+    @property
+    def arg(self):
+        return self._arg
+
 class FunctionCall(Basic, PyccelAstNode):
 
     """Represents a function call in the code.
@@ -4296,6 +4329,62 @@ class Load(Basic):
 
 
 # TODO: Should Declare have an optional init value for each var?
+
+class FuncAddressDeclare(Basic):
+    def __init__(
+        self,
+        ret,
+        arg,
+        name,
+        intent=None,
+        value=None,
+        ):
+        if isinstance(ret.dtype, str):
+            self._retdtype = datatype(ret.dtype)
+        if isinstance(arg.dtype, str):
+            self._argdtype = datatype(arg.dtype)
+
+        if not isinstance(ret, Variable):
+            raise TypeError('var must be of type Variable, given {0}'.format(variable))
+        if not isinstance(ret, Variable):
+            raise TypeError('var must be of type Variable, given {0}'.format(variable))
+
+        if intent:
+            if not intent in ['in', 'out', 'inout']:
+                raise ValueError("intent must be one among {'in', 'out', 'inout'}")
+
+        self._ret = ret
+        self._arg = arg
+        self._intent = intent
+        self._value = value
+        self._name = name
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def retdtype(self):
+        return self._retdtype
+
+    @property
+    def argdtype(self):
+        return self._argdtype
+
+    @property
+    def ret(self):
+        return self._ret
+
+    @property
+    def arg(self):
+        return self._arg
+
+    @property
+    def intent(self):
+        return self._intent
+
+    @property
+    def value(self):
+        return self._value
 
 class Declare(Basic):
 
