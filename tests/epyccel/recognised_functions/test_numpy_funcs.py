@@ -1210,9 +1210,15 @@ def test_ones_order(language):
     f_shape_F  = epyccel(create_ones_shape_F, language = language)
     assert(     f_shape_F(size_1,size_2) == create_ones_shape_F(size_1,size_2))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="complex not covered in this PR"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_ones_dtype(language):
-    if (language == 'c'):
-        pytest.xfail(reason="complex type not implemented yet")
     def create_ones_val_int():
         from numpy import ones
         a = ones(3,int)
