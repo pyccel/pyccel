@@ -18,6 +18,7 @@ from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildVal
 from pyccel.ast.cwrapper import PyArgKeywords
 from pyccel.ast.cwrapper import Py_True, Py_False, Py_None
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
+from pyccel.ast.cwrapper import malloc ,free
 
 from pyccel.ast.type_inference import str_dtype
 
@@ -137,7 +138,8 @@ class CWrapperCodePrinter(CCodePrinter):
             if cast_function is not None:
                 body = [Assign(variable, self.get_cast_function_call(cast_function, collect_var))]
             else:
-                body = [Assign(variable, 'NULL')]
+                body = [AliasAssign(variable, FunctionCall(malloc, [variable.precision]))]
+                #TODO call the python function to extract value from pyobject
             body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
             (BooleanTrue(), [AliasAssign(variable, variable.value)]))]
         return collect_var, body
