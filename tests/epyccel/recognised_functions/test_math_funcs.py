@@ -393,7 +393,7 @@ def test_floor_return_type(language):
     assert(type(f1(x))  == type(floor_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
 
 #------------------------------- Ceil function -------------------------------#
-def test_ceil_call(language):
+def test_ceil_call_r(language):
     @types('real')
     def ceil_call(x):
         from math import ceil
@@ -405,7 +405,7 @@ def test_ceil_call(language):
 
     assert isinstance(ceil_call(x), type(f1(x)))
 
-def test_ceil_call(language):
+def test_ceil_call_i(language):
     @types('int')
     def ceil_call(x):
         from math import ceil
