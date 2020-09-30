@@ -177,10 +177,12 @@ class CWrapperCodePrinter(CCodePrinter):
         return variable, None
 
     def get_default_assign(self, arg, func_arg):
-        if isinstance(arg.dtype, (NativeReal, NativeInteger, NativeBool)):
-            return Assign(arg, func_arg.value)
-        elif isinstance(arg.dtype, PyccelPyObject):
+        if func_arg.is_optional:
             return AliasAssign(arg, Py_None)
+        elif isinstance(arg.dtype, (NativeReal, NativeInteger, NativeBool)):
+            return Assign(arg, func_arg.value)
+        elif isinstance(func_arg.dtype, NativeComplex):
+            return AliasAssign(arg, self.get_cast_function_call('complex_to_pycomplex', func_arg.value))
         else:
             raise NotImplementedError('Default values are not implemented for this datatype : {}'.format(func_arg.dtype))
 
