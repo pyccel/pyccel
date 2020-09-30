@@ -620,7 +620,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyFloor(self, expr):
         result_code = self._print_MathFloor(expr)
-        return 'real({})'.format(result_code)
+        return 'real({}, {})'.format(result_code, expr.precision)
 
     def _print_PythonFloat(self, expr):
         return expr.fprint(self._print)
@@ -2099,19 +2099,19 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_PyccelFloorDiv(self, expr):
-        args = [self._print(a) for a in expr.args]
 
-        code   = args[0]
+        code   = self._print(expr.args[0])
         adtype = expr.args[0].dtype
         is_real  = expr.dtype is NativeReal()
-        for b,c in zip(expr.args[1:],args[1:]):
+        for b in expr.args[1:]:
             bdtype    = b.dtype
             if adtype is NativeInteger() and bdtype is NativeInteger():
-                c = 'real({})'.format(c)
+                b = PythonFloat(b)
+            c = self._print(b)
             adtype = bdtype
-            code = 'FLOOR({}/{},{})'.format(code, c, default_precision['real'])
+            code = 'FLOOR({}/{},{})'.format(code, c, expr.precision)
             if is_real:
-                code = 'real({})'.format(code)
+                code = 'real({}, {})'.format(code, expr.precision)
         return code
 
     def _print_PyccelRShift(self, expr):
@@ -2228,17 +2228,17 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpySqrt(self, expr):
         arg = expr.args[0]
-        code_args = self._print(arg)
         if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
-            code_args = 'Real({})'.format(code_args)
+            arg = PythonFloat(arg)
+        code_args = self._print(arg)
         code = 'sqrt({})'.format(code_args)
         return self._get_statement(code)
 
     def _print_MathSqrt(self, expr):
         arg = expr.args[0]
-        code_args = self._print(arg)
         if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
-            code_args = 'Real({})'.format(code_args)
+            arg = PythonFloat(arg)
+        code_args = self._print(arg)
         code = 'sqrt({})'.format(code_args)
         return self._get_statement(code)
 
