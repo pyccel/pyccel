@@ -6,7 +6,7 @@ from sympy.printing.precedence import precedence
 
 from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit
 from pyccel.ast.core import If, Nil
-from pyccel.ast.core import Assign, datatype, Variable, Import, FunctionCall
+from pyccel.ast.core import Assign, datatype, Variable, Import, FunctionCall, FunctionAddress
 from pyccel.ast.core import CommentBlock, Comment, SeparatorComment, VariableAddress
 
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
@@ -16,7 +16,7 @@ from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
 
 from pyccel.ast.builtins  import Range
-from pyccel.ast.core import Declare
+from pyccel.ast.core import Declare, FuncAddressDeclare
 from pyccel.ast.core import SeparatorComment
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -228,6 +228,13 @@ class CCodePrinter(CodePrinter):
         else:
             return '{0} '.format(dtype)
 
+    def _print_FuncAddressDeclare(self, expr):
+        ret_type = self.get_declare_type(expr.ret)
+        arg_type = self.get_declare_type(expr.arg)
+        func = self._print(expr.name)
+        a = '({}){}({})'.format(ret_type, arg_type, func)
+        return '{}(*{})({});'.format(ret_type, func, arg_type)
+
     def _print_Declare(self, expr):
         declaration_type = self.get_declare_type(expr.variable)
         variable = self._print(expr.variable.name)
@@ -265,12 +272,11 @@ class CCodePrinter(CodePrinter):
         if not expr.arguments:
             arg_code = 'void'
         else:
-            arg_code = ', '.join('{0}{1}'.format(self.get_declare_type(i), i) for i in expr.arguments)
+                arg_code = ', '.join('{0}{1}'.format(self.get_declare_type(i), i) if not isinstance(i, FunctionAddress) else '{}(*{})({})'.format(self.get_declare_type(i.ret), i, self.get_declare_type(i.arg)) for i in expr.arguments)
         return '{0}{1}({2})'.format(ret_type, name, arg_code)
 
     def _print_FunctionDef(self, expr):
-
-        decs  = [Declare(i.dtype, i) for i in expr.local_vars]
+        decs  = [FuncAddressDeclare(i.ret, i.arg, i.name) if isinstance(i, FunctionAddress) else Declare(i.dtype, i) for i in expr.local_vars]
         decs += [Declare(i.dtype, i) for i in expr.results]
         decs  = '\n'.join(self._print(i) for i in decs)
         body  = '\n'.join(self._print(i) for i in expr.body.body)
