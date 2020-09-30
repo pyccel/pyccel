@@ -124,7 +124,7 @@ class CWrapperCodePrinter(CCodePrinter):
             cast_function = 'pycomplex_to_complex'
             body = [Assign(variable, self.get_cast_function_call(cast_function, collect_var))]
 
-        if isinstance(variable, ValuedVariable) and isinstance(variable.value, Nil):
+        if variable.is_optional:
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
