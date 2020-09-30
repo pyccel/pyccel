@@ -17,7 +17,6 @@ from numpy import asarray
 from sympy.core import Symbol
 from sympy.core import Tuple
 from sympy.core.function import Function, Application
-from sympy import Atom
 from sympy import preorder_traversal
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
