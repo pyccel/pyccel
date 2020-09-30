@@ -179,13 +179,6 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
 
-    def _print_FuncCall(self, expr):
-        name = expr.name
-        args = ', '.join(['{}'.format(self._print(a)) for a in expr.args])
-        return ('{name}({args})'.format(
-            name = name,
-            args = args))
-
     def _print_PyArg_ParseTupleNode(self, expr):
         name    = 'PyArg_ParseTupleAndKeywords'
         pyarg   = expr.pyarg
