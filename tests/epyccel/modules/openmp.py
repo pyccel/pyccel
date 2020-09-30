@@ -5,6 +5,14 @@ def set_num_threads(n):
     from pyccel.stdlib.internal.openmp import omp_set_num_threads
     omp_set_num_threads(n)
 
+@types()
+def get_num_threads():
+    from pyccel.stdlib.internal.openmp import omp_get_num_threads
+    #$ omp parallel
+    n = omp_get_num_threads()
+    #$ omp end parallel
+    return n
+
 @types('int')
 def f1(i):
     from pyccel.stdlib.internal.openmp import omp_get_num_threads
