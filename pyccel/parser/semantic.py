@@ -26,7 +26,7 @@ from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import Constant
 from pyccel.ast.core import String
 from pyccel.ast.core import Nil
-from pyccel.ast.core import Variable
+from pyccel.ast.core import Variable, FunctionAddress
 from pyccel.ast.core import TupleVariable
 from pyccel.ast.core import DottedName, DottedVariable
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
@@ -595,6 +595,21 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, Variable):
+
+            d_var['datatype'      ] = expr.dtype
+            d_var['allocatable'   ] = expr.allocatable
+            d_var['shape'         ] = expr.shape
+            d_var['rank'          ] = expr.rank
+            d_var['cls_base'      ] = expr.cls_base
+            d_var['is_pointer'    ] = expr.is_pointer
+            d_var['is_polymorphic'] = expr.is_polymorphic
+            d_var['is_optional'   ] = expr.is_optional
+            d_var['is_target'     ] = expr.is_target
+            d_var['order'         ] = expr.order
+            d_var['precision'     ] = expr.precision
+            return d_var
+
+        elif isinstance(expr, FunctionAddress):
 
             d_var['datatype'      ] = expr.dtype
             d_var['allocatable'   ] = expr.allocatable
@@ -1367,7 +1382,6 @@ class SemanticParser(BasicParser):
             severity='fatal', blocker=self.blocking)
 
     def _create_variable(self, name, dtype, rhs, d_lhs):
-
         if isinstance(rhs, (TupleVariable, PythonTuple, List)):
             elem_vars = []
             for i,r in enumerate(rhs):
@@ -2300,7 +2314,7 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_FunctionDef(self, expr, **settings):
-
+        
         name         = str(expr.name)
         name         = name.replace("'", '')
         cls_name     = expr.cls_name
@@ -2313,8 +2327,10 @@ class SemanticParser(BasicParser):
         is_elemental = expr.is_elemental
         is_private   = expr.is_private
 
+        #in case of using decorators
         header = expr.header
         args_number = len(expr.arguments)
+        #in case of using header comments
         if header is None:
             if cls_name:
                 header = self.get_header(cls_name +'.'+ name)
@@ -2341,7 +2357,6 @@ class SemanticParser(BasicParser):
         # we construct a FunctionDef from its header
         if header:
             interfaces = header.create_definition()
-
             # get function kind from the header
 
             kind = header.kind
@@ -2412,6 +2427,8 @@ class SemanticParser(BasicParser):
 
                         a_new = ValuedVariable(dtype, str(a.name),
                                     value=a.value, **d_var)
+                    elif isinstance(ah, FunctionAddress):
+                        a_new = FunctionAddress(ah.ret, ah.arg, dtype, a.name, **d_var)
                     else:
                         a_new = Variable(dtype, a.name, **d_var)
 
@@ -2420,7 +2437,6 @@ class SemanticParser(BasicParser):
 
                     args.append(a_new)
                     self.insert_variable(a_new, name=str(a_new.name))
-
             results = expr.results
             if header_results:
                 new_results = []
@@ -2900,7 +2916,6 @@ class SemanticParser(BasicParser):
 
 
     def _visit_MacroFunction(self, expr, **settings):
-
         # we change here the master name to its FunctionDef
 
         f_name = expr.master
