@@ -11,6 +11,7 @@ def get_num_threads():
     #$ omp parallel
     n = omp_get_num_threads()
     #$ omp end parallel
+    return n
 
 @types('int')
 def f1(i):
