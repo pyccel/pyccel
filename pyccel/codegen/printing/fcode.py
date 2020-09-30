@@ -425,7 +425,7 @@ class FCodePrinter(CodePrinter):
 
         code = ', '.join(['print *', *args])
         return self._get_statement(code) + '\n'
-    
+
     def _print_Pow(self, expr):
         base = expr.args[0]
         e    = expr.args[1]
