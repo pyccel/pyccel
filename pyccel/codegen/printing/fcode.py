@@ -2087,7 +2087,7 @@ class FCodePrinter(CodePrinter):
 
         if expr.dtype is NativeInteger():
             return "MODULO({},{})".format(first, second)
-        
+
         if expr.args[0].dtype is NativeInteger():
             first = self._print(PythonFloat(expr.args[0]))
         if expr.args[1].dtype is NativeInteger():
