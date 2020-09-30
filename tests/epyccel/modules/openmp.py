@@ -33,8 +33,33 @@ def f1(i):
     #$ omp end parallel
     return out
 
-def number_of_procs():
+def test_omp_number_of_procs():
     from pyccel.stdlib.internal.openmp import omp_get_num_procs
 
     procs_num = omp_get_num_procs()
     return procs_num
+
+def test_omp_in_parallel():
+    from pyccel.stdlib.internal.openmp import omp_in_parallel
+    
+    in_parallel = omp_in_parallel()
+    return in_parallel
+
+@types ('bool')
+def test_omp_set_dynamic(dynamic_theads):
+    from pyccel.stdlib.internal.openmp import omp_set_dynamic
+
+    omp_set_dynamic(dynamic_theads)
+
+def test_omp_get_dynamic():
+    from pyccel.stdlib.internal.openmp import omp_get_dynamic
+
+    is_threads_dynamic = get_num_threads()
+    return is_threads_dynamic
+
+
+
+
+
+
+    
