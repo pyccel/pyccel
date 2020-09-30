@@ -7,7 +7,7 @@ from sympy.core import Symbol
 from sympy import sympify, Tuple
 
 from .core import Basic
-from .core import Variable
+from .core import Variable, FunctionAddress
 from .core import ValuedArgument, ValuedVariable
 from .core import FunctionDef, Interface
 from .core import DottedName, DottedVariable
@@ -189,29 +189,65 @@ class FunctionHeader(Header):
         for args_ in product(*dtypes):
             args = []
             for i, d in enumerate(args_):
-                dtype    = d['datatype']
-                allocatable = d['allocatable']
-                is_pointer = d['is_pointer']
-                precision = d['precision']
-                rank = d['rank']
+                if (d['isfunc']):
+                    dtype    = d['ret_datatype']
+                    allocatable = d['ret_allocatable']
+                    is_pointer = d['ret_is_pointer']
+                    precision = d['ret_precision']
+                    rank = d['ret_rank']
+                    order = None
+                    shape = None
+                    arg_name = ''
+                    order = d['ret_order']
+                    dtype = datatype(dtype)
+                    tmpret = Variable(dtype, arg_name,
+                                    allocatable=allocatable, is_pointer=is_pointer,
+                                    rank=rank, shape=shape ,order = order, precision = precision,
+                                    is_argument=True)
 
-                order = None
-                shape = None
-                if rank >1:
-                    order = d['order']
+                    dtype    = d['arg_datatype']
+                    allocatable = d['arg_allocatable']
+                    is_pointer = d['arg_is_pointer']
+                    precision = d['arg_precision']
+                    rank = d['arg_rank']
+                    arg_name = ''
+                    order = d['arg_order']
+                    dtype = datatype(dtype)
+                    tmparg = Variable(dtype, arg_name,
+                                    allocatable=allocatable, is_pointer=is_pointer,
+                                    rank=rank, shape=shape ,order = order, precision = precision,
+                                    is_argument=True)
+                    arg_name = 'arg_{0}'.format(str(i))
+                    dtype = d['ret_datatype']
+                    arg = FunctionAddress(tmpret, tmparg, dtype, arg_name)
+
+                    isfunc = True
+                else:
+                    dtype    = d['datatype']
+                    allocatable = d['allocatable']
+                    is_pointer = d['is_pointer']
+                    precision = d['precision']
+                    rank = d['rank']
+                    order = None
+                    shape = None
+                    if rank > 1:
+                        order = d['order']
                 
-                if isinstance(dtype, str):
-                    try:
-                        dtype = datatype(dtype)
-                    except ValueError:
-                        #TODO check if it's a class type before
-                        dtype =  DataTypeFactory(str(dtype), ("_name"))()
-                        is_pointer = True
-                arg_name = 'arg_{0}'.format(str(i))
-                arg = Variable(dtype, arg_name,
-                               allocatable=allocatable, is_pointer=is_pointer,
-                               rank=rank, shape=shape ,order = order, precision = precision,
-                               is_argument=True)
+                    if isinstance(dtype, str):
+                        #here we check the types in the decorators
+                        try:
+                            dtype = datatype(dtype)
+                        except ValueError:
+                            #TODO check if it's a class type before
+                            dtype =  DataTypeFactory(str(dtype), ("_name"))()
+                            is_pointer = True
+
+                    arg_name = 'arg_{0}'.format(str(i))
+
+                    arg = Variable(dtype, arg_name,
+                                    allocatable=allocatable, is_pointer=is_pointer,
+                                    rank=rank, shape=shape ,order = order, precision = precision,
+                                    is_argument=True)
                 args.append(arg)
 
             # ... factorize the following 2 blocks
