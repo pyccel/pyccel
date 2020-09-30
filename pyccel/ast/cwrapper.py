@@ -285,7 +285,7 @@ def pycomplex_to_complex(cast_function_name):
 malloc = FunctionDef(name = 'malloc',
                         body = [],
                         arguments = [Variable(dtype=NativeInteger(), name = 'o')],
-                        results = [])
+                        results = [Variable(dtype=NativeVoid(), name = 'r', is_pointer=True)])
 
 free = FunctionDef(name = 'free',
                         body = [],
