@@ -108,3 +108,16 @@ def test_pow_c_r(language):
     assert(isclose(f(-b, e), pow_c_r(-b, e), rtol=1e-15, atol=1e-15))
     assert(isclose(f(b, -e), pow_c_r(b, -e), rtol=1e-15, atol=1e-15))
     assert(isclose(f(-b, -e), pow_c_r(-b, -e), rtol=1e-15, atol=1e-15))
+
+def test_pow_r_c(language):
+    @types('real', 'complex')
+    def pow_r_c(x, y):
+        return x ** y
+
+    f = epyccel(pow_r_c, language=language)
+    b = rand()
+    e = complex(rand(), rand())
+    assert(isclose(f(b, e), pow_r_c(b, e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(-b, e), pow_r_c(-b, e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(b, -e), pow_r_c(b, -e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(-b, -e), pow_r_c(-b, -e), rtol=1e-15, atol=1e-15))
