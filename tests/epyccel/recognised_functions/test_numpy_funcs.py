@@ -1213,7 +1213,7 @@ def test_ones_order(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.c),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="complex not covered in this PR"),
+            pytest.mark.xfail(reason="Array not implemented yet in c"),
             pytest.mark.fortran]
         )
     )
