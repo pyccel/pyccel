@@ -123,6 +123,10 @@ class CWrapperCodePrinter(CCodePrinter):
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = 'pycomplex_to_complex'
             body = [Assign(variable, self.get_cast_function_call(cast_function, collect_var))]
+            if isinstance(variable, ValuedVariable):
+                default_value = VariableAddress(Py_None)
+                body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
+            (BooleanTrue(), [Assign(variable,variable.value)]))]
 
         if variable.is_optional:
             collect_type = PyccelPyObject()
@@ -181,8 +185,8 @@ class CWrapperCodePrinter(CCodePrinter):
             return AliasAssign(arg, Py_None)
         elif isinstance(arg.dtype, (NativeReal, NativeInteger, NativeBool)):
             return Assign(arg, func_arg.value)
-        elif isinstance(func_arg.dtype, NativeComplex):
-            return AliasAssign(arg, self.get_cast_function_call('complex_to_pycomplex', func_arg.value))
+        elif isinstance(arg.dtype, PyccelPyObject):
+            return AliasAssign(arg, Py_None)
         else:
             raise NotImplementedError('Default values are not implemented for this datatype : {}'.format(func_arg.dtype))
 
