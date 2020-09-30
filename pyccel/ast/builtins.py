@@ -178,7 +178,10 @@ class Int(Expr, PyccelAstNode):
         """Fortran print."""
         value = printer(self.arg)
         prec  = printer(self.precision)
-        code  = 'Int({0}, {1})'.format(value, prec)
+        if (self.arg.dtype is NativeBool()):
+            code = 'MERGE(1_8, 0_8, {})'.format(value)
+        else:
+            code  = 'Int({0}, {1})'.format(value, prec)
         return code
 
 #==============================================================================

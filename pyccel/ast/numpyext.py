@@ -829,7 +829,7 @@ class Rand(Function, NumpyNewArray):
         code_init = 'call random_number({0})'.format(lhs_code)
         stmts.append(code_init)
 
-        return '\n'.join(stmts)
+        return '\n'.join(stmts) + '\n'
 
 #==============================================================================
 class NumpyRandint(Function, NumpyNewArray):
@@ -962,7 +962,10 @@ class Full(Application, NumpyNewArray):
             code_init = '{0} = {1}'.format(lhs_code, init_value)
             stmts.append(code_init)
 
-        return '\n'.join(stmts)
+        if len(stmts) == 0:
+            return ''
+        else:
+            return '\n'.join(stmts) + '\n'
 
 #==============================================================================
 class Empty(Full):

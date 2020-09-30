@@ -143,3 +143,49 @@ def if_0_real(a):
         return True
     else:
         return False
+
+@types('int','float')
+def is_types(x,y):
+    return x is y
+
+@types('int','float')
+def isnot_types(x,y):
+    return x is not y
+
+@types('int')
+def is_same_int(x):
+    return x is x
+
+@types('int')
+def isnot_same_int(x):
+    return x is not x
+
+@types('float')
+def is_same_float(x):
+    return x is x
+
+@types('float')
+def isnot_same_float(x):
+    return x is not x
+
+@types('complex')
+def is_same_complex(x):
+    return x is x
+
+@types('complex')
+def isnot_same_complex(x):
+    return x is not x
+
+def is_same_string():
+    x = 'hello world'
+    return x is x
+
+def isnot_same_string():
+    x = 'hello world'
+    return x is not x
+
+def none_is_none():
+    return None is None
+
+def none_isnot_none():
+    return None is not None
