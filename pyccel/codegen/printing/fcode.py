@@ -17,7 +17,7 @@ from numpy import asarray
 from sympy.core import Symbol
 from sympy.core import Tuple
 from sympy.core.function import Function, Application
-from sympy import Atom, Indexed
+from sympy import Atom
 from sympy import preorder_traversal
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
@@ -976,7 +976,7 @@ class FCodePrinter(CodePrinter):
             if isinstance(rhs, TupleVariable):
                 return self._print(CodeBlock([AliasAssign(l, rhs[i]) for i,l in enumerate(lhs)]))
             else:
-                return self._print(CodeBlock([AliasAssign(l, Indexed(rhs,i)) for i,l in enumerate(lhs)]))
+                return self._print(CodeBlock([AliasAssign(l, IndexedVariable(rhs)[i]) for i,l in enumerate(lhs)]))
 
         if isinstance(rhs, Dlist):
             pattern = 'allocate({lhs}(0:{length}-1))\n{lhs} = {init_value}\n'
@@ -2264,45 +2264,6 @@ class FCodePrinter(CodePrinter):
     # TODO: Use expr.precision once the precision is correctly defined
     def _print_Integer(self, expr):
         return "{0}_{1}".format(str(expr.p), expr.precision)
-
-    def _print_Indexed(self, expr):
-        if isinstance(expr.base, IndexedVariable):
-            base = expr.base.internal_variable
-        else:
-            base = expr.base
-        if isinstance(base, Application) and not isinstance(base, PythonTuple):
-            indexed_type = base.dtype
-            if isinstance(indexed_type, PythonTuple):
-                base = self._print_Function(expr.base.base)
-            else:
-                if (not self._additional_code):
-                    self._additional_code = ''
-                var_name = self.parser.get_new_name()
-                var = Variable(base.dtype, var_name, is_stack_array = True,
-                        shape=base.shape,precision=base.precision,
-                        order=base.order,rank=base.rank)
-
-                if self._current_function:
-                    name = self._current_function
-                    func = self.get_function(name)
-                    func.local_vars.append(var)
-                else:
-                    self._namespace.variables[var.name] = var
-
-                self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
-                return self._print(IndexedVariable(var, dtype=base.dtype,
-                   shape=base.shape,prec=base.precision,
-                   order=base.order,rank=base.rank)[expr.indices])
-        else:
-            base = self._print(expr.base.label)
-
-        inds = list(expr.indices)
-        #indices of indexedElement of len==1 shouldn't be a Tuple
-        for i, ind in enumerate(inds):
-            if isinstance(ind, Tuple) and len(ind) == 1:
-                inds[i] = ind[0]
-
-        inds = [self._print(i) for i in inds]
 
     def _print_IndexedElement(self, expr):
         if isinstance(expr.base, IndexedVariable):
