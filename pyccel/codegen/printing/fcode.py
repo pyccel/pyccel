@@ -893,8 +893,6 @@ class FCodePrinter(CodePrinter):
         if expr.value:
             code_value = ' = {0}'.format(expr.value)
 
-        decs = []
-
         vstr = self._print(expr.variable.name)
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
