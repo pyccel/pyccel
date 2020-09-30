@@ -166,7 +166,7 @@ class Int(Expr, PyccelAstNode):
     _shape     = ()
     _precision = default_precision['integer']
     _dtype     = NativeInteger()
-        
+
     def __new__(cls, arg):
         return Expr.__new__(cls, arg)
 
@@ -228,9 +228,9 @@ class PythonTuple(Expr, PyccelAstNode):
                 else:
                     raise TypeError('cannot determine the type of {}'.format(self))
 
-                
+
                 shapes = [a.shape for a in args]
-                
+
                 if all(sh is not None for sh in shapes):
                     self._shape = (Integer(len(args)), ) + shapes[0]
                     self._rank  = len(self._shape)
@@ -312,9 +312,9 @@ class List(Tuple, PyccelAstNode):
                 self._precision  = max(a.precision for a in bools)
             else:
                 raise TypeError('cannot determine the type of {}'.format(self))
-            
+
             shapes = [a.shape for a in args]
-            
+
             if all(sh is not None for sh in shapes):
                 assert all(sh==shapes[0] for sh in shapes)
                 self._shape = (len(args), ) + shapes[0]

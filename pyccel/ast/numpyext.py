@@ -96,7 +96,7 @@ numpy_constants = {
 }
 
 def process_dtype(dtype):
-    if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt, 
+    if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt,
                   Int32, Int64, NumpyComplex, Complex64, Complex128, NumpyFloat,
                   Float64, Float32):
         dtype = dtype.__name__.lower()
