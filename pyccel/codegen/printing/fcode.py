@@ -426,14 +426,6 @@ class FCodePrinter(CodePrinter):
         code = ', '.join(['print *', *args])
         return self._get_statement(code) + '\n'
 
-    def _print_Pow(self, expr):
-        base = expr.args[0]
-        e    = expr.args[1]
-
-        base_c = self._print(base)
-        e_c    = self._print(e)
-        return '{} ** {}'.format(base_c, e_c)
-
     def _print_SymbolicPrint(self, expr):
         # for every expression we will generate a print
         code = '\n'.join("print *, 'sympy> {}'".format(a) for a in expr.expr)
@@ -2230,9 +2222,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_MathFunctionBase(self, expr):
         type_name = type(expr).__name__
-        if type_name == "MathPow":
-            code = self._print_PyccelPow(expr)
-            return code
         try:
             func_name = math_function_to_fortran[type_name]
         except KeyError:
@@ -2246,6 +2235,14 @@ class FCodePrinter(CodePrinter):
         code_args = ', '.join(args)
         code = '{0}({1})'.format(func_name, code_args)
         return self._get_statement(code)
+
+    def _print_MathPow(self, expr):
+        base = expr.args[0]
+        e    = expr.args[1]
+
+        base_c = self._print(base)
+        e_c    = self._print(e)
+        return '{} ** {}'.format(base_c, e_c)
 
     def _print_NumpySqrt(self, expr):
         arg = expr.args[0]
