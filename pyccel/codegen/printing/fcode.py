@@ -2076,23 +2076,25 @@ class FCodePrinter(CodePrinter):
         return ' * '.join(a for a in args)
 
     def _print_PyccelDiv(self, expr):
-        args = [self._print(a) for a in expr.args]
+        args = expr.args
         if all(a.dtype is NativeInteger() for a in expr.args):
-            return ' / '.join('real({})'.format(a) for a in args)
+            args = [PythonFloat(a) for a in args]
+        args = [self._print(a) for a in args]
         return ' / '.join(a for a in args)
 
     def _print_PyccelMod(self, expr):
-        args = [self._print(a) for a in expr.args]
-
-        code   = args[0]
         is_real  = expr.dtype is NativeReal()
-        bdtype = expr.args[0].dtype
-        if is_real  and bdtype is NativeInteger():
-            code = 'real({})'.format(code)
-        for b,c in zip(expr.args[1:], args[1:]):
-            bdtype    = b.dtype
-            if is_real and bdtype is NativeInteger():
-                c = 'real({})'.format(c)
+
+        def correct_type_arg(a):
+            if is_real and a.dtype is NativeInteger():
+                return PythonFloat(a)
+            else:
+                return a
+
+        args = [self._print(correct_type_arg(a)) for a in expr.args]
+
+        code = args[0]
+        for c in args[1:]:
             code = 'MODULO({},{})'.format(code, c)
         return code
 
