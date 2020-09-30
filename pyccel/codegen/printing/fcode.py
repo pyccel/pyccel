@@ -2265,18 +2265,6 @@ class FCodePrinter(CodePrinter):
     def _print_Integer(self, expr):
         return "{0}_{1}".format(str(expr.p), expr.precision)
 
-    def _print_Zero(self, expr):
-        return "0_{0}".format(default_precision['int'])
-
-    def _print_One(self, expr):
-        return "1_{0}".format(default_precision['int'])
-
-    def _print_NegativeOne(self, expr):
-        return "-1_{0}".format(default_precision['int'])
-
-    def _print_IndexedBase(self, expr):
-        return self._print(expr.label)
-
     def _print_Indexed(self, expr):
         if isinstance(expr.base, IndexedVariable):
             base = expr.base.internal_variable
