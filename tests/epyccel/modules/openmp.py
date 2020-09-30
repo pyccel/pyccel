@@ -26,17 +26,15 @@ def f1(i):
     #$ omp parallel private(idx)
 
     idx = omp_get_thread_num()
-    
+
     if idx == i:
         out = idx
 
     #$ omp end parallel
     return out
-  
-def test_all_omp_funcs()
-{
-    from pyccel.stdlib.internal.openmp import *
+
+def number_of_procs():
+    from pyccel.stdlib.internal.openmp import omp_get_num_procs
 
     procs_num = omp_get_num_procs()
-    print("the number of processors available to this device is:".procs_number)
-}
+    return procs_num
