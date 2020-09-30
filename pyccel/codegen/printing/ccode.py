@@ -18,7 +18,6 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
 
 from pyccel.ast.builtins  import Range
 from pyccel.ast.core import Declare
-from pyccel.ast.core import SeparatorComment
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -531,9 +530,7 @@ class CCodePrinter(CodePrinter):
         ln = len(top)
         bottom = '/*' + '_'*(ln-2) + '*/'
 
-        for i in range(len(txts)):
-            txts[i] = '/*' + txts[i] + ' '*(ln -2 - len(txts[i])) + '*/'
-
+        txts = ['/*' + t + ' '*(ln -2 - len(t)) + '*/' for t in txts]
 
         body = '\n'.join(i for i in txts)
 
