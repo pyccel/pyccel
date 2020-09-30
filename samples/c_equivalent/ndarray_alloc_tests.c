@@ -13,7 +13,7 @@ int main(void)
     t_ndarray_type a;
 
     printf("testing float\n");
-    a.raw_data = malloc(6 * sizeof(double));
+    a.raw_data = malloc(sizeof(double_arr));
     printf("size of arr %lu - %lu\n", sizeof(double_arr), sizeof(double_arr[0]));
     memcpy(a.raw_data, double_arr, sizeof(double_arr));
 
