@@ -33,6 +33,7 @@ __all__ = (
     'pycomplex_real',
     'pycomplex_imag',
     'pycomplex_fromdoubles',
+    'Py_DECREF',
 #------- CAST FUNCTIONS ------
     'pyint_to_bool',
     'bool_to_pyobj',
@@ -206,6 +207,10 @@ pycomplex_fromdoubles = FunctionDef(name      = 'PyComplex_FromDoubles',
                            arguments = [Variable(dtype=NativeReal(), name = 'r'),
                                         Variable(dtype=NativeReal(), name = 'i')],
                            results   = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)])
+Py_DECREF = FunctionDef(name = 'Py_DECREF',
+                        body = [],
+                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                        results = [])
 
 # Casting functions
 # Represents type of cast function responsible of the conversion of one data type into another.
