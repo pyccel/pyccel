@@ -17,7 +17,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, Nativ
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper import PyArgKeywords
 from pyccel.ast.cwrapper import Py_True, Py_False, Py_None
-from pyccel.ast.cwrapper import cast_function_registry
+from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 
 from pyccel.ast.type_inference import str_dtype
 
@@ -34,6 +34,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def __init__(self, parser, settings={}):
         CCodePrinter.__init__(self, parser,settings)
         self._cast_functions_dict = OrderedDict()
+        self._to_free_PyObject_list = []
         self._function_wrapper_names = dict()
         self._global_names = set()
 
@@ -126,7 +127,7 @@ class CWrapperCodePrinter(CCodePrinter):
             if isinstance(variable, ValuedVariable):
                 default_value = VariableAddress(Py_None)
                 body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
-            (BooleanTrue(), [Assign(variable,variable.value)]))]
+            (BooleanTrue(), [Assign(variable, variable.value)]))]
 
         if variable.is_optional:
             collect_type = PyccelPyObject()
@@ -176,6 +177,7 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function_call('complex_to_pycomplex', variable)
+            self._to_free_PyObject_list.append(collect_var)
             return collect_var, AliasAssign(collect_var, cast_function)
 
         return variable, None
@@ -316,6 +318,11 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Call PyBuildNode
         wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
+
+        # Call free function for python type
+        wrapper_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
+        self._to_free_PyObject_list.clear()
+        #Return
         wrapper_body.append(Return(wrapper_results))
 
         # Create FunctionDef and write using classic method
