@@ -320,9 +320,10 @@ class CCodePrinter(CodePrinter):
         return ' * '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelDiv(self, expr):
-        args = [self._print(a) for a in expr.args]
+        args = expr.args
         if all(a.dtype is NativeInteger() for a in expr.args):
-            return ' / '.join('real({})'.format(self._print(a)) for a in args)
+            args = [PythonFloat(a) for a in args]
+        args = [self._print(a) for a in args]
         return  ' / '.join(self._print(a) for a in args)
 
     def _print_PyccelRShift(self, expr):
