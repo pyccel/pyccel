@@ -13,6 +13,7 @@ from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMo
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 
+from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
 
 from pyccel.ast.builtins  import Range
@@ -108,11 +109,13 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
-        return '(double)({0})'.format(value)
+        type_name = self.find_in_dtype_registry('real', default_precision['real'])
+        return '({0})({1})'.format(type_name, value)
 
     def _print_Int(self, expr):
         value = self._print(expr.arg)
-        return '(long)({0})'.format(value)
+        type_name = self.find_in_dtype_registry('int', default_precision['int'])
+        return '({0})({1})'.format(type_name, value)
 
     def _print_Bool(self, expr):
         value = self._print(expr.arg)
