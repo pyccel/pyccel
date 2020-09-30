@@ -972,7 +972,7 @@ class FCodePrinter(CodePrinter):
             rhs = rhs.variable
 
         if isinstance(lhs, TupleVariable) and not lhs.is_homogeneous:
-            if isinstance(rhs, TupleVariable):
+            if isinstance(rhs, (TupleVariable, PythonTuple)):
                 return self._print(CodeBlock([AliasAssign(l, rhs[i]) for i,l in enumerate(lhs)]))
             else:
                 return self._print(CodeBlock([AliasAssign(l, IndexedVariable(rhs)[i]) for i,l in enumerate(lhs)]))
