@@ -78,6 +78,7 @@ dtype_and_precision_registry = { 'real':('real',default_precision['float']),
                                  'int'  :('int', default_precision['int']),
                                  'pythonint'  :('int', default_precision['int']),
                                  'integer':('int',default_precision['int']),
+                                 'bool' :('bool',default_precision['bool']),
                                  'pythonbool' :('bool',default_precision['bool'])}
 
 
