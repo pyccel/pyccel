@@ -39,10 +39,18 @@ def test_omp_number_of_procs():
     procs_num = omp_get_num_procs()
     return procs_num
 
-def test_omp_in_parallel():
+def test_omp_in_parallel1():
     from pyccel.stdlib.internal.openmp import omp_in_parallel
 
     in_parallel = omp_in_parallel()
+    return in_parallel
+
+def test_omp_in_parallel2():
+    from pyccel.stdlib.internal.openmp import omp_in_parallel
+
+    #$ omp parallel
+    in_parallel = omp_in_parallel()
+    #$ omp end parallel
     return in_parallel
 
 @types ('bool')

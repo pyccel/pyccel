@@ -21,7 +21,10 @@ def test_module_1():
     # assert mod.f2(42) == openmp.f2(42)
 
     assert mod.test_omp_number_of_procs() == multiprocessing.cpu_count()
-    assert mod.test_omp_set_get_dynamic(0) == 0
+    assert mod.test_omp_in_parallel1() == 0
+    assert mod.test_omp_in_parallel2() == 1
     assert mod.test_omp_set_get_dynamic(1) == 1
+    assert mod.test_omp_set_get_dynamic(0) == 0
     mod.set_num_threads(8)
+    assert mod.get_num_threads() == 8
     assert mod.f1(5) == 5
