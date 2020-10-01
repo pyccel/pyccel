@@ -437,9 +437,9 @@ class Zip(Basic):
 
 #==============================================================================
 python_builtin_datatypes_dict = {
-    'bool'   : Bool,
+    'bool'   : PythonBool,
     'float'  : PythonFloat,
-    'int'    : Int,
+    'int'    : PythonInt,
     'complex': PythonComplex
 }
 
