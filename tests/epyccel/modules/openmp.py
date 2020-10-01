@@ -60,3 +60,9 @@ def test_omp_set_get_dynamic(dynamic_theads):
 
     omp_set_dynamic(dynamic_theads)
     return omp_get_dynamic()
+
+def test_omp_get_cancellation():
+    from pyccel.stdlib.internal.openmp import omp_get_cancellation
+
+    cancellation = omp_get_cancellation()
+    return cancellation
