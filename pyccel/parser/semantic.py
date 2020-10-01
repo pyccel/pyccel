@@ -85,7 +85,7 @@ from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_impo
 from pyccel.ast.utilities import split_positional_keyword_arguments
 
 from pyccel.ast.builtins import Print
-from pyccel.ast.builtins import Int as PythonInt, Bool as PythonBool, PythonFloat, PythonComplex
+from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
 from pyccel.ast.builtins import python_builtin_datatype
 from pyccel.ast.builtins import Range, Zip, Enumerate, Map, PythonTuple
 

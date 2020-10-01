@@ -111,12 +111,12 @@ class CCodePrinter(CodePrinter):
         type_name = self.find_in_dtype_registry('real', default_precision['real'])
         return '({0})({1})'.format(type_name, value)
 
-    def _print_Int(self, expr):
+    def _print_PythonInt(self, expr):
         value = self._print(expr.arg)
         type_name = self.find_in_dtype_registry('int', default_precision['int'])
         return '({0})({1})'.format(type_name, value)
 
-    def _print_Bool(self, expr):
+    def _print_PythonBool(self, expr):
         value = self._print(expr.arg)
         return '{} != 0'.format(value)
 

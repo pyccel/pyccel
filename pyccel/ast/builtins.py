@@ -21,11 +21,11 @@ from .datatypes import (datatype, DataType, NativeSymbol,
 from .numbers   import Integer, Float
 
 __all__ = (
-    'Bool',
+    'PythonBool',
     'PythonComplex',
     'Enumerate',
     'PythonFloat',
-    'Int',
+    'PythonInt',
     'PythonTuple',
     'Len',
     'List',
@@ -47,7 +47,7 @@ local_sympify = {
 }
 
 #==============================================================================
-class Bool(Expr, PyccelAstNode):
+class PythonBool(Expr, PyccelAstNode):
     """ Represents a call to Python's native bool() function.
     """
     _rank = 0
@@ -158,7 +158,7 @@ class PythonFloat(Expr, PyccelAstNode):
         return code
 
 #==============================================================================
-class Int(Expr, PyccelAstNode):
+class PythonInt(Expr, PyccelAstNode):
     """ Represents a call to Python's native int() function.
     """
 

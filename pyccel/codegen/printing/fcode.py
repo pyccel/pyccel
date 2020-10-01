@@ -44,7 +44,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
 
 from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
 from pyccel.ast.core      import FunctionCall
-from pyccel.ast.builtins  import Enumerate, Int, Len, Map, Print, Range, Zip, PythonTuple, PythonFloat
+from pyccel.ast.builtins  import Enumerate, PythonInt, Len, Map, Print, Range, Zip, PythonTuple, PythonFloat
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString
@@ -601,7 +601,7 @@ class FCodePrinter(CodePrinter):
     def _print_Array(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Int(self, expr):
+    def _print_PythonInt(self, expr):
         return expr.fprint(self._print)
 
     def _print_MathFloor(self, expr):
@@ -633,7 +633,7 @@ class FCodePrinter(CodePrinter):
     def _print_PythonComplex(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Bool(self, expr):
+    def _print_PythonBool(self, expr):
         return expr.fprint(self._print)
 
     def _print_Rand(self, expr):
@@ -1049,7 +1049,7 @@ class FCodePrinter(CodePrinter):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}\n'.format(lhs_code, rhs_code)
 
-        if isinstance(rhs, (Int, Real, NumpyComplex)):
+        if isinstance(rhs, (PythonInt, Real, NumpyComplex)):
            lhs = self._print(expr.lhs)
            rhs = expr.rhs.fprint(self._print)
            return '{0} = {1}\n'.format(lhs,rhs)

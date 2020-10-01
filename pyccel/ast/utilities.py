@@ -17,7 +17,7 @@ from .core import FunctionDef
 from .core import ValuedVariable
 from .core import Constant, Variable, IndexedVariable
 
-from .builtins import Bool, Enumerate, Int, PythonFloat, PythonComplex, Len, Map, Range, Zip
+from .builtins import PythonBool, Enumerate, PythonInt, PythonFloat, PythonComplex, Len, Map, Range, Zip
 
 from .mathext  import math_functions, math_constants
 
@@ -131,10 +131,10 @@ builtin_functions_dict = {
     'range'    : Range,
     'zip'      : Zip,
     'enumerate': Enumerate,
-    'int'      : Int,
+    'int'      : PythonInt,
     'float'    : PythonFloat,
     'complex'  : PythonComplex,
-    'bool'     : Bool,
+    'bool'     : PythonBool,
     'sum'      : NumpySum,
     'len'      : Len,
     'max'      : NumpyMax,

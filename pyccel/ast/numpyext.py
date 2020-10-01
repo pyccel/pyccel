@@ -22,7 +22,7 @@ from .core           import create_variable
 from .core           import CodeBlock
 from .core           import ClassDef, FunctionDef
 
-from .builtins       import Int as PythonInt, Bool as PythonBool
+from .builtins       import PythonInt, PythonBool
 from .builtins       import PythonFloat, PythonTuple, PythonComplex
 from .datatypes      import dtype_and_precision_registry as dtype_registry
 from .datatypes      import default_precision
