@@ -13,9 +13,9 @@ from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMo
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
-from pyccel.ast.builtins  import Range, PythonFloat
+from pyccel.ast.builtins  import Range, PythonFloat, PythonComplex
 from pyccel.ast.core import Declare
 from pyccel.ast.core import SeparatorComment
 
@@ -224,21 +224,25 @@ class CCodePrinter(CodePrinter):
         return "fmod({}, {})".format(first, second)
 
     def _print_PyccelPow(self, expr):
-        dtype = self._print(expr.dtype)
-        prec  = expr.precision
-
-        b = self._print(expr.args[0])
-        e = self._print(expr.args[1])
+        b = expr.args[0]
+        e = expr.args[1]
 
         if expr.dtype is NativeComplex():
+            b = self._print(b if b.dtype is NativeComplex() else PythonComplex(b))
+            e = self._print(e if e.dtype is NativeComplex() else PythonComplex(e))
             self._additional_imports.add("complex.h")
             return 'cpow({}, {})'.format(b, e)
-        elif expr.dtype is NativeInteger():
-            self._additional_imports.add("math.h")
-            return '({})pow({}, {})'.format(self.find_in_dtype_registry(dtype, prec), b, e)
-        else:
-            self._additional_imports.add("math.h")
-            return 'pow({}, {})'.format(b, e)
+
+        self._additional_imports.add("math.h")
+        b = self._print(b if b.dtype is NativeReal() else PythonFloat(b))
+        e = self._print(e if e.dtype is NativeReal() else PythonFloat(e))
+        code = 'pow({}, {})'.format(b, e)
+        if expr.dtype is NativeInteger():
+            dtype = self._print(expr.dtype)
+            prec  = expr.precision
+            cast_type = self.find_in_dtype_registry(dtype, prec)
+            return '({}){}'.format(cast_type, code)
+        return code
 
     def _print_Import(self, expr):
         return '#include <{0}>'.format(expr.source)
