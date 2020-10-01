@@ -2073,11 +2073,11 @@ class FCodePrinter(CodePrinter):
         return ' * '.join(a for a in args)
 
     def _print_PyccelDiv(self, expr):
-        args = expr.args
         if all(a.dtype is NativeInteger() for a in expr.args):
             args = [PythonFloat(a) for a in args]
-        args = [self._print(a) for a in args]
-        return ' / '.join(a for a in args)
+        else:
+            args = expr.args
+        return ' / '.join(self._print(a) for a in args)
 
     def _print_PyccelMod(self, expr):
         is_real  = expr.dtype is NativeReal()
