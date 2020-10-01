@@ -5,6 +5,10 @@ from numpy import isclose
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 from conftest import *
+import sys
+
+# this smallest positive float number
+min_float = sys.float_info.min
 
 def test_pow_int_int(language):
     @types(int, int)
@@ -12,8 +16,8 @@ def test_pow_int_int(language):
         return x ** y
 
     f = epyccel(f_call, language=language)
-    x = randint(10)
-    y = randint(10)
+    x = randint(50)
+    y = randint(5)
 
     assert f(x, y) == f_call(x, y)
     # negative base
@@ -27,11 +31,11 @@ def test_pow_real_real(language):
         return x ** y
 
     f = epyccel(pow_r_r, language=language)
-    x = rand()
-    y = rand()
+    x = uniform(low=min_float, high=50)
+    y = uniform(high=5)
 
-    assert(isclose(f(x, y), pow_r_r(x, y), rtol=1e-15, atol=1e-15))
-
+    assert(isclose(f(x, y), pow_r_r(x, y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f(x, -y), pow_r_r(x, -y), rtol=1e-14, atol=1e-15))
     assert isinstance(f(x, y), type(pow_r_r(x, y)))
 
 def test_pow_real_int(language):
@@ -40,10 +44,11 @@ def test_pow_real_int(language):
         return x ** y
 
     f = epyccel(pow_r_i, language=language)
-    x = uniform()
+    x = uniform(low=min_float, high=50)
     y = randint(5)
 
-    assert(isclose(f(x, y), pow_r_i(x, y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(x, y), pow_r_i(x, y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f(-x, y), pow_r_i(-x, y), rtol=1e-14, atol=1e-15))
     assert isinstance(f(x, y), type(pow_r_i(x, y)))
 
 def test_pow_int_real(language):
@@ -55,7 +60,7 @@ def test_pow_int_real(language):
     x = randint(40)
     y = uniform()
 
-    assert(isclose(f(x, y), pow_i_r(x, y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(x, y), pow_i_r(x, y), rtol=1e-14, atol=1e-15))
     assert isinstance(f(x, y), type(pow_i_r(x, y)))
 
 def test_pow_special_cases(language):
@@ -64,9 +69,9 @@ def test_pow_special_cases(language):
         return x ** y
 
     f = epyccel(pow_sp, language=language)
-    e = uniform()
-    assert(isclose(f(0.0, e), pow_sp(0.0, e), rtol=1e-15, atol=1e-15))
-    assert(isclose(f(0.0, e), pow_sp(0.0, e), rtol=1e-15, atol=1e-15))
+    e = uniform(high=1e6)
+    assert(isclose(f(0.0, e), pow_sp(0.0, e), rtol=1e-14, atol=1e-15))
+    assert(isclose(f(0.0, e), pow_sp(0.0, e), rtol=1e-14, atol=1e-15))
 
 # ---------------------------- Complex numbers ----------------------------- #
 
@@ -78,10 +83,10 @@ def test_pow_c_c(language):
     f = epyccel(pow_c_c, language=language)
     b = complex(rand(), rand())
     e = complex(rand(), rand())
-    assert(isclose(f(b, e), pow_c_c(b, e), rtol=1e-15, atol=1e-15))
-    assert(isclose(f(-b, e), pow_c_c(-b, e), rtol=1e-15, atol=1e-15))
-    assert(isclose(f(b, -e), pow_c_c(b, -e), rtol=1e-15, atol=1e-15))
-    assert(isclose(f(-b, -e), pow_c_c(-b, -e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(b, e), pow_c_c(b, e), rtol=1e-14, atol=1e-15))
+    assert(isclose(f(-b, e), pow_c_c(-b, e), rtol=1e-14, atol=1e-15))
+    assert(isclose(f(b, -e), pow_c_c(b, -e), rtol=1e-14, atol=1e-15))
+    assert(isclose(f(-b, -e), pow_c_c(-b, -e), rtol=1e-14, atol=1e-15))
 
 def test_pow_c_i(language):
     @types('complex', 'int')
@@ -91,10 +96,10 @@ def test_pow_c_i(language):
     f = epyccel(pow_c_i, language=language)
     b = complex(rand(), rand())
     e = randint(10)
-    assert(isclose(f(b, e), pow_c_i(b, e), rtol=1e-15, atol=1e-15))
-    assert(isclose(f(-b, e), pow_c_i(-b, e), rtol=1e-15, atol=1e-15))
-    assert(isclose(f(b, -e), pow_c_i(b, -e), rtol=1e-15, atol=1e-15))
-    assert(isclose(f(-b, -e), pow_c_i(-b, -e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(b, e), pow_c_i(b, e), rtol=1e-14, atol=1e-15))
+    assert(isclose(f(-b, e), pow_c_i(-b, e), rtol=1e-14, atol=1e-15))
+    assert(isclose(f(b, -e), pow_c_i(b, -e), rtol=1e-14, atol=1e-15))
+    assert(isclose(f(-b, -e), pow_c_i(-b, -e), rtol=1e-14, atol=1e-15))
 
 def test_pow_c_r(language):
     @types('complex', 'real')
@@ -104,10 +109,10 @@ def test_pow_c_r(language):
     f = epyccel(pow_c_r, language=language)
     b = complex(rand(), rand())
     e = rand()
-    assert(isclose(f(b, e), pow_c_r(b, e), rtol=1e-15, atol=1e-15))
-    assert(isclose(f(-b, e), pow_c_r(-b, e), rtol=1e-15, atol=1e-15))
-    assert(isclose(f(b, -e), pow_c_r(b, -e), rtol=1e-15, atol=1e-15))
-    assert(isclose(f(-b, -e), pow_c_r(-b, -e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(b, e), pow_c_r(b, e), rtol=1e-14, atol=1e-15))
+    assert(isclose(f(-b, e), pow_c_r(-b, e), rtol=1e-14, atol=1e-15))
+    assert(isclose(f(b, -e), pow_c_r(b, -e), rtol=1e-14, atol=1e-15))
+    assert(isclose(f(-b, -e), pow_c_r(-b, -e), rtol=1e-14, atol=1e-15))
 
 def test_pow_r_c(language):
     @types('real', 'complex')
@@ -117,7 +122,7 @@ def test_pow_r_c(language):
     f = epyccel(pow_r_c, language=language)
     b = rand()
     e = complex(rand(), rand())
-    assert(isclose(f(b, e), pow_r_c(b, e), rtol=1e-15, atol=1e-15))
-    assert(isclose(f(-b, e), pow_r_c(-b, e), rtol=1e-15, atol=1e-15))
-    assert(isclose(f(b, -e), pow_r_c(b, -e), rtol=1e-15, atol=1e-15))
-    assert(isclose(f(-b, -e), pow_r_c(-b, -e), rtol=1e-15, atol=1e-15))
+    assert(isclose(f(b, e), pow_r_c(b, e), rtol=1e-14, atol=1e-15))
+    assert(isclose(f(-b, e), pow_r_c(-b, e), rtol=1e-14, atol=1e-15))
+    assert(isclose(f(b, -e), pow_r_c(b, -e), rtol=1e-14, atol=1e-15))
+    assert(isclose(f(-b, -e), pow_r_c(-b, -e), rtol=1e-14, atol=1e-15))
