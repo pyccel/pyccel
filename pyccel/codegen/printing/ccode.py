@@ -123,6 +123,7 @@ class CCodePrinter(CodePrinter):
                         PyccelMul(expr.imag, ImaginaryUnit())))
 
     def _print_PythonComplex(self, expr):
+        self._additional_imports.add("complex.h")
         return self._print(PyccelAdd(expr.real_part,
                         PyccelMul(expr.imag_part, ImaginaryUnit())))
 
@@ -236,10 +237,13 @@ class CCodePrinter(CodePrinter):
             elif f.dtype is NativeString():
                 args_format.append("%s")
                 args.append(self._print(f))
+            elif f.dtype is NativeComplex():
+                args_format.append("(%f + %fj)")
+                complex_n = self._print(f)
+                args.append('creal({}), cimag({})'.format(complex_n, complex_n))
             else :
-                print("type is ", f.dtype)
-                raise ("{} type is not supported currently").format(f.dtype)
-        
+                raise ("{} type is not supported currently".format(f.dtype))
+
         args_format = sep.join(args_format)
         args_format += end
         args_format = '"{}"'.format(args_format)
