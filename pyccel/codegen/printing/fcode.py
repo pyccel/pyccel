@@ -2258,7 +2258,6 @@ class FCodePrinter(CodePrinter):
         imag_str = self._print_Float(expr.imag)
         return "({}, {})".format(real_str, imag_str)
 
-    # TODO: Use expr.precision once the precision is correctly defined
     def _print_Integer(self, expr):
         return "{0}_{1}".format(str(expr.p), expr.precision)
 
