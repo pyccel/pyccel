@@ -320,7 +320,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelDiv(self, expr):
         if all(a.dtype is NativeInteger() for a in expr.args):
-            args = [PythonFloat(a) for a in args]
+            args = [PythonFloat(a) for a in expr.args]
         else:
             args = expr.args
         return  ' / '.join(self._print(a) for a in args)
