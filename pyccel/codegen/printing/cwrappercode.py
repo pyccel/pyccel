@@ -131,7 +131,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
             (BooleanTrue(), [Assign(variable, variable.value)]))]
 
-        if variable.is_optional:
+         if variable.is_optional:
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
@@ -139,11 +139,11 @@ class CWrapperCodePrinter(CCodePrinter):
             if cast_function is not None:
                 body = [Assign(variable, self.get_cast_function_call(cast_function, collect_var))]
             else:
-                body = [AliasAssign(variable, FunctionCall(malloc, [variable.precision]))]
+                body = [Assign(VariableAddress(variable), FunctionCall(malloc, [variable.precision]))]
                 self._to_free_c_list.append(variable)
                 #TODO call the python function to extract value from pyobject
             body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
-            (BooleanTrue(), [AliasAssign(variable, variable.value)]))]
+            (BooleanTrue(), [Assign(VariableAddress(variable), variable.value)]))]
         return collect_var, body
 
     def get_PyBuildValue(self, used_names, variable):
@@ -258,7 +258,6 @@ class CWrapperCodePrinter(CCodePrinter):
         self._function_wrapper_names[expr.name] = wrapper_name
         self._global_names.add(wrapper_name)
         used_names.add(wrapper_name)
-
         # Collect local variables
         wrapper_vars        = {a.name : a for a in expr.arguments}
         wrapper_vars.update({r.name : r for r in expr.results})
