@@ -10,8 +10,8 @@ t_ndarray mat_product(t_ndarray mat1, t_ndarray mat2)
     memset(mat_p.shape, -1, sizeof(mat_p.shape));
     mat_p.shape[0] = mat2.shape[0];
     mat_p.shape[1] = mat1.shape[1];
-    mat_p.types = sizeof(double); // this will be checked from the types of the matrices
-    mat_p.buffer.raw_data = malloc(mat_p.shape[0] * mat_p.shape[1] * mat_p.types); // allocation the raw data buffer
+    mat_p.type = sizeof(double); // this will be checked from the types of the matrices
+    mat_p.buffer.raw_data = malloc(mat_p.shape[0] * mat_p.shape[1] * mat_p.type); // allocation the raw data buffer
 
     
      for (int i = 0; i < mat1.shape[1]; ++i) {
@@ -22,6 +22,7 @@ t_ndarray mat_product(t_ndarray mat1, t_ndarray mat2)
          }
       }
    }
+
    return (mat_p);
 }
 

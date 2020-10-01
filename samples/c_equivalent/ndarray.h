@@ -22,7 +22,7 @@ typedef struct s_ndarray
     /* shape 'size of each dimmension' */
     int shape[NDARRAY_MAX_DIMS];
     /* type of the array elements */
-    int types; // TODO : make it into an enum
+    int type; // TODO : make it into an enum
 
 } t_ndarray;
 
