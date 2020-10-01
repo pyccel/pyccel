@@ -13,11 +13,11 @@ from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMo
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
+from pyccel.ast.datatypes import default_precision
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
 
 from pyccel.ast.builtins  import Range, PythonFloat, PythonComplex
 from pyccel.ast.core import Declare
-from pyccel.ast.core import SeparatorComment
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -108,13 +108,15 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
-        return '(double)({0})'.format(value)
+        type_name = self.find_in_dtype_registry('real', default_precision['real'])
+        return '({0})({1})'.format(type_name, value)
 
-    def _print_Int(self, expr):
+    def _print_PythonInt(self, expr):
         value = self._print(expr.arg)
-        return '(long)({0})'.format(value)
+        type_name = self.find_in_dtype_registry('int', default_precision['int'])
+        return '({0})({1})'.format(type_name, value)
 
-    def _print_Bool(self, expr):
+    def _print_PythonBool(self, expr):
         value = self._print(expr.arg)
         return '{} != 0'.format(value)
 
@@ -353,9 +355,10 @@ class CCodePrinter(CodePrinter):
         return ' * '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelDiv(self, expr):
-        args = [self._print(a) for a in expr.args]
         if all(a.dtype is NativeInteger() for a in expr.args):
-            return ' / '.join('real({})'.format(self._print(a)) for a in args)
+            args = [PythonFloat(a) for a in expr.args]
+        else:
+            args = expr.args
         return  ' / '.join(self._print(a) for a in args)
 
     def _print_PyccelRShift(self, expr):
@@ -566,9 +569,7 @@ class CCodePrinter(CodePrinter):
         ln = len(top)
         bottom = '/*' + '_'*(ln-2) + '*/'
 
-        for i in range(len(txts)):
-            txts[i] = '/*' + txts[i] + ' '*(ln -2 - len(txts[i])) + '*/'
-
+        txts = ['/*' + t + ' '*(ln -2 - len(t)) + '*/' for t in txts]
 
         body = '\n'.join(i for i in txts)
 

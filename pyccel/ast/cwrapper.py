@@ -1,7 +1,7 @@
 from .basic     import Basic
 
 from pyccel.ast.numbers   import BooleanTrue, Complex
-from .builtins  import Bool
+from .builtins  import PythonBool
 
 from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
@@ -210,7 +210,7 @@ pycomplex_fromdoubles = FunctionDef(name      = 'PyComplex_FromDoubles',
 def pyint_to_bool(cast_function_name):
     cast_function_argument = Variable(dtype=NativeInteger(), name = 'i', precision=4)
     cast_function_result   = Variable(dtype=NativeBool(), name = 'b')
-    cast_function_body     = [Assign(cast_function_result, Bool(cast_function_argument)),
+    cast_function_body     = [Assign(cast_function_result, PythonBool(cast_function_argument)),
                               Return([cast_function_result])  ]
     return FunctionDef(name      = cast_function_name,
                        arguments = [cast_function_argument],
@@ -221,7 +221,7 @@ def bool_to_pyobj(cast_function_name):
     cast_function_argument = Variable(dtype=NativeBool(), name = 'b')
     cast_function_result   = Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)
     cast_function_body = [IfTernaryOperator(
-                            (Bool(cast_function_argument),
+                            (PythonBool(cast_function_argument),
                                 [AliasAssign(cast_function_result, Py_True)]),
                             (BooleanTrue(),
                                 [AliasAssign(cast_function_result, Py_False)])
