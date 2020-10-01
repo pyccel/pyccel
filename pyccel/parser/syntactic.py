@@ -616,7 +616,7 @@ class SyntaxParser(BasicParser):
         imports      = []
 
         # TODO improve later
-        decorators = {str(d) if isinstance(d,Symbol) else str(type(d)): d \
+        decorators = {str(d) if isinstance(d, Symbol) else str(type(d)): d \
                             for d in self._visit(stmt.decorator_list)}
 
         if 'bypass' in decorators:

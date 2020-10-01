@@ -16,6 +16,7 @@ from .core import Product
 from .core import FunctionDef
 from .core import ValuedVariable
 from .core import Constant, Variable, IndexedVariable
+from .core import String
 
 from .builtins import Bool, Enumerate, Int, PythonFloat, PythonComplex, Len, Map, Range, Zip
 
@@ -264,9 +265,7 @@ def build_types_decorator(args, order=None):
             if order and a.rank > 1:
                 dtype = "{dtype}(order={ordering})".format(dtype=dtype, ordering=order)
 
-        if not ( dtype.startswith("'") and dtype.endswith("'") ):
-            dtype = "'{}'".format(dtype)
-
+        dtype = String(dtype)
         types.append(dtype)
 
     return types
