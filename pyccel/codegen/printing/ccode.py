@@ -289,7 +289,7 @@ class CCodePrinter(CodePrinter):
     def stored_in_c_pointer(self, a):
         if not isinstance(a, Variable):
             return False
-        return a.is_pointer
+        return a.is_pointer or a.is_optional
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
