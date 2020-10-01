@@ -223,7 +223,7 @@ class CCodePrinter(CodePrinter):
         rank  = expr.rank
         dtype = self.find_in_dtype_registry(dtype,prec)
 
-        if rank > 0 or expr.is_pointer:
+        if rank > 0 or self.stored_in_c_pointer(expr):
             return '{0} *'.format(dtype)
         else:
             return '{0} '.format(dtype)
@@ -513,13 +513,13 @@ class CCodePrinter(CodePrinter):
                 expr.i*expr.parent.shape[1])
 
     def _print_Variable(self, expr):
-        if expr in self._dereference or expr.is_pointer:
+        if expr in self._dereference or self.stored_in_c_pointer(expr):
             return '(*{0})'.format(expr.name)
         else:
             return expr.name
 
     def _print_VariableAddress(self, expr):
-        if expr.variable.is_pointer or expr.variable.rank > 0:
+        if self.stored_in_c_pointer(expr.variable) or expr.variable.rank > 0:
             return '{}'.format(expr.variable.name)
         else:
             return '&{}'.format(expr.variable.name)
