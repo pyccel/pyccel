@@ -396,18 +396,20 @@ class CCodePrinter(CodePrinter):
         return '{0}{1}({2})'.format(ret_type, name, arg_code)
 
     def _print_NumpyUfuncBase(self, expr):
-        """ convert a python expresion with a numpy function call to c
+        """ convert a python expression with a numpy function call to c
         function call
 
-        Parameters:
-        -----------
-            expr (Pyccel ast node): python expresion with a numpy function call
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                python expression with a numpy function call
 
-        Returns:
-        --------
-            string: equivalent of the expression in c language
+        Returns
+        -------
+            string
+                equivalent of the expression in c language
 
-        Example:
+        Example
         -------
             numpy.cos(x) ==> cos(x)
 
@@ -436,17 +438,20 @@ class CCodePrinter(CodePrinter):
         return '{0}({1})'.format(func_name, code_args)
 
     def _print_MathFunctionBase(self, expr):
-        """ convert a python expresion with a math function call to c
+        """ convert a python expression with a math function call to c
         function call
 
-        Parameters:
-        -----------
-            expr (Pyccel ast node): python expresion with a Math function call
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                python expression with a Math function call
 
-        Returns:
-        --------
-            string: equivalent of the expression in c language
+        Returns
+        -------
+            string
+                the equivalent expression in c language
 
+        ------
         Example:
         --------
             math.sin(x) ==> sin(x)
@@ -506,19 +511,21 @@ class CCodePrinter(CodePrinter):
         return '{}({})'.format(func.name, args)
 
     def _print_Constant(self, expr):
-        """ convert a python expresion with a math constant call to c
+        """ convert a python expression with a math constant call to c
         function call
 
-        Parameters:
-        -----------
-            expr (Pyccel ast node): python expresion with a Math constant
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                python expression with a Math constant
 
-        Returns:
-        --------
-            string: string represent the value of the constant
+        Returns
+        -------
+            string
+                string represent the value of the constant
 
-        Example:
-        --------
+        Example
+        -------
             math.pi ==> 3.14159265358979
 
         """
