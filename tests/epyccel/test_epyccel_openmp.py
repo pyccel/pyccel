@@ -1,5 +1,6 @@
 import pytest
 import multiprocessing
+import os
 import numpy as np
 
 from pyccel.epyccel import epyccel
@@ -17,7 +18,12 @@ def test_module_1():
     assert mod.f1(3) == 3
     assert mod.f1(5) == -1
     assert mod.test_omp_number_of_procs() == multiprocessing.cpu_count()
-    assert mod.test_omp_get_cancellation() == 0
+    omp_cancel = os.environ.get('OMP_CANCELLATION')
+    if omp_cancel is not None:
+        if omp_cancel.lower() == 'true':
+            assert mod.test_omp_get_cancellation() == 1
+        else:
+            assert mod.test_omp_get_cancellation() == 0
     assert mod.test_omp_in_parallel1() == 0
     assert mod.test_omp_in_parallel2() == 1
     assert mod.test_omp_set_get_dynamic(1) == 1
