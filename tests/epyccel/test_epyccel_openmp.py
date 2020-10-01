@@ -24,6 +24,8 @@ def test_module_1():
             assert mod.test_omp_get_cancellation() == 1
         else:
             assert mod.test_omp_get_cancellation() == 0
+    else:
+        assert mod.test_omp_get_cancellation() == 0
     assert mod.test_omp_in_parallel1() == 0
     assert mod.test_omp_in_parallel2() == 1
     assert mod.test_omp_set_get_dynamic(1) == 1
