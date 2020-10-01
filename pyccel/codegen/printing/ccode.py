@@ -396,18 +396,18 @@ class CCodePrinter(CodePrinter):
         return '{0}{1}({2})'.format(ret_type, name, arg_code)
 
     def _print_NumpyUfuncBase(self, expr):
-        """ convert a python expression with a numpy function call to c
+        """ Convert a Python expression with a Numpy function call to C
         function call
 
         Parameters
         ----------
             expr : Pyccel ast node
-                python expression with a numpy function call
+                Python expression with a Numpy function call
 
         Returns
         -------
             string
-                equivalent of the expression in c language
+                Equivalent expression in C language
 
         Example
         -------
@@ -438,18 +438,18 @@ class CCodePrinter(CodePrinter):
         return '{0}({1})'.format(func_name, code_args)
 
     def _print_MathFunctionBase(self, expr):
-        """ convert a python expression with a math function call to c
+        """ Convert a Python expression with a math function call to C
         function call
 
         Parameters
         ----------
             expr : Pyccel ast node
-                python expression with a Math function call
+                Python expression with a Math function call
 
         Returns
         -------
             string
-                the equivalent expression in c language
+                Equivalent expression in C language
 
         ------
         Example:
@@ -511,18 +511,18 @@ class CCodePrinter(CodePrinter):
         return '{}({})'.format(func.name, args)
 
     def _print_Constant(self, expr):
-        """ convert a python expression with a math constant call to c
+        """ Convert a Python expression with a math constant call to C
         function call
 
         Parameters
         ----------
             expr : Pyccel ast node
-                python expression with a Math constant
+                Python expression with a Math constant
 
         Returns
         -------
             string
-                string represent the value of the constant
+                String represent the value of the constant
 
         Example
         -------
