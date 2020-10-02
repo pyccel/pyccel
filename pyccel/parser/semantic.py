@@ -2,7 +2,6 @@
 # pylint: disable=R0201
 
 from collections import OrderedDict
-import traceback
 
 from sympy.core.function       import Application, UndefinedFunction
 from sympy.utilities.iterables import iterable as sympy_iterable
@@ -16,7 +15,6 @@ from sympy import ceiling
 from sympy import oo  as INF
 from sympy import Tuple
 from sympy import Lambda
-from sympy import Expr
 from sympy.core import cache
 
 #==============================================================================
@@ -24,7 +22,6 @@ from sympy.core import cache
 from pyccel.ast.basic import PyccelAstNode
 
 from pyccel.ast.core import Constant
-from pyccel.ast.core import String
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Variable
 from pyccel.ast.core import TupleVariable
@@ -36,45 +33,39 @@ from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionDef, Interface
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor, ForIterator
-from pyccel.ast.core import If, IfTernaryOperator
+from pyccel.ast.core import IfTernaryOperator
 from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
 from pyccel.ast.core import EmptyNode
 from pyccel.ast.core import Slice, IndexedVariable, IndexedElement
-from pyccel.ast.core import Concatenate
 from pyccel.ast.core import ValuedVariable
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import Is, IsNot
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import With, Block
-from pyccel.ast.core import List, Dlist, Len
+from pyccel.ast.core import List, Dlist
 from pyccel.ast.core import StarredArguments
-from pyccel.ast.core import inline, subs, extract_subexpressions
+from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import _atomic
-from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.core import PyccelUnary
 from pyccel.ast.core import Product, FunctionCall
-from pyccel.ast.core import PyccelArraySize
-from pyccel.ast.core import PyccelOperator
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
-from pyccel.ast.functionalexpr import GeneratorComprehension as GC
 
 from pyccel.ast.datatypes import NativeRange
 from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric, NativeComplex
-from pyccel.ast.datatypes import default_precision
 
 from pyccel.ast.type_inference  import str_dtype
 
 from pyccel.ast.numbers import BooleanTrue, BooleanFalse
-from pyccel.ast.numbers import Integer, Float, Complex
+from pyccel.ast.numbers import Integer, Float
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.headers import MacroFunction, MacroVariable
@@ -89,18 +80,13 @@ from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComple
 from pyccel.ast.builtins import python_builtin_datatype
 from pyccel.ast.builtins import Range, Zip, Enumerate, Map, PythonTuple
 
-from pyccel.ast.numpyext import Full, Array, Rand, Empty
-from pyccel.ast.numpyext import EmptyLike, FullLike, OnesLike, ZerosLike
-from pyccel.ast.numpyext import NumpySum, NumpyMin, NumpyMax, NumpyMod
-from pyccel.ast.numpyext import Matmul, Norm
+from pyccel.ast.numpyext import Empty
+from pyccel.ast.numpyext import EmptyLike
 from pyccel.ast.numpyext import NumpyInt, Int32, Int64
 from pyccel.ast.numpyext import NumpyFloat, Float32, Float64
 from pyccel.ast.numpyext import NumpyComplex, Complex64, Complex128
-from pyccel.ast.numpyext import Real, Imag, Where, Diag, Linspace
-from pyccel.ast.numpyext import NumpyUfuncBase
+from pyccel.ast.numpyext import Where, Diag, Linspace
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
-
-from pyccel.ast.mathext  import MathFunctionBase, MathCeil
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -620,7 +606,6 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, Dlist):
-            import numpy
             d = self._infere_type(expr.val, **settings)
 
             # TODO must check that it is consistent with pyccel's rules

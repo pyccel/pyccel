@@ -15,13 +15,12 @@ from sympy import preorder_traversal
 
 from sympy.simplify.radsimp   import fraction
 from sympy.core.compatibility import with_metaclass
-from sympy.core.assumptions   import StdFactKB
 from sympy.core.singleton     import Singleton, S
 from sympy.core.function      import Function, Application
 from sympy.core.function      import Derivative, UndefinedFunction as sp_UndefinedFunction
 from sympy.core.function      import _coeff_isneg
 from sympy.core.expr          import Expr, AtomicExpr
-from sympy.logic.boolalg      import And as sp_And, Not as sp_Not, Or as sp_Or
+from sympy.logic.boolalg      import And as sp_And, Or as sp_Or
 from sympy.logic.boolalg      import Boolean as sp_Boolean
 from sympy.tensor             import Idx, Indexed, IndexedBase
 

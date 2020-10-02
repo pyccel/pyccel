@@ -23,7 +23,7 @@ from .mathext  import math_functions, math_constants
 
 from .numpyext import Full, Empty, Zeros, Ones
 from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
-from .numpyext import Diag, Cross
+from .numpyext import Diag
 from .numpyext import NumpyMin, NumpyMax, NumpyAbs, NumpyFloor, Norm, Where
 from .numpyext import Array, Shape, Rand, NumpyRandint, NumpySum, Matmul, Real, NumpyComplex, Imag, NumpyMod
 from .numpyext import NumpyInt, Int32, Int64, NumpyFloat, Float32, Float64, Complex64, Complex128

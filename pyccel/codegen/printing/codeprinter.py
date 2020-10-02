@@ -5,10 +5,7 @@
 
 from sympy.core.basic import Basic
 from sympy.core.symbol import Symbol
-from sympy.core import Mul, Pow, S
-from sympy.core.compatibility import default_sort_key
 from sympy.core.sympify import _sympify
-from sympy.core.mul import _keep_coeff
 from sympy.printing.str import StrPrinter
 
 from pyccel.ast.core import Assign

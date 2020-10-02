@@ -7,18 +7,15 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.ast.numbers   import BooleanTrue
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
-from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, Symbol, Constant
-from pyccel.ast.core import create_incremented_string, Declare, SeparatorComment
-from pyccel.ast.core import IfTernaryOperator, VariableAddress, Import, IsNot
+from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
+from pyccel.ast.core import create_incremented_string, SeparatorComment
+from pyccel.ast.core import VariableAddress, Import, IsNot
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper import PyArgKeywords
-from pyccel.ast.cwrapper import Py_True, Py_False
 from pyccel.ast.cwrapper import cast_function_registry
-
-from pyccel.ast.type_inference import str_dtype
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *

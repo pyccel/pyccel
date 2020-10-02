@@ -5,17 +5,15 @@ from sympy.core import S
 from sympy.printing.precedence import precedence
 
 from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit
-from pyccel.ast.core import If, Nil
-from pyccel.ast.core import Assign, datatype, Variable, Import, FunctionCall
-from pyccel.ast.core import CommentBlock, Comment, SeparatorComment, VariableAddress
+from pyccel.ast.core import Nil
+from pyccel.ast.core import Assign, datatype, Variable, Import
+from pyccel.ast.core import SeparatorComment, VariableAddress
 
-from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
-from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
+from pyccel.ast.core import PyccelAdd, PyccelMul
 
 from pyccel.ast.datatypes import default_precision
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
-from pyccel.ast.numpyext import NumpyComplex, NumpyFloat
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
+from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.builtins  import Range
 from pyccel.ast.core import Declare
 

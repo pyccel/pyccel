@@ -7,7 +7,6 @@ import re
 
 #==============================================================================
 
-from pyccel.ast.core import DottedName
 from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface
 from pyccel.ast.core import PythonFunction, SympyFunction

@@ -10,14 +10,12 @@ In this module we implement some of them in alphabetical order.
 from sympy import Symbol, Function, Tuple
 from sympy import Expr
 from sympy import sympify
-from sympy.core.assumptions import StdFactKB
 from sympy.tensor import Indexed, IndexedBase
 
 from .basic     import Basic, PyccelAstNode
-from .datatypes import (datatype, DataType, NativeSymbol,
-                        NativeInteger, NativeBool, NativeReal,
-                        NativeComplex, NativeRange, NativeTensor, NativeString,
-                        NativeGeneric, NativeTuple, default_precision)
+from .datatypes import (NativeInteger, NativeBool, NativeReal,
+                        NativeComplex, NativeString,
+                        NativeGeneric, default_precision)
 from .numbers   import Integer, Float
 
 __all__ = (

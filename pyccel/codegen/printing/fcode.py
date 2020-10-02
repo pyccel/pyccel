@@ -17,7 +17,6 @@ from numpy import asarray
 from sympy.core import Symbol
 from sympy.core import Tuple
 from sympy.core.function import Function, Application
-from sympy import preorder_traversal
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
 
@@ -26,10 +25,8 @@ from sympy.logic.boolalg import Not
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import Nil
-from pyccel.ast.core import Module
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
-from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import Subroutine
 from pyccel.ast.core import ErrorExit
 from pyccel.ast.core import Product
@@ -38,7 +35,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              TupleVariable, Declare,
                              IndexedVariable, CodeBlock,
                              IndexedElement, Slice, Dlist,
-                             DottedName, AsName, DottedVariable,
+                             DottedName, AsName,
                              If, PyccelArraySize)
 
 
@@ -53,7 +50,6 @@ from pyccel.ast.datatypes import NativeSymbol, NativeString
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
-from pyccel.ast.datatypes import default_precision
 from pyccel.ast.numbers   import Integer, Float
 from pyccel.ast.numbers   import BooleanTrue
 

@@ -5,9 +5,8 @@
 from pyccel.parser.extend_tree import CommentLine
 
 from sympy import srepr
-from pyccel.ast.core import DottedName
-from pyccel.ast.core import create_variable
 from sympy import Symbol
+from pyccel.ast.core import DottedName
 import os
 
 import string
