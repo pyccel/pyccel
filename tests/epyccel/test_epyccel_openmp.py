@@ -20,9 +20,9 @@ def test_module_1():
 
     assert mod.test_omp_number_of_procs() == multiprocessing.cpu_count()
 
-    omp_cancel = os.environ.get('OMP_CANCELLATION')
-    if omp_cancel is not None:
-        if omp_cancel.lower() == 'true':
+    cancel_var = os.environ.get('OMP_CANCELLATION')
+    if cancel_var is not None:
+        if cancel_var.lower() == 'true':
             assert mod.test_omp_get_cancellation() == 1
         else:
             assert mod.test_omp_get_cancellation() == 0

@@ -64,13 +64,13 @@ def test_omp_set_get_dynamic(dynamic_theads):
 def test_omp_get_cancellation():
     from pyccel.stdlib.internal.openmp import omp_get_cancellation
 
-    cancellation = omp_get_cancellation()
-    return cancellation
+    cancel_var = omp_get_cancellation()
+    return cancel_var
 
 def test_omp_get_max_task_priority():
     from pyccel.stdlib.internal.openmp import omp_get_max_task_priority
 
-    priority = omp_get_max_task_priority()
-    return priority
-    
+    max_task_priority_var = omp_get_max_task_priority()
+    return max_task_priority_var
+
 
