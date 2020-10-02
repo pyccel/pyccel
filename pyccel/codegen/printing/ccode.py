@@ -15,8 +15,9 @@ from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
+
 from pyccel.ast.numpyext import NumpyComplex, NumpyFloat
-from pyccel.ast.builtins  import Range
+from pyccel.ast.builtins  import Range, PythonFloat, PythonComplex
 from pyccel.ast.core import Declare
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -332,6 +333,42 @@ class CCodePrinter(CodePrinter):
         a = self._print(expr.args[0])
         return '!{}'.format(a)
 
+    def _print_PyccelMod(self, expr):
+        self._additional_imports.add("math.h")
+
+        first = self._print(expr.args[0])
+        second = self._print(expr.args[1])
+
+        if expr.dtype is NativeInteger():
+            return "{} % {}".format(first, second)
+
+        if expr.args[0].dtype is NativeInteger():
+            first = self._print(PythonFloat(expr.args[0]))
+        if expr.args[1].dtype is NativeInteger():
+            second = self._print(PythonFloat(expr.args[1]))
+        return "fmod({}, {})".format(first, second)
+
+    def _print_PyccelPow(self, expr):
+        b = expr.args[0]
+        e = expr.args[1]
+
+        if expr.dtype is NativeComplex():
+            b = self._print(b if b.dtype is NativeComplex() else PythonComplex(b))
+            e = self._print(e if e.dtype is NativeComplex() else PythonComplex(e))
+            self._additional_imports.add("complex.h")
+            return 'cpow({}, {})'.format(b, e)
+
+        self._additional_imports.add("math.h")
+        b = self._print(b if b.dtype is NativeReal() else PythonFloat(b))
+        e = self._print(e if e.dtype is NativeReal() else PythonFloat(e))
+        code = 'pow({}, {})'.format(b, e)
+        if expr.dtype is NativeInteger():
+            dtype = self._print(expr.dtype)
+            prec  = expr.precision
+            cast_type = self.find_in_dtype_registry(dtype, prec)
+            return '({}){}'.format(cast_type, code)
+        return code
+
     def _print_Import(self, expr):
         return '#include <{0}>'.format(expr.source)
 
@@ -339,7 +376,7 @@ class CCodePrinter(CodePrinter):
         try :
             return dtype_registry[(dtype, prec)]
         except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,severity='fatal')
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
 
     def get_declare_type(self, expr):
         dtype = self._print(expr.dtype)
@@ -588,7 +625,10 @@ class CCodePrinter(CodePrinter):
         return '({})'.format(self._print(expr.args[0]))
 
     def _print_PyccelUnary(self, expr):
-        return '({})'.format(self._print(expr.args[0]))
+        return '+{}'.format(self._print(expr.args[0]))
+
+    def _print_PyccelUnarySub(self, expr):
+        return '-{}'.format(self._print(expr.args[0]))
 
     def _print_AugAssign(self, expr):
         lhs_code = self._print(expr.lhs)
