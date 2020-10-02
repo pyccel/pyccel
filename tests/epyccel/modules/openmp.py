@@ -66,3 +66,11 @@ def test_omp_get_cancellation():
 
     cancellation = omp_get_cancellation()
     return cancellation
+
+def test_omp_get_max_task_priority():
+    from pyccel.stdlib.internal.openmp import omp_get_max_task_priority
+
+    priority = omp_get_max_task_priority()
+    return priority
+    
+
