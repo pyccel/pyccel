@@ -4,6 +4,7 @@ import sys
 import subprocess
 import os
 import glob
+import warnings
 
 from pyccel.ast.f2py                        import as_static_function_call
 from pyccel.ast.core                        import SeparatorComment
@@ -38,7 +39,8 @@ def compile_f2py( filename, *,
                   accelerator=None,
                   includes = '',
                   only = (),
-                  pyf = '' ):
+                  pyf = '',
+                  verbose = False ):
 
     args_pattern = """  -c {compilers} --f90flags="{f90flags}" {opt} {libs} -m {modulename} {pyf} {filename} {libdirs} {extra_args} {includes} {only}"""
 
@@ -123,7 +125,7 @@ def compile_f2py( filename, *,
     cmd = """{} -m numpy.f2py {}"""
     cmd = cmd.format(sys.executable, args)
 
-    output = subprocess.check_output(cmd, shell=True)
+    output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
 
 #    # .... TODO: TO REMOVE
 #    pattern_1 = 'f2py  {modulename}.f90 -h {modulename}.pyf -m {modulename}'
@@ -193,14 +195,20 @@ def create_shared_library(codegen,
 
         setup_filename = os.path.join(pyccel_dirpath, setup_filename)
         cmd = [sys.executable, setup_filename, "build"]
+
+        if verbose:
+            print(' '.join(cmd))
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         out, err = p.communicate()
         if verbose:
             print(out)
-        if len(err)>0:
-            print(err)
-            if p.returncode != 0:
-                raise RuntimeError("Failed to build module")
+        if p.returncode != 0:
+            err_msg = "Failed to build module"
+            if verbose:
+                err_msg += "\n" + err
+            raise RuntimeError(err_msg)
+        if err:
+            warnings.warn(UserWarning(err))
 
         sharedlib_folder += 'build/lib*/'
 
@@ -233,7 +241,8 @@ def create_shared_library(codegen,
                          extra_args  = extra_args,
                          compiler    = compiler,
                          mpi_compiler= mpi_compiler,
-                         accelerator = accelerator)
+                         accelerator = accelerator,
+                         verbose     = verbose )
 
     # Obtain absolute path of newly created shared library
 
