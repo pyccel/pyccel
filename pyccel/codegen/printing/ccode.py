@@ -16,6 +16,7 @@ from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
+from pyccel.ast.numpyext import NumpyComplex, NumpyFloat
 from pyccel.ast.builtins  import Range, PythonFloat, PythonComplex
 from pyccel.ast.core import Declare
 
@@ -53,6 +54,128 @@ known_functions = {
     "atanh": "atanh",
     "floor": "floor",
     "ceiling": "ceil",
+}
+
+# dictionary mapping numpy function to (argument_conditions, C_function).
+# Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
+numpy_ufunc_to_c_real = {
+    'NumpyAbs'  : 'fabs',
+    'NumpyMin'  : 'minval',
+    'NumpyMax'  : 'maxval',
+    'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
+    # ---
+    'NumpyExp' : 'exp',
+    'NumpyLog' : 'log',
+    'NumpySqrt': 'sqrt',
+    # ---
+    'NumpySin'    : 'sin',
+    'NumpyCos'    : 'cos',
+    'NumpyTan'    : 'tan',
+    'NumpyArcsin' : 'asin',
+    'NumpyArccos' : 'acos',
+    'NumpyArctan' : 'atan',
+    'NumpyArctan2': 'atan2',
+    'NumpySinh'   : 'sinh',
+    'NumpyCosh'   : 'cosh',
+    'NumpyTanh'   : 'tanh',
+    'NumpyArcsinh': 'asinh',
+    'NumpyArccosh': 'acosh',
+    'NumpyArctanh': 'atanh',
+}
+
+numpy_ufunc_to_c_complex = {
+    'NumpyAbs'  : 'cabs',
+    'NumpyMin'  : 'minval',
+    'NumpyMax'  : 'maxval',
+    # ---
+    'NumpyExp' : 'cexp',
+    'NumpyLog' : 'clog',
+    'NumpySqrt': 'csqrt',
+    # ---
+    'NumpySin'    : 'csin',
+    'NumpyCos'    : 'ccos',
+    'NumpyTan'    : 'ctan',
+    'NumpyArcsin' : 'casin',
+    'NumpyArccos' : 'cacos',
+    'NumpyArctan' : 'catan',
+    'NumpySinh'   : 'csinh',
+    'NumpyCosh'   : 'ccosh',
+    'NumpyTanh'   : 'ctanh',
+    'NumpyArcsinh': 'casinh',
+    'NumpyArccosh': 'cacosh',
+    'NumpyArctanh': 'catanh',
+}
+
+# dictionary mapping Math function to (argument_conditions, C_function).
+# Used in CCodePrinter._print_MathFunctionBase(self, expr)
+# Math function ref https://docs.python.org/3/library/math.html
+math_function_to_c = {
+    # ---------- Number-theoretic and representation functions ------------
+    'MathCeil'     : 'ceil',
+    # 'MathComb'   : 'com' # TODO
+    'MathCopysign': 'copysign',
+    'MathFabs'   : 'fabs',
+    # 'MathFactorial': '???', # TODO
+    'MathFloor'    : 'floor',
+    # 'MathFmod'   : '???',  # TODO
+    # 'MathRexp'   : '???'   TODO requires two output
+    # 'MathFsum'   : '???',  # TODO
+    # 'MathGcd'   : '???',  # TODO
+    # 'MathIsclose' : '???',  # TODO
+    'MathIsfinite': 'isfinite', # int isfinite(real-floating x);
+    'MathIsinf'   : 'isinf', # int isinf(real-floating x);
+    'MathIsnan'   : 'isnan', # int isnan(real-floating x);
+    # 'MathIsqrt'  : '???' TODO
+    'MathLdexp'  : 'ldexp',
+    # 'MathModf'  : '???' TODO return two value
+    # 'MathPerm'  : '???' TODO
+    # 'MathProd'  : '???' TODO
+    'MathRemainder'  : 'remainder',
+    'MathTrunc'  : 'trunc',
+
+    # ----------------- Power and logarithmic functions -----------------------
+
+    'MathExp'    : 'exp',
+    'MathExpm1'  : 'expm1',
+    'MathLog'    : 'log',      # take also an option arg [base]
+    'MathLog1p'  : 'log1p',
+    'MathLog2'  : 'log2',
+    'MathLog10'  : 'log10',
+    'MathPow'    : 'pow',
+    # 'MathSqrt'   : 'sqrt',    # sqrt is printed using _Print_MathSqrt
+
+    # --------------------- Trigonometric functions ---------------------------
+
+    'MathAcos'   : 'acos',
+    'MathAsin'   : 'asin',
+    'MathAtan'   : 'atan',
+    'MathAtan2'  : 'atan2',
+    'MathCos'    : 'cos',
+    # 'MathDist'  : '???', TODO
+    'MathHypot'  : 'hypot',
+    'MathSin'    : 'sin',
+    'MathTan'    : 'tan',
+
+    # -------------------------- Angular conversion ---------------------------
+
+    # 'MathDegrees': '???',  # TODO
+    # 'MathRadians': '???', # TODO
+
+    # -------------------------- Hyperbolic functions -------------------------
+
+    'MathAcosh'  : 'acosh',
+    'MathAsinh'  : 'asinh',
+    'MathAtanh'  : 'atanh',
+    'MathCosh'   : 'cosh',
+    'MathSinh'   : 'sinh',
+    'MathTanh'   : 'tanh',
+
+    # --------------------------- Special functions ---------------------------
+
+    'MathErf'    : 'erf',
+    'MathErfc'   : 'erfc',
+    'MathGamma'  : 'tgamma',
+    'MathLgamma' : 'lgamma',
 }
 
 dtype_registry = {('real',8)    : 'double',
@@ -259,7 +382,7 @@ class CCodePrinter(CodePrinter):
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         rank  = expr.rank
-        dtype = self.find_in_dtype_registry(dtype,prec)
+        dtype = self.find_in_dtype_registry(dtype, prec)
 
         if rank > 0 or expr.is_pointer:
             return '{0} *'.format(dtype)
@@ -267,6 +390,8 @@ class CCodePrinter(CodePrinter):
             return '{0} '.format(dtype)
 
     def _print_Declare(self, expr):
+        if expr.variable.rank > 0:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
         declaration_type = self.get_declare_type(expr.variable)
         variable = self._print(expr.variable.name)
 
@@ -296,7 +421,7 @@ class CCodePrinter(CodePrinter):
             # TODO: Use fortran example to add pointer arguments for multiple output
             msg = 'Multiple output arguments is not yet supported in c'
             errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal', blocker=self.blocking)
+                severity='fatal')
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
@@ -305,6 +430,95 @@ class CCodePrinter(CodePrinter):
         else:
             arg_code = ', '.join('{0}{1}'.format(self.get_declare_type(i), i) for i in expr.arguments)
         return '{0}{1}({2})'.format(ret_type, name, arg_code)
+
+    def _print_NumpyUfuncBase(self, expr):
+        """ Convert a Python expression with a Numpy function call to C
+        function call
+
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                Python expression with a Numpy function call
+
+        Returns
+        -------
+            string
+                Equivalent expression in C language
+
+        Example
+        -------
+            numpy.cos(x) ==> cos(x)
+
+        """
+        # add necessary include
+        self._additional_imports.add('math.h')
+        type_name = type(expr).__name__
+        try:
+            func_name = numpy_ufunc_to_c_real[type_name]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+        args = []
+        for arg in expr.args:
+            if arg.dtype is NativeComplex():
+                self._additional_imports.add('complex.h')
+                try:
+                    func_name = numpy_ufunc_to_c_complex[type_name]
+                    args.append(self._print(arg))
+                except KeyError:
+                    errors.report(INCOMPATIBLE_TYPEVAR_TO_FUNC.format(type_name) ,severity='fatal')
+            elif arg.dtype is not NativeReal():
+                args.append(self._print(NumpyFloat(arg)))
+            else :
+                args.append(self._print(arg))
+        code_args = ', '.join(args)
+        return '{0}({1})'.format(func_name, code_args)
+
+    def _print_MathFunctionBase(self, expr):
+        """ Convert a Python expression with a math function call to C
+        function call
+
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                Python expression with a Math function call
+
+        Returns
+        -------
+            string
+                Equivalent expression in C language
+
+        ------
+        Example:
+        --------
+            math.sin(x) ==> sin(x)
+
+        """
+        # add necessary include
+        self._additional_imports.add('math.h')
+        type_name = type(expr).__name__
+        try:
+            func_name = math_function_to_c[type_name]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+        args = []
+        for arg in expr.args:
+            if arg.dtype is NativeComplex():
+                self._additional_imports.add('complex.h')
+            if arg.dtype is not NativeReal():
+                args.append(self._print(NumpyFloat(arg)))
+            else :
+                args.append(self._print(arg))
+        code_args = ', '.join(args)
+        return '{0}({1})'.format(func_name, code_args)
+
+    def _print_MathSqrt(self, expr):
+        # add necessary include
+        self._additional_imports.add('math.h')
+        arg = expr.args[0]
+        code_args = self._print(arg)
+        if arg.dtype is not NativeReal():
+            code_args = self._print(NumpyFloat(arg))
+        return 'sqrt({})'.format(code_args)
 
     def _print_FunctionDef(self, expr):
 
@@ -331,6 +545,28 @@ class CCodePrinter(CodePrinter):
         if not func.results:
             return '{}({});'.format(func.name, args)
         return '{}({})'.format(func.name, args)
+
+    def _print_Constant(self, expr):
+        """ Convert a Python expression with a math constant call to C
+        function call
+
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                Python expression with a Math constant
+
+        Returns
+        -------
+            string
+                String represent the value of the constant
+
+        Example
+        -------
+            math.pi ==> 3.14159265358979
+
+        """
+        val = Float(expr.value)
+        return self._print(val)
 
     def _print_Return(self, expr):
         code = ''
@@ -558,7 +794,6 @@ class CCodePrinter(CodePrinter):
         comments = self._print(expr.text)
 
         return '/*' + comments + '*/'
-
 
     def _print_CommentBlock(self, expr):
         txts = expr.comments
