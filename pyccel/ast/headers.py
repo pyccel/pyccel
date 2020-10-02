@@ -228,26 +228,24 @@ class FunctionHeader(Header):
                     is_pointer = d['is_pointer']
                     precision = d['precision']
                     rank = d['rank']
+
                     order = None
                     shape = None
-                    if rank > 1:
+                    if rank >1:
                         order = d['order']
-                
+
                     if isinstance(dtype, str):
-                        #here we check the types in the decorators
                         try:
                             dtype = datatype(dtype)
                         except ValueError:
                             #TODO check if it's a class type before
                             dtype =  DataTypeFactory(str(dtype), ("_name"))()
                             is_pointer = True
-
                     arg_name = 'arg_{0}'.format(str(i))
-
                     arg = Variable(dtype, arg_name,
-                                    allocatable=allocatable, is_pointer=is_pointer,
-                                    rank=rank, shape=shape ,order = order, precision = precision,
-                                    is_argument=True)
+                                allocatable=allocatable, is_pointer=is_pointer,
+                                rank=rank, shape=shape ,order = order, precision = precision,
+                                is_argument=True)
                 args.append(arg)
 
             # ... factorize the following 2 blocks
