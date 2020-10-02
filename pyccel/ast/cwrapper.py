@@ -35,6 +35,8 @@ __all__ = (
     'pycomplex_imag',
     'pycomplex_fromdoubles',
     'Py_DECREF',
+    'PyLong_AsLong',
+    'PyFloat_AsDouble',
 #------- CAST FUNCTIONS ------
     'pyint_to_bool',
     'bool_to_pyobj',
@@ -215,6 +217,14 @@ Py_DECREF = FunctionDef(name = 'Py_DECREF',
                         body = [],
                         arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
                         results = [])
+PyLong_AsLong = FunctionDef(name = 'PyLong_AsLong',
+                        body = [],
+                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                        results   = [Variable(dtype=NativeInteger(), name = 'r')])
+PyFloat_AsDouble = FunctionDef(name = 'PyFloat_AsDouble',
+                        body = [],
+                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                        results   = [Variable(dtype=NativeReal(), name = 'r')])
 
 # Casting functions
 # Represents type of cast function responsible of the conversion of one data type into another.
@@ -297,4 +307,10 @@ cast_function_registry = {
     'bool_to_pyobj' : bool_to_pyobj,
     'pycomplex_to_complex' : pycomplex_to_complex,
     'complex_to_pycomplex': complex_to_pycomplex
+}
+
+
+collect_function_registry = {
+    NativeInteger(): PyLong_AsLong,
+    NativeReal() : PyFloat_AsDouble,
 }
