@@ -7,6 +7,7 @@ from collections     import OrderedDict
 
 from sympy import sympify
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
+from sympy import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Le as sp_Le, Gt as sp_Gt, Ge as sp_Ge
 from sympy import Integral, Symbol, Tuple
 from sympy import Lambda
 from sympy import Integer as sp_Integer
@@ -36,7 +37,7 @@ from .builtins  import Enumerate, Len, List, Map, Range, Zip, PythonTuple, Pytho
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
-                        NativeGeneric, NativeTuple, default_precision)
+                        NativeGeneric, NativeTuple, default_precision, is_iterable_datatype)
 
 from .numbers        import BooleanTrue, BooleanFalse, Integer as Py_Integer, ImaginaryUnit
 from .functionalexpr import GeneratorComprehension as GC
@@ -4837,7 +4838,7 @@ class IndexedElement(Expr, PyccelAstNode):
         ):
 
         if not args:
-            raise IndexException('Indexed needs at least one index.')
+            raise IndexError('Indexed needs at least one index.')
         if isinstance(base, (str, Symbol)):
             base = IndexedBase(base)
         elif not hasattr(base, '__getitem__') and not isinstance(base,
@@ -5497,7 +5498,7 @@ def get_iterable_ranges(it, var_name=None):
                 return expr.lhs
             else:
                 return None
-        elif isinstance(expr, And):
+        elif isinstance(expr, sp_And):
             return [doit(a, targets) for a in expr.args]
         else:
             raise TypeError('Expecting And logical expression.')

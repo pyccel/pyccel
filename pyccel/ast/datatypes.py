@@ -2,6 +2,7 @@
 
 
 from .basic import Basic
+from .numbers import BooleanFalse
 
 from sympy.core.singleton import Singleton
 from sympy.core.compatibility import with_metaclass

@@ -18,6 +18,7 @@ from .core           import PyccelPow, PyccelMinus, PyccelAssociativeParenthesis
 from .core           import PyccelMul, PyccelAdd
 from .core           import broadcast
 from .core           import ClassDef, FunctionDef
+from .core           import IndexedVariable
 
 from .builtins       import PythonInt, PythonBool
 from .builtins       import PythonFloat, PythonTuple, PythonComplex

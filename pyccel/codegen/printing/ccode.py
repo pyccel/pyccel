@@ -12,9 +12,10 @@ from pyccel.ast.core import SeparatorComment, VariableAddress
 from pyccel.ast.core import PyccelAdd, PyccelMul
 
 from pyccel.ast.datatypes import default_precision
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeComplex
+from pyccel.ast.numbers import Float
 from pyccel.ast.numpyext import NumpyFloat
-from pyccel.ast.builtins  import Range
+from pyccel.ast.builtins  import Range, PythonFloat
 from pyccel.ast.core import Declare
 
 from pyccel.codegen.printing.codeprinter import CodePrinter

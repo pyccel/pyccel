@@ -113,7 +113,7 @@ def lambdify(expr, args):
         var = stmts[-1].lhs
     else:
         var  = create_variable(expr)
-        stmts[-1] = Assing(var, stmts[-1])
+        stmts[-1] = Assign(var, stmts[-1])
     stmts += [Return([var])]
     set_fst(stmts, args.fst)
     func = FunctionDef(f_name, new_args, [], stmts ,decorators = args.decorators)

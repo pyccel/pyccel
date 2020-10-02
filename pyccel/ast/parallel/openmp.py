@@ -14,6 +14,7 @@ from pyccel.ast.core import Import
 from pyccel.ast.core import For, ForIterator, While, With, If
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import ConstructorCall
+from pyccel.ast.core import Tensor
 
 from pyccel.ast.parallel.basic import Basic
 
