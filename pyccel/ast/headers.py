@@ -135,7 +135,7 @@ class FunctionHeader(Header):
         if not isinstance(kind, str):
             raise TypeError("Expecting a string for kind.")
 
-        if not (kind in ['function', 'procedure']):
+        if kind not in ['function', 'procedure']:
             raise ValueError("kind must be one among {'function', 'procedure'}")
 
         if not isinstance(is_static, bool):
@@ -318,7 +318,7 @@ class MethodHeader(FunctionHeader):
         if not isinstance(kind, str):
             raise TypeError("Expecting a string for kind.")
 
-        if not (kind in ['function', 'procedure']):
+        if kind not in ['function', 'procedure']:
             raise ValueError("kind must be one among {'function', 'procedure'}")
 
         if not isinstance(is_static, bool):

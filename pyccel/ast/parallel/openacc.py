@@ -225,7 +225,7 @@ class ACC_Bind(ACC):
     """
     name = 'bind'
     def __new__(cls, *args, **options):
-        if not(len(args) == 1):
+        if len(args) != 1:
             raise ValueError('Expecting 1 entry, '
                              'given {0}'.format(len(args)))
 
@@ -253,7 +253,7 @@ class ACC_Collapse(ACC):
     """
     name = 'collapse'
     def __new__(cls, *args, **options):
-        if not(len(args) == 1):
+        if len(args) != 1:
             raise ValueError('Expecting 1 entry, '
                              'given {0}'.format(len(args)))
 
@@ -462,7 +462,7 @@ class ACC_DeviceNum(ACC):
     """
     name = 'device_num'
     def __new__(cls, *args, **options):
-        if not(len(args) == 1):
+        if len(args) != 1:
             raise ValueError('Expecting 1 entry, '
                              'given {0}'.format(len(args)))
 
@@ -722,7 +722,7 @@ class ACC_NumGangs(ACC):
     """
     name = 'num_gangs'
     def __new__(cls, *args, **options):
-        if not(len(args) == 1):
+        if len(args) != 1:
             raise ValueError('Expecting 1 entry, '
                              'given {0}'.format(len(args)))
 
@@ -750,7 +750,7 @@ class ACC_NumWorkers(ACC):
     """
     name = 'num_workers'
     def __new__(cls, *args, **options):
-        if not(len(args) == 1):
+        if len(args) != 1:
             raise ValueError('Expecting 1 entry, '
                              'given {0}'.format(len(args)))
 
@@ -953,7 +953,7 @@ class ACC_VectorLength(ACC):
     """
     name = 'vector_length'
     def __new__(cls, *args, **options):
-        if not(len(args) == 1):
+        if len(args) != 1:
             raise ValueError('Expecting 1 entry, '
                              'given {0}'.format(len(args)))
 
