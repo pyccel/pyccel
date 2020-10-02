@@ -1,4 +1,3 @@
-import pytest
 from numpy.random import rand, randint, uniform
 from numpy import isclose
 

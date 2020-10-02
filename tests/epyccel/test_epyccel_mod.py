@@ -1,5 +1,4 @@
-import pytest
-from numpy.random import rand, randint, uniform
+from numpy.random import randint, uniform
 from numpy import isclose
 
 from pyccel.decorators import types
