@@ -5,7 +5,6 @@ from collections import OrderedDict
 from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.numbers   import BooleanTrue
-from pyccel.ast.builtins import Bool
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, Symbol, Constant
@@ -178,13 +177,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
-
-    def _print_FuncCall(self, expr):
-        name = expr.name
-        args = ', '.join(['{}'.format(self._print(a)) for a in expr.args])
-        return ('{name}({args})'.format(
-            name = name,
-            args = args))
 
     def _print_PyArg_ParseTupleNode(self, expr):
         name    = 'PyArg_ParseTupleAndKeywords'

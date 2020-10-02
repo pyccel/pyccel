@@ -171,7 +171,7 @@ class MathModf(MathFunctionBase):
 
     Return the fractional and integer parts of x.  Both results carry the sign
     of x and are floats.
-    """    
+    """
 
 #==============================================================================
 # Dictionary to map math functions to classes above

@@ -33,7 +33,7 @@ from sympy.utilities.misc               import filldedent
 
 
 from .basic     import Basic, PyccelAstNode
-from .builtins  import Enumerate, Len, List, Map, Range, Zip, PythonTuple, Bool
+from .builtins  import Enumerate, Len, List, Map, Range, Zip, PythonTuple, PythonBool, PythonInt
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
@@ -45,8 +45,6 @@ from .functionalexpr import FunctionalFor
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
-
-from pyccel.ast.builtins import Int
 
 errors = Errors()
 
@@ -268,7 +266,7 @@ class PyccelRShift(PyccelBitOperator):
         super(PyccelRShift, self).__init__(args)
         if self.stage == 'syntactic':
             return
-        self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelLShift(PyccelBitOperator):
     _precedence = 11
@@ -277,7 +275,7 @@ class PyccelLShift(PyccelBitOperator):
         super(PyccelLShift, self).__init__(args)
         if self.stage == 'syntactic':
             return
-        self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelBitXor(PyccelBitOperator):
     _precedence = 9
@@ -291,7 +289,7 @@ class PyccelBitXor(PyccelBitOperator):
             self._dtype = NativeBool()
         else:
             self._dtype = NativeInteger()
-            self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelBitOr(PyccelBitOperator):
     _precedence = 8
@@ -305,7 +303,7 @@ class PyccelBitOr(PyccelBitOperator):
             self._dtype = NativeBool()
         else:
             self._dtype = NativeInteger()
-            self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelBitAnd(PyccelBitOperator):
     _precedence = 10
@@ -319,7 +317,7 @@ class PyccelBitAnd(PyccelBitOperator):
             self._dtype = NativeBool()
         else:
             self._dtype = NativeInteger()
-            self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelInvert(PyccelBitOperator):
     _precedence = 14
@@ -328,7 +326,7 @@ class PyccelInvert(PyccelBitOperator):
         super(PyccelInvert, self).__init__(args)
         if self.stage == 'syntactic':
             return
-        self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelOperator(Expr, PyccelAstNode):
 
@@ -1579,7 +1577,7 @@ class While(Basic):
 
         if PyccelAstNode.stage == 'semantic':
             if test.dtype is not NativeBool():
-                test = Bool(test)
+                test = PythonBool(test)
 
         if iterable(body):
             body = CodeBlock((sympify(i, locals=local_sympify) for i in body))
@@ -3712,29 +3710,6 @@ class FunctionDef(Basic):
             or len(set(self.results).intersection(self.arguments)) > 0
         return flag
 
-    def is_compatible_header(self, header):
-        """
-        Returns True if the header is compatible with the given FunctionDef.
-
-        Parameters
-        ----------
-        header: Header
-            a pyccel header suppose to describe the FunctionDef
-        """
-
-        cond_args = len(self.arguments) == len(header.dtypes)
-        cond_results = len(self.results) == len(header.results)
-
-        header_with_results = len(header.results) > 0
-
-        if not cond_args:
-            return False
-
-        if header_with_results and not cond_results:
-            return False
-
-        return True
-
     def __getnewargs__(self):
         """used for Pickling self."""
 
@@ -5193,7 +5168,7 @@ class If(Basic):
         for ce in args:
             cond = ce[0]
             if PyccelAstNode.stage == 'semantic' and cond.dtype is not NativeBool():
-                cond = Bool(cond)
+                cond = PythonBool(cond)
             if isinstance(ce[1], (list, Tuple, tuple)):
                 body = CodeBlock(ce[1])
             elif isinstance(ce[1], CodeBlock):
