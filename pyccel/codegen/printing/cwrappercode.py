@@ -15,7 +15,7 @@ from pyccel.ast.core import IfTernaryOperator, VariableAddress, Import, IsNot, P
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
-from pyccel.ast.cwrapper import PyArgKeywords
+from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
 from pyccel.ast.cwrapper import Py_True, Py_False, Py_None
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 from pyccel.ast.cwrapper import malloc ,free
@@ -59,20 +59,34 @@ class CWrapperCodePrinter(CCodePrinter):
         except KeyError:
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
+    def get_collect_function_call(self, variable, collect_var):
+        """
+        Represents a call to cast function responsible of collecting value from python object.
+
+        Parameters:
+        ----------
+        variable: variable
+            the variable needed to collect
+        collect_var :
+            the pyobject variable
+        """
+        if isinstance(variable.dtype, NativeComplex):
+            return self.get_cast_function_call('pycomplex_to_complex', collect_var)
+
+        collect_function = collect_function_registry[variable.dtype]
+        return FunctionCall(collect_function, [collect_var])
+
+
     def get_cast_function_call(self, cast_type, arg):
         """
         Represents a call to cast function responsible of the conversion of one data type into another.
 
         Parameters:
         ----------
-        used_names: list of strings
-            List of variable and function names
         cast_type: string
             The type of cast function on format 'data type_to_data type'
-        from_variable: variable
+        arg: variable
             the variable needed to cast
-        to_variable: variable
-            the result of the cast operation
         """
 
         if cast_type in self._cast_functions_dict:
@@ -113,14 +127,29 @@ class CWrapperCodePrinter(CCodePrinter):
         collect_var = variable
         cast_function = None
 
-        if variable.dtype is NativeBool():
+        if variable.is_optional:
+            collect_type = PyccelPyObject()
+            collect_var = Variable(dtype=collect_type, is_pointer=True,
+                name = self.get_new_name(used_names, variable.name+"_tmp"))
+            default_value = VariableAddress(Py_None)
+            if cast_function is not None:
+                body = [Assign(variable, self.get_cast_function_call(cast_function, collect_var))]
+            else:
+                body = [Assign(VariableAddress(variable), FunctionCall(malloc, [variable.precision]))]
+                self._to_free_c_list.append(variable)
+                body += [Assign(variable, self.get_collect_function_call(variable, collect_var))]
+                #TODO call the python function to extract value from pyobject
+            body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
+            (BooleanTrue(), [Assign(VariableAddress(variable), variable.value)]))]
+
+        elif variable.dtype is NativeBool():
             collect_type = NativeInteger()
             collect_var = Variable(dtype=collect_type, precision=4,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = 'pyint_to_bool'
             body = [Assign(variable, self.get_cast_function_call(cast_function, collect_var))]
 
-        if variable.dtype is NativeComplex():
+        elif variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
@@ -131,19 +160,6 @@ class CWrapperCodePrinter(CCodePrinter):
                 body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
             (BooleanTrue(), [Assign(variable, variable.value)]))]
 
-         if variable.is_optional:
-            collect_type = PyccelPyObject()
-            collect_var = Variable(dtype=collect_type, is_pointer=True,
-                name = self.get_new_name(used_names, variable.name+"_tmp"))
-            default_value = VariableAddress(Py_None)
-            if cast_function is not None:
-                body = [Assign(variable, self.get_cast_function_call(cast_function, collect_var))]
-            else:
-                body = [Assign(VariableAddress(variable), FunctionCall(malloc, [variable.precision]))]
-                self._to_free_c_list.append(variable)
-                #TODO call the python function to extract value from pyobject
-            body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
-            (BooleanTrue(), [Assign(VariableAddress(variable), variable.value)]))]
         return collect_var, body
 
     def get_PyBuildValue(self, used_names, variable):
