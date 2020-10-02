@@ -38,6 +38,6 @@ def test_module_1():
     mod.set_num_threads(8)
     assert mod.get_num_threads() == 8
 
-    assert mod.test_omp_get_max_task_priority() > 0
+    assert mod.test_omp_get_max_task_priority() == 0
 
     assert mod.f1(5) == 5
