@@ -240,7 +240,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonBool(self, expr):
         value = self._print(expr.arg)
-        return '{} != 0'.format(value)
+        return '({} != 0)'.format(value)
 
     def _print_Complex(self, expr):
         return self._print(PyccelAdd(expr.real,
@@ -502,6 +502,12 @@ class CCodePrinter(CodePrinter):
         if arg.dtype is not NativeReal():
             code_args = self._print(NumpyFloat(arg))
         return 'sqrt({})'.format(code_args)
+
+    def _print_Rand(self, expr):
+        raise NotImplementedError("Rand not implemented")
+
+    def _print_NumpyRandint(self, expr):
+        raise NotImplementedError("Randint not implemented")
 
     def _print_FunctionDef(self, expr):
 
