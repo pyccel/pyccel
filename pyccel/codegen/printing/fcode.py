@@ -44,7 +44,9 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
 
 from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
 from pyccel.ast.core      import FunctionCall
+
 from pyccel.ast.builtins  import Enumerate, PythonInt, Len, Map, Print, Range, Zip, PythonTuple, PythonFloat
+
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString
@@ -112,7 +114,7 @@ math_function_to_fortran = {
     'MathAtan'   : 'atan',
     'MathAtan2'  : 'atan2',
     'MathAtanh'  : 'atanh',
-#    'MathCopysign': '???', # TODO
+    'MathCopysign': 'sign',
     'MathCos'    : 'cos',
     'MathCosh'   : 'cosh',
 #    'MathDegrees': '???',  # TODO
@@ -143,12 +145,12 @@ math_function_to_fortran = {
 #    'MathFactorial': '???', # TODO
     'MathFloor'    : 'floor',
 #    'MathGcd'      : '???', # TODO
-#    'MathTrunc'    : '???', # TODO
+    'MathTrunc'    : 'dint', # TODO
     # ---
 #    'MathIsclose' : '???', # TODO
 #    'MathIsfinite': '???', # TODO
 #    'MathIsinf'   : '???', # TODO
-#    'MathIsnan'   : '???', # TODO
+    'MathIsnan'   : 'isnan',
 }
 
 _default_methods = {
@@ -2211,17 +2213,37 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__
-        func_name = numpy_ufunc_to_fortran[type_name]
+        try:
+            func_name = numpy_ufunc_to_fortran[type_name]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
         code_args = ', '.join(self._print(i) for i in expr.args)
         code = '{0}({1})'.format(func_name, code_args)
         return self._get_statement(code)
 
     def _print_MathFunctionBase(self, expr):
         type_name = type(expr).__name__
-        func_name = math_function_to_fortran[type_name]
-        code_args = ', '.join(self._print(i) for i in expr.args)
+        try:
+            func_name = math_function_to_fortran[type_name]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+        args = []
+        for arg in expr.args:
+            if arg.dtype is not NativeReal():
+                args.append(self._print(PythonFloat(arg)))
+            else :
+                args.append(self._print(arg))
+        code_args = ', '.join(args)
         code = '{0}({1})'.format(func_name, code_args)
         return self._get_statement(code)
+
+    def _print_MathPow(self, expr):
+        base = expr.args[0]
+        e    = expr.args[1]
+
+        base_c = self._print(base)
+        e_c    = self._print(e)
+        return '{} ** {}'.format(base_c, e_c)
 
     def _print_NumpySqrt(self, expr):
         arg = expr.args[0]
