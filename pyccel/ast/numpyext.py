@@ -319,9 +319,9 @@ class Matmul(Application, PyccelAstNode):
             raise TypeError('cannot determine the type of {}'.format(self))
 
         if a.rank == 1 or b.rank == 1:
-           self._rank = 1
+            self._rank = 1
         else:
-           self._rank = 2
+            self._rank = 2
 
         if not (a.shape is None or b.shape is None):
 
@@ -455,7 +455,7 @@ class Linspace(Application, NumpyNewArray):
             size = args[2]
 
         else:
-           raise ValueError('Range has at most 3 arguments')
+            raise ValueError('Range has at most 3 arguments')
 
         index = Variable('int', 'linspace_index')
         return Basic.__new__(cls, start, stop, size, index)
@@ -552,10 +552,10 @@ class Diag(Application, NumpyNewArray):
 
 
         if not isinstance(array, _valid_args):
-           raise TypeError('Expecting valid args')
+            raise TypeError('Expecting valid args')
 
         if not isinstance(k, (int, sp_Integer)):
-           raise ValueError('k must be an integer')
+            raise ValueError('k must be an integer')
 
         index = Variable('int', 'diag_index')
         return Basic.__new__(cls, array, v, k, index)
@@ -640,10 +640,10 @@ class Cross(Application, NumpyNewArray):
 
 
         if not isinstance(a, _valid_args):
-           raise TypeError('Expecting valid args')
+            raise TypeError('Expecting valid args')
 
         if not isinstance(b, _valid_args):
-           raise TypeError('Expecting valid args')
+            raise TypeError('Expecting valid args')
 
         return Basic.__new__(cls, a, b)
 

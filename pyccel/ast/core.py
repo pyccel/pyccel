@@ -908,10 +908,10 @@ def extract_subexpressions(expr):
 #    return variables.values()
 
 def inline(func, args):
-        local_vars = func.local_vars
-        body = func.body
-        body = subs(body, zip(func.arguments, args))
-        return Block(str(func.name), local_vars, body)
+    local_vars = func.local_vars
+    body = func.body
+    body = subs(body, zip(func.arguments, args))
+    return Block(str(func.name), local_vars, body)
 
 
 def int2float(expr):

@@ -121,12 +121,12 @@ def lambdify(expr, args):
 
 def set_fst(expr, fst):
     if isinstance(expr, (tuple,list,Tuple)):
-         for i in expr:set_fst(i, fst)
+        for i in expr:set_fst(i, fst)
     elif isinstance(expr, For):
-         set_fst(expr.body, fst)
+        set_fst(expr.body, fst)
     elif isinstance(expr, (Assign, AugAssign)):
-         expr.set_fst(fst)
+        expr.set_fst(fst)
     elif isinstance(expr, GC):
-         expr.set_fst(fst)
-         set_fst(expr.loops, fst)
+        expr.set_fst(fst)
+        set_fst(expr.loops, fst)
 

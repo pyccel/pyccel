@@ -536,8 +536,8 @@ class FCodePrinter(CodePrinter):
         return ' % '.join(self._print(n) for n in expr.name)
 
     def _print_Concatenate(self, expr):
-         code = ', '.join(self._print(a) for a in expr.args)
-         return '[' + code + ']'
+        code = ', '.join(self._print(a) for a in expr.args)
+        return '[' + code + ']'
 
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
@@ -803,7 +803,7 @@ class FCodePrinter(CodePrinter):
                 severity='fatal')
 
         if rank == 0:
-                return '1'
+            return '1'
 
         return str(functools.reduce(operator.mul, shape ))
 
@@ -1052,9 +1052,9 @@ class FCodePrinter(CodePrinter):
             return '{0} = {1}\n'.format(lhs_code, rhs_code)
 
         if isinstance(rhs, (PythonInt, Real, NumpyComplex)):
-           lhs = self._print(expr.lhs)
-           rhs = expr.rhs.fprint(self._print)
-           return '{0} = {1}\n'.format(lhs,rhs)
+            lhs = self._print(expr.lhs)
+            rhs = expr.rhs.fprint(self._print)
+            return '{0} = {1}\n'.format(lhs,rhs)
 
         if isinstance(rhs, (Array, Linspace, Diag, Cross, Where, PyccelArraySize)):
             return rhs.fprint(self._print, expr.lhs) + '\n'

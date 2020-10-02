@@ -116,18 +116,18 @@ def view_tree(expr):
 #  ...
 
 def get_default_path(name):
-   """this function takes a an import name
+    """this function takes a an import name
       and returns the path full bash of the library
       if the library is in stdlib"""
-   name_ = name
-   if isinstance(name, (DottedName, Symbol)):
+    name_ = name
+    if isinstance(name, (DottedName, Symbol)):
        name_ = str(name)
-   if name_ in pyccel_external_lib.keys():
+    if name_ in pyccel_external_lib.keys():
         name = pyccel_external_lib[name_].split('.')
         if len(name)>1:
             return DottedName(*name)
         else:
             return name[0]
-   return name
+    return name
 
 

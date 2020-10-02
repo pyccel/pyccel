@@ -7,7 +7,7 @@ def lambdify(f):
     args = symbols(args)
     expr = f(*args)
     def wrapper(*vals):
-       return  expr.subs(zip(args,vals)).doit()
+        return  expr.subs(zip(args,vals)).doit()
 
     return wrapper
 

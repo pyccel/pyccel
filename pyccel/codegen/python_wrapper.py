@@ -59,7 +59,7 @@ def compile_f2py( filename, *,
         _vendor = 'intelem'
 
     elif compiler == 'pgfortran':
-       _vendor = 'pg'
+        _vendor = 'pg'
 
     else:
         raise NotImplementedError('Only gfortran, gcc, ifort, icc and pgi are available for the moment')

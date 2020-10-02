@@ -542,7 +542,7 @@ class MacroFunction(Header):
 
                 new = construct_macro(arg.name, new)
                 if isinstance(arg, MacroShape):
-                        new._index = arg.index
+                    new._index = arg.index
 
             newargs[i] = new
         return newargs
