@@ -1186,7 +1186,7 @@ def get_with_clauses(expr):
     # ... get initial values for all attributs
     #     TODO do we keep 'self' hard coded?
     d = {}
-    for k,v in d_attributs.items():
+    for k in d_attributs.keys():
         i = DottedName('self', k)
         d[k] = get_initial_value(expr, i)
     # ...
@@ -1476,7 +1476,7 @@ def get_for_clauses(expr):
     # ... get initial values for all attributs
     #     TODO do we keep 'self' hard coded?
     d = {}
-    for k,v in d_attributs.items():
+    for k in d_attributs.keys():
         i = DottedName('self', k)
         d[k] = get_initial_value(expr, i)
     # ...

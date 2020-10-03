@@ -280,7 +280,6 @@ class SemanticParser(BasicParser):
             container = container.parent_scope
 
 
-        imports   = container.imports
         while container:
             var = self._get_variable_from_scope(name, container)
             if var is not None:
@@ -1006,7 +1005,6 @@ class SemanticParser(BasicParser):
 
         if first.cls_base:
             attr_name = [i.name for i in first.cls_base.attributes]
-        name = None
 
         # look for a class method
         if isinstance(expr.rhs, Application):
@@ -1318,7 +1316,6 @@ class SemanticParser(BasicParser):
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='error', blocker=True)
             args = expr.args
-            m_args = method.arguments[1:]  # we delete the self arg
 
             # TODO check compatibility
             # TODO treat parametrized arguments.
@@ -1515,7 +1512,6 @@ class SemanticParser(BasicParser):
 
         rhs = expr.rhs
         lhs = expr.lhs
-        assigns = None
 
         if isinstance(rhs, Application):
             name = type(rhs).__name__
@@ -1565,7 +1561,6 @@ class SemanticParser(BasicParser):
                 master = macro.master
                 if isinstance(macro, MacroVariable):
                     rhs = master
-                    annotated_rhs = True
                 else:
 
                     # If macro is function, create left-hand side variable
@@ -1921,7 +1916,7 @@ class SemanticParser(BasicParser):
             indx   = self.get_new_variable()
             func   = iterable.args[0]
             args   = [IndexedBase(arg)[indx] for arg in iterable.args[1:]]
-            assing = assign = Assign(iterator, func(*args))
+            assign = Assign(iterator, func(*args))
             assign.set_fst(expr.fst)
             iterator = indx
             body     = [assign] + body
@@ -1971,7 +1966,6 @@ class SemanticParser(BasicParser):
                 self.insert_variable(var)
                 target.append(var)
         else:
-            dtype = type(iterator)
 
             # TODO ERROR not tested yet
 
@@ -2615,7 +2609,6 @@ class SemanticParser(BasicParser):
 
         is_symbolic = lambda var: isinstance(var, Variable) \
             and isinstance(var.dtype, NativeSymbol)
-        test = all(is_symbolic(i) for i in args)
 
         # TODO fix: not yet working because of mpi examples
 #        if not test:
@@ -2686,7 +2679,6 @@ class SemanticParser(BasicParser):
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='fatal', blocker=self.blocking)
 
-        options    = header.options
         attributes = self.get_class(name).attributes
 
         for i in methods:
@@ -2709,7 +2701,6 @@ class SemanticParser(BasicParser):
 
         # TODO ERROR wrong position ??
 
-        name = expr.lhs
         var1 = self._visit(expr.lhs)
         var2 = self._visit(expr.rhs)
 

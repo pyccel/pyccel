@@ -2,15 +2,15 @@
 
 """This file contains different utilities for the Parser."""
 
-from pyccel.parser.extend_tree import CommentLine
-
 from sympy import srepr
 from sympy import Symbol
-from pyccel.ast.core import DottedName
 import os
 
 import string
 import random
+
+from pyccel.ast.core import DottedName
+from pyccel.parser.extend_tree import CommentLine
 
 pyccel_external_lib = {"mpi4py"             : "pyccel.stdlib.external.mpi4py",
                        "scipy.linalg.lapack": "pyccel.stdlib.external.lapack",
@@ -120,7 +120,7 @@ def get_default_path(name):
       if the library is in stdlib"""
     name_ = name
     if isinstance(name, (DottedName, Symbol)):
-       name_ = str(name)
+        name_ = str(name)
     if name_ in pyccel_external_lib.keys():
         name = pyccel_external_lib[name_].split('.')
         if len(name)>1:

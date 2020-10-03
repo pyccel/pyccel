@@ -24,7 +24,7 @@ def cse(expr):
     if not ls:
         return [expr]
     ls += [expr]
-    (ls, m) = sympy_cse(ls)
+    (ls, _) = sympy_cse(ls)
 
     (vars_old, stmts) = map(list, zip(*ls))
     vars_new = []

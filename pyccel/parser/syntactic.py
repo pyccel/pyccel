@@ -862,7 +862,6 @@ class SyntaxParser(BasicParser):
 
         iterator = self._visit(stmt.target)
         iterable = self._visit(stmt.iter)
-        ifs = stmt.ifs
         expr = For(iterator, iterable, [], strict=False)
         expr.set_fst(stmt)
         return expr
@@ -923,10 +922,8 @@ class SyntaxParser(BasicParser):
             if len(grandparent.targets) != 1:
                 raise NotImplementedError("Cannot unpack function with generator expression argument")
             lhs = self._visit(grandparent.targets[0])
-            cond = False
         else:
             lhs = self.get_new_variable()
-            cond = True
 
         body = result
         if name == 'sum':

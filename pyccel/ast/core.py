@@ -743,7 +743,7 @@ def allocatable_like(expr, verbose=False):
             elif a.is_Add:
                 aargs = list(a.args)
                 negs = 0
-                for (i, ai) in enumerate(aargs):
+                for ai in aargs:
                     if _coeff_isneg(ai):
                         negs += 1
                         args.append(-ai)

@@ -158,7 +158,6 @@ class Codegen(object):
 
         funcs      = []
         interfaces = []
-        body = []
 
 
         for i in namespace.functions.values():

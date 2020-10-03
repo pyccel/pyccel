@@ -1341,7 +1341,6 @@ class FCodePrinter(CodePrinter):
                     dec = Declare(result.dtype, result, intent='out')
                 args_decs[str(result)] = dec
 
-            names = [str(res.name) for res in expr.results]
             functions = expr.functions
 
         else:
@@ -1914,7 +1913,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_ForIterator(self, expr):
         return self._print_For(expr)
-        depth = expr.depth
 
         prolog = ''
         epilog = ''

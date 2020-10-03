@@ -163,7 +163,6 @@ class Array(Application, NumpyNewArray):
         self._rank  = len(self._shape)
 
     def _sympystr(self, printer):
-        sstr = printer.doprint
         return self.arg
 
     @property
@@ -506,6 +505,7 @@ class Linspace(Application, NumpyNewArray):
         code = 'linspace({}, {}, {})',format(sstr(self.start),
                                              sstr(self.stop),
                                              sstr(self.size))
+        return code
 
 
     def fprint(self, printer, lhs=None):
@@ -600,7 +600,6 @@ class Diag(Application, NumpyNewArray):
 
         array = printer(self.array)
         rank  = self.array.rank
-        index = printer(self.index)
 
         if rank == 2:
             lhs   = IndexedVariable(lhs)[self.index]
