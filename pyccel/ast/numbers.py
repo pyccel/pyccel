@@ -12,6 +12,7 @@ __all__ = (
     'Integer',
     'Float',
     'Complex',
+    'get_default_value'
 )
 
 #------------------------------------------------------------------------------
@@ -68,3 +69,20 @@ class ImaginaryUnit(Expr, PyccelAstNode):
     _rank      = 0
     _shape     = ()
     _precision = default_precision['complex']
+
+#------------------------------------------------------------------------------
+
+def get_default_value(dtype):
+    """Returns the default value of a native datatype."""
+    if isinstance(dtype, NativeInteger):
+        value = Integer(0)
+    elif isinstance(dtype, NativeReal):
+        value = Float(0.0)
+    elif isinstance(dtype, NativeComplex):
+        value = Complex(0.0)
+    elif isinstance(dtype, NativeBool):
+        value = BooleanFalse()
+    else:
+        raise TypeError('Unknown type')
+    return value
+

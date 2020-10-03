@@ -37,7 +37,6 @@ __all__ = (
 # --------- FUNCTIONS -----------
 #
     'datatype',
-#    'get_default_value',
     'is_iterable_datatype',
     'is_pyccel_datatype',
     'is_with_construct_datatype',
@@ -249,21 +248,6 @@ def is_iterable_datatype(dtype):
         return True
     else:
         return False
-
-
-def get_default_value(dtype):
-    """Returns the default value of a native datatype."""
-    if isinstance(dtype, NativeInteger):
-        value = 0
-    elif isinstance(dtype, NativeReal):
-        value = 0.0
-    elif isinstance(dtype, NativeComplex):
-        value = 0.0
-    elif isinstance(dtype, NativeBool):
-        value = BooleanFalse()
-    else:
-        raise TypeError('Unknown type')
-    return value
 
 
 # TODO improve
