@@ -54,7 +54,7 @@ from pyccel.ast.core import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitO
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
-from pyccel.ast.core import PyccelUnary
+from pyccel.ast.core import PyccelUnary, PyccelUnarySub
 
 from pyccel.ast.builtins import Print
 from pyccel.ast.headers  import Header, MetaVariable
@@ -481,7 +481,7 @@ class SyntaxParser(BasicParser):
             Func = PyccelUnary
 
         elif isinstance(stmt.op, ast.USub):
-            Func = PyccelMinus
+            Func = PyccelUnarySub
 
         elif isinstance(stmt.op, ast.Invert):
             Func = PyccelInvert
@@ -490,7 +490,7 @@ class SyntaxParser(BasicParser):
                           symbol = stmt,
                           severity='fatal')
 
-        return Func(PyccelUnary(target))
+        return Func(target)
 
     def _visit_BinOp(self, stmt):
 
@@ -614,7 +614,7 @@ class SyntaxParser(BasicParser):
         imports      = []
 
         # TODO improve later
-        decorators = {str(d) if isinstance(d,Symbol) else str(type(d)): d \
+        decorators = {str(d) if isinstance(d, Symbol) else str(type(d)): d \
                             for d in self._visit(stmt.decorator_list)}
 
         if 'bypass' in decorators:

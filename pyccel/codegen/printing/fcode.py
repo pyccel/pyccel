@@ -2137,7 +2137,10 @@ class FCodePrinter(CodePrinter):
         return '({})'.format(self._print(expr.args[0]))
 
     def _print_PyccelUnary(self, expr):
-        return '({})'.format(self._print(expr.args[0]))
+        return '+{}'.format(self._print(expr.args[0]))
+
+    def _print_PyccelUnarySub(self, expr):
+        return '-{}'.format(self._print(expr.args[0]))
 
     def _print_PyccelAnd(self, expr):
         args = [self._print(a) for a in expr.args]
