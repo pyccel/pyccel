@@ -135,15 +135,15 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return code
 
     def _print_For(self, expr):
-        iter   = self._print(expr.iterable)
-        target = expr.target
+        iterable = self._print(expr.iterable)
+        target   = expr.target
         if not isinstance(target,(list, tuple, Tuple)):
             target = [target]
         target = ','.join(self._print(i) for i in target)
         body   = self._print(expr.body)
         body   = self._indent_codestring(body)
         code   = ('for {0} in {1}:\n'
-                '{2}\n').format(target,iter,body)
+                '{2}\n').format(target,iterable,body)
 
         return code
 

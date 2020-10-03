@@ -1728,11 +1728,11 @@ class SemanticParser(BasicParser):
             d_list = d_var if isinstance(d_var, list) else [d_var]
 
             for d in d_list:
-                __name__ = d['datatype'].__class__.__name__
+                name = d['datatype'].__class__.__name__
 
-                if __name__.startswith('Pyccel'):
-                    __name__ = __name__[6:]
-                    d['cls_base'] = self.get_class(__name__)
+                if name.startswith('Pyccel'):
+                    name = name[6:]
+                    d['cls_base'] = self.get_class(name__)
                     #TODO: Avoid writing the default variables here
                     d['is_pointer'] = d_var.get('is_target',False) or d_var.get('is_pointer',False)
 

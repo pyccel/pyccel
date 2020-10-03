@@ -1654,17 +1654,17 @@ class With(Basic):
         methods = self.test.cls_base.methods
         for i in methods:
             if str(i.name) == '__enter__':
-                enter = i
+                start = i
             elif str(i.name) == '__exit__':
-                exit = i
-        enter = inline(enter,[])
-        exit =  inline(exit, [])
+                end   = i
+        start = inline(start,[])
+        end   = inline(end  ,[])
 
         # TODO check if enter is empty or not first
 
-        body = enter.body.body
+        body = start.body.body
         body += self.body.body
-        body += exit.body.body
+        body +=  end.body.body
         return Block('with', [], body)
 
 
@@ -2156,7 +2156,7 @@ class For(Basic):
     def __new__(
         cls,
         target,
-        iter,
+        iterable,
         body,
         local_vars = [],
         strict=True,
@@ -2164,15 +2164,15 @@ class For(Basic):
         if strict:
             target = sympify(target, locals=local_sympify)
 
-            cond_iter = iterable(iter)
-            cond_iter = cond_iter or isinstance(iter, (Range, Product,
+            cond_iter = iterable(iterable)
+            cond_iter = cond_iter or isinstance(iterable, (Range, Product,
                     Enumerate, Zip, Map))
-            cond_iter = cond_iter or isinstance(iter, Variable) \
-                and is_iterable_datatype(iter.dtype)
-          #  cond_iter = cond_iter or isinstance(iter, ConstructorCall) \
-          #      and is_iterable_datatype(iter.arguments[0].dtype)
+            cond_iter = cond_iter or isinstance(iterable, Variable) \
+                and is_iterable_datatype(iterable.dtype)
+          #  cond_iter = cond_iter or isinstance(iterable, ConstructorCall) \
+          #      and is_iterable_datatype(iterable.arguments[0].dtype)
             if not cond_iter:
-                raise TypeError('iter must be an iterable')
+                raise TypeError('iterable must be an iterable')
 
             if iterable(body):
                 body = CodeBlock((sympify(i, locals=local_sympify) for i in
@@ -2180,7 +2180,7 @@ class For(Basic):
             elif not isinstance(body,CodeBlock):
                 raise TypeError('body must be an iterable or a Codeblock')
 
-        return Basic.__new__(cls, target, iter, body, local_vars)
+        return Basic.__new__(cls, target, iterable, body, local_vars)
 
     @property
     def target(self):
@@ -2209,12 +2209,12 @@ class DoConcurrent(For):
 
 class ForAll(Basic):
     """ class that represents the forall statement in fortran"""
-    def __new__(cls, iter, target, mask, body):
+    def __new__(cls, iterable, target, mask, body):
 
-        if not isinstance(iter, Range):
-            raise TypeError('iter must be of type Range')
+        if not isinstance(iterable, Range):
+            raise TypeError('iterable must be of type Range')
 
-        return Basic.__new__(cls, iter, target, mask, body)
+        return Basic.__new__(cls, iterable, target, mask, body)
 
 
     @property
@@ -2240,14 +2240,14 @@ class ForIterator(For):
     def __new__(
         cls,
         target,
-        iter,
+        iterable,
         body,
         strict=True,
         ):
 
-        if isinstance(iter, Symbol):
-            iter = Range(Len(iter))
-        return For.__new__(cls, target, iter, body, strict)
+        if isinstance(iterable, Symbol):
+            iterable = Range(Len(iterable))
+        return For.__new__(cls, target, iterable, body, strict)
 
     # TODO uncomment later when we intriduce iterators
     # @property
