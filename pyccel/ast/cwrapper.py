@@ -42,9 +42,6 @@ __all__ = (
     'bool_to_pyobj',
     'pycomplex_to_complex',
     'complex_to_pycomplex',
-#-C MEMORY MANAGEMENT FUNCTION -
-    'malloc',
-    'free',
 )
 
 class PyccelPyObject(DataType):
@@ -291,24 +288,12 @@ def pycomplex_to_complex(cast_function_name):
                        results   = [cast_function_result],
                        local_vars= cast_function_local_vars)
 
-# Memory management function for c data type
-malloc = FunctionDef(name = 'malloc',
-                        body = [],
-                        arguments = [Variable(dtype=NativeInteger(), name = 'o')],
-                        results = [Variable(dtype=NativeVoid(), name = 'r', is_pointer=True)])
-
-free = FunctionDef(name = 'free',
-                        body = [],
-                        arguments = [Variable(dtype=NativeVoid(), name = 'o', is_pointer=True)],
-                        results = [])
-
 cast_function_registry = {
     'pyint_to_bool' : pyint_to_bool,
     'bool_to_pyobj' : bool_to_pyobj,
     'pycomplex_to_complex' : pycomplex_to_complex,
     'complex_to_pycomplex': complex_to_pycomplex
 }
-
 
 collect_function_registry = {
     NativeInteger(): PyLong_AsLong,
