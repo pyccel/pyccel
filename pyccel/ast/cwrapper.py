@@ -228,22 +228,19 @@ PyFloat_AsDouble = FunctionDef(name = 'PyFloat_AsDouble',
                         body = [],
                         arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
                         results   = [Variable(dtype=NativeReal(), name = 'r')])
-PyLong_Check = FunctionDef(name = 'PyLong_Check',
-                        body = [],
-                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                        results   = [Variable(dtype=NativeBool(), name = 'r')])
-PyComplex_Check = FunctionDef(name = 'PyComplex_Check',
-                        body = [],
-                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                        results   = [Variable(dtype=NativeBool(), name = 'r')])
-PyBool_Check = FunctionDef(name = 'PyBool_Check',
-                        body = [],
-                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                        results   = [Variable(dtype=NativeBool(), name = 'r')])
-PyFloat_Check = FunctionDef(name = 'PyFloat_Check',
-                        body = [],
-                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                        results   = [Variable(dtype=NativeBool(), name = 'r')])
+
+def PyType_Check(data_type):
+    try :
+        check_type = check_type_registry[data_type]
+    except KeyError:
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=data_type,severity='fatal')
+    print(check_type)
+    func = FunctionDef(name = check_type,
+                    body = [],
+                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                    results   = [Variable(dtype=NativeBool(), name = 'r')])
+    return func
+
 
 # Casting functions
 # Represents type of cast function responsible of the conversion of one data type into another.
@@ -335,9 +332,9 @@ collect_function_registry = {
     NativeReal() : PyFloat_AsDouble,
 }
 
-check_function_registry = {
-    NativeInteger(): PyLong_Check,
-    NativeComplex() : PyComplex_Check,
-    NativeReal() : PyFloat_Check,
-    NativeBool() : PyBool_Check,
+check_type_registry = {
+    NativeInteger(): 'PyLong_Check',
+    NativeComplex() : 'PyComplex_Check',
+    NativeReal() : 'PyFloat_Check',
+    NativeBool() : 'PyBool_Check',
 }
