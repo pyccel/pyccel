@@ -31,6 +31,7 @@ from sympy.sets.fancysets import Range
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors import Errors
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 
 __all__ = ["LuaCodePrinter", "lua_code"]
 
@@ -384,7 +385,7 @@ class LuaCodePrinter(CodePrinter):
             return "[%s]" % ", ".join(self._print(a) for a in A)
         else:
             msg = "Full Matrix Support in Lua need Crates (https://crates.io/keywords/matrix)."
-            errors.report(msg, symbol=expr,
+            errors.report(msg, symbol=A,
                 severity='fatal', blocker=self.blocking)
 
     def _print_MatrixElement(self, expr):

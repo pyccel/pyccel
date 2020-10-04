@@ -4,7 +4,7 @@
 from sympy.core import S
 from sympy.printing.precedence import precedence
 
-from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit
+from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import SeparatorComment, VariableAddress

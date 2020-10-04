@@ -1267,7 +1267,7 @@ class CodeBlock(Basic):
 
     def __init__(self, body):
         if len(self._args)>0 and isinstance(self._args[-1], (Assign, AugAssign)):
-            self.set_fst(ls[-1].fst)
+            self.set_fst(self._args[-1].fst)
 
     @property
     def body(self):

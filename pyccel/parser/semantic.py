@@ -122,8 +122,7 @@ def _get_name(var):
         return var.target
     msg = 'Name of Object : {} cannot be determined'.format(type(var).__name__)
     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg, symbol=var,
-        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-        severity='fatal', blocker=self.blocking)
+                severity='fatal')
 
 #==============================================================================
 
@@ -1727,7 +1726,7 @@ class SemanticParser(BasicParser):
 
                 if name.startswith('Pyccel'):
                     name = name[6:]
-                    d['cls_base'] = self.get_class(name__)
+                    d['cls_base'] = self.get_class(name)
                     #TODO: Avoid writing the default variables here
                     d['is_pointer'] = d_var.get('is_target',False) or d_var.get('is_pointer',False)
 
