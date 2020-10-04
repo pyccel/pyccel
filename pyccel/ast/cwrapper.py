@@ -37,11 +37,7 @@ __all__ = (
     'Py_DECREF',
     'PyLong_AsLong',
     'PyFloat_AsDouble',
-#-----------------------------
-    'PyLong_Check',
-    'PyComplex_Check',
-    'PyBool_Check',
-    'PyFloat_Check',
+    'PyType_Check',
 #------- CAST FUNCTIONS ------
     'pyint_to_bool',
     'bool_to_pyobj',
