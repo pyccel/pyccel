@@ -230,13 +230,20 @@ def PyType_Check(data_type):
         check_type = check_type_registry[data_type]
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=data_type,severity='fatal')
-    print(check_type)
     func = FunctionDef(name = check_type,
                     body = [],
                     arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
     return func
 
+def PyErr_SetString(error_type, error_msg):
+    func = FunctionDef(name = 'PyErr_SetString',
+                body = [],
+                arguments = [Variable(dtype=PyccelPyObject(), name = 'o'),
+                             Variable(dtype =NativeString(), name = 's')],
+                results   = [])
+    err_type = Variable(PyccelPyObject(), error_type)
+    return FunctionCall(func, [err_type, error_msg])
 
 # Casting functions
 # Represents type of cast function responsible of the conversion of one data type into another.
