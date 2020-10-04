@@ -15,8 +15,9 @@ from pyccel.ast.core import IfTernaryOperator, VariableAddress, Import, IsNot, P
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
-from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
+from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry, PyErr_SetString
 from pyccel.ast.cwrapper import Py_True, Py_False, Py_None
+from pyccel.ast.cwrapper import PyErr_SetString, PyType_Check
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 
 from pyccel.ast.type_inference import str_dtype
@@ -73,11 +74,10 @@ class CWrapperCodePrinter(CCodePrinter):
 
         if isinstance(variable.dtype, NativeBool):
             return self.get_cast_function_call('pybool_to_bool', collect_var)
-
         try :
             collect_function = collect_function_registry[variable.dtype]
         except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,severity='fatal')
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=variable.dtype,severity='fatal')
         return FunctionCall(collect_function, [collect_var])
 
 
@@ -264,7 +264,11 @@ class CWrapperCodePrinter(CCodePrinter):
                 name = self.get_new_name(used_names, a.name+"_tmp"))
 
         default_value = VariableAddress(Py_None)
-        body = [Assign(optional_tmp_var, self.get_collect_function_call(optional_tmp_var, collect_var))]
+
+        check = FunctionCall(PyType_Check(a.dtype), [collect_var])
+        err = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(a, a.dtype))
+        body = [If((PyccelNot(check), [err, Return([Nil()])]))]
+        body += [Assign(optional_tmp_var, self.get_collect_function_call(optional_tmp_var, collect_var))]
         body += [Assign(VariableAddress(a), VariableAddress(optional_tmp_var))]
 
         body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
