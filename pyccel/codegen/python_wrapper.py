@@ -54,7 +54,7 @@ def compile_f2py( filename, *,
     elif compiler == 'gcc':
         _vendor = 'unix'
 
-    elif compiler == 'ifort' or compiler == 'icc':
+    elif compiler in ['ifort', 'icc']:
         _vendor = 'intelem'
 
     elif compiler == 'pgfortran':
