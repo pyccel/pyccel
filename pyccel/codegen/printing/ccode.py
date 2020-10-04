@@ -455,7 +455,7 @@ class CCodePrinter(CodePrinter):
         a = expr.args[0]
         b = expr.args[1]
 
-        if (a.dtype is NativeBool() and b.dtype is NativeBool()):
+        if (Nil() not in expr.args and a.dtype is NativeBool() and b.dtype is NativeBool()):
             return '{} {} {}'.format(lhs, Op, rhs)
 
         if Nil() in expr.args:
