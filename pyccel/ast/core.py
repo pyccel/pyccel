@@ -2283,7 +2283,7 @@ class ForIterator(For):
                 if isinstance(stmt, Assign):
                     it_vars.append(stmt.lhs)
 
-            n = len(set([str(var.name) for var in it_vars]))
+            n = len(set(str(var.name) for var in it_vars))
             return n
         else:
 

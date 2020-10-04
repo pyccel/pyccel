@@ -116,7 +116,7 @@ class SyntaxParser(BasicParser):
 
         self._fst = tree
 
-        self._used_names = set([str(a.id) for a in ast.walk(self._fst) if isinstance(a, ast.Name)])
+        self._used_names = set(str(a.id) for a in ast.walk(self._fst) if isinstance(a, ast.Name))
         self._dummy_counter = 1
 
         self.parse(verbose=True)
