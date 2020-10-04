@@ -7,9 +7,9 @@ from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
 from .datatypes import NativeVoid
 
-from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable
+from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress
 from .core      import AliasAssign, Assign, Return
-from .core      import If, IfTernaryOperator
+from .core      import If, IfTernaryOperator, PyccelEq
 
 from .numpyext  import Real as NumpyReal, Imag as NumpyImag
 
@@ -42,6 +42,7 @@ __all__ = (
     'bool_to_pyobj',
     'pycomplex_to_complex',
     'complex_to_pycomplex',
+    'pybool_to_bool',
 )
 
 class PyccelPyObject(DataType):
@@ -288,11 +289,24 @@ def pycomplex_to_complex(cast_function_name):
                        results   = [cast_function_result],
                        local_vars= cast_function_local_vars)
 
+def pybool_to_bool(cast_function_name):
+    cast_function_argument = Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)
+    cast_function_result   = Variable(dtype=NativeBool(), name = 'c')
+
+    cast_function_body = [Assign(cast_function_result , PyccelEq(VariableAddress(cast_function_argument), VariableAddress(Py_True)))
+                        , Return([cast_function_result])]
+
+    return FunctionDef(name      = cast_function_name,
+                       arguments = [cast_function_argument],
+                       body      = cast_function_body,
+                       results   = [cast_function_result])
+
 cast_function_registry = {
     'pyint_to_bool' : pyint_to_bool,
     'bool_to_pyobj' : bool_to_pyobj,
     'pycomplex_to_complex' : pycomplex_to_complex,
-    'complex_to_pycomplex': complex_to_pycomplex
+    'complex_to_pycomplex': complex_to_pycomplex,
+    'pybool_to_bool' : pybool_to_bool,
 }
 
 collect_function_registry = {
