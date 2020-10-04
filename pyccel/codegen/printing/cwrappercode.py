@@ -71,6 +71,9 @@ class CWrapperCodePrinter(CCodePrinter):
         if isinstance(variable.dtype, NativeComplex):
             return self.get_cast_function_call('pycomplex_to_complex', collect_var)
 
+        if isinstance(variable.dtype, NativeBool):
+            return self.get_cast_function_call('pybool_to_bool', collect_var)
+
         collect_function = collect_function_registry[variable.dtype]
         return FunctionCall(collect_function, [collect_var])
 
