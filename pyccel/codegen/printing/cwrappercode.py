@@ -18,7 +18,6 @@ from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildVal
 from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
 from pyccel.ast.cwrapper import Py_True, Py_False, Py_None
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
-from pyccel.ast.cwrapper import malloc ,free
 
 from pyccel.ast.type_inference import str_dtype
 
@@ -36,7 +35,6 @@ class CWrapperCodePrinter(CCodePrinter):
         CCodePrinter.__init__(self, parser,settings)
         self._cast_functions_dict = OrderedDict()
         self._to_free_PyObject_list = []
-        self._to_free_c_list = []
         self._function_wrapper_names = dict()
         self._global_names = set()
 
@@ -347,8 +345,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Call free function for python type
         wrapper_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
-        wrapper_body += [FunctionCall(free, [i]) for i in self._to_free_c_list]
-        self._to_free_c_list.clear()
         self._to_free_PyObject_list.clear()
         #Return
         wrapper_body.append(Return(wrapper_results))
