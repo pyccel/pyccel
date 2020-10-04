@@ -38,6 +38,7 @@ __all__ = (
     'PyLong_AsLong',
     'PyFloat_AsDouble',
     'PyType_Check',
+    'PyErr_SetString',
 #------- CAST FUNCTIONS ------
     'pyint_to_bool',
     'bool_to_pyobj',
