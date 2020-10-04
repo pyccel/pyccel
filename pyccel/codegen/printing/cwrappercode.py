@@ -131,16 +131,6 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            default_value = VariableAddress(Py_None)
-            if cast_function is not None:
-                body = [Assign(variable, self.get_cast_function_call(cast_function, collect_var))]
-            else:
-                body = [Assign(VariableAddress(variable), FunctionCall(malloc, [variable.precision]))]
-                self._to_free_c_list.append(variable)
-                body += [Assign(variable, self.get_collect_function_call(variable, collect_var))]
-                #TODO call the python function to extract value from pyobject
-            body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
-            (BooleanTrue(), [Assign(VariableAddress(variable), variable.value)]))]
 
         elif variable.dtype is NativeBool():
             collect_type = NativeInteger()
@@ -265,6 +255,19 @@ class CWrapperCodePrinter(CCodePrinter):
                         '{arg_names}\n'
                         '}};\n'.format(name=expr.name, arg_names = arg_names))
 
+    def optional_element_management(self, used_names, a, collect_var):
+        optional_tmp_var = Variable(dtype=a.dtype,
+                name = self.get_new_name(used_names, a.name+"_tmp"))
+
+        default_value = VariableAddress(Py_None)
+        body = [Assign(optional_tmp_var, self.get_collect_function_call(optional_tmp_var, collect_var))]
+        body += [Assign(VariableAddress(a), VariableAddress(optional_tmp_var))]
+
+        body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
+        (BooleanTrue(), [Assign(VariableAddress(a), a.value)]))]
+        return optional_tmp_var, body
+
+
     def _print_FunctionDef(self, expr):
         # Save all used names
         used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name.name])
@@ -309,6 +312,10 @@ class CWrapperCodePrinter(CCodePrinter):
             # Write default values
             if isinstance(a, ValuedVariable):
                 wrapper_body.append(self.get_default_assign(parse_args[-1], a))
+            if a.is_optional :
+                tmp_variable, body = self.optional_element_management(used_names, a, collect_var)
+                wrapper_vars[tmp_variable.name] = tmp_variable
+                wrapper_body_translations += body
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, expr.arguments, parse_args, keyword_list)
