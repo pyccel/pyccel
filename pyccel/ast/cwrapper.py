@@ -37,6 +37,11 @@ __all__ = (
     'Py_DECREF',
     'PyLong_AsLong',
     'PyFloat_AsDouble',
+#-----------------------------
+    'PyLong_Check',
+    'PyComplex_Check',
+    'PyBool_Check',
+    'PyFloat_Check',
 #------- CAST FUNCTIONS ------
     'pyint_to_bool',
     'bool_to_pyobj',
@@ -223,6 +228,22 @@ PyFloat_AsDouble = FunctionDef(name = 'PyFloat_AsDouble',
                         body = [],
                         arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
                         results   = [Variable(dtype=NativeReal(), name = 'r')])
+PyLong_Check = FunctionDef(name = 'PyLong_Check',
+                        body = [],
+                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                        results   = [Variable(dtype=NativeBool(), name = 'r')])
+PyComplex_Check = FunctionDef(name = 'PyComplex_Check',
+                        body = [],
+                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                        results   = [Variable(dtype=NativeBool(), name = 'r')])
+PyBool_Check = FunctionDef(name = 'PyBool_Check',
+                        body = [],
+                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                        results   = [Variable(dtype=NativeBool(), name = 'r')])
+PyFloat_Check = FunctionDef(name = 'PyFloat_Check',
+                        body = [],
+                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                        results   = [Variable(dtype=NativeBool(), name = 'r')])
 
 # Casting functions
 # Represents type of cast function responsible of the conversion of one data type into another.
@@ -312,4 +333,11 @@ cast_function_registry = {
 collect_function_registry = {
     NativeInteger(): PyLong_AsLong,
     NativeReal() : PyFloat_AsDouble,
+}
+
+check_function_registry = {
+    NativeInteger(): PyLong_Check,
+    NativeComplex() : PyComplex_Check,
+    NativeReal() : PyFloat_Check,
+    NativeBool() : PyBool_Check,
 }

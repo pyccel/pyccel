@@ -74,7 +74,10 @@ class CWrapperCodePrinter(CCodePrinter):
         if isinstance(variable.dtype, NativeBool):
             return self.get_cast_function_call('pybool_to_bool', collect_var)
 
-        collect_function = collect_function_registry[variable.dtype]
+        try :
+            collect_function = collect_function_registry[variable.dtype]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,severity='fatal')
         return FunctionCall(collect_function, [collect_var])
 
 
