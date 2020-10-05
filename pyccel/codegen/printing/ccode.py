@@ -656,10 +656,6 @@ class CCodePrinter(CodePrinter):
     def _print_CodeBlock(self, expr):
         return '\n'.join(self._print(b) for b in expr.body)
 
-    def _print_Rational(self, expr):
-        p, q = int(expr.p), int(expr.q)
-        return '%d.0L/%d.0L' % (p, q)
-
     def _print_Indexed(self, expr):
         # calculate index for 1d array
         dims = expr.shape
