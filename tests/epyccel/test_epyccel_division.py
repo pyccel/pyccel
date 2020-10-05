@@ -1,10 +1,8 @@
-import pytest
-
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 from conftest       import *
 
-from numpy.random import rand, randint, uniform
+from numpy.random import randint, uniform
 
 # -------------------- simple division ---------------------- #
 
