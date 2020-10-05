@@ -844,7 +844,7 @@ class CCodePrinter(CodePrinter):
             level += increase[n]
         return pretty
 
-    _print_Function = _print_not_supported
+    _print_Function = CodePrinter._print_not_supported
 
 def ccode(expr, parser, assign_to=None, **settings):
     """Converts an expr to a string of c code
