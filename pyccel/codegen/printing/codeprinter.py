@@ -108,6 +108,7 @@ class CodePrinter(StrPrinter):
     _print_Derivative = _print_not_supported
     _print_dict = _print_not_supported
     _print_ExprCondPair = _print_not_supported
+    _print_Function = _print_not_supported
     _print_GeometryEntity = _print_not_supported
     _print_Infinity = _print_not_supported
     _print_Integral = _print_not_supported
@@ -129,6 +130,7 @@ class CodePrinter(StrPrinter):
     _print_RootSum = _print_not_supported
     _print_Sample = _print_not_supported
     _print_SparseMatrix = _print_not_supported
+    _print_Symbol = _print_not_supported
     _print_tuple = _print_not_supported
     _print_Uniform = _print_not_supported
     _print_Unit = _print_not_supported
