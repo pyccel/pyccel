@@ -1,10 +1,9 @@
 # coding: utf-8
 # pylint: disable=R0201
 
-from sympy.core import S
 from sympy.printing.precedence import precedence
 
-from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float
+from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float, Integer
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import SeparatorComment, VariableAddress
@@ -678,8 +677,8 @@ class CCodePrinter(CodePrinter):
     def _print_Indexed(self, expr):
         # calculate index for 1d array
         dims = expr.shape
-        elem = S.Zero
-        offset = S.One
+        elem = Integer(0)
+        offset = Integer(1)
         for i in reversed(list(range(expr.rank))):
             elem += expr.indices[i]*offset
             offset *= dims[i]
