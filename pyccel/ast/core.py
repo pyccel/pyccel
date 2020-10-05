@@ -2180,7 +2180,7 @@ class For(Basic):
             elif not isinstance(body,CodeBlock):
                 raise TypeError('body must be an iterable or a Codeblock')
 
-        return Basic.__new__(cls, target, iterable, body, local_vars)
+        return Basic.__new__(cls, target, iter_obj, body, local_vars)
 
     @property
     def target(self):
