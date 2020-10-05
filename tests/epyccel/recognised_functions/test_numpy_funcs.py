@@ -1211,10 +1211,10 @@ def test_ones_order(language):
     assert(     f_shape_F(size_1,size_2) == create_ones_shape_F(size_1,size_2))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="Array not implemented yet in c"),
-            pytest.mark.fortran]
+            pytest.mark.c]
         )
     )
 )
