@@ -345,7 +345,7 @@ class LuaCodePrinter(CodePrinter):
         return "NAN"
 
     def _print_Piecewise(self, expr):
-        if expr.args[-1].cond != True:
+        if expr.args[-1].cond is not True:
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.
             raise ValueError("All Piecewise expressions must contain an "
@@ -358,7 +358,7 @@ class LuaCodePrinter(CodePrinter):
         for i, (e, c) in enumerate(expr.args):
             if i == 0:
                 lines.append("if (%s) {" % self._print(c))
-            elif i == len(expr.args) - 1 and c == True:
+            elif i == len(expr.args) - 1 and c is True:
                 lines[-1] += " else {"
             else:
                 lines[-1] += " else if (%s) {" % self._print(c)
@@ -386,7 +386,7 @@ class LuaCodePrinter(CodePrinter):
         else:
             msg = "Full Matrix Support in Lua need Crates (https://crates.io/keywords/matrix)."
             errors.report(msg, symbol=A,
-                severity='fatal', blocker=self.blocking)
+                severity='fatal')
 
     def _print_MatrixElement(self, expr):
         return "%s[%s]" % (expr.parent,
@@ -443,7 +443,7 @@ class LuaCodePrinter(CodePrinter):
             # TODO: Use fortran example to add pointer arguments for multiple output
             msg = 'Multiple output arguments is not yet supported in c'
             errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal', blocker=self.blocking)
+                severity='fatal')
         else:
             ret_type = self._print(datatype('void'))
         name = expr.name
