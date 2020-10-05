@@ -239,7 +239,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonBool(self, expr):
         value = self._print(expr.arg)
-        return '{} != 0'.format(value)
+        return '({} != 0)'.format(value)
 
     def _print_Complex(self, expr):
         return self._print(PyccelAdd(expr.real,
