@@ -71,12 +71,3 @@ def test_output_types_3(language):
     f = epyccel(cast_to_bool, language=language)
     assert(cast_to_bool(1) == f(1))
 
-
-
-##==============================================================================
-## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
-##==============================================================================
-
-def teardown_module():
-    clean_test()
-
