@@ -753,8 +753,8 @@ def allocatable_like(expr, verbose=False):
             if a.is_Pow and a.exp is S.NegativeOne:
                 args.append(a.base)  # won't be -Mul but could be Add
                 continue
-            if a.is_Mul or a.is_Pow or a.is_Function or isinstance(a,
-                    Derivative) or isinstance(a, Integral):
+            if a.is_Mul or a.is_Pow or a.is_Function or 
+                    isinstance(a, (Derivative, Integral)):
 
                 o = Symbol(a.func.__name__.upper())
             if not a.is_Symbol and not isinstance(a, (IndexedElement,
