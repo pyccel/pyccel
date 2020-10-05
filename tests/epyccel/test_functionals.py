@@ -1,4 +1,3 @@
-import pytest
 from numpy.random import randint
 from numpy import equal
 

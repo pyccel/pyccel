@@ -1,3 +1,5 @@
+from pyccel.decorators import types
+
 @types(int)
 def incr_(x):
     @types(int)

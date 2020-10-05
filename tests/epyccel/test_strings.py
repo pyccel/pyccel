@@ -1,9 +1,5 @@
-import pytest
 import inspect
-import contextlib
-import io
-import re
-import numpy as np
+import pytest
 
 from pyccel.epyccel import epyccel
 from modules import strings as strings_module

@@ -1,6 +1,5 @@
 import pytest
 import numpy as np
-import platform
 
 from pyccel.epyccel import epyccel
 from modules        import loops

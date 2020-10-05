@@ -1,8 +1,5 @@
-import pytest
 import inspect
-import contextlib
-import io
-import re
+import pytest
 import numpy as np
 
 from pyccel.epyccel import epyccel

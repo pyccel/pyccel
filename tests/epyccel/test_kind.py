@@ -1,11 +1,7 @@
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
-import shutil
 
 from conftest import *
-def clean_test():
-    shutil.rmtree('__pycache__', ignore_errors=True)
-    shutil.rmtree('__epyccel__', ignore_errors=True)
 
 def test_or_boolean(language):
     @types('bool', 'bool')

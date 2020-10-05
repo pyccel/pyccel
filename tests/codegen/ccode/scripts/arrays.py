@@ -1,5 +1,4 @@
 from pyccel.decorators import types
-import pytest
 #==============================================================================
 
 @types( 'int[:,:](order=C)' )

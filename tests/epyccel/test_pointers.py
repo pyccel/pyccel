@@ -1,5 +1,5 @@
-import pytest
 import inspect
+import pytest
 import numpy as np
 
 from pyccel.epyccel import epyccel
