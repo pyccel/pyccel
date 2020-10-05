@@ -73,6 +73,8 @@ def test_omp_get_num_teams():
 	num_teams = omp_get_num_teams()
 	return num_teams
 
+
+
 def test_omp_get_team_num():
 	from pyccel.stdlib.internal.openmp import omp_get_team_num
 
