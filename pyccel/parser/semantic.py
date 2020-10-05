@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=R0201
+# pylint: disable=missing-function-docstring
 
 from collections import OrderedDict
 

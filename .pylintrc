@@ -81,8 +81,6 @@ disable=bad-whitespace,
         too-many-ancestors,
         line-too-long,
         fixme,
-        missing-module-docstring,
-        missing-function-docstring, #TODO: Enable?
         c-extension-no-member,
         no-name-in-module, # Does not see .pyh files
         import-error, # Does not see .pyh files

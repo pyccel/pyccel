@@ -1,5 +1,6 @@
 # coding: utf-8
 # pylint: disable=R0201
+# pylint: disable=missing-function-docstring
 
 """Print to F90 standard. Trying to follow the information provided at
 www.fortran90.org as much as possible."""
