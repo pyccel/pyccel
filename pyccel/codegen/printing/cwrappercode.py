@@ -129,7 +129,6 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         body = []
         collect_var = variable
-        cast_function = None
 
         if variable.is_optional:
             collect_type = PyccelPyObject()
