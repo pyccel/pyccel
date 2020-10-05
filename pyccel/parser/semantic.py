@@ -57,7 +57,7 @@ from pyccel.ast.core import _atomic
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
-from pyccel.ast.core import PyccelUnary
+from pyccel.ast.core import PyccelUnary, PyccelUnarySub
 from pyccel.ast.core import Product, FunctionCall
 from pyccel.ast.core import PyccelArraySize
 from pyccel.ast.core import PyccelOperator
@@ -85,7 +85,7 @@ from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_impo
 from pyccel.ast.utilities import split_positional_keyword_arguments
 
 from pyccel.ast.builtins import Print
-from pyccel.ast.builtins import Int as PythonInt, Bool as PythonBool, PythonFloat, PythonComplex
+from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
 from pyccel.ast.builtins import python_builtin_datatype
 from pyccel.ast.builtins import Range, Zip, Enumerate, Map, PythonTuple
 
@@ -951,7 +951,6 @@ class SemanticParser(BasicParser):
 
     def _visit_Symbol(self, expr, **settings):
         name = expr.name
-
         var = self.check_for_variable(name)
 
         if var is None:
@@ -1159,6 +1158,9 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelUnary(self, expr, **settings):
         return PyccelUnary(self._visit(expr.args[0]))
+
+    def _visit_PyccelUnarySub(self, expr, **settings):
+        return PyccelUnarySub(self._visit(expr.args[0]))
 
     def _visit_PyccelAnd(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
@@ -2315,11 +2317,21 @@ class SemanticParser(BasicParser):
         is_private   = expr.is_private
 
         header = expr.header
+        args_number = len(expr.arguments)
         if header is None:
             if cls_name:
                 header = self.get_header(cls_name +'.'+ name)
+                args_number -= 1
             else:
                 header = self.get_header(name)
+
+        if header:
+            if (args_number != len(header.dtypes)):
+                msg = 'The number of arguments in the function {} ({}) does not match the number of types in decorator/header ({}).'.format(name ,args_number, len(header.dtypes))
+                if (args_number < len(header.dtypes)):
+                    errors.report(msg, symbol=expr.arguments, severity='warning')
+                else:
+                    errors.report(msg, symbol=expr.arguments, severity='fatal')
 
         if expr.arguments and not header:
 
@@ -2361,7 +2373,6 @@ class SemanticParser(BasicParser):
 #            body_vec   = [For(index, range_, [body_vec], strict=False)]
 #            header_vec = header.vectorize(index_arg)
 #            vec_func   = expr.vectorize(body_vec, header_vec)
-
 
         for m in interfaces:
             args           = []

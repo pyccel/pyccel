@@ -13,11 +13,12 @@ from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMo
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
+from pyccel.ast.datatypes import default_precision
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
-from pyccel.ast.builtins  import Range
+from pyccel.ast.numpyext import NumpyComplex, NumpyFloat
+from pyccel.ast.builtins  import Range, PythonFloat, PythonComplex
 from pyccel.ast.core import Declare
-from pyccel.ast.core import SeparatorComment
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -53,6 +54,128 @@ known_functions = {
     "atanh": "atanh",
     "floor": "floor",
     "ceiling": "ceil",
+}
+
+# dictionary mapping numpy function to (argument_conditions, C_function).
+# Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
+numpy_ufunc_to_c_real = {
+    'NumpyAbs'  : 'fabs',
+    'NumpyMin'  : 'minval',
+    'NumpyMax'  : 'maxval',
+    'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
+    # ---
+    'NumpyExp' : 'exp',
+    'NumpyLog' : 'log',
+    'NumpySqrt': 'sqrt',
+    # ---
+    'NumpySin'    : 'sin',
+    'NumpyCos'    : 'cos',
+    'NumpyTan'    : 'tan',
+    'NumpyArcsin' : 'asin',
+    'NumpyArccos' : 'acos',
+    'NumpyArctan' : 'atan',
+    'NumpyArctan2': 'atan2',
+    'NumpySinh'   : 'sinh',
+    'NumpyCosh'   : 'cosh',
+    'NumpyTanh'   : 'tanh',
+    'NumpyArcsinh': 'asinh',
+    'NumpyArccosh': 'acosh',
+    'NumpyArctanh': 'atanh',
+}
+
+numpy_ufunc_to_c_complex = {
+    'NumpyAbs'  : 'cabs',
+    'NumpyMin'  : 'minval',
+    'NumpyMax'  : 'maxval',
+    # ---
+    'NumpyExp' : 'cexp',
+    'NumpyLog' : 'clog',
+    'NumpySqrt': 'csqrt',
+    # ---
+    'NumpySin'    : 'csin',
+    'NumpyCos'    : 'ccos',
+    'NumpyTan'    : 'ctan',
+    'NumpyArcsin' : 'casin',
+    'NumpyArccos' : 'cacos',
+    'NumpyArctan' : 'catan',
+    'NumpySinh'   : 'csinh',
+    'NumpyCosh'   : 'ccosh',
+    'NumpyTanh'   : 'ctanh',
+    'NumpyArcsinh': 'casinh',
+    'NumpyArccosh': 'cacosh',
+    'NumpyArctanh': 'catanh',
+}
+
+# dictionary mapping Math function to (argument_conditions, C_function).
+# Used in CCodePrinter._print_MathFunctionBase(self, expr)
+# Math function ref https://docs.python.org/3/library/math.html
+math_function_to_c = {
+    # ---------- Number-theoretic and representation functions ------------
+    'MathCeil'     : 'ceil',
+    # 'MathComb'   : 'com' # TODO
+    'MathCopysign': 'copysign',
+    'MathFabs'   : 'fabs',
+    # 'MathFactorial': '???', # TODO
+    'MathFloor'    : 'floor',
+    # 'MathFmod'   : '???',  # TODO
+    # 'MathRexp'   : '???'   TODO requires two output
+    # 'MathFsum'   : '???',  # TODO
+    # 'MathGcd'   : '???',  # TODO
+    # 'MathIsclose' : '???',  # TODO
+    'MathIsfinite': 'isfinite', # int isfinite(real-floating x);
+    'MathIsinf'   : 'isinf', # int isinf(real-floating x);
+    'MathIsnan'   : 'isnan', # int isnan(real-floating x);
+    # 'MathIsqrt'  : '???' TODO
+    'MathLdexp'  : 'ldexp',
+    # 'MathModf'  : '???' TODO return two value
+    # 'MathPerm'  : '???' TODO
+    # 'MathProd'  : '???' TODO
+    'MathRemainder'  : 'remainder',
+    'MathTrunc'  : 'trunc',
+
+    # ----------------- Power and logarithmic functions -----------------------
+
+    'MathExp'    : 'exp',
+    'MathExpm1'  : 'expm1',
+    'MathLog'    : 'log',      # take also an option arg [base]
+    'MathLog1p'  : 'log1p',
+    'MathLog2'  : 'log2',
+    'MathLog10'  : 'log10',
+    'MathPow'    : 'pow',
+    # 'MathSqrt'   : 'sqrt',    # sqrt is printed using _Print_MathSqrt
+
+    # --------------------- Trigonometric functions ---------------------------
+
+    'MathAcos'   : 'acos',
+    'MathAsin'   : 'asin',
+    'MathAtan'   : 'atan',
+    'MathAtan2'  : 'atan2',
+    'MathCos'    : 'cos',
+    # 'MathDist'  : '???', TODO
+    'MathHypot'  : 'hypot',
+    'MathSin'    : 'sin',
+    'MathTan'    : 'tan',
+
+    # -------------------------- Angular conversion ---------------------------
+
+    # 'MathDegrees': '???',  # TODO
+    # 'MathRadians': '???', # TODO
+
+    # -------------------------- Hyperbolic functions -------------------------
+
+    'MathAcosh'  : 'acosh',
+    'MathAsinh'  : 'asinh',
+    'MathAtanh'  : 'atanh',
+    'MathCosh'   : 'cosh',
+    'MathSinh'   : 'sinh',
+    'MathTanh'   : 'tanh',
+
+    # --------------------------- Special functions ---------------------------
+
+    'MathErf'    : 'erf',
+    'MathErfc'   : 'erfc',
+    'MathGamma'  : 'tgamma',
+    'MathLgamma' : 'lgamma',
 }
 
 dtype_registry = {('real',8)    : 'double',
@@ -108,13 +231,15 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
-        return '(double)({0})'.format(value)
+        type_name = self.find_in_dtype_registry('real', default_precision['real'])
+        return '({0})({1})'.format(type_name, value)
 
-    def _print_Int(self, expr):
+    def _print_PythonInt(self, expr):
         value = self._print(expr.arg)
-        return '(long)({0})'.format(value)
+        type_name = self.find_in_dtype_registry('int', default_precision['int'])
+        return '({0})({1})'.format(type_name, value)
 
-    def _print_Bool(self, expr):
+    def _print_PythonBool(self, expr):
         value = self._print(expr.arg)
         return '{} != 0'.format(value)
 
@@ -208,20 +333,56 @@ class CCodePrinter(CodePrinter):
         a = self._print(expr.args[0])
         return '!{}'.format(a)
 
+    def _print_PyccelMod(self, expr):
+        self._additional_imports.add("math.h")
+
+        first = self._print(expr.args[0])
+        second = self._print(expr.args[1])
+
+        if expr.dtype is NativeInteger():
+            return "{} % {}".format(first, second)
+
+        if expr.args[0].dtype is NativeInteger():
+            first = self._print(PythonFloat(expr.args[0]))
+        if expr.args[1].dtype is NativeInteger():
+            second = self._print(PythonFloat(expr.args[1]))
+        return "fmod({}, {})".format(first, second)
+
+    def _print_PyccelPow(self, expr):
+        b = expr.args[0]
+        e = expr.args[1]
+
+        if expr.dtype is NativeComplex():
+            b = self._print(b if b.dtype is NativeComplex() else PythonComplex(b))
+            e = self._print(e if e.dtype is NativeComplex() else PythonComplex(e))
+            self._additional_imports.add("complex.h")
+            return 'cpow({}, {})'.format(b, e)
+
+        self._additional_imports.add("math.h")
+        b = self._print(b if b.dtype is NativeReal() else PythonFloat(b))
+        e = self._print(e if e.dtype is NativeReal() else PythonFloat(e))
+        code = 'pow({}, {})'.format(b, e)
+        if expr.dtype is NativeInteger():
+            dtype = self._print(expr.dtype)
+            prec  = expr.precision
+            cast_type = self.find_in_dtype_registry(dtype, prec)
+            return '({}){}'.format(cast_type, code)
+        return code
+
     def _print_Import(self, expr):
-        return '#include "{0}"'.format(expr.source)
+        return '#include <{0}>'.format(expr.source)
 
     def find_in_dtype_registry(self, dtype, prec):
         try :
             return dtype_registry[(dtype, prec)]
         except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,severity='fatal')
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
 
     def get_declare_type(self, expr):
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         rank  = expr.rank
-        dtype = self.find_in_dtype_registry(dtype,prec)
+        dtype = self.find_in_dtype_registry(dtype, prec)
 
         if rank > 0 or expr.is_pointer:
             return '{0} *'.format(dtype)
@@ -229,6 +390,8 @@ class CCodePrinter(CodePrinter):
             return '{0} '.format(dtype)
 
     def _print_Declare(self, expr):
+        if expr.variable.rank > 0:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
         declaration_type = self.get_declare_type(expr.variable)
         variable = self._print(expr.variable.name)
 
@@ -258,7 +421,7 @@ class CCodePrinter(CodePrinter):
             # TODO: Use fortran example to add pointer arguments for multiple output
             msg = 'Multiple output arguments is not yet supported in c'
             errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal', blocker=self.blocking)
+                severity='fatal')
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
@@ -267,6 +430,95 @@ class CCodePrinter(CodePrinter):
         else:
             arg_code = ', '.join('{0}{1}'.format(self.get_declare_type(i), i) for i in expr.arguments)
         return '{0}{1}({2})'.format(ret_type, name, arg_code)
+
+    def _print_NumpyUfuncBase(self, expr):
+        """ Convert a Python expression with a Numpy function call to C
+        function call
+
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                Python expression with a Numpy function call
+
+        Returns
+        -------
+            string
+                Equivalent expression in C language
+
+        Example
+        -------
+            numpy.cos(x) ==> cos(x)
+
+        """
+        # add necessary include
+        self._additional_imports.add('math.h')
+        type_name = type(expr).__name__
+        try:
+            func_name = numpy_ufunc_to_c_real[type_name]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+        args = []
+        for arg in expr.args:
+            if arg.dtype is NativeComplex():
+                self._additional_imports.add('complex.h')
+                try:
+                    func_name = numpy_ufunc_to_c_complex[type_name]
+                    args.append(self._print(arg))
+                except KeyError:
+                    errors.report(INCOMPATIBLE_TYPEVAR_TO_FUNC.format(type_name) ,severity='fatal')
+            elif arg.dtype is not NativeReal():
+                args.append(self._print(NumpyFloat(arg)))
+            else :
+                args.append(self._print(arg))
+        code_args = ', '.join(args)
+        return '{0}({1})'.format(func_name, code_args)
+
+    def _print_MathFunctionBase(self, expr):
+        """ Convert a Python expression with a math function call to C
+        function call
+
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                Python expression with a Math function call
+
+        Returns
+        -------
+            string
+                Equivalent expression in C language
+
+        ------
+        Example:
+        --------
+            math.sin(x) ==> sin(x)
+
+        """
+        # add necessary include
+        self._additional_imports.add('math.h')
+        type_name = type(expr).__name__
+        try:
+            func_name = math_function_to_c[type_name]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+        args = []
+        for arg in expr.args:
+            if arg.dtype is NativeComplex():
+                self._additional_imports.add('complex.h')
+            if arg.dtype is not NativeReal():
+                args.append(self._print(NumpyFloat(arg)))
+            else :
+                args.append(self._print(arg))
+        code_args = ', '.join(args)
+        return '{0}({1})'.format(func_name, code_args)
+
+    def _print_MathSqrt(self, expr):
+        # add necessary include
+        self._additional_imports.add('math.h')
+        arg = expr.args[0]
+        code_args = self._print(arg)
+        if arg.dtype is not NativeReal():
+            code_args = self._print(NumpyFloat(arg))
+        return 'sqrt({})'.format(code_args)
 
     def _print_FunctionDef(self, expr):
 
@@ -294,6 +546,28 @@ class CCodePrinter(CodePrinter):
             return '{}({});'.format(func.name, args)
         return '{}({})'.format(func.name, args)
 
+    def _print_Constant(self, expr):
+        """ Convert a Python expression with a math constant call to C
+        function call
+
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                Python expression with a Math constant
+
+        Returns
+        -------
+            string
+                String represent the value of the constant
+
+        Example
+        -------
+            math.pi ==> 3.14159265358979
+
+        """
+        val = Float(expr.value)
+        return self._print(val)
+
     def _print_Return(self, expr):
         code = ''
         if expr.stmt:
@@ -317,9 +591,10 @@ class CCodePrinter(CodePrinter):
         return ' * '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelDiv(self, expr):
-        args = [self._print(a) for a in expr.args]
         if all(a.dtype is NativeInteger() for a in expr.args):
-            return ' / '.join('real({})'.format(self._print(a)) for a in args)
+            args = [PythonFloat(a) for a in expr.args]
+        else:
+            args = expr.args
         return  ' / '.join(self._print(a) for a in args)
 
     def _print_PyccelRShift(self, expr):
@@ -350,7 +625,10 @@ class CCodePrinter(CodePrinter):
         return '({})'.format(self._print(expr.args[0]))
 
     def _print_PyccelUnary(self, expr):
-        return '({})'.format(self._print(expr.args[0]))
+        return '+{}'.format(self._print(expr.args[0]))
+
+    def _print_PyccelUnarySub(self, expr):
+        return '-{}'.format(self._print(expr.args[0]))
 
     def _print_AugAssign(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -517,7 +795,6 @@ class CCodePrinter(CodePrinter):
 
         return '/*' + comments + '*/'
 
-
     def _print_CommentBlock(self, expr):
         txts = expr.comments
         ln = max(len(i) for i in txts)
@@ -527,9 +804,7 @@ class CCodePrinter(CodePrinter):
         ln = len(top)
         bottom = '/*' + '_'*(ln-2) + '*/'
 
-        for i in range(len(txts)):
-            txts[i] = '/*' + txts[i] + ' '*(ln -2 - len(txts[i])) + '*/'
-
+        txts = ['/*' + t + ' '*(ln -2 - len(t)) + '*/' for t in txts]
 
         body = '\n'.join(i for i in txts)
 
