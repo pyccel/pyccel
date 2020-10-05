@@ -2156,7 +2156,7 @@ class For(Basic):
     def __new__(
         cls,
         target,
-        iterable,
+        iter_obj,
         body,
         local_vars = [],
         strict=True,
@@ -2164,15 +2164,15 @@ class For(Basic):
         if strict:
             target = sympify(target, locals=local_sympify)
 
-            cond_iter = iterable(iterable)
-            cond_iter = cond_iter or isinstance(iterable, (Range, Product,
+            cond_iter = iterable(iter_obj)
+            cond_iter = cond_iter or isinstance(iter_obj, (Range, Product,
                     Enumerate, Zip, Map))
-            cond_iter = cond_iter or isinstance(iterable, Variable) \
-                and is_iterable_datatype(iterable.dtype)
-          #  cond_iter = cond_iter or isinstance(iterable, ConstructorCall) \
-          #      and is_iterable_datatype(iterable.arguments[0].dtype)
+            cond_iter = cond_iter or isinstance(iter_obj, Variable) \
+                and is_iterable_datatype(iter_obj.dtype)
+          #  cond_iter = cond_iter or isinstance(iter_obj, ConstructorCall) \
+          #      and is_iterable_datatype(iter_obj.arguments[0].dtype)
             if not cond_iter:
-                raise TypeError('iterable must be an iterable')
+                raise TypeError('iter_obj must be an iterable')
 
             if iterable(body):
                 body = CodeBlock((sympify(i, locals=local_sympify) for i in
