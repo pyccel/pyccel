@@ -38,6 +38,7 @@ def test_module_1():
 
 	num_teams = mod.test_omp_get_num_teams()
 	assert mod.omp_get_team_num() <= num_teams
+	assert mod.omp_get_team_num() >= num_teams
 
 	assert mod.test_omp_is_initial_device() == 1
 	assert mod.test_omp_get_initial_device() >= 0
