@@ -495,8 +495,7 @@ class MacroFunction(Header):
                 else:
                     raise ValueError('Unknown valued argument')
             d_arguments.update(d_unsorted_args)
-            for i in d_arguments.keys():
-                arg = d_arguments[i]
+            for i, arg in d_arguments.items():
                 if isinstance(arg, Macro):
                     d_arguments[i] = construct_macro(arg.name,
                                       d_arguments[arg.argument.name])
