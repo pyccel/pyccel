@@ -5568,13 +5568,13 @@ def get_iterable_ranges(it, var_name=None):
 
 class ParserResult(Basic):
     def __new__(
-        self,
+        cls,
         program=None,
         module=None,
         mod_name = None,
         prog_name = None,
         ):
-        return Basic.__new__(self)
+        return Basic.__new__(cls)
 
     def __init__(
         self,
