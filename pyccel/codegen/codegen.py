@@ -260,7 +260,3 @@ class Codegen(object):
         return filename
 
 
-class FCodegen(Codegen):
-    pass
-
-
