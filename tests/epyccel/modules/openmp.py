@@ -55,8 +55,7 @@ def test_omp_in_parallel2():
 
 @types ('bool')
 def test_omp_set_get_dynamic(dynamic_theads):
-	from pyccel.stdlib.internal.openmp import omp_set_dynamic
-	from pyccel.stdlib.internal.openmp import omp_get_dynamic
+	from pyccel.stdlib.internal.openmp import omp_set_dynamic, omp_get_dynamic
 
 	omp_set_dynamic(dynamic_theads)
 	return omp_get_dynamic()
@@ -67,13 +66,27 @@ def test_omp_get_cancellation():
 	cancel_var = omp_get_cancellation()
 	return cancel_var
 
+
+
+@types ('int')
+def test_omp_set_get_default_device(device_num):
+	from pyccel.stdlib.internal.openmp import omp_get_default_device, omp_set_default_device
+
+	omp_set_default_device(device_num)
+	default_device = omp_get_default_device()
+	return default_device
+
+def test_omp_get_num_devices():
+	from pyccel.stdlib.internal.openmp import omp_get_num_devices
+
+	num_devices = omp_get_num_devices()
+	return num_devices
+
 def test_omp_get_num_teams():
 	from pyccel.stdlib.internal.openmp import omp_get_num_teams
 
 	num_teams = omp_get_num_teams()
 	return num_teams
-
-
 
 def test_omp_get_team_num():
 	from pyccel.stdlib.internal.openmp import omp_get_team_num
