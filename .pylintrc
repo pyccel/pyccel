@@ -85,14 +85,12 @@ disable=bad-whitespace,
         missing-function-docstring, #TODO: Enable?
         c-extension-no-member,
         no-name-in-module, # Does not see .pyh files
-        import-error,
+        import-error, # Does not see .pyh files
         superfluous-parens,
         useless-object-inheritance,
         trailing-newlines,
-        unused-wildcard-import,
-        wrong-import-order,
-        bad-continuation,
-        arguments-differ,
+        bad-continuation, # wrong indentation on multi-line object
+        arguments-differ, # Parameters differ from overridden method, raised by many _print_X functions existing in sympy
         misplaced-comparison-constant,
         unused-argument,
         redefined-outer-name,
