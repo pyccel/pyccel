@@ -741,7 +741,7 @@ class CCodePrinter(CodePrinter):
         return self._handle_is_operator("==", expr)
 
     def _print_Piecewise(self, expr):
-        if expr.args[-1].cond != True:
+        if expr.args[-1].cond is not True:
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.
             raise ValueError("All Piecewise expressions must contain an "
@@ -754,7 +754,7 @@ class CCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) {" % self._print(c))
-                elif i == len(expr.args) - 1 and c == True:
+                elif i == len(expr.args) - 1 and c is True:
                     lines.append("else {")
                 else:
                     lines.append("else if (%s) {" % self._print(c))

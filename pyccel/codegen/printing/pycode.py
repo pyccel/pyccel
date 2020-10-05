@@ -58,7 +58,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
             indices = ','.join(i for i in indices)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal', blocker=self.blocking)
+                severity='fatal')
 
         base = self._print(expr.base)
         return '{base}[{indices}]'.format(base=base, indices=indices)
@@ -172,7 +172,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return self._print(expr.label)
 
     def _print_Indexed(self, expr):
-        inds = [i for i in expr.indices]
+        inds = list(expr.indices)
         #indices of indexedElement of len==1 shouldn't be a Tuple
         for i, ind in enumerate(inds):
             if isinstance(ind, Tuple) and len(ind) == 1:
@@ -216,7 +216,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
             if i == 0:
                 lines.append("if (%s):" % self._print(c))
 
-            elif i == len(expr.args) - 1 and c == True:
+            elif i == len(expr.args) - 1 and c is True:
                 lines.append("else:")
 
             else:

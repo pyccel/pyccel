@@ -18,7 +18,6 @@ from pyccel.ast.cwrapper import PyArgKeywords
 from pyccel.ast.cwrapper import cast_function_registry
 
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import *
 
 errors = Errors()
 
