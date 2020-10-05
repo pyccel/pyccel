@@ -345,7 +345,7 @@ class LuaCodePrinter(CodePrinter):
         return "NAN"
 
     def _print_Piecewise(self, expr):
-        if expr.args[-1].cond is not True:
+        if not expr.args[-1].cond:
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.
             raise ValueError("All Piecewise expressions must contain an "
