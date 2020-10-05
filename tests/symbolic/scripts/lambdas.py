@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 # coding: utf-8
 
 f1 = lambda x: x**2 + 1

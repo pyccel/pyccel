@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
         factorial, Piecewise,  symbols, S, Float)
 from sympy import Catalan, EulerGamma, GoldenRatio, I
