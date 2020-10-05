@@ -2209,12 +2209,12 @@ class DoConcurrent(For):
 
 class ForAll(Basic):
     """ class that represents the forall statement in fortran"""
-    def __new__(cls, iterable, target, mask, body):
+    def __new__(cls, iter_obj, target, mask, body):
 
-        if not isinstance(iterable, Range):
+        if not isinstance(iter_obj, Range):
             raise TypeError('iterable must be of type Range')
 
-        return Basic.__new__(cls, iterable, target, mask, body)
+        return Basic.__new__(cls, iter_obj, target, mask, body)
 
 
     @property
