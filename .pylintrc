@@ -99,7 +99,8 @@ disable=bad-whitespace,
         multiple-statements, # raised by : 'class MathIsclose (MathFunctionBool): pass'
         abstract-method, # Raised when a method contains raise NotImplementedError
         redundant-keyword-arg,
-        duplicate-code
+        duplicate-code,
+        unused-wildcard-import # Raised by everything not used in pyccel.errors.messages when using 'from pyccel.errors.messages import *'
         
 
 # Enable the message, report, category or checker with the given id(s). You can
