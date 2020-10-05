@@ -1,8 +1,6 @@
 # coding: utf-8
 # pylint: disable=R0201
 
-from sympy.printing.precedence import precedence
-
 from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float, Integer
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Assign, datatype, Variable, Import
@@ -657,18 +655,6 @@ class CCodePrinter(CodePrinter):
 
     def _print_CodeBlock(self, expr):
         return '\n'.join(self._print(b) for b in expr.body)
-
-    def _print_Pow(self, expr):
-        if "Pow" in self.known_functions:
-            return self._print_Function(expr)
-        PREC = precedence(expr)
-        if expr.exp == -1:
-            return '1.0/%s' % (self.parenthesize(expr.base, PREC))
-        elif expr.exp == 0.5:
-            return 'sqrt(%s)' % self._print(expr.base)
-        else:
-            return 'pow(%s, %s)' % (self._print(expr.base),
-                                 self._print(expr.exp))
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
