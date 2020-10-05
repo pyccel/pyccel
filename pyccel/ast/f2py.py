@@ -87,7 +87,7 @@ def as_static_function(func, name=None):
             # ...
 
             _args += additional_args
-            _arguments_inout = [False] * len(additional_args)
+            _arguments_inout += [False] * len(additional_args)
 
             a_new = Variable( a.dtype, a.name,
                               allocatable = a.allocatable,
