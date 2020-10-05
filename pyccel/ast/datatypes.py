@@ -76,8 +76,10 @@ dtype_and_precision_registry = { 'real':('real',default_precision['float']),
                                  'int32':('int',4),
                                  'int64':('int',8),
                                  'int'  :('int', default_precision['int']),
+                                 'pythonint'  :('int', default_precision['int']),
                                  'integer':('int',default_precision['int']),
-                                 'bool' :('bool',default_precision['bool'])}
+                                 'bool' :('bool',default_precision['bool']),
+                                 'pythonbool' :('bool',default_precision['bool'])}
 
 
 class DataType(with_metaclass(Singleton, Basic)):
