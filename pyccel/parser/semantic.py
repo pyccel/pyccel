@@ -1713,9 +1713,9 @@ class SemanticParser(BasicParser):
 
             dvar  = self._infere_type(rhs.args[1], **settings)
             d_var = [self._infere_type(result, **settings) for result in func.results]
-            for i in range(len(d_var)):
-                d_var[i]['shape'] = dvar['shape']
-                d_var[i]['rank' ]  = dvar['rank']
+            for d_var_i in d_var:
+                d_var_i['shape'] = dvar['shape']
+                d_var_i['rank' ]  = dvar['rank']
 
         else:
             d_var  = self._infere_type(rhs, **settings)
@@ -1923,8 +1923,8 @@ class SemanticParser(BasicParser):
         elif isinstance(iterable, Zip):
             args = iterable.args
             indx = self.get_new_variable()
-            for i in range(len(args)):
-                assign = Assign(iterator[i], IndexedBase(args[i])[indx])
+            for i, arg in enumerate(args):
+                assign = Assign(iterator[i], IndexedBase(arg)[indx])
                 assign.set_fst(expr.fst)
                 body = [assign] + body
             iterator = indx
@@ -1940,10 +1940,10 @@ class SemanticParser(BasicParser):
         elif isinstance(iterable, Product):
             args     = iterable.elements
             iterator = list(iterator)
-            for i in range(len(args)):
-                if not isinstance(args[i], Range):
+            for i,arg in enumerate(args):
+                if not isinstance(arg, Range):
                     indx   = self.get_new_variable()
-                    assign = Assign(iterator[i], IndexedBase(args[i])[indx])
+                    assign = Assign(iterator[i], IndexedBase(arg)[indx])
 
                     assign.set_fst(expr.fst)
                     body        = [assign] + body
@@ -2441,8 +2441,7 @@ class SemanticParser(BasicParser):
 
             if 'stack_array' in decorators:
 
-                for i in range(len(local_vars)):
-                    var = local_vars[i]
+                for var in local_vars:
                     var_name = var.name
                     if var_name in decorators['stack_array']:
                         d_var = self._infere_type(var, **settings)

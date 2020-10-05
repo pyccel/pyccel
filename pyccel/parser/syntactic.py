@@ -622,8 +622,8 @@ class SyntaxParser(BasicParser):
 
         if 'stack_array' in decorators:
             args = list(decorators['stack_array'].args)
-            for i in range(len(args)):
-                args[i] = str(args[i]).replace("'", '')
+            for i, arg in enumerate(args):
+                args[i] = str(arg).replace("'", '')
             decorators['stack_array'] = tuple(args)
         # extract the types to construct a header
         if 'types' in decorators:
