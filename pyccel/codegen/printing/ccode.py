@@ -1,7 +1,6 @@
 # coding: utf-8
 # pylint: disable=R0201
 
-from sympy.core import S, Tuple
 from sympy.printing.precedence import precedence
 
 from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float
@@ -14,7 +13,7 @@ from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 
 from pyccel.ast.datatypes import default_precision
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeString
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
 from pyccel.ast.numpyext import NumpyComplex, NumpyFloat
 from pyccel.ast.numpyext import Real as NumpyReal, Imag as NumpyImag
