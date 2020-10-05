@@ -67,10 +67,33 @@ def test_omp_get_cancellation():
     cancel_var = omp_get_cancellation()
     return cancel_var
 
+def test_omp_get_num_teams():
+    from pyccel.stdlib.internal.openmp import omp_get_num_teams
+
+	num_teams = omp_get_num_teams()
+	return num_teams
+
+def test_omp_get_team_num():
+	from pyccel.stdlib.internal.openmp import omp_get_team_num
+
+	team_num = omp_get_team_num()
+	return team_num
+
+def test_omp_is_initial_device():
+	from pyccel.stdlib.internal.openmp import omp_is_initial_device
+
+    is_task_in_init_device = omp_is_initial_device()
+    return is_task_in_init_device
+
+def test_omp_get_initial_device():
+    from pyccel.stdlib.internal.openmp import omp_get_initial_device
+
+    host_device = omp_get_initial_device()
+    return host_device
+
 def test_omp_get_max_task_priority():
     from pyccel.stdlib.internal.openmp import omp_get_max_task_priority
 
+
     max_task_priority_var = omp_get_max_task_priority()
     return max_task_priority_var
-
-
