@@ -13,7 +13,6 @@ from pyccel.codegen.printing.cwrappercode   import cwrappercode
 from .cwrapper import create_c_setup
 
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import *
 
 errors = Errors()
 
