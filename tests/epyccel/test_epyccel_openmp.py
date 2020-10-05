@@ -36,6 +36,9 @@ def test_module_1():
 	assert mod.test_omp_set_get_dynamic(1) == 1
 	assert mod.test_omp_set_get_dynamic(0) == 0
 
+	#OMP_PLACES (env var) should be set proply for this test
+	#assert mod.test_omp_places() >= 0
+	
 	device_num = mod.test_omp_get_initial_device()
 	mod.test_omp_set_get_default_device(device_num)
 
