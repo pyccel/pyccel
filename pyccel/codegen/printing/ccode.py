@@ -4,7 +4,7 @@
 from sympy.core import S, Tuple
 from sympy.printing.precedence import precedence
 
-from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit
+from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float
 from pyccel.ast.core import If, Nil
 from pyccel.ast.core import Assign, datatype, Variable, Import, FunctionCall, TupleVariable
 from pyccel.ast.core import CommentBlock, Comment, SeparatorComment, VariableAddress
@@ -17,6 +17,7 @@ from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeString
 
 from pyccel.ast.numpyext import NumpyComplex, NumpyFloat
+from pyccel.ast.numpyext import Real as NumpyReal, Imag as NumpyImag
 from pyccel.ast.builtins  import Range, PythonFloat, PythonComplex
 from pyccel.ast.core import Declare, ValuedVariable
 
@@ -386,38 +387,41 @@ class CCodePrinter(CodePrinter):
 
     def _print_Print(self, expr):
         self._additional_imports.add("stdio.h")
-        args = []
+        type_to_format = {('real',8)    : '%lf',
+                          ('real',4)    : '%f',
+                          ('complex',8) : '(%lf + %lfj)',
+                          ('complex',4) : '(%f + %fj)',
+                          ('int',4)     : '%d',
+                          ('int',8)     : '%ld',
+                          ('int',2)     : '%hd',
+                          ('int',1)     : '%c',
+                          ('bool',4)    : '%s',
+                          ('string', 0) : '%s'}
         args_format = []
+        args = []
         end = '\\n'
         sep = ' '
         for f in expr.expr:
             if isinstance(f, ValuedVariable):
                 if f.name == 'sep'      :   sep = str(f.value)
                 elif f.name == 'end'    :   end = str(f.value)
-            elif f.dtype is NativeBool():
-                args_format.append("%s")
-                args.append('({}) ? "True" : "False"'.format(self._print(f)))
-            elif f.dtype is NativeInteger():
-                args_format.append("%ld")
-                args.append(self._print(f))
-            elif f.dtype is NativeReal():
-                args_format.append("%lf")
-                args.append(self._print(f))
-            elif f.dtype is NativeString():
-                args_format.append("%s")
-                args.append(self._print(f))
-            elif f.dtype is NativeComplex():
-                args_format.append("(%f + %fj)")
-                complex_n = self._print(f)
-                args.append('creal({}), cimag({})'.format(complex_n, complex_n))
-            else :
-                raise ("{} type is not supported currently".format(f.dtype))
+            else:
+                try:
+                    args_format.append(type_to_format[(self._print(f.dtype), f.precision)])
+                except KeyError:
+                    raise ("{} type is not supported currently".format(f.dtype))
+                if f.dtype is NativeComplex():
+                    args.extend([self._print(NumpyReal(f)), self._print(NumpyImag(f))])
+                elif f.dtype is NativeBool():
+                    args.append('{} ? "True" : "False"'.format(self._print(f)))
+                else:
+                    args.append(self._print(f))
 
         args_format = sep.join(args_format)
         args_format += end
         args_format = '"{}"'.format(args_format)
         code = ', '.join([args_format, *args])
-        return self._get_statement("printf({})".format(code)) + '\n'
+        return "printf({});".format(code)
 
     def find_in_dtype_registry(self, dtype, prec):
         try :
@@ -460,6 +464,8 @@ class CCodePrinter(CodePrinter):
     def _print_NativeComplex(self, expr):
         self._additional_imports.add('complex.h')
         return 'complex'
+    def _print_NativeString(self, expr):
+        return 'string'
 
     def function_signature(self, expr):
         if len(expr.results) == 1:
