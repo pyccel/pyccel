@@ -8,7 +8,7 @@ from sympy.tensor import IndexedBase, Idx
 
 from pyccel.types.ast import (Assign, AugAssign, For, InArgument, Result,
         FunctionDef, Return, Import, Declare, Variable)
-from pyccel.printers import ccode, CCodePrinter
+from pyccel.printers import ccode
 
 x, y, z = symbols('x, y, z')
 a, b, c = symbols('a, b, c')
