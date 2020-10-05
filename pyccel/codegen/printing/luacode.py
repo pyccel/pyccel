@@ -355,13 +355,13 @@ class LuaCodePrinter(CodePrinter):
                              "some condition.")
         lines = []
 
-        for i, (e, c) in enumerate(expr.args):
+        for i, (e, cond) in enumerate(expr.args):
             if i == 0:
-                lines.append("if (%s) {" % self._print(c))
-            elif i == len(expr.args) - 1 and c is True:
+                lines.append("if (%s) {" % self._print(cond))
+            elif i == len(expr.args) - 1 and cond:
                 lines[-1] += " else {"
             else:
-                lines[-1] += " else if (%s) {" % self._print(c)
+                lines[-1] += " else if (%s) {" % self._print(cond)
             code0 = self._print(e)
             lines.append(code0)
             lines.append("}")
