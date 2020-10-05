@@ -260,6 +260,35 @@ class CWrapperCodePrinter(CCodePrinter):
                         '}};\n'.format(name=expr.name, arg_names = arg_names))
 
     def optional_element_management(self, used_names, a, collect_var):
+        """
+        Responsible for collecting the variable required to build the result
+        into a temporary variable and create body of optional args check
+        in format
+            if (pyobject != Py_None){
+                assigne pyobject value to tmp variable
+                collect the adress of the tmp variable
+            }else{
+                collect Null
+            }
+
+        Parameters:
+        ----------
+        used_names : list of strings
+            List of variable and function names to avoid name collisions
+
+        a : Variable
+            The optional variable
+        collect_var : variable
+            the pyobject type variable  holder of value
+
+        Returns
+        -------
+        optional_tmp_var : Variable
+            The tmp variable
+
+        body : list
+            A list of statements
+        """
         optional_tmp_var = Variable(dtype=a.dtype,
                 name = self.get_new_name(used_names, a.name+"_tmp"))
 
