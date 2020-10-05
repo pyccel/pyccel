@@ -63,19 +63,19 @@ def test_call_div_r_r(language):
 
 # -------------------- floor division ---------------------- #
 
-def test_call_div_i_i(language):
+def test_call_fdiv_i_i(language):
     @types(int, int)
-    def div_i_i(x, y):
+    def fdiv_i_i(x, y):
         return x // y
 
-    f = epyccel(div_i_i, language=language)
+    f = epyccel(fdiv_i_i, language=language)
     x = randint(1e9)
     y = randint(low=1, high= 1e3)
 
-    assert (f(x, y) == div_i_i(x, y))
-    assert (f(-x, y) == div_i_i(-x, y))
-    assert (f(x, -y) == div_i_i(x, -y))
-    assert (f(-x, -y) == div_i_i(-x, -y))
+    assert (f(x, y) == fdiv_i_i(x, y))
+    assert (f(-x, y) == fdiv_i_i(-x, y))
+    assert (f(x, -y) == fdiv_i_i(x, -y))
+    assert (f(-x, -y) == fdiv_i_i(-x, -y))
 
 def test_call_fdiv_i_r(language):
     @types(int, 'real')
