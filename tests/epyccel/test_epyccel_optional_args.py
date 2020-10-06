@@ -2,7 +2,6 @@
 
 import pytest
 
-from modules.call_user_defined_funcs import my_mult
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 from conftest       import *

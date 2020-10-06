@@ -1,3 +1,5 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
+
 from .basic     import Basic
 
 from pyccel.ast.numbers   import BooleanTrue, Complex
