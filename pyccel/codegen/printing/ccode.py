@@ -455,16 +455,15 @@ class CCodePrinter(CodePrinter):
         a = expr.args[0]
         b = expr.args[1]
 
-        if (Nil() not in expr.args and a.dtype is NativeBool() and b.dtype is NativeBool()):
-            return '{} {} {}'.format(lhs, Op, rhs)
-
         if Nil() in expr.args:
             lhs = VariableAddress(expr.lhs) if isinstance(expr.lhs, Variable) else expr.lhs
             rhs = VariableAddress(expr.rhs) if isinstance(expr.rhs, Variable) else expr.rhs
 
             lhs = self._print(lhs)
             rhs = self._print(rhs)
+            return '{} {} {}'.format(lhs, Op, rhs)
 
+        if (a.dtype is NativeBool() and b.dtype is NativeBool()):
             return '{} {} {}'.format(lhs, Op, rhs)
         else:
             errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
