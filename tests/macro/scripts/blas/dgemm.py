@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 # TODO - beta, ta, tb must optional
 
 from pyccel.stdlib.internal.blas import dgemm

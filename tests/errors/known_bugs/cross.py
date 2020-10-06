@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from numpy import ones, empty, cross
 b = ones((2,3))
 a = ones((2,3))

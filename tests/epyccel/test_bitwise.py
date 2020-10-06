@@ -1,5 +1,5 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 import pytest
-import numpy as np
 
 from pyccel.epyccel import epyccel
 from modules import bitwise
@@ -101,7 +101,7 @@ def test_bit_or_i_i(language, a, b):
             pytest.mark.xfail(reason="problem in wrapping issue #370"),
             pytest.mark.fortran]
         )
-   ]
+    ]
 )
 def test_bit_or_b_b(language):
     f1 = bitwise.bit_or_b_b

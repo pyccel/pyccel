@@ -7,7 +7,7 @@ def lambdify(f):
     args = symbols(args)
     expr = f(*args)
     def wrapper(*vals):
-       return  expr.subs(zip(args,vals)).doit()
+        return  expr.subs(zip(args,vals)).doit()
 
     return wrapper
 
@@ -21,9 +21,9 @@ def bypass(f):
     return f
 
 def types(*args,**kw):
-    def id(f):
+    def identity(f):
         return f
-    return id
+    return identity
 
 def pure(f):
     return f
@@ -35,6 +35,6 @@ def elemental(f):
     return f
 
 def stack_array(*args, **kw):
-    def id(f):
+    def identity(f):
         return f
-    return id
+    return identity

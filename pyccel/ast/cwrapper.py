@@ -8,7 +8,7 @@ from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, Nat
 
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable
 from .core      import AliasAssign, Assign, Return
-from .core      import If, IfTernaryOperator
+from .core      import IfTernaryOperator
 
 from .numpyext  import Real as NumpyReal, Imag as NumpyImag
 
