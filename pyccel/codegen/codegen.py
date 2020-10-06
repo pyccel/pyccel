@@ -10,9 +10,6 @@ from pyccel.ast.core      import EmptyNode, NewLine, Comment, CommentBlock
 from pyccel.ast.headers   import Header
 from pyccel.errors.errors import Errors
 
-# TODO improve this import
-from pyccel.errors.messages import *
-
 _extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
 _header_extension_registry = {'fortran': None, 'c':'h',  'python':None}
 printer_registry    = {'fortran':fcode, 'c':ccode, 'python':pycode}
@@ -159,7 +156,6 @@ class Codegen(object):
 
         funcs      = []
         interfaces = []
-        body = []
 
 
         for i in namespace.functions.values():
@@ -275,9 +271,5 @@ class Codegen(object):
                     f.write(line)
 
         return filename
-
-
-class FCodegen(Codegen):
-    pass
 
 

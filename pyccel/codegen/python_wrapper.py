@@ -10,11 +10,9 @@ from pyccel.ast.f2py                        import as_static_function_call
 from pyccel.ast.core                        import SeparatorComment
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import cwrappercode
-from .utilities import language_extension
 from .cwrapper import create_c_setup
 
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import *
 
 errors = Errors()
 
@@ -55,11 +53,11 @@ def compile_f2py( filename, *,
     elif compiler == 'gcc':
         _vendor = 'unix'
 
-    elif compiler == 'ifort' or compiler == 'icc':
+    elif compiler in ['ifort', 'icc']:
         _vendor = 'intelem'
 
     elif compiler == 'pgfortran':
-       _vendor = 'pg'
+        _vendor = 'pg'
 
     else:
         raise NotImplementedError('Only gfortran, gcc, ifort, icc and pgi are available for the moment')

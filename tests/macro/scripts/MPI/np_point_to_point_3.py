@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from mpi4py import MPI
 from numpy import zeros
 # we need to declare these variables somehow,
