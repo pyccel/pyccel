@@ -5,7 +5,13 @@ from pyccel.decorators import types
 from conftest       import *
 
 #------------------------------------------------------------------------------
-@pytest.mark.xfail(reason="f2py does not support optional arguments https://github.com/numpy/numpy/issues/4013")
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="f2py does not support optional arguments"),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c)
+    ]
+)
 def test_f1(language):
     @types('int')
     def f1(x = None):
@@ -22,7 +28,13 @@ def test_f1(language):
     assert f(0) == f1(0)
     # ...
 #------------------------------------------------------------------------------
-@pytest.mark.xfail(reason="f2py does not support optional arguments https://github.com/numpy/numpy/issues/4013")
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="f2py does not support optional arguments"),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c)
+    ]
+)
 def test_f2(language):
     @types('real')
     def f2(x = None):
@@ -39,7 +51,12 @@ def test_f2(language):
     assert f(0.0) == f2(0.0)
     # ...
 #------------------------------------------------------------------------------
-@pytest.mark.xfail(reason="f2py does not support optional arguments https://github.com/numpy/numpy/issues/4013")
+@pytest.mark.parametrize('language' , [
+    pytest.param("fortran", marks = [
+        pytest.mark.xfail(reason="f2py does not support optional arguments"),
+        pytest.mark.fortran]),
+    pytest.param("c" , marks = pytest.mark.c)
+])
 def test_f3(language):
     @types('complex')
     def f3(x = None):
@@ -55,7 +72,13 @@ def test_f3(language):
     assert f(None) == f3(None)
     # ...
 #------------------------------------------------------------------------------
-@pytest.mark.xfail(reason="f2py does not support optional arguments https://github.com/numpy/numpy/issues/4013")
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="f2py does not support optional arguments"),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c)
+    ]
+)
 def test_f4(language):
     @types('bool')
     def f4(x = None):
