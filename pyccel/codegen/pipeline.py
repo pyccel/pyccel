@@ -181,6 +181,7 @@ def execute_pyccel(fname, *,
 
         if errors.has_warnings():
             errors.check()
+            errors.reset()
 
         #------------------------------------------------------
         # TODO: collect dependencies and proceed recursively
