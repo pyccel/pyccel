@@ -354,7 +354,7 @@ class CCodePrinter(CodePrinter):
         return '!{}'.format(a)
 
     def _print_PyccelMod(self, expr):
-        self._additional_imports.add("math.h")
+        self._additional_imports.add("math")
 
         first = self._print(expr.args[0])
         second = self._print(expr.args[1])
@@ -375,10 +375,10 @@ class CCodePrinter(CodePrinter):
         if expr.dtype is NativeComplex():
             b = self._print(b if b.dtype is NativeComplex() else PythonComplex(b))
             e = self._print(e if e.dtype is NativeComplex() else PythonComplex(e))
-            self._additional_imports.add("complex.h")
+            self._additional_imports.add("complex")
             return 'cpow({}, {})'.format(b, e)
 
-        self._additional_imports.add("math.h")
+        self._additional_imports.add("math")
         b = self._print(b if b.dtype is NativeReal() else PythonFloat(b))
         e = self._print(e if e.dtype is NativeReal() else PythonFloat(e))
         code = 'pow({}, {})'.format(b, e)
