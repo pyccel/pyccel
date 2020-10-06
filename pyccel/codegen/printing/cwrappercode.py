@@ -9,7 +9,7 @@ from pyccel.ast.numbers   import BooleanTrue
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import VariableAddress, Import, IsNot
+from pyccel.ast.core import VariableAddress, Import, IsNot, PyccelNe
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
@@ -20,6 +20,7 @@ from pyccel.ast.cwrapper import PyErr_SetString, PyType_Check
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 
 from pyccel.errors.errors import Errors
+from pyccel.errors.messages import *
 
 errors = Errors()
 
