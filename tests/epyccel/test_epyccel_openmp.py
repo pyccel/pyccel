@@ -36,6 +36,9 @@ def test_module_1():
 	assert mod.test_omp_set_get_dynamic(1) == 1
 	assert mod.test_omp_set_get_dynamic(0) == 0
 
+	#something wierd happening here, the return is a massive number
+	assert mod.test_omp_get_thread_limit() >= 0
+
 	max_active_level = 5
 	#if the given max_active_level less than 0, omp_get_max_active_levels() gonna return (MAX_INT + (- max_active_level)) as result
 	#example omp_get_max_active_levels(-1) will give 2147483647

@@ -66,6 +66,13 @@ def test_omp_get_cancellation():
 	cancel_var = omp_get_cancellation()
 	return cancel_var
 
+def test_omp_get_thread_limit():
+	from pyccel.stdlib.internal.openmp import omp_get_thread_limit
+
+	maximum_threads_available = omp_get_thread_limit()
+	return maximum_threads_available
+
+
 @types ('int')
 def test_omp_get_set_max_active_levels(max_active_levels):
 	from pyccel.stdlib.internal.openmp import omp_get_max_active_levels, omp_set_max_active_levels  
