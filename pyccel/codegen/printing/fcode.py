@@ -1,5 +1,6 @@
 # coding: utf-8
 # pylint: disable=R0201
+# pylint: disable=missing-function-docstring
 
 """Print to F90 standard. Trying to follow the information provided at
 www.fortran90.org as much as possible."""
@@ -17,7 +18,6 @@ from numpy import asarray
 from sympy.core import Symbol
 from sympy.core import Tuple
 from sympy.core.function import Function, Application
-from sympy import preorder_traversal
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
 
@@ -26,10 +26,8 @@ from sympy.logic.boolalg import Not
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import Nil
-from pyccel.ast.core import Module
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
-from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import Subroutine
 from pyccel.ast.core import ErrorExit
 from pyccel.ast.core import Product
@@ -38,7 +36,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              TupleVariable, Declare,
                              IndexedVariable, CodeBlock,
                              IndexedElement, Slice, Dlist,
-                             DottedName, AsName, DottedVariable,
+                             DottedName, AsName,
                              If, PyccelArraySize)
 
 
@@ -53,7 +51,6 @@ from pyccel.ast.datatypes import NativeSymbol, NativeString
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
-from pyccel.ast.datatypes import default_precision
 from pyccel.ast.numbers   import Integer, Float
 from pyccel.ast.numbers   import BooleanTrue
 
@@ -536,8 +533,8 @@ class FCodePrinter(CodePrinter):
         return ' % '.join(self._print(n) for n in expr.name)
 
     def _print_Concatenate(self, expr):
-         code = ', '.join(self._print(a) for a in expr.args)
-         return '[' + code + ']'
+        code = ', '.join(self._print(a) for a in expr.args)
+        return '[' + code + ']'
 
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
@@ -803,7 +800,7 @@ class FCodePrinter(CodePrinter):
                 severity='fatal')
 
         if rank == 0:
-                return '1'
+            return '1'
 
         return str(functools.reduce(operator.mul, shape ))
 
@@ -910,7 +907,7 @@ class FCodePrinter(CodePrinter):
 
         # Compute intent string
         if intent:
-            if intent == 'in' and rank == 0 and is_static == False:
+            if intent == 'in' and rank == 0 and is_static is False:
                 intentstr = ', value'
             else:
                 intentstr = ', intent({})'.format(intent)
@@ -1052,9 +1049,9 @@ class FCodePrinter(CodePrinter):
             return '{0} = {1}\n'.format(lhs_code, rhs_code)
 
         if isinstance(rhs, (PythonInt, Real, NumpyComplex)):
-           lhs = self._print(expr.lhs)
-           rhs = expr.rhs.fprint(self._print)
-           return '{0} = {1}\n'.format(lhs,rhs)
+            lhs = self._print(expr.lhs)
+            rhs = expr.rhs.fprint(self._print)
+            return '{0} = {1}\n'.format(lhs,rhs)
 
         if isinstance(rhs, (Array, Linspace, Diag, Cross, Where, PyccelArraySize)):
             return rhs.fprint(self._print, expr.lhs) + '\n'
@@ -1345,7 +1342,6 @@ class FCodePrinter(CodePrinter):
                     dec = Declare(result.dtype, result, intent='out')
                 args_decs[str(result)] = dec
 
-            names = [str(res.name) for res in expr.results]
             functions = expr.functions
 
         else:
@@ -1918,7 +1914,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_ForIterator(self, expr):
         return self._print_For(expr)
-        depth = expr.depth
 
         prolog = ''
         epilog = ''
@@ -2038,7 +2033,7 @@ class FCodePrinter(CodePrinter):
                 lines.append("else if (%s) then\n" % self._print(c))
 
             if isinstance(e, (list, tuple, Tuple, PythonTuple)):
-                lines.extend(self._print(e) for e in ee)
+                lines.extend(self._print(ee) for ee in e)
             else:
                 lines.append(self._print(e))
 

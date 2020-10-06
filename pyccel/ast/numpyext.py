@@ -7,7 +7,6 @@ from sympy import Integer as sp_Integer
 from sympy import Expr
 from sympy import Rational as sp_Rational
 from sympy.core.function import Application
-from sympy.core.assumptions import StdFactKB
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
 from .basic import PyccelAstNode
@@ -18,9 +17,8 @@ from .core  import (Variable, IndexedElement, Slice, Len,
 from .core           import PyccelPow, PyccelMinus, PyccelAssociativeParenthesis
 from .core           import PyccelMul, PyccelAdd
 from .core           import broadcast
-from .core           import create_variable
-from .core           import CodeBlock
 from .core           import ClassDef, FunctionDef
+from .core           import IndexedVariable
 
 from .builtins       import PythonInt, PythonBool
 from .builtins       import PythonFloat, PythonTuple, PythonComplex
@@ -28,7 +26,6 @@ from .datatypes      import dtype_and_precision_registry as dtype_registry
 from .datatypes      import default_precision
 from .datatypes      import datatype
 from .datatypes      import NativeInteger, NativeReal, NativeComplex, NativeBool
-from .mathext        import MathFloor
 from .numbers        import Integer, Float
 from .type_inference import str_dtype
 
@@ -166,7 +163,6 @@ class Array(Application, NumpyNewArray):
         self._rank  = len(self._shape)
 
     def _sympystr(self, printer):
-        sstr = printer.doprint
         return self.arg
 
     @property
@@ -319,9 +315,9 @@ class Matmul(Application, PyccelAstNode):
             raise TypeError('cannot determine the type of {}'.format(self))
 
         if a.rank == 1 or b.rank == 1:
-           self._rank = 1
+            self._rank = 1
         else:
-           self._rank = 2
+            self._rank = 2
 
         if not (a.shape is None or b.shape is None):
 
@@ -455,7 +451,7 @@ class Linspace(Application, NumpyNewArray):
             size = args[2]
 
         else:
-           raise ValueError('Range has at most 3 arguments')
+            raise ValueError('Range has at most 3 arguments')
 
         index = Variable('int', 'linspace_index')
         return Basic.__new__(cls, start, stop, size, index)
@@ -509,6 +505,7 @@ class Linspace(Application, NumpyNewArray):
         code = 'linspace({}, {}, {})',format(sstr(self.start),
                                              sstr(self.stop),
                                              sstr(self.size))
+        return code
 
 
     def fprint(self, printer, lhs=None):
@@ -552,10 +549,10 @@ class Diag(Application, NumpyNewArray):
 
 
         if not isinstance(array, _valid_args):
-           raise TypeError('Expecting valid args')
+            raise TypeError('Expecting valid args')
 
         if not isinstance(k, (int, sp_Integer)):
-           raise ValueError('k must be an integer')
+            raise ValueError('k must be an integer')
 
         index = Variable('int', 'diag_index')
         return Basic.__new__(cls, array, v, k, index)
@@ -603,7 +600,6 @@ class Diag(Application, NumpyNewArray):
 
         array = printer(self.array)
         rank  = self.array.rank
-        index = printer(self.index)
 
         if rank == 2:
             lhs   = IndexedVariable(lhs)[self.index]
@@ -640,10 +636,10 @@ class Cross(Application, NumpyNewArray):
 
 
         if not isinstance(a, _valid_args):
-           raise TypeError('Expecting valid args')
+            raise TypeError('Expecting valid args')
 
         if not isinstance(b, _valid_args):
-           raise TypeError('Expecting valid args')
+            raise TypeError('Expecting valid args')
 
         return Basic.__new__(cls, a, b)
 

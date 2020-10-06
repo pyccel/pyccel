@@ -1,8 +1,9 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 # coding: utf-8
 
+import shutil
 import pytest
 import numpy as np
-import shutil
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
@@ -273,7 +274,7 @@ def test_multiple_returns_f13(language):
         if a<b:
             return a
         else:
-           return b
+            return b
 
     f = epyccel(get_min, language=language)
     assert f(2,3) == get_min(2,3)

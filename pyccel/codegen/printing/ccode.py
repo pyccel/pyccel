@@ -1,22 +1,18 @@
 # coding: utf-8
 # pylint: disable=R0201
+# pylint: disable=missing-function-docstring
 
-from sympy.core import S
-from sympy.printing.precedence import precedence
+from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float, Integer
+from pyccel.ast.core import Nil
+from pyccel.ast.core import Assign, datatype, Variable, Import
+from pyccel.ast.core import SeparatorComment, VariableAddress
 
-from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit
-from pyccel.ast.core import If, Nil
-from pyccel.ast.core import Assign, datatype, Variable, Import, FunctionCall
-from pyccel.ast.core import CommentBlock, Comment, SeparatorComment, VariableAddress
-
-from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
-from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
+from pyccel.ast.core import PyccelAdd, PyccelMul
 
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
-from pyccel.ast.numpyext import NumpyComplex, NumpyFloat
+from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.builtins  import Range, PythonFloat, PythonComplex
 from pyccel.ast.core import Declare
 
@@ -241,7 +237,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonBool(self, expr):
         value = self._print(expr.arg)
-        return '{} != 0'.format(value)
+        return '({} != 0)'.format(value)
 
     def _print_Complex(self, expr):
         return self._print(PyccelAdd(expr.real,
@@ -661,27 +657,11 @@ class CCodePrinter(CodePrinter):
     def _print_CodeBlock(self, expr):
         return '\n'.join(self._print(b) for b in expr.body)
 
-    def _print_Pow(self, expr):
-        if "Pow" in self.known_functions:
-            return self._print_Function(expr)
-        PREC = precedence(expr)
-        if expr.exp == -1:
-            return '1.0/%s' % (self.parenthesize(expr.base, PREC))
-        elif expr.exp == 0.5:
-            return 'sqrt(%s)' % self._print(expr.base)
-        else:
-            return 'pow(%s, %s)' % (self._print(expr.base),
-                                 self._print(expr.exp))
-
-    def _print_Rational(self, expr):
-        p, q = int(expr.p), int(expr.q)
-        return '%d.0L/%d.0L' % (p, q)
-
     def _print_Indexed(self, expr):
         # calculate index for 1d array
         dims = expr.shape
-        elem = S.Zero
-        offset = S.One
+        elem = Integer(0)
+        offset = Integer(1)
         for i in reversed(list(range(expr.rank))):
             elem += expr.indices[i]*offset
             offset *= dims[i]
@@ -743,7 +723,7 @@ class CCodePrinter(CodePrinter):
         return self._handle_is_operator("==", expr)
 
     def _print_Piecewise(self, expr):
-        if expr.args[-1].cond != True:
+        if expr.args[-1].cond is not True:
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.
             raise ValueError("All Piecewise expressions must contain an "
@@ -756,7 +736,7 @@ class CCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) {" % self._print(c))
-                elif i == len(expr.args) - 1 and c == True:
+                elif i == len(expr.args) - 1 and c is True:
                     lines.append("else {")
                 else:
                     lines.append("else if (%s) {" % self._print(c))
@@ -865,6 +845,7 @@ class CCodePrinter(CodePrinter):
             level += increase[n]
         return pretty
 
+    _print_Function = CodePrinter._print_not_supported
 
 def ccode(expr, parser, assign_to=None, **settings):
     """Converts an expr to a string of c code
