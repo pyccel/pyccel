@@ -109,7 +109,7 @@ class TypeHeader(BasicStmt):
 
 class StringStmt(BasicStmt):
     def __init__(self, **kwargs):
-       self.arg = kwargs.pop('arg')
+        self.arg = kwargs.pop('arg')
     @property
     def expr(self):
         return String(repr(str(self.arg)))
@@ -290,25 +290,25 @@ class MetavarHeaderStmt(BasicStmt):
 
 
 class InterfaceStmt(BasicStmt):
-      """ class represent the header interface statement"""
+    """ class represent the header interface statement"""
 
-      def __init__(self, **kwargs):
-          """
-          Constructor of Interface statement
+    def __init__(self, **kwargs):
+        """
+        Constructor of Interface statement
 
-          name: str
+        name: str
 
-          args: list of function names
+        args: list of function names
 
-          """
+        """
 
-          self.name = kwargs.pop('name')
-          self.args = kwargs.pop('args')
-          super(InterfaceStmt, self).__init__(**kwargs)
+        self.name = kwargs.pop('name')
+        self.args = kwargs.pop('args')
+        super(InterfaceStmt, self).__init__(**kwargs)
 
-      @property
-      def expr(self):
-          return InterfaceHeader(self.name, self.args)
+    @property
+    def expr(self):
+        return InterfaceHeader(self.name, self.args)
 
 # ...
 class MacroArg(BasicStmt):
@@ -361,21 +361,21 @@ class MacroStmt(BasicStmt):
 # ...
 
 class MacroList(BasicStmt):
-     """ reresent a MacroList statement"""
-     def __init__(self, **kwargs):
-         ls = []
-         for i in kwargs.pop('ls'):
-             if isinstance(i, MacroArg):
-                 ls.append(i.expr)
-             else:
-                 ls.append(i)
-         self.ls = ls
+    """ reresent a MacroList statement"""
+    def __init__(self, **kwargs):
+        ls = []
+        for i in kwargs.pop('ls'):
+            if isinstance(i, MacroArg):
+                ls.append(i.expr)
+            else:
+                ls.append(i)
+        self.ls = ls
 
-         super(MacroList, self).__init__(**kwargs)
+        super(MacroList, self).__init__(**kwargs)
 
-     @property
-     def expr(self):
-         return self.ls
+    @property
+    def expr(self):
+        return self.ls
 
 
 class FunctionMacroStmt(BasicStmt):

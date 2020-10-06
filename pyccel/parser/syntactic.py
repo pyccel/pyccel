@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=R0201
+# pylint: disable=missing-function-docstring
 
 import os
 import re
 
 import ast
-#==============================================================================
-from pyccel.parser.extend_tree import extend_tree
-from pyccel.parser.extend_tree import CommentLine, CommentMultiLine
 #==============================================================================
 
 from sympy.core.function import Function
@@ -56,14 +54,15 @@ from pyccel.ast.core import create_variable
 from pyccel.ast.core import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
-from pyccel.ast.core import PyccelOperator, PyccelUnary, PyccelUnarySub
+from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
+from pyccel.ast.core import PyccelUnary, PyccelUnarySub
 
 from pyccel.ast.builtins import Print
 from pyccel.ast.headers  import Header, MetaVariable
 from pyccel.ast.numbers  import Integer, Float, Complex, BooleanFalse, BooleanTrue
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 
+from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.base import BasicParser
 from pyccel.parser.utilities import read_file
 from pyccel.parser.utilities import get_default_path
@@ -72,7 +71,7 @@ from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp  import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
-from pyccel.errors.errors import Errors, PyccelSyntaxError
+from pyccel.errors.errors import Errors
 
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
@@ -118,7 +117,7 @@ class SyntaxParser(BasicParser):
 
         self._fst = tree
 
-        self._used_names = set([str(a.id) for a in ast.walk(self._fst) if isinstance(a, ast.Name)])
+        self._used_names = set(str(a.id) for a in ast.walk(self._fst) if isinstance(a, ast.Name))
         self._dummy_counter = 1
 
         self.parse(verbose=True)
@@ -624,8 +623,8 @@ class SyntaxParser(BasicParser):
 
         if 'stack_array' in decorators:
             args = list(decorators['stack_array'].args)
-            for i in range(len(args)):
-                args[i] = str(args[i]).replace("'", '')
+            for i, arg in enumerate(args):
+                args[i] = str(arg).replace("'", '')
             decorators['stack_array'] = tuple(args)
         # extract the types to construct a header
         if 'types' in decorators:
@@ -864,14 +863,12 @@ class SyntaxParser(BasicParser):
 
         iterator = self._visit(stmt.target)
         iterable = self._visit(stmt.iter)
-        ifs = stmt.ifs
         expr = For(iterator, iterable, [], strict=False)
         expr.set_fst(stmt)
         return expr
 
     def _visit_ListComp(self, stmt):
 
-        import numpy as np
         result = self._visit(stmt.elt)
         generators = list(self._visit(stmt.generators))
 
@@ -926,10 +923,8 @@ class SyntaxParser(BasicParser):
             if len(grandparent.targets) != 1:
                 raise NotImplementedError("Cannot unpack function with generator expression argument")
             lhs = self._visit(grandparent.targets[0])
-            cond = False
         else:
             lhs = self.get_new_variable()
-            cond = True
 
         body = result
         if name == 'sum':

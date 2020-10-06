@@ -6,7 +6,6 @@ from sympy import sympify
 from .basic          import Basic, PyccelAstNode
 from .core           import local_sympify
 from .datatypes      import default_precision
-from .datatypes      import datatype
 from .datatypes      import NativeInteger, NativeGeneric
 
 __all__ = (
