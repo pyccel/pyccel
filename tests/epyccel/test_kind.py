@@ -1,11 +1,8 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
-import shutil
 
 from conftest import *
-def clean_test():
-    shutil.rmtree('__pycache__', ignore_errors=True)
-    shutil.rmtree('__epyccel__', ignore_errors=True)
 
 def test_or_boolean(language):
     @types('bool', 'bool')
@@ -64,23 +61,14 @@ def test_output_types_2(language):
         return b
 
     f = epyccel(cast_to_float,language= language)
-    assert(type(cast_to_float(5)) == type(f(5)))    # pylint: disable=unidiomatic-typecheck 
+    assert(type(cast_to_float(5)) == type(f(5)))    # pylint: disable=unidiomatic-typecheck
 
 def test_output_types_3(language):
     @types('int')
     def cast_to_bool(a):
         b = bool(a)
         return b
-    
+
     f = epyccel(cast_to_bool, language=language)
     assert(cast_to_bool(1) == f(1))
-
-
-
-##==============================================================================
-## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
-##==============================================================================
-
-def teardown_module():
-    clean_test()
 

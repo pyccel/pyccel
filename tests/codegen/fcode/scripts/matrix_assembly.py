@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from numpy import zeros
 w_u = zeros(4, 'double')
 w_v = zeros(4, 'double')

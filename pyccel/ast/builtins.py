@@ -8,24 +8,22 @@ In this module we implement some of them in alphabetical order.
 """
 
 from sympy import Symbol, Function, Tuple
-from sympy import Float, Expr
+from sympy import Expr
 from sympy import sympify
-from sympy.core.assumptions import StdFactKB
 from sympy.tensor import Indexed, IndexedBase
 
 from .basic     import Basic, PyccelAstNode
-from .datatypes import (datatype, DataType, NativeSymbol,
-                        NativeInteger, NativeBool, NativeReal,
-                        NativeComplex, NativeRange, NativeTensor, NativeString,
-                        NativeGeneric, NativeTuple, default_precision)
-from .numbers   import Integer
+from .datatypes import (NativeInteger, NativeBool, NativeReal,
+                        NativeComplex, NativeString,
+                        NativeGeneric, default_precision)
+from .numbers   import Integer, Float
 
 __all__ = (
-    'Bool',
+    'PythonBool',
     'PythonComplex',
     'Enumerate',
     'PythonFloat',
-    'Int',
+    'PythonInt',
     'PythonTuple',
     'Len',
     'List',
@@ -47,7 +45,7 @@ local_sympify = {
 }
 
 #==============================================================================
-class Bool(Expr, PyccelAstNode):
+class PythonBool(Expr, PyccelAstNode):
     """ Represents a call to Python's native bool() function.
     """
     _rank = 0
@@ -158,7 +156,7 @@ class PythonFloat(Expr, PyccelAstNode):
         return code
 
 #==============================================================================
-class Int(Expr, PyccelAstNode):
+class PythonInt(Expr, PyccelAstNode):
     """ Represents a call to Python's native int() function.
     """
 
@@ -166,7 +164,7 @@ class Int(Expr, PyccelAstNode):
     _shape     = ()
     _precision = default_precision['integer']
     _dtype     = NativeInteger()
-        
+
     def __new__(cls, arg):
         return Expr.__new__(cls, arg)
 
@@ -228,9 +226,9 @@ class PythonTuple(Expr, PyccelAstNode):
                 else:
                     raise TypeError('cannot determine the type of {}'.format(self))
 
-                
+
                 shapes = [a.shape for a in args]
-                
+
                 if all(sh is not None for sh in shapes):
                     self._shape = (Integer(len(args)), ) + shapes[0]
                     self._rank  = len(self._shape)
@@ -312,9 +310,9 @@ class List(Tuple, PyccelAstNode):
                 self._precision  = max(a.precision for a in bools)
             else:
                 raise TypeError('cannot determine the type of {}'.format(self))
-            
+
             shapes = [a.shape for a in args]
-            
+
             if all(sh is not None for sh in shapes):
                 assert all(sh==shapes[0] for sh in shapes)
                 self._shape = (len(args), ) + shapes[0]
@@ -437,9 +435,9 @@ class Zip(Basic):
 
 #==============================================================================
 python_builtin_datatypes_dict = {
-    'bool'   : Bool,
+    'bool'   : PythonBool,
     'float'  : PythonFloat,
-    'int'    : Int,
+    'int'    : PythonInt,
     'complex': PythonComplex
 }
 

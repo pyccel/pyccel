@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 # pylint: disable=unused-variable
 
 #$ header function incr_(int)

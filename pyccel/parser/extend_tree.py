@@ -23,7 +23,7 @@ class CommentMultiLine(CommentLine):
     """"New AST node representing a multi-line comment"""
 
 
-def get_comments(code): 
+def get_comments(code):
     lines = code.split("\n")
     comments        = []
     lineno_comments = []
@@ -65,7 +65,7 @@ def get_comments(code):
                         txt = txt + '\n' + s
 
                 comments.append(CommentMultiLine(txt, lineno, col_offset))
- 
+
     assert len(lineno_comments) == len(comments)
     return array(lineno_comments), array(comments), array(else_no)
 
@@ -212,7 +212,7 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
                 if col_offset >= comments[k].col_offset and not orelse:
                     break
         else:
-            k = k+1 
+            k = k+1
 
         if orelse and not elif_orelse and k>0:
             expr = logical_and(logical_and(else_no >= comment_lines_no[0], else_no <= comment_lines_no[k-1]), else_no<=body_last_lineno)

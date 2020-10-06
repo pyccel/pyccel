@@ -5,25 +5,21 @@ from collections import OrderedDict
 from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.numbers   import BooleanTrue
-from pyccel.ast.builtins import Bool
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
-from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, Symbol, Constant
-from pyccel.ast.core import create_incremented_string, Declare, SeparatorComment
-from pyccel.ast.core import IfTernaryOperator, VariableAddress, Import, IsNot, PyccelNe
+from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
+from pyccel.ast.core import create_incremented_string, SeparatorComment
+from pyccel.ast.core import VariableAddress, Import, IsNot
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
-from pyccel.ast.cwrapper import Py_True, Py_False, Py_None
+from pyccel.ast.cwrapper import Py_None
 from pyccel.ast.cwrapper import PyErr_SetString, PyType_Check
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 
-from pyccel.ast.type_inference import str_dtype
-
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import *
 
 errors = Errors()
 
@@ -32,6 +28,8 @@ __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 dtype_registry = {('pyobject', 0) : 'PyObject'}
 
 class CWrapperCodePrinter(CCodePrinter):
+    """A printer to convert a python module to strings of c code creating
+    an interface between python and an implementation of the module in c"""
     def __init__(self, parser, settings={}):
         CCodePrinter.__init__(self, parser,settings)
         self._cast_functions_dict = OrderedDict()
@@ -207,13 +205,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
-
-    def _print_FuncCall(self, expr):
-        name = expr.name
-        args = ', '.join(['{}'.format(self._print(a)) for a in expr.args])
-        return ('{name}({args})'.format(
-            name = name,
-            args = args))
 
     def _print_PyArg_ParseTupleNode(self, expr):
         name    = 'PyArg_ParseTupleAndKeywords'
@@ -396,7 +387,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
-        self._global_names = set([f.name.name for f in expr.funcs])
+        self._global_names = set(f.name.name for f in expr.funcs)
         sep = self._print(SeparatorComment(40))
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.funcs)
 

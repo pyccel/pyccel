@@ -24,7 +24,7 @@ def cse(expr):
     if not ls:
         return [expr]
     ls += [expr]
-    (ls, m) = sympy_cse(ls)
+    (ls, _) = sympy_cse(ls)
 
     (vars_old, stmts) = map(list, zip(*ls))
     vars_new = []
@@ -113,7 +113,7 @@ def lambdify(expr, args):
         var = stmts[-1].lhs
     else:
         var  = create_variable(expr)
-        stmts[-1] = Assing(var, stmts[-1])
+        stmts[-1] = Assign(var, stmts[-1])
     stmts += [Return([var])]
     set_fst(stmts, args.fst)
     func = FunctionDef(f_name, new_args, [], stmts ,decorators = args.decorators)
@@ -121,12 +121,12 @@ def lambdify(expr, args):
 
 def set_fst(expr, fst):
     if isinstance(expr, (tuple,list,Tuple)):
-         for i in expr:set_fst(i, fst)
+        for i in expr:set_fst(i, fst)
     elif isinstance(expr, For):
-         set_fst(expr.body, fst)
+        set_fst(expr.body, fst)
     elif isinstance(expr, (Assign, AugAssign)):
-         expr.set_fst(fst)
+        expr.set_fst(fst)
     elif isinstance(expr, GC):
-         expr.set_fst(fst)
-         set_fst(expr.loops, fst)
+        expr.set_fst(fst)
+        set_fst(expr.loops, fst)
 
