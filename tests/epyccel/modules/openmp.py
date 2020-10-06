@@ -75,7 +75,7 @@ def test_omp_get_thread_limit():
 
 @types ('int')
 def test_omp_get_set_max_active_levels(max_active_levels):
-	from pyccel.stdlib.internal.openmp import omp_get_max_active_levels, omp_set_max_active_levels  
+	from pyccel.stdlib.internal.openmp import omp_get_max_active_levels, omp_set_max_active_levels
 
 	omp_set_max_active_levels(max_active_levels)
 	max_active_levels_var = omp_get_max_active_levels()
@@ -92,14 +92,14 @@ def test_omp_get_level():
 def test_omp_get_ancestor_thread_num():
 	from pyccel.stdlib.internal.openmp import omp_get_ancestor_thread_num, omp_get_active_level
 
-	active_level = omp_get_active_level()	
+	active_level = omp_get_active_level()
 	ancestor_thread = omp_get_ancestor_thread_num(active_level)
 	return ancestor_thread
 
 def test_omp_get_team_size():
 	from pyccel.stdlib.internal.openmp import omp_get_team_size, omp_get_active_level
 
-	active_level = omp_get_active_level()	
+	active_level = omp_get_active_level()
 	team_size = omp_get_team_size(active_level)
 	return team_size
 
@@ -123,7 +123,7 @@ def test_omp_get_proc_bind():
 
 def test_omp_places():
 	from pyccel.stdlib.internal.openmp import omp_get_partition_num_places, omp_get_partition_place_nums, omp_get_place_num, omp_get_place_proc_ids, omp_get_place_num_procs, omp_get_num_places
-	
+
 	partition_num_places = omp_get_partition_num_places()
 	#partition_places_num =  omp_get_partition_place_nums() ERROR at Fortran compilation stage
 	place_num = omp_get_place_num()
@@ -174,6 +174,9 @@ def test_omp_get_initial_device():
 def test_omp_get_max_task_priority():
 	from pyccel.stdlib.internal.openmp import omp_get_max_task_priority
 
-
 	max_task_priority_var = omp_get_max_task_priority()
 	return max_task_priority_var
+
+# @types('real[:,:], real[:], real[:]')
+# def omp_mm(A, x, out):
+# 	print

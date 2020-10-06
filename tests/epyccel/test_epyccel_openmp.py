@@ -8,10 +8,11 @@ import numpy as np
 from pyccel.epyccel import epyccel
 
 #==============================================================================
-def test_module_1():
-	import modules.openmp as openmp
+import modules.openmp as openmp
 
-	mod = epyccel(openmp, accelerator='openmp')
+mod = epyccel(openmp, accelerator='openmp')
+
+def test_OMP_functions():
 	mod.set_num_threads(4)
 	assert mod.get_num_threads() == 4
 	assert mod.f1(0) == 0
@@ -22,7 +23,7 @@ def test_module_1():
 
 	assert mod.test_omp_number_of_procs() == multiprocessing.cpu_count()
 	mod.set_num_threads(8)
-	assert mod.get_num_threads() == 8 
+	assert mod.get_num_threads() == 8
 	cancel_var = os.environ.get('OMP_CANCELLATION')
 	if cancel_var is not None:
 		if cancel_var.lower() == 'true':
@@ -58,7 +59,7 @@ def test_module_1():
 
 	#OMP_PLACES (env var) should be set proply for this test
 	#assert mod.test_omp_places() >= 0
-	
+
 	device_num = mod.test_omp_get_initial_device()
 	mod.test_omp_set_get_default_device(device_num)
 
@@ -73,3 +74,15 @@ def test_module_1():
 	assert mod.test_omp_get_max_task_priority() >= 0
 
 	assert mod.f1(5) == 5
+
+def test_OMP_result():
+    A1 = np.ones([3, 2])
+    A1[1,0] = 2
+    A2 = np.copy(A1)
+    x1 = np.ones([2, 1])
+    x2 = np.copy(x1)
+    y1 = np.empty([3,1])
+    y2 = np.empty([3,1])
+	# f1(A1, x1, y1)
+	# f2(A2, x2, y2)
+    # assert np.array_equal(y1, y2)
