@@ -1,3 +1,5 @@
+# pylint: disable=wildcard-import
+
 import pytest
 import multiprocessing
 import os
