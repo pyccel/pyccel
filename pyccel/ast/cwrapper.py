@@ -5,11 +5,10 @@ from .builtins  import Bool
 
 from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
-from .datatypes import NativeVoid
 
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress
 from .core      import AliasAssign, Assign, Return
-from .core      import If, IfTernaryOperator, PyccelEq
+from .core      import IfTernaryOperator, PyccelEq
 
 from .numpyext  import Real as NumpyReal, Imag as NumpyImag
 
