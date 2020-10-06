@@ -66,6 +66,54 @@ def test_omp_get_cancellation():
 	cancel_var = omp_get_cancellation()
 	return cancel_var
 
+@types ('int')
+def test_omp_get_set_max_active_levels(max_active_levels):
+	from pyccel.stdlib.internal.openmp import omp_get_max_active_levels, omp_set_max_active_levels  
+
+	omp_set_max_active_levels(max_active_levels)
+	max_active_levels_var = omp_get_max_active_levels()
+	return max_active_levels_var
+
+
+def test_omp_get_level():
+	from pyccel.stdlib.internal.openmp import omp_get_active_level
+
+	nested_parallel_regions = omp_get_active_level()
+	return nested_parallel_regions
+
+
+def test_omp_get_ancestor_thread_num():
+	from pyccel.stdlib.internal.openmp import omp_get_ancestor_thread_num, omp_get_active_level
+
+	active_level = omp_get_active_level()	
+	ancestor_thread = omp_get_ancestor_thread_num(active_level)
+	return ancestor_thread
+
+def test_omp_get_team_size():
+	from pyccel.stdlib.internal.openmp import omp_get_team_size, omp_get_active_level
+
+	active_level = omp_get_active_level()	
+	team_size = omp_get_team_size(active_level)
+	return team_size
+
+def test_omp_get_active_level():
+	from pyccel.stdlib.internal.openmp import omp_get_active_level
+
+	active_level_vars = omp_get_active_level()
+	return active_level_vars
+
+def test_omp_in_final():
+	from pyccel.stdlib.internal.openmp import omp_in_final
+
+	task_region = omp_in_final()
+	return task_region
+
+def test_omp_get_proc_bind():
+	from pyccel.stdlib.internal.openmp import omp_get_proc_bind
+
+	bind_var = omp_get_proc_bind()
+	return bind_var
+
 def test_omp_places():
 	from pyccel.stdlib.internal.openmp import omp_get_partition_num_places, omp_get_partition_place_nums, omp_get_place_num, omp_get_place_proc_ids, omp_get_place_num_procs, omp_get_num_places
 	
@@ -77,7 +125,6 @@ def test_omp_places():
 	#place_num, ids = omp_get_place_proc_ids() ERROR at Fortran compilation stage
 	procs = omp_get_place_num_procs(place_num)
 	num_places = omp_get_num_places()
-
 
 @types ('int')
 def test_omp_set_get_default_device(device_num):

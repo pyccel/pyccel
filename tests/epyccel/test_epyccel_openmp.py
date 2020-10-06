@@ -36,6 +36,21 @@ def test_module_1():
 	assert mod.test_omp_set_get_dynamic(1) == 1
 	assert mod.test_omp_set_get_dynamic(0) == 0
 
+	max_active_level = 5
+	#if the given max_active_level less than 0, omp_get_max_active_levels() gonna return (MAX_INT + (- max_active_level)) as result
+	#example omp_get_max_active_levels(-1) will give 2147483647
+	assert mod.test_omp_get_set_max_active_levels(max_active_level) == max_active_level
+
+	assert mod.test_omp_get_level() >= 0
+
+	assert mod.test_omp_get_ancestor_thread_num() >= 0
+
+	assert mod.test_omp_get_team_size() > 0
+
+	assert mod.test_omp_get_active_level() >= 0
+
+	assert mod.test_omp_get_proc_bind() >= 0
+
 	#OMP_PLACES (env var) should be set proply for this test
 	#assert mod.test_omp_places() >= 0
 	
