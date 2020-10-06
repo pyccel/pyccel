@@ -2,6 +2,7 @@
 
 import pytest
 
+from modules.call_user_defined_funcs import my_mult
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 from conftest       import *
@@ -96,3 +97,40 @@ def test_f4(language):
     assert f(None) == f4(None)
     assert f(False) == f4(False)
     # ...
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="f2py does not support optional arguments"),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c)
+    ]
+)
+def test_f5(language):
+    import modules.Module_3 as mod
+
+    modnew = epyccel(mod, language = language)
+
+    # ...
+    assert mod.func(1) == modnew.func(1)
+    assert mod.func() == modnew.func()
+    assert mod.func(None) == modnew.func(None)
+    assert mod.func(0) == modnew.func(0)
+
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="f2py does not support optional arguments"),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c)
+    ]
+)
+def test_f6(language):
+    import modules.Module_4 as mod
+
+    modnew = epyccel(mod, language = language)
+
+    # ...
+    assert mod.call_optional_1() == modnew.call_optional_1()
+    assert mod.call_optional_2(None) == modnew.call_optional_2(None)
+    assert mod.call_optional_2(0) == modnew.call_optional_2(0)
+    assert mod.call_optional_2() == modnew.call_optional_2()
