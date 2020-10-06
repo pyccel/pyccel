@@ -1,9 +1,11 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
+from numpy.random import randint, uniform
+from numpy import isclose
+
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 from conftest       import *
 
-from numpy.random import randint, uniform
 
 # -------------------- simple division ---------------------- #
 
@@ -16,10 +18,10 @@ def test_call_div_i_i(language):
     x = randint(1e9)
     y = randint(low=1, high= 1e3)
 
-    assert (f(x, y) == div_i_i(x, y))
-    assert (f(-x, y) == div_i_i(-x, y))
-    assert (f(x, -y) == div_i_i(x, -y))
-    assert (f(-x, -y) == div_i_i(-x, -y))
+    assert isclose(f(x, y), div_i_i(x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, y), div_i_i(-x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(x, -y), div_i_i(x, -y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, -y), div_i_i(-x, -y), rtol=1e-14, atol=1e-15)
 
 def test_call_div_i_r(language):
     @types(int, 'real')
@@ -29,10 +31,10 @@ def test_call_div_i_r(language):
     f = epyccel(div_i_r, language=language)
     x = randint(1e9)
     y = uniform(low=1, high= 1e3)
-    assert (f(x, y) == div_i_r(x, y))
-    assert (f(-x, y) == div_i_r(-x, y))
-    assert (f(x, -y) == div_i_r(x, -y))
-    assert (f(-x, -y) == div_i_r(-x, -y))
+    assert isclose(f(x, y), div_i_r(x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, y), div_i_r(-x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(x, -y), div_i_r(x, -y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, -y), div_i_r(-x, -y), rtol=1e-14, atol=1e-15)
 
 def test_call_div_r_i(language):
     @types('real', int)
@@ -42,10 +44,10 @@ def test_call_div_r_i(language):
     f = epyccel(div_r_i, language=language)
     x = uniform(high=1e9)
     y = randint(low=1, high= 1e3)
-    assert (f(x, y) == div_r_i(x, y))
-    assert (f(-x, y) == div_r_i(-x, y))
-    assert (f(x, -y) == div_r_i(x, -y))
-    assert (f(-x, -y) == div_r_i(-x, -y))
+    assert isclose(f(x, y), div_r_i(x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, y), div_r_i(-x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(x, -y), div_r_i(x, -y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, -y), div_r_i(-x, -y), rtol=1e-14, atol=1e-15)
 
 def test_call_div_r_r(language):
     @types('real', 'real')
@@ -55,10 +57,10 @@ def test_call_div_r_r(language):
     f = epyccel(div_r_r, language=language)
     x = uniform(high=1e9)
     y = uniform(low=1e-14, high= 1e3)
-    assert (f(x, y) == div_r_r(x, y))
-    assert (f(-x, y) == div_r_r(-x, y))
-    assert (f(x, -y) == div_r_r(x, -y))
-    assert (f(-x, -y) == div_r_r(-x, -y))
+    assert isclose(f(x, y), div_r_r(x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, y), div_r_r(-x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(x, -y), div_r_r(x, -y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, -y), div_r_r(-x, -y), rtol=1e-14, atol=1e-15)
 
 # -------------------- Complex division ---------------------- #
 
@@ -70,10 +72,10 @@ def test_call_div_c_c(language):
     f = epyccel(div_c_c, language=language)
     x = complex(uniform(high= 1e5), uniform(high= 1e5))
     y = complex(uniform(low=1, high= 1e2), uniform(low=1, high= 1e2))
-    assert (f(x, y) == div_c_c(x, y))
-    assert (f(-x, y) == div_c_c(-x, y))
-    assert (f(x, -y) == div_c_c(x, -y))
-    assert (f(-x, -y) == div_c_c(-x, -y))
+    assert isclose(f(x, y), div_c_c(x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, y), div_c_c(-x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(x, -y), div_c_c(x, -y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, -y), div_c_c(-x, -y), rtol=1e-14, atol=1e-15)
 
 def test_call_div_i_c(language):
     @types(int, 'complex')
@@ -83,10 +85,10 @@ def test_call_div_i_c(language):
     f = epyccel(div_i_c, language=language)
     x = randint(1e5)
     y = complex(uniform(low=1, high= 1e2), uniform(low=1, high= 1e2))
-    assert (f(x, y) == div_i_c(x, y))
-    assert (f(-x, y) == div_i_c(-x, y))
-    assert (f(x, -y) == div_i_c(x, -y))
-    assert (f(-x, -y) == div_i_c(-x, -y))
+    assert isclose(f(x, y), div_i_c(x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, y), div_i_c(-x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(x, -y), div_i_c(x, -y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, -y), div_i_c(-x, -y), rtol=1e-14, atol=1e-15)
 
 def test_call_div_c_i(language):
     @types('complex', int)
@@ -96,10 +98,10 @@ def test_call_div_c_i(language):
     f = epyccel(div_c_i, language=language)
     x = complex(uniform(high= 1e5), uniform(high= 1e5))
     y = randint(low=1, high= 1e2)
-    assert (f(x, y) == div_c_i(x, y))
-    assert (f(-x, y) == div_c_i(-x, y))
-    assert (f(x, -y) == div_c_i(x, -y))
-    assert (f(-x, -y) == div_c_i(-x, -y))
+    assert isclose(f(x, y), div_c_i(x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, y), div_c_i(-x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(x, -y), div_c_i(x, -y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, -y), div_c_i(-x, -y), rtol=1e-14, atol=1e-15)
 
 def test_call_div_r_c(language):
     @types('real', 'complex')
@@ -109,10 +111,10 @@ def test_call_div_r_c(language):
     f = epyccel(div_r_c, language=language)
     x = uniform(high=1e9)
     y = complex(uniform(low=1, high= 1e2), uniform(low=1, high= 1e2))
-    assert (f(x, y) == div_r_c(x, y))
-    assert (f(-x, y) == div_r_c(-x, y))
-    assert (f(x, -y) == div_r_c(x, -y))
-    assert (f(-x, -y) == div_r_c(-x, -y))
+    assert isclose(f(x, y), div_r_c(x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, y), div_r_c(-x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(x, -y), div_r_c(x, -y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, -y), div_r_c(-x, -y), rtol=1e-14, atol=1e-15)
 
 def test_call_div_c_r(language):
     @types('complex', 'real')
@@ -122,10 +124,10 @@ def test_call_div_c_r(language):
     f = epyccel(div_c_r, language=language)
     x = complex(uniform(high= 1e5), uniform(high= 1e5))
     y = uniform(low=1e-14, high= 1e3)
-    assert (f(x, y) == div_c_r(x, y))
-    assert (f(-x, y) == div_c_r(-x, y))
-    assert (f(x, -y) == div_c_r(x, -y))
-    assert (f(-x, -y) == div_c_r(-x, -y))
+    assert isclose(f(x, y), div_c_r(x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, y), div_c_r(-x, y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(x, -y), div_c_r(x, -y), rtol=1e-14, atol=1e-15)
+    assert isclose(f(-x, -y), div_c_r(-x, -y), rtol=1e-14, atol=1e-15)
 
 # -------------------- floor division ---------------------- #
 
