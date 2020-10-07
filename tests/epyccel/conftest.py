@@ -13,12 +13,6 @@ import pytest
 def language(request):
     return request.param
 
-def pytest_runtest_setup(item):
-    teardown()
-
-def pytest_runtest_teardown(item, nextitem):
-    teardown()
-
 def teardown(path_dir = None):
     if path_dir is None:
         path_dir = os.path.dirname(os.path.realpath(__file__))
@@ -37,3 +31,9 @@ def teardown(path_dir = None):
             teardown(file_name)
         elif not f.endswith(".py") and not f.endswith(".rst"):
             os.remove(file_name)
+
+def pytest_runtest_setup(item):
+    teardown()
+
+def pytest_runtest_teardown(item, nextitem):
+    teardown()
