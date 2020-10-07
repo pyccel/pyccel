@@ -4,7 +4,7 @@ from pyccel.decorators import types
 @types('int')
 def basic_optional(a = None):
     if a is  None :
-        return 0
+        return 2
     return a
 
 @types()

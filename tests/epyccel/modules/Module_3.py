@@ -8,5 +8,5 @@ def add_one(x):
 @types('int')
 def func(x = None):
     if x is None:
-        return 0
+        return 2
     return add_one(x)
