@@ -75,14 +75,16 @@ def test_OMP_functions():
 
 	assert mod.f1(5) == 5
 
-def test_OMP_result():
+def test_array_real_2d_1d_matmul():
+    mod.set_num_threads(4)
+    from numpy import matmul
     A1 = np.ones([3, 2])
     A1[1,0] = 2
     A2 = np.copy(A1)
     x1 = np.ones([2, 1])
     x2 = np.copy(x1)
-    y1 = np.empty([3,1])
-    y2 = np.empty([3,1])
-	# f1(A1, x1, y1)
-	# f2(A2, x2, y2)
-    # assert np.array_equal(y1, y2)
+    y1 = np.zeros([3,1])
+    y2 = np.zeros([3,1])
+    mod.omp_matmul(A1, x1, y1)
+    y2[:] = matmul(A2, x2)
+    assert np.array_equal(y1, y2)
