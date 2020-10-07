@@ -26,6 +26,7 @@ class Parser(object):
 
         self._syntax_parser = None
         self._semantic_parser = None
+        self._module_parser = None
 
         self._input_folder = os.path.dirname(filename)
 
@@ -81,6 +82,12 @@ class Parser(object):
     def fst(self):
         return self._syntax_parser.fst
 
+    @property
+    def module_parser(self):
+        """Returns the module parser if the parsed object is a program with a module.
+        Returns None otherwise"""
+        return self._module_parser
+
     def parse(self, d_parsers=None, verbose=False):
         if self._syntax_parser:
             return self._syntax_parser.ast
@@ -111,10 +118,10 @@ class Parser(object):
 
             parser._ast = parse_result.program
 
-            self.module_parser = q
+            self._module_parser = q
         else:
             parser._ast = parse_result.get_focus()
-            self.module_parser = None
+            self._module_parser = None
 
         return parser.ast
 
@@ -173,8 +180,8 @@ class Parser(object):
 
             q = Parser(filename)
             q.parse(d_parsers=d_parsers)
-            if q.module_parser:
-                d_parsers[source] = q.module_parser
+            if q._module_parser:
+                d_parsers[source] = q._module_parser
             else:
                 d_parsers[source] = q
 

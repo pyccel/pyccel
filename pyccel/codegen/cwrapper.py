@@ -1,8 +1,3 @@
-from pyccel.ast.core import FunctionCall
-
-from pyccel.codegen.printing.ccode import CCodePrinter, dtype_registry
-from pyccel.ast.core import Module, Declare, Assign
-from pyccel.ast.type_inference import str_dtype
 
 def create_c_setup(mod_name, dependencies, compiler, flags):
     code  = "from setuptools import Extension, setup\n\n"

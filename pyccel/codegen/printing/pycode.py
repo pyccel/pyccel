@@ -1,5 +1,6 @@
 # coding: utf-8
 # pylint: disable=R0201
+# pylint: disable=missing-function-docstring
 
 from itertools import chain
 
@@ -9,11 +10,6 @@ from sympy.printing.pycode import PythonCodePrinter as SympyPythonCodePrinter
 from sympy.printing.pycode import _known_functions
 from sympy.printing.pycode import _known_functions_math
 from sympy.printing.pycode import _known_constants_math
-
-
-from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
-from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 
 from pyccel.ast.utilities  import build_types_decorator
 from pyccel.ast.core       import CodeBlock
@@ -63,7 +59,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
             indices = ','.join(i for i in indices)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal', blocker=self.blocking)
+                severity='fatal')
 
         base = self._print(expr.base)
         return '{base}[{indices}]'.format(base=base, indices=indices)
@@ -140,15 +136,15 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return code
 
     def _print_For(self, expr):
-        iter   = self._print(expr.iterable)
-        target = expr.target
+        iterable = self._print(expr.iterable)
+        target   = expr.target
         if not isinstance(target,(list, tuple, Tuple)):
             target = [target]
         target = ','.join(self._print(i) for i in target)
         body   = self._print(expr.body)
         body   = self._indent_codestring(body)
         code   = ('for {0} in {1}:\n'
-                '{2}\n').format(target,iter,body)
+                '{2}\n').format(target,iterable,body)
 
         return code
 
@@ -177,7 +173,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return self._print(expr.label)
 
     def _print_Indexed(self, expr):
-        inds = [i for i in expr.indices]
+        inds = list(expr.indices)
         #indices of indexedElement of len==1 shouldn't be a Tuple
         for i, ind in enumerate(inds):
             if isinstance(ind, Tuple) and len(ind) == 1:
@@ -221,7 +217,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
             if i == 0:
                 lines.append("if (%s):" % self._print(c))
 
-            elif i == len(expr.args) - 1 and c == True:
+            elif i == len(expr.args) - 1 and c is True:
                 lines.append("else:")
 
             else:

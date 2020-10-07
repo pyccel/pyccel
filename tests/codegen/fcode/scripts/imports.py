@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 #from expressions import ai
 #xi = ai + 1
 #

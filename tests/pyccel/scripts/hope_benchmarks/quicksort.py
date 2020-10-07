@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 
 #$ header function qsort_kernel(double[:],int,int)
 def qsort_kernel ( a , lo , hi ) :
