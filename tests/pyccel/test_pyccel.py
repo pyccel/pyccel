@@ -11,11 +11,8 @@ import sys
 #==============================================================================
 
 @pytest.fixture( params=[
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Lack of print support"),
-            pytest.mark.c]
-        )
+        # pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c)
     ],
     scope='module'
 )
@@ -62,7 +59,7 @@ def get_python_output(abs_path, cwd = None):
 def compile_pyccel(path_dir,test_file, options = ""):
     if options != "":
         options = options.strip().split(' ')
-        p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file] + options, universal_newlines=True, cwd=path_dir)
+        p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file, ], universal_newlines=True, cwd=path_dir)
     else:
         p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file], universal_newlines=True, cwd=path_dir)
     p.wait()
@@ -92,7 +89,7 @@ def compile_fortran(path_dir,test_file,dependencies):
     p.wait()
 
 #------------------------------------------------------------------------------
-def get_fortran_output(abs_path):
+def get_lang_output(abs_path):
     p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
     out, _ = p.communicate()
     assert(p.returncode==0)
@@ -188,9 +185,9 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         compile_pyccel (cwd, test_file, pyccel_commands+"-t")
         compile_fortran(cwd, test_file, dependencies)
 
-    fort_out = get_fortran_output(get_exe(test_file))
+    lang_out = get_lang_output(get_exe(test_file))
 
-    compare_pyth_fort_output(pyth_out, fort_out, output_dtype)
+    compare_pyth_fort_output(pyth_out, lang_out, output_dtype)
 
 #==============================================================================
 # PYTEST MODULE SETUP AND TEARDOWN
@@ -441,3 +438,6 @@ def test_multiple_results():
 #------------------------------------------------------------------------------
 def test_elemental():
     pyccel_test("scripts/decorators_elemental.py")
+
+def test_print(language):
+    pyccel_test("runtest_print.py", language='c', output_dtype=str)
