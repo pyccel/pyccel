@@ -5,7 +5,7 @@ from sympy.printing.precedence import precedence
 
 from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float
 from pyccel.ast.core import If, Nil
-from pyccel.ast.core import Assign, datatype, Variable, Import, FunctionCall, TupleVariable
+from pyccel.ast.core import Assign, datatype, Variable, Import, TupleVariable
 from pyccel.ast.core import CommentBlock, Comment, SeparatorComment, VariableAddress
 
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
