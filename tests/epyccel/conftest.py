@@ -10,13 +10,15 @@ __all__ = ['setup', 'teardown']
         pytest.param("c", marks = [
             pytest.mark.c]
         )
-    ],
-    scope='module'
+    ]
 )
 def language(request):
     return request.param
 
-def setup():
+def pytest_runtest_setup(item):
+    teardown()
+
+def pytest_runtest_teardown(item, nextitem):
     teardown()
 
 def teardown(path_dir = None):
