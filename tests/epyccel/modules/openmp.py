@@ -179,11 +179,20 @@ def test_omp_get_max_task_priority():
 
 @types('real[:,:], real[:,:], real[:,:]')
 def omp_matmul(A, x, out):
-    #$ omp parallel shared(A,x,out) private(i,j,k)
-	#$ omp do
-    for i in range(len(A)):
-        for j in range(len(x[0])):
-            for k in range(len(x)):
-                out[i][j] += A[i][k] * x[k][j]
-	#$ omp end do
-    #$ omp end parallel
+  #$ omp parallel shared(A,x,out) private(i,j,k)
+  #$ omp do
+  for i in range(len(A)):
+    for j in range(len(x[0])):
+      for k in range(len(x)):
+        out[i][j] += A[i][k] * x[k][j]
+  #$ omp end do
+  #$ omp end parallel
+
+@types('real[:,:], real[:,:], real[:,:]')
+def omp_matmul_single(A, x, out):
+  from numpy import matmul
+  #$ omp parallel
+  #$ omp single
+  out[:] = matmul(A, x)
+  #$ omp end single
+  #$ omp end parallel
