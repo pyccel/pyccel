@@ -3,6 +3,22 @@
 #include <stdio.h>
 #include "ndarray.h"
 #include <time.h>
+#include <stdarg.h>
+
+int *init_shape(int nd, ...)
+{
+    va_list ap;
+    int *shape;
+
+    va_start(ap, nd);
+    shape = malloc(nd * sizeof(int));
+    for (int i = 0; i < nd; i++)
+    {
+        shape[i] = va_arg(ap, int);
+    }
+    va_end(ap);
+    return(shape);
+}
 
 int free_array(t_ndarray dump)
 {
@@ -18,9 +34,7 @@ t_ndarray init_array(char *temp, int nd, int *shape, int type)
 
     a.type = type;
     a.nd = nd;
-    a.shape = malloc(a.nd * sizeof(int));
-    a.shape[0] = shape[0];
-    a.shape[1] = shape[1];
+    a.shape = shape;
     a.strides = malloc(nd * sizeof(int));
     for (int i = 0; i < a.nd; i++)
     {
@@ -38,12 +52,9 @@ t_ndarray init_array(char *temp, int nd, int *shape, int type)
 t_ndarray mat_product(t_ndarray mat1, t_ndarray mat2)
 {
     t_ndarray mat_p;
-    int temp_shape[2];
-
-    temp_shape[0] = mat1.shape[0];
-    temp_shape[1] = mat2.shape[1];
+    
     mat_p.type = sizeof(double); // this will be checked from the types of the matrices
-    mat_p = init_array(NULL, 2, temp_shape, sizeof(double));
+    mat_p = init_array(NULL, 2, init_shape(2, mat1.shape[0], mat2.shape[1]), sizeof(double));
 
     
      for (int i = 0; i < mat1.shape[0]; ++i) {
@@ -61,34 +72,34 @@ int main(void)
 {
     int i;
     double m_1[] = {2, 3, 5, 5, 6, 7, 10, 11, 12, 260, 6.34, 7, 8.002, 0.056, 45, 0.1, 1.02, 0.25, 0.00005, 1};
-    int m_1_shape[] = {4,5};
+    // int m_1_shape[] = {4,5};
     double m_2[] = {2, 3, 5, 5, 6, 7, 10, 11, 12, 260, 6.34, 7, 8.002, 0.056, 45, 0.1, 1.02, 0.25, 0.00005, 1};
-    int m_2_shape[] = {5,4};
+    // int m_2_shape[] = {5,4};
 
     t_ndarray nd_arr_m1;
     t_ndarray nd_arr_m2;
     t_ndarray mat_p;
 
     /* init the fist matrix */
-    nd_arr_m1 = init_array((char *)m_1, 2, m_1_shape, sizeof(double));
+    nd_arr_m1 = init_array((char *)m_1, 2, init_shape(2, 4, 5), sizeof(double));
 
     /* init the second matrix */
-    nd_arr_m2 = init_array((char *)m_2, 2, m_2_shape, sizeof(double));
+    nd_arr_m2 = init_array((char *)m_2, 2, init_shape(2, 5, 4), sizeof(double));
 
     /* the product matrix time loop test*/
-    clock_t start, end;
-    double cpu_time_used;
-    int loops = 1000000;
+    // clock_t start, end;
+    // double cpu_time_used;
+    // int loops = 1000000;
 
-    start = clock();
-    for (i = 0; i < loops; i++)
-    {
-        mat_p = mat_product(nd_arr_m1, nd_arr_m2);
-        free_array(mat_p);
-    }
-    end = clock();
-    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
-    printf("\nlooped %d times in %fs\n", loops, cpu_time_used);
+    // start = clock();
+    // for (i = 0; i < loops; i++)
+    // {
+    //     mat_p = mat_product(nd_arr_m1, nd_arr_m2);
+    //     free_array(mat_p);
+    // }
+    // end = clock();
+    // cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    // printf("\nlooped %d times in %fs\n", loops, cpu_time_used);
     
     /* the product matrix */
     mat_p = mat_product(nd_arr_m1, nd_arr_m2);
