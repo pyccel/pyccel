@@ -440,4 +440,4 @@ def test_elemental():
     pyccel_test("scripts/decorators_elemental.py")
 
 def test_print(language):
-    pyccel_test("runtest_print.py", language='c', output_dtype=str)
+    pyccel_test("runtest_print.py", language=language, output_dtype=str)
