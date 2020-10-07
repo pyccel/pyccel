@@ -4,7 +4,6 @@ import numpy as np
 
 from pyccel.epyccel import epyccel
 from modules import base
-from conftest       import *
 
 
 def compare_epyccel(f, *args, language='fortran'):
