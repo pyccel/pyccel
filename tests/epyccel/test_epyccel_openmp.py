@@ -119,3 +119,19 @@ def test_omp_matmul_2d_2d():
   f1(A1, x1, y1)
   y2[:,:] = matmul(A2, x2)
   assert np.array_equal(y1, y2)
+
+def test_omp_arraysum():
+  f1 = mod.omp_arraysum
+  mod.set_num_threads(4)
+  from numpy import random
+  from numpy import sum
+  x = random.randint(20, size=(5))
+  assert f1(x) == sum(x)
+
+def test_omp_arraysum_single():
+  f1 = mod.omp_arraysum_single
+  mod.set_num_threads(2)
+  from numpy import random
+  from numpy import sum
+  x = random.randint(20, size=(10))
+  assert f1(x) == sum(x)

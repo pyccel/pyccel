@@ -196,3 +196,25 @@ def omp_matmul_single(A, x, out):
   out[:] = matmul(A, x)
   #$ omp end single
   #$ omp end parallel
+
+@types('int[:]')
+def omp_arraysum(x):
+  result = 0
+  #$ omp parallel private(i)
+  #$ omp do
+  for i in range(len(x)):
+    result += x[i]
+  #$ omp end do
+  #$ omp end parallel
+  return result
+
+@types('int[:]')
+def omp_arraysum_single(x):
+  from numpy import sum
+  result = 0
+  #$ omp parallel
+  #$ omp single
+  result = sum(x)
+  #$ omp end single
+  #$ omp end parallel
+  return result
