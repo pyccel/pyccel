@@ -5,7 +5,7 @@
 
 typedef union s_ndarr_type
 {
-    /* data */
+    /* data --- change it later to shorter names*/
     char *raw_data;
     int *int_nd;
     float *float_nd;
@@ -16,11 +16,13 @@ typedef union s_ndarr_type
 typedef struct s_ndarray
 {
     /* raw data buffer*/
-    t_ndarray_type buffer;
+    t_ndarray_type data;
     /* number of dimmensions */
     int nd;
     /* shape 'size of each dimmension' */
-    int shape[NDARRAY_MAX_DIMS];
+    int *shape;
+    /* strides 'number of bytes to skip to get the next element' */
+    int *strides;
     /* type of the array elements */
     int type; // TODO : make it into an enum
 

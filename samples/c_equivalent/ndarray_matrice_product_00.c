@@ -1,11 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "ndarray.h"
+#include "ndarray_01.h"
 
 int free_array(t_ndarray dump)
 {
-    free(dump.data.raw_data);
+    free(dump.data);
     free(dump.shape);
     free(dump.strides);
     return (1);
@@ -28,9 +28,9 @@ t_ndarray init_array(char *temp, int nd, int *shape, int type)
             a.strides[i] *= a.shape[j];
         a.strides[i] *= type;
     }
-    a.data.raw_data = calloc(a.shape[0] * a.shape[1] , a.type);
+    a.data = calloc(a.shape[0] * a.shape[1] , a.type);
     if (temp)
-        memcpy(a.data.raw_data, temp, a.shape[0] * a.shape[1] * a.type);
+        memcpy(a.data, temp, a.shape[0] * a.shape[1] * a.type);
     return (a);
 }
 
@@ -48,13 +48,15 @@ t_ndarray mat_product(t_ndarray mat1, t_ndarray mat2)
      for (int i = 0; i < mat1.shape[0]; ++i) {
       for (int j = 0; j < mat2.shape[1]; ++j) {
          for (int k = 0; k < mat1.shape[1]; ++k) {
-            mat_p.data.double_nd[(j * mat_p.strides[1] + i * mat_p.strides[0])/mat_p.type]+= 
-                        mat1.data.double_nd[(k * mat1.strides[1] + i * mat1.strides[0])/mat_p.type] * mat2.data.double_nd[(j * mat2.strides[1] + k * mat2.strides[0])/mat_p.type];
+            ((double *)mat_p.data)[(j * mat_p.strides[1] + i * mat_p.strides[0])/mat_p.type]+= 
+                        ((double *)mat1.data)[(k * mat1.strides[1] + i * mat1.strides[0])/mat_p.type] * ((double *)mat2.data)[(j * mat2.strides[1] + k * mat2.strides[0])/mat_p.type];
          }
       }
    }
+
    return (mat_p);
 }
+
 
 int main(void)
 {
@@ -87,7 +89,7 @@ int main(void)
     i = 0;
     while (i <  mat_p.shape[1]* mat_p.shape[0])
     {
-        printf(" %f,", (mat_p.data.double_nd)[i]);
+        printf(" %f,", ((double *)mat_p.data)[i]);
         i = i + 1;
         if (i % mat_p.shape[0] == 0) // skipping a line when acessing the next row
             printf("\n");
