@@ -6,7 +6,7 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.numbers   import BooleanTrue
 
-from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
+from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, Symbol, Constant
 from pyccel.ast.core import create_incremented_string, Declare, SeparatorComment
 from pyccel.ast.core import IfTernaryOperator, VariableAddress, Import, IsNot
@@ -106,6 +106,9 @@ class CWrapperCodePrinter(CCodePrinter):
             These handle casting collect_var to variable if necessary
         """
 
+        if isinstance(variable, FunctionAddress):
+            return variable, []
+            
         if variable.dtype is NativeBool():
             collect_type = NativeInteger()
             collect_var = Variable(dtype=collect_type, precision=4,
@@ -184,8 +187,7 @@ class CWrapperCodePrinter(CCodePrinter):
         pykwarg = expr.pykwarg
         flags   = expr.flags
         # All args are modified so even pointers are passed by address
-        args    = ', '.join(['&{}'.format(self._print(VariableAddress(a))) if a.is_pointer
-                        else self._print(VariableAddress(a)) for a in expr.args])
+        args    = ', '.join(['&{}'.format(a.name) for a in expr.args])
 
         if expr.args:
             code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(

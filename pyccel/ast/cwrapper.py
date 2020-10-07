@@ -6,7 +6,7 @@ from .builtins  import PythonBool
 from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
 
-from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable
+from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, FunctionAddress
 from .core      import AliasAssign, Assign, Return
 from .core      import If, IfTernaryOperator
 
@@ -105,7 +105,7 @@ class PyArg_ParseTupleNode(Basic):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
             raise TypeError('Python func kwargs should be a Variable')
-        if not isinstance(c_func_args, list) and any(not isinstance(c, Variable) for c in c_func_args):
+        if not isinstance(c_func_args, list) and any(not isinstance(c, (Variable, FunctionAddress)) for c in c_func_args):
             raise TypeError('C func args should be a list of Variables')
         if not isinstance(parse_args, list) and any(not isinstance(c, Variable) for c in parse_args):
             raise TypeError('Parse args should be a list of Variables')
@@ -122,12 +122,18 @@ class PyArg_ParseTupleNode(Basic):
         self._flags      = ''
         i = 0
         while i < len(c_func_args) and not isinstance(c_func_args[i], ValuedVariable):
-            self._flags += pytype_parse_registry[(c_func_args[i].dtype, c_func_args[i].precision)]
+            if isinstance(c_func_args[i], FunctionAddress):
+                self._flags += 'O'
+            else:
+                self._flags += pytype_parse_registry[(c_func_args[i].dtype, c_func_args[i].precision)]
             i+=1
         if i < len(c_func_args):
             self._flags += '|'
         while i < len(c_func_args):
-            self._flags += pytype_parse_registry[(c_func_args[i].dtype, c_func_args[i].precision)]
+            if isinstance(c_func_args[i], FunctionAddress):
+                self._flags += 'O'
+            else:
+                self._flags += pytype_parse_registry[(c_func_args[i].dtype, c_func_args[i].precision)]
             i+=1
 
         # Restriction as of python 3.8
