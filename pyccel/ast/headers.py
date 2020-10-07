@@ -7,9 +7,9 @@ from sympy.core import Symbol
 from sympy import sympify, Tuple
 
 from .core import Basic
-from .core import Variable, FunctionAddress
+from .core import Variable
 from .core import ValuedArgument, ValuedVariable
-from .core import FunctionDef, Interface
+from .core import FunctionDef, Interface, FunctionAddress
 from .core import DottedName, DottedVariable
 from .datatypes import datatype, DataTypeFactory, UnionType
 from .macros import Macro, MacroShape, construct_macro
@@ -190,38 +190,46 @@ class FunctionHeader(Header):
             args = []
             for i, d in enumerate(args_):
                 if (d['isfunc']):
-                    dtype    = d['ret_datatype']
-                    allocatable = d['ret_allocatable']
-                    is_pointer = d['ret_is_pointer']
-                    precision = d['ret_precision']
-                    rank = d['ret_rank']
-                    order = None
-                    shape = None
-                    arg_name = ''
-                    order = d['ret_order']
-                    dtype = datatype(dtype)
-                    tmpret = Variable(dtype, arg_name,
-                                    allocatable=allocatable, is_pointer=is_pointer,
-                                    rank=rank, shape=shape ,order = order, precision = precision,
-                                    is_argument=True)
+                    decs = []
+                    results = []
+                    for dc in d['decs']:
+                        dtype    = dc['datatype']
+                        allocatable = dc['allocatable']
+                        is_pointer = dc['is_pointer']
+                        precision = dc['precision']
+                        rank = dc['rank']
 
-                    dtype    = d['arg_datatype']
-                    allocatable = d['arg_allocatable']
-                    is_pointer = d['arg_is_pointer']
-                    precision = d['arg_precision']
-                    rank = d['arg_rank']
-                    arg_name = ''
-                    order = d['arg_order']
-                    dtype = datatype(dtype)
-                    tmparg = Variable(dtype, arg_name,
+                        order = None
+                        shape = None
+                        if rank >1:
+                            order = dc['order']
+                            dtype = datatype(dtype)
+                        arg = Variable(dtype, '',
                                     allocatable=allocatable, is_pointer=is_pointer,
                                     rank=rank, shape=shape ,order = order, precision = precision,
                                     is_argument=True)
+                        decs.append(arg)
+
+                    for rt in d['results']:
+                        dtype    = rt['datatype']
+                        allocatable = rt['allocatable']
+                        is_pointer = rt['is_pointer']
+                        precision = rt['precision']
+                        rank = rt['rank']
+
+                        order = None
+                        shape = None
+                        if rank >1:
+                            order = rt['order']
+                            dtype = datatype(dtype)
+                        ret = Variable(dtype, '',
+                                    allocatable=allocatable, is_pointer=is_pointer,
+                                    rank=rank, shape=shape ,order = order, precision = precision,
+                                    is_argument=True)
+                        results.append(ret)
                     arg_name = 'arg_{0}'.format(str(i))
-                    dtype = d['ret_datatype']
-                    arg = FunctionAddress(tmpret, tmparg, dtype, arg_name)
+                    arg = FunctionAddress(arg_name, decs, results, [])
 
-                    isfunc = True
                 else:
                     dtype    = d['datatype']
                     allocatable = d['allocatable']
