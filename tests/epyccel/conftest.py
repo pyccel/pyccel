@@ -26,7 +26,7 @@ def teardown(path_dir = None):
     for f in files:
         file_name = os.path.join(path_dir,f)
         if f in  ("__pyccel__", "__epyccel__"):
-            shutil.rmtree( file_name )
+            shutil.rmtree( file_name, ignore_errors=True)
         elif not os.path.isfile(file_name):
             teardown(file_name)
         elif not f.endswith(".py") and not f.endswith(".rst"):
