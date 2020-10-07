@@ -623,7 +623,7 @@ class CCodePrinter(CodePrinter):
         return  ' / '.join(self._print(a) for a in args)
 
     def _print_PyccelFloorDiv(self, expr):
-        self._additional_imports.add("math.h")
+        self._additional_imports.add("math")
         if all(a.dtype is NativeInteger() for a in expr.args):
             args = [PythonFloat(a) for a in expr.args]
         else:
