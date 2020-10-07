@@ -200,7 +200,7 @@ def omp_matmul_single(A, x, out):
 @types('int[:]')
 def omp_arraysum(x):
   result = 0
-  #$ omp parallel private(i)
+  #$ omp parallel private(i) reduction(+: result)
   #$ omp do
   for i in range(len(x)):
     result += x[i]
