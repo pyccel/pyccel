@@ -6,7 +6,7 @@ from sympy.printing.precedence import precedence
 
 from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit
 from pyccel.ast.core import If, Nil
-from pyccel.ast.core import Assign, datatype, Variable, Import, FunctionCall, FunctionAddress
+from pyccel.ast.core import Assign, datatype, Variable, Import, FunctionCall, FunctionDef, FunctionAddress
 from pyccel.ast.core import CommentBlock, Comment, SeparatorComment, VariableAddress
 
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
@@ -390,11 +390,20 @@ class CCodePrinter(CodePrinter):
             return '{0} '.format(dtype)
 
     def _print_FuncAddressDeclare(self, expr):
-        ret_type = self.get_declare_type(expr.ret)
-        arg_type = self.get_declare_type(expr.arg)
-        func = self._print(expr.name)
-        a = '({}){}({})'.format(ret_type, arg_type, func)
-        return '{}(*{})({});'.format(ret_type, func, arg_type)
+        if len(expr.results) == 1:
+            ret_type = self.get_declare_type(expr.results[0])
+        elif len(expr.results) > 1:
+            msg = 'Multiple output arguments is not yet supported in c'
+            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO, symbol=expr,
+                severity='fatal')
+        else:
+            ret_type = self._print(datatype('void')) + ' '
+        name = expr.name
+        if not expr.arguments:
+            arg_code = 'void'
+        else:
+            arg_code = ', '.join('{}'.format(self.print_FuncAddressDeclare(i)) if isinstance(i, FunctionDef) else '{0}{1}'.format(self.get_declare_type(i), i) for i in expr.arguments)
+        return '{}(*{})({});'.format(ret_type, name, arg_code)
 
     def _print_Declare(self, expr):
         if expr.variable.rank > 0:
@@ -435,8 +444,11 @@ class CCodePrinter(CodePrinter):
         if not expr.arguments:
             arg_code = 'void'
         else:
-                arg_code = ', '.join('{0}{1}'.format(self.get_declare_type(i), i) if not isinstance(i, FunctionAddress) else '{}(*{})({})'.format(self.get_declare_type(i.ret), i, self.get_declare_type(i.arg)) for i in expr.arguments)
-        return '{0}{1}({2})'.format(ret_type, name, arg_code)
+            arg_code = ', '.join('{}'.format(self.function_signature(i)) if isinstance(i, FunctionAddress) else '{0}{1}'.format(self.get_declare_type(i), i) for i in expr.arguments)
+        if isinstance(expr, FunctionAddress):
+            return '{}(*{})({})'.format(ret_type, name, arg_code)
+        else:
+            return '{0}{1}({2})'.format(ret_type, name, arg_code)
 
     def _print_NumpyUfuncBase(self, expr):
         """ Convert a Python expression with a Numpy function call to C
@@ -527,9 +539,12 @@ class CCodePrinter(CodePrinter):
             code_args = self._print(NumpyFloat(arg))
         return 'sqrt({})'.format(code_args)
 
+    def _print_FunctionAddress(self, expr):
+        return expr.name
+
     def _print_FunctionDef(self, expr):
-        decs  = [FuncAddressDeclare(i.ret, i.arg, i.name) if isinstance(i, FunctionAddress) else Declare(i.dtype, i) for i in expr.local_vars]
-        decs += [Declare(i.dtype, i) for i in expr.results]
+        decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i.name, i.arguments, i.results) for i in expr.local_vars]
+        decs += [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i.name, i.arguments, i.results) for i in expr.results]
         decs  = '\n'.join(self._print(i) for i in decs)
         body  = '\n'.join(self._print(i) for i in expr.body.body)
         sep = self._print(SeparatorComment(40))
