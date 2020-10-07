@@ -191,7 +191,7 @@ class FCodePrinter(CodePrinter):
 
         prefix_module = settings.pop('prefix_module', None)
 
-        if self.filename:
+        if parser.filename:
             errors.set_target(parser.filename, 'file')
 
         CodePrinter.__init__(self, settings)
