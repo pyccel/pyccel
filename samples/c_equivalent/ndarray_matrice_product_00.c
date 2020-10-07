@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "ndarray_01.h"
+#include <time.h>
 
 int free_array(t_ndarray dump)
 {
@@ -76,13 +77,22 @@ int main(void)
     /* init the second matrix */
     nd_arr_m2 = init_array((char *)m_2, 2, m_2_shape, sizeof(double));
 
-    /* the product matrix */
-    for (i = 0; i < 10000000; i++)
+    /* the product matrix time loop test*/
+    clock_t start, end;
+    double cpu_time_used;
+    int loops = 1000000;
+
+    start = clock();
+    for (i = 0; i < loops; i++)
     {
         mat_p = mat_product(nd_arr_m1, nd_arr_m2);
         free_array(mat_p);
     }
+    end = clock();
+    cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+    printf("looped %d times in %fs\n", loops, cpu_time_used);
     
+    /* the product matrix */
     mat_p = mat_product(nd_arr_m1, nd_arr_m2);
     printf("mat_p.shape : (%d,%d)\n", mat_p.shape[0], mat_p.shape[1]); 
     /* printing the result of the product */
