@@ -14,6 +14,7 @@ def language(request):
     return request.param
 
 def teardown(path_dir = None):
+    print("teardown")
     if path_dir is None:
         path_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -33,7 +34,11 @@ def teardown(path_dir = None):
             os.remove(file_name)
 
 def pytest_runtest_setup(item):
-    teardown()
+    marks = [m.name for m in item.own_markers ]
+    if 'parallel' not in marks:
+        teardown()
 
 def pytest_runtest_teardown(item, nextitem):
-    teardown()
+    marks = [m.name for m in item.own_markers ]
+    if 'parallel' not in marks:
+        teardown()
