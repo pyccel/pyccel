@@ -619,6 +619,15 @@ class CCodePrinter(CodePrinter):
             args = expr.args
         return  ' / '.join(self._print(a) for a in args)
 
+    def _print_PyccelFloorDiv(self, expr):
+        self._additional_imports.add("math.h")
+        if all(a.dtype is NativeInteger() for a in expr.args):
+            args = [PythonFloat(a) for a in expr.args]
+        else:
+            args = expr.args
+        code = ' / '.join(self._print(a) for a in args)
+        return "floor({})".format(code)
+
     def _print_PyccelRShift(self, expr):
         return ' >> '.join(self._print(a) for a in expr.args)
 
