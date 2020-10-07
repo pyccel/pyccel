@@ -14,7 +14,6 @@ def language(request):
     return request.param
 
 def teardown(path_dir = None):
-    print("teardown")
     if path_dir is None:
         path_dir = os.path.dirname(os.path.realpath(__file__))
 
