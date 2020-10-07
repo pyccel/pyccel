@@ -104,3 +104,18 @@ def test_omp_matmul_single():
   f1(A1, x1, y1)
   y2[:] = matmul(A2, x2)
   assert np.array_equal(y1, y2)
+
+def test_omp_matmul_2d_2d():
+  f1 = mod.omp_matmul
+  mod.set_num_threads(4)
+  from numpy import matmul
+  A1 = np.ones([3, 2])
+  A1[1,0] = 3
+  A2 = np.copy(A1)
+  x1 = np.ones([2, 3])
+  x2 = np.copy(x1)
+  y1 = np.zeros([3,3])
+  y2 = np.zeros([3,3])
+  f1(A1, x1, y1)
+  y2[:,:] = matmul(A2, x2)
+  assert np.array_equal(y1, y2)
