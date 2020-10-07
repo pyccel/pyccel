@@ -31,43 +31,24 @@ class Header(object):
 class FuncType(BasicStmt):
 
     def __init__(self, **kwargs):
-        self.arg = kwargs.pop('args')
-        self.ret = kwargs.pop('ret')
+        self.decs = kwargs.pop('decs')
+        self.results = kwargs.pop('results')
 
         super(FuncType, self).__init__(**kwargs)
 
     @property
     def expr(self):
-        arg = []
-        if self.arg:
-            arg = self.args[0].expr
+        decs = []
+        if self.decs:
+            decs = [i.expr for i in self.decs]
 
-        ret = []
-        if self.ret:
-            ret = self.ret[0].expr
-        
+        results = []
+        if self.results:
+            results = [i.expr for i in self.results]
+
         d_var = {}
-
-        d_var['ret_datatype'] = ret['datatype']
-        d_var['ret_rank'] = ret['rank']
-        d_var['ret_is_pointer'] = ret['is_pointer'] 
-        d_var['ret_allocatable'] = ret['allocatable']
-        d_var['ret_precision'] = ret['precision']
-        d_var['ret_order'] = 'C'
-
-        d_var['arg_datatype'] = arg['datatype']
-        d_var['arg_rank'] = arg['rank']
-        d_var['arg_is_pointer'] = arg['is_pointer']
-        d_var['arg_allocatable'] = arg['allocatable']
-        d_var['arg_precision'] = arg['precision']
-        d_var['arg_order'] = 'C'
-        
-        d_var['datatype'] = ret['datatype']
-        d_var['rank'] = ret['rank']
-        d_var['is_pointer'] = ret['is_pointer'] 
-        d_var['allocatable'] = ret['allocatable']
-        d_var['precision'] = ret['precision']
-        d_var['order'] = 'C'
+        d_var['decs'] = decs
+        d_var['results'] = results
         d_var['isfunc'] = True
         
         return d_var

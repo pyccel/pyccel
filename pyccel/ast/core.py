@@ -3118,36 +3118,6 @@ class VariableAddress(Basic, PyccelAstNode):
     def variable(self):
         return self._variable
 
-class FunctionAddress(Variable):
-
-    def __init__(
-            self,
-            ret,
-            arg,
-            dtype,
-            name,
-            *args,
-            **kwargs
-            ):
-        Variable.__init__(self, dtype, name, *args, **kwargs)
-        #must be a tuple of variables
-        if not isinstance(ret, Variable):
-            raise TypeError('rets must be a variable')
-        if not isinstance(arg, Variable):
-            raise TypeError('args must be a variable')
-        
-        self._ret = ret
-        self._arg = arg
-        self._is_pointer = True
-
-    @property
-    def ret(self):
-        return self._ret
-
-    @property
-    def arg(self):
-        return self._arg
-
 class FunctionCall(Basic, PyccelAstNode):
 
     """Represents a function call in the code.
@@ -3190,6 +3160,8 @@ class FunctionCall(Basic, PyccelAstNode):
         # Ensure the correct syntax is used for pointers
         args = [VariableAddress(a) if isinstance(a, Variable) and f.is_pointer else a for a, f in zip(args, f_args)]
 
+        args = [FunctionAddress(a.name, a.arguments, a.results, []) if isinstance(a, FunctionDef) else a for a in args]
+        
         args = Tuple(*args, sympify=False)
         # ...
 
@@ -3314,7 +3286,6 @@ class Interface(Basic):
 
     def rename(self, newname):
         return Interface(newname, self.functions)
-
 
 class FunctionDef(Basic):
 
@@ -3747,6 +3718,44 @@ class FunctionDef(Basic):
                 args   = ', '.join(self.args),
                 result = result)
 
+class FunctionAddress(FunctionDef):
+    def __init__(
+        self,
+        name,
+        arguments,
+        results,
+        body,
+        is_pointer=False,
+        is_kwonly=False,
+        is_argument=False,
+        *args,
+        **kwargs
+        ):
+        FunctionDef.__init__(self, name, arguments, results, body, *args)
+        if not isinstance(is_argument, bool):
+            raise TypeError('Expecting a boolean for is_argument')
+
+        if not isinstance(is_pointer, bool):
+            raise TypeError('Expecting a boolean for is_pointer')
+
+        if not isinstance(is_kwonly, bool):
+            raise TypeError('Expecting a boolean for kwonly')
+
+        self._is_pointer      = is_pointer
+        self._is_kwonly       = is_kwonly
+        self._is_argument     = is_argument
+
+    @property
+    def is_pointer(self):
+        return self._is_pointer
+
+    @property
+    def is_argument(self):
+        return self._is_argument
+
+    @property
+    def is_kwonly(self):
+        return self._is_kwonly
 
 class SympyFunction(FunctionDef):
 
@@ -4334,50 +4343,30 @@ class Load(Basic):
 class FuncAddressDeclare(Basic):
     def __init__(
         self,
-        ret,
-        arg,
         name,
+        arguments,
+        results,
         intent=None,
         value=None,
         ):
-        if isinstance(ret.dtype, str):
-            self._retdtype = datatype(ret.dtype)
-        if isinstance(arg.dtype, str):
-            self._argdtype = datatype(arg.dtype)
 
-        if not isinstance(ret, Variable):
-            raise TypeError('var must be of type Variable, given {0}'.format(variable))
-        if not isinstance(ret, Variable):
-            raise TypeError('var must be of type Variable, given {0}'.format(variable))
-
-        if intent:
-            if not intent in ['in', 'out', 'inout']:
-                raise ValueError("intent must be one among {'in', 'out', 'inout'}")
-
-        self._ret = ret
-        self._arg = arg
+        self._name = name
+        self._arguments = arguments
+        self._results = results
         self._intent = intent
         self._value = value
-        self._name = name
+
     @property
     def name(self):
         return self._name
 
     @property
-    def retdtype(self):
-        return self._retdtype
+    def arguments(self):
+        return self._arguments
 
     @property
-    def argdtype(self):
-        return self._argdtype
-
-    @property
-    def ret(self):
-        return self._ret
-
-    @property
-    def arg(self):
-        return self._arg
+    def results(self):
+        return self._results
 
     @property
     def intent(self):
