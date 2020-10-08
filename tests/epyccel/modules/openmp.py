@@ -66,6 +66,16 @@ def test_omp_get_cancellation():
 	cancel_var = omp_get_cancellation()
 	return cancel_var
 
+def test_omp_get_set_schedule():
+	from pyccel.stdlib.internal.openmp import omp_get_schedule, omp_set_schedule
+
+	#omp_set_schedule(0, 0) #ERROR at Fortran compilation stage
+	#schedule_kind, chunk_size = omp_get_schedule() #ERROR at Fortran compilation stage
+	return 0
+
+
+
+
 def test_omp_get_thread_limit():
 	from pyccel.stdlib.internal.openmp import omp_get_thread_limit
 
@@ -125,7 +135,7 @@ def test_omp_places():
 	from pyccel.stdlib.internal.openmp import omp_get_partition_num_places, omp_get_partition_place_nums, omp_get_place_num, omp_get_place_proc_ids, omp_get_place_num_procs, omp_get_num_places
 
 	partition_num_places = omp_get_partition_num_places()
-	#partition_places_num =  omp_get_partition_place_nums() ERROR at Fortran compilation stage
+	#partition_places_num =  omp_get_partition_place_nums() #ERROR at Fortran compilation stage
 	place_num = omp_get_place_num()
 	if place_num < 0:
 		return -1
@@ -179,14 +189,14 @@ def test_omp_get_max_task_priority():
 
 @types('real[:,:], real[:,:], real[:,:]')
 def omp_matmul(A, x, out):
-  #$ omp parallel shared(A,x,out) private(i,j,k)
-  #$ omp do
-  for i in range(len(A)):
-    for j in range(len(x[0])):
-      for k in range(len(x)):
-        out[i][j] += A[i][k] * x[k][j]
-  #$ omp end do
-  #$ omp end parallel
+	#$ omp parallel shared(A,x,out) private(i,j,k)
+	#$ omp do
+	for i in range(len(A)):
+		for j in range(len(x[0])):
+			for k in range(len(x)):
+				out[i][j] += A[i][k] * x[k][j]
+	#$ omp end do
+	#$ omp end parallel
 
 @types('real[:,:], real[:,:], real[:,:]')
 def omp_matmul_single(A, x, out):
@@ -199,14 +209,14 @@ def omp_matmul_single(A, x, out):
 
 @types('int[:]')
 def omp_arraysum(x):
-  result = 0
-  #$ omp parallel private(i) reduction(+: result)
-  #$ omp do
-  for i in range(len(x)):
-    result += x[i]
-  #$ omp end do
-  #$ omp end parallel
-  return result
+	result = 0
+	#$ omp parallel private(i) reduction(+: result)
+	#$ omp do
+	for i in range(len(x)):
+		result += x[i]
+	#$ omp end do
+	#$ omp end parallel
+	return result
 
 @types('int[:]')
 def omp_arraysum_single(x):
