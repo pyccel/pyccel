@@ -1,18 +1,18 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import subprocess
 import os
-import pytest
 import shutil
-import numpy as np
-import re
 import sys
+import re
+import pytest
+import numpy as np
 
 #==============================================================================
 # UTILITIES
 #==============================================================================
 
 @pytest.fixture( params=[
-        # pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c)
     ],
     scope='module'
@@ -60,7 +60,7 @@ def get_python_output(abs_path, cwd = None):
 def compile_pyccel(path_dir,test_file, options = ""):
     if options != "":
         options = options.strip().split(' ')
-        p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file, ], universal_newlines=True, cwd=path_dir)
+        p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file] + options, universal_newlines=True, cwd=path_dir)
     else:
         p = subprocess.Popen([shutil.which("pyccel"), "%s" % test_file], universal_newlines=True, cwd=path_dir)
     p.wait()
@@ -107,7 +107,9 @@ def get_value(string, regex, conversion):
 def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float ):
 
     if dtype is str:
-        assert(p_output.strip()==f_output.strip())
+        p_list = p_output.split()
+        f_list = f_output.split()
+        assert(p_list==f_list)
     elif dtype is complex:
         rx = re.compile('[-0-9.eEj]+')
         p, p_output = get_value(p_output, rx, complex)
@@ -321,8 +323,9 @@ def test_folder_imports():
     compare_pyth_fort_output(pyth_out, fort_out)
 
 #------------------------------------------------------------------------------
-def test_funcs(language):
-    pyccel_test("scripts/runtest_funcs.py", language = language)
+# it won't work until PR 462 goes through
+# def test_funcs(language):
+#     pyccel_test("scripts/runtest_funcs.py", language = language)
 
 #------------------------------------------------------------------------------
 def test_inout_func():
@@ -358,7 +361,7 @@ def test_pyccel_calling_directory():
 
     compile_pyccel(cwd, test_file)
 
-    fort_out = get_fortran_output(get_exe(test_file))
+    fort_out = get_lang_output(get_exe(test_file))
 
     compare_pyth_fort_output( pyth_out, fort_out )
 
@@ -440,5 +443,18 @@ def test_multiple_results():
 def test_elemental():
     pyccel_test("scripts/decorators_elemental.py")
 
-def test_print(language):
-    pyccel_test("runtest_print.py", language=language, output_dtype=str)
+def test_print_strings(language):
+    types = [str]
+    pyccel_test("scripts/print_strings.py", language=language, output_dtype=types)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="formated string not implemented in fortran"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_print_special_cases(language):
+    types = [str]
+    pyccel_test("scripts/print_special_cases.py", language=language, output_dtype=types)
