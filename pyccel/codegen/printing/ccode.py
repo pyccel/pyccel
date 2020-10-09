@@ -7,7 +7,7 @@ from pyccel.ast.core import Nil
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import SeparatorComment, VariableAddress
 
-from pyccel.ast.core import PyccelAdd, PyccelMul
+from pyccel.ast.core import PyccelAdd, PyccelMul, String
 
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
@@ -381,7 +381,18 @@ class CCodePrinter(CodePrinter):
         return '#include <{0}>'.format(expr.source)
 
     def _print_String(self, expr):
-        return "\"{}\"".format(expr.arg)
+        format_str = format(expr.arg)
+        format_str = format_str.replace("\\", "\\\\")\
+                               .replace('\a', '\\a')\
+                               .replace('\b', '\\b')\
+                               .replace('\f', '\\f')\
+                               .replace("\n", "\\n")\
+                               .replace('\r', '\\r')\
+                               .replace('\t', '\\t')\
+                               .replace('\v', '\\v')\
+                               .replace('"', '\\"')\
+                               .replace("'", "\\'")
+        return '"{}"'.format(format_str)
 
     def _print_Print(self, expr):
         self._additional_imports.add("stdio.h")
@@ -397,7 +408,7 @@ class CCodePrinter(CodePrinter):
                           ('string', 0) : '%s'}
         args_format = []
         args = []
-        end = '\\n'
+        end = '\n'
         sep = ' '
         for f in expr.expr:
             if isinstance(f, ValuedVariable):
@@ -417,7 +428,7 @@ class CCodePrinter(CodePrinter):
 
         args_format = sep.join(args_format)
         args_format += end
-        args_format = '"{}"'.format(args_format)
+        args_format = self._print(String(args_format))
         code = ', '.join([args_format, *args])
         return "printf({});".format(code)
 
