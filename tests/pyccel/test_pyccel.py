@@ -323,9 +323,8 @@ def test_folder_imports():
     compare_pyth_fort_output(pyth_out, fort_out)
 
 #------------------------------------------------------------------------------
-# it won't work until PR 462 goes through
-# def test_funcs(language):
-#     pyccel_test("scripts/runtest_funcs.py", language = language)
+def test_funcs():
+    pyccel_test("scripts/runtest_funcs.py")
 
 #------------------------------------------------------------------------------
 def test_inout_func():
@@ -336,13 +335,13 @@ def test_bool():
     pyccel_test("scripts/bool_comp.py", output_dtype = bool)
 
 #------------------------------------------------------------------------------
-def test_expressions():
-    types = [float, complex, int, float, float, int] + [float]*3 + \
-            [complex, int, complex, complex, int, int, float] + [complex]*3 + \
+def test_expressions(language):
+    types = [float, int, float, float, int] + [float]*3 + \
+            [complex, int, int, int, float] + [complex]*2 + \
             [float]*3 + [int] + [float]*2 + [int] + [float]*3 + [int] + \
-            [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex] + [bool]*9
-    pyccel_test("scripts/expressions.py",
-                output_dtype = types)
+            [float]*2 + [float]*2 + [int]*5 + [bool]*9
+    pyccel_test("scripts/expressions.py", language=language,
+                pyccel_commands="--libs m", output_dtype = types)
 
 #------------------------------------------------------------------------------
 def test_default_arguments():
@@ -443,10 +442,12 @@ def test_multiple_results():
 def test_elemental():
     pyccel_test("scripts/decorators_elemental.py")
 
+#------------------------------------------------------------------------------
 def test_print_strings(language):
-    types = [str]
+    types = str
     pyccel_test("scripts/print_strings.py", language=language, output_dtype=types)
 
+#------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = [
@@ -456,5 +457,5 @@ def test_print_strings(language):
     )
 )
 def test_print_special_cases(language):
-    types = [str]
+    types = str
     pyccel_test("scripts/print_special_cases.py", language=language, output_dtype=types)
