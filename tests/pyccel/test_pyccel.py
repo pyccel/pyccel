@@ -344,6 +344,20 @@ def test_expressions(language):
                 pyccel_commands="--libs m", output_dtype = types)
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Bug: need to be fixed in c"),
+            pytest.mark.c]
+        ),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    )
+)
+def test_expressions_with_complex(language):
+    types = [complex] * 4 + [float] * 3 + [complex]
+    pyccel_test("scripts/expression_special_cases.py", language=language,
+                pyccel_commands="--libs m", output_dtype = types)
+
+#------------------------------------------------------------------------------
 def test_default_arguments():
     pyccel_test("scripts/runtest_default_args.py",
             dependencies = "scripts/default_args_mod.py",
