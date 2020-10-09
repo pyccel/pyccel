@@ -13,7 +13,7 @@ from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
 
-from pyccel.ast.numpyext import NumpyComplex, NumpyFloat
+from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.numpyext import Real as NumpyReal, Imag as NumpyImag
 
 from pyccel.ast.builtins  import Range, PythonFloat, PythonComplex
@@ -418,7 +418,8 @@ class CCodePrinter(CodePrinter):
                 try:
                     args_format.append(type_to_format[(self._print(f.dtype), f.precision)])
                 except KeyError:
-                    raise ("{} type is not supported currently".format(f.dtype))
+                    errors.report("{} type is not supported currently".format(\
+                        f.dtype), severity='fatal')
                 if f.dtype is NativeComplex():
                     args.extend([self._print(NumpyReal(f)), self._print(NumpyImag(f))])
                 elif f.dtype is NativeBool():
