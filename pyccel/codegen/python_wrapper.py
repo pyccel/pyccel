@@ -40,7 +40,7 @@ def compile_f2py( filename, *,
                   pyf = '',
                   verbose = False ):
 
-    args_pattern = """  -c {compilers} --f90flags="{f90flags}" {opt} {libs} -m {modulename} {pyf} {filename} {libdirs} {extra_args} {includes} {only} {verbose}"""
+    args_pattern = """  -c {compilers} --f90flags="{f90flags}" {opt} {libs} -m {modulename} {pyf} {filename} {libdirs} {extra_args} {includes} {only} {verbose_str}"""
 
     compilers  = ''
     f90flags   = ''
@@ -113,18 +113,18 @@ def compile_f2py( filename, *,
     else:
         verbose_str = '--verbose'
 
-    args = args_pattern.format( compilers  = compilers,
-                                f90flags   = f90flags,
-                                opt        = opt,
-                                libs       = libs,
-                                libdirs    = libdirs,
-                                modulename = modulename.rpartition('.')[2],
-                                filename   = filename,
-                                extra_args = extra_args,
-                                includes   = includes,
-                                only       = only,
-                                pyf        = pyf,
-                                verbose    = verbose_str )
+    args = args_pattern.format( compilers   = compilers,
+                                f90flags    = f90flags,
+                                opt         = opt,
+                                libs        = libs,
+                                libdirs     = libdirs,
+                                modulename  = modulename.rpartition('.')[2],
+                                filename    = filename,
+                                extra_args  = extra_args,
+                                includes    = includes,
+                                only        = only,
+                                pyf         = pyf,
+                                verbose_str = verbose_str )
 
     cmd = """{} -m numpy.f2py {}"""
     cmd = cmd.format(sys.executable, args)
