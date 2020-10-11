@@ -40,7 +40,7 @@ def test_OMP_functions():
 	assert mod.test_omp_set_get_dynamic(0) == 0
 
 	#ERROR at Fortran compilation stage
-	#assert mod.test_omp_get_set_schedule() == 0
+	assert mod.test_omp_get_set_schedule() == 0
 
 	#something wierd happening here, the return is a massive number
 	assert mod.test_omp_get_thread_limit() >= 0
