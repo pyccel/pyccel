@@ -1,3 +1,5 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=wildcard-import
 import pytest
 import os
 import multiprocessing
