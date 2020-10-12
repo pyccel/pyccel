@@ -3,7 +3,7 @@
 # pylint: disable=missing-function-docstring
 
 from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float, Integer
-from pyccel.ast.core import Nil
+from pyccel.ast.core import Nil, PyccelAssociativeParenthesis
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import SeparatorComment, VariableAddress
 
@@ -243,13 +243,13 @@ class CCodePrinter(CodePrinter):
         return '({} != 0)'.format(value)
 
     def _print_Complex(self, expr):
-        return self._print(PyccelAdd(expr.real,
-                        PyccelMul(expr.imag, ImaginaryUnit())))
+        return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
+                        PyccelMul(expr.imag, ImaginaryUnit()))))
 
     def _print_PythonComplex(self, expr):
         self._additional_imports.add("complex.h")
-        return self._print(PyccelAdd(expr.real_part,
-                        PyccelMul(expr.imag_part, ImaginaryUnit())))
+        return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real_part,
+                        PyccelMul(expr.imag_part, ImaginaryUnit()))))
 
     def _print_ImaginaryUnit(self, expr):
         return '_Complex_I'
@@ -388,10 +388,10 @@ class CCodePrinter(CodePrinter):
 
     def _print_Print(self, expr):
         self._additional_imports.add("stdio.h")
-        type_to_format = {('real',8)    : '%lf',
-                          ('real',4)    : '%f',
-                          ('complex',8) : '(%lf + %lfj)',
-                          ('complex',4) : '(%f + %fj)',
+        type_to_format = {('real',8)    : '%.12lf',
+                          ('real',4)    : '%.12f',
+                          ('complex',8) : '(%.12lf + %.12lfj)',
+                          ('complex',4) : '(%.12f + %.12fj)',
                           ('int',4)     : '%d',
                           ('int',8)     : '%ld',
                           ('int',2)     : '%hd',
