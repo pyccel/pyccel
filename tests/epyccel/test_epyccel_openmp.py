@@ -1,86 +1,149 @@
-# pylint: disable=wildcard-import
-
 import pytest
-import multiprocessing
 import os
+import multiprocessing
 import numpy as np
-
 from pyccel.epyccel import epyccel
 
+from pyccel.parser.parser   import Parser
+from pyccel.codegen.codegen import Codegen
+from pyccel.errors.errors   import Errors
 #==============================================================================
 import modules.openmp as openmp
-mod = epyccel(openmp, accelerator='openmp')
 
+def test_module_1():
+  f1 = epyccel(openmp.f1, accelerator='openmp')
+  set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
+  get_num_threads = epyccel(openmp.get_num_threads, accelerator='openmp')
+  set_num_threads(4)
+  assert get_num_threads() == 4
+  assert f1(0) == 0
+  assert f1(1) == 1
+  assert f1(2) == 2
+  assert f1(3) == 3
+  assert f1(5) == -1
 
-def test_OMP_functions():
-	mod.set_num_threads(4)
-	assert mod.get_num_threads() == 4
-	assert mod.f1(0) == 0
-	assert mod.f1(1) == 1
-	assert mod.f1(2) == 2
-	assert mod.f1(3) == 3
-	assert mod.f1(5) == -1
+  set_num_threads(8)
+  assert get_num_threads() == 8
+  assert f1(5) == 5
+  set_num_threads(4)
 
-	assert mod.test_omp_number_of_procs() == multiprocessing.cpu_count()
-	mod.set_num_threads(8)
-	assert mod.get_num_threads() == 8
+def test_modules_10():
+	set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
+	set_num_threads(1)
+	f1 = epyccel(openmp.test_omp_get_ancestor_thread_num, accelerator='openmp')
+
+	assert f1() == 0
+	set_num_threads(4)
+
+def test_module_2():
+	f1 = epyccel(openmp.test_omp_number_of_procs, accelerator='openmp')
+	assert f1() == multiprocessing.cpu_count()
+
+def test_module_3():
+	set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
+	set_num_threads(4)
+	f1 = epyccel(openmp.test_omp_in_parallel1, accelerator='openmp')
+	f2 = epyccel(openmp.test_omp_in_parallel2, accelerator='openmp')
+
+	assert f1() == 0
+	assert f2() == 1
+
+def test_modules_4():
+	f1 = epyccel(openmp.test_omp_set_get_dynamic, accelerator='openmp')
+
+	assert f1(1) == 1
+	assert f1(0) == 0
+
+def test_modules_5():
+	f1 = epyccel(openmp.test_omp_get_cancellation, accelerator='openmp')
+
 	cancel_var = os.environ.get('OMP_CANCELLATION')
 	if cancel_var is not None:
 		if cancel_var.lower() == 'true':
-			assert mod.test_omp_get_cancellation() == 1
+			assert f1() == 1
 		else:
-			assert mod.test_omp_get_cancellation() == 0
+			assert f1() == 0
 	else:
-		assert mod.test_omp_get_cancellation() == 0
+		assert f1() == 0
 
-	assert mod.test_omp_in_parallel1() == 0
-	assert mod.test_omp_in_parallel2() == 1
+def test_modules_6():
+	f1 = epyccel(openmp.test_omp_get_thread_limit, accelerator='openmp')
 
-	assert mod.test_omp_set_get_dynamic(1) == 1
-	assert mod.test_omp_set_get_dynamic(0) == 0
+	#In order to test this function properly we must set the OMP_THREAD_LIMIT env var with the number of threads limit of the program
+	#When the env var is not set, the number of threads limit is MAX INT
+	assert f1() >= 0
 
-	#ERROR at Fortran compilation stage
-	assert mod.test_omp_get_set_schedule() == 0
-
-	#something wierd happening here, the return is a massive number
-	assert mod.test_omp_get_thread_limit() >= 0
+def test_modules_7():
+	f1 = epyccel(openmp.test_omp_get_set_max_active_levels, accelerator='openmp')
 
 	max_active_level = 5
-	#if the given max_active_level less than 0, omp_get_max_active_levels() gonna return (MAX_INT + (- max_active_level)) as result
-	#example omp_get_max_active_levels(-1) will give 2147483647
-	assert mod.test_omp_get_set_max_active_levels(max_active_level) == max_active_level
+	#if the given max_active_level less than 0, omp_get_max_active_levels() gonna return (MAX_INT) as result
+	assert f1(max_active_level) == max_active_level
 
-	assert mod.test_omp_get_level() >= 0
+def test_modules_8():
+	f1 = epyccel(openmp.test_omp_get_level, accelerator='openmp')
 
-	assert mod.test_omp_get_ancestor_thread_num() >= 0
+	assert f1() == 2
 
-	assert mod.test_omp_get_team_size() > 0
+def test_modules_9():
+	f1 = epyccel(openmp.test_omp_get_active_level, accelerator='openmp')
 
-	assert mod.test_omp_get_active_level() >= 0
+	assert f1() == 1
 
-	assert mod.test_omp_get_proc_bind() >= 0
+def test_modules_11():
+	set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
+	set_num_threads(4)
+	f1 = epyccel(openmp.test_omp_get_team_size, accelerator='openmp')
 
-	#OMP_PLACES (env var) should be set proply for this test
-	assert mod.test_omp_places() < 0
+	assert f1() == 4
+	set_num_threads(8)
+	assert f1() == 8
 
-	device_num = mod.test_omp_get_initial_device()
-	mod.test_omp_set_get_default_device(device_num)
+@pytest.mark.xfail(reason = "Tasks not supported yet for openmp !")
+def test_modules_12():
+	f1 = epyccel(openmp.test_omp_in_final, accelerator='openmp')
 
-	assert mod.test_omp_get_num_devices() >= 0
+	assert f1() == 1
 
-	num_teams = mod.test_omp_get_num_teams()
-	assert mod.test_omp_get_team_num() <= num_teams
-	assert mod.test_omp_get_team_num() >= 0
+def test_modules_13():
+	f1 = epyccel(openmp.test_omp_get_proc_bind, accelerator='openmp')
 
-	assert mod.test_omp_is_initial_device() == True
+	assert f1() >= 0
 
-	assert mod.test_omp_get_max_task_priority() >= 0
+def test_modules_14_0():
+  f1 = epyccel(openmp.test_omp_set_get_default_device, accelerator='openmp')
+  f2 = epyccel(openmp.test_omp_get_num_devices, accelerator='openmp')
 
-	assert mod.f1(5) == 5
+  assert f1(1) == 1
+  assert f1(0) == 0
+  assert f2() >= 0
+
+@pytest.mark.xfail(reason = "omp_get_initial_device give a compilation error on Travis (Linux and Windows), also Target construct not implemented yet !")
+def test_modules_14_1():
+  f3 = epyccel(openmp.test_omp_is_initial_device, accelerator='openmp')
+  f4 = epyccel(openmp.test_omp_get_initial_device, accelerator='openmp')
+
+  assert f3() == 1
+
+@pytest.mark.xfail(reason = "Teams not supported yet for openmp !")
+def test_modules_15():
+	f1 = epyccel(openmp.test_omp_get_num_teams, accelerator='openmp')
+	f2 = epyccel(openmp.test_omp_get_team_num, accelerator='openmp')
+
+	assert f1() == 2
+	assert f2(0) == 0
+	assert f2(1) == 1
+
+@pytest.mark.xfail(reason = "Tasks not supported yet for openmp !")
+def test_modules_16():
+	f1 = epyccel(openmp.test_omp_get_max_task_priority, accelerator='openmp')
+
+	assert f1() == 5
 
 def test_omp_matmul():
-  f1 = mod.omp_matmul
-  mod.set_num_threads(4)
+  f1 = epyccel(openmp.omp_matmul, accelerator='openmp')
+  set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
+  set_num_threads(4)
   from numpy import matmul
   A1 = np.ones([3, 2])
   A1[1,0] = 2
@@ -94,8 +157,9 @@ def test_omp_matmul():
   assert np.array_equal(y1, y2)
 
 def test_omp_matmul_single():
-  f1 = mod.omp_matmul_single
-  mod.set_num_threads(4)
+  f1 = epyccel(openmp.omp_matmul_single, accelerator='openmp')
+  set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
+  set_num_threads(4)
   from numpy import matmul
   A1 = np.ones([3, 2])
   A1[1,0] = 2
@@ -109,31 +173,34 @@ def test_omp_matmul_single():
   assert np.array_equal(y1, y2)
 
 def test_omp_matmul_2d_2d():
-  f1 = mod.omp_matmul
-  mod.set_num_threads(4)
+  f1 = epyccel(openmp.omp_matmul, accelerator='openmp')
+  set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
+  set_num_threads(4)
   from numpy import matmul
   A1 = np.ones([3, 2])
-  A1[1,0] = 3
+  A1[1,0] = 2
   A2 = np.copy(A1)
   x1 = np.ones([2, 3])
   x2 = np.copy(x1)
   y1 = np.zeros([3,3])
   y2 = np.zeros([3,3])
   f1(A1, x1, y1)
-  y2[:,:] = matmul(A2, x2)
+  y2[:] = matmul(A2, x2)
   assert np.array_equal(y1, y2)
 
 def test_omp_arraysum():
-  f1 = mod.omp_arraysum
-  mod.set_num_threads(4)
+  f1 = epyccel(openmp.omp_arraysum, accelerator='openmp')
+  set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
+  set_num_threads(4)
   from numpy import random
   from numpy import sum
   x = random.randint(20, size=(5))
   assert f1(x) == sum(x)
 
 def test_omp_arraysum_single():
-  f1 = mod.omp_arraysum_single
-  mod.set_num_threads(2)
+  f1 = epyccel(openmp.omp_arraysum_single, accelerator='openmp')
+  set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
+  set_num_threads(2)
   from numpy import random
   from numpy import sum
   x = random.randint(20, size=(10))
