@@ -2676,6 +2676,8 @@ class Variable(Symbol, PyccelAstNode):
             return False
         return isinstance(self.dtype, (NativeInteger, NativeBool,
                           NativeReal, NativeComplex))
+    def rename(self, newname):
+        return Variable(self._dtype, newname, rank=self._rank, allocatable=self._allocatable, is_stack_array=self._is_stack_array, is_pointer=self._is_pointer, is_target=self._is_target, is_polymorphic=self._is_polymorphic, is_optional=self._is_optional, shape=self._shape, cls_base=self._cls_base, order=self.order, precision=self.precision, is_argument=self._is_argument, is_kwonly=self._is_kwonly)
 
     def __str__(self):
         if isinstance(self.name, (str, DottedName)):
@@ -3725,6 +3727,8 @@ class FunctionAddress(FunctionDef):
         arguments,
         results,
         body,
+        is_optional=False,
+        #do we need it
         is_pointer=False,
         is_kwonly=False,
         is_argument=False,
@@ -3741,9 +3745,20 @@ class FunctionAddress(FunctionDef):
         if not isinstance(is_kwonly, bool):
             raise TypeError('Expecting a boolean for kwonly')
 
+        if is_optional is None:
+            is_optional = False
+        elif not isinstance(is_optional, bool):
+            raise TypeError('is_optional must be a boolean.')
+        self._is_optional = is_optional
+
+        self._name = name
         self._is_pointer      = is_pointer
         self._is_kwonly       = is_kwonly
         self._is_argument     = is_argument
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def is_pointer(self):
@@ -3756,6 +3771,9 @@ class FunctionAddress(FunctionDef):
     @property
     def is_kwonly(self):
         return self._is_kwonly
+    @property
+    def is_optional(self):
+        return self._is_optional
 
 class SympyFunction(FunctionDef):
 
@@ -4341,40 +4359,59 @@ class Load(Basic):
 # TODO: Should Declare have an optional init value for each var?
 
 class FuncAddressDeclare(Basic):
-    def __init__(
-        self,
-        name,
-        arguments,
-        results,
+
+    def __new__(
+        cls,
+        variable,
         intent=None,
         value=None,
+        static=False,
         ):
 
-        self._name = name
-        self._arguments = arguments
-        self._results = results
-        self._intent = intent
-        self._value = value
+        if not isinstance(variable, FunctionAddress):
+            raise TypeError('variable must be of type FunctionAddress, given {0}'.format(variable))
 
-    @property
-    def name(self):
-        return self._name
+        if intent:
+            if not intent in ['in', 'out', 'inout']:
+                raise ValueError("intent must be one among {'in', 'out', 'inout'}")
 
-    @property
-    def arguments(self):
-        return self._arguments
+        if not isinstance(static, bool):
+            raise TypeError('Expecting a boolean for static attribute')
+        return Basic.__new__(
+            cls,
+            variable,
+            intent,
+            value,
+            static,
+            )
 
     @property
     def results(self):
-        return self._results
+        return self._args[0].results
+
+    @property
+    def arguments(self):
+        return self._args[0].arguments
+
+    @property
+    def name(self):
+        return self._args[0].name
+
+    @property
+    def variable(self):
+        return self._args[0]
 
     @property
     def intent(self):
-        return self._intent
+        return self._args[1]
 
     @property
     def value(self):
-        return self._value
+        return self._args[2]
+
+    @property
+    def static(self):
+        return self._args[3]
 
 class Declare(Basic):
 
