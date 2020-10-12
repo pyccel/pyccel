@@ -1,16 +1,16 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 # pylint: disable=wildcard-import
-import pytest
-import os
 import multiprocessing
+import os
+import pytest
 import numpy as np
-from pyccel.epyccel import epyccel
+import modules.openmp as openmp
 
+from pyccel.epyccel import epyccel
 from pyccel.parser.parser   import Parser
 from pyccel.codegen.codegen import Codegen
 from pyccel.errors.errors   import Errors
 #==============================================================================
-import modules.openmp as openmp
 
 def test_module_1():
   f1 = epyccel(openmp.f1, accelerator='openmp')

@@ -1,3 +1,5 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=wildcard-import
 from pyccel.decorators import types
 
 @types(int)
