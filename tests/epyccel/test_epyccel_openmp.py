@@ -30,87 +30,86 @@ def test_module_1():
   set_num_threads(4)
 
 def test_modules_10():
-	set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
-	set_num_threads(1)
-	f1 = epyccel(openmp.test_omp_get_ancestor_thread_num, accelerator='openmp')
+  set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
+  set_num_threads(1)
+  f1 = epyccel(openmp.test_omp_get_ancestor_thread_num, accelerator='openmp')
 
-	assert f1() == 0
-	set_num_threads(4)
+  assert f1() == 0
+  set_num_threads(4)
 
 def test_module_2():
-	f1 = epyccel(openmp.test_omp_number_of_procs, accelerator='openmp')
-	assert f1() == multiprocessing.cpu_count()
+  f1 = epyccel(openmp.test_omp_number_of_procs, accelerator='openmp')
+  assert f1() == multiprocessing.cpu_count()
 
 def test_module_3():
-	set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
-	set_num_threads(4)
-	f1 = epyccel(openmp.test_omp_in_parallel1, accelerator='openmp')
-	f2 = epyccel(openmp.test_omp_in_parallel2, accelerator='openmp')
+  set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
+  set_num_threads(4)
+  f1 = epyccel(openmp.test_omp_in_parallel1, accelerator='openmp')
+  f2 = epyccel(openmp.test_omp_in_parallel2, accelerator='openmp')
 
-	assert f1() == 0
-	assert f2() == 1
+  assert f1() == 0
+  assert f2() == 1
 
 def test_modules_4():
-	f1 = epyccel(openmp.test_omp_set_get_dynamic, accelerator='openmp')
+  f1 = epyccel(openmp.test_omp_set_get_dynamic, accelerator='openmp')
 
-	assert f1(1) == 1
-	assert f1(0) == 0
+  assert f1(1) == 1
+  assert f1(0) == 0
 
 def test_modules_5():
-	f1 = epyccel(openmp.test_omp_get_cancellation, accelerator='openmp')
+  f1 = epyccel(openmp.test_omp_get_cancellation, accelerator='openmp')
 
-	cancel_var = os.environ.get('OMP_CANCELLATION')
-	if cancel_var is not None:
-		if cancel_var.lower() == 'true':
-			assert f1() == 1
-		else:
-			assert f1() == 0
-	else:
-		assert f1() == 0
+  cancel_var = os.environ.get('OMP_CANCELLATION')
+  if cancel_var is not None:
+    if cancel_var.lower() == 'true':
+      assert f1() == 1
+    else:
+      assert f1() == 0
+  else:
+    assert f1() == 0
 
 def test_modules_6():
-	f1 = epyccel(openmp.test_omp_get_thread_limit, accelerator='openmp')
-
-	#In order to test this function properly we must set the OMP_THREAD_LIMIT env var with the number of threads limit of the program
-	#When the env var is not set, the number of threads limit is MAX INT
-	assert f1() >= 0
+  f1 = epyccel(openmp.test_omp_get_thread_limit, accelerator='openmp')
+  #In order to test this function properly we must set the OMP_THREAD_LIMIT env var with the number of threads limit of the program
+  #When the env var is not set, the number of threads limit is MAX INT
+  assert f1() >= 0
 
 def test_modules_7():
-	f1 = epyccel(openmp.test_omp_get_set_max_active_levels, accelerator='openmp')
+  f1 = epyccel(openmp.test_omp_get_set_max_active_levels, accelerator='openmp')
 
-	max_active_level = 5
-	#if the given max_active_level less than 0, omp_get_max_active_levels() gonna return (MAX_INT) as result
-	assert f1(max_active_level) == max_active_level
+  max_active_level = 5
+  #if the given max_active_level less than 0, omp_get_max_active_levels() gonna return (MAX_INT) as result
+  assert f1(max_active_level) == max_active_level
 
 def test_modules_8():
-	f1 = epyccel(openmp.test_omp_get_level, accelerator='openmp')
+  f1 = epyccel(openmp.test_omp_get_level, accelerator='openmp')
 
-	assert f1() == 2
+  assert f1() == 2
 
 def test_modules_9():
-	f1 = epyccel(openmp.test_omp_get_active_level, accelerator='openmp')
+  f1 = epyccel(openmp.test_omp_get_active_level, accelerator='openmp')
 
-	assert f1() == 1
+  assert f1() == 1
 
 def test_modules_11():
-	set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
-	set_num_threads(4)
-	f1 = epyccel(openmp.test_omp_get_team_size, accelerator='openmp')
+  set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
+  set_num_threads(4)
+  f1 = epyccel(openmp.test_omp_get_team_size, accelerator='openmp')
 
-	assert f1() == 4
-	set_num_threads(8)
-	assert f1() == 8
+  assert f1() == 4
+  set_num_threads(8)
+  assert f1() == 8
 
 @pytest.mark.xfail(reason = "Tasks not supported yet for openmp !")
 def test_modules_12():
-	f1 = epyccel(openmp.test_omp_in_final, accelerator='openmp')
+  f1 = epyccel(openmp.test_omp_in_final, accelerator='openmp')
 
-	assert f1() == 1
+  assert f1() == 1
 
 def test_modules_13():
-	f1 = epyccel(openmp.test_omp_get_proc_bind, accelerator='openmp')
+  f1 = epyccel(openmp.test_omp_get_proc_bind, accelerator='openmp')
 
-	assert f1() >= 0
+  assert f1() >= 0
 
 def test_modules_14_0():
   f1 = epyccel(openmp.test_omp_set_get_default_device, accelerator='openmp')
@@ -129,18 +128,18 @@ def test_modules_14_1():
 
 @pytest.mark.xfail(reason = "Teams not supported yet for openmp !")
 def test_modules_15():
-	f1 = epyccel(openmp.test_omp_get_num_teams, accelerator='openmp')
-	f2 = epyccel(openmp.test_omp_get_team_num, accelerator='openmp')
+  f1 = epyccel(openmp.test_omp_get_num_teams, accelerator='openmp')
+  f2 = epyccel(openmp.test_omp_get_team_num, accelerator='openmp')
 
-	assert f1() == 2
-	assert f2(0) == 0
-	assert f2(1) == 1
+  assert f1() == 2
+  assert f2(0) == 0
+  assert f2(1) == 1
 
 @pytest.mark.xfail(reason = "Tasks not supported yet for openmp !")
 def test_modules_16():
-	f1 = epyccel(openmp.test_omp_get_max_task_priority, accelerator='openmp')
+  f1 = epyccel(openmp.test_omp_get_max_task_priority, accelerator='openmp')
 
-	assert f1() == 5
+  assert f1() == 5
 
 def test_omp_matmul():
   f1 = epyccel(openmp.omp_matmul, accelerator='openmp')
@@ -156,6 +155,7 @@ def test_omp_matmul():
   y2 = np.zeros([3,1])
   f1(A1, x1, y1)
   y2[:] = matmul(A2, x2)
+
   assert np.array_equal(y1, y2)
 
 def test_omp_matmul_single():
@@ -172,6 +172,7 @@ def test_omp_matmul_single():
   y2 = np.zeros([3,1])
   f1(A1, x1, y1)
   y2[:] = matmul(A2, x2)
+
   assert np.array_equal(y1, y2)
 
 def test_omp_matmul_2d_2d():
@@ -188,6 +189,7 @@ def test_omp_matmul_2d_2d():
   y2 = np.zeros([3,3])
   f1(A1, x1, y1)
   y2[:] = matmul(A2, x2)
+
   assert np.array_equal(y1, y2)
 
 def test_omp_arraysum():
@@ -197,6 +199,7 @@ def test_omp_arraysum():
   from numpy import random
   from numpy import sum
   x = random.randint(20, size=(5))
+
   assert f1(x) == sum(x)
 
 def test_omp_arraysum_single():
@@ -206,4 +209,5 @@ def test_omp_arraysum_single():
   from numpy import random
   from numpy import sum
   x = random.randint(20, size=(10))
+
   assert f1(x) == sum(x)
