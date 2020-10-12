@@ -543,7 +543,7 @@ class CCodePrinter(CodePrinter):
         return expr.name
 
     def _print_FunctionDef(self, expr):
-        decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i.name, i.arguments, i.results) for i in expr.local_vars]
+        decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         decs += [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i.name, i.arguments, i.results) for i in expr.results]
         decs  = '\n'.join(self._print(i) for i in decs)
         body  = '\n'.join(self._print(i) for i in expr.body.body)
