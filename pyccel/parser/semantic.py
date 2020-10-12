@@ -2500,7 +2500,7 @@ class SemanticParser(BasicParser):
             if func_ and func_.is_recursive:
                 is_recursive = True
 
-            sub_funcs = [i for i in self.namespace.functions.values() if not i.is_header]
+            sub_funcs = [i for i in self.namespace.functions.values() if not i.is_header and not isinstance(i, FunctionAddress)]
 
             self.exit_function_scope()
             # ... computing inout arguments
@@ -2565,7 +2565,6 @@ class SemanticParser(BasicParser):
                     errors.report(UNSUPPORTED_ARRAY_RETURN_VALUE,
                     symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal')
-
 
             func = FunctionDef(name,
                     args,
