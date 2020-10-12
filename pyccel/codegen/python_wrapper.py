@@ -40,7 +40,7 @@ def compile_f2py( filename, *,
                   pyf = '',
                   verbose = False ):
 
-    args_pattern = """  -c {compilers} --f90flags="{f90flags}" {opt} {libs} -m {modulename} {pyf} {filename} {libdirs} {extra_args} {includes} {only}"""
+    args_pattern = """  -c {compilers} --f90flags="{f90flags}" {opt} {libs} -m {modulename} {pyf} {filename} {libdirs} {extra_args} {includes} {only} {verbose_str}"""
 
     compilers  = ''
     f90flags   = ''
@@ -108,22 +108,31 @@ def compile_f2py( filename, *,
     libs = ' '.join('-l'+i.lower() for i in libs) # because of f2py we must use lower case
     libdirs = ' '.join('-L'+i for i in libdirs)
 
-    args = args_pattern.format( compilers  = compilers,
-                                f90flags   = f90flags,
-                                opt        = opt,
-                                libs       = libs,
-                                libdirs    = libdirs,
-                                modulename = modulename.rpartition('.')[2],
-                                filename   = filename,
-                                extra_args = extra_args,
-                                includes   = includes,
-                                only       = only,
-                                pyf        = pyf )
+    if not verbose:
+        verbose_str = '--quiet'
+    else:
+        verbose_str = '--verbose'
+
+    args = args_pattern.format( compilers   = compilers,
+                                f90flags    = f90flags,
+                                opt         = opt,
+                                libs        = libs,
+                                libdirs     = libdirs,
+                                modulename  = modulename.rpartition('.')[2],
+                                filename    = filename,
+                                extra_args  = extra_args,
+                                includes    = includes,
+                                only        = only,
+                                pyf         = pyf,
+                                verbose_str = verbose_str )
 
     cmd = """{} -m numpy.f2py {}"""
     cmd = cmd.format(sys.executable, args)
 
     output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+
+    if verbose:
+        print(cmd)
 
 #    # .... TODO: TO REMOVE
 #    pattern_1 = 'f2py  {modulename}.f90 -h {modulename}.pyf -m {modulename}'
@@ -229,19 +238,18 @@ def create_shared_library(codegen,
         # ...
 
         # Create MOD.so shared library
-        if language == 'fortran':
-            extra_args  = ' '.join([extra_args, '--no-wrap-functions', '--build-dir f2py_build'])
-            compile_f2py(f2py_filename,
-                         language    = language,
-                         modulename  = sharedlib_modname,
-                         libs        = libs,
-                         libdirs     = libdirs,
-                         includes    = object_files,  # TODO: this is not an include...
-                         extra_args  = extra_args,
-                         compiler    = compiler,
-                         mpi_compiler= mpi_compiler,
-                         accelerator = accelerator,
-                         verbose     = verbose )
+        extra_args  = ' '.join([extra_args, '--no-wrap-functions', '--build-dir f2py_build'])
+        compile_f2py(f2py_filename,
+                     language    = language,
+                     modulename  = sharedlib_modname,
+                     libs        = libs,
+                     libdirs     = libdirs,
+                     includes    = object_files,  # TODO: this is not an include...
+                     extra_args  = extra_args,
+                     compiler    = compiler,
+                     mpi_compiler= mpi_compiler,
+                     accelerator = accelerator,
+                     verbose     = verbose )
 
     # Obtain absolute path of newly created shared library
 
