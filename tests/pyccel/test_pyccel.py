@@ -336,25 +336,11 @@ def test_bool():
 
 #------------------------------------------------------------------------------
 def test_expressions(language):
-    types = [float, int, float, float, int] + [float]*3 + \
-            [complex, int, int, int, float] + [complex]*2 + \
+    types = [float, complex, int, float, float, int] + [float]*3 + \
+            [complex, int, complex, complex, int, int, float] + [complex]*3 + \
             [float]*3 + [int] + [float]*2 + [int] + [float]*3 + [int] + \
-            [float]*2 + [float]*2 + [int]*5 + [bool]*9
+            [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex] + [bool]*9
     pyccel_test("scripts/expressions.py", language=language,
-                pyccel_commands="--libs m", output_dtype = types)
-
-#------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Bug: need to be fixed in c"),
-            pytest.mark.c]
-        ),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    )
-)
-def test_expressions_with_complex(language):
-    types = [complex] * 4 + [float] * 3 + [complex]
-    pyccel_test("scripts/expression_special_cases.py", language=language,
                 pyccel_commands="--libs m", output_dtype = types)
 
 #------------------------------------------------------------------------------
