@@ -233,7 +233,8 @@ def omp_matmul(A, x, out):
                 out[i][j] += A[i][k] * x[k][j]
     #$ omp end do
     #$ omp end parallel
-    "bypass issue #468" #to let the function compile using epyccel issue #468
+    #to let the function compile using epyccel issue #468
+    "bypass issue #468" # pylint: disable=issue #468
 
 @types('real[:,:], real[:,:], real[:,:]')
 def omp_matmul_single(A, x, out):
@@ -243,7 +244,8 @@ def omp_matmul_single(A, x, out):
     out[:] = matmul(A, x)
     #$ omp end single
     #$ omp end parallel
-    "bypass issue #468" #to let the function compile using epyccel issue #468
+    #to let the function compile using epyccel issue #468
+    "bypass issue #468" # pylint: disable=issue #468
 
 @types('int[:]')
 def omp_arraysum(x):
