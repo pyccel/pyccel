@@ -849,8 +849,9 @@ class CCodePrinter(CodePrinter):
 
     def _print_Program(self, expr):
         body  = self._print(expr.body)
-        decs     = '\n'.join(self._print(i) for i in expr.declarations)
-        decs    += '\n'.join(self._print(Declare(i.dtype, i)) for i in self._additional_declare)
+        decs     = [self._print(i) for i in expr.declarations]
+        decs    += [self._print(Declare(i.dtype, i)) for i in self._additional_declare]
+        decs    = '\n'.join(self._print(i) for i in decs)
         self._additional_declare.clear()
 
         # Print imports last to be sure that all additional_imports have been collected
