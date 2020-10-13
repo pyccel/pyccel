@@ -33,6 +33,7 @@ from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return
 from pyccel.ast.core import ConstructorCall
+from pyccel.ast.core import ValuedFunctionAddress
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor, ForIterator
@@ -2400,7 +2401,16 @@ class SemanticParser(BasicParser):
                         d_var['is_argument'] = True
                         d_var['is_pointer'] = True
                         d_var['is_kwonly'] = a.is_kwonly
-                        a_new = FunctionAddress(a.name, ah.arguments, ah.results, [], **d_var)
+                        if isinstance(a, ValuedArgument):
+
+                            # optional argument only if the value is None
+                            if isinstance(a.value, Nil):
+                                d_var['is_optional'] = True
+
+                            a_new = ValuedFunctionAddress(a.name, ah.arguments, ah.results, [],
+                                        value=a.value, **d_var)
+                        else:
+                            a_new = FunctionAddress(a.name, ah.arguments, ah.results, [], **d_var)
                     else:
                         d_var = self._infere_type(ah, **settings)
                         d_var['shape'] = ah.alloc_shape
@@ -2411,7 +2421,6 @@ class SemanticParser(BasicParser):
                             d_var['cls_base'] = NumpyArrayClass
 
                         # this is needed for the static case
-                        # same thig for functionaddress
                         if isinstance(a, ValuedArgument):
 
                             # optional argument only if the value is None

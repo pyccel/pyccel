@@ -2879,8 +2879,6 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
     def inspect(self):
         self._args[1].inspect()
 
-
-
 class ValuedVariable(Variable):
 
     """Represents a valued variable in the code.
@@ -3152,10 +3150,10 @@ class FunctionCall(Basic, PyccelAstNode):
         # add the messing argument in the case of optional arguments
         f_args = func.arguments
         if not len(args) == len(f_args):
-            f_args_dict = OrderedDict((a.name,a) if isinstance(a, ValuedVariable) else (a.name, None) for a in f_args)
+            f_args_dict = OrderedDict((a.name,a) if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else (a.name, None) for a in f_args)
             keyword_args = []
             for i,a in enumerate(args):
-                if not isinstance(a, ValuedVariable):
+                if not isinstance(a, (ValuedVariable, ValuedFunctionAddress)):
                     f_args_dict[f_args[i].name] = a
                 else:
                     keyword_args = args[i:]
@@ -3164,7 +3162,7 @@ class FunctionCall(Basic, PyccelAstNode):
             for a in keyword_args:
                 f_args_dict[a.name] = a.value
 
-            args = [a.value if isinstance(a, ValuedVariable) else a for a in f_args_dict.values()]
+            args = [a.value if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else a for a in f_args_dict.values()]
 
         # Ensure the correct syntax is used for pointers
         args = [VariableAddress(a) if isinstance(a, Variable) and f.is_pointer else a for a, f in zip(args, f_args)]
@@ -3779,6 +3777,20 @@ class FunctionAddress(FunctionDef):
     @property
     def is_optional(self):
         return self._is_optional
+
+class ValuedFunctionAddress(FunctionAddress):
+
+    def __new__(cls, *args, **kwargs):
+        kwargs.pop('value', Nil())
+        return FunctionAddress.__new__(cls, *args, **kwargs)
+
+    def __init__(self, *args, **kwargs):
+        self._value = kwargs.pop('value', Nil())
+        FunctionAddress.__init__(self, *args, **kwargs)
+
+    @property
+    def value(self):
+        return self._value
 
 class SympyFunction(FunctionDef):
 
