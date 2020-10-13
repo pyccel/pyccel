@@ -550,7 +550,7 @@ class CCodePrinter(CodePrinter):
         self._additional_declare.append(tmp_var)
         assign = Assign(tmp_var, init_val)
         self._additional_code += self._print(assign) + '\n'
-        return VariableAddress(tmp_var)
+        return tmp_var
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
@@ -562,7 +562,7 @@ class CCodePrinter(CodePrinter):
                 args.append(VariableAddress(a))
             elif f.is_optional and not isinstance(a, Nil):
                 tmp_var = self.create_tmp_var(a, f)
-                args.append(tmp_var)
+                args.append(VariableAddress(tmp_var))
             else :
                 args.append(a)
 
