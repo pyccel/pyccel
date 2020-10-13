@@ -1195,19 +1195,20 @@ class FCodePrinter(CodePrinter):
         return '.False.'
 
     def _print_String(self, expr):
-        # characters speciaux are not handled only newline
-        formatted_str = expr.arg.replace("'","''")\
-                                .replace('\a', '\\a')\
-                                .replace('\b', '\\b')\
-                                .replace('\f', '\\f')\
-                                .replace('\r', '\\r')\
-                                .replace('\t', '\\t')\
-                                .replace('\v', '\\v')
-        if "\n" in formatted_str:
-            s_list = formatted_str.split("\n")
-            code = " // new_line('') // ".join("'{}'".format(s) for s in s_list)
-            return code
-        return "'{}'".format(formatted_str)
+        sp_chars = ['\a', '\b', '\f', '\r', '\t', '\v', "'", '\n']
+        sub_str = ''
+        formatted_str = "''"
+        for c in expr.arg:
+            if c in sp_chars:
+                if sub_str != '':
+                    formatted_str += " // '{}'".format(sub_str)
+                    sub_str = ''
+                formatted_str += ' // ACHAR({})'.format(ord(c))
+            else:
+                sub_str += c
+        if sub_str != '':
+            formatted_str += " // '{}'".format(sub_str)
+        return formatted_str
 
     def _print_Interface(self, expr):
         # ... we don't print 'hidden' functions
