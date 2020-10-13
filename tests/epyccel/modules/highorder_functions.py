@@ -26,6 +26,10 @@ def f6(a, b):
 def f7(a, b):
     return a * 5 + b
 
+#$ header function f8()
+def f8():
+    return 0.5
+
 #$ header function high_int_1((int)(int), int)
 def high_int_1(function, a):
     x = function(a)
@@ -45,6 +49,16 @@ def high_real_1(function, a, b):
 #$ header function high_real_2((real)(real, real), real, real)
 def high_real_2(function, a, b):
     x = function(a, b)
+    return x
+
+#$ header function high_real_3((real)())
+def high_real_3(function):
+    x = function()
+    return x
+
+#$ header function high_valuedarg_1(int, (int)(int))
+def high_valuedarg_1(a, function=f1):
+    x = function(a)
     return x
 
 #$ header function high_real_real_int((real)(real, real), (real)(int, real), (int)(int))
@@ -71,6 +85,16 @@ def test_real_1():
 def test_real_2():
     x = high_real_2(f7, 999.11, 10.5)
     return x
+
+#$ header function test_real_3()
+def test_real_3():
+    x = high_real_3(f8)
+    return x 
+
+#$ header function test_valuedarg_1()
+def test_valuedarg_1():
+    x = high_valuedarg_1(2)
+    return x 
 
 #$ header function test_real_real_int()
 def test_real_real_int():
