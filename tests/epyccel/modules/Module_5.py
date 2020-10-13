@@ -83,7 +83,7 @@ def call_optional_11():
 @types()
 def call_optional_12():
     a = 0
-    for i in range(0, nothing(3)) :
+    for i in range(0, nothing(3)) : # pylint: disable=unused-variable
         a = a + nothing(3)
     return a
 
