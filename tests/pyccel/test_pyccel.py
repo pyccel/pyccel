@@ -107,8 +107,8 @@ def get_value(string, regex, conversion):
 def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float ):
 
     if dtype is str:
-        p_list = p_output.split()
-        f_list = f_output.split()
+        p_list = [e.strip() for e in p_output.split('\n')]
+        f_list = [e.strip() for e in f_output.split('\n')]
         assert(p_list==f_list)
     elif dtype is complex:
         rx = re.compile('[-0-9.eEj]+')
@@ -153,6 +153,8 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float ):
     elif dtype is complex:
         while len(p_output)>0 and len(f_output)>0:
             p_output,f_output = compare_pyth_fort_output_by_type(p_output,f_output,complex)
+    elif dtype is str:
+        compare_pyth_fort_output_by_type(p_output,f_output,dtype)
     else:
         p_output = p_output.strip().split()
         f_output = f_output.strip().split()
@@ -456,6 +458,6 @@ def test_print_strings(language):
         )
     )
 )
-def test_print_special_cases(language):
+def test_print_sp_and_end(language):
     types = str
-    pyccel_test("scripts/print_special_cases.py", language=language, output_dtype=types)
+    pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
