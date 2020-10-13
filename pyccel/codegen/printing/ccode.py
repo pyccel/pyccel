@@ -402,7 +402,7 @@ class CCodePrinter(CodePrinter):
         if not expr.arguments:
             arg_code = 'void'
         else:
-            arg_code = ', '.join('{}'.format(self.print_FuncAddressDeclare(i)) if isinstance(i, FunctionDef) else '{0}{1}'.format(self.get_declare_type(i), i) for i in expr.arguments)
+            arg_code = ', '.join('{}'.format(self._print_FuncAddressDeclare(i)) if isinstance(i, FunctionAddress) else '{0}{1}'.format(self.get_declare_type(i), i) for i in expr.arguments)
         return '{}(*{})({});'.format(ret_type, name, arg_code)
 
     def _print_Declare(self, expr):

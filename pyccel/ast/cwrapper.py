@@ -137,7 +137,7 @@ class PyArg_ParseTupleNode(Basic):
             i+=1
 
         # Restriction as of python 3.8
-        if any([isinstance(a, Variable) and a.is_kwonly for a in c_func_args]):
+        if any([isinstance(a, (Variable, FunctionAddress)) and a.is_kwonly for a in c_func_args]):
             errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
                           symbol=c_func_args, severity='warning')
 

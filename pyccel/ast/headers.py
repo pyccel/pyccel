@@ -203,7 +203,13 @@ class FunctionHeader(Header):
                         shape = None
                         if rank >1:
                             order = dc['order']
-                            dtype = datatype(dtype)
+
+                        if isinstance(dtype, str):
+                            try:
+                                dtype = datatype(dtype)
+                            except ValueError:
+                                dtype = DatatypeFactory(str(dtype), ("_name"))()
+                                is_pointer = True
                         arg = Variable(dtype, '',
                                     allocatable=allocatable, is_pointer=is_pointer,
                                     rank=rank, shape=shape ,order = order, precision = precision,
@@ -221,7 +227,13 @@ class FunctionHeader(Header):
                         shape = None
                         if rank >1:
                             order = rt['order']
-                            dtype = datatype(dtype)
+
+                        if isinstance(dtype, str):
+                            try:
+                                dtype = datatype(dtype)
+                            except ValueError:
+                                dtype = DatatypeFactory(str(dtype), ("_name"))()
+                                is_pointer = True
                         ret = Variable(dtype, '',
                                     allocatable=allocatable, is_pointer=is_pointer,
                                     rank=rank, shape=shape ,order = order, precision = precision,

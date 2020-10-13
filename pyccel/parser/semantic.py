@@ -415,7 +415,7 @@ class SemanticParser(BasicParser):
                 func =  container.imports['functions'][name]
                 break
             container = container.parent_scope
-         
+
         return func
 
 
@@ -2302,7 +2302,7 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_FunctionDef(self, expr, **settings):
-        
+
         name         = str(expr.name)
         name         = name.replace("'", '')
         cls_name     = expr.cls_name
@@ -2315,10 +2315,8 @@ class SemanticParser(BasicParser):
         is_elemental = expr.is_elemental
         is_private   = expr.is_private
 
-        #in case of using decorators
         header = expr.header
         args_number = len(expr.arguments)
-        #in case of using header comments
         if header is None:
             if cls_name:
                 header = self.get_header(cls_name +'.'+ name)
@@ -2413,7 +2411,7 @@ class SemanticParser(BasicParser):
                             d_var['cls_base'] = NumpyArrayClass
 
                         # this is needed for the static case
-
+                        # same thig for functionaddress
                         if isinstance(a, ValuedArgument):
 
                             # optional argument only if the value is None

@@ -236,7 +236,7 @@ class FunctionHeaderStmt(BasicStmt):
         for dec in self.decs:
             if isinstance(dec,UnionTypeStmt):
                 dtypes += [dec.expr]
- 
+
         if self.kind is None:
             kind = 'function'
         else:

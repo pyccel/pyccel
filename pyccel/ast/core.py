@@ -1310,9 +1310,6 @@ class AliasAssign(Basic):
             if not lhs.is_pointer:
                 raise TypeError('lhs must be a pointer')
 
-            #should results be the same type ?
-            #function should return a pointer
-            #will be used in x = functioncall
             if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_pointer:
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
 
@@ -2677,7 +2674,17 @@ class Variable(Symbol, PyccelAstNode):
         return isinstance(self.dtype, (NativeInteger, NativeBool,
                           NativeReal, NativeComplex))
     def rename(self, newname):
-        return Variable(self._dtype, newname, rank=self._rank, allocatable=self._allocatable, is_stack_array=self._is_stack_array, is_pointer=self._is_pointer, is_target=self._is_target, is_polymorphic=self._is_polymorphic, is_optional=self._is_optional, shape=self._shape, cls_base=self._cls_base, order=self.order, precision=self.precision, is_argument=self._is_argument, is_kwonly=self._is_kwonly)
+        return Variable(self._dtype,newname, rank=self._rank,
+                        allocatable=self._allocatable,
+                        is_stack_array=self._is_stack_array,
+                        is_pointer=self._is_pointer,
+                        is_target=self._is_target,
+                        is_polymorphic=self._is_polymorphic,
+                        is_optional=self._is_optional,
+                        shape=self._shape, cls_base=self._cls_base,
+                        order=self.order, precision=self.precision,
+                        is_argument=self._is_argument,
+                        is_kwonly=self._is_kwonly)
 
     def __str__(self):
         if isinstance(self.name, (str, DottedName)):
@@ -3161,7 +3168,7 @@ class FunctionCall(Basic, PyccelAstNode):
 
         # Ensure the correct syntax is used for pointers
         args = [VariableAddress(a) if isinstance(a, Variable) and f.is_pointer else a for a, f in zip(args, f_args)]
-
+        
         args = [FunctionAddress(a.name, a.arguments, a.results, []) if isinstance(a, FunctionDef) else a for a in args]
         
         args = Tuple(*args, sympify=False)
@@ -3728,7 +3735,6 @@ class FunctionAddress(FunctionDef):
         results,
         body,
         is_optional=False,
-        #do we need it
         is_pointer=False,
         is_kwonly=False,
         is_argument=False,
@@ -3745,16 +3751,14 @@ class FunctionAddress(FunctionDef):
         if not isinstance(is_kwonly, bool):
             raise TypeError('Expecting a boolean for kwonly')
 
-        if is_optional is None:
-            is_optional = False
         elif not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
-        self._is_optional = is_optional
 
-        self._name = name
-        self._is_pointer      = is_pointer
-        self._is_kwonly       = is_kwonly
-        self._is_argument     = is_argument
+        self._is_optional   = is_optional
+        self._name          = name
+        self._is_pointer    = is_pointer
+        self._is_kwonly     = is_kwonly
+        self._is_argument   = is_argument
 
     @property
     def name(self):
@@ -3771,6 +3775,7 @@ class FunctionAddress(FunctionDef):
     @property
     def is_kwonly(self):
         return self._is_kwonly
+
     @property
     def is_optional(self):
         return self._is_optional
@@ -4377,6 +4382,7 @@ class FuncAddressDeclare(Basic):
 
         if not isinstance(static, bool):
             raise TypeError('Expecting a boolean for static attribute')
+
         return Basic.__new__(
             cls,
             variable,
