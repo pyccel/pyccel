@@ -195,7 +195,7 @@ def test_f10(language):
         pytest.param("c", marks = pytest.mark.c)
     ]
 )
-def test_f10(language):
+def test_f11(language):
     import modules.Module_5 as mod
 
     modnew = epyccel(mod, language = language)
