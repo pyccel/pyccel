@@ -265,9 +265,9 @@ class CCodePrinter(CodePrinter):
                         body    = body)
 
     def _print_While(self, expr):
-        code = "while (%s)\n{" % self._print(expr.test)
-        code = code + "\n %s" % self._print(expr.body) + "\n}"
-        return (code)
+        body = self._print(expr.body)
+        cond = self._print(expr.test)
+        return 'while({condi})\n{{\n{body}\n}}'.format(condi = cond, body = body)
 
     def _print_If(self, expr):
         lines = []
@@ -685,11 +685,11 @@ class CCodePrinter(CodePrinter):
 
     def _print_For(self, expr):
         target = self._print(expr.target)
+        body  = self._print(expr.body)
         if isinstance(expr.iterable, Range):
             start, stop, step = [self._print(e) for e in expr.iterable.args]
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
-        body  = self._print(expr.body)
         return ('for ({target} = {start}; {target} < {stop}; {target} += '
                 '{step})\n{{\n{body}\n}}').format(target=target, start=start,
                 stop=stop, step=step, body=body)
