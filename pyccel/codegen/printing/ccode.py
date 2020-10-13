@@ -209,6 +209,9 @@ class CCodePrinter(CodePrinter):
         self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
         self._additional_imports = set(['stdlib.h'])
+        self._parser = parser
+        self._additional_code = ''
+        self._additional_declare = []
 
     def _get_statement(self, codestring):
         return "%s;" % codestring
@@ -521,6 +524,7 @@ class CCodePrinter(CodePrinter):
         body  = self._print(expr.body)
         decs  = [Declare(i.dtype, i) for i in expr.local_vars]
         decs += [Declare(i.dtype, i) for i in expr.results]
+        decs += [Declare(i.dtype, i) for i in self._additional_declare]
         decs  = '\n'.join(self._print(i) for i in decs)
         sep = self._print(SeparatorComment(40))
 
@@ -542,8 +546,21 @@ class CCodePrinter(CodePrinter):
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
          # Ensure the correct syntax is used for pointers
-        args = [VariableAddress(a) if isinstance(a, Variable) and self.stored_in_c_pointer(f) else a
-            for a, f in zip(expr.arguments, func.arguments)]
+
+        args = []
+        for a, f in zip(expr.arguments, func.arguments):
+            if isinstance(a, Variable) and self.stored_in_c_pointer(f):
+                args.append(VariableAddress(a))
+            elif f.is_optional and not isinstance(a, Nil):
+                tmp_var_name = self._parser.get_new_name('tmp')
+                tmp_var = Variable(name = tmp_var_name, dtype = f.dtype)
+                self._additional_declare.append(tmp_var)
+                assign = Assign(tmp_var, a)
+                args.append(VariableAddress(tmp_var))
+                self._additional_code += self._print(assign) + '\n'
+            else :
+                args.append(a)
+
         # currently support only function with one or zero output
         args = ','.join(['{}'.format(self._print(a)) for a in args])
         if not func.results:
