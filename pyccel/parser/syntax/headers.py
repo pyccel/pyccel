@@ -80,7 +80,7 @@ class ListType(BasicStmt):
         d_var['allocatable'] = False
         d_var['precision'] = max(precisions)
         d_var['order'] = 'C'
-        if not(d_var['preCision']):
+        if not(d_var['precision']):
             if d_var['datatype'] in ['double','float','complex','int']:
                 d_var['precision'] = default_precision[d_var['datatype']]
         return d_var
