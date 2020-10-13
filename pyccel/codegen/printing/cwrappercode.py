@@ -1,5 +1,7 @@
 # coding: utf-8
 # pylint: disable=R0201
+# pylint: disable=wildcard-import
+
 from collections import OrderedDict
 
 from pyccel.codegen.printing.ccode import CCodePrinter
