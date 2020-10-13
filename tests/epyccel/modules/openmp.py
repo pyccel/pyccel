@@ -233,8 +233,7 @@ def omp_matmul(A, x, out):
                 out[i][j] += A[i][k] * x[k][j]
     #$ omp end do
     #$ omp end parallel
-    #to let the function compile using epyccel issue #468
-    "bypass issue #468" # eslint-disable-line no-eval
+    "bypass issue #468" #to let the function compile using epyccel issue #468
 
 @types('real[:,:], real[:,:], real[:,:]')
 def omp_matmul_single(A, x, out):
@@ -251,7 +250,7 @@ def omp_arraysum(x):
     result = 0
     #$ omp parallel private(i)
     #$ omp do reduction (+:result)
-    for i in range(len(x)):
+    for i in range(0, 10):
         result += x[i]
     #$ omp end do
     #$ omp end parallel
@@ -259,11 +258,11 @@ def omp_arraysum(x):
 
 @types('int[:]')
 def omp_arraysum_single(x):
-    from numpy import sum
     result = 0
     #$ omp parallel
     #$ omp single
-    result = sum(x)
+    for i in range(0, 10):
+        result += x[i]
     #$ omp end single
     #$ omp end parallel
     return result

@@ -196,10 +196,9 @@ def test_omp_arraysum():
     set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
     set_num_threads(4)
     from numpy import random
-    from numpy import sum
     x = random.randint(20, size=(5))
 
-    assert f1(x) == sum(x)
+    assert f1(x) == np.sum(x)
 
 def test_omp_arraysum_single():
     f1 = epyccel(openmp.omp_arraysum_single, accelerator='openmp')
