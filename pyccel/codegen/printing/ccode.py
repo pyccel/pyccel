@@ -694,7 +694,13 @@ class CCodePrinter(CodePrinter):
                 stop=stop, step=step, body=body)
 
     def _print_CodeBlock(self, expr):
-        return '\n'.join(self._print(b) for b in expr.body)
+        body = []
+        for b in expr.body :
+            code = self._print(b)
+            code = self._additional_code + code
+            self._additional_code = ''
+            body.append(code)
+        return '\n'.join(self._print(b) for b in body)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array
