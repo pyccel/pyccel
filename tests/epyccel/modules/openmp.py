@@ -57,6 +57,12 @@ def test_omp_set_get_dynamic(dynamic_theads):
     omp_set_dynamic(dynamic_theads)
     return omp_get_dynamic()
 
+@types ('bool')
+def test_omp_set_get_nested(nested):
+    from pyccel.stdlib.internal.openmp import omp_set_nested, omp_get_nested
+    omp_set_nested(nested)
+    return omp_get_nested()
+
 def test_omp_get_cancellation():
     from pyccel.stdlib.internal.openmp import omp_get_cancellation
     cancel_var = omp_get_cancellation()

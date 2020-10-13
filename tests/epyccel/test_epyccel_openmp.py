@@ -55,6 +55,12 @@ def test_modules_4():
     assert f1(1) == 1
     assert f1(0) == 0
 
+def test_modules_4_1():
+    f1 = epyccel(openmp.test_omp_set_get_nested, accelerator='openmp')
+
+    assert f1(1) == 1
+    assert f1(0) == 0
+
 def test_modules_5():
     f1 = epyccel(openmp.test_omp_get_cancellation, accelerator='openmp')
 
