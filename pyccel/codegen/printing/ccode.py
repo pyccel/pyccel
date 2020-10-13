@@ -514,9 +514,10 @@ class CCodePrinter(CodePrinter):
         # add necessary include
         self._additional_imports.add('math.h')
         arg = expr.args[0]
-        code_args = self._print(arg)
         if arg.dtype is not NativeReal():
             code_args = self._print(NumpyFloat(arg))
+        else :
+            code_args = self._print(arg)
         return 'sqrt({})'.format(code_args)
 
     def _print_FunctionDef(self, expr):
