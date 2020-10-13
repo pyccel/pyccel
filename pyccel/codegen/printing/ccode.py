@@ -518,10 +518,10 @@ class CCodePrinter(CodePrinter):
 
     def _print_FunctionDef(self, expr):
 
+        body  = self._print(expr.body)
         decs  = [Declare(i.dtype, i) for i in expr.local_vars]
         decs += [Declare(i.dtype, i) for i in expr.results]
         decs  = '\n'.join(self._print(i) for i in decs)
-        body  = '\n'.join(self._print(i) for i in expr.body.body)
         sep = self._print(SeparatorComment(40))
 
         return ('{sep}\n'
@@ -820,7 +820,7 @@ class CCodePrinter(CodePrinter):
         return '\n'
 
     def _print_Program(self, expr):
-        body     = '\n'.join(self._print(i) for i in expr.body.body)
+        body  = self._print(expr.body)
         decs     = '\n'.join(self._print(i) for i in expr.declarations)
 
         # Print imports last to be sure that all additional_imports have been collected
