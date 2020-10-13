@@ -7,7 +7,6 @@ import re
 
 #==============================================================================
 
-from pyccel.ast.core import DottedName
 from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
 from pyccel.ast.core import PythonFunction, SympyFunction
@@ -453,7 +452,7 @@ class BasicParser(object):
                 container[name] = []
         else:
             source = str(expr.source)
-            if not source in pyccel_builtin_import_registery:
+            if source not in pyccel_builtin_import_registery:
                 for t in expr.target:
                     name = [str(t)]
                     if not source in container.keys():

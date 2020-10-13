@@ -7,6 +7,7 @@ from collections     import OrderedDict
 
 from sympy import sympify
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
+from sympy import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Le as sp_Le, Gt as sp_Gt, Ge as sp_Ge
 from sympy import Integral, Symbol, Tuple
 from sympy import Lambda
 from sympy import Integer as sp_Integer
@@ -15,13 +16,12 @@ from sympy import preorder_traversal
 
 from sympy.simplify.radsimp   import fraction
 from sympy.core.compatibility import with_metaclass
-from sympy.core.assumptions   import StdFactKB
 from sympy.core.singleton     import Singleton, S
 from sympy.core.function      import Function, Application
 from sympy.core.function      import Derivative, UndefinedFunction as sp_UndefinedFunction
 from sympy.core.function      import _coeff_isneg
 from sympy.core.expr          import Expr, AtomicExpr
-from sympy.logic.boolalg      import And as sp_And, Not as sp_Not, Or as sp_Or
+from sympy.logic.boolalg      import And as sp_And, Or as sp_Or
 from sympy.logic.boolalg      import Boolean as sp_Boolean
 from sympy.tensor             import Idx, Indexed, IndexedBase
 
@@ -37,7 +37,7 @@ from .builtins  import Enumerate, Len, List, Map, Range, Zip, PythonTuple, Pytho
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
-                        NativeGeneric, NativeTuple, default_precision)
+                        NativeGeneric, NativeTuple, default_precision, is_iterable_datatype)
 
 from .numbers        import BooleanTrue, BooleanFalse, Integer as Py_Integer, ImaginaryUnit
 from .functionalexpr import GeneratorComprehension as GC
@@ -743,7 +743,7 @@ def allocatable_like(expr, verbose=False):
             elif a.is_Add:
                 aargs = list(a.args)
                 negs = 0
-                for (i, ai) in enumerate(aargs):
+                for ai in aargs:
                     if _coeff_isneg(ai):
                         negs += 1
                         args.append(-ai)
@@ -753,8 +753,8 @@ def allocatable_like(expr, verbose=False):
             if a.is_Pow and a.exp is S.NegativeOne:
                 args.append(a.base)  # won't be -Mul but could be Add
                 continue
-            if a.is_Mul or a.is_Pow or a.is_Function or isinstance(a,
-                    Derivative) or isinstance(a, Integral):
+            if a.is_Mul or a.is_Pow or a.is_Function or \
+                    isinstance(a, (Derivative, Integral)):
 
                 o = Symbol(a.func.__name__.upper())
             if not a.is_Symbol and not isinstance(a, (IndexedElement,
@@ -911,10 +911,10 @@ def extract_subexpressions(expr):
 #    return variables.values()
 
 def inline(func, args):
-        local_vars = func.local_vars
-        body = func.body
-        body = subs(body, zip(func.arguments, args))
-        return Block(str(func.name), local_vars, body)
+    local_vars = func.local_vars
+    body = func.body
+    body = subs(body, zip(func.arguments, args))
+    return Block(str(func.name), local_vars, body)
 
 
 def int2float(expr):
@@ -1267,7 +1267,7 @@ class CodeBlock(Basic):
 
     def __init__(self, body):
         if len(self._args)>0 and isinstance(self._args[-1], (Assign, AugAssign)):
-            self.set_fst(ls[-1].fst)
+            self.set_fst(self._args[-1].fst)
 
     @property
     def body(self):
@@ -1654,17 +1654,17 @@ class With(Basic):
         methods = self.test.cls_base.methods
         for i in methods:
             if str(i.name) == '__enter__':
-                enter = i
+                start = i
             elif str(i.name) == '__exit__':
-                exit = i
-        enter = inline(enter,[])
-        exit =  inline(exit, [])
+                end   = i
+        start = inline(start,[])
+        end   = inline(end  ,[])
 
         # TODO check if enter is empty or not first
 
-        body = enter.body.body
+        body = start.body.body
         body += self.body.body
-        body += exit.body.body
+        body +=  end.body.body
         return Block('with', [], body)
 
 
@@ -2156,7 +2156,7 @@ class For(Basic):
     def __new__(
         cls,
         target,
-        iter,
+        iter_obj,
         body,
         local_vars = [],
         strict=True,
@@ -2164,15 +2164,15 @@ class For(Basic):
         if strict:
             target = sympify(target, locals=local_sympify)
 
-            cond_iter = iterable(iter)
-            cond_iter = cond_iter or isinstance(iter, (Range, Product,
+            cond_iter = iterable(iter_obj)
+            cond_iter = cond_iter or isinstance(iter_obj, (Range, Product,
                     Enumerate, Zip, Map))
-            cond_iter = cond_iter or isinstance(iter, Variable) \
-                and is_iterable_datatype(iter.dtype)
-          #  cond_iter = cond_iter or isinstance(iter, ConstructorCall) \
-          #      and is_iterable_datatype(iter.arguments[0].dtype)
+            cond_iter = cond_iter or isinstance(iter_obj, Variable) \
+                and is_iterable_datatype(iter_obj.dtype)
+          #  cond_iter = cond_iter or isinstance(iter_obj, ConstructorCall) \
+          #      and is_iterable_datatype(iter_obj.arguments[0].dtype)
             if not cond_iter:
-                raise TypeError('iter must be an iterable')
+                raise TypeError('iter_obj must be an iterable')
 
             if iterable(body):
                 body = CodeBlock((sympify(i, locals=local_sympify) for i in
@@ -2180,7 +2180,7 @@ class For(Basic):
             elif not isinstance(body,CodeBlock):
                 raise TypeError('body must be an iterable or a Codeblock')
 
-        return Basic.__new__(cls, target, iter, body, local_vars)
+        return Basic.__new__(cls, target, iter_obj, body, local_vars)
 
     @property
     def target(self):
@@ -2209,12 +2209,12 @@ class DoConcurrent(For):
 
 class ForAll(Basic):
     """ class that represents the forall statement in fortran"""
-    def __new__(cls, iter, target, mask, body):
+    def __new__(cls, iter_obj, target, mask, body):
 
-        if not isinstance(iter, Range):
-            raise TypeError('iter must be of type Range')
+        if not isinstance(iter_obj, Range):
+            raise TypeError('iterable must be of type Range')
 
-        return Basic.__new__(cls, iter, target, mask, body)
+        return Basic.__new__(cls, iter_obj, target, mask, body)
 
 
     @property
@@ -2240,14 +2240,14 @@ class ForIterator(For):
     def __new__(
         cls,
         target,
-        iter,
+        iterable,
         body,
         strict=True,
         ):
 
-        if isinstance(iter, Symbol):
-            iter = Range(Len(iter))
-        return For.__new__(cls, target, iter, body, strict)
+        if isinstance(iterable, Symbol):
+            iterable = Range(Len(iterable))
+        return For.__new__(cls, target, iterable, body, strict)
 
     # TODO uncomment later when we intriduce iterators
     # @property
@@ -2283,7 +2283,7 @@ class ForIterator(For):
                 if isinstance(stmt, Assign):
                     it_vars.append(stmt.lhs)
 
-            n = len(set([str(var.name) for var in it_vars]))
+            n = len(set(str(var.name) for var in it_vars))
             return n
         else:
 
@@ -4974,7 +4974,7 @@ class IndexedElement(Expr, PyccelAstNode):
         ):
 
         if not args:
-            raise IndexException('Indexed needs at least one index.')
+            raise IndexError('Indexed needs at least one index.')
         if isinstance(base, (str, Symbol)):
             base = IndexedBase(base)
         elif not hasattr(base, '__getitem__') and not isinstance(base,
@@ -5634,7 +5634,7 @@ def get_iterable_ranges(it, var_name=None):
                 return expr.lhs
             else:
                 return None
-        elif isinstance(expr, And):
+        elif isinstance(expr, sp_And):
             return [doit(a, targets) for a in expr.args]
         else:
             raise TypeError('Expecting And logical expression.')
@@ -5701,13 +5701,13 @@ def get_iterable_ranges(it, var_name=None):
 
 class ParserResult(Basic):
     def __new__(
-        self,
+        cls,
         program=None,
         module=None,
         mod_name = None,
         prog_name = None,
         ):
-        return Basic.__new__(self)
+        return Basic.__new__(cls)
 
     def __init__(
         self,

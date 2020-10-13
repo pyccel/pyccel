@@ -1,6 +1,7 @@
-import pytest
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 import os
 import shutil
+import pytest
 
 __all__ = ['setup', 'teardown']
 
@@ -30,7 +31,7 @@ def teardown(path_dir = None):
     files = os.listdir(path_dir)
     for f in files:
         file_name = os.path.join(path_dir,f)
-        if f == "__pyccel__" or f == "__epyccel__":
+        if f in  ("__pyccel__", "__epyccel__"):
             shutil.rmtree( file_name )
         elif not os.path.isfile(file_name):
             teardown(file_name)

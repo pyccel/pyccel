@@ -7,21 +7,17 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.ast.numbers   import BooleanTrue
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
-from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, Symbol, Constant
-from pyccel.ast.core import create_incremented_string, Declare, SeparatorComment
-from pyccel.ast.core import IfTernaryOperator, VariableAddress, Import, IsNot
+from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
+from pyccel.ast.core import create_incremented_string, SeparatorComment
+from pyccel.ast.core import VariableAddress, Import, IsNot
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper import PyArgKeywords
-from pyccel.ast.cwrapper import Py_True, Py_False
 from pyccel.ast.cwrapper import cast_function_registry
 
-from pyccel.ast.type_inference import str_dtype
-
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import *
 
 errors = Errors()
 
@@ -30,6 +26,8 @@ __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 dtype_registry = {('pyobject', 0) : 'PyObject'}
 
 class CWrapperCodePrinter(CCodePrinter):
+    """A printer to convert a python module to strings of c code creating
+    an interface between python and an implementation of the module in c"""
     def __init__(self, parser, settings={}):
         CCodePrinter.__init__(self, parser,settings)
         self._cast_functions_dict = OrderedDict()
@@ -307,7 +305,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
-        self._global_names = set([f.name.name for f in expr.funcs])
+        self._global_names = set(f.name.name for f in expr.funcs)
         sep = self._print(SeparatorComment(40))
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.funcs)
 

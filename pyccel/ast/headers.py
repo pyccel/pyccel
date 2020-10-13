@@ -135,7 +135,7 @@ class FunctionHeader(Header):
         if not isinstance(kind, str):
             raise TypeError("Expecting a string for kind.")
 
-        if not (kind in ['function', 'procedure']):
+        if kind not in ['function', 'procedure']:
             raise ValueError("kind must be one among {'function', 'procedure'}")
 
         if not isinstance(is_static, bool):
@@ -372,7 +372,7 @@ class MethodHeader(FunctionHeader):
         if not isinstance(kind, str):
             raise TypeError("Expecting a string for kind.")
 
-        if not (kind in ['function', 'procedure']):
+        if kind not in ['function', 'procedure']:
             raise ValueError("kind must be one among {'function', 'procedure'}")
 
         if not isinstance(is_static, bool):
@@ -549,8 +549,7 @@ class MacroFunction(Header):
                 else:
                     raise ValueError('Unknown valued argument')
             d_arguments.update(d_unsorted_args)
-            for i in d_arguments.keys():
-                arg = d_arguments[i]
+            for i, arg in d_arguments.items():
                 if isinstance(arg, Macro):
                     d_arguments[i] = construct_macro(arg.name,
                                       d_arguments[arg.argument.name])
@@ -596,7 +595,7 @@ class MacroFunction(Header):
 
                 new = construct_macro(arg.name, new)
                 if isinstance(arg, MacroShape):
-                        new._index = arg.index
+                    new._index = arg.index
 
             newargs[i] = new
         return newargs

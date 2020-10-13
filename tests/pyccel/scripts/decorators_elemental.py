@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from pyccel.decorators import types, elemental
 from numpy import array
 from numpy import zeros_like

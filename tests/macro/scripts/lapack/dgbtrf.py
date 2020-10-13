@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from pyccel.stdlib.internal.lapack import dgbtrf
 from numpy import zeros
 
