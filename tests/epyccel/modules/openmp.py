@@ -122,7 +122,7 @@ def test_omp_in_final():
     for i in range(x):
         z = z + i
         if omp_in_final() == 1:
-            results = 1
+            result = 1
     #$ omp end task
     #$ omp end single
     #$ omp end parallel
@@ -197,7 +197,7 @@ def test_omp_get_initial_device():
 
 def test_omp_get_set_schedule():
     from pyccel.stdlib.internal.openmp import omp_get_schedule, omp_set_schedule
-    sum = 0
+    result = 0
     #$ omp parallel private(i)
     #$ omp do schedule(runtime) reduction (+:sum)
     omp_set_schedule(2, 2)
@@ -205,7 +205,7 @@ def test_omp_get_set_schedule():
     chunk_size = 0
     omp_get_schedule(schedule_kind, chunk_size)
     for i in range(16):
-        sum = sum + i
+        result = result + i
     #$ omp end do nowait
     return True
 
@@ -233,7 +233,8 @@ def omp_matmul(A, x, out):
                 out[i][j] += A[i][k] * x[k][j]
     #$ omp end do
     #$ omp end parallel
-    "bypass issue #468" #to let the function compile using epyccel issue #468
+    #to let the function compile using epyccel issue #468
+    "bypass issue #468" # eslint-disable-line no-eval
 
 @types('real[:,:], real[:,:], real[:,:]')
 def omp_matmul_single(A, x, out):
