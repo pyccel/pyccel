@@ -250,7 +250,7 @@ def omp_arraysum(x):
     result = 0
     #$ omp parallel private(i)
     #$ omp do reduction (+:result)
-    for i in range(0, 10):
+    for i in range(0, 5):
         result += x[i]
     #$ omp end do
     #$ omp end parallel
