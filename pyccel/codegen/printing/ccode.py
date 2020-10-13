@@ -671,7 +671,7 @@ class CCodePrinter(CodePrinter):
             start, stop, step = [self._print(e) for e in expr.iterable.args]
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
-        body = '\n'.join(self._print(i) for i in expr.body.body)
+        body  = self._print(expr.body)
         return ('for ({target} = {start}; {target} < {stop}; {target} += '
                 '{step})\n{{\n{body}\n}}').format(target=target, start=start,
                 stop=stop, step=step, body=body)
