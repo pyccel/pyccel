@@ -526,6 +526,7 @@ class CCodePrinter(CodePrinter):
         decs += [Declare(i.dtype, i) for i in expr.results]
         decs += [Declare(i.dtype, i) for i in self._additional_declare]
         decs  = '\n'.join(self._print(i) for i in decs)
+        self._additional_declare.clear()
         sep = self._print(SeparatorComment(40))
 
         return ('{sep}\n'
