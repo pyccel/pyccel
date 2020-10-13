@@ -1,6 +1,5 @@
 # coding: utf-8
 # pylint: disable=R0201
-# pylint: disable=wildcard-import
 
 from collections import OrderedDict
 
@@ -22,7 +21,7 @@ from pyccel.ast.cwrapper import PyErr_SetString, PyType_Check
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import *
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 
 errors = Errors()
 
