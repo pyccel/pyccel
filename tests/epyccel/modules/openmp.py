@@ -227,12 +227,9 @@ def test_omp_get_max_task_priority():
 def omp_matmul(A, x, out):
     #$ omp parallel shared(A,x,out) private(i,j,k)
     #$ omp do
-    l1 = len(A)
-    l2 = len(x[0])
-    l3 = len(x)
-    for i in range(l1):
-        for j in range(l2):
-            for k in range(l3):
+    for i in range(len(A)):# pylint: disable=C0200
+        for j in range(len(x[0])):# pylint: disable=C0200
+            for k in range(len(x)):# pylint: disable=C0200
                 out[i][j] += A[i][k] * x[k][j]
     #$ omp end do
     #$ omp end parallel
