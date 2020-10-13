@@ -16,12 +16,3 @@ print('Uranus', 'Neptune', 'Pluto', sep=', ')
 print('Printing in a Nutshell', end='\n * ')
 print('Calling Print', end='\n * ')
 print('Separating Multiple Arguments', end='\n * ')
-
-#  ---------------------------special characters -----------------------------
-
-print('line1\r\nline2\r\nline3')
-print('//\\//\/\/\\/\/\/\\/\/\\/\/\/\\/\/')
-print("tab\ttab\tnewline\n")
-print("\b\v\b\v\b")
-print("\a\b\n\b\f")
-print("''''\"'\"\'///\\\\")
