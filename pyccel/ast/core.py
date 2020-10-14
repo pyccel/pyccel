@@ -4365,8 +4365,11 @@ class Load(Basic):
 
 class FuncAddressDeclare(Basic):
 
-    def __new__(
-        cls,
+    def __new__( cls, *args, **kwargs ):
+        return Basic.__new__(cls)
+
+    def __init__(
+        self,
         variable,
         intent=None,
         value=None,
@@ -4383,41 +4386,38 @@ class FuncAddressDeclare(Basic):
         if not isinstance(static, bool):
             raise TypeError('Expecting a boolean for static attribute')
 
-        return Basic.__new__(
-            cls,
-            variable,
-            intent,
-            value,
-            static,
-            )
+        self._variable  = variable
+        self._intent    = intent
+        self._value     = value
+        self._static    = static
 
     @property
     def results(self):
-        return self._args[0].results
+        return self._variable.results
 
     @property
     def arguments(self):
-        return self._args[0].arguments
+        return self._variable.arguments
 
     @property
     def name(self):
-        return self._args[0].name
+        return self._variable.name
 
     @property
     def variable(self):
-        return self._args[0]
+        return self._variable
 
     @property
     def intent(self):
-        return self._args[1]
+        return self._intent
 
     @property
     def value(self):
-        return self._args[2]
+        return self._value
 
     @property
     def static(self):
-        return self._args[3]
+        return self._static
 
 class Declare(Basic):
 
