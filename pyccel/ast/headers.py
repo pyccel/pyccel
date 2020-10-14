@@ -193,79 +193,17 @@ class FunctionHeader(Header):
                     decs = []
                     results = []
                     for dc in d['decs']:
-                        dtype    = dc['datatype']
-                        allocatable = dc['allocatable']
-                        is_pointer = dc['is_pointer']
-                        precision = dc['precision']
-                        rank = dc['rank']
-
-                        order = None
-                        shape = None
-                        if rank >1:
-                            order = dc['order']
-
-                        if isinstance(dtype, str):
-                            try:
-                                dtype = datatype(dtype)
-                            except ValueError:
-                                dtype = DatatypeFactory(str(dtype), ("_name"))()
-                                is_pointer = True
-                        arg = Variable(dtype, '',
-                                    allocatable=allocatable, is_pointer=is_pointer,
-                                    rank=rank, shape=shape ,order = order, precision = precision,
-                                    is_argument=True)
-                        decs.append(arg)
-
-                    for rt in d['results']:
-                        dtype    = rt['datatype']
-                        allocatable = rt['allocatable']
-                        is_pointer = rt['is_pointer']
-                        precision = rt['precision']
-                        rank = rt['rank']
-
-                        order = None
-                        shape = None
-                        if rank >1:
-                            order = rt['order']
-
-                        if isinstance(dtype, str):
-                            try:
-                                dtype = datatype(dtype)
-                            except ValueError:
-                                dtype = DatatypeFactory(str(dtype), ("_name"))()
-                                is_pointer = True
-                        ret = Variable(dtype, '',
-                                    allocatable=allocatable, is_pointer=is_pointer,
-                                    rank=rank, shape=shape ,order = order, precision = precision,
-                                    is_argument=True)
-                        results.append(ret)
+                        var = self. build_variable('', dc)
+                        decs.append(var)
+                    for dc in d['results']:
+                        var = self.build_variable('', dc)
+                        results.append(var)
                     arg_name = 'arg_{0}'.format(str(i))
                     arg = FunctionAddress(arg_name, decs, results, [])
 
                 else:
-                    dtype    = d['datatype']
-                    allocatable = d['allocatable']
-                    is_pointer = d['is_pointer']
-                    precision = d['precision']
-                    rank = d['rank']
-
-                    order = None
-                    shape = None
-                    if rank >1:
-                        order = d['order']
-
-                    if isinstance(dtype, str):
-                        try:
-                            dtype = datatype(dtype)
-                        except ValueError:
-                            #TODO check if it's a class type before
-                            dtype =  DataTypeFactory(str(dtype), ("_name"))()
-                            is_pointer = True
                     arg_name = 'arg_{0}'.format(str(i))
-                    arg = Variable(dtype, arg_name,
-                                allocatable=allocatable, is_pointer=is_pointer,
-                                rank=rank, shape=shape ,order = order, precision = precision,
-                                is_argument=True)
+                    arg = self.build_variable(arg_name, d)
                 args.append(arg)
 
             # ... factorize the following 2 blocks
@@ -290,6 +228,31 @@ class FunctionHeader(Header):
             funcs += [func]
 
         return funcs
+
+    def build_variable(self, var_name, dc):
+        dtype    = dc['datatype']
+        allocatable = dc['allocatable']
+        is_pointer = dc['is_pointer']
+        precision = dc['precision']
+        rank = dc['rank']
+
+        order = None
+        shape = None
+        if rank >1:
+            order = dc['order']
+
+        if isinstance(dtype, str):
+            try:
+                dtype = datatype(dtype)
+            except ValueError:
+                dtype = DatatypeFactory(str(dtype), ("_name"))()
+                is_pointer = True
+        var = Variable(dtype, var_name,
+                    allocatable=allocatable, is_pointer=is_pointer,
+                    rank=rank, shape=shape ,order = order, precision = precision,
+                    is_argument=True)
+        return var
+
 
     def to_static(self):
         """returns a static function header. needed for f2py"""
