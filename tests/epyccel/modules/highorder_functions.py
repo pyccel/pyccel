@@ -1,3 +1,5 @@
+ # pylint: disable=missing-function-docstring, missing-module-docstring/
+
 #$ header function f1(int)
 def f1(a):
     return a
