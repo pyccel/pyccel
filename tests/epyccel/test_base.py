@@ -4,7 +4,6 @@ import numpy as np
 
 from pyccel.epyccel import epyccel
 from modules import base
-from conftest       import *
 
 
 def compare_epyccel(f, *args, language='fortran'):
@@ -73,13 +72,25 @@ def test_not(language):
     compare_epyccel(base.not_val, True, language=language)
     compare_epyccel(base.not_val, False, language=language)
 
-@pytest.mark.xfail(reason="f2py does not support optional arguments https://github.com/numpy/numpy/issues/4013")
-def test_compare_is_nil():
-    compare_epyccel(base.is_nil, True, None)
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="f2py does not support optional arguments"),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c)
+    ]
+)
+def test_compare_is_nil(language):
+    compare_epyccel(base.is_nil, None, language=language)
 
-@pytest.mark.xfail(reason="f2py does not support optional arguments https://github.com/numpy/numpy/issues/4013")
-def test_compare_is_not_nil():
-    compare_epyccel(base.is_not_nil, True, None)
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="f2py does not support optional arguments"),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c)
+    ]
+)
+def test_compare_is_not_nil(language):
+    compare_epyccel(base.is_not_nil, None, language=language)
 
 def test_cast_int(language):
     compare_epyccel(base.cast_int, 4, language=language)
