@@ -107,8 +107,8 @@ def get_value(string, regex, conversion):
 def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float ):
 
     if dtype is str:
-        p_list = [e.strip() for e in p_output.split('\n')]
-        f_list = [e.strip() for e in f_output.split('\n')]
+        p_list = [e.strip() for e in re.split('\n', p_output)]
+        f_list = [e.strip() for e in re.split('\n', f_output)]
         assert(p_list==f_list)
     elif dtype is complex:
         rx = re.compile('[-0-9.eEj]+')
