@@ -2673,18 +2673,6 @@ class Variable(Symbol, PyccelAstNode):
             return False
         return isinstance(self.dtype, (NativeInteger, NativeBool,
                           NativeReal, NativeComplex))
-    def rename(self, newname):
-        return Variable(self._dtype,newname, rank=self._rank,
-                        allocatable=self._allocatable,
-                        is_stack_array=self._is_stack_array,
-                        is_pointer=self._is_pointer,
-                        is_target=self._is_target,
-                        is_polymorphic=self._is_polymorphic,
-                        is_optional=self._is_optional,
-                        shape=self._shape, cls_base=self._cls_base,
-                        order=self.order, precision=self.precision,
-                        is_argument=self._is_argument,
-                        is_kwonly=self._is_kwonly)
 
     def __str__(self):
         if isinstance(self.name, (str, DottedName)):
