@@ -135,6 +135,7 @@ def compile_files(filename, compiler, flags,
     output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
 
     if output:
+        output = output.decode("utf-8")
         warnings.warn(UserWarning(output))
 
     # TODO shall we uncomment this?
