@@ -1,5 +1,7 @@
 
 def print_list(l):
+    """ Convert a list of strings to a string that contains the
+    python constructor of a list of strings """
     if isinstance(l,str):
         l = [l]
     return '[{0}]'.format(', '.join("r'{0}'".format(li) for li in l))
@@ -11,6 +13,12 @@ def create_c_setup(mod_name,
         libs = '',
         libdirs = '',
         flags = ''):
+    """
+    Create the code for the setup file which uses python setuptools
+    to compile a c file and generate the corresponding shared
+    library file
+    """
+
     code  = "from setuptools import Extension, setup\n\n"
 
     deps  = ", ".join('r"{0}.c"'.format(d) for d in dependencies)
