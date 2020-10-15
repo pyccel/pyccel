@@ -387,7 +387,7 @@ def test_expressions(language):
                 pyccel_commands="--libs m", output_dtype = types)
 
 #------------------------------------------------------------------------------
-def test_default_arguments(language):
+def test_default_arguments():
     pyccel_test("scripts/runtest_default_args.py",
             dependencies = "scripts/default_args_mod.py",
             output_dtype = [int,int,float,float,float,
@@ -452,24 +452,28 @@ def test_import_syntax( test_file ):
     pyccel_test(test_file)
 
 #------------------------------------------------------------------------------
+@pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import_as_user_func.py",
+                                        "scripts/import_syntax/import_mod_as_user_func.py",
+                                        "scripts/import_syntax/collisions2.py"
+                                        ] )
+def test_import_syntax_user_as( test_file ):
+    pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py")
+
+#------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import_user.py",
                                         "scripts/import_syntax/from_mod_import_as_user.py",
                                         "scripts/import_syntax/import_mod_user.py",
                                         "scripts/import_syntax/import_mod_as_user.py",
                                         "scripts/import_syntax/from_mod_import_user_func.py",
-                                        "scripts/import_syntax/from_mod_import_as_user_func.py",
                                         "scripts/import_syntax/import_mod_user_func.py",
-                                        "scripts/import_syntax/import_mod_as_user_func.py",
-                                        "scripts/import_syntax/collisions2.py"
                                         ] )
 def test_import_syntax_user( test_file, language ):
     pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py", language = language)
 
 #------------------------------------------------------------------------------
-def test_import_collisions(language):
+def test_import_collisions():
     pyccel_test("scripts/import_syntax/collisions4.py",
-            dependencies = ["scripts/import_syntax/user_mod.py", "scripts/import_syntax/user_mod2.py"],
-            language = language)
+            dependencies = ["scripts/import_syntax/user_mod.py", "scripts/import_syntax/user_mod2.py"])
 
 #------------------------------------------------------------------------------
 def test_numpy_kernels_compile():
