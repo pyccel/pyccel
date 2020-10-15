@@ -285,7 +285,8 @@ class CCodePrinter(CodePrinter):
         body    = '\n\n'.join(self._print(i) for i in expr.body)
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports = self._print(Import(expr.name))
+        imports = [Import(expr.name), *map(Import, self._additional_imports)]
+        imports = '\n'.join(self._print(i) for i in imports)
         return ('{imports}\n\n'
                 '{body}').format(
                         imports = imports,
