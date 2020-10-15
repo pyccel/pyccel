@@ -1,11 +1,11 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import subprocess
 import os
-import pytest
 import shutil
-import numpy as np
-import re
 import sys
+import re
+import pytest
+import numpy as np
 
 #==============================================================================
 # UTILITIES
@@ -13,10 +13,7 @@ import sys
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Lack of print support"),
-            pytest.mark.c]
-        )
+        pytest.param("c", marks = pytest.mark.c)
     ],
     scope='module'
 )
@@ -93,7 +90,7 @@ def compile_fortran(path_dir,test_file,dependencies):
     p.wait()
 
 #------------------------------------------------------------------------------
-def get_fortran_output(abs_path):
+def get_lang_output(abs_path):
     p = subprocess.Popen(["%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
     out, _ = p.communicate()
     assert(p.returncode==0)
@@ -110,7 +107,9 @@ def get_value(string, regex, conversion):
 def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float ):
 
     if dtype is str:
-        assert(p_output.strip()==f_output.strip())
+        p_list = [e.strip() for e in re.split('\n', p_output)]
+        f_list = [e.strip() for e in re.split('\n', f_output)]
+        assert(p_list==f_list)
     elif dtype is complex:
         rx = re.compile('[-0-9.eEj]+')
         p, p_output = get_value(p_output, rx, complex)
@@ -154,6 +153,8 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float ):
     elif dtype is complex:
         while len(p_output)>0 and len(f_output)>0:
             p_output,f_output = compare_pyth_fort_output_by_type(p_output,f_output,complex)
+    elif dtype is str:
+        compare_pyth_fort_output_by_type(p_output,f_output,dtype)
     else:
         p_output = p_output.strip().split()
         f_output = f_output.strip().split()
@@ -189,9 +190,9 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         compile_pyccel (cwd, test_file, pyccel_commands+" -t")
         compile_fortran(cwd, test_file, dependencies)
 
-    fort_out = get_fortran_output(get_exe(test_file))
+    lang_out = get_lang_output(get_exe(test_file))
 
-    compare_pyth_fort_output(pyth_out, fort_out, output_dtype)
+    compare_pyth_fort_output(pyth_out, lang_out, output_dtype)
 
 #==============================================================================
 # PYTEST MODULE SETUP AND TEARDOWN
@@ -335,8 +336,8 @@ def test_folder_imports(language):
     compare_pyth_fort_output(pyth_out, fort_out)
 
 #------------------------------------------------------------------------------
-def test_funcs(language):
-    pyccel_test("scripts/runtest_funcs.py", language = language)
+def test_funcs():
+    pyccel_test("scripts/runtest_funcs.py")
 
 #------------------------------------------------------------------------------
 def test_inout_func():
@@ -347,13 +348,13 @@ def test_bool(language):
     pyccel_test("scripts/bool_comp.py", output_dtype = bool, language = language)
 
 #------------------------------------------------------------------------------
-def test_expressions():
+def test_expressions(language):
     types = [float, complex, int, float, float, int] + [float]*3 + \
             [complex, int, complex, complex, int, int, float] + [complex]*3 + \
             [float]*3 + [int] + [float]*2 + [int] + [float]*3 + [int] + \
             [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex] + [bool]*9
-    pyccel_test("scripts/expressions.py",
-                output_dtype = types)
+    pyccel_test("scripts/expressions.py", language=language,
+                pyccel_commands="--libs m", output_dtype = types)
 
 #------------------------------------------------------------------------------
 def test_default_arguments(language):
@@ -374,7 +375,7 @@ def test_pyccel_calling_directory(language):
     language_opt = '--language={}'.format(language)
     compile_pyccel(cwd, test_file, language_opt)
 
-    fort_out = get_fortran_output(get_exe(test_file))
+    fort_out = get_lang_output(get_exe(test_file))
 
     compare_pyth_fort_output( pyth_out, fort_out )
 
@@ -457,3 +458,21 @@ def test_multiple_results():
 #------------------------------------------------------------------------------
 def test_elemental():
     pyccel_test("scripts/decorators_elemental.py")
+
+#------------------------------------------------------------------------------
+def test_print_strings(language):
+    types = str
+    pyccel_test("scripts/print_strings.py", language=language, output_dtype=types)
+
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="formated string not implemented in fortran"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_print_sp_and_end(language):
+    types = str
+    pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)

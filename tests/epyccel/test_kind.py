@@ -3,8 +3,6 @@ import platform
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 
-from conftest import *
-
 def test_or_boolean(language):
     @types('bool', 'bool')
     def or_bool(a, b):

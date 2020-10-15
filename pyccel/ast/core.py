@@ -1314,9 +1314,6 @@ class AliasAssign(Basic):
             if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_pointer:
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
 
-        if isinstance(rhs, Variable):
-            rhs = VariableAddress(rhs)
-
         return Basic.__new__(cls, lhs, rhs)
 
     def _sympystr(self, printer):
@@ -3196,9 +3193,6 @@ class FunctionCall(Basic, PyccelAstNode):
 
             args = [a.value if isinstance(a, ValuedVariable) else a for a in f_args_dict.values()]
 
-        # Ensure the correct syntax is used for pointers
-        args = [VariableAddress(a) if isinstance(a, Variable) and f.is_pointer else a for a, f in zip(args, f_args)]
-
         args = Tuple(*args, sympify=False)
         # ...
 
@@ -3244,13 +3238,6 @@ class Return(Basic):
 
         if stmt and not isinstance(stmt, (Assign, CodeBlock)):
             raise TypeError('stmt should only be of type Assign')
-
-        if PyccelAstNode.stage == 'semantic':
-            if isinstance(expr, list):
-                expr = [VariableAddress(e) if isinstance(e, Variable) and e.is_pointer else e for e in expr]
-            else:
-                if isinstance(expr, Variable) and expr.is_pointer:
-                    expr = VariableAddress(expr)
 
         return Basic.__new__(cls, expr, stmt)
 
