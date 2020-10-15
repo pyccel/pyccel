@@ -202,7 +202,7 @@ class CCodePrinter(CodePrinter):
         'dereference': set()
     }
 
-    def __init__(self, parser, settings={}):
+    def __init__(self, parser, accelerator, settings={}):
 
         prefix_module = settings.pop('prefix_module', None)
         CodePrinter.__init__(self, settings)
@@ -212,7 +212,11 @@ class CCodePrinter(CodePrinter):
         self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
         self._additional_imports = set(['stdlib.h'])
-        self._additional_imports.add("omp.h")
+        if 'accelerator' in accelerator.keys():
+            accel_import = accelerator['accelerator']
+            if accel_import is not None:
+                if accel_import == 'openmp':
+                    self._additional_imports.add("omp.h")
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []

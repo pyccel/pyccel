@@ -18,7 +18,7 @@ class Codegen(object):
 
     """Abstract class for code generator."""
 
-    def __init__(self, parser, name):
+    def __init__(self, parser, name, accelerator=None):
         """Constructor for Codegen.
 
         parser: pyccel parser
@@ -27,12 +27,13 @@ class Codegen(object):
         name: str
             name of the generated module or program.
         """
-        self._parser   = parser
-        self._ast      = parser.ast
-        self._name     = name
-        self._kind     = None
-        self._code     = None
-        self._language = None
+        self._accelerator   = accelerator
+        self._parser        = parser
+        self._ast           = parser.ast
+        self._name          = name
+        self._kind          = None
+        self._code          = None
+        self._language      = None
 
         #TODO verify module name != function name
         #it generates a compilation error
@@ -234,7 +235,10 @@ class Codegen(object):
         errors = Errors()
         errors.set_parser_stage('codegen')
 
-        code = printer(self.expr, parser=self.parser, **settings)
+        if language == 'c':
+            code = printer(self.expr, parser=self.parser, accelerator=self._accelerator, **settings)
+        else:
+            code = printer(self.expr, parser=self.parser, **settings)
 
         self._code = code
 
@@ -258,5 +262,3 @@ class Codegen(object):
                 f.write(line)
 
         return filename
-
-
