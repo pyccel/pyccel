@@ -73,8 +73,8 @@ def compile_c(path_dir,test_file,dependencies):
     assert(os.path.isfile(root+".c"))
 
     command = [shutil.which("gcc"), "-O3", "%s.c" % root]
-    deps = dependencies if hasattr(dependencies, '__iter__') else [deps]
-    for d in dependencies:
+    deps = dependencies if hasattr(dependencies, '__iter__') else [dependencies]
+    for d in deps:
         d = insert_pyccel_folder(d)
         command.append(d[:-3]+".o")
         command.append("-I"+os.path.dirname(d))
@@ -92,8 +92,8 @@ def compile_fortran(path_dir,test_file,dependencies):
     assert(os.path.isfile(root+".f90"))
 
     command = [shutil.which("gfortran"), "-O3", "%s.f90" % root]
-    deps = dependencies if hasattr(dependencies, '__iter__') else [deps]
-    for d in dependencies:
+    deps = dependencies if hasattr(dependencies, '__iter__') else [dependencies]
+    for d in deps:
         d = insert_pyccel_folder(d)
         command.append(d[:-3]+".o")
         command.append("-I"+os.path.dirname(d))
