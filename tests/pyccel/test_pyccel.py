@@ -67,6 +67,29 @@ def compile_pyccel(path_dir,test_file, options = ""):
     assert(p.returncode==0)
 
 #------------------------------------------------------------------------------
+def compile_c(path_dir,test_file,dependencies):
+    root = insert_pyccel_folder(test_file)[:-3]
+
+    assert(os.path.isfile(root+".c"))
+
+    command = [shutil.which("gcc"), "-O3", "%s.c" % root]
+    if isinstance(dependencies, list):
+        for d in dependencies:
+            d = insert_pyccel_folder(d)
+            command.append(d[:-3]+".o")
+            command.append("-I"+os.path.dirname(d))
+    elif isinstance(dependencies, str):
+        dependencies = insert_pyccel_folder(dependencies)
+        command.append(dependencies[:-3]+".o")
+        command.append("-I"+os.path.dirname(dependencies))
+
+    command.append("-o")
+    command.append("%s" % test_file[:-3])
+
+    p = subprocess.Popen(command, universal_newlines=True, cwd=path_dir)
+    p.wait()
+
+#------------------------------------------------------------------------------
 def compile_fortran(path_dir,test_file,dependencies):
     root = insert_pyccel_folder(test_file)[:-3]
 
@@ -174,6 +197,12 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
 
     test_file = get_abs_path(test_file)
     pyth_out = get_python_output(test_file, cwd)
+
+    if language:
+        pyccel_commands += " --language="+language
+    else:
+        language='fortran'
+
     if (isinstance(dependencies, list)):
         for i, d in enumerate(dependencies):
             dependencies[i] = get_abs_path(d)
@@ -182,13 +211,14 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         dependencies = get_abs_path(dependencies)
         compile_pyccel(os.path.dirname(dependencies), dependencies, pyccel_commands)
 
-    if language:
-        pyccel_commands += " --language="+language
     if compile_with_pyccel:
         compile_pyccel(cwd, test_file, pyccel_commands)
     else:
         compile_pyccel (cwd, test_file, pyccel_commands+" -t")
-        compile_fortran(cwd, test_file, dependencies)
+        if language=='fortran':
+            compile_fortran(cwd, test_file, dependencies)
+        else:
+            compile_c(cwd, test_file, dependencies)
 
     lang_out = get_lang_output(get_exe(test_file))
 
