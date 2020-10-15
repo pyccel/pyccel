@@ -277,7 +277,7 @@ class CCodePrinter(CodePrinter):
                 '{funcs}\n\n'
                 #'{interfaces}\n\n'
                 '#endif // {name}_H').format(
-                        name    = name,
+                        name    = name.upper(),
                         imports = imports,
                         funcs   = funcs)
 
