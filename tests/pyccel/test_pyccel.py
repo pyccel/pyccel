@@ -453,7 +453,7 @@ def test_import_syntax( test_file ):
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import_as_user_func.py",
-                                        "scripts/import_syntax/import_mod_as_user_func.py",
+                                        "scripts/import_syntax/from_mod_import_as_user.py",
                                         "scripts/import_syntax/collisions2.py"
                                         ] )
 def test_import_syntax_user_as( test_file ):
@@ -461,11 +461,11 @@ def test_import_syntax_user_as( test_file ):
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import_user.py",
-                                        "scripts/import_syntax/from_mod_import_as_user.py",
                                         "scripts/import_syntax/import_mod_user.py",
                                         "scripts/import_syntax/import_mod_as_user.py",
                                         "scripts/import_syntax/from_mod_import_user_func.py",
                                         "scripts/import_syntax/import_mod_user_func.py",
+                                        "scripts/import_syntax/import_mod_as_user_func.py",
                                         ] )
 def test_import_syntax_user( test_file, language ):
     pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py", language = language)
