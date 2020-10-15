@@ -202,7 +202,7 @@ class CCodePrinter(CodePrinter):
         'dereference': set()
     }
 
-    def __init__(self, parser, accelerator, settings={}):
+    def __init__(self, accelerator, parser, settings={}):
 
         prefix_module = settings.pop('prefix_module', None)
         CodePrinter.__init__(self, settings)
@@ -212,11 +212,10 @@ class CCodePrinter(CodePrinter):
         self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
         self._additional_imports = set(['stdlib.h'])
-        if 'accelerator' in accelerator.keys():
-            accel_import = accelerator['accelerator']
-            if accel_import is not None:
-                if accel_import == 'openmp':
-                    self._additional_imports.add("omp.h")
+        accel_import = accelerator
+        if accel_import is not None:
+            if accel_import == 'openmp':
+                self._additional_imports.add("omp.h")
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
@@ -964,7 +963,7 @@ class CCodePrinter(CodePrinter):
 
     _print_Function = CodePrinter._print_not_supported
 
-def ccode(expr, parser, assign_to=None, **settings):
+def ccode(expr, accelerator, parser, assign_to=None, **settings):
     """Converts an expr to a string of c code
 
     expr : Expr
@@ -989,4 +988,4 @@ def ccode(expr, parser, assign_to=None, **settings):
         For example, if ``dereference=[a]``, the resulting code would print
         ``(*a)`` instead of ``a``.
     """
-    return CCodePrinter(parser, settings).doprint(expr, assign_to)
+    return CCodePrinter(accelerator, parser, settings).doprint(expr, assign_to)

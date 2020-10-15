@@ -236,7 +236,7 @@ class Codegen(object):
         errors.set_parser_stage('codegen')
 
         if language == 'c':
-            code = printer(self.expr, parser=self.parser, accelerator=self._accelerator, **settings)
+            code = printer(self.expr, self._accelerator, parser=self.parser, **settings)
         else:
             code = printer(self.expr, parser=self.parser, **settings)
 
