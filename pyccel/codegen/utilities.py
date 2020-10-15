@@ -70,7 +70,13 @@ def construct_flags(compiler,
 
     if accelerator is not None:
         if accelerator == "openmp":
-            flags += " -fopenmp"
+            if sys.platform == "darwin":
+                if compiler == "gcc":
+                    flags += " -Xpreprocessor -fopenmp -lomp"
+                else:
+                    flags += " -fopenmp"
+            else:
+                flags += " -fopenmp"
         elif accelerator == "openacc":
             flags += " -ta=multicore -Minfo=accel"
         else:
