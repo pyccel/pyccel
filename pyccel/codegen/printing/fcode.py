@@ -418,6 +418,8 @@ class FCodePrinter(CodePrinter):
             elif isinstance(f, TupleVariable) and not f.is_homogeneous:
                 for i in f:
                     args.append("{}".format(self._print(i)))
+            elif f.dtype is NativeString() and f != expr.expr[-1]:
+                args.append("{} // ' ' ".format(self._print(f)))
             else:
                 args.append("{}".format(self._print(f)))
 
@@ -1193,8 +1195,20 @@ class FCodePrinter(CodePrinter):
         return '.False.'
 
     def _print_String(self, expr):
-        formatted_str = expr.arg.replace("'","''")
-        return "'{}'".format(formatted_str)
+        sp_chars = ['\a', '\b', '\f', '\r', '\t', '\v', "'", '\n']
+        sub_str = ''
+        formatted_str = "''"
+        for c in expr.arg:
+            if c in sp_chars:
+                if sub_str != '':
+                    formatted_str += " // '{}'".format(sub_str)
+                    sub_str = ''
+                formatted_str += ' // ACHAR({})'.format(ord(c))
+            else:
+                sub_str += c
+        if sub_str != '':
+            formatted_str += " // '{}'".format(sub_str)
+        return formatted_str
 
     def _print_Interface(self, expr):
         # ... we don't print 'hidden' functions
