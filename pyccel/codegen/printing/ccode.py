@@ -3,18 +3,21 @@
 # pylint: disable=missing-function-docstring
 
 from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float, Integer
-from pyccel.ast.core import Nil
+from pyccel.ast.core import Nil, PyccelAssociativeParenthesis
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import SeparatorComment, VariableAddress
 
-from pyccel.ast.core import PyccelAdd, PyccelMul
+from pyccel.ast.core import PyccelAdd, PyccelMul, String
 
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
+
 from pyccel.ast.numpyext import NumpyFloat
+from pyccel.ast.numpyext import Real as NumpyReal, Imag as NumpyImag
+
 from pyccel.ast.builtins  import Range, PythonFloat, PythonComplex
-from pyccel.ast.core import Declare
+from pyccel.ast.core import Declare, ValuedVariable
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -243,12 +246,13 @@ class CCodePrinter(CodePrinter):
         return '({} != 0)'.format(value)
 
     def _print_Complex(self, expr):
-        return self._print(PyccelAdd(expr.real,
-                        PyccelMul(expr.imag, ImaginaryUnit())))
+        return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
+                        PyccelMul(expr.imag, ImaginaryUnit()))))
 
     def _print_PythonComplex(self, expr):
-        return self._print(PyccelAdd(expr.real_part,
-                        PyccelMul(expr.imag_part, ImaginaryUnit())))
+        self._additional_imports.add("complex.h")
+        return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real_part,
+                        PyccelMul(expr.imag_part, ImaginaryUnit()))))
 
     def _print_ImaginaryUnit(self, expr):
         return '_Complex_I'
@@ -371,6 +375,59 @@ class CCodePrinter(CodePrinter):
     def _print_Import(self, expr):
         return '#include <{0}>'.format(expr.source)
 
+    def _print_String(self, expr):
+        format_str = format(expr.arg)
+        format_str = format_str.replace("\\", "\\\\")\
+                               .replace('\a', '\\a')\
+                               .replace('\b', '\\b')\
+                               .replace('\f', '\\f')\
+                               .replace("\n", "\\n")\
+                               .replace('\r', '\\r')\
+                               .replace('\t', '\\t')\
+                               .replace('\v', '\\v')\
+                               .replace('"', '\\"')\
+                               .replace("'", "\\'")
+        return '"{}"'.format(format_str)
+
+    def _print_Print(self, expr):
+        self._additional_imports.add("stdio.h")
+        type_to_format = {('real',8)    : '%.12lf',
+                          ('real',4)    : '%.12f',
+                          ('complex',8) : '(%.12lf + %.12lfj)',
+                          ('complex',4) : '(%.12f + %.12fj)',
+                          ('int',4)     : '%d',
+                          ('int',8)     : '%ld',
+                          ('int',2)     : '%hd',
+                          ('int',1)     : '%c',
+                          ('bool',4)    : '%s',
+                          ('string', 0) : '%s'}
+        args_format = []
+        args = []
+        end = '\n'
+        sep = ' '
+        for f in expr.expr:
+            if isinstance(f, ValuedVariable):
+                if f.name == 'sep'      :   sep = str(f.value)
+                elif f.name == 'end'    :   end = str(f.value)
+            else:
+                try:
+                    args_format.append(type_to_format[(self._print(f.dtype), f.precision)])
+                except KeyError:
+                    errors.report("{} type is not supported currently".format(\
+                        f.dtype), severity='fatal')
+                if f.dtype is NativeComplex():
+                    args.extend([self._print(NumpyReal(f)), self._print(NumpyImag(f))])
+                elif f.dtype is NativeBool():
+                    args.append('{} ? "True" : "False"'.format(self._print(f)))
+                else:
+                    args.append(self._print(f))
+
+        args_format = sep.join(args_format)
+        args_format += end
+        args_format = self._print(String(args_format))
+        code = ', '.join([args_format, *args])
+        return "printf({});".format(code)
+
     def find_in_dtype_registry(self, dtype, prec):
         try :
             return dtype_registry[(dtype, prec)]
@@ -412,6 +469,8 @@ class CCodePrinter(CodePrinter):
     def _print_NativeComplex(self, expr):
         self._additional_imports.add('complex.h')
         return 'complex'
+    def _print_NativeString(self, expr):
+        return 'string'
 
     def function_signature(self, expr):
         if len(expr.results) == 1:
