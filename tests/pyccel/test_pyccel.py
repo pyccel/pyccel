@@ -384,7 +384,7 @@ def test_expressions(language):
             [float]*3 + [int] + [float]*2 + [int] + [float]*3 + [int] + \
             [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex] + [bool]*9
     pyccel_test("scripts/expressions.py", language=language,
-                pyccel_commands="--libs m", output_dtype = types)
+                output_dtype = types)
 
 #------------------------------------------------------------------------------
 def test_default_arguments():
