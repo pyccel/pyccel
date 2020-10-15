@@ -196,7 +196,7 @@ def create_shared_library(codegen,
             f.writelines(wrapper_code)
 
         dep_mods = (wrapper_filename_root, *dep_mods)
-        setup_code = create_c_setup(sharedlib_modname, dep_mods, 
+        setup_code = create_c_setup(sharedlib_modname, dep_mods,
                 compiler, includes, libs, libdirs, flags)
         setup_filename = "setup_{}.py".format(module_name)
 
@@ -215,7 +215,7 @@ def create_shared_library(codegen,
         if p.returncode != 0:
             err_msg = "Failed to build module"
             if verbose:
-                err_msg += "\n" + err
+                err_msg += "\n" + err.decode("utf-8")
             raise RuntimeError(err_msg)
         if err:
             warnings.warn(UserWarning(err))
