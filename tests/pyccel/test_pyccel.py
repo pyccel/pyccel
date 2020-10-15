@@ -418,8 +418,8 @@ def test_hope_benchmarks( test_file ):
                                         "scripts/import_syntax/collisions5.py",
                                         "scripts/import_syntax/collisions6.py",
                                         ] )
-def test_import_syntax( test_file, language ):
-    pyccel_test(test_file, language = language)
+def test_import_syntax( test_file ):
+    pyccel_test(test_file)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import_user.py",
