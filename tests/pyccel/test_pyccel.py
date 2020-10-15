@@ -73,15 +73,11 @@ def compile_c(path_dir,test_file,dependencies):
     assert(os.path.isfile(root+".c"))
 
     command = [shutil.which("gcc"), "-O3", "%s.c" % root]
-    if isinstance(dependencies, list):
-        for d in dependencies:
-            d = insert_pyccel_folder(d)
-            command.append(d[:-3]+".o")
-            command.append("-I"+os.path.dirname(d))
-    elif isinstance(dependencies, str):
-        dependencies = insert_pyccel_folder(dependencies)
-        command.append(dependencies[:-3]+".o")
-        command.append("-I"+os.path.dirname(dependencies))
+    deps = dependencies if hasattr(dependencies, '__iter__') else [deps]
+    for d in dependencies:
+        d = insert_pyccel_folder(d)
+        command.append(d[:-3]+".o")
+        command.append("-I"+os.path.dirname(d))
 
     command.append("-o")
     command.append("%s" % test_file[:-3])
@@ -96,15 +92,11 @@ def compile_fortran(path_dir,test_file,dependencies):
     assert(os.path.isfile(root+".f90"))
 
     command = [shutil.which("gfortran"), "-O3", "%s.f90" % root]
-    if isinstance(dependencies, list):
-        for d in dependencies:
-            d = insert_pyccel_folder(d)
-            command.append(d[:-3]+".o")
-            command.append("-I"+os.path.dirname(d))
-    elif isinstance(dependencies, str):
-        dependencies = insert_pyccel_folder(dependencies)
-        command.append(dependencies[:-3]+".o")
-        command.append("-I"+os.path.dirname(dependencies))
+    deps = dependencies if hasattr(dependencies, '__iter__') else [deps]
+    for d in dependencies:
+        d = insert_pyccel_folder(d)
+        command.append(d[:-3]+".o")
+        command.append("-I"+os.path.dirname(d))
 
     command.append("-o")
     command.append("%s" % test_file[:-3])
