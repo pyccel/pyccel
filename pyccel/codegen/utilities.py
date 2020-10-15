@@ -135,7 +135,7 @@ def compile_files(filename, compiler, flags,
     output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
 
     if output:
-        warnings.warn(UserWarning(output))
+        warnings.warn(UserWarning(output.decode("utf-8")))
 
     # TODO shall we uncomment this?
 #    # write and save a log file in .pyccel/'filename'.log

@@ -218,7 +218,7 @@ def create_shared_library(codegen,
                 err_msg += "\n" + err.decode("utf-8")
             raise RuntimeError(err_msg)
         if err:
-            warnings.warn(UserWarning(err))
+            warnings.warn(UserWarning(err.decode("utf-8")))
 
         sharedlib_folder += 'build/lib*/'
 
