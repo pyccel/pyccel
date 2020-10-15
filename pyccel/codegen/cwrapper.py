@@ -15,32 +15,32 @@ def create_c_setup(mod_name,
 
     deps  = ", ".join('r"{0}.c"'.format(d) for d in dependencies)
 
-    mod = '"{mod}"'.format(mod_name)
+    mod = '"{mod}"'.format(mod=mod_name)
 
     files = "[{0}]".format(deps)
 
-    if include == '':
+    if include == '' or include == []:
         include_str = None
     else:
         include_str = 'include_dirs = {0}'.format(print_list(include))
 
-    if libs == '':
+    if libs == '' or libs == []:
         libs_str = None
     else:
         libs_str = 'libraries = {0}'.format(print_list(libs))
 
-    if libdirs == '':
+    if libdirs == '' or libdirs == []:
         libdirs_str = None
     else:
         libdirs_str = 'library_dirs = {0}'.format(print_list(libdirs))
 
-    if flags == '':
+    if flags == '' or flags == []:
         flags_str = None
     else:
-        flags_str = 'extra_compile_args = {0}'.format(print_list(flags))
+        flags_str = 'extra_compile_args = {0}'.format(print_list(flags.strip().split()))
 
     args = [mod, files, include_str, libs_str, libdirs_str, flags_str]
-    args = ', '.join(a for a in args if a is not None]
+    args = ', '.join(a for a in args if a is not None)
 
     code += "extension_mod = Extension({args})\n\n".format(args=args)
     code += "setup(name = \"" + mod_name + "\", ext_modules=[extension_mod])"
