@@ -13,10 +13,17 @@ typedef union s_ndarr_type
 
 }  t_ndarray_type;
 
+typedef struct s_slice_data
+{
+    int start;
+    int end;
+    int step;
+}  t_slice;
+
 typedef struct s_ndarray
 {
     /* raw data buffer*/
-    t_ndarray_type data;
+    t_ndarray_type *data;
     /* number of dimmensions */
     int nd;
     /* shape 'size of each dimmension' */
@@ -25,7 +32,8 @@ typedef struct s_ndarray
     int *strides;
     /* type of the array elements */
     int type; // TODO : make it into an enum
-
+    t_slice **slices;
+    int lenght;
 } t_ndarray;
 
 #endif
