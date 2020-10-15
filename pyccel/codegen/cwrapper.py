@@ -2,7 +2,7 @@
 def print_list(l):
     if isinstance(l,str):
         l = [l]
-    return '[{0}]'.format(', '.join("'{0}'".format(li) for li in l))
+    return '[{0}]'.format(', '.join("r'{0}'".format(li) for li in l))
 
 def create_c_setup(mod_name,
         dependencies,
@@ -19,25 +19,16 @@ def create_c_setup(mod_name,
 
     files = "[{0}]".format(deps)
 
-    if include == '' or include == []:
-        include_str = None
-    else:
-        include_str = 'include_dirs = {0}'.format(print_list(include))
+    include_str = ('include_dirs = {0}'.format(print_list(include))
+                   if include else None)
 
-    if libs == '' or libs == []:
-        libs_str = None
-    else:
-        libs_str = 'libraries = {0}'.format(print_list(libs))
+    libs_str    = ('libraries = {0}'.format(print_list(libs))
+                   if libs else None)
+    libdirs_str = ('library_dirs = {0}'.format(print_list(libdirs))
+                   if libdirs else None)
 
-    if libdirs == '' or libdirs == []:
-        libdirs_str = None
-    else:
-        libdirs_str = 'library_dirs = {0}'.format(print_list(libdirs))
-
-    if flags == '' or flags == []:
-        flags_str = None
-    else:
-        flags_str = 'extra_compile_args = {0}'.format(print_list(flags.strip().split()))
+    flags_str   = ('extra_compile_args = {0}'.format(print_list(flags.strip().split()))
+                   if flags else None)
 
     args = [mod, files, include_str, libs_str, libdirs_str, flags_str]
     args = ', '.join(a for a in args if a is not None)
