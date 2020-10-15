@@ -215,10 +215,10 @@ def create_shared_library(codegen,
         if p.returncode != 0:
             err_msg = "Failed to build module"
             if verbose:
-                err_msg += "\n" + err.decode("utf-8")
+                err_msg += "\n" + err
             raise RuntimeError(err_msg)
         if err:
-            warnings.warn(UserWarning(err.decode("utf-8")))
+            warnings.warn(UserWarning(err))
 
         sharedlib_folder += 'build/lib*/'
 
