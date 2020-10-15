@@ -253,7 +253,7 @@ class CCodePrinter(CodePrinter):
                         PyccelMul(expr.imag, ImaginaryUnit()))))
 
     def _print_PythonComplex(self, expr):
-        self._additional_imports.add("complex.h")
+        self._additional_imports.add("complex")
         return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real_part,
                         PyccelMul(expr.imag_part, ImaginaryUnit()))))
 
@@ -413,7 +413,7 @@ class CCodePrinter(CodePrinter):
         return '"{}"'.format(format_str)
 
     def _print_Print(self, expr):
-        self._additional_imports.add("stdio.h")
+        self._additional_imports.add("stdio")
         type_to_format = {('real',8)    : '%.12lf',
                           ('real',4)    : '%.12f',
                           ('complex',8) : '(%.12lf + %.12lfj)',
