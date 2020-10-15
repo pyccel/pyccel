@@ -209,6 +209,7 @@ class CCodePrinter(CodePrinter):
         self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
         self._additional_imports = set(['stdlib.h'])
+        self._additional_imports.add("omp.h")
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
@@ -857,7 +858,8 @@ class CCodePrinter(CodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports  = [*expr.imports, *map(Import, self._additional_imports)]
-        imports  = '\n'.join(self._print(i) for i in imports)
+        imports  = '\n'.join(self._print(i) for i in imports).replace("#include <omp_lib>\n", "")
+        print(imports)
 
         return ('{imports}\n'
                 'int main()\n{{\n'
