@@ -384,8 +384,7 @@ def test_default_arguments():
             dependencies = "scripts/default_args_mod.py",
             output_dtype = [int,int,float,float,float,
                 float,float,float,float,bool,bool,bool,
-                float,float,float,float],
-            language = language)
+                float,float,float,float])
 
 #------------------------------------------------------------------------------
 def test_pyccel_calling_directory(language):
