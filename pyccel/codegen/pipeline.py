@@ -103,6 +103,9 @@ def execute_pyccel(fname, *,
 
     f90exec = mpi_compiler if mpi_compiler else compiler
 
+    if (language == "c"):
+        libs = libs + ['m']
+
     # ...
     # Construct flags for the Fortran compiler
     if fflags is None:
