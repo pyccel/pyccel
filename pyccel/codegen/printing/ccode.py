@@ -6,6 +6,7 @@ from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float, Integer
 from pyccel.ast.core import Nil, PyccelAssociativeParenthesis
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import SeparatorComment, VariableAddress
+from pyccel.ast.core import DottedName
 
 from pyccel.ast.core import PyccelAdd, PyccelMul, String
 
@@ -396,7 +397,12 @@ class CCodePrinter(CodePrinter):
         return code
 
     def _print_Import(self, expr):
-        return '#include <{0}.h>'.format(expr.source)
+        if isinstance(expr.source, DottedName):
+            source = expr.source.name[-1]
+        else:
+            source = self._print(expr.source)
+
+        return '#include <{0}.h>'.format(source)
 
     def _print_String(self, expr):
         format_str = format(expr.arg)
