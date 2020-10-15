@@ -264,7 +264,7 @@ class CCodePrinter(CodePrinter):
     def _print_ModuleHeader(self, expr):
         name = expr.module.name
         # TODO: Add classes and interfaces
-        funcs = ';\n\n'.join(self.function_signature(f) for f in expr.module.funcs)
+        funcs = '\n\n'.join('{};'.format(self.function_signature(f)) for f in expr.module.funcs)
 
         # Print imports last to be sure that all additional_imports have been collected
         imports = [*expr.module.imports, *map(Import, self._additional_imports)]
@@ -274,7 +274,7 @@ class CCodePrinter(CodePrinter):
                 '#define {name}_H\n\n'
                 '{imports}\n\n'
                 #'{classes}\n\n'
-                '{funcs};\n\n'
+                '{funcs}\n\n'
                 #'{interfaces}\n\n'
                 '#endif // {name}_H').format(
                         name    = name,
