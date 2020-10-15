@@ -17,6 +17,29 @@ def create_c_setup(mod_name,
     Create the code for the setup file which uses python setuptools
     to compile a c file and generate the corresponding shared
     library file
+
+    Parameters
+    ----------
+    mod_name : str
+            The name of the module that will be created
+    dependencies : list
+            A list of all files needed for the module
+    include : list
+            Include directories needed for compiling
+            If there is only one then a string can be passed instead of a list
+    libs : list
+            Libraries needed for compiling
+            If there is only one then a string can be passed instead of a list
+    libdirs : list
+            Library directories needed for compiling
+            If there is only one then a string can be passed instead of a list
+    flags : str
+            Additional flags to pass to the compiler
+
+    Returns
+    -------
+    code : str
+            A string containing the contents of the setup file
     """
 
     code  = "from setuptools import Extension, setup\n\n"
