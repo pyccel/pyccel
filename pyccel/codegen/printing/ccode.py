@@ -911,6 +911,9 @@ class CCodePrinter(CodePrinter):
     def _print_NewLine(self, expr):
         return '\n'
 
+    # .....................................................
+    #                   OpenMP statements
+    # .....................................................
     def _print_Program(self, expr):
         body  = self._print(expr.body)
         decs     = [self._print(i) for i in expr.declarations]
