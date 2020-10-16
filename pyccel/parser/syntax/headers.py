@@ -29,12 +29,12 @@ class Header(object):
         self.statements = kwargs.pop('statements', [])
 
 class FuncType(BasicStmt):
-
+    """Base class representing a  FunctionType in the grammar."""
     def __init__(self, **kwargs):
         self.decs = kwargs.pop('decs')
         self.results = kwargs.pop('results')
 
-        super(FuncType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -50,7 +50,7 @@ class FuncType(BasicStmt):
         d_var['decs'] = decs
         d_var['results'] = results
         d_var['isfunc'] = True
-        
+
         return d_var
 
 class ListType(BasicStmt):

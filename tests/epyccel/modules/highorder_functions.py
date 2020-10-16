@@ -91,7 +91,7 @@ def test_real_2():
 #$ header function test_real_3()
 def test_real_3():
     x = high_real_3(f8)
-    return x 
+    return x
 
 #$ header function test_valuedarg_1()
 def test_valuedarg_1():

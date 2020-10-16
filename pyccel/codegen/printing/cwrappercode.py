@@ -132,7 +132,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         if isinstance(variable, FunctionAddress):
             return variable, []
-            
+
         if variable.is_optional:
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
