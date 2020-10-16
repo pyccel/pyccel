@@ -6,6 +6,7 @@ from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float, Integer
 from pyccel.ast.core import Nil, PyccelAssociativeParenthesis
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import SeparatorComment, VariableAddress
+from pyccel.ast.core import DottedName
 
 from pyccel.ast.core import PyccelAdd, PyccelMul, String
 
@@ -204,6 +205,9 @@ class CCodePrinter(CodePrinter):
 
     def __init__(self, accelerator, parser, settings={}):
 
+        if parser.filename:
+            errors.set_target(parser.filename, 'file')
+
         prefix_module = settings.pop('prefix_module', None)
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
@@ -254,18 +258,38 @@ class CCodePrinter(CodePrinter):
                         PyccelMul(expr.imag, ImaginaryUnit()))))
 
     def _print_PythonComplex(self, expr):
-        self._additional_imports.add("complex.h")
+        self._additional_imports.add("complex")
         return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real_part,
                         PyccelMul(expr.imag_part, ImaginaryUnit()))))
 
     def _print_ImaginaryUnit(self, expr):
         return '_Complex_I'
 
+    def _print_ModuleHeader(self, expr):
+        name = expr.module.name
+        # TODO: Add classes and interfaces
+        funcs = '\n\n'.join('{};'.format(self.function_signature(f)) for f in expr.module.funcs)
+
+        # Print imports last to be sure that all additional_imports have been collected
+        imports = [*expr.module.imports, *map(Import, self._additional_imports)]
+        imports = '\n'.join(self._print(i) for i in imports)
+
+        return ('#ifndef {name}_H\n'
+                '#define {name}_H\n\n'
+                '{imports}\n\n'
+                #'{classes}\n\n'
+                '{funcs}\n\n'
+                #'{interfaces}\n\n'
+                '#endif // {name}_H').format(
+                        name    = name.upper(),
+                        imports = imports,
+                        funcs   = funcs)
+
     def _print_Module(self, expr):
         body    = '\n\n'.join(self._print(i) for i in expr.body)
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports  = [*expr.imports, *map(Import, self._additional_imports)]
+        imports = [Import(expr.name), *map(Import, self._additional_imports)]
         imports = '\n'.join(self._print(i) for i in imports)
         return ('{imports}\n\n'
                 '{body}').format(
@@ -341,7 +365,7 @@ class CCodePrinter(CodePrinter):
         return '!{}'.format(a)
 
     def _print_PyccelMod(self, expr):
-        self._additional_imports.add("math.h")
+        self._additional_imports.add("math")
 
         first = self._print(expr.args[0])
         second = self._print(expr.args[1])
@@ -362,10 +386,10 @@ class CCodePrinter(CodePrinter):
         if expr.dtype is NativeComplex():
             b = self._print(b if b.dtype is NativeComplex() else PythonComplex(b))
             e = self._print(e if e.dtype is NativeComplex() else PythonComplex(e))
-            self._additional_imports.add("complex.h")
+            self._additional_imports.add("complex")
             return 'cpow({}, {})'.format(b, e)
 
-        self._additional_imports.add("math.h")
+        self._additional_imports.add("math")
         b = self._print(b if b.dtype is NativeReal() else PythonFloat(b))
         e = self._print(e if e.dtype is NativeReal() else PythonFloat(e))
         code = 'pow({}, {})'.format(b, e)
@@ -377,7 +401,12 @@ class CCodePrinter(CodePrinter):
         return code
 
     def _print_Import(self, expr):
-        return '#include <{0}>'.format(expr.source)
+        if isinstance(expr.source, DottedName):
+            source = expr.source.name[-1]
+        else:
+            source = self._print(expr.source)
+
+        return '#include <{0}.h>'.format(source)
 
     def _print_String(self, expr):
         format_str = format(expr.arg)
@@ -394,7 +423,7 @@ class CCodePrinter(CodePrinter):
         return '"{}"'.format(format_str)
 
     def _print_Print(self, expr):
-        self._additional_imports.add("stdio.h")
+        self._additional_imports.add("stdio")
         type_to_format = {('real',8)    : '%.12lf',
                           ('real',4)    : '%.12f',
                           ('complex',8) : '(%.12lf + %.12lfj)',
@@ -458,7 +487,7 @@ class CCodePrinter(CodePrinter):
         return '{0}{1};'.format(declaration_type, variable)
 
     def _print_NativeBool(self, expr):
-        self._additional_imports.add('stdbool.h')
+        self._additional_imports.add('stdbool')
         return 'bool'
 
     def _print_NativeInteger(self, expr):
@@ -471,7 +500,7 @@ class CCodePrinter(CodePrinter):
         return 'void'
 
     def _print_NativeComplex(self, expr):
-        self._additional_imports.add('complex.h')
+        self._additional_imports.add('complex')
         return 'complex'
     def _print_NativeString(self, expr):
         return 'string'
@@ -513,7 +542,7 @@ class CCodePrinter(CodePrinter):
 
         """
         # add necessary include
-        self._additional_imports.add('math.h')
+        self._additional_imports.add('math')
         type_name = type(expr).__name__
         try:
             func_name = numpy_ufunc_to_c_real[type_name]
@@ -522,7 +551,7 @@ class CCodePrinter(CodePrinter):
         args = []
         for arg in expr.args:
             if arg.dtype is NativeComplex():
-                self._additional_imports.add('complex.h')
+                self._additional_imports.add('complex')
                 try:
                     func_name = numpy_ufunc_to_c_complex[type_name]
                     args.append(self._print(arg))
@@ -556,7 +585,7 @@ class CCodePrinter(CodePrinter):
 
         """
         # add necessary include
-        self._additional_imports.add('math.h')
+        self._additional_imports.add('math')
         type_name = type(expr).__name__
         try:
             func_name = math_function_to_c[type_name]
@@ -565,7 +594,7 @@ class CCodePrinter(CodePrinter):
         args = []
         for arg in expr.args:
             if arg.dtype is NativeComplex():
-                self._additional_imports.add('complex.h')
+                self._additional_imports.add('complex')
             if arg.dtype is not NativeReal():
                 args.append(self._print(NumpyFloat(arg)))
             else :
@@ -575,13 +604,19 @@ class CCodePrinter(CodePrinter):
 
     def _print_MathSqrt(self, expr):
         # add necessary include
-        self._additional_imports.add('math.h')
+        self._additional_imports.add('math')
         arg = expr.args[0]
         if arg.dtype is not NativeReal():
             code_args = self._print(NumpyFloat(arg))
         else :
             code_args = self._print(arg)
         return 'sqrt({})'.format(code_args)
+
+    def _print_Rand(self, expr):
+        raise NotImplementedError("Rand not implemented")
+
+    def _print_NumpyRandint(self, expr):
+        raise NotImplementedError("Randint not implemented")
 
     def _print_FunctionDef(self, expr):
 
@@ -593,13 +628,17 @@ class CCodePrinter(CodePrinter):
         self._additional_declare.clear()
         sep = self._print(SeparatorComment(40))
 
+        imports = ''.join(self._print(i) for i in expr.imports)
+
         return ('{sep}\n'
                 '{signature}\n{{\n'
+                '{imports}\n'
                 '{decs}\n'
                 '{body}\n'
                 '}}\n{sep}'.format(
                     sep = sep,
                     signature = self.function_signature(expr),
+                    imports = imports,
                     decs = decs,
                     body = body))
 
@@ -689,7 +728,7 @@ class CCodePrinter(CodePrinter):
         return  ' / '.join(self._print(a) for a in args)
 
     def _print_PyccelFloorDiv(self, expr):
-        self._additional_imports.add("math.h")
+        self._additional_imports.add("math")
         if all(a.dtype is NativeInteger() for a in expr.args):
             args = [PythonFloat(a) for a in expr.args]
         else:
