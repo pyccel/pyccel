@@ -5,12 +5,13 @@ from pyccel.codegen.printing.fcode  import fcode
 from pyccel.codegen.printing.ccode  import ccode
 from pyccel.codegen.printing.pycode import pycode
 
-from pyccel.ast.core      import FunctionDef, Module, Program, Interface
+from pyccel.ast.core      import FunctionDef, Module, Program, Interface, ModuleHeader
 from pyccel.ast.core      import EmptyNode, NewLine, Comment, CommentBlock
 from pyccel.ast.headers   import Header
 from pyccel.errors.errors import Errors
 
 _extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
+_header_extension_registry = {'fortran': None, 'c':'h',  'python':None}
 printer_registry    = {'fortran':fcode, 'c':ccode, 'python':pycode}
 
 
@@ -248,14 +249,26 @@ class Codegen(object):
             code = self.code
 
         ext = _extension_registry[self.language]
+        header_ext = _header_extension_registry[self.language]
         if filename is None:
+            header_filename = '{name}.{ext}'.format(name=self.name, ext=header_ext)
             filename = '{name}.{ext}'.format(name=self.name, ext=ext)
         else:
+            header_filename = '{name}.{ext}'.format(name=filename, ext=header_ext)
             filename = '{name}.{ext}'.format(name=filename, ext=ext)
 
         with open(filename, 'w') as f:
             for line in code:
                 f.write(line)
+
+        if header_ext is not None and self.is_module:
+            printer = printer_registry[self.language]
+
+            settings.pop('language', 'fortran')
+            code = printer(ModuleHeader(self.expr), parser=self.parser, **settings)
+            with open(header_filename, 'w') as f:
+                for line in code:
+                    f.write(line)
 
         return filename
 

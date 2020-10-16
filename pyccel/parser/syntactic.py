@@ -103,11 +103,13 @@ class SyntaxParser(BasicParser):
         code = inputs
         if os.path.isfile(inputs):
 
+            self._filename = inputs
+            errors.set_target(self.filename, 'file')
+
             # we don't use is_valid_filename_py since it uses absolute path
             # file extension
 
             code = read_file(inputs)
-            self._filename = inputs
 
         self._code = code
 
@@ -139,10 +141,6 @@ class SyntaxParser(BasicParser):
 
         # TODO - add settings to Errors
         #      - filename
-
-        errors = Errors()
-        if self.filename:
-            errors.set_target(self.filename, 'file')
         errors.set_parser_stage('syntax')
 
         PyccelAstNode.stage = 'syntactic'
