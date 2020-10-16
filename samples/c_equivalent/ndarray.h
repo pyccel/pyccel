@@ -1,7 +1,10 @@
 #ifndef NDARRAY_H
 # define NDAARAY_H
 
-# define NDARRAY_MAX_DIMS 32
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 typedef union s_ndarr_type
 {
@@ -34,5 +37,27 @@ typedef struct s_ndarray
     int lenght;
     int is_slice;
 } t_ndarray;
+
+/* functions prototypes */
+
+/* allocations */
+t_ndarray *init_array(char *temp, int nd, int *shape, int type);
+
+/* dumping data */
+int array_value_dump(t_ndarray *arr);
+int array_data_dump(t_ndarray *arr);
+
+/* slicing */
+t_slice *slice_data(int start, int end, int step);
+t_ndarray *make_slice(t_ndarray *p, ...);
+
+/* free */
+int free_array(t_ndarray *dump);
+
+/* indexing */
+int get_index(t_ndarray *arr, ...);
+
+/* other funcs */
+t_ndarray *mat_product(t_ndarray *mat1, t_ndarray *mat2);
 
 #endif
