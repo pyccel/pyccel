@@ -981,8 +981,7 @@ class SyntaxParser(BasicParser):
         test1 = self._visit(stmt.test)
         first = self._visit(stmt.body)
         second = self._visit(stmt.orelse)
-        args = [Tuple(test1, [first], sympify=False),
-                Tuple(BooleanTrue(), [second], sympify=False)]
+        args = [test1, [first], [second]]
         expr = IfTernaryOperator(*args)
         expr.set_fst(stmt)
         return expr
