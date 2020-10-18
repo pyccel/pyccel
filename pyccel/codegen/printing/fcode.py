@@ -44,7 +44,7 @@ from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
 from pyccel.ast.core      import FunctionCall
 
 from pyccel.ast.builtins  import Enumerate, PythonInt, Len, Map, Print, Range, Zip, PythonTuple, PythonFloat
-
+from pyccel.ast.builtins  import PythonComplex, PythonBool
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString
@@ -55,6 +55,7 @@ from pyccel.ast.numbers   import Integer, Float
 from pyccel.ast.numbers   import BooleanTrue
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.type_inference import str_dtype
 
 from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
 from pyccel.ast.numpyext import Real, Where
@@ -153,6 +154,13 @@ math_function_to_fortran = {
 _default_methods = {
     '__init__': 'create',
     '__del__' : 'free',
+}
+
+python_builtin_datatypes = {
+    'integer' : PythonInt,
+    'real'    : PythonFloat,
+    'bool'    : PythonBool,
+    'complex' : PythonComplex
 }
 
 errors = Errors()
