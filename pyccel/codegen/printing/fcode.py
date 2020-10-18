@@ -28,6 +28,7 @@ from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import Nil
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
+from pyccel.ast.core import FunctionDef, FunctionAddress, FuncAddressDeclare
 from pyccel.ast.core import Subroutine
 from pyccel.ast.core import ErrorExit
 from pyccel.ast.core import Product
@@ -809,6 +810,39 @@ class FCodePrinter(CodePrinter):
 
         return str(functools.reduce(operator.mul, shape ))
 
+    def _print_FuncAddressDeclare(self, expr):
+
+        return ''
+        var = expr.variable
+        is_optional = var.is_optional
+        is_static = expr.static
+        intent = expr.intent
+
+        dtype = self._print(var.results[0].dtype)
+        dtype += '(kind={0})'.format(str(var.results[0].precision))
+
+        code_value = ''
+        if expr.value:
+            code_value = ' = {0}'.format(expr.value)
+
+        vstr = self._print(expr.variable.name)
+
+        intentstr      = ''
+        allocatablestr = ''
+        optionalstr    = ''
+        rankstr        = ''
+
+        if intent:
+            intentstr = ', intent({})'.format(intent)
+
+        if is_optional:
+            optionalstr = ', optional'
+
+        left  = dtype + ', external' + optionalstr
+        right = vstr + code_value
+        return '{} :: {}\n'.format(left, right)
+
+
     def _print_Declare(self, expr):
         # ... ignored declarations
         # we don't print the declaration if iterable object
@@ -885,6 +919,7 @@ class FCodePrinter(CodePrinter):
             dtype = self._print(expr_dtype)
 
         # ...
+            #todo handle this case in funcaddressdeclare
             if isinstance(expr_dtype, NativeString):
 
                 if expr.intent:
@@ -912,8 +947,10 @@ class FCodePrinter(CodePrinter):
 
         # Compute intent string
         if intent:
+            #if intent == 'in' and rank == 0 and is_static is False:
+            #    intentstr = ', value'
             if intent == 'in' and rank == 0 and is_static is False:
-                intentstr = ', value'
+                intentstr = ''
             else:
                 intentstr = ', intent({})'.format(intent)
 
@@ -1215,6 +1252,25 @@ class FCodePrinter(CodePrinter):
 
     def _print_Interface(self, expr):
         # ... we don't print 'hidden' functions
+        if expr.is_external:
+            print(expr.functions[0].arguments[0].dtype)
+            interface = 'interface\n'
+            for f in expr.functions:
+                args = [i.rename('test') for i in f.arguments]
+                args = [Declare(i.dtype, i) for i in args]
+                args = [self._print(i) for i in args]
+                args = '\n'.join(i for i in args)
+                res = [i.rename(f.name) for i in f.results]
+                res = [Declare(i.dtype, i) for i in res]
+                res = [self._print(i) for i in res]
+                res = '\n'.join(i for i in res)
+                arg_code =  [i.rename('test') for i in f.arguments]
+                arg_code = ', '.join(self._print(i) for i in arg_code)
+                sig = "function {}({})".format(f.name, arg_code)
+                parts = sig + '\n' + args + '\n' + res + '\n' + 'end function\n'
+            interface += parts + 'end interface\n'
+            return(interface)
+
         name = self._print(expr.name)
         if expr.functions[0].cls_name:
             for k, m in list(_default_methods.items()):
@@ -1272,7 +1328,6 @@ class FCodePrinter(CodePrinter):
         results   = list(expr.results)
         arguments = list(expr.arguments)
         arguments_inout = expr.arguments_inout
-
         args_decs = OrderedDict()
         for i,arg in enumerate(arguments):
             if arguments_inout[i]:
@@ -1283,11 +1338,17 @@ class FCodePrinter(CodePrinter):
             if arg in results:
                 results.remove(i)
 
-            dec = Declare(arg.dtype, arg, intent=intent , static=True)
+            if isinstance(arg, FunctionAddress):
+                dec = FuncAddressDeclare(arg, intent=intent , static=True)
+            else:
+                dec = Declare(arg.dtype, arg, intent=intent , static=True)
             args_decs[str(arg.name)] = dec
 
         for result in results:
-            dec = Declare(result.dtype, result, intent='out', static=True)
+            if isinstance(result, FunctionAddress):
+                dec = FuncAddressDeclare(result, intent='out', static=True)
+            else:
+                dec = Declare(result.dtype, result, intent='out', static=True)
             args_decs[str(result)] = dec
 
         if expr.is_procedure:
@@ -1301,6 +1362,8 @@ class FCodePrinter(CodePrinter):
             args_decs[str(result.name)] = dec
         # ...
 
+        print("dddddddddddddd {}".format(len(expr.interfaces)))
+        interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         arg_code  = ', '.join(self._print(i) for i in chain( arguments, results ))
         imports   = ''.join(self._print(i) for i in expr.imports)
         prelude   = ''.join(self._print(i) for i in args_decs.values())
@@ -1310,10 +1373,14 @@ class FCodePrinter(CodePrinter):
                  imports,
                 'implicit none\n',
                  prelude,
+                 interfaces,
                  body_code,
                  'end {} {}\n'.format(func_type, name)]
 
         return '\n'.join(parts)
+
+    def _print_FunctionAddress(self, expr):
+        return expr.name
 
     def _print_FunctionDef(self, expr):
         self._handle_fortran_specific_a_prioris(list(expr.local_vars) +
@@ -1362,6 +1429,7 @@ class FCodePrinter(CodePrinter):
             functions = expr.functions
 
         else:
+           #todo: red if return is a function
             func_type = 'function'
             result = expr.results[0]
             functions = expr.functions
@@ -1374,14 +1442,18 @@ class FCodePrinter(CodePrinter):
 
         for i,arg in enumerate(expr.arguments):
             if expr.arguments_inout[i]:
-                dec = Declare(arg.dtype, arg, intent='inout')
-
+                if isinstance(arg, FunctionAddress):
+                    dec = FuncAddressDeclare(arg, intent='inout')
+                else:
+                    dec = Declare(arg.dtype, arg, intent='inout')
             elif str(arg) == 'self':
                 dec = Declare(arg.dtype, arg, intent='inout')
 
             else:
-                dec = Declare(arg.dtype, arg, intent='in')
-
+                if isinstance(arg, FunctionAddress):
+                    dec = FuncAddressDeclare(arg, intent='in')
+                else:
+                    dec = Declare(arg.dtype, arg, intent='in')
             args_decs[str(arg)] = dec
 
         #remove parametres intent(inout) from out_args to prevent repetition
@@ -1402,7 +1474,10 @@ class FCodePrinter(CodePrinter):
         body_code = self._print(expr.body)
 
         for i in expr.local_vars:
-            dec = Declare(i.dtype, i)
+            if isinstance(i, FunctionAddress):
+                dec = FuncAddressDeclare(i)
+            else:
+                dec = Declare(i.dtype, i)
             decs[str(i)] = dec
 
         args_decs.update(decs)
@@ -1420,11 +1495,13 @@ class FCodePrinter(CodePrinter):
         imports = ''.join(self._print(i) for i in expr.imports)
 
         self.set_current_function(None)
-
+        tmp_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
+        print(tmp_interfaces)
         parts = ['{0}({1}) {2}\n'.format(sig, arg_code, func_end),
                  imports,
                 'implicit none\n',
                  prelude,
+                 tmp_interfaces,
                  body_code,
                  'end {} {}\n'.format(func_type, name)]
 
