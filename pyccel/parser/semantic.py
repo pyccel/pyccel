@@ -2200,7 +2200,6 @@ class SemanticParser(BasicParser):
         return expr.func(*args)
 
     def _visit_IfTernaryOperator(self, expr, **settings):
-        print('semantic stage for IfTernaryOperator')
         args = [self._visit(i, **settings) for i in expr.args]
         return expr.func(*args)
 
