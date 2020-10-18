@@ -312,6 +312,14 @@ class CCodePrinter(CodePrinter):
             lines.append("%s\n}" % var)
         return "\n".join(lines)
 
+    def _print_IfTernaryOperator(self, expr):
+        print('in print if ternary')
+        body = expr.body
+        cond = self._print(body[0])
+        first = self._print(body[1])
+        second = self._print(body[2])
+        return '({cond}) ? {true} : {false}'.format(cond = cond, true =first , false =second )
+
     def _print_BooleanTrue(self, expr):
         return '1'
 
