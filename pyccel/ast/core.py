@@ -5178,6 +5178,8 @@ class If(Basic):
 
 
 class IfTernaryOperator(Basic, PyccelAstNode):
+    _rank  = 0
+    _shape = ()
 
     """class for the Ternery operator"""
     def __init__(self, *args):
@@ -5196,6 +5198,15 @@ class IfTernaryOperator(Basic, PyccelAstNode):
         else:
             raise TypeError('body is not CodeBlock')
         self._args = [cond, first, second]
+        if isinstance(first.body[0].dtype, NativeString) ^ isinstance(second.body[0].dtype, NativeString):
+             raise TypeError('Only one of the condition results is type string')
+        _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
+        _tmp_elem = max([first, second], key = lambda x : _tmp_list.index(x.body[0].dtype))
+        self._dtype = _tmp_elem.body[0].dtype
+        self._precision = _tmp_elem.body[0].precision
+
+
+
 
     @property
     def body(self):
