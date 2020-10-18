@@ -5214,6 +5214,8 @@ class IfTernaryOperator(Basic, PyccelAstNode):
         else:
             raise TypeError('body is not CodeBlock')
         self._args = [cond, first, second]
+        if self.stage == 'syntactic':
+            return
         if isinstance(first.body[0].dtype, NativeString) ^ isinstance(second.body[0].dtype, NativeString):
              raise TypeError('Only one of the condition results is type string')
         _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
