@@ -179,7 +179,7 @@ class FunctionHeader(Header):
         funcs = []
         dtypes = []
 
-        def build_variable(var_name, dc):
+        def build_argument(var_name, dc):
             dtype    = dc['datatype']
             allocatable = dc['allocatable']
             is_pointer = dc['is_pointer']
@@ -218,22 +218,23 @@ class FunctionHeader(Header):
                     decs = []
                     results = []
                     for dc in d['decs']:
-                        var = build_variable('', dc)
+                        var = build_argument('', dc)
                         decs.append(var)
                     for dc in d['results']:
-                        var = build_variable('', dc)
+                        var = build_argument('', dc)
                         results.append(var)
                     arg_name = 'arg_{0}'.format(str(i))
                     arg = FunctionAddress(arg_name, decs, results, [])
 
                 else:
                     arg_name = 'arg_{0}'.format(str(i))
-                    arg = build_variable(arg_name, d)
+                    arg = build_argument(arg_name, d)
                 args.append(arg)
 
             # ... factorize the following 2 blocks
             results = []
             for i,d_var in enumerate(self.results):
+                d_var.pop('isfunc')
                 dtype = d_var.pop('datatype')
                 var = Variable(dtype, 'res_{}'.format(i), **d_var)
                 results.append(var)
