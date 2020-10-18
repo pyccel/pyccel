@@ -2067,14 +2067,17 @@ class FCodePrinter(CodePrinter):
         return ''.join(lines)
 
     def _print_IfTernaryOperator(self, expr):
-        body = expr.body
+        args = expr.body
+        cond = self._print(args[0])
+        first = args[1].body[0]
+        second = args[2].body[0]
         try :
             cast_func = python_builtin_datatypes[str_dtype(expr.dtype)]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
-        cond = self._print(body[0])
-        first = self._print(cast_func(body[1].body[0]))
-        second = self._print(cast_func(body[2].body[0]))
+
+        first = self._print(cast_func(first) if first.dtype != expr.dtype else first)
+        second = self._print(cast_func(second) if second.dtype != expr.dtype else second)
         return 'merge({true}, {false}, {cond})'.format(cond = cond, true =first , false =second)
 
     def _print_MatrixElement(self, expr):
