@@ -5181,7 +5181,23 @@ class IfTernaryOperator(Basic, PyccelAstNode):
     _rank  = 0
     _shape = ()
 
-    """class for the Ternery operator"""
+    """Represents a IfTernaryOperator statement in the code.
+
+    Parameters
+    ----------
+    args :
+        args : type list
+        format : [condition , value_if_true, value_if_false]
+
+    Examples
+    --------
+    >>> from sympy import Symbol
+    >>> from pyccel.ast.core import Assign, IfTernaryOperator
+    >>> n = Symbol('n')
+    >>> x = 5 if n > 1 else 2
+    >>> IfTernaryOperator([PyccelGt(n > 1),  CodeBlock([5]),  CodeBlock([2])])
+    IfTernaryOperator([PyccelGt(n > 1),  CodeBlock([5]),  CodeBlock([2])])
+    """
     def __init__(self, *args):
         self._args = []
         cond = args[0]
