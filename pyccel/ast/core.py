@@ -5177,15 +5177,29 @@ class If(Basic):
         return b
 
 
-class IfTernaryOperator(If):
+class IfTernaryOperator(Basic, PyccelAstNode):
 
     """class for the Ternery operator"""
     def __init__(self, *args):
-        for arg in self.args:
-            if len(arg[1].body)!=1:
-                raise TypeError('IfTernary body must be of length 1')
+        self._args = []
+        cond = args[0]
+        if isinstance(args[1], (list, Tuple, tuple)):
+            first = CodeBlock(args[1])
+        elif isinstance(args[1], CodeBlock):
+            first = args[1]
+        else:
+            raise TypeError('body is not CodeBlock')
+        if isinstance(args[2], (list, Tuple, tuple)):
+            second = CodeBlock(args[2])
+        elif isinstance(args[2], CodeBlock):
+            second = args[2]
+        else:
+            raise TypeError('body is not CodeBlock')
+        self._args = [cond, first, second]
 
-    pass
+    @property
+    def body(self):
+        return self._args
 
 class StarredArguments(Basic):
     def __new__(cls, args):
