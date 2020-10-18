@@ -2066,6 +2066,17 @@ class FCodePrinter(CodePrinter):
 
         return ''.join(lines)
 
+    def _print_IfTernaryOperator(self, expr):
+        body = expr.body
+        try :
+            cast_func = python_builtin_datatypes[str_dtype(expr.dtype)]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+        cond = self._print(body[0])
+        first = self._print(cast_func(body[1].body[0]))
+        second = self._print(cast_func(body[2].body[0]))
+        return 'merge({true}, {false}, {cond})'.format(cond = cond, true =first , false =second)
+
     def _print_MatrixElement(self, expr):
         return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
 
