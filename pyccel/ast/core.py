@@ -5201,27 +5201,17 @@ class IfTernaryOperator(Basic, PyccelAstNode):
     def __init__(self, *args):
         self._args = []
         cond = args[0]
-        if isinstance(args[1], (list, Tuple, tuple)):
-            first = CodeBlock(args[1])
-        elif isinstance(args[1], CodeBlock):
-            first = args[1]
-        else:
-            raise TypeError('body is not CodeBlock')
-        if isinstance(args[2], (list, Tuple, tuple)):
-            second = CodeBlock(args[2])
-        elif isinstance(args[2], CodeBlock):
-            second = args[2]
-        else:
-            raise TypeError('body is not CodeBlock')
+        first = args[1]
+        second = args[2]
         self._args = [cond, first, second]
         if self.stage == 'syntactic':
             return
-        if isinstance(first.body[0].dtype, NativeString) ^ isinstance(second.body[0].dtype, NativeString):
+        if isinstance(first.dtype, NativeString) ^ isinstance(second.dtype, NativeString):
              raise TypeError('Only one of the condition results is type string')
         _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
-        _tmp_elem = max([first, second], key = lambda x : _tmp_list.index(x.body[0].dtype))
-        self._dtype = _tmp_elem.body[0].dtype
-        self._precision = _tmp_elem.body[0].precision
+        _tmp_elem = max([first, second], key = lambda x : _tmp_list.index(x.dtype))
+        self._dtype = _tmp_elem.dtype
+        self._precision = _tmp_elem.precision
 
 
 
