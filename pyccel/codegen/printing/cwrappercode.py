@@ -131,7 +131,8 @@ class CWrapperCodePrinter(CCodePrinter):
         collect_var = variable
 
         if isinstance(variable, FunctionAddress):
-            return variable, []
+            body = [PyErr_SetString('PyExc_NotImplementedError', '"can not pass a function as an argument"'), Return([Nil()])]
+            return variable, body
 
         if variable.is_optional:
             collect_type = PyccelPyObject()
