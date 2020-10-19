@@ -1,11 +1,15 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import pytest
-from numpy.random import rand, randint
+from numpy.random import rand, randint, uniform
 from numpy import isclose
 
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 from conftest import *
+
+import sys
+
+min_float = sys.float_info.min  # Minimum positive float
 
 # Functions still to be tested:
 #    full_like
@@ -36,173 +40,524 @@ from conftest import *
 #    cross
 #    # ---
 
-def test_fabs_call(language):
+#-------------------------------- Fabs function ------------------------------#
+def test_fabs_call_r(language):
     @types('real')
-    def fabs_call(x):
+    def fabs_call_r(x):
         from numpy import fabs
         return fabs(x)
 
-    f1 = epyccel(fabs_call, language = language)
-    x = rand()
-    assert(isclose(f1(x), fabs_call(x), rtol=1e-15, atol=1e-15))
+    f1 = epyccel(fabs_call_r, language = language)
+    x = uniform(high=1e6)
+    assert(isclose(f1(x), fabs_call_r(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), fabs_call_r(-x), rtol=1e-15, atol=1e-15))
+    # assert(type(f1(x)) == type(fabs_call_r(x).item()))
 
-def test_fabs_phrase(language):
+def test_fabs_call_i(language):
+    @types('int')
+    def fabs_call_i(x):
+        from numpy import fabs
+        return fabs(x)
+
+    f1 = epyccel(fabs_call_i, language = language)
+    x = randint(1e6)
+    assert(isclose(f1(x), fabs_call_i(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), fabs_call_i(-x), rtol=1e-15, atol=1e-15))
+    # assert(type(f1(x)) == type(fabs_call_i(x).item()))
+
+def test_fabs_phrase_r_r(language):
     @types('real','real')
-    def fabs_phrase(x,y):
+    def fabs_phrase_r_r(x,y):
         from numpy import fabs
         a = fabs(x)*fabs(y)
         return a
 
-    f2 = epyccel(fabs_phrase, language = language)
-    x = rand()
-    y = rand()
-    assert(isclose(f2(x,y), fabs_phrase(x,y), rtol=1e-15, atol=1e-15))
+    f2 = epyccel(fabs_phrase_r_r, language = language)
+    x = uniform(high=1e6)
+    y = uniform(high=1e6)
+    assert(isclose(f2(x,y), fabs_phrase_r_r(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), fabs_phrase_r_r(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), fabs_phrase_r_r(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), fabs_phrase_r_r(-x,y), rtol=1e-15, atol=1e-15))
 
-@pytest.mark.xfail(reason = "fabs should always return a float")
-def test_fabs_return_type(language):
-    @types('int')
-    def fabs_return_type(x):
+def test_fabs_phrase_i_i(language):
+    @types('int','int')
+    def fabs_phrase_i_i(x,y):
         from numpy import fabs
-        a = fabs(x)
+        a = fabs(x)*fabs(y)
         return a
 
-    f1 = epyccel(fabs_return_type, language = language)
-    x = randint(100)
-    assert(isclose(f1(x), fabs_return_type(x), rtol=1e-15, atol=1e-15))
-    assert(type(f1(x)) == type(fabs_return_type(x))) # pylint: disable=unidiomatic-typecheck
+    f2 = epyccel(fabs_phrase_i_i, language = language)
+    x = randint(1e6)
+    y = randint(1e6)
+    assert(isclose(f2(x,y), fabs_phrase_i_i(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), fabs_phrase_i_i(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), fabs_phrase_i_i(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), fabs_phrase_i_i(-x,y), rtol=1e-15, atol=1e-15))
 
-def test_absolute_call(language):
+def test_fabs_phrase_r_i(language):
+    @types('real','int')
+    def fabs_phrase_r_i(x,y):
+        from numpy import fabs
+        a = fabs(x)*fabs(y)
+        return a
+
+    f2 = epyccel(fabs_phrase_r_i, language = language)
+    x = uniform(high=1e6)
+    y = randint(1e6)
+    assert(isclose(f2(x,y), fabs_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), fabs_phrase_r_i(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), fabs_phrase_r_i(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), fabs_phrase_r_i(-x,y), rtol=1e-15, atol=1e-15))
+
+def test_fabs_phrase_r_i(language):
+    @types('int','real')
+    def fabs_phrase_r_i(x,y):
+        from numpy import fabs
+        a = fabs(x)*fabs(y)
+        return a
+
+    f2 = epyccel(fabs_phrase_r_i, language = language)
+    x = randint(1e6)
+    y = uniform(high=1e6)
+    assert(isclose(f2(x,y), fabs_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), fabs_phrase_r_i(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), fabs_phrase_r_i(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), fabs_phrase_r_i(-x,y), rtol=1e-15, atol=1e-15))
+
+#------------------------------ absolute function ----------------------------#
+def test_absolute_call_r(language):
     @types('real')
-    def absolute_call(x):
+    def absolute_call_r(x):
         from numpy import absolute
         return absolute(x)
 
-    f1 = epyccel(absolute_call, language = language)
-    x = rand()
-    assert(isclose(f1(x), absolute_call(x), rtol=1e-15, atol=1e-15))
+    f1 = epyccel(absolute_call_r, language = language)
+    x = uniform(high=1e6)
+    assert(isclose(f1(x), absolute_call_r(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), absolute_call_r(-x), rtol=1e-15, atol=1e-15))
+    # assert(type(f1(x)) == type(absolute_call_r(x).item()))
 
-def test_absolute_phrase(language):
+def test_absolute_call_i(language):
+    @types('int')
+    def absolute_call_i(x):
+        from numpy import absolute
+        return absolute(x)
+
+    f1 = epyccel(absolute_call_i, language = language)
+    x = randint(1e6)
+    assert(isclose(f1(x), absolute_call_i(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), absolute_call_i(-x), rtol=1e-15, atol=1e-15))
+    # assert(type(f1(x)) == type(absolute_call_i(x).item()))
+
+def test_absolute_phrase_r_r(language):
     @types('real','real')
-    def absolute_phrase(x,y):
+    def absolute_phrase_r_r(x,y):
         from numpy import absolute
         a = absolute(x)*absolute(y)
         return a
 
-    f2 = epyccel(absolute_phrase, language = language)
-    x = rand()
-    y = rand()
-    assert(isclose(f2(x,y), absolute_phrase(x,y), rtol=1e-15, atol=1e-15))
+    f2 = epyccel(absolute_phrase_r_r, language = language)
+    x = uniform(high=1e6)
+    y = uniform(high=1e6)
+    assert(isclose(f2(x,y), absolute_phrase_r_r(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), absolute_phrase_r_r(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), absolute_phrase_r_r(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), absolute_phrase_r_r(x,-y), rtol=1e-15, atol=1e-15))
 
-def test_absolute_return_type(language):
-    @types('int')
-    def absolute_return_type(x):
+def test_absolute_phrase_i_r(language):
+    @types('int','real')
+    def absolute_phrase_i_r(x,y):
         from numpy import absolute
-        a = absolute(x)
+        a = absolute(x)*absolute(y)
         return a
 
-    f1 = epyccel(absolute_return_type, language = language)
-    x = randint(100)
-    assert(isclose(f1(x), absolute_return_type(x), rtol=1e-15, atol=1e-15))
-    assert(type(f1(x)) == type(absolute_return_type(x).item())) # pylint: disable=unidiomatic-typecheck
+    f2 = epyccel(absolute_phrase_i_r, language = language)
+    x = randint(1e6)
+    y = uniform(high=1e6)
+    assert(isclose(f2(x,y), absolute_phrase_i_r(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), absolute_phrase_i_r(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), absolute_phrase_i_r(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), absolute_phrase_i_r(x,-y), rtol=1e-15, atol=1e-15))
 
-def test_sin_call(language):
+def test_absolute_phrase_r_i(language):
+    @types('real','int')
+    def absolute_phrase_r_i(x,y):
+        from numpy import absolute
+        a = absolute(x)*absolute(y)
+        return a
+
+    f2 = epyccel(absolute_phrase_r_i, language = language)
+    x = uniform(high=1e6)
+    y = randint(1e6)
+    assert(isclose(f2(x,y), absolute_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), absolute_phrase_r_i(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), absolute_phrase_r_i(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), absolute_phrase_r_i(x,-y), rtol=1e-15, atol=1e-15))
+
+#--------------------------------- sin function ------------------------------#
+def test_sin_call_r(language):
     @types('real')
-    def sin_call(x):
+    def sin_call_r(x):
         from numpy import sin
         return sin(x)
 
-    f1 = epyccel(sin_call, language = language)
-    x = rand()
-    assert(isclose(f1(x), sin_call(x), rtol=1e-15, atol=1e-15))
+    f1 = epyccel(sin_call_r, language = language)
+    x = uniform(high=1e6)
+    assert(isclose(f1(x), sin_call_r(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), sin_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(sin_call_r(x).item()))
 
-def test_sin_phrase(language):
+def test_sin_call_i(language):
+    @types('int')
+    def sin_call_i(x):
+        from numpy import sin
+        return sin(x)
+
+    f1 = epyccel(sin_call_i, language = language)
+    x = randint(1e6)
+    assert(isclose(f1(x), sin_call_i(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), sin_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(sin_call_i(x).item()))
+
+def test_sin_phrase_r_r(language):
     @types('real','real')
-    def sin_phrase(x,y):
+    def sin_phrase_r_r(x,y):
         from numpy import sin
         a = sin(x)+sin(y)
         return a
 
-    f2 = epyccel(sin_phrase, language = language)
-    x = rand()
-    y = rand()
-    assert(isclose(f2(x,y), sin_phrase(x,y), rtol=1e-15, atol=1e-15))
+    f2 = epyccel(sin_phrase_r_r, language = language)
+    x = uniform(high=1e6)
+    y = uniform(high=1e6)
+    assert(isclose(f2(x,y), sin_phrase_r_r(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), sin_phrase_r_r(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), sin_phrase_r_r(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), sin_phrase_r_r(x,-y), rtol=1e-15, atol=1e-15))
 
-def test_cos_call(language):
-    @types('real')
-    def cos_call(x):
+def test_sin_phrase_i_i(language):
+    @types('int','int')
+    def sin_phrase_i_i(x,y):
+        from numpy import sin
+        a = sin(x)+sin(y)
+        return a
+
+    f2 = epyccel(sin_phrase_i_i, language = language)
+    x = randint(1e6)
+    y = randint(1e6)
+    assert(isclose(f2(x,y), sin_phrase_i_i(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), sin_phrase_i_i(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), sin_phrase_i_i(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), sin_phrase_i_i(x,-y), rtol=1e-15, atol=1e-15))
+
+def test_sin_phrase_i_r(language):
+    @types('int','real')
+    def sin_phrase_i_r(x,y):
+        from numpy import sin
+        a = sin(x)+sin(y)
+        return a
+
+    f2 = epyccel(sin_phrase_i_r, language = language)
+    x = randint(1e6)
+    y = uniform(high=1e6)
+    assert(isclose(f2(x,y), sin_phrase_i_r(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), sin_phrase_i_r(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), sin_phrase_i_r(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), sin_phrase_i_r(x,-y), rtol=1e-15, atol=1e-15))
+
+def test_sin_phrase_r_i(language):
+    @types('real','int')
+    def sin_phrase_r_i(x,y):
+        from numpy import sin
+        a = sin(x)+sin(y)
+        return a
+
+    f2 = epyccel(sin_phrase_r_i, language = language)
+    x = uniform(high=1e6)
+    y = randint(1e6)
+    assert(isclose(f2(x,y), sin_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), sin_phrase_r_i(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), sin_phrase_r_i(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), sin_phrase_r_i(x,-y), rtol=1e-15, atol=1e-15))
+
+#--------------------------------- cos function ------------------------------#
+def test_cos_call_i(language):
+    @types('int')
+    def cos_call_i(x):
         from numpy import cos
         return cos(x)
 
-    f1 = epyccel(cos_call, language = language)
-    x = rand()
-    assert(isclose(f1(x), cos_call(x), rtol=1e-15, atol=1e-15))
+    f1 = epyccel(cos_call_i, language = language)
+    x = randint(1e6)
+    assert(isclose(f1(x), cos_call_i(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), cos_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(cos_call_i(x).item()))
 
-def test_cos_phrase(language):
-    @types('real','real')
-    def cos_phrase(x,y):
+def test_cos_call_r(language):
+    @types('real')
+    def cos_call_r(x):
+        from numpy import cos
+        return cos(x)
+
+    f1 = epyccel(cos_call_r, language = language)
+    x = uniform(high=1e6)
+    assert(isclose(f1(x), cos_call_r(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), cos_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(cos_call_r(x).item()))
+
+
+def test_cos_phrase_i_i(language):
+    @types('int','int')
+    def cos_phrase_i_i(x,y):
         from numpy import cos
         a = cos(x)+cos(y)
         return a
 
-    f2 = epyccel(cos_phrase, language = language)
-    x = rand()
-    y = rand()
-    assert(isclose(f2(x,y), cos_phrase(x,y), rtol=1e-15, atol=1e-15))
+    f2 = epyccel(cos_phrase_i_i, language = language)
+    x = randint(1e6)
+    y = randint(1e6)
+    assert(isclose(f2(x,y), cos_phrase_i_i(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), cos_phrase_i_i(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), cos_phrase_i_i(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), cos_phrase_i_i(x,-y), rtol=1e-15, atol=1e-15))
 
+def test_cos_phrase_r_r(language):
+    @types('real','real')
+    def cos_phrase_r_r(x,y):
+        from numpy import cos
+        a = cos(x)+cos(y)
+        return a
 
-def test_tan_call(language):
-    @types('real')
-    def tan_call(x):
+    f2 = epyccel(cos_phrase_r_r, language = language)
+    x = uniform(high=1e6)
+    y = uniform(high=1e6)
+    assert(isclose(f2(x,y), cos_phrase_r_r(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), cos_phrase_r_r(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), cos_phrase_r_r(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), cos_phrase_r_r(x,-y), rtol=1e-15, atol=1e-15))
+
+def test_cos_phrase_i_r(language):
+    @types('int','real')
+    def cos_phrase_i_r(x,y):
+        from numpy import cos
+        a = cos(x)+cos(y)
+        return a
+
+    f2 = epyccel(cos_phrase_i_r, language = language)
+    x = randint(1e6)
+    y = uniform(high=1e6)
+    assert(isclose(f2(x,y), cos_phrase_i_r(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), cos_phrase_i_r(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), cos_phrase_i_r(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), cos_phrase_i_r(x,-y), rtol=1e-15, atol=1e-15))
+
+def test_cos_phrase_r_i(language):
+    @types('real','int')
+    def cos_phrase_r_i(x,y):
+        from numpy import cos
+        a = cos(x)+cos(y)
+        return a
+
+    f2 = epyccel(cos_phrase_r_i, language = language)
+    x = uniform(high=1e6)
+    y = randint(1e6)
+    assert(isclose(f2(x,y), cos_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), cos_phrase_r_i(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), cos_phrase_r_i(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), cos_phrase_r_i(x,-y), rtol=1e-15, atol=1e-15))
+
+#--------------------------------- tan function ------------------------------#
+def test_tan_call_i(language):
+    @types('int')
+    def tan_call_i(x):
         from numpy import tan
         return tan(x)
 
-    f1 = epyccel(tan_call, language = language)
-    x = rand()
-    assert(isclose(f1(x), tan_call(x), rtol=1e-15, atol=1e-15))
+    f1 = epyccel(tan_call_i, language = language)
+    x = randint(1e6)
+    assert(isclose(f1(x), tan_call_i(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), tan_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(tan_call_i(x).item()))
 
-def test_tan_phrase(language):
-    @types('real','real')
-    def tan_phrase(x,y):
+def test_tan_call_r(language):
+    @types('real')
+    def tan_call_r(x):
+        from numpy import tan
+        return tan(x)
+
+    f1 = epyccel(tan_call_r, language = language)
+    x = uniform(high=1e6)
+    assert(isclose(f1(x), tan_call_r(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), tan_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(tan_call_r(x).item()))
+
+def test_tan_phrase_i_i(language):
+    @types('int','int')
+    def tan_phrase_i_i(x,y):
         from numpy import tan
         a = tan(x)+tan(y)
         return a
 
-    f2 = epyccel(tan_phrase, language = language)
-    x = rand()
-    y = rand()
-    assert(isclose(f2(x,y), tan_phrase(x,y), rtol=1e-15, atol=1e-15))
+    f2 = epyccel(tan_phrase_i_i, language = language)
+    x = randint(1e6)
+    y = randint(1e6)
+    assert(isclose(f2(x,y), tan_phrase_i_i(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), tan_phrase_i_i(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), tan_phrase_i_i(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), tan_phrase_i_i(x,-y), rtol=1e-15, atol=1e-15))
 
-def test_exp_call(language):
-    @types('real')
-    def exp_call(x):
+def test_tan_phrase_r_r(language):
+    @types('real','real')
+    def tan_phrase_r_r(x,y):
+        from numpy import tan
+        a = tan(x)+tan(y)
+        return a
+
+    f2 = epyccel(tan_phrase_r_r, language = language)
+    x = uniform(high=1e6)
+    y = uniform(high=1e6)
+    assert(isclose(f2(x,y), tan_phrase_r_r(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), tan_phrase_r_r(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), tan_phrase_r_r(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), tan_phrase_r_r(x,-y), rtol=1e-15, atol=1e-15))
+
+def test_tan_phrase_i_r(language):
+    @types('int','real')
+    def tan_phrase_i_r(x,y):
+        from numpy import tan
+        a = tan(x)+tan(y)
+        return a
+
+    f2 = epyccel(tan_phrase_i_r, language = language)
+    x = randint(1e6)
+    y = uniform(high=1e6)
+    assert(isclose(f2(x,y), tan_phrase_i_r(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), tan_phrase_i_r(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), tan_phrase_i_r(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), tan_phrase_i_r(x,-y), rtol=1e-15, atol=1e-15))
+
+def test_tan_phrase_r_i(language):
+    @types('real','int')
+    def tan_phrase_r_i(x,y):
+        from numpy import tan
+        a = tan(x)+tan(y)
+        return a
+
+    f2 = epyccel(tan_phrase_r_i, language = language)
+    x = uniform(high=1e6)
+    y = randint(1e6)
+    assert(isclose(f2(x,y), tan_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), tan_phrase_r_i(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), tan_phrase_r_i(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), tan_phrase_r_i(x,-y), rtol=1e-15, atol=1e-15))
+
+#--------------------------------- exp function ------------------------------#
+def test_exp_call_i(language):
+    @types('int')
+    def exp_call_i(x):
         from numpy import exp
         return exp(x)
 
-    f1 = epyccel(exp_call, language = language)
-    x = rand()
-    assert(isclose(f1(x), exp_call(x), rtol=1e-15, atol=1e-15))
+    f1 = epyccel(exp_call_i, language = language)
+    x = randint(1e2)
+    assert(isclose(f1(x), exp_call_i(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), exp_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(exp_call_i(x).item()))
 
-def test_exp_phrase(language):
-    @types('real','real')
-    def exp_phrase(x,y):
+def test_exp_call_r(language):
+    @types('real')
+    def exp_call_r(x):
+        from numpy import exp
+        return exp(x)
+
+    f1 = epyccel(exp_call_r, language = language)
+    x = uniform(high=1e2)
+    assert(isclose(f1(x), exp_call_r(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), exp_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(exp_call_r(x).item()))
+
+def test_exp_phrase_i_i(language):
+    @types('int','int')
+    def exp_phrase_i_i(x,y):
         from numpy import exp
         a = exp(x)+exp(y)
         return a
 
-    f2 = epyccel(exp_phrase, language = language)
-    x = rand()
-    y = rand()
-    assert(isclose(f2(x,y), exp_phrase(x,y), rtol=1e-15, atol=1e-15))
+    f2 = epyccel(exp_phrase_i_i, language = language)
+    x = randint(1e2)
+    y = randint(1e2)
+    assert(isclose(f2(x,y), exp_phrase_i_i(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), exp_phrase_i_i(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), exp_phrase_i_i(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), exp_phrase_i_i(x,-y), rtol=1e-15, atol=1e-15))
 
-def test_log_call(language):
-    @types('real')
-    def log_call(x):
+def test_exp_phrase_r_r(language):
+    @types('real','real')
+    def exp_phrase_r_r(x,y):
+        from numpy import exp
+        a = exp(x)+exp(y)
+        return a
+
+    f2 = epyccel(exp_phrase_r_r, language = language)
+    x = uniform(high=1e2)
+    y = uniform(high=1e2)
+    assert(isclose(f2(x,y), exp_phrase_r_r(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), exp_phrase_r_r(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), exp_phrase_r_r(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), exp_phrase_r_r(x,-y), rtol=1e-15, atol=1e-15))
+
+def test_exp_phrase_i_r(language):
+    @types('int','real')
+    def exp_phrase_i_r(x,y):
+        from numpy import exp
+        a = exp(x)+exp(y)
+        return a
+
+    f2 = epyccel(exp_phrase_i_r, language = language)
+    x = randint(1e2)
+    y = uniform(high=1e2)
+    assert(isclose(f2(x,y), exp_phrase_i_r(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), exp_phrase_i_r(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), exp_phrase_i_r(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), exp_phrase_i_r(x,-y), rtol=1e-15, atol=1e-15))
+
+def test_exp_phrase_r_i(language):
+    @types('real','int')
+    def exp_phrase_r_i(x,y):
+        from numpy import exp
+        a = exp(x)+exp(y)
+        return a
+
+    f2 = epyccel(exp_phrase_r_i, language = language)
+    x = uniform(high=1e2)
+    y = randint(1e2)
+    assert(isclose(f2(x,y), exp_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), exp_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), exp_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), exp_phrase_r_i(x,-y), rtol=1e-15, atol=1e-15))
+
+#--------------------------------- log function ------------------------------#
+def test_log_call_i(language):
+    @types('int')
+    def log_call_i(x):
         from numpy import log
         return log(x)
 
-    f1 = epyccel(log_call, language = language)
-    x = rand()
-    assert(isclose(f1(x), log_call(x), rtol=1e-15, atol=1e-15))
+    f1 = epyccel(log_call_i, language = language)
+    x = randint(low=min_float, high=1e6)
+    assert(isclose(f1(x), log_call_i(x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(log_call_i(x).item()))
+
+def test_log_call_r(language):
+    @types('real')
+    def log_call_r(x):
+        from numpy import log
+        return log(x)
+
+    f1 = epyccel(log_call_r, language = language)
+    x = uniform(low=min_float, high=1e6)
+    assert(isclose(f1(x), log_call_r(x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(log_call_r(x).item()))
 
 def test_log_phrase(language):
     @types('real','real')
@@ -212,19 +567,34 @@ def test_log_phrase(language):
         return a
 
     f2 = epyccel(log_phrase, language = language)
-    x = rand()
-    y = rand()
+    x = uniform(low=min_float, high=1e6)
+    y = uniform(low=min_float, high=1e6)
     assert(isclose(f2(x,y), log_phrase(x,y), rtol=1e-15, atol=1e-15))
 
-def test_arcsin_call(language):
-    @types('real')
-    def arcsin_call(x):
+#----------------------------- arcsin function -------------------------------#
+def test_arcsin_call_i(language):
+    @types('int')
+    def arcsin_call_i(x):
         from numpy import arcsin
         return arcsin(x)
 
-    f1 = epyccel(arcsin_call, language = language)
+    f1 = epyccel(arcsin_call_i, language = language)
+    x = randint(2)
+    assert(isclose(f1(x), arcsin_call_i(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), arcsin_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(arcsin_call_i(x).item()))
+
+def test_arcsin_call_r(language):
+    @types('real')
+    def arcsin_call_r(x):
+        from numpy import arcsin
+        return arcsin(x)
+
+    f1 = epyccel(arcsin_call_r, language = language)
     x = rand()
-    assert(isclose(f1(x), arcsin_call(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), arcsin_call_r(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), arcsin_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(arcsin_call_r(x).item()))
 
 def test_arcsin_phrase(language):
     @types('real','real')
@@ -237,16 +607,35 @@ def test_arcsin_phrase(language):
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), arcsin_phrase(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), arcsin_phrase(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), arcsin_phrase(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), arcsin_phrase(x,-y), rtol=1e-15, atol=1e-15))
 
-def test_arccos_call(language):
-    @types('real')
-    def arccos_call(x):
+#----------------------------- arccos function -------------------------------#
+
+def test_arccos_call_i(language):
+    @types('int')
+    def arccos_call_i(x):
         from numpy import arccos
         return arccos(x)
 
-    f1 = epyccel(arccos_call, language = language)
+    f1 = epyccel(arccos_call_i, language = language)
+    x = randint(2)
+    assert(isclose(f1(x), arccos_call_i(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), arccos_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(arccos_call_i(x).item()))
+
+def test_arccos_call_r(language):
+    @types('real')
+    def arccos_call_r(x):
+        from numpy import arccos
+        return arccos(x)
+
+    f1 = epyccel(arccos_call_r, language = language)
     x = rand()
-    assert(isclose(f1(x), arccos_call(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), arccos_call_r(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), arccos_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(arccos_call_r(x).item()))
 
 def test_arccos_phrase(language):
     @types('real','real')
@@ -259,16 +648,34 @@ def test_arccos_phrase(language):
     x = rand()
     y = rand()
     assert(isclose(f2(x,y), arccos_phrase(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), arccos_phrase(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), arccos_phrase(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), arccos_phrase(x,-y), rtol=1e-15, atol=1e-15))
 
-def test_arctan_call(language):
-    @types('real')
-    def arctan_call(x):
+#----------------------------- arctan function -------------------------------#
+def test_arctan_call_i(language):
+    @types('int')
+    def arctan_call_i(x):
         from numpy import arctan
         return arctan(x)
 
-    f1 = epyccel(arctan_call, language = language)
-    x = rand()
-    assert(isclose(f1(x), arctan_call(x), rtol=1e-15, atol=1e-15))
+    f1 = epyccel(arctan_call_i, language = language)
+    x = randint(1e6)
+    assert(isclose(f1(x), arctan_call_i(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), arctan_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(arctan_call_i(x).item()))
+
+def test_arctan_call_r(language):
+    @types('real')
+    def arctan_call_r(x):
+        from numpy import arctan
+        return arctan(x)
+
+    f1 = epyccel(arctan_call_r, language = language)
+    x = uniform(high=1e6)
+    assert(isclose(f1(x), arctan_call_r(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), arctan_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(arctan_call_r(x).item()))
 
 def test_arctan_phrase(language):
     @types('real','real')
@@ -278,19 +685,37 @@ def test_arctan_phrase(language):
         return a
 
     f2 = epyccel(arctan_phrase, language = language)
-    x = rand()
-    y = rand()
+    x = uniform(high=1e6)
+    y = uniform(high=1e6)
     assert(isclose(f2(x,y), arctan_phrase(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), arctan_phrase(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), arctan_phrase(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), arctan_phrase(x,-y), rtol=1e-15, atol=1e-15))
 
-def test_sinh_call(language):
-    @types('real')
-    def sinh_call(x):
+#------------------------------- sinh function -------------------------------#
+def test_sinh_call_i(language):
+    @types('int')
+    def sinh_call_i(x):
         from numpy import sinh
         return sinh(x)
 
-    f1 = epyccel(sinh_call, language = language)
-    x = rand()
-    assert(isclose(f1(x), sinh_call(x), rtol=1e-15, atol=1e-15))
+    f1 = epyccel(sinh_call_i, language = language)
+    x = randint(100)
+    assert(isclose(f1(x), sinh_call_i(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), sinh_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(sinh_call_i(x).item()))
+
+def test_sinh_call_r(language):
+    @types('real')
+    def sinh_call_r(x):
+        from numpy import sinh
+        return sinh(x)
+
+    f1 = epyccel(sinh_call_r, language = language)
+    x = uniform(high=1e2)
+    assert(isclose(f1(x), sinh_call_r(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), sinh_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(sinh_call_r(x).item()))
 
 def test_sinh_phrase(language):
     @types('real','real')
@@ -300,19 +725,37 @@ def test_sinh_phrase(language):
         return a
 
     f2 = epyccel(sinh_phrase, language = language)
-    x = rand()
-    y = rand()
+    x = uniform(high=1e2)
+    y = uniform(high=1e2)
     assert(isclose(f2(x,y), sinh_phrase(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), sinh_phrase(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), sinh_phrase(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), sinh_phrase(x,-y), rtol=1e-15, atol=1e-15))
 
-def test_cosh_call(language):
-    @types('real')
-    def cosh_call(x):
+#------------------------------- sinh function -------------------------------#
+def test_cosh_call_i(language):
+    @types('int')
+    def cosh_call_i(x):
         from numpy import cosh
         return cosh(x)
 
-    f1 = epyccel(cosh_call, language = language)
-    x = rand()
-    assert(isclose(f1(x), cosh_call(x), rtol=1e-15, atol=1e-15))
+    f1 = epyccel(cosh_call_i, language = language)
+    x = randint(100)
+    assert(isclose(f1(x), cosh_call_i(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), cosh_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(cosh_call_i(x).item()))
+
+def test_cosh_call_r(language):
+    @types('real')
+    def cosh_call_r(x):
+        from numpy import cosh
+        return cosh(x)
+
+    f1 = epyccel(cosh_call_r, language = language)
+    x = uniform(high=1e2)
+    assert(isclose(f1(x), cosh_call_r(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), cosh_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(cosh_call_r(x).item()))
 
 def test_cosh_phrase(language):
     @types('real','real')
@@ -322,19 +765,37 @@ def test_cosh_phrase(language):
         return a
 
     f2 = epyccel(cosh_phrase, language = language)
-    x = rand()
-    y = rand()
+    x = uniform(high=1e2)
+    y = uniform(high=1e2)
     assert(isclose(f2(x,y), cosh_phrase(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), cosh_phrase(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), cosh_phrase(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), cosh_phrase(x,-y), rtol=1e-15, atol=1e-15))
 
-def test_tanh_call(language):
-    @types('real')
-    def tanh_call(x):
+#------------------------------- sinh function -------------------------------#
+def test_tanh_call_i(language):
+    @types('int')
+    def tanh_call_i(x):
         from numpy import tanh
         return tanh(x)
 
-    f1 = epyccel(tanh_call, language = language)
-    x = rand()
-    assert(isclose(f1(x), tanh_call(x), rtol=1e-15, atol=1e-15))
+    f1 = epyccel(tanh_call_i, language = language)
+    x = randint(100)
+    assert(isclose(f1(x), tanh_call_i(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), tanh_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(tanh_call_i(x).item()))
+
+def test_tanh_call_r(language):
+    @types('real')
+    def tanh_call_r(x):
+        from numpy import tanh
+        return tanh(x)
+
+    f1 = epyccel(tanh_call_r, language = language)
+    x = uniform(high=1e2)
+    assert(isclose(f1(x), tanh_call_r(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), tanh_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(tanh_call_r(x).item()))
 
 def test_tanh_phrase(language):
     @types('real','real')
@@ -344,20 +805,73 @@ def test_tanh_phrase(language):
         return a
 
     f2 = epyccel(tanh_phrase, language = language)
-    x = rand()
-    y = rand()
+    x = uniform(high=1e2)
+    y = uniform(high=1e2)
     assert(isclose(f2(x,y), tanh_phrase(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y), tanh_phrase(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), tanh_phrase(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), tanh_phrase(x,-y), rtol=1e-15, atol=1e-15))
 
-def test_arctan2_call(language):
+#------------------------------ arctan2 function -----------------------------#
+def test_arctan2_call_i_i(language):
+    @types('int','int')
+    def arctan2_call(x,y):
+        from numpy import arctan2
+        return arctan2(x,y)
+
+    f1 = epyccel(arctan2_call, language = language)
+    x = randint(100)
+    y = randint(100)
+    assert(isclose(f1(x,y), arctan2_call(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x,-y), arctan2_call(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x,y), arctan2_call(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x,-y), arctan2_call(x,-y), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x, y)) == type(arctan2_call(x, y).item()))
+
+def test_arctan2_call_i_r(language):
+    @types('int','real')
+    def arctan2_call(x,y):
+        from numpy import arctan2
+        return arctan2(x,y)
+
+    f1 = epyccel(arctan2_call, language = language)
+    x = randint(100)
+    y = uniform(high=1e2)
+    assert(isclose(f1(x,y), arctan2_call(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x,-y), arctan2_call(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x,y), arctan2_call(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x,-y), arctan2_call(x,-y), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x, y)) == type(arctan2_call(x, y).item()))
+
+def test_arctan2_call_r_i(language):
+    @types('real','int')
+    def arctan2_call(x,y):
+        from numpy import arctan2
+        return arctan2(x,y)
+
+    f1 = epyccel(arctan2_call, language = language)
+    x = uniform(high=1e2)
+    y = randint(100)
+    assert(isclose(f1(x,y), arctan2_call(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x,-y), arctan2_call(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x,y), arctan2_call(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x,-y), arctan2_call(x,-y), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x, y)) == type(arctan2_call(x, y).item()))
+
+def test_arctan2_call_r_r(language):
     @types('real','real')
     def arctan2_call(x,y):
         from numpy import arctan2
         return arctan2(x,y)
 
     f1 = epyccel(arctan2_call, language = language)
-    x = rand()
-    y = rand()
+    x = uniform(high=1e2)
+    y = uniform(high=1e2)
     assert(isclose(f1(x,y), arctan2_call(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x,-y), arctan2_call(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x,y), arctan2_call(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x,-y), arctan2_call(x,-y), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x, y)) == type(arctan2_call(x, y).item()))
 
 def test_arctan2_phrase(language):
     @types('real','real','real')
@@ -367,11 +881,19 @@ def test_arctan2_phrase(language):
         return a
 
     f2 = epyccel(arctan2_phrase, language = language)
-    x = -rand()
-    y = rand()
-    z = rand()
+    x = uniform(high=1e2)
+    y = uniform(high=1e2)
+    z = uniform(high=1e2)
     assert(isclose(f2(x,y,z), arctan2_phrase(x,y,z), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y,z), arctan2_phrase(-x,y,z), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y,z), arctan2_phrase(-x,-y,z), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y,-z), arctan2_phrase(-x,y,-z), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y,z), arctan2_phrase(x,-y,z), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y,-z), arctan2_phrase(x,-y,-z), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y,-z), arctan2_phrase(x,y,-z), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,-y,-z), arctan2_phrase(-x,-y,-z), rtol=1e-15, atol=1e-15))
 
+#-------------------------------- sqrt function ------------------------------#
 def test_sqrt_call(language):
     @types('real')
     def sqrt_call(x):
@@ -418,16 +940,30 @@ def test_sqrt_return_type_c(language):
     assert(isclose(f1(x), sqrt_return_type_comp(x), rtol=1e-15, atol=1e-15))
     assert(type(f1(x)) == type(sqrt_return_type_comp(x).item())) # pylint: disable=unidiomatic-typecheck
 
+#-------------------------------- floor function -----------------------------#
+def test_floor_call_i(language):
+    @types('int')
+    def floor_call(x):
+        from numpy import floor
+        return floor(x)
 
-def test_floor_call(language):
+    f1 = epyccel(floor_call, language = language)
+    x = randint(1e6)
+    assert(isclose(f1(x), floor_call(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), floor_call(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(floor_call(x).item()))
+
+def test_floor_call_r(language):
     @types('real')
     def floor_call(x):
         from numpy import floor
         return floor(x)
 
     f1 = epyccel(floor_call, language = language)
-    x = rand()
+    x = uniform(high=1e6)
     assert(isclose(f1(x), floor_call(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(-x), floor_call(-x), rtol=1e-15, atol=1e-15))
+    assert(type(f1(x)) == type(floor_call(x).item()))
 
 def test_floor_phrase(language):
     @types('real','real')
@@ -437,32 +973,12 @@ def test_floor_phrase(language):
         return a
 
     f2 = epyccel(floor_phrase, language = language)
-    x = rand()
-    y = rand()
+    x = uniform(high=1e6)
+    y = uniform(high=1e6)
     assert(isclose(f2(x,y), floor_phrase(x,y), rtol=1e-15, atol=1e-15))
-
-def test_floor_return_type(language):
-    @types('int')
-    def floor_return_type_int(x):
-        from numpy import floor
-        a = floor(x)
-        return a
-
-    @types('real')
-    def floor_return_type_real(x):
-        from numpy import floor
-        a = floor(x)
-        return a
-
-    f1 = epyccel(floor_return_type_int, language = language)
-    x = randint(100)
-    assert(isclose(f1(x), floor_return_type_int(x), rtol=1e-15, atol=1e-15))
-    assert(type(f1(x)) == type(floor_return_type_int(x).item())) # pylint: disable=unidiomatic-typecheck
-
-    f1 = epyccel(floor_return_type_real, language = language)
-    x = randint(100)
-    assert(isclose(f1(x), floor_return_type_real(x), rtol=1e-15, atol=1e-15))
-    assert(type(f1(x)) == type(floor_return_type_real(x).item())) # pylint: disable=unidiomatic-typecheck
+    assert(isclose(f2(-x,-y), floor_phrase(-x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(-x,y), floor_phrase(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,-y), floor_phrase(x,-y), rtol=1e-15, atol=1e-15))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -1975,4 +2491,3 @@ def test_max_property(language):
     f1 = epyccel(max_call, language = language)
     x = randint(99,size=10)
     assert(f1(x) == max_call(x))
-
