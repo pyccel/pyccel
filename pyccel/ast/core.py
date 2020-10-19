@@ -5215,9 +5215,8 @@ class IfTernaryOperator(Basic, PyccelAstNode):
             raise TypeError('cannot determine the type of {}'.format(second.dtype))
         self._dtype = max([first.dtype, second.dtype], key = lambda x : _tmp_list.index(x))
         self._precision = max([first.precision, second.precision])
-
-
-
+        self._shape = broadcast(first.shape, second.shape)
+        self._rank = len(self._shape)
 
     @property
     def body(self):
