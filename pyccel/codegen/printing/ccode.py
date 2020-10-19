@@ -215,11 +215,11 @@ class CCodePrinter(CodePrinter):
         self.known_functions.update(userfuncs)
         self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
-        self._additional_imports = set(['stdlib.h'])
+        self._additional_imports = set(['stdlib'])
         accel_import = accelerator
         if accel_import is not None:
             if accel_import == 'openmp':
-                self._additional_imports.add("omp.h")
+                self._additional_imports.add("omp")
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
