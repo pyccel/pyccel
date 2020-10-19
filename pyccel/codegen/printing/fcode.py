@@ -2068,9 +2068,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_IfTernaryOperator(self, expr):
         args = expr.body
-        cond = self._print(args[0])
-        first = args[1].body[0]
-        second = args[2].body[0]
+        cond = self._print(PythonBool(args[0]))
+        first = args[1]
+        second = args[2]
         try :
             cast_func = python_builtin_datatypes[str_dtype(expr.dtype)]
         except KeyError:
