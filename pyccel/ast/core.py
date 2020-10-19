@@ -5205,15 +5205,19 @@ class IfTernaryOperator(Basic, PyccelAstNode):
             return
         if isinstance(first.dtype, NativeString) ^ isinstance(second.dtype, NativeString):
              raise TypeError('Only one of the condition results is type string')
-        _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex()]
+        _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
         if first.dtype not in _tmp_list :
             raise TypeError('cannot determine the type of {}'.format(first.dtype))
         if second.dtype not in _tmp_list :
             raise TypeError('cannot determine the type of {}'.format(second.dtype))
         self._dtype = max([first.dtype, second.dtype], key = lambda x : _tmp_list.index(x))
         self._precision = max([first.precision, second.precision])
-        self._shape = broadcast(first.shape, second.shape)
-        self._rank = len(self._shape)
+        if None in [first.rank, second.rank]:
+            self._rank = None
+            self.shape = None
+        else :
+            self._shape = broadcast(first.shape, second.shape)
+            self._rank = len(self._shape)
 
     @property
     def body(self):
