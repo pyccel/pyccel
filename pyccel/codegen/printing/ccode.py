@@ -313,7 +313,6 @@ class CCodePrinter(CodePrinter):
         return "\n".join(lines)
 
     def _print_IfTernaryOperator(self, expr):
-        print('in print if ternary')
         body = expr.body
         cond = self._print(body[0])
         first = self._print(body[1])
