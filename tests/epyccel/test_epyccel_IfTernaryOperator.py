@@ -1,7 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 
-import pytest
-
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 
@@ -73,6 +71,20 @@ def test_f5(language):
     assert f(6) == f5(6)
     assert f(4) == f5(4)
     assert f(5) == f5(5)
+    # ...
+#------------------------------------------------------------------------------
+def test_f6(language):
+    @types('int')
+    def f6(x):
+        a = x if x < 0 else 1 if x < 5 else complex(0, 1) if x == 5 else 6.5
+        return a
+
+    f = epyccel(f6, language = language)
+
+    # ...
+    assert f(6) == f6(6)
+    assert f(4) == f6(4)
+    assert f(5) == f6(5)
     # ...
 #------------------------------------------------------------------------------
 def test_f6(language):
