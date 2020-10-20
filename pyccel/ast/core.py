@@ -3191,9 +3191,6 @@ class FunctionCall(Basic, PyccelAstNode):
 
             args = [a.value if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else a for a in f_args_dict.values()]
 
-        # Ensure the correct syntax is used for pointers
-        args = [VariableAddress(a) if isinstance(a, Variable) and f.is_pointer else a for a, f in zip(args, f_args)]
-        
         args = [FunctionAddress(a.name, a.arguments, a.results, []) if isinstance(a, FunctionDef) else a for a in args]
         
         args = Tuple(*args, sympify=False)
