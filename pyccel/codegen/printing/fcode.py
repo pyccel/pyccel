@@ -2068,7 +2068,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_IfTernaryOperator(self, expr):
         args = expr.body
-        cond = self._print(PythonBool(args[0]))
+        cond = self._print(PythonBool(args[0])) if not isinstance(args[0].dtype, NativeBool) else self._print(args[0])
         first = args[1]
         second = args[2]
         try :
