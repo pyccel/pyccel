@@ -980,8 +980,7 @@ class SyntaxParser(BasicParser):
         test1 = self._visit(stmt.test)
         first = self._visit(stmt.body)
         second = self._visit(stmt.orelse)
-        args = [test1, first, second]
-        expr = IfTernaryOperator(*args)
+        expr = IfTernaryOperator(test1, first, second)
         expr.set_fst(stmt)
         return expr
 

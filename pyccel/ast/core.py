@@ -5192,8 +5192,8 @@ class IfTernaryOperator(Basic, PyccelAstNode):
     >>> from pyccel.ast.core import Assign, IfTernaryOperator
     >>> n = Symbol('n')
     >>> x = 5 if n > 1 else 2
-    >>> IfTernaryOperator([PyccelGt(n > 1),  5,  2])
-    IfTernaryOperator([PyccelGt(n > 1),  5,  2])
+    >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
+    IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     """
     def __init__(self, *args):
         self._args = []
