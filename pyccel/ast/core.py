@@ -3743,6 +3743,46 @@ class FunctionDef(Basic):
                 result = result)
 
 class FunctionAddress(FunctionDef):
+    """Represents a function address.
+
+    Parameters
+    ----------
+    name : str
+        The name of the function address.
+
+    arguments : iterable
+        The arguments to the function address.
+
+    results : iterable
+        The direct outputs of the function address.
+
+    is_argument: bool
+        if object is the argument of a function [Default value: False]
+
+    is_kwonly: bool
+        if object is an argument which can only be specified using its keyword
+
+    is_pointer: bool
+        if object is a pointer [Default value: False]
+
+    is_optional: bool
+        if object is an optional argument of a function [Default value: False]
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Assign, Variable, FunctionAddress, FuncAddressDeclare
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
+
+    a function definition can have a FunctionAddress as an argument
+
+    >>> FunctionDef('g', [FunctionAddress('f', [x], [y], [])], [], [])
+
+    we can also Declare a FunctionAddress
+
+    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
+    """
+
     def __init__(
         self,
         name,
