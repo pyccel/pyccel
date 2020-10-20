@@ -3743,6 +3743,7 @@ class FunctionDef(Basic):
                 result = result)
 
 class FunctionAddress(FunctionDef):
+
     """Represents a function address.
 
     Parameters
@@ -3770,7 +3771,7 @@ class FunctionAddress(FunctionDef):
 
     Examples
     --------
-    >>> from pyccel.ast.core import Assign, Variable, FunctionAddress, FuncAddressDeclare
+    >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare, FunctionDef
     >>> x = Variable('real', 'x')
     >>> y = Variable('real', 'y')
 
@@ -4432,6 +4433,27 @@ class Load(Basic):
 # TODO: Should Declare have an optional init value for each var?
 
 class FuncAddressDeclare(Basic):
+
+    """Represents a FunctionAddress declaration in the code.
+
+    Parameters
+    ----------
+    variable:
+        An instance of FunctionAddress.
+    intent: None, str
+        one among {'in', 'out', 'inout'}
+    value: Expr
+        variable value
+    static: bool
+        True for a static declaration of an array.
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
+    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
+    """
 
     def __new__( cls, *args, **kwargs ):
         return Basic.__new__(cls)
