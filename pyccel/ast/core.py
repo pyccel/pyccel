@@ -5205,7 +5205,7 @@ class IfTernaryOperator(Basic, PyccelAstNode):
             return
 
         if isinstance(first , Nil) or isinstance(second, Nil):
-            raise TypeError('None is not implemeted for Ternary Operator')
+            raise NotImplementedError('None is not implemeted for Ternary Operator')
         if first.shape != second.shape :
             raise TypeError('results in Ternary Operator should be the same shape')
         if isinstance(first.dtype, NativeString) ^ isinstance(second.dtype, NativeString):
