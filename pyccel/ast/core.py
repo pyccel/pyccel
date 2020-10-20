@@ -3756,10 +3756,9 @@ class FunctionAddress(FunctionDef):
         is_pointer=False,
         is_kwonly=False,
         is_argument=False,
-        *args,
         **kwargs
         ):
-        FunctionDef.__init__(self, name, arguments, results, body, *args)
+        FunctionDef.__init__(self, name, arguments, results, body, **kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
 
