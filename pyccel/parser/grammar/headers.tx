@@ -19,7 +19,10 @@ DataType: ID|STAR;
 
 Type: dtype=DataType ('*' prec=INT)? (trailer=TrailerSubscriptList)?;
 ListType : '[' dtype+=Type[','] ']';
-TypeHeader: Type|ListType ;
+
+FuncType: '('(results*=TypeHeader[','])?')' '('decs*=TypeHeader[',']')';
+
+TypeHeader: FuncType|Type|ListType;
 UnionTypeStmt:  dtype+=TypeHeader['|'] ;
 
 

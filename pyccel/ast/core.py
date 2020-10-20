@@ -2906,8 +2906,6 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
     def inspect(self):
         self._args[1].inspect()
 
-
-
 class ValuedVariable(Variable):
 
     """Represents a valued variable in the code.
@@ -3179,10 +3177,10 @@ class FunctionCall(Basic, PyccelAstNode):
         # add the messing argument in the case of optional arguments
         f_args = func.arguments
         if not len(args) == len(f_args):
-            f_args_dict = OrderedDict((a.name,a) if isinstance(a, ValuedVariable) else (a.name, None) for a in f_args)
+            f_args_dict = OrderedDict((a.name,a) if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else (a.name, None) for a in f_args)
             keyword_args = []
             for i,a in enumerate(args):
-                if not isinstance(a, ValuedVariable):
+                if not isinstance(a, (ValuedVariable, ValuedFunctionAddress)):
                     f_args_dict[f_args[i].name] = a
                 else:
                     keyword_args = args[i:]
@@ -3191,8 +3189,13 @@ class FunctionCall(Basic, PyccelAstNode):
             for a in keyword_args:
                 f_args_dict[a.name] = a.value
 
-            args = [a.value if isinstance(a, ValuedVariable) else a for a in f_args_dict.values()]
+            args = [a.value if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else a for a in f_args_dict.values()]
 
+        # Ensure the correct syntax is used for pointers
+        args = [VariableAddress(a) if isinstance(a, Variable) and f.is_pointer else a for a, f in zip(args, f_args)]
+        
+        args = [FunctionAddress(a.name, a.arguments, a.results, []) if isinstance(a, FunctionDef) else a for a in args]
+        
         args = Tuple(*args, sympify=False)
         # ...
 
@@ -3310,7 +3313,6 @@ class Interface(Basic):
 
     def rename(self, newname):
         return Interface(newname, self.functions)
-
 
 class FunctionDef(Basic):
 
@@ -3743,6 +3745,72 @@ class FunctionDef(Basic):
                 args   = ', '.join(self.args),
                 result = result)
 
+class FunctionAddress(FunctionDef):
+    def __init__(
+        self,
+        name,
+        arguments,
+        results,
+        body,
+        is_optional=False,
+        is_pointer=False,
+        is_kwonly=False,
+        is_argument=False,
+        *args,
+        **kwargs
+        ):
+        FunctionDef.__init__(self, name, arguments, results, body, *args)
+        if not isinstance(is_argument, bool):
+            raise TypeError('Expecting a boolean for is_argument')
+
+        if not isinstance(is_pointer, bool):
+            raise TypeError('Expecting a boolean for is_pointer')
+
+        if not isinstance(is_kwonly, bool):
+            raise TypeError('Expecting a boolean for kwonly')
+
+        elif not isinstance(is_optional, bool):
+            raise TypeError('is_optional must be a boolean.')
+
+        self._is_optional   = is_optional
+        self._name          = name
+        self._is_pointer    = is_pointer
+        self._is_kwonly     = is_kwonly
+        self._is_argument   = is_argument
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def is_pointer(self):
+        return self._is_pointer
+
+    @property
+    def is_argument(self):
+        return self._is_argument
+
+    @property
+    def is_kwonly(self):
+        return self._is_kwonly
+
+    @property
+    def is_optional(self):
+        return self._is_optional
+
+class ValuedFunctionAddress(FunctionAddress):
+
+    def __new__(cls, *args, **kwargs):
+        kwargs.pop('value', Nil())
+        return FunctionAddress.__new__(cls, *args, **kwargs)
+
+    def __init__(self, *args, **kwargs):
+        self._value = kwargs.pop('value', Nil())
+        FunctionAddress.__init__(self, *args, **kwargs)
+
+    @property
+    def value(self):
+        return self._value
 
 class SympyFunction(FunctionDef):
 
@@ -4326,6 +4394,62 @@ class Load(Basic):
 
 
 # TODO: Should Declare have an optional init value for each var?
+
+class FuncAddressDeclare(Basic):
+
+    def __new__( cls, *args, **kwargs ):
+        return Basic.__new__(cls)
+
+    def __init__(
+        self,
+        variable,
+        intent=None,
+        value=None,
+        static=False,
+        ):
+
+        if not isinstance(variable, FunctionAddress):
+            raise TypeError('variable must be of type FunctionAddress, given {0}'.format(variable))
+
+        if intent:
+            if not intent in ['in', 'out', 'inout']:
+                raise ValueError("intent must be one among {'in', 'out', 'inout'}")
+
+        if not isinstance(static, bool):
+            raise TypeError('Expecting a boolean for static attribute')
+
+        self._variable  = variable
+        self._intent    = intent
+        self._value     = value
+        self._static    = static
+
+    @property
+    def results(self):
+        return self._variable.results
+
+    @property
+    def arguments(self):
+        return self._variable.arguments
+
+    @property
+    def name(self):
+        return self._variable.name
+
+    @property
+    def variable(self):
+        return self._variable
+
+    @property
+    def intent(self):
+        return self._intent
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def static(self):
+        return self._static
 
 class Declare(Basic):
 
