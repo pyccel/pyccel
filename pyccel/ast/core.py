@@ -3837,6 +3837,21 @@ class FunctionAddress(FunctionDef):
 
 class ValuedFunctionAddress(FunctionAddress):
 
+    """Represents a valued function address in the code.
+
+    Parameters
+    ----------
+    value: instance of FunctionDef or FunctionAddress
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Variable, ValuedFunctionAddress, FunctionDef
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
+    >>> f = FunctionDef('f', [], [], [])
+    >>> n  = ValuedFunctionAddress('g', [x], [y], [], value=f)
+    """
+
     def __new__(cls, *args, **kwargs):
         kwargs.pop('value', Nil())
         return FunctionAddress.__new__(cls, *args, **kwargs)
