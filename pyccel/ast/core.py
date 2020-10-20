@@ -5203,8 +5203,13 @@ class IfTernaryOperator(Basic, PyccelAstNode):
         self._args = [cond, first, second]
         if self.stage == 'syntactic':
             return
+
+        if isinstance(first , Nil) or isinstance(second, Nil):
+            raise TypeError('None is not implemeted for Ternary Operator')
+        if first.shape != second.shape :
+            raise TypeError('results in Ternary Operator should be the same shape')
         if isinstance(first.dtype, NativeString) ^ isinstance(second.dtype, NativeString):
-             raise TypeError('Only one of the condition results is type string')
+            raise TypeError('Only one of the Ternary Operator results is type string')
         _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
         if first.dtype not in _tmp_list :
             raise TypeError('cannot determine the type of {}'.format(first.dtype))
