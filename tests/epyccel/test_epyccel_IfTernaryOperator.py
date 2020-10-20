@@ -87,17 +87,3 @@ def test_f6(language):
     assert f(5) == f6(5)
     # ...
 #------------------------------------------------------------------------------
-def test_f6(language):
-    @types('int')
-    def f6(x):
-        a = x if x < 0 else 1 if x < 5 else complex(0, 1) if x == 5 else 6.5
-        return a
-
-    f = epyccel(f6, language = language)
-
-    # ...
-    assert f(6) == f6(6)
-    assert f(4) == f6(4)
-    assert f(5) == f6(5)
-    # ...
-#------------------------------------------------------------------------------
