@@ -60,6 +60,9 @@ WRONG_NUMBER_OUTPUT_ARGS = 'Number of output arguments does not match number of 
 INDEXED_TUPLE = 'Tuples must be indexed with constant integers for the type inference to work'
 LIST_OF_TUPLES = 'Cannot create list of non-homogeneous tuples'
 
+UNDEFINED_DECORATOR = 'Decorator not used'
+UNDEFINED_DECORATORS = 'Decorators not used'
+
 UNDEFINED_LAMBDA_VARIABLE = 'Unknown variable(s) in lambda function'
 UNDEFINED_LAMBDA_FUNCTION = 'Unknown function in lambda function'
 
