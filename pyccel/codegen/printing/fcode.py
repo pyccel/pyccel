@@ -40,7 +40,8 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              If, PyccelArraySize)
 
 
-from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus, PyccelUnarySub
+from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
+from pyccel.ast.core      import PyccelUnarySub, PyccelMod
 from pyccel.ast.core      import FunctionCall
 
 from pyccel.ast.builtins  import Enumerate, PythonInt, Len, Map, Print, Range, Zip, PythonTuple, PythonFloat
@@ -993,8 +994,6 @@ class FCodePrinter(CodePrinter):
         if lhs.rank > 0:
             shape_code = ', '.join('0:' for i in range(lhs.rank))
             shape_code = '({s_c})'.format(s_c = shape_code)
-
-        print(expr.rhs, self._print(expr.rhs))
 
         code += '{lhs}{s_c} {op} {rhs}'.format(lhs=self._print(expr.lhs),
                                           s_c = shape_code,
@@ -2339,12 +2338,19 @@ class FCodePrinter(CodePrinter):
             base = self._print(expr.base.label)
 
         inds = list(expr.indices)
-        #indices of indexedElement of len==1 shouldn't be a Tuple
+        base_shape = Shape(expr.base)
+        allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
+                expr.base.internal_variable.allows_negative_indexes)
+
         for i, ind in enumerate(inds):
-            if isinstance(ind, Tuple) and len(ind) == 1:
-                inds[i] = ind[0]
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], Integer):
-                inds[i] = PyccelMinus(Shape(expr.base)[i], ind.args[0])
+                inds[i] = PyccelMinus(base_shape[i], ind.args[0])
+            else:
+                #indices of indexedElement of len==1 shouldn't be a Tuple
+                if isinstance(ind, Tuple) and len(ind) == 1:
+                    inds[i] = ind[0]
+                if allow_negative_indexes and not isinstance(ind, Integer):
+                    inds[i] = PyccelMod(ind, base_shape[i])
 
         inds = [self._print(i) for i in inds]
 
