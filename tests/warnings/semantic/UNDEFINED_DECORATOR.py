@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 
-@toto
+@toto # pylint: disable=undefined-variable
 def f():
     pass
