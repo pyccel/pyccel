@@ -1,10 +1,11 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 
+import pytest
+
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 
 #------------------------------------------------------------------------------
-
 def test_f1(language):
     @types('int')
     def f1(x):
@@ -85,5 +86,25 @@ def test_f6(language):
     assert f(6) == f6(6)
     assert f(4) == f6(4)
     assert f(5) == f6(5)
+    # ...
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Strings are not yet implemented for C language"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
+def test_f7(language):
+    @types('int')
+    def f7(x):
+        a = 'Hello' if x < 5 else 'Olleh'
+        return a
+
+    f = epyccel(f7, language = language)
+
+    # ...
+    assert f(6).decode("utf-8").strip() == f7(6)
+    assert f(4).decode("utf-8").strip() == f7(4)
     # ...
 #------------------------------------------------------------------------------
