@@ -180,6 +180,7 @@ class FunctionHeader(Header):
         dtypes = []
 
         def build_argument(var_name, dc):
+            #Constructs an argument variable from a dictionary.
             dtype    = dc['datatype']
             allocatable = dc['allocatable']
             is_pointer = dc['is_pointer']
