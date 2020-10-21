@@ -9,7 +9,8 @@ __all__ = (
     'pure',
     'private',
     'elemental',
-    'stack_array'
+    'stack_array',
+    'allow_negative_index'
 )
 
 def lambdify(f):
