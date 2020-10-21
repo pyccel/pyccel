@@ -2472,7 +2472,7 @@ class SemanticParser(BasicParser):
             # get the imports
             imports   = self.namespace.imports['imports'].values()
             imports   = list(set(imports))
-            print(imports)
+
             # remove the FunctionDef from the function scope
             # TODO improve func_ is None in the case of an interface
             func_     = self.namespace.functions.pop(name, None)
