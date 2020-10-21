@@ -2067,18 +2067,22 @@ class FCodePrinter(CodePrinter):
         return ''.join(lines)
 
     def _print_IfTernaryOperator(self, expr):
-        args = expr.body
-        cond = self._print(PythonBool(args[0])) if not isinstance(args[0].dtype, NativeBool) else self._print(args[0])
-        first = args[1]
-        second = args[2]
-        try :
-            cast_func = python_builtin_datatypes[str_dtype(expr.dtype)]
-        except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+        cond = PythonBool(expr.cond) if not isinstance(expr.cond.dtype, NativeBool) else expr.cond
+        value_true = expr.value_true
+        value_false = expr.value_false
 
-        first = self._print(cast_func(first) if first.dtype != expr.dtype else first)
-        second = self._print(cast_func(second) if second.dtype != expr.dtype else second)
-        return 'merge({true}, {false}, {cond})'.format(cond = cond, true =first , false =second)
+        if value_true.dtype != value_false.dtype :
+            try :
+                cast_func = python_builtin_datatypes[str_dtype(expr.dtype)]
+            except KeyError:
+                errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+            value_true = cast_func(value_true) if value_true.dtype != expr.dtype else value_true
+            value_false = cast_func(value_false) if value_false.dtype != expr.dtype else value_false
+
+        cond = self._print(cond)
+        value_true = self._print(value_true)
+        value_false = self._print(value_false)
+        return 'merge({true}, {false}, {cond})'.format(cond = cond, true = value_true, false = value_false)
 
     def _print_MatrixElement(self, expr):
         return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
