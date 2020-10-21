@@ -1,0 +1,4 @@
+
+@toto
+def f():
+    pass
