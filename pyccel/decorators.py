@@ -34,7 +34,18 @@ def private(f):
 def elemental(f):
     return f
 
-def stack_array(*args, **kw):
+def stack_array(f, *args):
+    """
+    Decorator indicates that all arrays mentioned as args should be stored
+    on the stack.
+
+    Parameters
+    ----------
+    f : Function
+        The function to which the decorator is applied
+    args : list of str
+        A list containing the names of all arrays which should be stored on the stack
+    """
     def identity(f):
         return f
     return identity
