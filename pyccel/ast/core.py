@@ -5208,9 +5208,9 @@ class IfTernaryOperator(Basic, PyccelAstNode):
             raise TypeError('Only one of the Ternary Operator results is type string')
         _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
         if value_true.dtype not in _tmp_list :
-            raise TypeError('cannot determine the type of {}'.format(value_true.dtype))
+            raise NotImplementedError('cannot determine the type of {}'.format(value_true.dtype))
         if value_false.dtype not in _tmp_list :
-            raise TypeError('cannot determine the type of {}'.format(value_false.dtype))
+            raise NotImplementedError('cannot determine the type of {}'.format(value_false.dtype))
         self._dtype = max([value_true.dtype, value_false.dtype], key = lambda x : _tmp_list.index(x))
         self._precision = max([value_true.precision, value_false.precision])
         if None in [value_true.rank, value_false.rank]:

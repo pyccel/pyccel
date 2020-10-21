@@ -4,7 +4,7 @@ import pytest
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
-'''
+
 #------------------------------------------------------------------------------
 def test_f1(language):
     @types('int')
@@ -108,7 +108,7 @@ def test_f7(language):
     assert f(4).decode("utf-8").strip() == f7(4)
     # ...
 #------------------------------------------------------------------------------
-'''
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="Arrays are not yet implemented for C language"),
