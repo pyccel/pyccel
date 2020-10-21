@@ -5184,7 +5184,7 @@ class IfTernaryOperator(Basic, PyccelAstNode):
     ----------
     args :
         args : type list
-        format : [condition , value_if_true, value_if_false]
+        format : condition , value_if_true, value_if_false
 
     Examples
     --------
@@ -5195,35 +5195,43 @@ class IfTernaryOperator(Basic, PyccelAstNode):
     >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     """
-    def __init__(self, *args):
-        self._args = []
-        cond = args[0]
-        first = args[1]
-        second = args[2]
-        self._args = [cond, first, second]
+    def __init__(self, cond, value_true, value_false):
+        self._cond = cond
+        self._value_true = value_true
+        self._value_false = value_false
+
         if self.stage == 'syntactic':
             return
-        if isinstance(first , Nil) or isinstance(second, Nil):
+        if isinstance(value_true , Nil) or isinstance(value_false, Nil):
             raise NotImplementedError('None is not implemeted for Ternary Operator')
-        if isinstance(first.dtype, NativeString) ^ isinstance(second.dtype, NativeString):
+        if isinstance(value_true.dtype, NativeString) ^ isinstance(value_false.dtype, NativeString):
             raise TypeError('Only one of the Ternary Operator results is type string')
         _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
-        if first.dtype not in _tmp_list :
-            raise TypeError('cannot determine the type of {}'.format(first.dtype))
-        if second.dtype not in _tmp_list :
-            raise TypeError('cannot determine the type of {}'.format(second.dtype))
-        self._dtype = max([first.dtype, second.dtype], key = lambda x : _tmp_list.index(x))
-        self._precision = max([first.precision, second.precision])
-        if None in [first.rank, second.rank]:
+        if value_true.dtype not in _tmp_list :
+            raise TypeError('cannot determine the type of {}'.format(value_true.dtype))
+        if value_false.dtype not in _tmp_list :
+            raise TypeError('cannot determine the type of {}'.format(value_false.dtype))
+        self._dtype = max([value_true.dtype, value_false.dtype], key = lambda x : _tmp_list.index(x))
+        self._precision = max([value_true.precision, value_false.precision])
+        if None in [value_true.rank, value_false.rank]:
             self._rank = None
             self.shape = None
         else :
-            self._shape = broadcast(first.shape, second.shape)
+            self._shape = broadcast(value_true.shape, value_false.shape)
             self._rank = len(self._shape)
 
     @property
-    def body(self):
-        return self._args
+    def cond(self):
+        return self._cond
+
+    @property
+    def value_true(self):
+        return self._value_true
+
+    @property
+    def value_false(self):
+        return self._value_false
+
 
 class StarredArguments(Basic):
     def __new__(cls, args):
