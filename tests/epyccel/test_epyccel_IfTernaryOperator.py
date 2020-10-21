@@ -88,26 +88,6 @@ def test_f6(language):
     assert f(5) == f6(5)
     # ...
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Strings are not yet implemented for C language"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
-def test_f7(language):
-    @types('int')
-    def f7(x):
-        a = 'Hello' if x < 5 else 'Olleh'
-        return a
-
-    f = epyccel(f7, language = language)
-
-    # ...
-    assert f(6).decode("utf-8").strip() == f7(6)
-    assert f(4).decode("utf-8").strip() == f7(4)
-    # ...
-#------------------------------------------------------------------------------
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -116,17 +96,17 @@ def test_f7(language):
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
 )
-def test_f8(language):
+def test_f7(language):
     @types('int')
-    def f8(x):
+    def f7(x):
         a = [1,2,3] if x < 5 else [1.5,6.5,7.5]
         return a[0]
 
-    f = epyccel(f8, language = language)
+    f = epyccel(f7, language = language)
 
     # ...
-    assert f(6) == f8(6)
-    assert f(4) == f8(4)
+    assert f(6) == f7(6)
+    assert f(4) == f7(4)
     # ...
 #------------------------------------------------------------------------------
 
@@ -137,16 +117,16 @@ def test_f8(language):
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
 )
-def test_f9(language):
+def test_f8(language):
     @types('int')
-    def f9(x):
+    def f8(x):
         a = (1, 2) if x < 5 else (complex(5, 1), complex(2, 2))
         return a[0]
 
-    f = epyccel(f9, language = language)
+    f = epyccel(f8, language = language)
 
     # ...
-    assert f(6) == f9(6)
-    assert f(4) == f9(4)
+    assert f(6) == f8(6)
+    assert f(4) == f8(4)
     # ...
 #------------------------------------------------------------------------------
