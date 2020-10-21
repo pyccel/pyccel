@@ -2303,9 +2303,7 @@ class SemanticParser(BasicParser):
             if value not in def_decorators.__all__:
                 not_used.append(value)
 
-        if len(not_used) == 1:
-            errors.report(UNDEFINED_DECORATORS, symbol=''.join(not_used), severity='warning')
-        elif len(not_used) > 1:
+        if len(not_used) >= 1:
             errors.report(UNDEFINED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
         args_number = len(expr.arguments)
