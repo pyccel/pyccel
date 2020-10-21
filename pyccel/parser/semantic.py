@@ -104,6 +104,7 @@ from pyccel.parser.base      import BasicParser, Scope
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
 
+import pyccel.decorators as def_decorators
 #==============================================================================
 
 errors = Errors()
@@ -2295,6 +2296,18 @@ class SemanticParser(BasicParser):
         is_private   = expr.is_private
 
         header = expr.header
+
+        keys = decorators.keys()
+        not_used = []
+        for value in keys:
+            if value not in def_decorators.__all__:
+                not_used.append(value)
+
+        if len(not_used) == 1:
+            errors.report(UNDEFINED_DECORATOR, symbol=''.join(not_used), severity='warning')
+        elif len(not_used) > 1:
+            errors.report(UNDEFINED_DECORATORS, symbol=', '.join(not_used), severity='warning')
+
         args_number = len(expr.arguments)
         if header is None:
             if cls_name:
