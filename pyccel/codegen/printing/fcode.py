@@ -40,7 +40,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              If, PyccelArraySize)
 
 
-from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
+from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus, PyccelUnarySub
 from pyccel.ast.core      import FunctionCall
 
 from pyccel.ast.builtins  import Enumerate, PythonInt, Len, Map, Print, Range, Zip, PythonTuple, PythonFloat
@@ -62,6 +62,7 @@ from pyccel.ast.numpyext import NumpyComplex, NumpyMod
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from pyccel.ast.numpyext import Rand, NumpyRandint
 from pyccel.ast.numpyext import NumpyNewArray
+from pyccel.ast.numpyext import Shape
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -2342,6 +2343,8 @@ class FCodePrinter(CodePrinter):
         for i, ind in enumerate(inds):
             if isinstance(ind, Tuple) and len(ind) == 1:
                 inds[i] = ind[0]
+            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], Integer):
+                inds[i] = PyccelMinus(Shape(expr.base)[i], ind.args[0])
 
         inds = [self._print(i) for i in inds]
 
