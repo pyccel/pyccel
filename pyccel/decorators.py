@@ -38,3 +38,8 @@ def stack_array(*args, **kw):
     def identity(f):
         return f
     return identity
+
+def allow_negative_index(*args, **kw):
+    def identity(f):
+        return f
+    return identity
