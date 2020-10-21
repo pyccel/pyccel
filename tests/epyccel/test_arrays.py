@@ -1482,6 +1482,24 @@ def test_array_kwargs_ones():
     assert f1() == f2()
 
 #==============================================================================
+# TEST: Negative indexes
+#==============================================================================
+
+def test_constant_negative_index():
+    from numpy.random import randint
+    n = randint(2, 10)
+    f1 = arrays.constant_negative_index
+    f2 = epyccel( f1 )
+    assert f1(n) == f2(n)
+
+def test_almost_negative_index():
+    from numpy.random import randint
+    n = randint(2, 10)
+    f1 = arrays.constant_negative_index
+    f2 = epyccel( f1 )
+    assert f1(n) == f2(n)
+
+#==============================================================================
 # TEST: shape initialisation
 #==============================================================================
 

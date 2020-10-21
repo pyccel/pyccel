@@ -539,6 +539,32 @@ def array_kwargs_ones():
 
 
 #==============================================================================
+# NEGATIVE INDEXES
+#==============================================================================
+
+@types('int')
+def constant_negative_index(n):
+    import numpy as np
+    a = np.empty(n, dtype=int)
+
+    for i in range(n):
+        a[i] = i
+
+    return a[-1], a[-2]
+
+@types('int')
+def almost_negative_index(n):
+    import numpy as np
+    a = np.empty(n, dtype=int)
+
+    for i in range(n):
+        a[i] = i
+    j = -1
+
+    return a[-j]
+
+
+#==============================================================================
 # SHAPE INITIALISATION
 #==============================================================================
 
