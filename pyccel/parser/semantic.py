@@ -2444,11 +2444,17 @@ class SemanticParser(BasicParser):
                 for var in local_vars:
                     var_name = var.name
                     if var_name in decorators['stack_array']:
-                        d_var = self._infere_type(var, **settings)
                         var.is_stack_array = True
                         var.allocatable    = False
                         var.is_pointer     = False
                         var.is_target      = False
+
+            if 'allow_negative_index' in decorators:
+
+                for var in local_vars:
+                    var_name = var.name
+                    if var_name in decorators['allow_negative_index']:
+                        var.allows_negative_indexes = True
 
             # TODO should we add all the variables or only the ones used in the function
             container = self._namespace.parent_scope
