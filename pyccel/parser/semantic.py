@@ -2304,7 +2304,7 @@ class SemanticParser(BasicParser):
                 not_used.append(value)
 
         if len(not_used) == 1:
-            errors.report(UNDEFINED_DECORATOR, symbol=''.join(not_used), severity='warning')
+            errors.report(UNDEFINED_DECORATORS, symbol=''.join(not_used), severity='warning')
         elif len(not_used) > 1:
             errors.report(UNDEFINED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
@@ -2472,6 +2472,7 @@ class SemanticParser(BasicParser):
             # get the imports
             imports   = self.namespace.imports['imports'].values()
             imports   = list(set(imports))
+            print(imports)
             # remove the FunctionDef from the function scope
             # TODO improve func_ is None in the case of an interface
             func_     = self.namespace.functions.pop(name, None)
