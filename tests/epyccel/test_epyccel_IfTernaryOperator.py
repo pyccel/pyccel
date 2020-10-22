@@ -77,6 +77,7 @@ def test_f5(language):
 def test_f6(language):
     @types('int')
     def f6(x):
+        # a = x if x < 0 else (1 if x < 5 else (complex(0, 1) if x == 5 else 6.5))
         a = x if x < 0 else 1 if x < 5 else complex(0, 1) if x == 5 else 6.5
         return a
 
