@@ -1158,7 +1158,7 @@ class NumpyUfuncBinary(NumpyUfuncBase):
 # Math operations
 #------------------------------------------------------------------------------
 #class NumpyAbsolute(NumpyUfuncUnary): pass
-#class NumpyFabs    (NumpyUfuncUnary): pass
+class NumpyFabs    (NumpyUfuncUnary): pass
 class NumpyExp     (NumpyUfuncUnary): pass
 class NumpyLog     (NumpyUfuncUnary): pass
 class NumpySqrt    (NumpyUfuncUnary): pass

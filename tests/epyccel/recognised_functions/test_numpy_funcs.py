@@ -51,7 +51,7 @@ def test_fabs_call_r(language):
     x = uniform(high=1e6)
     assert(isclose(f1(x), fabs_call_r(x), rtol=1e-15, atol=1e-15))
     assert(isclose(f1(-x), fabs_call_r(-x), rtol=1e-15, atol=1e-15))
-    # assert(type(f1(x)) == type(fabs_call_r(x).item()))
+    assert(type(f1(x)) == type(fabs_call_r(x).item()))
 
 def test_fabs_call_i(language):
     @types('int')
@@ -63,7 +63,7 @@ def test_fabs_call_i(language):
     x = randint(1e6)
     assert(isclose(f1(x), fabs_call_i(x), rtol=1e-15, atol=1e-15))
     assert(isclose(f1(-x), fabs_call_i(-x), rtol=1e-15, atol=1e-15))
-    # assert(type(f1(x)) == type(fabs_call_i(x).item()))
+    assert(type(f1(x)) == type(fabs_call_i(x).item()))
 
 def test_fabs_phrase_r_r(language):
     @types('real','real')
@@ -136,7 +136,7 @@ def test_absolute_call_r(language):
     x = uniform(high=1e6)
     assert(isclose(f1(x), absolute_call_r(x), rtol=1e-15, atol=1e-15))
     assert(isclose(f1(-x), absolute_call_r(-x), rtol=1e-15, atol=1e-15))
-    # assert(type(f1(x)) == type(absolute_call_r(x).item()))
+    assert(type(f1(x)) == type(absolute_call_r(x).item()))
 
 def test_absolute_call_i(language):
     @types('int')
@@ -148,7 +148,7 @@ def test_absolute_call_i(language):
     x = randint(1e6)
     assert(isclose(f1(x), absolute_call_i(x), rtol=1e-15, atol=1e-15))
     assert(isclose(f1(-x), absolute_call_i(-x), rtol=1e-15, atol=1e-15))
-    # assert(type(f1(x)) == type(absolute_call_i(x).item()))
+    assert(type(f1(x)) == type(absolute_call_i(x).item()))
 
 def test_absolute_phrase_r_r(language):
     @types('real','real')

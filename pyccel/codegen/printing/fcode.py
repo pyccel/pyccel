@@ -80,6 +80,7 @@ known_functions = {
 
 numpy_ufunc_to_fortran = {
     'NumpyAbs'  : 'abs',
+    'NumpyFabs'  : 'abs',
     'NumpyMin'  : 'minval',
     'NumpyMax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
