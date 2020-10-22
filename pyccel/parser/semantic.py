@@ -2439,7 +2439,6 @@ class SemanticParser(BasicParser):
             # we annotate the body
             body = self._visit(expr.body)
 
-            # ISSUE 177: must update arguments to get is_target
             args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(str(a.name)) for a in args]
 
             results = list(OrderedDict((a.name,self.get_variable(a.name)) for a in results).values())
