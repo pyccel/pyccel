@@ -10,7 +10,7 @@ from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, Nat
 
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress, FunctionAddress
 from .core      import AliasAssign, Assign, Return
-from .core      import IfTernaryOperator, PyccelEq
+from .core      import PyccelEq, If
 
 from .numpyext  import Real as NumpyReal, Imag as NumpyImag
 
@@ -271,7 +271,7 @@ def pyint_to_bool(cast_function_name):
 def bool_to_pyobj(cast_function_name):
     cast_function_argument = Variable(dtype=NativeBool(), name = 'b')
     cast_function_result   = Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)
-    cast_function_body = [IfTernaryOperator(
+    cast_function_body = [If(
                             (PythonBool(cast_function_argument),
                                 [AliasAssign(cast_function_result, Py_True)]),
                             (BooleanTrue(),

@@ -105,6 +105,7 @@ from pyccel.parser.base      import BasicParser, Scope
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
 
+import pyccel.decorators as def_decorators
 #==============================================================================
 
 errors = Errors()
@@ -1595,21 +1596,7 @@ class SemanticParser(BasicParser):
         else:
             rhs = self._visit(rhs, **settings)
 
-        if isinstance(rhs, IfTernaryOperator):
-            args = rhs.args
-            new_args = []
-            for arg in args:
-                result = arg[1].body[0]
-                if isinstance(expr, Assign):
-                    body = Assign(lhs, result)
-                else:
-                    body = AugAssign(lhs, expr.op, result)
-                body.set_fst(fst)
-                new_args.append([arg[0], [body]])
-            expr = IfTernaryOperator(*new_args)
-            return self._visit_If(expr, **settings)
-
-        elif isinstance(rhs, FunctionDef):
+        if isinstance(rhs, FunctionDef):
 
             # case of lambdify
 
@@ -2213,6 +2200,10 @@ class SemanticParser(BasicParser):
         args = [self._visit(i, **settings) for i in expr.args]
         return expr.func(*args)
 
+    def _visit_IfTernaryOperator(self, expr, **settings):
+        args = [self._visit(i, **settings) for i in expr.args]
+        return expr.func(*args)
+
     def _visit_VariableHeader(self, expr, **settings):
 
         # TODO improve
@@ -2296,6 +2287,12 @@ class SemanticParser(BasicParser):
         is_private   = expr.is_private
 
         header = expr.header
+
+        not_used = [d for d in decorators if d not in def_decorators.__all__]
+
+        if len(not_used) >= 1:
+            errors.report(UNDEFINED_DECORATORS, symbol=', '.join(not_used), severity='warning')
+
         args_number = len(expr.arguments)
         if header is None:
             if cls_name:
@@ -2462,11 +2459,17 @@ class SemanticParser(BasicParser):
                 for var in local_vars:
                     var_name = var.name
                     if var_name in decorators['stack_array']:
-                        d_var = self._infere_type(var, **settings)
                         var.is_stack_array = True
                         var.allocatable    = False
                         var.is_pointer     = False
                         var.is_target      = False
+
+            if 'allow_negative_index' in decorators:
+
+                for var in local_vars:
+                    var_name = var.name
+                    if var_name in decorators['allow_negative_index']:
+                        var.allows_negative_indexes = True
 
             # TODO should we add all the variables or only the ones used in the function
             container = self._namespace.parent_scope
@@ -2477,6 +2480,7 @@ class SemanticParser(BasicParser):
             # get the imports
             imports   = self.namespace.imports['imports'].values()
             imports   = list(set(imports))
+
             # remove the FunctionDef from the function scope
             # TODO improve func_ is None in the case of an interface
             func_     = self.namespace.functions.pop(name, None)
