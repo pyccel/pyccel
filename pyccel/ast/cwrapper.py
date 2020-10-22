@@ -1,8 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 
+from sympy import Tuple
 from .basic     import Basic
 
-from sympy import Tuple
 from pyccel.ast.numbers   import BooleanTrue, Complex
 from .builtins  import PythonBool
 
