@@ -2,6 +2,7 @@
 
 from .basic     import Basic
 
+from sympy import Tuple
 from pyccel.ast.numbers   import BooleanTrue, Complex
 from .builtins  import PythonBool
 
@@ -17,7 +18,6 @@ from .numpyext  import Real as NumpyReal, Imag as NumpyImag
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
 
-from sympy import Tuple
 
 errors = Errors()
 
