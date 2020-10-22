@@ -41,10 +41,11 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
 
 
 from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
+from pyccel.ast.core      import PyccelUnarySub, PyccelMod
 from pyccel.ast.core      import FunctionCall
 
 from pyccel.ast.builtins  import Enumerate, PythonInt, Len, Map, Print, Range, Zip, PythonTuple, PythonFloat
-
+from pyccel.ast.builtins  import PythonComplex, PythonBool
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString
@@ -55,6 +56,7 @@ from pyccel.ast.numbers   import Integer, Float
 from pyccel.ast.numbers   import BooleanTrue
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.type_inference import str_dtype
 
 from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
 from pyccel.ast.numpyext import Real, Where
@@ -62,6 +64,7 @@ from pyccel.ast.numpyext import NumpyComplex, NumpyMod
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from pyccel.ast.numpyext import Rand, NumpyRandint
 from pyccel.ast.numpyext import NumpyNewArray
+from pyccel.ast.numpyext import Shape
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -153,6 +156,13 @@ math_function_to_fortran = {
 _default_methods = {
     '__init__': 'create',
     '__del__' : 'free',
+}
+
+python_builtin_datatypes = {
+    'integer' : PythonInt,
+    'real'    : PythonFloat,
+    'bool'    : PythonBool,
+    'complex' : PythonComplex
 }
 
 errors = Errors()
@@ -992,8 +1002,6 @@ class FCodePrinter(CodePrinter):
         if lhs.rank > 0:
             shape_code = ', '.join('0:' for i in range(lhs.rank))
             shape_code = '({s_c})'.format(s_c = shape_code)
-
-        print(expr.rhs, self._print(expr.rhs))
 
         code += '{lhs}{s_c} {op} {rhs}'.format(lhs=self._print(expr.lhs),
                                           s_c = shape_code,
@@ -2062,6 +2070,24 @@ class FCodePrinter(CodePrinter):
 
         return ''.join(lines)
 
+    def _print_IfTernaryOperator(self, expr):
+        cond = PythonBool(expr.cond) if not isinstance(expr.cond.dtype, NativeBool) else expr.cond
+        value_true = expr.value_true
+        value_false = expr.value_false
+
+        if value_true.dtype != value_false.dtype :
+            try :
+                cast_func = python_builtin_datatypes[str_dtype(expr.dtype)]
+            except KeyError:
+                errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+            value_true = cast_func(value_true) if value_true.dtype != expr.dtype else value_true
+            value_false = cast_func(value_false) if value_false.dtype != expr.dtype else value_false
+
+        cond = self._print(cond)
+        value_true = self._print(value_true)
+        value_false = self._print(value_false)
+        return 'merge({true}, {false}, {cond})'.format(cond = cond, true = value_true, false = value_false)
+
     def _print_MatrixElement(self, expr):
         return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
 
@@ -2342,10 +2368,19 @@ class FCodePrinter(CodePrinter):
             base = self._print(expr.base.label)
 
         inds = list(expr.indices)
-        #indices of indexedElement of len==1 shouldn't be a Tuple
+        base_shape = Shape(expr.base)
+        allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
+                expr.base.internal_variable.allows_negative_indexes)
+
         for i, ind in enumerate(inds):
-            if isinstance(ind, Tuple) and len(ind) == 1:
-                inds[i] = ind[0]
+            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], Integer):
+                inds[i] = PyccelMinus(base_shape[i], ind.args[0])
+            else:
+                #indices of indexedElement of len==1 shouldn't be a Tuple
+                if isinstance(ind, Tuple) and len(ind) == 1:
+                    inds[i] = ind[0]
+                if allow_negative_indexes and not isinstance(ind, Integer):
+                    inds[i] = PyccelMod(ind, base_shape[i])
 
         inds = [self._print(i) for i in inds]
 

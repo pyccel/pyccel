@@ -2526,7 +2526,8 @@ class Variable(Symbol, PyccelAstNode):
         order='C',
         precision=0,
         is_argument=False,
-        is_kwonly=False
+        is_kwonly=False,
+        allows_negative_indexes=False
         ):
 
         # ------------ PyccelAstNode Properties ---------------
@@ -2608,6 +2609,12 @@ class Variable(Symbol, PyccelAstNode):
         elif not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
         self._is_optional = is_optional
+
+        if allows_negative_indexes is None:
+            allows_negative_indexes = False
+        elif not isinstance(allows_negative_indexes, bool):
+            raise TypeError('allows_negative_indexes must be a boolean.')
+        self._allows_negative_indexes = allows_negative_indexes
 
         self._cls_base       = cls_base
         self._order          = order
@@ -2693,6 +2700,14 @@ class Variable(Symbol, PyccelAstNode):
     @is_stack_array.setter
     def is_stack_array(self, is_stack_array):
         self._is_stack_array = is_stack_array
+
+    @property
+    def allows_negative_indexes(self):
+        return self._allows_negative_indexes
+
+    @allows_negative_indexes.setter
+    def allows_negative_indexes(self, allows_negative_indexes):
+        self._allows_negative_indexes = allows_negative_indexes
 
     @property
     def is_argument(self):
@@ -5180,15 +5195,62 @@ class If(Basic):
         return b
 
 
-class IfTernaryOperator(If):
+class IfTernaryOperator(Basic, PyccelAstNode):
+    """Represent a ternary conditional operator in the code, of the form (a if cond else b)
 
-    """class for the Ternery operator"""
-    def __init__(self, *args):
-        for arg in self.args:
-            if len(arg[1].body)!=1:
-                raise TypeError('IfTernary body must be of length 1')
+    Parameters
+    ----------
+    args :
+        args : type list
+        format : condition , value_if_true, value_if_false
 
-    pass
+    Examples
+    --------
+    >>> from sympy import Symbol
+    >>> from pyccel.ast.core import Assign, IfTernaryOperator
+    >>> n = Symbol('n')
+    >>> x = 5 if n > 1 else 2
+    >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
+    IfTernaryOperator(PyccelGt(n > 1),  5,  2)
+    """
+    def __init__(self, cond, value_true, value_false):
+        self._cond = cond
+        self._value_true = value_true
+        self._value_false = value_false
+
+        if self.stage == 'syntactic':
+            return
+        if isinstance(value_true , Nil) or isinstance(value_false, Nil):
+            errors.report('None is not implemented for Ternary Operator', severity='fatal')
+        if isinstance(value_true.dtype, NativeString) or isinstance(value_false.dtype, NativeString):
+            errors.report('Strings are not supported by Ternary Operator', severity='fatal')
+        _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
+        if value_true.dtype not in _tmp_list :
+            raise NotImplementedError('cannot determine the type of {}'.format(value_true.dtype))
+        if value_false.dtype not in _tmp_list :
+            raise NotImplementedError('cannot determine the type of {}'.format(value_false.dtype))
+        if value_false.rank != value_true.rank :
+            errors.report('Ternary Operator results should have the same rank', severity='fatal')
+        if value_false.shape != value_true.shape :
+            errors.report('Ternary Operator results should have the same shape', severity='fatal')
+        self._dtype = max([value_true.dtype, value_false.dtype], key = lambda x : _tmp_list.index(x))
+        self._precision = max([value_true.precision, value_false.precision])
+        self._shape = value_true.shape
+        self._rank = value_true.rank
+
+
+    @property
+    def cond(self):
+        return self._cond
+
+    @property
+    def value_true(self):
+        return self._value_true
+
+    @property
+    def value_false(self):
+        return self._value_false
+
 
 class StarredArguments(Basic):
     def __new__(cls, args):
