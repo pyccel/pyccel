@@ -59,6 +59,7 @@ jobs:
   - os: linux
     python: 3.5
 
+# Test: see if this works on a non-draft PR
   - os: linux
     python: 3.6
     if: branch = master
