@@ -123,6 +123,7 @@ __all__ = (
     'Load',
     'ModOp',
     'Module',
+    'ModuleHeader',
     'MulOp',
     'NativeOp',
     'NewLine',
@@ -1313,9 +1314,6 @@ class AliasAssign(Basic):
             if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_pointer:
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
 
-        if isinstance(rhs, Variable):
-            rhs = VariableAddress(rhs)
-
         return Basic.__new__(cls, lhs, rhs)
 
     def _sympystr(self, printer):
@@ -2049,6 +2047,47 @@ class Module(Basic):
     def set_name(self, new_name):
         self._name = new_name
 
+class ModuleHeader(Basic):
+
+    """Represents the header file for a module
+
+    Parameters
+    ----------
+    module: Module
+        the module
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
+    >>> z = Variable('real', 'z')
+    >>> t = Variable('real', 't')
+    >>> a = Variable('real', 'a')
+    >>> b = Variable('real', 'b')
+    >>> body = [Assign(y,x+a)]
+    >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
+    >>> attributes   = [x,y]
+    >>> methods     = [translate]
+    >>> Point = ClassDef('Point', attributes, methods)
+    >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
+    >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
+    >>> mod = Module('my_module', [], [incr, decr], classes = [Point])
+    >>> ModuleHeader(mod)
+    Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
+    """
+
+    def __init__(self, module):
+        if not isinstance(module, Module):
+            raise TypeError('module must be a Module')
+
+        self._module = module
+
+    @property
+    def module(self):
+        return self._module
+
 class Program(Basic):
 
     """Represents a Program in the code. A block consists of the following inputs
@@ -2486,7 +2525,8 @@ class Variable(Symbol, PyccelAstNode):
         order='C',
         precision=0,
         is_argument=False,
-        is_kwonly=False
+        is_kwonly=False,
+        allows_negative_indexes=False
         ):
 
         # ------------ PyccelAstNode Properties ---------------
@@ -2568,6 +2608,12 @@ class Variable(Symbol, PyccelAstNode):
         elif not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
         self._is_optional = is_optional
+
+        if allows_negative_indexes is None:
+            allows_negative_indexes = False
+        elif not isinstance(allows_negative_indexes, bool):
+            raise TypeError('allows_negative_indexes must be a boolean.')
+        self._allows_negative_indexes = allows_negative_indexes
 
         self._cls_base       = cls_base
         self._order          = order
@@ -2653,6 +2699,14 @@ class Variable(Symbol, PyccelAstNode):
     @is_stack_array.setter
     def is_stack_array(self, is_stack_array):
         self._is_stack_array = is_stack_array
+
+    @property
+    def allows_negative_indexes(self):
+        return self._allows_negative_indexes
+
+    @allows_negative_indexes.setter
+    def allows_negative_indexes(self, allows_negative_indexes):
+        self._allows_negative_indexes = allows_negative_indexes
 
     @property
     def is_argument(self):
@@ -3154,9 +3208,6 @@ class FunctionCall(Basic, PyccelAstNode):
 
             args = [a.value if isinstance(a, ValuedVariable) else a for a in f_args_dict.values()]
 
-        # Ensure the correct syntax is used for pointers
-        args = [VariableAddress(a) if isinstance(a, Variable) and f.is_pointer else a for a, f in zip(args, f_args)]
-
         args = Tuple(*args, sympify=False)
         # ...
 
@@ -3202,13 +3253,6 @@ class Return(Basic):
 
         if stmt and not isinstance(stmt, (Assign, CodeBlock)):
             raise TypeError('stmt should only be of type Assign')
-
-        if PyccelAstNode.stage == 'semantic':
-            if isinstance(expr, list):
-                expr = [VariableAddress(e) if isinstance(e, Variable) and e.is_pointer else e for e in expr]
-            else:
-                if isinstance(expr, Variable) and expr.is_pointer:
-                    expr = VariableAddress(expr)
 
         return Basic.__new__(cls, expr, stmt)
 
@@ -5148,15 +5192,61 @@ class If(Basic):
         return b
 
 
-class IfTernaryOperator(If):
+class IfTernaryOperator(Basic, PyccelAstNode):
+    """Represent a ternary conditional operator in the code, of the form (a if cond else b)
 
-    """class for the Ternery operator"""
-    def __init__(self, *args):
-        for arg in self.args:
-            if len(arg[1].body)!=1:
-                raise TypeError('IfTernary body must be of length 1')
+    Parameters
+    ----------
+    args :
+        args : type list
+        format : condition , value_if_true, value_if_false
 
-    pass
+    Examples
+    --------
+    >>> from sympy import Symbol
+    >>> from pyccel.ast.core import Assign, IfTernaryOperator
+    >>> n = Symbol('n')
+    >>> x = 5 if n > 1 else 2
+    >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
+    IfTernaryOperator(PyccelGt(n > 1),  5,  2)
+    """
+    def __init__(self, cond, value_true, value_false):
+        self._cond = cond
+        self._value_true = value_true
+        self._value_false = value_false
+
+        if self.stage == 'syntactic':
+            return
+        if isinstance(value_true , Nil) or isinstance(value_false, Nil):
+            errors.report('None is not implemented for Ternary Operator', severity='fatal')
+        if isinstance(value_true.dtype, NativeString) or isinstance(value_false.dtype, NativeString):
+            errors.report('Strings are not supported by Ternary Operator', severity='fatal')
+        _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
+        if value_true.dtype not in _tmp_list :
+            raise NotImplementedError('cannot determine the type of {}'.format(value_true.dtype))
+        if value_false.dtype not in _tmp_list :
+            raise NotImplementedError('cannot determine the type of {}'.format(value_false.dtype))
+        self._dtype = max([value_true.dtype, value_false.dtype], key = lambda x : _tmp_list.index(x))
+        self._precision = max([value_true.precision, value_false.precision])
+        if None in [value_true.rank, value_false.rank]:
+            self._rank = None
+            self.shape = None
+        else :
+            self._shape = broadcast(value_true.shape, value_false.shape)
+            self._rank = len(self._shape)
+
+    @property
+    def cond(self):
+        return self._cond
+
+    @property
+    def value_true(self):
+        return self._value_true
+
+    @property
+    def value_false(self):
+        return self._value_false
+
 
 class StarredArguments(Basic):
     def __new__(cls, args):

@@ -3,21 +3,15 @@ import os
 import shutil
 import pytest
 
-__all__ = ['setup', 'teardown']
-
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.c]
         )
-    ],
-    scope='module'
+    ]
 )
 def language(request):
     return request.param
-
-def setup():
-    teardown()
 
 def teardown(path_dir = None):
     if path_dir is None:
@@ -32,8 +26,18 @@ def teardown(path_dir = None):
     for f in files:
         file_name = os.path.join(path_dir,f)
         if f in  ("__pyccel__", "__epyccel__"):
-            shutil.rmtree( file_name )
+            shutil.rmtree( file_name, ignore_errors=True)
         elif not os.path.isfile(file_name):
             teardown(file_name)
         elif not f.endswith(".py") and not f.endswith(".rst"):
             os.remove(file_name)
+
+def pytest_runtest_setup(item):
+    marks = [m.name for m in item.own_markers ]
+    if 'parallel' not in marks:
+        teardown()
+
+def pytest_runtest_teardown(item, nextitem):
+    marks = [m.name for m in item.own_markers ]
+    if 'parallel' not in marks:
+        teardown()

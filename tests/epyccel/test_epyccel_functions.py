@@ -1,18 +1,11 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 # coding: utf-8
 
-import shutil
 import pytest
 import numpy as np
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
-from conftest       import *
-
-
-def clean_test():
-    shutil.rmtree('__pycache__', ignore_errors=True)
-    shutil.rmtree('__epyccel__', ignore_errors=True)
 
 def test_func_no_args_1(language):
     '''test function with return value but no args'''

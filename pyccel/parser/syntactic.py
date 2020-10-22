@@ -103,11 +103,13 @@ class SyntaxParser(BasicParser):
         code = inputs
         if os.path.isfile(inputs):
 
+            self._filename = inputs
+            errors.set_target(self.filename, 'file')
+
             # we don't use is_valid_filename_py since it uses absolute path
             # file extension
 
             code = read_file(inputs)
-            self._filename = inputs
 
         self._code = code
 
@@ -117,7 +119,15 @@ class SyntaxParser(BasicParser):
 
         self._fst = tree
 
-        self._used_names = set(str(a.id) for a in ast.walk(self._fst) if isinstance(a, ast.Name))
+        def get_name(a):
+            if isinstance(a, ast.Name):
+                return a.id
+            elif isinstance(a, ast.arg):
+                return a.arg
+            else:
+                raise NotImplementedError()
+
+        self._used_names = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg)))
         self._dummy_counter = 1
 
         self.parse(verbose=True)
@@ -131,10 +141,6 @@ class SyntaxParser(BasicParser):
 
         # TODO - add settings to Errors
         #      - filename
-
-        errors = Errors()
-        if self.filename:
-            errors.set_target(self.filename, 'file')
         errors.set_parser_stage('syntax')
 
         PyccelAstNode.stage = 'syntactic'
@@ -622,10 +628,11 @@ class SyntaxParser(BasicParser):
             return EmptyNode()
 
         if 'stack_array' in decorators:
-            args = list(decorators['stack_array'].args)
-            for i, arg in enumerate(args):
-                args[i] = str(arg).replace("'", '')
-            decorators['stack_array'] = tuple(args)
+            decorators['stack_array'] = tuple(str(a) for a in decorators['stack_array'].args)
+
+        if 'allow_negative_index' in decorators:
+            decorators['allow_negative_index'] = tuple(str(a) for a in decorators['allow_negative_index'].args)
+
         # extract the types to construct a header
         if 'types' in decorators:
             types = []
@@ -962,7 +969,6 @@ class SyntaxParser(BasicParser):
         test = self._visit(stmt.test)
         body = self._visit(stmt.body)
         orelse = self._visit(stmt.orelse)
-
         if len(orelse)==1 and isinstance(orelse[0],If):
             orelse = orelse[0]._args
             return If(Tuple(test, body, sympify=False), *orelse)
@@ -975,9 +981,7 @@ class SyntaxParser(BasicParser):
         test1 = self._visit(stmt.test)
         first = self._visit(stmt.body)
         second = self._visit(stmt.orelse)
-        args = [Tuple(test1, [first], sympify=False),
-                Tuple(BooleanTrue(), [second], sympify=False)]
-        expr = IfTernaryOperator(*args)
+        expr = IfTernaryOperator(test1, first, second)
         expr.set_fst(stmt)
         return expr
 

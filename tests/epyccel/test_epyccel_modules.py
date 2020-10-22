@@ -1,7 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import numpy as np
 from pyccel.epyccel import epyccel
-from conftest       import *
 
 def test_module_1():
     import modules.Module_1 as mod

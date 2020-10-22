@@ -6,7 +6,6 @@ import pytest
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
-from conftest       import *
 
 #------------------------------------------------------------------------------
 def test_f1(language):

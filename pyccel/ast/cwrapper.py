@@ -1,3 +1,5 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
+
 from .basic     import Basic
 
 from pyccel.ast.numbers   import BooleanTrue, Complex
@@ -6,9 +8,9 @@ from .builtins  import PythonBool
 from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
 
-from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable
+from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress
 from .core      import AliasAssign, Assign, Return
-from .core      import IfTernaryOperator
+from .core      import PyccelEq, If
 
 from .numpyext  import Real as NumpyReal, Imag as NumpyImag
 
@@ -28,15 +30,22 @@ __all__ = (
 #--------- CONSTANTS ----------
     'Py_True',
     'Py_False',
+    'Py_None',
 #----- C / PYTHON FUNCTIONS ---
     'pycomplex_real',
     'pycomplex_imag',
     'pycomplex_fromdoubles',
+    'Py_DECREF',
+    'PyLong_AsLong',
+    'PyFloat_AsDouble',
+    'PyType_Check',
+    'PyErr_SetString',
 #------- CAST FUNCTIONS ------
     'pyint_to_bool',
     'bool_to_pyobj',
     'pycomplex_to_complex',
     'complex_to_pycomplex',
+    'pybool_to_bool',
 )
 
 class PyccelPyObject(DataType):
@@ -121,13 +130,14 @@ class PyArg_ParseTupleNode(Basic):
         self._arg_names  = arg_names
         self._flags      = ''
         i = 0
+
         while i < len(c_func_args) and not isinstance(c_func_args[i], ValuedVariable):
-            self._flags += pytype_parse_registry[(c_func_args[i].dtype, c_func_args[i].precision)]
+            self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
             i+=1
         if i < len(c_func_args):
             self._flags += '|'
         while i < len(c_func_args):
-            self._flags += pytype_parse_registry[(c_func_args[i].dtype, c_func_args[i].precision)]
+            self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
             i+=1
 
         # Restriction as of python 3.8
@@ -187,6 +197,9 @@ class PyBuildValueNode(Basic):
 Py_True = Variable(PyccelPyObject(), 'Py_True',is_pointer=True)
 Py_False = Variable(PyccelPyObject(), 'Py_False',is_pointer=True)
 
+# Python.h object representing None
+Py_None = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
+
 # Python.h function managing complex data type
 pycomplex_real = FunctionDef(name      = 'PyComplex_RealAsDouble',
                            body      = [],
@@ -201,6 +214,38 @@ pycomplex_fromdoubles = FunctionDef(name      = 'PyComplex_FromDoubles',
                            arguments = [Variable(dtype=NativeReal(), name = 'r'),
                                         Variable(dtype=NativeReal(), name = 'i')],
                            results   = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)])
+Py_DECREF = FunctionDef(name = 'Py_DECREF',
+                        body = [],
+                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                        results = [])
+PyLong_AsLong = FunctionDef(name = 'PyLong_AsLong',
+                        body = [],
+                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                        results   = [Variable(dtype=NativeInteger(), name = 'r')])
+PyFloat_AsDouble = FunctionDef(name = 'PyFloat_AsDouble',
+                        body = [],
+                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                        results   = [Variable(dtype=NativeReal(), name = 'r')])
+
+def PyType_Check(data_type):
+    try :
+        check_type = check_type_registry[data_type]
+    except KeyError:
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=data_type,severity='fatal')
+    func = FunctionDef(name = check_type,
+                    body = [],
+                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                    results   = [Variable(dtype=NativeBool(), name = 'r')])
+    return func
+
+def PyErr_SetString(error_type, error_msg):
+    func = FunctionDef(name = 'PyErr_SetString',
+                body = [],
+                arguments = [Variable(dtype=PyccelPyObject(), name = 'o'),
+                             Variable(dtype =NativeString(), name = 's')],
+                results   = [])
+    err_type = Variable(PyccelPyObject(), error_type)
+    return FunctionCall(func, [err_type, error_msg])
 
 # Casting functions
 # Represents type of cast function responsible of the conversion of one data type into another.
@@ -220,7 +265,7 @@ def pyint_to_bool(cast_function_name):
 def bool_to_pyobj(cast_function_name):
     cast_function_argument = Variable(dtype=NativeBool(), name = 'b')
     cast_function_result   = Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)
-    cast_function_body = [IfTernaryOperator(
+    cast_function_body = [If(
                             (PythonBool(cast_function_argument),
                                 [AliasAssign(cast_function_result, Py_True)]),
                             (BooleanTrue(),
@@ -267,9 +312,34 @@ def pycomplex_to_complex(cast_function_name):
                        results   = [cast_function_result],
                        local_vars= cast_function_local_vars)
 
+def pybool_to_bool(cast_function_name):
+    cast_function_argument = Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)
+    cast_function_result   = Variable(dtype=NativeBool(), name = 'c')
+
+    cast_function_body = [Assign(cast_function_result , PyccelEq(VariableAddress(cast_function_argument), VariableAddress(Py_True)))
+                        , Return([cast_function_result])]
+
+    return FunctionDef(name      = cast_function_name,
+                       arguments = [cast_function_argument],
+                       body      = cast_function_body,
+                       results   = [cast_function_result])
+
 cast_function_registry = {
     'pyint_to_bool' : pyint_to_bool,
     'bool_to_pyobj' : bool_to_pyobj,
     'pycomplex_to_complex' : pycomplex_to_complex,
-    'complex_to_pycomplex': complex_to_pycomplex
+    'complex_to_pycomplex': complex_to_pycomplex,
+    'pybool_to_bool' : pybool_to_bool,
+}
+
+collect_function_registry = {
+    NativeInteger(): PyLong_AsLong,
+    NativeReal() : PyFloat_AsDouble,
+}
+
+check_type_registry = {
+    NativeInteger(): 'PyLong_Check',
+    NativeComplex() : 'PyComplex_Check',
+    NativeReal() : 'PyFloat_Check',
+    NativeBool() : 'PyBool_Check',
 }

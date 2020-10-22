@@ -4,7 +4,6 @@ from numpy import isclose
 
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
-from conftest import *
 
 def test_modulo_int_int(language):
     @types(int, int)

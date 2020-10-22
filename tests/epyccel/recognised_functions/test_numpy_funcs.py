@@ -6,7 +6,6 @@ from numpy import isclose
 
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
-from conftest import *
 
 min_float = sys.float_info.min  # Minimum positive float
 

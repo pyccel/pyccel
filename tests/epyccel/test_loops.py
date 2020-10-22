@@ -4,7 +4,6 @@ import numpy as np
 
 from pyccel.epyccel import epyccel
 from modules        import loops
-from conftest       import *
 
 #==============================================================================
 

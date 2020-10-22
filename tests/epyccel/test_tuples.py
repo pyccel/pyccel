@@ -5,7 +5,6 @@ import numpy as np
 
 from pyccel.epyccel import epyccel
 from modules import tuples as tuples_module
-from conftest       import *
 
 tuple_funcs = [(f, getattr(tuples_module,f)) for f in tuples_module.__all__ if inspect.isfunction(getattr(tuples_module,f))]
 
