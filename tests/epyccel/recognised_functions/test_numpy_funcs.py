@@ -108,7 +108,7 @@ def test_fabs_phrase_r_i(language):
     assert(isclose(f2(x,-y), fabs_phrase_r_i(x,-y), rtol=1e-14, atol=1e-15))
     assert(isclose(f2(-x,y), fabs_phrase_r_i(-x,y), rtol=1e-14, atol=1e-15))
 
-def test_fabs_phrase_r_i(language):
+def test_fabs_phrase_i_r(language):
     @types('int','real')
     def fabs_phrase_r_i(x,y):
         from numpy import fabs
@@ -924,7 +924,7 @@ def test_sqrt_return_type_r(language):
     f1 = epyccel(sqrt_return_type_real, language = language)
     x = rand()
     assert(isclose(f1(x), sqrt_return_type_real(x), rtol=1e-14, atol=1e-15))
-    assert(type(f1(x)) == type(sqrt_return_type_real(x).item()))  
+    assert(type(f1(x)) == type(sqrt_return_type_real(x).item()))
 
 def test_sqrt_return_type_c(language):
     @types('complex')
@@ -936,7 +936,7 @@ def test_sqrt_return_type_c(language):
     f1 = epyccel(sqrt_return_type_comp, language = language)
     x = rand() + 1j * rand()
     assert(isclose(f1(x), sqrt_return_type_comp(x), rtol=1e-14, atol=1e-15))
-    assert(type(f1(x)) == type(sqrt_return_type_comp(x).item()))  
+    assert(type(f1(x)) == type(sqrt_return_type_comp(x).item()))
 
 #-------------------------------- floor function -----------------------------#
 def test_floor_call_i(language):
@@ -1217,11 +1217,11 @@ def test_full_basic_int(language):
 
     f_val       = epyccel(create_full_val, language = language)
     assert(f_val(size)      == create_full_val(size))
-    assert(type(f_val(size)[0])       == type(create_full_val(size)[0].item()))  
+    assert(type(f_val(size)[0])       == type(create_full_val(size)[0].item()))
 
     f_arg_names = epyccel(create_full_arg_names, language = language)
     assert(f_arg_names(size) == create_full_arg_names(size))
-    assert(type(f_arg_names(size)[0]) == type(create_full_arg_names(size)[0].item()))  
+    assert(type(f_arg_names(size)[0]) == type(create_full_arg_names(size)[0].item()))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -1266,11 +1266,11 @@ def test_full_basic_real(language):
 
     f_val       = epyccel(create_full_val, language = language)
     assert(f_val(val)           == create_full_val(val))
-    assert(type(f_val(val)[0])       == type(create_full_val(val)[0].item()))  
+    assert(type(f_val(val)[0])       == type(create_full_val(val)[0].item()))
 
     f_arg_names = epyccel(create_full_arg_names, language = language)
     assert(f_arg_names(val)     == create_full_arg_names(val))
-    assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0].item()))  
+    assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0].item()))
 
 @pytest.mark.xfail(reason = "f2py converts bools to int")
 def test_full_basic_bool(language):
@@ -1308,11 +1308,11 @@ def test_full_basic_bool(language):
 
     f_val       = epyccel(create_full_val, language = language)
     assert(f_val(val)           == create_full_val(val))
-    assert(type(f_val(val)[0])       == type(create_full_val(val)[0]))  
+    assert(type(f_val(val)[0])       == type(create_full_val(val)[0]))
 
     f_arg_names = epyccel(create_full_arg_names, language = language)
     assert(f_arg_names(val)     == create_full_arg_names(val))
-    assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0]))  
+    assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0]))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -1400,35 +1400,35 @@ def test_full_dtype(language):
 
     f_int_int   = epyccel(create_full_val_int_int, language = language)
     assert(     f_int_int(val_int)        ==      create_full_val_int_int(val_int))
-    assert(type(f_int_int(val_int))       == type(create_full_val_int_int(val_int).item()))  
+    assert(type(f_int_int(val_int))       == type(create_full_val_int_int(val_int).item()))
 
     f_int_float = epyccel(create_full_val_int_float, language = language)
     assert(isclose(     f_int_float(val_int)     ,      create_full_val_int_float(val_int), rtol=1e-14, atol=1e-15))
-    assert(type(f_int_float(val_int))     == type(create_full_val_int_float(val_int).item()))  
+    assert(type(f_int_float(val_int))     == type(create_full_val_int_float(val_int).item()))
 
     f_int_complex = epyccel(create_full_val_int_complex, language = language)
     assert(isclose(     f_int_complex(val_int)     ,      create_full_val_int_complex(val_int), rtol=1e-14, atol=1e-15))
-    assert(type(f_int_complex(val_int))     == type(create_full_val_int_complex(val_int).item()))  
+    assert(type(f_int_complex(val_int))     == type(create_full_val_int_complex(val_int).item()))
 
     f_real_int32   = epyccel(create_full_val_real_int32, language = language)
     assert(     f_real_int32(val_float)        ==      create_full_val_real_int32(val_float))
-    assert(type(f_real_int32(val_float))       == type(create_full_val_real_int32(val_float).item()))  
+    assert(type(f_real_int32(val_float))       == type(create_full_val_real_int32(val_float).item()))
 
     f_real_float32   = epyccel(create_full_val_real_float32, language = language)
     assert(isclose(     f_real_float32(val_float)       ,      create_full_val_real_float32(val_float), rtol=1e-14, atol=1e-15))
-    assert(type(f_real_float32(val_float))       == type(create_full_val_real_float32(val_float).item()))  
+    assert(type(f_real_float32(val_float))       == type(create_full_val_real_float32(val_float).item()))
 
     f_real_float64   = epyccel(create_full_val_real_float64, language = language)
     assert(isclose(     f_real_float64(val_float)       ,      create_full_val_real_float64(val_float), rtol=1e-14, atol=1e-15))
-    assert(type(f_real_float64(val_float))       == type(create_full_val_real_float64(val_float).item()))  
+    assert(type(f_real_float64(val_float))       == type(create_full_val_real_float64(val_float).item()))
 
     f_real_complex64   = epyccel(create_full_val_real_complex64, language = language)
     assert(isclose(     f_real_complex64(val_float)       ,      create_full_val_real_complex64(val_float), rtol=1e-14, atol=1e-15))
-    assert(type(f_real_complex64(val_float))       == type(create_full_val_real_complex64(val_float).item()))  
+    assert(type(f_real_complex64(val_float))       == type(create_full_val_real_complex64(val_float).item()))
 
     f_real_complex128   = epyccel(create_full_val_real_complex128, language = language)
     assert(isclose(     f_real_complex128(val_float)       ,      create_full_val_real_complex128(val_float), rtol=1e-14, atol=1e-15))
-    assert(type(f_real_complex128(val_float))       == type(create_full_val_real_complex128(val_float).item()))  
+    assert(type(f_real_complex128(val_float))       == type(create_full_val_real_complex128(val_float).item()))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -1471,19 +1471,19 @@ def test_full_combined_args(language):
     f1_val   = epyccel(create_full_1_val, language = language)
     assert(f1_shape() == create_full_1_shape())
     assert(f1_val()   == create_full_1_val()  )
-    assert(type(f1_val())  == type(create_full_1_val().item()))  
+    assert(type(f1_val())  == type(create_full_1_val().item()))
 
     f2_shape = epyccel(create_full_2_shape, language = language)
     f2_val   = epyccel(create_full_2_val, language = language)
     assert(f2_shape() == create_full_2_shape()    )
     assert(isclose(f2_val()  , create_full_2_val()      , rtol=1e-14, atol=1e-15))
-    assert(type(f2_val())  == type(create_full_2_val().item()))  
+    assert(type(f2_val())  == type(create_full_2_val().item()))
 
     f3_shape = epyccel(create_full_3_shape, language = language)
     f3_val   = epyccel(create_full_3_val, language = language)
     assert(             f3_shape() ==    create_full_3_shape()      )
     assert(isclose(     f3_val()  ,      create_full_3_val()        , rtol=1e-14, atol=1e-15))
-    assert(type(f3_val())  == type(create_full_3_val().item()))  
+    assert(type(f3_val())  == type(create_full_3_val().item()))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -1589,28 +1589,28 @@ def test_empty_dtype(language):
         return a[0]
 
     f_int_int   = epyccel(create_empty_val_int, language = language)
-    assert(type(f_int_int())         == type(create_empty_val_int().item()))  
+    assert(type(f_int_int())         == type(create_empty_val_int().item()))
 
     f_int_float = epyccel(create_empty_val_float, language = language)
-    assert(type(f_int_float())       == type(create_empty_val_float().item()))  
+    assert(type(f_int_float())       == type(create_empty_val_float().item()))
 
     f_int_complex = epyccel(create_empty_val_complex, language = language)
-    assert(type(f_int_complex())     == type(create_empty_val_complex().item()))  
+    assert(type(f_int_complex())     == type(create_empty_val_complex().item()))
 
     f_real_int32   = epyccel(create_empty_val_int32, language = language)
-    assert(type(f_real_int32())      == type(create_empty_val_int32().item()))  
+    assert(type(f_real_int32())      == type(create_empty_val_int32().item()))
 
     f_real_float32   = epyccel(create_empty_val_float32, language = language)
-    assert(type(f_real_float32())    == type(create_empty_val_float32().item()))  
+    assert(type(f_real_float32())    == type(create_empty_val_float32().item()))
 
     f_real_float64   = epyccel(create_empty_val_float64, language = language)
-    assert(type(f_real_float64())    == type(create_empty_val_float64().item()))  
+    assert(type(f_real_float64())    == type(create_empty_val_float64().item()))
 
     f_real_complex64   = epyccel(create_empty_val_complex64, language = language)
-    assert(type(f_real_complex64())  == type(create_empty_val_complex64().item()))  
+    assert(type(f_real_complex64())  == type(create_empty_val_complex64().item()))
 
     f_real_complex128   = epyccel(create_empty_val_complex128, language = language)
-    assert(type(f_real_complex128()) == type(create_empty_val_complex128().item()))  
+    assert(type(f_real_complex128()) == type(create_empty_val_complex128().item()))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -1652,17 +1652,17 @@ def test_empty_combined_args(language):
     f1_shape = epyccel(create_empty_1_shape, language = language)
     f1_val   = epyccel(create_empty_1_val, language = language)
     assert(     f1_shape() ==      create_empty_1_shape()      )
-    assert(type(f1_val())  == type(create_empty_1_val().item()))  
+    assert(type(f1_val())  == type(create_empty_1_val().item()))
 
     f2_shape = epyccel(create_empty_2_shape, language = language)
     f2_val   = epyccel(create_empty_2_val, language = language)
     assert(all(isclose(     f2_shape(),      create_empty_2_shape()      )))
-    assert(type(f2_val())  == type(create_empty_2_val().item()))  
+    assert(type(f2_val())  == type(create_empty_2_val().item()))
 
     f3_shape = epyccel(create_empty_3_shape, language = language)
     f3_val   = epyccel(create_empty_3_val, language = language)
     assert(all(isclose(     f3_shape(),      create_empty_3_shape()      )))
-    assert(type(f3_val())  == type(create_empty_3_val().item()))  
+    assert(type(f3_val())  == type(create_empty_3_val().item()))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -1769,35 +1769,35 @@ def test_ones_dtype(language):
 
     f_int_int   = epyccel(create_ones_val_int, language = language)
     assert(     f_int_int()          ==      create_ones_val_int())
-    assert(type(f_int_int())         == type(create_ones_val_int().item()))  
+    assert(type(f_int_int())         == type(create_ones_val_int().item()))
 
     f_int_float = epyccel(create_ones_val_float, language = language)
     assert(isclose(     f_int_float()       ,      create_ones_val_float(), rtol=1e-14, atol=1e-15))
-    assert(type(f_int_float())       == type(create_ones_val_float().item()))  
+    assert(type(f_int_float())       == type(create_ones_val_float().item()))
 
     f_int_complex = epyccel(create_ones_val_complex, language = language)
     assert(isclose(     f_int_complex()     ,      create_ones_val_complex(), rtol=1e-14, atol=1e-15))
-    assert(type(f_int_complex())     == type(create_ones_val_complex().item()))  
+    assert(type(f_int_complex())     == type(create_ones_val_complex().item()))
 
     f_real_int32   = epyccel(create_ones_val_int32, language = language)
     assert(     f_real_int32()       ==      create_ones_val_int32())
-    assert(type(f_real_int32())      == type(create_ones_val_int32().item()))  
+    assert(type(f_real_int32())      == type(create_ones_val_int32().item()))
 
     f_real_float32   = epyccel(create_ones_val_float32, language = language)
     assert(isclose(     f_real_float32()    ,      create_ones_val_float32(), rtol=1e-14, atol=1e-15))
-    assert(type(f_real_float32())    == type(create_ones_val_float32().item()))  
+    assert(type(f_real_float32())    == type(create_ones_val_float32().item()))
 
     f_real_float64   = epyccel(create_ones_val_float64, language = language)
     assert(isclose(     f_real_float64()    ,      create_ones_val_float64(), rtol=1e-14, atol=1e-15))
-    assert(type(f_real_float64())    == type(create_ones_val_float64().item()))  
+    assert(type(f_real_float64())    == type(create_ones_val_float64().item()))
 
     f_real_complex64   = epyccel(create_ones_val_complex64, language = language)
     assert(isclose(     f_real_complex64()  ,      create_ones_val_complex64(), rtol=1e-14, atol=1e-15))
-    assert(type(f_real_complex64())  == type(create_ones_val_complex64().item()))  
+    assert(type(f_real_complex64())  == type(create_ones_val_complex64().item()))
 
     f_real_complex128   = epyccel(create_ones_val_complex128, language = language)
     assert(isclose(     f_real_complex128() ,      create_ones_val_complex128(), rtol=1e-14, atol=1e-15))
-    assert(type(f_real_complex128()) == type(create_ones_val_complex128().item()))  
+    assert(type(f_real_complex128()) == type(create_ones_val_complex128().item()))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -1840,19 +1840,19 @@ def test_ones_combined_args(language):
     f1_val   = epyccel(create_ones_1_val, language = language)
     assert(     f1_shape() ==      create_ones_1_shape()      )
     assert(     f1_val()   ==      create_ones_1_val()        )
-    assert(type(f1_val())  == type(create_ones_1_val().item()))  
+    assert(type(f1_val())  == type(create_ones_1_val().item()))
 
     f2_shape = epyccel(create_ones_2_shape, language = language)
     f2_val   = epyccel(create_ones_2_val, language = language)
     assert(     f2_shape() ==      create_ones_2_shape()      )
     assert(isclose(     f2_val()  ,      create_ones_2_val()        , rtol=1e-14, atol=1e-15))
-    assert(type(f2_val())  == type(create_ones_2_val().item()))  
+    assert(type(f2_val())  == type(create_ones_2_val().item()))
 
     f3_shape = epyccel(create_ones_3_shape, language = language)
     f3_val   = epyccel(create_ones_3_val, language = language)
     assert(     f3_shape() ==      create_ones_3_shape()      )
     assert(isclose(     f3_val()  ,      create_ones_3_val()        , rtol=1e-14, atol=1e-15))
-    assert(type(f3_val())  == type(create_ones_3_val().item()))  
+    assert(type(f3_val())  == type(create_ones_3_val().item()))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -1959,35 +1959,35 @@ def test_zeros_dtype(language):
 
     f_int_int   = epyccel(create_zeros_val_int, language = language)
     assert(     f_int_int()          ==      create_zeros_val_int())
-    assert(type(f_int_int())         == type(create_zeros_val_int().item()))  
+    assert(type(f_int_int())         == type(create_zeros_val_int().item()))
 
     f_int_float = epyccel(create_zeros_val_float, language = language)
     assert(isclose(     f_int_float()       ,      create_zeros_val_float(), rtol=1e-14, atol=1e-15))
-    assert(type(f_int_float())       == type(create_zeros_val_float().item()))  
+    assert(type(f_int_float())       == type(create_zeros_val_float().item()))
 
     f_int_complex = epyccel(create_zeros_val_complex, language = language)
     assert(isclose(     f_int_complex()     ,      create_zeros_val_complex(), rtol=1e-14, atol=1e-15))
-    assert(type(f_int_complex())     == type(create_zeros_val_complex().item()))  
+    assert(type(f_int_complex())     == type(create_zeros_val_complex().item()))
 
     f_real_int32   = epyccel(create_zeros_val_int32, language = language)
     assert(     f_real_int32()       ==      create_zeros_val_int32())
-    assert(type(f_real_int32())      == type(create_zeros_val_int32().item()))  
+    assert(type(f_real_int32())      == type(create_zeros_val_int32().item()))
 
     f_real_float32   = epyccel(create_zeros_val_float32, language = language)
     assert(isclose(     f_real_float32()    ,      create_zeros_val_float32(), rtol=1e-14, atol=1e-15))
-    assert(type(f_real_float32())    == type(create_zeros_val_float32().item()))  
+    assert(type(f_real_float32())    == type(create_zeros_val_float32().item()))
 
     f_real_float64   = epyccel(create_zeros_val_float64, language = language)
     assert(isclose(     f_real_float64()    ,      create_zeros_val_float64(), rtol=1e-14, atol=1e-15))
-    assert(type(f_real_float64())    == type(create_zeros_val_float64().item()))  
+    assert(type(f_real_float64())    == type(create_zeros_val_float64().item()))
 
     f_real_complex64   = epyccel(create_zeros_val_complex64, language = language)
     assert(isclose(     f_real_complex64()  ,      create_zeros_val_complex64(), rtol=1e-14, atol=1e-15))
-    assert(type(f_real_complex64())  == type(create_zeros_val_complex64().item()))  
+    assert(type(f_real_complex64())  == type(create_zeros_val_complex64().item()))
 
     f_real_complex128   = epyccel(create_zeros_val_complex128, language = language)
     assert(isclose(     f_real_complex128() ,      create_zeros_val_complex128(), rtol=1e-14, atol=1e-15))
-    assert(type(f_real_complex128()) == type(create_zeros_val_complex128().item()))  
+    assert(type(f_real_complex128()) == type(create_zeros_val_complex128().item()))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -2030,19 +2030,19 @@ def test_zeros_combined_args(language):
     f1_val   = epyccel(create_zeros_1_val, language = language)
     assert(     f1_shape() ==      create_zeros_1_shape()      )
     assert(     f1_val()   ==      create_zeros_1_val()        )
-    assert(type(f1_val())  == type(create_zeros_1_val().item()))  
+    assert(type(f1_val())  == type(create_zeros_1_val().item()))
 
     f2_shape = epyccel(create_zeros_2_shape, language = language)
     f2_val   = epyccel(create_zeros_2_val, language = language)
     assert(     f2_shape() ==      create_zeros_2_shape()      )
     assert(isclose(     f2_val()  ,      create_zeros_2_val()        , rtol=1e-14, atol=1e-15))
-    assert(type(f2_val())  == type(create_zeros_2_val().item()))  
+    assert(type(f2_val())  == type(create_zeros_2_val().item()))
 
     f3_shape = epyccel(create_zeros_3_shape, language = language)
     f3_val   = epyccel(create_zeros_3_val, language = language)
     assert(     f3_shape() ==      create_zeros_3_shape()      )
     assert(isclose(     f3_val()  ,      create_zeros_3_val()        , rtol=1e-14, atol=1e-15))
-    assert(type(f3_val())  == type(create_zeros_3_val().item()))  
+    assert(type(f3_val())  == type(create_zeros_3_val().item()))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -2075,12 +2075,12 @@ def test_array(language):
     f1_val   = epyccel(create_array_list_val, language = language)
     assert(f1_shape() == create_array_list_shape())
     assert(f1_val()   == create_array_list_val())
-    assert(type(f1_val()) == type(create_array_list_val().item()))  
+    assert(type(f1_val()) == type(create_array_list_val().item()))
     f2_shape = epyccel(create_array_tuple_shape, language = language)
     f2_val   = epyccel(create_array_tuple_val, language = language)
     assert(f2_shape() == create_array_tuple_shape())
     assert(f2_val()   == create_array_tuple_val())
-    assert(type(f2_val()) == type(create_array_tuple_val().item()))  
+    assert(type(f2_val()) == type(create_array_tuple_val().item()))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
