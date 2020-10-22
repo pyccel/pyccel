@@ -104,6 +104,7 @@ from pyccel.parser.base      import BasicParser, Scope
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
 
+import pyccel.decorators as def_decorators
 #==============================================================================
 
 errors = Errors()
@@ -2285,6 +2286,12 @@ class SemanticParser(BasicParser):
         is_private   = expr.is_private
 
         header = expr.header
+
+        not_used = [d for d in decorators if d not in def_decorators.__all__]
+
+        if len(not_used) >= 1:
+            errors.report(UNDEFINED_DECORATORS, symbol=', '.join(not_used), severity='warning')
+
         args_number = len(expr.arguments)
         if header is None:
             if cls_name:
@@ -2455,6 +2462,7 @@ class SemanticParser(BasicParser):
             # get the imports
             imports   = self.namespace.imports['imports'].values()
             imports   = list(set(imports))
+
             # remove the FunctionDef from the function scope
             # TODO improve func_ is None in the case of an interface
             func_     = self.namespace.functions.pop(name, None)
