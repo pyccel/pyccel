@@ -2525,7 +2525,8 @@ class Variable(Symbol, PyccelAstNode):
         order='C',
         precision=0,
         is_argument=False,
-        is_kwonly=False
+        is_kwonly=False,
+        allows_negative_indexes=False
         ):
 
         # ------------ PyccelAstNode Properties ---------------
@@ -2607,6 +2608,12 @@ class Variable(Symbol, PyccelAstNode):
         elif not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
         self._is_optional = is_optional
+
+        if allows_negative_indexes is None:
+            allows_negative_indexes = False
+        elif not isinstance(allows_negative_indexes, bool):
+            raise TypeError('allows_negative_indexes must be a boolean.')
+        self._allows_negative_indexes = allows_negative_indexes
 
         self._cls_base       = cls_base
         self._order          = order
@@ -2692,6 +2699,14 @@ class Variable(Symbol, PyccelAstNode):
     @is_stack_array.setter
     def is_stack_array(self, is_stack_array):
         self._is_stack_array = is_stack_array
+
+    @property
+    def allows_negative_indexes(self):
+        return self._allows_negative_indexes
+
+    @allows_negative_indexes.setter
+    def allows_negative_indexes(self, allows_negative_indexes):
+        self._allows_negative_indexes = allows_negative_indexes
 
     @property
     def is_argument(self):
