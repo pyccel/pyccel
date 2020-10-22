@@ -489,6 +489,7 @@ class CCodePrinter(CodePrinter):
         if not expr.arguments:
             arg_code = 'void'
         else:
+            # TODO: extract informations needed for printing in case of function argument which itself has a function argument
             arg_code = ', '.join('{}'.format(self._print_FuncAddressDeclare(i))
                         if isinstance(i, FunctionAddress) else '{0}{1}'.format(self.get_declare_type(i), i)
                         for i in expr.arguments)

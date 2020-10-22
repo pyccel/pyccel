@@ -215,6 +215,7 @@ class FunctionHeader(Header):
         for args_ in product(*dtypes):
             args = []
             for i, d in enumerate(args_):
+                # TODO  handle function as argument, which itself has a function argument
                 if (d['isfunc']):
                     decs = []
                     results = []
