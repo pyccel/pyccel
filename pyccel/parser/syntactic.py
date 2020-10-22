@@ -969,7 +969,6 @@ class SyntaxParser(BasicParser):
         test = self._visit(stmt.test)
         body = self._visit(stmt.body)
         orelse = self._visit(stmt.orelse)
-
         if len(orelse)==1 and isinstance(orelse[0],If):
             orelse = orelse[0]._args
             return If(Tuple(test, body, sympify=False), *orelse)
@@ -982,9 +981,7 @@ class SyntaxParser(BasicParser):
         test1 = self._visit(stmt.test)
         first = self._visit(stmt.body)
         second = self._visit(stmt.orelse)
-        args = [Tuple(test1, [first], sympify=False),
-                Tuple(BooleanTrue(), [second], sympify=False)]
-        expr = IfTernaryOperator(*args)
+        expr = IfTernaryOperator(test1, first, second)
         expr.set_fst(stmt)
         return expr
 
