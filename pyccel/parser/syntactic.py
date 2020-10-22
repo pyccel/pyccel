@@ -630,13 +630,13 @@ class SyntaxParser(BasicParser):
         if 'stack_array' in decorators:
             args = list(decorators['stack_array'].args)
             for i, arg in enumerate(args):
-                args[i] = str(arg).replace("'", '')
+                args[i] = str(arg)
             decorators['stack_array'] = tuple(args)
 
         if 'allow_negative_index' in decorators:
             args = list(decorators['allow_negative_index'].args)
             for i, arg in enumerate(args):
-                args[i] = str(arg).replace("'", '')
+                args[i] = str(arg)
             decorators['allow_negative_index'] = tuple(args)
 
         # extract the types to construct a header
