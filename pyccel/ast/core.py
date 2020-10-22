@@ -5226,14 +5226,15 @@ class IfTernaryOperator(Basic, PyccelAstNode):
             raise NotImplementedError('cannot determine the type of {}'.format(value_true.dtype))
         if value_false.dtype not in _tmp_list :
             raise NotImplementedError('cannot determine the type of {}'.format(value_false.dtype))
+        if value_false.rank != value_true.rank :
+            errors.report('Ternary Operator results should have the same rank', severity='fatal')
+        if value_false.shape != value_true.shape :
+            errors.report('Ternary Operator results should have the same shape', severity='fatal')
         self._dtype = max([value_true.dtype, value_false.dtype], key = lambda x : _tmp_list.index(x))
         self._precision = max([value_true.precision, value_false.precision])
-        if None in [value_true.rank, value_false.rank]:
-            self._rank = None
-            self.shape = None
-        else :
-            self._shape = broadcast(value_true.shape, value_false.shape)
-            self._rank = len(self._shape)
+        self._shape = value_true.shape
+        self._rank = value_true.rank
+
 
     @property
     def cond(self):
