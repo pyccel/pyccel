@@ -2297,11 +2297,7 @@ class SemanticParser(BasicParser):
 
         header = expr.header
 
-        keys = decorators.keys()
-        not_used = []
-        for value in keys:
-            if value not in def_decorators.__all__:
-                not_used.append(value)
+        not_used = [d for d in decorators if d not in def_decorators.__all__]
 
         if len(not_used) >= 1:
             errors.report(UNDEFINED_DECORATORS, symbol=', '.join(not_used), severity='warning')
