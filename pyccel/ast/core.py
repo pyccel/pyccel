@@ -5203,9 +5203,9 @@ class IfTernaryOperator(Basic, PyccelAstNode):
         if self.stage == 'syntactic':
             return
         if isinstance(value_true , Nil) or isinstance(value_false, Nil):
-            errors.report('None is not implemeted for Ternary Operator', severity='fatal')
+            errors.report('None is not implemented for Ternary Operator', severity='fatal')
         if isinstance(value_true.dtype, NativeString) or isinstance(value_false.dtype, NativeString):
-            raise TypeError('Strings are not supported by Ternary Operator')
+            errors.report('Strings are not supported by Ternary Operator', severity='fatal')
         _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
         if value_true.dtype not in _tmp_list :
             raise NotImplementedError('cannot determine the type of {}'.format(value_true.dtype))
