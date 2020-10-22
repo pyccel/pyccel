@@ -49,8 +49,8 @@ def test_fabs_call_r(language):
 
     f1 = epyccel(fabs_call_r, language = language)
     x = uniform(high=1e6)
-    assert(isclose(f1(x), fabs_call_r(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), fabs_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), fabs_call_r(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), fabs_call_r(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(fabs_call_r(x).item()))
 
 def test_fabs_call_i(language):
@@ -61,8 +61,8 @@ def test_fabs_call_i(language):
 
     f1 = epyccel(fabs_call_i, language = language)
     x = randint(1e6)
-    assert(isclose(f1(x), fabs_call_i(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), fabs_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), fabs_call_i(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), fabs_call_i(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(fabs_call_i(x).item()))
 
 def test_fabs_phrase_r_r(language):
@@ -75,10 +75,10 @@ def test_fabs_phrase_r_r(language):
     f2 = epyccel(fabs_phrase_r_r, language = language)
     x = uniform(high=1e6)
     y = uniform(high=1e6)
-    assert(isclose(f2(x,y), fabs_phrase_r_r(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), fabs_phrase_r_r(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), fabs_phrase_r_r(x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), fabs_phrase_r_r(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), fabs_phrase_r_r(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), fabs_phrase_r_r(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), fabs_phrase_r_r(x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), fabs_phrase_r_r(-x,y), rtol=1e-14, atol=1e-15))
 
 def test_fabs_phrase_i_i(language):
     @types('int','int')
@@ -90,10 +90,10 @@ def test_fabs_phrase_i_i(language):
     f2 = epyccel(fabs_phrase_i_i, language = language)
     x = randint(1e6)
     y = randint(1e6)
-    assert(isclose(f2(x,y), fabs_phrase_i_i(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), fabs_phrase_i_i(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), fabs_phrase_i_i(x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), fabs_phrase_i_i(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), fabs_phrase_i_i(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), fabs_phrase_i_i(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), fabs_phrase_i_i(x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), fabs_phrase_i_i(-x,y), rtol=1e-14, atol=1e-15))
 
 def test_fabs_phrase_r_i(language):
     @types('real','int')
@@ -105,10 +105,10 @@ def test_fabs_phrase_r_i(language):
     f2 = epyccel(fabs_phrase_r_i, language = language)
     x = uniform(high=1e6)
     y = randint(1e6)
-    assert(isclose(f2(x,y), fabs_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), fabs_phrase_r_i(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), fabs_phrase_r_i(x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), fabs_phrase_r_i(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), fabs_phrase_r_i(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), fabs_phrase_r_i(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), fabs_phrase_r_i(x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), fabs_phrase_r_i(-x,y), rtol=1e-14, atol=1e-15))
 
 def test_fabs_phrase_r_i(language):
     @types('int','real')
@@ -120,10 +120,10 @@ def test_fabs_phrase_r_i(language):
     f2 = epyccel(fabs_phrase_r_i, language = language)
     x = randint(1e6)
     y = uniform(high=1e6)
-    assert(isclose(f2(x,y), fabs_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), fabs_phrase_r_i(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), fabs_phrase_r_i(x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), fabs_phrase_r_i(-x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), fabs_phrase_r_i(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), fabs_phrase_r_i(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), fabs_phrase_r_i(x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), fabs_phrase_r_i(-x,y), rtol=1e-14, atol=1e-15))
 
 #------------------------------ absolute function ----------------------------#
 def test_absolute_call_r(language):
@@ -134,8 +134,8 @@ def test_absolute_call_r(language):
 
     f1 = epyccel(absolute_call_r, language = language)
     x = uniform(high=1e6)
-    assert(isclose(f1(x), absolute_call_r(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), absolute_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), absolute_call_r(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), absolute_call_r(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(absolute_call_r(x).item()))
 
 def test_absolute_call_i(language):
@@ -146,8 +146,8 @@ def test_absolute_call_i(language):
 
     f1 = epyccel(absolute_call_i, language = language)
     x = randint(1e6)
-    assert(isclose(f1(x), absolute_call_i(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), absolute_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), absolute_call_i(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), absolute_call_i(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(absolute_call_i(x).item()))
 
 def test_absolute_phrase_r_r(language):
@@ -160,10 +160,10 @@ def test_absolute_phrase_r_r(language):
     f2 = epyccel(absolute_phrase_r_r, language = language)
     x = uniform(high=1e6)
     y = uniform(high=1e6)
-    assert(isclose(f2(x,y), absolute_phrase_r_r(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), absolute_phrase_r_r(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), absolute_phrase_r_r(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), absolute_phrase_r_r(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), absolute_phrase_r_r(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), absolute_phrase_r_r(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), absolute_phrase_r_r(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), absolute_phrase_r_r(x,-y), rtol=1e-14, atol=1e-15))
 
 def test_absolute_phrase_i_r(language):
     @types('int','real')
@@ -175,10 +175,10 @@ def test_absolute_phrase_i_r(language):
     f2 = epyccel(absolute_phrase_i_r, language = language)
     x = randint(1e6)
     y = uniform(high=1e6)
-    assert(isclose(f2(x,y), absolute_phrase_i_r(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), absolute_phrase_i_r(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), absolute_phrase_i_r(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), absolute_phrase_i_r(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), absolute_phrase_i_r(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), absolute_phrase_i_r(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), absolute_phrase_i_r(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), absolute_phrase_i_r(x,-y), rtol=1e-14, atol=1e-15))
 
 def test_absolute_phrase_r_i(language):
     @types('real','int')
@@ -190,10 +190,10 @@ def test_absolute_phrase_r_i(language):
     f2 = epyccel(absolute_phrase_r_i, language = language)
     x = uniform(high=1e6)
     y = randint(1e6)
-    assert(isclose(f2(x,y), absolute_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), absolute_phrase_r_i(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), absolute_phrase_r_i(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), absolute_phrase_r_i(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), absolute_phrase_r_i(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), absolute_phrase_r_i(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), absolute_phrase_r_i(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), absolute_phrase_r_i(x,-y), rtol=1e-14, atol=1e-15))
 
 #--------------------------------- sin function ------------------------------#
 def test_sin_call_r(language):
@@ -204,8 +204,8 @@ def test_sin_call_r(language):
 
     f1 = epyccel(sin_call_r, language = language)
     x = uniform(high=1e6)
-    assert(isclose(f1(x), sin_call_r(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), sin_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), sin_call_r(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), sin_call_r(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(sin_call_r(x).item()))
 
 def test_sin_call_i(language):
@@ -216,8 +216,8 @@ def test_sin_call_i(language):
 
     f1 = epyccel(sin_call_i, language = language)
     x = randint(1e6)
-    assert(isclose(f1(x), sin_call_i(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), sin_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), sin_call_i(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), sin_call_i(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(sin_call_i(x).item()))
 
 def test_sin_phrase_r_r(language):
@@ -230,10 +230,10 @@ def test_sin_phrase_r_r(language):
     f2 = epyccel(sin_phrase_r_r, language = language)
     x = uniform(high=1e6)
     y = uniform(high=1e6)
-    assert(isclose(f2(x,y), sin_phrase_r_r(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), sin_phrase_r_r(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), sin_phrase_r_r(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), sin_phrase_r_r(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), sin_phrase_r_r(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), sin_phrase_r_r(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), sin_phrase_r_r(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), sin_phrase_r_r(x,-y), rtol=1e-14, atol=1e-15))
 
 def test_sin_phrase_i_i(language):
     @types('int','int')
@@ -245,10 +245,10 @@ def test_sin_phrase_i_i(language):
     f2 = epyccel(sin_phrase_i_i, language = language)
     x = randint(1e6)
     y = randint(1e6)
-    assert(isclose(f2(x,y), sin_phrase_i_i(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), sin_phrase_i_i(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), sin_phrase_i_i(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), sin_phrase_i_i(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), sin_phrase_i_i(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), sin_phrase_i_i(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), sin_phrase_i_i(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), sin_phrase_i_i(x,-y), rtol=1e-14, atol=1e-15))
 
 def test_sin_phrase_i_r(language):
     @types('int','real')
@@ -260,10 +260,10 @@ def test_sin_phrase_i_r(language):
     f2 = epyccel(sin_phrase_i_r, language = language)
     x = randint(1e6)
     y = uniform(high=1e6)
-    assert(isclose(f2(x,y), sin_phrase_i_r(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), sin_phrase_i_r(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), sin_phrase_i_r(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), sin_phrase_i_r(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), sin_phrase_i_r(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), sin_phrase_i_r(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), sin_phrase_i_r(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), sin_phrase_i_r(x,-y), rtol=1e-14, atol=1e-15))
 
 def test_sin_phrase_r_i(language):
     @types('real','int')
@@ -275,10 +275,10 @@ def test_sin_phrase_r_i(language):
     f2 = epyccel(sin_phrase_r_i, language = language)
     x = uniform(high=1e6)
     y = randint(1e6)
-    assert(isclose(f2(x,y), sin_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), sin_phrase_r_i(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), sin_phrase_r_i(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), sin_phrase_r_i(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), sin_phrase_r_i(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), sin_phrase_r_i(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), sin_phrase_r_i(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), sin_phrase_r_i(x,-y), rtol=1e-14, atol=1e-15))
 
 #--------------------------------- cos function ------------------------------#
 def test_cos_call_i(language):
@@ -289,8 +289,8 @@ def test_cos_call_i(language):
 
     f1 = epyccel(cos_call_i, language = language)
     x = randint(1e6)
-    assert(isclose(f1(x), cos_call_i(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), cos_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), cos_call_i(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), cos_call_i(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(cos_call_i(x).item()))
 
 def test_cos_call_r(language):
@@ -301,8 +301,8 @@ def test_cos_call_r(language):
 
     f1 = epyccel(cos_call_r, language = language)
     x = uniform(high=1e6)
-    assert(isclose(f1(x), cos_call_r(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), cos_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), cos_call_r(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), cos_call_r(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(cos_call_r(x).item()))
 
 
@@ -316,10 +316,10 @@ def test_cos_phrase_i_i(language):
     f2 = epyccel(cos_phrase_i_i, language = language)
     x = randint(1e6)
     y = randint(1e6)
-    assert(isclose(f2(x,y), cos_phrase_i_i(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), cos_phrase_i_i(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), cos_phrase_i_i(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), cos_phrase_i_i(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), cos_phrase_i_i(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), cos_phrase_i_i(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), cos_phrase_i_i(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), cos_phrase_i_i(x,-y), rtol=1e-14, atol=1e-15))
 
 def test_cos_phrase_r_r(language):
     @types('real','real')
@@ -331,10 +331,10 @@ def test_cos_phrase_r_r(language):
     f2 = epyccel(cos_phrase_r_r, language = language)
     x = uniform(high=1e6)
     y = uniform(high=1e6)
-    assert(isclose(f2(x,y), cos_phrase_r_r(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), cos_phrase_r_r(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), cos_phrase_r_r(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), cos_phrase_r_r(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), cos_phrase_r_r(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), cos_phrase_r_r(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), cos_phrase_r_r(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), cos_phrase_r_r(x,-y), rtol=1e-14, atol=1e-15))
 
 def test_cos_phrase_i_r(language):
     @types('int','real')
@@ -346,10 +346,10 @@ def test_cos_phrase_i_r(language):
     f2 = epyccel(cos_phrase_i_r, language = language)
     x = randint(1e6)
     y = uniform(high=1e6)
-    assert(isclose(f2(x,y), cos_phrase_i_r(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), cos_phrase_i_r(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), cos_phrase_i_r(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), cos_phrase_i_r(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), cos_phrase_i_r(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), cos_phrase_i_r(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), cos_phrase_i_r(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), cos_phrase_i_r(x,-y), rtol=1e-14, atol=1e-15))
 
 def test_cos_phrase_r_i(language):
     @types('real','int')
@@ -361,10 +361,10 @@ def test_cos_phrase_r_i(language):
     f2 = epyccel(cos_phrase_r_i, language = language)
     x = uniform(high=1e6)
     y = randint(1e6)
-    assert(isclose(f2(x,y), cos_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), cos_phrase_r_i(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), cos_phrase_r_i(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), cos_phrase_r_i(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), cos_phrase_r_i(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), cos_phrase_r_i(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), cos_phrase_r_i(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), cos_phrase_r_i(x,-y), rtol=1e-14, atol=1e-15))
 
 #--------------------------------- tan function ------------------------------#
 def test_tan_call_i(language):
@@ -375,8 +375,8 @@ def test_tan_call_i(language):
 
     f1 = epyccel(tan_call_i, language = language)
     x = randint(1e6)
-    assert(isclose(f1(x), tan_call_i(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), tan_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), tan_call_i(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), tan_call_i(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(tan_call_i(x).item()))
 
 def test_tan_call_r(language):
@@ -387,8 +387,8 @@ def test_tan_call_r(language):
 
     f1 = epyccel(tan_call_r, language = language)
     x = uniform(high=1e6)
-    assert(isclose(f1(x), tan_call_r(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), tan_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), tan_call_r(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), tan_call_r(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(tan_call_r(x).item()))
 
 def test_tan_phrase_i_i(language):
@@ -401,10 +401,10 @@ def test_tan_phrase_i_i(language):
     f2 = epyccel(tan_phrase_i_i, language = language)
     x = randint(1e6)
     y = randint(1e6)
-    assert(isclose(f2(x,y), tan_phrase_i_i(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), tan_phrase_i_i(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), tan_phrase_i_i(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), tan_phrase_i_i(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), tan_phrase_i_i(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), tan_phrase_i_i(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), tan_phrase_i_i(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), tan_phrase_i_i(x,-y), rtol=1e-14, atol=1e-15))
 
 def test_tan_phrase_r_r(language):
     @types('real','real')
@@ -416,10 +416,10 @@ def test_tan_phrase_r_r(language):
     f2 = epyccel(tan_phrase_r_r, language = language)
     x = uniform(high=1e6)
     y = uniform(high=1e6)
-    assert(isclose(f2(x,y), tan_phrase_r_r(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), tan_phrase_r_r(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), tan_phrase_r_r(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), tan_phrase_r_r(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), tan_phrase_r_r(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), tan_phrase_r_r(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), tan_phrase_r_r(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), tan_phrase_r_r(x,-y), rtol=1e-14, atol=1e-15))
 
 def test_tan_phrase_i_r(language):
     @types('int','real')
@@ -431,10 +431,10 @@ def test_tan_phrase_i_r(language):
     f2 = epyccel(tan_phrase_i_r, language = language)
     x = randint(1e6)
     y = uniform(high=1e6)
-    assert(isclose(f2(x,y), tan_phrase_i_r(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), tan_phrase_i_r(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), tan_phrase_i_r(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), tan_phrase_i_r(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), tan_phrase_i_r(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), tan_phrase_i_r(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), tan_phrase_i_r(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), tan_phrase_i_r(x,-y), rtol=1e-14, atol=1e-15))
 
 def test_tan_phrase_r_i(language):
     @types('real','int')
@@ -446,10 +446,10 @@ def test_tan_phrase_r_i(language):
     f2 = epyccel(tan_phrase_r_i, language = language)
     x = uniform(high=1e6)
     y = randint(1e6)
-    assert(isclose(f2(x,y), tan_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), tan_phrase_r_i(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), tan_phrase_r_i(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), tan_phrase_r_i(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), tan_phrase_r_i(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), tan_phrase_r_i(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), tan_phrase_r_i(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), tan_phrase_r_i(x,-y), rtol=1e-14, atol=1e-15))
 
 #--------------------------------- exp function ------------------------------#
 def test_exp_call_i(language):
@@ -460,8 +460,8 @@ def test_exp_call_i(language):
 
     f1 = epyccel(exp_call_i, language = language)
     x = randint(1e2)
-    assert(isclose(f1(x), exp_call_i(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), exp_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), exp_call_i(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), exp_call_i(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(exp_call_i(x).item()))
 
 def test_exp_call_r(language):
@@ -472,8 +472,8 @@ def test_exp_call_r(language):
 
     f1 = epyccel(exp_call_r, language = language)
     x = uniform(high=1e2)
-    assert(isclose(f1(x), exp_call_r(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), exp_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), exp_call_r(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), exp_call_r(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(exp_call_r(x).item()))
 
 def test_exp_phrase_i_i(language):
@@ -486,10 +486,10 @@ def test_exp_phrase_i_i(language):
     f2 = epyccel(exp_phrase_i_i, language = language)
     x = randint(1e2)
     y = randint(1e2)
-    assert(isclose(f2(x,y), exp_phrase_i_i(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), exp_phrase_i_i(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), exp_phrase_i_i(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), exp_phrase_i_i(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), exp_phrase_i_i(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), exp_phrase_i_i(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), exp_phrase_i_i(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), exp_phrase_i_i(x,-y), rtol=1e-14, atol=1e-15))
 
 def test_exp_phrase_r_r(language):
     @types('real','real')
@@ -501,10 +501,10 @@ def test_exp_phrase_r_r(language):
     f2 = epyccel(exp_phrase_r_r, language = language)
     x = uniform(high=1e2)
     y = uniform(high=1e2)
-    assert(isclose(f2(x,y), exp_phrase_r_r(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), exp_phrase_r_r(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), exp_phrase_r_r(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), exp_phrase_r_r(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), exp_phrase_r_r(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), exp_phrase_r_r(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), exp_phrase_r_r(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), exp_phrase_r_r(x,-y), rtol=1e-14, atol=1e-15))
 
 def test_exp_phrase_i_r(language):
     @types('int','real')
@@ -516,10 +516,10 @@ def test_exp_phrase_i_r(language):
     f2 = epyccel(exp_phrase_i_r, language = language)
     x = randint(1e2)
     y = uniform(high=1e2)
-    assert(isclose(f2(x,y), exp_phrase_i_r(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), exp_phrase_i_r(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), exp_phrase_i_r(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), exp_phrase_i_r(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), exp_phrase_i_r(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), exp_phrase_i_r(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), exp_phrase_i_r(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), exp_phrase_i_r(x,-y), rtol=1e-14, atol=1e-15))
 
 def test_exp_phrase_r_i(language):
     @types('real','int')
@@ -531,10 +531,10 @@ def test_exp_phrase_r_i(language):
     f2 = epyccel(exp_phrase_r_i, language = language)
     x = uniform(high=1e2)
     y = randint(1e2)
-    assert(isclose(f2(x,y), exp_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,y), exp_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,y), exp_phrase_r_i(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), exp_phrase_r_i(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), exp_phrase_r_i(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,y), exp_phrase_r_i(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,y), exp_phrase_r_i(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), exp_phrase_r_i(x,-y), rtol=1e-14, atol=1e-15))
 
 #--------------------------------- log function ------------------------------#
 def test_log_call_i(language):
@@ -545,7 +545,7 @@ def test_log_call_i(language):
 
     f1 = epyccel(log_call_i, language = language)
     x = randint(low=min_float, high=1e6)
-    assert(isclose(f1(x), log_call_i(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), log_call_i(x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(log_call_i(x).item()))
 
 def test_log_call_r(language):
@@ -556,7 +556,7 @@ def test_log_call_r(language):
 
     f1 = epyccel(log_call_r, language = language)
     x = uniform(low=min_float, high=1e6)
-    assert(isclose(f1(x), log_call_r(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), log_call_r(x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(log_call_r(x).item()))
 
 def test_log_phrase(language):
@@ -569,7 +569,7 @@ def test_log_phrase(language):
     f2 = epyccel(log_phrase, language = language)
     x = uniform(low=min_float, high=1e6)
     y = uniform(low=min_float, high=1e6)
-    assert(isclose(f2(x,y), log_phrase(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), log_phrase(x,y), rtol=1e-14, atol=1e-15))
 
 #----------------------------- arcsin function -------------------------------#
 def test_arcsin_call_i(language):
@@ -580,8 +580,8 @@ def test_arcsin_call_i(language):
 
     f1 = epyccel(arcsin_call_i, language = language)
     x = randint(2)
-    assert(isclose(f1(x), arcsin_call_i(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), arcsin_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), arcsin_call_i(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), arcsin_call_i(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(arcsin_call_i(x).item()))
 
 def test_arcsin_call_r(language):
@@ -592,8 +592,8 @@ def test_arcsin_call_r(language):
 
     f1 = epyccel(arcsin_call_r, language = language)
     x = rand()
-    assert(isclose(f1(x), arcsin_call_r(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), arcsin_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), arcsin_call_r(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), arcsin_call_r(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(arcsin_call_r(x).item()))
 
 def test_arcsin_phrase(language):
@@ -606,10 +606,10 @@ def test_arcsin_phrase(language):
     f2 = epyccel(arcsin_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y), arcsin_phrase(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), arcsin_phrase(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), arcsin_phrase(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), arcsin_phrase(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), arcsin_phrase(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), arcsin_phrase(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), arcsin_phrase(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), arcsin_phrase(x,-y), rtol=1e-14, atol=1e-15))
 
 #----------------------------- arccos function -------------------------------#
 
@@ -621,8 +621,8 @@ def test_arccos_call_i(language):
 
     f1 = epyccel(arccos_call_i, language = language)
     x = randint(2)
-    assert(isclose(f1(x), arccos_call_i(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), arccos_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), arccos_call_i(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), arccos_call_i(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(arccos_call_i(x).item()))
 
 def test_arccos_call_r(language):
@@ -633,8 +633,8 @@ def test_arccos_call_r(language):
 
     f1 = epyccel(arccos_call_r, language = language)
     x = rand()
-    assert(isclose(f1(x), arccos_call_r(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), arccos_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), arccos_call_r(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), arccos_call_r(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(arccos_call_r(x).item()))
 
 def test_arccos_phrase(language):
@@ -647,10 +647,10 @@ def test_arccos_phrase(language):
     f2 = epyccel(arccos_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y), arccos_phrase(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), arccos_phrase(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), arccos_phrase(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), arccos_phrase(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), arccos_phrase(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), arccos_phrase(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), arccos_phrase(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), arccos_phrase(x,-y), rtol=1e-14, atol=1e-15))
 
 #----------------------------- arctan function -------------------------------#
 def test_arctan_call_i(language):
@@ -661,8 +661,8 @@ def test_arctan_call_i(language):
 
     f1 = epyccel(arctan_call_i, language = language)
     x = randint(1e6)
-    assert(isclose(f1(x), arctan_call_i(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), arctan_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), arctan_call_i(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), arctan_call_i(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(arctan_call_i(x).item()))
 
 def test_arctan_call_r(language):
@@ -673,8 +673,8 @@ def test_arctan_call_r(language):
 
     f1 = epyccel(arctan_call_r, language = language)
     x = uniform(high=1e6)
-    assert(isclose(f1(x), arctan_call_r(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), arctan_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), arctan_call_r(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), arctan_call_r(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(arctan_call_r(x).item()))
 
 def test_arctan_phrase(language):
@@ -687,10 +687,10 @@ def test_arctan_phrase(language):
     f2 = epyccel(arctan_phrase, language = language)
     x = uniform(high=1e6)
     y = uniform(high=1e6)
-    assert(isclose(f2(x,y), arctan_phrase(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), arctan_phrase(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), arctan_phrase(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), arctan_phrase(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), arctan_phrase(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), arctan_phrase(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), arctan_phrase(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), arctan_phrase(x,-y), rtol=1e-14, atol=1e-15))
 
 #------------------------------- sinh function -------------------------------#
 def test_sinh_call_i(language):
@@ -701,8 +701,8 @@ def test_sinh_call_i(language):
 
     f1 = epyccel(sinh_call_i, language = language)
     x = randint(100)
-    assert(isclose(f1(x), sinh_call_i(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), sinh_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), sinh_call_i(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), sinh_call_i(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(sinh_call_i(x).item()))
 
 def test_sinh_call_r(language):
@@ -713,8 +713,8 @@ def test_sinh_call_r(language):
 
     f1 = epyccel(sinh_call_r, language = language)
     x = uniform(high=1e2)
-    assert(isclose(f1(x), sinh_call_r(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), sinh_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), sinh_call_r(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), sinh_call_r(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(sinh_call_r(x).item()))
 
 def test_sinh_phrase(language):
@@ -727,10 +727,10 @@ def test_sinh_phrase(language):
     f2 = epyccel(sinh_phrase, language = language)
     x = uniform(high=1e2)
     y = uniform(high=1e2)
-    assert(isclose(f2(x,y), sinh_phrase(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), sinh_phrase(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), sinh_phrase(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), sinh_phrase(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), sinh_phrase(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), sinh_phrase(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), sinh_phrase(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), sinh_phrase(x,-y), rtol=1e-14, atol=1e-15))
 
 #------------------------------- sinh function -------------------------------#
 def test_cosh_call_i(language):
@@ -741,8 +741,8 @@ def test_cosh_call_i(language):
 
     f1 = epyccel(cosh_call_i, language = language)
     x = randint(100)
-    assert(isclose(f1(x), cosh_call_i(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), cosh_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), cosh_call_i(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), cosh_call_i(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(cosh_call_i(x).item()))
 
 def test_cosh_call_r(language):
@@ -753,8 +753,8 @@ def test_cosh_call_r(language):
 
     f1 = epyccel(cosh_call_r, language = language)
     x = uniform(high=1e2)
-    assert(isclose(f1(x), cosh_call_r(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), cosh_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), cosh_call_r(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), cosh_call_r(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(cosh_call_r(x).item()))
 
 def test_cosh_phrase(language):
@@ -767,10 +767,10 @@ def test_cosh_phrase(language):
     f2 = epyccel(cosh_phrase, language = language)
     x = uniform(high=1e2)
     y = uniform(high=1e2)
-    assert(isclose(f2(x,y), cosh_phrase(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), cosh_phrase(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), cosh_phrase(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), cosh_phrase(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), cosh_phrase(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), cosh_phrase(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), cosh_phrase(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), cosh_phrase(x,-y), rtol=1e-14, atol=1e-15))
 
 #------------------------------- sinh function -------------------------------#
 def test_tanh_call_i(language):
@@ -781,8 +781,8 @@ def test_tanh_call_i(language):
 
     f1 = epyccel(tanh_call_i, language = language)
     x = randint(100)
-    assert(isclose(f1(x), tanh_call_i(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), tanh_call_i(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), tanh_call_i(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), tanh_call_i(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(tanh_call_i(x).item()))
 
 def test_tanh_call_r(language):
@@ -793,8 +793,8 @@ def test_tanh_call_r(language):
 
     f1 = epyccel(tanh_call_r, language = language)
     x = uniform(high=1e2)
-    assert(isclose(f1(x), tanh_call_r(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), tanh_call_r(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), tanh_call_r(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), tanh_call_r(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(tanh_call_r(x).item()))
 
 def test_tanh_phrase(language):
@@ -807,10 +807,10 @@ def test_tanh_phrase(language):
     f2 = epyccel(tanh_phrase, language = language)
     x = uniform(high=1e2)
     y = uniform(high=1e2)
-    assert(isclose(f2(x,y), tanh_phrase(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), tanh_phrase(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), tanh_phrase(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), tanh_phrase(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), tanh_phrase(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), tanh_phrase(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), tanh_phrase(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), tanh_phrase(x,-y), rtol=1e-14, atol=1e-15))
 
 #------------------------------ arctan2 function -----------------------------#
 def test_arctan2_call_i_i(language):
@@ -822,10 +822,10 @@ def test_arctan2_call_i_i(language):
     f1 = epyccel(arctan2_call, language = language)
     x = randint(100)
     y = randint(100)
-    assert(isclose(f1(x,y), arctan2_call(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x,-y), arctan2_call(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x,y), arctan2_call(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(x,-y), arctan2_call(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x,y), arctan2_call(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x,-y), arctan2_call(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x,y), arctan2_call(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(x,-y), arctan2_call(x,-y), rtol=1e-14, atol=1e-15))
     assert(type(f1(x, y)) == type(arctan2_call(x, y).item()))
 
 def test_arctan2_call_i_r(language):
@@ -837,10 +837,10 @@ def test_arctan2_call_i_r(language):
     f1 = epyccel(arctan2_call, language = language)
     x = randint(100)
     y = uniform(high=1e2)
-    assert(isclose(f1(x,y), arctan2_call(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x,-y), arctan2_call(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x,y), arctan2_call(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(x,-y), arctan2_call(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x,y), arctan2_call(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x,-y), arctan2_call(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x,y), arctan2_call(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(x,-y), arctan2_call(x,-y), rtol=1e-14, atol=1e-15))
     assert(type(f1(x, y)) == type(arctan2_call(x, y).item()))
 
 def test_arctan2_call_r_i(language):
@@ -852,10 +852,10 @@ def test_arctan2_call_r_i(language):
     f1 = epyccel(arctan2_call, language = language)
     x = uniform(high=1e2)
     y = randint(100)
-    assert(isclose(f1(x,y), arctan2_call(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x,-y), arctan2_call(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x,y), arctan2_call(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(x,-y), arctan2_call(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x,y), arctan2_call(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x,-y), arctan2_call(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x,y), arctan2_call(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(x,-y), arctan2_call(x,-y), rtol=1e-14, atol=1e-15))
     assert(type(f1(x, y)) == type(arctan2_call(x, y).item()))
 
 def test_arctan2_call_r_r(language):
@@ -867,10 +867,10 @@ def test_arctan2_call_r_r(language):
     f1 = epyccel(arctan2_call, language = language)
     x = uniform(high=1e2)
     y = uniform(high=1e2)
-    assert(isclose(f1(x,y), arctan2_call(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x,-y), arctan2_call(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x,y), arctan2_call(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(x,-y), arctan2_call(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x,y), arctan2_call(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x,-y), arctan2_call(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x,y), arctan2_call(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(x,-y), arctan2_call(x,-y), rtol=1e-14, atol=1e-15))
     assert(type(f1(x, y)) == type(arctan2_call(x, y).item()))
 
 def test_arctan2_phrase(language):
@@ -884,14 +884,14 @@ def test_arctan2_phrase(language):
     x = uniform(high=1e2)
     y = uniform(high=1e2)
     z = uniform(high=1e2)
-    assert(isclose(f2(x,y,z), arctan2_phrase(x,y,z), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y,z), arctan2_phrase(-x,y,z), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y,z), arctan2_phrase(-x,-y,z), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y,-z), arctan2_phrase(-x,y,-z), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y,z), arctan2_phrase(x,-y,z), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y,-z), arctan2_phrase(x,-y,-z), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,y,-z), arctan2_phrase(x,y,-z), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y,-z), arctan2_phrase(-x,-y,-z), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y,z), arctan2_phrase(x,y,z), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y,z), arctan2_phrase(-x,y,z), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y,z), arctan2_phrase(-x,-y,z), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y,-z), arctan2_phrase(-x,y,-z), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y,z), arctan2_phrase(x,-y,z), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y,-z), arctan2_phrase(x,-y,-z), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,y,-z), arctan2_phrase(x,y,-z), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y,-z), arctan2_phrase(-x,-y,-z), rtol=1e-14, atol=1e-15))
 
 #-------------------------------- sqrt function ------------------------------#
 def test_sqrt_call(language):
@@ -902,7 +902,7 @@ def test_sqrt_call(language):
 
     f1 = epyccel(sqrt_call, language = language)
     x = rand()
-    assert(isclose(f1(x), sqrt_call(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), sqrt_call(x), rtol=1e-14, atol=1e-15))
 
 def test_sqrt_phrase(language):
     @types('real','real')
@@ -914,7 +914,7 @@ def test_sqrt_phrase(language):
     f2 = epyccel(sqrt_phrase, language = language)
     x = rand()
     y = rand()
-    assert(isclose(f2(x,y), sqrt_phrase(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), sqrt_phrase(x,y), rtol=1e-14, atol=1e-15))
 
 def test_sqrt_return_type_r(language):
     @types('real')
@@ -925,7 +925,7 @@ def test_sqrt_return_type_r(language):
 
     f1 = epyccel(sqrt_return_type_real, language = language)
     x = rand()
-    assert(isclose(f1(x), sqrt_return_type_real(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), sqrt_return_type_real(x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(sqrt_return_type_real(x).item())) # pylint: disable=unidiomatic-typecheck
 
 def test_sqrt_return_type_c(language):
@@ -937,7 +937,7 @@ def test_sqrt_return_type_c(language):
 
     f1 = epyccel(sqrt_return_type_comp, language = language)
     x = rand() + 1j * rand()
-    assert(isclose(f1(x), sqrt_return_type_comp(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), sqrt_return_type_comp(x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(sqrt_return_type_comp(x).item())) # pylint: disable=unidiomatic-typecheck
 
 #-------------------------------- floor function -----------------------------#
@@ -949,8 +949,8 @@ def test_floor_call_i(language):
 
     f1 = epyccel(floor_call, language = language)
     x = randint(1e6)
-    assert(isclose(f1(x), floor_call(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), floor_call(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), floor_call(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), floor_call(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(floor_call(x).item()))
 
 def test_floor_call_r(language):
@@ -961,8 +961,8 @@ def test_floor_call_r(language):
 
     f1 = epyccel(floor_call, language = language)
     x = uniform(high=1e6)
-    assert(isclose(f1(x), floor_call(x), rtol=1e-15, atol=1e-15))
-    assert(isclose(f1(-x), floor_call(-x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), floor_call(x), rtol=1e-14, atol=1e-15))
+    assert(isclose(f1(-x), floor_call(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x)) == type(floor_call(x).item()))
 
 def test_floor_phrase(language):
@@ -975,10 +975,10 @@ def test_floor_phrase(language):
     f2 = epyccel(floor_phrase, language = language)
     x = uniform(high=1e6)
     y = uniform(high=1e6)
-    assert(isclose(f2(x,y), floor_phrase(x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,-y), floor_phrase(-x,-y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(-x,y), floor_phrase(-x,y), rtol=1e-15, atol=1e-15))
-    assert(isclose(f2(x,-y), floor_phrase(x,-y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), floor_phrase(x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,-y), floor_phrase(-x,-y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(-x,y), floor_phrase(-x,y), rtol=1e-14, atol=1e-15))
+    assert(isclose(f2(x,-y), floor_phrase(x,-y), rtol=1e-14, atol=1e-15))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -1405,11 +1405,11 @@ def test_full_dtype(language):
     assert(type(f_int_int(val_int))       == type(create_full_val_int_int(val_int).item())) # pylint: disable=unidiomatic-typecheck
 
     f_int_float = epyccel(create_full_val_int_float, language = language)
-    assert(isclose(     f_int_float(val_int)     ,      create_full_val_int_float(val_int), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_int_float(val_int)     ,      create_full_val_int_float(val_int), rtol=1e-14, atol=1e-15))
     assert(type(f_int_float(val_int))     == type(create_full_val_int_float(val_int).item())) # pylint: disable=unidiomatic-typecheck
 
     f_int_complex = epyccel(create_full_val_int_complex, language = language)
-    assert(isclose(     f_int_complex(val_int)     ,      create_full_val_int_complex(val_int), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_int_complex(val_int)     ,      create_full_val_int_complex(val_int), rtol=1e-14, atol=1e-15))
     assert(type(f_int_complex(val_int))     == type(create_full_val_int_complex(val_int).item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_int32   = epyccel(create_full_val_real_int32, language = language)
@@ -1417,19 +1417,19 @@ def test_full_dtype(language):
     assert(type(f_real_int32(val_float))       == type(create_full_val_real_int32(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_float32   = epyccel(create_full_val_real_float32, language = language)
-    assert(isclose(     f_real_float32(val_float)       ,      create_full_val_real_float32(val_float), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_real_float32(val_float)       ,      create_full_val_real_float32(val_float), rtol=1e-14, atol=1e-15))
     assert(type(f_real_float32(val_float))       == type(create_full_val_real_float32(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_float64   = epyccel(create_full_val_real_float64, language = language)
-    assert(isclose(     f_real_float64(val_float)       ,      create_full_val_real_float64(val_float), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_real_float64(val_float)       ,      create_full_val_real_float64(val_float), rtol=1e-14, atol=1e-15))
     assert(type(f_real_float64(val_float))       == type(create_full_val_real_float64(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_complex64   = epyccel(create_full_val_real_complex64, language = language)
-    assert(isclose(     f_real_complex64(val_float)       ,      create_full_val_real_complex64(val_float), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_real_complex64(val_float)       ,      create_full_val_real_complex64(val_float), rtol=1e-14, atol=1e-15))
     assert(type(f_real_complex64(val_float))       == type(create_full_val_real_complex64(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_complex128   = epyccel(create_full_val_real_complex128, language = language)
-    assert(isclose(     f_real_complex128(val_float)       ,      create_full_val_real_complex128(val_float), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_real_complex128(val_float)       ,      create_full_val_real_complex128(val_float), rtol=1e-14, atol=1e-15))
     assert(type(f_real_complex128(val_float))       == type(create_full_val_real_complex128(val_float).item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
@@ -1478,13 +1478,13 @@ def test_full_combined_args(language):
     f2_shape = epyccel(create_full_2_shape, language = language)
     f2_val   = epyccel(create_full_2_val, language = language)
     assert(f2_shape() == create_full_2_shape()    )
-    assert(isclose(f2_val()  , create_full_2_val()      , rtol=1e-15, atol=1e-15))
+    assert(isclose(f2_val()  , create_full_2_val()      , rtol=1e-14, atol=1e-15))
     assert(type(f2_val())  == type(create_full_2_val().item())) # pylint: disable=unidiomatic-typecheck
 
     f3_shape = epyccel(create_full_3_shape, language = language)
     f3_val   = epyccel(create_full_3_val, language = language)
     assert(             f3_shape() ==    create_full_3_shape()      )
-    assert(isclose(     f3_val()  ,      create_full_3_val()        , rtol=1e-15, atol=1e-15))
+    assert(isclose(     f3_val()  ,      create_full_3_val()        , rtol=1e-14, atol=1e-15))
     assert(type(f3_val())  == type(create_full_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
@@ -1774,11 +1774,11 @@ def test_ones_dtype(language):
     assert(type(f_int_int())         == type(create_ones_val_int().item())) # pylint: disable=unidiomatic-typecheck
 
     f_int_float = epyccel(create_ones_val_float, language = language)
-    assert(isclose(     f_int_float()       ,      create_ones_val_float(), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_int_float()       ,      create_ones_val_float(), rtol=1e-14, atol=1e-15))
     assert(type(f_int_float())       == type(create_ones_val_float().item())) # pylint: disable=unidiomatic-typecheck
 
     f_int_complex = epyccel(create_ones_val_complex, language = language)
-    assert(isclose(     f_int_complex()     ,      create_ones_val_complex(), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_int_complex()     ,      create_ones_val_complex(), rtol=1e-14, atol=1e-15))
     assert(type(f_int_complex())     == type(create_ones_val_complex().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_int32   = epyccel(create_ones_val_int32, language = language)
@@ -1786,19 +1786,19 @@ def test_ones_dtype(language):
     assert(type(f_real_int32())      == type(create_ones_val_int32().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_float32   = epyccel(create_ones_val_float32, language = language)
-    assert(isclose(     f_real_float32()    ,      create_ones_val_float32(), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_real_float32()    ,      create_ones_val_float32(), rtol=1e-14, atol=1e-15))
     assert(type(f_real_float32())    == type(create_ones_val_float32().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_float64   = epyccel(create_ones_val_float64, language = language)
-    assert(isclose(     f_real_float64()    ,      create_ones_val_float64(), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_real_float64()    ,      create_ones_val_float64(), rtol=1e-14, atol=1e-15))
     assert(type(f_real_float64())    == type(create_ones_val_float64().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_complex64   = epyccel(create_ones_val_complex64, language = language)
-    assert(isclose(     f_real_complex64()  ,      create_ones_val_complex64(), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_real_complex64()  ,      create_ones_val_complex64(), rtol=1e-14, atol=1e-15))
     assert(type(f_real_complex64())  == type(create_ones_val_complex64().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_complex128   = epyccel(create_ones_val_complex128, language = language)
-    assert(isclose(     f_real_complex128() ,      create_ones_val_complex128(), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_real_complex128() ,      create_ones_val_complex128(), rtol=1e-14, atol=1e-15))
     assert(type(f_real_complex128()) == type(create_ones_val_complex128().item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
@@ -1847,13 +1847,13 @@ def test_ones_combined_args(language):
     f2_shape = epyccel(create_ones_2_shape, language = language)
     f2_val   = epyccel(create_ones_2_val, language = language)
     assert(     f2_shape() ==      create_ones_2_shape()      )
-    assert(isclose(     f2_val()  ,      create_ones_2_val()        , rtol=1e-15, atol=1e-15))
+    assert(isclose(     f2_val()  ,      create_ones_2_val()        , rtol=1e-14, atol=1e-15))
     assert(type(f2_val())  == type(create_ones_2_val().item())) # pylint: disable=unidiomatic-typecheck
 
     f3_shape = epyccel(create_ones_3_shape, language = language)
     f3_val   = epyccel(create_ones_3_val, language = language)
     assert(     f3_shape() ==      create_ones_3_shape()      )
-    assert(isclose(     f3_val()  ,      create_ones_3_val()        , rtol=1e-15, atol=1e-15))
+    assert(isclose(     f3_val()  ,      create_ones_3_val()        , rtol=1e-14, atol=1e-15))
     assert(type(f3_val())  == type(create_ones_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
@@ -1964,11 +1964,11 @@ def test_zeros_dtype(language):
     assert(type(f_int_int())         == type(create_zeros_val_int().item())) # pylint: disable=unidiomatic-typecheck
 
     f_int_float = epyccel(create_zeros_val_float, language = language)
-    assert(isclose(     f_int_float()       ,      create_zeros_val_float(), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_int_float()       ,      create_zeros_val_float(), rtol=1e-14, atol=1e-15))
     assert(type(f_int_float())       == type(create_zeros_val_float().item())) # pylint: disable=unidiomatic-typecheck
 
     f_int_complex = epyccel(create_zeros_val_complex, language = language)
-    assert(isclose(     f_int_complex()     ,      create_zeros_val_complex(), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_int_complex()     ,      create_zeros_val_complex(), rtol=1e-14, atol=1e-15))
     assert(type(f_int_complex())     == type(create_zeros_val_complex().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_int32   = epyccel(create_zeros_val_int32, language = language)
@@ -1976,19 +1976,19 @@ def test_zeros_dtype(language):
     assert(type(f_real_int32())      == type(create_zeros_val_int32().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_float32   = epyccel(create_zeros_val_float32, language = language)
-    assert(isclose(     f_real_float32()    ,      create_zeros_val_float32(), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_real_float32()    ,      create_zeros_val_float32(), rtol=1e-14, atol=1e-15))
     assert(type(f_real_float32())    == type(create_zeros_val_float32().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_float64   = epyccel(create_zeros_val_float64, language = language)
-    assert(isclose(     f_real_float64()    ,      create_zeros_val_float64(), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_real_float64()    ,      create_zeros_val_float64(), rtol=1e-14, atol=1e-15))
     assert(type(f_real_float64())    == type(create_zeros_val_float64().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_complex64   = epyccel(create_zeros_val_complex64, language = language)
-    assert(isclose(     f_real_complex64()  ,      create_zeros_val_complex64(), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_real_complex64()  ,      create_zeros_val_complex64(), rtol=1e-14, atol=1e-15))
     assert(type(f_real_complex64())  == type(create_zeros_val_complex64().item())) # pylint: disable=unidiomatic-typecheck
 
     f_real_complex128   = epyccel(create_zeros_val_complex128, language = language)
-    assert(isclose(     f_real_complex128() ,      create_zeros_val_complex128(), rtol=1e-15, atol=1e-15))
+    assert(isclose(     f_real_complex128() ,      create_zeros_val_complex128(), rtol=1e-14, atol=1e-15))
     assert(type(f_real_complex128()) == type(create_zeros_val_complex128().item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
@@ -2037,13 +2037,13 @@ def test_zeros_combined_args(language):
     f2_shape = epyccel(create_zeros_2_shape, language = language)
     f2_val   = epyccel(create_zeros_2_val, language = language)
     assert(     f2_shape() ==      create_zeros_2_shape()      )
-    assert(isclose(     f2_val()  ,      create_zeros_2_val()        , rtol=1e-15, atol=1e-15))
+    assert(isclose(     f2_val()  ,      create_zeros_2_val()        , rtol=1e-14, atol=1e-15))
     assert(type(f2_val())  == type(create_zeros_2_val().item())) # pylint: disable=unidiomatic-typecheck
 
     f3_shape = epyccel(create_zeros_3_shape, language = language)
     f3_val   = epyccel(create_zeros_3_val, language = language)
     assert(     f3_shape() ==      create_zeros_3_shape()      )
-    assert(isclose(     f3_val()  ,      create_zeros_3_val()        , rtol=1e-15, atol=1e-15))
+    assert(isclose(     f3_val()  ,      create_zeros_3_val()        , rtol=1e-14, atol=1e-15))
     assert(type(f3_val())  == type(create_zeros_3_val().item())) # pylint: disable=unidiomatic-typecheck
 
 @pytest.mark.parametrize( 'language', (
@@ -2307,7 +2307,7 @@ def test_sum_real(language):
 
     f1 = epyccel(sum_call, language = language)
     x = rand(10)
-    assert(isclose(f1(x), sum_call(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), sum_call(x), rtol=1e-14, atol=1e-15))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -2327,7 +2327,7 @@ def test_sum_phrase(language):
     f2 = epyccel(sum_phrase, language = language)
     x = rand(10)
     y = rand(15)
-    assert(isclose(f2(x,y), sum_phrase(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), sum_phrase(x,y), rtol=1e-14, atol=1e-15))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -2380,7 +2380,7 @@ def test_min_real(language):
 
     f1 = epyccel(min_call, language = language)
     x = rand(10)
-    assert(isclose(f1(x), min_call(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), min_call(x), rtol=1e-14, atol=1e-15))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -2400,7 +2400,7 @@ def test_min_phrase(language):
     f2 = epyccel(min_phrase, language = language)
     x = rand(10)
     y = rand(15)
-    assert(isclose(f2(x,y), min_phrase(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), min_phrase(x,y), rtol=1e-14, atol=1e-15))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -2453,7 +2453,7 @@ def test_max_real(language):
 
     f1 = epyccel(max_call, language = language)
     x = rand(10)
-    assert(isclose(f1(x), max_call(x), rtol=1e-15, atol=1e-15))
+    assert(isclose(f1(x), max_call(x), rtol=1e-14, atol=1e-15))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -2473,7 +2473,7 @@ def test_max_phrase(language):
     f2 = epyccel(max_phrase, language = language)
     x = rand(10)
     y = rand(15)
-    assert(isclose(f2(x,y), max_phrase(x,y), rtol=1e-15, atol=1e-15))
+    assert(isclose(f2(x,y), max_phrase(x,y), rtol=1e-14, atol=1e-15))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
