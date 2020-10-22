@@ -5178,7 +5178,7 @@ class If(Basic):
 
 
 class IfTernaryOperator(Basic, PyccelAstNode):
-    """Represents a IfTernaryOperator statement in the code.
+    """Represent a ternary conditional operator in the code, of the form (a if cond else b)
 
     Parameters
     ----------
