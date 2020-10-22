@@ -2259,12 +2259,8 @@ class FCodePrinter(CodePrinter):
             func_name = numpy_ufunc_to_fortran[type_name]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
-        args = []
-        for arg in expr.args:
-            if arg.dtype is NativeInteger():
-                args.append(self._print(NumpyFloat(arg)))
-            else :
-                args.append(self._print(arg))
+        args = [self._print(NumpyFloat(a) if a.dtype is NativeInteger() else a)\
+				for a in expr.args]
         code_args = ', '.join(args)
         code = '{0}({1})'.format(func_name, code_args)
         return self._get_statement(code)
