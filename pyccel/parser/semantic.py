@@ -1596,21 +1596,7 @@ class SemanticParser(BasicParser):
         else:
             rhs = self._visit(rhs, **settings)
 
-        if isinstance(rhs, IfTernaryOperator):
-            args = rhs.args
-            new_args = []
-            for arg in args:
-                result = arg[1].body[0]
-                if isinstance(expr, Assign):
-                    body = Assign(lhs, result)
-                else:
-                    body = AugAssign(lhs, expr.op, result)
-                body.set_fst(fst)
-                new_args.append([arg[0], [body]])
-            expr = IfTernaryOperator(*new_args)
-            return self._visit_If(expr, **settings)
-
-        elif isinstance(rhs, FunctionDef):
+        if isinstance(rhs, FunctionDef):
 
             # case of lambdify
 
@@ -2211,6 +2197,10 @@ class SemanticParser(BasicParser):
         return While(test, body, local_vars)
 
     def _visit_If(self, expr, **settings):
+        args = [self._visit(i, **settings) for i in expr.args]
+        return expr.func(*args)
+
+    def _visit_IfTernaryOperator(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.args]
         return expr.func(*args)
 

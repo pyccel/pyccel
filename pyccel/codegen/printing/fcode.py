@@ -44,7 +44,7 @@ from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
 from pyccel.ast.core      import FunctionCall
 
 from pyccel.ast.builtins  import Enumerate, PythonInt, Len, Map, Print, Range, Zip, PythonTuple, PythonFloat
-
+from pyccel.ast.builtins  import PythonComplex, PythonBool
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString
@@ -55,6 +55,7 @@ from pyccel.ast.numbers   import Integer, Float
 from pyccel.ast.numbers   import BooleanTrue
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.type_inference import str_dtype
 
 from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
 from pyccel.ast.numpyext import Real, Where
@@ -153,6 +154,13 @@ math_function_to_fortran = {
 _default_methods = {
     '__init__': 'create',
     '__del__' : 'free',
+}
+
+python_builtin_datatypes = {
+    'integer' : PythonInt,
+    'real'    : PythonFloat,
+    'bool'    : PythonBool,
+    'complex' : PythonComplex
 }
 
 errors = Errors()
@@ -2057,6 +2065,24 @@ class FCodePrinter(CodePrinter):
         lines.append("end if\n")
 
         return ''.join(lines)
+
+    def _print_IfTernaryOperator(self, expr):
+        cond = PythonBool(expr.cond) if not isinstance(expr.cond.dtype, NativeBool) else expr.cond
+        value_true = expr.value_true
+        value_false = expr.value_false
+
+        if value_true.dtype != value_false.dtype :
+            try :
+                cast_func = python_builtin_datatypes[str_dtype(expr.dtype)]
+            except KeyError:
+                errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+            value_true = cast_func(value_true) if value_true.dtype != expr.dtype else value_true
+            value_false = cast_func(value_false) if value_false.dtype != expr.dtype else value_false
+
+        cond = self._print(cond)
+        value_true = self._print(value_true)
+        value_false = self._print(value_false)
+        return 'merge({true}, {false}, {cond})'.format(cond = cond, true = value_true, false = value_false)
 
     def _print_MatrixElement(self, expr):
         return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
