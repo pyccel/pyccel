@@ -176,7 +176,8 @@ __all__ = (
 #    'operator',
 #    'op_registry',
     'process_shape',
-    'subs'
+    'subs',
+    'OMP_ForLoop'
 )
 
 #==============================================================================
@@ -4657,7 +4658,6 @@ class SeparatorComment(Comment):
         text = """.""" * n
         return Comment.__new__(cls, text)
 
-
 class AnnotatedComment(Basic):
 
     """Represents a Annotated Comment in the code.
@@ -4693,6 +4693,9 @@ class AnnotatedComment(Basic):
 
         args = (self.accel, self.txt)
         return args
+
+class OMP_ForLoop(AnnotatedComment):
+    pass
 
 class CommentBlock(Basic):
 
