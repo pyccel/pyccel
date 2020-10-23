@@ -155,22 +155,27 @@ def epyccel_seq(function_or_module,
     if not isinstance(loader, ExtensionFileLoader):
         raise ImportError('Could not load shared library')
 
-    # Function case:
+    # If Python object was function, extract it from module
     if isinstance(function_or_module, FunctionType):
-        return getattr(package, pyfunc.__name__.lower())
+        func = getattr(package, pyfunc.__name__.lower())
+    else:
+        func = None
 
-    # Module case:
-    return package
+    # Return accelerated Python module and function
+    return package, func
 
 #==============================================================================
-def epyccel( inputs, **kwargs ):
+def epyccel( python_function_or_module, **kwargs ):
 
-    comm = kwargs.pop('comm', None)
-    root = kwargs.pop('root', 0)
+    assert isinstance( python_function_or_module, (FunctionType, ModuleType) )
+
+    comm  = kwargs.pop('comm', None)
+    root  = kwargs.pop('root', 0)
     bcast = kwargs.pop('bcast', True)
 
+    # Parallel version
     if comm is not None:
-        # TODO not tested for a function
+
         from mpi4py import MPI
 
         assert isinstance( comm, MPI.Comm )
@@ -181,28 +186,34 @@ def epyccel( inputs, **kwargs ):
 
         # Master process calls epyccel
         if comm.rank == root:
-            fmod      = epyccel_seq( inputs, **kwargs )
-            fmod_path = os.path.abspath(fmod.__file__)
-            fmod_name = fmod.__name__
+            mod, fun = epyccel_seq( python_function_or_module, **kwargs )
+            mod_path = os.path.abspath(mod.__file__)
+            mod_name = mod.__name__
+            fun_name = python_function_or_module.__name__ if fun else None
         else:
-            fmod      = None
-            fmod_path = None
-            fmod_name = None
+            mod, fun = None, None
+            mod_path = None
+            mod_name = None
+            fun_name = None
 
         if bcast:
-            # Broadcast Fortran module path/name to all processes
-            fmod_path = comm.bcast( fmod_path, root=root )
-            fmod_name = comm.bcast( fmod_name, root=root )
+            # Broadcast Fortran module path/name and function name to all processes
+            mod_path = comm.bcast( mod_path, root=root )
+            mod_name = comm.bcast( mod_name, root=root )
+            fun_name = comm.bcast( fun_name, root=root )
 
             # Non-master processes import Fortran module directly from its path
+            # and extract function if its name is given
             if comm.rank != root:
-                folder = os.path.split(fmod_path)[0]
+                folder = os.path.split(mod_path)[0]
                 sys.path.insert(0, folder)
-                fmod = importlib.import_module(fmod_name)
+                mod = importlib.import_module(mod_name)
                 sys.path.remove(folder)
+                fun = getattr(mod, fun_name) if fun_name else None
 
-        # Return Fortran module
-        return fmod
-
+    # Serial version
     else:
-        return epyccel_seq( inputs, **kwargs )
+        mod, fun = epyccel_seq( python_function_or_module, **kwargs )
+
+    # Return Fortran function (if any), otherwise module
+    return fun or mod
