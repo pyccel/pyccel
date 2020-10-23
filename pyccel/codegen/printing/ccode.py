@@ -957,7 +957,7 @@ class CCodePrinter(CodePrinter):
     def _print_NewLine(self, expr):
         return '\n'
 
-    #=====================================
+    #=================== OMP ==================
     def _print_OMP_ForLoop(self, expr):
         for_construct   = str(expr.txt)
         tmp = '#pragma omp for{}\n'.format(for_construct)
