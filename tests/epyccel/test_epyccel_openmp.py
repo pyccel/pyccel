@@ -124,7 +124,7 @@ def test_modules_14_0():
     assert f1(0) == 0
     assert f2() >= 0
 
-@pytest.mark.xfail(reason = "omp_get_initial_device give a compilation error on Travis (Linux and Windows), also Target construct not implemented yet !")
+# omp_get_initial_device give a compilation error on Travis (Linux and Windows), also Target construct not implemented yet !"
 def test_modules_14_1():
     f3 = epyccel(openmp.test_omp_is_initial_device, accelerator='openmp')
     # f4 = epyccel(openmp.test_omp_get_initial_device, accelerator='openmp') #Target construct not implemented yet and need a non-host device to test the function
