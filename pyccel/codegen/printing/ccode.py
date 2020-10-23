@@ -62,6 +62,7 @@ known_functions = {
 # Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
 numpy_ufunc_to_c_real = {
     'NumpyAbs'  : 'fabs',
+    'NumpyFabs'  : 'fabs',
     'NumpyMin'  : 'minval',
     'NumpyMax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
