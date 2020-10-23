@@ -60,7 +60,7 @@ from pyccel.ast.type_inference import str_dtype
 
 from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
 from pyccel.ast.numpyext import Real, Where
-from pyccel.ast.numpyext import NumpyComplex, NumpyMod
+from pyccel.ast.numpyext import NumpyComplex, NumpyMod, NumpyFloat
 from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
 from pyccel.ast.numpyext import Rand, NumpyRandint
 from pyccel.ast.numpyext import NumpyNewArray
@@ -83,6 +83,7 @@ known_functions = {
 
 numpy_ufunc_to_fortran = {
     'NumpyAbs'  : 'abs',
+    'NumpyFabs'  : 'abs',
     'NumpyMin'  : 'minval',
     'NumpyMax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
@@ -2262,7 +2263,9 @@ class FCodePrinter(CodePrinter):
             func_name = numpy_ufunc_to_fortran[type_name]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
-        code_args = ', '.join(self._print(i) for i in expr.args)
+        args = [self._print(NumpyFloat(a) if a.dtype is NativeInteger() else a)\
+				for a in expr.args]
+        code_args = ', '.join(args)
         code = '{0}({1})'.format(func_name, code_args)
         return self._get_statement(code)
 
