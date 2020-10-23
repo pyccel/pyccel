@@ -49,7 +49,7 @@ class FuncType(BasicStmt):
         d_var = {}
         d_var['decs'] = decs
         d_var['results'] = results
-        d_var['isfunc'] = True
+        d_var['is_func'] = True
 
         return d_var
 
@@ -80,7 +80,7 @@ class ListType(BasicStmt):
         d_var['allocatable'] = False
         d_var['precision'] = max(precisions)
         d_var['order'] = 'C'
-        d_var['isfunc'] = False
+        d_var['is_func'] = False
         if not(d_var['precision']):
             if d_var['datatype'] in ['double','float','complex','int']:
                 d_var['precision'] = default_precision[d_var['datatype']]
@@ -123,7 +123,7 @@ class Type(BasicStmt):
         d_var['allocatable'] = len(trailer)>0
         d_var['is_pointer'] = False
         d_var['precision']  = precision
-        d_var['isfunc'] = False
+        d_var['is_func'] = False
         if not(precision):
             if dtype in ['double' ,'float','complex', 'int']:
                 d_var['precision'] = default_precision[dtype]

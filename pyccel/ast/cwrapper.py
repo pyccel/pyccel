@@ -116,7 +116,7 @@ class PyArg_ParseTupleNode(Basic):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
             raise TypeError('Python func kwargs should be a Variable')
-        if not isinstance(c_func_args, (tuple, Tuple)) or any(not isinstance(c, (Variable, FunctionAddress)) for c in c_func_args):
+        if not all(isinstance(c, (Variable, FunctionAddress)) for c in c_func_args):
             raise TypeError('C func args should be a list of Variables')
         if not isinstance(parse_args, list) and any(not isinstance(c, Variable) for c in parse_args):
             raise TypeError('Parse args should be a list of Variables')

@@ -216,7 +216,7 @@ class FunctionHeader(Header):
             args = []
             for i, d in enumerate(args_):
                 # TODO  handle function as argument, which itself has a function argument
-                if (d['isfunc']):
+                if (d['is_func']):
                     decs = []
                     results = []
                     for dc in d['decs']:
@@ -236,7 +236,7 @@ class FunctionHeader(Header):
             # ... factorize the following 2 blocks
             results = []
             for i,d_var in enumerate(self.results):
-                d_var.pop('isfunc')
+                d_var.pop('is_func')
                 dtype = d_var.pop('datatype')
                 var = Variable(dtype, 'res_{}'.format(i), **d_var)
                 results.append(var)
