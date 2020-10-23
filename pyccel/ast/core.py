@@ -177,7 +177,8 @@ __all__ = (
 #    'op_registry',
     'process_shape',
     'subs',
-    'OMP_ForLoop'
+    'OMP_ForLoop',
+    'OMP_ParallelConstruct'
 )
 
 #==============================================================================
@@ -4710,6 +4711,9 @@ class AnnotatedComment(Basic):
         return args
 
 class OMP_ForLoop(AnnotatedComment):
+    pass
+
+class OMP_ParallelConstruct(AnnotatedComment):
     pass
 
 class CommentBlock(Basic):
