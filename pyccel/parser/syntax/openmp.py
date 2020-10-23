@@ -6,7 +6,7 @@
 from os.path import join, dirname
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.core import AnnotatedComment, OMP_ForLoop
+from pyccel.ast.core import AnnotatedComment, OMP_ForLoop, OMP_ParallelConstruct
 
 DEBUG = False
 
@@ -75,7 +75,7 @@ class OmpParallelConstruct(BasicStmt):
             else:
                 raise TypeError('Wrong clause for OmpParallelConstruct')
 
-        return AnnotatedComment('omp', txt)
+        return OMP_ParallelConstruct('omp', txt)
 
 class OmpLoopConstruct(BasicStmt):
     """Class representing a ."""
