@@ -19,7 +19,7 @@ class Codegen(object):
 
     """Abstract class for code generator."""
 
-    def __init__(self, parser, name):
+    def __init__(self, parser, name, accelerator=None):
         """Constructor for Codegen.
 
         parser: pyccel parser
@@ -28,7 +28,7 @@ class Codegen(object):
         name: str
             name of the generated module or program.
         """
-        self._accelerator   = None
+        self._accelerator   = accelerator
         self._parser        = parser
         self._ast           = parser.ast
         self._name          = name
@@ -75,7 +75,9 @@ class Codegen(object):
     @property
     def imports(self):
         """Returns the imports of the source code."""
-
+        if self._accelerator is not None:
+            if self._accelerator == 'openmp':
+                self._stmts['imports'].append('#include <omp.h>')
         return self._stmts['imports']
 
     @property
@@ -236,10 +238,7 @@ class Codegen(object):
         errors = Errors()
         errors.set_parser_stage('codegen')
 
-        if language == 'c':
-            code = printer(self.expr, self._accelerator, parser=self.parser, **settings)
-        else:
-            code = printer(self.expr, parser=self.parser, **settings)
+        code = printer(self.expr, parser=self.parser, **settings)
 
         self._code = code
 
