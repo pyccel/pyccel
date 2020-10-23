@@ -2212,7 +2212,7 @@ class SemanticParser(BasicParser):
         name  = expr.name
         d_var = expr.dtypes.copy()
         dtype = d_var.pop('datatype')
-        d_var.pop('isfunc')
+        d_var.pop('is_func')
 
         var = Variable(dtype, name, **d_var)
         self.insert_variable(var)
