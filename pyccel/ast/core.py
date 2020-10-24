@@ -178,7 +178,8 @@ __all__ = (
     'process_shape',
     'subs',
     'OMP_ForLoop',
-    'OMP_ParallelConstruct'
+    'OMP_ParallelConstruct',
+    'OMP_SingleConstruct'
 )
 
 #==============================================================================
@@ -4714,6 +4715,9 @@ class OMP_ForLoop(AnnotatedComment):
     pass
 
 class OMP_ParallelConstruct(AnnotatedComment):
+    pass
+
+class OMP_SingleConstruct(AnnotatedComment):
     pass
 
 class CommentBlock(Basic):
