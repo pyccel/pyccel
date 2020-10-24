@@ -967,6 +967,7 @@ class CCodePrinter(CodePrinter):
         ParallelConstruct   = str(expr.txt)
         tmp = '#pragma omp {}\n'.format(ParallelConstruct)
         return tmp + '{'
+
     def _print_OMP_SingleConstruct(self, expr):
         ParallelConstruct   = str(expr.txt)
         tmp = '#pragma omp {}\n'.format(ParallelConstruct)
