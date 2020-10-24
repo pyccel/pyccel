@@ -9,6 +9,7 @@ from pyccel.ast.core      import FunctionDef, Module, Program, Interface, Module
 from pyccel.ast.core      import EmptyNode, NewLine, Comment, CommentBlock
 from pyccel.ast.headers   import Header
 from pyccel.errors.errors import Errors
+from pyccel.ast.core      import Import
 
 _extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
 _header_extension_registry = {'fortran': None, 'c':'h',  'python':None}
@@ -77,7 +78,7 @@ class Codegen(object):
         """Returns the imports of the source code."""
         if self._accelerator is not None:
             if self._accelerator == 'openmp':
-                self._stmts['imports'].append('#include <omp.h>')
+                self._stmts['imports'] += [Import('omp')]
         return self._stmts['imports']
 
     @property
