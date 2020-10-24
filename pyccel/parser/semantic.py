@@ -763,6 +763,8 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_OMP_ParallelConstruct(self, expr, **settings):
         return expr
+    def _visit_OMP_SingleConstruct(self, expr, **settings):
+        return expr
     def _visit_Integer(self, expr, **settings):
         if isinstance(expr, Integer):
             return expr
