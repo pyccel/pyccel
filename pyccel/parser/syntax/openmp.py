@@ -6,7 +6,7 @@
 from os.path import join, dirname
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.core import AnnotatedComment, OMP_ForLoop, OMP_ParallelConstruct, OMP_SingleConstruct
+from pyccel.ast.core import AnnotatedComment, OMP_ForLoop, OMP_ParallelConstruct, OMP_SingleConstruct, Omp_EndClause
 
 DEBUG = False
 
@@ -152,7 +152,7 @@ class OmpEndClause(BasicStmt):
             print("> OmpEndClause: expr")
 
         txt = 'end {0} {1} {2}'.format(self.construct, self.simd, self.nowait)
-        return AnnotatedComment('omp', txt)
+        return Omp_EndClause('omp', txt)
 
 class OmpNumThread(BasicStmt):
     """Class representing a ."""
