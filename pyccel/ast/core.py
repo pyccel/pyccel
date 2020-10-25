@@ -179,7 +179,8 @@ __all__ = (
     'subs',
     'OMP_ForLoop',
     'OMP_ParallelConstruct',
-    'OMP_SingleConstruct'
+    'OMP_SingleConstruct',
+    'Omp_EndClause'
 )
 
 #==============================================================================
@@ -4718,6 +4719,8 @@ class OMP_ParallelConstruct(AnnotatedComment):
     pass
 
 class OMP_SingleConstruct(AnnotatedComment):
+    pass
+class Omp_EndClause(AnnotatedComment):
     pass
 
 class CommentBlock(Basic):
