@@ -31,7 +31,7 @@ from .numpyext import NumpyInt, Int32, Int64, NumpyFloat, Float32, Float64, Comp
 from .numpyext import NumpyExp, NumpyLog, NumpySqrt
 from .numpyext import NumpySin, NumpyCos, NumpyTan
 from .numpyext import NumpyArcsin, NumpyArccos, NumpyArctan, NumpyArctan2
-from .numpyext import NumpySinh, NumpyCosh, NumpyTanh
+from .numpyext import NumpySinh, NumpyCosh, NumpyTanh, NumpyFabs
 from .numpyext import NumpyArcsinh, NumpyArccosh, NumpyArctanh
 from .numpyext import numpy_constants, Linspace
 from .numpyext import Product as Prod
@@ -94,7 +94,7 @@ numpy_functions = {
     'abs'       : NumpyAbs,
     'floor'     : NumpyFloor,
     'absolute'  : NumpyAbs,
-    'fabs'      : NumpyAbs,
+    'fabs'      : NumpyFabs,
     'exp'       : NumpyExp,
     'log'       : NumpyLog,
     'sqrt'      : NumpySqrt,
@@ -218,7 +218,8 @@ def builtin_import(expr):
     if source == 'pyccel.decorators':
         funcs = [f[0] for f in inspect.getmembers(pyccel_decorators, inspect.isfunction)]
         for target in expr.target:
-            if str(target) not in funcs:
+            search_target = target.name if isinstance(target, AsName) else str(target)
+            if search_target not in funcs:
                 errors = Errors()
                 errors.report("{} does not exist in pyccel.decorators".format(target),
                         symbol = expr, severity='error')

@@ -62,6 +62,7 @@ known_functions = {
 # Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
 numpy_ufunc_to_c_real = {
     'NumpyAbs'  : 'fabs',
+    'NumpyFabs'  : 'fabs',
     'NumpyMin'  : 'minval',
     'NumpyMax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
@@ -314,6 +315,12 @@ class CCodePrinter(CodePrinter):
             lines.append("%s\n}" % var)
         return "\n".join(lines)
 
+    def _print_IfTernaryOperator(self, expr):
+        cond = self._print(expr.cond)
+        value_true = self._print(expr.value_true)
+        value_false = self._print(expr.value_false)
+        return '({cond}) ? {true} : {false}'.format(cond = cond, true =value_true, false = value_false)
+
     def _print_BooleanTrue(self, expr):
         return '1'
 
@@ -489,6 +496,7 @@ class CCodePrinter(CodePrinter):
         if not expr.arguments:
             arg_code = 'void'
         else:
+            # TODO: extract informations needed for printing in case of function argument which itself has a function argument
             arg_code = ', '.join('{}'.format(self._print_FuncAddressDeclare(i))
                         if isinstance(i, FunctionAddress) else '{0}{1}'.format(self.get_declare_type(i), i)
                         for i in expr.arguments)

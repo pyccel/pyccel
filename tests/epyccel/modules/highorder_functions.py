@@ -1,4 +1,5 @@
  # pylint: disable=missing-function-docstring, missing-module-docstring/
+from pyccel.decorators import types
 
 #$ header function f1(int)
 def f1(a):
@@ -63,8 +64,23 @@ def high_valuedarg_1(a, function=f1):
     x = function(a)
     return x
 
-#$ header function high_real_real_int((real)(real, real), (real)(int, real), (int)(int))
-def high_real_real_int(func1, func2, func3):
+#$ header function high_real_real_int_1((real)(real, real), (real)(int, real), (int)(int))
+def high_real_real_int_1(func1, func2, func3):
+    x = func1(1.1, 11.2) + func2(11, 10.2) + func3(10)
+    return x
+
+@types('(real)()')
+def high_real_4(function):
+    x = function()
+    return x
+
+@types('int', '(int)(int)')
+def high_valuedarg_2(a, function=f1):
+    x = function(a)
+    return x
+
+@types('(real)(real, real)', '(real)(int, real)', '(int)(int)')
+def high_real_real_int_2(func1, func2, func3):
     x = func1(1.1, 11.2) + func2(11, 10.2) + func3(10)
     return x
 
@@ -98,7 +114,22 @@ def test_valuedarg_1():
     x = high_valuedarg_1(2)
     return x
 
-#$ header function test_real_real_int()
-def test_real_real_int():
-    x = high_real_real_int(f7, f4, f3)
+#$ header function test_real_real_int_1()
+def test_real_real_int_1():
+    x = high_real_real_int_1(f7, f4, f3)
+    return x
+
+@types()
+def test_real_4():
+    x = high_real_4(f8)
+    return x
+
+@types()
+def test_valuedarg_2():
+    x = high_valuedarg_2(2)
+    return x
+
+@types()
+def test_real_real_int_2():
+    x = high_real_real_int_2(f7, f4, f3)
     return x
