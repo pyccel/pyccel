@@ -1002,7 +1002,7 @@ class CCodePrinter(CodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports  = [*expr.imports, *map(Import, self._additional_imports)]
-        imports  = '\n'.join(self._print(i) for i in imports).replace("#include <omp_lib>\n", "")
+        imports  = '\n'.join(self._print(i) for i in imports)
 
         return ('{imports}\n'
                 'int main()\n{{\n'
