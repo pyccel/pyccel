@@ -968,6 +968,9 @@ class CCodePrinter(CodePrinter):
         ParallelConstruct   = str(expr.txt)
         tmp = '#pragma omp {}\n'.format(ParallelConstruct)
         return tmp + '{'
+
+    def _print_Omp_EndClause(self, expr):
+        return '}'
     #=====================================
 
     def _print_AnnotatedComment(self, expr):

@@ -1652,6 +1652,11 @@ class FCodePrinter(CodePrinter):
         ompexpr = '!$omp {}\n'.format(ParallelConstruct)
         return ompexpr
 
+    def _print_Omp_EndClause(self, expr):
+        EndClause = str(expr.txt)
+        ompexpr = '!$omp {}\n'.format(EndClause)
+        return ompexpr
+
     def _print_OMP_SingleConstruct(self, expr):
         ParallelConstruct   = str(expr.txt)
         ompexpr = '!$omp {}\n'.format(ParallelConstruct)
@@ -1661,6 +1666,7 @@ class FCodePrinter(CodePrinter):
         for_construct   = str(expr.txt)
         return '!$omp do{}\n'.format(for_construct)
 
+    # .....................................................
     def _print_OMP_Parallel(self, expr):
         clauses = ' '.join(self._print(i)  for i in expr.clauses)
         body    = ''.join(self._print(i) for i in expr.body)
