@@ -824,35 +824,6 @@ class FCodePrinter(CodePrinter):
     def _print_FuncAddressDeclare(self, expr):
 
         return ''
-        var = expr.variable
-        is_optional = var.is_optional
-        is_static = expr.static
-        intent = expr.intent
-
-        dtype = self._print(var.results[0].dtype)
-        dtype += '(kind={0})'.format(str(var.results[0].precision))
-
-        code_value = ''
-        if expr.value:
-            code_value = ' = {0}'.format(expr.value)
-
-        vstr = self._print(expr.variable.name)
-
-        intentstr      = ''
-        allocatablestr = ''
-        optionalstr    = ''
-        rankstr        = ''
-
-        if intent:
-            intentstr = ', intent({})'.format(intent)
-
-        if is_optional:
-            optionalstr = ', optional'
-
-        left  = dtype + ', external' + optionalstr
-        right = vstr + code_value
-        return '{} :: {}\n'.format(left, right)
-
 
     def _print_Declare(self, expr):
         # ... ignored declarations
@@ -958,10 +929,8 @@ class FCodePrinter(CodePrinter):
 
         # Compute intent string
         if intent:
-            #if intent == 'in' and rank == 0 and is_static is False:
-            #    intentstr = ', value'
             if intent == 'in' and rank == 0 and is_static is False:
-                intentstr = ''
+                intentstr = ', value'
             else:
                 intentstr = ', intent({})'.format(intent)
 
@@ -1260,27 +1229,16 @@ class FCodePrinter(CodePrinter):
         return formatted_str
 
     def _print_Interface(self, expr):
-        # ... we don't print 'hidden' functions
-        if expr.is_external:
-            print(expr.functions[0].arguments[0].dtype)
-            interface = 'interface\n'
-            for f in expr.functions:
-                args = [i.rename('test') for i in f.arguments]
-                args = [Declare(i.dtype, i) for i in args]
-                args = [self._print(i) for i in args]
-                args = '\n'.join(i for i in args)
-                res = [i.rename(f.name) for i in f.results]
-                res = [Declare(i.dtype, i) for i in res]
-                res = [self._print(i) for i in res]
-                res = '\n'.join(i for i in res)
-                arg_code =  [i.rename('test') for i in f.arguments]
-                arg_code = ', '.join(self._print(i) for i in arg_code)
-                sig = "function {}({})".format(f.name, arg_code)
-                parts = sig + '\n' + args + '\n' + res + '\n' + 'end function\n'
-            interface += parts + 'end interface\n'
-            return(interface)
-
         name = self._print(expr.name)
+        if expr.is_argument:
+            sigs = ''
+            for f in expr.functions:
+                self._handle_fortran_specific_a_prioris(list(f.arguments) + list(f.results))
+                sigs += self.function_signature(f, f.name) + '\n'
+                sigs += 'end %s\n' % sigs.split()[0]
+            interface = 'interface\n' + sigs + 'end interface\n'
+            return interface
+
         if expr.functions[0].cls_name:
             for k, m in list(_default_methods.items()):
                 name = name.replace(k, m)
@@ -1371,7 +1329,6 @@ class FCodePrinter(CodePrinter):
             args_decs[str(result.name)] = dec
         # ...
 
-        print("dddddddddddddd {}".format(len(expr.interfaces)))
         interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         arg_code  = ', '.join(self._print(i) for i in chain( arguments, results ))
         imports   = ''.join(self._print(i) for i in expr.imports)
@@ -1391,38 +1348,20 @@ class FCodePrinter(CodePrinter):
     def _print_FunctionAddress(self, expr):
         return expr.name
 
-    def _print_FunctionDef(self, expr):
-        self._handle_fortran_specific_a_prioris(list(expr.local_vars) +
-                                                list(expr.arguments)  +
-                                                list(expr.results))
-        # ... we don't print 'hidden' functions
-        if expr.hide:
-            return ''
-
-        name = self._print(expr.name)
-        self.set_current_function(name)
-
+    def function_signature(self, expr, name):
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
-        is_procedure = expr.is_procedure
-
-        if expr.cls_name:
-            for k, m in list(_default_methods.items()):
-                name = name.replace(k, m)
-
-            cls_name = expr.cls_name
-            if not (cls_name == '__UNDEFINED__'):
-                name = '{0}_{1}'.format(cls_name, name)
-        else:
-            for i in _default_methods:
-                # because we may have a class Point with init: Point___init__
-                if i in name:
-                    name = name.replace(i, _default_methods[i])
-
         out_args = []
-        decs = OrderedDict()
         args_decs = OrderedDict()
-        # ... local variables declarations
+
+        for j, i in enumerate(expr.results):
+            if not i.name:
+                i.rename('out_{}'.format(j))
+        for j, i in enumerate(expr.arguments):
+            if not i.name:
+                i.rename('in_{}'.format(j))
+
+        is_procedure = expr.is_procedure
         func_end  = ''
         rec = 'recursive' if expr.is_recursive else ''
         if is_procedure:
@@ -1430,7 +1369,7 @@ class FCodePrinter(CodePrinter):
             out_args = list(expr.results)
             for result in out_args:
                 if result in expr.arguments:
-                    dec = Declare(result.dtype, result, intent='inout')
+                    dec = Declare(result.dtype, result.clone(name, j), intent='inout')
                 else:
                     dec = Declare(result.dtype, result, intent='out')
                 args_decs[str(result)] = dec
@@ -1480,6 +1419,46 @@ class FCodePrinter(CodePrinter):
             sig = 'elemental {}'.format(sig)
 
         arg_code  = ', '.join(self._print(i) for i in chain( expr.arguments, out_args ))
+
+        imports = ''
+        implicit_none = ''
+        if expr.body:
+            imports = ''.join(self._print(i) for i in expr.imports)
+        prelude = ''.join(self._print(i) for i in args_decs.values())
+        parts = ["{}({}) {}\n".format(sig, arg_code, func_end,),
+                imports,
+                "implicit none\n",
+                prelude]
+        return '\n'.join(a for a in parts if a)
+
+    def _print_FunctionDef(self, expr):
+        self._handle_fortran_specific_a_prioris(list(expr.local_vars) +
+                                                list(expr.arguments)  +
+                                                list(expr.results))
+        # ... we don't print 'hidden' functions
+        if expr.hide:
+            return ''
+
+        name = self._print(expr.name)
+        self.set_current_function(name)
+
+        if expr.cls_name:
+            for k, m in list(_default_methods.items()):
+                name = name.replace(k, m)
+
+            cls_name = expr.cls_name
+            if not (cls_name == '__UNDEFINED__'):
+                name = '{0}_{1}'.format(cls_name, name)
+        else:
+            for i in _default_methods:
+                # because we may have a class Point with init: Point___init__
+                if i in name:
+                    name = name.replace(i, _default_methods[i])
+
+        signature = self.function_signature(expr, name)
+        decs = OrderedDict()
+        functions = expr.functions
+        tmp_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         body_code = self._print(expr.body)
 
         for i in expr.local_vars:
@@ -1489,27 +1468,24 @@ class FCodePrinter(CodePrinter):
                 dec = Declare(i.dtype, i)
             decs[str(i)] = dec
 
-        args_decs.update(decs)
-
         vars_to_print = self.parser.get_variables(self._namespace)
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in expr.arguments):
-                args_decs[str(v)] = Declare(v.dtype,v)
-        prelude = ''.join(self._print(i) for i in args_decs.values())
-
+                decs[str(v)] = Declare(v.dtype,v)
+        prelude = ''.join(self._print(i) for i in decs.values())
+        signature += prelude
         if len(functions)>0:
             functions_code = '\n'.join(self._print(i) for  i in functions)
             body_code = body_code +'\ncontains\n' + functions_code
 
         imports = ''.join(self._print(i) for i in expr.imports)
 
+        if (expr.is_procedure):
+            func_type = 'subroutine'
+        else:
+            func_type = 'function'
         self.set_current_function(None)
-        tmp_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
-        print(tmp_interfaces)
-        parts = ['{0}({1}) {2}\n'.format(sig, arg_code, func_end),
-                 imports,
-                'implicit none\n',
-                 prelude,
+        parts = [signature,
                  tmp_interfaces,
                  body_code,
                  'end {} {}\n'.format(func_type, name)]

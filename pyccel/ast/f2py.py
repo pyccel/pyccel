@@ -25,9 +25,7 @@ __all__ = (
 def sanitize_arguments(args):
     _args = []
     for a in args:
-        if isinstance( a, Variable ):
-            _args.append(a)
-        elif isinstance(a, FunctionAddress):
+        if isinstance(a, (Variable, FunctionAddress)):
             _args.append(a)
 
         elif isinstance( a, IndexedVariable ):
@@ -57,7 +55,6 @@ def as_static_function(func, name=None):
     _results = []
     interfaces = func.interfaces
 
-    print("ccccccccccccccc {}".format(len(func.interfaces)))
     # Convert array results to inout arguments
     for r in results:
         if r.rank > 0 and r not in args:
@@ -77,10 +74,9 @@ def as_static_function(func, name=None):
     for i_a, a in enumerate(args):
         if not isinstance(a, (Variable, FunctionAddress)):
             raise TypeError('Expecting a Variable or FunctionAddress type for {}'.format(a))
+        rank = None
         if isinstance(a, Variable):
             rank = a.rank
-        else:
-            rank = None
         if rank and rank > 0:
             # ...
             additional_args = []
