@@ -4714,19 +4714,23 @@ class AnnotatedComment(Basic):
 
 class OMP_For_Loop(AnnotatedComment):
     """ Represents and OpenMP Loop construct. """
-    pass
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
 
 class OMP_Parallel_Construct(AnnotatedComment):
     """ Represents and OpenMP Parallel construct. """
-    pass
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
 
 class OMP_Single_Construct(AnnotatedComment):
     """ Represents and OpenMP Single construct. """
-    pass
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
 
 class Omp_End_Clause(AnnotatedComment):
     """ Represents the End of an OpenMP block. """
-    pass
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
 
 class CommentBlock(Basic):
 

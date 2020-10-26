@@ -75,7 +75,7 @@ class OmpParallelConstruct(BasicStmt):
             else:
                 raise TypeError('Wrong clause for OmpParallelConstruct')
 
-        return OMP_Parallel_Construct('omp', txt)
+        return OMP_Parallel_Construct(txt)
 
 class OmpLoopConstruct(BasicStmt):
     """Class representing a ."""
@@ -107,7 +107,7 @@ class OmpLoopConstruct(BasicStmt):
             else:
                 raise TypeError('Wrong clause for OmpLoopConstruct. Given : ', \
                                 type(clause))
-        return OMP_For_Loop('omp', txt)
+        return OMP_For_Loop(txt)
 
 class OmpSingleConstruct(BasicStmt):
     """Class representing a ."""
@@ -133,7 +133,7 @@ class OmpSingleConstruct(BasicStmt):
             else:
                 raise TypeError('Wrong clause for OmpSingleConstruct')
 
-        return OMP_Single_Construct('omp', txt)
+        return OMP_Single_Construct(txt)
 
 class OmpEndClause(BasicStmt):
     """Class representing a ."""
@@ -152,7 +152,7 @@ class OmpEndClause(BasicStmt):
             print("> OmpEndClause: expr")
 
         txt = 'end {0} {1} {2}'.format(self.construct, self.simd, self.nowait)
-        return Omp_End_Clause('omp', txt)
+        return Omp_End_Clause(txt)
 
 class OmpNumThread(BasicStmt):
     """Class representing a ."""
