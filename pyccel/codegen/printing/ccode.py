@@ -955,42 +955,20 @@ class CCodePrinter(CodePrinter):
 
     #=================== OMP ==================
     def _print_OMP_ForLoop(self, expr):
-        for_construct   = str(expr.txt)
-        tmp = '#pragma omp for{}\n'.format(for_construct)
-        return tmp + '{'
+        omp_expr   = str(expr.txt)
+        return '#pragma omp for{}\n{{'.format(omp_expr)
 
     def _print_OMP_ParallelConstruct(self, expr):
-        ParallelConstruct   = str(expr.txt)
-        tmp = '#pragma omp {}\n'.format(ParallelConstruct)
-        return tmp + '{'
+        omp_expr   = str(expr.txt)
+        return '#pragma omp {}\n{{'.format(omp_expr)
 
     def _print_OMP_SingleConstruct(self, expr):
-        ParallelConstruct   = str(expr.txt)
-        tmp = '#pragma omp {}\n'.format(ParallelConstruct)
-        return tmp + '{'
+        omp_expr   = str(expr.txt)
+        return '#pragma omp {}\n{{'.format(omp_expr)
 
     def _print_Omp_EndClause(self, expr):
         return '}'
     #=====================================
-
-    def _print_AnnotatedComment(self, expr):
-        accel = self._print(expr.accel)
-        txt   = str(expr.txt)
-        if len(txt)>72:
-            txts = []
-            while len(txt)>72:
-                txts.append(txt[:72])
-                txt  = txt[72:]
-            if txt:
-                txts.append(txt)
-
-            txt = '&\n!${} &'.format(accel).join(txt for txt in txts)
-
-        if txt.startswith('end '):
-            return '}\n'
-
-        tmp = '#pragma {0} {1}\n'.format(accel, txt)
-        return tmp + '{'
 
     def _print_Program(self, expr):
         body  = self._print(expr.body)
@@ -1001,7 +979,7 @@ class CCodePrinter(CodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports  = [*expr.imports, *map(Import, self._additional_imports)]
-        imports  = '\n'.join(self._print(i) for i in imports).replace('#include <omp_lib.h>\n', "")
+        imports  = '\n'.join(self._print(i) for i in imports)
 
         return ('{imports}\n'
                 'int main()\n{{\n'
