@@ -81,7 +81,7 @@ __all__ = (
     'NumpyRand',
     'NumpyRandint',
     'NumpyReal',
-    'NumpyShape',
+    'Shape',
     'NumpyWhere',
     'NumpyZeros',
     'NumpyZerosLike'
@@ -94,8 +94,8 @@ numpy_constants = {
 
 def process_dtype(dtype):
     if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt,
-                  Int32, Int64, NumpyComplex, Complex64, Complex128, NumpyFloat,
-                  Float64, Float32):
+                  NumpyInt32, NumpyInt64, NumpyComplex, NumpyComplex64,
+				  NumpyComplex128, NumpyFloat, NumpyFloat64, NumpyFloat32):
         dtype = dtype.__name__.lower()
     else:
         dtype            = str(dtype).replace('\'', '').lower()
@@ -848,7 +848,7 @@ class NumpyRandint(Function, NumpyNewArray):
 
         self._shape   = size
         self._rank    = len(self.shape)
-        self._rand    = Rand(*size)
+        self._rand    = NumpyRand(*size)
         self._low     = low
         self._high    = high
 
@@ -863,9 +863,9 @@ class NumpyRandint(Function, NumpyNewArray):
     def fprint(self, printer):
         assert(self._rank == 0)
         if self._high is None:
-            randreal = printer(PyccelMul(self._low, Rand()))
+            randreal = printer(PyccelMul(self._low, NumpyRand()))
         else:
-            randreal = printer(PyccelAdd(PyccelMul(PyccelAssociativeParenthesis(PyccelMinus(self._high, self._low)), Rand()), self._low))
+            randreal = printer(PyccelAdd(PyccelMul(PyccelAssociativeParenthesis(PyccelMinus(self._high, self._low)), NumpyRand()), self._low))
 
         prec_code = printer(self.precision)
         return 'floor({}, kind={})'.format(randreal, prec_code)
@@ -1031,7 +1031,7 @@ class NumpyFullLike(Application):
         dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
 
-        return Full(Shape(a), fill_value, dtype, order)
+        return NumpyFull(Shape(a), fill_value, dtype, order)
 
 #=======================================================================================
 class NumpyEmptyLike(Application):
@@ -1042,7 +1042,7 @@ class NumpyEmptyLike(Application):
         dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
 
-        return Empty(Shape(a), dtype, order)
+        return NumpyEmpty(Shape(a), dtype, order)
 
 #=======================================================================================
 class NumpyOnesLike(Application):
@@ -1053,7 +1053,7 @@ class NumpyOnesLike(Application):
         dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
 
-        return Ones(Shape(a), dtype, order)
+        return NumpyOnes(Shape(a), dtype, order)
 
 #=======================================================================================
 class NumpyZerosLike(Application):
@@ -1064,7 +1064,7 @@ class NumpyZerosLike(Application):
         dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
 
-        return Zeros(Shape(a), dtype, order)
+        return NumpyZeros(Shape(a), dtype, order)
 
 #=======================================================================================
 
@@ -1116,7 +1116,7 @@ class NumpyNorm(Function, PyccelAstNode):
         return rhs
 
 #=====================================================
-class NumpySqrt(PyccelPow):
+class Sqrt(PyccelPow):
     def __new__(cls, base):
         return PyccelPow(PyccelAssociativeParenthesis(base), Float(0.5))
 
@@ -1304,7 +1304,7 @@ class NumpyInt64(NumpyInt):
 NumpyArrayClass = ClassDef('numpy.ndarray',
         methods=[
             FunctionDef('shape',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':NumpyShape}),
+                decorators={'property':'property', 'numpy_wrapper':Shape}),
             FunctionDef('sum',[],[],body=[],
                 decorators={'numpy_wrapper':NumpySum}),
             FunctionDef('min',[],[],body=[],
