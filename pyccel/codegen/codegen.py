@@ -20,7 +20,7 @@ class Codegen(object):
 
     """Abstract class for code generator."""
 
-    def __init__(self, parser, name, accelerator=None):
+    def __init__(self, parser, name):
         """Constructor for Codegen.
 
         parser: pyccel parser
@@ -29,7 +29,6 @@ class Codegen(object):
         name: str
             name of the generated module or program.
         """
-        self._accelerator   = accelerator
         self._parser        = parser
         self._ast           = parser.ast
         self._name          = name

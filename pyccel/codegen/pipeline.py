@@ -170,11 +170,7 @@ def execute_pyccel(fname, *,
         semantic_parser = parser.semantic_parser
         # Generate .f90 file
         try:
-            if language == 'c':
-                accel = accelerator
-            else:
-                accel = None
-            codegen = Codegen(semantic_parser, module_name, accel)
+            codegen = Codegen(semantic_parser, module_name)
             fname = os.path.join(pyccel_dirpath, module_name)
             fname = codegen.export(fname, language=language)
         except NotImplementedError as error:
