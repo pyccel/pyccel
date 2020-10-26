@@ -9,11 +9,11 @@ import modules.openmp as openmp
 from pyccel.epyccel import epyccel
 #==============================================================================
 
-def test_module_1():
-    f1 = epyccel(openmp.f1, accelerator='openmp')
-    set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp')
-    get_num_threads = epyccel(openmp.get_num_threads, accelerator='openmp')
-    get_max_threads = epyccel(openmp.get_max_threads, accelerator='openmp')
+def test_module_1(language):
+    f1 = epyccel(openmp.f1, language=language, accelerator='openmp')
+    set_num_threads = epyccel(openmp.set_num_threads, language=language, accelerator='openmp')
+    get_num_threads = epyccel(openmp.get_num_threads, language=language, accelerator='openmp')
+    get_max_threads = epyccel(openmp.get_max_threads, language=language, accelerator='openmp')
     set_num_threads(4)
     assert get_max_threads() == 4
     assert get_num_threads() == 4
@@ -124,7 +124,7 @@ def test_modules_14_0():
     assert f1(0) == 0
     assert f2() >= 0
 
-@pytest.mark.xfail(reason = "omp_get_initial_device give a compilation error on Travis (Linux and Windows), also Target construct not implemented yet !")
+#omp_get_initial_device give a compilation error on Travis (Linux and Windows), also Target construct not implemented yet
 def test_modules_14_1():
     f3 = epyccel(openmp.test_omp_is_initial_device, accelerator='openmp')
     # f4 = epyccel(openmp.test_omp_get_initial_device, accelerator='openmp') #Target construct not implemented yet and need a non-host device to test the function
