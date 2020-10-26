@@ -28,12 +28,12 @@ class Codegen(object):
         name: str
             name of the generated module or program.
         """
-        self._parser        = parser
-        self._ast           = parser.ast
-        self._name          = name
-        self._kind          = None
-        self._code          = None
-        self._language      = None
+        self._parser   = parser
+        self._ast      = parser.ast
+        self._name     = name
+        self._kind     = None
+        self._code     = None
+        self._language = None
 
         #TODO verify module name != function name
         #it generates a compilation error
