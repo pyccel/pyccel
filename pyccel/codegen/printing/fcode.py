@@ -822,7 +822,6 @@ class FCodePrinter(CodePrinter):
         return str(functools.reduce(operator.mul, shape ))
 
     def _print_FuncAddressDeclare(self, expr):
-
         return ''
 
     def _print_Declare(self, expr):
@@ -901,7 +900,6 @@ class FCodePrinter(CodePrinter):
             dtype = self._print(expr_dtype)
 
         # ...
-            #todo handle this case in funcaddressdeclare
             if isinstance(expr_dtype, NativeString):
 
                 if expr.intent:
@@ -1229,6 +1227,7 @@ class FCodePrinter(CodePrinter):
         return formatted_str
 
     def _print_Interface(self, expr):
+        # ... we don't print 'hidden' functions
         name = self._print(expr.name)
         if expr.is_argument:
             sigs = ''
@@ -1305,17 +1304,11 @@ class FCodePrinter(CodePrinter):
             if arg in results:
                 results.remove(i)
 
-            if isinstance(arg, FunctionAddress):
-                dec = FuncAddressDeclare(arg, intent=intent , static=True)
-            else:
-                dec = Declare(arg.dtype, arg, intent=intent , static=True)
+            dec = Declare(arg.dtype, arg, intent=intent , static=True)
             args_decs[str(arg.name)] = dec
 
         for result in results:
-            if isinstance(result, FunctionAddress):
-                dec = FuncAddressDeclare(result, intent='out', static=True)
-            else:
-                dec = Declare(result.dtype, result, intent='out', static=True)
+            dec = Declare(result.dtype, result, intent='out', static=True)
             args_decs[str(result)] = dec
 
         if expr.is_procedure:
@@ -1377,7 +1370,7 @@ class FCodePrinter(CodePrinter):
             functions = expr.functions
 
         else:
-           #todo: red if return is a function
+           #todo: if return is a function
             func_type = 'function'
             result = expr.results[0]
             functions = expr.functions

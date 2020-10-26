@@ -124,7 +124,7 @@ def as_static_function(func, name=None):
     int_kind = Variable('int', 'f2py_array_dimension').precision
 
     for a in args:
-        if isinstance(a, Variable) and a.rank > 1 and a.order == 'C':
+        if rank and a.rank > 1 and a.order == 'C':
 
             # Reverse shape of array
             transpose_stmts = [Comment(f2py_template.format(kind    = int_kind,
