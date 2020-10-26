@@ -414,8 +414,8 @@ class CCodePrinter(CodePrinter):
         # Get with a default value is not used here as it is
         # slower and on most occasions the import will not be in the
         # dictionary
-        if source in import_dict:
-            source = import_dict[source] # pylint: disable=consider-using-get
+        if source in import_dict: # pylint: disable=consider-using-get
+            source = import_dict[source]
 
         if source is None:
             return ''
