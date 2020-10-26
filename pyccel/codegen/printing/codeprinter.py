@@ -41,12 +41,13 @@ class CodePrinter(StrPrinter):
             If provided, the printed code will set the expression to a
             variable with name ``assign_to``.
         """
+
         if isinstance(assign_to, str):
             assign_to = Symbol(assign_to)
         elif not isinstance(assign_to, (Basic, type(None))):
             raise TypeError("{0} cannot assign to object of type {1}".format(
                     type(self).__name__, type(assign_to)))
-        
+
         if assign_to:
             expr = Assign(assign_to, expr)
         else:
