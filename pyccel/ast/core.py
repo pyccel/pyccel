@@ -7,6 +7,7 @@ from collections     import OrderedDict
 
 from sympy import sympify
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
+from sympy import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Le as sp_Le, Gt as sp_Gt, Ge as sp_Ge
 from sympy import Integral, Symbol, Tuple
 from sympy import Lambda
 from sympy import Integer as sp_Integer
@@ -15,13 +16,12 @@ from sympy import preorder_traversal
 
 from sympy.simplify.radsimp   import fraction
 from sympy.core.compatibility import with_metaclass
-from sympy.core.assumptions   import StdFactKB
 from sympy.core.singleton     import Singleton, S
 from sympy.core.function      import Function, Application
 from sympy.core.function      import Derivative, UndefinedFunction as sp_UndefinedFunction
 from sympy.core.function      import _coeff_isneg
 from sympy.core.expr          import Expr, AtomicExpr
-from sympy.logic.boolalg      import And as sp_And, Not as sp_Not, Or as sp_Or
+from sympy.logic.boolalg      import And as sp_And, Or as sp_Or
 from sympy.logic.boolalg      import Boolean as sp_Boolean
 from sympy.tensor             import Idx, Indexed, IndexedBase
 
@@ -33,11 +33,11 @@ from sympy.utilities.misc               import filldedent
 
 
 from .basic     import Basic, PyccelAstNode
-from .builtins  import Enumerate, Len, List, Map, Range, Zip, PythonTuple, Bool
+from .builtins  import Enumerate, Len, List, Map, Range, Zip, PythonTuple, PythonBool, PythonInt
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
-                        NativeGeneric, NativeTuple, default_precision)
+                        NativeGeneric, NativeTuple, default_precision, is_iterable_datatype)
 
 from .numbers        import BooleanTrue, BooleanFalse, Integer as Py_Integer, ImaginaryUnit
 from .functionalexpr import GeneratorComprehension as GC
@@ -45,8 +45,6 @@ from .functionalexpr import FunctionalFor
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
-
-from pyccel.ast.builtins import Int
 
 errors = Errors()
 
@@ -125,6 +123,7 @@ __all__ = (
     'Load',
     'ModOp',
     'Module',
+    'ModuleHeader',
     'MulOp',
     'NativeOp',
     'NewLine',
@@ -267,7 +266,7 @@ class PyccelRShift(PyccelBitOperator):
         super(PyccelRShift, self).__init__(args)
         if self.stage == 'syntactic':
             return
-        self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelLShift(PyccelBitOperator):
     _precedence = 11
@@ -276,7 +275,7 @@ class PyccelLShift(PyccelBitOperator):
         super(PyccelLShift, self).__init__(args)
         if self.stage == 'syntactic':
             return
-        self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelBitXor(PyccelBitOperator):
     _precedence = 9
@@ -290,7 +289,7 @@ class PyccelBitXor(PyccelBitOperator):
             self._dtype = NativeBool()
         else:
             self._dtype = NativeInteger()
-            self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelBitOr(PyccelBitOperator):
     _precedence = 8
@@ -304,7 +303,7 @@ class PyccelBitOr(PyccelBitOperator):
             self._dtype = NativeBool()
         else:
             self._dtype = NativeInteger()
-            self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelBitAnd(PyccelBitOperator):
     _precedence = 10
@@ -318,7 +317,7 @@ class PyccelBitAnd(PyccelBitOperator):
             self._dtype = NativeBool()
         else:
             self._dtype = NativeInteger()
-            self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelInvert(PyccelBitOperator):
     _precedence = 14
@@ -327,7 +326,7 @@ class PyccelInvert(PyccelBitOperator):
         super(PyccelInvert, self).__init__(args)
         if self.stage == 'syntactic':
             return
-        self._args = [Int(a) if a.dtype is NativeBool() else a for a in args]
+        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelOperator(Expr, PyccelAstNode):
 
@@ -517,6 +516,9 @@ class PyccelUnary(Expr, PyccelAstNode):
     @property
     def precedence(self):
         return self._precedence
+
+class PyccelUnarySub(PyccelUnary):
+    pass
 
 class PyccelAnd(Expr, PyccelAstNode):
     _dtype = NativeBool()
@@ -742,7 +744,7 @@ def allocatable_like(expr, verbose=False):
             elif a.is_Add:
                 aargs = list(a.args)
                 negs = 0
-                for (i, ai) in enumerate(aargs):
+                for ai in aargs:
                     if _coeff_isneg(ai):
                         negs += 1
                         args.append(-ai)
@@ -752,8 +754,8 @@ def allocatable_like(expr, verbose=False):
             if a.is_Pow and a.exp is S.NegativeOne:
                 args.append(a.base)  # won't be -Mul but could be Add
                 continue
-            if a.is_Mul or a.is_Pow or a.is_Function or isinstance(a,
-                    Derivative) or isinstance(a, Integral):
+            if a.is_Mul or a.is_Pow or a.is_Function or \
+                    isinstance(a, (Derivative, Integral)):
 
                 o = Symbol(a.func.__name__.upper())
             if not a.is_Symbol and not isinstance(a, (IndexedElement,
@@ -910,10 +912,10 @@ def extract_subexpressions(expr):
 #    return variables.values()
 
 def inline(func, args):
-        local_vars = func.local_vars
-        body = func.body
-        body = subs(body, zip(func.arguments, args))
-        return Block(str(func.name), local_vars, body)
+    local_vars = func.local_vars
+    body = func.body
+    body = subs(body, zip(func.arguments, args))
+    return Block(str(func.name), local_vars, body)
 
 
 def int2float(expr):
@@ -1266,7 +1268,7 @@ class CodeBlock(Basic):
 
     def __init__(self, body):
         if len(self._args)>0 and isinstance(self._args[-1], (Assign, AugAssign)):
-            self.set_fst(ls[-1].fst)
+            self.set_fst(self._args[-1].fst)
 
     @property
     def body(self):
@@ -1311,9 +1313,6 @@ class AliasAssign(Basic):
 
             if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_pointer:
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
-
-        if isinstance(rhs, Variable):
-            rhs = VariableAddress(rhs)
 
         return Basic.__new__(cls, lhs, rhs)
 
@@ -1578,7 +1577,7 @@ class While(Basic):
 
         if PyccelAstNode.stage == 'semantic':
             if test.dtype is not NativeBool():
-                test = Bool(test)
+                test = PythonBool(test)
 
         if iterable(body):
             body = CodeBlock((sympify(i, locals=local_sympify) for i in body))
@@ -1653,17 +1652,17 @@ class With(Basic):
         methods = self.test.cls_base.methods
         for i in methods:
             if str(i.name) == '__enter__':
-                enter = i
+                start = i
             elif str(i.name) == '__exit__':
-                exit = i
-        enter = inline(enter,[])
-        exit =  inline(exit, [])
+                end   = i
+        start = inline(start,[])
+        end   = inline(end  ,[])
 
         # TODO check if enter is empty or not first
 
-        body = enter.body.body
+        body = start.body.body
         body += self.body.body
-        body += exit.body.body
+        body +=  end.body.body
         return Block('with', [], body)
 
 
@@ -2048,6 +2047,47 @@ class Module(Basic):
     def set_name(self, new_name):
         self._name = new_name
 
+class ModuleHeader(Basic):
+
+    """Represents the header file for a module
+
+    Parameters
+    ----------
+    module: Module
+        the module
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
+    >>> z = Variable('real', 'z')
+    >>> t = Variable('real', 't')
+    >>> a = Variable('real', 'a')
+    >>> b = Variable('real', 'b')
+    >>> body = [Assign(y,x+a)]
+    >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
+    >>> attributes   = [x,y]
+    >>> methods     = [translate]
+    >>> Point = ClassDef('Point', attributes, methods)
+    >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
+    >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
+    >>> mod = Module('my_module', [], [incr, decr], classes = [Point])
+    >>> ModuleHeader(mod)
+    Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
+    """
+
+    def __init__(self, module):
+        if not isinstance(module, Module):
+            raise TypeError('module must be a Module')
+
+        self._module = module
+
+    @property
+    def module(self):
+        return self._module
+
 class Program(Basic):
 
     """Represents a Program in the code. A block consists of the following inputs
@@ -2155,7 +2195,7 @@ class For(Basic):
     def __new__(
         cls,
         target,
-        iter,
+        iter_obj,
         body,
         local_vars = [],
         strict=True,
@@ -2163,15 +2203,15 @@ class For(Basic):
         if strict:
             target = sympify(target, locals=local_sympify)
 
-            cond_iter = iterable(iter)
-            cond_iter = cond_iter or isinstance(iter, (Range, Product,
+            cond_iter = iterable(iter_obj)
+            cond_iter = cond_iter or isinstance(iter_obj, (Range, Product,
                     Enumerate, Zip, Map))
-            cond_iter = cond_iter or isinstance(iter, Variable) \
-                and is_iterable_datatype(iter.dtype)
-          #  cond_iter = cond_iter or isinstance(iter, ConstructorCall) \
-          #      and is_iterable_datatype(iter.arguments[0].dtype)
+            cond_iter = cond_iter or isinstance(iter_obj, Variable) \
+                and is_iterable_datatype(iter_obj.dtype)
+          #  cond_iter = cond_iter or isinstance(iter_obj, ConstructorCall) \
+          #      and is_iterable_datatype(iter_obj.arguments[0].dtype)
             if not cond_iter:
-                raise TypeError('iter must be an iterable')
+                raise TypeError('iter_obj must be an iterable')
 
             if iterable(body):
                 body = CodeBlock((sympify(i, locals=local_sympify) for i in
@@ -2179,7 +2219,7 @@ class For(Basic):
             elif not isinstance(body,CodeBlock):
                 raise TypeError('body must be an iterable or a Codeblock')
 
-        return Basic.__new__(cls, target, iter, body, local_vars)
+        return Basic.__new__(cls, target, iter_obj, body, local_vars)
 
     @property
     def target(self):
@@ -2208,12 +2248,12 @@ class DoConcurrent(For):
 
 class ForAll(Basic):
     """ class that represents the forall statement in fortran"""
-    def __new__(cls, iter, target, mask, body):
+    def __new__(cls, iter_obj, target, mask, body):
 
-        if not isinstance(iter, Range):
-            raise TypeError('iter must be of type Range')
+        if not isinstance(iter_obj, Range):
+            raise TypeError('iterable must be of type Range')
 
-        return Basic.__new__(cls, iter, target, mask, body)
+        return Basic.__new__(cls, iter_obj, target, mask, body)
 
 
     @property
@@ -2239,14 +2279,14 @@ class ForIterator(For):
     def __new__(
         cls,
         target,
-        iter,
+        iterable,
         body,
         strict=True,
         ):
 
-        if isinstance(iter, Symbol):
-            iter = Range(Len(iter))
-        return For.__new__(cls, target, iter, body, strict)
+        if isinstance(iterable, Symbol):
+            iterable = Range(Len(iterable))
+        return For.__new__(cls, target, iterable, body, strict)
 
     # TODO uncomment later when we intriduce iterators
     # @property
@@ -2282,7 +2322,7 @@ class ForIterator(For):
                 if isinstance(stmt, Assign):
                     it_vars.append(stmt.lhs)
 
-            n = len(set([str(var.name) for var in it_vars]))
+            n = len(set(str(var.name) for var in it_vars))
             return n
         else:
 
@@ -2485,7 +2525,8 @@ class Variable(Symbol, PyccelAstNode):
         order='C',
         precision=0,
         is_argument=False,
-        is_kwonly=False
+        is_kwonly=False,
+        allows_negative_indexes=False
         ):
 
         # ------------ PyccelAstNode Properties ---------------
@@ -2567,6 +2608,12 @@ class Variable(Symbol, PyccelAstNode):
         elif not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
         self._is_optional = is_optional
+
+        if allows_negative_indexes is None:
+            allows_negative_indexes = False
+        elif not isinstance(allows_negative_indexes, bool):
+            raise TypeError('allows_negative_indexes must be a boolean.')
+        self._allows_negative_indexes = allows_negative_indexes
 
         self._cls_base       = cls_base
         self._order          = order
@@ -2652,6 +2699,14 @@ class Variable(Symbol, PyccelAstNode):
     @is_stack_array.setter
     def is_stack_array(self, is_stack_array):
         self._is_stack_array = is_stack_array
+
+    @property
+    def allows_negative_indexes(self):
+        return self._allows_negative_indexes
+
+    @allows_negative_indexes.setter
+    def allows_negative_indexes(self, allows_negative_indexes):
+        self._allows_negative_indexes = allows_negative_indexes
 
     @property
     def is_argument(self):
@@ -3153,9 +3208,6 @@ class FunctionCall(Basic, PyccelAstNode):
 
             args = [a.value if isinstance(a, ValuedVariable) else a for a in f_args_dict.values()]
 
-        # Ensure the correct syntax is used for pointers
-        args = [VariableAddress(a) if isinstance(a, Variable) and f.is_pointer else a for a, f in zip(args, f_args)]
-
         args = Tuple(*args, sympify=False)
         # ...
 
@@ -3201,13 +3253,6 @@ class Return(Basic):
 
         if stmt and not isinstance(stmt, (Assign, CodeBlock)):
             raise TypeError('stmt should only be of type Assign')
-
-        if PyccelAstNode.stage == 'semantic':
-            if isinstance(expr, list):
-                expr = [VariableAddress(e) if isinstance(e, Variable) and e.is_pointer else e for e in expr]
-            else:
-                if isinstance(expr, Variable) and expr.is_pointer:
-                    expr = VariableAddress(expr)
 
         return Basic.__new__(cls, expr, stmt)
 
@@ -3669,29 +3714,6 @@ class FunctionDef(Basic):
         flag = flag \
             or len(set(self.results).intersection(self.arguments)) > 0
         return flag
-
-    def is_compatible_header(self, header):
-        """
-        Returns True if the header is compatible with the given FunctionDef.
-
-        Parameters
-        ----------
-        header: Header
-            a pyccel header suppose to describe the FunctionDef
-        """
-
-        cond_args = len(self.arguments) == len(header.dtypes)
-        cond_results = len(self.results) == len(header.results)
-
-        header_with_results = len(header.results) > 0
-
-        if not cond_args:
-            return False
-
-        if header_with_results and not cond_results:
-            return False
-
-        return True
 
     def __getnewargs__(self):
         """used for Pickling self."""
@@ -4863,7 +4885,7 @@ class IndexedElement(Expr, PyccelAstNode):
         ):
 
         if not args:
-            raise IndexException('Indexed needs at least one index.')
+            raise IndexError('Indexed needs at least one index.')
         if isinstance(base, (str, Symbol)):
             base = IndexedBase(base)
         elif not hasattr(base, '__getitem__') and not isinstance(base,
@@ -5151,7 +5173,7 @@ class If(Basic):
         for ce in args:
             cond = ce[0]
             if PyccelAstNode.stage == 'semantic' and cond.dtype is not NativeBool():
-                cond = Bool(cond)
+                cond = PythonBool(cond)
             if isinstance(ce[1], (list, Tuple, tuple)):
                 body = CodeBlock(ce[1])
             elif isinstance(ce[1], CodeBlock):
@@ -5170,15 +5192,62 @@ class If(Basic):
         return b
 
 
-class IfTernaryOperator(If):
+class IfTernaryOperator(Basic, PyccelAstNode):
+    """Represent a ternary conditional operator in the code, of the form (a if cond else b)
 
-    """class for the Ternery operator"""
-    def __init__(self, *args):
-        for arg in self.args:
-            if len(arg[1].body)!=1:
-                raise TypeError('IfTernary body must be of length 1')
+    Parameters
+    ----------
+    args :
+        args : type list
+        format : condition , value_if_true, value_if_false
 
-    pass
+    Examples
+    --------
+    >>> from sympy import Symbol
+    >>> from pyccel.ast.core import Assign, IfTernaryOperator
+    >>> n = Symbol('n')
+    >>> x = 5 if n > 1 else 2
+    >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
+    IfTernaryOperator(PyccelGt(n > 1),  5,  2)
+    """
+    def __init__(self, cond, value_true, value_false):
+        self._cond = cond
+        self._value_true = value_true
+        self._value_false = value_false
+
+        if self.stage == 'syntactic':
+            return
+        if isinstance(value_true , Nil) or isinstance(value_false, Nil):
+            errors.report('None is not implemented for Ternary Operator', severity='fatal')
+        if isinstance(value_true.dtype, NativeString) or isinstance(value_false.dtype, NativeString):
+            errors.report('Strings are not supported by Ternary Operator', severity='fatal')
+        _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
+        if value_true.dtype not in _tmp_list :
+            raise NotImplementedError('cannot determine the type of {}'.format(value_true.dtype))
+        if value_false.dtype not in _tmp_list :
+            raise NotImplementedError('cannot determine the type of {}'.format(value_false.dtype))
+        if value_false.rank != value_true.rank :
+            errors.report('Ternary Operator results should have the same rank', severity='fatal')
+        if value_false.shape != value_true.shape :
+            errors.report('Ternary Operator results should have the same shape', severity='fatal')
+        self._dtype = max([value_true.dtype, value_false.dtype], key = lambda x : _tmp_list.index(x))
+        self._precision = max([value_true.precision, value_false.precision])
+        self._shape = value_true.shape
+        self._rank = value_true.rank
+
+
+    @property
+    def cond(self):
+        return self._cond
+
+    @property
+    def value_true(self):
+        return self._value_true
+
+    @property
+    def value_false(self):
+        return self._value_false
+
 
 class StarredArguments(Basic):
     def __new__(cls, args):
@@ -5523,7 +5592,7 @@ def get_iterable_ranges(it, var_name=None):
                 return expr.lhs
             else:
                 return None
-        elif isinstance(expr, And):
+        elif isinstance(expr, sp_And):
             return [doit(a, targets) for a in expr.args]
         else:
             raise TypeError('Expecting And logical expression.')
@@ -5590,13 +5659,13 @@ def get_iterable_ranges(it, var_name=None):
 
 class ParserResult(Basic):
     def __new__(
-        self,
+        cls,
         program=None,
         module=None,
         mod_name = None,
         prog_name = None,
         ):
-        return Basic.__new__(self)
+        return Basic.__new__(cls)
 
     def __init__(
         self,

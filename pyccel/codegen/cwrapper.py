@@ -1,15 +1,70 @@
-from pyccel.ast.core import FunctionCall
 
-from pyccel.codegen.printing.ccode import CCodePrinter, dtype_registry
-from pyccel.ast.core import Module, Declare, Assign
-from pyccel.ast.type_inference import str_dtype
+def print_list(l):
+    """ Convert a list of strings to a string that contains the
+    python constructor of a list of strings """
+    if isinstance(l,str):
+        l = [l]
+    return '[{0}]'.format(', '.join("r'{0}'".format(li) for li in l))
 
-def create_c_setup(mod_name, dependencies, compiler, flags):
+def create_c_setup(mod_name,
+        dependencies,
+        compiler,
+        include = '',
+        libs = '',
+        libdirs = '',
+        flags = ''):
+    """
+    Create the code for the setup file which uses python setuptools
+    to compile a c file and generate the corresponding shared
+    library file
+
+    Parameters
+    ----------
+    mod_name : str
+            The name of the module that will be created
+    dependencies : list
+            A list of all files needed for the module
+    include : list
+            Include directories needed for compiling
+            If there is only one then a string can be passed instead of a list
+    libs : list
+            Libraries needed for compiling
+            If there is only one then a string can be passed instead of a list
+    libdirs : list
+            Library directories needed for compiling
+            If there is only one then a string can be passed instead of a list
+    flags : str
+            Additional flags to pass to the compiler
+
+    Returns
+    -------
+    code : str
+            A string containing the contents of the setup file
+    """
+
     code  = "from setuptools import Extension, setup\n\n"
 
-    flags = flags.replace('"','\\"')
-    deps  = ", ".join("r\"{0}.c\"".format(d) for d in dependencies)
-    code += "extension_mod = Extension(\"{0}\", [{1}], extra_compile_args = {2})\n\n".format(mod_name, deps, flags.strip().split())
+    deps  = ", ".join('r"{0}.c"'.format(d) for d in dependencies)
+
+    mod = '"{mod}"'.format(mod=mod_name)
+
+    files = "[{0}]".format(deps)
+
+    include_str = ('include_dirs = {0}'.format(print_list(include))
+                   if include else None)
+
+    libs_str    = ('libraries = {0}'.format(print_list(libs))
+                   if libs else None)
+    libdirs_str = ('library_dirs = {0}'.format(print_list(libdirs))
+                   if libdirs else None)
+
+    flags_str   = ('extra_compile_args = {0}'.format(print_list(flags.strip().split()))
+                   if flags else None)
+
+    args = [mod, files, include_str, libs_str, libdirs_str, flags_str]
+    args = ', '.join(a for a in args if a is not None)
+
+    code += "extension_mod = Extension({args})\n\n".format(args=args)
     code += "setup(name = \"" + mod_name + "\", ext_modules=[extension_mod])"
     return code
 

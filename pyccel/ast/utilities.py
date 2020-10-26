@@ -16,21 +16,22 @@ from .core import Product
 from .core import FunctionDef
 from .core import ValuedVariable
 from .core import Constant, Variable, IndexedVariable
+from .core import String
 
-from .builtins import Bool, Enumerate, Int, PythonFloat, PythonComplex, Len, Map, Range, Zip
+from .builtins import PythonBool, Enumerate, PythonInt, PythonFloat, PythonComplex, Len, Map, Range, Zip
 
 from .mathext  import math_functions, math_constants
 
 from .numpyext import Full, Empty, Zeros, Ones
 from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
-from .numpyext import Diag, Cross
+from .numpyext import Diag
 from .numpyext import NumpyMin, NumpyMax, NumpyAbs, NumpyFloor, Norm, Where
 from .numpyext import Array, Shape, Rand, NumpyRandint, NumpySum, Matmul, Real, NumpyComplex, Imag, NumpyMod
 from .numpyext import NumpyInt, Int32, Int64, NumpyFloat, Float32, Float64, Complex64, Complex128
 from .numpyext import NumpyExp, NumpyLog, NumpySqrt
 from .numpyext import NumpySin, NumpyCos, NumpyTan
 from .numpyext import NumpyArcsin, NumpyArccos, NumpyArctan, NumpyArctan2
-from .numpyext import NumpySinh, NumpyCosh, NumpyTanh
+from .numpyext import NumpySinh, NumpyCosh, NumpyTanh, NumpyFabs
 from .numpyext import NumpyArcsinh, NumpyArccosh, NumpyArctanh
 from .numpyext import numpy_constants, Linspace
 from .numpyext import Product as Prod
@@ -93,7 +94,7 @@ numpy_functions = {
     'abs'       : NumpyAbs,
     'floor'     : NumpyFloor,
     'absolute'  : NumpyAbs,
-    'fabs'      : NumpyAbs,
+    'fabs'      : NumpyFabs,
     'exp'       : NumpyExp,
     'log'       : NumpyLog,
     'sqrt'      : NumpySqrt,
@@ -131,10 +132,10 @@ builtin_functions_dict = {
     'range'    : Range,
     'zip'      : Zip,
     'enumerate': Enumerate,
-    'int'      : Int,
+    'int'      : PythonInt,
     'float'    : PythonFloat,
     'complex'  : PythonComplex,
-    'bool'     : Bool,
+    'bool'     : PythonBool,
     'sum'      : NumpySum,
     'len'      : Len,
     'max'      : NumpyMax,
@@ -217,7 +218,8 @@ def builtin_import(expr):
     if source == 'pyccel.decorators':
         funcs = [f[0] for f in inspect.getmembers(pyccel_decorators, inspect.isfunction)]
         for target in expr.target:
-            if str(target) not in funcs:
+            search_target = target.name if isinstance(target, AsName) else str(target)
+            if search_target not in funcs:
                 errors = Errors()
                 errors.report("{} does not exist in pyccel.decorators".format(target),
                         symbol = expr, severity='error')
@@ -264,9 +266,7 @@ def build_types_decorator(args, order=None):
             if order and a.rank > 1:
                 dtype = "{dtype}(order={ordering})".format(dtype=dtype, ordering=order)
 
-        if not ( dtype.startswith("'") and dtype.endswith("'") ):
-            dtype = "'{}'".format(dtype)
-
+        dtype = String(dtype)
         types.append(dtype)
 
     return types

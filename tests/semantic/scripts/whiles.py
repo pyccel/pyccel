@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 x = 5
 y = 0
 

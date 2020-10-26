@@ -1,28 +1,27 @@
 # coding: utf-8
 # pylint: disable=R0201
+
 from collections import OrderedDict
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.numbers   import BooleanTrue
-from pyccel.ast.builtins import Bool
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
-from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, Symbol, Constant
-from pyccel.ast.core import create_incremented_string, Declare, SeparatorComment
-from pyccel.ast.core import IfTernaryOperator, VariableAddress, Import, IsNot
+from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
+from pyccel.ast.core import create_incremented_string, SeparatorComment
+from pyccel.ast.core import VariableAddress, Import, PyccelNe
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
-from pyccel.ast.cwrapper import PyArgKeywords
-from pyccel.ast.cwrapper import Py_True, Py_False
-from pyccel.ast.cwrapper import cast_function_registry
-
-from pyccel.ast.type_inference import str_dtype
+from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
+from pyccel.ast.cwrapper import Py_None
+from pyccel.ast.cwrapper import PyErr_SetString, PyType_Check
+from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import *
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 
 errors = Errors()
 
@@ -31,9 +30,12 @@ __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 dtype_registry = {('pyobject', 0) : 'PyObject'}
 
 class CWrapperCodePrinter(CCodePrinter):
+    """A printer to convert a python module to strings of c code creating
+    an interface between python and an implementation of the module in c"""
     def __init__(self, parser, settings={}):
         CCodePrinter.__init__(self, parser,settings)
         self._cast_functions_dict = OrderedDict()
+        self._to_free_PyObject_list = []
         self._function_wrapper_names = dict()
         self._global_names = set()
 
@@ -56,20 +58,39 @@ class CWrapperCodePrinter(CCodePrinter):
         except KeyError:
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
+    def get_collect_function_call(self, variable, collect_var):
+        """
+        Represents a call to cast function responsible of collecting value from python object.
+
+        Parameters:
+        ----------
+        variable: variable
+            the variable needed to collect
+        collect_var :
+            the pyobject variable
+        """
+        if isinstance(variable.dtype, NativeComplex):
+            return self.get_cast_function_call('pycomplex_to_complex', collect_var)
+
+        if isinstance(variable.dtype, NativeBool):
+            return self.get_cast_function_call('pybool_to_bool', collect_var)
+        try :
+            collect_function = collect_function_registry[variable.dtype]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=variable.dtype,severity='fatal')
+        return FunctionCall(collect_function, [collect_var])
+
+
     def get_cast_function_call(self, cast_type, arg):
         """
         Represents a call to cast function responsible of the conversion of one data type into another.
 
         Parameters:
         ----------
-        used_names: list of strings
-            List of variable and function names
         cast_type: string
             The type of cast function on format 'data type_to_data type'
-        from_variable: variable
+        arg: variable
             the variable needed to cast
-        to_variable: variable
-            the result of the cast operation
         """
 
         if cast_type in self._cast_functions_dict:
@@ -106,28 +127,33 @@ class CWrapperCodePrinter(CCodePrinter):
             A list of statements to be carried out after parsing the arguments.
             These handle casting collect_var to variable if necessary
         """
+        body = []
+        collect_var = variable
 
-        if variable.dtype is NativeBool():
-            collect_type = NativeInteger()
-            collect_var = Variable(dtype=collect_type, precision=4,
-                name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function_call('pyint_to_bool', collect_var)
-            body = [Assign(variable, cast_function)]
-            return collect_var, body
-
-        if variable.dtype is NativeComplex():
+        if variable.is_optional:
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function_call('pycomplex_to_complex', collect_var)
-            if isinstance(variable, ValuedVariable):
-                body = [If((IsNot(collect_var, Nil()), [Assign(variable, cast_function)]),
-                           (BooleanTrue(),             [Assign(variable, variable.value)]))]
-            else:
-                body = [Assign(variable, cast_function)]
-            return collect_var, body
 
-        return variable, []
+        elif variable.dtype is NativeBool():
+            collect_type = NativeInteger()
+            collect_var = Variable(dtype=collect_type, precision=4,
+                name = self.get_new_name(used_names, variable.name+"_tmp"))
+            cast_function = 'pyint_to_bool'
+            body = [Assign(variable, self.get_cast_function_call(cast_function, collect_var))]
+
+        elif variable.dtype is NativeComplex():
+            collect_type = PyccelPyObject()
+            collect_var = Variable(dtype=collect_type, is_pointer=True,
+                name = self.get_new_name(used_names, variable.name+"_tmp"))
+            cast_function = 'pycomplex_to_complex'
+            body = [Assign(variable, self.get_cast_function_call(cast_function, collect_var))]
+            if isinstance(variable, ValuedVariable):
+                default_value = VariableAddress(Py_None)
+                body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
+            (BooleanTrue(), [Assign(variable, variable.value)]))]
+
+        return collect_var, body
 
     def get_PyBuildValue(self, used_names, variable):
         """
@@ -164,27 +190,23 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function_call('complex_to_pycomplex', variable)
+            self._to_free_PyObject_list.append(collect_var)
             return collect_var, AliasAssign(collect_var, cast_function)
 
         return variable, None
 
     def get_default_assign(self, arg, func_arg):
-        if isinstance(arg.dtype, (NativeReal, NativeInteger, NativeBool)):
+        if func_arg.is_optional:
+            return AliasAssign(arg, Py_None)
+        elif isinstance(arg.dtype, (NativeReal, NativeInteger, NativeBool)):
             return Assign(arg, func_arg.value)
         elif isinstance(arg.dtype, PyccelPyObject):
-            return AliasAssign(arg, Nil())
+            return AliasAssign(arg, Py_None)
         else:
             raise NotImplementedError('Default values are not implemented for this datatype : {}'.format(func_arg.dtype))
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
-
-    def _print_FuncCall(self, expr):
-        name = expr.name
-        args = ', '.join(['{}'.format(self._print(a)) for a in expr.args])
-        return ('{name}({args})'.format(
-            name = name,
-            args = args))
 
     def _print_PyArg_ParseTupleNode(self, expr):
         name    = 'PyArg_ParseTupleAndKeywords'
@@ -229,6 +251,52 @@ class CWrapperCodePrinter(CCodePrinter):
                         '{arg_names}\n'
                         '}};\n'.format(name=expr.name, arg_names = arg_names))
 
+    def optional_element_management(self, used_names, a, collect_var):
+        """
+        Responsible for collecting the variable required to build the result
+        into a temporary variable and create body of optional args check
+        in format
+            if (pyobject != Py_None){
+                assigne pyobject value to tmp variable
+                collect the adress of the tmp variable
+            }else{
+                collect Null
+            }
+
+        Parameters:
+        ----------
+        used_names : list of strings
+            List of variable and function names to avoid name collisions
+
+        a : Variable
+            The optional variable
+        collect_var : variable
+            the pyobject type variable  holder of value
+
+        Returns
+        -------
+        optional_tmp_var : Variable
+            The tmp variable
+
+        body : list
+            A list of statements
+        """
+        optional_tmp_var = Variable(dtype=a.dtype,
+                name = self.get_new_name(used_names, a.name+"_tmp"))
+
+        default_value = VariableAddress(Py_None)
+
+        check = FunctionCall(PyType_Check(a.dtype), [collect_var])
+        err = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(a, a.dtype))
+        body = [If((PyccelNot(check), [err, Return([Nil()])]))]
+        body += [Assign(optional_tmp_var, self.get_collect_function_call(optional_tmp_var, collect_var))]
+        body += [Assign(VariableAddress(a), VariableAddress(optional_tmp_var))]
+
+        body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
+        (BooleanTrue(), [Assign(VariableAddress(a), a.value)]))]
+        return optional_tmp_var, body
+
+
     def _print_FunctionDef(self, expr):
         # Save all used names
         used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name.name])
@@ -238,7 +306,6 @@ class CWrapperCodePrinter(CCodePrinter):
         self._function_wrapper_names[expr.name] = wrapper_name
         self._global_names.add(wrapper_name)
         used_names.add(wrapper_name)
-
         # Collect local variables
         wrapper_vars        = {a.name : a for a in expr.arguments}
         wrapper_vars.update({r.name : r for r in expr.results})
@@ -274,6 +341,10 @@ class CWrapperCodePrinter(CCodePrinter):
             # Write default values
             if isinstance(a, ValuedVariable):
                 wrapper_body.append(self.get_default_assign(parse_args[-1], a))
+            if a.is_optional :
+                tmp_variable, body = self.optional_element_management(used_names, a, collect_var)
+                wrapper_vars[tmp_variable.name] = tmp_variable
+                wrapper_body_translations += body
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, expr.arguments, parse_args, keyword_list)
@@ -302,6 +373,11 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Call PyBuildNode
         wrapper_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
+
+        # Call free function for python type
+        wrapper_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
+        self._to_free_PyObject_list.clear()
+        #Return
         wrapper_body.append(Return(wrapper_results))
 
         # Create FunctionDef and write using classic method
@@ -313,7 +389,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
-        self._global_names = set([f.name.name for f in expr.funcs])
+        self._global_names = set(f.name.name for f in expr.funcs)
         sep = self._print(SeparatorComment(40))
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.funcs)
 
@@ -357,7 +433,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports  = [Import(s) for s in self._additional_imports]
-        imports += [Import('Python.h')]
+        imports += [Import('Python')]
         imports  = '\n'.join(self._print(i) for i in imports)
 
         return ('#define PY_SSIZE_T_CLEAN\n'

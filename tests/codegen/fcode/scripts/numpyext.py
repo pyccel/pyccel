@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from numpy import zeros
 from numpy import ones
 from numpy import sum as np_sum

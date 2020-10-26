@@ -3,11 +3,8 @@ from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float
 from sympy.logic.boolalg      import BooleanTrue as sp_BooleanTrue, BooleanFalse as sp_BooleanFalse
 from sympy.core.expr          import Expr
-from sympy.core.numbers       import NegativeOne as sp_NegativeOne
-from pyccel.ast.datatypes     import (datatype, DataType, NativeSymbol,
-                                  NativeInteger, NativeBool, NativeReal,
-                                  NativeComplex, NativeRange, NativeTensor, NativeString,
-                                  NativeGeneric, NativeTuple, default_precision)
+from pyccel.ast.datatypes     import (NativeInteger, NativeBool, NativeReal,
+                                  NativeComplex, default_precision)
 
 __all__ = (
     'BooleanTrue',
@@ -15,6 +12,7 @@ __all__ = (
     'Integer',
     'Float',
     'Complex',
+    'get_default_value'
 )
 
 #------------------------------------------------------------------------------
@@ -71,3 +69,20 @@ class ImaginaryUnit(Expr, PyccelAstNode):
     _rank      = 0
     _shape     = ()
     _precision = default_precision['complex']
+
+#------------------------------------------------------------------------------
+
+def get_default_value(dtype):
+    """Returns the default value of a native datatype."""
+    if isinstance(dtype, NativeInteger):
+        value = Integer(0)
+    elif isinstance(dtype, NativeReal):
+        value = Float(0.0)
+    elif isinstance(dtype, NativeComplex):
+        value = Complex(0.0)
+    elif isinstance(dtype, NativeBool):
+        value = BooleanFalse()
+    else:
+        raise TypeError('Unknown type')
+    return value
+

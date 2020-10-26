@@ -37,7 +37,6 @@ __all__ = (
 # --------- FUNCTIONS -----------
 #
     'datatype',
-#    'get_default_value',
     'is_iterable_datatype',
     'is_pyccel_datatype',
     'is_with_construct_datatype',
@@ -76,8 +75,10 @@ dtype_and_precision_registry = { 'real':('real',default_precision['float']),
                                  'int32':('int',4),
                                  'int64':('int',8),
                                  'int'  :('int', default_precision['int']),
+                                 'pythonint'  :('int', default_precision['int']),
                                  'integer':('int',default_precision['int']),
-                                 'bool' :('bool',default_precision['bool'])}
+                                 'bool' :('bool',default_precision['bool']),
+                                 'pythonbool' :('bool',default_precision['bool'])}
 
 
 class DataType(with_metaclass(Singleton, Basic)):
@@ -247,21 +248,6 @@ def is_iterable_datatype(dtype):
         return True
     else:
         return False
-
-
-def get_default_value(dtype):
-    """Returns the default value of a native datatype."""
-    if isinstance(dtype, NativeInteger):
-        value = 0
-    elif isinstance(dtype, NativeReal):
-        value = 0.0
-    elif isinstance(dtype, NativeComplex):
-        value = 0.0
-    elif isinstance(dtype, NativeBool):
-        value = BooleanFalse()
-    else:
-        raise TypeError('Unknown type')
-    return value
 
 
 # TODO improve

@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=R0201
+# pylint: disable=missing-function-docstring
 
 import os
 import re
 
 import ast
-#==============================================================================
-from pyccel.parser.extend_tree import extend_tree
-from pyccel.parser.extend_tree import CommentLine, CommentMultiLine
 #==============================================================================
 
 from sympy.core.function import Function
@@ -56,14 +54,15 @@ from pyccel.ast.core import create_variable
 from pyccel.ast.core import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus, PyccelAssociativeParenthesis
-from pyccel.ast.core import PyccelOperator, PyccelUnary
+from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
+from pyccel.ast.core import PyccelUnary, PyccelUnarySub
 
 from pyccel.ast.builtins import Print
 from pyccel.ast.headers  import Header, MetaVariable
 from pyccel.ast.numbers  import Integer, Float, Complex, BooleanFalse, BooleanTrue
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 
+from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.base import BasicParser
 from pyccel.parser.utilities import read_file
 from pyccel.parser.utilities import get_default_path
@@ -72,7 +71,7 @@ from pyccel.parser.syntax.headers import parse as hdr_parse
 from pyccel.parser.syntax.openmp  import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
-from pyccel.errors.errors import Errors, PyccelSyntaxError
+from pyccel.errors.errors import Errors
 
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
@@ -104,11 +103,13 @@ class SyntaxParser(BasicParser):
         code = inputs
         if os.path.isfile(inputs):
 
+            self._filename = inputs
+            errors.set_target(self.filename, 'file')
+
             # we don't use is_valid_filename_py since it uses absolute path
             # file extension
 
             code = read_file(inputs)
-            self._filename = inputs
 
         self._code = code
 
@@ -118,7 +119,15 @@ class SyntaxParser(BasicParser):
 
         self._fst = tree
 
-        self._used_names = set([str(a.id) for a in ast.walk(self._fst) if isinstance(a, ast.Name)])
+        def get_name(a):
+            if isinstance(a, ast.Name):
+                return a.id
+            elif isinstance(a, ast.arg):
+                return a.arg
+            else:
+                raise NotImplementedError()
+
+        self._used_names = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg)))
         self._dummy_counter = 1
 
         self.parse(verbose=True)
@@ -132,10 +141,6 @@ class SyntaxParser(BasicParser):
 
         # TODO - add settings to Errors
         #      - filename
-
-        errors = Errors()
-        if self.filename:
-            errors.set_target(self.filename, 'file')
         errors.set_parser_stage('syntax')
 
         PyccelAstNode.stage = 'syntactic'
@@ -483,7 +488,7 @@ class SyntaxParser(BasicParser):
             Func = PyccelUnary
 
         elif isinstance(stmt.op, ast.USub):
-            Func = PyccelMinus
+            Func = PyccelUnarySub
 
         elif isinstance(stmt.op, ast.Invert):
             Func = PyccelInvert
@@ -492,7 +497,7 @@ class SyntaxParser(BasicParser):
                           symbol = stmt,
                           severity='fatal')
 
-        return Func(PyccelUnary(target))
+        return Func(target)
 
     def _visit_BinOp(self, stmt):
 
@@ -616,17 +621,18 @@ class SyntaxParser(BasicParser):
         imports      = []
 
         # TODO improve later
-        decorators = {str(d) if isinstance(d,Symbol) else str(type(d)): d \
+        decorators = {str(d) if isinstance(d, Symbol) else str(type(d)): d \
                             for d in self._visit(stmt.decorator_list)}
 
         if 'bypass' in decorators:
             return EmptyNode()
 
         if 'stack_array' in decorators:
-            args = list(decorators['stack_array'].args)
-            for i in range(len(args)):
-                args[i] = str(args[i]).replace("'", '')
-            decorators['stack_array'] = tuple(args)
+            decorators['stack_array'] = tuple(str(a) for a in decorators['stack_array'].args)
+
+        if 'allow_negative_index' in decorators:
+            decorators['allow_negative_index'] = tuple(str(a) for a in decorators['allow_negative_index'].args)
+
         # extract the types to construct a header
         if 'types' in decorators:
             types = []
@@ -864,14 +870,12 @@ class SyntaxParser(BasicParser):
 
         iterator = self._visit(stmt.target)
         iterable = self._visit(stmt.iter)
-        ifs = stmt.ifs
         expr = For(iterator, iterable, [], strict=False)
         expr.set_fst(stmt)
         return expr
 
     def _visit_ListComp(self, stmt):
 
-        import numpy as np
         result = self._visit(stmt.elt)
         generators = list(self._visit(stmt.generators))
 
@@ -926,10 +930,8 @@ class SyntaxParser(BasicParser):
             if len(grandparent.targets) != 1:
                 raise NotImplementedError("Cannot unpack function with generator expression argument")
             lhs = self._visit(grandparent.targets[0])
-            cond = False
         else:
             lhs = self.get_new_variable()
-            cond = True
 
         body = result
         if name == 'sum':
@@ -967,7 +969,6 @@ class SyntaxParser(BasicParser):
         test = self._visit(stmt.test)
         body = self._visit(stmt.body)
         orelse = self._visit(stmt.orelse)
-
         if len(orelse)==1 and isinstance(orelse[0],If):
             orelse = orelse[0]._args
             return If(Tuple(test, body, sympify=False), *orelse)
@@ -980,9 +981,7 @@ class SyntaxParser(BasicParser):
         test1 = self._visit(stmt.test)
         first = self._visit(stmt.body)
         second = self._visit(stmt.orelse)
-        args = [Tuple(test1, [first], sympify=False),
-                Tuple(BooleanTrue(), [second], sympify=False)]
-        expr = IfTernaryOperator(*args)
+        expr = IfTernaryOperator(test1, first, second)
         expr.set_fst(stmt)
         return expr
 

@@ -10,6 +10,7 @@ from pyccel.ast.core import Assign
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import Comment
+from pyccel.ast.core import IndexedVariable
 
 from pyccel.ast.type_inference import str_dtype
 
@@ -86,8 +87,7 @@ def as_static_function(func, name=None):
             # ...
 
             _args += additional_args
-            for j in additional_args:
-                _arguments_inout += [False]
+            _arguments_inout += [False] * len(additional_args)
 
             a_new = Variable( a.dtype, a.name,
                               allocatable = a.allocatable,

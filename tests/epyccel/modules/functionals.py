@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from pyccel.decorators import types
 
 def functional_for_1d_range():

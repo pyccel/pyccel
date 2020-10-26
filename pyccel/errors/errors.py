@@ -72,7 +72,7 @@ class ErrorInfo:
                  symbol=None,
                  blocker=False):
         # The source file that was the source of this error.
-        self.filename = basename(filename)
+        self.filename = basename(filename) if filename is not None else ''
         # The line number related to this error within file.
         self.line = line
         # The column number related to this error with file.

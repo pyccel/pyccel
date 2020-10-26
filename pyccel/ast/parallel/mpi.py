@@ -113,7 +113,6 @@ def mpify(stmt, **options):
     if isinstance(stmt, Ones):
         if stmt.grid:
             lhs   = stmt.lhs
-            shape = stmt.shape
             grid  = mpify(stmt.grid, **options)
             return Ones(lhs, grid=grid)
 

@@ -1,4 +1,5 @@
-from pyccel.decorators import types, stack_array
+# pylint: disable=missing-function-docstring, missing-module-docstring/
+from pyccel.decorators import types, stack_array, allow_negative_index
 
 #==============================================================================
 # 1D ARRAYS OF INT-32
@@ -535,6 +536,54 @@ def array_kwargs_ones():
     d = ones(dtype=int, shape=2+n)
 
     return np_sum(a) + np_sum(b) + np_sum(c) + np_sum(d)
+
+
+#==============================================================================
+# NEGATIVE INDEXES
+#==============================================================================
+
+@types('int')
+def constant_negative_index(n):
+    import numpy as np
+    a = np.empty(n, dtype=int)
+
+    for i in range(n):
+        a[i] = i
+
+    return a[-1], a[-2]
+
+@types('int')
+def almost_negative_index(n):
+    import numpy as np
+    a = np.empty(n, dtype=int)
+
+    for i in range(n):
+        a[i] = i
+    j = -1
+
+    return a[-j]
+
+@allow_negative_index('a')
+@types('int', 'int')
+def var_negative_index(n, idx):
+    import numpy as np
+    a = np.empty(n, dtype=int)
+
+    for i in range(n):
+        a[i] = i
+
+    return a[idx]
+
+@allow_negative_index('a')
+@types('int', 'int', 'int')
+def expr_negative_index(n, idx_1, idx_2):
+    import numpy as np
+    a = np.empty(n, dtype=int)
+
+    for i in range(n):
+        a[i] = i
+
+    return a[idx_1-idx_2]
 
 
 #==============================================================================

@@ -50,7 +50,8 @@
 #$ header function omp_get_partition_place_nums() results(int [:])
 
 #$ header function omp_set_default_device(int)
-#$ header function omp_get_default_device() results(int) 
+#$ header function omp_get_default_device() results(int)
+
 #$ header function omp_get_num_devices() results(int) 
 
 #$ header function omp_get_num_teams() results(int) 

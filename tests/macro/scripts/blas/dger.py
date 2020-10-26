@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 # TODO - y must be optional
 
 from pyccel.stdlib.internal.blas import dger

@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from numpy import zeros
 
 #$ header function matmat(double [:,:], double [:,:], double [:,:])

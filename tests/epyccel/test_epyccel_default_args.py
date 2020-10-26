@@ -1,12 +1,11 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 # coding: utf-8
 
 import numpy as np
 import pytest
-import shutil
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
-from conftest       import *
 
 #------------------------------------------------------------------------------
 def test_f1(language):

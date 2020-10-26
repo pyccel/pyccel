@@ -7,7 +7,6 @@ import re
 
 #==============================================================================
 
-from pyccel.ast.core import DottedName
 from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface
 from pyccel.ast.core import PythonFunction, SympyFunction
@@ -105,31 +104,31 @@ def get_filename_from_import(module,input_folder=''):
     errors = Errors()
     errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
                   severity='fatal')
-                  
+
 
 #==============================================================================
 
 class Scope(object):
     """."""
-    
+
     def __init__(self):
-    
+
         self._imports = OrderedDict()
-            
+
         self._imports['functions'] = OrderedDict()
         self._imports['variables'] = OrderedDict()
         self._imports['classes'  ] = OrderedDict()
         self._imports['imports'  ] = OrderedDict()
-        
+
         self._imports['python_functions'  ] = OrderedDict()
         self._imports['symbolic_functions'] = OrderedDict()
-        
+
         self._variables = OrderedDict()
         self._classes   = OrderedDict()
         self._functions = OrderedDict()
         self._macros    = OrderedDict()
         self._headers   = OrderedDict()
-        
+
         # TODO use another name for headers
         #      => reserved keyword, or use __
         self.parent_scope        = None
@@ -138,65 +137,65 @@ class Scope(object):
         self._cls_constructs     = OrderedDict()
         self._symbolic_functions = OrderedDict()
         self._python_functions   = OrderedDict()
-        
+
         self._is_loop = False
         # scoping for loops
         self._loops = []
-        
+
     @property
     def imports(self):
         return self._imports
-        
+
     @property
     def variables(self):
         return self._variables
-        
+
     @property
     def classes(self):
         return self._classes
-        
+
     @property
     def functions(self):
         return self._functions
-        
+
     @property
     def macros(self):
         return self._macros
-        
+
     @property
     def headers(self):
         return self._headers
-        
+
     @property
     def static_functions(self):
         return self._static_functions
-        
+
     @property
     def cls_constructs(self):
         return self._cls_constructs
-        
+
     @property
     def sons_scopes(self):
         return self._sons_scopes
-        
+
     @property
     def symbolic_functions(self):
         return self._symbolic_functions
-        
+
     @property
     def python_functions(self):
         return self._python_functions
-        
+
     @property
     def is_loop(self):
         return self._is_loop
-        
+
     @property
     def loops(self):
         return self._loops
 
 
-        
+
 
 #==============================================================================
 
@@ -266,7 +265,7 @@ class BasicParser(object):
             if not isinstance(headers, dict):
                 raise TypeError('Expecting a dict of headers')
 
-        
+
             self.namespace.headers.update(headers)
 
 
@@ -411,7 +410,7 @@ class BasicParser(object):
 
     def insert_symbolic_function(self, func):
         """."""
-        
+
         container = self.namespace.symbolic_functions
         if isinstance(func, SympyFunction):
             container[str(func.name)] = func
@@ -425,7 +424,7 @@ class BasicParser(object):
         """."""
 
         container = self.namespace.python_functions
-        
+
         if isinstance(func, PythonFunction):
             container[str(func.name)] = func
         else:
@@ -435,11 +434,11 @@ class BasicParser(object):
         """."""
 
         # this method is only used in the syntatic stage
-        
+
         if not isinstance(expr, Import):
             raise TypeError('Expecting Import expression')
         container = self.namespace.imports['imports']
-        
+
         # if source is not specified, imported things are treated as sources
         if len(expr.target) == 0:
             if isinstance(expr.source, AsName):
@@ -453,7 +452,7 @@ class BasicParser(object):
                 container[name] = []
         else:
             source = str(expr.source)
-            if not source in pyccel_builtin_import_registery:
+            if source not in pyccel_builtin_import_registery:
                 for t in expr.target:
                     name = [str(t)]
                     if not source in container.keys():

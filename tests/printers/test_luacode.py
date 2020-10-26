@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
         factorial, Piecewise,  symbols, S, Float)
 from sympy import Catalan, EulerGamma, GoldenRatio, I
@@ -11,7 +12,7 @@ from sympy.sets.fancysets import Range
 from sympy.utilities.pytest import raises
 
 from pyccel.types.ast import Assign, For, Import, Declare, Variable, InArgument, InOutArgument, OutArgument
-from pyccel.printers import lua_code, LuaCodePrinter
+from pyccel.printers import lua_code
 
 x, y, z = symbols('x, y, z')
 a, b, c = symbols('a, b, c')

@@ -1,10 +1,11 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 # coding: utf-8
 
 # Note that we need to change the directory for tests involving the import
 # statement
 
-import pytest
 import os
+import pytest
 
 from pyccel.parser.parser   import Parser
 from pyccel.codegen.codegen import Codegen
@@ -59,6 +60,6 @@ if __name__ == '__main__':
 
     for f in files:
         print('> testing {0}'.format(str(os.path.basename(f))))
-        call_test_codegen(f)
+        test_codegen(f)
 
     print('\n')

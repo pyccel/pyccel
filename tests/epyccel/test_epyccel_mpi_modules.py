@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from mpi4py import MPI
 import pytest
 import numpy as np

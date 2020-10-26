@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from numpy import array
 from numpy import empty
 from numpy import ones

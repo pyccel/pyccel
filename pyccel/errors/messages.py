@@ -54,10 +54,13 @@ CANNOT_ISINSTANCE_NEWTYPE = 'Cannot use isinstance() with a NewType type'
 BARE_GENERIC = 'Missing type parameters for generic type'
 IMPLICIT_GENERIC_ANY_BUILTIN = 'Implicit generic "Any". Use \'{}\' and specify generic parameters'
 INCOMPATIBLE_TYPEVAR_VALUE = 'Value of type variable "{}" of {} cannot be {}'
+INCOMPATIBLE_TYPEVAR_TO_FUNC = 'TypeError: ufunc "{}" not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule \'safe\''
 UNSUPPORTED_ARGUMENT_2_FOR_SUPER = 'Unsupported argument 2 for "super"'
 WRONG_NUMBER_OUTPUT_ARGS = 'Number of output arguments does not match number of provided variables'
 INDEXED_TUPLE = 'Tuples must be indexed with constant integers for the type inference to work'
 LIST_OF_TUPLES = 'Cannot create list of non-homogeneous tuples'
+
+UNDEFINED_DECORATORS = 'Decorator(s) not used'
 
 UNDEFINED_LAMBDA_VARIABLE = 'Unknown variable(s) in lambda function'
 UNDEFINED_LAMBDA_FUNCTION = 'Unknown function in lambda function'

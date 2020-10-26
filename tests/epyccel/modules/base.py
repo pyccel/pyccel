@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from pyccel.decorators import types
 
 @types('bool')
@@ -92,14 +93,14 @@ def not_val(a):
     return c
 
 @types('bool')
-def is_nil(a):
+def is_nil(a = None):
     c = False
     if a is None:
         c = True
     return c
 
 @types('bool')
-def is_not_nil(a):
+def is_not_nil(a = None):
     c = False
     if a is not None:
         c = True
