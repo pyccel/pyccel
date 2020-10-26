@@ -9,7 +9,6 @@ from pyccel.ast.core      import FunctionDef, Module, Program, Interface, Module
 from pyccel.ast.core      import EmptyNode, NewLine, Comment, CommentBlock
 from pyccel.ast.headers   import Header
 from pyccel.errors.errors import Errors
-from pyccel.ast.core      import Import
 
 _extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
 _header_extension_registry = {'fortran': None, 'c':'h',  'python':None}
