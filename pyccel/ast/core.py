@@ -4720,6 +4720,7 @@ class OMP_ParallelConstruct(AnnotatedComment):
 
 class OMP_SingleConstruct(AnnotatedComment):
     pass
+
 class Omp_EndClause(AnnotatedComment):
     pass
 
