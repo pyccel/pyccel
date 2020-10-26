@@ -671,7 +671,7 @@ class CCodePrinter(CodePrinter):
         self._additional_declare.clear()
         sep = self._print(SeparatorComment(40))
 
-        imports = ''.join(self._print(i) for i in expr.imports)
+        imports = ''.join(self._print(i) for i in expr.imports).replace("#include <omp.h>","")
 
         return ('{sep}\n'
                 '{signature}\n{{\n'
