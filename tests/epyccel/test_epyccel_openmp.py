@@ -10,10 +10,10 @@ from pyccel.epyccel import epyccel
 #==============================================================================
 
 def test_module_1(language):
-    f1 = epyccel(openmp.f1, language=language, accelerator='openmp')
-    set_num_threads = epyccel(openmp.set_num_threads, language=language, accelerator='openmp')
-    get_num_threads = epyccel(openmp.get_num_threads, language=language, accelerator='openmp')
-    get_max_threads = epyccel(openmp.get_max_threads, language=language, accelerator='openmp')
+    f1 = epyccel(openmp.f1, language=language, accelerator='openmp', verbose = True)
+    set_num_threads = epyccel(openmp.set_num_threads, language=language, accelerator='openmp', verbose = True)
+    get_num_threads = epyccel(openmp.get_num_threads, language=language, accelerator='openmp', verbose = True)
+    get_max_threads = epyccel(openmp.get_max_threads, language=language, accelerator='openmp', verbose = True)
     set_num_threads(4)
     assert get_max_threads() == 4
     assert get_num_threads() == 4
