@@ -22,19 +22,19 @@ from .builtins import PythonBool, Enumerate, PythonInt, PythonFloat, PythonCompl
 
 from .mathext  import math_functions, math_constants
 
-from .numpyext import Full, Empty, Zeros, Ones
-from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
-from .numpyext import Diag
-from .numpyext import NumpyMin, NumpyMax, NumpyAbs, NumpyFloor, Norm, Where
-from .numpyext import Array, Shape, Rand, NumpyRandint, NumpySum, Matmul, Real, NumpyComplex, Imag, NumpyMod
-from .numpyext import NumpyInt, Int32, Int64, NumpyFloat, Float32, Float64, Complex64, Complex128
+from .numpyext import NumpyFull, NumpyEmpty, NumpyZeros, NumpyOnes
+from .numpyext import NumpyFullLike, NumpyEmptyLike, NumpyZerosLike, NumpyOnesLike
+from .numpyext import NumpyDiag
+from .numpyext import NumpyMin, NumpyMax, NumpyAbs, NumpyFloor, NumpyNorm, NumpyWhere
+from .numpyext import NumpyArray, NumpyShape, NumpyRand, NumpyRandint, NumpySum, NumpyMatmul, NumpyReal, NumpyComplex, NumpyImag, NumpyMod
+from .numpyext import NumpyInt, NumpyInt32, NumpyInt64, NumpyFloat, NumpyFloat32, NumpyFloat64, NumpyComplex64, NumpyComplex128
 from .numpyext import NumpyExp, NumpyLog, NumpySqrt
 from .numpyext import NumpySin, NumpyCos, NumpyTan
 from .numpyext import NumpyArcsin, NumpyArccos, NumpyArctan, NumpyArctan2
 from .numpyext import NumpySinh, NumpyCosh, NumpyTanh, NumpyFabs
 from .numpyext import NumpyArcsinh, NumpyArccosh, NumpyArctanh
-from .numpyext import numpy_constants, Linspace
-from .numpyext import Product as Prod
+from .numpyext import numpy_constants, NumpyLinspace
+from .numpyext import NumpyProduct
 
 import pyccel.decorators as pyccel_decorators
 
@@ -55,41 +55,41 @@ __all__ = (
 # TODO [YG, 20.05.2020]: Move dictionary to 'numpyext' module
 numpy_functions = {
     # ... array creation routines
-    'full'      : Full,
-    'empty'     : Empty,
-    'zeros'     : Zeros,
-    'ones'      : Ones,
-    'full_like' : FullLike,
-    'empty_like': EmptyLike,
-    'zeros_like': ZerosLike,
-    'ones_like' : OnesLike,
-    'array'     : Array,
+    'full'      : NumpyFull,
+    'empty'     : NumpyEmpty,
+    'zeros'     : NumpyZeros,
+    'ones'      : NumpyOnes,
+    'full_like' : NumpyFullLike,
+    'empty_like': NumpyEmptyLike,
+    'zeros_like': NumpyZerosLike,
+    'ones_like' : NumpyOnesLike,
+    'array'     : NumpyArray,
     # ...
-    'shape'     : Shape,
-    'norm'      : Norm,
+    'shape'     : NumpyShape,
+    'norm'      : NumpyNorm,
     'int'       : NumpyInt,
-    'real'      : Real,
-    'imag'      : Imag,
+    'real'      : NumpyReal,
+    'imag'      : NumpyImag,
     'float'     : NumpyFloat,
-    'double'    : Float64,
+    'double'    : NumpyFloat64,
     'mod'       : NumpyMod,
-    'float32'   : Float32,
-    'float64'   : Float64,
-    'int32'     : Int32,
-    'int64'     : Int64,
+    'float32'   : NumpyFloat32,
+    'float64'   : NumpyFloat64,
+    'int32'     : NumpyInt32,
+    'int64'     : NumpyInt64,
     'complex'   : NumpyComplex,
-    'complex128': Complex128,
-    'complex64' : Complex64,
-    'matmul'    : Matmul,
+    'complex128': NumpyComplex128,
+    'complex64' : NumpyComplex64,
+    'matmul'    : NumpyMatmul,
     'sum'       : NumpySum,
     'max'      : NumpyMax,
     'min'      : NumpyMin,
-    'prod'      : Prod,
-    'product'   : Prod,
-    'linspace'  : Linspace,
-    'diag'      : Diag,
-    'where'     : Where,
-#    'cross'     : Cross,   # Currently not correctly implemented
+    'prod'      : NumpyProd,
+    'product'   : NumpyProd,
+    'linspace'  : NumpyLinspace,
+    'diag'      : NumpyDiag,
+    'where'     : NumpyWhere,
+#    'cross'     : NumpyCross,   # Currently not correctly implemented
     # ---
     'abs'       : NumpyAbs,
     'floor'     : NumpyFloor,
@@ -118,12 +118,12 @@ numpy_functions = {
 }
 
 numpy_linalg_functions = {
-    'norm'      : Norm,
+    'norm'      : NumpyNorm,
 }
 
 numpy_random_functions = {
-    'rand'      : Rand,
-    'random'    : Rand,
+    'rand'      : NumpyRand,
+    'random'    : NumpyRand,
     'randint'   : NumpyRandint,
 }
 

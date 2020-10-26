@@ -58,13 +58,13 @@ from pyccel.ast.numbers   import BooleanTrue
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 from pyccel.ast.type_inference import str_dtype
 
-from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
-from pyccel.ast.numpyext import Real, Where
+from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyLinspace, NumpyDiag, NumpyCross
+from pyccel.ast.numpyext import NumpyReal, NumpyWhere
 from pyccel.ast.numpyext import NumpyComplex, NumpyMod, NumpyFloat
-from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
-from pyccel.ast.numpyext import Rand, NumpyRandint
+from pyccel.ast.numpyext import NumpyFullLike, NumpyEmptyLike, NumpyZerosLike, NumpyOnesLike
+from pyccel.ast.numpyext import NumpyRand, NumpyRandint
 from pyccel.ast.numpyext import NumpyNewArray
-from pyccel.ast.numpyext import Shape
+from pyccel.ast.numpyext import NumpyShape
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -1062,15 +1062,17 @@ class FCodePrinter(CodePrinter):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}\n'.format(lhs_code, rhs_code)
 
-        if isinstance(rhs, (PythonInt, Real, NumpyComplex)):
+        if isinstance(rhs, (PythonInt, NumpyReal, NumpyComplex)):
             lhs = self._print(expr.lhs)
             rhs = expr.rhs.fprint(self._print)
             return '{0} = {1}\n'.format(lhs,rhs)
 
-        if isinstance(rhs, (Array, Linspace, Diag, Cross, Where, PyccelArraySize)):
+        if isinstance(rhs, (NumpyArray, NumpyLinspace, NumpyDiag, NumpyCross,\
+						NumpyWhere, PyccelArraySize)):
             return rhs.fprint(self._print, expr.lhs) + '\n'
 
-        if isinstance(rhs, (Full, FullLike, EmptyLike, ZerosLike, OnesLike, Rand)):
+        if isinstance(rhs, (NumpyFull, NumpyFullLike, NumpyEmptyLike,\
+						NumpyZerosLike, NumpyOnesLike, NumpyRand)):
 
             stack_array = False
             if self._current_function:
@@ -2367,7 +2369,7 @@ class FCodePrinter(CodePrinter):
             base = self._print(expr.base.label)
 
         inds = list(expr.indices)
-        base_shape = Shape(expr.base)
+        base_shape = NumpyShape(expr.base)
         allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
                 expr.base.internal_variable.allows_negative_indexes)
 

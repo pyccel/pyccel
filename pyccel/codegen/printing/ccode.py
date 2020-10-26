@@ -15,7 +15,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, Nativ
 
 
 from pyccel.ast.numpyext import NumpyFloat
-from pyccel.ast.numpyext import Real as NumpyReal, Imag as NumpyImag
+from pyccel.ast.numpyext import NumpyReal, NumpyImag
 
 from pyccel.ast.builtins  import Range, PythonFloat, PythonComplex
 from pyccel.ast.core import Declare, ValuedVariable

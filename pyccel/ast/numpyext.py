@@ -52,39 +52,39 @@ __all__ = (
     'NumpyArccosh',
     'NumpyArctanh',
     # ---
-    'Cross',
-    'Diag',
-    'Empty',
-    'EmptyLike',
+    'NumpyCross',
+    'NumpyDiag',
+    'NumpyEmpty',
+    'NumpyEmptyLike',
     'NumpyFloat',
     'NumpyComplex',
-    'Complex64',
-    'Complex128',
-    'Float32',
-    'Float64',
-    'Full',
-    'FullLike',
-    'Imag',
+    'NumpyComplex64',
+    'NumpyComplex128',
+    'NumpyFloat32',
+    'NumpyFloat64',
+    'NumpyFull',
+    'NumpyFullLike',
+    'NumpyImag',
     'NumpyInt',
-    'Int32',
-    'Int64',
-    'Linspace',
-    'Matmul',
+    'NumpyInt32',
+    'NumpyInt64',
+    'NumpyLinspace',
+    'NumpyMatmul',
     'NumpyMax',
     'NumpyMin',
     'NumpyMod',
-    'Norm',
+    'NumpyNorm',
     'NumpySum',
-    'Ones',
-    'OnesLike',
-    'Product',
-    'Rand',
+    'NumpyOnes',
+    'NumpyOnesLike',
+    'NumpyProduct',
+    'NumpyRand',
     'NumpyRandint',
-    'Real',
-    'Shape',
-    'Where',
-    'Zeros',
-    'ZerosLike'
+    'NumpyReal',
+    'NumpyShape',
+    'NumpyWhere',
+    'NumpyZeros',
+    'NumpyZerosLike'
 )
 
 #==============================================================================
@@ -123,7 +123,7 @@ class NumpyNewArray(PyccelAstNode):
 # TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
 # TODO [YG, 22.05.2020]: move dtype & prec processing to __init__
 # TODO [YG, 22.05.2020]: change properties to read _dtype, _prec, _rank, etc...
-class Array(Application, NumpyNewArray):
+class NumpyArray(Application, NumpyNewArray):
     """
     Represents a call to  numpy.array for code generation.
 
@@ -252,7 +252,7 @@ class NumpySum(Function, PyccelAstNode):
         return 'sum({0})'.format(rhs_code)
 
 #==============================================================================
-class Product(Function, PyccelAstNode):
+class NumpyProduct(Function, PyccelAstNode):
     """Represents a call to  numpy.prod for code generation.
 
     arg : list , tuple , PythonTuple, Tuple, List, Variable
@@ -283,7 +283,7 @@ class Product(Function, PyccelAstNode):
         return 'product({0})'.format(rhs_code)
 
 #==============================================================================
-class Matmul(Application, PyccelAstNode):
+class NumpyMatmul(Application, PyccelAstNode):
     """Represents a call to numpy.matmul for code generation.
     arg : list , tuple , PythonTuple, Tuple, List, Variable
     """
@@ -366,7 +366,7 @@ def Shape(arg):
 
 #==============================================================================
 # TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Float
-class Real(Function, PyccelAstNode):
+class NumpyReal(Function, PyccelAstNode):
 
     """Represents a call to  numpy.real for code generation.
 
@@ -409,7 +409,7 @@ class Real(Function, PyccelAstNode):
         return self.__str__()
 
 #==============================================================================
-class Imag(Real):
+class NumpyImag(NumpyReal):
 
     """Represents a call to  numpy.imag for code generation.
 
@@ -428,7 +428,7 @@ class Imag(Real):
         return 'imag({0})'.format(str(self.arg))
 
 #==============================================================================
-class Linspace(Application, NumpyNewArray):
+class NumpyLinspace(Application, NumpyNewArray):
 
     """
     Represents numpy.linspace.
@@ -532,7 +532,7 @@ class Linspace(Application, NumpyNewArray):
         return code
 
 #==============================================================================
-class Diag(Application, NumpyNewArray):
+class NumpyDiag(Application, NumpyNewArray):
 
     """
     Represents numpy.diag.
@@ -620,7 +620,7 @@ class Diag(Application, NumpyNewArray):
         return alloc + '\n' + code
 
 #==============================================================================
-class Cross(Application, NumpyNewArray):
+class NumpyCross(Application, NumpyNewArray):
 
     """
     Represents numpy.cross.
@@ -740,7 +740,7 @@ class Cross(Application, NumpyNewArray):
         return code
 
 #==============================================================================
-class Where(Application, NumpyNewArray):
+class NumpyWhere(Application, NumpyNewArray):
     """ Represents a call to  numpy.where """
 
     def __new__(cls, mask):
@@ -787,7 +787,7 @@ class Where(Application, NumpyNewArray):
         return alloc +'\n' + stmt
 
 #==============================================================================
-class Rand(Function, NumpyNewArray):
+class NumpyRand(Function, NumpyNewArray):
 
     """
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
@@ -871,7 +871,7 @@ class NumpyRandint(Function, NumpyNewArray):
         return 'floor({}, kind={})'.format(randreal, prec_code)
 
 #==============================================================================
-class Full(Application, NumpyNewArray):
+class NumpyFull(Application, NumpyNewArray):
     """
     Represents a call to numpy.full for code generation.
 
@@ -964,7 +964,7 @@ class Full(Application, NumpyNewArray):
             return '\n'.join(stmts) + '\n'
 
 #==============================================================================
-class Empty(Full):
+class NumpyEmpty(NumpyFull):
     """ Represents a call to numpy.empty for code generation.
     """
     def __new__(cls, shape, dtype='float', order='C'):
@@ -985,7 +985,7 @@ class Empty(Full):
         return None
 
 #==============================================================================
-class Zeros(Empty):
+class NumpyZeros(NumpyEmpty):
     """ Represents a call to numpy.zeros for code generation.
     """
     @property
@@ -1004,7 +1004,7 @@ class Zeros(Empty):
         return value
 
 #==============================================================================
-class Ones(Empty):
+class NumpyOnes(NumpyEmpty):
     """ Represents a call to numpy.ones for code generation.
     """
     @property
@@ -1023,7 +1023,7 @@ class Ones(Empty):
         return value
 
 #=======================================================================================
-class FullLike(Application):
+class NumpyFullLike(Application):
 
     def __new__(cls, a, fill_value, dtype=None, order='K', subok=True):
 
@@ -1034,7 +1034,7 @@ class FullLike(Application):
         return Full(Shape(a), fill_value, dtype, order)
 
 #=======================================================================================
-class EmptyLike(Application):
+class NumpyEmptyLike(Application):
 
     def __new__(cls, a, dtype=None, order='K', subok=True):
 
@@ -1045,7 +1045,7 @@ class EmptyLike(Application):
         return Empty(Shape(a), dtype, order)
 
 #=======================================================================================
-class OnesLike(Application):
+class NumpyOnesLike(Application):
 
     def __new__(cls, a, dtype=None, order='K', subok=True):
 
@@ -1056,7 +1056,7 @@ class OnesLike(Application):
         return Ones(Shape(a), dtype, order)
 
 #=======================================================================================
-class ZerosLike(Application):
+class NumpyZerosLike(Application):
 
     def __new__(cls, a, dtype=None, order='K', subok=True):
 
@@ -1068,7 +1068,7 @@ class ZerosLike(Application):
 
 #=======================================================================================
 
-class Norm(Function, PyccelAstNode):
+class NumpyNorm(Function, PyccelAstNode):
     """ Represents call to numpy.norm"""
 
     is_zero = False
@@ -1116,7 +1116,7 @@ class Norm(Function, PyccelAstNode):
         return rhs
 
 #=====================================================
-class Sqrt(PyccelPow):
+class NumpySqrt(PyccelPow):
     def __new__(cls, base):
         return PyccelPow(PyccelAssociativeParenthesis(base), Float(0.5))
 
@@ -1258,10 +1258,10 @@ class NumpyComplex(PythonComplex):
     def __new__(cls, arg0, arg1=Float(0)):
         return PythonComplex.__new__(cls, arg0, arg1)
 
-class Complex64(NumpyComplex):
+class NumpyComplex64(NumpyComplex):
     _precision = dtype_registry['complex64'][1]
 
-class Complex128(NumpyComplex):
+class NumpyComplex128(NumpyComplex):
     _precision = dtype_registry['complex128'][1]
 
 #=======================================================================================
@@ -1271,12 +1271,12 @@ class NumpyFloat(PythonFloat):
     def __new__(cls, arg):
         return PythonFloat.__new__(cls, arg)
 
-class Float32(NumpyFloat):
+class NumpyFloat32(NumpyFloat):
     """ Represents a call to numpy.float32() function.
     """
     _precision = dtype_registry['float32'][1]
 
-class Float64(NumpyFloat):
+class NumpyFloat64(NumpyFloat):
     """ Represents a call to numpy.float64() function.
     """
     _precision = dtype_registry['float64'][1]
@@ -1289,12 +1289,12 @@ class NumpyInt(PythonInt):
     def __new__(cls, arg=None, base=10):
         return PythonInt.__new__(cls, arg)
 
-class Int32(NumpyInt):
+class NumpyInt32(NumpyInt):
     """ Represents a call to numpy.int32() function.
     """
     _precision = dtype_registry['int32'][1]
 
-class Int64(NumpyInt):
+class NumpyInt64(NumpyInt):
     """ Represents a call to numpy.int64() function.
     """
     _precision = dtype_registry['int64'][1]
@@ -1304,7 +1304,7 @@ class Int64(NumpyInt):
 NumpyArrayClass = ClassDef('numpy.ndarray',
         methods=[
             FunctionDef('shape',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':Shape}),
+                decorators={'property':'property', 'numpy_wrapper':NumpyShape}),
             FunctionDef('sum',[],[],body=[],
                 decorators={'numpy_wrapper':NumpySum}),
             FunctionDef('min',[],[],body=[],
@@ -1312,8 +1312,8 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
             FunctionDef('max',[],[],body=[],
                 decorators={'numpy_wrapper':NumpyMax}),
             FunctionDef('imag',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':Imag}),
+                decorators={'property':'property', 'numpy_wrapper':NumpyImag}),
             FunctionDef('real',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':Real}),
+                decorators={'property':'property', 'numpy_wrapper':NumpyReal}),
             FunctionDef('diagonal',[],[],body=[],
-                decorators={'numpy_wrapper':Diag})])
+                decorators={'numpy_wrapper':NumpyDiag})])
