@@ -177,10 +177,10 @@ __all__ = (
 #    'op_registry',
     'process_shape',
     'subs',
-    'OMP_ForLoop',
-    'OMP_ParallelConstruct',
-    'OMP_SingleConstruct',
-    'Omp_EndClause'
+    'OMP_For_Loop',
+    'OMP_Parallel_Construct',
+    'OMP_Single_Construct',
+    'Omp_End_Clause'
 )
 
 #==============================================================================
@@ -4712,19 +4712,19 @@ class AnnotatedComment(Basic):
         args = (self.accel, self.txt)
         return args
 
-class OMP_ForLoop(AnnotatedComment):
+class OMP_For_Loop(AnnotatedComment):
     """ Represents and OpenMP Loop construct. """
     pass
 
-class OMP_ParallelConstruct(AnnotatedComment):
+class OMP_Parallel_Construct(AnnotatedComment):
     """ Represents and OpenMP Parallel construct. """
     pass
 
-class OMP_SingleConstruct(AnnotatedComment):
+class OMP_Single_Construct(AnnotatedComment):
     """ Represents and OpenMP Single construct. """
     pass
 
-class Omp_EndClause(AnnotatedComment):
+class Omp_End_Clause(AnnotatedComment):
     """ Represents the End of an OpenMP block. """
     pass
 

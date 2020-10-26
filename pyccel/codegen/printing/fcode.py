@@ -1647,22 +1647,22 @@ class FCodePrinter(CodePrinter):
     # .....................................................
     #                   OpenMP statements
     # .....................................................
-    def _print_OMP_ParallelConstruct(self, expr):
+    def _print_OMP_Parallel_Construct(self, expr):
         ParallelConstruct   = str(expr.txt)
         ompexpr = '!$omp {}\n'.format(ParallelConstruct)
         return ompexpr
 
-    def _print_Omp_EndClause(self, expr):
+    def _print_Omp_End_Clause(self, expr):
         EndClause = str(expr.txt)
         ompexpr = '!$omp {}\n'.format(EndClause)
         return ompexpr
 
-    def _print_OMP_SingleConstruct(self, expr):
+    def _print_OMP_Single_Construct(self, expr):
         ParallelConstruct   = str(expr.txt)
         ompexpr = '!$omp {}\n'.format(ParallelConstruct)
         return ompexpr
 
-    def _print_OMP_ForLoop(self, expr):
+    def _print_OMP_For_Loop(self, expr):
         for_construct   = str(expr.txt)
         return '!$omp do{}\n'.format(for_construct)
 

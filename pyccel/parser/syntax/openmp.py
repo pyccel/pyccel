@@ -6,7 +6,7 @@
 from os.path import join, dirname
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.core import AnnotatedComment, OMP_ForLoop, OMP_ParallelConstruct, OMP_SingleConstruct, Omp_EndClause
+from pyccel.ast.core import AnnotatedComment, OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct, Omp_End_Clause
 
 DEBUG = False
 
@@ -75,7 +75,7 @@ class OmpParallelConstruct(BasicStmt):
             else:
                 raise TypeError('Wrong clause for OmpParallelConstruct')
 
-        return OMP_ParallelConstruct('omp', txt)
+        return OMP_Parallel_Construct('omp', txt)
 
 class OmpLoopConstruct(BasicStmt):
     """Class representing a ."""
@@ -107,7 +107,7 @@ class OmpLoopConstruct(BasicStmt):
             else:
                 raise TypeError('Wrong clause for OmpLoopConstruct. Given : ', \
                                 type(clause))
-        return OMP_ForLoop('omp', txt)
+        return OMP_For_Loop('omp', txt)
 
 class OmpSingleConstruct(BasicStmt):
     """Class representing a ."""
@@ -133,7 +133,7 @@ class OmpSingleConstruct(BasicStmt):
             else:
                 raise TypeError('Wrong clause for OmpSingleConstruct')
 
-        return OMP_SingleConstruct('omp', txt)
+        return OMP_Single_Construct('omp', txt)
 
 class OmpEndClause(BasicStmt):
     """Class representing a ."""
@@ -152,7 +152,7 @@ class OmpEndClause(BasicStmt):
             print("> OmpEndClause: expr")
 
         txt = 'end {0} {1} {2}'.format(self.construct, self.simd, self.nowait)
-        return Omp_EndClause('omp', txt)
+        return Omp_End_Clause('omp', txt)
 
 class OmpNumThread(BasicStmt):
     """Class representing a ."""
