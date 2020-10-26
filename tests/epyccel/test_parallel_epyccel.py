@@ -5,12 +5,21 @@ import numpy as np
 
 from pyccel.epyccel import epyccel
 
+@pytest.fixture(params=[
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c'      , marks = [pytest.mark.c,
+        pytest.mark.xfail(message='Arrays not implemented in C')])
+    ]
+)
+def language(request):
+    return request.param
+
 #==============================================================================
 @pytest.mark.parallel
-def test_module_1():
+def test_module_1(language):
     import modules.Module_1 as mod
 
-    modnew = epyccel(mod, comm=MPI.COMM_WORLD)
+    modnew = epyccel(mod, comm=MPI.COMM_WORLD, language=language)
 
     # ...
     x_expected = np.zeros(5)
@@ -27,10 +36,10 @@ def test_module_1():
 
 #==============================================================================
 @pytest.mark.parallel
-def test_module_2():
+def test_module_2(language):
     import modules.Module_2 as mod
 
-    modnew = epyccel(mod, comm=MPI.COMM_WORLD)
+    modnew = epyccel(mod, comm=MPI.COMM_WORLD, language=language)
 
     # ...
     m1 = 2 ; m2 = 3
@@ -46,14 +55,14 @@ def test_module_2():
 
 #==============================================================================
 @pytest.mark.parallel
-def test_function():
+def test_function(language):
     from modules.Module_1 import f, g, h
 
     comm = MPI.COMM_WORLD
 
-    f_fast = epyccel(f, comm=comm)
-    g_fast = epyccel(g, comm=comm)
-    h_fast = epyccel(h, comm=comm)
+    f_fast = epyccel(f, comm=comm, language=language)
+    g_fast = epyccel(g, comm=comm, language=language)
+    h_fast = epyccel(h, comm=comm, language=language)
 
     assert f_fast is not f
     assert g_fast is not g
@@ -68,8 +77,5 @@ def test_function():
     f_fast(x)
     g_fast(x)
     h_fast(x)
-
-    print(x_expected)
-    print(x)
 
     assert np.array_equal(x, x_expected)
