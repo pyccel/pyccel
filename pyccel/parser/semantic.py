@@ -759,14 +759,6 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_AnnotatedComment(self, expr, **settings):
         return expr
-    def _visit_OMP_ForLoop(self, expr, **settings):
-        return expr
-    def _visit_OMP_ParallelConstruct(self, expr, **settings):
-        return expr
-    def _visit_OMP_SingleConstruct(self, expr, **settings):
-        return expr
-    def _visit_Omp_EndClause(self, expr, **settings):
-        return expr
     def _visit_Integer(self, expr, **settings):
         if isinstance(expr, Integer):
             return expr
