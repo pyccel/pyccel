@@ -2778,6 +2778,18 @@ class Variable(Symbol, PyccelAstNode):
             is_optional=kwargs.pop('is_optional',self.is_optional),
             cls_base=kwargs.pop('cls_base',self.cls_base),
             )
+    def rename(self, newname):
+        """
+        Rename the Variable name
+        newname.
+
+        Parameters
+        ----------
+        newname: str
+            new name for the Variable
+        """
+
+        self._name = newname
 
     def __getnewargs__(self):
         """used for Pickling self."""
@@ -3280,12 +3292,13 @@ class Interface(Basic):
         name,
         functions,
         hide=False,
+        is_argument = False,
         ):
         if not isinstance(name, str):
             raise TypeError('Expecting an str')
         if not isinstance(functions, list):
             raise TypeError('Expecting a list')
-        return Basic.__new__(cls, name, functions, hide)
+        return Basic.__new__(cls, name, functions, hide, is_argument)
 
     @property
     def name(self):
@@ -3298,6 +3311,10 @@ class Interface(Basic):
     @property
     def hide(self):
         return self.functions[0].hide or self._args[2]
+
+    @property
+    def is_argument(self):
+        return self._args[3]
 
     @property
     def global_vars(self):
@@ -3437,7 +3454,8 @@ class FunctionDef(Basic):
         is_private=False,
         is_header=False,
         arguments_inout=[],
-        functions = []):
+        functions=[],
+        interfaces=[]):
 
         if isinstance(name, str):
             name = Symbol(name)
@@ -3555,6 +3573,7 @@ class FunctionDef(Basic):
         self._is_header       = is_header
         self._arguments_inout = arguments_inout
         self._functions       = functions
+        self._interfaces      = interfaces
 
     @property
     def name(self):
@@ -3635,6 +3654,10 @@ class FunctionDef(Basic):
     @property
     def functions(self):
         return self._functions
+
+    @property
+    def interfaces(self):
+        return self._interfaces
 
     @property
     def doc_string(self):
