@@ -76,9 +76,7 @@ class Codegen(object):
     @property
     def imports(self):
         """Returns the imports of the source code."""
-        if self._accelerator is not None:
-            if self._accelerator == 'openmp':
-                self._stmts['imports'] += [Import('omp')]
+
         return self._stmts['imports']
 
     @property
