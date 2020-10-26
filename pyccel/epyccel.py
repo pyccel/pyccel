@@ -44,7 +44,7 @@ def get_source_function(func):
     return code
 
 #==============================================================================
-def epyccel_seq(function_or_module,
+def epyccel_seq(function_or_module, *,
                 language     = None,
                 compiler     = None,
                 mpi_compiler = None,
@@ -166,7 +166,56 @@ def epyccel_seq(function_or_module,
 
 #==============================================================================
 def epyccel( python_function_or_module, **kwargs ):
+    """
+    Accelerate Python function or module using Pyccel in "embedded" mode.
 
+    Parameters
+    ----------
+    python_function_or_module : function | module
+        Python function or module to be accelerated.
+
+    verbose : bool
+        Print additional information (default: False).
+
+    language : {'fortran', 'c', 'python'}
+        Language of generated code (default: 'fortran').
+
+    accelerator : str, optional
+        Parallel multi-threading acceleration strategy
+        (currently supported: 'openmp', 'openacc').
+
+    Options for parallel mode
+    -------------------------
+    comm : mpi4py.MPI.Comm, optional
+        MPI communicator for calling Pyccel in parallel mode (default: None).
+
+    root : int, optional
+        MPI rank of process in charge of accelerating code (default: 0).
+
+    bcast : {True, False}
+        If False, only root process loads accelerated function/module (default: True).
+
+    Other options
+    -------------
+    compiler : str, optional
+        User-defined command for compiling generated source code.
+
+    mpi_compiler : str, optional
+        Compiler for MPI parallel code.
+
+    Returns
+    -------
+    res : object
+        Accelerated function or module.
+
+    Examples
+    --------
+    >>> def one(): return 1
+    >>> from pyccel.epyccel import epyccel
+    >>> one_f = epyccel(one, language='fortran')
+    >>> one_c = epyccel(one, language='c')
+
+    """
     assert isinstance( python_function_or_module, (FunctionType, ModuleType) )
 
     comm  = kwargs.pop('comm', None)
