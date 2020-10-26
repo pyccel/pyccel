@@ -1,0 +1,1 @@
+gcc ndarrays_tests.c ../../pyccel/stdlib/ndarrays/*.c -I ../../pyccel/stdlib/ndarrays/ && ./a.out
