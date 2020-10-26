@@ -189,6 +189,8 @@ dtype_registry = {('real',8)    : 'double',
                   ('int',1)     : 'char',
                   ('bool',4)    : 'bool'}
 
+import_dict = {'numpy'   : None,
+               'omp_lib' : 'omp' }
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
@@ -409,7 +411,13 @@ class CCodePrinter(CodePrinter):
         else:
             source = self._print(expr.source)
 
-        return '#include <{0}.h>'.format(source)
+        if source in import_dict:
+            source = import_dict[source]
+
+        if source is None:
+            return ''
+        else:
+            return '#include <{0}.h>'.format(source)
 
     def _print_String(self, expr):
         format_str = format(expr.arg)
