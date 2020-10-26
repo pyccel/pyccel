@@ -2,6 +2,7 @@
 # define NDARRAYS_H
 
 # include <stdlib.h>
+# include <complex.h>
 # include <string.h>
 # include <stdio.h>
 # include <stdarg.h>
@@ -15,6 +16,7 @@ typedef union	u_ndarr_type
 	int		*int_nd;
 	float	*float_nd;
 	double	*double_nd;
+    double complex *complex_double;
 }				t_ndarray_type;
 
 typedef struct s_slice_data{

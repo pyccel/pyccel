@@ -94,7 +94,7 @@ t_ndarray *make_slice(t_ndarray *p, ...)
 		start += slice_data->start * p->strides[i];
 		slice->strides[i] *= slice_data->step;
 		i++;
-		free(slice_data);
+		// free(slice_data);
 	}
 	va_end(va);
 	slice->data = malloc(sizeof(t_ndarray_type));
