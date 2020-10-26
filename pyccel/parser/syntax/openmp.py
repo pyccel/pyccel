@@ -6,7 +6,7 @@
 from os.path import join, dirname
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.core import AnnotatedComment, OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct, Omp_End_Clause
+from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct, Omp_End_Clause
 
 DEBUG = False
 
