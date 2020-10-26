@@ -26,7 +26,7 @@ from .numpyext import NumpyFull, NumpyEmpty, NumpyZeros, NumpyOnes
 from .numpyext import NumpyFullLike, NumpyEmptyLike, NumpyZerosLike, NumpyOnesLike
 from .numpyext import NumpyDiag
 from .numpyext import NumpyMin, NumpyMax, NumpyAbs, NumpyFloor, NumpyNorm, NumpyWhere
-from .numpyext import NumpyArray, NumpyShape, NumpyRand, NumpyRandint, NumpySum, NumpyMatmul, NumpyReal, NumpyComplex, NumpyImag, NumpyMod
+from .numpyext import NumpyArray, Shape, NumpyRand, NumpyRandint, NumpySum, NumpyMatmul, NumpyReal, NumpyComplex, NumpyImag, NumpyMod
 from .numpyext import NumpyInt, NumpyInt32, NumpyInt64, NumpyFloat, NumpyFloat32, NumpyFloat64, NumpyComplex64, NumpyComplex128
 from .numpyext import NumpyExp, NumpyLog, NumpySqrt
 from .numpyext import NumpySin, NumpyCos, NumpyTan
@@ -65,7 +65,7 @@ numpy_functions = {
     'ones_like' : NumpyOnesLike,
     'array'     : NumpyArray,
     # ...
-    'shape'     : NumpyShape,
+    'shape'     : Shape,
     'norm'      : NumpyNorm,
     'int'       : NumpyInt,
     'real'      : NumpyReal,
