@@ -220,7 +220,6 @@ class CCodePrinter(CodePrinter):
         self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
         self._additional_imports = set(['stdlib'])
-        self._additional_imports.add("omp")
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
@@ -671,7 +670,7 @@ class CCodePrinter(CodePrinter):
         self._additional_declare.clear()
         sep = self._print(SeparatorComment(40))
 
-        imports = ''.join(self._print(i) for i in expr.imports).replace("#include <omp.h>","")
+        imports = ''.join(self._print(i) for i in expr.imports)
 
         return ('{sep}\n'
                 '{signature}\n{{\n'
