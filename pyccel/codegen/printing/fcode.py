@@ -1362,7 +1362,7 @@ class FCodePrinter(CodePrinter):
             out_args = list(expr.results)
             for result in out_args:
                 if result in expr.arguments:
-                    dec = Declare(result.dtype, result.clone(name, j), intent='inout')
+                    dec = Declare(result.dtype, result, intent='inout')
                 else:
                     dec = Declare(result.dtype, result, intent='out')
                 args_decs[str(result)] = dec
@@ -1413,10 +1413,7 @@ class FCodePrinter(CodePrinter):
 
         arg_code  = ', '.join(self._print(i) for i in chain( expr.arguments, out_args ))
 
-        imports = ''
-        implicit_none = ''
-        if expr.body:
-            imports = ''.join(self._print(i) for i in expr.imports)
+        imports = ''.join(self._print(i) for i in expr.imports)
         prelude = ''.join(self._print(i) for i in args_decs.values())
         parts = ["{}({}) {}\n".format(sig, arg_code, func_end,),
                 imports,
@@ -1451,7 +1448,7 @@ class FCodePrinter(CodePrinter):
         signature = self.function_signature(expr, name)
         decs = OrderedDict()
         functions = expr.functions
-        tmp_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
+        func_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         body_code = self._print(expr.body)
 
         for i in expr.local_vars:
@@ -1465,13 +1462,10 @@ class FCodePrinter(CodePrinter):
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in expr.arguments):
                 decs[str(v)] = Declare(v.dtype,v)
-        prelude = ''.join(self._print(i) for i in decs.values())
-        signature += prelude
+        signature += ''.join(self._print(i) for i in decs.values())
         if len(functions)>0:
             functions_code = '\n'.join(self._print(i) for  i in functions)
             body_code = body_code +'\ncontains\n' + functions_code
-
-        imports = ''.join(self._print(i) for i in expr.imports)
 
         if (expr.is_procedure):
             func_type = 'subroutine'
@@ -1479,7 +1473,7 @@ class FCodePrinter(CodePrinter):
             func_type = 'function'
         self.set_current_function(None)
         parts = [signature,
-                 tmp_interfaces,
+                 func_interfaces,
                  body_code,
                  'end {} {}\n'.format(func_type, name)]
 
