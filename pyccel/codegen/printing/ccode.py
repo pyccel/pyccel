@@ -189,8 +189,7 @@ dtype_registry = {('real',8)    : 'double',
                   ('int',1)     : 'char',
                   ('bool',4)    : 'bool'}
 
-import_dict = {'numpy'   : None,
-               'omp_lib' : 'omp' }
+import_dict = {'omp_lib' : 'omp' }
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
