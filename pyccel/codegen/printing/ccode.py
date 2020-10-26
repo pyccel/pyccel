@@ -189,6 +189,7 @@ dtype_registry = {('real',8)    : 'double',
                   ('int',1)     : 'char',
                   ('bool',4)    : 'bool'}
 
+import_dict = {'omp_lib' : 'omp' }
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
@@ -409,7 +410,16 @@ class CCodePrinter(CodePrinter):
         else:
             source = self._print(expr.source)
 
-        return '#include <{0}.h>'.format(source)
+        # Get with a default value is not used here as it is
+        # slower and on most occasions the import will not be in the
+        # dictionary
+        if source in import_dict: # pylint: disable=consider-using-get
+            source = import_dict[source]
+
+        if source is None:
+            return ''
+        else:
+            return '#include <{0}.h>'.format(source)
 
     def _print_String(self, expr):
         format_str = format(expr.arg)
