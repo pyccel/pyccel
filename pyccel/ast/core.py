@@ -4713,15 +4713,19 @@ class AnnotatedComment(Basic):
         return args
 
 class OMP_ForLoop(AnnotatedComment):
+    """ Represents and OpenMP Loop construct. """
     pass
 
 class OMP_ParallelConstruct(AnnotatedComment):
+    """ Represents and OpenMP Parallel construct. """
     pass
 
 class OMP_SingleConstruct(AnnotatedComment):
+    """ Represents and OpenMP Single construct. """
     pass
 
 class Omp_EndClause(AnnotatedComment):
+    """ Represents the End of an OpenMP block. """
     pass
 
 class CommentBlock(Basic):
