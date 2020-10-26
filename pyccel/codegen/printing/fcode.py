@@ -64,7 +64,7 @@ from pyccel.ast.numpyext import NumpyComplex, NumpyMod, NumpyFloat
 from pyccel.ast.numpyext import NumpyFullLike, NumpyEmptyLike, NumpyZerosLike, NumpyOnesLike
 from pyccel.ast.numpyext import NumpyRand, NumpyRandint
 from pyccel.ast.numpyext import NumpyNewArray
-from pyccel.ast.numpyext import NumpyShape
+from pyccel.ast.numpyext import Shape
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -2369,7 +2369,7 @@ class FCodePrinter(CodePrinter):
             base = self._print(expr.base.label)
 
         inds = list(expr.indices)
-        base_shape = NumpyShape(expr.base)
+        base_shape = Shape(expr.base)
         allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
                 expr.base.internal_variable.allows_negative_indexes)
 
