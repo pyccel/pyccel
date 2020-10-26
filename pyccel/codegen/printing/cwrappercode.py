@@ -7,7 +7,7 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.numbers   import BooleanTrue
 
-from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
+from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, PyccelNe
@@ -130,6 +130,10 @@ class CWrapperCodePrinter(CCodePrinter):
         body = []
         collect_var = variable
 
+        if isinstance(variable, FunctionAddress):
+            body = [PyErr_SetString('PyExc_NotImplementedError', '"can not pass a function as an argument"'), Return([Nil()])]
+            return variable, body
+
         if variable.is_optional:
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
@@ -214,8 +218,7 @@ class CWrapperCodePrinter(CCodePrinter):
         pykwarg = expr.pykwarg
         flags   = expr.flags
         # All args are modified so even pointers are passed by address
-        args    = ', '.join(['&{}'.format(self._print(VariableAddress(a))) if a.is_pointer
-                        else self._print(VariableAddress(a)) for a in expr.args])
+        args    = ', '.join(['&{}'.format(a.name) for a in expr.args])
 
         if expr.args:
             code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(
