@@ -243,9 +243,6 @@ def execute_pyccel(fname, *,
                                 includes=includes,
                                 libdirs=libdirs)
 
-        if not codegen.is_program and language == "c":
-            if sys.platform == "darwin":
-                flags = flags.replace("-lomp", "")
         # Compile Fortran code
         #
         # TODO: stop at object files, do not compile executable
