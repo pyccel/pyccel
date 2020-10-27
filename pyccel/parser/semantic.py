@@ -1440,15 +1440,20 @@ class SemanticParser(BasicParser):
                     errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT,
                     symbol=txt,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='error', blocker=False)
-                elif not is_augassign and d_var['shape'] != getattr(var, 'shape', 'None'):
-                    txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
-                    format_shape = lambda s: "" if len(s)==0 else s
-                    txt = txt.format(name=name, dtype=dtype,
-                            old=format_shape(var.shape), new=format_shape(d_var['shape']))
 
-                    errors.report(INCOMPATIBLE_REDEFINITION,
-                        symbol=txt,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='error', blocker=False)
+                elif not is_augassign:
+                    if d_var['rank'] == getattr(var, 'rank', 'None'):
+                        if d_var['shape'] != getattr(var, 'shape', 'None'):
+                            errors.report(ARRAY_REALLOCATION, symbol=name, severity='warning', blocker=False,
+                                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset))
+                    else:
+                        txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
+                        format_shape = lambda s: "" if len(s)==0 else s
+                        txt = txt.format(name=name, dtype=dtype, old=format_shape(var.shape),
+                            new=format_shape(d_var['shape']))
+                        errors.report(INCOMPATIBLE_REDEFINITION, symbol=txt,
+                            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                            severity='error', blocker=False)
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.
