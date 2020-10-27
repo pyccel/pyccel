@@ -118,11 +118,9 @@ def test_modules_13(language):
 
 def test_modules_14_0(language):
     f1 = epyccel(openmp.test_omp_set_get_default_device, accelerator='openmp', language=language)
-    f2 = epyccel(openmp.test_omp_get_num_devices, accelerator='openmp', language=language)
 
     assert f1(1) == 1
     assert f1(0) == 0
-    assert f2() >= 0
 
 # omp_get_initial_device give a compilation error on Travis (Linux and Windows), also Target construct not implemented yet !"
 def test_modules_14_1(language):
@@ -130,6 +128,11 @@ def test_modules_14_1(language):
     # f4 = epyccel(openmp.test_omp_get_initial_device, accelerator='openmp') #Target construct not implemented yet and need a non-host device to test the function
 
     assert f3() == 1
+
+def test_modules_14_2(language):
+    f1 = epyccel(openmp.test_omp_get_num_devices, accelerator='openmp', language=language)
+
+    assert f1() >= 0
 
 @pytest.mark.xfail(reason = "Teams not supported yet for openmp !")
 def test_modules_15(language):
