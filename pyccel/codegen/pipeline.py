@@ -105,7 +105,7 @@ def execute_pyccel(fname, *,
 
     if (language == "c"):
         libs = libs + ['m']
-        if accelerator == 'openmp' and sys.platform == "darwin":
+        if accelerator == 'openmp':
             libs = libs + ['omp']
 
     # ...
