@@ -226,7 +226,9 @@ def epyccel( python_function_or_module, **kwargs ):
     if comm is not None:
 
         from mpi4py import MPI
-
+        from tblib  import pickling_support   # [YG, 27.10.2020] We use tblib to
+        pickling_support.install()            # pickle tracebacks, which allows
+                                              # mpi4py to broadcast exceptions
         assert isinstance( comm, MPI.Comm )
         assert isinstance( root, int      )
 
@@ -235,15 +237,28 @@ def epyccel( python_function_or_module, **kwargs ):
 
         # Master process calls epyccel
         if comm.rank == root:
-            mod, fun = epyccel_seq( python_function_or_module, **kwargs )
-            mod_path = os.path.abspath(mod.__file__)
-            mod_name = mod.__name__
-            fun_name = python_function_or_module.__name__ if fun else None
+            try:
+                mod, fun = epyccel_seq( python_function_or_module, **kwargs )
+                mod_path = os.path.abspath(mod.__file__)
+                mod_name = mod.__name__
+                fun_name = python_function_or_module.__name__ if fun else None
+                success  = True
+            except:
+                exc_info = sys.exc_info()
+                success  = False
+
+        # Non-master processes initialize empty variables
         else:
             mod, fun = None, None
             mod_path = None
             mod_name = None
             fun_name = None
+            exc_info = None
+            success  = None
+
+        # Broadcast success state, and raise exception if neeeded
+        if not comm.bcast(success, root=root):
+            raise comm.bcast(exc_info, root=root)
 
         if bcast:
             # Broadcast Fortran module path/name and function name to all processes
