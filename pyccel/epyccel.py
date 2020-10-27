@@ -243,7 +243,8 @@ def epyccel( python_function_or_module, **kwargs ):
                 mod_name = mod.__name__
                 fun_name = python_function_or_module.__name__ if fun else None
                 success  = True
-            except:
+            # error handling carried out after broadcast to prevent deadlocks
+            except: # pylint: disable=bare-except
                 exc_info = sys.exc_info()
                 success  = False
 
