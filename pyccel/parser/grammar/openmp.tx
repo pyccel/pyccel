@@ -24,7 +24,6 @@ OmpConstructOrDirective:
 //     Constructs and Directives definitions
 ////////////////////////////////////////////////////
 OmpParallelConstruct: 'parallel' clauses*=OmpParallelClause;
-OmpLoopConstruct:     'do'       clauses*=OmpLoopClause;
 OmpLoopConstruct:     'for'       clauses*=OmpLoopClause;
 OmpSingleConstruct:   'single'   clauses*=OmpSingleClause;
 ////////////////////////////////////////////////////
