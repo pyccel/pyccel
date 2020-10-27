@@ -1259,10 +1259,10 @@ class NumpyComplex(PythonComplex):
         return PythonComplex.__new__(cls, arg0, arg1)
 
 class NumpyComplex64(NumpyComplex):
-    _precision = dtype_registry['complex64'][1]
+    _precision = dtype_registry['numpycomplex64'][1]
 
 class NumpyComplex128(NumpyComplex):
-    _precision = dtype_registry['complex128'][1]
+    _precision = dtype_registry['numpycomplex128'][1]
 
 #=======================================================================================
 class NumpyFloat(PythonFloat):
@@ -1274,12 +1274,12 @@ class NumpyFloat(PythonFloat):
 class NumpyFloat32(NumpyFloat):
     """ Represents a call to numpy.float32() function.
     """
-    _precision = dtype_registry['float32'][1]
+    _precision = dtype_registry['numpyfloat32'][1]
 
 class NumpyFloat64(NumpyFloat):
     """ Represents a call to numpy.float64() function.
     """
-    _precision = dtype_registry['float64'][1]
+    _precision = dtype_registry['numpyfloat64'][1]
 
 #=======================================================================================
 # TODO [YG, 13.03.2020]: handle case where base != 10
@@ -1292,12 +1292,12 @@ class NumpyInt(PythonInt):
 class NumpyInt32(NumpyInt):
     """ Represents a call to numpy.int32() function.
     """
-    _precision = dtype_registry['int32'][1]
+    _precision = dtype_registry['numpyint32'][1]
 
 class NumpyInt64(NumpyInt):
     """ Represents a call to numpy.int64() function.
     """
-    _precision = dtype_registry['int64'][1]
+    _precision = dtype_registry['numpyint64'][1]
 
 
 
