@@ -2,8 +2,7 @@
 #include <assert.h>
 #include <unistd.h>
 
-#define m_assert(X, Y) \
-				(X == Y) ? (void)0 : my_assert(X , Y,__func__, __FILE__, __LINE__)
+#define m_assert(X, Y) my_assert(X , Y,__func__, __FILE__, __LINE__)
 
 #define my_assert(X , Y,__func__, __FILE__, __LINE__) _Generic((X), double: assert_double, \
 							float: assert_float,\
@@ -15,45 +14,49 @@ void assert_double(double v1 , double v2, const char * func, const char *file, i
 {
 	if (v1 != v2)
 	{
-		printf("error in %s - %s:%d\n", file, func, line);
+		printf("[FAIL] %s:%d:%s\n", file, line, func);
 		printf("%f != %f\n", v1, v2);
-		exit(1);
+		return ;
 	}
+	printf("[PASS] %s:%d:%s\n", file, line, func);
 }
 
 void assert_float(float v1 , float v2, const char * func, const char *file, int line)
 {
 	if (v1 != v2)
 	{
-		printf("error in %s - %s:%d\n", file, func, line);
+		printf("[FAIL] %s:%d:%s\n", file, line, func);
 		printf("%f != %f\n", v1, v2);
-		exit(1);
+		return ;
 	}
+	printf("[PASS] %s:%d:%s\n", file, line, func);
 }
 void assert_int(int v1 , int v2, const char * func, const char *file, int line)
 {
 	if (v1 != v2)
 	{
-		printf("error in %s - %s:%d\n", file, func, line);
+		printf("[FAIL] %s:%d:%s\n", file, line, func);
 		printf("%d != %d\n", v1, v2);
-		exit(1);
+		return ;
 	}
+	printf("[PASS] %s:%d:%s\n", file, line, func);
 }
 void assert_complex_double(double complex v1 , double complex v2, const char * func, const char *file, int line)
 {
 	if (v1 != v2)
 	{
-		printf("error in %s - %s:%d\n", file, func, line);
+		printf("[FAIL] %s:%d:%s\n", file, line, func);
 		printf("%f+%f*I != %f+%f*I\n", creal(v1), cimag(v1), creal(v2), cimag(v2));
-		exit(1);
+		return ;
 	}
+	printf("[PASS] %s:%d:%s\n", file, line, func);
 }
 void assert_ns(float v1 , float v2, const char * func, const char *file, int line)
 {
 
-	printf("error in %s - %s:%d\n", file, func, line);
+	printf("[FAIL] %s:%d:%s\n", file, line, func);
 	printf("not supported type\n");
-	exit(1);
+	return ;
 }
 
 int	test_indexing_int(void)
@@ -278,6 +281,6 @@ int main(void)
 	test_slicing_int();
 	test_slicing_complex_double();
 
-	write(1, "ALL the tests passed\n", 22);
+	write(1, "ALL the tests PASSed.\n", 22);
 	return (0);
 }
