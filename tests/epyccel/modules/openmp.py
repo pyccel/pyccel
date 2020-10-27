@@ -161,7 +161,8 @@ def test_omp_get_proc_bind():
 
 @types ('int')
 def test_omp_set_get_default_device(device_num):
-    from pyccel.stdlib.internal.openmp import omp_get_default_device, omp_set_default_device
+    from pyccel.stdlib.internal.openmp import omp_get_default_device
+    from pyccel.stdlib.internal.openmp import omp_set_default_device
     omp_set_default_device(device_num)
     default_device = omp_get_default_device()
     return default_device
