@@ -134,10 +134,14 @@ def compile_files(filename, compiler, flags,
     if verbose:
         print(cmd)
 
-    output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
-
+    p = subprocess.Popen(cmd, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
+    _, output = p.communicate()
+    if p.returncode != 0:
+        err_msg = "Failed to build module"
+        if verbose:
+            err_msg += "\n" + output
+        raise RuntimeError(err_msg)
     if output:
-        output = output.decode("utf-8")
         warnings.warn(UserWarning(output))
 
     # TODO shall we uncomment this?
