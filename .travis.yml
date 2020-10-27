@@ -14,6 +14,7 @@ before_install:
   - sudo apt-get install gfortran
   - sudo apt-get install libblas-dev liblapack-dev
   - sudo apt-get install libopenmpi-dev openmpi-bin
+  - sudo apt-get install libomp-dev
 
 install:
   - ${PYTHON} -m pip install .
