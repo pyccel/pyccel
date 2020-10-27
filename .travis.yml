@@ -84,6 +84,8 @@ jobs:
       - brew pin poppler postgis postgresql pyenv sfcgal unbound
 #      - brew install gcc openblas lapack
       - brew install open-mpi
+      - brew install libomp
+
     before_script: null
     after_script : null
     before_cache:
