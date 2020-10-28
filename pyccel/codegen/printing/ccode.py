@@ -18,7 +18,7 @@ from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.numpyext import Real as NumpyReal, Imag as NumpyImag
 
 from pyccel.ast.builtins  import Range, PythonFloat, PythonComplex
-from pyccel.ast.core import FuncAddressDeclare
+from pyccel.ast.core import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import Declare, ValuedVariable
 
@@ -719,7 +719,8 @@ class CCodePrinter(CodePrinter):
             else :
                 args.append(a)
 
-        # currently support only function with one or zero output
+        args += self._additional_args
+        self._additional_args.clear()
         args = ','.join(['{}'.format(self._print(a)) for a in args])
         if not func.results:
             return '{}({});'.format(func.name, args)
