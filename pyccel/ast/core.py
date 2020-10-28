@@ -3211,7 +3211,7 @@ class FunctionCall(Basic, PyccelAstNode):
             args = [a.value if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else a for a in f_args_dict.values()]
 
         args = [FunctionAddress(a.name, a.arguments, a.results, []) if isinstance(a, FunctionDef) else a for a in args]
-        
+
         args = Tuple(*args, sympify=False)
         # ...
 
@@ -4910,17 +4910,17 @@ class AnnotatedComment(Basic):
         return args
 
 class OMP_For_Loop(AnnotatedComment):
-    """ Represents and OpenMP Loop construct. """
+    """ Represents an OpenMP Loop construct. """
     def __new__(cls, txt):
         return AnnotatedComment.__new__(cls, 'omp', txt)
 
 class OMP_Parallel_Construct(AnnotatedComment):
-    """ Represents and OpenMP Parallel construct. """
+    """ Represents an OpenMP Parallel construct. """
     def __new__(cls, txt):
         return AnnotatedComment.__new__(cls, 'omp', txt)
 
 class OMP_Single_Construct(AnnotatedComment):
-    """ Represents and OpenMP Single construct. """
+    """ Represents an OpenMP Single construct. """
     def __new__(cls, txt):
         return AnnotatedComment.__new__(cls, 'omp', txt)
 
