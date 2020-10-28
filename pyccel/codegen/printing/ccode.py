@@ -455,7 +455,7 @@ class CCodePrinter(CodePrinter):
         except KeyError:
             errors.report("{} type is not supported currently".format(var.dtype), severity='fatal')
         if var.dtype is NativeComplex():
-            arg = self._print(NumpyReal(var)), self._print(NumpyImag(var))
+            arg = '{}, {}'.format(self._print(NumpyReal(var)), self._print(NumpyImag(var)))
         elif var.dtype is NativeBool():
             arg = '{} ? "True" : "False"'.format(self._print(var))
         else:
