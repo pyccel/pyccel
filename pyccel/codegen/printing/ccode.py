@@ -828,6 +828,9 @@ class CCodePrinter(CodePrinter):
         return "{0} {1}= {2};".format(lhs_code, op, rhs_code)
 
     def _print_Assign(self, expr):
+        if not isinstance(expr.lhs, Variable) and isinstance(expr.rhs, FunctionCall):
+            self._additional_args = [VariableAddress(a) for a in expr.lhs]
+            return '{};'.format(self._print(expr.rhs))
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         return '{} = {};'.format(lhs, rhs)
