@@ -11,7 +11,7 @@ from pyccel.ast.core import DottedName
 from pyccel.ast.core import PyccelAdd, PyccelMul, String
 
 from pyccel.ast.datatypes import default_precision
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
 
 
 from pyccel.ast.numpyext import NumpyFloat
@@ -472,6 +472,17 @@ class CCodePrinter(CodePrinter):
             if isinstance(f, ValuedVariable):
                 if f.name == 'sep'      :   sep = str(f.value)
                 elif f.name == 'end'    :   end = str(f.value)
+            elif isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
+                #create tmp variables to holde functionCall results
+                tmp_list = []
+                for a in f.funcdef.results :
+                    tmp_var = self.create_tmp_var(a)
+                    arg_format, arg = self.get_print_format_and_arg(tmp_var)
+                    args_format.append(arg_format)
+                    args.append(arg)
+                    tmp_list.append(tmp_var)
+                assign = Assign(tmp_list, f)
+                self._additional_code += self._print(assign) + '\n'
             else:
                 arg_format, arg = self.get_print_format_and_arg(f)
                 args_format.append(arg_format)
@@ -728,7 +739,7 @@ class CCodePrinter(CodePrinter):
 
         args += self._additional_args
         self._additional_args.clear()
-        args = ','.join(['{}'.format(self._print(a)) for a in args])
+        args = ', '.join(['{}'.format(self._print(a)) for a in args])
         if not func.results:
             return '{}({});'.format(func.name, args)
         return '{}({})'.format(func.name, args)
