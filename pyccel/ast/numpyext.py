@@ -192,31 +192,27 @@ class Array(Application, NumpyNewArray):
     def fprint(self, printer, lhs):
         """Fortran print."""
 
+        lhs_code = printer(lhs)
+
         # Always transpose indices because Numpy initial values are given with
         # row-major ordering, while Fortran initial values are column-major
         shape = self.shape[::-1]
 
-        shape_code = ', '.join('0:' + printer(PyccelMinus(i, Integer(1))) for i in shape)
-
-        lhs_code = printer(lhs)
-        code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
-        arg = self.arg
+        # Construct right-hand-side code
         if self.rank > 1:
             import functools
             import operator
-            arg = functools.reduce(operator.concat, arg)
-            init_value = 'reshape(' + printer(arg) + ', ' + printer(Tuple(*shape)) + ')'
+            arg = functools.reduce(operator.concat, self.arg)
+            rhs_code = 'reshape({array}, {shape})'.format(
+                    array=printer(arg), shape=printer(Tuple(*shape)))
         else:
-            init_value = printer(arg)
+            rhs_code = printer(self.arg)
 
         # If Numpy array is stored with column-major ordering, transpose values
         if self.order == 'F' and self.rank > 1:
-            init_value = 'transpose({})'.format(init_value)
+            rhs_code = 'transpose({})'.format(rhs_code)
 
-        code_init = '{0} = {1}'.format(lhs_code, init_value)
-        code = '{0}\n{1}'.format(code_alloc, code_init)
-
-        return code
+        return '{0} = {1}'.format(lhs_code, rhs_code)
 
 #==============================================================================
 class NumpySum(Function, PyccelAstNode):
@@ -511,23 +507,19 @@ class Linspace(Application, NumpyNewArray):
     def fprint(self, printer, lhs=None):
         """Fortran print."""
 
-        init_value = '[({0} + {1}*{2},{1} = 0,{3}-1)]'
+        template = '[({start} + {index}*{step},{index} = 0,{stop}-1)]'
 
-        start = printer(self.start)
-        step  = printer(self.step)
-        stop  = printer(self.stop)
-        index = printer(self.index)
-
-        init_value = init_value.format(start, index, step, stop)
-
-
+        init_value = template.format(
+            start = printer(self.start),
+            stop  = printer(self.stop ),
+            step  = printer(self.step ),
+            index = printer(self.index),
+        )
 
         if lhs:
-            lhs    = printer(lhs)
-            code   = 'allocate(0:{})'.format(printer(self.size))
-            code  += '\n{0} = {1}'.format(lhs, init_value)
+            code = '{0} = {1}\n'.format(printer(lhs), init_value)
         else:
-            code   = '{0}'.format(init_value)
+            code = init_value
 
         return code
 
@@ -807,25 +799,7 @@ class Rand(Function, NumpyNewArray):
     def fprint(self, printer, lhs, stack_array=False):
         """Fortran print."""
 
-        lhs_code = printer(lhs)
-        stmts = []
-
-        if self.rank>0:
-            # Create statement for allocation
-            if not stack_array:
-                # Transpose indices because of Fortran column-major ordering
-                shape = self.shape[::-1]
-
-                shape_code = ', '.join('0:' + printer(PyccelMinus(i, Integer(1))) for i in shape)
-
-                code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
-                stmts.append(code_alloc)
-
-        # Create statement for initialization
-        code_init = 'call random_number({0})'.format(lhs_code)
-        stmts.append(code_init)
-
-        return '\n'.join(stmts) + '\n'
+        return 'call random_number({0})\n'.format(printer(lhs))
 
 #==============================================================================
 class NumpyRandint(Function, NumpyNewArray):
