@@ -200,16 +200,16 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
     else:
         language='fortran'
 
-    if isinstance(dependencies, str):
-        dependencies = [dependencies]
-
-    for i, d in enumerate(dependencies):
-        dependencies[i] = get_abs_path(d)
-        if not compile_with_pyccel and language=='fortran':
-            compile_pyccel (os.path.dirname(dependencies[i]), dependencies[i], pyccel_commands+" -t")
-            compile_fortran(os.path.dirname(dependencies[i]), dependencies[i], [], is_mod = True)
-        else:
-            compile_pyccel(os.path.dirname(dependencies[i]), dependencies[i], pyccel_commands)
+    if dependencies:
+        if isinstance(dependencies, str):
+            dependencies = [dependencies]
+        for i, d in enumerate(dependencies):
+            dependencies[i] = get_abs_path(d)
+            if not compile_with_pyccel and language=='fortran':
+                compile_pyccel (os.path.dirname(dependencies[i]), dependencies[i], pyccel_commands+" -t")
+                compile_fortran(os.path.dirname(dependencies[i]), dependencies[i], [], is_mod = True)
+            else:
+                compile_pyccel(os.path.dirname(dependencies[i]), dependencies[i], pyccel_commands)
 
     if compile_with_pyccel:
         compile_pyccel(cwd, test_file, pyccel_commands)
