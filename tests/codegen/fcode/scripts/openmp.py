@@ -1,4 +1,4 @@
-# coding: utf-8
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 
 from numpy import zeros
 
