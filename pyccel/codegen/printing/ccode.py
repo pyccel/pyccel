@@ -992,6 +992,23 @@ class CCodePrinter(CodePrinter):
     def _print_NewLine(self, expr):
         return '\n'
 
+    #=================== OMP ==================
+    def _print_OMP_For_Loop(self, expr):
+        omp_expr   = str(expr.txt)
+        return '#pragma omp for{}\n{{'.format(omp_expr)
+
+    def _print_OMP_Parallel_Construct(self, expr):
+        omp_expr   = str(expr.txt)
+        return '#pragma omp {}\n{{'.format(omp_expr)
+
+    def _print_OMP_Single_Construct(self, expr):
+        omp_expr   = str(expr.txt)
+        return '#pragma omp {}\n{{'.format(omp_expr)
+
+    def _print_Omp_End_Clause(self, expr):
+        return '}'
+    #=====================================
+
     def _print_Program(self, expr):
         body  = self._print(expr.body)
         decs     = [self._print(i) for i in expr.declarations]
