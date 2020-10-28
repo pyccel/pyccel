@@ -205,7 +205,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
 
     for i, d in enumerate(dependencies):
         dependencies[i] = get_abs_path(d)
-        if not compile_with_pyccel:
+        if not compile_with_pyccel and language=='fortran':
             compile_pyccel (os.path.dirname(dependencies[i]), dependencies[i], pyccel_commands+" -t")
             compile_fortran(os.path.dirname(dependencies[i]), dependencies[i], [], is_mod = True)
         else:
