@@ -1421,15 +1421,12 @@ class SemanticParser(BasicParser):
                 know_lhs_shape = all(sh is not None for sh in lhs.alloc_shape) \
                         or (lhs.rank == 0) \
                         or isinstance(rhs, (Variable, EmptyLike, DottedVariable))
+
                 if not know_lhs_shape:
                     msg = "Cannot infer shape of right-hand side for expression {} = {}".format(lhs, rhs)
                     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=self.blocking)
-                elif lhs.rank>0 and not isinstance(rhs, (NumpyNewArray, TupleVariable, PythonTuple)):
-                    #TODO: Provide order once issue #335 is fixed
-                    #new_expressions.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, lhs.order)))
-                    new_expressions.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, 'C')))
             else:
 
                 # TODO improve check type compatibility
