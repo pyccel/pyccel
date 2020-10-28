@@ -1445,24 +1445,12 @@ class SemanticParser(BasicParser):
 
                 elif not is_augassign:
 
-                    if d_var['rank'] == getattr(var, 'rank', 'None') and (d_var['rank'] == 1 or
-                       d_var['rank'] > 1 and d_var['order'] == getattr(var, 'order', 'None')):
-                            if d_var['shape'] != getattr(var, 'shape', 'None'):
+                    rank  = getattr(var, 'rank' , 'None')
+                    order = getattr(var, 'order', 'None')
+                    shape = getattr(var, 'shape', 'None')
 
-                                # TODO [YG, 28.10.2020] What should we do if LHS is stack array?
-                                if not var.is_stack_array:
+                    if (d_var['rank'] != rank) or (rank > 1 and d_var['order'] != order):
 
-                                    # TODO [YG, 28.10.2020] Should we set status='unknown' instead?
-                                    new_expressions.append(Allocate(var,
-                                        shape=rhs.shape, order=rhs.order,
-                                        status='allocated'))
-
-                                    errors.report(ARRAY_REALLOCATION, symbol=name,
-                                        severity='warning', blocker=False,
-                                        bounding_box=(self._current_fst_node.lineno,
-                                            self._current_fst_node.col_offset))
-
-                    else:
                         txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
                         format_shape = lambda s: "" if len(s)==0 else s
                         txt = txt.format(name=name, dtype=dtype, old=format_shape(var.shape),
@@ -1470,6 +1458,23 @@ class SemanticParser(BasicParser):
                         errors.report(INCOMPATIBLE_REDEFINITION, symbol=txt,
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='error', blocker=False)
+
+                    elif d_var['shape'] != shape:
+
+                        if var.is_stack_array:
+                            # TODO [YG, 28.10.2020] Raise Pyccel error: STACK_ARRAY_REALLOCATION
+                            pass
+
+                        else:
+                            # TODO [YG, 28.10.2020] Should we set status='unknown' instead?
+                            new_expressions.append(Allocate(var,
+                                shape=rhs.shape, order=rhs.order,
+                                status='allocated'))
+
+                            errors.report(ARRAY_REALLOCATION, symbol=name,
+                                severity='warning', blocker=False,
+                                bounding_box=(self._current_fst_node.lineno,
+                                    self._current_fst_node.col_offset))
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.
