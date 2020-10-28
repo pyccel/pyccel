@@ -2,32 +2,29 @@
 # -*- coding: utf-8 -*-
 
 import numpy
-from sympy import Basic, Function, Tuple
-from sympy import Integer as sp_Integer
-from sympy import Expr
-from sympy import Rational as sp_Rational
+
 from sympy.core.function import Application
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
-from .basic import PyccelAstNode
-from .core  import (Variable, IndexedElement, Slice, Len,
-                   For, Range, Assign, List, Nil,
-                   ValuedArgument, Constant, process_shape)
+from sympy           import (Basic, Function, Tuple, Integer as sp_Integer,
+                             Rational as sp_Rational, Expr)
 
-from .core           import PyccelPow, PyccelMinus, PyccelAssociativeParenthesis
-from .core           import PyccelMul, PyccelAdd
-from .core           import broadcast
-from .core           import ClassDef, FunctionDef
-from .core           import IndexedVariable
+from .core           import (PyccelPow, PyccelMinus, PyccelMul, PyccelAdd,
+                             PyccelAssociativeParenthesis, broadcast, ClassDef,
+                             FunctionDef, IndexedVariable, Assign, List, Nil,
+                             Variable, IndexedElement, Slice, Len, For, Range,
+                             ValuedArgument, Constant, process_shape)
 
-from .builtins       import PythonInt, PythonBool
-from .builtins       import PythonFloat, PythonTuple, PythonComplex
-from .datatypes      import dtype_and_precision_registry as dtype_registry
-from .datatypes      import default_precision
-from .datatypes      import datatype
-from .datatypes      import NativeInteger, NativeReal, NativeComplex, NativeBool
+from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
+                             PythonComplex)
+
+from .datatypes      import (dtype_and_precision_registry as dtype_registry,
+                             default_precision, datatype, NativeInteger,
+                             NativeReal, NativeComplex, NativeBool)
+
 from .numbers        import Integer, Float
 from .type_inference import str_dtype
+from .basic          import PyccelAstNode
 
 
 __all__ = (
@@ -93,10 +90,11 @@ numpy_constants = {
 }
 
 def process_dtype(dtype):
-    if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt,
-                  NumpyInt32, NumpyInt64, NumpyComplex, NumpyComplex64,
-				  NumpyComplex128, NumpyFloat, NumpyFloat64, NumpyFloat32):
-        dtype = dtype.__name__.lower()
+    if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool):
+        dtype = dtype.__name__.lower()[6:]
+    elif dtype  in (NumpyInt, NumpyInt32, NumpyInt64, NumpyComplex, NumpyFloat,
+				  NumpyComplex128, NumpyComplex64, NumpyFloat64, NumpyFloat32):
+        dtype = dtype.__name__.lower()[5:]
     else:
         dtype            = str(dtype).replace('\'', '').lower()
     dtype, precision = dtype_registry[dtype]
@@ -140,7 +138,7 @@ class NumpyArray(Application, NumpyNewArray):
         if dtype is None:
             dtype = arg.dtype
         dtype, prec = process_dtype(dtype)
-
+        print("numpy new array dtype", dtype)
         # ... Determine ordering
         if isinstance(order, ValuedArgument):
             order = order.value
@@ -1259,10 +1257,10 @@ class NumpyComplex(PythonComplex):
         return PythonComplex.__new__(cls, arg0, arg1)
 
 class NumpyComplex64(NumpyComplex):
-    _precision = dtype_registry['numpycomplex64'][1]
+    _precision = dtype_registry['complex64'][1]
 
 class NumpyComplex128(NumpyComplex):
-    _precision = dtype_registry['numpycomplex128'][1]
+    _precision = dtype_registry['complex128'][1]
 
 #=======================================================================================
 class NumpyFloat(PythonFloat):
@@ -1274,12 +1272,12 @@ class NumpyFloat(PythonFloat):
 class NumpyFloat32(NumpyFloat):
     """ Represents a call to numpy.float32() function.
     """
-    _precision = dtype_registry['numpyfloat32'][1]
+    _precision = dtype_registry['float32'][1]
 
 class NumpyFloat64(NumpyFloat):
     """ Represents a call to numpy.float64() function.
     """
-    _precision = dtype_registry['numpyfloat64'][1]
+    _precision = dtype_registry['float64'][1]
 
 #=======================================================================================
 # TODO [YG, 13.03.2020]: handle case where base != 10
@@ -1292,12 +1290,12 @@ class NumpyInt(PythonInt):
 class NumpyInt32(NumpyInt):
     """ Represents a call to numpy.int32() function.
     """
-    _precision = dtype_registry['numpyint32'][1]
+    _precision = dtype_registry['int32'][1]
 
 class NumpyInt64(NumpyInt):
     """ Represents a call to numpy.int64() function.
     """
-    _precision = dtype_registry['numpyint64'][1]
+    _precision = dtype_registry['int64'][1]
 
 
 
