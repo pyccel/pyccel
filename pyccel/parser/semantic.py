@@ -22,6 +22,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import PyccelAstNode
 
+from pyccel.ast.core import Allocate
 from pyccel.ast.core import Constant
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Variable
@@ -626,6 +627,7 @@ class SemanticParser(BasicParser):
             d_var['precision'  ] = expr.precision
             d_var['cls_base'   ] = NumpyArrayClass
             return d_var
+
         elif isinstance(expr, PyccelAstNode):
 
             d_var['datatype'   ] = expr.dtype
@@ -796,7 +798,6 @@ class SemanticParser(BasicParser):
     def _visit_Variable(self, expr, **settings):
         name = expr.name
         return self.get_variable(name)
-
 
     def _visit_str(self, expr, **settings):
         return repr(expr)
@@ -1411,6 +1412,10 @@ class SemanticParser(BasicParser):
                 # Add variable to scope
                 self.insert_variable(lhs, name=lhs.name)
 
+                # Add memory allocation if needed
+                if lhs.allocatable and not lhs.is_stack_array:
+                    new_expressions.append(Allocate(lhs, shape=rhs.shape, order=rhs.order, status='unallocated'))
+
                 # Not yet supported for arrays: x=y+z, x=b[:]
                 # Because we cannot infer shape of right-hand side yet
                 know_lhs_shape = all(sh is not None for sh in lhs.alloc_shape) \
@@ -1442,10 +1447,24 @@ class SemanticParser(BasicParser):
                     severity='error', blocker=False)
 
                 elif not is_augassign:
-                    if d_var['rank'] == getattr(var, 'rank', 'None'):
-                        if d_var['shape'] != getattr(var, 'shape', 'None'):
-                            errors.report(ARRAY_REALLOCATION, symbol=name, severity='warning', blocker=False,
-                                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset))
+
+                    if d_var['rank'] == getattr(var, 'rank', 'None') and (d_var['rank'] == 1 or
+                       d_var['rank'] > 1 and d_var['order'] == getattr(var, 'order', 'None')):
+                            if d_var['shape'] != getattr(var, 'shape', 'None'):
+
+                                # TODO [YG, 28.10.2020] What should we do if LHS is stack array?
+                                if not var.is_stack_array:
+
+                                    # TODO [YG, 28.10.2020] Should we set status='unknown' instead?
+                                    new_expressions.append(Allocate(var,
+                                        shape=rhs.shape, order=rhs.order,
+                                        status='allocated'))
+
+                                    errors.report(ARRAY_REALLOCATION, symbol=name,
+                                        severity='warning', blocker=False,
+                                        bounding_box=(self._current_fst_node.lineno,
+                                            self._current_fst_node.col_offset))
+
                     else:
                         txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
                         format_shape = lambda s: "" if len(s)==0 else s
@@ -1461,7 +1480,6 @@ class SemanticParser(BasicParser):
                 # the following is a small fix, since lhs must be already
                 # declared
                 lhs = var
-
 
         elif isinstance(lhs, DottedVariable):
 

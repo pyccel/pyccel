@@ -942,17 +942,8 @@ class Full(Application, NumpyNewArray):
         lhs_code = printer(lhs)
         stmts = []
 
-        # Create statement for allocation
-        if not stack_array:
-            # Transpose indices because of Fortran column-major ordering
-            shape = self.shape if self.order == 'F' else self.shape[::-1]
-
-            shape_code = ', '.join('0:' + printer(PyccelMinus(i, Integer(1))) for i in shape)
-
-            code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
-            stmts.append(code_alloc)
-
         # Create statement for initialization
+        # TODO [YG, 28.10.2020] Print value w/ correct format (type, precision)
         if self.fill_value is not None:
             init_value = printer(self.fill_value)
             code_init = '{0} = {1}'.format(lhs_code, init_value)
