@@ -4,42 +4,33 @@
 import inspect
 
 from sympy.core.function import Application
-from sympy import Not
-from sympy import Function
+from sympy import Not, Function
 from numpy import pi
 
+import pyccel.decorators as pyccel_decorators
 from pyccel.symbolic import lambdify
+from pyccel.errors.errors import Errors
 
-from .core import AsName
-from .core import Import
-from .core import Product
-from .core import FunctionDef
-from .core import ValuedVariable
-from .core import Constant, Variable, IndexedVariable
-from .core import String
+from .core     import (AsName, Import, Product, FunctionDef, String, Constant,
+                       Variable, IndexedVariable, ValuedVariable)
 
-from .builtins import PythonBool, Enumerate, PythonInt, PythonFloat, PythonComplex, Len, Map, Range, Zip
+from .builtins import (PythonBool, Enumerate, PythonInt, PythonFloat,
+                       PythonComplex, Len, Map, Range, Zip)
 
 from .mathext  import math_functions, math_constants
 
-from .numpyext import NumpyFull, NumpyEmpty, NumpyZeros, NumpyOnes
-from .numpyext import NumpyFullLike, NumpyEmptyLike, NumpyZerosLike, NumpyOnesLike
-from .numpyext import NumpyDiag
-from .numpyext import NumpyMin, NumpyMax, NumpyAbs, NumpyFloor, NumpyNorm, NumpyWhere
-from .numpyext import NumpyArray, Shape, NumpyRand, NumpyRandint, NumpySum, NumpyMatmul, NumpyReal, NumpyComplex, NumpyImag, NumpyMod
-from .numpyext import NumpyInt, NumpyInt32, NumpyInt64, NumpyFloat, NumpyFloat32, NumpyFloat64, NumpyComplex64, NumpyComplex128
-from .numpyext import NumpyExp, NumpyLog, NumpySqrt
-from .numpyext import NumpySin, NumpyCos, NumpyTan
-from .numpyext import NumpyArcsin, NumpyArccos, NumpyArctan, NumpyArctan2
-from .numpyext import NumpySinh, NumpyCosh, NumpyTanh, NumpyFabs
-from .numpyext import NumpyArcsinh, NumpyArccosh, NumpyArctanh
-from .numpyext import numpy_constants, NumpyLinspace
-from .numpyext import NumpyProduct
-
-import pyccel.decorators as pyccel_decorators
-
-from pyccel.errors.errors import Errors
-
+from .numpyext import (NumpyFull, NumpyEmpty, NumpyZeros, NumpyOnes, NumpyDiag,
+                       NumpyFullLike, NumpyEmptyLike, NumpyZerosLike, NumpyExp,
+                       NumpyMin, NumpyMax, NumpyAbs, NumpyFloor, NumpyNorm,
+                       NumpyArray, NumpyRand, NumpyMatmul, NumpySum, NumpyReal,
+                       NumpyInt, NumpyInt32, NumpyInt64, NumpyFloat, Shape,
+                       NumpyRandint, NumpyLog, NumpySqrt, NumpyComplex,
+                       NumpySin, NumpyCos, NumpyTan, NumpyComplex64, NumpyMod,
+                       NumpyArcsin, NumpyArccos, NumpyArctan, NumpyArctan2,
+                       NumpySinh, NumpyCosh, NumpyTanh, NumpyFabs, NumpyImag,
+                       NumpyArcsinh, NumpyArccosh, NumpyArctanh, NumpyFloat32,
+                       numpy_constants, NumpyLinspace, NumpyOnesLike,
+                       NumpyProduct, NumpyFloat64, NumpyWhere, NumpyComplex128)
 
 __all__ = (
     'build_types_decorator',
@@ -89,7 +80,7 @@ numpy_functions = {
     'linspace'  : NumpyLinspace,
     'diag'      : NumpyDiag,
     'where'     : NumpyWhere,
-#    'cross'     : NumpyCross,   # Currently not correctly implemented
+    # 'cross'     : NumpyCross,   # Currently not correctly implemented
     # ---
     'abs'       : NumpyAbs,
     'floor'     : NumpyFloor,
@@ -106,15 +97,15 @@ numpy_functions = {
     'arccos'    : NumpyArccos,
     'arctan'    : NumpyArctan,
     'arctan2'   : NumpyArctan2,
-#    'hypot'     : NumpyHypot,
+    # 'hypot'     : NumpyHypot,
     'sinh'      : NumpySinh,
     'cosh'      : NumpyCosh,
     'tanh'      : NumpyTanh,
     'arcsinh'   : NumpyArcsinh,
     'arccosh'   : NumpyArccosh,
     'arctanh'   : NumpyArctanh,
-#    'deg2rad'   : NumpyDeg2rad,
-#    'rad2deg'   : NumpyRad2deg,
+    # 'deg2rad'   : NumpyDeg2rad,
+    # 'rad2deg'   : NumpyRad2deg,
 }
 
 numpy_linalg_functions = {
@@ -178,13 +169,18 @@ def builtin_function(expr, args=None):
 
 
 # TODO add documentation
-builtin_import_registery = {'numpy': {**numpy_functions, **numpy_constants, 'linalg':numpy_linalg_functions, 'random':numpy_random_functions},
-        'numpy.linalg': numpy_linalg_functions,
-        'numpy.random': numpy_random_functions,
-        'scipy.constants': scipy_constants,
-        'itertools': {'product': Product},
-        'math': {**math_functions, ** math_constants},
-        'pyccel.decorators': None}
+builtin_import_registery = {'numpy': {
+                                      **numpy_functions,
+                                      **numpy_constants,
+                                      'linalg':numpy_linalg_functions,
+                                      'random':numpy_random_functions
+                                      },
+                            'numpy.linalg': numpy_linalg_functions,
+                            'numpy.random': numpy_random_functions,
+                            'scipy.constants': scipy_constants,
+                            'itertools': {'product': Product},
+                            'math': {**math_functions, ** math_constants},
+                            'pyccel.decorators': None}
 
 #==============================================================================
 def collect_relevant_imports(func_dictionary, targets):
