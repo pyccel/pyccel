@@ -81,13 +81,8 @@ class VariableHeader(Header):
     def dtypes(self):
         return self._args[1]
 
-# TODO rename dtypes to arguments
-
-    def __getnewargs__(self):
-        """used for Pickling self."""
-        # TODO improve after renaming the args property
-        args = (self._args[0],)
-        return args
+    def __reduce_ex__(self, i):
+        return (self.__class__, self.args)
 
 #==============================================================================
 class FunctionHeader(Header):
@@ -275,14 +270,13 @@ class FunctionHeader(Header):
                               self.kind,
                               self.is_static)
 
-    def __getnewargs__(self):
-        """used for Pickling self."""
+    def __reduce_ex__(self, i):
         args = (self.func,
-                self.dtypes,
-                self.results,
-                self.kind,
-                self.is_static,)
-        return args
+            self.dtypes,
+            self.results,
+            self.kind,
+            self.is_static,)
+        return (self.__class__, args)
 
 #==============================================================================
 # TODO to be improved => use FunctionHeader

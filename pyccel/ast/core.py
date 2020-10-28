@@ -189,6 +189,8 @@ local_sympify = {
 }
 
 #==============================================================================
+def apply(func, args, kwargs):return func(*args, **kwargs)
+#==============================================================================
 def broadcast(shape_1, shape_2):
     """ This function broadcast two shapes using numpy broadcasting rules """
     a = len(shape_1)
@@ -2779,21 +2781,20 @@ class Variable(Symbol, PyccelAstNode):
             cls_base=kwargs.pop('cls_base',self.cls_base),
             )
 
-    def __getnewargs__(self):
-        """used for Pickling self."""
-
+    def __reduce_ex__(self, i):
         args = (
             self.dtype,
-            self.name,
-            self.rank,
-            self.allocatable,
-            self.is_pointer,
-            self.is_polymorphic,
-            self.is_optional,
-            self.shape,
-            self.cls_base,
-            )
-        return args
+            self.name)
+        kwargs = {
+            'rank' : self.rank,
+            'allocatable': self.allocatable,
+            'is_pointer':self.is_pointer,
+            'is_polymorphic':self.is_polymorphic,
+            'is_optional':self.is_optional,
+            'shape':self.shape,
+            'cls_base':self.cls_base,
+            }
+        return (apply, (Variable, args, kwargs))
 
     def _eval_subs(self, old, new):
         return self
@@ -2801,7 +2802,6 @@ class Variable(Symbol, PyccelAstNode):
     def _eval_is_positive(self):
         #we do this inorder to infere the type of Pow expression correctly
         return self.is_real
-
 
 class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
 
@@ -3714,32 +3714,32 @@ class FunctionDef(Basic):
             or len(set(self.results).intersection(self.arguments)) > 0
         return flag
 
-    def __getnewargs__(self):
-        """used for Pickling self."""
 
+    def __reduce_ex__(self, i):
         args = (
-                self._name,
-                self._arguments,
-                self._results,
-                self._body,
-                self._local_vars,
-                self._global_vars,
-                self._cls_name,
-                self._hide,
-                self._kind,
-                self._is_static,
-                self._imports,
-                self._decorators,
-                self._header,
-                self._is_recursive,
-                self._is_pure,
-                self._is_elemental,
-                self._is_private,
-                self._is_header,
-                self._arguments_inout,
-                self._functions
-            )
-        return args
+        self._name,
+        self._arguments,
+        self._results,
+        self._body)
+
+        kwargs = {
+        'local_vars':self._local_vars,
+        'global_vars':self._global_vars,
+        'cls_name':self._cls_name,
+        'hide':self._hide,
+        'kind':self._kind,
+        'is_static':self._is_static,
+        'imports':self._imports,
+        'decorators':self._decorators,
+        'header':self._header,
+        'is_recursive':self._is_recursive,
+        'is_pure':self._is_pure,
+        'is_elemental':self._is_elemental,
+        'is_private':self._is_private,
+        'is_header':self._is_header,
+        'arguments_inout':self._arguments_inout,
+        'functions':self._functions}
+        return (apply, (self.__class__, args, kwargs))
 
     # TODO
     def check_pure(self):
