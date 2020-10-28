@@ -438,8 +438,8 @@ class CCodePrinter(CodePrinter):
                                .replace("'", "\\'")
         return '"{}"'.format(format_str)
 
-    def _print_Print(self, expr):
-        self._additional_imports.add("stdio")
+
+    def get_print_format_and_arg(self, var):
         type_to_format = {('real',8)    : '%.12lf',
                           ('real',4)    : '%.12f',
                           ('complex',8) : '(%.12lf + %.12lfj)',
@@ -450,6 +450,20 @@ class CCodePrinter(CodePrinter):
                           ('int',1)     : '%c',
                           ('bool',4)    : '%s',
                           ('string', 0) : '%s'}
+        try:
+            arg_format = type_to_format[(self._print(var.dtype), var.precision)]
+        except KeyError:
+            errors.report("{} type is not supported currently".format(var.dtype), severity='fatal')
+        if var.dtype is NativeComplex():
+            arg = self._print(NumpyReal(var)), self._print(NumpyImag(var))
+        elif var.dtype is NativeBool():
+            arg = '{} ? "True" : "False"'.format(self._print(var))
+        else:
+            arg = self._print(var)
+        return arg_format, arg
+
+    def _print_Print(self, expr):
+        self._additional_imports.add("stdio")
         args_format = []
         args = []
         end = '\n'
@@ -459,17 +473,9 @@ class CCodePrinter(CodePrinter):
                 if f.name == 'sep'      :   sep = str(f.value)
                 elif f.name == 'end'    :   end = str(f.value)
             else:
-                try:
-                    args_format.append(type_to_format[(self._print(f.dtype), f.precision)])
-                except KeyError:
-                    errors.report("{} type is not supported currently".format(\
-                        f.dtype), severity='fatal')
-                if f.dtype is NativeComplex():
-                    args.extend([self._print(NumpyReal(f)), self._print(NumpyImag(f))])
-                elif f.dtype is NativeBool():
-                    args.append('{} ? "True" : "False"'.format(self._print(f)))
-                else:
-                    args.append(self._print(f))
+                arg_format, arg = self.get_print_format_and_arg(f)
+                args_format.append(arg_format)
+                args.append(arg)
 
         args_format = sep.join(args_format)
         args_format += end
