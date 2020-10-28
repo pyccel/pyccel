@@ -592,28 +592,38 @@ class FCodePrinter(CodePrinter):
         idx = 1 if var.order == 'F' else var.rank
         return 'size({},{})'.format(self._print(var), self._print(idx))
 
+    #========================== Numpy Elements ===============================#
+
     def _print_NumpySum(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Product(self, expr):
+    def _print_NumpyProduct(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Matmul(self, expr):
+    def _print_NumpyMatmul(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Cross(self, expr):
+    def _print_NumpyCross(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Norm(self, expr):
+    def _print_NumpyNorm(self, expr):
         return expr.fprint(self._print)
 
+    def _print_NumpyLinspace(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_NumpyArray(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_NumpyFloor(self, expr):
+        result_code = self._print_MathFloor(expr)
+        return 'real({}, {})'.format(result_code, expr.precision)
+
+    def _print_PythonFloat(self, expr):
+        return expr.fprint(self._print)
+
+    # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
-        return expr.fprint(self._print)
-
-    def _print_Linspace(self, expr):
-        return expr.fprint(self._print)
-
-    def _print_Array(self, expr):
         return expr.fprint(self._print)
 
     def _print_PythonInt(self, expr):
@@ -632,13 +642,6 @@ class FCodePrinter(CodePrinter):
         prec_code = self._print(prec)
         return 'floor({}, kind={})'.format(arg_code, prec_code)
 
-    def _print_NumpyFloor(self, expr):
-        result_code = self._print_MathFloor(expr)
-        return 'real({}, {})'.format(result_code, expr.precision)
-
-    def _print_PythonFloat(self, expr):
-        return expr.fprint(self._print)
-
     def _print_NumpyFloat(self, expr):
         return expr.fprint(self._print)
 
@@ -651,7 +654,7 @@ class FCodePrinter(CodePrinter):
     def _print_PythonBool(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Rand(self, expr):
+    def _print_NumpyRand(self, expr):
         if expr.rank != 0:
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
@@ -1148,7 +1151,7 @@ class FCodePrinter(CodePrinter):
 
         code = ''
         if (expr.status == 'unallocated') and not (expr.like is None):
-            stmt = ZerosLike(lhs=lhs_code, rhs=expr.like)
+            stmt = NumpyZerosLike(lhs=lhs_code, rhs=expr.like)
             code += self._print(stmt)
             code += '\n'
         if not is_procedure:
