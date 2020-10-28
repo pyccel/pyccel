@@ -184,7 +184,6 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float ):
 #------------------------------------------------------------------------------
 def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         cwd = None, pyccel_commands = "", output_dtype = float,
-        compile_dep_with_pyccel = True,
         language = None):
     test_file = os.path.normpath(test_file)
 
@@ -201,18 +200,16 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
     else:
         language='fortran'
 
-    if (isinstance(dependencies, list)):
-        for i, d in enumerate(dependencies):
-            dependencies[i] = get_abs_path(d)
-            compile_pyccel(os.path.dirname(dependencies[i]), dependencies[i], pyccel_commands)
+    if isinstance(dependencies, str):
+        dependencies = [dependencies]
 
-    elif (isinstance(dependencies, str)):
-        dependencies = get_abs_path(dependencies)
-        if not compile_dep_with_pyccel:
-            compile_pyccel (os.path.dirname(dependencies), dependencies, pyccel_commands+" -t")
-            compile_fortran(os.path.dirname(dependencies), dependencies, [], is_mod = True)
+    for i, d in enumerate(dependencies):
+        dependencies[i] = get_abs_path(d)
+        if not compile_with_pyccel:
+            compile_pyccel (os.path.dirname(dependencies[i]), dependencies[i], pyccel_commands+" -t")
+            compile_fortran(os.path.dirname(dependencies[i]), dependencies[i], [], is_mod = True)
         else:
-            compile_pyccel(os.path.dirname(dependencies), dependencies, pyccel_commands)
+            compile_pyccel(os.path.dirname(dependencies[i]), dependencies[i], pyccel_commands)
 
     if compile_with_pyccel:
         compile_pyccel(cwd, test_file, pyccel_commands)
@@ -392,7 +389,7 @@ def test_expressions(language):
 def test_highorder():
     pyccel_test("scripts/runtest_highorder_functions.py",
             dependencies = "scripts/highorder_functions.py",
-            compile_dep_with_pyccel = False,
+            compile_with_pyccel = False,
             output_dtype = [int,int,float,float,float,int,float,
                 float, int])
 
