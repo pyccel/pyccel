@@ -477,20 +477,21 @@ class CCodePrinter(CodePrinter):
         end = '\n'
         sep = ' '
         for f in expr.expr:
-            arg_format, arg = '', ''
             if isinstance(f, ValuedVariable):
                 if f.name == 'sep'      :   sep = str(f.value)
                 elif f.name == 'end'    :   end = str(f.value)
             elif isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
                 tmp_list = self.extract_function_call_results(f)
+                tmp_arg_format_list = []
                 for a in tmp_list:
                     arg_format, arg = self.get_print_format_and_arg(a)
+                    tmp_arg_format_list.append(arg_format)
+                    args.append(arg)
+                args_format.append('({})'.format(', '.join(tmp_arg_format_list)))
                 assign = Assign(tmp_list, f)
                 self._additional_code += self._print(assign) + '\n'
             else:
                 arg_format, arg = self.get_print_format_and_arg(f)
-
-            if arg_format and arg:
                 args_format.append(arg_format)
                 args.append(arg)
 
