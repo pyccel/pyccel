@@ -50,8 +50,9 @@ def print_multiple():
 
 print_multiple()
 
-print(min(f3()))
-print(max(f3()))
+#TODO remove comment when passing tuple as arguments is done in C
+#print(min(f3()))
+#print(max(f3()))
 
 
 @types('real','real')

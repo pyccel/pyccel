@@ -472,13 +472,12 @@ def test_numpy_kernels_compile():
     compile_pyccel(os.path.join(cwd, "scripts/numpy/"), "numpy_kernels.py")
 
 #------------------------------------------------------------------------------
-def test_multiple_results():
+def test_multiple_results(language):
     pyccel_test("scripts/runtest_multiple_results.py",
-            dependencies = "scripts/default_args_mod.py",
             output_dtype = [int,float,complex,bool,int,complex,
                 int,bool,float,float,float,float,float,float,
-                float,float,float,float,float,float,
-                float,float,float,float,float,float])
+                float,float,float,float,float,float
+                ,float,float,float,float], language=language)
 
 #------------------------------------------------------------------------------
 def test_elemental():
