@@ -673,7 +673,7 @@ class CCodePrinter(CodePrinter):
         self._additional_declare.clear()
 
         if len(expr.results) > 1:
-            self._additional_args = [a.clone(name = self._parser.get_new_name('return'), is_pointer =True) for a in expr.results]
+            self._additional_args = [a.clone(name = self._parser.get_new_name('tmp_ret'), is_pointer =True) for a in expr.results]
             body += '\n'.join(self._print_Assign(Assign(a, b)) for  a, b in zip(self._additional_args, expr.results))
 
         sep = self._print(SeparatorComment(40))
@@ -752,7 +752,8 @@ class CCodePrinter(CodePrinter):
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
         if expr.stmt:
             code += self._print(expr.stmt)+'\n'
-        code +='return {0};'.format(self._print(args[0]))
+        if len(args) == 1:
+            code +='return {0};'.format(self._print(args[0]))
         return code
 
     def _print_Nil(self, expr):
