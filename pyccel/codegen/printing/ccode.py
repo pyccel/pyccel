@@ -697,12 +697,10 @@ class CCodePrinter(CodePrinter):
             return False
         return a.is_pointer or a.is_optional
 
-    def create_tmp_var(self, init_val, match_var):
+    def create_tmp_var(self, match_var):
         tmp_var_name = self._parser.get_new_name('tmp')
         tmp_var = Variable(name = tmp_var_name, dtype = match_var.dtype)
         self._additional_declare.append(tmp_var)
-        assign = Assign(tmp_var, init_val)
-        self._additional_code += self._print(assign) + '\n'
         return tmp_var
 
     def _print_FunctionCall(self, expr):
@@ -714,8 +712,11 @@ class CCodePrinter(CodePrinter):
             if isinstance(a, Variable) and self.stored_in_c_pointer(f):
                 args.append(VariableAddress(a))
             elif f.is_optional and not isinstance(a, Nil):
-                tmp_var = self.create_tmp_var(a, f)
+                tmp_var = self.create_tmp_var(f)
+                assign = Assign(tmp_var, a)
+                self._additional_code += self._print(assign) + '\n'
                 args.append(VariableAddress(tmp_var))
+
             else :
                 args.append(a)
 
