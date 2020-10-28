@@ -28,7 +28,7 @@ from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import Nil
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
-from pyccel.ast.core import FunctionDef, FunctionAddress, FuncAddressDeclare
+from pyccel.ast.core import FunctionDef, FunctionAddress
 from pyccel.ast.core import Subroutine
 from pyccel.ast.core import ErrorExit
 from pyccel.ast.core import Product
@@ -821,9 +821,6 @@ class FCodePrinter(CodePrinter):
 
         return str(functools.reduce(operator.mul, shape ))
 
-    def _print_FuncAddressDeclare(self, expr):
-        return ''
-
     def _print_Declare(self, expr):
         # ... ignored declarations
         # we don't print the declaration if iterable object
@@ -1382,20 +1379,14 @@ class FCodePrinter(CodePrinter):
         # ...
 
         for i,arg in enumerate(expr.arguments):
-            if expr.arguments_inout[i]:
-                if isinstance(arg, FunctionAddress):
-                    dec = FuncAddressDeclare(arg, intent='inout')
-                else:
+            if isinstance(arg, Variable):
+                if expr.arguments_inout[i]:
                     dec = Declare(arg.dtype, arg, intent='inout')
-            elif str(arg) == 'self':
-                dec = Declare(arg.dtype, arg, intent='inout')
-
-            else:
-                if isinstance(arg, FunctionAddress):
-                    dec = FuncAddressDeclare(arg, intent='in')
+                elif str(arg) == 'self':
+                    dec = Declare(arg.dtype, arg, intent='inout')
                 else:
                     dec = Declare(arg.dtype, arg, intent='in')
-            args_decs[str(arg)] = dec
+                args_decs[str(arg)] = dec
 
         #remove parametres intent(inout) from out_args to prevent repetition
         for i in expr.arguments:
@@ -1452,10 +1443,7 @@ class FCodePrinter(CodePrinter):
         body_code = self._print(expr.body)
 
         for i in expr.local_vars:
-            if isinstance(i, FunctionAddress):
-                dec = FuncAddressDeclare(i)
-            else:
-                dec = Declare(i.dtype, i)
+            dec = Declare(i.dtype, i)
             decs[str(i)] = dec
 
         vars_to_print = self.parser.get_variables(self._namespace)
