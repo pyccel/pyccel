@@ -36,7 +36,7 @@ def count_ops(expr, visual=None):
         return sum(count_ops(i, visual) for i in expr)
     elif isinstance(expr, CodeBlock):
         return sum(count_ops(i, visual) for i in expr.body)
-    elif isinstance(expr, (Zeros, Ones,NewLine, Comment)):
+    elif isinstance(expr, (NumpyZeros, NumpyOnes,NewLine, Comment)):
         return 0
     else:
         raise NotImplementedError('TODO count_ops for {}'.format(type(expr)))
