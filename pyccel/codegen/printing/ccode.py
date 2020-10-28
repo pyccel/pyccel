@@ -462,6 +462,14 @@ class CCodePrinter(CodePrinter):
             arg = self._print(var)
         return arg_format, arg
 
+    def extract_function_call_results(self, expr):
+        tmp_list = []
+        for a in expr.funcdef.results :
+            tmp_var = self.create_tmp_var(a)
+            tmp_list.append(tmp_var)
+        return tmp_list
+
+
     def _print_Print(self, expr):
         self._additional_imports.add("stdio")
         args_format = []
@@ -469,22 +477,20 @@ class CCodePrinter(CodePrinter):
         end = '\n'
         sep = ' '
         for f in expr.expr:
+            arg_format, arg = '', ''
             if isinstance(f, ValuedVariable):
                 if f.name == 'sep'      :   sep = str(f.value)
                 elif f.name == 'end'    :   end = str(f.value)
             elif isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
-                #create tmp variables to holde functionCall results
-                tmp_list = []
-                for a in f.funcdef.results :
-                    tmp_var = self.create_tmp_var(a)
-                    arg_format, arg = self.get_print_format_and_arg(tmp_var)
-                    args_format.append(arg_format)
-                    args.append(arg)
-                    tmp_list.append(tmp_var)
+                tmp_list = self.extract_function_call_results(f)
+                for a in tmp_list:
+                    arg_format, arg = self.get_print_format_and_arg(a)
                 assign = Assign(tmp_list, f)
                 self._additional_code += self._print(assign) + '\n'
             else:
                 arg_format, arg = self.get_print_format_and_arg(f)
+
+            if arg_format and arg:
                 args_format.append(arg_format)
                 args.append(arg)
 
