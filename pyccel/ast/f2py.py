@@ -74,10 +74,7 @@ def as_static_function(func, name=None):
     for i_a, a in enumerate(args):
         if not isinstance(a, (Variable, FunctionAddress)):
             raise TypeError('Expecting a Variable or FunctionAddress type for {}'.format(a))
-        rank = None
-        if isinstance(a, Variable):
-            rank = a.rank
-        if rank and rank > 0:
+        if not isinstance(a, FunctionAddress) and a.rank > 0:
             # ...
             additional_args = []
             for i in range(rank):
@@ -124,7 +121,7 @@ def as_static_function(func, name=None):
     int_kind = Variable('int', 'f2py_array_dimension').precision
 
     for a in args:
-        if rank and a.rank > 1 and a.order == 'C':
+        if not isinstance(FunctionAddress) and a.rank > 1 and a.order == 'C':
 
             # Reverse shape of array
             transpose_stmts = [Comment(f2py_template.format(kind    = int_kind,
