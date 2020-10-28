@@ -669,6 +669,11 @@ class CCodePrinter(CodePrinter):
         decs += [Declare(i.dtype, i) for i in self._additional_declare]
         decs  = '\n'.join(self._print(i) for i in decs)
         self._additional_declare.clear()
+
+        if len(expr.results) > 1:
+            self._additional_args = [a.clone(name = self._parser.get_new_name('return'), is_pointer =True) for a in expr.results]
+            body += '\n'.join(self._print_Assign(Assign(a, b)) for  a, b in zip(self._additional_args, expr.results))
+
         sep = self._print(SeparatorComment(40))
 
         imports = ''.join(self._print(i) for i in expr.imports)
