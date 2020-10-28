@@ -2493,7 +2493,7 @@ class SemanticParser(BasicParser):
 
             func_args = [i for i in self.namespace.functions.values() if isinstance(i, FunctionAddress)]
             if func_args:
-                func_interfaces.append(Interface('', func_args, is_argument = True)) 
+                func_interfaces.append(Interface('', func_args, is_argument = True))
 
             self.exit_function_scope()
             # ... computing inout arguments

@@ -40,6 +40,8 @@ def f9(x, y):
 @types()
 def f10():
     y = 0
+    if y:
+        pass
 
 #$ header function high_int_1((int)(int), int)
 def high_int_1(function, a):

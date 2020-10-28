@@ -91,7 +91,7 @@ def compile_fortran(path_dir,test_file,dependencies,is_mod=False):
 
     assert(os.path.isfile(root+".f90"))
 
-    if is_mod: 
+    if is_mod:
         command = [shutil.which("gfortran"), "-c", "%s.f90" % root]
     else:
         command = [shutil.which("gfortran"), "-O3", "%s.f90" % root]
