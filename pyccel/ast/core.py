@@ -177,7 +177,11 @@ __all__ = (
 #    'operator',
 #    'op_registry',
     'process_shape',
-    'subs'
+    'subs',
+    'OMP_For_Loop',
+    'OMP_Parallel_Construct',
+    'OMP_Single_Construct',
+    'Omp_End_Clause'
 )
 
 #==============================================================================
@@ -3306,7 +3310,7 @@ class FunctionCall(Basic, PyccelAstNode):
             args = [a.value if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else a for a in f_args_dict.values()]
 
         args = [FunctionAddress(a.name, a.arguments, a.results, []) if isinstance(a, FunctionDef) else a for a in args]
-        
+
         args = Tuple(*args, sympify=False)
         # ...
 
@@ -4968,7 +4972,6 @@ class SeparatorComment(Comment):
         text = """.""" * n
         return Comment.__new__(cls, text)
 
-
 class AnnotatedComment(Basic):
 
     """Represents a Annotated Comment in the code.
@@ -5004,6 +5007,26 @@ class AnnotatedComment(Basic):
 
         args = (self.accel, self.txt)
         return args
+
+class OMP_For_Loop(AnnotatedComment):
+    """ Represents an OpenMP Loop construct. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
+
+class OMP_Parallel_Construct(AnnotatedComment):
+    """ Represents an OpenMP Parallel construct. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
+
+class OMP_Single_Construct(AnnotatedComment):
+    """ Represents an OpenMP Single construct. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
+
+class Omp_End_Clause(AnnotatedComment):
+    """ Represents the End of an OpenMP block. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
 
 class CommentBlock(Basic):
 

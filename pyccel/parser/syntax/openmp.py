@@ -6,7 +6,7 @@
 from os.path import join, dirname
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.core import AnnotatedComment
+from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct, Omp_End_Clause
 
 DEBUG = False
 
@@ -75,7 +75,7 @@ class OmpParallelConstruct(BasicStmt):
             else:
                 raise TypeError('Wrong clause for OmpParallelConstruct')
 
-        return AnnotatedComment('omp', txt)
+        return OMP_Parallel_Construct(txt)
 
 class OmpLoopConstruct(BasicStmt):
     """Class representing a ."""
@@ -100,15 +100,14 @@ class OmpLoopConstruct(BasicStmt):
                          OmpLinear, \
                          OmpOrdered)
 
-        txt = 'do'
+        txt = ''
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpLoopConstruct. Given : ', \
                                 type(clause))
-
-        return AnnotatedComment('omp', txt)
+        return OMP_For_Loop(txt)
 
 class OmpSingleConstruct(BasicStmt):
     """Class representing a ."""
@@ -134,7 +133,7 @@ class OmpSingleConstruct(BasicStmt):
             else:
                 raise TypeError('Wrong clause for OmpSingleConstruct')
 
-        return AnnotatedComment('omp', txt)
+        return OMP_Single_Construct(txt)
 
 class OmpEndClause(BasicStmt):
     """Class representing a ."""
@@ -153,7 +152,7 @@ class OmpEndClause(BasicStmt):
             print("> OmpEndClause: expr")
 
         txt = 'end {0} {1} {2}'.format(self.construct, self.simd, self.nowait)
-        return AnnotatedComment('omp', txt)
+        return Omp_End_Clause(txt)
 
 class OmpNumThread(BasicStmt):
     """Class representing a ."""
@@ -450,4 +449,3 @@ if __name__ == '__main__':
     print(parse(stmts='#$omp do private(ipart, pos, spana, lefta, righta, valuesa, spanb, leftb, rightb, valuesb,E, B)'))
     print(parse(stmts='#$omp end do'))
     print(parse(stmts='#$omp end parallel'))
-
