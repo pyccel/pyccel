@@ -1226,15 +1226,15 @@ class FCodePrinter(CodePrinter):
         # ... we don't print 'hidden' functions
         name = self._print(expr.name)
         if expr.is_argument:
-            funcs_sigs = ''
+            funcs_sigs = []
             for f in expr.functions:
                 self._handle_fortran_specific_a_prioris(list(f.arguments) + list(f.results))
                 parts = self.function_signature(f, f.name)
                 parts = ["{}({}) {}\n".format(parts['sig'], parts['arg_code'], parts['func_end']),
                 parts['arg_decs'],
                 'end {} {}\n'.format(parts['func_type'], f.name)]
-                funcs_sigs += ''.join(a for a in parts)
-            interface = 'interface\n' + funcs_sigs + 'end interface\n'
+                funcs_sigs.append(''.join(a for a in parts))
+            interface = 'interface\n' + '\n'.join(a for a in funcs_sigs) + 'end interface\n'
             return interface
 
         if expr.functions[0].cls_name:
