@@ -3660,8 +3660,8 @@ class FunctionDef(Basic):
         newname: str
             new name for the FunctionDef
         """
-        args = self.__getnewargs__()
-        new_func = FunctionDef(*args)
+        args, kwargs = self.__getnewargs__()
+        new_func = FunctionDef(*args, **kwargs)
         new_func.rename(newname)
         return new_func
 
@@ -3715,7 +3715,7 @@ class FunctionDef(Basic):
         return flag
 
 
-    def __reduce_ex__(self, i):
+    def __getnewargs__(self):
         args = (
         self._name,
         self._arguments,
@@ -3739,6 +3739,10 @@ class FunctionDef(Basic):
         'is_header':self._is_header,
         'arguments_inout':self._arguments_inout,
         'functions':self._functions}
+        return args, kwargs
+
+    def __reduce_ex__(self, i):
+        args, kwargs = self.__getnewargs__()
         return (apply, (self.__class__, args, kwargs))
 
     # TODO
