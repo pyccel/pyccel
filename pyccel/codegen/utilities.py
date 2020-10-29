@@ -100,20 +100,19 @@ def compile_files(filename, compiler, flags,
     if binary is None:
         if not is_module:
             binary = os.path.splitext(os.path.basename(filename))[0]
-            mod_file = ''
         else:
             f = os.path.join(output, os.path.splitext(os.path.basename(filename))[0])
             binary = '{}.o'.format(f)
 #            binary = "{folder}{binary}.o".format(folder=output,
 #                                binary=os.path.splitext(os.path.basename(filename))[0])
-            mod_file = '"{folder}"'.format(folder=output)
 
     o_code = '-o'
     j_code = ''
+    mod_file = ''
     if is_module:
         flags += ' -c '
         if (len(output)>0) and language == "fortran":
-            j_code = '-J'
+            j_code = '-J"{folder}"'.format(folder=output)
 
     m_code = ' '.join('{}.o'.format(m) for m in modules)
     if is_module:
@@ -129,8 +128,8 @@ def compile_files(filename, compiler, flags,
         compiler = "gfortran"
         filename += ' "{}"'.format(os.path.join(os.environ["MSMPI_LIB64"], 'libmsmpi.a'))
 
-    cmd = '{0} {1} {2} {3} {4} {5} {6} {7} {8}'.format( \
-        compiler, flags, m_code, filename, o_code, binary, libs_flags, j_code, mod_file)
+    cmd = '{0} {1} {2} {3} {4} {5} {6} {7}'.format( \
+        compiler, flags, m_code, filename, o_code, binary, libs_flags, j_code)
 
     if verbose:
         print(cmd)
