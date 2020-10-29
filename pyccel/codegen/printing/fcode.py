@@ -1151,9 +1151,8 @@ class FCodePrinter(CodePrinter):
 
         code = ''
         if (expr.status == 'unallocated') and not (expr.like is None):
-            stmt = NumpyZerosLike(lhs=lhs_code, rhs=expr.like)
-            code += self._print(stmt)
-            code += '\n'
+            errors.report("Numpy array dtype=object not supported ", symbol=expr,
+                    severity='fatal')
         if not is_procedure:
             code += '{0} = {1}'.format(lhs_code, rhs_code)
 #        else:
