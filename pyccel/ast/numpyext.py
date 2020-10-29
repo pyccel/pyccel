@@ -1058,7 +1058,8 @@ class NumpyOnesLike(Application):
 
 #=======================================================================================
 class NumpyZerosLike(Application):
-
+    """ Represents a call to numpy.zeros_like for code generation.
+    """
     def __new__(cls, a, dtype=None, order='K', subok=True):
 
         # NOTE: we ignore 'subok' argument
