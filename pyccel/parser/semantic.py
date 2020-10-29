@@ -2282,7 +2282,7 @@ class SemanticParser(BasicParser):
         decorators      = expr.decorators
         funcs           = []
         sub_funcs       = []
-        func_interfaces  = []
+        func_interfaces = []
         is_pure         = expr.is_pure
         is_elemental    = expr.is_elemental
         is_private      = expr.is_private
