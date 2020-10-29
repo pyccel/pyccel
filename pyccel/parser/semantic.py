@@ -531,12 +531,39 @@ class SemanticParser(BasicParser):
 
         self.namespace.cls_constructs[name] = value
 
-    def create_new_function_scope(self, name):
-        """."""
+    def create_new_function_scope(self, name, decorators):
+        """
+        Create a new Scope object for a Python function with the given name,
+        and attach any decorators' information to the scope. The new scope is
+        a child of the current one, and can be accessed from the dictionary of
+        its children using the function name as key.
 
-        self.namespace._sons_scopes[name] = Scope()
-        self.namespace._sons_scopes[name].parent_scope = self.namespace
-        self._namespace = self._namespace._sons_scopes[name]
+        Before returning control to the caller, the current scope (stored in
+        self._namespace) is changed to the one just created, and the function's
+        name is stored in self._current_function.
+
+        Parameters
+        ----------
+        name : str
+            Function's name, used as a key to retrieve the new scope.
+
+        decorators : dict
+            Decorators attached to FunctionDef object at syntactic stage.
+
+        """
+        # TODO [YG, 29.10.2020]:
+        #   Instead of manipulating the private attributes of Scope
+        #   objects, we should pass the required information to the
+        #   Scope constructor, or use a dedicated factory method.
+
+        child = Scope()
+        child._decorators = decorators
+
+        parent = self.namespace
+        parent._sons_scopes[name] = child
+        child.parent_scope = parent
+
+        self._namespace = child
         if self._current_function:
             name = DottedName(self._current_function, name)
         self._current_function = name
@@ -2396,7 +2423,7 @@ class SemanticParser(BasicParser):
             arguments      = expr.arguments
             header_results = m.results
 
-            self.create_new_function_scope(name)
+            self.create_new_function_scope(name, decorators)
 
             if cls_name and str(arguments[0].name) == 'self':
                 arg       = arguments[0]
