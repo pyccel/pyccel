@@ -25,7 +25,8 @@ from pyccel.ast.core import Declare, ValuedVariable
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import *
+from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
+                                    PYCCEL_RESTRICTION_IS_ISNOT )
 
 errors = Errors()
 
@@ -510,7 +511,10 @@ class CCodePrinter(CodePrinter):
         rank  = expr.rank
         dtype = self.find_in_dtype_registry(dtype, prec)
 
-        if rank > 0 or self.stored_in_c_pointer(expr):
+        if rank > 0:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
+
+        if self.stored_in_c_pointer(expr):
             return '{0} *'.format(dtype)
         else:
             return '{0} '.format(dtype)
@@ -1030,6 +1034,23 @@ class CCodePrinter(CodePrinter):
 
     def _print_NewLine(self, expr):
         return '\n'
+
+    #=================== OMP ==================
+    def _print_OMP_For_Loop(self, expr):
+        omp_expr   = str(expr.txt)
+        return '#pragma omp for{}\n{{'.format(omp_expr)
+
+    def _print_OMP_Parallel_Construct(self, expr):
+        omp_expr   = str(expr.txt)
+        return '#pragma omp {}\n{{'.format(omp_expr)
+
+    def _print_OMP_Single_Construct(self, expr):
+        omp_expr   = str(expr.txt)
+        return '#pragma omp {}\n{{'.format(omp_expr)
+
+    def _print_Omp_End_Clause(self, expr):
+        return '}'
+    #=====================================
 
     def _print_Program(self, expr):
         body  = self._print(expr.body)
