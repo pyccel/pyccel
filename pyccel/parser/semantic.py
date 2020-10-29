@@ -300,8 +300,6 @@ class SemanticParser(BasicParser):
             var = self._get_variable_from_scope(name, container)
             if var is not None:
                 return var
-            elif name in container.imports['variables']:       # These 2 lines are probably useless, because
-                return container.imports['variables'][name]    # they are also present in _get_variable_from_scope
             container = container.parent_scope
 
         return None
