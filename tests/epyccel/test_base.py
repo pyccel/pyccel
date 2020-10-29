@@ -7,6 +7,11 @@ from modules import base
 
 
 class epyccel_test:
+    """
+    Class to pyccelize module then compare different results
+    This avoids the need to pyccelize the file multiple times
+    or write the arguments multiple times
+    """
     def __init__(self, f, lang='fortran'):
         self._f  = f
         self._f2 = epyccel(f, language=lang)

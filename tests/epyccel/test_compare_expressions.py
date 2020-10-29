@@ -1,9 +1,15 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
+import numpy as np
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 
 #==============================================================================
 class epyccel_test:
+    """
+    Class to pyccelize module then compare different results
+    This avoids the need to pyccelize the file multiple times
+    or write the arguments multiple times
+    """
     def __init__(self, f, lang='fortran'):
         self._f  = f
         self._f2 = epyccel(f, language=lang)
