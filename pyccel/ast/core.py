@@ -2783,15 +2783,7 @@ class Variable(Symbol, PyccelAstNode):
             cls_base=kwargs.pop('cls_base',self.cls_base),
             )
     def rename(self, newname):
-        """
-        Rename the Variable name
-        newname.
-
-        Parameters
-        ----------
-        newname: str
-            new name for the Variable
-        """
+        """Change variable name."""
 
         self._name = newname
 
