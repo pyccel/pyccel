@@ -463,10 +463,7 @@ class CCodePrinter(CodePrinter):
         return arg_format, arg
 
     def extract_function_call_results(self, expr):
-        tmp_list = []
-        for a in expr.funcdef.results :
-            tmp_var = self.create_tmp_var(a)
-            tmp_list.append(tmp_var)
+        tmp_list = [self.create_tmp_var(a) for a in expr.funcdef.results]
         return tmp_list
 
 
