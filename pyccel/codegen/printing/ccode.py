@@ -520,7 +520,7 @@ class CCodePrinter(CodePrinter):
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
-            ret_type = self._print(datatype('int')) + ' '
+            ret_type = self._print(datatype('bool')) + ' '
             if not self._additional_args :
                 self._additional_args = [a.clone(name = a.name, is_pointer =True) for a in expr.results]
             args += self._additional_args
@@ -569,7 +569,7 @@ class CCodePrinter(CodePrinter):
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
-            ret_type = self._print(datatype('int')) + ' '
+            ret_type = self._print(datatype('bool')) + ' '
             if not self._additional_args :
                 self._additional_args = [a.clone(name = a.name, is_pointer =True) for a in expr.results]
             args += self._additional_args
@@ -699,7 +699,7 @@ class CCodePrinter(CodePrinter):
         if len(expr.results) > 1:
             self._additional_args = [a.clone(name = self._parser.get_new_name('tmp_ret'), is_pointer =True) for a in expr.results]
             body += '\n'.join(self._print_Assign(Assign(a, b)) for  a, b in zip(self._additional_args, expr.results))
-            body += '\n' + self._print_Return(Return([1]))
+            body += '\n' + self._print_Return(Return([BooleanTrue()]))
 
         sep = self._print(SeparatorComment(40))
 
