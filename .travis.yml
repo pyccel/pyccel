@@ -47,6 +47,7 @@ after_script:  # Coverage instructions - collections
   - bash <(wget -q -O - https://coverage.codacy.com/get.sh)
 
 cache:
+  pip: true
   directories:
     - /usr/local/Homebrew/
     - $HOME/Library/Caches/Homebrew/
