@@ -44,8 +44,8 @@ def f10():
         pass
 
 #$ header function high_int_1((int)(int), int)
-def high_int_1(function, a):
-    x = function(a)
+def high_int_1(func, a):
+    x = func(a)
     return x
 
 #$ header function high_int_int_1((int)(int), (int)(int), int)
@@ -55,23 +55,23 @@ def high_int_int_1(function1, function2, a):
     return x + y
 
 #$ header function high_real_1((real)(int, real), int, real)
-def high_real_1(function, a, b):
-    x = function(a, b)
+def high_real_1(func, a, b):
+    x = func(a, b)
     return x
 
 #$ header function high_real_2((real)(real, real), real, real)
-def high_real_2(function, a, b):
-    x = function(a, b)
+def high_real_2(func, a, b):
+    x = func(a, b)
     return x
 
 #$ header function high_real_3((real)())
-def high_real_3(function):
-    x = function()
+def high_real_3(func):
+    x = func()
     return x
 
 #$ header function high_valuedarg_1(int, (int)(int))
-def high_valuedarg_1(a, function=f1):
-    x = function(a)
+def high_valuedarg_1(a, func=f1):
+    x = func(a)
     return x
 
 #$ header function high_real_real_int((real)(real, real), (real)(int, real), (int)(int))
