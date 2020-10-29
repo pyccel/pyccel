@@ -6,7 +6,7 @@ from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float, Integer
 from pyccel.ast.core import Nil, PyccelAssociativeParenthesis
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import SeparatorComment, VariableAddress
-from pyccel.ast.core import DottedName
+from pyccel.ast.core import DottedName, Return
 
 from pyccel.ast.core import PyccelAdd, PyccelMul, String
 
@@ -523,7 +523,7 @@ class CCodePrinter(CodePrinter):
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
-            ret_type = self._print(datatype('void')) + ' '
+            ret_type = self._print(datatype('int')) + ' '
             if not self._additional_args :
                 self._additional_args = [a.clone(name = a.name, is_pointer =True) for a in expr.results]
             args += self._additional_args
@@ -572,7 +572,7 @@ class CCodePrinter(CodePrinter):
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
-            ret_type = self._print(datatype('void')) + ' '
+            ret_type = self._print(datatype('int')) + ' '
             if not self._additional_args :
                 self._additional_args = [a.clone(name = a.name, is_pointer =True) for a in expr.results]
             args += self._additional_args
@@ -702,6 +702,7 @@ class CCodePrinter(CodePrinter):
         if len(expr.results) > 1:
             self._additional_args = [a.clone(name = self._parser.get_new_name('tmp_ret'), is_pointer =True) for a in expr.results]
             body += '\n'.join(self._print_Assign(Assign(a, b)) for  a, b in zip(self._additional_args, expr.results))
+            body += '\n' + self._print_Return(Return([1]))
 
         sep = self._print(SeparatorComment(40))
 
