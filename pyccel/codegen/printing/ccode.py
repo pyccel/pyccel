@@ -488,7 +488,10 @@ class CCodePrinter(CodePrinter):
         rank  = expr.rank
         dtype = self.find_in_dtype_registry(dtype, prec)
 
-        if rank > 0 or self.stored_in_c_pointer(expr):
+        if rank > 0:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
+
+        if self.stored_in_c_pointer(expr):
             return '{0} *'.format(dtype)
         else:
             return '{0} '.format(dtype)
