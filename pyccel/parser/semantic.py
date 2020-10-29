@@ -245,7 +245,11 @@ class SemanticParser(BasicParser):
         return ast
 
     def get_variable_from_scope(self, name):
-        """."""
+        """
+        Search for a Variable object with the given name inside the local Python scope.
+        If not found, return None.
+        """
+        # Walk up nested loops (if any)
         container = self.namespace
         while container.is_loop:
             container = container.parent_scope
@@ -255,13 +259,18 @@ class SemanticParser(BasicParser):
         return var
 
     def _get_variable_from_scope(self, name, container):
-
+        """
+        Search for a Variable object with the given name in the given Python scope.
+        This is a recursive function because it searches inside nested loops, where
+        OpenMP variables could be defined.
+        """
         if name in container.variables:
             return container.variables[name]
 
         if name in container.imports['variables']:
             return container.imports['variables'][name]
 
+        # Search downwards, walking down the tree of nested loop Scopes
         for container in container.loops:
             var = self._get_variable_from_scope(name, container)
             if var:
@@ -270,31 +279,36 @@ class SemanticParser(BasicParser):
         return None
 
     def check_for_variable(self, name):
-        """."""
+        """
+        Search for a Variable object with the given name in the current namespace,
+        defined by the local and global Python scopes. Return None if not found. 
+        """
 
         if self.current_class:
             for i in self._current_class.attributes:
                 if str(i.name) == name:
                     var = i
                     return var
-
+        
+        # Walk up nested loops (if any)
         container = self.namespace
         while container.is_loop:
             container = container.parent_scope
 
-
+        # Walk up the tree of Scope objects, until the root if needed
         while container:
             var = self._get_variable_from_scope(name, container)
             if var is not None:
                 return var
-            elif name in container.imports['variables']:
-                return container.imports['variables'][name]
+            elif name in container.imports['variables']:       # These 2 lines are probably useless, because
+                return container.imports['variables'][name]    # they are also present in _get_variable_from_scope
             container = container.parent_scope
 
         return None
 
     def get_variable(self, name):
-        """."""
+        """ Like 'check_for_variable', but raise Pyccel error if Variable is not found.
+        """
         var = self.check_for_variable(name)
         if var is None:
             errors.report(UNDEFINED_VARIABLE, symbol=name,
@@ -304,7 +318,7 @@ class SemanticParser(BasicParser):
             return var
 
     def get_variables(self, container):
-        # this only works one called the function scope
+        # this only works if called on a function scope
         # TODO needs more tests when we have nested functions
         variables = []
         variables.extend(container.variables.values())
