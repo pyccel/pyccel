@@ -117,7 +117,10 @@ def compile_files(filename, compiler, flags,
             j_code = '-J'
 
     m_code = ' '.join('{}.o'.format(m) for m in modules)
-    libs_flags = ' '.join('-l{}'.format(i) for i in libs)
+    if is_module:
+        libs_flags = ''
+    else:
+        libs_flags = ' '.join('-l{}'.format(i) for i in libs)
 
     filename = '"{}"'.format(filename)  # in case of spaces in path
     binary = '"{}"'.format(binary)
