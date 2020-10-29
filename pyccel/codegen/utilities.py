@@ -108,7 +108,6 @@ def compile_files(filename, compiler, flags,
 
     o_code = '-o'
     j_code = ''
-    mod_file = ''
     if is_module:
         flags += ' -c '
         if (len(output)>0) and language == "fortran":
