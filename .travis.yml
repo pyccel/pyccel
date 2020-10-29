@@ -73,6 +73,7 @@ jobs:
     if: branch = master
 
   - os: osx
+    python: 3.8
     language: c  #'language: python' is an error on Travis CI macOS
     env: PYTHON=python3 MPI_OPTS="--oversubscribe"
     before_install:
