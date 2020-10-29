@@ -1226,12 +1226,15 @@ class FCodePrinter(CodePrinter):
         # ... we don't print 'hidden' functions
         name = self._print(expr.name)
         if expr.is_argument:
-            sigs = ''
+            funcs_sigs = ''
             for f in expr.functions:
                 self._handle_fortran_specific_a_prioris(list(f.arguments) + list(f.results))
-                sigs += self.function_signature(f, f.name) + '\n'
-                sigs += 'end %s\n' % sigs.split()[0]
-            interface = 'interface\n' + sigs + 'end interface\n'
+                parts = self.function_signature(f, f.name)
+                parts = ["{}({}) {}\n".format(parts['sig'], parts['arg_code'], parts['func_end']),
+                parts['arg_decs'],
+                'end {} {}\n'.format(parts['func_type'], f.name)]
+                funcs_sigs += ''.join(a for a in parts)
+            interface = 'interface\n' + funcs_sigs + 'end interface\n'
             return interface
 
         if expr.functions[0].cls_name:
@@ -1403,13 +1406,16 @@ class FCodePrinter(CodePrinter):
 
         arg_code  = ', '.join(self._print(i) for i in chain( expr.arguments, out_args ))
 
-        imports = ''.join(self._print(i) for i in expr.imports)
-        prelude = ''.join(self._print(i) for i in args_decs.values())
-        parts = ["{}({}) {}\n".format(sig, arg_code, func_end,),
-                imports,
-                "implicit none\n",
-                prelude]
-        return '\n'.join(a for a in parts if a)
+        arg_decs = ''.join(self._print(i) for i in args_decs.values())
+
+        parts = {
+                'sig' : sig,
+                'arg_code' : arg_code,
+                'func_end' : func_end,
+                'arg_decs' : arg_decs,
+                'func_type' : func_type
+        }
+        return parts
 
     def _print_FunctionDef(self, expr):
         self._handle_fortran_specific_a_prioris(list(expr.local_vars) +
@@ -1435,7 +1441,8 @@ class FCodePrinter(CodePrinter):
                 if i in name:
                     name = name.replace(i, _default_methods[i])
 
-        signature = self.function_signature(expr, name)
+        sig_parts = self.function_signature(expr, name)
+        prelude = sig_parts.pop('arg_decs')
         decs = OrderedDict()
         functions = expr.functions
         func_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
@@ -1449,20 +1456,22 @@ class FCodePrinter(CodePrinter):
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in expr.arguments):
                 decs[str(v)] = Declare(v.dtype,v)
-        signature += ''.join(self._print(i) for i in decs.values())
+        prelude += ''.join(self._print(i) for i in decs.values())
         if len(functions)>0:
             functions_code = '\n'.join(self._print(i) for  i in functions)
             body_code = body_code +'\ncontains\n' + functions_code
 
-        if (expr.is_procedure):
-            func_type = 'subroutine'
-        else:
-            func_type = 'function'
+        imports = ''.join(self._print(i) for i in expr.imports)
+
         self.set_current_function(None)
-        parts = [signature,
-                 func_interfaces,
-                 body_code,
-                 'end {} {}\n'.format(func_type, name)]
+
+        parts = parts = ["{}({}) {}\n".format(sig_parts['sig'], sig_parts['arg_code'], sig_parts['func_end']),
+                imports,
+                'implicit none\n',
+                prelude,
+                func_interfaces,
+                body_code,
+                'end {} {}\n'.format(sig_parts['func_type'], name)]
 
         return '\n'.join(a for a in parts if a)
 
