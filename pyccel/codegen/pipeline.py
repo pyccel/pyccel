@@ -251,7 +251,8 @@ def execute_pyccel(fname, *,
                             modules=modules,
                             is_module=codegen.is_module,
                             output=pyccel_dirpath,
-                            libs=libs)
+                            libs=libs,
+                            language=language)
         except Exception:
             handle_error('Fortran compilation')
             raise
