@@ -1,6 +1,7 @@
  # pylint: disable=missing-function-docstring, missing-module-docstring/
-import modules.highorder_functions as mod
+import pytest
 from pyccel.epyccel import epyccel
+import modules.highorder_functions as mod
 
 @pytest.mark.c
 def test_int_1():
