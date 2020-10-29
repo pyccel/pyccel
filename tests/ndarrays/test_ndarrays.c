@@ -2,63 +2,73 @@
 #include <unistd.h>
 
 
-#define m_assert(X, Y) my_assert(X , Y,__func__, __FILE__, __LINE__)
+#define m_assert(X, Y, dscr) my_assert(X , Y, dscr, __func__, __FILE__, __LINE__)
 
-#define my_assert(X , Y,__func__, __FILE__, __LINE__) _Generic((X), double: assert_double,\
+#define my_assert(X , Y, dscr, __func__, __FILE__, __LINE__) _Generic((X), double: assert_double,\
 							float: assert_float,\
 							int: assert_int,\
 							double complex : assert_complex_double,\
-							default: assert_ns)(X , Y,__func__, __FILE__, __LINE__)
+							default: assert_ns)(X , Y, dscr, __func__, __FILE__, __LINE__)
 #define getname(X) #X
 
-void assert_double(double v1 , double v2, const char * func, const char *file, int line)
+void assert_double(double v1 , double v2, const char *dscr, const char * func, const char *file, int line)
+{
+
+	if (v1 != v2)
+	{
+		printf("[FAIL] %s:%d:%s\n", file, line, func);
+		printf("[INFO] %s:%f != %s:%f\n", getname(v1), v1, getname(v2),v2);
+		printf("[DSCR] %s\n", dscr);
+		return ;
+	}
+	printf("[PASS] %s:%d:%s\n", file, line, func);
+	printf("[DSCR] %s\n", dscr);
+}
+
+void assert_float(float v1 , float v2, const char *dscr, const char * func, const char *file, int line)
 {
 	if (v1 != v2)
 	{
 		printf("[FAIL] %s:%d:%s\n", file, line, func);
 		printf("[INFO] %s:%f != %s:%f\n", getname(v1), v1, getname(v2),v2);
+		printf("[DSCR] %s\n", dscr);
 		return ;
 	}
 	printf("[PASS] %s:%d:%s\n", file, line, func);
+	printf("[DSCR] %s\n", dscr);
 }
 
-void assert_float(float v1 , float v2, const char * func, const char *file, int line)
-{
-	if (v1 != v2)
-	{
-		printf("[FAIL] %s:%d:%s\n", file, line, func);
-		printf("[INFO] %s:%f != %s:%f\n", getname(v1), v1, getname(v2),v2);
-		return ;
-	}
-	printf("[PASS] %s:%d:%s\n", file, line, func);
-}
-
-void assert_int(int v1 , int v2, const char * func, const char *file, int line)
+void assert_int(int v1 , int v2, const char *dscr, const char * func, const char *file, int line)
 {
 	if (v1 != v2)
 	{
 		printf("[FAIL] %s:%d:%s\n", file, line, func);
 		printf("[INFO] %s:%d != %s:%d\n", getname(v1), v1, getname(v2),v2);
+		printf("[DSCR] %s\n", dscr);
 		return ;
 	}
 	printf("[PASS] %s:%d:%s\n", file, line, func);
+	printf("[DSCR] %s\n", dscr);
 }
 
-void assert_complex_double(double complex v1 , double complex v2, const char * func, const char *file, int line)
+void assert_complex_double(double complex v1 , double complex v2, const char *dscr, const char * func, const char *file, int line)
 {
 	if (v1 != v2)
 	{
 		printf("[FAIL] %s:%d:%s\n", file, line, func);
 		printf("[INFO] %s:%f+%f*I != %s:%f+%f*I\n", getname(v1), creal(v1), cimag(v1), getname(v2),creal(v2), cimag(v2));
+		printf("[DSCR] %s\n", dscr);
 		return ;
 	}
 	printf("[PASS] %s:%d:%s\n", file, line, func);
+	printf("[DSCR] %s\n", dscr);
 }
-void assert_ns(float v1 , float v2, const char * func, const char *file, int line)
+void assert_ns(float v1 , float v2, const char *dscr, const char * func, const char *file, int line)
 {
 
 	printf("[FAIL] %s:%d:%s\n", file, line, func);
-	printf("not supported type\n");
+	printf("[INFO] not supported type\n");
+	printf("[DSCR] %s\n", dscr);
 	return ;
 }
 
@@ -73,30 +83,15 @@ int	test_indexing_int(void)
 	int c_value;;
 
 	x = init_array((char *)m_1, 2, m_1_shape, sizeof(int));
-	// testing the index [0, 0]
-	index = 0 * x->strides[0] + 0 * x->strides[1];
-	c_index = 0;
-	if (index != c_index)
-		m_assert(index, c_index);
-	// testing the value with the index [0, 0]
-	value = x->data->int_nd[index];
-	c_value = 2;
-	if (index != c_index)
-		m_assert(index , c_index); //testing the strides
-	if (index != c_index)
-		m_assert(get_index(x, 0, 0) , c_index); //testing the indexing function
-
 	// testing the index [3, 2]
 	index = 3 * x->strides[0] + 2 * x->strides[1];
 	c_index = 26;
-	if (index != c_index)
-		m_assert(index , c_index); //testing the strides
-	if (index != c_index)
-		m_assert(get_index(x, 3, 2) , c_index); //testing the indexing function
+	m_assert(index , c_index, "testing the strides"); //testing the strides
+	m_assert(get_index(x, 3, 2) , c_index, "testing the indexing function"); //testing the indexing function
 	// testing the value with the index [0, 0]
 	value = x->data->int_nd[index];
 	c_value = 103;
-	m_assert(value , c_value);
+	m_assert(value , c_value, "testing the value");
 
 	return (1);
 }
@@ -112,30 +107,15 @@ int	test_indexing_double(void)
 	double c_value;
 
 	x = init_array((char *)m_1, 2, m_1_shape, sizeof(double));
-	// testing the index [0, 0]
-	index = 0 * x->strides[0] + 0 * x->strides[1];
-	c_index = 0;
-	if (index != c_index)
-		m_assert(index , c_index);
-	// testing the value with the index [0, 0]
-	value = x->data->double_nd[index];
-	c_value = 2;
-	if (index != c_index)
-		m_assert(index , c_index); //testing the strides
-	if (index != c_index)
-		m_assert(get_index(x, 0, 0) , c_index); //testing the indexing function
-
 	// testing the index [3, 2]
 	index = 3 * x->strides[0] + 2 * x->strides[1];
 	c_index = 26;
-	if (index != c_index)
-		m_assert(index , c_index); //testing the strides
-	if (index != c_index)
-		m_assert(get_index(x, 3, 2) , c_index); //testing the indexing function
+	m_assert(index , c_index, "testing the strides"); //testing the strides
+	m_assert(get_index(x, 3, 2) , c_index, "testing the indexing function"); //testing the indexing function
 	// testing the value with the index [0, 0]
 	value = x->data->double_nd[index];
 	c_value = 103.009;
-	m_assert(value , c_value);
+	m_assert(value , c_value, "testing the value");
 
 	return (1);
 }
@@ -151,30 +131,15 @@ int	test_indexing_complex_double(void)
 	double complex c_value;;
 
 	x = init_array((char *)m_1, 2, m_1_shape, sizeof(double complex));
-	// testing the index [0, 0]
-	index = 0 * x->strides[0] + 0 * x->strides[1];
-	c_index = 0;
-	if (index != c_index)
-		m_assert(index , c_index); //testing the strides
-	if (index != c_index)
-		m_assert(get_index(x, 0, 0) , c_index); //testing the indexing function
-	// testing the value with the index [0, 0]
-	value = x->data->complex_double[index];
-	c_value = 0.37 + 0.588*I;
-	if (value != c_value)
-		m_assert(value , c_value);
-
 	// testing the index [3, 1]
 	index = 3 * x->strides[0] + 1 * x->strides[1];
 	c_index = 7;
-	if (index != c_index)
-		m_assert(index , c_index); //testing the strides
-	if (index != c_index)
-		m_assert(get_index(x, 3, 2) , c_index); //testing the indexing function
+	m_assert(index , c_index, "testing the strides"); //testing the strides
+	m_assert(get_index(x, 3, 1) , c_index, "testing the indexing function"); //testing the indexing function
 	// testing the value with the index [0, 0]
 	value = x->data->complex_double[index];
 	c_value = 0.58532094+0.67890618*I;
-	m_assert(value , c_value);
+	m_assert(value , c_value, "testing the value");
 
 	return (1);
 }
@@ -207,14 +172,14 @@ int	test_slicing_int(void)
 			c_value = m_1[c_index];
 			c_index+=2;
             if (value != c_value)
-			    m_assert(value , c_value);
+			    m_assert(value , c_value, "testing slice values");
 		}
 	}
 
 	c_value = 1337;
 	slice->data->int_nd[get_index(slice, 0, 1)] = c_value;
 	value = x->data->int_nd[get_index(x, 1, 2)];
-	m_assert(value , c_value);
+	m_assert(value , c_value, "testing slice assiengment");
 	return (1);
 }
 
@@ -241,15 +206,15 @@ int	test_slicing_double(void)
 			value = slice->data->double_nd[get_index(slice, i, j)];
 			c_value = m_1[c_index];
 			c_index+=2;
-            if (value != c_value)
-			    m_assert(value , c_value);
+            if (value != c_value) // to not spam the test because of the loop
+			    m_assert(value , c_value, "testing slice values");
 		}
 	}
 
 	c_value = 0.1337;
 	slice->data->double_nd[get_index(slice, 0, 1)] = c_value;
 	value = x->data->double_nd[get_index(x, 1, 2)];
-	m_assert(value, c_value);
+	m_assert(value, c_value, "testing slice assiengment");
 	return (1);
 }
 
@@ -277,15 +242,15 @@ int	test_slicing_complex_double(void)
 			value = slice->data->complex_double[get_index(slice, i, j)];
 			c_value = m_1[c_index];
 			c_index+=2;
-            if (value != c_value)
-			    m_assert(value , c_value);
+            if (value != c_value) // to not spam the test because of the loop
+			    m_assert(value , c_value, "testing slice values");
 		}
 	}
 
 	c_value = 0.13 + 0.37*I;
 	slice->data->complex_double[get_index(slice, 0, 1)] = c_value;
 	value = x->data->complex_double[get_index(x, 1, 2)];
-	m_assert(value, c_value);
+	m_assert(value, c_value, "testing slice assiengment");
 	return (1);
 }
 

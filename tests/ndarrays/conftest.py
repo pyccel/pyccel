@@ -12,6 +12,13 @@ def pytest_collect_file(parent, path):
     if path.ext == ".c" and path.basename.startswith("test_"):
         return CTestFile.from_parent(parent, path)
 
+def pytest_collection_modifyitems(items):
+    for item in items:
+        # check that we are altering a test named `test_xxx`
+        # and it accepts the `value` arg
+        # print(item.test_result)
+        print(item._nodeid)
+        item._nodeid = item.nodeid + " < " + item.test_result["DSCR"] + " >"
 
 class CTestFile(pytest.File):
     """
@@ -31,12 +38,12 @@ class CTestFile(pytest.File):
         """
         # Run the exe that corresponds to the .c file and capture the output.
         test_exe = os.path.splitext(str(self.fspath))[0]
+        rootdir = str(self.config.rootdir)
         rel_path = os.path.relpath(test_exe)
-        lib = os.path.dirname(pyccel.__file__)
         if  sys.platform.startswith("win"):
-            ndarray_path =  lib + "\\stdlib\\ndarrays\\"
+            ndarray_path =  rootdir + "\\pyccel\\stdlib\\ndarrays\\"
         else :
-            ndarray_path = lib +"/stdlib/ndarrays/"
+            ndarray_path = rootdir + "/pyccel/stdlib/ndarrays/"
         comp_cmd = "gcc "+ rel_path +".c " + ndarray_path + "*.c -I " + ndarray_path + " -o " + rel_path
         subprocess.run(comp_cmd, shell = 'TRUE')
         if sys.platform.startswith("win"):
@@ -54,6 +61,7 @@ class CTestFile(pytest.File):
         for line in lines:
             token, data = line.split(" ", 1)
             token = token[1:-1]
+            # print(token, data)
             if token in ("PASS", "FAIL"):
                 file_name, line_number, function_name = data.split(":")
                 test_results.append({"condition": token,
@@ -61,8 +69,9 @@ class CTestFile(pytest.File):
                                      "function_name": function_name,
                                      "line_number": int(line_number),
                                      "INFO" : "no data found",
+                                     "DSCR" : ""
                                      })
-            elif token == "INFO":
+            elif token in ("INFO", "DSCR"):
                 test_results[-1][token] = data
         
         for test_result in test_results:
