@@ -1022,7 +1022,8 @@ class NumpyOnes(NumpyEmpty):
 
 #=======================================================================================
 class NumpyFullLike(Application):
-
+    """ Represents a call to numpy.full_like for code generation.
+    """
     def __new__(cls, a, fill_value, dtype=None, order='K', subok=True):
 
         # NOTE: we ignore 'subok' argument
@@ -1033,7 +1034,8 @@ class NumpyFullLike(Application):
 
 #=======================================================================================
 class NumpyEmptyLike(Application):
-
+    """ Represents a call to numpy.empty_like for code generation.
+    """
     def __new__(cls, a, dtype=None, order='K', subok=True):
 
         # NOTE: we ignore 'subok' argument
@@ -1044,7 +1046,8 @@ class NumpyEmptyLike(Application):
 
 #=======================================================================================
 class NumpyOnesLike(Application):
-
+    """ Represents a call to numpy.ones_like for code generation.
+    """
     def __new__(cls, a, dtype=None, order='K', subok=True):
 
         # NOTE: we ignore 'subok' argument
