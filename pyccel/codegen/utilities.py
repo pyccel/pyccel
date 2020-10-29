@@ -23,8 +23,7 @@ def construct_flags(compiler,
                     fflags=None,
                     debug=False,
                     accelerator=None,
-                    includes=(),
-                    libdirs=()):
+                    includes=()):
     """
     Constructs compiling flags for a given compiler.
 
@@ -78,7 +77,6 @@ def construct_flags(compiler,
 
     # Construct flags
     flags += ''.join(' -I"{0}"'.format(i) for i in includes)
-    flags += ''.join(' -L"{0}"'.format(i) for i in libdirs)
 
     return flags
 
@@ -89,6 +87,7 @@ def compile_files(filename, compiler, flags,
                     modules=[],
                     is_module=False,
                     libs=(),
+                    libdirs=(),
                     language="fortran",
                     output=''):
     """
@@ -120,6 +119,7 @@ def compile_files(filename, compiler, flags,
     if is_module:
         libs_flags = ''
     else:
+        flags += ''.join(' -L"{0}"'.format(i) for i in libdirs)
         libs_flags = ' '.join('-l{}'.format(i) for i in libs)
 
     filename = '"{}"'.format(filename)  # in case of spaces in path

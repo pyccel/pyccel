@@ -113,8 +113,7 @@ def execute_pyccel(fname, *,
                                  fflags=None,
                                  debug=debug,
                                  accelerator=accelerator,
-                                 includes=(),
-                                 libdirs=())
+                                 includes=())
 
     # Build position-independent code, suited for use in shared library
     fflags = ' {} -fPIC '.format(fflags)
@@ -236,8 +235,7 @@ def execute_pyccel(fname, *,
                                 fflags=fflags,
                                 debug=debug,
                                 accelerator=accelerator,
-                                includes=includes,
-                                libdirs=libdirs)
+                                includes=includes)
 
         # Compile Fortran code
         #
@@ -252,6 +250,7 @@ def execute_pyccel(fname, *,
                             is_module=codegen.is_module,
                             output=pyccel_dirpath,
                             libs=libs,
+                            libdirs=libdirs,
                             language=language)
         except Exception:
             handle_error('Fortran compilation')
