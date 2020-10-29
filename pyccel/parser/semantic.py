@@ -1446,6 +1446,18 @@ class SemanticParser(BasicParser):
             # Variable not yet declared (hence array not yet allocated)
             if var is None:
 
+                # Update variable's dictionary with information from function decorators
+                decorators = self._namespace.decorators
+                if decorators:
+                    if 'stack_array' in decorators:
+                        if name in decorators['stack_array']:
+                            d_lhs.update(is_stack_array=True,
+                                    allocatable=False, is_pointer=False, is_target=False)
+                    if 'allow_negative_index' in decorators:
+                        if lhs.name in decorators['allow_negative_index']:
+                            d_lhs.update(allows_negative_indexes=True)
+
+                # Create new variable
                 lhs = self._create_variable(name, dtype, rhs, d_lhs)
 
                 # Add variable to scope
