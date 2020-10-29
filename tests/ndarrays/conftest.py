@@ -14,11 +14,8 @@ def pytest_collect_file(parent, path):
 
 def pytest_collection_modifyitems(items):
     for item in items:
-        # check that we are altering a test named `test_xxx`
-        # and it accepts the `value` arg
-        # print(item.test_result)
-        print(item._nodeid)
-        item._nodeid = item.nodeid + " < " + item.test_result["DSCR"] + " >"
+        if item.fspath.ext == ".c":
+            item._nodeid = item.nodeid + " < " + item.test_result["DSCR"] + " >"
 
 class CTestFile(pytest.File):
     """

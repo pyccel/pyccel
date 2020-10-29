@@ -178,8 +178,8 @@ int	test_slicing_int(void)
 
 	c_value = 1337;
 	slice->data->int_nd[get_index(slice, 0, 1)] = c_value;
-	value = x->data->int_nd[get_index(x, 1, 2)];
-	m_assert(value , c_value, "testing slice assiengment");
+	value = x->data->int_nd[get_index(x, 1, 1)];
+	m_assert(value , c_value, "testing slice assignment");
 	return (1);
 }
 
@@ -214,7 +214,7 @@ int	test_slicing_double(void)
 	c_value = 0.1337;
 	slice->data->double_nd[get_index(slice, 0, 1)] = c_value;
 	value = x->data->double_nd[get_index(x, 1, 2)];
-	m_assert(value, c_value, "testing slice assiengment");
+	m_assert(value, c_value, "testing slice assignment");
 	return (1);
 }
 
@@ -250,7 +250,7 @@ int	test_slicing_complex_double(void)
 	c_value = 0.13 + 0.37*I;
 	slice->data->complex_double[get_index(slice, 0, 1)] = c_value;
 	value = x->data->complex_double[get_index(x, 1, 2)];
-	m_assert(value, c_value, "testing slice assiengment");
+	m_assert(value, c_value, "testing slice assignment");
 	return (1);
 }
 
