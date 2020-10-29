@@ -2589,11 +2589,13 @@ class FCodePrinter(CodePrinter):
         code = [line.lstrip(' \t') for line in code]
 
         inc_keyword = ('do ', 'if(', 'if ', 'do\n',
-                       'else', 'type', 'subroutine', 'function')
+                       'else', 'type', 'subroutine', 'function',
+                       'interface')
         dec_keyword = ('end do', 'enddo', 'end if', 'endif',
                        'else', 'endtype', 'end type',
                        'endfunction', 'end function',
-                       'endsubroutine', 'end subroutine')
+                       'endsubroutine', 'end subroutine',
+                       'endinterface', 'end interface')
 
         increase = [int(any(map(line.startswith, inc_keyword)))
                      for line in code]
