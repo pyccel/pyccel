@@ -519,22 +519,25 @@ class CCodePrinter(CodePrinter):
             return '{0} '.format(dtype)
 
     def _print_FuncAddressDeclare(self, expr):
+        args = list(expr.arguments)
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
-            msg = 'Multiple output arguments is not yet supported in c'
-            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO, symbol=expr,
-                severity='fatal')
+            ret_type = self._print(datatype('void')) + ' '
+            if not self._additional_args :
+                self._additional_args = [a.clone(name = a.name, is_pointer =True) for a in expr.results]
+            args += self._additional_args
+            self._additional_args.clear()
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
-        if not expr.arguments:
+        if not args:
             arg_code = 'void'
         else:
             # TODO: extract informations needed for printing in case of function argument which itself has a function argument
             arg_code = ', '.join('{}'.format(self._print_FuncAddressDeclare(i))
                         if isinstance(i, FunctionAddress) else '{0}{1}'.format(self.get_declare_type(i), i)
-                        for i in expr.arguments)
+                        for i in args)
         return '{}(*{})({});'.format(ret_type, name, arg_code)
 
     def _print_Declare(self, expr):
