@@ -3290,59 +3290,65 @@ class Return(Basic):
 class Interface(Basic):
 
     """Represent an Interface"""
+    def __new__( cls, *args, **kwargs ):
+        return Basic.__new__(cls)
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         name,
         functions,
         hide=False,
         is_argument = False,
         ):
+
         if not isinstance(name, str):
             raise TypeError('Expecting an str')
         if not isinstance(functions, list):
             raise TypeError('Expecting a list')
-        return Basic.__new__(cls, name, functions, hide, is_argument)
+        self._name = name
+        self._functions = functions
+        self._hide = hide
+        self._is_argument = is_argument
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def functions(self):
-        return self._args[1]
+        return self._functions
 
     @property
     def hide(self):
-        return self.functions[0].hide or self._args[2]
+        return self._functions[0].hide or self._hide
 
     @property
     def is_argument(self):
-        return self._args[3]
+        return self._is_argument
 
     @property
     def global_vars(self):
-        return self.functions[0].global_vars
+        return self._functions[0].global_vars
 
     @property
     def cls_name(self):
-        return self.functions[0].cls_name
+        return self._functions[0].cls_name
 
     @property
     def kind(self):
-        return self.functions[0].kind
+        return self._functions[0].kind
 
     @property
     def imports(self):
-        return self.functions[0].imports
+        return self._functions[0].imports
 
     @property
     def decorators(self):
-        return self.functions[0].decorators
+        return self._functions[0].decorators
 
     @property
     def is_procedure(self):
-        return self.functions[0].is_procedure
+        return self._functions[0].is_procedure
 
     def rename(self, newname):
         return Interface(newname, self.functions)
