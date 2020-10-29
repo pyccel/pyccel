@@ -17,7 +17,7 @@ before_install:
 
 install:
   - ${PYTHON} -m pip install .
-  - ${PYTHON} -m pip install scipy
+  - ${PYTHON} -m pip install scipy -v
   - ${PYTHON} -m pip install mpi4py
   - ${PYTHON} -m pip install tblib
   - ${PYTHON} -m pip install "pytest>=4.5"
