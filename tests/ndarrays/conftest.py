@@ -2,7 +2,7 @@ import subprocess
 import os
 import sys
 import pytest
-
+import pyccel
 
 def pytest_collect_file(parent, path):
     """
@@ -20,8 +20,8 @@ class CTestFile(pytest.File):
     """
     @classmethod
     def from_parent(cls, parent, fspath):
-        test = super().from_parent(parent=parent, fspath=fspath)
-        return test
+        return super().from_parent(parent=parent, fspath=fspath)
+
     
     def collect(self):
         """
@@ -31,12 +31,18 @@ class CTestFile(pytest.File):
         """
         # Run the exe that corresponds to the .c file and capture the output.
         test_exe = os.path.splitext(str(self.fspath))[0]
-        
-        # still neeed to test this on windows :)
+        rel_path = os.path.relpath(test_exe)
+        lib = os.path.dirname(pyccel.__file__)
+        if  sys.platform.startswith("win"):
+            ndarray_path =  lib + "\\stdlib\\ndarrays\\"
+        else :
+            ndarray_path = lib +"/stdlib/ndarrays/"
+        comp_cmd = "gcc "+ rel_path +".c " + ndarray_path + "*.c -I " + ndarray_path + " -o " + rel_path
+        subprocess.run(comp_cmd, shell = 'TRUE')
         if sys.platform.startswith("win"):
-                test_exe += ".exe"
+                rel_path += ".exe"
         
-        test_output = subprocess.check_output(test_exe)
+        test_output = subprocess.check_output("./" + rel_path)
 
         # Clean up the unit test output and remove non test data lines.
         lines = test_output.decode().split("\n")
@@ -48,14 +54,16 @@ class CTestFile(pytest.File):
         for line in lines:
             token, data = line.split(" ", 1)
             token = token[1:-1]
-
             if token in ("PASS", "FAIL"):
                 file_name, line_number, function_name = data.split(":")
                 test_results.append({"condition": token,
                                      "file_name": file_name,
                                      "function_name": function_name,
                                      "line_number": int(line_number),
+                                     "INFO" : "no data found",
                                      })
+            elif token == "INFO":
+                test_results[-1][token] = data
         
         for test_result in test_results:
             yield CTestItem.from_parent(test_result["function_name"], self, test_result)
@@ -75,13 +83,14 @@ class CTestItem(pytest.Item):
     
     @classmethod
     def from_parent(cls, name, parent, test_result):
-        # TODO: after dropping python 2, change to keyword only after 'parent'
         return super().from_parent(name=name, parent=parent, test_result=test_result)
     
     def runtest(self):
         """The test has already been run. We just evaluate the result."""
+        # print(self.)
         if self.test_result["condition"] == "FAIL":
             raise CTestException(self, self.name)
+
         
     def reportinfo(self):
         """"Called to display header information about the test case."""
@@ -94,7 +103,7 @@ class CTestItem(pytest.Item):
 
         """
         if isinstance(exception.value, CTestException):
-            return ("Test failed : {file_name}:{line_number}\n".format(**self.test_result))
+            return ("Test failed : {file_name}:{line_number}\nINFO : {INFO}".format(**self.test_result))
 
 
 
