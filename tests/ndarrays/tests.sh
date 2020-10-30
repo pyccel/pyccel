@@ -1,1 +1,1 @@
-gcc test_ndarrays.c ../../pyccel/stdlib/ndarrays/*.c -I ../../pyccel/stdlib/ndarrays/ -o test_ndarrays
+gcc -g test_ndarrays.c ../../pyccel/stdlib/ndarrays/*.c -I ../../pyccel/stdlib/ndarrays/ -o test_ndarrays

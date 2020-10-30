@@ -43,15 +43,14 @@ int free_array(t_ndarray *dump)
 	{
 		free(dump->data->raw_data);
 		dump->data->raw_data = NULL;
-		free(dump->data);
-		dump->data = NULL;
 	}
+	free(dump->data);
+	dump->data = NULL;
 	free(dump->shape);
 	dump->shape = NULL;
 	free(dump->strides);
 	dump->strides = NULL;
 	free(dump);
-	dump = NULL;
 	return (1);
 }
 
@@ -94,7 +93,7 @@ t_ndarray *make_slice(t_ndarray *p, ...)
 		start += slice_data->start * p->strides[i];
 		slice->strides[i] *= slice_data->step;
 		i++;
-		// free(slice_data);
+		free(slice_data);
 	}
 	va_end(va);
 	slice->data = malloc(sizeof(t_ndarray_type));

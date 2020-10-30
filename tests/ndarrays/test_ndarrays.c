@@ -92,7 +92,7 @@ int	test_indexing_int(void)
 	value = x->data->int_nd[index];
 	c_value = 103;
 	m_assert(value , c_value, "testing the value");
-
+	free_array(x);
 	return (1);
 }
 
@@ -116,7 +116,7 @@ int	test_indexing_double(void)
 	value = x->data->double_nd[index];
 	c_value = 103.009;
 	m_assert(value , c_value, "testing the value");
-
+	free_array(x);
 	return (1);
 }
 
@@ -140,6 +140,7 @@ int	test_indexing_complex_double(void)
 	value = x->data->complex_double[index];
 	c_value = 0.58532094+0.67890618*I;
 	m_assert(value , c_value, "testing the value");
+	free_array(x);
 
 	return (1);
 }
@@ -180,6 +181,8 @@ int	test_slicing_int(void)
 	slice->data->int_nd[get_index(slice, 0, 1)] = c_value;
 	value = x->data->int_nd[get_index(x, 1, 2)];
 	m_assert(value , c_value, "testing slice assignment");
+	free_array(x);
+	free_array(slice);
 	return (1);
 }
 
@@ -215,6 +218,8 @@ int	test_slicing_double(void)
 	slice->data->double_nd[get_index(slice, 0, 1)] = c_value;
 	value = x->data->double_nd[get_index(x, 1, 2)];
 	m_assert(value, c_value, "testing slice assignment");
+	free_array(x);
+	free_array(slice);
 	return (1);
 }
 
@@ -251,6 +256,8 @@ int	test_slicing_complex_double(void)
 	slice->data->complex_double[get_index(slice, 0, 1)] = c_value;
 	value = x->data->complex_double[get_index(x, 1, 2)];
 	m_assert(value, c_value, "testing slice assignment");
+	free_array(x);
+	free_array(slice);
 	return (1);
 }
 
