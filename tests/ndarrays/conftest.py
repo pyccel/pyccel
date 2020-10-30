@@ -3,6 +3,7 @@
 import subprocess
 import os
 import sys
+import shutil
 import pytest
 
 def pytest_collect_file(parent, path):
@@ -45,8 +46,9 @@ class CTestFile(pytest.File):
             ndarray_path =  rootdir + "\\pyccel\\stdlib\\ndarrays\\"
         else :
             ndarray_path = rootdir + "/pyccel/stdlib/ndarrays/"
-        comp_cmd = "gcc "+test_exe+".c "+ndarray_path+"*.c -I "+ndarray_path+" -o "+test_exe
-        subprocess.run(comp_cmd, check= 'TRUE' ,shell = 'TRUE')
+        comp_cmd = [shutil.which("gcc"), test_exe + ".c",
+                    os.path.join(ndarray_path,"ndarrays.c"), "-I", ndarray_path, "-o", test_exe]
+        subprocess.run(comp_cmd, check= 'TRUE')
         if sys.platform.startswith("win"):
             test_exe += ".exe"
         test_output = subprocess.check_output("./" + test_exe)
@@ -94,13 +96,12 @@ class CTestItem(pytest.Item):
 
     def runtest(self):
         """The test has already been run. We just evaluate the result."""
-        # print(self.)
         if self.test_result["condition"] == "FAIL":
             raise CTestException(self, self.name)
 
     def reportinfo(self):
         """"Called to display header information about the test case."""
-        return self.fspath, self.test_result["line_number"] - 1 , self.name
+        return self.fspath, self.test_result["line_number"], self.name
 
     def repr_failure(self, exception):
         """
@@ -109,7 +110,7 @@ class CTestItem(pytest.Item):
 
         """
         if isinstance(exception.value, CTestException):
-            return ("Test failed : {file_name}:{line_number}\n"
+            return ("Test failed : {file_name}:{line_number} {function_name} < {DSCR} >\n"
                         "INFO : {INFO}".format(**self.test_result))
 
 
