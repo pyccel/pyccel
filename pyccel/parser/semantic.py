@@ -2274,17 +2274,18 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionDef(self, expr, **settings):
 
-        name         = str(expr.name)
-        name         = name.replace("'", '')
-        cls_name     = expr.cls_name
-        hide         = False
-        kind         = 'function'
-        decorators   = expr.decorators
-        funcs        = []
-        sub_funcs    = []
-        is_pure      = expr.is_pure
-        is_elemental = expr.is_elemental
-        is_private   = expr.is_private
+        name            = str(expr.name)
+        name            = name.replace("'", '')
+        cls_name        = expr.cls_name
+        hide            = False
+        kind            = 'function'
+        decorators      = expr.decorators
+        funcs           = []
+        sub_funcs       = []
+        func_interfaces = []
+        is_pure         = expr.is_pure
+        is_elemental    = expr.is_elemental
+        is_private      = expr.is_private
 
         header = expr.header
 
@@ -2490,6 +2491,10 @@ class SemanticParser(BasicParser):
 
             sub_funcs = [i for i in self.namespace.functions.values() if not i.is_header and not isinstance(i, FunctionAddress)]
 
+            func_args = [i for i in self.namespace.functions.values() if isinstance(i, FunctionAddress)]
+            if func_args:
+                func_interfaces.append(Interface('', func_args, is_argument = True))
+
             self.exit_function_scope()
             # ... computing inout arguments
             args_inout = []
@@ -2570,7 +2575,8 @@ class SemanticParser(BasicParser):
                     decorators=decorators,
                     is_recursive=is_recursive,
                     arguments_inout=args_inout,
-                    functions = sub_funcs)
+                    functions = sub_funcs,
+                    interfaces = func_interfaces)
 
             if cls_name:
                 cls = self.get_class(cls_name)
