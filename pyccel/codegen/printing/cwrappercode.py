@@ -130,10 +130,6 @@ class CWrapperCodePrinter(CCodePrinter):
         body = []
         collect_var = variable
 
-        if isinstance(variable, FunctionAddress):
-            body = [PyErr_SetString('PyExc_NotImplementedError', '"can not pass a function as an argument"'), Return([Nil()])]
-            return variable, body
-
         if variable.is_optional:
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
@@ -319,6 +315,15 @@ class CWrapperCodePrinter(CCodePrinter):
         # Collect arguments and results
         wrapper_args    = [python_func_selfarg, python_func_args, python_func_kwargs]
         wrapper_results = [self.get_new_PyObject("result", used_names)]
+
+        if any(isinstance(arg, FunctionAddress) for arg in expr.arguments):
+            wrapper_func = FunctionDef(name = wrapper_name,
+                arguments = wrapper_args,
+                results = wrapper_results,
+                body = [PyErr_SetString('PyExc_NotImplementedError', '"Cannot pass a function as an argument"'),
+                        AliasAssign(wrapper_results[0], Nil()),
+                        Return(wrapper_results)])
+            return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
         # Collect argument names for PyArgParse
         arg_names         = [a.name for a in expr.arguments]
