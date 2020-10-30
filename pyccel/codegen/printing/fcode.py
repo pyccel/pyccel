@@ -1150,9 +1150,10 @@ class FCodePrinter(CodePrinter):
         rhs_code = self._print(rhs)
 
         code = ''
-        if (expr.status == 'unallocated') and not (expr.like is None):
-            errors.report("Numpy array dtype=object not supported ", symbol=expr,
-                    severity='fatal')
+        # if (expr.status == 'unallocated') and not (expr.like is None):
+        #     stmt = ZerosLike(lhs=lhs_code, rhs=expr.like)
+        #     code += self._print(stmt)
+        #     code += '\n'
         if not is_procedure:
             code += '{0} = {1}'.format(lhs_code, rhs_code)
 #        else:
