@@ -601,19 +601,10 @@ class FCodePrinter(CodePrinter):
     def _print_Matmul(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Cross(self, expr):
-        return expr.fprint(self._print)
-
     def _print_Norm(self, expr):
         return expr.fprint(self._print)
 
     def _print_PyccelArraySize(self, expr):
-        return expr.fprint(self._print)
-
-    def _print_Linspace(self, expr):
-        return expr.fprint(self._print)
-
-    def _print_Array(self, expr):
         return expr.fprint(self._print)
 
     def _print_PythonInt(self, expr):
