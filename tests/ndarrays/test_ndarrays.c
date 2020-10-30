@@ -178,7 +178,7 @@ int	test_slicing_int(void)
 
 	c_value = 1337;
 	slice->data->int_nd[get_index(slice, 0, 1)] = c_value;
-	value = x->data->int_nd[get_index(x, 1, 1)];
+	value = x->data->int_nd[get_index(x, 1, 2)];
 	m_assert(value , c_value, "testing slice assignment");
 	return (1);
 }
