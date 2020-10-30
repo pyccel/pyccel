@@ -281,7 +281,7 @@ class SemanticParser(BasicParser):
     def check_for_variable(self, name):
         """
         Search for a Variable object with the given name in the current namespace,
-        defined by the local and global Python scopes. Return None if not found. 
+        defined by the local and global Python scopes. Return None if not found.
         """
 
         if self.current_class:
@@ -289,7 +289,7 @@ class SemanticParser(BasicParser):
                 if str(i.name) == name:
                     var = i
                     return var
-        
+
         # Walk up nested loops (if any)
         container = self.namespace
         while container.is_loop:
@@ -1465,7 +1465,7 @@ class SemanticParser(BasicParser):
 
                 # Add memory allocation if needed
                 if lhs.allocatable and not lhs.is_stack_array:
-                    new_expressions.append(Allocate(lhs, shape=rhs.shape, order=rhs.order, status='unallocated'))
+                    new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status='unallocated'))
 
                 # Not yet supported for arrays: x=y+z, x=b[:]
                 # Because we cannot infer shape of right-hand side yet
