@@ -2242,14 +2242,15 @@ class SemanticParser(BasicParser):
         d_var['shape'] = PythonTuple(*shape)
         d_var['is_stack_array'] = False # PythonTuples can be stack arrays
 
-        lhs_name = _get_name(expr.lhs)
-
-        lhs_empty = Empty(shape, dtype = dtype)
-        lhs       = self._create_variable(lhs_name, dtype, lhs_empty, d_var)
+        # ...
+        # TODO [YG, 30.10.2020]:
+        #  - Check if we should use self._create_variable or self._assign_lhs_variable
+        #  - Check if we should allow the possibility that is_stack_array=True
+        #  - Verify that the LHS variable did not exist already
+        lhs = Variable(dtype, _get_name(expr.lhs), **d_var)
         self.insert_variable(lhs)
-        lhs_assign = Assign(lhs, lhs_empty)
-
-        lhs = self.get_variable(lhs_name)
+        lhs_alloc = Allocate(lhs, shape=shape, order=d_var.get('order', 'C'), status='unallocated')
+        # ...
 
         if isinstance(target, PythonTuple) and not target.is_homogeneous:
             errors.report(LIST_OF_TUPLES, symbol=expr,
@@ -2259,7 +2260,7 @@ class SemanticParser(BasicParser):
         loops = [self._visit(i, **settings) for i in expr.loops]
         index = self._visit(index, **settings)
 
-        return CodeBlock([lhs_assign, FunctionalFor(loops, lhs=lhs, indices=indices, index=index)])
+        return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=indices, index=index)])
 
     def _visit_While(self, expr, **settings):
 
