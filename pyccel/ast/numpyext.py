@@ -138,7 +138,6 @@ class NumpyArray(Application, NumpyNewArray):
         if dtype is None:
             dtype = arg.dtype
         dtype, prec = process_dtype(dtype)
-        print("numpy new array dtype", dtype)
         # ... Determine ordering
         if isinstance(order, ValuedArgument):
             order = order.value
