@@ -31,7 +31,8 @@ from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return
 from pyccel.ast.core import ConstructorCall
-from pyccel.ast.core import FunctionDef, Interface
+from pyccel.ast.core import ValuedFunctionAddress
+from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor, ForIterator
 from pyccel.ast.core import IfTernaryOperator
@@ -1352,7 +1353,6 @@ class SemanticParser(BasicParser):
             severity='fatal', blocker=self.blocking)
 
     def _create_variable(self, name, dtype, rhs, d_lhs):
-
         if isinstance(rhs, (TupleVariable, PythonTuple, List)):
             elem_vars = []
             for i,r in enumerate(rhs):
@@ -2212,6 +2212,7 @@ class SemanticParser(BasicParser):
         name  = expr.name
         d_var = expr.dtypes.copy()
         dtype = d_var.pop('datatype')
+        d_var.pop('is_func')
 
         var = Variable(dtype, name, **d_var)
         self.insert_variable(var)
@@ -2273,17 +2274,18 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionDef(self, expr, **settings):
 
-        name         = str(expr.name)
-        name         = name.replace("'", '')
-        cls_name     = expr.cls_name
-        hide         = False
-        kind         = 'function'
-        decorators   = expr.decorators
-        funcs        = []
-        sub_funcs    = []
-        is_pure      = expr.is_pure
-        is_elemental = expr.is_elemental
-        is_private   = expr.is_private
+        name            = str(expr.name)
+        name            = name.replace("'", '')
+        cls_name        = expr.cls_name
+        hide            = False
+        kind            = 'function'
+        decorators      = expr.decorators
+        funcs           = []
+        sub_funcs       = []
+        func_interfaces = []
+        is_pure         = expr.is_pure
+        is_elemental    = expr.is_elemental
+        is_private      = expr.is_private
 
         header = expr.header
 
@@ -2319,7 +2321,6 @@ class SemanticParser(BasicParser):
         # we construct a FunctionDef from its header
         if header:
             interfaces = header.create_definition()
-
             # get function kind from the header
 
             kind = header.kind
@@ -2371,34 +2372,51 @@ class SemanticParser(BasicParser):
 
             if arguments:
                 for (a, ah) in zip(arguments, m.arguments):
-                    d_var = self._infere_type(ah, **settings)
-                    d_var['shape'] = ah.alloc_shape
-                    d_var['is_argument'] = True
-                    d_var['is_kwonly'] = a.is_kwonly
-                    dtype = d_var.pop('datatype')
-                    if d_var['rank']>0:
-                        d_var['cls_base'] = NumpyArrayClass
-
-                    # this is needed for the static case
-
                     additional_args = []
-                    if isinstance(a, ValuedArgument):
+                    if isinstance(ah, FunctionAddress):
+                        d_var = {}
+                        d_var['is_argument'] = True
+                        d_var['is_pointer'] = True
+                        d_var['is_kwonly'] = a.is_kwonly
+                        if isinstance(a, ValuedArgument):
 
-                        # optional argument only if the value is None
-                        if isinstance(a.value, Nil):
-                            d_var['is_optional'] = True
+                            # optional argument only if the value is None
+                            if isinstance(a.value, Nil):
+                                d_var['is_optional'] = True
 
-                        a_new = ValuedVariable(dtype, str(a.name),
-                                    value=a.value, **d_var)
+                            a_new = ValuedFunctionAddress(a.name, ah.arguments, ah.results, [],
+                                        value=a.value, **d_var)
+                        else:
+                            a_new = FunctionAddress(a.name, ah.arguments, ah.results, [], **d_var)
                     else:
-                        a_new = Variable(dtype, a.name, **d_var)
+                        d_var = self._infere_type(ah, **settings)
+                        d_var['shape'] = ah.alloc_shape
+                        d_var['is_argument'] = True
+                        d_var['is_kwonly'] = a.is_kwonly
+                        dtype = d_var.pop('datatype')
+                        if d_var['rank']>0:
+                            d_var['cls_base'] = NumpyArrayClass
+
+                        # this is needed for the static case
+                        if isinstance(a, ValuedArgument):
+
+                            # optional argument only if the value is None
+                            if isinstance(a.value, Nil):
+                                d_var['is_optional'] = True
+
+                            a_new = ValuedVariable(dtype, str(a.name),
+                                        value=a.value, **d_var)
+                        else:
+                            a_new = Variable(dtype, a.name, **d_var)
 
                     if additional_args:
                         args += additional_args
 
                     args.append(a_new)
-                    self.insert_variable(a_new, name=str(a_new.name))
-
+                    if isinstance(a_new, FunctionAddress):
+                        self.insert_function(a_new)
+                    else:
+                        self.insert_variable(a_new, name=str(a_new.name))
             results = expr.results
             if header_results:
                 new_results = []
@@ -2422,8 +2440,8 @@ class SemanticParser(BasicParser):
             # we annotate the body
             body = self._visit(expr.body)
 
-            # ISSUE 177: must update arguments to get is_target
-            args    = [self.get_variable(a.name) for a in args]
+            args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(str(a.name)) for a in args]
+
             results = list(OrderedDict((a.name,self.get_variable(a.name)) for a in results).values())
 
             if arg and cls_name:
@@ -2471,7 +2489,11 @@ class SemanticParser(BasicParser):
             if func_ and func_.is_recursive:
                 is_recursive = True
 
-            sub_funcs = [i for i in self.namespace.functions.values() if not i.is_header]
+            sub_funcs = [i for i in self.namespace.functions.values() if not i.is_header and not isinstance(i, FunctionAddress)]
+
+            func_args = [i for i in self.namespace.functions.values() if isinstance(i, FunctionAddress)]
+            if func_args:
+                func_interfaces.append(Interface('', func_args, is_argument = True))
 
             self.exit_function_scope()
             # ... computing inout arguments
@@ -2537,7 +2559,6 @@ class SemanticParser(BasicParser):
                     symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal')
 
-
             func = FunctionDef(name,
                     args,
                     results,
@@ -2554,7 +2575,8 @@ class SemanticParser(BasicParser):
                     decorators=decorators,
                     is_recursive=is_recursive,
                     arguments_inout=args_inout,
-                    functions = sub_funcs)
+                    functions = sub_funcs,
+                    interfaces = func_interfaces)
 
             if cls_name:
                 cls = self.get_class(cls_name)
@@ -2881,7 +2903,6 @@ class SemanticParser(BasicParser):
 
 
     def _visit_MacroFunction(self, expr, **settings):
-
         # we change here the master name to its FunctionDef
 
         f_name = expr.master

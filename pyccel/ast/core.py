@@ -176,7 +176,11 @@ __all__ = (
 #    'operator',
 #    'op_registry',
     'process_shape',
-    'subs'
+    'subs',
+    'OMP_For_Loop',
+    'OMP_Parallel_Construct',
+    'OMP_Single_Construct',
+    'Omp_End_Clause'
 )
 
 #==============================================================================
@@ -2778,6 +2782,10 @@ class Variable(Symbol, PyccelAstNode):
             is_optional=kwargs.pop('is_optional',self.is_optional),
             cls_base=kwargs.pop('cls_base',self.cls_base),
             )
+    def rename(self, newname):
+        """Change variable name."""
+
+        self._name = newname
 
     def __getnewargs__(self):
         """used for Pickling self."""
@@ -2920,8 +2928,6 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
 
     def inspect(self):
         self._args[1].inspect()
-
-
 
 class ValuedVariable(Variable):
 
@@ -3194,10 +3200,10 @@ class FunctionCall(Basic, PyccelAstNode):
         # add the messing argument in the case of optional arguments
         f_args = func.arguments
         if not len(args) == len(f_args):
-            f_args_dict = OrderedDict((a.name,a) if isinstance(a, ValuedVariable) else (a.name, None) for a in f_args)
+            f_args_dict = OrderedDict((a.name,a) if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else (a.name, None) for a in f_args)
             keyword_args = []
             for i,a in enumerate(args):
-                if not isinstance(a, ValuedVariable):
+                if not isinstance(a, (ValuedVariable, ValuedFunctionAddress)):
                     f_args_dict[f_args[i].name] = a
                 else:
                     keyword_args = args[i:]
@@ -3206,7 +3212,9 @@ class FunctionCall(Basic, PyccelAstNode):
             for a in keyword_args:
                 f_args_dict[a.name] = a.value
 
-            args = [a.value if isinstance(a, ValuedVariable) else a for a in f_args_dict.values()]
+            args = [a.value if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else a for a in f_args_dict.values()]
+
+        args = [FunctionAddress(a.name, a.arguments, a.results, []) if isinstance(a, FunctionDef) else a for a in args]
 
         args = Tuple(*args, sympify=False)
         # ...
@@ -3274,58 +3282,68 @@ class Return(Basic):
 class Interface(Basic):
 
     """Represent an Interface"""
+    def __new__( cls, *args, **kwargs ):
+        return Basic.__new__(cls)
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         name,
         functions,
         hide=False,
+        is_argument = False,
         ):
+
         if not isinstance(name, str):
             raise TypeError('Expecting an str')
         if not isinstance(functions, list):
             raise TypeError('Expecting a list')
-        return Basic.__new__(cls, name, functions, hide)
+        self._name = name
+        self._functions = functions
+        self._hide = hide
+        self._is_argument = is_argument
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def functions(self):
-        return self._args[1]
+        return self._functions
 
     @property
     def hide(self):
-        return self.functions[0].hide or self._args[2]
+        return self._functions[0].hide or self._hide
+
+    @property
+    def is_argument(self):
+        return self._is_argument
 
     @property
     def global_vars(self):
-        return self.functions[0].global_vars
+        return self._functions[0].global_vars
 
     @property
     def cls_name(self):
-        return self.functions[0].cls_name
+        return self._functions[0].cls_name
 
     @property
     def kind(self):
-        return self.functions[0].kind
+        return self._functions[0].kind
 
     @property
     def imports(self):
-        return self.functions[0].imports
+        return self._functions[0].imports
 
     @property
     def decorators(self):
-        return self.functions[0].decorators
+        return self._functions[0].decorators
 
     @property
     def is_procedure(self):
-        return self.functions[0].is_procedure
+        return self._functions[0].is_procedure
 
     def rename(self, newname):
         return Interface(newname, self.functions)
-
 
 class FunctionDef(Basic):
 
@@ -3438,7 +3456,8 @@ class FunctionDef(Basic):
         is_private=False,
         is_header=False,
         arguments_inout=[],
-        functions = []):
+        functions=[],
+        interfaces=[]):
 
         if isinstance(name, str):
             name = Symbol(name)
@@ -3556,6 +3575,7 @@ class FunctionDef(Basic):
         self._is_header       = is_header
         self._arguments_inout = arguments_inout
         self._functions       = functions
+        self._interfaces      = interfaces
 
     @property
     def name(self):
@@ -3636,6 +3656,10 @@ class FunctionDef(Basic):
     @property
     def functions(self):
         return self._functions
+
+    @property
+    def interfaces(self):
+        return self._interfaces
 
     @property
     def doc_string(self):
@@ -3758,6 +3782,127 @@ class FunctionDef(Basic):
                 args   = ', '.join(self.args),
                 result = result)
 
+class FunctionAddress(FunctionDef):
+
+    """Represents a function address.
+
+    Parameters
+    ----------
+    name : str
+        The name of the function address.
+
+    arguments : iterable
+        The arguments to the function address.
+
+    results : iterable
+        The direct outputs of the function address.
+
+    is_argument: bool
+        if object is the argument of a function [Default value: False]
+
+    is_kwonly: bool
+        if object is an argument which can only be specified using its keyword
+
+    is_pointer: bool
+        if object is a pointer [Default value: False]
+
+    is_optional: bool
+        if object is an optional argument of a function [Default value: False]
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare, FunctionDef
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
+
+    a function definition can have a FunctionAddress as an argument
+
+    >>> FunctionDef('g', [FunctionAddress('f', [x], [y], [])], [], [])
+
+    we can also Declare a FunctionAddress
+
+    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
+    """
+
+    def __init__(
+        self,
+        name,
+        arguments,
+        results,
+        body,
+        is_optional=False,
+        is_pointer=False,
+        is_kwonly=False,
+        is_argument=False,
+        **kwargs
+        ):
+        FunctionDef.__init__(self, name, arguments, results, body, **kwargs)
+        if not isinstance(is_argument, bool):
+            raise TypeError('Expecting a boolean for is_argument')
+
+        if not isinstance(is_pointer, bool):
+            raise TypeError('Expecting a boolean for is_pointer')
+
+        if not isinstance(is_kwonly, bool):
+            raise TypeError('Expecting a boolean for kwonly')
+
+        elif not isinstance(is_optional, bool):
+            raise TypeError('is_optional must be a boolean.')
+
+        self._is_optional   = is_optional
+        self._name          = name
+        self._is_pointer    = is_pointer
+        self._is_kwonly     = is_kwonly
+        self._is_argument   = is_argument
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def is_pointer(self):
+        return self._is_pointer
+
+    @property
+    def is_argument(self):
+        return self._is_argument
+
+    @property
+    def is_kwonly(self):
+        return self._is_kwonly
+
+    @property
+    def is_optional(self):
+        return self._is_optional
+
+class ValuedFunctionAddress(FunctionAddress):
+
+    """Represents a valued function address in the code.
+
+    Parameters
+    ----------
+    value: instance of FunctionDef or FunctionAddress
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Variable, ValuedFunctionAddress, FunctionDef
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
+    >>> f = FunctionDef('f', [], [], [])
+    >>> n  = ValuedFunctionAddress('g', [x], [y], [], value=f)
+    """
+
+    def __new__(cls, *args, **kwargs):
+        kwargs.pop('value', Nil())
+        return FunctionAddress.__new__(cls, *args, **kwargs)
+
+    def __init__(self, *args, **kwargs):
+        self._value = kwargs.pop('value', Nil())
+        FunctionAddress.__init__(self, *args, **kwargs)
+
+    @property
+    def value(self):
+        return self._value
 
 class SympyFunction(FunctionDef):
 
@@ -4342,6 +4487,83 @@ class Load(Basic):
 
 # TODO: Should Declare have an optional init value for each var?
 
+class FuncAddressDeclare(Basic):
+
+    """Represents a FunctionAddress declaration in the code.
+
+    Parameters
+    ----------
+    variable:
+        An instance of FunctionAddress.
+    intent: None, str
+        one among {'in', 'out', 'inout'}
+    value: Expr
+        variable value
+    static: bool
+        True for a static declaration of an array.
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare
+    >>> x = Variable('real', 'x')
+    >>> y = Variable('real', 'y')
+    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
+    """
+
+    def __new__( cls, *args, **kwargs ):
+        return Basic.__new__(cls)
+
+    def __init__(
+        self,
+        variable,
+        intent=None,
+        value=None,
+        static=False,
+        ):
+
+        if not isinstance(variable, FunctionAddress):
+            raise TypeError('variable must be of type FunctionAddress, given {0}'.format(variable))
+
+        if intent:
+            if not intent in ['in', 'out', 'inout']:
+                raise ValueError("intent must be one among {'in', 'out', 'inout'}")
+
+        if not isinstance(static, bool):
+            raise TypeError('Expecting a boolean for static attribute')
+
+        self._variable  = variable
+        self._intent    = intent
+        self._value     = value
+        self._static    = static
+
+    @property
+    def results(self):
+        return self._variable.results
+
+    @property
+    def arguments(self):
+        return self._variable.arguments
+
+    @property
+    def name(self):
+        return self._variable.name
+
+    @property
+    def variable(self):
+        return self._variable
+
+    @property
+    def intent(self):
+        return self._intent
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def static(self):
+        return self._static
+
 class Declare(Basic):
 
     """Represents a variable declaration in the code.
@@ -4672,7 +4894,6 @@ class SeparatorComment(Comment):
         text = """.""" * n
         return Comment.__new__(cls, text)
 
-
 class AnnotatedComment(Basic):
 
     """Represents a Annotated Comment in the code.
@@ -4708,6 +4929,26 @@ class AnnotatedComment(Basic):
 
         args = (self.accel, self.txt)
         return args
+
+class OMP_For_Loop(AnnotatedComment):
+    """ Represents an OpenMP Loop construct. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
+
+class OMP_Parallel_Construct(AnnotatedComment):
+    """ Represents an OpenMP Parallel construct. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
+
+class OMP_Single_Construct(AnnotatedComment):
+    """ Represents an OpenMP Single construct. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
+
+class Omp_End_Clause(AnnotatedComment):
+    """ Represents the End of an OpenMP block. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
 
 class CommentBlock(Basic):
 

@@ -7,7 +7,7 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.numbers   import BooleanTrue
 
-from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef
+from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, PyccelNe
@@ -214,8 +214,7 @@ class CWrapperCodePrinter(CCodePrinter):
         pykwarg = expr.pykwarg
         flags   = expr.flags
         # All args are modified so even pointers are passed by address
-        args    = ', '.join(['&{}'.format(self._print(VariableAddress(a))) if a.is_pointer
-                        else self._print(VariableAddress(a)) for a in expr.args])
+        args    = ', '.join(['&{}'.format(a.name) for a in expr.args])
 
         if expr.args:
             code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(
@@ -316,6 +315,15 @@ class CWrapperCodePrinter(CCodePrinter):
         # Collect arguments and results
         wrapper_args    = [python_func_selfarg, python_func_args, python_func_kwargs]
         wrapper_results = [self.get_new_PyObject("result", used_names)]
+
+        if any(isinstance(arg, FunctionAddress) for arg in expr.arguments):
+            wrapper_func = FunctionDef(name = wrapper_name,
+                arguments = wrapper_args,
+                results = wrapper_results,
+                body = [PyErr_SetString('PyExc_NotImplementedError', '"Cannot pass a function as an argument"'),
+                        AliasAssign(wrapper_results[0], Nil()),
+                        Return(wrapper_results)])
+            return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
         # Collect argument names for PyArgParse
         arg_names         = [a.name for a in expr.arguments]

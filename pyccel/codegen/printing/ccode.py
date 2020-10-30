@@ -18,12 +18,15 @@ from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.numpyext import NumpyReal, NumpyImag
 
 from pyccel.ast.builtins  import Range, PythonFloat, PythonComplex
+from pyccel.ast.core import FuncAddressDeclare
+from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import Declare, ValuedVariable
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors import Errors
-from pyccel.errors.messages import *
+from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
+                                    PYCCEL_RESTRICTION_IS_ISNOT )
 
 errors = Errors()
 
@@ -189,6 +192,7 @@ dtype_registry = {('real',8)    : 'double',
                   ('int',1)     : 'char',
                   ('bool',4)    : 'bool'}
 
+import_dict = {'omp_lib' : 'omp' }
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
@@ -409,7 +413,16 @@ class CCodePrinter(CodePrinter):
         else:
             source = self._print(expr.source)
 
-        return '#include <{0}.h>'.format(source)
+        # Get with a default value is not used here as it is
+        # slower and on most occasions the import will not be in the
+        # dictionary
+        if source in import_dict: # pylint: disable=consider-using-get
+            source = import_dict[source]
+
+        if source is None:
+            return ''
+        else:
+            return '#include <{0}.h>'.format(source)
 
     def _print_String(self, expr):
         format_str = format(expr.arg)
@@ -476,10 +489,32 @@ class CCodePrinter(CodePrinter):
         rank  = expr.rank
         dtype = self.find_in_dtype_registry(dtype, prec)
 
-        if rank > 0 or self.stored_in_c_pointer(expr):
+        if rank > 0:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
+
+        if self.stored_in_c_pointer(expr):
             return '{0} *'.format(dtype)
         else:
             return '{0} '.format(dtype)
+
+    def _print_FuncAddressDeclare(self, expr):
+        if len(expr.results) == 1:
+            ret_type = self.get_declare_type(expr.results[0])
+        elif len(expr.results) > 1:
+            msg = 'Multiple output arguments is not yet supported in c'
+            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO, symbol=expr,
+                severity='fatal')
+        else:
+            ret_type = self._print(datatype('void')) + ' '
+        name = expr.name
+        if not expr.arguments:
+            arg_code = 'void'
+        else:
+            # TODO: extract informations needed for printing in case of function argument which itself has a function argument
+            arg_code = ', '.join('{}'.format(self._print_FuncAddressDeclare(i))
+                        if isinstance(i, FunctionAddress) else '{0}{1}'.format(self.get_declare_type(i), i)
+                        for i in expr.arguments)
+        return '{}(*{})({});'.format(ret_type, name, arg_code)
 
     def _print_Declare(self, expr):
         if expr.variable.rank > 0:
@@ -522,8 +557,13 @@ class CCodePrinter(CodePrinter):
         if not expr.arguments:
             arg_code = 'void'
         else:
-            arg_code = ', '.join('{0}{1}'.format(self.get_declare_type(i), i) for i in expr.arguments)
-        return '{0}{1}({2})'.format(ret_type, name, arg_code)
+            arg_code = ', '.join('{}'.format(self.function_signature(i))
+                        if isinstance(i, FunctionAddress) else '{0}{1}'.format(self.get_declare_type(i), i)
+                        for i in expr.arguments)
+        if isinstance(expr, FunctionAddress):
+            return '{}(*{})({})'.format(ret_type, name, arg_code)
+        else:
+            return '{0}{1}({2})'.format(ret_type, name, arg_code)
 
     def _print_NumpyUfuncBase(self, expr):
         """ Convert a Python expression with a Numpy function call to C
@@ -615,6 +655,9 @@ class CCodePrinter(CodePrinter):
             code_args = self._print(arg)
         return 'sqrt({})'.format(code_args)
 
+    def _print_FunctionAddress(self, expr):
+        return expr.name
+
     def _print_Rand(self, expr):
         raise NotImplementedError("Rand not implemented")
 
@@ -624,8 +667,8 @@ class CCodePrinter(CodePrinter):
     def _print_FunctionDef(self, expr):
 
         body  = self._print(expr.body)
-        decs  = [Declare(i.dtype, i) for i in expr.local_vars]
-        decs += [Declare(i.dtype, i) for i in expr.results]
+        decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
+        decs += [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.results]
         decs += [Declare(i.dtype, i) for i in self._additional_declare]
         decs  = '\n'.join(self._print(i) for i in decs)
         self._additional_declare.clear()
@@ -952,6 +995,23 @@ class CCodePrinter(CodePrinter):
 
     def _print_NewLine(self, expr):
         return '\n'
+
+    #=================== OMP ==================
+    def _print_OMP_For_Loop(self, expr):
+        omp_expr   = str(expr.txt)
+        return '#pragma omp for{}\n{{'.format(omp_expr)
+
+    def _print_OMP_Parallel_Construct(self, expr):
+        omp_expr   = str(expr.txt)
+        return '#pragma omp {}\n{{'.format(omp_expr)
+
+    def _print_OMP_Single_Construct(self, expr):
+        omp_expr   = str(expr.txt)
+        return '#pragma omp {}\n{{'.format(omp_expr)
+
+    def _print_Omp_End_Clause(self, expr):
+        return '}'
+    #=====================================
 
     def _print_Program(self, expr):
         body  = self._print(expr.body)
