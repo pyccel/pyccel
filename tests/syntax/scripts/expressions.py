@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 # coding: utf-8
-# pylint: disable=pointless-statement
+# pylint: disable=pointless-statement, undefined-variable
 
 None
 
