@@ -91,9 +91,11 @@ numpy_constants = {
 
 def process_dtype(dtype):
     if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool):
+        # remove python prefix from dtype.name len("python") = 6
         dtype = dtype.__name__.lower()[6:]
     elif dtype  in (NumpyInt, NumpyInt32, NumpyInt64, NumpyComplex, NumpyFloat,
 				  NumpyComplex128, NumpyComplex64, NumpyFloat64, NumpyFloat32):
+        # remove numpy prefix from dtype.name len("numpy") = 5
         dtype = dtype.__name__.lower()[5:]
     else:
         dtype            = str(dtype).replace('\'', '').lower()
