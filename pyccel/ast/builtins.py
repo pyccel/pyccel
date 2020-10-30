@@ -315,7 +315,7 @@ class List(Tuple, PyccelAstNode):
 
             if all(sh is not None for sh in shapes):
                 assert all(sh==shapes[0] for sh in shapes)
-                self._shape = (len(args), ) + shapes[0]
+                self._shape = (Integer(len(args)), ) + shapes[0]
                 self._rank  = len(self._shape)
             else:
                 self._rank = max(a.rank for a in args) + 1
