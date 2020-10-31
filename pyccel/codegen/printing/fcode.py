@@ -58,11 +58,11 @@ from pyccel.ast.numbers   import BooleanTrue
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 from pyccel.ast.type_inference import str_dtype
 
-from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
-from pyccel.ast.numpyext import Real, Where
+from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyLinspace, NumpyDiag, NumpyCross
+from pyccel.ast.numpyext import NumpyReal, NumpyWhere
 from pyccel.ast.numpyext import NumpyComplex, NumpyMod, NumpyFloat
-from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
-from pyccel.ast.numpyext import Rand, NumpyRandint
+from pyccel.ast.numpyext import NumpyFullLike, NumpyEmptyLike, NumpyZerosLike, NumpyOnesLike
+from pyccel.ast.numpyext import NumpyRand, NumpyRandint
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import Shape
 
@@ -592,28 +592,38 @@ class FCodePrinter(CodePrinter):
         idx = 1 if var.order == 'F' else var.rank
         return 'size({},{})'.format(self._print(var), self._print(idx))
 
+    #========================== Numpy Elements ===============================#
+
     def _print_NumpySum(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Product(self, expr):
+    def _print_NumpyProduct(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Matmul(self, expr):
+    def _print_NumpyMatmul(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Cross(self, expr):
+    def _print_NumpyCross(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Norm(self, expr):
+    def _print_NumpyNorm(self, expr):
         return expr.fprint(self._print)
 
+    def _print_NumpyLinspace(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_NumpyArray(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_NumpyFloor(self, expr):
+        result_code = self._print_MathFloor(expr)
+        return 'real({}, {})'.format(result_code, expr.precision)
+
+    def _print_PythonFloat(self, expr):
+        return expr.fprint(self._print)
+
+    # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
-        return expr.fprint(self._print)
-
-    def _print_Linspace(self, expr):
-        return expr.fprint(self._print)
-
-    def _print_Array(self, expr):
         return expr.fprint(self._print)
 
     def _print_PythonInt(self, expr):
@@ -632,13 +642,6 @@ class FCodePrinter(CodePrinter):
         prec_code = self._print(prec)
         return 'floor({}, kind={})'.format(arg_code, prec_code)
 
-    def _print_NumpyFloor(self, expr):
-        result_code = self._print_MathFloor(expr)
-        return 'real({}, {})'.format(result_code, expr.precision)
-
-    def _print_PythonFloat(self, expr):
-        return expr.fprint(self._print)
-
     def _print_NumpyFloat(self, expr):
         return expr.fprint(self._print)
 
@@ -651,7 +654,7 @@ class FCodePrinter(CodePrinter):
     def _print_PythonBool(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Rand(self, expr):
+    def _print_NumpyRand(self, expr):
         if expr.rank != 0:
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
@@ -1062,15 +1065,17 @@ class FCodePrinter(CodePrinter):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}\n'.format(lhs_code, rhs_code)
 
-        if isinstance(rhs, (PythonInt, Real, NumpyComplex)):
+        if isinstance(rhs, (PythonInt, NumpyReal, NumpyComplex)):
             lhs = self._print(expr.lhs)
             rhs = expr.rhs.fprint(self._print)
             return '{0} = {1}\n'.format(lhs,rhs)
 
-        if isinstance(rhs, (Array, Linspace, Diag, Cross, Where, PyccelArraySize)):
+        if isinstance(rhs, (NumpyArray, NumpyLinspace, NumpyDiag, NumpyCross,\
+						NumpyWhere, PyccelArraySize)):
             return rhs.fprint(self._print, expr.lhs) + '\n'
 
-        if isinstance(rhs, (Full, FullLike, EmptyLike, ZerosLike, OnesLike, Rand)):
+        if isinstance(rhs, (NumpyFull, NumpyFullLike, NumpyEmptyLike,\
+						NumpyZerosLike, NumpyOnesLike, NumpyRand)):
 
             stack_array = False
             if self._current_function:
@@ -1145,10 +1150,10 @@ class FCodePrinter(CodePrinter):
         rhs_code = self._print(rhs)
 
         code = ''
-        if (expr.status == 'unallocated') and not (expr.like is None):
-            stmt = ZerosLike(lhs=lhs_code, rhs=expr.like)
-            code += self._print(stmt)
-            code += '\n'
+        # if (expr.status == 'unallocated') and not (expr.like is None):
+        #     stmt = ZerosLike(lhs=lhs_code, rhs=expr.like)
+        #     code += self._print(stmt)
+        #     code += '\n'
         if not is_procedure:
             code += '{0} = {1}'.format(lhs_code, rhs_code)
 #        else:
