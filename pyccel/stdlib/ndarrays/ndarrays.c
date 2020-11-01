@@ -4,32 +4,90 @@
 ** allocation
 */
 
-t_ndarray array_init(char *temp, int nd, int *shape, enum e_types type, int type_size)
+t_ndarray   array_create(int nd, int *shape, enum e_types type)
 {
-    t_ndarray a;
+    t_ndarray arr;
 
-    a.type = type;
-    a.type_size = type_size;
-    a.nd = nd;
-    a.shape = malloc(a.nd * sizeof(int));
-    a.length = 1;
-    a.is_slice = false;
-    for (int i = 0; i < a.nd; i++) // init the shapes
+    arr.nd = nd;
+    arr.type = type;
+    switch (type)
     {
-        a.length *= shape[i];
-        a.shape[i] = shape[i];
+        case nd_int:
+            arr.type_size = sizeof(int);
+            break;
+        case nd_float:
+            arr.type_size = sizeof(float);
+            break;
+        case nd_double:
+            arr.type_size = sizeof(double);
+            break;
+        case nd_cdouble:
+            arr.type_size = sizeof(double complex);
+            break;
     }
-    a.strides = malloc(nd * sizeof(int));
-    for (int i = 0; i < a.nd; i++)
+    arr.is_slice = false;
+    arr.length = 1;
+    arr.shape = malloc(arr.nd * sizeof(int));
+    for (int i = 0; i < arr.nd; i++)
     {
-        a.strides[i] = 1;
-        for (int j = i + 1; j < a.nd; j++)
-            a.strides[i] *= a.shape[j];
+        arr.length *= shape[i];
+        arr.shape[i] = shape[i];
     }
-    a.raw_data = calloc(a.length , a.type_size);
-    if (temp)
-        memcpy(a.raw_data, temp, a.length * a.type_size);
-    return (a);
+    arr.buffer_size = arr.length * arr.type_size;
+    arr.strides = malloc(nd * sizeof(int));
+    for (int i = 0; i < arr.nd; i++)
+    {
+        arr.strides[i] = 1;
+        for (int j = i + 1; j < arr.nd; j++)
+            arr.strides[i] *= arr.shape[j];
+    }
+    arr.raw_data = malloc(arr.buffer_size);
+    return (arr);
+}
+
+/* initialisation */
+
+t_ndarray   array_init(char *temp, int nd, int *shape, enum e_types type)
+{
+    t_ndarray arr;
+
+    arr = array_create(nd, shape, type);
+    memcpy(arr.raw_data, temp, arr.buffer_size);
+    return (arr);
+}
+
+t_ndarray   array_ones(int nd, int *shape, enum e_types type)
+{
+    t_ndarray arr;
+
+    arr = array_create(nd, shape, type);
+    for (int i = 0; i < arr.length; i ++)
+        switch (arr.type)
+        {
+            case nd_int:
+                arr.nd_int[i] = 1;
+                break;
+            case nd_float:
+                arr.nd_float[i] = 1;
+                break;
+            case nd_double:
+                arr.nd_double[i] = 1;
+                break;
+            case nd_cdouble:
+                arr.nd_cdouble[i] = 1.0+0*I;
+                break;
+        }
+    return (arr);
+
+}
+
+t_ndarray   array_zeros(int nd, int *shape, enum e_types type)
+{
+    t_ndarray arr;
+
+    arr = array_create(nd, shape, type);
+    bzero(arr.raw_data, arr.buffer_size);
+    return (arr);
 }
 
 /*
@@ -69,26 +127,22 @@ t_ndarray slice_make(t_ndarray p, ...)
     t_ndarray slice;
     va_list  va;
     t_slice slice_data;
-    t_slice s;
-    int i = 0;
     int start = 0;
 
     slice.nd = p.nd;
     slice.type = p.type;
     slice.type_size = p.type_size;
     slice.shape = malloc(sizeof(int) * p.nd);
-    memcpy(slice.shape, p.shape, sizeof(int) * p.nd);
     slice.strides = malloc(sizeof(int) * p.nd);
     memcpy(slice.strides, p.strides, sizeof(int) * p.nd);
     slice.is_slice = true;
     va_start(va, p);
-    while (i < p.nd)
+    for (int i = 0; i < p.nd ; i++)
     {
         slice_data = va_arg(va, t_slice);
-        slice.shape[i] = (slice_data.end - slice_data.start + (slice_data.step / 2)) / slice_data.step; // we need to round up the shape
+        slice.shape[i] = (slice_data.end - slice_data.start + (slice_data.step - 1)) / slice_data.step; // we need to round up the shape
         start += slice_data.start * p.strides[i];
         slice.strides[i] *= slice_data.step;
-        i++;
     }
     va_end(va);
     slice.raw_data = p.raw_data + start * p.type_size;
