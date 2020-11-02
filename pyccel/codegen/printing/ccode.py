@@ -6,7 +6,7 @@ from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float, Integer
 from pyccel.ast.core import Nil, PyccelAssociativeParenthesis
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import SeparatorComment, VariableAddress
-from pyccel.ast.core import DottedName, Return
+from pyccel.ast.core import DottedName
 
 from pyccel.ast.core import PyccelAdd, PyccelMul, String
 
