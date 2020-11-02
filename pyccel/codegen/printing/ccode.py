@@ -689,7 +689,7 @@ class CCodePrinter(CodePrinter):
     def _print_FunctionDef(self, expr):
 
         if len(expr.results) > 1:
-            self._additional_args = expr.results
+            self._additional_args.append(expr.results)
         body  = self._print(expr.body)
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
@@ -699,7 +699,8 @@ class CCodePrinter(CodePrinter):
         self._additional_declare.clear()
 
         sep = self._print(SeparatorComment(40))
-        self._additional_args = []
+        if self._additional_args :
+            self._additional_args.pop()
         imports = ''.join(self._print(i) for i in expr.imports)
 
         return ('{sep}\n'
@@ -717,7 +718,7 @@ class CCodePrinter(CodePrinter):
     def stored_in_c_pointer(self, a):
         if not isinstance(a, Variable):
             return False
-        return a.is_pointer or a.is_optional or a in self._additional_args
+        return a.is_pointer or a.is_optional or any(a in b for b in self._additional_args)
 
     def create_tmp_var(self, match_var):
         tmp_var_name = self._parser.get_new_name('tmp')
