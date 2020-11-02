@@ -521,8 +521,7 @@ class CCodePrinter(CodePrinter):
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
-        elif len(expr.results) > 1:
-            ret_type = self._print(datatype('bool')) + ' '
+            ret_type = self._print(datatype('int')) + ' '
             args += [a.clone(name = a.name, is_pointer =True) for a in expr.results]
         else:
             ret_type = self._print(datatype('void')) + ' '
@@ -568,7 +567,7 @@ class CCodePrinter(CodePrinter):
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
-            ret_type = self._print(datatype('bool')) + ' '
+            ret_type = self._print(datatype('int')) + ' '
             args += [a.clone(name = a.name, is_pointer =True) for a in expr.results]
         else:
             ret_type = self._print(datatype('void')) + ' '
@@ -714,7 +713,7 @@ class CCodePrinter(CodePrinter):
     def stored_in_c_pointer(self, a):
         if not isinstance(a, Variable):
             return False
-        return a.is_pointer or a.is_optional or in self._additional_args
+        return a.is_pointer or a.is_optional or a in self._additional_args
 
     def create_tmp_var(self, match_var):
         tmp_var_name = self._parser.get_new_name('tmp')
@@ -775,6 +774,8 @@ class CCodePrinter(CodePrinter):
             code += self._print(expr.stmt)+'\n'
         if len(args) == 1:
             code +='return {0};'.format(self._print(args[0]))
+        elif len(args) > 1:
+            code += 'return 0;'
         return code
 
     def _print_Nil(self, expr):
