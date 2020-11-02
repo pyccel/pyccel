@@ -90,6 +90,25 @@ class VariableHeader(Header):
         return args
 
 #==============================================================================
+class Template(Header):
+
+    def __new__(cls, *args, **kwargs):
+        return Basic.__new__(cls)
+
+    def __init__(self, name, args):
+        # ...
+        self._name = name
+        self._args = args 
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def args(self):
+        return self._args
+
+#==============================================================================
 class FunctionHeader(Header):
     """Represents function/subroutine header in the code.
 
@@ -163,7 +182,7 @@ class FunctionHeader(Header):
     def is_static(self):
         return self._args[4]
 
-    def create_definition(self):
+    def create_definition(self, templates = []):
         """Returns a FunctionDef with empy body."""
         # TODO factorize what can be factorized
         from itertools import product
@@ -211,7 +230,29 @@ class FunctionHeader(Header):
                 dtypes += [[i]]
             else:
                 raise TypeError('element must be of type UnionType or dict')
-        for args_ in product(*dtypes):
+        templates_names = [i.name for i in templates]
+
+        args = []
+        for iterx in product(*dtypes):
+            iterx = list(iterx)
+            visited = []
+            old_values = {} 
+            for i, j in enumerate(iterx):
+                if j['datatype'] in templates_names and not j['datatype'] in visited:
+                    tmplt = templates_names.index(j['datatype'])
+                    iterx[i] = templates[tmplt].args
+                    visited.append(j['datatype'])
+                    old_values[templates_names[tmplt]] = i
+                else:
+                    iterx[i] = [j]
+            for itery in product(*iterx):
+                itery = list(itery)
+                for j, i in enumerate(itery):
+                    if i['datatype'] in templates_names:
+                        itery[j] = itery[old_values[i['datatype']]].copy()
+                    args += itery
+        #import pdb; pdb.set_trace()
+        for args_ in args:
             args = []
             for i, d in enumerate(args_):
                 # TODO  handle function as argument, which itself has a function argument
