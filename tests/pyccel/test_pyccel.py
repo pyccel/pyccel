@@ -253,239 +253,239 @@ def teardown(path_dir = None):
 #==============================================================================
 # UNIT TESTS
 #==============================================================================
-# def test_relative_imports_in_project(language):
+def test_relative_imports_in_project(language):
 
-#     base_dir = os.path.dirname(os.path.realpath(__file__))
-#     path_dir = os.path.join(base_dir, "project_rel_imports")
-#     pyth_out = get_python_output('runtest.py', cwd=path_dir)
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.join(base_dir, "project_rel_imports")
+    pyth_out = get_python_output('runtest.py', cwd=path_dir)
 
-#     language_opt = '--language={}'.format(language)
-#     compile_pyccel(path_dir, 'project/folder1/mod1.py', language_opt)
-#     compile_pyccel(path_dir, 'project/folder2/mod2.py', language_opt)
-#     compile_pyccel(path_dir, 'project/folder2/mod3.py', language_opt)
-#     fort_out = get_python_output('runtest.py', cwd=path_dir)
+    language_opt = '--language={}'.format(language)
+    compile_pyccel(path_dir, 'project/folder1/mod1.py', language_opt)
+    compile_pyccel(path_dir, 'project/folder2/mod2.py', language_opt)
+    compile_pyccel(path_dir, 'project/folder2/mod3.py', language_opt)
+    fort_out = get_python_output('runtest.py', cwd=path_dir)
 
-#     compare_pyth_fort_output(pyth_out, fort_out)
+    compare_pyth_fort_output(pyth_out, fort_out)
 
-# #------------------------------------------------------------------------------
-# def test_absolute_imports_in_project(language):
+#------------------------------------------------------------------------------
+def test_absolute_imports_in_project(language):
 
-#     base_dir = os.path.dirname(os.path.realpath(__file__))
-#     path_dir = os.path.join(base_dir, "project_abs_imports")
-#     pyth_out = get_python_output('runtest.py', cwd=path_dir)
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.join(base_dir, "project_abs_imports")
+    pyth_out = get_python_output('runtest.py', cwd=path_dir)
 
-#     language_opt = '--language={}'.format(language)
-#     compile_pyccel(path_dir, 'project/folder1/mod1.py', language_opt)
-#     compile_pyccel(path_dir, 'project/folder2/mod2.py', language_opt)
-#     compile_pyccel(path_dir, 'project/folder2/mod3.py', language_opt)
-#     fort_out = get_python_output('runtest.py', cwd=path_dir)
+    language_opt = '--language={}'.format(language)
+    compile_pyccel(path_dir, 'project/folder1/mod1.py', language_opt)
+    compile_pyccel(path_dir, 'project/folder2/mod2.py', language_opt)
+    compile_pyccel(path_dir, 'project/folder2/mod3.py', language_opt)
+    fort_out = get_python_output('runtest.py', cwd=path_dir)
 
-#     compare_pyth_fort_output(pyth_out, fort_out)
+    compare_pyth_fort_output(pyth_out, fort_out)
 
-# #------------------------------------------------------------------------------
-# def test_rel_imports_python_accessible_folder(language):
-#     # pyccel is called on scripts/folder2/runtest_rel_imports.py from the scripts folder
-#     # From this folder python understands relative imports
-#     base_dir = os.path.dirname(os.path.realpath(__file__))
-#     path_dir = os.path.join(base_dir, "scripts")
-#     from scripts.folder2.runtest_rel_imports import test_func
+#------------------------------------------------------------------------------
+def test_rel_imports_python_accessible_folder(language):
+    # pyccel is called on scripts/folder2/runtest_rel_imports.py from the scripts folder
+    # From this folder python understands relative imports
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.join(base_dir, "scripts")
+    from scripts.folder2.runtest_rel_imports import test_func
 
-#     pyth_out = str(test_func())
+    pyth_out = str(test_func())
 
-#     language_opt = '--language={}'.format(language)
-#     compile_pyccel(os.path.join(path_dir, "folder2"), get_abs_path("scripts/folder2/folder2_funcs.py"), language_opt)
-#     compile_pyccel(path_dir, get_abs_path("scripts/folder2/runtest_rel_imports.py"), language_opt)
+    language_opt = '--language={}'.format(language)
+    compile_pyccel(os.path.join(path_dir, "folder2"), get_abs_path("scripts/folder2/folder2_funcs.py"), language_opt)
+    compile_pyccel(path_dir, get_abs_path("scripts/folder2/runtest_rel_imports.py"), language_opt)
 
-#     p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_rel_imports"],
-#             stdout=subprocess.PIPE, universal_newlines=True)
-#     fort_out, _ = p.communicate()
-#     assert(p.returncode==0)
+    p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_rel_imports"],
+            stdout=subprocess.PIPE, universal_newlines=True)
+    fort_out, _ = p.communicate()
+    assert(p.returncode==0)
 
-#     compare_pyth_fort_output(pyth_out, fort_out)
+    compare_pyth_fort_output(pyth_out, fort_out)
 
-# #------------------------------------------------------------------------------
-# def test_imports_compile(language):
-#     pyccel_test("scripts/runtest_imports.py","scripts/funcs.py",
-#             compile_with_pyccel = False, language = language)
+#------------------------------------------------------------------------------
+def test_imports_compile(language):
+    pyccel_test("scripts/runtest_imports.py","scripts/funcs.py",
+            compile_with_pyccel = False, language = language)
 
-# #------------------------------------------------------------------------------
-# def test_imports_in_folder(language):
-#     pyccel_test("scripts/runtest_folder_imports.py","scripts/folder1/folder1_funcs.py",
-#             compile_with_pyccel = False, language = language)
+#------------------------------------------------------------------------------
+def test_imports_in_folder(language):
+    pyccel_test("scripts/runtest_folder_imports.py","scripts/folder1/folder1_funcs.py",
+            compile_with_pyccel = False, language = language)
 
-# #------------------------------------------------------------------------------
-# def test_imports(language):
-#     pyccel_test("scripts/runtest_imports.py","scripts/funcs.py",
-#             language = language)
+#------------------------------------------------------------------------------
+def test_imports(language):
+    pyccel_test("scripts/runtest_imports.py","scripts/funcs.py",
+            language = language)
 
-# #------------------------------------------------------------------------------
-# def test_folder_imports_python_accessible_folder(language):
-#     # pyccel is called on scripts/folder2/runtest_imports2.py from the scripts folder
-#     # From this folder python understands relative imports
-#     base_dir = os.path.dirname(os.path.realpath(__file__))
-#     path_dir = os.path.join(base_dir, "scripts")
-#     from scripts.folder2.runtest_imports2 import test_func
+#------------------------------------------------------------------------------
+def test_folder_imports_python_accessible_folder(language):
+    # pyccel is called on scripts/folder2/runtest_imports2.py from the scripts folder
+    # From this folder python understands relative imports
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.join(base_dir, "scripts")
+    from scripts.folder2.runtest_imports2 import test_func
 
-#     pyth_out = str(test_func())
+    pyth_out = str(test_func())
 
-#     language_opt = '--language={}'.format(language)
-#     compile_pyccel(os.path.join(path_dir, "folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"),
-#             language_opt)
-#     compile_pyccel(path_dir, get_abs_path("scripts/folder2/runtest_imports2.py"),
-#             language_opt)
+    language_opt = '--language={}'.format(language)
+    compile_pyccel(os.path.join(path_dir, "folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"),
+            language_opt)
+    compile_pyccel(path_dir, get_abs_path("scripts/folder2/runtest_imports2.py"),
+            language_opt)
 
-#     p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_imports2"],
-#             stdout=subprocess.PIPE, universal_newlines=True)
-#     fort_out, _ = p.communicate()
-#     assert(p.returncode==0)
+    p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_imports2"],
+            stdout=subprocess.PIPE, universal_newlines=True)
+    fort_out, _ = p.communicate()
+    assert(p.returncode==0)
 
-#     compare_pyth_fort_output(pyth_out, fort_out)
+    compare_pyth_fort_output(pyth_out, fort_out)
 
-# #------------------------------------------------------------------------------
-# def test_folder_imports(language):
-#     # pyccel is called on scripts/folder2/runtest_imports2.py from the scripts/folder2 folder
-#     # which is where the final .so file should be
-#     # From this folder python doesn't understand relative imports
-#     base_dir = os.path.dirname(os.path.realpath(__file__))
-#     path_dir = os.path.join(base_dir, "scripts")
-#     from scripts.folder2.runtest_imports2 import test_func
+#------------------------------------------------------------------------------
+def test_folder_imports(language):
+    # pyccel is called on scripts/folder2/runtest_imports2.py from the scripts/folder2 folder
+    # which is where the final .so file should be
+    # From this folder python doesn't understand relative imports
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    path_dir = os.path.join(base_dir, "scripts")
+    from scripts.folder2.runtest_imports2 import test_func
 
-#     pyth_out = str(test_func())
+    pyth_out = str(test_func())
 
-#     language_opt = '--language={}'.format(language)
-#     compile_pyccel(os.path.join(path_dir,"folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"),
-#             language_opt)
-#     compile_pyccel(os.path.join(path_dir,"folder2"), get_abs_path("scripts/folder2/runtest_imports2.py"),
-#             language_opt)
+    language_opt = '--language={}'.format(language)
+    compile_pyccel(os.path.join(path_dir,"folder1"), get_abs_path("scripts/folder1/folder1_funcs.py"),
+            language_opt)
+    compile_pyccel(os.path.join(path_dir,"folder2"), get_abs_path("scripts/folder2/runtest_imports2.py"),
+            language_opt)
 
-#     p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_imports2"],
-#             stdout=subprocess.PIPE, universal_newlines=True)
-#     fort_out, _ = p.communicate()
-#     assert(p.returncode==0)
+    p = subprocess.Popen([sys.executable , "%s" % os.path.join(base_dir, "run_import_function.py"), "scripts.folder2.runtest_imports2"],
+            stdout=subprocess.PIPE, universal_newlines=True)
+    fort_out, _ = p.communicate()
+    assert(p.returncode==0)
 
-#     compare_pyth_fort_output(pyth_out, fort_out)
+    compare_pyth_fort_output(pyth_out, fort_out)
 
-# #------------------------------------------------------------------------------
-# def test_funcs():
-#     pyccel_test("scripts/runtest_funcs.py")
+#------------------------------------------------------------------------------
+def test_funcs():
+    pyccel_test("scripts/runtest_funcs.py")
 
-# #------------------------------------------------------------------------------
-# def test_inout_func():
-#     pyccel_test("scripts/runtest_inoutfunc.py")
+#------------------------------------------------------------------------------
+def test_inout_func():
+    pyccel_test("scripts/runtest_inoutfunc.py")
 
-# #------------------------------------------------------------------------------
-# def test_bool(language):
-#     pyccel_test("scripts/bool_comp.py", output_dtype = bool, language = language)
+#------------------------------------------------------------------------------
+def test_bool(language):
+    pyccel_test("scripts/bool_comp.py", output_dtype = bool, language = language)
 
-# #------------------------------------------------------------------------------
-# def test_expressions(language):
-#     types = [float, complex, int, float, float, int] + [float]*3 + \
-#             [complex, int, complex, complex, int, int, float] + [complex]*3 + \
-#             [float]*3 + [int] + [float]*2 + [int] + [float]*3 + [int] + \
-#             [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex] + [bool]*9
-#     pyccel_test("scripts/expressions.py", language=language,
-#                 output_dtype = types)
-# #------------------------------------------------------------------------------
-# def test_highorder():
-#     pyccel_test("scripts/runtest_highorder_functions.py",
-#             dependencies = "scripts/highorder_functions.py",
-#             compile_with_pyccel = False,
-#             output_dtype = [int,int,float,float,float,int,float,
-#                 float, int])
+#------------------------------------------------------------------------------
+def test_expressions(language):
+    types = [float, complex, int, float, float, int] + [float]*3 + \
+            [complex, int, complex, complex, int, int, float] + [complex]*3 + \
+            [float]*3 + [int] + [float]*2 + [int] + [float]*3 + [int] + \
+            [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex] + [bool]*9
+    pyccel_test("scripts/expressions.py", language=language,
+                output_dtype = types)
+#------------------------------------------------------------------------------
+def test_highorder():
+    pyccel_test("scripts/runtest_highorder_functions.py",
+            dependencies = "scripts/highorder_functions.py",
+            compile_with_pyccel = False,
+            output_dtype = [int,int,float,float,float,int,float,
+                float, int])
 
 
-# #------------------------------------------------------------------------------
-# def test_default_arguments():
-#     pyccel_test("scripts/runtest_default_args.py",
-#             dependencies = "scripts/default_args_mod.py",
-#             output_dtype = [int,int,float,float,float,
-#                 float,float,float,float,bool,bool,bool,
-#                 float,float,float,float])
+#------------------------------------------------------------------------------
+def test_default_arguments():
+    pyccel_test("scripts/runtest_default_args.py",
+            dependencies = "scripts/default_args_mod.py",
+            output_dtype = [int,int,float,float,float,
+                float,float,float,float,bool,bool,bool,
+                float,float,float,float])
 
-# #------------------------------------------------------------------------------
-# def test_pyccel_calling_directory(language):
-#     cwd = get_abs_path(".")
+#------------------------------------------------------------------------------
+def test_pyccel_calling_directory(language):
+    cwd = get_abs_path(".")
 
-#     test_file = get_abs_path("scripts/runtest_funcs.py")
-#     pyth_out = get_python_output(test_file)
+    test_file = get_abs_path("scripts/runtest_funcs.py")
+    pyth_out = get_python_output(test_file)
 
-#     language_opt = '--language={}'.format(language)
-#     compile_pyccel(cwd, test_file, language_opt)
+    language_opt = '--language={}'.format(language)
+    compile_pyccel(cwd, test_file, language_opt)
 
-#     fort_out = get_lang_output(get_exe(test_file))
+    fort_out = get_lang_output(get_exe(test_file))
 
-#     compare_pyth_fort_output( pyth_out, fort_out )
+    compare_pyth_fort_output( pyth_out, fort_out )
 
-# #------------------------------------------------------------------------------
-# def test_in_specified():
-#     pyccel_test("scripts/runtest_degree_in.py")
+#------------------------------------------------------------------------------
+def test_in_specified():
+    pyccel_test("scripts/runtest_degree_in.py")
 
-# #------------------------------------------------------------------------------
-# @pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/hope_fib.py",
-#                                         "scripts/hope_benchmarks/quicksort.py",
-#                                         "scripts/hope_benchmarks/hope_pisum.py",
-#                                         "scripts/hope_benchmarks/hope_ln_python.py",
-#                                         "scripts/hope_benchmarks/hope_pairwise_python.py",
-#                                         "scripts/hope_benchmarks/point_spread_func.py",
-#                                         "scripts/hope_benchmarks/simplify.py",
-#                                         pytest.param("scripts/hope_benchmarks/fib.py",
-#                                             marks = pytest.mark.xfail(reason="Issue 344 : Functions and modules cannot share the same name")),
-#                                         "scripts/hope_benchmarks_decorators/hope_ln_python.py",
-#                                         "scripts/hope_benchmarks_decorators/hope_pairwise_python.py",
-#                                         "scripts/hope_benchmarks_decorators/point_spread_func.py",
-#                                         "scripts/hope_benchmarks_decorators/simplify.py",
-#                                         "scripts/hope_benchmarks_decorators/hope_fib.py",
-#                                         "scripts/hope_benchmarks_decorators/quicksort.py",
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/hope_fib.py",
+                                        "scripts/hope_benchmarks/quicksort.py",
+                                        "scripts/hope_benchmarks/hope_pisum.py",
+                                        "scripts/hope_benchmarks/hope_ln_python.py",
+                                        "scripts/hope_benchmarks/hope_pairwise_python.py",
+                                        "scripts/hope_benchmarks/point_spread_func.py",
+                                        "scripts/hope_benchmarks/simplify.py",
+                                        pytest.param("scripts/hope_benchmarks/fib.py",
+                                            marks = pytest.mark.xfail(reason="Issue 344 : Functions and modules cannot share the same name")),
+                                        "scripts/hope_benchmarks_decorators/hope_ln_python.py",
+                                        "scripts/hope_benchmarks_decorators/hope_pairwise_python.py",
+                                        "scripts/hope_benchmarks_decorators/point_spread_func.py",
+                                        "scripts/hope_benchmarks_decorators/simplify.py",
+                                        "scripts/hope_benchmarks_decorators/hope_fib.py",
+                                        "scripts/hope_benchmarks_decorators/quicksort.py",
 
-#                                         ] )
-# def test_hope_benchmarks( test_file ):
-#     pyccel_test(test_file)
+                                        ] )
+def test_hope_benchmarks( test_file ):
+    pyccel_test(test_file)
 
-# #------------------------------------------------------------------------------
-# @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import.py",
-#                                         "scripts/import_syntax/from_mod_import_as.py",
-#                                         "scripts/import_syntax/import_mod.py",
-#                                         "scripts/import_syntax/import_mod_as.py",
-#                                         "scripts/import_syntax/from_mod_import_func.py",
-#                                         "scripts/import_syntax/from_mod_import_as_func.py",
-#                                         "scripts/import_syntax/import_mod_func.py",
-#                                         "scripts/import_syntax/import_mod_as_func.py",
-#                                         "scripts/import_syntax/collisions.py",
-#                                         "scripts/import_syntax/collisions3.py",
-#                                         "scripts/import_syntax/collisions5.py",
-#                                         "scripts/import_syntax/collisions6.py",
-#                                         ] )
-# def test_import_syntax( test_file ):
-#     pyccel_test(test_file)
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import.py",
+                                        "scripts/import_syntax/from_mod_import_as.py",
+                                        "scripts/import_syntax/import_mod.py",
+                                        "scripts/import_syntax/import_mod_as.py",
+                                        "scripts/import_syntax/from_mod_import_func.py",
+                                        "scripts/import_syntax/from_mod_import_as_func.py",
+                                        "scripts/import_syntax/import_mod_func.py",
+                                        "scripts/import_syntax/import_mod_as_func.py",
+                                        "scripts/import_syntax/collisions.py",
+                                        "scripts/import_syntax/collisions3.py",
+                                        "scripts/import_syntax/collisions5.py",
+                                        "scripts/import_syntax/collisions6.py",
+                                        ] )
+def test_import_syntax( test_file ):
+    pyccel_test(test_file)
 
-# #------------------------------------------------------------------------------
-# @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import_as_user_func.py",
-#                                         "scripts/import_syntax/from_mod_import_as_user.py",
-#                                         "scripts/import_syntax/collisions2.py"
-#                                         ] )
-# def test_import_syntax_user_as( test_file ):
-#     pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py")
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import_as_user_func.py",
+                                        "scripts/import_syntax/from_mod_import_as_user.py",
+                                        "scripts/import_syntax/collisions2.py"
+                                        ] )
+def test_import_syntax_user_as( test_file ):
+    pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py")
 
-# #------------------------------------------------------------------------------
-# @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import_user.py",
-#                                         "scripts/import_syntax/import_mod_user.py",
-#                                         "scripts/import_syntax/import_mod_as_user.py",
-#                                         "scripts/import_syntax/from_mod_import_user_func.py",
-#                                         "scripts/import_syntax/import_mod_user_func.py",
-#                                         "scripts/import_syntax/import_mod_as_user_func.py",
-#                                         ] )
-# def test_import_syntax_user( test_file, language ):
-#     pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py", language = language)
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import_user.py",
+                                        "scripts/import_syntax/import_mod_user.py",
+                                        "scripts/import_syntax/import_mod_as_user.py",
+                                        "scripts/import_syntax/from_mod_import_user_func.py",
+                                        "scripts/import_syntax/import_mod_user_func.py",
+                                        "scripts/import_syntax/import_mod_as_user_func.py",
+                                        ] )
+def test_import_syntax_user( test_file, language ):
+    pyccel_test(test_file, dependencies = "scripts/import_syntax/user_mod.py", language = language)
 
-# #------------------------------------------------------------------------------
-# def test_import_collisions():
-#     pyccel_test("scripts/import_syntax/collisions4.py",
-#             dependencies = ["scripts/import_syntax/user_mod.py", "scripts/import_syntax/user_mod2.py"])
+#------------------------------------------------------------------------------
+def test_import_collisions():
+    pyccel_test("scripts/import_syntax/collisions4.py",
+            dependencies = ["scripts/import_syntax/user_mod.py", "scripts/import_syntax/user_mod2.py"])
 
-# #------------------------------------------------------------------------------
-# def test_numpy_kernels_compile():
-#     cwd = get_abs_path(".")
-#     compile_pyccel(os.path.join(cwd, "scripts/numpy/"), "numpy_kernels.py")
+#------------------------------------------------------------------------------
+def test_numpy_kernels_compile():
+    cwd = get_abs_path(".")
+    compile_pyccel(os.path.join(cwd, "scripts/numpy/"), "numpy_kernels.py")
 
 #------------------------------------------------------------------------------
 def test_multiple_results():
@@ -495,24 +495,24 @@ def test_multiple_results():
                 int,bool,float,float,float,float,float,float,
                 float,float,float,float,float,float,float,float,float,float])
 
-# #------------------------------------------------------------------------------
-# def test_elemental():
-#     pyccel_test("scripts/decorators_elemental.py")
+#------------------------------------------------------------------------------
+def test_elemental():
+    pyccel_test("scripts/decorators_elemental.py")
 
-# #------------------------------------------------------------------------------
-# def test_print_strings(language):
-#     types = str
-#     pyccel_test("scripts/print_strings.py", language=language, output_dtype=types)
+#------------------------------------------------------------------------------
+def test_print_strings(language):
+    types = str
+    pyccel_test("scripts/print_strings.py", language=language, output_dtype=types)
 
-# #------------------------------------------------------------------------------
-# @pytest.mark.parametrize( 'language', (
-#         pytest.param("c", marks = pytest.mark.c),
-#         pytest.param("fortran", marks = [
-#             pytest.mark.xfail(reason="formated string not implemented in fortran"),
-#             pytest.mark.fortran]
-#         )
-#     )
-# )
-# def test_print_sp_and_end(language):
-#     types = str
-#     pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="formated string not implemented in fortran"),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_print_sp_and_end(language):
+    types = str
+    pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
