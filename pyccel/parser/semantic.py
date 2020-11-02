@@ -363,12 +363,19 @@ class SemanticParser(BasicParser):
         else:
             raise TypeError('Expected A class definition ')
 
+    def insert_template(self, expr):
+        """insert a template"""
+        self.namespace.templates.append(expr)
+            
     def insert_header(self, expr):
         """."""
         if isinstance(expr, MethodHeader):
             self.namespace.headers[expr.name] = expr
         elif isinstance(expr, FunctionHeader):
-            self.namespace.headers[expr.func] = expr
+            if expr.func in self.namespace.headers:
+                self.namespace.headers[expr.func].append(expr)
+            else:
+                self.namespace.headers[expr.func] = [expr]
         elif isinstance(expr, ClassHeader):
             self.namespace.headers[expr.name] = expr
 
@@ -498,6 +505,15 @@ class SemanticParser(BasicParser):
                 return container.headers[name]
             container = container.parent_scope
         return None
+
+    def get_templates(self):
+        """."""
+        container = self.namespace
+        templates = []
+        while container:
+            templates += container.templates
+            container = container.parent_scope
+        return templates
 
     def get_class_construct(self, name):
         """Returns the class datatype for name."""
@@ -1240,45 +1256,15 @@ class SemanticParser(BasicParser):
 
             if isinstance(expr, (NumpyWhere, NumpyDiag, NumpyLinspace)):
                 self.insert_variable(expr.index)
-
-            #if len(stmts) > 0:
-            #    stmts.append(expr)
-            #    return CodeBlock(stmts)
             return expr
+
         else:
-            #if isinstance(func, Interface):
-            #    arg_dvar = [self._infere_type(i, **settings) for i in args]
-            #    f_dvar = [[self._infere_type(j, **settings)
-            #              for j in i.arguments] for i in
-            #              func.functions]
-            #    j = -1
-            #    for i in f_dvar:
-            #        j += 1
-            #        found = True
-            #        for (idx, dt) in enumerate(arg_dvar):
-            #            dtype1 = str_dtype(dt['datatype'])
-            #            dtype2 = str_dtype(i[idx]['datatype'])
-            #            found = found and (dtype1 in dtype2
-            #                          or dtype2 in dtype1)
-            #            found = found and dt['rank'] \
-            #                          == i[idx]['rank']
-            #        if found:
-            #            break
-            #
-            #    if found:
-            #        f_args = func.functions[j].arguments
-            #    else:
-            #        msg = 'function not found in the interface'
-            #        # TODO: Add message to parser/messages.py
-            #        errors.report(msg,
-            #            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            #            severity='fatal', blocker=self.blocking)
-
-            expr = FunctionCall(func, args, self._current_function)
-
-            #if len(stmts) > 0:
-            #    stmts.append(expr)
-            #    return CodeBlock(stmts)
+            if isinstance(func, Interface):
+                func.point(args)
+                expr = FunctionCall(func, args, self._current_function)
+                func.neutralize()
+            else:
+                expr = FunctionCall(func, args, self._current_function)
             return expr
 
     def _visit_Application(self, expr, **settings):
@@ -2223,6 +2209,10 @@ class SemanticParser(BasicParser):
         self.insert_header(expr)
         return expr
 
+    def _visit_Template(self, expr, **settings):
+        self.insert_template(expr)
+        return expr
+
     def _visit_ClassHeader(self, expr, **settings):
         # TODO should we return it and keep it in the AST?
         self.insert_header(expr)
@@ -2295,20 +2285,23 @@ class SemanticParser(BasicParser):
             errors.report(UNDEFINED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
         args_number = len(expr.arguments)
+        templates = self.get_templates()
         if header is None:
             if cls_name:
                 header = self.get_header(cls_name +'.'+ name)
                 args_number -= 1
             else:
                 header = self.get_header(name)
-
+        if not isinstance(header, list):
+            header = [header]
         if header:
-            if (args_number != len(header.dtypes)):
-                msg = 'The number of arguments in the function {} ({}) does not match the number of types in decorator/header ({}).'.format(name ,args_number, len(header.dtypes))
-                if (args_number < len(header.dtypes)):
-                    errors.report(msg, symbol=expr.arguments, severity='warning')
-                else:
-                    errors.report(msg, symbol=expr.arguments, severity='fatal')
+            for hd in header:
+                if (args_number != len(hd.dtypes)):
+                    msg = 'The number of arguments in the function {} ({}) does not match the number of types in decorator/header ({}).'.format(name ,args_number, len(hd.dtypes))
+                    if (args_number < len(hd.dtypes)):
+                        errors.report(msg, symbol=expr.arguments, severity='warning')
+                    else:
+                        errors.report(msg, symbol=expr.arguments, severity='fatal')
 
         if expr.arguments and not header:
 
@@ -2320,10 +2313,12 @@ class SemanticParser(BasicParser):
 
         # we construct a FunctionDef from its header
         if header:
-            interfaces = header.create_definition()
-            # get function kind from the header
+            interfaces = []
+            for hd in header:
+                interfaces += hd.create_definition(templates)
 
-            kind = header.kind
+            # get function kind from the header
+            kind = header[0].kind
         else:
 
             # this for the case of a function without arguments => no header
@@ -2350,7 +2345,8 @@ class SemanticParser(BasicParser):
 #            header_vec = header.vectorize(index_arg)
 #            vec_func   = expr.vectorize(body_vec, header_vec)
 
-        for m in interfaces:
+        interface_name = name
+        for i, m in enumerate(interfaces):
             args           = []
             results        = []
             local_vars     = []
@@ -2360,8 +2356,11 @@ class SemanticParser(BasicParser):
             arguments      = expr.arguments
             header_results = m.results
 
-            self.create_new_function_scope(name)
+            if len(interfaces) > 1:
+                name = interface_name
+                name = name + '_' + str(i)
 
+            self.create_new_function_scope(name)
             if cls_name and str(arguments[0].name) == 'self':
                 arg       = arguments[0]
                 arguments = arguments[1:]
@@ -2430,12 +2429,11 @@ class SemanticParser(BasicParser):
 
                 results = new_results
 
-            if len(interfaces) == 1:
-                # insert the FunctionDef into the scope
-                # to handle the case of a recursive function
-                # TODO improve in the case of an interface
-                func = FunctionDef(name, args, results, [])
-                self.insert_function(func)
+            # insert the FunctionDef into the scope
+            # to handle the case of a recursive function
+            # TODO improve in the case of an interface
+            func = FunctionDef(name, args, results, [])
+            self.insert_function(func)
 
             # we annotate the body
             body = self._visit(expr.body)
@@ -2506,6 +2504,7 @@ class SemanticParser(BasicParser):
             assigned = get_assigned_symbols(body)
             assigned = [str(i) for i in assigned]
 
+            #why checking classname in functions
             apps = list(Tuple(*body.body).atoms(Application))
             apps = [i for i in apps if (i.__class__.__name__
                     in self.get_parent_functions())]
@@ -2592,26 +2591,20 @@ class SemanticParser(BasicParser):
             #clear the sympy cache
             #TODO clear all variable except the global ones
             cache.clear_cache()
-
+        name = interface_name
         if len(funcs) == 1:
             funcs = funcs[0]
             self.insert_function(funcs)
 
         else:
-            new_funcs = []
-            for i,f in enumerate(funcs):
+            for f in funcs:
                 #TODO add new scope for the interface
-                self.namespace.sons_scopes[name+'_'+ str(i)] = self.namespace.sons_scopes[name]
-                new_funcs.append(f.clone(name+'_'+ str(i)))
+                self.insert_function(f)
 
-            funcs = Interface(name, new_funcs)
+            self.create_new_function_scope(name)
+            self.exit_function_scope()
+            funcs = Interface(name, funcs)
             self.insert_function(funcs)
-            msg = "Interfaces are currently not fully supported\n"
-            msg += "See issue #301 at https://github.com/pyccel/pyccel/issues"
-            errors.report(msg,
-                    symbol = expr,
-                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    severity='fatal', blocker=True)
 #        TODO move this to codegen
 #        if vec_func:
 #           self._visit_FunctionDef(vec_func, **settings)
