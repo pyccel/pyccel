@@ -2588,6 +2588,10 @@ class Variable(Symbol, PyccelAstNode):
             allocatable = False
         self.allocatable = allocatable
 
+        if is_const is None:
+            is_const = False
+        self.is_const = is_const
+
         if is_stack_array is None:
             is_stack_array = False
         elif not isinstance(is_stack_array, bool):
