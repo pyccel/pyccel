@@ -11,6 +11,7 @@ Statement:
   | ClassHeaderStmt
   | MetavarHeaderStmt
   | InterfaceStmt
+  | TemplateStmt
 ;
 
 TrailerSubscriptList: '[' args*=':' [','] ']'  ( '(' 'order' '=' order = ID ')' )?;
@@ -31,6 +32,8 @@ VariableHeaderStmt: 'variable'  name=ID ('::')? dec=TypeHeader;
 FunctionHeaderStmt: 
   (kind=FunctionKind)? (static=Static)? name=ID '(' decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
 ;
+
+TemplateStmt: 'template' name = ID '(' dtype+=TypeHeader['|'] ')';
 
 FunctionKind: 'function' | 'procedure' | 'method';
 Static: 'static';
