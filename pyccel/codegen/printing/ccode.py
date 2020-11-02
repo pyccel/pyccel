@@ -695,7 +695,7 @@ class CCodePrinter(CodePrinter):
         self._additional_declare.clear()
 
         sep = self._print(SeparatorComment(40))
-
+        self._additional_args = []
         imports = ''.join(self._print(i) for i in expr.imports)
 
         return ('{sep}\n'
