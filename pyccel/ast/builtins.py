@@ -447,6 +447,10 @@ class PythonAbs(Function, PyccelAstNode):
         self._precision = default_precision[str_dtype(self._dtype)]
         self._order     = x.order
 
+    @property
+    def arg(self):
+        return self._args[0]
+
 #==============================================================================
 class PythonSum(Function, PyccelAstNode):
     """Represents a call to  python sum for code generation.

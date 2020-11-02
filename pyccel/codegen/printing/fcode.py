@@ -89,7 +89,7 @@ numpy_ufunc_to_fortran = {
     # ---
     'NumpyExp' : 'exp',
     'NumpyLog' : 'Log',
-#    'NumpySqrt': 'Sqrt',  # sqrt is printed using _Print_NumpySqrt
+    # 'NumpySqrt': 'Sqrt',  # sqrt is printed using _Print_NumpySqrt
     # ---
     'NumpySin'    : 'sin',
     'NumpyCos'    : 'cos',
@@ -117,39 +117,39 @@ math_function_to_fortran = {
     'MathCopysign': 'sign',
     'MathCos'    : 'cos',
     'MathCosh'   : 'cosh',
-#    'MathDegrees': '???',  # TODO
+    # 'MathDegrees': '???',  # TODO
     'MathErf'    : 'erf',
     'MathErfc'   : 'erfc',
     'MathExp'    : 'exp',
-#    'MathExpm1'  : '???', # TODO
+    # 'MathExpm1'  : '???', # TODO
     'MathFabs'   : 'abs',
-#    'MathFmod'   : '???',  # TODO
-#    'MathFsum'   : '???',  # TODO
+    # 'MathFmod'   : '???',  # TODO
+    # 'MathFsum'   : '???',  # TODO
     'MathGamma'  : 'gamma',
     'MathHypot'  : 'hypot',
-#    'MathLdexp'  : '???',  # TODO
+    # 'MathLdexp'  : '???',  # TODO
     'MathLgamma' : 'log_gamma',
     'MathLog'    : 'log',
     'MathLog10'  : 'log10',
-#    'MathLog1p'  : '???', # TODO
-#    'MathLog2'   : '???', # TODO
-#    'MathPow'    : '???', # TODO
-#    'MathRadians': '???', # TODO
+    # 'MathLog1p'  : '???', # TODO
+    # 'MathLog2'   : '???', # TODO
+    # 'MathPow'    : '???', # TODO
+    # 'MathRadians': '???', # TODO
     'MathSin'    : 'sin',
     'MathSinh'   : 'sinh',
-#    'MathSqrt'   : 'sqrt', # sqrt is printed using _Print_MathSqrt
+    # 'MathSqrt'   : 'sqrt', # sqrt is printed using _Print_MathSqrt
     'MathTan'    : 'tan',
     'MathTanh'   : 'tanh',
     # ---
     'MathCeil'     : 'ceiling',
-#    'MathFactorial': '???', # TODO
+    # 'MathFactorial': '???', # TODO
     'MathFloor'    : 'floor',
-#    'MathGcd'      : '???', # TODO
+    # 'MathGcd'      : '???', # TODO
     'MathTrunc'    : 'dint', # TODO
     # ---
-#    'MathIsclose' : '???', # TODO
-#    'MathIsfinite': '???', # TODO
-#    'MathIsinf'   : '???', # TODO
+    # 'MathIsclose' : '???', # TODO
+    # 'MathIsfinite': '???', # TODO
+    # 'MathIsinf'   : '???', # TODO
     'MathIsnan'   : 'isnan',
 }
 
@@ -496,6 +496,12 @@ class FCodePrinter(CodePrinter):
             return 'reshape(['+ elements + '], '+ self._print(Tuple(*shape)) + ')'
         fs = ', '.join(self._print(f) for f in expr)
         return '[{0}]'.format(fs)
+
+    def _print_PythonAbs(self, expr):
+        """ print the python builtin function abs
+        args : variable
+        """
+        return "abs({})".format(self._print(expr.arg))
 
     def _print_PythonTuple(self, expr):
         shape = Tuple(*reversed(expr.shape))
