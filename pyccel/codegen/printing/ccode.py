@@ -520,11 +520,9 @@ class CCodePrinter(CodePrinter):
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
+        elif len(expr.results) > 1:
             ret_type = self._print(datatype('bool')) + ' '
-            if not self._additional_args :
-                self._additional_args = [a.clone(name = a.name, is_pointer =True) for a in expr.results]
-            args += self._additional_args
-            self._additional_args.clear()
+            args += [a.clone(name = a.name, is_pointer =True) for a in expr.results]
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
@@ -570,10 +568,7 @@ class CCodePrinter(CodePrinter):
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
             ret_type = self._print(datatype('bool')) + ' '
-            if not self._additional_args :
-                self._additional_args = [a.clone(name = a.name, is_pointer =True) for a in expr.results]
-            args += self._additional_args
-            self._additional_args.clear()
+            args += [a.clone(name = a.name, is_pointer =True) for a in expr.results]
         else:
             ret_type = self._print(datatype('void')) + ' '
         name = expr.name
