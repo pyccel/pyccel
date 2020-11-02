@@ -12,7 +12,7 @@ from sympy import Expr, Not
 from sympy import sympify
 from sympy.tensor import Indexed, IndexedBase
 
-import pyccel.ast.core
+import pyccel.ast.core as Core
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
@@ -459,7 +459,7 @@ class PythonSum(Function, PyccelAstNode):
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
+        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Core.Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         return Basic.__new__(cls, arg)
