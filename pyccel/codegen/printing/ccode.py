@@ -21,6 +21,7 @@ from pyccel.ast.builtins  import Range, PythonFloat, PythonComplex
 from pyccel.ast.core import FuncAddressDeclare
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import Declare, ValuedVariable
+from pyccel.ast.core import Interface
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -664,6 +665,8 @@ class CCodePrinter(CodePrinter):
     def _print_NumpyRandint(self, expr):
         raise NotImplementedError("Randint not implemented")
 
+    def _print_Interface(self, expr):
+        return ""
     def _print_FunctionDef(self, expr):
 
         body  = self._print(expr.body)
@@ -703,6 +706,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
+        if isinstance(func, Interface):
+            func.point(expr.arguments, rename = True)
          # Ensure the correct syntax is used for pointers
 
         args = []
@@ -714,7 +719,6 @@ class CCodePrinter(CodePrinter):
                 args.append(VariableAddress(tmp_var))
             else :
                 args.append(a)
-
         # currently support only function with one or zero output
         args = ','.join(['{}'.format(self._print(a)) for a in args])
         if not func.results:
