@@ -8,13 +8,14 @@ In this module we implement some of them in alphabetical order.
 """
 
 from sympy import Symbol, Function, Tuple
-from sympy import Expr
+from sympy import Expr, Not
 from sympy import sympify
 from sympy.tensor import Indexed, IndexedBase
 
+import pyccel.ast.core
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
-                        NativeComplex, NativeString,
+                        NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
 from .numbers   import Integer, Float
 
@@ -434,6 +435,60 @@ class Zip(Basic):
         return self._args[0]
 
 #==============================================================================
+class PythonAbs(Function, PyccelAstNode):
+    """Represents a call to  python abs for code generation.
+
+    arg : Variable
+    """
+    def __init__(self, x):
+        self._shape     = x.shape
+        self._rank      = x.rank
+        self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
+        self._precision = default_precision[str_dtype(self._dtype)]
+        self._order     = x.order
+
+#==============================================================================
+class PythonSum(Function, PyccelAstNode):
+    """Represents a call to  python sum for code generation.
+
+    arg : list , tuple , PythonTuple, Tuple, List, Variable
+    """
+
+    def __new__(cls, arg):
+        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
+            raise TypeError('Uknown type of  %s.' % type(arg))
+
+        return Basic.__new__(cls, arg)
+
+    def __init__(self, arg):
+        self._dtype = arg.dtype
+        self._rank  = 0
+        self._shape = ()
+        self._precision = default_precision[str_dtype(self._dtype)]
+
+    @property
+    def arg(self):
+        return self._args[0]
+
+
+    def fprint(self, printer, lhs=None):
+        """Fortran print."""
+
+        rhs_code = printer(self.arg)
+        if lhs:
+            lhs_code = printer(lhs)
+            return '{0} = sum({1})'.format(lhs_code, rhs_code)
+        return 'sum({0})'.format(rhs_code)
+
+#==============================================================================
+# TODO [RT, 01.11.2020]: implement python max builtin function
+# class PythonMax(): pass
+
+#==============================================================================
+# TODO [RT, 01.11.2020]: implement python min builtin function
+# class PythonMin(): pass
+
+#==============================================================================
 python_builtin_datatypes_dict = {
     'bool'   : PythonBool,
     'float'  : PythonFloat,
@@ -457,3 +512,18 @@ def python_builtin_datatype(name):
 
     return None
 
+builtin_functions_dict = {
+    'abs'      : PythonAbs,  # TODO: create a built-in Abs
+    'range'    : Range,
+    'zip'      : Zip,
+    'enumerate': Enumerate,
+    'int'      : PythonInt,
+    'float'    : PythonFloat,
+    'complex'  : PythonComplex,
+    'bool'     : PythonBool,
+    'sum'      : PythonSum,
+    'len'      : Len,
+    # 'max'      : PythonMax,
+    # 'min'      : PythonMin,
+    'not'      : Not,   # TODO [YG, 20.05.2020]: do not use Sympy's Not
+}
