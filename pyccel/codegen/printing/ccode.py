@@ -15,7 +15,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, Nativ
 
 
 from pyccel.ast.numpyext import NumpyFloat
-from pyccel.ast.numpyext import Real as NumpyReal, Imag as NumpyImag
+from pyccel.ast.numpyext import NumpyReal, NumpyImag
 
 from pyccel.ast.builtins  import Range, PythonFloat, PythonComplex
 from pyccel.ast.core import FuncAddressDeclare
@@ -881,13 +881,13 @@ class CCodePrinter(CodePrinter):
     def _print_NegativeInfinity(self, expr):
         return '-HUGE_VAL'
 
-    def _print_Real(self, expr):
+    def _print_NumpyReal(self, expr):
         if expr.arg.dtype is NativeComplex():
             return 'creal({})'.format(self._print(expr.arg))
         else:
             return self._print(expr.arg)
 
-    def _print_Imag(self, expr):
+    def _print_NumpyImag(self, expr):
         if expr.arg.dtype is NativeComplex():
             return 'cimag({})'.format(self._print(expr.arg))
         else:
