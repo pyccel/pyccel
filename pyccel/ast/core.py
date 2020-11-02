@@ -40,6 +40,7 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeGeneric, NativeTuple, default_precision, is_iterable_datatype)
 
 from .numbers        import BooleanTrue, BooleanFalse, Integer as Py_Integer, ImaginaryUnit
+from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
@@ -132,7 +133,6 @@ __all__ = (
     'ParallelRange',
     'ParserResult',
     'Pass',
-    'Product',
     'Program',
     'PyccelArraySize',
     'PythonFunction',
@@ -1668,26 +1668,6 @@ class With(Basic):
         body += self.body.body
         body +=  end.body.body
         return Block('with', [], body)
-
-
-class Product(Basic):
-
-    """
-    Represents a Product stmt.
-
-    """
-
-    def __new__(cls, *args):
-        if not isinstance(args, (tuple, list, Tuple)):
-            raise TypeError('args must be an iterable')
-        elif len(args) < 2:
-            return args[0]
-        return Basic.__new__(cls, *args)
-
-    @property
-    def elements(self):
-        return self._args
-
 
 class Tile(Range):
 

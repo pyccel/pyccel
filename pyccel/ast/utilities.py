@@ -11,11 +11,11 @@ import pyccel.decorators as pyccel_decorators
 from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors
 
-from .core     import (AsName, Import, Product, FunctionDef, String, Constant,
+from .core     import (AsName, Import, FunctionDef, String, Constant,
                        Variable, IndexedVariable, ValuedVariable)
 
 from .builtins import builtin_functions_dict, Map
-
+from .itertoolsext import Product
 from .mathext  import math_functions, math_constants
 
 from .numpyext import (numpy_functions, numpy_linalg_functions,

@@ -30,7 +30,7 @@ from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import Subroutine
 from pyccel.ast.core import ErrorExit
-from pyccel.ast.core import Product
+from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              VariableAddress,
                              TupleVariable, Declare,

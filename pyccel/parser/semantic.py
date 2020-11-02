@@ -54,8 +54,8 @@ from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import _atomic
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
-from pyccel.ast.core import PyccelUnary, PyccelUnarySub
-from pyccel.ast.core import Product, FunctionCall
+from pyccel.ast.core import PyccelUnary, PyccelUnarySub, FunctionCall
+from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 
