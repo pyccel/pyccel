@@ -224,6 +224,7 @@ class CCodePrinter(CodePrinter):
         self._additional_code = ''
         self._additional_declare = []
         self._additional_args = []
+        self._temporary_args = []
 
     def _get_statement(self, codestring):
         return "%s;" % codestring
@@ -738,8 +739,8 @@ class CCodePrinter(CodePrinter):
             else :
                 args.append(a)
 
-        args += self._additional_args
-        self._additional_args.clear()
+        args += self._temporary_args
+        self._temporary_args = []
         args = ', '.join(['{}'.format(self._print(a)) for a in args])
         if not func.results:
             return '{}({});'.format(func.name, args)
@@ -848,7 +849,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Assign(self, expr):
         if isinstance(expr.rhs, FunctionCall) and isinstance(expr.rhs.dtype, NativeTuple):
-            self._additional_args = [VariableAddress(a) for a in expr.lhs]
+            self._temporary_args = [VariableAddress(a) for a in expr.lhs]
             return '{};'.format(self._print(expr.rhs))
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
