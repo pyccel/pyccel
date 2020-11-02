@@ -1,4 +1,6 @@
-
+"""
+This module represent a call to the itertools functions for code generation.
+"""
 from sympy import Tuple
 from .basic     import Basic
 
@@ -7,7 +9,11 @@ __all__ = (
 )
 
 class Product(Basic):
-    """Represents a Product stmt."""
+    """
+    Represents a call to itertools.product for code generation.
+
+    arg : list ,tuple ,Tuple
+    """
 
     def __new__(cls, *args):
         if not isinstance(args, (tuple, list, Tuple)):
@@ -18,4 +24,5 @@ class Product(Basic):
 
     @property
     def elements(self):
+        "get expression's elements"
         return self._args
