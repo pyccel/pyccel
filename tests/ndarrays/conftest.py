@@ -42,10 +42,7 @@ class CTestFile(pytest.File):
         test_exe = os.path.splitext(str(self.fspath))[0]
         rootdir = str(self.config.rootdir)
         test_exe = os.path.relpath(test_exe)
-        if  sys.platform.startswith("win"):
-            ndarray_path =  rootdir + "\\pyccel\\stdlib\\ndarrays\\"
-        else :
-            ndarray_path = rootdir + "/pyccel/stdlib/ndarrays/"
+        ndarray_path =  os.path.join(rootdir , "pyccel", "stdlib", "ndarrays")
         comp_cmd = [shutil.which("gcc"), test_exe + ".c",
                     os.path.join(ndarray_path,"ndarrays.c"), "-I", ndarray_path, "-o", test_exe]
         subprocess.run(comp_cmd, check= 'TRUE')
