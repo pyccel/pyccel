@@ -132,9 +132,12 @@ if __name__ == '__main__':
     print('***   TESTING SYNTAX ERRORS   ***')
     print('***                           ***')
     print('*********************************')
-    for f in get_files_from_folder("syntax"):
+    for f in get_files_from_folder("syntax_errors"):
         print('> testing {0}'.format(str(os.path.basename(f))))
         test_syntax_errors(f)
+    for f in get_files_from_folder("syntax_blockers"):
+        print('> testing {0}'.format(str(os.path.basename(f))))
+        test_syntax_blockers(f)
     print('\n')
 
     print('*********************************')
@@ -142,7 +145,10 @@ if __name__ == '__main__':
     print('***  TESTING SEMANTIC ERRORS  ***')
     print('***                           ***')
     print('*********************************')
-    for f in get_files_from_folder("semantic"):
+    for f in get_files_from_folder("semantic/non_blocking"):
         print('> testing {0}'.format(str(os.path.basename(f))))
-        test_semantic_errors(f)
+        test_semantic_non_blocking_errors(f)
+    for f in get_files_from_folder("semantic/blocking"):
+        print('> testing {0}'.format(str(os.path.basename(f))))
+        test_semantic_blocking_errors(f)
     print('\n')

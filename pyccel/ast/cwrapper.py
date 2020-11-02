@@ -12,7 +12,7 @@ from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, Vari
 from .core      import AliasAssign, Assign, Return
 from .core      import PyccelEq, If
 
-from .numpyext  import Real as NumpyReal, Imag as NumpyImag
+from .numpyext  import NumpyReal, NumpyImag
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
