@@ -20,10 +20,9 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
-                             NativeReal, NativeComplex, NativeBool)
+                             NativeReal, NativeComplex, NativeBool, str_dtype)
 
 from .numbers        import Integer, Float
-from .type_inference import str_dtype
 from .basic          import PyccelAstNode
 
 
@@ -1320,3 +1319,80 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
                 decorators={'property':'property', 'numpy_wrapper':NumpyReal}),
             FunctionDef('diagonal',[],[],body=[],
                 decorators={'numpy_wrapper':NumpyDiag})])
+
+#==============================================================================
+# TODO split numpy_functions into multiple dictionaries following
+# https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
+numpy_functions = {
+    # ... array creation routines
+    'full'      : NumpyFull,
+    'empty'     : NumpyEmpty,
+    'zeros'     : NumpyZeros,
+    'ones'      : NumpyOnes,
+    'full_like' : NumpyFullLike,
+    'empty_like': NumpyEmptyLike,
+    'zeros_like': NumpyZerosLike,
+    'ones_like' : NumpyOnesLike,
+    'array'     : NumpyArray,
+    # ...
+    'shape'     : Shape,
+    'norm'      : NumpyNorm,
+    'int'       : NumpyInt,
+    'real'      : NumpyReal,
+    'imag'      : NumpyImag,
+    'float'     : NumpyFloat,
+    'double'    : NumpyFloat64,
+    'mod'       : NumpyMod,
+    'float32'   : NumpyFloat32,
+    'float64'   : NumpyFloat64,
+    'int32'     : NumpyInt32,
+    'int64'     : NumpyInt64,
+    'complex'   : NumpyComplex,
+    'complex128': NumpyComplex128,
+    'complex64' : NumpyComplex64,
+    'matmul'    : NumpyMatmul,
+    'sum'       : NumpySum,
+    'max'      : NumpyMax,
+    'min'      : NumpyMin,
+    'prod'      : NumpyProduct,
+    'product'   : NumpyProduct,
+    'linspace'  : NumpyLinspace,
+    'diag'      : NumpyDiag,
+    'where'     : NumpyWhere,
+    # 'cross'     : NumpyCross,   # Currently not correctly implemented
+    # ---
+    'abs'       : NumpyAbs,
+    'floor'     : NumpyFloor,
+    'absolute'  : NumpyAbs,
+    'fabs'      : NumpyFabs,
+    'exp'       : NumpyExp,
+    'log'       : NumpyLog,
+    'sqrt'      : NumpySqrt,
+    # ---
+    'sin'       : NumpySin,
+    'cos'       : NumpyCos,
+    'tan'       : NumpyTan,
+    'arcsin'    : NumpyArcsin,
+    'arccos'    : NumpyArccos,
+    'arctan'    : NumpyArctan,
+    'arctan2'   : NumpyArctan2,
+    # 'hypot'     : NumpyHypot,
+    'sinh'      : NumpySinh,
+    'cosh'      : NumpyCosh,
+    'tanh'      : NumpyTanh,
+    'arcsinh'   : NumpyArcsinh,
+    'arccosh'   : NumpyArccosh,
+    'arctanh'   : NumpyArctanh,
+    # 'deg2rad'   : NumpyDeg2rad,
+    # 'rad2deg'   : NumpyRad2deg,
+}
+
+numpy_linalg_functions = {
+    'norm'      : NumpyNorm,
+}
+
+numpy_random_functions = {
+    'rand'      : NumpyRand,
+    'random'    : NumpyRand,
+    'randint'   : NumpyRandint,
+}
