@@ -128,6 +128,7 @@ class Scope(object):
         self._functions = OrderedDict()
         self._macros    = OrderedDict()
         self._headers   = OrderedDict()
+        self._templates = []
 
         # TODO use another name for headers
         #      => reserved keyword, or use __
@@ -165,6 +166,10 @@ class Scope(object):
     @property
     def headers(self):
         return self._headers
+
+    @property
+    def templates(self):
+        return self._templates
 
     @property
     def static_functions(self):
