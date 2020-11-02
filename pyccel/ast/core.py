@@ -2497,6 +2497,9 @@ class Variable(Symbol, PyccelAstNode):
     is_kwonly: bool
         if object is an argument which can only be specified using its keyword
 
+    is_const: bool
+        if object is a const argument of a function [Default value: False]
+
     Examples
     --------
     >>> from pyccel.ast.core import Variable
@@ -2521,6 +2524,7 @@ class Variable(Symbol, PyccelAstNode):
         allocatable=False,
         is_stack_array = False,
         is_pointer=False,
+        is_const=False,
         is_target=False,
         is_polymorphic=None,
         is_optional=False,
