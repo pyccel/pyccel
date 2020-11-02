@@ -26,6 +26,7 @@ from sympy.logic.boolalg import Not
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import Nil
+from pyccel.ast.core import Interface 
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import Subroutine
@@ -295,9 +296,6 @@ class FCodePrinter(CodePrinter):
         interfaces = ''
         if expr.interfaces:
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces if not i.hide)
-            for interface in expr.interfaces:
-                if not interface.hide:
-                    body += '\n'.join(''.join([sep, self._print(i), sep]) for i in interface.functions)
 
         if expr.funcs:
             body += '\n'.join(''.join([sep, self._print(i), sep]) for i in expr.funcs)
@@ -2465,6 +2463,8 @@ class FCodePrinter(CodePrinter):
 #=======================================================================================
 
     def _print_FunctionCall(self, expr):
+        if isinstance(expr.funcdef, Interface):
+            expr.funcdef.point(expr.arguments)
         func = expr.funcdef
         args = [a for a in expr.arguments if not isinstance(a, Nil)]
         results = func.results
