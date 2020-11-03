@@ -285,6 +285,15 @@ def execute_pyccel(fname, *,
                                                        extra_args,
                                                        output_name,
                                                        verbose)
+        except NotImplementedError as error:
+            msg = str(error)
+            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+                severity='error')
+            handle_error('codegen (wrapping)')
+            raise PyccelCodegenError(msg)
+        except PyccelError:
+            handle_error('codegen (wrapping)')
+            raise
         except Exception:
             handle_error('shared library generation')
             raise
