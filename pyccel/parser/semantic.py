@@ -82,12 +82,12 @@ from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComple
 from pyccel.ast.builtins import python_builtin_datatype
 from pyccel.ast.builtins import Range, Zip, Enumerate, Map, PythonTuple
 
-from pyccel.ast.numpyext import Empty, Zeros
-from pyccel.ast.numpyext import EmptyLike
-from pyccel.ast.numpyext import NumpyInt, Int32, Int64
-from pyccel.ast.numpyext import NumpyFloat, Float32, Float64
-from pyccel.ast.numpyext import NumpyComplex, Complex64, Complex128
-from pyccel.ast.numpyext import Where, Diag, Linspace
+from pyccel.ast.numpyext import NumpyEmpty, NumpyZeros
+from pyccel.ast.numpyext import NumpyEmptyLike
+from pyccel.ast.numpyext import NumpyInt, NumpyInt32, NumpyInt64
+from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
+from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
+from pyccel.ast.numpyext import NumpyWhere, NumpyDiag, NumpyLinspace
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
@@ -573,8 +573,8 @@ class SemanticParser(BasicParser):
         # TODO improve => put settings as attribut of Parser
 
         if expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt,
-                      Int32, Int64, NumpyComplex, Complex64, Complex128, NumpyFloat,
-                      Float64, Float32):
+                      NumpyInt32, NumpyInt64, NumpyComplex, NumpyComplex64,
+					  NumpyComplex128, NumpyFloat, NumpyFloat64, NumpyFloat32):
 
             d_var['datatype'   ] = '*'
             d_var['rank'       ] = 0
@@ -1238,7 +1238,7 @@ class SemanticParser(BasicParser):
                     self._infere_type(a, **settings)
             expr = func(*args, **kwargs)
 
-            if isinstance(expr, (Where, Diag, Linspace)):
+            if isinstance(expr, (NumpyWhere, NumpyDiag, NumpyLinspace)):
                 self.insert_variable(expr.index)
 
             #if len(stmts) > 0:
@@ -1414,8 +1414,8 @@ class SemanticParser(BasicParser):
                 # Not yet supported for arrays: x=y+z, x=b[:]
                 # Because we cannot infer shape of right-hand side yet
                 know_lhs_shape = all(sh is not None for sh in lhs.alloc_shape) \
-                        or (lhs.rank == 0) \
-                        or isinstance(rhs, (Variable, EmptyLike, DottedVariable))
+                    or (lhs.rank == 0) \
+                    or isinstance(rhs, (Variable, NumpyEmptyLike, DottedVariable))
                 if not know_lhs_shape:
                     msg = "Cannot infer shape of right-hand side for expression {} = {}".format(lhs, rhs)
                     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
@@ -1424,7 +1424,7 @@ class SemanticParser(BasicParser):
                 elif lhs.rank>0 and not isinstance(rhs, (NumpyNewArray, TupleVariable, PythonTuple)):
                     #TODO: Provide order once issue #335 is fixed
                     #new_expressions.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, lhs.order)))
-                    new_expressions.append(Assign(lhs, Empty(lhs.alloc_shape, dtype, 'C')))
+                    new_expressions.append(Assign(lhs, NumpyEmpty(lhs.alloc_shape, dtype, 'C')))
             else:
 
                 # TODO improve check type compatibility
@@ -1803,7 +1803,7 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, (Map, Zip)):
             func  = _get_name(rhs.args[0])
             func  = UndefinedFunction(func)
-            alloc = Assign(lhs, Zeros(lhs.shape, lhs.dtype))
+            alloc = Assign(lhs, NumpyZeros(lhs.shape, lhs.dtype))
             alloc.set_fst(fst)
             index_name = self.get_new_name(expr)
             index = Variable('int',index_name)
@@ -2168,7 +2168,7 @@ class SemanticParser(BasicParser):
 
         lhs_name = _get_name(expr.lhs)
 
-        lhs_empty = Empty(shape, dtype = dtype)
+        lhs_empty = NumpyEmpty(shape, dtype = dtype)
         lhs       = self._create_variable(lhs_name, dtype, lhs_empty, d_var)
         self.insert_variable(lhs)
         lhs_assign = Assign(lhs, lhs_empty)
