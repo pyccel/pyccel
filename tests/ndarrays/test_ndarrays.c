@@ -92,13 +92,14 @@ int test_indexing_int(void)
     int value;
     int c_value;
 
-    x = array_init((char *)m_1, 2, m_1_shape, nd_int);
+    x = array_create(2, m_1_shape, nd_int);
+    memcpy(x.raw_data, m_1, x.buffer_size);
     // testing the index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
     c_index = 26;
     my_assert(index , c_index, "testing the strides");
     my_assert(get_index(x, 3, 2) , c_index, "testing the indexing function");
-    // testing the value with the index [0, 0]
+    // testing the value with the index [3, 2]
     value = x.nd_int[index];
     c_value = 103;
     my_assert(value , c_value, "testing the value");
@@ -120,13 +121,14 @@ int test_indexing_double(void)
     double value;
     double c_value;
 
-    x = array_init((char *)m_1, 2, m_1_shape, nd_double);
+    x = array_create(2, m_1_shape, nd_double);
+    memcpy(x.raw_data, m_1, x.buffer_size);
     // testing the index [3, 2]
     index = 3 * x.strides[0] + 2 * x.strides[1];
     c_index = 26;
     my_assert(index , c_index, "testing the strides");
     my_assert(get_index(x, 3, 2) , c_index, "testing the indexing function");
-    // testing the value with the index [0, 0]
+    // testing the value with the index [3, 2]
     value = x.nd_double[index];
     c_value = 103.009;
     my_assert(value , c_value, "testing the value");
@@ -148,13 +150,14 @@ int test_indexing_cdouble(void)
     double complex value;
     double complex c_value;
 
-    x = array_init((char *)m_1, 2, m_1_shape, nd_cdouble);
+    x = array_create(2, m_1_shape, nd_cdouble);
+    memcpy(x.raw_data, m_1, x.buffer_size);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
     my_assert(get_index(x, 3, 1) , c_index, "testing the indexing function");
-    // testing the value with the index [0, 0]
+    // testing the value with the index [3, 1]
     value = x.nd_cdouble[index];
     c_value = 0.58532094+0.67890618*I;
     my_assert(value , c_value, "testing the value");
@@ -184,8 +187,9 @@ int test_slicing_int(void)
     int value;
     int c_value;
 
-    x = array_init((char *)m_1, 2, m_1_shape, nd_int);
-    slice = slice_make(x, slice_data(1, 2, 1), slice_data(0, 5, 2));
+    x = array_create(2, m_1_shape, nd_int);
+    memcpy(x.raw_data, m_1, x.buffer_size);
+    slice = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
     for (int i = 0; i < slice.shape[0]; i++)
     {
@@ -223,8 +227,10 @@ int test_slicing_double(void)
     int c_index;
     double value;
     double c_value;
-    x = array_init((char *)m_1, 2, m_1_shape, nd_double);
-    slice = slice_make(x, slice_data(1, 2, 1), slice_data(0, 5, 2));
+
+    x = array_create(2, m_1_shape, nd_double);
+    memcpy(x.raw_data, m_1, x.buffer_size);
+    slice = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
     for (int i = 0; i < slice.shape[0]; i++)
     {
@@ -259,8 +265,9 @@ int test_slicing_cdouble(void)
     double complex value;
     double complex c_value;
 
-    x = array_init((char *)m_1, 2, m_1_shape, nd_cdouble);
-    slice = slice_make(x, slice_data(1, 2, 1), slice_data(0, 5, 2));
+    x = array_create(2, m_1_shape, nd_cdouble);
+    memcpy(x.raw_data, m_1, x.buffer_size);
+    slice = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
     for (int i = 0; i < slice.shape[0]; i++)
     {
@@ -282,9 +289,9 @@ int test_slicing_cdouble(void)
     return (0);
 }
 
-/* array_ones tests */
+/* array_fill tests */
 
-int test_array_ones_int(void)
+int test_array_fill_int(void)
 {
     int m_1_shape[] = {5, 2};
     t_ndarray x;
@@ -293,21 +300,22 @@ int test_array_ones_int(void)
     int value;
     int c_value;
 
-    x = array_ones(2, m_1_shape, nd_int);
+    x = array_create(2, m_1_shape, nd_int);
+    array_fill(32, x);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
     my_assert(get_index(x, 3, 1) , c_index, "testing the indexing function");
-    // testing the value with the index [0, 0]
+    // testing the value with the index [3, 1]
     value = x.nd_int[index];
-    c_value = 1;
+    c_value = 32;
     my_assert(value , c_value, "testing the value");
     free_array(x);
     return (0);
 }
 
-int test_array_ones_double(void)
+int test_array_fill_double(void)
 {
     int m_1_shape[] = {5, 2};
     t_ndarray x;
@@ -316,21 +324,22 @@ int test_array_ones_double(void)
     double value;
     double c_value;
 
-    x = array_ones(2, m_1_shape, nd_double);
+    x = array_create(2, m_1_shape, nd_double);
+    array_fill(2., x);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
     my_assert(get_index(x, 3, 1) , c_index, "testing the indexing function");
-    // testing the value with the index [0, 0]
+    // testing the value with the index [3, 1]
     value = x.nd_double[index];
-    c_value = 1.0;
+    c_value = 2.;
     my_assert(value , c_value, "testing the value");
     free_array(x);
     return (0);
 }
 
-int test_array_ones_cdouble(void)
+int test_array_fill_cdouble(void)
 {
     int m_1_shape[] = {5, 2};
     t_ndarray x;
@@ -339,15 +348,16 @@ int test_array_ones_cdouble(void)
     double complex value;
     double complex c_value;
 
-    x = array_ones(2, m_1_shape, nd_cdouble);
+    x = array_create(2, m_1_shape, nd_cdouble);
+    array_fill(0.3+0.54*I, x);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
     my_assert(get_index(x, 3, 1) , c_index, "testing the indexing function");
-    // testing the value with the index [0, 0]
+    // testing the value with the index [3, 1]
     value = x.nd_cdouble[index];
-    c_value = 1.0+0*I;
+    c_value = 0.3+0.54*I;
     my_assert(value , c_value, "testing the value");
     free_array(x);
     return (0);
@@ -364,15 +374,16 @@ int test_array_zeros_double(void)
     double value;
     double c_value;
 
-    x = array_zeros(2, m_1_shape, nd_double);
+    x = array_create(2, m_1_shape, nd_double);
+    array_fill(0, x);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
     my_assert(get_index(x, 3, 1) , c_index, "testing the indexing function");
-    // testing the value with the index [0, 0]
+    // testing the value with the index [3, 1]
     value = x.nd_double[index];
-    c_value =0.;
+    c_value = 0.;
     my_assert(value , c_value, "testing the value");
     free_array(x);
     return (0);
@@ -387,13 +398,14 @@ int test_array_zeros_int(void)
     int value;
     int c_value;
 
-    x = array_zeros(2, m_1_shape, nd_int);
+    x = array_create(2, m_1_shape, nd_int);
+    array_fill(0, x);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
     my_assert(get_index(x, 3, 1) , c_index, "testing the indexing function");
-    // testing the value with the index [0, 0]
+    // testing the value with the index [3, 1]
     value = x.nd_int[index];
     c_value = 0;
     my_assert(value , c_value, "testing the value");
@@ -410,13 +422,14 @@ int test_array_zeros_cdouble(void)
     double complex value;
     double complex c_value;
 
-    x = array_zeros(2, m_1_shape, nd_cdouble);
+    x = array_create(2, m_1_shape, nd_cdouble);
+    array_fill(0, x);
     // testing the index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
     my_assert(index , c_index, "testing the strides");
     my_assert(get_index(x, 3, 1) , c_index, "testing the indexing function");
-    // testing the value with the index [0, 0]
+    // testing the value with the index [3, 1]
     value = x.nd_cdouble[index];
     c_value = 0+0*I;
     my_assert(value , c_value, "testing the value");
@@ -434,10 +447,10 @@ int main(void)
     test_slicing_double();
     test_slicing_int();
     test_slicing_cdouble();
-    /* array_ones tests */
-    test_array_ones_int();
-    test_array_ones_double();
-    test_array_ones_cdouble();
+    /* array_fill tests */
+    test_array_fill_int();
+    test_array_fill_double();
+    test_array_fill_cdouble();
     /* array_zeros tests */
     test_array_zeros_int();
     test_array_zeros_double();

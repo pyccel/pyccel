@@ -45,49 +45,28 @@ t_ndarray   array_create(int nd, int *shape, enum e_types type)
     return (arr);
 }
 
-/* initialisation */
-
-t_ndarray   array_init(char *temp, int nd, int *shape, enum e_types type)
+void   _array_fill_int(int c, t_ndarray arr)
 {
-    t_ndarray arr;
-
-    arr = array_create(nd, shape, type);
-    memcpy(arr.raw_data, temp, arr.buffer_size);
-    return (arr);
+    if (c == 0)
+        memset(arr.raw_data, 0, arr.buffer_size);
+    for (int i = 0; i < arr.length; i++)
+        arr.nd_int[i] = c;
 }
 
-t_ndarray   array_ones(int nd, int *shape, enum e_types type)
+void   _array_fill_double(double c, t_ndarray arr)
 {
-    t_ndarray arr;
-
-    arr = array_create(nd, shape, type);
-    for (int i = 0; i < arr.length; i ++)
-        switch (arr.type)
-        {
-            case nd_int:
-                arr.nd_int[i] = 1;
-                break;
-            case nd_float:
-                arr.nd_float[i] = 1;
-                break;
-            case nd_double:
-                arr.nd_double[i] = 1;
-                break;
-            case nd_cdouble:
-                arr.nd_cdouble[i] = 1.0+0*I;
-                break;
-        }
-    return (arr);
-
+    if (c == 0)
+        memset(arr.raw_data, 0, arr.buffer_size);
+    for (int i = 0; i < arr.length; i++)
+        arr.nd_double[i] = c;
 }
 
-t_ndarray   array_zeros(int nd, int *shape, enum e_types type)
+void   _array_fill_cdouble(double complex c, t_ndarray arr)
 {
-    t_ndarray arr;
-
-    arr = array_create(nd, shape, type);
-    bzero(arr.raw_data, arr.buffer_size);
-    return (arr);
+    if (c == 0)
+        memset(arr.raw_data, 0, arr.buffer_size);
+    for (int i = 0; i < arr.length; i++)
+        arr.nd_cdouble[i] = c;
 }
 
 /*
@@ -112,7 +91,7 @@ int free_array(t_ndarray dump)
 ** slices
 */
 
-t_slice slice_data(int start, int end, int step)
+t_slice new_slice(int start, int end, int step)
 {
     t_slice slice_d;
 
@@ -122,7 +101,7 @@ t_slice slice_data(int start, int end, int step)
     return (slice_d);
 }
 
-t_ndarray slice_make(t_ndarray p, ...)
+t_ndarray array_slicing(t_ndarray p, ...)
 {
     t_ndarray slice;
     va_list  va;

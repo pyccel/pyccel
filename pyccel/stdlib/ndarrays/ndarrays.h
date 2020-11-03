@@ -6,8 +6,13 @@
 # include <string.h>
 # include <stdio.h>
 # include <stdarg.h>
-# include <stdbool.h> 
-typedef struct  s_slice_data
+# include <stdbool.h>
+
+# define array_fill(c, arr) _Generic((c), int : _array_fill_int,\
+                                        float : _array_fill_float,\
+                                        double : _array_fill_double,\
+                                        double complex : _array_fill_cdouble)(c, arr)
+typedef struct  s_slice
 {
     int start;
     int end;
@@ -32,9 +37,9 @@ typedef struct  s_ndarray
             double          *nd_double;
             double complex  *nd_cdouble;
             };
-    /* number of dimmensions */
+    /* number of dimensions */
     int             nd;
-    /* shape 'size of each dimmension' */
+    /* shape 'size of each dimension' */
     int             *shape;
     /* strides 'number of bytes to skip to get the next element' */
     int             *strides;
@@ -50,14 +55,14 @@ typedef struct  s_ndarray
 
 /* allocations */
 t_ndarray   array_create(int nd, int *shape, enum e_types type);
-t_ndarray   array_init(char *temp, int nd, int *shape, enum e_types type);
-t_ndarray   array_ones(int nd, int *shape, enum e_types type);
-t_ndarray   array_zeros(int nd, int *shape, enum e_types type);
-// t_ndarray   array_full(void *c, int nd, int *shape, enum e_types type);
+void        _array_fill_int(int c, t_ndarray arr);
+void        _array_fill_float(float c, t_ndarray arr);
+void        _array_fill_double(double c, t_ndarray arr);
+void        _array_fill_cdouble(complex double c, t_ndarray arr);
 
 /* slicing */
-t_slice     slice_data(int start, int end, int step);
-t_ndarray   slice_make(t_ndarray p, ...);
+t_slice     new_slice(int start, int end, int step);
+t_ndarray   array_slicing(t_ndarray p, ...);
 
 /* free */
 int         free_array(t_ndarray dump);
