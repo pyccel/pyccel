@@ -160,10 +160,20 @@ _default_methods = {
 }
 
 iso_c_binding = {
-	'integer' : 'C_INT',
-	'real' : 'C_FLOAT',
-	'complex' : 'C_LONG_DOUBLE',
-	'LOGICAL' : 'C_BOOL'
+    "integer" : {
+	    1 : 'C_INT8',
+	    2 : 'C_INT16',
+        4 : 'C_INT32',
+	    8 : 'C_INT64',
+        16 : 'C_INT128'},
+    "real" : {
+        4 : 'C_FLOAT',
+	    8 : 'C_DOUBLE',
+        16 : 'C_LONG_DOUBLE'},
+    "complex" : {
+        4 : 'C_FLOAT_COMPLEX',
+	    8 : 'C_DOUBLE_COMPLEX',
+        16 : 'C_LONG_DOUBLE_COMPLEX'}
 }
 
 python_builtin_datatypes = {
@@ -912,7 +922,7 @@ class FCodePrinter(CodePrinter):
                     dtype = dtype[:9] +'(len =*)'
                     #TODO improve ,this is the case of character as argument
             else:
-                dtype += '(kind={0})'.format(str(expr.variable.precision))
+                dtype += '({0})'.format(str(iso_c_binding[dtype][expr.variable.precision]))
 
         code_value = ''
         if expr.value:
