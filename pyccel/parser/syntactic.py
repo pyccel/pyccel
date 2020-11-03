@@ -612,7 +612,8 @@ class SyntaxParser(BasicParser):
 
         local_vars   = []
         global_vars  = []
-        header       = None
+        headers      = []
+        templates    = []
         hide         = False
         kind         = 'function'
         is_pure      = False
@@ -621,8 +622,16 @@ class SyntaxParser(BasicParser):
         imports      = []
 
         # TODO improve later
-        decorators = {str(d) if isinstance(d, Symbol) else str(type(d)): d \
-                            for d in self._visit(stmt.decorator_list)}
+        decorators = {}
+        for d in self._visit(stmt.decorator_list):
+            tmp_var = str(d, Symbol) if isinstance(d, Symbol) else str(type(d))
+            if tmp_var in decorators:
+                if isinstance(decorators[tmp_var], list):
+                    decorators[tmp_var] += [d]
+                else:
+                    decorators[tmp_var] = [decorators[tmp_var]] + [d]
+            else:
+                decorators[tmp_var] = d
 
         if 'bypass' in decorators:
             return EmptyNode()
@@ -633,54 +642,110 @@ class SyntaxParser(BasicParser):
         if 'allow_negative_index' in decorators:
             decorators['allow_negative_index'] = tuple(str(a) for a in decorators['allow_negative_index'].args)
 
+        # extract the templates
+        if 'template' in decorators:
+            types = []
+            i = 0
+
+            if not isinstance(decorators['template'], list):
+                decorators['template'] = [decorators['template']]
+            for comb_types in decorators['template']:
+                if len(comb_types.args) != 2:
+                        msg = 'Number of Arguments provided to the types decorator is not valid'
+                        errors.report(msg,
+                                        symbol = comb_types,
+                                        bounding_box = (stmt.lineno, stmt.col_offset),
+                                        severity='error')
+    
+                tp_name = comb_types.args[0]
+                ls = comb_types.args[1]
+                if isinstance(ls, ValuedArgument):
+                    arg_name = ls.name
+                    ls  = ls.value
+                    if not arg_name == 'types':
+                        msg = 'Argument "{}" provided to the template decorator is not valid'.format(arg_name)
+                        errors.report(msg,
+                                        symbol = comb_types,
+                                        bounding_box = (stmt.lineno, stmt.col_offset),
+                                        severity='error')
+                    else:
+                        ls = ls if isinstance(ls, (PythonTuple)) else list(ls)
+    
+                while i<len(ls) :
+                    arg = ls[i]
+                    if isinstance(arg, Symbol):
+                        arg = arg.name
+                        types.append(arg)
+                    elif isinstance(arg, String):
+                        arg = str(arg)
+                        arg = arg.strip("'").strip('"')
+                        types.append(arg)
+                    else:
+                        msg = 'Invalid argument type of type {} passed to template decorator'.format(type(arg))
+                        errors.report(msg,
+                                    symbol = comb_types,
+                                    bounding_box = (stmt.lineno, stmt.col_offset),
+                                    severity='error')
+    
+                    i += 1
+    
+                txt  = '#$ header template ' + str(tp_name)
+                txt += '(' + '|'.join(types) + ')'
+                templates += [hdr_parse(stmts=txt)]
+
         # extract the types to construct a header
         if 'types' in decorators:
-            types = []
-            results = []
-            container = types
-            i = 0
-            ls = decorators['types'].args
-            while i<len(ls) :
-                arg = ls[i]
-
-                if isinstance(arg, Symbol):
-                    arg = arg.name
-                    container.append(arg)
-                elif isinstance(arg, String):
-                    arg = str(arg)
-                    arg = arg.strip("'").strip('"')
-                    container.append(arg)
-                elif isinstance(arg, ValuedArgument):
-                    arg_name = arg.name
-                    arg  = arg.value
-                    container = results
-                    if not arg_name == 'results':
-                        msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
-                        errors.report(msg,
-                                      symbol = decorators['types'],
-                                      bounding_box = (stmt.lineno, stmt.col_offset),
-                                      severity='error')
+            if not isinstance(decorators['types'], list):
+                decorators['types'] = [decorators['types']]
+            for comb_types in decorators['types']:
+                types = []
+                results = []
+                container = types
+                i = 0
+                ls = comb_types.args
+    
+                while i<len(ls) :
+                    arg = ls[i]
+    
+                    if isinstance(arg, Symbol):
+                        arg = arg.name
+                        container.append(arg)
+                    elif isinstance(arg, String):
+                        arg = str(arg)
+                        arg = arg.strip("'").strip('"')
+                        container.append(arg)
+                    elif isinstance(arg, ValuedArgument):
+                        arg_name = arg.name
+                        arg  = arg.value
+                        container = results
+                        if not arg_name == 'results':
+                            msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
+                            errors.report(msg,
+                                        symbol = comb_types['types'],
+                                        bounding_box = (stmt.lineno, stmt.col_offset),
+                                        severity='error')
+                        else:
+                            ls = arg if isinstance(arg, PythonTuple) else [arg]
+                            i = -1
                     else:
-                        ls = arg if isinstance(arg, PythonTuple) else [arg]
-                        i = -1
-                else:
-                    msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
-                    errors.report(msg,
-                                  symbol = decorators['types'],
-                                  bounding_box = (stmt.lineno, stmt.col_offset),
-                                  severity='error')
-
-                i = i+1
-
-            txt  = '#$ header ' + name
-            txt += '(' + ','.join(types) + ')'
-
-            if results:
-                txt += ' results(' + ','.join(results) + ')'
-
-            header = hdr_parse(stmts=txt)
-            if name in self.namespace.static_functions:
-                header = header.to_static()
+                        msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
+                        errors.report(msg,
+                                    symbol = comb_types['types'],
+                                    bounding_box = (stmt.lineno, stmt.col_offset),
+                                    severity='error')
+    
+                    i = i+1
+    
+                txt  = '#$ header ' + name
+                txt += '(' + ','.join(types) + ')'
+    
+                if results:
+                    txt += ' results(' + ','.join(results) + ')'
+    
+                header = hdr_parse(stmts=txt)
+                if name in self.namespace.static_functions:
+                    header = header.to_static()
+                headers += [header] 
 
         body = stmt.body
 
@@ -753,7 +818,8 @@ class SyntaxParser(BasicParser):
                is_private=is_private,
                imports=imports,
                decorators=decorators,
-               header=header)
+               headers=headers,
+               templates=templates)
 
         func.set_fst(stmt)
         return func
