@@ -926,7 +926,7 @@ class FCodePrinter(CodePrinter):
 
         # Compute intent string
         if intent:
-            if intent == 'in' and rank == 0:
+            if intent == 'in' and rank == 0 and not (is_static and is_optional):
                 intentstr = ', value'
             else:
                 intentstr = ', intent({})'.format(intent)
