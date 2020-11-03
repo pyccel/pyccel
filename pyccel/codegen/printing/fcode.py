@@ -165,7 +165,7 @@ iso_c_binding = {
 	    2 : 'C_INT_LEAST16_T',
         4 : 'C_INT_LEAST32_T',
 	    8 : 'C_INT_LEAST64_T',
-        16 : 'C_INT'},
+        16 : 'C_INT128'}, #no supported yet
     "real" : {
         4 : 'C_FLOAT',
 	    8 : 'C_DOUBLE',
