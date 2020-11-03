@@ -6,6 +6,7 @@ __all__ = (
     'sympy',
     'bypass',
     'types',
+    'template',
     'pure',
     'private',
     'elemental',
@@ -34,6 +35,11 @@ def bypass(f):
     return f
 
 def types(*args,**kw):
+    def identity(f):
+        return f
+    return identity
+
+def template(name, types=[]):
     def identity(f):
         return f
     return identity
