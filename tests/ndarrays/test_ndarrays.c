@@ -182,32 +182,32 @@ int test_slicing_int(void)
                 22, 1, 11, 1, 19};
     int m_1_shape[] = {8, 5};
     t_ndarray x;
-    t_ndarray slice;
+    t_ndarray xview;
     int c_index;
     int value;
     int c_value;
 
     x = array_create(2, m_1_shape, nd_int);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    slice = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
-    for (int i = 0; i < slice.shape[0]; i++)
+    for (int i = 0; i < xview.shape[0]; i++)
     {
-        for (int j = 0; j < slice.shape[1]; j++)
+        for (int j = 0; j < xview.shape[1]; j++)
         {
-            value = slice.nd_int[get_index(slice, i, j)];
+            value = xview.nd_int[get_index(xview, i, j)];
             c_value = m_1[c_index];
             c_index+=2;
             if (value != c_value)
-                my_assert(value , c_value, "testing slice values");
+                my_assert(value , c_value, "testing xview values");
         }
     }
     c_value = 1337;
-    slice.nd_int[get_index(slice, 0, 1)] = c_value;
+    xview.nd_int[get_index(xview, 0, 1)] = c_value;
     value = x.nd_int[get_index(x, 1, 2)];
-    my_assert(value , c_value, "testing slice assignment");
+    my_assert(value , c_value, "testing xview assignment");
     free_array(x);
-    free_array(slice);
+    free_array(xview);
     return (0);
 }
 
@@ -223,32 +223,32 @@ int test_slicing_double(void)
                     1.1102, 011.25, 1.01110005, 19, 70};
     int m_1_shape[] = {8, 5};
     t_ndarray x;
-    t_ndarray slice;
+    t_ndarray xview;
     int c_index;
     double value;
     double c_value;
 
     x = array_create(2, m_1_shape, nd_double);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    slice = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
-    for (int i = 0; i < slice.shape[0]; i++)
+    for (int i = 0; i < xview.shape[0]; i++)
     {
-        for (int j = 0; j < slice.shape[1]; j++)
+        for (int j = 0; j < xview.shape[1]; j++)
         {
-            value = slice.nd_double[get_index(slice, i, j)];
+            value = xview.nd_double[get_index(xview, i, j)];
             c_value = m_1[c_index];
             c_index+=2;
             if (value != c_value) // to not spam the test because of the loop
-                my_assert(value , c_value, "testing slice values");
+                my_assert(value , c_value, "testing xview values");
         }
     }
     c_value = 0.1337;
-    slice.nd_double[get_index(slice, 0, 1)] = c_value;
+    xview.nd_double[get_index(xview, 0, 1)] = c_value;
     value = x.nd_double[get_index(x, 1, 2)];
-    my_assert(value, c_value, "testing slice assignment");
+    my_assert(value, c_value, "testing xview assignment");
     free_array(x);
-    free_array(slice);
+    free_array(xview);
     return (0);
 }
 
@@ -260,32 +260,32 @@ int test_slicing_cdouble(void)
                     };
     int m_1_shape[] = {2, 5};
     t_ndarray x;
-    t_ndarray slice;
+    t_ndarray xview;
     int c_index;
     double complex value;
     double complex c_value;
 
     x = array_create(2, m_1_shape, nd_cdouble);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    slice = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
-    for (int i = 0; i < slice.shape[0]; i++)
+    for (int i = 0; i < xview.shape[0]; i++)
     {
-        for (int j = 0; j < slice.shape[1]; j++)
+        for (int j = 0; j < xview.shape[1]; j++)
         {
-            value = slice.nd_cdouble[get_index(slice, i, j)];
+            value = xview.nd_cdouble[get_index(xview, i, j)];
             c_value = m_1[c_index];
             c_index+=2;
             if (value != c_value) // to not spam the test because of the loop
-                my_assert(value , c_value, "testing slice values");
+                my_assert(value , c_value, "testing xview values");
         }
     }
     c_value = 0.13 + 0.37*I;
-    slice.nd_cdouble[get_index(slice, 0, 1)] = c_value;
+    xview.nd_cdouble[get_index(xview, 0, 1)] = c_value;
     value = x.nd_cdouble[get_index(x, 1, 2)];
-    my_assert(value, c_value, "testing slice assignment");
+    my_assert(value, c_value, "testing xview assignment");
     free_array(x);
-    free_array(slice);
+    free_array(xview);
     return (0);
 }
 

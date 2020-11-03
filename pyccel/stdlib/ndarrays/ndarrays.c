@@ -49,24 +49,27 @@ void   _array_fill_int(int c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
-    for (int i = 0; i < arr.length; i++)
-        arr.nd_int[i] = c;
+    else
+        for (int i = 0; i < arr.length; i++)
+            arr.nd_int[i] = c;
 }
 
 void   _array_fill_double(double c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
-    for (int i = 0; i < arr.length; i++)
-        arr.nd_double[i] = c;
+    else
+        for (int i = 0; i < arr.length; i++)
+            arr.nd_double[i] = c;
 }
 
 void   _array_fill_cdouble(double complex c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
-    for (int i = 0; i < arr.length; i++)
-        arr.nd_cdouble[i] = c;
+    else
+        for (int i = 0; i < arr.length; i++)
+            arr.nd_cdouble[i] = c;
 }
 
 /*
