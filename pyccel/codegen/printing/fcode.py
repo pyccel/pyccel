@@ -1332,7 +1332,7 @@ class FCodePrinter(CodePrinter):
         prelude   = ''.join(self._print(i) for i in args_decs.values())
         body_code = self._print(expr.body)
 
-        parts = ['{0} {1}({2}) {3}\n'.format(func_type, name, arg_code, func_end),
+        parts = ['{0} {1}({2}) {3} bind(c)\n'.format(func_type, name, arg_code, func_end),
                  imports,
                 'implicit none\n',
                  prelude,
