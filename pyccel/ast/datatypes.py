@@ -73,7 +73,8 @@ iso_c_binding = {
         4 : 'C_FLOAT_COMPLEX',
 	    8 : 'C_DOUBLE_COMPLEX',
         16 : 'C_LONG_DOUBLE_COMPLEX'},
-    "logical" : "C_BOOL"
+    "logical" : {
+		4 : "C_BOOL"}
 }
 
 default_precision = {'real': 8, 'int': numpy.dtype(int).alignment, 'integer': numpy.dtype(int).alignment, 'complex': 8, 'bool':4, 'float':8}
