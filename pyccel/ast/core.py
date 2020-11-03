@@ -3380,7 +3380,8 @@ class FunctionDef(Basic):
         is_static=False,
         imports=[],
         decorators={},
-        header=None,
+        headers=[],
+        templates=[],
         is_recursive=False,
         is_pure=False,
         is_elemental=False,
@@ -3498,7 +3499,8 @@ class FunctionDef(Basic):
         self._is_static       = is_static
         self._imports         = imports
         self._decorators      = decorators
-        self._header          = header
+        self._headers          = headers
+        self._templates       = templates
         self._is_recursive    = is_recursive
         self._is_pure         = is_pure
         self._is_elemental    = is_elemental
@@ -3557,8 +3559,12 @@ class FunctionDef(Basic):
         return self._decorators
 
     @property
-    def header(self):
-        return self._header
+    def headers(self):
+        return self._headers
+
+    @property
+    def templates(self):
+        return self._templates
 
     @property
     def is_recursive(self):
