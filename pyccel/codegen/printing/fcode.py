@@ -161,10 +161,10 @@ _default_methods = {
 
 iso_c_binding = {
     "integer" : {
-	    1 : 'C_INT_LEAST8_T',
-	    2 : 'C_INT_LEAST16_T',
-        4 : 'C_INT_LEAST32_T',
-	    8 : 'C_INT_LEAST64_T',
+        1 : 'C_SIGNED_CHAR',
+	    2 : 'C_SHORT',
+        4 : 'C_INT',
+	    8 : 'C_LONG_LONG',
         16 : 'C_INT128'}, #no supported yet
     "real" : {
         4 : 'C_FLOAT',
@@ -634,7 +634,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyFloor(self, expr):
         result_code = self._print_MathFloor(expr)
-        return 'real({}, {})'.format(result_code, expr.precision)
+        return 'real({}, {})'.format(result_code, iso_c_binding["real"][8])
 
     def _print_PythonFloat(self, expr):
         return expr.fprint(self._print)
@@ -2228,7 +2228,7 @@ class FCodePrinter(CodePrinter):
             adtype = bdtype
             code = 'FLOOR({}/{},{})'.format(code, c, expr.precision)
             if is_real:
-                code = 'real({}, {})'.format(code, expr.precision)
+                code = 'real({}, {})'.format(code, iso_c_binding["real"][expr.precision])
         return code
 
     def _print_PyccelRShift(self, expr):
@@ -2396,7 +2396,7 @@ class FCodePrinter(CodePrinter):
         e = printed.find('e')
         if e > -1:
             return "%sd%s" % (printed[:e], printed[e + 1:])
-        return "%sd0" % printed
+        return "%s_C_DOUBLE" % printed
 
     def _print_Complex(self, expr):
         real_str = self._print_Float(expr.real)
@@ -2404,7 +2404,7 @@ class FCodePrinter(CodePrinter):
         return "({}, {})".format(real_str, imag_str)
 
     def _print_Integer(self, expr):
-        return "{0}_{1}".format(str(expr.p), expr.precision)
+        return "{0}_{1}".format(str(expr.p), iso_c_binding["integer"][expr.precision])
 
     def _print_IndexedElement(self, expr):
         if isinstance(expr.base, IndexedVariable):
