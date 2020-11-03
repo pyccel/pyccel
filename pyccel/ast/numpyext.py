@@ -506,13 +506,14 @@ class NumpyLinspace(Application, NumpyNewArray):
     def fprint(self, printer, lhs=None):
         """Fortran print."""
 
-        template = '[({start} + {index}*{step},{index} = 0,{stop}-1)]'
+        template = '[({start} + {index}*{step},{index} = {zero},{end})]'
 
         init_value = template.format(
             start = printer(self.start),
-            stop  = printer(self.stop ),
             step  = printer(self.step ),
             index = printer(self.index),
+            zero  = printer(Integer(0)),
+            end   = printer(PyccelMinus(self.size, Integer(1))),
         )
 
         if lhs:
