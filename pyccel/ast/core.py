@@ -1300,12 +1300,8 @@ class Allocate(Basic):
         if variable.rank != len(shape):
             raise ValueError("Incompatible rank in variable allocation")
 
-        # TODO [YG, 28.10.2020] Is this a good place to raise a Pyccel error?
-        #                       And if so, how do we obtain a bounding box?
         if variable.rank > 1 and variable.order != order:
-            errors.report("Incompatible order in variable allocation", symbol=variable.name,
-                    severity='error', blocker=False)
-#                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset))
+            raise ValueError("Incompatible order in variable allocation")
 
         if not isinstance(status, str):
             raise TypeError("Cannot understand 'status' parameter of type '{}'".format(type(status)))
