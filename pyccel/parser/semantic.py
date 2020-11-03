@@ -551,17 +551,7 @@ class SemanticParser(BasicParser):
             Decorators attached to FunctionDef object at syntactic stage.
 
         """
-        # TODO [YG, 29.10.2020]:
-        #   Instead of manipulating the private attributes of Scope
-        #   objects, we should pass the required information to the
-        #   Scope constructor, or use a dedicated factory method.
-
-        child = Scope()
-        child._decorators = decorators
-
-        parent = self.namespace
-        parent._sons_scopes[name] = child
-        child.parent_scope = parent
+        child = self.namespace.new_child_scope(name, decorators=decorators)
 
         self._namespace = child
         if self._current_function:
