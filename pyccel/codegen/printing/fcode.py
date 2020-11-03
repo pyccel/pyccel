@@ -159,6 +159,13 @@ _default_methods = {
     '__del__' : 'free',
 }
 
+iso_c_binding = {
+	'integer' : 'C_INT',
+	'real' : 'C_FLOAT',
+	'complex' : 'C_LONG_DOUBLE',
+	'LOGICAL' : 'C_BOOL'
+}
+
 python_builtin_datatypes = {
     'integer' : PythonInt,
     'real'    : PythonFloat,
