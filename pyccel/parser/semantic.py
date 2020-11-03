@@ -500,11 +500,12 @@ class SemanticParser(BasicParser):
     def get_header(self, name):
         """."""
         container = self.namespace
+        headers = []
         while container:
             if name in container.headers:
-                return container.headers[name]
+                headers += container.headers[name]
             container = container.parent_scope
-        return None
+        return headers
 
     def get_templates(self):
         """."""
@@ -2277,7 +2278,7 @@ class SemanticParser(BasicParser):
         is_elemental    = expr.is_elemental
         is_private      = expr.is_private
 
-        header = expr.header
+        header = expr.headers
 
         not_used = [d for d in decorators if d not in def_decorators.__all__]
 
@@ -2286,22 +2287,25 @@ class SemanticParser(BasicParser):
 
         args_number = len(expr.arguments)
         templates = self.get_templates()
-        if header is None:
-            if cls_name:
-                header = self.get_header(cls_name +'.'+ name)
-                args_number -= 1
-            else:
-                header = self.get_header(name)
-        if not isinstance(header, list):
-            header = [header]
-        if header:
-            for hd in header:
-                if (args_number != len(hd.dtypes)):
-                    msg = 'The number of arguments in the function {} ({}) does not match the number of types in decorator/header ({}).'.format(name ,args_number, len(hd.dtypes))
-                    if (args_number < len(hd.dtypes)):
-                        errors.report(msg, symbol=expr.arguments, severity='warning')
-                    else:
-                        errors.report(msg, symbol=expr.arguments, severity='fatal')
+        templates_names = [tp.name for tp in expr.templates]
+        for i, tp in enumerate(templates):
+            if tp.name in templates_names:
+                templates.pop(i)
+        templates += expr.templates
+
+        if cls_name:
+            header += self.get_header(cls_name +'.'+ name)
+            args_number -= 1
+        else:
+            header += self.get_header(name)
+
+        for hd in header:
+            if (args_number != len(hd.dtypes)):
+                msg = 'The number of arguments in the function {} ({}) does not match the number of types in decorator/header ({}).'.format(name ,args_number, len(hd.dtypes))
+                if (args_number < len(hd.dtypes)):
+                    errors.report(msg, symbol=expr.arguments, severity='warning')
+                else:
+                    errors.report(msg, symbol=expr.arguments, severity='fatal')
 
         if expr.arguments and not header:
 
@@ -2312,11 +2316,11 @@ class SemanticParser(BasicParser):
                    severity='error', blocker=self.blocking)
 
         # we construct a FunctionDef from its header
-        if header:
-            interfaces = []
-            for hd in header:
-                interfaces += hd.create_definition(templates)
+        interfaces = []
+        for hd in header:
+            interfaces += hd.create_definition(templates)
 
+        if header:
             # get function kind from the header
             kind = header[0].kind
         else:

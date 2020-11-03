@@ -10,8 +10,8 @@ Statement:
   | FunctionHeaderStmt 
   | ClassHeaderStmt
   | MetavarHeaderStmt
-  | InterfaceStmt
   | TemplateStmt
+  | InterfaceStmt
 ;
 
 TrailerSubscriptList: '[' args*=':' [','] ']'  ( '(' 'order' '=' order = ID ')' )?;
