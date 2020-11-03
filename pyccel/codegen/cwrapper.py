@@ -4,9 +4,10 @@ def print_list(l):
     python constructor of a list of strings """
     if isinstance(l,str):
         l = [l]
-    return '[{0}]'.format(', '.join("r'{0}'".format(li) for li in l))
+    return '[{0}]'.format(',\n'.join("r'{0}'".format(li) for li in l))
 
 def create_c_setup(mod_name,
+        wrapper_file,
         dependencies,
         compiler,
         include = '',
@@ -44,11 +45,14 @@ def create_c_setup(mod_name,
 
     code  = "from setuptools import Extension, setup\n\n"
 
-    deps  = ", ".join('r"{0}.c"'.format(d) for d in dependencies)
+    wrapper_file = "[ r'{0}' ]".format(wrapper_file)
+
+    deps  = ['{0}.o'.format(d) for d in dependencies]
 
     mod = '"{mod}"'.format(mod=mod_name)
 
-    files = "[{0}]".format(deps)
+    files       = ("extra_objects = {0}".format(print_list(deps))
+                   if deps else None)
 
     include_str = ('include_dirs = {0}'.format(print_list(include))
                    if include else None)
@@ -61,8 +65,8 @@ def create_c_setup(mod_name,
     flags_str   = ('extra_compile_args = {0}'.format(print_list(flags.strip().split()))
                    if flags else None)
 
-    args = [mod, files, include_str, libs_str, libdirs_str, flags_str]
-    args = ', '.join(a for a in args if a is not None)
+    args = [mod, wrapper_file, files, include_str, libs_str, libdirs_str, flags_str]
+    args = ',\n'.join(a for a in args if a is not None)
 
     code += "extension_mod = Extension({args})\n\n".format(args=args)
     code += "setup(name = \"" + mod_name + "\", ext_modules=[extension_mod])"
