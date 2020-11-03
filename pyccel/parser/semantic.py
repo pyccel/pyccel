@@ -1442,7 +1442,7 @@ class SemanticParser(BasicParser):
                     if 'stack_array' in decorators:
                         if name in decorators['stack_array']:
                             d_lhs.update(is_stack_array=True,
-                                    allocatable=False, is_pointer=False, is_target=False)
+                                    allocatable=False, is_pointer=False)
                     if 'allow_negative_index' in decorators:
                         if lhs.name in decorators['allow_negative_index']:
                             d_lhs.update(allows_negative_indexes=True)
@@ -2529,7 +2529,6 @@ class SemanticParser(BasicParser):
                         var.is_stack_array = True
                         var.allocatable    = False
                         var.is_pointer     = False
-                        var.is_target      = False
 
             if 'allow_negative_index' in decorators:
 
