@@ -6,6 +6,7 @@ always available.
 In this module we implement some of them in alphabetical order.
 
 """
+from pyccel.ast.datatypes import iso_c_binding
 
 from sympy import Symbol, Function, Tuple
 from sympy import Expr
@@ -104,8 +105,7 @@ class PythonComplex(Expr, PyccelAstNode):
         """Fortran print."""
         real = printer(self.real_part)
         imag = printer(self.imag_part)
-        prec = printer(self.precision)
-        code = 'cmplx({0}, {1}, {2})'.format(real, imag, prec)
+        code = 'cmplx({0}, {1}, {2})'.format(real, imag, iso_c_binding["complex"][self.precision])
         return code
 
 #==============================================================================

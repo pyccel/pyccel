@@ -50,6 +50,7 @@ from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
+from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.numbers   import Integer, Float
@@ -157,23 +158,6 @@ math_function_to_fortran = {
 _default_methods = {
     '__init__': 'create',
     '__del__' : 'free',
-}
-
-iso_c_binding = {
-    "integer" : {
-        1 : 'C_SIGNED_CHAR',
-	    2 : 'C_SHORT',
-        4 : 'C_INT',
-	    8 : 'C_LONG_LONG',
-        16 : 'C_INT128'}, #no supported yet
-    "real" : {
-        4 : 'C_FLOAT',
-	    8 : 'C_DOUBLE',
-        16 : 'C_LONG_DOUBLE'},
-    "complex" : {
-        4 : 'C_FLOAT_COMPLEX',
-	    8 : 'C_DOUBLE_COMPLEX',
-        16 : 'C_LONG_DOUBLE_COMPLEX'},
 }
 
 python_builtin_datatypes = {
