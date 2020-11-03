@@ -10,6 +10,8 @@ from pyccel.ast.f2py                        import as_static_function_call
 from pyccel.ast.core                        import SeparatorComment
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import cwrappercode
+from pyccel.codegen.codegen                 import _extension_registry
+from pyccel.codegen.utilities               import compile_files
 from .cwrapper import create_c_setup
 
 from pyccel.errors.errors import Errors
@@ -182,10 +184,33 @@ def create_shared_library(codegen,
 
     sharedlib_folder = ''
 
-    if language == 'c':
+    if language in ['c', 'fortran']:
+        if language == 'fortran':
+            # Construct f2py interface for assembly and write it to file f2py_MOD.f90
+            # be careful: because of f2py we must use lower case
+            funcs = codegen.routines + codegen.interfaces
+            sep = fcode(SeparatorComment(40), codegen.parser)
+            f2py_funcs = [as_static_function_call(f, module_name, name=f.name) for f in funcs]
+            f2py_code = '\n'.join([sep + fcode(f, codegen.parser) + sep for f in f2py_funcs])
+            f2py_filename = 'f2py_{}.f90'.format(module_name)
+
+            with open(f2py_filename, 'w') as f:
+                f.writelines(f2py_code)
+
+            compile_files(f2py_filename, compiler, flags,
+                binary=None,
+                verbose=verbose,
+                is_module=True,
+                output=pyccel_dirpath,
+                libs=libs,
+                libdirs=libdirs,
+                language=language)
+
+            dep_mods = (os.path.join(pyccel_dirpath,'f2py_{}'.format(module_name)), *dep_mods)
+
         module_old_name = codegen.expr.name
         codegen.expr.set_name(sharedlib_modname)
-        wrapper_code = cwrappercode(codegen.expr, codegen.parser)
+        wrapper_code = cwrappercode(codegen.expr, codegen.parser, language)
         codegen.expr.set_name(module_old_name)
         errors.check()
         errors.reset()
@@ -195,9 +220,8 @@ def create_shared_library(codegen,
         with open(wrapper_filename, 'w') as f:
             f.writelines(wrapper_code)
 
-        dep_mods = (wrapper_filename_root, *dep_mods)
-        setup_code = create_c_setup(sharedlib_modname, dep_mods,
-                compiler, includes, libs, libdirs, flags)
+        setup_code = create_c_setup(sharedlib_modname, wrapper_filename,
+                dep_mods, compiler, includes, libs, libdirs, flags)
         setup_filename = "setup_{}.py".format(module_name)
 
         with open(setup_filename, 'w') as f:
