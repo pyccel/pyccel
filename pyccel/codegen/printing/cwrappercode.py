@@ -54,7 +54,7 @@ class CWrapperCodePrinter(CCodePrinter):
         rank  = expr.rank
         dtype = self.find_in_dtype_registry(dtype, prec)
 
-        if self.stored_in_c_pointer(expr) or (rank > 0 and expr.is_static):
+        if self.stored_in_c_pointer(expr) or (rank > 0 and self._target_language=="fortran"):
             return '{0} *'.format(dtype)
         else:
             return '{0} '.format(dtype)
