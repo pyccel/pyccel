@@ -48,6 +48,17 @@ class CWrapperCodePrinter(CCodePrinter):
             incremented_name, _ = create_incremented_string(used_names, prefix=requested_name)
             return incremented_name
 
+    def get_declare_type(self, expr):
+        dtype = self._print(expr.dtype)
+        prec  = expr.precision
+        rank  = expr.rank
+        dtype = self.find_in_dtype_registry(dtype, prec)
+
+        if self.stored_in_c_pointer(expr) or (rank > 0 and expr.is_static):
+            return '{0} *'.format(dtype)
+        else:
+            return '{0} '.format(dtype)
+
     def get_new_PyObject(self, name, used_names):
         return Variable(dtype=PyccelPyObject(),
                         name=self.get_new_name(used_names, name),
@@ -100,7 +111,10 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             cast_function_name = self.get_new_name(self._global_names, cast_type)
 
-            cast_function = cast_function_registry[cast_type](cast_function_name)
+            try:
+                cast_function = cast_function_registry[cast_type](cast_function_name)
+            except KeyError:
+                raise NotImplementedError("No conversion function : {}".format(cast_type))
 
             self._cast_functions_dict[cast_type] = cast_function
 
@@ -152,7 +166,7 @@ class CWrapperCodePrinter(CCodePrinter):
             if isinstance(variable, ValuedVariable):
                 default_value = VariableAddress(Py_None)
                 body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
-            (BooleanTrue(), [Assign(variable, variable.value)]))]
+                        (BooleanTrue(), [Assign(variable, variable.value)]))]
 
         return collect_var, body
 
