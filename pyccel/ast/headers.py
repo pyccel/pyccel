@@ -250,8 +250,7 @@ class FunctionHeader(Header):
                 for j, i in enumerate(itery):
                     if i['datatype'] in templates_names:
                         itery[j] = itery[old_values[i['datatype']]].copy()
-                    args += itery
-        #import pdb; pdb.set_trace()
+                args.append(tuple(itery))
         for args_ in args:
             args = []
             for i, d in enumerate(args_):
