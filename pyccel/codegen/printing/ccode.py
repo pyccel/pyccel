@@ -504,7 +504,9 @@ class CCodePrinter(CodePrinter):
         try :
             return dtype_registry[(dtype, prec)]
         except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = "{}[kind = {}]".format(dtype, prec),
+                    severity='fatal')
 
     def get_declare_type(self, expr):
         dtype = self._print(expr.dtype)
