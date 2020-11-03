@@ -161,11 +161,11 @@ _default_methods = {
 
 iso_c_binding = {
     "integer" : {
-	    1 : 'C_INT8',
-	    2 : 'C_INT16',
-        4 : 'C_INT32',
-	    8 : 'C_INT64',
-        16 : 'C_INT128'},
+	    1 : 'C_INT_LEAST8_T',
+	    2 : 'C_INT_LEAST16_T',
+        4 : 'C_INT_LEAST32_T',
+	    8 : 'C_INT_LEAST64_T',
+        16 : 'C_INT'},
     "real" : {
         4 : 'C_FLOAT',
 	    8 : 'C_DOUBLE',
@@ -173,7 +173,7 @@ iso_c_binding = {
     "complex" : {
         4 : 'C_FLOAT_COMPLEX',
 	    8 : 'C_DOUBLE_COMPLEX',
-        16 : 'C_LONG_DOUBLE_COMPLEX'}
+        16 : 'C_LONG_DOUBLE_COMPLEX'},
 }
 
 python_builtin_datatypes = {
@@ -286,7 +286,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_Module(self, expr):
         self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
-
         name = self._print(expr.name)
         name = name.replace('.', '_')
         if not name.startswith('mod_') and self.prefix_module:
@@ -294,6 +293,7 @@ class FCodePrinter(CodePrinter):
                                             name=name)
 
         imports = ''.join(self._print(i) for i in expr.imports)
+        imports += 'use ISO_C_BINDING'
         decs    = ''.join(self._print(i) for i in expr.declarations)
         body    = ''
 
@@ -344,9 +344,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_Program(self, expr):
         self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
-
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
+        imports += 'use ISO_C_BINDING'
         body    = self._print(expr.body)
 
         # Print the declarations of all variables in the namespace, which include:
@@ -1346,6 +1346,7 @@ class FCodePrinter(CodePrinter):
         interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         arg_code  = ', '.join(self._print(i) for i in chain( arguments, results ))
         imports   = ''.join(self._print(i) for i in expr.imports)
+        imports += 'use ISO_C_BINDING'
         prelude   = ''.join(self._print(i) for i in args_decs.values())
         body_code = self._print(expr.body)
 
