@@ -3,8 +3,11 @@ import pytest
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import stack_array, types
-from pyccel.errors.errors import Errors, PyccelSemanticError
-from pyccel.errors.messages import *
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import (ARRAY_REALLOCATION,
+                                    ARRAY_DEFINITION_IN_LOOP,
+                                    INCOMPATIBLE_REDEFINITION_STACK_ARRAY,
+                                    STACK_ARRAY_DEFINITION_IN_LOOP)
 
 @pytest.fixture(params=[
     pytest.param('fortran', marks = pytest.mark.fortran),
@@ -78,7 +81,7 @@ def test_reallocation_stack(language):
 
     # epyccel should raise an Exception
     with pytest.raises(RuntimeError):
-        g = epyccel(f, language=language)
+        epyccel(f, language=language)
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors()
@@ -131,7 +134,7 @@ def test_creation_in_loop_stack(language):
 
     # epyccel should raise an Exception
     with pytest.raises(RuntimeError):
-        g = epyccel(f, language=language)
+        epyccel(f, language=language)
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors()
