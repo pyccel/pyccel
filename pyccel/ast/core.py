@@ -3192,7 +3192,13 @@ class FunctionCall(Basic, PyccelAstNode):
 
         # ...
         if not isinstance(func, (FunctionDef, Interface)):
-            raise TypeError('> expecting a FunctionDef')
+            raise TypeError('> expecting a FunctionDef or an Interface')
+
+        if isinstance(func, Interface):
+            self._interface = func
+            func = func.point(args)
+        else:
+            self._interface = None
 
         name = func.name
         # ...
@@ -3242,6 +3248,10 @@ class FunctionCall(Basic, PyccelAstNode):
     @property
     def funcdef(self):
         return self._funcdef
+
+    @property
+    def interface(self):
+        return self._interface
 
 class Return(Basic):
 
@@ -3738,11 +3748,9 @@ class Interface(Basic):
         if not isinstance(functions, list):
             raise TypeError('Expecting a list')
         self._name = name
-        self._interface_name = name
         self._functions = functions
         self._hide = hide
         self._is_argument = is_argument
-        self._points_to = None
 
     @property
     def name(self):
@@ -3784,50 +3792,7 @@ class Interface(Basic):
     def is_procedure(self):
         return self._functions[0].is_procedure
 
-    @property
-    def points_to(self):
-        return self._points_to
-
-    @property
-    def arguments(self):
-        return self._points_to.arguments
-
-    @property
-    def results(self):
-        return self._points_to.results
-
-    @property
-    def is_recursive(self):
-        return self._points_to.is_recursive
-
-    @property
-    def is_pure(self):
-        return self._points_to.is_pure
-
-    @property
-    def is_elemental(self):
-        return self._points_to.is_elemental
-
-    @property
-    def is_private(self):
-        return self._points_to.is_private
-
-    @property
-    def is_header(self):
-        return self._points_to.is_header
-
-    @property
-    def arguments_inout(self):
-        return self._points_to._arguments_inout
-
-    def rename(self, newname):
-        return Interface(newname, self.functions)
-
-    def neutralize(self):
-        points_to = None
-        self._name = self._interface_name
-
-    def point(self, args, rename = False):
+    def point(self, args):
         fs_args = [[j for j in i.arguments] for i in
                     self._functions]
         j = -1
@@ -3845,15 +3810,11 @@ class Interface(Basic):
                 break
 
         if found:
-            self._points_to = self._functions[j]
+            return  self._functions[j]
         else:
             msg = 'function not found in the interface'
-            # TODO: Add message to parser/messages.py
-            errors.report(msg,
-                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal', blocker=self.blocking)
-        if rename:
-            self._name = self._functions[j].name
+            errors.report('function not found in the interface',
+                        severity='fatal')
 
 class FunctionAddress(FunctionDef):
 

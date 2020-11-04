@@ -1260,14 +1260,8 @@ class SemanticParser(BasicParser):
             return expr
 
         else:
-            if isinstance(func, Interface):
-                func.point(args)
-                expr = FunctionCall(func, args, self._current_function)
-                func.neutralize()
-            else:
-                expr = FunctionCall(func, args, self._current_function)
+            expr = FunctionCall(func, args, self._current_function)
             return expr
-
     def _visit_Application(self, expr, **settings):
         name     = type(expr).__name__
         func     = self.get_function(name)
