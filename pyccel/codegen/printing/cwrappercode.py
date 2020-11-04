@@ -20,6 +20,8 @@ from pyccel.ast.cwrapper import Py_None
 from pyccel.ast.cwrapper import PyErr_SetString, PyType_Check
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 
+from pyccel.ast.f2py     import as_static_function_call
+
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 
@@ -414,7 +416,11 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_Module(self, expr):
         self._global_names = set(f.name.name for f in expr.funcs)
         sep = self._print(SeparatorComment(40))
-        function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.funcs)
+        if self._target_language == 'fortran':
+            static_funcs = [as_static_function_call(f, expr.name, name=f.name) for f in expr.funcs]
+        else:
+            static_funcs = expr.funcs
+        function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in static_funcs)
 
         function_defs = '\n\n'.join(self._print(f) for f in expr.funcs)
         cast_functions = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f)
