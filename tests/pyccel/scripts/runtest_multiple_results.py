@@ -50,8 +50,8 @@ def print_multiple():
 
 print_multiple()
 
-# print(min(f3()))
-# print(max(f3()))
+print(min(f3()))
+print(max(f3()))
 
 
 @types('real','real')
