@@ -1471,6 +1471,13 @@ class SemanticParser(BasicParser):
                     new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
                 # ...
 
+                # We cannot allow the definition of a stack array in a loop
+                if lhs.is_stack_array and self._namespace.is_loop:
+                    errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=name,
+                        severity='error', blocker=False,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset))
+
                 # Not yet supported for arrays: x=y+z, x=b[:]
                 # Because we cannot infer shape of right-hand side yet
                 know_lhs_shape = all(sh is not None for sh in lhs.alloc_shape) \
