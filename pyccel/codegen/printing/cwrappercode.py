@@ -222,51 +222,6 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             raise NotImplementedError('Default values are not implemented for this datatype : {}'.format(func_arg.dtype))
 
-    def _print_PyccelPyObject(self, expr):
-        return 'pyobject'
-
-    def _print_PyArg_ParseTupleNode(self, expr):
-        name    = 'PyArg_ParseTupleAndKeywords'
-        pyarg   = expr.pyarg
-        pykwarg = expr.pykwarg
-        flags   = expr.flags
-        # All args are modified so even pointers are passed by address
-        args    = ', '.join(['&{}'.format(a.name) for a in expr.args])
-
-        if expr.args:
-            code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(
-                            name=name,
-                            pyarg=pyarg,
-                            pykwarg=pykwarg,
-                            flags = flags,
-                            kwlist = expr.arg_names.name,
-                            args = args)
-        else :
-            code ='{name}({pyarg}, {pykwarg}, "", {kwlist})'.format(
-                    name=name,
-                    pyarg=pyarg,
-                    pykwarg=pykwarg,
-                    kwlist = expr.arg_names.name)
-
-        return code
-
-    def _print_PyBuildValueNode(self, expr):
-        name  = 'Py_BuildValue'
-        flags = expr.flags
-        args  = ', '.join(['{}'.format(self._print(a)) for a in expr.args])
-        #to change for args rank 1 +
-        if expr.args:
-            code = '{name}("{flags}", {args})'.format(name=name, flags=flags, args=args)
-        else :
-            code = '{name}("")'.format(name=name)
-        return code
-
-    def _print_PyArgKeywords(self, expr):
-        arg_names = ',\n'.join(['"{}"'.format(a) for a in expr.arg_names] + [self._print(Nil())])
-        return ('static char *{name}[] = {{\n'
-                        '{arg_names}\n'
-                        '}};\n'.format(name=expr.name, arg_names = arg_names))
-
     def optional_element_management(self, used_names, a, collect_var):
         """
         Responsible for collecting the variable required to build the result
@@ -312,6 +267,54 @@ class CWrapperCodePrinter(CCodePrinter):
         (BooleanTrue(), [Assign(VariableAddress(a), a.value)]))]
         return optional_tmp_var, body
 
+    #--------------------------------------------------------------------
+    #                 _print_ClassName functions
+    #--------------------------------------------------------------------
+
+    def _print_PyccelPyObject(self, expr):
+        return 'pyobject'
+
+    def _print_PyArg_ParseTupleNode(self, expr):
+        name    = 'PyArg_ParseTupleAndKeywords'
+        pyarg   = expr.pyarg
+        pykwarg = expr.pykwarg
+        flags   = expr.flags
+        # All args are modified so even pointers are passed by address
+        args    = ', '.join(['&{}'.format(a.name) for a in expr.args])
+
+        if expr.args:
+            code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(
+                            name=name,
+                            pyarg=pyarg,
+                            pykwarg=pykwarg,
+                            flags = flags,
+                            kwlist = expr.arg_names.name,
+                            args = args)
+        else :
+            code ='{name}({pyarg}, {pykwarg}, "", {kwlist})'.format(
+                    name=name,
+                    pyarg=pyarg,
+                    pykwarg=pykwarg,
+                    kwlist = expr.arg_names.name)
+
+        return code
+
+    def _print_PyBuildValueNode(self, expr):
+        name  = 'Py_BuildValue'
+        flags = expr.flags
+        args  = ', '.join(['{}'.format(self._print(a)) for a in expr.args])
+        #to change for args rank 1 +
+        if expr.args:
+            code = '{name}("{flags}", {args})'.format(name=name, flags=flags, args=args)
+        else :
+            code = '{name}("")'.format(name=name)
+        return code
+
+    def _print_PyArgKeywords(self, expr):
+        arg_names = ',\n'.join(['"{}"'.format(a) for a in expr.arg_names] + [self._print(Nil())])
+        return ('static char *{name}[] = {{\n'
+                        '{arg_names}\n'
+                        '}};\n'.format(name=expr.name, arg_names = arg_names))
 
     def _print_FunctionDef(self, expr):
         # Save all used names
