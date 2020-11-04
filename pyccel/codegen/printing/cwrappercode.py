@@ -293,7 +293,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 return IndexedVariable(dims, dtype=NativeInteger())[idx]
 
             arguments = [[a] if not (isinstance(a, Variable) and a.rank>0)
-                    else [get_shape(a,i) for i in reversed(range(a.rank))]+
+                    else [get_shape(a,i) for i in range(a.rank)]+
                     [NumpyPyArrayClass.get_attribute(a,'data')] for a in expr.arguments]
             arguments = [a for args in arguments for a in args]
         else:
