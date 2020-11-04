@@ -573,7 +573,7 @@ class SemanticParser(BasicParser):
         self._current_function = name
 
     def create_new_loop_scope(self):
-        new_scope = Scope()
+        new_scope = Scope(decorators=self._namespace.decorators)
         new_scope._is_loop = True
         new_scope.parent_scope = self._namespace
         self._namespace._loops.append(new_scope)
