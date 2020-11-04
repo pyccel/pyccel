@@ -44,7 +44,9 @@ from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
 from pyccel.ast.core      import PyccelUnarySub, PyccelMod
 from pyccel.ast.core      import FunctionCall
 
-from pyccel.ast.builtins  import Enumerate, PythonInt, Len, Map, Print, Range, Zip, PythonTuple, PythonFloat
+from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
+                                  PythonMap, PythonPrint, PythonRange,
+                                  PythonZip, PythonTuple, PythonFloat)
 from pyccel.ast.builtins  import PythonComplex, PythonBool
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
@@ -420,7 +422,7 @@ class FCodePrinter(CodePrinter):
         code = '\n'.join(self._print(i) for i in expr.imports)
         return self._get_statement(code) + '\n'
 
-    def _print_Print(self, expr):
+    def _print_PythonPrint(self, expr):
         args = []
         for f in expr.expr:
             if isinstance(f, str):
@@ -592,10 +594,14 @@ class FCodePrinter(CodePrinter):
     def _print_SumFunction(self, expr):
         return str(expr)
 
-    def _print_Len(self, expr):
+    def _print_PythonLen(self, expr):
         var = expr.arg
         idx = 1 if var.order == 'F' else var.rank
         return 'size({},{})'.format(self._print(var), self._print(idx))
+
+    def _print_PythonSum(self, expr):
+        args = [self._print(arg) for arg in expr.args]
+        return "sum({})".format(", ".join(args))
 
     #========================== Numpy Elements ===============================#
 
@@ -687,7 +693,7 @@ class FCodePrinter(CodePrinter):
                           symbol=expr, severity='fatal')
         return expr.fprint(self._print)
 
-    def _print_Min(self, expr):
+    def _print_PythonMin(self, expr):
         args = expr.args
         if len(args) == 1:
             arg = args[0]
@@ -697,7 +703,7 @@ class FCodePrinter(CodePrinter):
             code = 'min('+code+')'
         return self._get_statement(code)
 
-    def _print_Max(self, expr):
+    def _print_PythonMax(self, expr):
         args = expr.args
         if len(args) == 1:
             arg = args[0]
@@ -1063,10 +1069,10 @@ class FCodePrinter(CodePrinter):
             rhs_code = 'Huge({0})'.format(lhs_code)
             return '{0} = {1}\n'.format(lhs_code, rhs_code)
 
-        if isinstance(rhs, (Range, Product)):
+        if isinstance(rhs, (PythonRange, Product)):
             return ''
 
-        if isinstance(rhs, (Len, NumpyRandint)):
+        if isinstance(rhs, (PythonLen, NumpyRandint)):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}\n'.format(lhs_code, rhs_code)
 
@@ -1601,7 +1607,7 @@ class FCodePrinter(CodePrinter):
         stmt = Assign(lhs, rhs, strict=strict, status=status, like=like)
         return self._print_Assign(stmt)
 
-    def _print_Range(self, expr):
+    def _print_PythonRange(self, expr):
         start = self._print(expr.start)
         stop  = self._print(expr.stop) + '-' + self._print(Integer(1))
         step  = self._print(expr.step)
@@ -1637,8 +1643,8 @@ class FCodePrinter(CodePrinter):
         # ...
 
         def _do_range(target, iterable, prolog, epilog):
-            if not isinstance(iterable, Range):
-                # Only iterable currently supported is Range
+            if not isinstance(iterable, PythonRange):
+                # Only iterable currently supported is PythonRange
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                     severity='fatal')
 
@@ -1651,36 +1657,37 @@ class FCodePrinter(CodePrinter):
             return prolog, epilog
         # ...
 
-        if not isinstance(expr.iterable, (Range, Product , Zip, Enumerate, Map)):
-            # Only iterable currently supported are Range or Product
+        if not isinstance(expr.iterable, (PythonRange, Product , PythonZip,
+                            PythonEnumerate, PythonMap)):
+            # Only iterable currently supported are PythonRange or Product
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                 severity='fatal')
 
-        if isinstance(expr.iterable, Range):
+        if isinstance(expr.iterable, PythonRange):
             prolog, epilog = _do_range(expr.target, expr.iterable, \
                                        prolog, epilog)
 
         elif isinstance(expr.iterable, Product):
             for i, a in zip(expr.target, expr.iterable.args):
-                if isinstance(a, Range):
+                if isinstance(a, PythonRange):
                     itr_ = a
                 else:
-                    itr_ = Range(a.shape[0])
+                    itr_ = PythonRange(a.shape[0])
                 prolog, epilog = _do_range(i, itr_, \
                                            prolog, epilog)
 
-        elif isinstance(expr.iterable, Zip):
-            itr_ = Range(expr.iterable.element.shape[0])
+        elif isinstance(expr.iterable, PythonZip):
+            itr_ = PythonRange(expr.iterable.element.shape[0])
             prolog, epilog = _do_range(expr.target, itr_, \
                                        prolog, epilog)
 
-        elif isinstance(expr.iterable, Enumerate):
-            itr_ = Range(Len(expr.iterable.element))
+        elif isinstance(expr.iterable, PythonEnumerate):
+            itr_ = PythonRange(PythonLen(expr.iterable.element))
             prolog, epilog = _do_range(expr.target, itr_, \
                                        prolog, epilog)
 
-        elif isinstance(expr.iterable, Map):
-            itr_ = Range(Len(expr.iterable.args[1]))
+        elif isinstance(expr.iterable, PythonMap):
+            itr_ = PythonRange(PythonLen(expr.iterable.args[1]))
             prolog, epilog = _do_range(expr.target, itr_, \
                                        prolog, epilog)
 
@@ -2068,10 +2075,10 @@ class FCodePrinter(CodePrinter):
         DEBUG = True
 
         err = ErrorExit()
-        args = [(Not(expr.test), [Print(["'Assert Failed'"]), err])]
+        args = [(Not(expr.test), [PythonPrint(["'Assert Failed'"]), err])]
 
         if DEBUG:
-            args.append((True, Print(["'PASSED'"])))
+            args.append((True, PythonPrint(["'PASSED'"])))
 
         stmt = If(*args)
         code = self._print(stmt)

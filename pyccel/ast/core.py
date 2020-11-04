@@ -33,7 +33,9 @@ from sympy.utilities.misc               import filldedent
 
 
 from .basic     import Basic, PyccelAstNode
-from .builtins  import Enumerate, Len, List, Map, Range, Zip, PythonTuple, PythonBool, PythonInt
+from .builtins  import (PythonEnumerate, PythonLen, PythonList, PythonMap,
+                        PythonRange, PythonZip, PythonTuple, PythonBool,
+                        PythonInt)
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
@@ -827,7 +829,7 @@ def extract_subexpressions(expr):
               DottedVariable, sp_Float, sp_Integer,
               sp_Rational, ImaginaryUnit,sp_Boolean,
               BooleanTrue, BooleanFalse, String,
-              ValuedArgument, Nil, List, PythonTuple,
+              ValuedArgument, Nil, PythonList, PythonTuple,
               StarredArguments)
 
     func_names = ('diag', 'empty', 'zip', 'enumerate')
@@ -861,12 +863,12 @@ def extract_subexpressions(expr):
             new.set_fst(expr.fst)
             stmts.append(new)
             return var
-        elif isinstance(expr, List):
+        elif isinstance(expr, PythonList):
             args = []
             for i in expr:
                 args.append(substitute(i))
 
-            return List(*args, sympify=False)
+            return PythonList(*args, sympify=False)
 
         elif isinstance(expr, (Tuple, tuple, list)):
             args = []
@@ -1243,7 +1245,7 @@ class Assign(Basic):
         if isinstance(lhs, Variable):
             return isinstance(lhs.dtype, NativeSymbol)
         elif isinstance(lhs, Symbol):
-            if isinstance(rhs, Range):
+            if isinstance(rhs, PythonRange):
                 return True
             elif isinstance(rhs, Variable):
                 return isinstance(rhs.dtype, NativeSymbol)
@@ -1669,7 +1671,7 @@ class With(Basic):
         body +=  end.body.body
         return Block('with', [], body)
 
-class Tile(Range):
+class Tile(PythonRange):
 
     """
     Representes a tile.
@@ -1687,7 +1689,7 @@ class Tile(Range):
 
     def __new__(cls, start, stop):
         step = 1
-        return Range.__new__(cls, start, stop, step)
+        return PythonRange.__new__(cls, start, stop, step)
 
     @property
     def start(self):
@@ -1702,7 +1704,7 @@ class Tile(Range):
         return self.stop - self.start
 
 
-class ParallelRange(Range):
+class ParallelRange(PythonRange):
 
     """
     Representes a parallel range using OpenMP/OpenACC.
@@ -1741,7 +1743,7 @@ class Tensor(Basic):
         for r in args:
             cond = isinstance(r, Variable) and isinstance(r.dtype,
                     (NativeRange, NativeTensor))
-            cond = cond or isinstance(r, (Range, Tensor))
+            cond = cond or isinstance(r, (PythonRange, Tensor))
 
             if not cond:
                 raise TypeError('non valid argument, given {0}'.format(type(r)))
@@ -2188,8 +2190,8 @@ class For(Basic):
             target = sympify(target, locals=local_sympify)
 
             cond_iter = iterable(iter_obj)
-            cond_iter = cond_iter or isinstance(iter_obj, (Range, Product,
-                    Enumerate, Zip, Map))
+            cond_iter = cond_iter or isinstance(iter_obj, (PythonRange, Product,
+                    PythonEnumerate, PythonZip, PythonMap))
             cond_iter = cond_iter or isinstance(iter_obj, Variable) \
                 and is_iterable_datatype(iter_obj.dtype)
           #  cond_iter = cond_iter or isinstance(iter_obj, ConstructorCall) \
@@ -2234,7 +2236,7 @@ class ForAll(Basic):
     """ class that represents the forall statement in fortran"""
     def __new__(cls, iter_obj, target, mask, body):
 
-        if not isinstance(iter_obj, Range):
+        if not isinstance(iter_obj, PythonRange):
             raise TypeError('iterable must be of type Range')
 
         return Basic.__new__(cls, iter_obj, target, mask, body)
@@ -2269,7 +2271,7 @@ class ForIterator(For):
         ):
 
         if isinstance(iterable, Symbol):
-            iterable = Range(Len(iterable))
+            iterable = PythonRange(PythonLen(iterable))
         return For.__new__(cls, target, iterable, body, strict)
 
     # TODO uncomment later when we intriduce iterators
@@ -5670,7 +5672,7 @@ def get_iterable_ranges(it, var_name=None):
 
         cls_base = it.cls_base
 
-        if isinstance(cls_base, Range):
+        if isinstance(cls_base, PythonRange):
             if not isinstance(it.name, DottedName):
                 raise TypeError('Expecting a DottedName, given  {0}'.format(type(it.name)))
 
@@ -5688,7 +5690,7 @@ def get_iterable_ranges(it, var_name=None):
                     raise TypeError('Wrong type, given {0}'.format(type(i)))
                 args += [arg]
 
-            return [Range(*args)]
+            return [PythonRange(*args)]
         elif isinstance(cls_base, Tensor):
 
             if not isinstance(it.name, DottedName):
@@ -5876,7 +5878,7 @@ def get_iterable_ranges(it, var_name=None):
 
     # ...
 
-    return [Range(s, e, 1) for (s, e) in zip(starts, ends)]
+    return [PythonRange(s, e, 1) for (s, e) in zip(starts, ends)]
 
 class ParserResult(Basic):
     def __new__(
@@ -5971,7 +5973,7 @@ class PyccelArraySize(Function, PyccelAstNode):
                                 tuple,
                                 Tuple,
                                 PythonTuple,
-                                List,
+                                PythonList,
                                 Variable,
                                 IndexedElement,
                                 IndexedBase)):

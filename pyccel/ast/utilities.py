@@ -14,7 +14,7 @@ from pyccel.errors.errors import Errors
 from .core     import (AsName, Import, FunctionDef, String, Constant,
                        Variable, IndexedVariable, ValuedVariable)
 
-from .builtins import builtin_functions_dict, Map
+from .builtins import builtin_functions_dict, PythonMap
 from .itertoolsext import Product
 from .mathext  import math_functions, math_constants
 
@@ -55,7 +55,7 @@ def builtin_function(expr, args=None):
     if name == 'map':
         func = Function(str(expr.args[0].name))
         args = [func]+list(args[1:])
-        return Map(*args)
+        return PythonMap(*args)
 
     if name == 'lambdify':
         return lambdify(expr, args)

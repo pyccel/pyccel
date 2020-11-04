@@ -11,9 +11,10 @@ from sympy           import (Basic, Function, Tuple, Integer as sp_Integer,
 
 from .core           import (PyccelPow, PyccelMinus, PyccelMul, PyccelAdd,
                              PyccelAssociativeParenthesis, broadcast, ClassDef,
-                             FunctionDef, IndexedVariable, Assign, List, Nil,
-                             Variable, IndexedElement, Slice, Len, For, Range,
-                             ValuedArgument, Constant, process_shape)
+                             FunctionDef, IndexedVariable, Assign, PythonList,
+                             Variable, IndexedElement, Slice, PythonLen, For,
+                             PythonRange, Nil, process_shape, ValuedArgument,
+                             Constant)
 
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex)
@@ -132,7 +133,7 @@ class NumpyArray(Application, NumpyNewArray):
 
     def __new__(cls, arg, dtype=None, order='C'):
 
-        if not isinstance(arg, (Tuple, PythonTuple, List)):
+        if not isinstance(arg, (Tuple, PythonTuple, PythonList)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         # Verify dtype and get precision
@@ -220,11 +221,12 @@ class NumpyArray(Application, NumpyNewArray):
 class NumpySum(Function, PyccelAstNode):
     """Represents a call to  numpy.sum for code generation.
 
-    arg : list , tuple , PythonTuple, Tuple, List, Variable
+    arg : list , tuple , PythonTuple, Tuple, PythonList, Variable
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
+        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, PythonList,
+                            Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         return Basic.__new__(cls, arg)
@@ -253,11 +255,12 @@ class NumpySum(Function, PyccelAstNode):
 class NumpyProduct(Function, PyccelAstNode):
     """Represents a call to  numpy.prod for code generation.
 
-    arg : list , tuple , PythonTuple, Tuple, List, Variable
+    arg : list , tuple , PythonTuple, Tuple, PythonList, Variable
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
+        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, PythonList,
+                                Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(arg))
         return Basic.__new__(cls, arg)
 
@@ -283,13 +286,15 @@ class NumpyProduct(Function, PyccelAstNode):
 #==============================================================================
 class NumpyMatmul(Application, PyccelAstNode):
     """Represents a call to numpy.matmul for code generation.
-    arg : list , tuple , PythonTuple, Tuple, List, Variable
+    arg : list , tuple , PythonTuple, Tuple, PythonList, Variable
     """
 
     def __new__(cls, a, b):
-        if not isinstance(a, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
+        if not isinstance(a, (list, tuple, PythonTuple, Tuple, PythonList,
+                                Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(a))
-        if not isinstance(b, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
+        if not isinstance(b, (list, tuple, PythonTuple, Tuple, PythonList,
+                                Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(a))
         return Basic.__new__(cls, a, b)
 
@@ -603,7 +608,7 @@ class NumpyDiag(Application, NumpyNewArray):
             lhs   = IndexedVariable(lhs)[self.index]
             rhs   = IndexedVariable(self.array)[self.index,self.index]
             body  = [Assign(lhs, rhs)]
-            body  = For(self.index, Range(Len(self.array)), body)
+            body  = For(self.index, PythonRange(PythonLen(self.array)), body)
             code  = printer(body)
             alloc = 'allocate({0}(0: size({1},1)-1))'.format(lhs.base, array)
         elif rank == 1:
@@ -611,7 +616,7 @@ class NumpyDiag(Application, NumpyNewArray):
             lhs   = IndexedVariable(lhs)[self.index, self.index]
             rhs   = IndexedVariable(self.array)[self.index]
             body  = [Assign(lhs, rhs)]
-            body  = For(self.index, Range(Len(self.array)), body)
+            body  = For(self.index, PythonRange(PythonLen(self.array)), body)
             code  = printer(body)
             alloc = 'allocate({0}(0: size({1},1)-1, 0: size({1},1)-1))'.format(lhs, array)
 
