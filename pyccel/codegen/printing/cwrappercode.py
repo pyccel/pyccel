@@ -11,6 +11,7 @@ from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, Funct
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, PyccelNe
+from pyccel.ast.core import IndexedVariable, DottedVariable
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
@@ -19,6 +20,7 @@ from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
 from pyccel.ast.cwrapper import Py_None
 from pyccel.ast.cwrapper import PyErr_SetString, PyType_Check
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
+from pyccel.ast.cwrapper import PyccelPyArrayObject, NumpyPyArrayClass
 
 from pyccel.ast.f2py     import as_static_function_call
 
@@ -29,7 +31,8 @@ errors = Errors()
 
 __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 
-dtype_registry = {('pyobject', 0) : 'PyObject'}
+dtype_registry = {('pyobject'     , 0) : 'PyObject',
+                  ('pyarrayobject', 0) : 'PyArrayObject'}
 
 class CWrapperCodePrinter(CCodePrinter):
     """A printer to convert a python module to strings of c code creating
@@ -271,8 +274,55 @@ class CWrapperCodePrinter(CCodePrinter):
     #                 _print_ClassName functions
     #--------------------------------------------------------------------
 
+    def _print_IndexedElement(self, expr):
+        assert(len(expr.indices)==1)
+        return '{}[{}]'.format(self._print(expr.base.internal_variable), self._print(expr.indices[0]))
+
+    def _print_FunctionCall(self, expr):
+        func = expr.funcdef
+        is_static = func.is_static
+        if is_static:
+            def get_shape(arg, idx):
+                dims = NumpyPyArrayClass.get_attribute(arg,'dimensions')
+                return IndexedVariable(dims, dtype=NativeInteger())[idx]
+
+            arguments = [[a] if not (isinstance(a, Variable) and a.rank>0)
+                    else [get_shape(a,i) for i in reversed(range(a.rank))]+
+                    [NumpyPyArrayClass.get_attribute(a,'data')] for a in expr.arguments]
+            arguments = [a for args in arguments for a in args]
+        else:
+            arguments = expr.arguments
+         # Ensure the correct syntax is used for pointers
+
+        args = []
+        for a, f in zip(arguments, func.arguments):
+            if isinstance(a, Variable) and self.stored_in_c_pointer(f):
+                args.append(VariableAddress(a))
+            elif f.is_optional and not isinstance(a, Nil):
+                tmp_var = self.create_tmp_var(f)
+                assign = Assign(tmp_var, a)
+                self._additional_code += self._print(assign) + '\n'
+                args.append(VariableAddress(tmp_var))
+
+            else :
+                args.append(a)
+
+        args += self._temporary_args
+        self._temporary_args = []
+        args = ', '.join(['{}'.format(self._print(a)) if f.rank == 0
+            else '({}*){}'.format(self.find_in_dtype_registry(self._print(f.dtype), f.precision),
+                self._print(a))
+            for a,f in zip(args, func.arguments)])
+        if not func.results:
+            return '{}({});'.format(func.name, args)
+        return '{}({})'.format(func.name, args)
+
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
+
+    def _print_PyccelPyArrayObject(self, expr):
+        self._additional_imports.add('numpy/arrayobject');
+        return 'pyarrayobject'
 
     def _print_PyArg_ParseTupleNode(self, expr):
         name    = 'PyArg_ParseTupleAndKeywords'
@@ -354,8 +404,13 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body_translations = []
 
         parse_args = []
-        # TODO (After PR 422): Handle optional args
-        for a in expr.arguments:
+        arguments = [Variable(PyccelPyArrayObject(),
+            a.name,
+            is_pointer = True,
+            cls_base = NumpyPyArrayClass,
+            rank = a.rank) if isinstance(a, Variable) and a.rank > 0
+                else a for a in expr.arguments]
+        for a in arguments:
             collect_var, cast_func = self.get_PyArgParseType(used_names, a)
 
             # If the variable cannot be collected from PyArgParse directly
@@ -380,11 +435,12 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.extend(wrapper_body_translations)
 
         # Call function
+        static_function = as_static_function_call(expr, self._module_name, name=expr.name)
         if len(expr.results)==0:
-            func_call = FunctionCall(expr, expr.arguments)
+            func_call = FunctionCall(static_function, arguments)
         else:
             results   = expr.results if len(expr.results)>1 else expr.results[0]
-            func_call = Assign(results,FunctionCall(expr, expr.arguments))
+            func_call = Assign(results,FunctionCall(static_function, arguments))
 
         wrapper_body.append(func_call)
 
@@ -418,6 +474,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_Module(self, expr):
         self._global_names = set(f.name.name for f in expr.funcs)
+        self._module_name  = expr.name
         sep = self._print(SeparatorComment(40))
         if self._target_language == 'fortran':
             static_funcs = [as_static_function_call(f, expr.name, name=f.name) for f in expr.funcs]
