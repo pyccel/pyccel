@@ -3954,6 +3954,10 @@ class F2PYFunctionDef(FunctionDef):
         return FunctionDef.__init__(self, *args, **kwargs)
 
     @property
+    def name(self):
+        return str(self._name).lower()
+
+    @property
     def original_function(self):
         return self._original_function
 

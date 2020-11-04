@@ -157,7 +157,7 @@ def epyccel_seq(function_or_module, *,
 
     # If Python object was function, extract it from module
     if isinstance(function_or_module, FunctionType):
-        func = getattr(package, pyfunc.__name__.lower())
+        func = getattr(package, pyfunc.__name__)
     else:
         func = None
 
