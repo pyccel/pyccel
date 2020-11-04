@@ -434,7 +434,6 @@ def array_int32_in_bool_out_2d_F_complex_3d_expr( x, y, ri ):
 # 1D STACK ARRAYS OF REAL
 #==============================================================================
 
-@types('double[:]')
 @stack_array('a')
 def array_real_1d_sum_stack_array():
     from numpy import zeros
@@ -444,7 +443,6 @@ def array_real_1d_sum_stack_array():
         s += a[i]
     return s
 
-@types('double[:]')
 @stack_array('a')
 def array_real_1d_div_stack_array():
     from numpy import ones
@@ -458,7 +456,7 @@ def array_real_1d_div_stack_array():
 # TEST: Product and matrix multiplication
 #==============================================================================
 
-@types('real[:], real[:], real[:]')
+@types('real[:], real[:]')
 def array_real_1d_1d_prod(x, out):
     from numpy import prod
     out[:] = prod(x)
