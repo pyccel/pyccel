@@ -47,24 +47,22 @@ from pyccel.ast.core import Is, IsNot
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import With, Block
-from pyccel.ast.core import List, Dlist
+from pyccel.ast.core import PythonList, Dlist
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import _atomic
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
-from pyccel.ast.core import PyccelUnary, PyccelUnarySub
-from pyccel.ast.core import Product, FunctionCall
+from pyccel.ast.core import PyccelUnary, PyccelUnarySub, FunctionCall
+from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 
-from pyccel.ast.datatypes import NativeRange
+from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric, NativeComplex
-
-from pyccel.ast.type_inference  import str_dtype
 
 from pyccel.ast.numbers import BooleanTrue, BooleanFalse
 from pyccel.ast.numbers import Integer, Float
@@ -77,10 +75,11 @@ from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 from pyccel.ast.utilities import split_positional_keyword_arguments
 
-from pyccel.ast.builtins import Print
+from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
 from pyccel.ast.builtins import python_builtin_datatype
-from pyccel.ast.builtins import Range, Zip, Enumerate, Map, PythonTuple
+from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
+                                 PythonMap, PythonTuple)
 
 from pyccel.ast.numpyext import NumpyEmpty, NumpyZeros
 from pyccel.ast.numpyext import NumpyEmptyLike
@@ -639,7 +638,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, IfTernaryOperator):
             return self._infere_type(expr.args[0][1].body[0])
 
-        elif isinstance(expr, Range):
+        elif isinstance(expr, PythonRange):
 
             d_var['datatype'   ] = NativeRange()
             d_var['allocatable'] = False
@@ -729,9 +728,9 @@ class SemanticParser(BasicParser):
         ls = [self._visit(i, **settings) for i in expr]
         return Tuple(*ls, sympify=False)
 
-    def _visit_List(self, expr, **settings):
+    def _visit_PythonList(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
-        return List(*ls, sympify=False)
+        return PythonList(*ls, sympify=False)
 
     def _visit_ValuedArgument(self, expr, **settings):
         value = self._visit(expr.value, **settings)
@@ -1091,7 +1090,7 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelAdd(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, List)):
+        if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, PythonList)):
             get_vars = lambda a: a.get_vars() if isinstance(a, TupleVariable) else a.args
             tuple_args = [ai for a in args for ai in get_vars(a)]
             expr_new = PythonTuple(*tuple_args)
@@ -1101,7 +1100,7 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelMul(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, List)):
+        if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, PythonList)):
             expr_new = self._visit(Dlist(args[0], args[1]))
         else:
             expr_new = self._handle_PyccelOperator(expr, **settings)
@@ -1353,7 +1352,7 @@ class SemanticParser(BasicParser):
             severity='fatal', blocker=self.blocking)
 
     def _create_variable(self, name, dtype, rhs, d_lhs):
-        if isinstance(rhs, (TupleVariable, PythonTuple, List)):
+        if isinstance(rhs, (TupleVariable, PythonTuple, PythonList)):
             elem_vars = []
             for i,r in enumerate(rhs):
                 elem_name = self.get_new_name( name + '_' + str(i) )
@@ -1688,7 +1687,7 @@ class SemanticParser(BasicParser):
             else:
                 d_var = self._infere_type(rhs, **settings)
 
-        elif isinstance(rhs, Map):
+        elif isinstance(rhs, PythonMap):
 
             name = str(rhs.args[0])
             func = self.get_function(name)
@@ -1800,7 +1799,7 @@ class SemanticParser(BasicParser):
         else:
             lhs = self._visit(lhs, **settings)
 
-        if isinstance(rhs, (Map, Zip)):
+        if isinstance(rhs, (PythonMap, PythonZip)):
             func  = _get_name(rhs.args[0])
             func  = UndefinedFunction(func)
             alloc = Assign(lhs, NumpyZeros(lhs.shape, lhs.dtype))
@@ -1832,7 +1831,7 @@ class SemanticParser(BasicParser):
             is_pointer = lhs.is_pointer
         elif isinstance(lhs, IndexedElement):
             is_pointer = False
-        elif isinstance(lhs, (PythonTuple, List)):
+        elif isinstance(lhs, (PythonTuple, PythonList)):
             is_pointer = any(l.is_pointer for l in lhs)
 
         # TODO: does is_pointer refer to any/all or last variable in list (currently last)
@@ -1898,7 +1897,7 @@ class SemanticParser(BasicParser):
             iterator = indx
             body     = [assign] + body
 
-        elif isinstance(iterable, Map):
+        elif isinstance(iterable, PythonMap):
             indx   = self.get_new_variable()
             func   = iterable.args[0]
             args   = [IndexedBase(arg)[indx] for arg in iterable.args[1:]]
@@ -1907,7 +1906,7 @@ class SemanticParser(BasicParser):
             iterator = indx
             body     = [assign] + body
 
-        elif isinstance(iterable, Zip):
+        elif isinstance(iterable, PythonZip):
             args = iterable.args
             indx = self.get_new_variable()
             for i, arg in enumerate(args):
@@ -1916,7 +1915,7 @@ class SemanticParser(BasicParser):
                 body = [assign] + body
             iterator = indx
 
-        elif isinstance(iterable, Enumerate):
+        elif isinstance(iterable, PythonEnumerate):
             indx   = iterator.args[0]
             var    = iterator.args[1]
             assign = Assign(var, IndexedBase(iterable.args[0])[indx])
@@ -1928,7 +1927,7 @@ class SemanticParser(BasicParser):
             args     = iterable.elements
             iterator = list(iterator)
             for i,arg in enumerate(args):
-                if not isinstance(arg, Range):
+                if not isinstance(arg, PythonRange):
                     indx   = self.get_new_variable()
                     assign = Assign(iterator[i], IndexedBase(arg)[indx])
 
@@ -2043,12 +2042,12 @@ class SemanticParser(BasicParser):
             step  = Integer(1)
             var   = body.target
             a     = self._visit(body.iterable, **settings)
-            if isinstance(a, Range):
+            if isinstance(a, PythonRange):
                 var   = Variable('int', var.name)
                 stop  = a.stop
                 start = a.start
                 step  = a.step
-            elif isinstance(a, (Zip, Enumerate)):
+            elif isinstance(a, (PythonZip, PythonEnumerate)):
                 dvar  = self._infere_type(a.element, **settings)
                 dtype = dvar.pop('datatype')
                 if dvar['rank'] > 0:
@@ -2627,10 +2626,10 @@ class SemanticParser(BasicParser):
 #           self.insert_function(funcs)
         return EmptyNode()
 
-    def _visit_Print(self, expr, **settings):
+    def _visit_PythonPrint(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.expr]
         if len(args) == 0:
-            return Print(args)
+            return PythonPrint(args)
 
         is_symbolic = lambda var: isinstance(var, Variable) \
             and isinstance(var.dtype, NativeSymbol)
@@ -2655,7 +2654,7 @@ class SemanticParser(BasicParser):
                     _args.append(f)
             return SymbolicPrint(_args)
         else:
-            return Print(args)
+            return PythonPrint(args)
 
     def _visit_ClassDef(self, expr, **settings):
 

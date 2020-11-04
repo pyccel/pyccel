@@ -17,7 +17,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, Nativ
 from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.numpyext import NumpyReal, NumpyImag
 
-from pyccel.ast.builtins  import Range, PythonFloat, PythonComplex
+from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 from pyccel.ast.core import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import Declare, ValuedVariable
@@ -440,7 +440,6 @@ class CCodePrinter(CodePrinter):
                                .replace("'", "\\'")
         return '"{}"'.format(format_str)
 
-
     def get_print_format_and_arg(self, var):
         type_to_format = {('real',8)    : '%.12lf',
                           ('real',4)    : '%.12f',
@@ -469,7 +468,7 @@ class CCodePrinter(CodePrinter):
         return tmp_list
 
 
-    def _print_Print(self, expr):
+    def _print_PythonPrint(self, expr):
         self._additional_imports.add("stdio")
         args_format = []
         args = []
@@ -874,7 +873,7 @@ class CCodePrinter(CodePrinter):
     def _print_For(self, expr):
         target = self._print(expr.target)
         body  = self._print(expr.body)
-        if isinstance(expr.iterable, Range):
+        if isinstance(expr.iterable, PythonRange):
             start, stop, step = [self._print(e) for e in expr.iterable.args]
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
@@ -1055,7 +1054,7 @@ class CCodePrinter(CodePrinter):
         decs    = '\n'.join(self._print(i) for i in decs)
         self._additional_declare.clear()
 
-        # Print imports last to be sure that all additional_imports have been collected
+        # PythonPrint imports last to be sure that all additional_imports have been collected
         imports  = [*expr.imports, *map(Import, self._additional_imports)]
         imports  = '\n'.join(self._print(i) for i in imports)
 

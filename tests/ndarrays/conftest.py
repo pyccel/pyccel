@@ -6,13 +6,17 @@ import sys
 import shutil
 import pytest
 
+NEEDS_FROM_PARENT = hasattr(pytest.Item, "from_parent")
+
 def pytest_collect_file(parent, path):
     """
     A hook to collect test_*.c test files.
 
     """
     if path.ext == ".c" and path.basename.startswith("test_"):
-        return CTestFile.from_parent(parent, path)
+        if NEEDS_FROM_PARENT:
+            return CTestFile.from_parent(fspath=path, parent=parent)
+        return CTestFile(parent=parent, fspath=path)
 
 def pytest_collection_modifyitems(items):
     """
@@ -28,6 +32,9 @@ class CTestFile(pytest.File):
     A custom file handler class for C unit test files.
 
     """
+    def __init__(self, fspath, parent):
+        pytest.File.__init__(self, fspath , parent)
+
     @classmethod
     def from_parent(cls, parent, fspath):
         return super().from_parent(parent=parent, fspath=fspath)
@@ -72,7 +79,10 @@ class CTestFile(pytest.File):
             elif token in ("INFO", "DSCR"):
                 test_results[-1][token] = data
         for test_result in test_results:
-            yield CTestItem.from_parent(test_result["function_name"], self, test_result)
+            if NEEDS_FROM_PARENT:
+                yield CTestItem.from_parent(test_result["function_name"], self, test_result)
+            else:
+                yield CTestItem(test_result["function_name"], self, test_result)
 
 
 class CTestItem(pytest.Item):
@@ -84,7 +94,7 @@ class CTestItem(pytest.Item):
 
     def __init__(self, name, parent, test_result):
         """Overridden constructor to pass test results dict."""
-        super().__init__(name, parent)
+        pytest.Item.__init__(self, name, parent)
         self.test_result = test_result
 
     @classmethod
