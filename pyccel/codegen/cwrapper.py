@@ -43,7 +43,8 @@ def create_c_setup(mod_name,
             A string containing the contents of the setup file
     """
 
-    code  = "from setuptools import Extension, setup\n\n"
+    code  = "from setuptools import Extension, setup\n"
+    code += "import numpy\n\n"
 
     wrapper_file = "[ r'{0}' ]".format(wrapper_file)
 
@@ -54,8 +55,11 @@ def create_c_setup(mod_name,
     files       = ("extra_objects = {0}".format(print_list(deps))
                    if deps else None)
 
-    include_str = ('include_dirs = {0}'.format(print_list(include))
-                   if include else None)
+    if include is None:
+        include_str = 'include_dirs = [numpy.get_include()]'
+    else:
+        include_str = ('include_dirs = [{0}, numpy.get_include()]'.format(print_list(include)[1:-1])
+                       if include else None)
 
     libs_str    = ('libraries = {0}'.format(print_list(libs))
                    if libs else None)
