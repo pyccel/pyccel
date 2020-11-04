@@ -1003,6 +1003,17 @@ class CCodePrinter(CodePrinter):
         else:
             return '&{}'.format(expr.variable.name)
 
+    def _print_DottedVariable(self, expr):
+        operator = '->' if expr.lhs.is_pointer else '.'
+        if isinstance(expr.lhs, Variable):
+            lhs = expr.lhs.name
+        else:
+            lhs = self._print(expr.lhs)
+        return '{lhs}{op}{rhs}'.format(
+                lhs=lhs,
+                op = operator,
+                rhs=self._print(expr.rhs))
+
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
 
