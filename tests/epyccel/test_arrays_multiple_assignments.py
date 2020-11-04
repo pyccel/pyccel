@@ -3,7 +3,7 @@ import pytest
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import stack_array, types
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors import Errors, PyccelSemanticError
 from pyccel.errors.messages import (ARRAY_REALLOCATION,
                                     ARRAY_DEFINITION_IN_LOOP,
                                     INCOMPATIBLE_REDEFINITION_STACK_ARRAY,
@@ -80,7 +80,7 @@ def test_reallocation_stack(language):
     errors = Errors()
 
     # epyccel should raise an Exception
-    with pytest.raises(RuntimeError):
+    with pytest.raises(PyccelSemanticError):
         epyccel(f, language=language)
 
     # Check that we got exactly 1 Pyccel error
@@ -133,7 +133,7 @@ def test_creation_in_loop_stack(language):
     errors = Errors()
 
     # epyccel should raise an Exception
-    with pytest.raises(RuntimeError):
+    with pytest.raises(PyccelSemanticError):
         epyccel(f, language=language)
 
     # Check that we got exactly 1 Pyccel error

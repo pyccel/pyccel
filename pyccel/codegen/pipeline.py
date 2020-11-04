@@ -152,7 +152,9 @@ def execute_pyccel(fname, *,
             severity='error')
     except PyccelError:
         handle_error('annotation (semantic)')
-        raise
+        # Raise a new error to avoid a large traceback
+        raise PyccelSemanticError('Semantic step failed')
+
     if errors.has_errors():
         handle_error('annotation (semantic)')
         raise PyccelSemanticError('Semantic step failed')
@@ -181,7 +183,9 @@ def execute_pyccel(fname, *,
                 severity='error')
         except PyccelError:
             handle_error('code generation')
-            raise
+            # Raise a new error to avoid a large traceback
+            raise PyccelCodegenError('Code generation failed')
+
         if errors.has_errors():
             handle_error('code generation')
             raise PyccelCodegenError('Code generation failed')
