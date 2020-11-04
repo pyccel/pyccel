@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
-from pyccel.ast.numbers   import BooleanTrue
+from pyccel.ast.numbers   import BooleanTrue, Integer
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
@@ -158,7 +158,7 @@ class CWrapperCodePrinter(CCodePrinter):
         elif variable.rank > 0:
             check = PyccelNe(NumpyPyArrayClass.get_attribute(variable,'nd'), Integer(variable.rank))
             err = PyErr_SetString('PyExc_TypeError', '"{} must have rank {}"'.format(variable, str(variable.rank)))
-            body = [If((PyccelNot(check), [err, Return([Nil()])]))]
+            body = [If((check, [err, Return([Nil()])]))]
             # TODO: Add type check
 
         elif variable.dtype is NativeBool():
