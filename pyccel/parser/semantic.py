@@ -1509,10 +1509,12 @@ class SemanticParser(BasicParser):
                                     self._current_fst_node.col_offset))
 
                         else:
-                            # TODO [YG, 28.10.2020] Should we set status='unknown' instead?
+                            # TODO [YG, 04.11.2020] If we could be sure that the
+                            # array was not created in an if-then-else block, we
+                            # would use status='allocated' instead.
                             new_expressions.append(Allocate(var,
                                 shape=rhs.shape, order=rhs.order,
-                                status='allocated'))
+                                status='unknown'))
 
                             errors.report(ARRAY_REALLOCATION, symbol=name,
                                 severity='warning', blocker=False,
