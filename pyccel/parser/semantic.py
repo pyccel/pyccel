@@ -1453,9 +1453,23 @@ class SemanticParser(BasicParser):
                 # Add variable to scope
                 self.insert_variable(lhs, name=lhs.name)
 
+                # ...
                 # Add memory allocation if needed
-                if lhs.allocatable and not lhs.is_stack_array:
-                    new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status='unallocated'))
+                if lhs.allocatable:
+                    if self._namespace.is_loop:
+                        # Array defined in a loop may need reallocation at every cycle
+                        errors.report(ARRAY_DEFINITION_IN_LOOP, symbol=name,
+                            severity='warning', blocker=False,
+                            bounding_box=(self._current_fst_node.lineno,
+                                self._current_fst_node.col_offset))
+                        status='unknown'
+                    else:
+                        # Array defined outside of a loop will be allocated only once
+                        status='unallocated'
+
+                    # Create Allocate node
+                    new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
+                # ...
 
                 # Not yet supported for arrays: x=y+z, x=b[:]
                 # Because we cannot infer shape of right-hand side yet
