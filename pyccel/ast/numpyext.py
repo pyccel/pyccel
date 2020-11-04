@@ -11,19 +11,19 @@ from sympy           import (Basic, Function, Tuple, Integer as sp_Integer,
 
 from .core           import (PyccelPow, PyccelMinus, PyccelMul, PyccelAdd,
                              PyccelAssociativeParenthesis, broadcast, ClassDef,
-                             FunctionDef, IndexedVariable, Assign, List, Nil,
-                             Variable, IndexedElement, Slice, Len, For, Range,
-                             ValuedArgument, Constant, process_shape)
+                             FunctionDef, IndexedVariable, Assign, PythonList,
+                             Variable, IndexedElement, Slice, PythonLen, For,
+                             PythonRange, Nil, process_shape, ValuedArgument,
+                             Constant)
 
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex)
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
-                             NativeReal, NativeComplex, NativeBool)
+                             NativeReal, NativeComplex, NativeBool, str_dtype)
 
 from .numbers        import Integer, Float
-from .type_inference import str_dtype
 from .basic          import PyccelAstNode
 
 
@@ -127,13 +127,13 @@ class NumpyArray(Application, NumpyNewArray):
     """
     Represents a call to  numpy.array for code generation.
 
-    arg : list ,tuple ,Tuple, List
+    arg : list ,tuple ,Tuple, PythonList
 
     """
 
     def __new__(cls, arg, dtype=None, order='C'):
 
-        if not isinstance(arg, (Tuple, PythonTuple, List)):
+        if not isinstance(arg, (Tuple, PythonTuple, PythonList)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         # Verify dtype and get precision
@@ -217,11 +217,12 @@ class NumpyArray(Application, NumpyNewArray):
 class NumpySum(Function, PyccelAstNode):
     """Represents a call to  numpy.sum for code generation.
 
-    arg : list , tuple , PythonTuple, Tuple, List, Variable
+    arg : list , tuple , PythonTuple, Tuple, PythonList, Variable
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
+        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, PythonList,
+                            Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         return Basic.__new__(cls, arg)
@@ -250,11 +251,12 @@ class NumpySum(Function, PyccelAstNode):
 class NumpyProduct(Function, PyccelAstNode):
     """Represents a call to  numpy.prod for code generation.
 
-    arg : list , tuple , PythonTuple, Tuple, List, Variable
+    arg : list , tuple , PythonTuple, Tuple, PythonList, Variable
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
+        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, PythonList,
+                                Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(arg))
         return Basic.__new__(cls, arg)
 
@@ -280,13 +282,15 @@ class NumpyProduct(Function, PyccelAstNode):
 #==============================================================================
 class NumpyMatmul(Application, PyccelAstNode):
     """Represents a call to numpy.matmul for code generation.
-    arg : list , tuple , PythonTuple, Tuple, List, Variable
+    arg : list , tuple , PythonTuple, Tuple, PythonList, Variable
     """
 
     def __new__(cls, a, b):
-        if not isinstance(a, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
+        if not isinstance(a, (list, tuple, PythonTuple, Tuple, PythonList,
+                                Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(a))
-        if not isinstance(b, (list, tuple, PythonTuple, Tuple, List, Variable, Expr)):
+        if not isinstance(b, (list, tuple, PythonTuple, Tuple, PythonList,
+                                Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(a))
         return Basic.__new__(cls, a, b)
 
@@ -580,7 +584,7 @@ class NumpyDiag(Application, NumpyNewArray):
 
     @property
     def shape(self):
-        return Len(self.array)
+        return PythonLen(self.array)
 
     @property
     def rank(self):
@@ -597,7 +601,7 @@ class NumpyDiag(Application, NumpyNewArray):
             lhs   = IndexedVariable(lhs)[self.index]
             rhs   = IndexedVariable(self.array)[self.index,self.index]
             body  = [Assign(lhs, rhs)]
-            body  = For(self.index, Range(Len(self.array)), body)
+            body  = For(self.index, PythonRange(PythonLen(self.array)), body)
             code  = printer(body)
             alloc = 'allocate({0}(0: size({1},1)-1))'.format(lhs.base, array)
         elif rank == 1:
@@ -605,7 +609,7 @@ class NumpyDiag(Application, NumpyNewArray):
             lhs   = IndexedVariable(lhs)[self.index, self.index]
             rhs   = IndexedVariable(self.array)[self.index]
             body  = [Assign(lhs, rhs)]
-            body  = For(self.index, Range(Len(self.array)), body)
+            body  = For(self.index, PythonRange(PythonLen(self.array)), body)
             code  = printer(body)
             alloc = 'allocate({0}(0: size({1},1)-1, 0: size({1},1)-1))'.format(lhs, array)
 
@@ -1286,3 +1290,80 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
                 decorators={'property':'property', 'numpy_wrapper':NumpyReal}),
             FunctionDef('diagonal',[],[],body=[],
                 decorators={'numpy_wrapper':NumpyDiag})])
+
+#==============================================================================
+# TODO split numpy_functions into multiple dictionaries following
+# https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
+numpy_functions = {
+    # ... array creation routines
+    'full'      : NumpyFull,
+    'empty'     : NumpyEmpty,
+    'zeros'     : NumpyZeros,
+    'ones'      : NumpyOnes,
+    'full_like' : NumpyFullLike,
+    'empty_like': NumpyEmptyLike,
+    'zeros_like': NumpyZerosLike,
+    'ones_like' : NumpyOnesLike,
+    'array'     : NumpyArray,
+    # ...
+    'shape'     : Shape,
+    'norm'      : NumpyNorm,
+    'int'       : NumpyInt,
+    'real'      : NumpyReal,
+    'imag'      : NumpyImag,
+    'float'     : NumpyFloat,
+    'double'    : NumpyFloat64,
+    'mod'       : NumpyMod,
+    'float32'   : NumpyFloat32,
+    'float64'   : NumpyFloat64,
+    'int32'     : NumpyInt32,
+    'int64'     : NumpyInt64,
+    'complex'   : NumpyComplex,
+    'complex128': NumpyComplex128,
+    'complex64' : NumpyComplex64,
+    'matmul'    : NumpyMatmul,
+    'sum'       : NumpySum,
+    'max'      : NumpyMax,
+    'min'      : NumpyMin,
+    'prod'      : NumpyProduct,
+    'product'   : NumpyProduct,
+    'linspace'  : NumpyLinspace,
+    'diag'      : NumpyDiag,
+    'where'     : NumpyWhere,
+    # 'cross'     : NumpyCross,   # Currently not correctly implemented
+    # ---
+    'abs'       : NumpyAbs,
+    'floor'     : NumpyFloor,
+    'absolute'  : NumpyAbs,
+    'fabs'      : NumpyFabs,
+    'exp'       : NumpyExp,
+    'log'       : NumpyLog,
+    'sqrt'      : NumpySqrt,
+    # ---
+    'sin'       : NumpySin,
+    'cos'       : NumpyCos,
+    'tan'       : NumpyTan,
+    'arcsin'    : NumpyArcsin,
+    'arccos'    : NumpyArccos,
+    'arctan'    : NumpyArctan,
+    'arctan2'   : NumpyArctan2,
+    # 'hypot'     : NumpyHypot,
+    'sinh'      : NumpySinh,
+    'cosh'      : NumpyCosh,
+    'tanh'      : NumpyTanh,
+    'arcsinh'   : NumpyArcsinh,
+    'arccosh'   : NumpyArccosh,
+    'arctanh'   : NumpyArctanh,
+    # 'deg2rad'   : NumpyDeg2rad,
+    # 'rad2deg'   : NumpyRad2deg,
+}
+
+numpy_linalg_functions = {
+    'norm'      : NumpyNorm,
+}
+
+numpy_random_functions = {
+    'rand'      : NumpyRand,
+    'random'    : NumpyRand,
+    'randint'   : NumpyRandint,
+}
