@@ -6,11 +6,12 @@ from pyccel.ast.numbers   import BooleanTrue, Complex
 from .builtins  import PythonBool
 
 from .datatypes import DataType
-from .datatypes import NativeInteger, NativeReal, NativeComplex, NativeBool, NativeString
+from .datatypes import NativeInteger, NativeReal, NativeComplex
+from .datatypes import NativeBool, NativeString, NativeGeneric
 
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress, FunctionAddress
 from .core      import AliasAssign, Assign, Return
-from .core      import PyccelEq, If
+from .core      import PyccelEq, If, ClassDef
 
 from .numpyext  import NumpyReal, NumpyImag
 
@@ -25,6 +26,8 @@ __all__ = (
 # --------- CLASSES -----------
 #
     'PyccelPyObject',
+    'PyccelPyArrayObject',
+    'NumpyPyArrayClass',
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
     'PyBuildValueNode',
@@ -51,6 +54,17 @@ __all__ = (
 
 class PyccelPyObject(DataType):
     _name = 'pyobject'
+
+class PyccelPyArrayObject(DataType):
+    _name = 'pyarrayobject'
+
+NumpyPyArrayClass = ClassDef('PyArrayObject',
+        attributes=[
+            Variable(NativeInteger(), 'nd'),
+            Variable(NativeInteger(), 'flags'),
+            Variable(NativeInteger(), 'dimensions', rank=1),
+            Variable(NativeGeneric(), 'data', rank=1)
+            ])
 
 #TODO: Is there an equivalent to static so this can be a static list of strings?
 class PyArgKeywords(Basic):
@@ -79,17 +93,18 @@ class PyArgKeywords(Basic):
 
 #using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
 pytype_parse_registry = {
-    (NativeInteger(), 4) : 'i',
-    (NativeInteger(), 8) : 'l',
-    (NativeInteger(), 2) : 'h',
-    (NativeInteger(), 1) : 'b',
-    (NativeReal(), 8)    : 'd',
-    (NativeReal(), 4)    : 'f',
-    (NativeComplex(), 4) : 'O',
-    (NativeComplex(), 8) : 'O',
-    (NativeBool(), 4)    : 'p',
-    (NativeString(), 0)  : 's',
-    (PyccelPyObject(), 0): 'O',
+    (NativeInteger(), 4)       : 'i',
+    (NativeInteger(), 8)       : 'l',
+    (NativeInteger(), 2)       : 'h',
+    (NativeInteger(), 1)       : 'b',
+    (NativeReal(), 8)          : 'd',
+    (NativeReal(), 4)          : 'f',
+    (NativeComplex(), 4)       : 'O',
+    (NativeComplex(), 8)       : 'O',
+    (NativeBool(), 4)          : 'p',
+    (NativeString(), 0)        : 's',
+    (PyccelPyObject(), 0)      : 'O',
+    (PyccelPyArrayObject(), 0) : 'O!',
     }
 
 class PyArg_ParseTupleNode(Basic):
@@ -133,24 +148,27 @@ class PyArg_ParseTupleNode(Basic):
         i = 0
 
         while i < len(c_func_args) and not isinstance(c_func_args[i], ValuedVariable):
-            if isinstance(c_func_args[i], FunctionAddress):
-                self._flags += 'O'
-            else:
-                self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
+            self._flags += self.get_pytype(c_func_args[i], parse_args[i])
             i+=1
         if i < len(c_func_args):
             self._flags += '|'
         while i < len(c_func_args):
-            if isinstance(c_func_args[i], FunctionAddress):
-                self._flags += 'O'
-            else:
-                self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
+            self._flags += self.get_pytype(c_func_args[i], parse_args[i])
             i+=1
 
         # Restriction as of python 3.8
         if any([isinstance(a, (Variable, FunctionAddress)) and a.is_kwonly for a in c_func_args]):
             errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
                           symbol=c_func_args, severity='warning')
+
+    def get_pytype(self, c_arg, parse_arg):
+        if isinstance(c_arg, FunctionAddress):
+            return 'O'
+        else:
+            try:
+                return pytype_parse_registry[(parse_arg.dtype, parse_arg.precision)]
+            except KeyError:
+                raise NotImplementedError("Type not implemented for argument collection : "+str(type(arg)))
 
     @property
     def pyarg(self):
