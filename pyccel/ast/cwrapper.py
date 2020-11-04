@@ -66,6 +66,8 @@ NumpyPyArrayClass = ClassDef('PyArrayObject',
             Variable(NativeGeneric(), 'data', rank=1)
             ])
 
+PyArray_Type = Variable(NativeGeneric(), 'PyArray_Type')
+
 #TODO: Is there an equivalent to static so this can be a static list of strings?
 class PyArgKeywords(Basic):
     """
@@ -140,10 +142,6 @@ class PyArg_ParseTupleNode(Basic):
         if len(parse_args) != len(c_func_args):
             raise TypeError('There should be the same number of c_func_args and parse_args')
 
-        self._pyarg      = python_func_args
-        self._pykwarg    = python_func_kwargs
-        self._parse_args = parse_args
-        self._arg_names  = arg_names
         self._flags      = ''
         i = 0
 
@@ -161,6 +159,15 @@ class PyArg_ParseTupleNode(Basic):
             errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
                           symbol=c_func_args, severity='warning')
 
+        parse_args = [[a, PyArray_Type] if isinstance(a, Variable) and a.dtype is PyccelPyArrayObject()
+                else [a] for a in parse_args]
+        parse_args = [a for arg in parse_args for a in arg]
+
+        self._pyarg      = python_func_args
+        self._pykwarg    = python_func_kwargs
+        self._parse_args = parse_args
+        self._arg_names  = arg_names
+
     def get_pytype(self, c_arg, parse_arg):
         if isinstance(c_arg, FunctionAddress):
             return 'O'
@@ -168,7 +175,7 @@ class PyArg_ParseTupleNode(Basic):
             try:
                 return pytype_parse_registry[(parse_arg.dtype, parse_arg.precision)]
             except KeyError:
-                raise NotImplementedError("Type not implemented for argument collection : "+str(type(arg)))
+                raise NotImplementedError("Type not implemented for argument collection : "+str(type(parse_arg)))
 
     @property
     def pyarg(self):
