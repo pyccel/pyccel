@@ -11,7 +11,7 @@ from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, Funct
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, PyccelNe
-from pyccel.ast.core import IndexedVariable, DottedVariable
+from pyccel.ast.core import IndexedVariable
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
@@ -156,8 +156,10 @@ class CWrapperCodePrinter(CCodePrinter):
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
 
         elif variable.rank > 0:
+            check = PyccelNe(NumpyPyArrayClass.get_attribute(variable,'nd'), Integer(variable.rank))
+            err = PyErr_SetString('PyExc_TypeError', '"{} must have rank {}"'.format(variable, str(variable.rank)))
+            body = [If((PyccelNot(check), [err, Return([Nil()])]))]
             # TODO: Add type check
-            body = []
 
         elif variable.dtype is NativeBool():
             collect_type = NativeInteger()
