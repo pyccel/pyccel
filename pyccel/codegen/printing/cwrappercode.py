@@ -160,6 +160,7 @@ class CWrapperCodePrinter(CCodePrinter):
             err = PyErr_SetString('PyExc_TypeError', '"{} must have rank {}"'.format(variable, str(variable.rank)))
             body = [If((check, [err, Return([Nil()])]))]
             # TODO: Add type check
+            # TODO: Add order check
 
         elif variable.dtype is NativeBool():
             collect_type = NativeInteger()
@@ -292,8 +293,14 @@ class CWrapperCodePrinter(CCodePrinter):
                 dims = NumpyPyArrayClass.get_attribute(arg,'dimensions')
                 return IndexedVariable(dims, dtype=NativeInteger())[idx]
 
+            def get_dims_in_order(a):
+                if a.order == 'F':
+                    return reversed(range(a.rank))
+                else:
+                    return range(a.rank)
+
             arguments = [[a] if not (isinstance(a, Variable) and a.rank>0)
-                    else [get_shape(a,i) for i in range(a.rank)]+
+                    else [get_shape(a,i) for i in get_dims_in_order(a)]+
                     [NumpyPyArrayClass.get_attribute(a,'data')] for a in expr.arguments]
             arguments = [a for args in arguments for a in args]
         else:
@@ -327,7 +334,6 @@ class CWrapperCodePrinter(CCodePrinter):
         return 'pyobject'
 
     def _print_PyccelPyArrayObject(self, expr):
-        self._additional_imports.add('numpy/arrayobject');
         return 'pyarrayobject'
 
     def _print_PyArg_ParseTupleNode(self, expr):
@@ -530,6 +536,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # Print imports last to be sure that all additional_imports have been collected
         imports  = [Import(s) for s in self._additional_imports]
         imports += [Import('Python')]
+        imports += [Import('numpy/arrayobject')]
         imports  = '\n'.join(self._print(i) for i in imports)
 
         return ('#define PY_SSIZE_T_CLEAN\n'
