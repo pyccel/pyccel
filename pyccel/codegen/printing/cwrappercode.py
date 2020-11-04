@@ -155,6 +155,10 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
 
+        elif variable.rank > 0:
+            # TODO: Add type check
+            body = []
+
         elif variable.dtype is NativeBool():
             collect_type = NativeInteger()
             collect_var = Variable(dtype=collect_type, precision=4,
