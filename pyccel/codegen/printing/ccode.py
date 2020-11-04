@@ -706,8 +706,6 @@ class CCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
-        if isinstance(func, Interface):
-            func.point(expr.arguments, rename = True)
          # Ensure the correct syntax is used for pointers
 
         args = []
