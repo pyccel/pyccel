@@ -185,6 +185,7 @@ def create_shared_library(codegen,
     sharedlib_folder = ''
 
     if language in ['c', 'fortran']:
+        extra_libs = []
         if language == 'fortran':
             # Construct f2py interface for assembly and write it to file f2py_MOD.f90
             # be careful: because of f2py we must use lower case
@@ -207,6 +208,10 @@ def create_shared_library(codegen,
                 language=language)
 
             dep_mods = (os.path.join(pyccel_dirpath,'f2py_{}'.format(module_name)), *dep_mods)
+            if compiler == 'gfortran':
+                extra_libs += ['gfortran']
+            elif compiler == 'ifort':
+                extra_libs += ['ifcore']
 
         module_old_name = codegen.expr.name
         codegen.expr.set_name(sharedlib_modname)
@@ -221,7 +226,7 @@ def create_shared_library(codegen,
             f.writelines(wrapper_code)
 
         setup_code = create_c_setup(sharedlib_modname, wrapper_filename,
-                dep_mods, compiler, includes, libs, libdirs, flags)
+                dep_mods, compiler, includes, libs + extra_libs, libdirs, flags)
         setup_filename = "setup_{}.py".format(module_name)
 
         with open(setup_filename, 'w') as f:
