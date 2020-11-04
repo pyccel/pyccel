@@ -127,7 +127,7 @@ class NumpyArray(Application, NumpyNewArray):
     """
     Represents a call to  numpy.array for code generation.
 
-    arg : list ,tuple ,Tuple, List
+    arg : list ,tuple ,Tuple, PythonList
 
     """
 
@@ -591,7 +591,7 @@ class NumpyDiag(Application, NumpyNewArray):
 
     @property
     def shape(self):
-        return Len(self.array)
+        return PythonLen(self.array)
 
     @property
     def rank(self):
