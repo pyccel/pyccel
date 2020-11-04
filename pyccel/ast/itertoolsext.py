@@ -24,5 +24,5 @@ class Product(Basic):
 
     @property
     def elements(self):
-        "get expression's elements"
+        """get expression's elements"""
         return self._args
