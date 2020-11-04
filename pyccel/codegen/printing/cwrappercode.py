@@ -533,6 +533,7 @@ class CWrapperCodePrinter(CCodePrinter):
         imports  = '\n'.join(self._print(i) for i in imports)
 
         return ('#define PY_SSIZE_T_CLEAN\n'
+                '#define NPY_NO_DEPRECATED_API 1\n'
                 '{imports}\n\n'
                 '{function_signatures}\n\n'
                 '{sep}\n\n'
