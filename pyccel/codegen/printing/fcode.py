@@ -2210,7 +2210,7 @@ class FCodePrinter(CodePrinter):
                 b = PythonFloat(b)
             c = self._print(b)
             adtype = bdtype
-            code = 'FLOOR({}/{},{})'.format(code, c, expr.precision)
+            code = 'FLOOR({}/{},{})'.format(code, c, iso_c_binding["integer"][expr.precision])
             if is_real:
                 code = 'real({}, {})'.format(code, iso_c_binding["real"][expr.precision])
         return code

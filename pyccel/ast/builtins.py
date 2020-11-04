@@ -70,7 +70,7 @@ class PythonBool(Expr, PyccelAstNode):
     def fprint(self, printer):
         """ Fortran printer. """
         if isinstance(self.arg.dtype, NativeBool):
-            return 'logical({}, kind = {prec})'.format(printer(self.arg), prec = self.precision)
+            return 'logical({}, kind = {prec})'.format(printer(self.arg), prec = iso_c_binding["logical"][self.precision])
         else:
             return '{} /= 0'.format(printer(self.arg))
 
