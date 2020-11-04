@@ -1503,8 +1503,10 @@ class SemanticParser(BasicParser):
                     elif d_var['shape'] != shape:
 
                         if var.is_stack_array:
-                            # TODO [YG, 28.10.2020] Raise Pyccel error: STACK_ARRAY_REALLOCATION
-                            pass
+                            errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=name,
+                                severity='error', blocker=False,
+                                bounding_box=(self._current_fst_node.lineno,
+                                    self._current_fst_node.col_offset))
 
                         else:
                             # TODO [YG, 28.10.2020] Should we set status='unknown' instead?
