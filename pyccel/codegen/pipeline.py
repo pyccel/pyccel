@@ -186,10 +186,6 @@ def execute_pyccel(fname, *,
             handle_error('code generation')
             raise PyccelCodegenError('Code generation failed')
 
-        if errors.has_warnings():
-            errors.check()
-            errors.reset()
-
         #------------------------------------------------------
         # TODO: collect dependencies and proceed recursively
     #    if recursive:
@@ -298,6 +294,10 @@ def execute_pyccel(fname, *,
 
         if verbose:
             print( '> Shared library has been created: {}'.format(sharedlib_filepath))
+
+    # Print all warnings now
+    if errors.has_warnings():
+        errors.check()
 
     # Change working directory back to starting point
     os.chdir(base_dirpath)
