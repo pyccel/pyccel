@@ -522,6 +522,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         init_func = ('PyMODINIT_FUNC PyInit_{mod_name}(void)\n{{\n'
                 'PyObject *m;\n\n'
+                'import_array();\n\n'
                 'm = PyModule_Create(&{module_def_name});\n'
                 'if (m == NULL) return NULL;\n\n'
                 'return m;\n}}'.format(mod_name=expr.name, module_def_name = module_def_name))
