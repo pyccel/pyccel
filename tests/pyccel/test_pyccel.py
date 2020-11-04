@@ -392,8 +392,13 @@ def test_highorder():
             compile_with_pyccel = False,
             output_dtype = [int,int,float,float,float,int,float,
                 float, int])
-
-
+#------------------------------------------------------------------------------
+def test_generic_functions():
+    pyccel_test("scripts/runtest_generic_functions.py",
+            dependencies = "scripts/generic_functions.py",
+            compile_with_pyccel = False,
+            output_dtype = [float,float,float,float,float,complex,
+                    float,float,float,float,float,float,float])
 #------------------------------------------------------------------------------
 def test_default_arguments():
     pyccel_test("scripts/runtest_default_args.py",
