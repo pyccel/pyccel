@@ -277,7 +277,7 @@ class FCodePrinter(CodePrinter):
                                             name=name)
 
         imports = ''.join(self._print(i) for i in expr.imports)
-        imports += 'use ISO_C_BINDING'
+        imports += 'use ISO_C_BINDING\n'
         decs    = ''.join(self._print(i) for i in expr.declarations)
         body    = ''
 
@@ -330,7 +330,7 @@ class FCodePrinter(CodePrinter):
         self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
-        imports += 'use ISO_C_BINDING'
+        imports += 'use ISO_C_BINDING\n'
         body    = self._print(expr.body)
 
         # Print the declarations of all variables in the namespace, which include:
