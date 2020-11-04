@@ -2830,7 +2830,7 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
             DottedVariable,
             )):
             raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
-                            type(lhs)))
+                            str(type(lhs))))
 
         if not isinstance(rhs, (
             Variable,
@@ -2843,7 +2843,7 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
             Function,
             )):
             raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
-                            type(rhs)))
+                            str(type(rhs))))
 
         return Basic.__new__(cls, lhs, rhs)
 
@@ -3943,7 +3943,16 @@ class PythonFunction(FunctionDef):
 
 
 class F2PYFunctionDef(FunctionDef):
-    pass
+    def __new__(cls, *args, original_function, **kwargs):
+        return FunctionDef.__new__(cls, *args, **kwargs)
+
+    def __init__(self, *args, original_function, **kwargs):
+        self._original_function = original_function
+        return FunctionDef.__init__(self, *args, **kwargs)
+
+    @property
+    def original_function(self):
+        return self._original_function
 
 
 class GetDefaultFunctionArg(Basic):

@@ -148,7 +148,8 @@ def as_static_function(func, name=None):
                         arguments_inout = arguments_inout,
                         functions = functions,
                         interfaces = interfaces,
-                        imports = func.imports
+                        imports = func.imports,
+                        original_function = func
                         )
 
 #=======================================================================================
