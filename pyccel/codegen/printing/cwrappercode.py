@@ -313,12 +313,12 @@ class CWrapperCodePrinter(CCodePrinter):
             else :
                 args.append(a)
 
-        args += self._temporary_args
-        self._temporary_args = []
         args = ', '.join(['{}'.format(self._print(a)) if f.rank == 0
             else '({}*){}'.format(self.find_in_dtype_registry(self._print(f.dtype), f.precision),
                 self._print(a))
-            for a,f in zip(args, func.arguments)])
+            for a,f in zip(args, func.arguments)] +
+            [self._print(a) for a in self._temporary_args])
+        self._temporary_args = []
         if not func.results:
             return '{}({});'.format(func.name, args)
         return '{}({})'.format(func.name, args)
