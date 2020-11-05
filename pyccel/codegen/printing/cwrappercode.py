@@ -3,6 +3,8 @@
 
 from collections import OrderedDict
 
+import numpy as np
+
 from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.numbers   import BooleanTrue, Integer
@@ -534,8 +536,14 @@ class CWrapperCodePrinter(CCodePrinter):
         imports += [Import('numpy/arrayobject')]
         imports  = '\n'.join(self._print(i) for i in imports)
 
+        numpy_max_acceptable_version = [1, 19]
+        numpy_current_version = [int(v) for v in np.version.version.split('.')[:2]]
+        numpy_api_macro = '#define NPY_NO_DEPRECATED_API NPY_{}_{}_API_VERSION'.format(
+                min(numpy_max_acceptable_version[0], numpy_current_version[0]),
+                min(numpy_max_acceptable_version[1], numpy_current_version[1]))
+
         return ('#define PY_SSIZE_T_CLEAN\n'
-                '#define NPY_NO_DEPRECATED_API NPY_1_19_API_VERSION\n'
+                '{numpy_api_macro}\n'
                 '{imports}\n\n'
                 '{function_signatures}\n\n'
                 '{sep}\n\n'
@@ -547,6 +555,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 '{module_def}\n\n'
                 '{sep}\n\n'
                 '{init_func}\n'.format(
+                    numpy_api_macro = numpy_api_macro,
                     imports = imports,
                     function_signatures = function_signatures,
                     sep = sep,
