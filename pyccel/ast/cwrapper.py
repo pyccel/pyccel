@@ -27,7 +27,6 @@ __all__ = (
 #
     'PyccelPyObject',
     'PyccelPyArrayObject',
-    'NumpyPyArrayClass',
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
     'PyBuildValueNode',
@@ -57,14 +56,6 @@ class PyccelPyObject(DataType):
 
 class PyccelPyArrayObject(DataType):
     _name = 'pyarrayobject'
-
-NumpyPyArrayClass = ClassDef('PyArrayObject',
-        attributes=[
-            Variable(NativeInteger(), 'nd'),
-            Variable(NativeInteger(), 'flags'),
-            Variable(NativeInteger(), 'dimensions', rank=1),
-            Variable(NativeGeneric(), 'data', rank=1)
-            ])
 
 PyArray_Type = Variable(NativeGeneric(), 'PyArray_Type')
 
@@ -258,6 +249,51 @@ PyFloat_AsDouble = FunctionDef(name = 'PyFloat_AsDouble',
                         body = [],
                         arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
                         results   = [Variable(dtype=NativeReal(), name = 'r')])
+
+#-------------------------------------------------------------------
+#                      Numpy functions
+#-------------------------------------------------------------------
+numpy_get_ndims = FunctionDef(name      = 'PyArray_NDIM',
+                           body      = [],
+                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
+                           results   = [Variable(dtype=NativeInteger(), name = 'i')])
+
+numpy_get_data  = FunctionDef(name      = 'PyArray_DATA',
+                           body      = [],
+                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
+                           results   = [Variable(dtype=NativeGeneric(), name = 'v', rank=1)])
+
+numpy_get_dim  = FunctionDef(name      = 'PyArray_DIM',
+                           body      = [],
+                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True),
+                                        Variable(dtype=NativeInteger(), name = 'idx')],
+                           results   = [Variable(dtype=NativeInteger(), name = 'd')])
+
+numpy_get_stride = FunctionDef(name      = 'PyArray_STRIDE',
+                           body      = [],
+                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True),
+                                        Variable(dtype=NativeInteger(), name = 'idx')],
+                           results   = [Variable(dtype=NativeInteger(), name = 's')])
+
+numpy_check_flag = FunctionDef(name      = 'PyArray_CHKFLAGS',
+                       body      = [],
+                       arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True),
+                                    Variable(dtype=NativeInteger(), name = 'flag')],
+                       results   = [Variable(dtype=NativeInteger(), name = 'i')])
+
+numpy_get_base = FunctionDef(name      = 'PyArray_BASE',
+                       body      = [],
+                       arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
+                       results   = [Variable(dtype=PyccelPyObject(), name = 'i')])
+
+numpy_itemsize = FunctionDef(name      = 'PyArray_ITEMSIZE',
+                       body      = [],
+                       arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
+                       results   = [Variable(dtype=NativeInteger(), name = 'i')])
+
+numpy_flag_own_data = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_OWNDATA')
+numpy_flag_c_contig = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_C_CONTIGUOUS')
+numpy_flag_c_contig = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_F_CONTIGUOUS')
 
 def PyType_Check(data_type):
     try :

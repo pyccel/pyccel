@@ -20,7 +20,8 @@ from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
 from pyccel.ast.cwrapper import Py_None
 from pyccel.ast.cwrapper import PyErr_SetString, PyType_Check
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
-from pyccel.ast.cwrapper import PyccelPyArrayObject, NumpyPyArrayClass
+from pyccel.ast.cwrapper import PyccelPyArrayObject
+from pyccel.ast.cwrapper import numpy_get_ndims, numpy_get_data, numpy_get_dim
 
 from pyccel.ast.f2py     import as_static_function_call
 
@@ -156,11 +157,10 @@ class CWrapperCodePrinter(CCodePrinter):
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
 
         elif variable.rank > 0:
-            check = PyccelNe(NumpyPyArrayClass.get_attribute(variable,'nd'), Integer(variable.rank))
+            check = PyccelNe(FunctionCall(numpy_get_ndims,[variable]), Integer(variable.rank))
             err = PyErr_SetString('PyExc_TypeError', '"{} must have rank {}"'.format(variable, str(variable.rank)))
             body = [If((check, [err, Return([Nil()])]))]
             # TODO: Add type check
-            # TODO: Add order check
 
         elif variable.dtype is NativeBool():
             collect_type = NativeInteger()
@@ -289,10 +289,6 @@ class CWrapperCodePrinter(CCodePrinter):
         func = expr.funcdef
         is_static = func.is_static
         if is_static:
-            def get_shape(arg, idx):
-                dims = NumpyPyArrayClass.get_attribute(arg,'dimensions')
-                return IndexedVariable(dims, dtype=NativeInteger())[idx]
-
             def get_dims_in_order(a):
                 if a.order == 'F':
                     return reversed(range(a.rank))
@@ -300,8 +296,8 @@ class CWrapperCodePrinter(CCodePrinter):
                     return range(a.rank)
 
             arguments = [[a] if not (isinstance(a, Variable) and a.rank>0)
-                    else [get_shape(a,i) for i in get_dims_in_order(a)]+
-                    [NumpyPyArrayClass.get_attribute(a,'data')] for a in expr.arguments]
+                    else [FunctionCall(numpy_get_dim,[a,i]) for i in get_dims_in_order(a)]+
+                    [FunctionCall(numpy_get_data,[a])] for a in expr.arguments]
             arguments = [a for args in arguments for a in args]
         else:
             arguments = expr.arguments
@@ -419,7 +415,6 @@ class CWrapperCodePrinter(CCodePrinter):
         arguments = [Variable(PyccelPyArrayObject(),
             a.name,
             is_pointer = True,
-            cls_base = NumpyPyArrayClass,
             rank = a.rank) if isinstance(a, Variable) and a.rank > 0
                 else a for a in expr.arguments]
         for a in arguments:
