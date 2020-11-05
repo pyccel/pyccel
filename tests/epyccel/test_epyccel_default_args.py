@@ -67,7 +67,6 @@ def test_f3(language):
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="f2py does not handle bool default values"),
             pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c)
     )
@@ -91,7 +90,6 @@ def test_f4(language):
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Complex default value not written in a f2py readable manner"),
             pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c)
     )

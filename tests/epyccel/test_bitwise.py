@@ -49,7 +49,6 @@ def test_left_shift_b_b(language, a, b):
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="problem in wrapping issue #370"),
             pytest.mark.fortran]
         )
     ]
@@ -97,7 +96,6 @@ def test_bit_or_i_i(language, a, b):
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="problem in wrapping issue #370"),
             pytest.mark.fortran]
         )
     ]
@@ -126,7 +124,6 @@ def test_bit_and_i_i(language, a, b):
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="problem in wrapping issue #370"),
             pytest.mark.fortran]
         )
     ]
