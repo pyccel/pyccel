@@ -111,7 +111,8 @@ def execute_pyccel(fname, *,
             else:
                 libs = libs + ['omp']
     elif (language == "fortran"):
-        libs = libs + ['gomp']
+        if accelerator == 'openmp':
+            libs = libs + ['gomp']
 
     # ...
     # Construct flags for the Fortran compiler
