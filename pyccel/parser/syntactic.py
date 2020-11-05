@@ -45,7 +45,7 @@ from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import CommentBlock
 from pyccel.ast.core import With
-from pyccel.ast.core import List
+from pyccel.ast.core import PythonList
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import _atomic
@@ -57,7 +57,7 @@ from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt
 from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.core import PyccelUnary, PyccelUnarySub
 
-from pyccel.ast.builtins import Print
+from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.headers  import Header, MetaVariable
 from pyccel.ast.numbers  import Integer, Float, Complex, BooleanFalse, BooleanTrue
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
@@ -265,7 +265,7 @@ class SyntaxParser(BasicParser):
         return PythonTuple(*self._treat_iterable(stmt.elts))
 
     def _visit_List(self, stmt):
-        return List(*self._treat_iterable(stmt.elts), sympify=False)
+        return PythonList(*self._treat_iterable(stmt.elts), sympify=False)
 
     def _visit_tuple(self, stmt):
         return Tuple(*self._treat_iterable(stmt), sympify=False)
@@ -592,7 +592,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Return(self, stmt):
         results = self._visit(stmt.value)
-        if not isinstance(results, (list, PythonTuple, List)):
+        if not isinstance(results, (list, PythonTuple, PythonList)):
             results = [results]
         expr = Return(results)
         expr.set_fst(stmt)
@@ -839,7 +839,7 @@ class SyntaxParser(BasicParser):
         if isinstance(func, Symbol):
             f_name = func.name
             if str(f_name) == "print":
-                func = Print(PythonTuple(*args))
+                func = PythonPrint(PythonTuple(*args))
             else:
                 func = Function(f_name)(*args)
         elif isinstance(func, DottedVariable):

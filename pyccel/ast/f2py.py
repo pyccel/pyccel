@@ -13,7 +13,7 @@ from pyccel.ast.core import AsName
 from pyccel.ast.core import Comment
 from pyccel.ast.core import IndexedVariable
 
-from pyccel.ast.type_inference import str_dtype
+from pyccel.ast.datatypes import str_dtype
 
 __all__ = (
    'as_static_function',
