@@ -139,12 +139,12 @@ class PyArg_ParseTupleNode(Basic):
         i = 0
 
         while i < len(c_func_args) and not isinstance(c_func_args[i], ValuedVariable):
-            self._flags += get_pytype(c_func_args[i], parse_args[i])
+            self._flags += self.get_pytype(c_func_args[i], parse_args[i])
             i+=1
         if i < len(c_func_args):
             self._flags += '|'
         while i < len(c_func_args):
-            self._flags += get_pytype(c_func_args[i], parse_args[i])
+            self._flags += self.get_pytype(c_func_args[i], parse_args[i])
             i+=1
 
         # Restriction as of python 3.8
@@ -162,7 +162,7 @@ class PyArg_ParseTupleNode(Basic):
         self._arg_names  = arg_names
 
     @staticmethod
-    def get_pytype(self, c_arg, parse_arg):
+    def get_pytype(c_arg, parse_arg):
         if isinstance(c_arg, FunctionAddress):
             return 'O'
         else:
