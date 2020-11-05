@@ -2520,15 +2520,14 @@ class SemanticParser(BasicParser):
                     d_apps[a].append(f)
 
             for i,a in enumerate(args):
-                if a.is_const == False:
-                    if str(a) in results_names:
-                        args_inout[i] = True
+                if str(a) in results_names:
+                    args_inout[i] = True
 
-                    elif str(a) in assigned:
-                        args_inout[i] = True
+                elif str(a) in assigned:
+                    args_inout[i] = True
 
-                    elif str(a) == 'self':
-                        args_inout[i] = True
+                elif str(a) == 'self':
+                    args_inout[i] = True
 
                 if d_apps[a] and not( args_inout[i] ):
                     intent = False
