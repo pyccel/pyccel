@@ -8,7 +8,6 @@ from pyccel.decorators import types
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', [
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="f2py does not support optional arguments"),
             pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c)
     ]
@@ -31,7 +30,6 @@ def test_f1(language):
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', [
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="f2py does not support optional arguments"),
             pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c)
     ]
@@ -54,7 +52,6 @@ def test_f2(language):
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize('language' , [
     pytest.param("fortran", marks = [
-        pytest.mark.xfail(reason="f2py does not support optional arguments"),
         pytest.mark.fortran]),
     pytest.param("c" , marks = pytest.mark.c)
 ])
@@ -75,7 +72,6 @@ def test_f3(language):
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', [
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="f2py does not support optional arguments"),
             pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c)
     ]
@@ -98,7 +94,6 @@ def test_f4(language):
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', [
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="f2py does not support optional arguments"),
             pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c)
     ]
@@ -117,7 +112,6 @@ def test_f5(language):
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', [
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="f2py does not support optional arguments"),
             pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c)
     ]
@@ -135,7 +129,6 @@ def test_f6(language):
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', [
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="f2py does not support optional arguments"),
             pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c)
     ]
@@ -153,7 +146,6 @@ def test_f7(language):
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', [
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="f2py does not support optional arguments"),
             pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c)
     ]
@@ -173,7 +165,6 @@ def test_f9(language):
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', [
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="f2py does not support optional arguments"),
             pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c)
     ]
@@ -190,7 +181,6 @@ def test_f10(language):
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', [
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="f2py does not support optional arguments"),
             pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c)
     ]
