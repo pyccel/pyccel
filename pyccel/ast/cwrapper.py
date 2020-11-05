@@ -11,7 +11,7 @@ from .datatypes import NativeBool, NativeString, NativeGeneric
 
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress, FunctionAddress
 from .core      import AliasAssign, Assign, Return
-from .core      import PyccelEq, If, ClassDef
+from .core      import PyccelEq, If
 
 from .numpyext  import NumpyReal, NumpyImag
 
@@ -55,6 +55,8 @@ class PyccelPyObject(DataType):
     _name = 'pyobject'
 
 class PyccelPyArrayObject(DataType):
+    """ Datatype representing a PyArrayObject which is the
+    class used to hold numpy objects"""
     _name = 'pyarrayobject'
 
 PyArray_Type = Variable(NativeGeneric(), 'PyArray_Type')
@@ -137,12 +139,12 @@ class PyArg_ParseTupleNode(Basic):
         i = 0
 
         while i < len(c_func_args) and not isinstance(c_func_args[i], ValuedVariable):
-            self._flags += self.get_pytype(c_func_args[i], parse_args[i])
+            self._flags += get_pytype(c_func_args[i], parse_args[i])
             i+=1
         if i < len(c_func_args):
             self._flags += '|'
         while i < len(c_func_args):
-            self._flags += self.get_pytype(c_func_args[i], parse_args[i])
+            self._flags += get_pytype(c_func_args[i], parse_args[i])
             i+=1
 
         # Restriction as of python 3.8
@@ -159,14 +161,15 @@ class PyArg_ParseTupleNode(Basic):
         self._parse_args = parse_args
         self._arg_names  = arg_names
 
+    @staticmethod
     def get_pytype(self, c_arg, parse_arg):
         if isinstance(c_arg, FunctionAddress):
             return 'O'
         else:
             try:
                 return pytype_parse_registry[(parse_arg.dtype, parse_arg.precision)]
-            except KeyError:
-                raise NotImplementedError("Type not implemented for argument collection : "+str(type(parse_arg)))
+            except KeyError as e:
+                raise NotImplementedError("Type not implemented for argument collection : "+str(type(parse_arg))) from e
 
     @property
     def pyarg(self):

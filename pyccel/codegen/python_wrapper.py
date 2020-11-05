@@ -10,7 +10,6 @@ from pyccel.ast.f2py                        import as_static_function_call
 from pyccel.ast.core                        import SeparatorComment
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import cwrappercode
-from pyccel.codegen.codegen                 import _extension_registry
 from pyccel.codegen.utilities               import compile_files
 from .cwrapper import create_c_setup
 
