@@ -4,6 +4,7 @@ import sys
 import subprocess
 import os
 import glob
+import platform
 import warnings
 
 from pyccel.ast.f2py                        import as_static_function_call
@@ -207,10 +208,11 @@ def create_shared_library(codegen,
                 language=language)
 
             dep_mods = (os.path.join(pyccel_dirpath,'f2py_{}'.format(module_name)), *dep_mods)
-            if compiler == 'gfortran':
-                extra_libs += ['gfortran']
-            elif compiler == 'ifort':
-                extra_libs += ['ifcore']
+            if platform.system() != 'Darwin':
+                if compiler == 'gfortran':
+                    extra_libs += ['gfortran']
+                elif compiler == 'ifort':
+                    extra_libs += ['ifcore']
 
         module_old_name = codegen.expr.name
         codegen.expr.set_name(sharedlib_modname)
