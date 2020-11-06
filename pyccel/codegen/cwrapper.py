@@ -34,7 +34,7 @@ def create_c_setup(mod_name,
     libdirs : list
             Library directories needed for compiling
             If there is only one then a string can be passed instead of a list
-    flags : str
+    flags : list
             Additional flags to pass to the compiler
 
     Returns
@@ -66,7 +66,7 @@ def create_c_setup(mod_name,
     libdirs_str = ('library_dirs = {0}'.format(print_list(libdirs))
                    if libdirs else None)
 
-    flags_str   = ('extra_compile_args = {0}'.format(print_list(flags.strip().split()))
+    flags_str   = ('extra_compile_args = {0}'.format(print_list(flags))
                    if flags else None)
 
     args = [mod, wrapper_file, files, include_str, libs_str, libdirs_str, flags_str]
