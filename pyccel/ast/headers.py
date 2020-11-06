@@ -108,7 +108,7 @@ class FunctionHeader(Header):
         'function' or 'procedure'. default value: 'function'
 
     is_static: bool
-        True if we want to pass arrays in f2py mode. every argument of type
+        True if we want to pass arrays in bind(c) mode. every argument of type
         array will be preceeded by its shape, the later will appear in the
         argument declaration. default value: False
 
@@ -257,7 +257,7 @@ class FunctionHeader(Header):
         return funcs
 
     def to_static(self):
-        """returns a static function header. needed for f2py"""
+        """returns a static function header. needed for bind(c)"""
         return FunctionHeader(self.func,
                               self.dtypes,
                               self.results,
@@ -304,7 +304,7 @@ class MethodHeader(FunctionHeader):
         'function' or 'procedure'. default value: 'function'
 
     is_static: bool
-        True if we want to pass arrays in f2py mode. every argument of type
+        True if we want to pass arrays in bind(c) mode. every argument of type
         array will be preceeded by its shape, the later will appear in the
         argument declaration. default value: False
 

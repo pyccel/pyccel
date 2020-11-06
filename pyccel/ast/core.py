@@ -3373,7 +3373,7 @@ class FunctionDef(Basic):
         True for a function that is private
 
     is_static: bool
-        True for static functions. Needed for f2py
+        True for static functions. Needed for iso_c_binding interface
 
     imports: list, tuple
         a list of needed imports
