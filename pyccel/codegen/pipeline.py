@@ -294,7 +294,7 @@ def execute_pyccel(fname, *,
             errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
                 severity='error')
             handle_error('codegen (wrapping)')
-            raise PyccelCodegenError(msg)
+            raise PyccelCodegenError(msg) from None
         except PyccelError:
             handle_error('codegen (wrapping)')
             raise
