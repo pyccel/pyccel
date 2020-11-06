@@ -113,7 +113,7 @@ def execute_pyccel(fname, *,
                 libs = libs + ['omp']
 
         elif compiler == 'ifort':
-            extra_libs.append('iomp5')
+            libs.append('iomp5')
 
     # ...
     # Construct flags for the Fortran compiler
