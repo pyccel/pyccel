@@ -2541,27 +2541,9 @@ class SemanticParser(BasicParser):
                 var      = Variable(dt, 'self', cls_base=cls_base)
                 args     = [var] + args
 
-            for var in self.get_variables(self._namespace):
-                if not var in args + results:
-                    local_vars += [var]
-
-            if 'stack_array' in decorators:
-                for var in local_vars:
-                    if var.name in decorators['stack_array']:
-                        var.is_stack_array = True
-                        var.allocatable    = False
-                        var.is_pointer     = False
-
-            if 'allow_negative_index' in decorators:
-                for var in local_vars:
-                    if var.name in decorators['allow_negative_index']:
-                        var.allows_negative_indexes = True
-
-            # TODO should we add all the variables or only the ones used in the function
-            container = self._namespace.parent_scope
-            for var in self.get_variables(container):
-                if not var in args + results + local_vars:
-                    global_vars += [var]
+            # Determine local and global variables
+            local_vars  = [v for v in self.get_variables(self.namespace)              if v not in args + results]
+            global_vars = [v for v in self.get_variables(self.namespace.parent_scope) if v not in args + results + local_vars]
 
             # get the imports
             imports   = self.namespace.imports['imports'].values()
