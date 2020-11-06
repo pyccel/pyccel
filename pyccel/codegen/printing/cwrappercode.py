@@ -54,6 +54,8 @@ class CWrapperCodePrinter(CCodePrinter):
         stored_in_c = CCodePrinter.stored_in_c_pointer(self, a)
         if self._target_language == 'fortran':
             return stored_in_c or (isinstance(a, Variable) and a.rank>0)
+        else:
+            return stored_in_c
 
     def get_new_name(self, used_names, requested_name):
         if requested_name not in used_names:
