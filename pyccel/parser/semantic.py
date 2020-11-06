@@ -2549,7 +2549,7 @@ class SemanticParser(BasicParser):
                         i_fa += 1
 
                 if args_inout[i] == True and a.is_const == True:
-                    msg = 'Argument ({}) must be an intent inout!'.format(a)
+                    msg = 'Argument ({}) must be an inout!'.format(a)
                     errors.report(msg, bounding_box=(self._current_fst_node.lineno,
                         self._current_fst_node.col_offset),
                         severity='fatal', blocker=self.blocking)
