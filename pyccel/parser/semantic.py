@@ -2519,7 +2519,10 @@ class SemanticParser(BasicParser):
                 for a in a_args:
                     d_apps[a].append(f)
 
+            print(args)
             for i,a in enumerate(args):
+                print(a)
+                print(args_inout[i])
                 if str(a) in results_names:
                     args_inout[i] = True
 
@@ -2544,6 +2547,12 @@ class SemanticParser(BasicParser):
                             args_inout[i] = True
 
                         i_fa += 1
+
+                if args_inout[i] == True and a.is_const == True:
+                    msg = 'Argument ({}) must be an intent inout!'.format(a)
+                    errors.report(msg, bounding_box=(self._current_fst_node.lineno,
+                        self._current_fst_node.col_offset),
+                        severity='fatal', blocker=self.blocking)
             # ...
 
             # Raise an error if one of the return arguments is either:
