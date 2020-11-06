@@ -5,6 +5,7 @@ This file contains some useful functions to compile the generated fortran code
 """
 
 import os
+import shutil
 import subprocess
 import sys
 import warnings
@@ -162,6 +163,7 @@ def compile_files(filename, compiler, flags,
     return output, cmd
 
 def get_gfortran_library_dir():
-    file_location = subprocess.check_output([shutil.which('gfortran'), '-print-file-name=libgfortran.a'])
+    file_location = subprocess.check_output([shutil.which('gfortran'), '-print-file-name=libgfortran.a'],
+            universal_newlines = True)
     lib_dir = os.path.dirname(file_location)
     return lib_dir
