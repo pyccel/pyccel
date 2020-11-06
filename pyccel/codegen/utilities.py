@@ -9,7 +9,7 @@ import subprocess
 import sys
 import warnings
 
-__all__ = ['construct_flags', 'compile_files']
+__all__ = ['construct_flags', 'compile_files', 'get_gfortran_library_dir']
 
 #==============================================================================
 # TODO use constructor and a dict to map flags w.r.t the compiler
@@ -160,3 +160,8 @@ def compile_files(filename, compiler, flags,
 #        f.close()
 
     return output, cmd
+
+def get_gfortran_library_dir():
+    file_location = subprocess.check_output([shutil.which('gfortran'), '-print-file-name=libgfortran.a'])
+    lib_dir = os.path.dirname(file_location)
+    return lib_dir
