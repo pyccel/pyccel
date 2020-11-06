@@ -3,6 +3,7 @@
 # pylint: disable=missing-function-docstring
 
 from collections import OrderedDict
+from itertools import chain
 
 from sympy.core.function       import Application, UndefinedFunction
 from sympy.utilities.iterables import iterable as sympy_iterable
@@ -2564,10 +2565,9 @@ class SemanticParser(BasicParser):
                 func_interfaces.append(Interface('', func_args, is_argument = True))
 
             self.exit_function_scope()
+
             # ... computing inout arguments
-            args_inout = []
-            for a in args:
-                args_inout.append(False)
+            args_inout = [False] * len(args)
 
             results_names = [str(i) for i in results]
 
@@ -2578,23 +2578,14 @@ class SemanticParser(BasicParser):
             apps = [i for i in apps if (i.__class__.__name__
                     in self.get_parent_functions())]
 
-            d_apps = OrderedDict()
-            for a in args:
-                d_apps[a] = []
-
+            d_apps = OrderedDict((a, []) for a in args)
             for f in apps:
                 a_args = set(f.args) & set(args)
                 for a in a_args:
                     d_apps[a].append(f)
 
-            for i,a in enumerate(args):
-                if str(a) in results_names:
-                    args_inout[i] = True
-
-                elif str(a) in assigned:
-                    args_inout[i] = True
-
-                elif str(a) == 'self':
+            for i, a in enumerate(args):
+                if str(a) in chain(results_names, assigned, ['self']):
                     args_inout[i] = True
 
                 if d_apps[a] and not( args_inout[i] ):
