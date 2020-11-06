@@ -7,7 +7,7 @@ import glob
 import platform
 import warnings
 
-from pyccel.ast.f2py                        import as_static_function_call
+from pyccel.ast.bind_c                      import as_static_function_call
 from pyccel.ast.core                        import SeparatorComment
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import cwrappercode

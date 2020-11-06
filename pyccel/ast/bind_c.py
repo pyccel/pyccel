@@ -4,7 +4,7 @@ from sympy import Tuple
 
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import FunctionAddress
-from pyccel.ast.core import FunctionDef, F2PYFunctionDef
+from pyccel.ast.core import FunctionDef, BindCFunctionDef
 from pyccel.ast.core import Variable
 from pyccel.ast.core import ValuedVariable
 from pyccel.ast.core import Assign
@@ -64,7 +64,7 @@ def as_static_function(func, name=None):
             _results += [r]
 
     if name is None:
-        name = 'f2py_{}'.format(func.name).lower()
+        name = 'bind_c_{}'.format(func.name).lower()
 
     # ...
     results_names = [i.name for i in _results]
@@ -114,35 +114,7 @@ def as_static_function(func, name=None):
     results = _results
     arguments_inout = _arguments_inout
     # ...
-
-    # ... If needed, add !f2py instructions at beginning of function body
-    f2py_template = 'f2py integer(kind={kind}) :: n{index}_{name}=shape({name},{index_t})'
-    f2py_instructions = []
-    int_kind = Variable('int', 'f2py_array_dimension').precision
-
-    for a in args:
-        if not isinstance(a, FunctionAddress) and a.rank > 1 and a.order == 'C':
-
-            # Reverse shape of array
-            transpose_stmts = [Comment(f2py_template.format(kind    = int_kind,
-                                                            index   = i,
-                                                            name    = a.name,
-                                                            index_t = str(i)))
-                               for i in range(a.rank)]
-
-            # Tell f2py that array has C ordering
-            c_intent_stmt = Comment('f2py intent(c) {}'.format(a.name))
-
-            # Update f2py directives
-            f2py_instructions += [*transpose_stmts, c_intent_stmt]
-        elif isinstance(a,ValuedVariable):
-            f2py_instructions += [Comment('f2py {type} :: {name} = {default_value}'.format(type = str_dtype(a.dtype),
-                name = a.name, default_value = a.value))]
-
-    if f2py_instructions:
-        body = f2py_instructions + body.body
-    # ...
-    return F2PYFunctionDef( name, list(args), results, body,
+    return BindCFunctionDef( name, list(args), results, body,
                         local_vars = func.local_vars,
                         is_static = True,
                         arguments_inout = arguments_inout,
@@ -181,7 +153,7 @@ def as_static_function_call(func, mod_name, name=None):
                        imports = imports,
                        )
 
-    # make it compatible with f2py
+    # make it compatible with c
     static_func = as_static_function(new_func, name)
 
     return static_func

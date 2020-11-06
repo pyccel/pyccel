@@ -108,7 +108,7 @@ __all__ = (
     'ErrorExit',
     'Eval',
     'Exit',
-    'F2PYFunctionDef',
+    'BindCFunctionDef',
     'For',
     'ForAll',
     'ForIterator',
@@ -3927,7 +3927,7 @@ class PythonFunction(FunctionDef):
                               self.body, cls_name=self.cls_name)
 
 
-class F2PYFunctionDef(FunctionDef):
+class BindCFunctionDef(FunctionDef):
     def __new__(cls, *args, original_function, **kwargs):
         return FunctionDef.__new__(cls, *args, **kwargs)
 

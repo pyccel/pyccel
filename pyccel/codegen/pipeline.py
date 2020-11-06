@@ -80,7 +80,7 @@ def execute_pyccel(fname, *,
     else:
         folder = os.path.abspath(folder)
 
-    # Define directory name and path for pyccel & f2py build
+    # Define directory name and path for pyccel & cpython build
     pyccel_dirname = '__pyccel__'
     pyccel_dirpath = os.path.join(folder, pyccel_dirname)
 
