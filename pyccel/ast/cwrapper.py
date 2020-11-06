@@ -294,7 +294,7 @@ numpy_check_flag = FunctionDef(name      = 'PyArray_CHKFLAGS',
                        body      = [],
                        arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True),
                                     Variable(dtype=NativeInteger(), name = 'flag')],
-                       results   = [Variable(dtype=NativeInteger(), name = 'i')])
+                       results   = [Variable(dtype=NativeBool(), name = 'i')])
 
 numpy_get_base = FunctionDef(name      = 'PyArray_BASE',
                        body      = [],
