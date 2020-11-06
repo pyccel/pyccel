@@ -406,29 +406,23 @@ def array_real_2d_F_complex_3d_expr( x, y ):
     z = full((2,3),5,order='F')
     x[:] = (x // y) * x + z
 
-@types( 'int32[:]', 'int32[:]', 'int32[:]' )
+@types( 'int32[:]', 'int32[:]', 'bool[:]' )
 def array_int32_in_bool_out_1d_complex_3d_expr( x, y, ri ):
     from numpy import full, int32, empty
     z = full(3,5, dtype=int32)
-    r = empty(3, dtype=bool)
-    r[:] = (x // y) * x > z
-    ri[:] = r
+    ri[:] = (x // y) * x > z
 
-@types( 'int32[:,:]', 'int32[:,:]', 'int32[:,:]' )
+@types( 'int32[:,:]', 'int32[:,:]', 'bool[:,:]' )
 def array_int32_in_bool_out_2d_C_complex_3d_expr( x, y, ri ):
     from numpy import full, int32
     z = full((2,3),5, dtype=int32)
-    r = full((2,3),5,order='F', dtype=bool)
-    r[:] = (x // y) * x > z
-    ri[:] = r
+    ri[:] = (x // y) * x > z
 
-@types( 'int32[:,:](order=F)', 'int32[:,:](order=F)', 'int32[:,:](order=F)' )
+@types( 'int32[:,:](order=F)', 'int32[:,:](order=F)', 'bool[:,:](order=F)' )
 def array_int32_in_bool_out_2d_F_complex_3d_expr( x, y, ri ):
     from numpy import full, int32
     z = full((2,3),5,order='F', dtype=int32)
-    r = full((2,3),5,order='F', dtype=bool)
-    r[:] = (x // y) * x > z
-    ri[:] = r
+    ri[:] = (x // y) * x > z
 
 #==============================================================================
 # 1D STACK ARRAYS OF REAL
