@@ -192,13 +192,14 @@ class CWrapperCodePrinter(CCodePrinter):
             body += [If((check, [err, Return([Nil()])]))]
 
             # Order check
-            if variable.order == 'F':
-                check = FunctionCall(numpy_check_flag,[variable, numpy_flag_c_contig])
-            else:
-                check = FunctionCall(numpy_check_flag,[variable, numpy_flag_f_contig])
-            body += [If((check, [PyErr_SetString('PyExc_NotImplementedError',
-                        '"Argument does not have the expected ordering ({})"'.format(variable.order)),
-                        Return([Nil()])]))]
+            if variable.rank > 1 and self._target_language == 'fortran':
+                if variable.order == 'F':
+                    check = FunctionCall(numpy_check_flag,[variable, numpy_flag_c_contig])
+                else:
+                    check = FunctionCall(numpy_check_flag,[variable, numpy_flag_f_contig])
+                body += [If((check, [PyErr_SetString('PyExc_NotImplementedError',
+                            '"Argument does not have the expected ordering ({})"'.format(variable.order)),
+                            Return([Nil()])]))]
 
         elif variable.dtype is NativeBool():
             collect_type = NativeInteger()
@@ -314,14 +315,6 @@ class CWrapperCodePrinter(CCodePrinter):
         body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
         (BooleanTrue(), [Assign(VariableAddress(a), a.value)]))]
         return optional_tmp_var, body
-
-    def get_array_indexes(self, used_names, arg):
-        if arg.order == 'C':
-            idxs = [FunctionCall(numpy_get_dim,[arg,i]) for i in reversed(range(arg.rank))]
-            return idxs
-        else:
-            idxs = [FunctionCall(numpy_get_dim,[arg,i]) for i in range(arg.rank)]
-            return idxs
 
 
     #--------------------------------------------------------------------
@@ -454,7 +447,8 @@ class CWrapperCodePrinter(CCodePrinter):
             for a in arguments:
                 if isinstance(a, Variable) and a.rank>0:
                     # Add shape arguments for static function
-                    static_args.extend(self.get_array_indexes(used_names, a))
+                    static_args.extend(FunctionCall(numpy_get_dim,[a,i])
+                            for i in range(a.rank))
                     static_args.append(FunctionCall(numpy_get_data,[a]))
                 else:
                     static_args.append(a)
