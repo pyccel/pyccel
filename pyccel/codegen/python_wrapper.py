@@ -87,14 +87,6 @@ def create_shared_library(codegen,
             elif compiler == 'ifort':
                 extra_libs.append('ifcore')
 
-        if accelerator:
-            if accelerator == 'openmp':
-                if compiler in ['gfortran', 'gcc']:
-                    extra_libs.append('gomp')
-
-                elif compiler == 'ifort':
-                    extra_libs.append('iomp5')
-
         module_old_name = codegen.expr.name
         codegen.expr.set_name(sharedlib_modname)
         wrapper_code = cwrappercode(codegen.expr, codegen.parser, language)

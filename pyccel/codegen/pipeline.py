@@ -105,14 +105,15 @@ def execute_pyccel(fname, *,
 
     if (language == "c"):
         libs = libs + ['m']
-        if accelerator == 'openmp':
+    if accelerator == 'openmp':
+        if compiler in ["gcc","gfortran"]:
             if sys.platform.startswith('win'):
                 libs = libs + ['gomp']
             else:
                 libs = libs + ['omp']
-    elif (language == "fortran"):
-        if accelerator == 'openmp':
-            libs = libs + ['gomp']
+
+        elif compiler == 'ifort':
+            extra_libs.append('iomp5')
 
     # ...
     # Construct flags for the Fortran compiler
