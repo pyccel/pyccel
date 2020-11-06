@@ -49,6 +49,18 @@ __all__ = (
     'pycomplex_to_complex',
     'complex_to_pycomplex',
     'pybool_to_bool',
+#--------- Numpy ----------
+    'numpy_get_ndims',
+    'numpy_get_data',
+    'numpy_get_dim',
+    'numpy_get_stride',
+    'numpy_check_flag',
+    'numpy_get_base',
+    'numpy_itemsize',
+    'numpy_flag_own_data',
+    'numpy_flag_c_contig',
+    'numpy_flag_f_contig',
+    'numpy_dtype_registry',
 )
 
 class PyccelPyObject(DataType):
@@ -294,9 +306,44 @@ numpy_itemsize = FunctionDef(name      = 'PyArray_ITEMSIZE',
                        arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
                        results   = [Variable(dtype=NativeInteger(), name = 'i')])
 
+numpy_get_type = FunctionDef(name      = 'PyArray_TYPE',
+                       body      = [],
+                       arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
+                       results   = [Variable(dtype=NativeInteger(), name = 'i')])
+
 numpy_flag_own_data = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_OWNDATA')
 numpy_flag_c_contig = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_C_CONTIGUOUS')
-numpy_flag_c_contig = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_F_CONTIGUOUS')
+numpy_flag_f_contig = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_F_CONTIGUOUS')
+numpy_bool_type = Variable(dtype=NativeInteger(),  name = 'NPY_BOOL')
+numpy_byte_type = Variable(dtype=NativeInteger(),  name = 'NPY_BYTE')
+numpy_ubyte_type = Variable(dtype=NativeInteger(),  name = 'NPY_UBYTE')
+numpy_short_type = Variable(dtype=NativeInteger(),  name = 'NPY_SHORT')
+numpy_ushort_type = Variable(dtype=NativeInteger(),  name = 'NPY_USHORT')
+numpy_int_type = Variable(dtype=NativeInteger(),  name = 'NPY_INT')
+numpy_uint_type = Variable(dtype=NativeInteger(),  name = 'NPY_UINT')
+numpy_long_type = Variable(dtype=NativeInteger(),  name = 'NPY_LONG')
+numpy_ulong_type = Variable(dtype=NativeInteger(),  name = 'NPY_ULONG')
+numpy_longlong_type = Variable(dtype=NativeInteger(),  name = 'NPY_LONGLONG')
+numpy_ulonglong_type = Variable(dtype=NativeInteger(),  name = 'NPY_ULONGLONG')
+numpy_float_type = Variable(dtype=NativeInteger(),  name = 'NPY_FLOAT')
+numpy_double_type = Variable(dtype=NativeInteger(),  name = 'NPY_DOUBLE')
+numpy_longdouble_type = Variable(dtype=NativeInteger(),  name = 'NPY_LONGDOUBLE')
+numpy_cfloat_type = Variable(dtype=NativeInteger(),  name = 'NPY_CFLOAT')
+numpy_cdouble_type = Variable(dtype=NativeInteger(),  name = 'NPY_CDOUBLE')
+numpy_clongdouble_type = Variable(dtype=NativeInteger(),  name = 'NPY_CLONGDOUBLE')
+
+numpy_dtype_registry = {('bool',4)     : numpy_bool_type,
+                        ('int',1)      : numpy_byte_type,
+                        ('int',2)      : numpy_short_type,
+                        ('int',4)      : numpy_int_type,
+                        ('int',8)      : numpy_long_type,
+                        ('int',16)     : numpy_longlong_type,
+                        ('real',4)     : numpy_float_type,
+                        ('real',8)     : numpy_double_type,
+                        ('real',16)    : numpy_longdouble_type,
+                        ('complex',4)  : numpy_cfloat_type,
+                        ('complex',8)  : numpy_cdouble_type,
+                        ('complex',16) : numpy_clongdouble_type}
 
 def PyType_Check(data_type):
     try :

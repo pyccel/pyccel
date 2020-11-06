@@ -24,6 +24,7 @@ from pyccel.ast.cwrapper import PyErr_SetString, PyType_Check
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 from pyccel.ast.cwrapper import PyccelPyArrayObject
 from pyccel.ast.cwrapper import numpy_get_ndims, numpy_get_data, numpy_get_dim
+from pyccel.ast.cwrapper import numpy_get_type, numpy_dtype_registry
 
 from pyccel.ast.bind_c   import as_static_function_call
 
@@ -78,6 +79,14 @@ class CWrapperCodePrinter(CCodePrinter):
         except KeyError:
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
+    def find_in_numpy_dtype_registry(self, dtype, prec):
+        try :
+            return numpy_dtype_registry[(dtype, prec)]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = "{}[kind = {}]".format(dtype, prec),
+                    severity='fatal')
+
     def get_collect_function_call(self, variable, collect_var):
         """
         Represents a call to cast function responsible of collecting value from python object.
@@ -128,7 +137,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return FunctionCall(cast_function, [arg])
 
-    def get_PyArgParseType(self, used_names, variable):
+    def get_PyArgParseType(self, used_names, variable, argument):
         """
         Responsible for creating any necessary intermediate variables which are used
         to collect the result of PyArgParse, and collecting the required cast function
@@ -140,6 +149,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
         variable : Variable
             The variable which will be passed to the translated function
+
+        argument : Variable
+            The original argument provided to the function
 
         Returns
         -------
@@ -162,7 +174,14 @@ class CWrapperCodePrinter(CCodePrinter):
             check = PyccelNe(FunctionCall(numpy_get_ndims,[variable]), Integer(variable.rank))
             err = PyErr_SetString('PyExc_TypeError', '"{} must have rank {}"'.format(variable, str(variable.rank)))
             body = [If((check, [err, Return([Nil()])]))]
-            # TODO: Add type check
+
+            # Type check
+            dtype = self._print(argument.dtype)
+            prec  = argument.precision
+            numpy_dtype = self.find_in_numpy_dtype_registry(dtype, prec)
+            check = PyccelNe(FunctionCall(numpy_get_type, [variable]), numpy_dtype)
+            err = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(argument, argument.dtype))
+            body += [If((check, [err, Return([Nil()])]))]
 
         elif variable.dtype is NativeBool():
             collect_type = NativeInteger()
@@ -420,8 +439,8 @@ class CWrapperCodePrinter(CCodePrinter):
             is_pointer = True,
             rank = a.rank) if isinstance(a, Variable) and a.rank > 0
                 else a for a in expr.arguments]
-        for a in arguments:
-            collect_var, cast_func = self.get_PyArgParseType(used_names, a)
+        for parse_arg, orig_arg in zip(arguments, expr.arguments):
+            collect_var, cast_func = self.get_PyArgParseType(used_names, parse_arg, orig_arg)
 
             # If the variable cannot be collected from PyArgParse directly
             wrapper_vars[collect_var.name] = collect_var
@@ -432,10 +451,10 @@ class CWrapperCodePrinter(CCodePrinter):
             parse_args.append(collect_var)
 
             # Write default values
-            if isinstance(a, ValuedVariable):
-                wrapper_body.append(self.get_default_assign(parse_args[-1], a))
-            if a.is_optional :
-                tmp_variable, body = self.optional_element_management(used_names, a, collect_var)
+            if isinstance(parse_arg, ValuedVariable):
+                wrapper_body.append(self.get_default_assign(parse_args[-1], parse_arg))
+            if parse_arg.is_optional :
+                tmp_variable, body = self.optional_element_management(used_names, parse_arg, collect_var)
                 wrapper_vars[tmp_variable.name] = tmp_variable
                 wrapper_body_translations += body
 
