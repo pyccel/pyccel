@@ -2519,10 +2519,7 @@ class SemanticParser(BasicParser):
                 for a in a_args:
                     d_apps[a].append(f)
 
-            print(args)
             for i,a in enumerate(args):
-                print(a)
-                print(args_inout[i])
                 if str(a) in results_names:
                     args_inout[i] = True
 
