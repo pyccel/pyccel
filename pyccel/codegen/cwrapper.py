@@ -69,6 +69,9 @@ def create_c_setup(mod_name,
     flags_str   = ('extra_compile_args = {0}'.format(print_list(flags))
                    if flags else None)
 
+    flags_str   = ('extra_link_args = {0}'.format(print_list(flags))
+                   if flags else None)
+
     args = [mod, wrapper_file, files, include_str, libs_str, libdirs_str, flags_str]
     args = ',\n'.join(a for a in args if a is not None)
 
