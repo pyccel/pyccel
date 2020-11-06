@@ -3179,11 +3179,8 @@ class FunctionCall(Basic, PyccelAstNode):
         if not isinstance(args, (tuple, list, Tuple)):
             raise TypeError('> expecting an iterable')
 
-        # add the messing argument in the case of optional arguments
-        if func.is_static:
-            f_args = func.original_function.arguments
-        else:
-            f_args = func.arguments
+        # add the missing argument in the case of optional arguments
+        f_args = func.arguments
         if not len(args) == len(f_args):
             f_args_dict = OrderedDict((a.name,a) if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else (a.name, None) for a in f_args)
             keyword_args = []

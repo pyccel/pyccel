@@ -24,6 +24,7 @@ from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 from pyccel.ast.cwrapper import PyccelPyArrayObject
 from pyccel.ast.cwrapper import numpy_get_ndims, numpy_get_data, numpy_get_dim
 from pyccel.ast.cwrapper import numpy_get_type, numpy_dtype_registry
+from pyccel.ast.cwrapper import numpy_check_flag, numpy_flag_c_contig, numpy_flag_f_contig
 
 from pyccel.ast.bind_c   import as_static_function_call
 
@@ -48,6 +49,11 @@ class CWrapperCodePrinter(CCodePrinter):
         self._function_wrapper_names = dict()
         self._global_names = set()
         self._module_name = None
+
+    def stored_in_c_pointer(self, a):
+        stored_in_c = CCodePrinter.stored_in_c_pointer(self, a)
+        if self._target_language == 'fortran':
+            return stored_in_c or (isinstance(a, Variable) and a.rank>0)
 
     def get_new_name(self, used_names, requested_name):
         if requested_name not in used_names:
@@ -185,6 +191,13 @@ class CWrapperCodePrinter(CCodePrinter):
             err = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(argument, argument.dtype))
             body += [If((check, [err, Return([Nil()])]))]
 
+            # Order check
+            if variable.order == 'F':
+                check = FunctionCall(numpy_check_flag,[variable, numpy_flag_c_contig])
+            else:
+                check = FunctionCall(numpy_check_flag,[variable, numpy_flag_f_contig])
+            body += [If((check, [PyErr_SetString('PyExc_NotImplementedError', '"Argument does not have the expected ordering ({})"'.format(variable.order))]))]
+
         elif variable.dtype is NativeBool():
             collect_type = NativeInteger()
             collect_var = Variable(dtype=collect_type, precision=4,
@@ -300,6 +313,15 @@ class CWrapperCodePrinter(CCodePrinter):
         (BooleanTrue(), [Assign(VariableAddress(a), a.value)]))]
         return optional_tmp_var, body
 
+    def get_array_indexes(self, used_names, arg):
+        if arg.order == 'C':
+            idxs = [FunctionCall(numpy_get_dim,[arg,i]) for i in reversed(range(arg.rank))]
+            return idxs
+        else:
+            idxs = [FunctionCall(numpy_get_dim,[arg,i]) for i in range(arg.rank)]
+            return idxs
+
+
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
     #--------------------------------------------------------------------
@@ -307,48 +329,6 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_IndexedElement(self, expr):
         assert(len(expr.indices)==1)
         return '{}[{}]'.format(self._print(expr.base.internal_variable), self._print(expr.indices[0]))
-
-    def _print_FunctionCall(self, expr):
-        func = expr.funcdef
-        is_static = func.is_static
-        if is_static:
-            def get_dims_in_order(a):
-                if a.order == 'F':
-                    return reversed(range(a.rank))
-                else:
-                    return range(a.rank)
-
-            arguments = [[a] if not (isinstance(a, Variable) and a.rank>0)
-                    else [FunctionCall(numpy_get_dim,[a,i]) for i in get_dims_in_order(a)]+
-                    [FunctionCall(numpy_get_data,[a])] for a in expr.arguments]
-            arguments = [a for args in arguments for a in args]
-        else:
-            arguments = expr.arguments
-         # Ensure the correct syntax is used for pointers
-
-        args = []
-        for a, f in zip(arguments, func.arguments):
-            if isinstance(a, Variable) and self.stored_in_c_pointer(f):
-                args.append(VariableAddress(a))
-            elif f.is_optional and not isinstance(a, Nil):
-                tmp_var = self.create_tmp_var(f)
-                assign = Assign(tmp_var, a)
-                self._additional_code += self._print(assign) + '\n'
-                args.append(VariableAddress(tmp_var))
-
-            else :
-                args.append(a)
-
-        return_args = self._temporary_args
-        self._temporary_args = []
-        args = ', '.join(['{}'.format(self._print(a)) if f.rank == 0
-            else '({}*){}'.format(self.find_in_dtype_registry(self._print(f.dtype), f.precision),
-                self._print(a))
-            for a,f in zip(args, func.arguments)] +
-            [self._print(a) for a in return_args])
-        if not func.results:
-            return '{}({});'.format(func.name, args)
-        return '{}({})'.format(func.name, args)
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
@@ -439,7 +419,8 @@ class CWrapperCodePrinter(CCodePrinter):
         arguments = [Variable(PyccelPyArrayObject(),
             a.name,
             is_pointer = True,
-            rank = a.rank) if isinstance(a, Variable) and a.rank > 0
+            rank  = a.rank,
+            order = a.order) if isinstance(a, Variable) and a.rank > 0
                 else a for a in expr.arguments]
         for parse_arg, orig_arg in zip(arguments, expr.arguments):
             collect_var, cast_func = self.get_PyArgParseType(used_names, parse_arg, orig_arg)
@@ -466,12 +447,26 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.extend(wrapper_body_translations)
 
         # Call function
-        static_function = as_static_function_call(expr, self._module_name, name=expr.name)
+        if self._target_language == 'fortran':
+            static_args = []
+            for a in arguments:
+                if isinstance(a, Variable) and a.rank>0:
+                    # Add shape arguments for static function
+                    static_args.extend(self.get_array_indexes(used_names, a))
+                    static_args.append(FunctionCall(numpy_get_data,[a]))
+                else:
+                    static_args.append(a)
+
+            static_function = as_static_function_call(expr, self._module_name, name=expr.name)
+        else:
+            static_function = expr
+            static_args = arguments
+
         if len(expr.results)==0:
-            func_call = FunctionCall(static_function, arguments)
+            func_call = FunctionCall(static_function, static_args)
         else:
             results   = expr.results if len(expr.results)>1 else expr.results[0]
-            func_call = Assign(results,FunctionCall(static_function, arguments))
+            func_call = Assign(results,FunctionCall(static_function, static_args))
 
         wrapper_body.append(func_call)
 
