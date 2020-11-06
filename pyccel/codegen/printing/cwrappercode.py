@@ -196,7 +196,9 @@ class CWrapperCodePrinter(CCodePrinter):
                 check = FunctionCall(numpy_check_flag,[variable, numpy_flag_c_contig])
             else:
                 check = FunctionCall(numpy_check_flag,[variable, numpy_flag_f_contig])
-            body += [If((check, [PyErr_SetString('PyExc_NotImplementedError', '"Argument does not have the expected ordering ({})"'.format(variable.order))]))]
+            body += [If((check, [PyErr_SetString('PyExc_NotImplementedError',
+                        '"Argument does not have the expected ordering ({})"'.format(variable.order)),
+                        Return([Nil()])]))]
 
         elif variable.dtype is NativeBool():
             collect_type = NativeInteger()
