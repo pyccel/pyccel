@@ -168,6 +168,8 @@ def compile_files(filename, compiler, flags,
     return output, cmd
 
 def get_gfortran_library_dir():
+    """Provide the location of the gfortran libraries for linking
+    """
     file_location = subprocess.check_output([shutil.which('gfortran'), '-print-file-name=libgfortran.a'],
             universal_newlines = True)
     lib_dir = os.path.dirname(file_location)

@@ -4,7 +4,6 @@ import sys
 import subprocess
 import os
 import glob
-import platform
 import warnings
 
 from pyccel.ast.bind_c                      import as_static_function_call

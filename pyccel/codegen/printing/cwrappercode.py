@@ -13,7 +13,6 @@ from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, Funct
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, PyccelNe
-from pyccel.ast.core import IndexedVariable
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
@@ -48,6 +47,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self._to_free_PyObject_list = []
         self._function_wrapper_names = dict()
         self._global_names = set()
+        self._module_name = None
 
     def get_new_name(self, used_names, requested_name):
         if requested_name not in used_names:
@@ -79,7 +79,11 @@ class CWrapperCodePrinter(CCodePrinter):
         except KeyError:
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
-    def find_in_numpy_dtype_registry(self, dtype, prec):
+    def find_in_numpy_dtype_registry(self, var):
+        """ Find the numpy dtype key for a given variable
+        """
+        dtype = self._print(var.dtype)
+        prec  = var.precision
         try :
             return numpy_dtype_registry[(dtype, prec)]
         except KeyError:
@@ -130,8 +134,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
             try:
                 cast_function = cast_function_registry[cast_type](cast_function_name)
-            except KeyError:
-                raise NotImplementedError("No conversion function : {}".format(cast_type))
+            except KeyError as e:
+                raise NotImplementedError("No conversion function : {}".format(cast_type)) from e
 
             self._cast_functions_dict[cast_type] = cast_function
 
@@ -176,9 +180,7 @@ class CWrapperCodePrinter(CCodePrinter):
             body = [If((check, [err, Return([Nil()])]))]
 
             # Type check
-            dtype = self._print(argument.dtype)
-            prec  = argument.precision
-            numpy_dtype = self.find_in_numpy_dtype_registry(dtype, prec)
+            numpy_dtype = self.find_in_numpy_dtype_registry(argument)
             check = PyccelNe(FunctionCall(numpy_get_type, [variable]), numpy_dtype)
             err = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(argument, argument.dtype))
             body += [If((check, [err, Return([Nil()])]))]
