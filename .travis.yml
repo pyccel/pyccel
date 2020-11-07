@@ -144,4 +144,5 @@ jobs:
       - dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
       - cd -
 
+    before_script: null
     after_script : null
