@@ -107,7 +107,7 @@ def execute_pyccel(fname, *,
         libs = libs + ['m']
     if accelerator == 'openmp':
         if compiler in ["gcc","gfortran"]:
-            if language == 'c' and sys.platform == "darwin":
+            if sys.platform == "darwin":
                 libs = libs + ['omp']
             else:
                 libs = libs + ['gomp']
