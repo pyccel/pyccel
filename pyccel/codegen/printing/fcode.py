@@ -1218,10 +1218,10 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_BooleanTrue(self, expr):
-        return '.True.'
+        return '.True._{}'.format(iso_c_binding["logical"][expr.precision])
 
     def _print_BooleanFalse(self, expr):
-        return '.False.'
+        return '.False._{}'.format(iso_c_binding["logical"][expr.precision])
 
     def _print_String(self, expr):
         sp_chars = ['\a', '\b', '\f', '\r', '\t', '\v', "'", '\n']
