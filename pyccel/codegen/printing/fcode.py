@@ -29,7 +29,7 @@ from pyccel.ast.core import Nil
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import Subroutine
-from pyccel.ast.core import ErrorExit
+from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              VariableAddress,
@@ -1248,8 +1248,9 @@ class FCodePrinter(CodePrinter):
                 self._handle_fortran_specific_a_prioris(list(f.arguments) + list(f.results))
                 parts = self.function_signature(f, f.name)
                 parts = ["{}({}) {}\n".format(parts['sig'], parts['arg_code'], parts['func_end']),
-                parts['arg_decs'],
-                'end {} {}\n'.format(parts['func_type'], f.name)]
+                        'use iso_c_binding\n',
+                        parts['arg_decs'],
+                        'end {} {}\n'.format(parts['func_type'], f.name)]
                 funcs_sigs.append(''.join(a for a in parts))
             interface = 'interface\n' + '\n'.join(a for a in funcs_sigs) + 'end interface\n'
             return interface
@@ -1309,6 +1310,10 @@ class FCodePrinter(CodePrinter):
         name = self._print(expr.name)
         results   = list(expr.results)
         arguments = list(expr.arguments)
+        if any([isinstance(a, FunctionAddress) for a in arguments]):
+            # Functions with function addresses as arguments cannot be
+            # exposed to python so there is no need to print their signature
+            return ''
         arguments_inout = expr.arguments_inout
         args_decs = OrderedDict()
         for i,arg in enumerate(arguments):
