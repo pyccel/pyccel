@@ -78,7 +78,12 @@ iso_c_binding = {
 		4 : "C_BOOL"}
 }
 
-default_precision = {'real': 8, 'int': numpy.dtype(int).alignment, 'integer': numpy.dtype(int).alignment, 'complex': 8, 'bool':4, 'float':8}
+default_precision = {'real': 8,
+                    'int': 8,#numpy.dtype(int).alignment,
+                    'integer': 8,#numpy.dtype(int).alignment,
+                    'complex': 8,
+                    'bool':4,
+                    'float':8}
 dtype_and_precision_registry = { 'real':('real',default_precision['float']),
                                  'double':('real',default_precision['float']),
                                  'float':('real',default_precision['float']),       # sympy.Float
