@@ -49,12 +49,28 @@ def test_module_3(language):
     assert f1() == 0
     assert f2() == 1
 
+@pytest.mark.parametrize( 'lang', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="omp_set_dynamic requires bool(kind=1) but C_BOOL has(kind=4)"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_modules_4(language):
     f1 = epyccel(openmp.test_omp_set_get_dynamic, accelerator='openmp', language=language, verbose = True)
 
     assert f1(1) == 1
     assert f1(0) == 0
 
+@pytest.mark.parametrize( 'lang', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="omp_set_dynamic requires bool(kind=1) but C_BOOL has(kind=4)"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_modules_4_1(language):
     f1 = epyccel(openmp.test_omp_set_get_nested, accelerator='openmp', language=language, verbose = True)
 

@@ -51,14 +51,12 @@ def test_omp_in_parallel2():
     #$ omp end parallel
     return in_parallel
 
-@pytest.mark.xfail("omp_set_dynamic requires bool(kind=1) but C_BOOL has(kind=4)")
 @types ('bool')
 def test_omp_set_get_dynamic(dynamic_theads):
     from pyccel.stdlib.internal.openmp import omp_set_dynamic, omp_get_dynamic
     omp_set_dynamic(dynamic_theads)
     return omp_get_dynamic()
 
-@pytest.mark.xfail("omp_set_dynamic requires bool(kind=1) but C_BOOL has(kind=4)")
 @types ('bool')
 def test_omp_set_get_nested(nested):
     from pyccel.stdlib.internal.openmp import omp_set_nested, omp_get_nested
