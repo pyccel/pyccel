@@ -14,7 +14,7 @@ from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import VariableAddress, Import, PyccelNe
+from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelNot
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
@@ -208,10 +208,10 @@ class CWrapperCodePrinter(CCodePrinter):
             # Order check
             if variable.rank > 1 and self._target_language == 'fortran':
                 if variable.order == 'F':
-                    check = FunctionCall(numpy_check_flag,[variable, numpy_flag_c_contig])
-                else:
                     check = FunctionCall(numpy_check_flag,[variable, numpy_flag_f_contig])
-                body += [If((check, [PyErr_SetString('PyExc_NotImplementedError',
+                else:
+                    check = FunctionCall(numpy_check_flag,[variable, numpy_flag_c_contig])
+                body += [If((PyccelNot(check), [PyErr_SetString('PyExc_NotImplementedError',
                             '"Argument does not have the expected ordering ({})"'.format(variable.order)),
                             Return([Nil()])]))]
 
