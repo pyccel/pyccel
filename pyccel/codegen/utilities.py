@@ -141,11 +141,22 @@ def compile_files(filename, compiler, flags,
     if verbose:
         print(cmd)
 
-    output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+    #output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, shell=True)
 
-    if output:
-        output = output.decode("utf-8")
-        warnings.warn(UserWarning(output))
+    #if output:
+    #    output = output.decode("utf-8")
+    #    warnings.warn(UserWarning(output))
+    output, err = p.communicate()
+    if verbose:
+        print(output)
+    if p.returncode != 0:
+        err_msg = "Failed to build module"
+        if verbose:
+            err_msg += "\n" + err
+        raise RuntimeError(err_msg)
+    if err:
+        warnings.warn(UserWarning(err))
 
     # TODO shall we uncomment this?
 #    # write and save a log file in .pyccel/'filename'.log
