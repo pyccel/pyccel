@@ -309,7 +309,7 @@ numpy_itemsize = FunctionDef(name      = 'PyArray_ITEMSIZE',
 numpy_get_type = FunctionDef(name      = 'PyArray_TYPE',
                        body      = [],
                        arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
-                       results   = [Variable(dtype=NativeInteger(), name = 'i')])
+                       results   = [Variable(dtype=NativeInteger(), name = 'i', precision = 4)])
 
 numpy_flag_own_data = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_OWNDATA')
 numpy_flag_c_contig = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_C_CONTIGUOUS')

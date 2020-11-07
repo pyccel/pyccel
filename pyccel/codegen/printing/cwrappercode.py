@@ -9,6 +9,8 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.numbers   import BooleanTrue, Integer
 
+from pyccel.ast.builtins import PythonPrint
+
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string, SeparatorComment
@@ -190,8 +192,9 @@ class CWrapperCodePrinter(CCodePrinter):
             # Type check
             numpy_dtype = self.find_in_numpy_dtype_registry(argument)
             check = PyccelNe(FunctionCall(numpy_get_type, [variable]), numpy_dtype)
-            err = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(argument, argument.dtype))
-            body += [If((check, [err, Return([Nil()])]))]
+            info_dump = PythonPrint([FunctionCall(numpy_get_type, [variable])])
+            err = PyErr_SetString('PyExc_TypeError', '"{} must be {} (numpy code : %ld)"'.format(argument, argument.dtype))
+            body += [If((check, [info_dump, err, Return([Nil()])]))]
 
             # Order check
             if variable.rank > 1 and self._target_language == 'fortran':
