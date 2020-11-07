@@ -20,6 +20,7 @@ failing_tests = dict()
 marks = [f[1] if f[0] not in failing_tests else
         pytest.param(f[1], marks = pytest.mark.xfail(reason=failing_tests[f[0]])) for f in string_funcs]
 
+@pytest.mark.skip(reason="Strings not implemented in c so not in cwrapper")
 @pytest.mark.parametrize('test_func',marks)
 def test_strings(test_func):
     f1 = test_func
