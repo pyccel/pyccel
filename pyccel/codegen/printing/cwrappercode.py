@@ -14,7 +14,7 @@ from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelNot
+from pyccel.ast.core import VariableAddress, Import, PyccelNe
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
