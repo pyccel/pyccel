@@ -7,15 +7,26 @@ from pyccel.ast.core import Nil, PyccelAssociativeParenthesis
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import SeparatorComment, VariableAddress
 from pyccel.ast.core import DottedName
+from sympy.core.function import Function, Application
 
-from pyccel.ast.core import PyccelAdd, PyccelMul, String
+from pyccel.ast.core import (AliasAssign,
+                             TupleVariable, Declare,
+                             IndexedVariable, CodeBlock,
+                             IndexedElement, Slice, Dlist,
+                             AsName,
+                             If, PyccelArraySize)
 
+from pyccel.ast.core import PyccelAdd, PyccelMul, String, PyccelMinus
+from pyccel.ast.core      import PyccelUnarySub, PyccelMod
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
 
 
 from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.numpyext import NumpyReal, NumpyImag
+from pyccel.ast.numpyext import NumpyFull, NumpyArray
+from pyccel.ast.numpyext import Shape
+from pyccel.ast.numpyext import Tuple, PythonTuple
 
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 from pyccel.ast.core import FuncAddressDeclare, FunctionCall
@@ -512,7 +523,8 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_dtype_registry(dtype, prec)
 
         if rank > 0:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
+            return 't_ndarray '
+        #     errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
 
         if self.stored_in_c_pointer(expr):
             return '{0} *'.format(dtype)
@@ -539,8 +551,8 @@ class CCodePrinter(CodePrinter):
         return '{}(*{})({});'.format(ret_type, name, arg_code)
 
     def _print_Declare(self, expr):
-        if expr.variable.rank > 0:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
+        # if expr.variable.rank > 0:
+        #     errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
         declaration_type = self.get_declare_type(expr.variable)
         variable = self._print(expr.variable.name)
 
@@ -585,6 +597,32 @@ class CCodePrinter(CodePrinter):
             return '{}(*{})({})'.format(ret_type, name, arg_code)
         else:
             return '{0}{1}({2})'.format(ret_type, name, arg_code)
+
+    def _print_IndexedElement(self, expr):
+        print(expr.base, IndexedVariable)
+        if isinstance(expr.base, IndexedVariable):
+            base = expr.base.internal_variable
+        else:
+            base = expr.base
+        base = self._print(expr.base.label)
+        inds = list(expr.indices)
+        print(inds)
+        base_shape = Shape(expr.base)
+        allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
+                expr.base.internal_variable.allows_negative_indexes)
+
+        for i, ind in enumerate(inds):
+            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], Integer):
+                inds[i] = PyccelMinus(base_shape[i], ind.args[0])
+            else:
+                #indices of indexedElement of len==1 shouldn't be a Tuple
+                if isinstance(ind, Tuple) and len(ind) == 1:
+                    inds[i] = ind[0]
+                if allow_negative_indexes and not isinstance(ind, Integer):
+                    inds[i] = PyccelMod(ind, base_shape[i])
+
+        inds = [self._print(i) for i in inds]
+        return "%s[%s]" % (base, ", ".join(inds))
 
     def _print_NumpyUfuncBase(self, expr):
         """ Convert a Python expression with a Numpy function call to C
@@ -852,13 +890,36 @@ class CCodePrinter(CodePrinter):
         rhs_code = self._print(expr.rhs)
         return "{0} {1}= {2};".format(lhs_code, op, rhs_code)
 
+
     def _print_Assign(self, expr):
+        lhs = expr.lhs
+        rhs = expr.rhs
+        if isinstance(rhs, (NumpyArray)):
+            self._additional_imports.add('ndarrays')
+            # stack_array = False
+            return rhs.cprint(self._print, expr.lhs) + '\n'
+
+        if isinstance(rhs, (NumpyFull)):
+
+            stack_array = False
+            # if self._current_function:
+            #     name = self._current_function
+            #     func = self.get_function(name)
+            #     lhs_name = expr.lhs.name
+            #     vars_dict = {i.name: i for i in func.local_vars}
+            #     if lhs_name in vars_dict:
+            #         stack_array = vars_dict[lhs_name].is_stack_array
+            return rhs.cprint(self._print, expr.lhs, stack_array)
+
         if isinstance(expr.rhs, FunctionCall) and isinstance(expr.rhs.dtype, NativeTuple):
             self._temporary_args = [VariableAddress(a) for a in expr.lhs]
             return '{};'.format(self._print(expr.rhs))
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
+        rhs = self._print(rhs)
         return '{} = {};'.format(lhs, rhs)
+
+    def _print_NumpyArray(self, expr):
+        print(expr)
+        return expr.cprint(self._print)
 
     def _print_AliasAssign(self, expr):
         lhs = expr.lhs

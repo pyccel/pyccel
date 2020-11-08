@@ -214,6 +214,28 @@ class NumpyArray(Application, NumpyNewArray):
 
         code_init = '{0} = {1}'.format(lhs_code, init_value)
         code = '{0}\n{1}'.format(code_alloc, code_init)
+        return code
+
+    def cprint(self, printer, lhs):
+        """C print."""
+        lhs_code = printer(lhs)
+        # Create statement for allocation
+        # Transpose indices because of Fortran column-major ordering
+        shape = self.shape if self.order == 'C' else self.shape[::-1]
+        arr_id = 'dump000'
+        shape_name = 'shape_' + arr_id #need to make it unique
+        shape_code = 'int {0}[] = '.format(shape_name) + '{' + ', '.join(printer(i) for i in shape) + '}'
+        func_call_code = 'array_create({0}, {1}, nd_{2})'.format(self.rank, shape_name, self.dtype)
+        code_alloc = '{1}\n{0} = {2};'.format(lhs_code, shape_code, func_call_code)
+        # Create statement for initialization
+        arg = self.arg
+        if self.rank > 1:
+            import functools
+            import operator
+            arg = functools.reduce(operator.concat, self.arg)
+        arr_dummy = '{0} arr_{1}[] = '.format(self.dtype, arr_id) + '{' + ', '.join(printer(i) for i in arg) + '};'
+        code_init = 'memcpy({0}.rawdata, arr_{1}.raw_data, {0}.buffer_size);'.format(lhs_code, arr_id)
+        code = '{0}\n{1}\n{2}'.format(code_alloc, arr_dummy, code_init)
 
         return code
 
@@ -965,6 +987,26 @@ class NumpyFull(Application, NumpyNewArray):
             return ''
         else:
             return '\n'.join(stmts) + '\n'
+    def cprint(self, printer, lhs, stack_array=False):
+        """C print."""
+        lhs_code = printer(lhs)
+
+        # Create statement for allocation
+        if not stack_array:
+            # Transpose indices because of Fortran column-major ordering
+            shape = self.shape if self.order == 'C' else self.shape[::-1]
+            print(shape)
+            arr_id = 'dump000' #need to make it unique
+            shape_name = 'shape_' + arr_id
+            shape_code = 'int {0}[] = '.format(shape_name) + '{' + ', '.join(printer(i) for i in shape) + '}'
+            func_call_code = 'array_create({0}, {1}, nd_{2})'.format(self.rank, shape_name, self.dtype)
+            code_alloc = '{1}\n{0} = {2};'.format(lhs_code, shape_code, func_call_code)
+        # Create statement for initialization
+        code_init = ''
+        if self.fill_value is not None:
+            code_init = 'array_fill({0}, {1});'.format(self.fill_value, lhs_code)
+        return "{0}\n{1}".format(code_alloc, code_init)
+
 
 #==============================================================================
 class NumpyEmpty(NumpyFull):
