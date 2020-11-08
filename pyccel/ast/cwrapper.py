@@ -1,5 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 
+import numpy as np
+
 from .basic     import Basic
 
 from pyccel.ast.numbers   import BooleanTrue, Complex
@@ -332,11 +334,33 @@ numpy_cfloat_type = Variable(dtype=NativeInteger(),  name = 'NPY_CFLOAT', precis
 numpy_cdouble_type = Variable(dtype=NativeInteger(),  name = 'NPY_CDOUBLE', precision = 4)
 numpy_clongdouble_type = Variable(dtype=NativeInteger(),  name = 'NPY_CLONGDOUBLE', precision = 4)
 
+numpy_num_to_type = { 0 : numpy_bool_type,
+        1 : numpy_byte_type,
+        2 : numpy_ubyte_type,
+        3 : numpy_short_type,
+        4 : numpy_ushort_type,
+        5 : numpy_int_type,
+        6 : numpy_uint_type,
+        7 : numpy_long_type,
+        8 : numpy_ulong_type,
+        9 : numpy_longlong_type,
+        10 : numpy_ulonglong_type,
+        11 : numpy_float_type,
+        12 : numpy_double_type,
+        13 : numpy_longdouble_type,
+        14 : numpy_cfloat_type,
+        15 : numpy_cdouble_type,
+        16 : numpy_clongdouble_type }
+
+numpy_int_type_precision_map = {1 : np.dtype(np.int8).num,
+        2 : np.dtype(np.int16).num,
+        4 : np.dtype(np.int32).num,
+        8 : np.dtype(np.int64).num}
 numpy_dtype_registry = {('bool',4)     : numpy_bool_type,
-                        ('int',1)      : numpy_byte_type,
-                        ('int',2)      : numpy_short_type,
-                        ('int',4)      : numpy_int_type,
-                        ('int',8)      : numpy_long_type,
+                        ('int',1)      : numpy_num_to_type[numpy_int_type_precision_map[1]],
+                        ('int',2)      : numpy_num_to_type[numpy_int_type_precision_map[2]],
+                        ('int',4)      : numpy_num_to_type[numpy_int_type_precision_map[4]],
+                        ('int',8)      : numpy_num_to_type[numpy_int_type_precision_map[8]],
                         ('int',16)     : numpy_longlong_type,
                         ('real',4)     : numpy_float_type,
                         ('real',8)     : numpy_double_type,
