@@ -34,6 +34,7 @@ before_script:  # Coverage instructions - setup
 
 script:
   - cd tests
+  - ${PYTHON} -c "import numpy as np; x = np.ones(3,dtype=int); print(x.dtype.alignment); print(np.dtype(int).alignment)"
   - ${PYTHON} -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
   - ${PYTHON} -m pytest -rx -m "not parallel and not c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
   - ${PYTHON} -m pytest ndarrays/ -rx
