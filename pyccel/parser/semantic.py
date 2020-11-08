@@ -2503,8 +2503,11 @@ class SemanticParser(BasicParser):
 
             results_names = [str(i) for i in results]
 
-            assigned = get_assigned_symbols(body)
+            assigned = get_assigned_symbols(body, False)
             assigned = [str(i) for i in assigned]
+
+            all_assigned = get_assigned_symbols(body, True)
+            all_assigned = [str(i) for i in all_assigned]
 
             apps = list(Tuple(*body.body).atoms(Application))
             apps = [i for i in apps if (i.__class__.__name__
@@ -2544,8 +2547,7 @@ class SemanticParser(BasicParser):
                             args_inout[i] = True
 
                         i_fa += 1
-
-                if args_inout[i] is True and a.is_const is True:
+                if (args_inout[i] is True and a.is_const is True) or (str(a) in all_assigned and a.is_const is True):
                     msg = 'Argument ({}) must be an inout!'.format(a)
                     errors.report(msg, bounding_box=(self._current_fst_node.lineno,
                         self._current_fst_node.col_offset),
