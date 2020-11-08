@@ -79,8 +79,8 @@ iso_c_binding = {
 }
 
 default_precision = {'real': 8,
-                    'int': 8,#numpy.dtype(int).alignment,
-                    'integer': 8,#numpy.dtype(int).alignment,
+                    'int': numpy.dtype(int).alignment,
+                    'integer': numpy.dtype(int).alignment,
                     'complex': 8,
                     'bool':4,
                     'float':8}
