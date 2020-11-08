@@ -203,6 +203,16 @@ dtype_registry = {('real',8)    : 'double',
                   ('int',1)     : 'char',
                   ('bool',4)    : 'bool'}
 
+arr_dtype_registry = {('real',8)    : 'double',
+                  ('real',4)    : 'float',
+                  ('complex',8) : 'cdouble',
+                  ('complex',4) : 'cfloat',
+                  ('int',4)     : 'int',
+                  ('int',8)     : 'long',
+                  ('int',2)     : 'sint',
+                  ('int',1)     : 'char',
+                  ('bool',4)    : 'bool'}
+
 import_dict = {'omp_lib' : 'omp' }
 
 class CCodePrinter(CodePrinter):
@@ -510,9 +520,9 @@ class CCodePrinter(CodePrinter):
         code = ', '.join([args_format, *args])
         return "printf({});".format(code)
 
-    def find_in_dtype_registry(self, dtype, prec):
+    def find_in_dtype_registry(self, dtype, prec, array=False):
         try :
-            return dtype_registry[(dtype, prec)]
+            return dtype_registry[(dtype, prec)] if not array else arr_dtype_registry[(dtype, prec)]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
 
@@ -599,7 +609,7 @@ class CCodePrinter(CodePrinter):
             return '{0}{1}({2})'.format(ret_type, name, arg_code)
 
     def _print_IndexedElement(self, expr):
-        print(expr.base, IndexedVariable)
+
         if isinstance(expr.base, IndexedVariable):
             base = expr.base.internal_variable
         else:
@@ -622,7 +632,8 @@ class CCodePrinter(CodePrinter):
                     inds[i] = PyccelMod(ind, base_shape[i])
 
         inds = [self._print(i) for i in inds]
-        return "%s[%s]" % (base, ", ".join(inds))
+        dtype = self.find_in_dtype_registry(format(expr.dtype), expr.precision, array=True)
+        return "%s.nd_%s[get_index(%s)]" % (base, dtype,", ".join(inds[::-1]))
 
     def _print_NumpyUfuncBase(self, expr):
         """ Convert a Python expression with a Numpy function call to C
@@ -892,12 +903,13 @@ class CCodePrinter(CodePrinter):
 
 
     def _print_Assign(self, expr):
-        lhs = expr.lhs
+        lhs = self._print(expr.lhs)
         rhs = expr.rhs
+        dtype = self.find_in_dtype_registry(format(rhs.dtype), rhs.precision, array=True)
         if isinstance(rhs, (NumpyArray)):
             self._additional_imports.add('ndarrays')
             # stack_array = False
-            return rhs.cprint(self._print, expr.lhs) + '\n'
+            return rhs.cprint(self._print, expr.lhs, dtype) + '\n'
 
         if isinstance(rhs, (NumpyFull)):
 
@@ -909,17 +921,13 @@ class CCodePrinter(CodePrinter):
             #     vars_dict = {i.name: i for i in func.local_vars}
             #     if lhs_name in vars_dict:
             #         stack_array = vars_dict[lhs_name].is_stack_array
-            return rhs.cprint(self._print, expr.lhs, stack_array)
+            return rhs.cprint(self._print, expr.lhs, dtype, stack_array)
 
         if isinstance(expr.rhs, FunctionCall) and isinstance(expr.rhs.dtype, NativeTuple):
             self._temporary_args = [VariableAddress(a) for a in expr.lhs]
             return '{};'.format(self._print(expr.rhs))
         rhs = self._print(rhs)
         return '{} = {};'.format(lhs, rhs)
-
-    def _print_NumpyArray(self, expr):
-        print(expr)
-        return expr.cprint(self._print)
 
     def _print_AliasAssign(self, expr):
         lhs = expr.lhs

@@ -216,7 +216,7 @@ class NumpyArray(Application, NumpyNewArray):
         code = '{0}\n{1}'.format(code_alloc, code_init)
         return code
 
-    def cprint(self, printer, lhs):
+    def cprint(self, printer, lhs, dtype):
         """C print."""
         lhs_code = printer(lhs)
         # Create statement for allocation
@@ -225,7 +225,7 @@ class NumpyArray(Application, NumpyNewArray):
         arr_id = 'dump000'
         shape_name = 'shape_' + arr_id #need to make it unique
         shape_code = 'int {0}[] = '.format(shape_name) + '{' + ', '.join(printer(i) for i in shape) + '}'
-        func_call_code = 'array_create({0}, {1}, nd_{2})'.format(self.rank, shape_name, self.dtype)
+        func_call_code = 'array_create({0}, {1}, nd_{2})'.format(self.rank, shape_name, dtype)
         code_alloc = '{1}\n{0} = {2};'.format(lhs_code, shape_code, func_call_code)
         # Create statement for initialization
         arg = self.arg
@@ -987,7 +987,7 @@ class NumpyFull(Application, NumpyNewArray):
             return ''
         else:
             return '\n'.join(stmts) + '\n'
-    def cprint(self, printer, lhs, stack_array=False):
+    def cprint(self, printer, lhs, dtype, stack_array=False):
         """C print."""
         lhs_code = printer(lhs)
 
@@ -999,7 +999,7 @@ class NumpyFull(Application, NumpyNewArray):
             arr_id = 'dump000' #need to make it unique
             shape_name = 'shape_' + arr_id
             shape_code = 'int {0}[] = '.format(shape_name) + '{' + ', '.join(printer(i) for i in shape) + '}'
-            func_call_code = 'array_create({0}, {1}, nd_{2})'.format(self.rank, shape_name, self.dtype)
+            func_call_code = 'array_create({0}, {1}, nd_{2})'.format(self.rank, shape_name, dtype)
             code_alloc = '{1}\n{0} = {2};'.format(lhs_code, shape_code, func_call_code)
         # Create statement for initialization
         code_init = ''
