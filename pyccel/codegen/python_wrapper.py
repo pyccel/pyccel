@@ -104,6 +104,10 @@ def create_shared_library(codegen,
 
         c_flags = [fortran_c_flag_equivalence[f] if f in fortran_c_flag_equivalence else f for f in flags.strip().split(' ') if f != '']
 
+        if sys.platform == "darwin" and "-fopenmp" in c_flags and "-Xpreprocessor" not in c_flags:
+            idx = c_flags.index("-fopenmp")
+            c_flags.insert(idx, "-Xpreprocessor")
+
         setup_code = create_c_setup(sharedlib_modname, wrapper_filename,
                 dep_mods, compiler, includes, libs + extra_libs, libdirs + extra_libdirs, c_flags)
         setup_filename = "setup_{}.py".format(module_name)
