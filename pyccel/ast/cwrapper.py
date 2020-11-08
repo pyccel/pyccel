@@ -352,10 +352,12 @@ numpy_num_to_type = { 0 : numpy_bool_type,
         15 : numpy_cdouble_type,
         16 : numpy_clongdouble_type }
 
+# This dictionary is required as the precision does not line up with the expected type on windows
 numpy_int_type_precision_map = {1 : np.dtype(np.int8).num,
         2 : np.dtype(np.int16).num,
         4 : np.dtype(np.int32).num,
         8 : np.dtype(np.int64).num}
+
 numpy_dtype_registry = {('bool',4)     : numpy_bool_type,
                         ('int',1)      : numpy_num_to_type[numpy_int_type_precision_map[1]],
                         ('int',2)      : numpy_num_to_type[numpy_int_type_precision_map[2]],
