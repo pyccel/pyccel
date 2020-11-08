@@ -5639,8 +5639,7 @@ def get_assigned_symbols(expr):
             var = var.base
             symbols.append(var)
         elif isinstance(var, Variable):
-            if var.rank:
-                symbols.append(var)
+            symbols.append(var)
         return symbols
     elif isinstance(expr, FunctionCall):
         f = expr.funcdef
