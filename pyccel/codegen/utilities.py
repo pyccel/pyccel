@@ -70,7 +70,7 @@ def construct_flags(compiler,
 
     if accelerator is not None:
         if accelerator == "openmp":
-            if sys.platform == "darwin" and compiler in ["gcc", "gfortran"]:
+            if sys.platform == "darwin" and compiler == "gcc":
                 flags += " -Xpreprocessor"
 
             if compiler == 'ifort':
