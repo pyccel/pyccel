@@ -940,7 +940,7 @@ class FCodePrinter(CodePrinter):
         if intent:
             if intent == 'in' and rank == 0 and is_static is False:
                 intentstr = ', value'
-                if is_const is True:
+                if is_const:
                     intentstr += ', intent(in)'
             else:
                 intentstr = ', intent({})'.format(intent)

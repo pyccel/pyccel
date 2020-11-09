@@ -2503,11 +2503,11 @@ class SemanticParser(BasicParser):
 
             results_names = [str(i) for i in results]
 
-            assigned = get_assigned_symbols(body, False)
-            assigned = [str(i) for i in assigned]
-
             all_assigned = get_assigned_symbols(body, True)
+            assigned     = [a for a in all_assigned if a.rank >0]
+
             all_assigned = [str(i) for i in all_assigned]
+            assigned     = [str(i) for i in assigned]
 
             apps = list(Tuple(*body.body).atoms(Application))
             apps = [i for i in apps if (i.__class__.__name__
