@@ -131,9 +131,6 @@ def epyccel_seq(function_or_module, *,
                        extra_args  = extra_args,
                        accelerator = accelerator,
                        output_name = module_name)
-    except PyccelError:
-        # Raise a new error to avoid a large traceback
-        raise RuntimeError("Pyccel translation failed")
     finally:
         # Change working directory back to starting point
         os.chdir(base_dirpath)
