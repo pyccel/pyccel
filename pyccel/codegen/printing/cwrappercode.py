@@ -371,17 +371,17 @@ class CWrapperCodePrinter(CCodePrinter):
             self._to_free_PyObject_list.clear()
             body_tmp.append((PyccelAnd(*cond), body))
 
-            # Create the If condition with the cond and body collected above
-            body_tmp.append((BooleanTrue(), [PyErr_SetString("some erro", "test") , Return([Nil()])]))
-            wrapper_body_translations = [If(*body_tmp)]
+        # Create the If condition with the cond and body collected above
+        body_tmp.append((BooleanTrue(), [PyErr_SetString("some erro", "test") , Return([Nil()])]))
+        wrapper_body_translations = [If(*body_tmp)]
 
-            # Parsing Arguments
-            parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, arguments[0], parse_args, keyword_list)
-            wrapper_body.append(If((PyccelNot(parse_node), [Return([Nil()])])))
+        # Parsing Arguments
+        parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, arguments[0], parse_args, keyword_list)
+        wrapper_body.append(If((PyccelNot(parse_node), [Return([Nil()])])))
 
-            #finishing the wrapper body
-            wrapper_body.extend(wrapper_body_translations)
-            wrapper_body.append(Return(wrapper_results))
+        #finishing the wrapper body
+        wrapper_body.extend(wrapper_body_translations)
+        wrapper_body.append(Return(wrapper_results))
 
 
     def _print_FunctionDef(self, expr):
