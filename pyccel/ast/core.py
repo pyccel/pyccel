@@ -3930,7 +3930,7 @@ class BindCFunctionDef(FunctionDef):
 
     def __init__(self, *args, original_function, **kwargs):
         self._original_function = original_function
-        return FunctionDef.__init__(self, *args, **kwargs)
+        FunctionDef.__init__(self, *args, **kwargs)
 
     @property
     def name(self):
