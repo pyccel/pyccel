@@ -23,7 +23,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
                              NativeReal, NativeComplex, NativeBool, str_dtype)
 
-from .numbers        import Integer, Float
+from .numbers        import Integer, Float, Complex
 from .basic          import PyccelAstNode
 
 
@@ -957,15 +957,16 @@ class NumpyEmpty(NumpyFull):
 class NumpyZeros(NumpyEmpty):
     """ Represents a call to numpy.zeros for code generation.
     """
+    # TODO [YG, 09.11.2020]: create Integer/Float/Complex w/ correct precision
     @property
     def fill_value(self):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
-            value = 0
+            value = Integer(0)
         elif isinstance(dtype, NativeReal):
-            value = 0.0
+            value = Float(0.)
         elif isinstance(dtype, NativeComplex):
-            value = 0.0
+            value = Complex(Float(0.), Float(0.))
         elif isinstance(dtype, NativeBool):
             value = BooleanFalse()
         else:
@@ -976,15 +977,16 @@ class NumpyZeros(NumpyEmpty):
 class NumpyOnes(NumpyEmpty):
     """ Represents a call to numpy.ones for code generation.
     """
+    # TODO [YG, 09.11.2020]: create Integer/Float/Complex w/ correct precision
     @property
     def fill_value(self):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
-            value = 1
+            value = Integer(1)
         elif isinstance(dtype, NativeReal):
-            value = 1.0
+            value = Float(1.)
         elif isinstance(dtype, NativeComplex):
-            value = 1.0
+            value = Complex(Float(1.), Float(0.))
         elif isinstance(dtype, NativeBool):
             value = BooleanTrue()
         else:
