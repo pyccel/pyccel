@@ -133,8 +133,12 @@ def create_shared_library(codegen,
 
         if verbose:
             print(' '.join(cmd))
+        if sys.platform == "darwin":
+            linker = c_compiler+" -pthread -dylib"
+        else:
+            linker = c_compiler+" -pthread -shared"
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True,
-                env=dict(os.environ, CC=c_compiler, LDSHARED=c_compiler+" -pthread -shared"))
+                env=dict(os.environ, CC=c_compiler, LDSHARED=linker))
         out, err = p.communicate()
         if verbose:
             print(out)
