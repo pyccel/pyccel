@@ -302,6 +302,18 @@ class CWrapperCodePrinter(CCodePrinter):
         # Save all used names
         used_names = set([n.name for n in funcs])
 
+        #Collecting all arguments and results
+        results = [r.results for r in funcs]
+        arguments = [a.arguments for a in funcs]
+
+        if len(funcs) > 1 :
+            results =  [list(map(lambda x : x.clone(name=self.get_new_name(used_names, x.name)), i)) for i in results]
+            arguments =  [list(map(lambda x : x.clone(name=self.get_new_name(used_names, x.name)), i)) for i in arguments]
+
+
+
+
+
 
 
 
