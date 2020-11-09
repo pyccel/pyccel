@@ -310,6 +310,13 @@ class CWrapperCodePrinter(CCodePrinter):
             results =  [list(map(lambda x : x.clone(name=self.get_new_name(used_names, x.name)), i)) for i in results]
             arguments =  [list(map(lambda x : x.clone(name=self.get_new_name(used_names, x.name)), i)) for i in arguments]
 
+        # Find a name for the wrapper function
+        wrapper_name = self.get_new_name(used_names.union(self._global_names), expr.name+"_wrapper")
+        self._function_wrapper_names[expr.name] = wrapper_name
+        self._global_names.add(wrapper_name)
+
+
+
 
 
 
