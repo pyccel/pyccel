@@ -1,4 +1,6 @@
-from sympy.printing.pycode import PythonCodePrinter as SympyPythonCodePrinter
+""" Functions necessary for creating the setup_X.py file which
+uses python setuptools to compile a c file and generate the
+corresponding shared library file"""
 
 def print_list(l):
     """ Convert a list of strings to a string that contains the

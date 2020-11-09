@@ -79,7 +79,6 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_declare_type(self, expr):
         dtype = self._print(expr.dtype)
         prec  = expr.precision
-        rank  = expr.rank
         dtype = self.find_in_dtype_registry(dtype, prec)
 
         if self.stored_in_c_pointer(expr):
