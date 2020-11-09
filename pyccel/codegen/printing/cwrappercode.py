@@ -336,6 +336,21 @@ class CWrapperCodePrinter(CCodePrinter):
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
         wrapper_body              = [keyword_list]
 
+        wrapper_body_translations = []
+        body_tmp = []
+
+        # Managing the body of wrapper
+        for func, res, args in zip(funcs, results, arguments):
+            cond = []
+            body = []
+            res_args = []
+            # Loop for all args in every functions and create the corresponding condition and body
+            for a, b in zip(parse_args, args):
+                check = FunctionCall(PyType_Check(b.dtype), [a])
+                body.append(Assign(b, self.get_collect_function_call(b, a)))
+                cond.append(check)
+
+
 
     def _print_FunctionDef(self, expr):
         # Save all used names
