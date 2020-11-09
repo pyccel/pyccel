@@ -4229,7 +4229,15 @@ class ClassDef(Basic):
                              str(self)))
 
         var = attributes[attr]
-        return DottedVariable(O, var)
+        name = DottedName(cls_name, str(var.name))
+        return Variable(
+            var.dtype,
+            name,
+            rank=var.rank,
+            allocatable=var.allocatable,
+            shape=var.shape,
+            cls_base=var.cls_base,
+            )
 
     @property
     def is_iterable(self):
