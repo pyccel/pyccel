@@ -686,7 +686,7 @@ class SyntaxParser(BasicParser):
                                     symbol = comb_types,
                                     bounding_box = (stmt.lineno, stmt.col_offset),
                                     severity='error')
-    
+
                     i += 1
     
                 txt  = '#$ header template ' + str(tp_name)

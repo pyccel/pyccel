@@ -5,7 +5,7 @@ import importlib
 from collections.abc import Iterable
 from collections     import OrderedDict
 
-from pyccel.ast.type_inference  import str_dtype
+from pyccel.ast.datatypes  import str_dtype
 from sympy import sympify
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
 from sympy import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Le as sp_Le, Gt as sp_Gt, Ge as sp_Ge
