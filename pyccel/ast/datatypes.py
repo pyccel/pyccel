@@ -40,6 +40,7 @@ __all__ = (
     'is_iterable_datatype',
     'is_pyccel_datatype',
     'is_with_construct_datatype',
+    'str_dtype',
 #
 # --------- VARIABLES -----------
 #
@@ -283,4 +284,33 @@ def datatype(arg):
     else:
         raise TypeError('Expecting a DataType')
 
+def str_dtype(dtype):
 
+    """
+    This function takes a datatype and returns a sympy datatype as a string
+
+    Example
+    -------
+    >>> str_dtype('int')
+    'integer'
+    >>> str_dtype(NativeInteger())
+    'integer'
+
+    """
+    if isinstance(dtype, str):
+        if dtype == 'int':
+            return 'integer'
+        elif dtype== 'real':
+            return 'real'
+        else:
+            return dtype
+    if isinstance(dtype, NativeInteger):
+        return 'integer'
+    elif isinstance(dtype, NativeReal):
+        return 'real'
+    elif isinstance(dtype, NativeComplex):
+        return 'complex'
+    elif isinstance(dtype, NativeBool):
+        return 'bool'
+    else:
+        raise TypeError('Unknown datatype {0}'.format(str(dtype)))
