@@ -296,19 +296,12 @@ class CWrapperCodePrinter(CCodePrinter):
         return optional_tmp_var, body
 
     def _print_Interface(self, expr):
+
         #Collecting all functions names
         funcs = [a for a in expr.functions] if isinstance(expr, Interface) else [expr]
         funcs_def = []
         # Save all used names
         used_names = set([n.name for n in funcs])
-
-        #Collecting all arguments and results
-        results = [r.results for r in funcs]
-        arguments = [a.arguments for a in funcs]
-
-        if len(funcs) > 1 :
-            results =  [list(map(lambda x : x.clone(name=self.get_new_name(used_names, x.name)), i)) for i in results]
-            arguments =  [list(map(lambda x : x.clone(name=self.get_new_name(used_names, x.name)), i)) for i in arguments]
 
         # Find a name for the wrapper function
         wrapper_name = self.get_new_name(used_names.union(self._global_names), expr.name+"_wrapper")
@@ -316,8 +309,6 @@ class CWrapperCodePrinter(CCodePrinter):
         self._global_names.add(wrapper_name)
 
         # Collect local variables
-        wrapper_vars        = {a.name : a for f in arguments for a in f}
-        wrapper_vars.update({r.name : r for f in results for r in f})
         python_func_args    = self.get_new_PyObject("args"  , used_names)
         python_func_kwargs  = self.get_new_PyObject("kwargs", used_names)
         python_func_selfarg = self.get_new_PyObject("self"  , used_names)
@@ -327,7 +318,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_results = [self.get_new_PyObject("result", used_names)]
 
         # Collect parser arguments
-        parse_args = [Variable(dtype=PyccelPyObject(), is_pointer=True, name = self.get_new_name(used_names, a.name+"_tmp")) for a in funcs_args]
+        parse_args = [Variable(dtype=PyccelPyObject(), is_pointer=True, name = self.get_new_name(used_names, a.name+"_tmp")) for a in funcs[0].arguments]
         wrapper_vars.update({a.name : a for a in parse_args})
 
         # Collect argument names for PyArgParse
@@ -340,25 +331,25 @@ class CWrapperCodePrinter(CCodePrinter):
         body_tmp = []
 
         # Managing the body of wrapper
-        for func, res, args in zip(funcs, results, arguments):
+        for func in funcs :
             cond = []
             body = []
             res_args = []
             # Loop for all args in every functions and create the corresponding condition and body
-            for a, b in zip(parse_args, args):
+            for a, b in zip(parse_args, func.arguments):
                 check = FunctionCall(PyType_Check(b.dtype), [a]) # get check type function
                 body.append(Assign(b, self.get_collect_function_call(b, a))) # get collect function
                 cond.append(check)
 
             # checking res length and create the corresponding function call
-            if len(res)==0:
-                body.append(FunctionCall(func, args))
+            if len(func.results)==0:
+                body.append(FunctionCall(func, func.arguments))
             else:
-                results   = res if len(res) > 1 else res[0]
-                body.append(Assign(results,FunctionCall(func, args)))
+                results   = func.results if len(func.results) > 1 else func.results[0]
+                body.append(Assign(results,FunctionCall(func, func.arguments)))
 
             # Loop for all res in every functions and create the corresponding body and cast
-            for r in res :
+            for r in func.results :
                 collect_var, cast_func = self.get_PyBuildValue(used_names, r)
                 if cast_func is not None:
                     wrapper_vars[collect_var.name] = collect_var
@@ -377,7 +368,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 arguments = parse_args,
                 results = wrapper_results,
                 body = body + [Return(wrapper_results)],
-                local_vars = args))
+                local_vars = func.arguments))
 
         # Create the If condition with the cond and body collected above
         body_tmp.append((BooleanTrue(), [PyErr_SetString("some erro", "test") , Return([Nil()])]))
