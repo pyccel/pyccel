@@ -119,7 +119,10 @@ def compile_files(filename, compiler, flags,
     if is_module:
         flags += ' -c '
         if (len(output)>0) and language == "fortran":
-            j_code = '-J"{folder}"'.format(folder=output)
+            if compiler == "ifort":
+                j_code = '-module "{folder}"'.format(folder=output)
+            else:
+                j_code = '-J"{folder}"'.format(folder=output)
 
     m_code = ' '.join('{}.o'.format(m) for m in modules)
     if is_module:
