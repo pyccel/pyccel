@@ -1640,6 +1640,8 @@ class SemanticParser(BasicParser):
                 self.insert_class(new_cls, parent=True)
             else:
                 lhs = self._visit_DottedVariable(lhs, **settings)
+        else:
+            raise NotImplementedError("_assign_lhs_variable does not handle {}".format(str(type(lhs))))
 
         return lhs
 
