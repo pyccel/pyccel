@@ -295,6 +295,15 @@ class CWrapperCodePrinter(CCodePrinter):
         (BooleanTrue(), [Assign(VariableAddress(a), a.value)]))]
         return optional_tmp_var, body
 
+    def _print_Interface(self, expr):
+        #Collecting all functions names
+        funcs = [a for a in expr.functions] if isinstance(expr, Interface) else [expr]
+
+        # Save all used names
+        used_names = set([n.name for n in funcs])
+
+
+
 
     def _print_FunctionDef(self, expr):
         # Save all used names
