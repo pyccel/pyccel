@@ -381,7 +381,15 @@ class CWrapperCodePrinter(CCodePrinter):
 
         #finishing the wrapper body
         wrapper_body.extend(wrapper_body_translations)
-        wrapper_body.append(Return(wrapper_results))
+        wrapper_body.append(Return(wrapper_results)) # Return
+
+        # Create FunctionDef and write using classic method
+        wrapper_func = FunctionDef(name = wrapper_name,
+            arguments = wrapper_args,
+            results = wrapper_results,
+            body = wrapper_body,
+            local_vars = wrapper_vars.values())
+        return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
 
     def _print_FunctionDef(self, expr):
