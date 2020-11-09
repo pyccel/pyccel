@@ -375,6 +375,15 @@ class CWrapperCodePrinter(CCodePrinter):
             body_tmp.append((BooleanTrue(), [PyErr_SetString("some erro", "test") , Return([Nil()])]))
             wrapper_body_translations = [If(*body_tmp)]
 
+            # Parsing Arguments
+            parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, arguments[0], parse_args, keyword_list)
+            wrapper_body.append(If((PyccelNot(parse_node), [Return([Nil()])])))
+
+            #finishing the wrapper body
+            wrapper_body.extend(wrapper_body_translations)
+            wrapper_body.append(Return(wrapper_results))
+
+
     def _print_FunctionDef(self, expr):
         # Save all used names
         used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name.name])
