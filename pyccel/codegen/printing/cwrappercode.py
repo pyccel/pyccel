@@ -299,7 +299,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         #Collecting all functions names
         funcs = [a for a in expr.functions] if isinstance(expr, Interface) else [expr]
-        funcs_def = []
         # Save all used names
         used_names = set([n.name for n in funcs])
 
@@ -329,6 +328,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
         wrapper_body_translations = []
         body_tmp = []
+
+        # To store the mini function responsible of collecting value and calling interfaces functions and return the builded value
+        funcs_def = []
 
         # Managing the body of wrapper
         for func in funcs :
@@ -364,11 +366,12 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # Building Mini wrapper function
             func_name = self.get_new_name(used_names, 'mini_wrapper')
-            funcs_def.append(FunctionDef(name = func_name,
+            func_def = FunctionDef(name = func_name,
                 arguments = parse_args,
                 results = wrapper_results,
                 body = body + [Return(wrapper_results)],
-                local_vars = func.arguments))
+                local_vars = func.arguments)
+            funcs_def.append(func_def)
 
         # Create the If condition with the cond and body collected above
         body_tmp.append((BooleanTrue(), [PyErr_SetString("some erro", "test") , Return([Nil()])]))
