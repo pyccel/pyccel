@@ -371,6 +371,10 @@ class CWrapperCodePrinter(CCodePrinter):
             self._to_free_PyObject_list.clear()
             body_tmp.append((PyccelAnd(*cond), body))
 
+            # Create the If condition with the cond and body collected above
+            body_tmp.append((BooleanTrue(), [PyErr_SetString("some erro", "test") , Return([Nil()])]))
+            wrapper_body_translations = [If(*body_tmp)]
+
     def _print_FunctionDef(self, expr):
         # Save all used names
         used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name.name])
