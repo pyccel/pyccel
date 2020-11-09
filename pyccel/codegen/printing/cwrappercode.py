@@ -357,6 +357,13 @@ class CWrapperCodePrinter(CCodePrinter):
                 results   = res if len(res) > 1 else res[0]
                 body.append(Assign(results,FunctionCall(func, args)))
 
+            # Loop for all res in every functions and create the corresponding body and cast
+            for r in res :
+                collect_var, cast_func = self.get_PyBuildValue(used_names, r)
+                if cast_func is not None:
+                    wrapper_vars[collect_var.name] = collect_var
+                    body.append(cast_func)
+                res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
 
 
     def _print_FunctionDef(self, expr):
