@@ -318,7 +318,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Collect parser arguments
         parse_args = [Variable(dtype=PyccelPyObject(), is_pointer=True, name = self.get_new_name(used_names, a.name+"_tmp")) for a in funcs[0].arguments]
-        wrapper_vars.update({a.name : a for a in parse_args})
+        wrapper_vars = {a.name : a for a in parse_args}
 
         # Collect argument names for PyArgParse
         arg_names         = [a.name for a in parse_args]
