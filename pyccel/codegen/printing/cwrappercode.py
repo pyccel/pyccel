@@ -322,8 +322,9 @@ class CWrapperCodePrinter(CCodePrinter):
         python_func_kwargs  = self.get_new_PyObject("kwargs", used_names)
         python_func_selfarg = self.get_new_PyObject("self"  , used_names)
 
-
-
+        # Collect wrapper arguments and results
+        wrapper_args    = [python_func_selfarg, python_func_args, python_func_kwargs]
+        wrapper_results = [self.get_new_PyObject("result", used_names)]
 
 
 
