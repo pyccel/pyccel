@@ -1,10 +1,11 @@
+from sympy.printing.pycode import PythonCodePrinter as SympyPythonCodePrinter
 
 def print_list(l):
     """ Convert a list of strings to a string that contains the
     python constructor of a list of strings """
     if isinstance(l,str):
         l = [l]
-    return '[{0}]'.format(',\n'.join("r'{0}'".format(li) for li in l))
+    return '[{0}]'.format(',\n\t\t\t\t'.join("r'{0}'".format(li) for li in l))
 
 def create_c_setup(mod_name,
         wrapper_file,
@@ -73,7 +74,7 @@ def create_c_setup(mod_name,
                    if flags else None)
 
     args = [mod, wrapper_file, files, include_str, libs_str, libdirs_str, flags_str]
-    args = ',\n'.join(a for a in args if a is not None)
+    args = ',\n\t\t'.join(a for a in args if a is not None)
 
     code += "extension_mod = Extension({args})\n\n".format(args=args)
     code += "setup(name = \"" + mod_name + "\", ext_modules=[extension_mod])"
