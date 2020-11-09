@@ -372,7 +372,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 local_vars = func.arguments)
             funcs_def.append(func_def)
 
-            body_tmp.append((PyccelAnd(*cond), [AliasAssign(wrapper_results[0], FunctionCall(func_def, func.arguments)]])))
+            body_tmp.append((PyccelAnd(*cond), [AliasAssign(wrapper_results[0], FunctionCall(func_def, parse_args))]))
 
         # Create the If condition with the cond and body collected above
         body_tmp.append((BooleanTrue(), [PyErr_SetString("some erro", "test") , Return([Nil()])]))
