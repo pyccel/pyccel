@@ -1589,7 +1589,7 @@ class SemanticParser(BasicParser):
                             # array was not created in an if-then-else block, we
                             # would use status='allocated' instead.
                             new_expressions.append(Allocate(var,
-                                shape=rhs.shape, order=rhs.order,
+                                shape=d_var['shape'], order=d_var['order'],
                                 status='unknown'))
 
                             errors.report(ARRAY_REALLOCATION, symbol=name,
