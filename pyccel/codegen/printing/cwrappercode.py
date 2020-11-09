@@ -362,7 +362,6 @@ class CWrapperCodePrinter(CCodePrinter):
             body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
             body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
             self._to_free_PyObject_list.clear()
-            body_tmp.append((PyccelAnd(*cond), body))
 
             # Building Mini wrapper function
             func_name = self.get_new_name(used_names, 'mini_wrapper')
@@ -372,6 +371,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 body = body + [Return(wrapper_results)],
                 local_vars = func.arguments)
             funcs_def.append(func_def)
+
+            body_tmp.append((PyccelAnd(*cond), [FunctionCall(func_def, func.arguments)]]))
 
         # Create the If condition with the cond and body collected above
         body_tmp.append((BooleanTrue(), [PyErr_SetString("some erro", "test") , Return([Nil()])]))
