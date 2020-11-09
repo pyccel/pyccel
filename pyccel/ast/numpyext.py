@@ -886,6 +886,15 @@ class NumpyFull(Application, NumpyNewArray):
         # Verify array ordering
         order = NumpyNewArray._process_order(order)
 
+        # Cast fill_value to correct type
+        # TODO [YG, 09.11.2020]: treat difficult case of Complex
+        from pyccel.ast.datatypes import str_dtype
+        stype = str_dtype(dtype)
+        if stype != 'complex':
+            from pyccel.codegen.printing.fcode import python_builtin_datatypes
+            cast_func  = python_builtin_datatypes[stype]
+            fill_value = cast_func(fill_value)
+
         return Basic.__new__(cls, shape, dtype, order, precision, fill_value)
 
     #--------------------------------------------------------------------------
@@ -921,7 +930,6 @@ class NumpyFull(Application, NumpyNewArray):
         stmts = []
 
         # Create statement for initialization
-        # TODO [YG, 28.10.2020] Print value w/ correct format (type, precision)
         if self.fill_value is not None:
             init_value = printer(self.fill_value)
             code_init = '{0} = {1}'.format(lhs_code, init_value)
