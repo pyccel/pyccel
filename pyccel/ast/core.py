@@ -5597,29 +5597,28 @@ def get_initial_value(expr, var):
 
 # ... TODO treat other statements
 
-def get_assigned_symbols(expr,all):
+def get_assigned_symbols(expr):
     """Returns all assigned symbols (as sympy Symbol) in the AST.
 
     Parameters
     ----------
     expr: Expression
         any AST valid expression
-    all: get all symbols if TRUE (ignore rank)
     """
 
     if isinstance(expr, (CodeBlock, FunctionDef, For, While)):
-        return get_assigned_symbols(expr.body, all)
+        return get_assigned_symbols(expr.body)
     elif isinstance(expr, FunctionalFor):
-        return get_assigned_symbols(expr.loops, all)
+        return get_assigned_symbols(expr.loops)
     elif isinstance(expr, If):
 
-        return get_assigned_symbols(expr.bodies, all)
+        return get_assigned_symbols(expr.bodies)
 
     elif iterable(expr):
         symbols = []
 
         for a in expr:
-            symbols += get_assigned_symbols(a, all)
+            symbols += get_assigned_symbols(a)
         symbols = set(symbols)
         symbols = list(symbols)
         return symbols
@@ -5640,11 +5639,7 @@ def get_assigned_symbols(expr,all):
             var = var.base
             symbols.append(var)
         elif isinstance(var, Variable):
-            if all is True:
-                symbols.append(var)
-            else:
-                if var.rank:
-                    symbols.append(var)
+            symbols.append(var)
         return symbols
     elif isinstance(expr, FunctionCall):
         f = expr.funcdef
