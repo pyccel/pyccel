@@ -2546,7 +2546,7 @@ class SemanticParser(BasicParser):
                             args_inout[i] = True
 
                         i_fa += 1
-                if (args_inout[i] is True and a.is_const is True) or (str(a) in all_assigned and a.is_const is True):
+                if a.is_const and (args_inout[i] or str(a) in all_assigned):
                     msg = 'Argument ({}) must be an inout!'.format(a)
                     errors.report(msg, bounding_box=(self._current_fst_node.lineno,
                         self._current_fst_node.col_offset),
