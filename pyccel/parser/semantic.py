@@ -2296,7 +2296,7 @@ class SemanticParser(BasicParser):
         target = self._visit(target, **settings)
         d_var = self._infere_type(target, **settings)
 
-        dtype = d_var.pop('datatype')
+        dtype = d_var['datatype']
 
         if dtype is NativeGeneric():
             errors.report(LIST_OF_TUPLES,
@@ -2304,21 +2304,21 @@ class SemanticParser(BasicParser):
                           severity='fatal')
 
         d_var['rank'] += 1
-        shape = list(d_var['shape'])
         d_var['allocatable'] = True
+        shape = list(d_var['shape'])
         shape.insert(0, dim)
-        d_var['shape'] = PythonTuple(*shape)
+        d_var['shape'] = shape
         d_var['is_stack_array'] = False # PythonTuples can be stack arrays
 
         # ...
         # TODO [YG, 30.10.2020]:
-        #  - Check if we should use self._create_variable or self._assign_lhs_variable
         #  - Check if we should allow the possibility that is_stack_array=True
-        #  - Verify that the LHS variable did not exist already
-        lhs = Variable(dtype, _get_name(expr.lhs), **d_var)
-        self.insert_variable(lhs)
-        lhs_alloc = Allocate(lhs, shape=shape, order=d_var.get('order', 'C'), status='unallocated')
         # ...
+        # expr.lhs is a sympy.Indexed
+        lhs_symbol = expr.lhs.base.label
+        ne = []
+        lhs = self._assign_lhs_variable(lhs_symbol, d_var, rhs=expr, new_expressions=ne, is_augassign=False, **settings)
+        lhs_alloc = ne[0]
 
         if isinstance(target, PythonTuple) and not target.is_homogeneous:
             errors.report(LIST_OF_TUPLES, symbol=expr,
