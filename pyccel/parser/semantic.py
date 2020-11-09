@@ -1383,6 +1383,30 @@ class SemanticParser(BasicParser):
             severity='fatal', blocker=self.blocking)
 
     def _create_variable(self, name, dtype, rhs, d_lhs):
+        """
+        Create a new variable. In most cases this is just a call to
+        Variable.__init__
+        but in the case of a tuple variable it is a recursive call to
+        create all elements in the tuple.
+        This is done separately to _assign_lhs_variable to ensure that
+        elements of a tuple do not exist in the scope
+
+        Parameters
+        ----------
+        name : str
+            The name of the new variable
+
+        dtype : DataType
+            The data type of the new variable
+
+        rhs : Variable
+            The value assigned to the lhs. This is required to call
+            self._infere_type recursively for tuples
+
+        d_lhs : dict
+            Dictionary of properties for the new Variable
+        """
+
         if isinstance(rhs, (TupleVariable, PythonTuple, PythonList)):
             elem_vars = []
             for i,r in enumerate(rhs):
