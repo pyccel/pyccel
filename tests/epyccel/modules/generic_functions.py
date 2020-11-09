@@ -2,8 +2,8 @@
 from pyccel.decorators import types
 from pyccel.decorators import template
 
-#$ header function gen_2(real, int) 
-#$ header function gen_2(int, real) 
+#$ header function gen_2(real, int)
+#$ header function gen_2(int, real)
 #$ header function gen_4(T, T)
 #$ header function tmplt_head_1(int, real)
 #$ header template T(int|real)
@@ -15,8 +15,8 @@ from pyccel.decorators import template
 def gen_1(a):
     return a / 10
 
-def gen_2(y, x): 
-    return y / x 
+def gen_2(y, x):
+    return y / x
 
 @types('T', 'T')
 def gen_3(x, y):
@@ -111,7 +111,7 @@ def tst_gen_7():
 def tst_multi_heads_1():
     x = multi_heads_1(5, 5)
     y = multi_heads_1(5, 7.3)
-    return x * y 
+    return x * y
 
 def tst_tmplt_1():
     x = tmplt_1(5, 5)

@@ -98,7 +98,7 @@ class Template(Header):
 
     def __init__(self, name, args):
         self._name = name
-        self._args = args 
+        self._args = args
 
     @property
     def name(self):
@@ -235,7 +235,7 @@ class FunctionHeader(Header):
         arg_codes = []
         for iterx in product(*dtypes):
             iterx = list(iterx)
-            old_values = {} 
+            old_values = {}
             for i, j in enumerate(iterx):
                 if j['datatype'] in templates_names and not j['datatype'] in old_values:
                     tmplt = templates_names.index(j['datatype'])

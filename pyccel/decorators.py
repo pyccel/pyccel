@@ -40,6 +40,7 @@ def types(*args,**kw):
     return identity
 
 def template(name, types=[]):
+    """template decorator."""
     def identity(f):
         return f
     return identity

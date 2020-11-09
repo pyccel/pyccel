@@ -365,7 +365,7 @@ class SemanticParser(BasicParser):
     def insert_template(self, expr):
         """insert a template"""
         self.namespace.templates.append(expr)
-            
+
     def insert_header(self, expr):
         """."""
         if isinstance(expr, MethodHeader):

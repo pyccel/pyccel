@@ -656,7 +656,7 @@ class SyntaxParser(BasicParser):
                                         symbol = comb_types,
                                         bounding_box = (stmt.lineno, stmt.col_offset),
                                         severity='error')
-    
+
                 tp_name = comb_types.args[0]
                 ls = comb_types.args[1]
                 if isinstance(ls, ValuedArgument):
@@ -745,7 +745,7 @@ class SyntaxParser(BasicParser):
                 header = hdr_parse(stmts=txt)
                 if name in self.namespace.static_functions:
                     header = header.to_static()
-                headers += [header] 
+                headers += [header]
 
         body = stmt.body
 
