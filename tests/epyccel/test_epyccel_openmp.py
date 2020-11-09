@@ -66,7 +66,7 @@ def test_modules_4(lang):
 @pytest.mark.parametrize( 'lang', (
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="omp_set_dynamic requires bool(kind=1) but C_BOOL has(kind=4)"),
+            pytest.mark.xfail(reason="omp_set_nested requires bool(kind=1) but C_BOOL has(kind=4)"),
             pytest.mark.fortran]
         )
     )
