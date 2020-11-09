@@ -58,13 +58,11 @@ class TemplateStmt(BasicStmt):
     def __init__(self, **kwargs):
         self.dtype  = kwargs.pop('dtype')
         self.name   = kwargs.pop('name')
-        super(TemplateStmt, self).__init__(**kwargs)
+        BasicStmt.__init__(self)
 
     @property
     def expr(self):
-        l = []
-        for i in self.dtype:
-            l += [i.expr]
+        l = [i.expr for i in self.dtype]
         return Template(self.name, l)
 
 

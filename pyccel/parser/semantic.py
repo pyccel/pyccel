@@ -1245,7 +1245,6 @@ class SemanticParser(BasicParser):
 
     def _handle_function(self, func, args, **settings):
         if not isinstance(func, (FunctionDef, Interface)):
-
             args, kwargs = split_positional_keyword_arguments(*args)
             for a in args:
                 if getattr(a,'dtype',None) == 'tuple':
@@ -2355,8 +2354,7 @@ class SemanticParser(BasicParser):
             header_results = m.results
 
             if len(interfaces) > 1:
-                name = interface_name
-                name = name + '_' + str(i)
+                name = interface_name + '_' + str(i)
 
             self.create_new_function_scope(name)
             if cls_name and str(arguments[0].name) == 'self':
@@ -2502,7 +2500,6 @@ class SemanticParser(BasicParser):
             assigned = get_assigned_symbols(body)
             assigned = [str(i) for i in assigned]
 
-            #why checking classname in functions
             apps = list(Tuple(*body.body).atoms(Application))
             apps = [i for i in apps if (i.__class__.__name__
                     in self.get_parent_functions())]

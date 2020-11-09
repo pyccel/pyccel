@@ -91,12 +91,12 @@ class VariableHeader(Header):
 
 #==============================================================================
 class Template(Header):
+    """Represents a Template."""
 
     def __new__(cls, *args, **kwargs):
         return Basic.__new__(cls)
 
     def __init__(self, name, args):
-        # ...
         self._name = name
         self._args = args 
 
@@ -232,17 +232,15 @@ class FunctionHeader(Header):
                 raise TypeError('element must be of type UnionType or dict')
         templates_names = [i.name for i in templates]
 
-        args = []
+        arg_codes = []
         for iterx in product(*dtypes):
             iterx = list(iterx)
-            visited = []
             old_values = {} 
             for i, j in enumerate(iterx):
-                if j['datatype'] in templates_names and not j['datatype'] in visited:
+                if j['datatype'] in templates_names and not j['datatype'] in old_values:
                     tmplt = templates_names.index(j['datatype'])
                     iterx[i] = templates[tmplt].args
-                    visited.append(j['datatype'])
-                    old_values[templates_names[tmplt]] = i
+                    old_values[j['datatype']] = i
                 else:
                     iterx[i] = [j]
             for itery in product(*iterx):
@@ -250,8 +248,8 @@ class FunctionHeader(Header):
                 for j, i in enumerate(itery):
                     if i['datatype'] in templates_names:
                         itery[j] = itery[old_values[i['datatype']]].copy()
-                args.append(tuple(itery))
-        for args_ in args:
+                arg_codes.append(itery)
+        for args_ in arg_codes:
             args = []
             for i, d in enumerate(args_):
                 # TODO  handle function as argument, which itself has a function argument

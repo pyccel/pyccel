@@ -21,7 +21,6 @@ from pyccel.ast.builtins  import Range, PythonFloat, PythonComplex
 from pyccel.ast.core import FuncAddressDeclare
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import Declare, ValuedVariable
-from pyccel.ast.core import Interface
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -717,6 +716,7 @@ class CCodePrinter(CodePrinter):
                 args.append(VariableAddress(tmp_var))
             else :
                 args.append(a)
+
         # currently support only function with one or zero output
         args = ','.join(['{}'.format(self._print(a)) for a in args])
         if not func.results:
