@@ -365,6 +365,11 @@ class CWrapperCodePrinter(CCodePrinter):
                     body.append(cast_func)
                 res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
 
+            # Building PybuildValue and freeing the allocated variable after.
+            body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
+            body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
+            self._to_free_PyObject_list.clear()
+            body_tmp.append((PyccelAnd(*cond), body))
 
     def _print_FunctionDef(self, expr):
         # Save all used names
