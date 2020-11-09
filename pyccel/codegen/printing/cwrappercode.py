@@ -340,8 +340,13 @@ class CWrapperCodePrinter(CCodePrinter):
             # Loop for all args in every functions and create the corresponding condition and body
             for a, b in zip(parse_args, func.arguments):
                 check = FunctionCall(PyType_Check(b.dtype), [a]) # get check type function
-                body.append(Assign(b, self.get_collect_function_call(b, a))) # get collect function
+                assign = Assign(b, self.get_collect_function_call(b, a)) # get collect function
                 cond.append(check)
+                if isinstance(b, ValuedVariable): # Managing valued variable
+                    wrapper_body.append(self.get_default_assign(parse_args[-1], a))
+                    assign = Assign(b, IfTernaryOperator(PyccelEq(VariableAddress(a), VariableAddress(Py_None)),
+                            self.get_collect_function_call(b, a), b.value))
+                body.append(assign
 
             # checking res length and create the corresponding function call
             if len(func.results)==0:
@@ -379,7 +384,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body_translations = [If(*body_tmp)]
 
         # Parsing Arguments
-        parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, arguments[0], parse_args, keyword_list)
+        parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, funcs[0].arguments, parse_args, keyword_list)
         wrapper_body.append(If((PyccelNot(parse_node), [Return([Nil()])])))
 
         #finishing the wrapper body
