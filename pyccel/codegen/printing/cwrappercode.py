@@ -346,9 +346,16 @@ class CWrapperCodePrinter(CCodePrinter):
             res_args = []
             # Loop for all args in every functions and create the corresponding condition and body
             for a, b in zip(parse_args, args):
-                check = FunctionCall(PyType_Check(b.dtype), [a])
-                body.append(Assign(b, self.get_collect_function_call(b, a)))
+                check = FunctionCall(PyType_Check(b.dtype), [a]) # get check type function
+                body.append(Assign(b, self.get_collect_function_call(b, a))) # get collect function
                 cond.append(check)
+
+            # checking res length and create the corresponding function call
+            if len(res)==0:
+                body.append(FunctionCall(func, args))
+            else:
+                results   = res if len(res) > 1 else res[0]
+                body.append(Assign(results,FunctionCall(func, args)))
 
 
 
