@@ -1421,6 +1421,35 @@ class SemanticParser(BasicParser):
             rhs.base.internal_variable.is_target = True
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign, **settings):
+        """
+        Create a lhs based on the information in d_var
+        If the lhs already exists then check that it has the expected properties.
+
+        Parameters
+        ----------
+        lhs : Symbol (or DottedVariable of Symbols)
+            The representation of the lhs provided by the SyntacticParser
+
+        d_var : dict
+            Dictionary of expected lhs properties
+
+        rhs : Variable / expression
+            The representation of the rhs provided by the SemanticParser.
+            This is necessary in order to set the rhs 'is_target' property
+            if necessary
+
+        new_expression : list
+            A list which allows collection of any additional expressions
+            resulting from this operation (e.g. Allocation)
+
+        is_augassign : bool
+            Indicates whether this is an assign ( = ) or an augassign ( += / -= / etc )
+            This is necessary as the restrictions on the dtype are less strict in this
+            case
+
+        settings : dictionary
+            Provided to all _visit_ClassName functions
+        """
 
         if isinstance(lhs, Symbol):
 
@@ -1481,14 +1510,15 @@ class SemanticParser(BasicParser):
                 # Not yet supported for arrays: x=y+z, x=b[:]
                 # Because we cannot infer shape of right-hand side yet
                 know_lhs_shape = all(sh is not None for sh in lhs.alloc_shape) \
-                    or (lhs.rank == 0) \
-                    or isinstance(rhs, (Variable, NumpyEmptyLike, DottedVariable))
+                    or (lhs.rank == 0)
 
                 if not know_lhs_shape:
                     msg = "Cannot infer shape of right-hand side for expression {} = {}".format(lhs, rhs)
                     errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=self.blocking)
+
+            # Variable already exists
             else:
 
                 # TODO improve check type compatibility
@@ -1497,6 +1527,7 @@ class SemanticParser(BasicParser):
                             symbol = '|{name}| <module> -> {rhs}'.format(name=name, rhs=rhs),
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
+
                 elif not is_augassign and str(dtype) != str(getattr(var, 'dtype', 'None')):
                     txt = '|{name}| {old} <-> {new}'
                     txt = txt.format(name=name, old=var.dtype, new=dtype)
