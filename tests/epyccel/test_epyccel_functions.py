@@ -6,6 +6,7 @@ import numpy as np
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
+from pyccel.errors.errors import PyccelError
 
 def test_func_no_args_1(language):
     '''test function with return value but no args'''
@@ -108,7 +109,7 @@ def test_decorator_f3():
         y[:] = x - 1
         return y
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(PyccelError):
         epyccel(f3)
 
 #------------------------------------------------------------------------------
@@ -120,7 +121,7 @@ def test_decorator_f4():
         y[:] = x - 1.0
         return y
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(PyccelError):
         epyccel(f4)
 
 #------------------------------------------------------------------------------
