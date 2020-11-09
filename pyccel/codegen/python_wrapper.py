@@ -91,9 +91,9 @@ def create_shared_library(codegen,
                 extra_libdirs.append(get_gfortran_library_dir())
             elif compiler == 'ifort':
                 extra_libs.append('ifcore')
-            compiler_specification = "CC={}".format(fortran_compiler_to_c_equivalent[compiler])
+            c_compiler = fortran_compiler_to_c_equivalent[compiler]
         else:
-            compiler_specification = "CC={}".format(compiler)
+            c_compiler = compiler
 
         if sys.platform == 'win32':
             extra_libs.append('quadmath')
@@ -133,7 +133,8 @@ def create_shared_library(codegen,
 
         if verbose:
             print(' '.join(cmd))
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True,
+                env=dict(os.environ, CC=c_compiler, LDSHARED=c_compiler+" -pthread -shared"))
         out, err = p.communicate()
         if verbose:
             print(out)
