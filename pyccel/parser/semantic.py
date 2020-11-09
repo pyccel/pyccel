@@ -1605,11 +1605,7 @@ class SemanticParser(BasicParser):
 
 
                 # ISSUES #177: lhs must be a pointer when rhs is allocatable array
-                if isinstance(rhs, Variable) and rhs.allocatable:
-                    d_lhs['allocatable'] = False
-                    d_lhs['is_pointer' ] = True
-
-                    rhs.is_target = True
+                self._ensure_target(rhs, d_lhs)
 
                 member = self._create_variable(n_name, dtype, rhs, d_lhs)
                 lhs    = DottedVariable(var, member)
