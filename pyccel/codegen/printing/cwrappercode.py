@@ -326,10 +326,15 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_args    = [python_func_selfarg, python_func_args, python_func_kwargs]
         wrapper_results = [self.get_new_PyObject("result", used_names)]
 
-        # Collect parser arguments .
+        # Collect parser arguments
         parse_args = [Variable(dtype=PyccelPyObject(), is_pointer=True, name = self.get_new_name(used_names, a.name+"_tmp")) for a in funcs_args]
         wrapper_vars.update({a.name : a for a in parse_args})
 
+        # Collect argument names for PyArgParse
+        arg_names         = [a.name for a in parse_args]
+        keyword_list_name = self.get_new_name(used_names,'kwlist')
+        keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
+        wrapper_body              = [keyword_list]
 
 
     def _print_FunctionDef(self, expr):
