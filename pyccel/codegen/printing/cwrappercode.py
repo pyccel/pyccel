@@ -315,7 +315,12 @@ class CWrapperCodePrinter(CCodePrinter):
         self._function_wrapper_names[expr.name] = wrapper_name
         self._global_names.add(wrapper_name)
 
-
+        # Collect local variables
+        wrapper_vars        = {a.name : a for f in arguments for a in f}
+        wrapper_vars.update({r.name : r for f in results for r in f})
+        python_func_args    = self.get_new_PyObject("args"  , used_names)
+        python_func_kwargs  = self.get_new_PyObject("kwargs", used_names)
+        python_func_selfarg = self.get_new_PyObject("self"  , used_names)
 
 
 
