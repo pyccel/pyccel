@@ -298,7 +298,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_Interface(self, expr):
         #Collecting all functions names
         funcs = [a for a in expr.functions] if isinstance(expr, Interface) else [expr]
-
+        funcs_def = []
         # Save all used names
         used_names = set([n.name for n in funcs])
 
@@ -371,6 +371,14 @@ class CWrapperCodePrinter(CCodePrinter):
             self._to_free_PyObject_list.clear()
             body_tmp.append((PyccelAnd(*cond), body))
 
+            # Building Mini wrapper function
+            func_name = self.get_new_name(used_names, 'mini_wrapper')
+            funcs_def.append(FunctionDef(name = func_name,
+                arguments = parse_args,
+                results = wrapper_results,
+                body = body + [Return(wrapper_results)],
+                local_vars = args))
+
         # Create the If condition with the cond and body collected above
         body_tmp.append((BooleanTrue(), [PyErr_SetString("some erro", "test") , Return([Nil()])]))
         wrapper_body_translations = [If(*body_tmp)]
@@ -384,12 +392,14 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.append(Return(wrapper_results)) # Return
 
         # Create FunctionDef and write using classic method
-        wrapper_func = FunctionDef(name = wrapper_name,
+        funcs_def.append(FunctionDef(name = wrapper_name,
             arguments = wrapper_args,
             results = wrapper_results,
             body = wrapper_body,
-            local_vars = wrapper_vars.values())
-        return CCodePrinter._print_FunctionDef(self, wrapper_func)
+            local_vars = wrapper_vars.values()))
+
+        sep = self._print(SeparatorComment(40))
+        return sep + '\n'.join(CCodePrinter._print_FunctionDef(self, f) for f in funcs_def)
 
 
     def _print_FunctionDef(self, expr):
