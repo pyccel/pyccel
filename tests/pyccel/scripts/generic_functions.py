@@ -3,7 +3,7 @@ from pyccel.decorators import types
 from pyccel.decorators import template
 
 #$ header function gen_2(real, int)
-#$ header function gen_2(int, real) 
+#$ header function gen_2(int, real)
 #$ header function gen_4(T, T)
 #$ header function tmplt_head_1(int, real)
 #$ header template T(int|real)
@@ -133,7 +133,7 @@ def tst_tmplt_head_1():
 def tst_local_overide_1():
     x = local_overide_1(5, 4)
     y = local_overide_1(6.56, 3.3)
-    return x * y 
+    return x * y
 
 def tst_tmplt_tmplt_1():
     x = tmplt_tmplt_1(5, 5, 5)

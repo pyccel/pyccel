@@ -134,7 +134,7 @@ def tst_tmplt_head_1():
 def tst_local_overide_1():
     x = local_overide_1(5, 4)
     y = local_overide_1(6.56, 3.3)
-    return x * y 
+    return x * y
 
 def tst_tmplt_tmplt_1():
     x = tmplt_tmplt_1(5, 5, 5)

@@ -670,7 +670,7 @@ class SyntaxParser(BasicParser):
                                         severity='error')
                     else:
                         ls = ls if isinstance(ls, (PythonTuple)) else list(ls)
-    
+
                 while i<len(ls) :
                     arg = ls[i]
                     if isinstance(arg, Symbol):
