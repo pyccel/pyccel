@@ -331,17 +331,20 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # To store the mini function responsible of collecting value and calling interfaces functions and return the builded value
         funcs_def = []
-
+        errors_dict = {}
         # Managing the body of wrapper
         # TODO split or re use exisiting functiond in the wrapper
         for func in funcs :
             cond = []
             body = []
             res_args = []
+            tmp_vars = []
             # Loop for all args in every functions and create the corresponding condition and body
             for a, b in zip(parse_args, func.arguments):
                 check = FunctionCall(PyType_Check(b.dtype), [a]) # get check type function
                 assign = [Assign(b, self.get_collect_function_call(b, a))] # get collect function
+                errors_dict.setdefault(b, set()).add((b.dtype, check)) # collect variable type for each arguments
+
                 # NOT WORKING FOR THE MOMENT : Managing valued variable
                 if isinstance(b, ValuedVariable):
                     check = PyccelAssociativeParenthesis(PyccelOr(check, PyccelEq(VariableAddress(a), VariableAddress(Py_None))))
@@ -389,8 +392,23 @@ class CWrapperCodePrinter(CCodePrinter):
 
             body_tmp.append((PyccelAnd(*cond), [AliasAssign(wrapper_results[0], FunctionCall(func_def, parse_args))]))
 
+        # Errors management
+        error_func_name = self.get_new_name(used_names, 'error_check')
+        error_body = []
+        for a in errors_dict:
+            check = PyccelNot(PyccelAssociativeParenthesis(PyccelOr(*[x[1] for x in errors_dict[a]])))
+            error = ' or '.join([str_dtype(x[0]) for x in errors_dict[a]])
+            error_body.append((check, [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(a, error))]))
+        error_body = [If(*error_body)]
+        error_func = FunctionDef(name = error_func_name,
+            arguments = parse_args,
+            results = [],
+            body = error_body,
+            local_vars = [])
+        funcs_def.append(error_func)
+
         # Create the If condition with the cond and body collected above
-        body_tmp.append((BooleanTrue(), [PyErr_SetString("some erro", "test") , Return([Nil()])]))
+        body_tmp.append((BooleanTrue(), [FunctionCall(error_func, parse_args) , Return([Nil()])]))
         wrapper_body_translations = [If(*body_tmp)]
 
         # Parsing Arguments
