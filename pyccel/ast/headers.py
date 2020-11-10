@@ -230,14 +230,15 @@ class FunctionHeader(Header):
                 dtypes += [[i]]
             else:
                 raise TypeError('element must be of type UnionType or dict')
-        templates_names = [i.name for i in templates]
 
+        #TODO: handel the case of functions arguments
+        templates_names = [i.name for i in templates]
         arg_codes = []
         for iterx in product(*dtypes):
             iterx = list(iterx)
             old_values = {}
             for i, j in enumerate(iterx):
-                if j['datatype'] in templates_names and not j['datatype'] in old_values:
+                if 'datatype' in j and j['datatype'] in templates_names and not j['datatype'] in old_values:
                     tmplt = templates_names.index(j['datatype'])
                     iterx[i] = templates[tmplt].args
                     old_values[j['datatype']] = i
@@ -246,7 +247,7 @@ class FunctionHeader(Header):
             for itery in product(*iterx):
                 itery = list(itery)
                 for j, i in enumerate(itery):
-                    if i['datatype'] in templates_names:
+                    if 'datatype' in i and i['datatype'] in templates_names:
                         itery[j] = itery[old_values[i['datatype']]].copy()
                 arg_codes.append(itery)
         for args_ in arg_codes:
