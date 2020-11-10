@@ -2661,7 +2661,7 @@ class SemanticParser(BasicParser):
                         i_fa += 1
                 if isinstance(a, Variable):
                     if a.is_const and (args_inout[i] or (str(a) in all_assigned)):
-                        msg = 'Argument ({}) must be an inout!'.format(a)
+                        msg = "Cannot modify 'const' argument ({})".format(a)
                         errors.report(msg, bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
                             severity='fatal', blocker=self.blocking)
