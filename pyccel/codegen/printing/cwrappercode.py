@@ -10,7 +10,7 @@ from pyccel.ast.numbers   import BooleanTrue
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import VariableAddress, Import, PyccelNe
+from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelOr
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
@@ -342,8 +342,9 @@ class CWrapperCodePrinter(CCodePrinter):
                 check = FunctionCall(PyType_Check(b.dtype), [a]) # get check type function
                 assign = Assign(b, self.get_collect_function_call(b, a)) # get collect function
                 cond.append(check)
-                # NOT WORKING FOR THE MOMENT.
-                if isinstance(b, ValuedVariable): # Managing valued variable
+                # NOT WORKING FOR THE MOMENT : Managing valued variable
+                if isinstance(b, ValuedVariable):
+                    check = PyccelOr(check, VariableAddress(a))
                     wrapper_body.append(self.get_default_assign(parse_args[-1], a))
                     assign = Assign(b, IfTernaryOperator(PyccelEq(VariableAddress(a), VariableAddress(Py_None)),
                             self.get_collect_function_call(b, a), b.value))
