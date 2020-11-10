@@ -97,8 +97,6 @@ def create_shared_library(codegen,
 
         if sys.platform == 'win32':
             extra_libs.append('quadmath')
-        if sys.platform == "darwin":
-            extra_libs.append('python')
 
         module_old_name = codegen.expr.name
         codegen.expr.set_name(sharedlib_modname)
@@ -133,15 +131,10 @@ def create_shared_library(codegen,
         setup_filename = os.path.join(pyccel_dirpath, setup_filename)
         cmd = [sys.executable, setup_filename, "build"]
 
-        if sys.platform == "darwin":
-            linker = c_compiler+" -pthread -dylib"
-        else:
-            linker = c_compiler+" -pthread -shared"
-
         if verbose:
             print(' '.join(cmd))
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True,
-                env=dict(os.environ, CC=c_compiler, LDSHARED=linker))
+                env=dict(os.environ, CC=c_compiler))
         out, err = p.communicate()
         if verbose:
             print(out)
