@@ -8,7 +8,7 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.ast.numbers   import BooleanTrue
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
-from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
+from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, PyccelEq
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelOr, PyccelAnd
 from pyccel.ast.core import Interface, IfTernaryOperator, PyccelAssociativeParenthesis
