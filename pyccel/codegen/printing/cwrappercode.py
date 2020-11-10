@@ -341,17 +341,17 @@ class CWrapperCodePrinter(CCodePrinter):
             # Loop for all args in every functions and create the corresponding condition and body
             for a, b in zip(parse_args, func.arguments):
                 check = FunctionCall(PyType_Check(b.dtype), [a]) # get check type function
-                assign = Assign(b, self.get_collect_function_call(b, a)) # get collect function
+                assign = [Assign(b, self.get_collect_function_call(b, a))] # get collect function
                 # NOT WORKING FOR THE MOMENT : Managing valued variable
                 if isinstance(b, ValuedVariable):
                     check = PyccelAssociativeParenthesis(PyccelOr(check, PyccelEq(VariableAddress(a), VariableAddress(Py_None))))
                     default_value = self.get_default_assign(parse_args[-1], a)
                     wrapper_body.append(default_value) if default_value not in wrapper_body else wrapper_body
-                    assign = Assign(b, IfTernaryOperator(PyccelEq(VariableAddress(a), VariableAddress(Py_None)),
-                            self.get_collect_function_call(b, a), b.value))
+                    assign = [Assign(b, IfTernaryOperator(PyccelEq(VariableAddress(a), VariableAddress(Py_None)),
+                            self.get_collect_function_call(b, a), b.value))]
 
                 cond.append(check)
-                body.append(assign)
+                body += assign
 
             # checking res length and create the corresponding function call
             if len(func.results)==0:
