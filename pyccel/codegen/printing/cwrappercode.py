@@ -387,7 +387,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 arguments = parse_args,
                 results = wrapper_results,
                 body = body + [Return(wrapper_results)],
-                local_vars = func.arguments)
+                local_vars = list(func.arguments) + tmp_vars + list(func.results))
             funcs_def.append(func_def)
 
             body_tmp.append((PyccelAnd(*cond), [AliasAssign(wrapper_results[0], FunctionCall(func_def, parse_args))]))
