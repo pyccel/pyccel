@@ -344,7 +344,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 assign = Assign(b, self.get_collect_function_call(b, a)) # get collect function
                 # NOT WORKING FOR THE MOMENT : Managing valued variable
                 if isinstance(b, ValuedVariable):
-                    check = PyccelOr(check, VariableAddress(a))
+                    check = PyccelAssociativeParenthesis(PyccelOr(check, PyccelEq(VariableAddress(a), VariableAddress(Py_None))))
                     wrapper_body.append(self.get_default_assign(parse_args[-1], a))
                     assign = Assign(b, IfTernaryOperator(PyccelEq(VariableAddress(a), VariableAddress(Py_None)),
                             self.get_collect_function_call(b, a), b.value))
