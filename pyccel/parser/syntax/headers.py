@@ -162,7 +162,7 @@ class UnionTypeStmt(BasicStmt):
         if self.const:
             for e in l:
                 e["is_const"] = True
-                
+
         if len(l)>1:
             return UnionType(l)
         else:
