@@ -342,7 +342,6 @@ class CWrapperCodePrinter(CCodePrinter):
             for a, b in zip(parse_args, func.arguments):
                 check = FunctionCall(PyType_Check(b.dtype), [a]) # get check type function
                 assign = Assign(b, self.get_collect_function_call(b, a)) # get collect function
-                cond.append(check)
                 # NOT WORKING FOR THE MOMENT : Managing valued variable
                 if isinstance(b, ValuedVariable):
                     check = PyccelOr(check, VariableAddress(a))
@@ -350,6 +349,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     assign = Assign(b, IfTernaryOperator(PyccelEq(VariableAddress(a), VariableAddress(Py_None)),
                             self.get_collect_function_call(b, a), b.value))
 
+                cond.append(check)
                 body.append(assign)
 
             # checking res length and create the corresponding function call
