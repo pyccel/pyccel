@@ -25,10 +25,6 @@ PY_VERSION = sys.version_info[0:2]
 
 fortran_c_flag_equivalence = {'-Wconversion-extra' : '-Wconversion' }
 
-fortran_compiler_to_c_equivalent = { 'gfortran' : 'gcc',
-        'ifort' : 'icc',
-        'pgf90' : 'pgcc' }
-
 #==============================================================================
 def create_shared_library(codegen,
                           language,
@@ -91,9 +87,6 @@ def create_shared_library(codegen,
                 extra_libdirs.append(get_gfortran_library_dir())
             elif compiler == 'ifort':
                 extra_libs.append('ifcore')
-            c_compiler = fortran_compiler_to_c_equivalent[compiler]
-        else:
-            c_compiler = compiler
 
         if sys.platform == 'win32':
             extra_libs.append('quadmath')
@@ -133,8 +126,7 @@ def create_shared_library(codegen,
 
         if verbose:
             print(' '.join(cmd))
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True,
-                env=dict(os.environ, CC=c_compiler))
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         out, err = p.communicate()
         if verbose:
             print(out)
