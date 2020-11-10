@@ -1,4 +1,5 @@
-# pylint: disable=pointless-statement
+# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=pointless-statement, undefined-variable
 
 a[0]
 a[:]

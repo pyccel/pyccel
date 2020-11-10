@@ -1,51 +1,55 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 import pytest
 import numpy as np
-import platform
 
 from pyccel.epyccel import epyccel
 from modules        import loops
-from conftest       import *
 
 #==============================================================================
 
 def test_sum_natural_numbers(language):
     f1 = loops.sum_natural_numbers
-    f2 = epyccel( f1, language = language, verbose = True )
+    f2 = epyccel( f1, language = language )
     assert f1( 42 ) == f2( 42 )
 
 def test_factorial(language):
     f1 = loops.factorial
-    f2 = epyccel( f1, language = language, verbose = True )
+    f2 = epyccel( f1, language = language )
     assert f1( 11 ) == f2( 11 )
 
 def test_fibonacci(language):
     f1 = loops.fibonacci
-    f2 = epyccel( f1, language = language, verbose = True )
+    f2 = epyccel( f1, language = language )
     assert f1( 42 ) == f2( 42 )
 
 def test_sum_nat_numbers_while(language):
     f1 = loops.sum_nat_numbers_while
-    f2 = epyccel( f1, language = language, verbose = True )
+    f2 = epyccel( f1, language = language )
     assert f1( 42 ) == f2( 42 )
 
 def test_factorial_while(language):
     f1 = loops.factorial_while
-    f2 = epyccel( f1, language = language, verbose = True )
+    f2 = epyccel( f1, language = language )
     assert f1( 10 ) == f2( 10 )
+
+def test_while_not_0(language):
+    f1 = loops.while_not_0
+    f2 = epyccel( f1, language = language )
+    assert f1( 42 ) == f2( 42 )
 
 def test_double_while_sum(language):
     f1 = loops.double_while_sum
-    f2 = epyccel( f1, language = language, verbose = True )
+    f2 = epyccel( f1, language = language )
     assert f1( 10, 10 ) == f2( 10, 10 )
 
 def test_fibonacci_while(language):
     f1 = loops.fibonacci_while
-    f2 = epyccel( f1, language = language, verbose = True )
+    f2 = epyccel( f1, language = language )
     assert f1( 42 ) == f2( 42 )
 
 def test_double_loop(language):
     f1 = loops.double_loop
-    f2 = epyccel( f1, language = language, verbose = True )
+    f2 = epyccel( f1, language = language )
     assert f1( 2 ) == f2( 2 )
 
 def test_double_loop_on_2d_array_C():

@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from pyccel.complexity.memory import MemComplexity
 from pyccel.complexity.arithmetic import OpComplexity
 import os

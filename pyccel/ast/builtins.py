@@ -8,31 +8,31 @@ In this module we implement some of them in alphabetical order.
 """
 
 from sympy import Symbol, Function, Tuple
-from sympy import Float, Expr
+from sympy import Expr, Not
 from sympy import sympify
-from sympy.core.assumptions import StdFactKB
 from sympy.tensor import Indexed, IndexedBase
 
 from .basic     import Basic, PyccelAstNode
-from .datatypes import (datatype, DataType, NativeSymbol,
-                        NativeInteger, NativeBool, NativeReal,
-                        NativeComplex, NativeRange, NativeTensor, NativeString,
-                        NativeGeneric, NativeTuple, default_precision)
-from .numbers   import Integer
+from .datatypes import (NativeInteger, NativeBool, NativeReal,
+                        NativeComplex, NativeString, str_dtype,
+                        NativeGeneric, default_precision)
+from .numbers   import Integer, Float
 
 __all__ = (
-    'Bool',
+    'PythonBool',
     'PythonComplex',
-    'Enumerate',
+    'PythonEnumerate',
     'PythonFloat',
-    'Int',
+    'PythonInt',
     'PythonTuple',
-    'Len',
-    'List',
-    'Map',
-    'Print',
-    'Range',
-    'Zip',
+    'PythonLen',
+    'PythonList',
+    'PythonMap',
+    'PythonPrint',
+    'PythonRange',
+    'PythonZip',
+    'PythonMax',
+    'PythonMin',
     'python_builtin_datatype'
 )
 
@@ -47,7 +47,7 @@ local_sympify = {
 }
 
 #==============================================================================
-class Bool(Expr, PyccelAstNode):
+class PythonBool(Expr, PyccelAstNode):
     """ Represents a call to Python's native bool() function.
     """
     _rank = 0
@@ -73,7 +73,7 @@ class Bool(Expr, PyccelAstNode):
         if isinstance(self.arg.dtype, NativeBool):
             return 'logical({}, kind = {prec})'.format(printer(self.arg), prec = self.precision)
         else:
-            return 'merge(.true., .false., ({}) /= 0)'.format(printer(self.arg))
+            return '{} /= 0'.format(printer(self.arg))
 
 #==============================================================================
 class PythonComplex(Expr, PyccelAstNode):
@@ -111,7 +111,7 @@ class PythonComplex(Expr, PyccelAstNode):
         return code
 
 #==============================================================================
-class Enumerate(Basic):
+class PythonEnumerate(Basic):
 
     """
     Represents the enumerate stmt
@@ -158,7 +158,7 @@ class PythonFloat(Expr, PyccelAstNode):
         return code
 
 #==============================================================================
-class Int(Expr, PyccelAstNode):
+class PythonInt(Expr, PyccelAstNode):
     """ Represents a call to Python's native int() function.
     """
 
@@ -166,7 +166,7 @@ class Int(Expr, PyccelAstNode):
     _shape     = ()
     _precision = default_precision['integer']
     _dtype     = NativeInteger()
-        
+
     def __new__(cls, arg):
         return Expr.__new__(cls, arg)
 
@@ -178,7 +178,10 @@ class Int(Expr, PyccelAstNode):
         """Fortran print."""
         value = printer(self.arg)
         prec  = printer(self.precision)
-        code  = 'Int({0}, {1})'.format(value, prec)
+        if (self.arg.dtype is NativeBool()):
+            code = 'MERGE(1_8, 0_8, {})'.format(value)
+        else:
+            code  = 'Int({0}, {1})'.format(value, prec)
         return code
 
 #==============================================================================
@@ -225,9 +228,9 @@ class PythonTuple(Expr, PyccelAstNode):
                 else:
                     raise TypeError('cannot determine the type of {}'.format(self))
 
-                
+
                 shapes = [a.shape for a in args]
-                
+
                 if all(sh is not None for sh in shapes):
                     self._shape = (Integer(len(args)), ) + shapes[0]
                     self._rank  = len(self._shape)
@@ -260,7 +263,7 @@ class PythonTuple(Expr, PyccelAstNode):
         return self._inconsistent_shape
 
 #==============================================================================
-class Len(Function, PyccelAstNode):
+class PythonLen(Function, PyccelAstNode):
 
     """
     Represents a 'len' expression in the code.
@@ -279,7 +282,7 @@ class Len(Function, PyccelAstNode):
         return self._args[0]
 
 #==============================================================================
-class List(Tuple, PyccelAstNode):
+class PythonList(Tuple, PyccelAstNode):
     """ Represent lists in the code with dynamic memory management."""
     def __init__(self, *args, **kwargs):
         if self.stage == 'syntactic':
@@ -309,17 +312,17 @@ class List(Tuple, PyccelAstNode):
                 self._precision  = max(a.precision for a in bools)
             else:
                 raise TypeError('cannot determine the type of {}'.format(self))
-            
+
             shapes = [a.shape for a in args]
-            
+
             if all(sh is not None for sh in shapes):
                 assert all(sh==shapes[0] for sh in shapes)
-                self._shape = (len(args), ) + shapes[0]
+                self._shape = (Integer(len(args)), ) + shapes[0]
                 self._rank  = len(self._shape)
             else:
                 self._rank = max(a.rank for a in args) + 1
 #==============================================================================
-class Map(Basic):
+class PythonMap(Basic):
     """ Represents the map stmt
     """
     def __new__(cls, *args):
@@ -328,7 +331,7 @@ class Map(Basic):
         return Basic.__new__(cls, *args)
 
 #==============================================================================
-class Print(Basic):
+class PythonPrint(Basic):
 
     """Represents a print function in the code.
 
@@ -354,7 +357,7 @@ class Print(Basic):
         return self._args[0]
 
 #==============================================================================
-class Range(Basic):
+class PythonRange(Basic):
 
     """
     Represents a range.
@@ -414,7 +417,7 @@ class Range(Basic):
 
 
 #==============================================================================
-class Zip(Basic):
+class PythonZip(Basic):
 
     """
     Represents a zip stmt.
@@ -433,10 +436,81 @@ class Zip(Basic):
         return self._args[0]
 
 #==============================================================================
+class PythonAbs(Function, PyccelAstNode):
+    """Represents a call to  python abs for code generation.
+
+    arg : Variable
+    """
+    def __init__(self, x):
+        self._shape     = x.shape
+        self._rank      = x.rank
+        self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
+        self._precision = default_precision[str_dtype(self._dtype)]
+        self._order     = x.order
+
+    @property
+    def arg(self):
+        return self._args[0]
+
+#==============================================================================
+class PythonSum(Function, PyccelAstNode):
+    """Represents a call to  python sum for code generation.
+
+    arg : list , tuple , PythonTuple, Tuple, List, Variable
+    """
+
+    def __new__(cls, arg):
+        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, PythonList,
+                                Variable, Expr)): # pylint: disable=undefined-variable
+            raise TypeError('Uknown type of  %s.' % type(arg))
+
+        return Basic.__new__(cls, arg)
+
+    def __init__(self, arg):
+        self._dtype = arg.dtype
+        self._rank  = 0
+        self._shape = ()
+        self._precision = default_precision[str_dtype(self._dtype)]
+
+    @property
+    def arg(self):
+        return self._args[0]
+
+#==============================================================================
+class PythonMax(Function, PyccelAstNode):
+    """Represents a call to  python max for code generation.
+
+    arg : list , tuple , PythonTuple, Tuple, List
+    """
+    def __new__(cls, arg):
+        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, PythonList)):
+            raise TypeError('Uknown type of  %s.' % type(arg))
+        return Basic.__new__(cls, arg)
+
+    def __init__(self, x):
+        self._shape     = ()
+        self._rank      = 0
+        self._dtype     = x.dtype
+        self._precision = x.precision
+
+
+#==============================================================================
+class PythonMin(Function, PyccelAstNode):
+    """Represents a call to  python min for code generation.
+
+    arg : list , tuple , PythonTuple, Tuple, List, Variable
+    """
+    def __init__(self, x):
+        self._shape     = ()
+        self._rank      = 0
+        self._dtype     = x.dtype
+        self._precision = x.precision
+
+#==============================================================================
 python_builtin_datatypes_dict = {
-    'bool'   : Bool,
+    'bool'   : PythonBool,
     'float'  : PythonFloat,
-    'int'    : Int,
+    'int'    : PythonInt,
     'complex': PythonComplex
 }
 
@@ -456,3 +530,18 @@ def python_builtin_datatype(name):
 
     return None
 
+builtin_functions_dict = {
+    'abs'      : PythonAbs,
+    'range'    : PythonRange,
+    'zip'      : PythonZip,
+    'enumerate': PythonEnumerate,
+    'int'      : PythonInt,
+    'float'    : PythonFloat,
+    'complex'  : PythonComplex,
+    'bool'     : PythonBool,
+    'sum'      : PythonSum,
+    'len'      : PythonLen,
+    'max'      : PythonMax,
+    'min'      : PythonMin,
+    'not'      : Not,   # TODO [YG, 20.05.2020]: do not use Sympy's Not
+}

@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 # > Usage:
 #
 #   pyccel test.py -t

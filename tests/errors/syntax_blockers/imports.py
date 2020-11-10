@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 
 # should not pass
 import foo.bar.baz as stuff

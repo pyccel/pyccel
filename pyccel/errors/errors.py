@@ -1,4 +1,6 @@
 from collections import OrderedDict
+from os.path import basename
+from ast import dump as ast_dump
 
 # ...
 #ERROR = 'error'
@@ -62,15 +64,17 @@ class PyccelCodegenError(PyccelError):
 class ErrorInfo:
     """Representation of a single error message."""
 
-    def __init__(self, filename,
+    def __init__(self, *, stage, filename,
                  line=None,
                  column=None,
                  severity=None,
                  message='',
                  symbol=None,
                  blocker=False):
+        # The parser stage
+        self.stage = stage
         # The source file that was the source of this error.
-        self.filename = filename
+        self.filename = basename(filename) if filename is not None else ''
         # The line number related to this error within file.
         self.line = line
         # The column number related to this error with file.
@@ -88,23 +92,26 @@ class ErrorInfo:
 
     def __str__(self):
 
-        pattern = '|{severity}'
-        text = pattern.format(severity=_severity_registry[self.severity])
+        pattern = '|{severity} [{stage}]: {filename}{location}| {message}{symbol}'
+        info = {
+            'stage'   : self.stage,
+            'severity': _severity_registry[self.severity],
+            'filename': self.filename,
+            'location': '',
+            'message' : self.message,
+            'symbol'  : ''
+        }
 
         if self.line:
-            if not self.column:
-                text = '{text}: {line}'.format(text=text, line=self.line)
+            if self.column:
+                info['location'] = ' [{line},{column}]'.format(line=self.line, column=self.column)
             else:
-                text = '{text}: [{line},{column}]'.format(text=text, line=self.line,
-                                                     column=self.column)
-
-        text = '{text}| {msg}'.format(text=text, msg=self.message)
+                info['location'] = ' [{line}]'.format(line=self.line)
 
         if self.symbol:
-            symbol = make_symbol(self.symbol)
-            text = '{text} ({symbol})'.format(text=text, symbol=symbol)
+            info['symbol'] = ' ({})'.format(self.symbol)
 
-        return text
+        return pattern.format(**info)
 
 
 def _singleton(cls):
@@ -221,7 +228,19 @@ class Errors:
             line   = bounding_box[0]
             column = bounding_box[1]
 
-        info = ErrorInfo(filename,
+        if symbol is not None:
+            if getattr(symbol, '__module__', '') == '_ast':
+                line   = symbol.lineno
+                column = symbol.col_offset
+                symbol = ast_dump(symbol)
+            else:
+                fst = getattr(symbol, 'fst', None)
+                if fst is not None:
+                    line   = fst.lineno
+                    column = fst.col_offset
+
+        info = ErrorInfo(stage=self._parser_stage,
+                         filename=filename,
                          line=line,
                          column=column,
                          severity=severity,
@@ -288,17 +307,14 @@ class Errors:
 
     def __str__(self):
         print_path = (len(self.error_info_map.keys()) > 1)
-        text = '{}:'.format(PYCCEL)
-        if self.parser_stage:
-            text = '{text} [{stage}] \n'.format(text=text,
-                                                stage=self.parser_stage)
+        text = '{}:\n'.format(PYCCEL)
 
         for path in self.error_info_map.keys():
             errors = self.error_info_map[path]
-
             if print_path: text += ' filename :: {path}\n'.format(path=path)
             for err in errors:
                 text += ' ' + str(err) + '\n'
+
         return text
 
 if __name__ == '__main__':

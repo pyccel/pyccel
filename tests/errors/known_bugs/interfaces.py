@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 def helloworld():
     print('hello world')
 
@@ -5,7 +6,7 @@ def helloworld():
 def incr(x):
     x = x + 1
 
-#$ header function decr(int|double) 
+#$ header function decr(int|double)
 def decr(x):
     y = x - 1
     return y
@@ -19,7 +20,7 @@ def incr_array(x):
 
 y_=[1,2,3]
 
-##$ header function decr_array([int]|[double]) 
+##$ header function decr_array([int]|[double])
 #def decr_array(x):
 #    y_[1] = 6
 #    z = y_
@@ -33,12 +34,12 @@ y_=[1,2,3]
 def decr_array(x):
     x = x - 1
 
-#$ header function f1(int, int, int) 
+#$ header function f1(int, int, int)
 def f1(x, n=2, m=3):
     y = x - n*m
     return y
 
-#$ header function f2(int, int) 
+#$ header function f2(int, int)
 def f2(x, m=None):
     if m is None:
         y = x + 1

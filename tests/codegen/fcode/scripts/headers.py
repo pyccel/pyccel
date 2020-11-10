@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 #$ header function f(int, int) &
 #$                 results (int)
 

@@ -103,6 +103,14 @@ def execute_pyccel(fname, *,
 
     f90exec = mpi_compiler if mpi_compiler else compiler
 
+    if (language == "c"):
+        libs = libs + ['m']
+        if accelerator == 'openmp':
+            if sys.platform.startswith('win'):
+                libs = libs + ['gomp']
+            else:
+                libs = libs + ['omp']
+
     # ...
     # Construct flags for the Fortran compiler
     if fflags is None:
@@ -110,8 +118,7 @@ def execute_pyccel(fname, *,
                                  fflags=None,
                                  debug=debug,
                                  accelerator=accelerator,
-                                 includes=(),
-                                 libdirs=())
+                                 includes=())
 
     # Build position-independent code, suited for use in shared library
     fflags = ' {} -fPIC '.format(fflags)
@@ -145,7 +152,9 @@ def execute_pyccel(fname, *,
             severity='error')
     except PyccelError:
         handle_error('annotation (semantic)')
-        raise
+        # Raise a new error to avoid a large traceback
+        raise PyccelSemanticError('Semantic step failed') from None
+
     if errors.has_errors():
         handle_error('annotation (semantic)')
         raise PyccelSemanticError('Semantic step failed')
@@ -174,13 +183,12 @@ def execute_pyccel(fname, *,
                 severity='error')
         except PyccelError:
             handle_error('code generation')
-            raise
+            # Raise a new error to avoid a large traceback
+            raise PyccelCodegenError('Code generation failed') from None
+
         if errors.has_errors():
             handle_error('code generation')
             raise PyccelCodegenError('Code generation failed')
-
-        if errors.has_warnings():
-            errors.check()
 
         #------------------------------------------------------
         # TODO: collect dependencies and proceed recursively
@@ -232,26 +240,26 @@ def execute_pyccel(fname, *,
                                 fflags=fflags,
                                 debug=debug,
                                 accelerator=accelerator,
-                                includes=includes,
-                                libdirs=libdirs)
+                                includes=includes)
 
         # Compile Fortran code
         #
         # TODO: stop at object files, do not compile executable
         #       This allows for properly linking program to modules
         #
-        if not (language == "c" and codegen.is_module):
-            try:
-                compile_files(fname, f90exec, flags,
-                                binary=None,
-                                verbose=verbose,
-                                modules=modules,
-                                is_module=codegen.is_module,
-                                output=pyccel_dirpath,
-                                libs=libs)
-            except Exception:
-                handle_error('Fortran compilation')
-                raise
+        try:
+            compile_files(fname, f90exec, flags,
+                            binary=None,
+                            verbose=verbose,
+                            modules=modules,
+                            is_module=codegen.is_module,
+                            output=pyccel_dirpath,
+                            libs=libs,
+                            libdirs=libdirs,
+                            language=language)
+        except Exception:
+            handle_error('Fortran compilation')
+            raise
 
         # For a program stop here
         if codegen.is_program:
@@ -272,6 +280,7 @@ def execute_pyccel(fname, *,
                                                        dep_mods,
                                                        libs,
                                                        libdirs,
+                                                       includes,
                                                        flags,
                                                        extra_args,
                                                        output_name,
@@ -289,6 +298,10 @@ def execute_pyccel(fname, *,
 
         if verbose:
             print( '> Shared library has been created: {}'.format(sharedlib_filepath))
+
+    # Print all warnings now
+    if errors.has_warnings():
+        errors.check()
 
     # Change working directory back to starting point
     os.chdir(base_dirpath)

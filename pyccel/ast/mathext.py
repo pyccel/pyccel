@@ -5,10 +5,8 @@ from sympy import Function
 
 from pyccel.ast.basic     import PyccelAstNode
 from pyccel.ast.core      import Constant
-from pyccel.ast.datatypes import (datatype, DataType, NativeSymbol,
-                                  NativeInteger, NativeBool, NativeReal,
-                                  NativeComplex, NativeRange, NativeTensor, NativeString,
-                                  NativeGeneric, NativeTuple, default_precision)
+from pyccel.ast.datatypes import (NativeInteger, NativeBool, NativeReal,
+                                  default_precision)
 
 __all__ = (
     'math_constants',
@@ -52,6 +50,7 @@ __all__ = (
     'MathSqrt',
     'MathTan',
     'MathTanh',
+    'MathRemainder',
     # ---
     'MathCeil',
     'MathFactorial',
@@ -136,6 +135,7 @@ class MathSinh    (MathFunctionFloat): pass
 class MathSqrt    (MathFunctionFloat): pass
 class MathTan     (MathFunctionFloat): pass
 class MathTanh    (MathFunctionFloat): pass
+class MathRemainder (MathFunctionFloat): pass
 
 # Integer result
 class MathCeil     (MathFunctionInt): pass
@@ -171,7 +171,7 @@ class MathModf(MathFunctionBase):
 
     Return the fractional and integer parts of x.  Both results carry the sign
     of x and are floats.
-    """    
+    """
 
 #==============================================================================
 # Dictionary to map math functions to classes above

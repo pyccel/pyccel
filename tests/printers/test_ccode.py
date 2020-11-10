@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from sympy.core import (pi, oo, symbols, Rational, Integer, Float, GoldenRatio,
         EulerGamma, Catalan, Lambda)
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt, gamma
@@ -8,7 +9,7 @@ from sympy.tensor import IndexedBase, Idx
 
 from pyccel.types.ast import (Assign, AugAssign, For, InArgument, Result,
         FunctionDef, Return, Import, Declare, Variable)
-from pyccel.printers import ccode, CCodePrinter
+from pyccel.printers import ccode
 
 x, y, z = symbols('x, y, z')
 a, b, c = symbols('a, b, c')

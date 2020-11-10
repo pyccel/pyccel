@@ -23,7 +23,7 @@ class CommentMultiLine(CommentLine):
     """"New AST node representing a multi-line comment"""
 
 
-def get_comments(code): 
+def get_comments(code):
     lines = code.split("\n")
     comments        = []
     lineno_comments = []
@@ -65,7 +65,7 @@ def get_comments(code):
                         txt = txt + '\n' + s
 
                 comments.append(CommentMultiLine(txt, lineno, col_offset))
- 
+
     assert len(lineno_comments) == len(comments)
     return array(lineno_comments), array(comments), array(else_no)
 
@@ -79,9 +79,8 @@ def extend_tree(code):
                       severity='fatal')
     if len(tree.body) == 0:
         if len(comments) > 0:
-            tree.body        = [comments[0]]
-            comment_lines_no = comment_lines_no[1:]
-            comments         = comments[1:]
+            tree.body  = list(comments)
+        return tree
 
     insert_comments(tree, comment_lines_no, comments, else_no)
     return tree
@@ -149,17 +148,19 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
                 elif_orelse = len(previous_stmt.orelse) == 1 and isinstance(previous_stmt.orelse[0], IfNode)
             else:
                 previous_stmt_body_last_lineno  = get_last_lineno(previous_stmt.body[-1])
+
             #TODO accelerate this part with pyccel
             k = -1
             for k, comment_line_no_k in enumerate(comment_lines_no):
                 if previous_stmt_body_last_lineno<comment_line_no_k:
                     if orelse and elif_orelse:
                         break
-                    elif col_offset >= comments[k].col_offset and not orelse:
+                    elif col_offset >= comments[k].col_offset and not orelse or next_node_lineno<comment_line_no_k:
                         break
             else:
                 k = k+1
 
+            # case of else stmt
             if orelse and not elif_orelse and k>0 :
                 expr = logical_and(logical_and(else_no >= comment_lines_no[0], else_no <= comment_lines_no[k-1]), else_no<=previous_stmt_body_last_lineno)
                 if expr.any():
@@ -197,7 +198,7 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
 
     last_stmt = body[-1]
     if hasattr( last_stmt, 'body'):
-        orelse            = hasattr(last_stmt, 'orelse') and last_stmt.orelse
+        orelse   = hasattr(last_stmt, 'orelse') and last_stmt.orelse
 
         if orelse:
             body_last_lineno  = last_stmt.orelse[0].lineno
@@ -213,7 +214,7 @@ def insert_comments(ast, comment_lines_no, comments, else_no, attr='body', col_o
                 if col_offset >= comments[k].col_offset and not orelse:
                     break
         else:
-            k = k+1 
+            k = k+1
 
         if orelse and not elif_orelse and k>0:
             expr = logical_and(logical_and(else_no >= comment_lines_no[0], else_no <= comment_lines_no[k-1]), else_no<=body_last_lineno)

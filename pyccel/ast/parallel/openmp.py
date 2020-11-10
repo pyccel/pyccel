@@ -14,6 +14,7 @@ from pyccel.ast.core import Import
 from pyccel.ast.core import For, ForIterator, While, With, If
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import ConstructorCall
+from pyccel.ast.core import Tensor
 
 from pyccel.ast.parallel.basic import Basic
 
@@ -403,7 +404,7 @@ class OMP_Schedule(OMP):
     """
     name = 'schedule'
     def __new__(cls, *args, **options):
-        if not(len(args) in [1, 2]):
+        if len(args) not in [1, 2]:
             raise ValueError('Expecting 1 or 2 entries, '
                              'given {0}'.format(len(args)))
 
@@ -448,7 +449,7 @@ class OMP_Ordered(OMP):
     """
     name = 'ordered'
     def __new__(cls, *args, **options):
-        if not(len(args) in [0, 1]):
+        if len(args) not in [0, 1]:
             raise ValueError('Expecting 0 or 1 entries, '
                              'given {0}'.format(len(args)))
 
@@ -483,7 +484,7 @@ class OMP_Collapse(OMP):
     """
     name = 'collapse'
     def __new__(cls, *args, **options):
-        if not(len(args) == 1):
+        if len(args) != 1:
             raise ValueError('Expecting 1 entry, '
                              'given {0}'.format(len(args)))
 
@@ -710,7 +711,7 @@ def get_with_clauses(expr):
     # ... get initial values for all attributs
     #     TODO do we keep 'self' hard coded?
     d = {}
-    for k,v in d_attributs.items():
+    for k in d_attributs.keys():
         i = DottedName('self', k)
         d[k] = get_initial_value(expr, i)
     # ...
@@ -893,7 +894,7 @@ def get_for_clauses(expr):
     # ... get initial values for all attributs
     #     TODO do we keep 'self' hard coded?
     d = {}
-    for k,v in d_attributs.items():
+    for k in d_attributs.keys():
         i = DottedName('self', k)
         d[k] = get_initial_value(expr, i)
     # ...

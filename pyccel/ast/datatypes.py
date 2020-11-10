@@ -37,10 +37,10 @@ __all__ = (
 # --------- FUNCTIONS -----------
 #
     'datatype',
-#    'get_default_value',
     'is_iterable_datatype',
     'is_pyccel_datatype',
     'is_with_construct_datatype',
+    'str_dtype',
 #
 # --------- VARIABLES -----------
 #
@@ -76,8 +76,10 @@ dtype_and_precision_registry = { 'real':('real',default_precision['float']),
                                  'int32':('int',4),
                                  'int64':('int',8),
                                  'int'  :('int', default_precision['int']),
+                                 'pythonint'  :('int', default_precision['int']),
                                  'integer':('int',default_precision['int']),
-                                 'bool' :('bool',default_precision['bool'])}
+                                 'bool' :('bool',default_precision['bool']),
+                                 'pythonbool' :('bool',default_precision['bool'])}
 
 
 class DataType(with_metaclass(Singleton, Basic)):
@@ -249,21 +251,6 @@ def is_iterable_datatype(dtype):
         return False
 
 
-def get_default_value(dtype):
-    """Returns the default value of a native datatype."""
-    if isinstance(dtype, NativeInteger):
-        value = 0
-    elif isinstance(dtype, NativeReal):
-        value = 0.0
-    elif isinstance(dtype, NativeComplex):
-        value = 0.0
-    elif isinstance(dtype, NativeBool):
-        value = BooleanFalse()
-    else:
-        raise TypeError('Unknown type')
-    return value
-
-
 # TODO improve
 def is_with_construct_datatype(dtype):
     """Returns True if dtype is an with_construct class."""
@@ -297,4 +284,33 @@ def datatype(arg):
     else:
         raise TypeError('Expecting a DataType')
 
+def str_dtype(dtype):
 
+    """
+    This function takes a datatype and returns a sympy datatype as a string
+
+    Example
+    -------
+    >>> str_dtype('int')
+    'integer'
+    >>> str_dtype(NativeInteger())
+    'integer'
+
+    """
+    if isinstance(dtype, str):
+        if dtype == 'int':
+            return 'integer'
+        elif dtype== 'real':
+            return 'real'
+        else:
+            return dtype
+    if isinstance(dtype, NativeInteger):
+        return 'integer'
+    elif isinstance(dtype, NativeReal):
+        return 'real'
+    elif isinstance(dtype, NativeComplex):
+        return 'complex'
+    elif isinstance(dtype, NativeBool):
+        return 'bool'
+    else:
+        raise TypeError('Unknown datatype {0}'.format(str(dtype)))

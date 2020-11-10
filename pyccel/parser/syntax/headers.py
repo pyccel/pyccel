@@ -28,6 +28,31 @@ class Header(object):
         """
         self.statements = kwargs.pop('statements', [])
 
+class FuncType(BasicStmt):
+    """Base class representing a  FunctionType in the grammar."""
+    def __init__(self, **kwargs):
+        self.decs = kwargs.pop('decs')
+        self.results = kwargs.pop('results')
+
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        decs = []
+        if self.decs:
+            decs = [i.expr for i in self.decs]
+
+        results = []
+        if self.results:
+            results = [i.expr for i in self.results]
+
+        d_var = {}
+        d_var['decs'] = decs
+        d_var['results'] = results
+        d_var['is_func'] = True
+
+        return d_var
+
 class ListType(BasicStmt):
     """Base class representing a  ListType in the grammar."""
 
@@ -54,6 +79,8 @@ class ListType(BasicStmt):
         d_var['is_pointer'] = len(dtypes)>0
         d_var['allocatable'] = False
         d_var['precision'] = max(precisions)
+        d_var['order'] = 'C'
+        d_var['is_func'] = False
         if not(d_var['precision']):
             if d_var['datatype'] in ['double','float','complex','int']:
                 d_var['precision'] = default_precision[d_var['datatype']]
@@ -96,6 +123,7 @@ class Type(BasicStmt):
         d_var['allocatable'] = len(trailer)>0
         d_var['is_pointer'] = False
         d_var['precision']  = precision
+        d_var['is_func'] = False
         if not(precision):
             if dtype in ['double' ,'float','complex', 'int']:
                 d_var['precision'] = default_precision[dtype]
@@ -109,7 +137,7 @@ class TypeHeader(BasicStmt):
 
 class StringStmt(BasicStmt):
     def __init__(self, **kwargs):
-       self.arg = kwargs.pop('arg')
+        self.arg = kwargs.pop('arg')
     @property
     def expr(self):
         return String(repr(str(self.arg)))
@@ -290,25 +318,25 @@ class MetavarHeaderStmt(BasicStmt):
 
 
 class InterfaceStmt(BasicStmt):
-      """ class represent the header interface statement"""
+    """ class represent the header interface statement"""
 
-      def __init__(self, **kwargs):
-          """
-          Constructor of Interface statement
+    def __init__(self, **kwargs):
+        """
+        Constructor of Interface statement
 
-          name: str
+        name: str
 
-          args: list of function names
+        args: list of function names
 
-          """
+        """
 
-          self.name = kwargs.pop('name')
-          self.args = kwargs.pop('args')
-          super(InterfaceStmt, self).__init__(**kwargs)
+        self.name = kwargs.pop('name')
+        self.args = kwargs.pop('args')
+        super(InterfaceStmt, self).__init__(**kwargs)
 
-      @property
-      def expr(self):
-          return InterfaceHeader(self.name, self.args)
+    @property
+    def expr(self):
+        return InterfaceHeader(self.name, self.args)
 
 # ...
 class MacroArg(BasicStmt):
@@ -361,21 +389,21 @@ class MacroStmt(BasicStmt):
 # ...
 
 class MacroList(BasicStmt):
-     """ reresent a MacroList statement"""
-     def __init__(self, **kwargs):
-         ls = []
-         for i in kwargs.pop('ls'):
-             if isinstance(i, MacroArg):
-                 ls.append(i.expr)
-             else:
-                 ls.append(i)
-         self.ls = ls
+    """ reresent a MacroList statement"""
+    def __init__(self, **kwargs):
+        ls = []
+        for i in kwargs.pop('ls'):
+            if isinstance(i, MacroArg):
+                ls.append(i.expr)
+            else:
+                ls.append(i)
+        self.ls = ls
 
-         super(MacroList, self).__init__(**kwargs)
+        super(MacroList, self).__init__(**kwargs)
 
-     @property
-     def expr(self):
-         return self.ls
+    @property
+    def expr(self):
+        return self.ls
 
 
 class FunctionMacroStmt(BasicStmt):
@@ -450,7 +478,7 @@ class FunctionMacroStmt(BasicStmt):
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
 hdr_classes = [Header, TypeHeader,
-               Type, ListType, UnionTypeStmt,
+               Type, ListType, UnionTypeStmt, FuncType,
                HeaderResults,
                FunctionHeaderStmt,
                ClassHeaderStmt,

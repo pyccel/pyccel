@@ -9,7 +9,7 @@ from sympy import sympify, Tuple
 from .core import Basic
 from .core import Variable
 from .core import ValuedArgument, ValuedVariable
-from .core import FunctionDef, Interface
+from .core import FunctionDef, Interface, FunctionAddress
 from .core import DottedName, DottedVariable
 from .datatypes import datatype, DataTypeFactory, UnionType
 from .macros import Macro, MacroShape, construct_macro
@@ -135,7 +135,7 @@ class FunctionHeader(Header):
         if not isinstance(kind, str):
             raise TypeError("Expecting a string for kind.")
 
-        if not (kind in ['function', 'procedure']):
+        if kind not in ['function', 'procedure']:
             raise ValueError("kind must be one among {'function', 'procedure'}")
 
         if not isinstance(is_static, bool):
@@ -179,6 +179,31 @@ class FunctionHeader(Header):
         funcs = []
         dtypes = []
 
+        def build_argument(var_name, dc):
+            #Constructs an argument variable from a dictionary.
+            dtype    = dc['datatype']
+            allocatable = dc['allocatable']
+            is_pointer = dc['is_pointer']
+            precision = dc['precision']
+            rank = dc['rank']
+
+            order = None
+            shape = None
+            if rank >1:
+                order = dc['order']
+
+            if isinstance(dtype, str):
+                try:
+                    dtype = datatype(dtype)
+                except ValueError:
+                    dtype = DataTypeFactory(str(dtype), ("_name"))()
+            var = Variable(dtype, var_name,
+                        allocatable=allocatable, is_pointer=is_pointer,
+                        rank=rank, shape=shape ,order = order, precision = precision,
+                        is_argument=True)
+            return var
+
+
         for i in self.dtypes:
             if isinstance(i, UnionType):
                 dtypes += [i.args]
@@ -189,34 +214,28 @@ class FunctionHeader(Header):
         for args_ in product(*dtypes):
             args = []
             for i, d in enumerate(args_):
-                dtype    = d['datatype']
-                allocatable = d['allocatable']
-                is_pointer = d['is_pointer']
-                precision = d['precision']
-                rank = d['rank']
+                # TODO  handle function as argument, which itself has a function argument
+                if (d['is_func']):
+                    decs = []
+                    results = []
+                    for dc in d['decs']:
+                        var = build_argument('', dc)
+                        decs.append(var)
+                    for dc in d['results']:
+                        var = build_argument('', dc)
+                        results.append(var)
+                    arg_name = 'arg_{0}'.format(str(i))
+                    arg = FunctionAddress(arg_name, decs, results, [])
 
-                order = None
-                shape = None
-                if rank >1:
-                    order = d['order']
-                
-                if isinstance(dtype, str):
-                    try:
-                        dtype = datatype(dtype)
-                    except ValueError:
-                        #TODO check if it's a class type before
-                        dtype =  DataTypeFactory(str(dtype), ("_name"))()
-                        is_pointer = True
-                arg_name = 'arg_{0}'.format(str(i))
-                arg = Variable(dtype, arg_name,
-                               allocatable=allocatable, is_pointer=is_pointer,
-                               rank=rank, shape=shape ,order = order, precision = precision,
-                               is_argument=True)
+                else:
+                    arg_name = 'arg_{0}'.format(str(i))
+                    arg = build_argument(arg_name, d)
                 args.append(arg)
 
             # ... factorize the following 2 blocks
             results = []
             for i,d_var in enumerate(self.results):
+                d_var.pop('is_func')
                 dtype = d_var.pop('datatype')
                 var = Variable(dtype, 'res_{}'.format(i), **d_var)
                 results.append(var)
@@ -318,7 +337,7 @@ class MethodHeader(FunctionHeader):
         if not isinstance(kind, str):
             raise TypeError("Expecting a string for kind.")
 
-        if not (kind in ['function', 'procedure']):
+        if kind not in ['function', 'procedure']:
             raise ValueError("kind must be one among {'function', 'procedure'}")
 
         if not isinstance(is_static, bool):
@@ -495,8 +514,7 @@ class MacroFunction(Header):
                 else:
                     raise ValueError('Unknown valued argument')
             d_arguments.update(d_unsorted_args)
-            for i in d_arguments.keys():
-                arg = d_arguments[i]
+            for i, arg in d_arguments.items():
                 if isinstance(arg, Macro):
                     d_arguments[i] = construct_macro(arg.name,
                                       d_arguments[arg.argument.name])
@@ -542,7 +560,7 @@ class MacroFunction(Header):
 
                 new = construct_macro(arg.name, new)
                 if isinstance(arg, MacroShape):
-                        new._index = arg.index
+                    new._index = arg.index
 
             newargs[i] = new
         return newargs

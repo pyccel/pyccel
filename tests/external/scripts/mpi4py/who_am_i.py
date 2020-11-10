@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 # coding: utf-8
 from mpi4py import MPI
 
