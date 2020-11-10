@@ -73,10 +73,9 @@ def construct_flags(compiler,
             if sys.platform == "darwin" and compiler == "gcc":
                 flags += " -Xpreprocessor"
 
+            flags += " -fopenmp"
             if compiler == 'ifort':
-                flags   += ' -openmp -nostandard-realloc-lhs '
-            else:
-                flags += " -fopenmp"
+                flags   += ' -nostandard-realloc-lhs '
 
         elif accelerator == "openacc":
             flags += " -ta=multicore -Minfo=accel"
