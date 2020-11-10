@@ -333,6 +333,7 @@ class CWrapperCodePrinter(CCodePrinter):
         funcs_def = []
 
         # Managing the body of wrapper
+        # TODO split or re use exisiting functiond in the wrapper
         for func in funcs :
             cond = []
             body = []
@@ -348,6 +349,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     wrapper_body.append(self.get_default_assign(parse_args[-1], a))
                     assign = Assign(b, IfTernaryOperator(PyccelEq(VariableAddress(a), VariableAddress(Py_None)),
                             self.get_collect_function_call(b, a), b.value))
+
                 body.append(assign)
 
             # checking res length and create the corresponding function call
