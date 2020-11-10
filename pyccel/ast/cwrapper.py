@@ -136,7 +136,8 @@ class PyArg_ParseTupleNode(Basic):
             if isinstance(c_func_args[i], FunctionAddress):
                 self._flags += 'O'
             else:
-                self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
+                self._flags += 'O'
+                #self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
             i+=1
         if i < len(c_func_args):
             self._flags += '|'
@@ -144,7 +145,8 @@ class PyArg_ParseTupleNode(Basic):
             if isinstance(c_func_args[i], FunctionAddress):
                 self._flags += 'O'
             else:
-                self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
+                self._flags += 'O'
+                #self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
             i+=1
 
         # Restriction as of python 3.8
