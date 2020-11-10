@@ -65,12 +65,6 @@ def test_f3(language):
     # ...
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c)
-    )
-)
 def test_f4(language):
     @types('bool')
     def f4(x = True):
@@ -88,12 +82,6 @@ def test_f4(language):
     # ...
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c)
-    )
-)
 def test_f5(language):
     @types('complex')
     def f5(x = 1j):
