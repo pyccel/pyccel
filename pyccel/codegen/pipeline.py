@@ -293,14 +293,18 @@ def execute_pyccel(fname, *,
             msg = str(error)
             errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
                 severity='error')
-            handle_error('codegen (wrapping)')
+            handle_error('code generation (wrapping)')
             raise PyccelCodegenError(msg) from None
         except PyccelError:
-            handle_error('codegen (wrapping)')
+            handle_error('code generation (wrapping)')
             raise
         except Exception:
             handle_error('shared library generation')
             raise
+
+        if errors.has_errors():
+            handle_error('code generation (wrapping)')
+            raise PyccelCodegenError('Code generation failed')
 
         # Move shared library to folder directory
         # (First construct absolute path of target location)

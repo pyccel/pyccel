@@ -93,10 +93,12 @@ def create_shared_library(codegen,
 
         module_old_name = codegen.expr.name
         codegen.expr.set_name(sharedlib_modname)
+
         wrapper_code = cwrappercode(codegen.expr, codegen.parser, language)
+        if errors.has_errors():
+            return
+
         codegen.expr.set_name(module_old_name)
-        errors.check()
-        errors.reset()
         wrapper_filename_root = '{}_wrapper'.format(module_name)
         wrapper_filename = '{}.c'.format(wrapper_filename_root)
 
