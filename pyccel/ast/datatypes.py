@@ -61,21 +61,21 @@ __all__ = (
 #==============================================================================
 iso_c_binding = {
     "integer" : {
-        1 : 'C_SIGNED_CHAR',
-	    2 : 'C_SHORT',
-        4 : 'C_INT',
-	    8 : 'C_LONG_LONG',
+        1  : 'C_SIGNED_CHAR',
+        2  : 'C_SHORT',
+        4  : 'C_INT',
+        8  : 'C_LONG_LONG',
         16 : 'C_INT128'}, #no supported yet
-    "real" : {
-        4 : 'C_FLOAT',
-	    8 : 'C_DOUBLE',
+    "real"    : {
+        4  : 'C_FLOAT',
+        8  : 'C_DOUBLE',
         16 : 'C_LONG_DOUBLE'},
     "complex" : {
-        4 : 'C_FLOAT_COMPLEX',
-	    8 : 'C_DOUBLE_COMPLEX',
+        4  : 'C_FLOAT_COMPLEX',
+        8  : 'C_DOUBLE_COMPLEX',
         16 : 'C_LONG_DOUBLE_COMPLEX'},
     "logical" : {
-		4 : "C_BOOL"}
+        4  : "C_BOOL"}
 }
 
 default_precision = {'real': 8,
