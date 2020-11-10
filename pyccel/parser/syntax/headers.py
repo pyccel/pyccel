@@ -158,12 +158,11 @@ class UnionTypeStmt(BasicStmt):
 
     @property
     def expr(self):
-        l = []
-        for i in self.dtype:
-            if self.const:
-                i.expr["is_const"] = True
-            l.append(i.expr)
-
+        l = [i.expr for i in self.dtype]
+        if self.const:
+            for e in l:
+                e["is_const"] = True
+                
         if len(l)>1:
             return UnionType(l)
         else:
