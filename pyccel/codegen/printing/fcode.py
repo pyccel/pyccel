@@ -1200,6 +1200,40 @@ class FCodePrinter(CodePrinter):
 #            code = 'call {0}({1})'.format(rhs_code, code_args)
         return self._get_statement(code) + '\n'
 
+#------------------------------------------------------------------------------
+    def _print_Allocate(self, expr):
+
+        # Transpose indices because of Fortran column-major ordering
+        shape = expr.shape if expr.order == 'F' else expr.shape[::-1]
+
+        var_code = self._print(expr.variable)
+        size_code = ', '.join(self._print(i) for i in shape)
+        shape_code = ', '.join('0:' + self._print(PyccelMinus(i, Integer(1))) for i in shape)
+        code = ''
+
+        if expr.status == 'unallocated':
+            code += 'allocate({0}({1}))\n'.format(var_code, shape_code)
+
+        elif expr.status == 'unknown':
+            code += 'if (allocated({})) then\n'.format(var_code)
+            code += '  if (any(size({}) /= [{}])) then\n'.format(var_code, size_code)
+            code += '    deallocate({})\n'     .format(var_code)
+            code += '    allocate({0}({1}))\n'.format(var_code, shape_code)
+            code += '  end if\n'
+            code += 'else\n'
+            code += '  allocate({0}({1}))\n'.format(var_code, shape_code)
+            code += 'end if\n'
+
+        elif expr.status == 'allocated':
+            code += 'if (any(size({}) /= [{}])) then\n'.format(var_code, size_code)
+            code += '  deallocate({})\n'     .format(var_code)
+            code += '  allocate({0}({1}))\n'.format(var_code, shape_code)
+            code += 'end if\n'
+
+        return code
+
+#------------------------------------------------------------------------------
+
     def _print_NativeBool(self, expr):
         return 'logical'
 

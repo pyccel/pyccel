@@ -82,6 +82,7 @@ __all__ = (
     'PyccelUnary',
     'AddOp',
     'AliasAssign',
+    'Allocate',
     'AnnotatedComment',
     'Argument',
     'AsName',
@@ -1254,7 +1255,99 @@ class Assign(Basic):
 
         return False
 
+#------------------------------------------------------------------------------
+class Allocate(Basic):
+    """
+    Represents memory allocation (usually of an array) for code generation.
+    This is relevant to low-level target languages, such as C or Fortran,
+    where the programmer must take care of heap memory allocation.
 
+    Parameters
+    ----------
+    variable : pyccel.ast.core.Variable
+        The typed variable (usually an array) that needs memory allocation.
+
+    shape : int or iterable or None
+        Shape of the array after allocation (None for scalars).
+
+    order : str {'C'|'F'}
+        Ordering of multi-dimensional array after allocation
+        ('C' = row-major, 'F' = column-major).
+
+    status : str {'allocated'|'unallocated'|'unknown'}
+        Variable allocation status at object creation.
+
+    Notes
+    -----
+    An object of this class is immutable, although it contains a reference to a
+    mutable Variable object.
+
+    """
+    def __new__(cls, *args, **kwargs):
+
+        return Basic.__new__(cls)
+
+    # ...
+    def __init__(self, variable, *, shape, order, status):
+
+        if not isinstance(variable, Variable):
+            raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
+
+        if not variable.allocatable:
+            raise ValueError("Variable must be allocatable")
+
+        if shape and not isinstance(shape, (int, tuple, list)):
+            raise TypeError("Cannot understand 'shape' parameter of type '{}'".format(type(shape)))
+
+        if variable.rank != len(shape):
+            raise ValueError("Incompatible rank in variable allocation")
+
+        if variable.rank > 1 and variable.order != order:
+            raise ValueError("Incompatible order in variable allocation")
+
+        if not isinstance(status, str):
+            raise TypeError("Cannot understand 'status' parameter of type '{}'".format(type(status)))
+
+        if status not in ('allocated', 'unallocated', 'unknown'):
+            raise ValueError("Value of 'status' not allowed: '{}'".format(status))
+
+        self._variable = variable
+        self._shape    = shape
+        self._order    = order
+        self._status   = status
+    # ...
+
+    @property
+    def variable(self):
+        return self._variable
+
+    @property
+    def shape(self):
+        return self._shape
+
+    @property
+    def order(self):
+        return self._order
+
+    @property
+    def status(self):
+        return self._status
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return 'Allocate({}, shape={}, order={}, status={})'.format(
+                sstr(self.variable), sstr(self.shape), sstr(self.order), sstr(self.status))
+
+    def __eq__(self, other):
+        return (self.variable is other.variable) and \
+               (self.shape    == other.shape   ) and \
+               (self.order    == other.order   ) and \
+               (self.status   == other.status  )
+
+    def __hash__(self):
+        return hash((id(self.variable), self.shape, self.order, self.status))
+
+#------------------------------------------------------------------------------
 class CodeBlock(Basic):
 
     """Represents a list of stmt for code generation.
@@ -2735,7 +2828,9 @@ class Variable(Symbol, PyccelAstNode):
         print('>>> Variable')
         print( '  name           = {}'.format(self.name))
         print( '  dtype          = {}'.format(self.dtype))
+        print( '  precision      = {}'.format(self.precision))
         print( '  rank           = {}'.format(self.rank))
+        print( '  order          = {}'.format(self.order))
         print( '  allocatable    = {}'.format(self.allocatable))
         print( '  shape          = {}'.format(self.shape))
         print( '  cls_base       = {}'.format(self.cls_base))

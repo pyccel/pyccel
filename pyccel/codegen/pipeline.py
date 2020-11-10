@@ -152,7 +152,9 @@ def execute_pyccel(fname, *,
             severity='error')
     except PyccelError:
         handle_error('annotation (semantic)')
-        raise
+        # Raise a new error to avoid a large traceback
+        raise PyccelSemanticError('Semantic step failed') from None
+
     if errors.has_errors():
         handle_error('annotation (semantic)')
         raise PyccelSemanticError('Semantic step failed')
@@ -181,14 +183,12 @@ def execute_pyccel(fname, *,
                 severity='error')
         except PyccelError:
             handle_error('code generation')
-            raise
+            # Raise a new error to avoid a large traceback
+            raise PyccelCodegenError('Code generation failed') from None
+
         if errors.has_errors():
             handle_error('code generation')
             raise PyccelCodegenError('Code generation failed')
-
-        if errors.has_warnings():
-            errors.check()
-            errors.reset()
 
         #------------------------------------------------------
         # TODO: collect dependencies and proceed recursively
@@ -298,6 +298,10 @@ def execute_pyccel(fname, *,
 
         if verbose:
             print( '> Shared library has been created: {}'.format(sharedlib_filepath))
+
+    # Print all warnings now
+    if errors.has_warnings():
+        errors.check()
 
     # Change working directory back to starting point
     os.chdir(base_dirpath)
