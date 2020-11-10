@@ -376,8 +376,8 @@ class CWrapperCodePrinter(CCodePrinter):
             for r in func.results :
                 collect_var, cast_func = self.get_PyBuildValue(used_names, r)
                 if cast_func is not None:
-                    wrapper_vars[collect_var.name] = collect_var
                     body.append(cast_func)
+                    tmp_vars.append(collect_var)
                 res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
 
             # Building PybuildValue and freeing the allocated variable after.
