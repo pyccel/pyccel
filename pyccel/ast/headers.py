@@ -186,6 +186,7 @@ class FunctionHeader(Header):
             is_pointer = dc['is_pointer']
             precision = dc['precision']
             rank = dc['rank']
+            is_const = dc['is_const']
 
             order = None
             shape = None
@@ -198,7 +199,7 @@ class FunctionHeader(Header):
                 except ValueError:
                     dtype = DataTypeFactory(str(dtype), ("_name"))()
             var = Variable(dtype, var_name,
-                        allocatable=allocatable, is_pointer=is_pointer,
+                        allocatable=allocatable, is_pointer=is_pointer, is_const=is_const,
                         rank=rank, shape=shape ,order = order, precision = precision,
                         is_argument=True)
             return var

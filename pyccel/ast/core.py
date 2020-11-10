@@ -2572,6 +2572,9 @@ class Variable(Symbol, PyccelAstNode):
     is_kwonly: bool
         if object is an argument which can only be specified using its keyword
 
+    is_const: bool
+        if object is a const argument of a function [Default value: False]
+
     Examples
     --------
     >>> from pyccel.ast.core import Variable
@@ -2596,6 +2599,7 @@ class Variable(Symbol, PyccelAstNode):
         allocatable=False,
         is_stack_array = False,
         is_pointer=False,
+        is_const=False,
         is_target=False,
         is_polymorphic=None,
         is_optional=False,
@@ -2655,22 +2659,24 @@ class Variable(Symbol, PyccelAstNode):
             raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
         self._name = name
 
-        if allocatable is None:
-            allocatable = False
+        if not isinstance(allocatable, bool):
+            raise TypeError('allocatable must be a boolean.')
         self.allocatable = allocatable
 
-        if is_stack_array is None:
-            is_stack_array = False
-        elif not isinstance(is_stack_array, bool):
+        if not isinstance(is_const, bool):
+            raise TypeError('is_const must be a boolean.')
+        self.is_const = is_const
+
+        if not isinstance(is_stack_array, bool):
             raise TypeError('is_stack_array must be a boolean.')
         self._is_stack_array = is_stack_array
 
-        if is_pointer is None:
-            is_pointer = False
+        if not isinstance(is_pointer, bool):
+            raise TypeError('is_pointer must be a boolean.')
         self.is_pointer = is_pointer
 
-        if is_target is None:
-            is_target = False
+        if not isinstance(is_target, bool):
+            raise TypeError('is_target must be a boolean.')
         self.is_target = is_target
 
         if is_polymorphic is None:
@@ -2682,15 +2688,11 @@ class Variable(Symbol, PyccelAstNode):
             raise TypeError('is_polymorphic must be a boolean.')
         self._is_polymorphic = is_polymorphic
 
-        if is_optional is None:
-            is_optional = False
-        elif not isinstance(is_optional, bool):
+        if not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
         self._is_optional = is_optional
 
-        if allows_negative_indexes is None:
-            allows_negative_indexes = False
-        elif not isinstance(allows_negative_indexes, bool):
+        if not isinstance(allows_negative_indexes, bool):
             raise TypeError('allows_negative_indexes must be a boolean.')
         self._allows_negative_indexes = allows_negative_indexes
 
@@ -5753,8 +5755,7 @@ def get_assigned_symbols(expr):
             var = var.base
             symbols.append(var)
         elif isinstance(var, Variable):
-            if var.rank:
-                symbols.append(var)
+            symbols.append(var)
         return symbols
     elif isinstance(expr, FunctionCall):
         f = expr.funcdef

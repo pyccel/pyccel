@@ -867,6 +867,7 @@ class FCodePrinter(CodePrinter):
         shape       = var.alloc_shape
         is_pointer = var.is_pointer
         is_target = var.is_target
+        is_const = var.is_const
         is_stack_array = var.is_stack_array
         is_polymorphic = var.is_polymorphic
         is_optional = var.is_optional
@@ -940,6 +941,8 @@ class FCodePrinter(CodePrinter):
         if intent:
             if intent == 'in' and rank == 0 and not (is_static and is_optional):
                 intentstr = ', value'
+                if is_const:
+                    intentstr += ', intent(in)'
             else:
                 intentstr = ', intent({})'.format(intent)
 

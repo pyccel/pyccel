@@ -2538,6 +2538,7 @@ class SemanticParser(BasicParser):
                         d_var['shape'] = ah.alloc_shape
                         d_var['is_argument'] = True
                         d_var['is_kwonly'] = a.is_kwonly
+                        d_var['is_const'] = ah.is_const
                         dtype = d_var.pop('datatype')
                         if d_var['rank']>0:
                             d_var['cls_base'] = NumpyArrayClass
@@ -2624,8 +2625,10 @@ class SemanticParser(BasicParser):
 
             results_names = [str(i) for i in results]
 
-            assigned = get_assigned_symbols(body)
-            assigned = [str(i) for i in assigned]
+            all_assigned = get_assigned_symbols(body)
+            assigned     = [a for a in all_assigned if a.rank > 0]
+            all_assigned = [str(i) for i in all_assigned]
+            assigned     = [str(i) for i in assigned]
 
             apps = list(Tuple(*body.body).atoms(Application))
             apps = [i for i in apps if (i.__class__.__name__
@@ -2656,6 +2659,12 @@ class SemanticParser(BasicParser):
                             args_inout[i] = True
 
                         i_fa += 1
+                if isinstance(a, Variable):
+                    if a.is_const and (args_inout[i] or (str(a) in all_assigned)):
+                        msg = "Cannot modify 'const' argument ({})".format(a)
+                        errors.report(msg, bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset),
+                            severity='fatal', blocker=self.blocking)
             # ...
 
             # Raise an error if one of the return arguments is either:

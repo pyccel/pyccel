@@ -81,6 +81,7 @@ class ListType(BasicStmt):
         d_var['precision'] = max(precisions)
         d_var['order'] = 'C'
         d_var['is_func'] = False
+        d_var['is_const'] = False
         if not(d_var['precision']):
             if d_var['datatype'] in ['double','float','complex','int']:
                 d_var['precision'] = default_precision[d_var['datatype']]
@@ -124,6 +125,7 @@ class Type(BasicStmt):
         d_var['is_pointer'] = False
         d_var['precision']  = precision
         d_var['is_func'] = False
+        d_var['is_const'] = False
         if not(precision):
             if dtype in ['double' ,'float','complex', 'int']:
                 d_var['precision'] = default_precision[dtype]
@@ -150,14 +152,17 @@ class UnionTypeStmt(BasicStmt):
         dtype: list fo str
         """
         self.dtype = kwargs.pop('dtype')
+        self.const = kwargs.pop('const')
 
         super(UnionTypeStmt, self).__init__(**kwargs)
 
     @property
     def expr(self):
-        l = []
-        for i in self.dtype:
-            l += [i.expr]
+        l = [i.expr for i in self.dtype]
+        if self.const:
+            for e in l:
+                e["is_const"] = True
+
         if len(l)>1:
             return UnionType(l)
         else:
@@ -541,4 +546,3 @@ if __name__ == '__main__':
     print(parse(stmts="#$ header macro _dswap([data,dtype=data.dtype,count=count.dtype], incx=y.shape,M='M',d=incx) := dswap(y.shape, y, incx)"))
     print(parse(stmts='#$ header function _f(int, int [:,:](order = F))'))
     print(parse(stmts='#$ header function _f(int, int [:,:])'))
-
