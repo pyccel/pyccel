@@ -159,10 +159,10 @@ class UnionTypeStmt(BasicStmt):
     @property
     def expr(self):
         l = []
-        for num, i in enumerate(self.dtype):
-            l += [i.expr]
-            if self.const is not None:
-                l[num]["is_const"] = True
+        for i in self.dtype:
+            if self.const:
+                i.expr["is_const"] = True
+            l.append(i.expr)
 
         if len(l)>1:
             return UnionType(l)
@@ -547,4 +547,3 @@ if __name__ == '__main__':
     print(parse(stmts="#$ header macro _dswap([data,dtype=data.dtype,count=count.dtype], incx=y.shape,M='M',d=incx) := dswap(y.shape, y, incx)"))
     print(parse(stmts='#$ header function _f(int, int [:,:](order = F))'))
     print(parse(stmts='#$ header function _f(int, int [:,:])'))
-
