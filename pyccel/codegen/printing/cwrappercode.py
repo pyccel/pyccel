@@ -11,6 +11,8 @@ from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, Funct
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelOr
+from pyccel.ast.core import Interface, IfTernaryOperator, PyccelAssociativeParenthesis
+from pyccel.ast.datatypes import str_dtype
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
@@ -535,7 +537,7 @@ class CWrapperCodePrinter(CCodePrinter):
         sep = self._print(SeparatorComment(40))
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.funcs)
 
-        function_defs = '\n\n'.join(self._print(f) for f in expr.funcs)
+        function_defs = '\n\n'.join(self._print_Interface(f) for f in expr.funcs)
         cast_functions = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f)
                                         for f in self._cast_functions_dict.values())
         method_def_func = ',\n'.join(('{{\n'
