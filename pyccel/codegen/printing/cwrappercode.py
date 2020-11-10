@@ -10,7 +10,7 @@ from pyccel.ast.numbers   import BooleanTrue
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelOr
+from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelOr, PyccelAnd
 from pyccel.ast.core import Interface, IfTernaryOperator, PyccelAssociativeParenthesis
 from pyccel.ast.datatypes import str_dtype
 
@@ -305,7 +305,9 @@ class CWrapperCodePrinter(CCodePrinter):
         used_names = set([n.name for n in funcs])
 
         # Find a name for the wrapper function
-        wrapper_name = self.get_new_name(used_names.union(self._global_names), expr.name+"_wrapper")
+        #TODO this line should be : Test purpose
+        # wrapper_name = self.get_new_name(used_names.union(self._global_names), expr.name+"_wrapper")
+        wrapper_name = self.get_new_name(used_names.union(self._global_names), expr.name.name+"_wrapper")
         self._function_wrapper_names[expr.name] = wrapper_name
         self._global_names.add(wrapper_name)
 
