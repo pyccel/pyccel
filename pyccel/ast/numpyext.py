@@ -23,7 +23,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
                              NativeReal, NativeComplex, NativeBool, str_dtype)
 
-from .numbers        import Integer, Float
+from .numbers        import Integer, Float, Complex
 from .basic          import PyccelAstNode
 
 
@@ -191,53 +191,27 @@ class NumpyArray(Application, NumpyNewArray):
     def fprint(self, printer, lhs):
         """Fortran print."""
 
+        lhs_code = printer(lhs)
+
         # Always transpose indices because Numpy initial values are given with
         # row-major ordering, while Fortran initial values are column-major
         shape = self.shape[::-1]
 
-        shape_code = ', '.join('0:' + printer(PyccelMinus(i, Integer(1))) for i in shape)
-
-        lhs_code = printer(lhs)
-        code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
-        arg = self.arg
-        if self.rank > 1:
-            import functools
-            import operator
-            arg = functools.reduce(operator.concat, arg)
-            init_value = 'reshape(' + printer(arg) + ', ' + printer(Tuple(*shape)) + ')'
-        else:
-            init_value = printer(arg)
-
-        # If Numpy array is stored with column-major ordering, transpose values
-        if self.order == 'F' and self.rank > 1:
-            init_value = 'transpose({})'.format(init_value)
-
-        code_init = '{0} = {1}'.format(lhs_code, init_value)
-        code = '{0}\n{1}'.format(code_alloc, code_init)
-        return code
-
-    def cprint(self, printer, lhs, dtype):
-        """C print."""
-        lhs_code = printer(lhs)
-        # Create statement for allocation
-        # Transpose indices because of Fortran column-major ordering
-        shape = self.shape if self.order == 'C' else self.shape[::-1]
-        arr_id = 'dump000'
-        shape_name = 'shape_' + arr_id #need to make it unique
-        shape_code = 'int {0}[] = '.format(shape_name) + '{' + ', '.join(printer(i) for i in shape) + '}'
-        func_call_code = 'array_create({0}, {1}, nd_{2})'.format(self.rank, shape_name, dtype)
-        code_alloc = '{1}\n{0} = {2};'.format(lhs_code, shape_code, func_call_code)
-        # Create statement for initialization
-        arg = self.arg
+        # Construct right-hand-side code
         if self.rank > 1:
             import functools
             import operator
             arg = functools.reduce(operator.concat, self.arg)
-        arr_dummy = '{0} arr_{1}[] = '.format(self.dtype, arr_id) + '{' + ', '.join(printer(i) for i in arg) + '};'
-        code_init = 'memcpy({0}.rawdata, arr_{1}.raw_data, {0}.buffer_size);'.format(lhs_code, arr_id)
-        code = '{0}\n{1}\n{2}'.format(code_alloc, arr_dummy, code_init)
+            rhs_code = 'reshape({array}, {shape})'.format(
+                    array=printer(arg), shape=printer(Tuple(*shape)))
+        else:
+            rhs_code = printer(self.arg)
 
-        return code
+        # If Numpy array is stored with column-major ordering, transpose values
+        if self.order == 'F' and self.rank > 1:
+            rhs_code = 'transpose({})'.format(rhs_code)
+
+        return '{0} = {1}'.format(lhs_code, rhs_code)
 
 #==============================================================================
 class NumpySum(Function, PyccelAstNode):
@@ -536,23 +510,20 @@ class NumpyLinspace(Application, NumpyNewArray):
     def fprint(self, printer, lhs=None):
         """Fortran print."""
 
-        init_value = '[({0} + {1}*{2},{1} = 0,{3}-1)]'
+        template = '[({start} + {index}*{step},{index} = {zero},{end})]'
 
-        start = printer(self.start)
-        step  = printer(self.step)
-        stop  = printer(self.stop)
-        index = printer(self.index)
-
-        init_value = init_value.format(start, index, step, stop)
-
-
+        init_value = template.format(
+            start = printer(self.start),
+            step  = printer(self.step ),
+            index = printer(self.index),
+            zero  = printer(Integer(0)),
+            end   = printer(PyccelMinus(self.size, Integer(1))),
+        )
 
         if lhs:
-            lhs    = printer(lhs)
-            code   = 'allocate(0:{})'.format(printer(self.size))
-            code  += '\n{0} = {1}'.format(lhs, init_value)
+            code = '{0} = {1}\n'.format(printer(lhs), init_value)
         else:
-            code   = '{0}'.format(init_value)
+            code = init_value
 
         return code
 
@@ -832,25 +803,7 @@ class NumpyRand(Function, NumpyNewArray):
     def fprint(self, printer, lhs, stack_array=False):
         """Fortran print."""
 
-        lhs_code = printer(lhs)
-        stmts = []
-
-        if self.rank>0:
-            # Create statement for allocation
-            if not stack_array:
-                # Transpose indices because of Fortran column-major ordering
-                shape = self.shape[::-1]
-
-                shape_code = ', '.join('0:' + printer(PyccelMinus(i, Integer(1))) for i in shape)
-
-                code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
-                stmts.append(code_alloc)
-
-        # Create statement for initialization
-        code_init = 'call random_number({0})'.format(lhs_code)
-        stmts.append(code_init)
-
-        return '\n'.join(stmts) + '\n'
+        return 'call random_number({0})\n'.format(printer(lhs))
 
 #==============================================================================
 class NumpyRandint(Function, NumpyNewArray):
@@ -933,6 +886,15 @@ class NumpyFull(Application, NumpyNewArray):
         # Verify array ordering
         order = NumpyNewArray._process_order(order)
 
+        # Cast fill_value to correct type
+        # TODO [YG, 09.11.2020]: treat difficult case of Complex
+        from pyccel.ast.datatypes import str_dtype
+        stype = str_dtype(dtype)
+        if stype != 'complex':
+            from pyccel.codegen.printing.fcode import python_builtin_datatypes
+            cast_func  = python_builtin_datatypes[stype]
+            fill_value = cast_func(fill_value)
+
         return Basic.__new__(cls, shape, dtype, order, precision, fill_value)
 
     #--------------------------------------------------------------------------
@@ -966,16 +928,6 @@ class NumpyFull(Application, NumpyNewArray):
 
         lhs_code = printer(lhs)
         stmts = []
-
-        # Create statement for allocation
-        if not stack_array:
-            # Transpose indices because of Fortran column-major ordering
-            shape = self.shape if self.order == 'F' else self.shape[::-1]
-
-            shape_code = ', '.join('0:' + printer(PyccelMinus(i, Integer(1))) for i in shape)
-
-            code_alloc = 'allocate({0}({1}))'.format(lhs_code, shape_code)
-            stmts.append(code_alloc)
 
         # Create statement for initialization
         if self.fill_value is not None:
@@ -1033,15 +985,16 @@ class NumpyEmpty(NumpyFull):
 class NumpyZeros(NumpyEmpty):
     """ Represents a call to numpy.zeros for code generation.
     """
+    # TODO [YG, 09.11.2020]: create Integer/Float/Complex w/ correct precision
     @property
     def fill_value(self):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
-            value = 0
+            value = Integer(0)
         elif isinstance(dtype, NativeReal):
-            value = 0.0
+            value = Float(0.)
         elif isinstance(dtype, NativeComplex):
-            value = 0.0
+            value = Complex(Float(0.), Float(0.))
         elif isinstance(dtype, NativeBool):
             value = BooleanFalse()
         else:
@@ -1052,15 +1005,16 @@ class NumpyZeros(NumpyEmpty):
 class NumpyOnes(NumpyEmpty):
     """ Represents a call to numpy.ones for code generation.
     """
+    # TODO [YG, 09.11.2020]: create Integer/Float/Complex w/ correct precision
     @property
     def fill_value(self):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
-            value = 1
+            value = Integer(1)
         elif isinstance(dtype, NativeReal):
-            value = 1.0
+            value = Float(1.)
         elif isinstance(dtype, NativeComplex):
-            value = 1.0
+            value = Complex(Float(1.), Float(0.))
         elif isinstance(dtype, NativeBool):
             value = BooleanTrue()
         else:
