@@ -19,7 +19,6 @@ __all__ = ['random_string', 'get_source_function', 'epyccel_seq', 'epyccel']
 random_selector = random.SystemRandom()
 
 def random_string( n ):
-    # we remove uppercase letters because of f2py
     chars    = string.ascii_lowercase + string.digits
     return ''.join( random_selector.choice( chars ) for _ in range(n) )
 
@@ -154,7 +153,7 @@ def epyccel_seq(function_or_module, *,
 
     # If Python object was function, extract it from module
     if isinstance(function_or_module, FunctionType):
-        func = getattr(package, pyfunc.__name__.lower())
+        func = getattr(package, pyfunc.__name__)
     else:
         func = None
 

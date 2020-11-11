@@ -21,7 +21,6 @@ pyccel_external_lib = {"mpi4py"             : "pyccel.stdlib.external.mpi4py",
 
 #==============================================================================
 def random_string( n ):
-    # we remove uppercase letters because of f2py
     chars    = string.ascii_lowercase + string.digits
     selector = random.SystemRandom()
     return ''.join( selector.choice( chars ) for _ in range( n ) )
