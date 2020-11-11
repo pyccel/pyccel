@@ -415,7 +415,7 @@ class CWrapperCodePrinter(CCodePrinter):
             # Loop for all res in every functions and create the corresponding body and cast
             for r in func.results :
                 collect_var, cast_func = self.get_PyBuildValue(used_names, r)
-                tmp_vars[collect_var.name] = collect_var
+                tmp_vars[r.name] = r
                 if cast_func is not None:
                     body.append(cast_func)
                     tmp_vars[collect_var.name] = collect_var
