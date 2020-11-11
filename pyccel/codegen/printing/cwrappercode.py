@@ -351,7 +351,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
                 # NOT WORKING FOR THE MOMENT : Managing valued variable
                 if isinstance(b, ValuedVariable):
-                    check = PyccelAssociativeParenthesis(PyccelOr(check, PyccelEq(VariableAddress(a), VariableAddress(Py_None))))
+                    check = PyccelAssociativeParenthesis(PyccelOr(PyccelEq(VariableAddress(a), VariableAddress(Py_None)), check))
                     default_value = self.get_default_assign(parse_args[-1], a)
                     wrapper_body.append(default_value) if default_value not in wrapper_body else wrapper_body
                     if not b._is_optional :
