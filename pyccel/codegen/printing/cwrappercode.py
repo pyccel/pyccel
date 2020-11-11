@@ -422,7 +422,9 @@ class CWrapperCodePrinter(CCodePrinter):
             self._to_free_PyObject_list.clear()
 
             # Building Mini wrapper function
-            func_name = self.get_new_name(used_names, 'mini_wrapper')
+            func_name = self.get_new_name(used_names.union(self._global_names), 'mini_wrapper')
+            self._global_names.add(func_name)
+
             func_def = FunctionDef(name = func_name,
                 arguments = parse_args,
                 results = wrapper_results,
@@ -433,7 +435,9 @@ class CWrapperCodePrinter(CCodePrinter):
             body_tmp.append((PyccelAnd(*cond), [AliasAssign(wrapper_results[0], FunctionCall(func_def, parse_args))]))
 
         # Errors management
-        error_func_name = self.get_new_name(used_names, 'error_check')
+        error_func_name = self.get_new_name(used_names.union(self._global_names), 'error_check')
+        self._global_names.add(error_func_name)
+
         error_body = []
         for a in errors_dict:
             check = PyccelNot(PyccelAssociativeParenthesis(PyccelOr(*[x[1] for x in errors_dict[a]])))
