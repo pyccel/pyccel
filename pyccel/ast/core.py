@@ -3684,14 +3684,16 @@ class FunctionDef(Basic):
                 self._is_static,
                 self._imports,
                 self._decorators,
-                self._header,
+                self._headers,
+                self._templates,
                 self._is_recursive,
                 self._is_pure,
                 self._is_elemental,
                 self._is_private,
                 self._is_header,
                 self._arguments_inout,
-                self._functions
+                self._functions,
+                self._interfaces
             )
         return args
 

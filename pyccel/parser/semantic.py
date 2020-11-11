@@ -224,7 +224,7 @@ class SemanticParser(BasicParser):
             target_headers = target.intersection(self.namespace.headers.keys())
 
             for name in list(target_headers):
-                v = self.namespace.headers[name]
+                v = self.namespace.headers[name][0]
                 if isinstance(v, FunctionHeader) and not isinstance(v,
                         MethodHeader):
                     F = self.get_function(name)
