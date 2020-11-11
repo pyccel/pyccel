@@ -360,7 +360,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_vars = {a.name : a for a in parse_args}
 
         # Collect argument names for PyArgParse
-        arg_names         = [a.name for a in parse_args]
+        arg_names         = [a.name for a in funcs[0].arguments]
         keyword_list_name = self.get_new_name(used_names,'kwlist')
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
         wrapper_body              = [keyword_list]
@@ -377,12 +377,13 @@ class CWrapperCodePrinter(CCodePrinter):
             cond = []
             body = []
             res_args = []
-            tmp_vars = []
+            tmp_vars = {}
             # Loop for all args in every functions and create the corresponding condition and body
             for a, b in zip(parse_args, func.arguments):
                 check = FunctionCall(PyType_Check(b.dtype), [a]) # get check type function
                 assign = [Assign(b, self.get_collect_function_call(b, a))] # get collect function
                 errors_dict.setdefault(b, set()).add((b.dtype, check)) # collect variable type for each arguments
+                tmp_vars[b.name] = b
 
                 # NOT WORKING FOR THE MOMENT : Managing valued variable
                 if isinstance(b, ValuedVariable):
@@ -393,8 +394,9 @@ class CWrapperCodePrinter(CCodePrinter):
                         assign = [Assign(b, IfTernaryOperator(PyccelNe(VariableAddress(a), VariableAddress(Py_None)),
                             self.get_collect_function_call(b, a), b.value))]
                     else :  # NOT WORKING FOR THE MOMENT : Managing optional variable
-                        tmp_vars.append(Variable(dtype=b.dtype, name = self.get_new_name(used_names, b.name+"_tmp")))
-                        assign = [Assign(tmp_vars[-1], self.get_collect_function_call(tmp_vars[-1], a)), Assign(VariableAddress(b), VariableAddress(tmp_vars[-1]))]
+                        tmp_var = Variable(dtype=b.dtype, name = self.get_new_name(used_names, b.name+"_tmp"))
+                        tmp_vars[tmp_var.name] = tmp_var
+                        assign = [Assign(tmp_var, self.get_collect_function_call(tmp_var, a)), Assign(VariableAddress(b), VariableAddress(tmp_vars[-1]))]
                         assign = [If((PyccelEq(VariableAddress(a), VariableAddress(Py_None)),
                                     [Assign(VariableAddress(b), b.value)]), (BooleanTrue(), assign))]#
 
@@ -411,9 +413,10 @@ class CWrapperCodePrinter(CCodePrinter):
             # Loop for all res in every functions and create the corresponding body and cast
             for r in func.results :
                 collect_var, cast_func = self.get_PyBuildValue(used_names, r)
+                tmp_vars[collect_var.name] = collect_var
                 if cast_func is not None:
                     body.append(cast_func)
-                    tmp_vars.append(collect_var)
+                    tmp_vars[collect_var.name] = collect_var
                 res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
 
             # Building PybuildValue and freeing the allocated variable after.
@@ -429,7 +432,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 arguments = parse_args,
                 results = wrapper_results,
                 body = body + [Return(wrapper_results)],
-                local_vars = list(func.arguments) + tmp_vars + list(func.results))
+                local_vars = tmp_vars.values())
             funcs_def.append(func_def)
             cond = [BooleanTrue()] if not cond else cond # temporary to active some tests  for 0 args
             body_tmp.append((PyccelAnd(*cond), [AliasAssign(wrapper_results[0], FunctionCall(func_def, parse_args))]))
