@@ -390,7 +390,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     default_value = self.get_default_assign(parse_args[-1], a)
                     wrapper_body.append(default_value) if default_value not in wrapper_body else wrapper_body
                     if not b._is_optional :
-                        assign = [Assign(b, IfTernaryOperator(PyccelEq(VariableAddress(a), VariableAddress(Py_None)),
+                        assign = [Assign(b, IfTernaryOperator(PyccelNe(VariableAddress(a), VariableAddress(Py_None)),
                             self.get_collect_function_call(b, a), b.value))]
                     else :  # NOT WORKING FOR THE MOMENT : Managing optional variable
                         tmp_vars.append(Variable(dtype=b.dtype, name = self.get_new_name(used_names, b.name+"_tmp")))
