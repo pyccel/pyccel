@@ -359,8 +359,9 @@ class CWrapperCodePrinter(CCodePrinter):
                             self.get_collect_function_call(b, a), b.value))]
                     else :  # NOT WORKING FOR THE MOMENT : Managing optional variable
                         tmp_vars.append(Variable(dtype=b.dtype, name = self.get_new_name(used_names, b.name+"_tmp")))
-                        assign = [Assign(tmp_vars[-1], self.get_collect_function_call(tmp_vars[-1], a))]
-                        assign += [Assign(VariableAddress(b), VariableAddress(tmp_vars[-1]))]
+                        assign = [Assign(tmp_vars[-1], self.get_collect_function_call(tmp_vars[-1], a)), Assign(VariableAddress(b), VariableAddress(tmp_vars[-1]))]
+                        assign = [If((PyccelEq(VariableAddress(a), VariableAddress(Py_None)),
+                                    [Assign(VariableAddress(b), b.value)]), (BooleanTrue(), assign))]#
 
                 cond.append(check)
                 body += assign
