@@ -371,6 +371,8 @@ class CWrapperCodePrinter(CCodePrinter):
         # To store the mini function responsible of collecting value and calling interfaces functions and return the builded value
         funcs_def = []
         errors_dict = {}
+        default_value = {}
+
         # Managing the body of wrapper
         # TODO split or re use exisiting functiond in the wrapper
         for func in funcs :
@@ -388,8 +390,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 # NOT WORKING FOR THE MOMENT : Managing valued variable
                 if isinstance(b, ValuedVariable):
                     check = PyccelAssociativeParenthesis(PyccelOr(PyccelEq(VariableAddress(a), VariableAddress(Py_None)), check))
-                    default_value = self.get_default_assign(parse_args[-1], a)
-                    wrapper_body.append(default_value) if default_value not in wrapper_body else wrapper_body
+                    default_value[a.name] =  self.get_default_assign(a, b)
+
                     if not b._is_optional :
                         assign = [Assign(b, IfTernaryOperator(PyccelNe(VariableAddress(a), VariableAddress(Py_None)),
                             self.get_collect_function_call(b, a), b.value))]
@@ -460,6 +462,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Parsing Arguments
         parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, funcs[0].arguments, parse_args, keyword_list)
+        wrapper_body += list(default_value.values())
         wrapper_body.append(If((PyccelNot(parse_node), [Return([Nil()])])))
 
         #finishing the wrapper body
