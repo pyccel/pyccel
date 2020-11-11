@@ -429,7 +429,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 body = body + [Return(wrapper_results)],
                 local_vars = list(func.arguments) + tmp_vars + list(func.results))
             funcs_def.append(func_def)
-
+            cond = [BooleanTrue()] if not cond else cond # temporary to active some tests  for 0 args
             body_tmp.append((PyccelAnd(*cond), [AliasAssign(wrapper_results[0], FunctionCall(func_def, parse_args))]))
 
         # Errors management
