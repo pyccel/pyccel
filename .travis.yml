@@ -144,10 +144,5 @@ jobs:
       - dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
       - cd -
 
-    before_script:
-      # Call f2py once (it will fail) to clear some cache
-      - echo -e "subroutine foo()\nend subroutine\n" > faily.f90
-      - ${PYTHON} -m numpy.f2py -c -m faily faily.f90 || true
-      - rm faily.f90
-
+    before_script: null
     after_script : null
