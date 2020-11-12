@@ -658,6 +658,16 @@ class SyntaxParser(BasicParser):
                                         severity='error')
 
                 tp_name = comb_types.args[0]
+                if isinstance(tp_name, ValuedArgument):
+                    arg_name = tp_name.name
+                    tp_name = tp_name.value
+                    if not arg_name == 'name':
+                        msg = 'Argument "{}" provided to the template decorator is not valid'.format(arg_name)
+                        errors.report(msg,
+                                        symbol = comb_types,
+                                        bounding_box = (stmt.lineno, stmt.col_offset),
+                                        severity='error')
+
                 ls = comb_types.args[1]
                 if isinstance(ls, ValuedArgument):
                     arg_name = ls.name
