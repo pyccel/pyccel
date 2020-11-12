@@ -31,7 +31,7 @@ from pyccel.ast.numpyext import Tuple, PythonTuple
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 from pyccel.ast.core import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core import FunctionAddress
-from pyccel.ast.core import Declare, ValuedVariable
+from pyccel.ast.core import ValuedVariable
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -609,31 +609,67 @@ class CCodePrinter(CodePrinter):
             return '{0}{1}({2})'.format(ret_type, name, arg_code)
 
     def _print_IndexedElement(self, expr):
-
         if isinstance(expr.base, IndexedVariable):
             base = expr.base.internal_variable
         else:
             base = expr.base
         base = self._print(expr.base.label)
         inds = list(expr.indices)
-        print(inds)
+        inds = inds[::-1]
         base_shape = Shape(expr.base)
         allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
                 expr.base.internal_variable.allows_negative_indexes)
-
         for i, ind in enumerate(inds):
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], Integer):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0])
             else:
+                if isinstance(ind, Slice):
+                    #setting the slice start and end to their correct value if none is provided
+                    start = ind.start
+                    end = ind.end
+                    if ind.start is None:
+                        start = 0
+                    if ind.end is None:
+                        end = expr.base.shape[i]
+                    inds[i].__new__(Slice, start, end)
                 #indices of indexedElement of len==1 shouldn't be a Tuple
                 if isinstance(ind, Tuple) and len(ind) == 1:
-                    inds[i] = ind[0]
+                    inds[i].args = ind[0]
                 if allow_negative_indexes and not isinstance(ind, Integer):
                     inds[i] = PyccelMod(ind, base_shape[i])
-
         inds = [self._print(i) for i in inds]
+        #set dtype to the C struct types
         dtype = self.find_in_dtype_registry(format(expr.dtype), expr.precision, array=True)
-        return "%s.nd_%s[get_index(%s)]" % (base, dtype,", ".join(inds[::-1]))
+        if expr.rank > 0:
+            return "array_slicing(%s, %s)" % (base, ", ".join(inds))
+        return "%s.nd_%s[get_index(%s, %s)]" % (base, dtype, base, ", ".join(inds))
+
+    def _print_Allocate(self, expr):
+        free_code = ''
+        #free the array if its already allocated
+        if  (expr.status != 'unallocated'):
+            free_code = 'if (%s.raw_data != NULL)\n' % self._print(expr.variable.name)
+            free_code += '{\nfree_array(%s);\n}\n' % self._print(expr.variable.name)
+        self._additional_imports.add('ndarrays')
+        shape = ", ".join(str(a) for a in expr.shape)
+        dtype = self.find_in_dtype_registry(format(expr.variable.dtype), expr.variable.precision, array=True)
+        shape_name = "shape_dummy_%s" % format(expr.__hash__()%991)
+        init_shape = "int %s[] = {%s};" % (shape_name, shape)
+        alloc_code = "{} = array_create({}, {}, nd_{});".format(expr.variable, len(expr.shape), shape_name, dtype)
+        return '{}{}\n{}'.format(free_code, init_shape, alloc_code)
+
+    def _print_Slice(self, expr):
+        # print(expr.args)
+        if expr.start is None or  isinstance(expr.start, Nil):
+            start = '-1'
+        else:
+            start = self._print(expr.start)
+        if (expr.end is None) or isinstance(expr.end, Nil):
+            end = '-1'
+        else:
+            end = self._print(expr.end)
+        
+        return 'new_slice({}, {}, {})'.format(start, end, 1)
 
     def _print_NumpyUfuncBase(self, expr):
         """ Convert a Python expression with a Numpy function call to C
@@ -754,7 +790,7 @@ class CCodePrinter(CodePrinter):
         return ('{sep}\n'
                 '{signature}\n{{\n'
                 '{imports}\n'
-                '{decs}\n'
+                '{decs}\n\n'
                 '{body}\n'
                 '}}\n{sep}'.format(
                     sep = sep,
@@ -901,27 +937,30 @@ class CCodePrinter(CodePrinter):
         rhs_code = self._print(expr.rhs)
         return "{0} {1}= {2};".format(lhs_code, op, rhs_code)
 
-
     def _print_Assign(self, expr):
         lhs = self._print(expr.lhs)
         rhs = expr.rhs
-        dtype = self.find_in_dtype_registry(format(rhs.dtype), rhs.precision, array=True)
         if isinstance(rhs, (NumpyArray)):
-            self._additional_imports.add('ndarrays')
-            # stack_array = False
-            return rhs.cprint(self._print, expr.lhs, dtype) + '\n'
+            dummy_array_name = "dummy_%s" % (rhs.__hash__()%991)
+            dtype = self.find_in_dtype_registry(format(rhs.dtype), rhs.precision)
+            arg = rhs.arg
+            if rhs.rank > 1:
+                import functools
+                import operator
+                arg = functools.reduce(operator.concat, arg)
+            dummy_array = "%s %s[] = {%s};" % (dtype, dummy_array_name, ', '.join(self._print(i) for i in arg))
+            dtype = self.find_in_dtype_registry(format(rhs.dtype), rhs.precision, array=True)
+            cpy_data = "memcpy({0}.nd_{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
+            return  '%s\n%s\n' % (dummy_array, cpy_data)
+
 
         if isinstance(rhs, (NumpyFull)):
-
-            stack_array = False
-            # if self._current_function:
-            #     name = self._current_function
-            #     func = self.get_function(name)
-            #     lhs_name = expr.lhs.name
-            #     vars_dict = {i.name: i for i in func.local_vars}
-            #     if lhs_name in vars_dict:
-            #         stack_array = vars_dict[lhs_name].is_stack_array
-            return rhs.cprint(self._print, expr.lhs, dtype, stack_array)
+            code_init = ''
+            if rhs.fill_value is not None:
+                code_init = 'array_fill({0}, {1});'.format(self._print(rhs.fill_value), lhs)
+            if len(code_init) == 0:
+                return ''
+            return '{}\n'.format(code_init)
 
         if isinstance(expr.rhs, FunctionCall) and isinstance(expr.rhs.dtype, NativeTuple):
             self._temporary_args = [VariableAddress(a) for a in expr.lhs]
