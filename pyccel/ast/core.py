@@ -3812,7 +3812,29 @@ class FunctionDef(Basic):
 
 class Interface(Basic):
 
-    """Represent an Interface"""
+    """Represents an Interface.
+
+    Parameters
+    ----------
+    name : str
+        The name of the interface.
+
+    functions : iterable
+        The functions of the interface.
+
+    hide: bool
+        if True, the interface definition will not be generated.
+
+    is_argument: bool
+        True if the interface is used for a function argument.
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Interface, FunctionDef
+    >>> f = FunctionDef('F', [], [], [])
+    >>> Interface('I', [f])
+    """
+
     def __new__( cls, *args, **kwargs ):
         return Basic.__new__(cls)
 
