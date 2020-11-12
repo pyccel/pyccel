@@ -2716,11 +2716,8 @@ class SemanticParser(BasicParser):
 
         else:
             for f in funcs:
-                #TODO add new scope for the interface
                 self.insert_function(f)
 
-            self.create_new_function_scope(name, decorators)
-            self.exit_function_scope()
             funcs = Interface(name, funcs)
             self.insert_function(funcs)
 #        TODO move this to codegen
