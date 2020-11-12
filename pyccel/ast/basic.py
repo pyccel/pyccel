@@ -6,7 +6,7 @@ __all__ = ('Basic', 'PyccelAstNode')
 class Basic(sp_Basic):
     """Basic class for Pyccel AST."""
     _fst = None
-
+    __slots__ = []
     def set_fst(self, fst):
         """Sets the python.ast fst."""
         self._fst = fst
