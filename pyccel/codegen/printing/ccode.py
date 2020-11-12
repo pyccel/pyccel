@@ -631,7 +631,7 @@ class CCodePrinter(CodePrinter):
                         start = 0
                     if ind.end is None:
                         end = expr.base.shape[i]
-                    inds[i].__new__(Slice, start, end)
+                    inds[i] = Slice.__new__(Slice, start, end)
                 #indices of indexedElement of len==1 shouldn't be a Tuple
                 if isinstance(ind, Tuple) and len(ind) == 1:
                     inds[i].args = ind[0]
