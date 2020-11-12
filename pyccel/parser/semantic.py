@@ -521,11 +521,13 @@ class SemanticParser(BasicParser):
         return headers
 
     def get_templates(self):
-        """."""
+        """Returns templates of the current scope and all its parents scopes"""
         container = self.namespace
         templates = []
         while container:
-            templates += container.templates
+            templates_names = [tmplt.name for tmplt in templates]
+            templates += [tmplt for tmplt in container.templates if tmplt.name not
+                    in templates_names]
             container = container.parent_scope
         return templates
 
