@@ -14,13 +14,16 @@ t_ndarray   array_create(int nd, int *shape, enum e_types type)
     {
         case nd_bool:
             arr.type_size = sizeof(bool);
+            break;
         case nd_sint:
             arr.type_size = sizeof(short int);
+            break;
         case nd_int:
             arr.type_size = sizeof(int);
             break;
         case nd_long:
             arr.type_size = sizeof(long);
+            break;
         case nd_float:
             arr.type_size = sizeof(float);
             break;
@@ -29,6 +32,7 @@ t_ndarray   array_create(int nd, int *shape, enum e_types type)
             break;
         case nd_cfloat:
             arr.type_size = sizeof(float complex);
+            break;
         case nd_cdouble:
             arr.type_size = sizeof(double complex);
             break;

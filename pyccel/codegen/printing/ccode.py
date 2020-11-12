@@ -7,14 +7,8 @@ from pyccel.ast.core import Nil, PyccelAssociativeParenthesis
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import SeparatorComment, VariableAddress
 from pyccel.ast.core import DottedName
-from sympy.core.function import Function, Application
 
-from pyccel.ast.core import (AliasAssign,
-                             TupleVariable, Declare,
-                             IndexedVariable, CodeBlock,
-                             IndexedElement, Slice, Dlist,
-                             AsName,
-                             If, PyccelArraySize)
+from pyccel.ast.core import Declare, IndexedVariable, Slice
 
 from pyccel.ast.core import PyccelAdd, PyccelMul, String, PyccelMinus
 from pyccel.ast.core      import PyccelUnarySub, PyccelMod
@@ -26,7 +20,7 @@ from pyccel.ast.numpyext import NumpyFloat
 from pyccel.ast.numpyext import NumpyReal, NumpyImag
 from pyccel.ast.numpyext import NumpyFull, NumpyArray
 from pyccel.ast.numpyext import Shape
-from pyccel.ast.numpyext import Tuple, PythonTuple
+from pyccel.ast.numpyext import Tuple
 
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 from pyccel.ast.core import FuncAddressDeclare, FunctionCall
@@ -668,7 +662,6 @@ class CCodePrinter(CodePrinter):
             end = '-1'
         else:
             end = self._print(expr.end)
-        
         return 'new_slice({}, {}, {})'.format(start, end, 1)
 
     def _print_NumpyUfuncBase(self, expr):
