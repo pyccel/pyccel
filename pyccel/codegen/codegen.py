@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from pyccel.codegen.printing.fcode  import fcode
-from pyccel.codegen.printing.ccode  import ccode
-from pyccel.codegen.printing.pycode import pycode
+from pyccel.codegen.printing.fcode  import FCodePrinter
+from pyccel.codegen.printing.ccode  import CCodePrinter
+from pyccel.codegen.printing.pycode import PythonCodePrinter
 
 from pyccel.ast.core      import FunctionDef, Module, Program, Interface, ModuleHeader
 from pyccel.ast.core      import EmptyNode, NewLine, Comment, CommentBlock
@@ -12,7 +12,11 @@ from pyccel.errors.errors import Errors
 
 _extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
 _header_extension_registry = {'fortran': None, 'c':'h',  'python':None}
-printer_registry    = {'fortran':fcode, 'c':ccode, 'python':pycode}
+printer_registry    = {
+                        'fortran':FCodePrinter,
+                        'c':CCodePrinter,
+                        'python':PythonCodePrinter
+                      }
 
 
 class Codegen(object):
@@ -31,6 +35,7 @@ class Codegen(object):
         self._parser   = parser
         self._ast      = parser.ast
         self._name     = name
+        self._printer  = None
         self._kind     = None
         self._code     = None
         self._language = None
@@ -149,6 +154,10 @@ class Codegen(object):
 
         return self._code
 
+    def get_printer(self):
+        """return the current codeprinter instance"""
+        return self._printer
+
     def _collect_statements(self):
         """Collects statements and split them into routines, classes, etc."""
 
@@ -228,16 +237,17 @@ class Codegen(object):
 
         self._language = language
 
-        # ... define the printing function to be used
-
-        printer = printer_registry[language]
+        # Define the printing class to be used
+        code_printer = printer_registry[language]
 
         errors = Errors()
         errors.set_parser_stage('codegen')
 
-        code = printer(self.expr, parser=self.parser, **settings)
+        # Get the code printed
+        self._printer = code_printer(self.parser, **settings)
+        code = self.get_printer().doprint(self.expr)
 
-        self._code = code
+        self._code      = code
 
         return code
 
@@ -262,14 +272,10 @@ class Codegen(object):
                 f.write(line)
 
         if header_ext is not None and self.is_module:
-            printer = printer_registry[self.language]
-
-            settings.pop('language', 'fortran')
-            code = printer(ModuleHeader(self.expr), parser=self.parser, **settings)
+            # Get the code printed
+            code = self.get_printer().doprint(ModuleHeader(self.expr), assign_to=None)
             with open(header_filename, 'w') as f:
                 for line in code:
                     f.write(line)
 
         return filename
-
-
