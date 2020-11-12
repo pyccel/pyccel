@@ -235,9 +235,13 @@ class FunctionHeader(Header):
         #TODO: handle the case of functions arguments
         templates_names = [i.name for i in templates]
         arg_codes = []
+
+        #generate possible combinations from uniontypes and iterate through them
         for iterx in product(*dtypes):
             iterx = list(iterx)
             old_values = {}
+            #For each template type, replace only one in each combination, by
+            #a list of its args
             for i, j in enumerate(iterx):
                 if 'datatype' in j and j['datatype'] in templates_names and not j['datatype'] in old_values:
                     tmplt = templates_names.index(j['datatype'])
@@ -245,6 +249,8 @@ class FunctionHeader(Header):
                     old_values[j['datatype']] = i
                 else:
                     iterx[i] = [j]
+            #generate combinations using product, and replace remaining
+            #templates with its appropriates values
             for itery in product(*iterx):
                 itery = list(itery)
                 for j, i in enumerate(itery):
