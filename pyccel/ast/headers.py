@@ -182,7 +182,7 @@ class FunctionHeader(Header):
     def is_static(self):
         return self._args[4]
 
-    def create_definition(self, templates = []):
+    def create_definition(self, templates = ()):
         """Returns a FunctionDef with empy body."""
         # TODO factorize what can be factorized
         from itertools import product
