@@ -377,7 +377,7 @@ class SemanticParser(BasicParser):
             raise TypeError('Expected A class definition ')
 
     def insert_template(self, expr):
-        """insert a template"""
+        """append the scope's templates with the given template"""
         self.namespace.templates.append(expr)
 
     def insert_header(self, expr):
