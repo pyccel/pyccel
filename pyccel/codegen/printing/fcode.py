@@ -1142,7 +1142,7 @@ class FCodePrinter(CodePrinter):
             # we should append them to the procedure arguments
             if isinstance(expr.lhs, (tuple, list, Tuple, PythonTuple)):
 
-                rhs_code = self._print(rhs.func)
+                rhs_code = rhs.funcdef.name
                 args = rhs.arguments
                 code_args = [self._print(i) for i in args]
                 func = rhs.funcdef
