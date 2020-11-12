@@ -624,7 +624,7 @@ class SyntaxParser(BasicParser):
         # TODO improve later
         decorators = {}
         for d in self._visit(stmt.decorator_list):
-            tmp_var = str(d, Symbol) if isinstance(d, Symbol) else str(type(d))
+            tmp_var = str(d) if isinstance(d, Symbol) else str(type(d))
             if tmp_var in decorators:
                 if isinstance(decorators[tmp_var], list):
                     decorators[tmp_var] += [d]
