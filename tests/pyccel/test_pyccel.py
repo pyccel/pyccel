@@ -385,13 +385,7 @@ def test_expressions(language):
             [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex] + [bool]*9
     pyccel_test("scripts/expressions.py", language=language,
                 output_dtype = types)
-#------------------------------------------------------------------------------
-def test_highorder():
-    pyccel_test("scripts/runtest_highorder_functions.py",
-            dependencies = "scripts/highorder_functions.py",
-            compile_with_pyccel = False,
-            output_dtype = [int,int,float,float,float,int,float,
-                float, int])
+
 #------------------------------------------------------------------------------
 def test_generic_functions():
     pyccel_test("scripts/runtest_generic_functions.py",
@@ -399,6 +393,7 @@ def test_generic_functions():
             compile_with_pyccel = False,
             output_dtype = [float,float,float,float,float,complex,
                     float,float,float,float,float,float,float])
+
 #------------------------------------------------------------------------------
 def test_default_arguments():
     pyccel_test("scripts/runtest_default_args.py",

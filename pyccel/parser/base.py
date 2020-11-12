@@ -111,7 +111,7 @@ def get_filename_from_import(module,input_folder=''):
 class Scope(object):
     """."""
 
-    def __init__(self):
+    def __init__(self, *, headers=None, decorators=None):
 
         self._imports = OrderedDict()
 
@@ -127,8 +127,9 @@ class Scope(object):
         self._classes   = OrderedDict()
         self._functions = OrderedDict()
         self._macros    = OrderedDict()
-        self._headers   = OrderedDict()
         self._templates = []
+        self._headers   = headers    or OrderedDict()
+        self._decorators= decorators or OrderedDict()
 
         # TODO use another name for headers
         #      => reserved keyword, or use __
@@ -142,6 +143,36 @@ class Scope(object):
         self._is_loop = False
         # scoping for loops
         self._loops = []
+
+    def new_child_scope(self, name, **kwargs):
+        """
+        Create a new child Scope object which has the current object as parent.
+
+        The parent scope can access the child scope through the '_sons_scopes'
+        dictionary, using the provided name as key. Conversely, the child scope
+        can access the parent scope through the 'parent_scope' attribute.
+
+        Parameters
+        ----------
+        name : str
+            Name of the new scope, used as a key to retrieve the new scope.
+
+        kwargs : dict
+            Keyword arguments passed to __init__() for object initialization.
+
+        Returns
+        -------
+        child : Scope
+            New child scope, which has the current object as parent.
+
+        """
+
+        child = Scope(**kwargs)
+
+        self._sons_scopes[name] = child
+        child.parent_scope = self
+
+        return child
 
     @property
     def imports(self):
@@ -170,6 +201,11 @@ class Scope(object):
     @property
     def templates(self):
         return self._templates
+
+    @property
+    def decorators(self):
+        """Dictionary of Pyccel decorators applied to a function definition."""
+        return self._decorators
 
     @property
     def static_functions(self):
@@ -313,6 +349,11 @@ class BasicParser(object):
     @property
     def current_class(self):
         return self._current_class
+
+    @property
+    def current_function(self):
+        """Name of current function, if any."""
+        return self._current_function
 
     @property
     def syntax_done(self):

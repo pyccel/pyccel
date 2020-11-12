@@ -24,8 +24,8 @@ ListType : '[' dtype+=Type[','] ']';
 FuncType: '('(results*=TypeHeader[','])?')' '('decs*=TypeHeader[',']')';
 
 TypeHeader: FuncType|Type|ListType;
-UnionTypeStmt:  dtype+=TypeHeader['|'] ;
-
+UnionTypeStmt: (const=Const)? dtype+=TypeHeader['|'] ;
+Const: 'const';
 
 VariableHeaderStmt: 'variable'  name=ID ('::')? dec=TypeHeader;
 
