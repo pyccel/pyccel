@@ -232,7 +232,7 @@ class FunctionHeader(Header):
             else:
                 raise TypeError('element must be of type UnionType or dict')
 
-        #TODO: handel the case of functions arguments
+        #TODO: handle the case of functions arguments
         templates_names = [i.name for i in templates]
         arg_codes = []
         for iterx in product(*dtypes):
