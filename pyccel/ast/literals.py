@@ -1,9 +1,9 @@
 """ This module contains all literal types
 """
+from sympy               import Expr
 from sympy               import Integer as sp_Integer
 from sympy               import Float as sp_Float
 from sympy.logic.boolalg import BooleanTrue as sp_BooleanTrue, BooleanFalse as sp_BooleanFalse
-from sympy.core.expr     import Expr
 
 from .basic              import PyccelAstNode, Basic
 from .datatypes          import (NativeInteger, NativeBool, NativeReal,
@@ -59,13 +59,13 @@ class LiteralFloat(sp_Float, Literal):
     _precision = default_precision['real']
 
 #------------------------------------------------------------------------------
-class LiteralComplex(Expr, Literal):
+class LiteralComplex(Basic, Literal):
     """Represents a complex literal in python"""
     _dtype     = NativeComplex()
     _precision = default_precision['complex']
 
     def __new__(cls, real, imag):
-        return Expr.__new__(cls)
+        return Basic.__new__(cls, real, imag)
 
     def __init__(self, real, imag):
         self._real_part = real
@@ -82,10 +82,13 @@ class LiteralComplex(Expr, Literal):
         return self._imag_part
 
 #------------------------------------------------------------------------------
-class LiteralImaginaryUnit(Expr, Literal):
+class LiteralImaginaryUnit(LiteralComplex, Literal):
     """Represents the python value j"""
-    _dtype     = NativeComplex()
-    _precision = default_precision['complex']
+    def __new__(cls):
+        return LiteralComplex.__new__(cls, 0, 1)
+
+    def __init__(self):
+        return LiteralComplex.__init__(self)
 
 #------------------------------------------------------------------------------
 class LiteralString(Basic, Literal):
