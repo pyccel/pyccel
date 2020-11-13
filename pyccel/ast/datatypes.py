@@ -109,6 +109,7 @@ class DataType(with_metaclass(Singleton, Basic)):
     """Base class representing native datatypes"""
     _name = '__UNDEFINED__'
 
+    __slots__ = []
     @property
     def name(self):
         return self._name
@@ -296,7 +297,6 @@ def datatype(arg):
         DataType
 
     """
-
 
     if isinstance(arg, str):
         if arg.lower() not in dtype_registry:
