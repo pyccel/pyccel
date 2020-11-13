@@ -23,11 +23,11 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, Nativ
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
 from pyccel.ast.cwrapper import Py_None
-from pyccel.ast.cwrapper import PyErr_SetString, PyType_Check
+from pyccel.ast.cwrapper import PyErr_SetString, PyType_Check_2
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 from pyccel.ast.cwrapper import PyccelPyArrayObject
 from pyccel.ast.cwrapper import numpy_get_ndims, numpy_get_data, numpy_get_dim
-from pyccel.ast.cwrapper import numpy_get_type, numpy_dtype_registry
+from pyccel.ast.cwrapper import numpy_get_type, numpy_dtype_registry, check_type_registry_2
 from pyccel.ast.cwrapper import numpy_check_flag, numpy_flag_c_contig, numpy_flag_f_contig
 
 from pyccel.ast.bind_c   import as_static_function_call
@@ -382,7 +382,7 @@ class CWrapperCodePrinter(CCodePrinter):
             tmp_vars = {}
             # Loop for all args in every functions and create the corresponding condition and body
             for a, b in zip(parse_args, func.arguments):
-                check = FunctionCall(PyType_Check(b.dtype), [a]) # get check type function
+                check = PyType_Check_2(b, a) # get check type function
                 assign = [Assign(b, self.get_collect_function_call(b, a))] # get collect function
                 errors_dict.setdefault(b, set()).add((b.dtype, check)) # collect variable type for each arguments
                 tmp_vars[b.name] = b

@@ -731,9 +731,9 @@ class CCodePrinter(CodePrinter):
 
         args = []
         for a, f in zip(expr.arguments, func.arguments):
-            if isinstance(a, Variable) and self.stored_in_c_pointer(f):
+            if self.stored_in_c_pointer(f):
                 args.append(VariableAddress(a))
-            elif f.is_optional and not isinstance(a, Nil):
+            elif isinstance(a, Variable) and f.is_optional and not isinstance(a, Nil):
                 tmp_var = self.create_tmp_var(f)
                 assign = Assign(tmp_var, a)
                 self._additional_code += self._print(assign) + '\n'
