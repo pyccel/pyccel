@@ -9,7 +9,7 @@ from .builtins  import PythonBool
 
 from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex
-from .datatypes import NativeBool, NativeString, NativeGeneric
+from .datatypes import NativeBool, NativeString, NativeGeneric, NativeVoid
 
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress, FunctionAddress
 from .core      import AliasAssign, Assign, Return
@@ -494,4 +494,29 @@ check_type_registry = {
     NativeComplex() : 'PyComplex_Check',
     NativeReal() : 'PyFloat_Check',
     NativeBool() : 'PyBool_Check',
+}
+
+
+pyBoolArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyBoolArrType_Type', is_pointer=True))
+PyCharacterArrType_Type =VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyCharacterArrType_Type', is_pointer=True))
+PyShortArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyShortArrType_Type', is_pointer=True))
+PyIntArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyIntArrType_Type', is_pointer=True))
+PyLongArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyLongArrType_Type', is_pointer=True))
+PyFloatArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyFloatArrType_Type', is_pointer=True))
+PyDoubleArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyDoubleArrType_Type', is_pointer=True))
+PyComplexFloatingArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyComplexFloatingArrType_Type', is_pointer=True))
+PyStringArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyStringArrType_Type', is_pointer=True))
+
+
+check_type_registry_2 = {
+    (NativeInteger(), 4)       : PyIntArrType_Type,
+    (NativeInteger(), 8)       : PyLongArrType_Type,
+    (NativeInteger(), 2)       : PyShortArrType_Type,
+    (NativeInteger(), 1)       : PyCharacterArrType_Type,
+    (NativeReal(), 8)          : PyDoubleArrType_Type,
+    (NativeReal(), 4)          : PyFloatArrType_Type,
+    (NativeComplex(), 4)       : PyComplexFloatingArrType_Type,
+    (NativeComplex(), 8)       : PyComplexFloatingArrType_Type,
+    (NativeBool(), 4)          : pyBoolArrType_Type,
+    (NativeString(), 0)        : PyStringArrType_Type
 }
