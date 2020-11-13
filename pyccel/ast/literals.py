@@ -1,3 +1,5 @@
+""" This module contains all literal types
+"""
 from .basic import PyccelAstNode
 from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float
@@ -7,30 +9,30 @@ from pyccel.ast.datatypes     import (NativeInteger, NativeBool, NativeReal,
                                   NativeComplex, default_precision)
 
 __all__ = (
-    'BooleanTrue',
-    'BooleanFalse',
-    'Integer',
-    'Float',
-    'Complex',
+    'LiteralBooleanTrue',
+    'LiteralBooleanFalse',
+    'LiteralInteger',
+    'LiteralFloat',
+    'LiteralComplex',
     'get_default_value'
 )
 
 #------------------------------------------------------------------------------
-class BooleanTrue(sp_BooleanTrue, PyccelAstNode):
+class LiteralBooleanTrue(sp_BooleanTrue, PyccelAstNode):
     _dtype     = NativeBool()
     _rank      = 0
     _shape     = ()
     _precision = default_precision['bool']
 
 #------------------------------------------------------------------------------
-class BooleanFalse(sp_BooleanFalse, PyccelAstNode):
+class LiteralBooleanFalse(sp_BooleanFalse, PyccelAstNode):
     _dtype     = NativeBool()
     _rank      = 0
     _shape     = ()
     _precision = default_precision['bool']
 
 #------------------------------------------------------------------------------
-class Integer(sp_Integer, PyccelAstNode):
+class LiteralInteger(sp_Integer, PyccelAstNode):
     _dtype     = NativeInteger()
     _rank      = 0
     _shape     = ()
@@ -42,14 +44,14 @@ class Integer(sp_Integer, PyccelAstNode):
         return obj
 
 #------------------------------------------------------------------------------
-class Float(sp_Float, PyccelAstNode):
+class LiteralFloat(sp_Float, PyccelAstNode):
     _dtype     = NativeReal()
     _rank      = 0
     _shape     = ()
     _precision = default_precision['real']
 
 #------------------------------------------------------------------------------
-class Complex(Expr, PyccelAstNode):
+class LiteralComplex(Expr, PyccelAstNode):
     _dtype     = NativeComplex()
     _rank      = 0
     _shape     = ()
@@ -64,7 +66,7 @@ class Complex(Expr, PyccelAstNode):
         return self.args[1]
 
 #------------------------------------------------------------------------------
-class ImaginaryUnit(Expr, PyccelAstNode):
+class LiteralImaginaryUnit(Expr, PyccelAstNode):
     _dtype     = NativeComplex()
     _rank      = 0
     _shape     = ()
@@ -75,13 +77,13 @@ class ImaginaryUnit(Expr, PyccelAstNode):
 def get_default_value(dtype):
     """Returns the default value of a native datatype."""
     if isinstance(dtype, NativeInteger):
-        value = Integer(0)
+        value = LiteralInteger(0)
     elif isinstance(dtype, NativeReal):
-        value = Float(0.0)
+        value = LiteralFloat(0.0)
     elif isinstance(dtype, NativeComplex):
-        value = Complex(0.0)
+        value = LiteralComplex(0.0)
     elif isinstance(dtype, NativeBool):
-        value = BooleanFalse()
+        value = LiteralBooleanFalse()
     else:
         raise TypeError('Unknown type')
     return value
