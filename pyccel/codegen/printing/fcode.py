@@ -1254,13 +1254,13 @@ class FCodePrinter(CodePrinter):
     def _print_DataType(self, expr):
         return self._print(expr.name)
 
-    def _print_BooleanTrue(self, expr):
+    def _print_LiteralBooleanTrue(self, expr):
         return '.True._{}'.format(iso_c_binding["logical"][expr.precision])
 
-    def _print_BooleanFalse(self, expr):
+    def _print_LiteralBooleanFalse(self, expr):
         return '.False._{}'.format(iso_c_binding["logical"][expr.precision])
 
-    def _print_String(self, expr):
+    def _print_LiteralString(self, expr):
         sp_chars = ['\a', '\b', '\f', '\r', '\t', '\v', "'", '\n']
         sub_str = ''
         formatted_str = "''"
@@ -2422,26 +2422,26 @@ class FCodePrinter(CodePrinter):
         code = 'sqrt({})'.format(code_args)
         return self._get_statement(code)
 
-    def _print_ImaginaryUnit(self, expr):
+    def _print_LiteralImaginaryUnit(self, expr):
         # purpose: print complex numbers nicely in Fortran.
         return "cmplx(0,1)"
 
     def _print_int(self, expr):
         return str(expr)
 
-    def _print_Float(self, expr):
+    def _print_LiteralFloat(self, expr):
         printed = CodePrinter._print_Float(self, expr)
         e = printed.find('e')
         if e > -1:
             return "%sd%s" % (printed[:e], printed[e + 1:])
         return "%s_C_DOUBLE" % printed
 
-    def _print_Complex(self, expr):
+    def _print_LiteralComplex(self, expr):
         real_str = self._print_Float(expr.real)
         imag_str = self._print_Float(expr.imag)
         return "({}, {})".format(real_str, imag_str)
 
-    def _print_Integer(self, expr):
+    def _print_LiteralInteger(self, expr):
         return "{0}_{1}".format(str(expr.p), iso_c_binding["integer"][expr.precision])
 
     def _print_IndexedElement(self, expr):

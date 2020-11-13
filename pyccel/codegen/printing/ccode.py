@@ -257,7 +257,7 @@ class CCodePrinter(CodePrinter):
         value = self._print(expr.arg)
         return '({} != 0)'.format(value)
 
-    def _print_Complex(self, expr):
+    def _print_LiteralComplex(self, expr):
         return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
                         PyccelMul(expr.imag, ImaginaryUnit()))))
 
@@ -266,7 +266,7 @@ class CCodePrinter(CodePrinter):
         return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real_part,
                         PyccelMul(expr.imag_part, ImaginaryUnit()))))
 
-    def _print_ImaginaryUnit(self, expr):
+    def _print_LiteralImaginaryUnit(self, expr):
         return '_Complex_I'
 
     def _print_ModuleHeader(self, expr):
@@ -326,10 +326,10 @@ class CCodePrinter(CodePrinter):
         value_false = self._print(expr.value_false)
         return '({cond}) ? {true} : {false}'.format(cond = cond, true =value_true, false = value_false)
 
-    def _print_BooleanTrue(self, expr):
+    def _print_LiteralBooleanTrue(self, expr):
         return '1'
 
-    def _print_BooleanFalse(self, expr):
+    def _print_LiteralBooleanFalse(self, expr):
         return '0'
 
     def _print_PyccelAnd(self, expr):
@@ -427,7 +427,7 @@ class CCodePrinter(CodePrinter):
         else:
             return '#include <{0}.h>'.format(source)
 
-    def _print_String(self, expr):
+    def _print_LiteralString(self, expr):
         format_str = format(expr.arg)
         format_str = format_str.replace("\\", "\\\\")\
                                .replace('\a', '\\a')\
