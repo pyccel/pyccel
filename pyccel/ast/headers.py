@@ -112,7 +112,7 @@ class Template(Header):
 class FunctionHeader(Header):
     """Represents function/subroutine header in the code.
 
-    func: str
+    name: str
         function/subroutine name
 
     dtypes: tuple/list
@@ -139,11 +139,11 @@ class FunctionHeader(Header):
     """
 
     # TODO dtypes should be a dictionary (useful in syntax)
-    def __new__(cls, func, dtypes,
+    def __new__(cls, name, dtypes,
                 results=None,
                 kind='function',
                 is_static=False):
-        func = str(func)
+        name = str(name)
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
 
@@ -160,10 +160,10 @@ class FunctionHeader(Header):
         if not isinstance(is_static, bool):
             raise TypeError('is_static must be a boolean')
 
-        return Basic.__new__(cls, func, dtypes, results, kind, is_static)
+        return Basic.__new__(cls, name, dtypes, results, kind, is_static)
 
     @property
-    def func(self):
+    def name(self):
         return self._args[0]
 
     @property
@@ -187,7 +187,7 @@ class FunctionHeader(Header):
         # TODO factorize what can be factorized
         from itertools import product
 
-        name = str(self.func)
+        name = str(self.name)
 
         body      = []
         cls_name  = None
@@ -304,7 +304,7 @@ class FunctionHeader(Header):
 
     def to_static(self):
         """returns a static function header. needed for bind(c)"""
-        return FunctionHeader(self.func,
+        return FunctionHeader(self.name,
                               self.dtypes,
                               self.results,
                               self.kind,
@@ -315,7 +315,7 @@ class FunctionHeader(Header):
         types = self.dtypes
         types[index]['rank'] += 1
         types[index]['allocatable'] = True
-        return FunctionHeader(self.func,
+        return FunctionHeader(self.name,
                               types,
                               self.results,
                               self.kind,
@@ -323,7 +323,7 @@ class FunctionHeader(Header):
 
     def __getnewargs__(self):
         """used for Pickling self."""
-        args = (self.func,
+        args = (self.name,
                 self.dtypes,
                 self.results,
                 self.kind,
