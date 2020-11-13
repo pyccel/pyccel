@@ -215,7 +215,7 @@ class PyBuildValueNode(Basic):
         List of arguments which the result will be buit from
     """
 
-    def __init__(self, result_args = []):
+    def __init__(self, result_args = ()):
         self._flags = ''
         self._result_args = result_args
         for i in result_args:
