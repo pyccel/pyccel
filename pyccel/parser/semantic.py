@@ -791,29 +791,25 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_AnnotatedComment(self, expr, **settings):
         return expr
+    def _visit_LiteralInteger(self, expr, **settings):
+        return LiteralInteger(expr)
+    def _visit_LiteralFloat(self, expr, **settings):
+        return expr
+    def _visit_LiteralComplex(self, expr, **settings):
+        return expr
+    def _visit_LiteralString(self, expr, **settings):
+        return expr
+    def _visit_LiteralBooleanTrue(self, expr, **settings):
+        return expr
+    def _visit_LiteralBooleanFalse(self, expr, **settings):
+        return expr
     def _visit_Integer(self, expr, **settings):
-        if isinstance(expr, LiteralInteger):
-            return expr
-        elif isinstance(expr, sp_Integer):
-            return LiteralInteger(expr)
-        else:
-            raise TypeError("LiteralInteger type is not sympy LiteralInteger or pyccel LiteralInteger")
+        """Visit sympy.Integer"""
+        return expr
     def _visit_Float(self, expr, **settings):
-        if isinstance(expr, LiteralFloat):
-            return expr
-        elif isinstance(expr, sp_Float):
-            return LiteralFloat(expr)
-        else:
-            raise TypeError("LiteralFloat type is not sympy LiteralFloat or pyccel LiteralFloat")
-    def _visit_Complex(self, expr, **settings):
-        return expr
-    def _visit_String(self, expr, **settings):
-        return expr
+        """Visit sympy.Integer"""
+        return LiteralFloat(expr)
     def _visit_PythonComplex(self, expr, **settings):
-        return expr
-    def _visit_BooleanTrue(self, expr, **settings):
-        return expr
-    def _visit_BooleanFalse(self, expr, **settings):
         return expr
     def _visit_Pass(self, expr, **settings):
         return expr
