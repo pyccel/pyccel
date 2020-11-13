@@ -731,7 +731,7 @@ class SyntaxParser(BasicParser):
                         if not arg_name == 'results':
                             msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
                             errors.report(msg,
-                                        symbol = comb_types['types'],
+                                        symbol = decorators['types'],
                                         bounding_box = (stmt.lineno, stmt.col_offset),
                                         severity='error')
                         else:
@@ -740,7 +740,7 @@ class SyntaxParser(BasicParser):
                     else:
                         msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
                         errors.report(msg,
-                                    symbol = comb_types['types'],
+                                    symbol = decorators['types'],
                                     bounding_box = (stmt.lineno, stmt.col_offset),
                                     severity='error')
     
