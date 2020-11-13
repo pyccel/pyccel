@@ -6,7 +6,7 @@ import numpy
 from sympy.core.function import Application
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
-from sympy           import (Basic, Function, Tuple, Integer as sp_Integer,
+from sympy           import (Basic, Function, Tuple, LiteralInteger as sp_Integer,
                              Rational as sp_Rational, Expr)
 
 from .core           import (PyccelPow, PyccelMinus, PyccelMul, PyccelAdd,
@@ -23,7 +23,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
                              NativeReal, NativeComplex, NativeBool, str_dtype)
 
-from .numbers        import Integer, Float, Complex
+from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
 from .basic          import PyccelAstNode
 
 
@@ -364,18 +364,18 @@ def Shape(arg):
         return PythonTuple(*arg.shape)
 
 #==============================================================================
-# TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.Float
+# TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.LiteralFloat
 class NumpyReal(Function, PyccelAstNode):
 
     """Represents a call to  numpy.real for code generation.
 
-    arg : Variable, Float, sp_Integer, Complex
+    arg : Variable, LiteralFloat, sp_Integer, LiteralComplex
     """
 
     def __new__(cls, arg):
 
         _valid_args = (Variable, IndexedElement, sp_Integer, Nil,
-                       Float, Expr, Application)
+                       LiteralFloat, Expr, Application)
 
         if not isinstance(arg, _valid_args):
             raise TypeError('Uknown type of  %s.' % type(arg))
@@ -401,7 +401,7 @@ class NumpyReal(Function, PyccelAstNode):
 
 
     def __str__(self):
-        return 'Float({0})'.format(str(self.arg))
+        return 'LiteralFloat({0})'.format(str(self.arg))
 
 
     def _sympystr(self, printer):
@@ -412,7 +412,7 @@ class NumpyImag(NumpyReal):
 
     """Represents a call to  numpy.imag for code generation.
 
-    arg : Variable, Float, sp_Integer, Complex
+    arg : Variable, LiteralFloat, sp_Integer, LiteralComplex
     """
 
     def fprint(self, printer):
@@ -437,7 +437,7 @@ class NumpyLinspace(Application, NumpyNewArray):
     def __new__(cls, *args):
 
 
-        _valid_args = (Variable, IndexedElement, Float,
+        _valid_args = (Variable, IndexedElement, LiteralFloat,
                        sp_Integer, sp_Rational)
 
         for arg in args:
@@ -516,8 +516,8 @@ class NumpyLinspace(Application, NumpyNewArray):
             start = printer(self.start),
             step  = printer(self.step ),
             index = printer(self.index),
-            zero  = printer(Integer(0)),
-            end   = printer(PyccelMinus(self.size, Integer(1))),
+            zero  = printer(LiteralInteger(0)),
+            end   = printer(PyccelMinus(self.size, LiteralInteger(1))),
         )
 
         if lhs:
@@ -887,7 +887,7 @@ class NumpyFull(Application, NumpyNewArray):
         order = NumpyNewArray._process_order(order)
 
         # Cast fill_value to correct type
-        # TODO [YG, 09.11.2020]: treat difficult case of Complex
+        # TODO [YG, 09.11.2020]: treat difficult case of LiteralComplex
         from pyccel.ast.datatypes import str_dtype
         stype = str_dtype(dtype)
         if stype != 'complex':
@@ -965,16 +965,16 @@ class NumpyEmpty(NumpyFull):
 class NumpyZeros(NumpyEmpty):
     """ Represents a call to numpy.zeros for code generation.
     """
-    # TODO [YG, 09.11.2020]: create Integer/Float/Complex w/ correct precision
+    # TODO [YG, 09.11.2020]: create LiteralInteger/LiteralFloat/LiteralComplex w/ correct precision
     @property
     def fill_value(self):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
-            value = Integer(0)
+            value = LiteralInteger(0)
         elif isinstance(dtype, NativeReal):
-            value = Float(0.)
+            value = LiteralFloat(0.)
         elif isinstance(dtype, NativeComplex):
-            value = Complex(Float(0.), Float(0.))
+            value = LiteralComplex(LiteralFloat(0.), LiteralFloat(0.))
         elif isinstance(dtype, NativeBool):
             value = BooleanFalse()
         else:
@@ -985,16 +985,16 @@ class NumpyZeros(NumpyEmpty):
 class NumpyOnes(NumpyEmpty):
     """ Represents a call to numpy.ones for code generation.
     """
-    # TODO [YG, 09.11.2020]: create Integer/Float/Complex w/ correct precision
+    # TODO [YG, 09.11.2020]: create LiteralInteger/LiteralFloat/LiteralComplex w/ correct precision
     @property
     def fill_value(self):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
-            value = Integer(1)
+            value = LiteralInteger(1)
         elif isinstance(dtype, NativeReal):
-            value = Float(1.)
+            value = LiteralFloat(1.)
         elif isinstance(dtype, NativeComplex):
-            value = Complex(Float(1.), Float(0.))
+            value = LiteralComplex(LiteralFloat(1.), LiteralFloat(0.))
         elif isinstance(dtype, NativeBool):
             value = BooleanTrue()
         else:
@@ -1101,7 +1101,7 @@ class NumpyNorm(Function, PyccelAstNode):
 #=====================================================
 class Sqrt(PyccelPow):
     def __new__(cls, base):
-        return PyccelPow(PyccelAssociativeParenthesis(base), Float(0.5))
+        return PyccelPow(PyccelAssociativeParenthesis(base), LiteralFloat(0.5))
 
 #====================================================
 
@@ -1238,7 +1238,7 @@ class NumpyMax(NumpyUfuncUnary):
 class NumpyComplex(PythonComplex):
     """ Represents a call to numpy.complex() function.
     """
-    def __new__(cls, arg0, arg1=Float(0)):
+    def __new__(cls, arg0, arg1=LiteralFloat(0)):
         return PythonComplex.__new__(cls, arg0, arg1)
 
 class NumpyComplex64(NumpyComplex):
