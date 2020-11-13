@@ -2,29 +2,30 @@
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 
-from pyccel.ast.literals   import LiteralBooleanTrue, ImaginaryUnit, LiteralFloat, LiteralInteger
-from pyccel.ast.core import Nil, PyccelAssociativeParenthesis
-from pyccel.ast.core import Assign, datatype, Variable, Import
-from pyccel.ast.core import SeparatorComment, VariableAddress
-from pyccel.ast.core import DottedName
+from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
-from pyccel.ast.core import PyccelAdd, PyccelMul, String
+from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
+from pyccel.ast.core      import FunctionAddress
+from pyccel.ast.core      import Declare, ValuedVariable
+from pyccel.ast.core      import Nil, PyccelAssociativeParenthesis
+from pyccel.ast.core      import Assign, datatype, Variable, Import
+from pyccel.ast.core      import SeparatorComment, VariableAddress
+from pyccel.ast.core      import DottedName
+from pyccel.ast.core      import PyccelAdd, PyccelMul
 
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
 
+from pyccel.ast.literals  import LiteralBooleanTrue, ImaginaryUnit, LiteralFloat
+from pyccel.ast.literals  import LiteralString
 
-from pyccel.ast.numpyext import NumpyFloat
-from pyccel.ast.numpyext import NumpyReal, NumpyImag
+from pyccel.ast.numpyext  import NumpyFloat
+from pyccel.ast.numpyext  import NumpyReal, NumpyImag
 
-from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
-from pyccel.ast.core import FuncAddressDeclare, FunctionCall
-from pyccel.ast.core import FunctionAddress
-from pyccel.ast.core import Declare, ValuedVariable
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT )
 
@@ -495,7 +496,7 @@ class CCodePrinter(CodePrinter):
 
         args_format = sep.join(args_format)
         args_format += end
-        args_format = self._print(String(args_format))
+        args_format = self._print(LiteralString(args_format))
         code = ', '.join([args_format, *args])
         return "printf({});".format(code)
 

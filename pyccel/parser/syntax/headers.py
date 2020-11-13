@@ -14,8 +14,9 @@ from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader, Vari
 from pyccel.ast.headers   import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.core      import ValuedArgument
-from pyccel.ast.core      import DottedName, String
+from pyccel.ast.core      import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
+from pyccel.ast.literals  import LiteralString
 
 DEBUG = False
 
@@ -142,7 +143,7 @@ class StringStmt(BasicStmt):
         self.arg = kwargs.pop('arg')
     @property
     def expr(self):
-        return String(repr(str(self.arg)))
+        return LiteralString(repr(str(self.arg)))
 
 class UnionTypeStmt(BasicStmt):
     def __init__(self, **kwargs):

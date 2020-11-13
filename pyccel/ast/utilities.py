@@ -11,15 +11,16 @@ import pyccel.decorators as pyccel_decorators
 from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors
 
-from .core     import (AsName, Import, FunctionDef, String, Constant,
+from .core     import (AsName, Import, FunctionDef, Constant,
                        Variable, IndexedVariable, ValuedVariable)
 
-from .builtins import builtin_functions_dict, PythonMap
-from .itertoolsext import Product
-from .mathext  import math_functions, math_constants
+from .builtins      import builtin_functions_dict, PythonMap
+from .itertoolsext  import Product
+from .mathext       import math_functions, math_constants
+from .literals      import LiteralString
 
-from .numpyext import (numpy_functions, numpy_linalg_functions,
-                       numpy_random_functions, numpy_constants)
+from .numpyext      import (numpy_functions, numpy_linalg_functions,
+                            numpy_random_functions, numpy_constants)
 
 __all__ = (
     'build_types_decorator',
@@ -157,7 +158,7 @@ def build_types_decorator(args, order=None):
             if order and a.rank > 1:
                 dtype = "{dtype}(order={ordering})".format(dtype=dtype, ordering=order)
 
-        dtype = String(dtype)
+        dtype = LiteralString(dtype)
         types.append(dtype)
 
     return types
