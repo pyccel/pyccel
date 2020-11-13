@@ -390,9 +390,9 @@ def PyType_Check(data_type):
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
     return func
 
-def PyType_Check_2(data_type, argument):
+def PyType_Check_2(data, argument):
     try :
-        check_ref = check_type_registry_2[data_type]
+        check_ref = check_type_registry_2[(data.dtype, data.precision)]
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=data_type,severity='fatal')
     func = FunctionDef(name = 'PyObject_TypeCheck',
@@ -510,15 +510,15 @@ check_type_registry = {
 }
 
 
-pyBoolArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyBoolArrType_Type', is_pointer=True))
-PyCharacterArrType_Type =VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyCharacterArrType_Type', is_pointer=True))
-PyShortArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyShortArrType_Type', is_pointer=True))
-PyIntArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyIntArrType_Type', is_pointer=True))
-PyLongArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyLongArrType_Type', is_pointer=True))
-PyFloatArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyFloatArrType_Type', is_pointer=True))
-PyDoubleArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyDoubleArrType_Type', is_pointer=True))
-PyComplexFloatingArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyComplexFloatingArrType_Type', is_pointer=True))
-PyStringArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyStringArrType_Type', is_pointer=True))
+pyBoolArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyBoolArrType_Type'))
+PyCharacterArrType_Type =VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyCharacterArrType_Type'))
+PyShortArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyShortArrType_Type'))
+PyIntArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyIntArrType_Type'))
+PyLongArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyLongArrType_Type'))
+PyFloatArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyFloatArrType_Type'))
+PyDoubleArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyDoubleArrType_Type'))
+PyComplexFloatingArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyComplexFloatingArrType_Type'))
+PyStringArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyStringArrType_Type'))
 
 
 check_type_registry_2 = {
