@@ -14,6 +14,7 @@ __all__ = (
     'LiteralInteger',
     'LiteralFloat',
     'LiteralComplex',
+    'LiteralImaginaryUnit',
     'LiteralString',
     'get_default_value'
 )
