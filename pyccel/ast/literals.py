@@ -68,6 +68,7 @@ class LiteralComplex(Basic, Literal):
         return Basic.__new__(cls, real, imag)
 
     def __init__(self, real, imag):
+        Basic.__init__(self)
         self._real_part = real
         self._imag_part = imag
 
