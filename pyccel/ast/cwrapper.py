@@ -13,7 +13,7 @@ from .datatypes import NativeBool, NativeString, NativeGeneric, NativeVoid
 
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress, FunctionAddress
 from .core      import AliasAssign, Assign, Return
-from .core      import PyccelEq, If
+from .core      import PyccelEq, If, PyccelOr, PyccelAssociativeParenthesis
 
 from .numpyext  import NumpyReal, NumpyImag
 
@@ -392,14 +392,23 @@ def PyType_Check(data_type):
 
 def PyType_Check_2(data, argument):
     try :
-        check_ref = check_type_registry_2[(data.dtype, data.precision)]
+        check_numpy_ref = check_type_registry_2[(data.dtype, data.precision)]
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=data_type,severity='fatal')
-    func = FunctionDef(name = 'PyObject_TypeCheck',
+
+    # check for numpy type
+    check_numpy_func = FunctionDef(name = 'PyArray_IsScalar',
                     body = [],
                     arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True), check_ref],
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
-    return FunctionCall(func, [argument, check_ref])
+
+    # check for python type
+    check_python_func = PyType_Check(data.dtype)
+    check = PyccelAssociativeParenthesis(PyccelOr(
+        FunctionCall(check_python_func, [argument]),
+        FunctionCall(check_numpy_func, [argument, check_numpy_ref]
+    ))
+    return check
 
 
 
