@@ -65,13 +65,22 @@ class LiteralComplex(Expr, PyccelAstNode):
     _shape     = ()
     _precision = default_precision['complex']
 
+    def __new__(cls, real, imag):
+        return Expr.__new__(cls)
+
+    def __init__(self, real, imag):
+        self._real_part = real
+        self._imag_part = imag
+
     @property
     def real(self):
-        return self.args[0]
+        """ Return the real part of the complex literal """
+        return self._real_part
 
     @property
     def imag(self):
-        return self.args[1]
+        """ Return the imaginary part of the complex literal """
+        return self._imag_part
 
 #------------------------------------------------------------------------------
 class LiteralImaginaryUnit(Expr, PyccelAstNode):
@@ -89,13 +98,17 @@ class LiteralString(Basic, PyccelAstNode):
     _dtype     = NativeString()
     _precision = 0
     def __new__(cls, arg):
+        return Basic.__new__(cls)
+
+    def __init__(self, arg):
         if not isinstance(arg, str):
             raise TypeError('arg must be of type str')
-        return Basic.__new__(cls, arg)
+        self._string = arg
 
     @property
     def arg(self):
-        return self._args[0]
+        """ Return the python string literal """
+        return self._string
 
     def __str__(self):
         return self.arg
