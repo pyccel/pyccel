@@ -1,12 +1,13 @@
 """ This module contains all literal types
 """
-from .basic import PyccelAstNode
-from sympy import Integer as sp_Integer
-from sympy import Float as sp_Float
-from sympy.logic.boolalg      import BooleanTrue as sp_BooleanTrue, BooleanFalse as sp_BooleanFalse
-from sympy.core.expr          import Expr
-from pyccel.ast.datatypes     import (NativeInteger, NativeBool, NativeReal,
-                                  NativeComplex, default_precision)
+from sympy               import Integer as sp_Integer
+from sympy               import Float as sp_Float
+from sympy.logic.boolalg import BooleanTrue as sp_BooleanTrue, BooleanFalse as sp_BooleanFalse
+from sympy.core.expr     import Expr
+
+from .basic              import PyccelAstNode, Basic
+from .datatypes          import (NativeInteger, NativeBool, NativeReal,
+                                  NativeComplex, NativeString, default_precision)
 
 __all__ = (
     'LiteralBooleanTrue',
