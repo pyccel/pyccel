@@ -88,7 +88,7 @@ class LiteralImaginaryUnit(LiteralComplex, Literal):
         return LiteralComplex.__new__(cls, 0, 1)
 
     def __init__(self):
-        return LiteralComplex.__init__(self)
+        LiteralComplex.__init__(self, 0, 1)
 
 #------------------------------------------------------------------------------
 class LiteralString(Basic, Literal):
