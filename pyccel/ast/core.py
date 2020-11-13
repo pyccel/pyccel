@@ -211,7 +211,6 @@ def broadcast(shape_1, shape_2):
         new_shape_1 = shape_1
 
     new_shape = []
-    __slots__ = []
     for e1,e2 in zip(new_shape_1, new_shape_2):
         if e1 == e2:
             new_shape.append(e1)
@@ -234,7 +233,6 @@ def broadcast(shape_1, shape_2):
 def handle_precedence(args, my_precedence):
     precedence = [getattr(a, 'precedence', 17) for a in args]
 
-    __slots__ = []
     if min(precedence) <= my_precedence:
 
         new_args = []
