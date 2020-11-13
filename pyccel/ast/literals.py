@@ -14,11 +14,13 @@ __all__ = (
     'LiteralInteger',
     'LiteralFloat',
     'LiteralComplex',
+    'LiteralString',
     'get_default_value'
 )
 
 #------------------------------------------------------------------------------
 class LiteralBooleanTrue(sp_BooleanTrue, PyccelAstNode):
+    """Represents the python value True"""
     _dtype     = NativeBool()
     _rank      = 0
     _shape     = ()
@@ -26,6 +28,7 @@ class LiteralBooleanTrue(sp_BooleanTrue, PyccelAstNode):
 
 #------------------------------------------------------------------------------
 class LiteralBooleanFalse(sp_BooleanFalse, PyccelAstNode):
+    """Represents the python value False"""
     _dtype     = NativeBool()
     _rank      = 0
     _shape     = ()
@@ -33,6 +36,7 @@ class LiteralBooleanFalse(sp_BooleanFalse, PyccelAstNode):
 
 #------------------------------------------------------------------------------
 class LiteralInteger(sp_Integer, PyccelAstNode):
+    """Represents an integer literal in python"""
     _dtype     = NativeInteger()
     _rank      = 0
     _shape     = ()
@@ -45,6 +49,7 @@ class LiteralInteger(sp_Integer, PyccelAstNode):
 
 #------------------------------------------------------------------------------
 class LiteralFloat(sp_Float, PyccelAstNode):
+    """Represents a float literal in python"""
     _dtype     = NativeReal()
     _rank      = 0
     _shape     = ()
@@ -52,6 +57,7 @@ class LiteralFloat(sp_Float, PyccelAstNode):
 
 #------------------------------------------------------------------------------
 class LiteralComplex(Expr, PyccelAstNode):
+    """Represents a complex literal in python"""
     _dtype     = NativeComplex()
     _rank      = 0
     _shape     = ()
@@ -67,10 +73,30 @@ class LiteralComplex(Expr, PyccelAstNode):
 
 #------------------------------------------------------------------------------
 class LiteralImaginaryUnit(Expr, PyccelAstNode):
+    """Represents the python value j"""
     _dtype     = NativeComplex()
     _rank      = 0
     _shape     = ()
     _precision = default_precision['complex']
+
+#------------------------------------------------------------------------------
+class LiteralString(Basic, PyccelAstNode):
+    """Represents a string literal in python"""
+    _rank      = 0
+    _shape     = ()
+    _dtype     = NativeString()
+    _precision = 0
+    def __new__(cls, arg):
+        if not isinstance(arg, str):
+            raise TypeError('arg must be of type str')
+        return Basic.__new__(cls, arg)
+
+    @property
+    def arg(self):
+        return self._args[0]
+
+    def __str__(self):
+        return self.arg
 
 #------------------------------------------------------------------------------
 
@@ -84,6 +110,8 @@ def get_default_value(dtype):
         value = LiteralComplex(0.0)
     elif isinstance(dtype, NativeBool):
         value = LiteralBooleanFalse()
+    elif isinstance(dtype, NativeString):
+        value = LiteralString('')
     else:
         raise TypeError('Unknown type')
     return value
