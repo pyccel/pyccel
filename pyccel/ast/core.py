@@ -272,6 +272,7 @@ class PyccelRShift(PyccelBitOperator):
     _precedence = 11
     _dtype = NativeInteger()
     
+    __slots__ = ['_args']
     def __init__(self, *args):
         super(PyccelRShift, self).__init__(args)
         if self.stage == 'syntactic':
@@ -281,6 +282,7 @@ class PyccelRShift(PyccelBitOperator):
 class PyccelLShift(PyccelBitOperator):
     _precedence = 11
     _dtype = NativeInteger()
+    __slots__ = ['_args']
     def __init__(self, *args):
         super(PyccelLShift, self).__init__(args)
         if self.stage == 'syntactic':
@@ -289,6 +291,7 @@ class PyccelLShift(PyccelBitOperator):
 
 class PyccelBitXor(PyccelBitOperator):
     _precedence = 9
+    __slots__ = ['_args', '_dtype']
     def __init__(self, *args):
         super(PyccelBitXor, self).__init__(args)
         if self.stage == 'syntactic':
@@ -303,6 +306,7 @@ class PyccelBitXor(PyccelBitOperator):
 
 class PyccelBitOr(PyccelBitOperator):
     _precedence = 8
+    __slots__ = ['_args', '_dtype']
     def __init__(self, *args):
         super(PyccelBitOr, self).__init__(args)
         if self.stage == 'syntactic':
@@ -317,6 +321,7 @@ class PyccelBitOr(PyccelBitOperator):
 
 class PyccelBitAnd(PyccelBitOperator):
     _precedence = 10
+    __slots__ = ['_args', '_dtype']
     def __init__(self, *args):
         super(PyccelBitAnd, self).__init__(args)
         if self.stage == 'syntactic':
@@ -332,6 +337,7 @@ class PyccelBitAnd(PyccelBitOperator):
 class PyccelInvert(PyccelBitOperator):
     _precedence = 14
     _dtype = NativeInteger()
+    __slots__ = ['_args']
     def __init__(self, *args):
         super(PyccelInvert, self).__init__(args)
         if self.stage == 'syntactic':
@@ -340,6 +346,7 @@ class PyccelInvert(PyccelBitOperator):
 
 class PyccelOperator(Expr, PyccelAstNode):
 
+    __slots__ = ['_args', '_dtype', '_rank', '_shape', '_precision'] 
     def __init__(self, *args):
 
         if self.stage == 'syntactic':
@@ -403,6 +410,7 @@ class PyccelMinus(PyccelAdd):
     pass
 class PyccelDiv(PyccelOperator):
     _precedence = 13
+    __slots__ = ['_args', '_dtype', '_rank', '_shape', '_precision'] 
     def __init__(self, *args):
 
         if self.stage == 'syntactic':
