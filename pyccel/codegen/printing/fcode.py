@@ -55,8 +55,8 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
-from pyccel.ast.literals  import Integer, Float
-from pyccel.ast.literals  import BooleanTrue
+from pyccel.ast.literals  import LiteralInteger, LiteralFloat
+from pyccel.ast.literals  import LiteralBooleanTrue
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
@@ -534,7 +534,7 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.variable)
 
     def _print_Constant(self, expr):
-        val = Float(expr.value)
+        val = LiteralFloat(expr.value)
         return self._print(val)
 
     def _print_DottedVariable(self, expr):
@@ -816,10 +816,10 @@ class FCodePrinter(CodePrinter):
                     if i.start is None and i.end is None:
                         shape.append(s)
                     elif i.start is None:
-                        if (isinstance(i.end, (int, Integer)) and i.end>0) or not(isinstance(i.end, (int, Integer))):
+                        if (isinstance(i.end, (int, LiteralInteger)) and i.end>0) or not(isinstance(i.end, (int, LiteralInteger))):
                             shape.append(i.end)
                     elif i.end is None:
-                        if (isinstance(i.start, (int, Integer)) and i.start<s-1) or not(isinstance(i.start, (int, Integer))):
+                        if (isinstance(i.start, (int, LiteralInteger)) and i.start<s-1) or not(isinstance(i.start, (int, LiteralInteger))):
                             shape.append(s-i.start)
                     else:
                         shape.append(i.end-i.start+1)
@@ -964,7 +964,7 @@ class FCodePrinter(CodePrinter):
 
         # Compute rank string
         # TODO: improve
-        if ((rank == 1) and (isinstance(shape, (int, Integer, Variable, PyccelAdd))) and
+        if ((rank == 1) and (isinstance(shape, (int, LiteralInteger, Variable, PyccelAdd))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             rankstr = '({0}:{1}-1)'.format(self._print(s), self._print(shape))
 
@@ -1209,7 +1209,7 @@ class FCodePrinter(CodePrinter):
 
         var_code = self._print(expr.variable)
         size_code = ', '.join(self._print(i) for i in shape)
-        shape_code = ', '.join('0:' + self._print(PyccelMinus(i, Integer(1))) for i in shape)
+        shape_code = ', '.join('0:' + self._print(PyccelMinus(i, LiteralInteger(1))) for i in shape)
         code = ''
 
         if expr.status == 'unallocated':
@@ -1653,7 +1653,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonRange(self, expr):
         start = self._print(expr.start)
-        stop  = self._print(expr.stop) + '-' + self._print(Integer(1))
+        stop  = self._print(expr.stop) + '-' + self._print(LiteralInteger(1))
         step  = self._print(expr.step)
         return '{0}, {1}, {2}'.format(start, stop, step)
 
@@ -2170,7 +2170,7 @@ class FCodePrinter(CodePrinter):
 
             if i == 0:
                 lines.append("if (%s) then\n" % self._print(c))
-            elif i == len(expr.args) - 1 and c is BooleanTrue():
+            elif i == len(expr.args) - 1 and c is LiteralBooleanTrue():
                 lines.append("else\n")
             else:
                 lines.append("else if (%s) then\n" % self._print(c))
@@ -2489,13 +2489,13 @@ class FCodePrinter(CodePrinter):
                 expr.base.internal_variable.allows_negative_indexes)
 
         for i, ind in enumerate(inds):
-            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], Integer):
+            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0])
             else:
                 #indices of indexedElement of len==1 shouldn't be a Tuple
                 if isinstance(ind, Tuple) and len(ind) == 1:
                     inds[i] = ind[0]
-                if allow_negative_indexes and not isinstance(ind, Integer):
+                if allow_negative_indexes and not isinstance(ind, LiteralInteger):
                     inds[i] = PyccelMod(ind, base_shape[i])
 
         inds = [self._print(i) for i in inds]
@@ -2514,7 +2514,7 @@ class FCodePrinter(CodePrinter):
         if (expr.end is None) or isinstance(expr.end, Nil):
             end = ''
         else:
-            end = PyccelMinus(expr.end, Integer(1))
+            end = PyccelMinus(expr.end, LiteralInteger(1))
             end = self._print(end)
         return '{0}:{1}'.format(start, end)
 

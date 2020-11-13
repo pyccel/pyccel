@@ -2,7 +2,7 @@
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 
-from pyccel.ast.literals   import BooleanTrue, ImaginaryUnit, Float, Integer
+from pyccel.ast.literals   import LiteralBooleanTrue, ImaginaryUnit, LiteralFloat, LiteralInteger
 from pyccel.ast.core import Nil, PyccelAssociativeParenthesis
 from pyccel.ast.core import Assign, datatype, Variable, Import
 from pyccel.ast.core import SeparatorComment, VariableAddress
@@ -312,7 +312,7 @@ class CCodePrinter(CodePrinter):
                 break
             if i == 0:
                 lines.append("if (%s)\n{" % self._print(c))
-            elif i == len(expr.args) - 1 and c is BooleanTrue():
+            elif i == len(expr.args) - 1 and c is LiteralBooleanTrue():
                 lines.append("else\n{")
             else:
                 lines.append("else if (%s)\n{" % self._print(c))
@@ -768,7 +768,7 @@ class CCodePrinter(CodePrinter):
             math.pi ==> 3.14159265358979
 
         """
-        val = Float(expr.value)
+        val = LiteralFloat(expr.value)
         return self._print(val)
 
     def _print_Return(self, expr):
@@ -893,8 +893,8 @@ class CCodePrinter(CodePrinter):
     def _print_Indexed(self, expr):
         # calculate index for 1d array
         dims = expr.shape
-        elem = Integer(0)
-        offset = Integer(1)
+        elem = LiteralInteger(0)
+        offset = LiteralInteger(1)
         for i in reversed(list(range(expr.rank))):
             elem += expr.indices[i]*offset
             offset *= dims[i]

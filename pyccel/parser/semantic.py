@@ -10,8 +10,8 @@ from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
 from sympy import Symbol
-from sympy import Integer as sp_Integer
-from sympy import Float as sp_Float
+from sympy import LiteralInteger as sp_Integer
+from sympy import LiteralFloat as sp_Float
 from sympy import Indexed, IndexedBase
 from sympy import ceiling
 from sympy import oo  as INF
@@ -66,8 +66,8 @@ from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric, NativeComplex
 
-from pyccel.ast.literals import BooleanTrue, BooleanFalse
-from pyccel.ast.literals import Integer, Float
+from pyccel.ast.literals import LiteralBooleanTrue, LiteralBooleanFalse
+from pyccel.ast.literals import LiteralInteger, LiteralFloat
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.headers import MacroFunction, MacroVariable
@@ -792,19 +792,19 @@ class SemanticParser(BasicParser):
     def _visit_AnnotatedComment(self, expr, **settings):
         return expr
     def _visit_Integer(self, expr, **settings):
-        if isinstance(expr, Integer):
+        if isinstance(expr, LiteralInteger):
             return expr
         elif isinstance(expr, sp_Integer):
-            return Integer(expr)
+            return LiteralInteger(expr)
         else:
-            raise TypeError("Integer type is not sympy Integer or pyccel Integer")
+            raise TypeError("LiteralInteger type is not sympy LiteralInteger or pyccel LiteralInteger")
     def _visit_Float(self, expr, **settings):
-        if isinstance(expr, Float):
+        if isinstance(expr, LiteralFloat):
             return expr
         elif isinstance(expr, sp_Float):
-            return Float(expr)
+            return LiteralFloat(expr)
         else:
-            raise TypeError("Float type is not sympy Float or pyccel Float")
+            raise TypeError("LiteralFloat type is not sympy LiteralFloat or pyccel LiteralFloat")
     def _visit_Complex(self, expr, **settings):
         return expr
     def _visit_String(self, expr, **settings):
@@ -861,8 +861,8 @@ class SemanticParser(BasicParser):
             arg = args[-1]
 
             if isinstance(arg, Slice):
-                if ((arg.start is not None and not isinstance(arg.start, Integer)) or
-                        (arg.end is not None and not isinstance(arg.end, Integer))):
+                if ((arg.start is not None and not isinstance(arg.start, LiteralInteger)) or
+                        (arg.end is not None and not isinstance(arg.end, LiteralInteger))):
                     errors.report(INDEXED_TUPLE, symbol=var,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=self.blocking)
@@ -882,7 +882,7 @@ class SemanticParser(BasicParser):
                 else:
                     return PythonTuple(*[self._extract_indexed_from_var(var, args[:-1], name) for var in selected_vars])
 
-            elif isinstance(arg, Integer):
+            elif isinstance(arg, LiteralInteger):
 
                 if len(args)==1:
                     return var[arg]
@@ -2147,9 +2147,9 @@ class SemanticParser(BasicParser):
 
 
         if isinstance(expr, FunctionalSum):
-            val = Integer(0)
+            val = LiteralInteger(0)
             if str_dtype(dtype) in ['real', 'complex']:
-                val = Float(0.0)
+                val = LiteralFloat(0.0)
         elif isinstance(expr, FunctionalMin):
             val = INF
         elif isinstance(expr, FunctionalMax):
@@ -2183,8 +2183,8 @@ class SemanticParser(BasicParser):
         while isinstance(body, For):
 
             stop  = None
-            start = Integer(0)
-            step  = Integer(1)
+            start = LiteralInteger(0)
+            step  = LiteralInteger(1)
             var   = body.target
             a     = self._visit(body.iterable, **settings)
             if isinstance(a, PythonRange):
@@ -2851,9 +2851,9 @@ class SemanticParser(BasicParser):
 
         if (var1 is var2) or (isinstance(var2, Nil) and isinstance(var1, Nil)):
             if IsClass == IsNot:
-                return BooleanFalse()
+                return LiteralBooleanFalse()
             elif IsClass == Is:
-                return BooleanTrue()
+                return LiteralBooleanTrue()
 
         if isinstance(var1, Nil):
             var1, var2 = var2, var1
@@ -2867,9 +2867,9 @@ class SemanticParser(BasicParser):
 
         if (var1.dtype != var2.dtype):
             if IsClass == Is:
-                return BooleanFalse()
+                return LiteralBooleanFalse()
             elif IsClass == IsNot:
-                return BooleanTrue()
+                return LiteralBooleanTrue()
 
         if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
             (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
