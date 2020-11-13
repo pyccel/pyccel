@@ -98,7 +98,7 @@ class LiteralString(Basic, PyccelAstNode):
     _dtype     = NativeString()
     _precision = 0
     def __new__(cls, arg):
-        return Basic.__new__(cls)
+        return Basic.__new__(cls, arg)
 
     def __init__(self, arg):
         if not isinstance(arg, str):
