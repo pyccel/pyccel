@@ -10,8 +10,8 @@ from .datatypes          import (NativeInteger, NativeBool, NativeReal,
                                   NativeComplex, NativeString, default_precision)
 
 __all__ = (
-    'LiteralBooleanTrue',
-    'LiteralBooleanFalse',
+    'LiteralTrue',
+    'LiteralFalse',
     'LiteralInteger',
     'LiteralFloat',
     'LiteralComplex',
@@ -21,27 +21,30 @@ __all__ = (
 )
 
 #------------------------------------------------------------------------------
-class LiteralBooleanTrue(sp_BooleanTrue, PyccelAstNode):
+class Literal(PyccelAstNode):
+    """
+    Represents a python literal
+    This class is abstract and should be implemented for each dtype
+    """
+    _rank      = 0
+    _shape     = ()
+
+#------------------------------------------------------------------------------
+class LiteralTrue(sp_BooleanTrue, Literal):
     """Represents the python value True"""
     _dtype     = NativeBool()
-    _rank      = 0
-    _shape     = ()
     _precision = default_precision['bool']
 
 #------------------------------------------------------------------------------
-class LiteralBooleanFalse(sp_BooleanFalse, PyccelAstNode):
+class LiteralFalse(sp_BooleanFalse, Literal):
     """Represents the python value False"""
     _dtype     = NativeBool()
-    _rank      = 0
-    _shape     = ()
     _precision = default_precision['bool']
 
 #------------------------------------------------------------------------------
-class LiteralInteger(sp_Integer, PyccelAstNode):
+class LiteralInteger(sp_Integer, Literal):
     """Represents an integer literal in python"""
     _dtype     = NativeInteger()
-    _rank      = 0
-    _shape     = ()
     _precision = default_precision['int']
     def __new__(cls, val):
         ival = int(val)
@@ -50,19 +53,15 @@ class LiteralInteger(sp_Integer, PyccelAstNode):
         return obj
 
 #------------------------------------------------------------------------------
-class LiteralFloat(sp_Float, PyccelAstNode):
+class LiteralFloat(sp_Float, Literal):
     """Represents a float literal in python"""
     _dtype     = NativeReal()
-    _rank      = 0
-    _shape     = ()
     _precision = default_precision['real']
 
 #------------------------------------------------------------------------------
-class LiteralComplex(Expr, PyccelAstNode):
+class LiteralComplex(Expr, Literal):
     """Represents a complex literal in python"""
     _dtype     = NativeComplex()
-    _rank      = 0
-    _shape     = ()
     _precision = default_precision['complex']
 
     def __new__(cls, real, imag):
@@ -83,18 +82,14 @@ class LiteralComplex(Expr, PyccelAstNode):
         return self._imag_part
 
 #------------------------------------------------------------------------------
-class LiteralImaginaryUnit(Expr, PyccelAstNode):
+class LiteralImaginaryUnit(Expr, Literal):
     """Represents the python value j"""
     _dtype     = NativeComplex()
-    _rank      = 0
-    _shape     = ()
     _precision = default_precision['complex']
 
 #------------------------------------------------------------------------------
-class LiteralString(Basic, PyccelAstNode):
+class LiteralString(Basic, Literal):
     """Represents a string literal in python"""
-    _rank      = 0
-    _shape     = ()
     _dtype     = NativeString()
     _precision = 0
     def __new__(cls, arg):
@@ -125,7 +120,7 @@ def get_default_literal_value(dtype):
     elif isinstance(dtype, NativeComplex):
         value = LiteralComplex(0.0, 0.0)
     elif isinstance(dtype, NativeBool):
-        value = LiteralBooleanFalse()
+        value = LiteralFalse()
     elif isinstance(dtype, NativeString):
         value = LiteralString('')
     else:

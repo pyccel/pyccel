@@ -7,7 +7,7 @@ import numpy as np
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
-from pyccel.ast.literals  import LiteralBooleanTrue, LiteralInteger
+from pyccel.ast.literals  import LiteralTrue, LiteralInteger
 
 from pyccel.ast.builtins import PythonPrint
 
@@ -231,7 +231,7 @@ class CWrapperCodePrinter(CCodePrinter):
             if isinstance(variable, ValuedVariable):
                 default_value = VariableAddress(Py_None)
                 body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
-                        (LiteralBooleanTrue(), [Assign(variable, variable.value)]))]
+                        (LiteralTrue(), [Assign(variable, variable.value)]))]
 
         return collect_var, body
 
@@ -327,7 +327,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body += [Assign(VariableAddress(a), VariableAddress(optional_tmp_var))]
 
         body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
-        (LiteralBooleanTrue(), [Assign(VariableAddress(a), a.value)]))]
+        (LiteralTrue(), [Assign(VariableAddress(a), a.value)]))]
         return optional_tmp_var, body
 
 

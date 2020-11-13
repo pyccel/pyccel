@@ -41,7 +41,7 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
                         NativeGeneric, NativeTuple, default_precision, is_iterable_datatype)
 
-from .literals       import LiteralBooleanTrue, LiteralBooleanFalse, LiteralInteger
+from .literals       import LiteralTrue, LiteralFalse, LiteralInteger
 from .literals       import LiteralImaginaryUnit, LiteralString
 from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
@@ -829,7 +829,7 @@ def extract_subexpressions(expr):
     id_cls = (Symbol, Indexed, IndexedBase,
               DottedVariable, sp_Float, sp_Integer,
               sp_Rational, LiteralImaginaryUnit,sp_Boolean,
-              LiteralBooleanTrue, LiteralBooleanFalse, LiteralString,
+              LiteralTrue, LiteralFalse, LiteralString,
               ValuedArgument, Nil, PythonList, PythonTuple,
               StarredArguments)
 
@@ -4541,7 +4541,7 @@ class Load(Basic):
             elif not isinstance(funcs, (list, tuple, Tuple)):
                 raise TypeError('Expecting a string, list, tuple, Tuple')
 
-        if not isinstance(as_lambda, (LiteralBooleanTrue, LiteralBooleanFalse, bool)):
+        if not isinstance(as_lambda, (LiteralTrue, LiteralFalse, bool)):
             raise TypeError('Expecting a boolean, given {0}'.format(as_lambda))
 
         return Basic.__new__(cls, module, funcs, as_lambda, nargs)

@@ -14,7 +14,7 @@ from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, Vari
 from .core      import AliasAssign, Assign, Return
 from .core      import PyccelEq, If
 
-from .literals  import LiteralBooleanTrue, LiteralComplex
+from .literals  import LiteralTrue, LiteralComplex
 
 from .numpyext  import NumpyReal, NumpyImag
 
@@ -413,7 +413,7 @@ def bool_to_pyobj(cast_function_name):
     cast_function_body = [If(
                             (PythonBool(cast_function_argument),
                                 [AliasAssign(cast_function_result, Py_True)]),
-                            (LiteralBooleanTrue(),
+                            (LiteralTrue(),
                                 [AliasAssign(cast_function_result, Py_False)])
                           ),
                           Return([cast_function_result])]

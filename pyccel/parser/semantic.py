@@ -65,7 +65,7 @@ from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric, NativeComplex
 
-from pyccel.ast.literals import LiteralBooleanTrue, LiteralBooleanFalse
+from pyccel.ast.literals import LiteralTrue, LiteralFalse
 from pyccel.ast.literals import LiteralInteger, LiteralFloat
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
@@ -789,17 +789,7 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_AnnotatedComment(self, expr, **settings):
         return expr
-    def _visit_LiteralInteger(self, expr, **settings):
-        return LiteralInteger(expr)
-    def _visit_LiteralFloat(self, expr, **settings):
-        return expr
-    def _visit_LiteralComplex(self, expr, **settings):
-        return expr
-    def _visit_LiteralString(self, expr, **settings):
-        return expr
-    def _visit_LiteralBooleanTrue(self, expr, **settings):
-        return expr
-    def _visit_LiteralBooleanFalse(self, expr, **settings):
+    def _visit_Literal(self, expr, **settings):
         return expr
     def _visit_Integer(self, expr, **settings):
         """Visit sympy.Integer"""
@@ -2845,9 +2835,9 @@ class SemanticParser(BasicParser):
 
         if (var1 is var2) or (isinstance(var2, Nil) and isinstance(var1, Nil)):
             if IsClass == IsNot:
-                return LiteralBooleanFalse()
+                return LiteralFalse()
             elif IsClass == Is:
-                return LiteralBooleanTrue()
+                return LiteralTrue()
 
         if isinstance(var1, Nil):
             var1, var2 = var2, var1
@@ -2861,9 +2851,9 @@ class SemanticParser(BasicParser):
 
         if (var1.dtype != var2.dtype):
             if IsClass == Is:
-                return LiteralBooleanFalse()
+                return LiteralFalse()
             elif IsClass == IsNot:
-                return LiteralBooleanTrue()
+                return LiteralTrue()
 
         if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
             (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):

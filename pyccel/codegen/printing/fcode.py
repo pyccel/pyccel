@@ -56,7 +56,7 @@ from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat
-from pyccel.ast.literals  import LiteralBooleanTrue
+from pyccel.ast.literals  import LiteralTrue
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
@@ -1254,10 +1254,10 @@ class FCodePrinter(CodePrinter):
     def _print_DataType(self, expr):
         return self._print(expr.name)
 
-    def _print_LiteralBooleanTrue(self, expr):
+    def _print_LiteralTrue(self, expr):
         return '.True._{}'.format(iso_c_binding["logical"][expr.precision])
 
-    def _print_LiteralBooleanFalse(self, expr):
+    def _print_LiteralFalse(self, expr):
         return '.False._{}'.format(iso_c_binding["logical"][expr.precision])
 
     def _print_LiteralString(self, expr):
@@ -2170,7 +2170,7 @@ class FCodePrinter(CodePrinter):
 
             if i == 0:
                 lines.append("if (%s) then\n" % self._print(c))
-            elif i == len(expr.args) - 1 and c is LiteralBooleanTrue():
+            elif i == len(expr.args) - 1 and c is LiteralTrue():
                 lines.append("else\n")
             else:
                 lines.append("else if (%s) then\n" % self._print(c))

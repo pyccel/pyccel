@@ -59,7 +59,7 @@ from pyccel.ast.core import PyccelUnary, PyccelUnarySub
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.headers  import Header, MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
-from pyccel.ast.literals import LiteralBooleanFalse, LiteralBooleanTrue, LiteralString
+from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 
 from pyccel.parser.extend_tree import extend_tree
@@ -388,10 +388,10 @@ class SyntaxParser(BasicParser):
             return Nil()
 
         elif stmt.value is True:
-            return LiteralBooleanTrue()
+            return LiteralTrue()
 
         elif stmt.value is False:
-            return LiteralBooleanFalse()
+            return LiteralFalse()
 
         elif isinstance(stmt.value, int):
             return LiteralInteger(stmt.value)
@@ -413,10 +413,10 @@ class SyntaxParser(BasicParser):
             return Nil()
 
         elif stmt.value is True:
-            return LiteralBooleanTrue()
+            return LiteralTrue()
 
         elif stmt.value is False:
-            return LiteralBooleanFalse()
+            return LiteralFalse()
 
         else:
             raise NotImplementedError("Unknown NameConstant : {}".format(stmt.value))
@@ -973,7 +973,7 @@ class SyntaxParser(BasicParser):
             orelse = orelse[0]._args
             return If(Tuple(test, body, sympify=False), *orelse)
         else:
-            orelse = Tuple(LiteralBooleanTrue(), orelse, sympify=False)
+            orelse = Tuple(LiteralTrue(), orelse, sympify=False)
             return If(Tuple(test, body, sympify=False), orelse)
 
     def _visit_IfExp(self, stmt):

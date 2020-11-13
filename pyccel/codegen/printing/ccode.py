@@ -16,7 +16,7 @@ from pyccel.ast.core      import PyccelAdd, PyccelMul
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
 
-from pyccel.ast.literals  import LiteralBooleanTrue, LiteralImaginaryUnit, LiteralFloat
+from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger
 
 from pyccel.ast.numpyext  import NumpyFloat
@@ -313,7 +313,7 @@ class CCodePrinter(CodePrinter):
                 break
             if i == 0:
                 lines.append("if (%s)\n{" % self._print(c))
-            elif i == len(expr.args) - 1 and c is LiteralBooleanTrue():
+            elif i == len(expr.args) - 1 and c is LiteralTrue():
                 lines.append("else\n{")
             else:
                 lines.append("else if (%s)\n{" % self._print(c))
@@ -326,10 +326,10 @@ class CCodePrinter(CodePrinter):
         value_false = self._print(expr.value_false)
         return '({cond}) ? {true} : {false}'.format(cond = cond, true =value_true, false = value_false)
 
-    def _print_LiteralBooleanTrue(self, expr):
+    def _print_LiteralTrue(self, expr):
         return '1'
 
-    def _print_LiteralBooleanFalse(self, expr):
+    def _print_LiteralFalse(self, expr):
         return '0'
 
     def _print_PyccelAnd(self, expr):
