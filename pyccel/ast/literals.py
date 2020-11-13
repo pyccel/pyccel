@@ -101,7 +101,7 @@ class LiteralString(Basic, PyccelAstNode):
         return Basic.__new__(cls, arg)
 
     def __init__(self, arg):
-        Basic.__init__()
+        Basic.__init__(self)
         if not isinstance(arg, str):
             raise TypeError('arg must be of type str')
         self._string = arg
