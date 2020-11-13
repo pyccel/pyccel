@@ -509,27 +509,25 @@ check_type_registry = {
     NativeBool() : 'PyBool_Check',
 }
 
-
-pyBoolArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyBoolArrType_Type'))
-PyCharacterArrType_Type =VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyCharacterArrType_Type'))
-PyShortArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyShortArrType_Type'))
-PyIntArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyIntArrType_Type'))
-PyLongArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyLongArrType_Type'))
-PyFloatArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyFloatArrType_Type'))
-PyDoubleArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyDoubleArrType_Type'))
-PyComplexFloatingArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyComplexFloatingArrType_Type'))
-PyStringArrType_Type = VariableAddress(Variable(dtype=NativeVoid(),  name = 'PyStringArrType_Type'))
+# Needed to check for numpy arguments type
+Numpy_Bool_ref = VariableAddress(Variable(dtype=NativeVoid(),  name = 'Bool'))
+Numpy_Byte_ref =VariableAddress(Variable(dtype=NativeVoid(),  name = 'Byte'))
+Numpy_Short_ref = VariableAddress(Variable(dtype=NativeVoid(),  name = 'Short'))
+Numpy_Int_ref = VariableAddress(Variable(dtype=NativeVoid(),  name = 'Int'))
+Numpy_Long_ref = VariableAddress(Variable(dtype=NativeVoid(),  name = 'Long'))
+Numpy_Float_ref = VariableAddress(Variable(dtype=NativeVoid(),  name = 'Float'))
+Numpy_Double_ref = VariableAddress(Variable(dtype=NativeVoid(),  name = 'Double'))
+Numpy_Complex_ref = VariableAddress(Variable(dtype=NativeVoid(),  name = 'ComplexFloating'))
 
 
 check_type_registry_2 = {
-    (NativeInteger(), 4)       : PyIntArrType_Type,
-    (NativeInteger(), 8)       : PyLongArrType_Type,
-    (NativeInteger(), 2)       : PyShortArrType_Type,
-    (NativeInteger(), 1)       : PyCharacterArrType_Type,
-    (NativeReal(), 8)          : PyDoubleArrType_Type,
-    (NativeReal(), 4)          : PyFloatArrType_Type,
-    (NativeComplex(), 4)       : PyComplexFloatingArrType_Type,
-    (NativeComplex(), 8)       : PyComplexFloatingArrType_Type,
-    (NativeBool(), 4)          : pyBoolArrType_Type,
-    (NativeString(), 0)        : PyStringArrType_Type
+    (NativeInteger(), 4)       : Numpy_Int_ref,
+    (NativeInteger(), 8)       : Numpy_Long_ref,
+    (NativeInteger(), 2)       : Numpy_Short_ref,
+    (NativeInteger(), 1)       : Numpy_Byte_ref,
+    (NativeReal(), 8)          : Numpy_Double_ref,
+    (NativeReal(), 4)          : Numpy_Float_ref,
+    (NativeComplex(), 4)       : Numpy_Complex_ref,
+    (NativeComplex(), 8)       : Numpy_Complex_ref,
+    (NativeBool(), 4)          : Numpy_Bool_ref
 }
