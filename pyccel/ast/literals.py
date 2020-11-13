@@ -122,7 +122,7 @@ def get_default_literal_value(dtype):
     elif isinstance(dtype, NativeReal):
         value = LiteralFloat(0.0)
     elif isinstance(dtype, NativeComplex):
-        value = LiteralComplex(0.0)
+        value = LiteralComplex(0.0, 0.0)
     elif isinstance(dtype, NativeBool):
         value = LiteralBooleanFalse()
     elif isinstance(dtype, NativeString):
