@@ -6,7 +6,7 @@ import numpy
 from sympy.core.function import Application
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
-from sympy           import (Basic, Function, Tuple, LiteralInteger as sp_Integer,
+from sympy           import (Basic, Function, Tuple, Integer as sp_Integer,
                              Rational as sp_Rational, Expr)
 
 from .core           import (PyccelPow, PyccelMinus, PyccelMul, PyccelAdd,
