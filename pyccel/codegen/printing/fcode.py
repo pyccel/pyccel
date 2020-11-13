@@ -55,8 +55,8 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
-from pyccel.ast.numbers   import Integer, Float
-from pyccel.ast.numbers   import BooleanTrue
+from pyccel.ast.literals  import Integer, Float
+from pyccel.ast.literals  import BooleanTrue
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 

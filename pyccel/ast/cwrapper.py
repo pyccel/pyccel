@@ -4,7 +4,7 @@ import numpy as np
 
 from .basic     import Basic
 
-from pyccel.ast.numbers   import BooleanTrue, Complex
+from pyccel.ast.literals  import BooleanTrue, Complex
 from .builtins  import PythonBool
 
 from .datatypes import DataType

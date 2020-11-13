@@ -7,7 +7,7 @@ import numpy as np
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
-from pyccel.ast.numbers   import BooleanTrue, Integer
+from pyccel.ast.literals  import BooleanTrue, Integer
 
 from pyccel.ast.builtins import PythonPrint
 

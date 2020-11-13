@@ -66,8 +66,8 @@ from pyccel.ast.datatypes import NativeSymbol
 from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric, NativeComplex
 
-from pyccel.ast.numbers import BooleanTrue, BooleanFalse
-from pyccel.ast.numbers import Integer, Float
+from pyccel.ast.literals import BooleanTrue, BooleanFalse
+from pyccel.ast.literals import Integer, Float
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.headers import MacroFunction, MacroVariable

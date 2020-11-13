@@ -59,7 +59,7 @@ from pyccel.ast.core import PyccelUnary, PyccelUnarySub
 
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.headers  import Header, MetaVariable
-from pyccel.ast.numbers  import Integer, Float, Complex, BooleanFalse, BooleanTrue
+from pyccel.ast.literals import Integer, Float, Complex, BooleanFalse, BooleanTrue
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 
 from pyccel.parser.extend_tree import extend_tree
