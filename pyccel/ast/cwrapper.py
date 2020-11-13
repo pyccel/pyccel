@@ -390,6 +390,19 @@ def PyType_Check(data_type):
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
     return func
 
+def PyType_Check_2(data_type, argument):
+    try :
+        check_ref = check_type_registry_2[data_type]
+    except KeyError:
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=data_type,severity='fatal')
+    func = FunctionDef(name = 'PyObject_TypeCheck',
+                    body = [],
+                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True), check_ref],
+                    results   = [Variable(dtype=NativeBool(), name = 'r')])
+    return FunctionCall(func, [argument, check_ref])
+
+
+
 def PyErr_SetString(error_type, error_msg):
     func = FunctionDef(name = 'PyErr_SetString',
                 body = [],
