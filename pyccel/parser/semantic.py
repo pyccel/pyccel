@@ -382,13 +382,11 @@ class SemanticParser(BasicParser):
 
     def insert_header(self, expr):
         """."""
-        if isinstance(expr, MethodHeader):
-            self.namespace.headers[expr.name] = expr
-        elif isinstance(expr, FunctionHeader):
-            if expr.func in self.namespace.headers:
-                self.namespace.headers[expr.func].append(expr)
+        if isinstance(expr, (FunctionHeader, MethodHeader)):
+            if expr.name in self.namespace.headers:
+                self.namespace.headers[expr.name].append(expr)
             else:
-                self.namespace.headers[expr.func] = [expr]
+                self.namespace.headers[expr.name] = [expr]
         elif isinstance(expr, ClassHeader):
             self.namespace.headers[expr.name] = expr
 
@@ -516,7 +514,10 @@ class SemanticParser(BasicParser):
         headers = []
         while container:
             if name in container.headers:
-                headers += container.headers[name]
+                if isinstance(container.headers[name], list):
+                    headers += container.headers[name]
+                else:
+                    headers.append(container.headers[name])
             container = container.parent_scope
         return headers
 
@@ -3015,14 +3016,16 @@ class SemanticParser(BasicParser):
 
         f_name = expr.master
         header = self.get_header(f_name)
-        if header is None:
+        if not header:
             func = self.get_function(f_name)
             if func is None:
                 errors.report(MACRO_MISSING_HEADER_OR_FUNC,
                 symbol=f_name,severity='error', blocker=self.blocking,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset))
         else:
-            interfaces = header.create_definition()
+            interfaces = []
+            for hd in header:
+                interfaces += hd.create_definition()
 
             # TODO -> Said: must handle interface
 
