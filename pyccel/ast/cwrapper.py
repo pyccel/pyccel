@@ -4,7 +4,6 @@ import numpy as np
 
 from .basic     import Basic
 
-from pyccel.ast.literals  import LiteralBooleanTrue, LiteralComplex
 from .builtins  import PythonBool
 
 from .datatypes import DataType
@@ -14,6 +13,8 @@ from .datatypes import NativeBool, NativeString, NativeGeneric
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress, FunctionAddress
 from .core      import AliasAssign, Assign, Return
 from .core      import PyccelEq, If
+
+from .literals  import LiteralBooleanTrue, LiteralComplex
 
 from .numpyext  import NumpyReal, NumpyImag
 
