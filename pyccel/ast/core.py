@@ -457,6 +457,7 @@ class PyccelFloorDiv(PyccelOperator):
 class PyccelBooleanOperator(Expr, PyccelAstNode):
     _precedence = 7
 
+    __slots__ = ['_args', '_dtype', '_rank', '_shape', '_precision'] 
     def __init__(self, *args):
 
         if self.stage == 'syntactic':
@@ -503,6 +504,7 @@ class PyccelGe(PyccelBooleanOperator):
 
 class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
     _precedence = 18
+    __slots__ = ['_dtype', '_rank', '_shape', '_precision'] 
     def __init__(self, a):
         if self.stage == 'syntactic':
             return
@@ -518,6 +520,7 @@ class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
 class PyccelUnary(Expr, PyccelAstNode):
     _precedence = 14
 
+    __slots__ = ['_args', '_dtype', '_rank', '_shape', '_precision'] 
     def __init__(self, a):
 
         if self.stage == 'syntactic':
@@ -545,6 +548,7 @@ class PyccelAnd(Expr, PyccelAstNode):
     _precision = default_precision['bool']
     _precedence = 5
 
+    __slots__ = ['_args'] 
     def __init__(self, *args):
         if self.stage == 'syntactic':
             self._args = handle_precedence(args, self.precedence)
@@ -560,6 +564,7 @@ class PyccelOr(Expr, PyccelAstNode):
     _precision = default_precision['bool']
     _precedence = 4
 
+    __slots__ = ['_args'] 
     def __init__(self, *args):
         if self.stage == 'syntactic':
             self._args = handle_precedence(args, self.precedence)
@@ -575,6 +580,7 @@ class PyccelNot(Expr, PyccelAstNode):
     _precision = default_precision['bool']
     _precedence = 6
 
+    __slots__ = ['_args'] 
     def __init__(self, *args):
         if self.stage == 'syntactic':
             self._args = handle_precedence(args, self.precedence)
@@ -601,6 +607,7 @@ class Is(Basic, PyccelAstNode):
     _precision = default_precision['bool']
     _precedence = 7
 
+    __slots__ = ['_args'] 
     def __init__(self, *args):
         if self.stage == 'syntactic':
             self._args = handle_precedence(args, self.precedence)
@@ -637,6 +644,7 @@ class IsNot(Basic, PyccelAstNode):
     _precision = default_precision['bool']
     _precedence = 7
 
+    __slots__ = ['_args'] 
     def __init__(self, *args):
         if self.stage == 'syntactic':
             self._args = handle_precedence(args, self.precedence)
