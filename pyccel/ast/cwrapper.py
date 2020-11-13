@@ -399,7 +399,7 @@ def PyType_Check_2(data, argument):
     # check for numpy type
     check_numpy_func = FunctionDef(name = 'PyArray_IsScalar',
                     body = [],
-                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True), check_ref],
+                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True), check_numpy_ref],
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
 
     # check for python type
@@ -407,7 +407,7 @@ def PyType_Check_2(data, argument):
     check = PyccelAssociativeParenthesis(PyccelOr(
         FunctionCall(check_python_func, [argument]),
         FunctionCall(check_numpy_func, [argument, check_numpy_ref]
-    ))
+    )))
     return check
 
 
@@ -519,14 +519,14 @@ check_type_registry = {
 }
 
 # Needed to check for numpy arguments type
-Numpy_Bool_ref = VariableAddress(Variable(dtype=NativeVoid(),  name = 'Bool'))
-Numpy_Byte_ref =VariableAddress(Variable(dtype=NativeVoid(),  name = 'Byte'))
-Numpy_Short_ref = VariableAddress(Variable(dtype=NativeVoid(),  name = 'Short'))
-Numpy_Int_ref = VariableAddress(Variable(dtype=NativeVoid(),  name = 'Int'))
-Numpy_Long_ref = VariableAddress(Variable(dtype=NativeVoid(),  name = 'Long'))
-Numpy_Float_ref = VariableAddress(Variable(dtype=NativeVoid(),  name = 'Float'))
-Numpy_Double_ref = VariableAddress(Variable(dtype=NativeVoid(),  name = 'Double'))
-Numpy_Complex_ref = VariableAddress(Variable(dtype=NativeVoid(),  name = 'ComplexFloating'))
+Numpy_Bool_ref = Variable(dtype=NativeVoid(),  name = 'Bool')
+Numpy_Byte_ref = Variable(dtype=NativeVoid(),  name = 'Byte')
+Numpy_Short_ref = Variable(dtype=NativeVoid(),  name = 'Short')
+Numpy_Int_ref = Variable(dtype=NativeVoid(),  name = 'Int')
+Numpy_Long_ref = Variable(dtype=NativeVoid(),  name = 'Long')
+Numpy_Float_ref = Variable(dtype=NativeVoid(),  name = 'Float')
+Numpy_Double_ref = Variable(dtype=NativeVoid(),  name = 'Double')
+Numpy_Complex_ref = Variable(dtype=NativeVoid(),  name = 'ComplexFloating')
 
 
 check_type_registry_2 = {
