@@ -4,7 +4,7 @@ import numpy as np
 
 from .basic     import Basic
 
-from pyccel.ast.literals  import BooleanTrue, Complex
+from pyccel.ast.literals  import LiteralBooleanTrue, LiteralComplex
 from .builtins  import PythonBool
 
 from .datatypes import DataType
@@ -412,7 +412,7 @@ def bool_to_pyobj(cast_function_name):
     cast_function_body = [If(
                             (PythonBool(cast_function_argument),
                                 [AliasAssign(cast_function_result, Py_True)]),
-                            (BooleanTrue(),
+                            (LiteralBooleanTrue(),
                                 [AliasAssign(cast_function_result, Py_False)])
                           ),
                           Return([cast_function_result])]
@@ -448,7 +448,7 @@ def pycomplex_to_complex(cast_function_name):
 
     cast_function_body = [Assign(real_part, FunctionCall(pycomplex_real, [cast_function_argument])),
                           Assign(imag_part, FunctionCall(pycomplex_imag, [cast_function_argument])),
-                          Assign(cast_function_result, Complex(real_part, imag_part)),
+                          Assign(cast_function_result, LiteralComplex(real_part, imag_part)),
                           Return([cast_function_result])]
     return FunctionDef(name      = cast_function_name,
                        arguments = [cast_function_argument],
