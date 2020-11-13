@@ -346,7 +346,7 @@ class PyccelInvert(PyccelBitOperator):
 
 class PyccelOperator(Expr, PyccelAstNode):
 
-    __slots__ = ['_args', '_dtype', '_rank', '_shape', '_precision'] 
+    __slots__ = ['_args', '_dtype', '_rank', '_shape'] 
     def __init__(self, *args):
 
         if self.stage == 'syntactic':
