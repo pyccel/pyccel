@@ -251,7 +251,7 @@ def handle_precedence(args, my_precedence):
 class PyccelBitOperator(Expr, PyccelAstNode):
     _rank = 0
     _shape = ()
-    __slots__ = ['_args']
+    __slots__ = ['_args', '_precision']
     def __init__(self, args):
         if self.stage == 'syntactic':
             self._args = handle_precedence(args, self.precedence)

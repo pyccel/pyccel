@@ -49,4 +49,3 @@ class PyccelAstNode:
         self._dtype     = x.dtype
         self._precision = x.precision
         self._order     = x.order
-
