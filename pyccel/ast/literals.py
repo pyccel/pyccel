@@ -16,7 +16,7 @@ __all__ = (
     'LiteralComplex',
     'LiteralImaginaryUnit',
     'LiteralString',
-    'get_default_value'
+    'get_default_literal_value'
 )
 
 #------------------------------------------------------------------------------
@@ -101,7 +101,7 @@ class LiteralString(Basic, PyccelAstNode):
 
 #------------------------------------------------------------------------------
 
-def get_default_value(dtype):
+def get_default_literal_value(dtype):
     """Returns the default value of a native datatype."""
     if isinstance(dtype, NativeInteger):
         value = LiteralInteger(0)
