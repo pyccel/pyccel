@@ -10,8 +10,8 @@ from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
 from sympy import Symbol
-from sympy import LiteralInteger as sp_Integer
-from sympy import LiteralFloat as sp_Float
+from sympy import Integer as sp_Integer
+from sympy import Float as sp_Float
 from sympy import Indexed, IndexedBase
 from sympy import ceiling
 from sympy import oo  as INF
