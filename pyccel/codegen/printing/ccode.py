@@ -16,8 +16,8 @@ from pyccel.ast.core      import PyccelAdd, PyccelMul
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
 
-from pyccel.ast.literals  import LiteralBooleanTrue, ImaginaryUnit, LiteralFloat
-from pyccel.ast.literals  import LiteralString
+from pyccel.ast.literals  import LiteralBooleanTrue, LiteralImaginaryUnit, LiteralFloat
+from pyccel.ast.literals  import LiteralString, LiteralInteger
 
 from pyccel.ast.numpyext  import NumpyFloat
 from pyccel.ast.numpyext  import NumpyReal, NumpyImag
@@ -259,12 +259,12 @@ class CCodePrinter(CodePrinter):
 
     def _print_LiteralComplex(self, expr):
         return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
-                        PyccelMul(expr.imag, ImaginaryUnit()))))
+                        PyccelMul(expr.imag, LiteralImaginaryUnit()))))
 
     def _print_PythonComplex(self, expr):
         self._additional_imports.add("complex")
         return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real_part,
-                        PyccelMul(expr.imag_part, ImaginaryUnit()))))
+                        PyccelMul(expr.imag_part, LiteralImaginaryUnit()))))
 
     def _print_LiteralImaginaryUnit(self, expr):
         return '_Complex_I'
