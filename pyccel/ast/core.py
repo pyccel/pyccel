@@ -3915,8 +3915,7 @@ class Interface(Basic):
         if found:
             return  self._functions[j]
         else:
-            msg = 'function not found in the interface'
-            errors.report('function not found in the interface',
+            errors.report('Arguments types provided to {} are incompatible'.format(self.name),
                         severity='fatal')
 
 class FunctionAddress(FunctionDef):
