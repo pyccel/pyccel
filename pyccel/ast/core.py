@@ -3856,46 +3856,57 @@ class Interface(Basic):
         self._is_argument = is_argument
 
     @property
+    """Name of the interface."""
     def name(self):
         return self._name
 
     @property
+    """"Functions of the interface."""
     def functions(self):
         return self._functions
 
     @property
+    """If True, the interface definition will not be generated."""
     def hide(self):
         return self._functions[0].hide or self._hide
 
     @property
+    """True if the interface is used for a function argument."""
     def is_argument(self):
         return self._is_argument
 
     @property
+    """Variables wich will not be passed to the interface."""
     def global_vars(self):
         return self._functions[0].global_vars
 
     @property
+    """Class name if the interface is a method of cls_name."""
     def cls_name(self):
         return self._functions[0].cls_name
 
     @property
+    """ 'function' or 'procedure' """
     def kind(self):
         return self._functions[0].kind
 
     @property
+    """a list of needed imports."""
     def imports(self):
         return self._functions[0].imports
 
     @property
+    """a list of properties."""
     def decorators(self):
         return self._functions[0].decorators
 
     @property
+    """True if the Interface is a procedure."""
     def is_procedure(self):
         return self._functions[0].is_procedure
 
     def point(self, args):
+        """Returns the actual function that will be called, depending on the passed arguments."""
         fs_args = [[j for j in i.arguments] for i in
                     self._functions]
         j = -1

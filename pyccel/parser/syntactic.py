@@ -650,11 +650,11 @@ class SyntaxParser(BasicParser):
             for comb_types in decorators['template']:
                 types = []
                 if len(comb_types.args) != 2:
-                        msg = 'Number of Arguments provided to the template decorator is not valid'
-                        errors.report(msg,
-                                        symbol = comb_types,
-                                        bounding_box = (stmt.lineno, stmt.col_offset),
-                                        severity='error')
+                    msg = 'Number of Arguments provided to the template decorator is not valid'
+                    errors.report(msg,
+                                    symbol = comb_types,
+                                    bounding_box = (stmt.lineno, stmt.col_offset),
+                                    severity='error')
 
                 for i in comb_types.args:
                     if isinstance(i, ValuedArgument) and not i.name in ('name',
@@ -700,7 +700,7 @@ class SyntaxParser(BasicParser):
                                     severity='error')
 
                     i += 1
-    
+
                 txt  = '#$ header template ' + str(tp_name)
                 txt += '(' + '|'.join(types) + ')'
                 templates += [hdr_parse(stmts=txt)]

@@ -200,6 +200,7 @@ class Scope(object):
 
     @property
     def templates(self):
+        """A list of user defined templates applied to all the functions in this scope"""
         return self._templates
 
     @property
