@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
+import numpy as np
 from pyccel.decorators import types
 from pyccel.decorators import template
 
@@ -67,6 +68,10 @@ def local_overide_1(x, y):
 @types('z', 'z', 'R')
 def tmplt_tmplt_1(x, y, z):
     return x + y + z
+
+#$ header function array_elem1(int [:]|double[:])
+def array_elem1(x):
+    return x[0]
 
 def tst_gen_1():
     x = gen_1(5.5)
@@ -141,3 +146,10 @@ def tst_tmplt_tmplt_1():
     z = tmplt_tmplt_1(5.5, 5.56, 7)
     a = tmplt_tmplt_1(5, 5, 7.7)
     return x * y * z * a
+
+def tst_array_elem1():
+    x1 = np.array([1,2,3], dtype=np.int)
+    y = array_elem1(x1)
+    x2 = np.array([1.3,2.4,3.4], dtype=np.double)
+    x = array_elem1(x2)
+    return x * y
