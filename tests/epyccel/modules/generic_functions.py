@@ -68,6 +68,11 @@ def local_overide_1(x, y):
 def tmplt_tmplt_1(x, y, z):
     return x + y + z
 
+@template(types=['int', 'real'], name = 'z')
+@types('z', 'z')
+def tmplt_2(x, y):
+    return x + y
+
 def tst_gen_1():
     x = gen_1(5.5)
     return x
@@ -141,3 +146,8 @@ def tst_tmplt_tmplt_1():
     z = tmplt_tmplt_1(5.5, 5.56, 7)
     a = tmplt_tmplt_1(5, 5, 7.7)
     return x, y, z, a
+
+def tst_tmplt_2():
+    x = tmplt_2(5, 5)
+    y = tmplt_2(5.5, 7.3)
+    return x, y
