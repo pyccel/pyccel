@@ -101,13 +101,13 @@ class Template(Header):
         self._args = args
 
     @property
-    "The name of the template."
     def name(self):
+        "The name of the template."
         return self._name
 
     @property
-    "Types the template represents."
     def args(self):
+        "Types the template represents."
         return self._args
 
 #==============================================================================
