@@ -6,6 +6,7 @@ import os
 import re
 
 import ast
+
 #==============================================================================
 
 from sympy.core.function import Function
@@ -644,44 +645,45 @@ class SyntaxParser(BasicParser):
 
         # extract the templates
         if 'template' in decorators:
-            types = []
-            i = 0
-
             if not isinstance(decorators['template'], list):
                 decorators['template'] = [decorators['template']]
             for comb_types in decorators['template']:
+                types = []
                 if len(comb_types.args) != 2:
-                        msg = 'Number of Arguments provided to the types decorator is not valid'
+                        msg = 'Number of Arguments provided to the template decorator is not valid'
                         errors.report(msg,
                                         symbol = comb_types,
                                         bounding_box = (stmt.lineno, stmt.col_offset),
                                         severity='error')
 
-                tp_name = comb_types.args[0]
-                if isinstance(tp_name, ValuedArgument):
-                    arg_name = tp_name.name
-                    tp_name = tp_name.value
-                    if not arg_name == 'name':
-                        msg = 'Argument "{}" provided to the template decorator is not valid'.format(arg_name)
+                for i in comb_types.args:
+                    if isinstance(i, ValuedArgument) and not i.name in ('name',
+                            'types'):
+                        msg = 'Argument provided to the template decorator is not valid'
                         errors.report(msg,
                                         symbol = comb_types,
                                         bounding_box = (stmt.lineno, stmt.col_offset),
                                         severity='error')
+                if all(isinstance(i, ValuedArgument) for i in comb_types.args):
+                    tp_name, ls = (comb_types.args[0].value, comb_types.args[1].value) if\
+                            comb_types.args[0].name == 'name' else\
+                            (comb_types.args[1].value, comb_types.args[0].value)
+                else:
+                    tp_name = comb_types.args[0]
+                    ls = comb_types.args[1]
+                    ls = ls.value if isinstance(ls, ValuedArgument) else ls
+                try:
+                    tp_name = str(tp_name)
+                    ls = ls if isinstance(ls, PythonTuple) else list(ls)
+                except TypeError:
+                    msg = 'Argument provided to the template decorator is not valid'
+                    errors.report(msg,
+                                    symbol = comb_types,
+                                    bounding_box = (stmt.lineno, stmt.col_offset),
+                                    severity='fatal')
 
-                ls = comb_types.args[1]
-                if isinstance(ls, ValuedArgument):
-                    arg_name = ls.name
-                    ls  = ls.value
-                    if not arg_name == 'types':
-                        msg = 'Argument "{}" provided to the template decorator is not valid'.format(arg_name)
-                        errors.report(msg,
-                                        symbol = comb_types,
-                                        bounding_box = (stmt.lineno, stmt.col_offset),
-                                        severity='error')
-                    else:
-                        ls = ls if isinstance(ls, (PythonTuple)) else list(ls)
-
-                while i<len(ls) :
+                i = 0
+                while i<len(ls):
                     arg = ls[i]
                     if isinstance(arg, Symbol):
                         arg = arg.name
@@ -731,7 +733,7 @@ class SyntaxParser(BasicParser):
                         if not arg_name == 'results':
                             msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
                             errors.report(msg,
-                                        symbol = decorators['types'],
+                                        symbol = comb_types,
                                         bounding_box = (stmt.lineno, stmt.col_offset),
                                         severity='error')
                         else:
@@ -740,7 +742,7 @@ class SyntaxParser(BasicParser):
                     else:
                         msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
                         errors.report(msg,
-                                    symbol = decorators['types'],
+                                    symbol = comb_types,
                                     bounding_box = (stmt.lineno, stmt.col_offset),
                                     severity='error')
     
