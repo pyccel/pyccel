@@ -75,70 +75,69 @@ def tst_gen_1():
 def tst_gen_2():
     x = gen_2(5.5, 5)
     y = gen_2(5, 5.5)
-    return x / y
+    return x, y
 
 def tst_gen_3():
     x = gen_3(5, 5)
     y = gen_3(5.5, 5.5)
-    return x / y
+    return x, y
 
 def tst_gen_4():
     x = gen_4(5.5, 5.5)
     y = gen_4(5, 5)
-    return x / y
+    return x, y
 
 def tst_gen_5():
     x = gen_5(5.5, 5.5)
     y = gen_5(5, 5)
     z = gen_5(5.5, 5)
     a = gen_5(5, 6.6)
-    return x * a * y * z
+    return x, a, y, z
 
 def tst_gen_6():
     x = gen_6(5.5, 5.5)
     y = gen_6(5, 5)
-    z = gen_6(True, True)
-    a = gen_6(1j, 1j)
-    return x * a * y * z
+    z = gen_6(1j, 1j)
+    return x, y, z
 
 def tst_gen_7():
     x = gen_7(5, 5, 7)
     y = gen_7(5, 5, 7.3)
     z = gen_7(4.5, 4.5, 8)
     a = gen_7(7.5, 3.5, 7.7)
-    return x * a * y * z
+    return x, a, y, z
 
 def tst_multi_heads_1():
     x = multi_heads_1(5, 5)
     y = multi_heads_1(5, 7.3)
-    return x * y
+    return x, y
 
 def tst_tmplt_1():
     x = tmplt_1(5, 5)
     y = tmplt_1(5.5, 7.3)
-    return x * y
+    return x, y
 
 def tst_multi_tmplt_1():
     x = multi_tmplt_1(5, 5, 7)
     y = multi_tmplt_1(5, 5, 7.3)
     z = multi_tmplt_1(4.5, 4.5, 8)
     a = multi_tmplt_1(7.5, 3.5, 7.7)
-    return x * a * y * z
+    return x, a, y, z
 
 def tst_tmplt_head_1():
     x = tmplt_head_1(5, 5)
     y = tmplt_head_1(5.5, 7.3)
     z = tmplt_head_1(5, 5.56)
-    return x * y * z
+    return x, y, z
 
 def tst_local_overide_1():
     x = local_overide_1(5, 4)
     y = local_overide_1(6.56, 3.3)
-    return x * y
+    return x, y
 
 def tst_tmplt_tmplt_1():
     x = tmplt_tmplt_1(5, 5, 5)
     y = tmplt_tmplt_1(5.5, 7.3, 7.7)
     z = tmplt_tmplt_1(5.5, 5.56, 7)
     a = tmplt_tmplt_1(5, 5, 7.7)
-    return x * y * z * a
+    return x, y, z, a
