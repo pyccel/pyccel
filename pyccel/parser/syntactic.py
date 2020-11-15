@@ -747,13 +747,13 @@ class SyntaxParser(BasicParser):
                                     severity='error')
 
                     i = i+1
-    
+
                 txt  = '#$ header ' + name
                 txt += '(' + ','.join(types) + ')'
-    
+
                 if results:
                     txt += ' results(' + ','.join(results) + ')'
-    
+
                 header = hdr_parse(stmts=txt)
                 if name in self.namespace.static_functions:
                     header = header.to_static()
