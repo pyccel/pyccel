@@ -3588,7 +3588,7 @@ class FunctionDef(Basic):
         self._is_static       = is_static
         self._imports         = imports
         self._decorators      = decorators
-        self._headers          = headers
+        self._headers         = headers
         self._templates       = templates
         self._is_recursive    = is_recursive
         self._is_pure         = is_pure
