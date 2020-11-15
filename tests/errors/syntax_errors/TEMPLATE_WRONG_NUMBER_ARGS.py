@@ -2,7 +2,7 @@
 from pyccel.decorators import types
 from pyccel.decorators import template
 
-@template(name='O', types=['int', 'real'], test='int')
+@template(name='O', types=['int', 'real'], test='int') # pylint: disable=unexpected-keyword-arg
 @types('O', 'O')
 def tmplt_1(x, y):
     return x + y

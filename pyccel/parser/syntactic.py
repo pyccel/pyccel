@@ -715,7 +715,7 @@ class SyntaxParser(BasicParser):
                 container = types
                 i = 0
                 ls = comb_types.args
-    
+
                 while i<len(ls) :
                     arg = ls[i]
     
