@@ -97,6 +97,7 @@ class Template(Header):
         return Basic.__new__(cls)
 
     def __init__(self, name, args):
+        Header.__init__(self)
         self._name = name
         self._args = args
 
