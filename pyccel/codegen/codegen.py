@@ -238,6 +238,12 @@ class Codegen(object):
 
         #  ...
 
+    def doprint(self, **settings):
+        """Prints the code in the target language."""
+        if not self._printer:
+            self.set_printer(**settings)
+        self._code = self._printer.doprint(self.expr)
+        return self._code
 
     def export(self, filename=None, **settings):
         """Export code in filename"""
