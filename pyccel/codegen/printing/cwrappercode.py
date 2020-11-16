@@ -401,10 +401,10 @@ class CWrapperCodePrinter(CCodePrinter):
                         tmp_vars[tmp_var.name] = tmp_var
                         assign = [Assign(tmp_var, self.get_collect_function_call(tmp_var, a)), Assign(VariableAddress(b), VariableAddress(tmp_var))]
                         assign = [If((PyccelEq(VariableAddress(a), VariableAddress(Py_None)),
-                                    [Assign(VariableAddress(b), b.value)]), (BooleanTrue(), assign))]
+                                    [Assign(VariableAddress(b), b.value)]), (LiteralTrue(), assign))]
 
                 errors_dict.setdefault(b, set()).add((b.dtype, check)) # collect variable type for each arguments
-                check = PyccelBitAnd(check_var, flags)
+                check = PyccelBitAnd(check_var, LiteralInteger(flags))
                 cond.append(check)
                 body += assign
 
@@ -439,7 +439,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 body = body + [Return(wrapper_results)],
                 local_vars = tmp_vars.values())
             funcs_def.append(func_def)
-            cond = [BooleanTrue()] if not cond else cond # temporary to active some tests  for 0 args
+            cond = [LiteralTrue()] if not cond else cond # temporary to active some tests  for 0 args
             body_tmp.append((PyccelAnd(*cond), [AliasAssign(wrapper_results[0], FunctionCall(func_def, parse_args))]))
 
         # Errors management
@@ -460,7 +460,7 @@ class CWrapperCodePrinter(CCodePrinter):
         funcs_def.append(error_func)
 
         # Create the If condition with the cond and body collected above
-        body_tmp.append((BooleanTrue(), [FunctionCall(error_func, parse_args) , Return([Nil()])]))
+        body_tmp.append((LiteralTrue(), [FunctionCall(error_func, parse_args) , Return([Nil()])]))
         wrapper_body_translations = [If(*body_tmp)]
 
         # Parsing Arguments
