@@ -34,9 +34,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     ))
     _kc = {k: ''+v for k, v in _known_constants_math.items()}
 
-    def __init__(self, settings=None):
+    def __init__(self, parser=None, settings={}):
         self.assert_contiguous = settings.pop('assert_contiguous', False)
-
+        self.parser = parser
         SympyPythonCodePrinter.__init__(self, settings=settings)
 
     def _print_Variable(self, expr):
