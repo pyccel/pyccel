@@ -154,9 +154,22 @@ class Codegen(object):
 
         return self._code
 
-    def get_printer(self):
-        """return the current codeprinter instance"""
-        return self._printer
+    def set_printer(self, **settings):
+        """ Set the current codeprinter instance"""
+        # Get language used (default language used is fortran)
+        language = settings.pop('language', 'fortran')
+
+        # Set language
+        if not language in ['fortran', 'c', 'python']:
+            raise ValueError('{} language is not available'.format(language))
+        self._language = language
+
+        # instanciat codePrinter
+        code_printer = printer_registry[language]
+        errors = Errors()
+        errors.set_parser_stage('codegen')
+        # set the code printer
+        self._printer = code_printer(self.parser, **settings)
 
     def _collect_statements(self):
         """Collects statements and split them into routines, classes, etc."""
@@ -225,57 +238,26 @@ class Codegen(object):
 
         #  ...
 
-    def doprint(self, **settings):
-        """Prints the code in the target language."""
-
-        # ... finds the target language
-
-        language = settings.pop('language', 'fortran')
-
-        if not language in ['fortran', 'c', 'python']:
-            raise ValueError('{} language is not available'.format(language))
-
-        self._language = language
-
-        # Define the printing class to be used
-        code_printer = printer_registry[language]
-
-        errors = Errors()
-        errors.set_parser_stage('codegen')
-
-        # Get the code printed
-        self._printer = code_printer(self.parser, **settings)
-        code = self.get_printer().doprint(self.expr)
-
-        self._code      = code
-
-        return code
 
     def export(self, filename=None, **settings):
+        """Export code in filename"""
+        self.set_printer(**settings)
+        ext = _extension_registry[self._language]
+        header_ext = _header_extension_registry[self._language]
 
-        if self.code is None:
-            code = self.doprint(**settings)
-        else:
-            code = self.code
-
-        ext = _extension_registry[self.language]
-        header_ext = _header_extension_registry[self.language]
-        if filename is None:
-            header_filename = '{name}.{ext}'.format(name=self.name, ext=header_ext)
-            filename = '{name}.{ext}'.format(name=self.name, ext=ext)
-        else:
-            header_filename = '{name}.{ext}'.format(name=filename, ext=header_ext)
-            filename = '{name}.{ext}'.format(name=filename, ext=ext)
-
-        with open(filename, 'w') as f:
-            for line in code:
-                f.write(line)
+        if filename is None: filename = self.name
+        header_filename = '{name}.{ext}'.format(name=filename, ext=header_ext)
+        filename = '{name}.{ext}'.format(name=filename, ext=ext)
 
         if header_ext is not None and self.is_module:
-            # Get the code printed
-            code = self.get_printer().doprint(ModuleHeader(self.expr), assign_to=None)
+            code = self._printer.doprint(ModuleHeader(self.expr))
             with open(header_filename, 'w') as f:
                 for line in code:
                     f.write(line)
+        # print module or program code
+        self._code = self._printer.doprint(self.expr)
+        with open(filename, 'w') as f:
+            for line in self._code:
+                f.write(line)
 
         return filename
