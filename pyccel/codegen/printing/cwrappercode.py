@@ -14,7 +14,7 @@ from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, PyccelEq
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelOr, PyccelAnd
+from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelOr, PyccelAnd,PyccelBitAnd
 from pyccel.ast.core import Interface, IfTernaryOperator, PyccelAssociativeParenthesis
 from pyccel.ast.datatypes import str_dtype
 
@@ -22,7 +22,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, Nativ
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
-from pyccel.ast.cwrapper import Py_None
+from pyccel.ast.cwrapper import Py_None, test_type
 from pyccel.ast.cwrapper import PyErr_SetString, PyType_Check_2
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 from pyccel.ast.cwrapper import PyccelPyArrayObject
@@ -380,13 +380,14 @@ class CWrapperCodePrinter(CCodePrinter):
             body = []
             res_args = []
             tmp_vars = {}
+            check_var = Variable(dtype = NativeInteger(), name = self.get_new_name(used_names , "check"))
+            flags = 0
             # Loop for all args in every functions and create the corresponding condition and body
             for a, b in zip(parse_args, func.arguments):
                 check = PyType_Check_2(b, a) # get check type function
                 assign = [Assign(b, self.get_collect_function_call(b, a))] # get collect function
-                errors_dict.setdefault(b, set()).add((b.dtype, check)) # collect variable type for each arguments
                 tmp_vars[b.name] = b
-
+                flags += test_type[(b.dtype, b.precision)]
                 # NOT WORKING FOR THE MOMENT : Managing valued variable
                 if isinstance(b, ValuedVariable):
                     check = PyccelAssociativeParenthesis(PyccelOr(PyccelEq(VariableAddress(a), VariableAddress(Py_None)), check))
@@ -402,6 +403,8 @@ class CWrapperCodePrinter(CCodePrinter):
                         assign = [If((PyccelEq(VariableAddress(a), VariableAddress(Py_None)),
                                     [Assign(VariableAddress(b), b.value)]), (BooleanTrue(), assign))]
 
+                errors_dict.setdefault(b, set()).add((b.dtype, check)) # collect variable type for each arguments
+                check = PyccelBitAnd(check_var, flags)
                 cond.append(check)
                 body += assign
 

@@ -540,3 +540,15 @@ check_type_registry_2 = {
     (NativeComplex(), 8)       : Numpy_Complex_ref,
     (NativeBool(), 4)          : Numpy_Bool_ref
 }
+
+test_type = {
+    (NativeInteger(), 4)       : 1,
+    (NativeInteger(), 8)       : 2,
+    (NativeInteger(), 2)       : 3,
+    (NativeInteger(), 1)       : 4,
+    (NativeReal(), 8)          : 5,
+    (NativeReal(), 4)          : 6,
+    (NativeComplex(), 4)       : 7,
+    (NativeComplex(), 8)       : 8,
+    (NativeBool(), 4)          : 9
+}
