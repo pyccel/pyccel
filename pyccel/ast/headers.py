@@ -236,7 +236,6 @@ class FunctionHeader(Header):
                 raise TypeError('element must be of type UnionType or dict')
 
         #TODO: handle the case of functions arguments
-        templates_names = [i.name for i in templates]
         arg_codes = []
 
         #generate possible combinations from uniontypes and iterate through them
@@ -246,9 +245,8 @@ class FunctionHeader(Header):
             #For each template type, replace only one in each combination, by
             #a list of its args
             for i, j in enumerate(iterx):
-                if 'datatype' in j and j['datatype'] in templates_names and not j['datatype'] in old_values:
-                    tmplt = templates_names.index(j['datatype'])
-                    iterx[i] = templates[tmplt].args
+                if 'datatype' in j and j['datatype'] in templates and not j['datatype'] in old_values:
+                    iterx[i] = templates[j['datatype']].args
                     old_values[j['datatype']] = i
                 else:
                     iterx[i] = [j]
@@ -257,7 +255,7 @@ class FunctionHeader(Header):
             for itery in product(*iterx):
                 itery = list(itery)
                 for j, i in enumerate(itery):
-                    if 'datatype' in i and i['datatype'] in templates_names:
+                    if 'datatype' in i and i['datatype'] in templates:
                         itery[j] = itery[old_values[i['datatype']]].copy()
                 arg_codes.append(itery)
         for args_ in arg_codes:

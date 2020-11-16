@@ -378,7 +378,7 @@ class SemanticParser(BasicParser):
 
     def insert_template(self, expr):
         """append the scope's templates with the given template"""
-        self.namespace.templates.append(expr)
+        self.namespace.templates[expr.name] = expr
 
     def insert_header(self, expr):
         """."""
@@ -524,11 +524,10 @@ class SemanticParser(BasicParser):
     def get_templates(self):
         """Returns templates of the current scope and all its parents scopes"""
         container = self.namespace
-        templates = []
+        templates = {}
         while container:
-            templates_names = [tmplt.name for tmplt in templates]
-            templates += [tmplt for tmplt in container.templates if tmplt.name not
-                    in templates_names]
+            templates.update({tmplt:container.templates[tmplt] for tmplt in container.templates\
+                if tmplt not in templates})
             container = container.parent_scope
         return templates
 
@@ -2428,11 +2427,7 @@ class SemanticParser(BasicParser):
 
         args_number = len(expr.arguments)
         templates = self.get_templates()
-        templates_names = [tp.name for tp in expr.templates]
-        for i, tp in enumerate(templates):
-            if tp.name in templates_names:
-                templates.pop(i)
-        templates += expr.templates
+        templates.update(expr.templates)
 
         if cls_name:
             header += self.get_header(cls_name +'.'+ name)

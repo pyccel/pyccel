@@ -614,7 +614,7 @@ class SyntaxParser(BasicParser):
         local_vars   = []
         global_vars  = []
         headers      = []
-        templates    = []
+        templates    = {}
         hide         = False
         kind         = 'function'
         is_pure      = False
@@ -703,7 +703,13 @@ class SyntaxParser(BasicParser):
 
                 txt  = '#$ header template ' + str(tp_name)
                 txt += '(' + '|'.join(types) + ')'
-                templates += [hdr_parse(stmts=txt)]
+                if tp_name in templates:
+                    msg = 'The template "{}" is duplicated'.format(tp_name)
+                    errors.report(msg,
+                                bounding_box = (stmt.lineno, stmt.col_offset),
+                                severity='warning')
+
+                templates[tp_name] = hdr_parse(stmts=txt)
 
         # extract the types to construct a header
         if 'types' in decorators:

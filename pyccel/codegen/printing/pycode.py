@@ -79,6 +79,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
         if decorators:
             for n,f in decorators.items():
+                # TODO - All decorators must be stored in a list
                 if not isinstance(f, list):
                     f = [f]
                 dec = ''

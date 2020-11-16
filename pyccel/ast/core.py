@@ -3470,7 +3470,7 @@ class FunctionDef(Basic):
         imports=[],
         decorators={},
         headers=[],
-        templates=[],
+        templates={},
         is_recursive=False,
         is_pure=False,
         is_elemental=False,

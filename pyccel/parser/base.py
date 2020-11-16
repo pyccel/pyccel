@@ -127,7 +127,7 @@ class Scope(object):
         self._classes   = OrderedDict()
         self._functions = OrderedDict()
         self._macros    = OrderedDict()
-        self._templates = []
+        self._templates = {}
         self._headers   = headers    or OrderedDict()
         self._decorators= decorators or OrderedDict()
 
@@ -200,7 +200,7 @@ class Scope(object):
 
     @property
     def templates(self):
-        """A list of user defined templates applied to all the functions in this scope"""
+        """A dictionary of user defined templates applied to all the functions in this scope"""
         return self._templates
 
     @property
