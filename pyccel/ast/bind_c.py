@@ -6,14 +6,10 @@ from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import FunctionDef, BindCFunctionDef
 from pyccel.ast.core import Variable
-from pyccel.ast.core import ValuedVariable
 from pyccel.ast.core import Assign
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
-from pyccel.ast.core import Comment
 from pyccel.ast.core import IndexedVariable
-
-from pyccel.ast.datatypes import str_dtype
 
 __all__ = (
    'as_static_function',

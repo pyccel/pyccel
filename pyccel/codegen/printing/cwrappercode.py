@@ -7,7 +7,7 @@ import numpy as np
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
-from pyccel.ast.numbers   import BooleanTrue, Integer
+from pyccel.ast.literals  import LiteralTrue, LiteralInteger
 
 from pyccel.ast.builtins import PythonPrint
 
@@ -195,7 +195,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
 
         elif variable.rank > 0:
-            check = PyccelNe(FunctionCall(numpy_get_ndims,[variable]), Integer(variable.rank))
+            check = PyccelNe(FunctionCall(numpy_get_ndims,[variable]), LiteralInteger(variable.rank))
             err = PyErr_SetString('PyExc_TypeError', '"{} must have rank {}"'.format(variable, str(variable.rank)))
             body = [If((check, [err, Return([Nil()])]))]
 
@@ -233,7 +233,7 @@ class CWrapperCodePrinter(CCodePrinter):
             if isinstance(variable, ValuedVariable):
                 default_value = VariableAddress(Py_None)
                 body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
-                        (BooleanTrue(), [Assign(variable, variable.value)]))]
+                        (LiteralTrue(), [Assign(variable, variable.value)]))]
 
         return collect_var, body
 
@@ -329,7 +329,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body += [Assign(VariableAddress(a), VariableAddress(optional_tmp_var))]
 
         body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
-        (BooleanTrue(), [Assign(VariableAddress(a), a.value)]))]
+        (LiteralTrue(), [Assign(VariableAddress(a), a.value)]))]
         return optional_tmp_var, body
 
     def _print_Interface(self, expr):

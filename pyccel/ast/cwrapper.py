@@ -4,7 +4,6 @@ import numpy as np
 
 from .basic     import Basic
 
-from pyccel.ast.numbers   import BooleanTrue, Complex
 from .builtins  import PythonBool
 
 from .datatypes import DataType
@@ -14,6 +13,8 @@ from .datatypes import NativeBool, NativeString, NativeGeneric, NativeVoid
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress, FunctionAddress
 from .core      import AliasAssign, Assign, Return
 from .core      import PyccelEq, If, PyccelOr, PyccelAssociativeParenthesis
+
+from .literals  import LiteralTrue, LiteralComplex
 
 from .numpyext  import NumpyReal, NumpyImag
 
@@ -223,7 +224,7 @@ class PyBuildValueNode(Basic):
         List of arguments which the result will be buit from
     """
 
-    def __init__(self, result_args = []):
+    def __init__(self, result_args = ()):
         self._flags = ''
         self._result_args = result_args
         for i in result_args:
@@ -442,7 +443,7 @@ def bool_to_pyobj(cast_function_name):
     cast_function_body = [If(
                             (PythonBool(cast_function_argument),
                                 [AliasAssign(cast_function_result, Py_True)]),
-                            (BooleanTrue(),
+                            (LiteralTrue(),
                                 [AliasAssign(cast_function_result, Py_False)])
                           ),
                           Return([cast_function_result])]
@@ -478,7 +479,7 @@ def pycomplex_to_complex(cast_function_name):
 
     cast_function_body = [Assign(real_part, FunctionCall(pycomplex_real, [cast_function_argument])),
                           Assign(imag_part, FunctionCall(pycomplex_imag, [cast_function_argument])),
-                          Assign(cast_function_result, Complex(real_part, imag_part)),
+                          Assign(cast_function_result, LiteralComplex(real_part, imag_part)),
                           Return([cast_function_result])]
     return FunctionDef(name      = cast_function_name,
                        arguments = [cast_function_argument],
