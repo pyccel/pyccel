@@ -409,12 +409,9 @@ class CWrapperCodePrinter(CCodePrinter):
                 types_dict.setdefault(b, set()).add((b, check, flag_value)) # collect variable type for each arguments
                 mini_wrapper_func_body += assign
 
-            # checking res length and create the corresponding function call
-            if len(func.results)==0:
-                mini_wrapper_func_body.append(FunctionCall(func, func.arguments))
-            else:
-                results   = func.results if len(func.results) > 1 else func.results[0]
-                mini_wrapper_func_body.append(Assign(results,FunctionCall(func, func.arguments)))
+            # create the corresponding function call
+            mini_wrapper_func_body.append(self._create_wrapper_results(func.arguments, func))
+
 
             # Loop for all res in every functions and create the corresponding body and cast
             for r in func.results :
@@ -500,6 +497,30 @@ class CWrapperCodePrinter(CCodePrinter):
         sep = self._print(SeparatorComment(40))
         return sep + '\n'.join(CCodePrinter._print_FunctionDef(self, f) for f in funcs_def)
 
+    def _create_wrapper_results(self, arguments, func):
+        if self._target_language == 'fortran':
+            static_args = []
+            for a in arguments:
+                if isinstance(a, Variable) and a.rank>0:
+                    # Add shape arguments for static function
+                    static_args.extend(FunctionCall(numpy_get_dim,[a,i])
+                            for i in range(a.rank))
+                    static_args.append(FunctionCall(numpy_get_data,[a]))
+                else:
+                    static_args.append(a)
+
+            static_function = as_static_function_call(func, self._module_name, name=func.name)
+        else:
+            static_function = func
+            static_args = arguments
+
+        if len(func.results)==0:
+            func_call = FunctionCall(static_function, static_args)
+        else:
+            results   = func.results if len(func.results)>1 else func.results[0]
+            func_call = Assign(results,FunctionCall(static_function, static_args))
+
+        return func_call
 
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
@@ -626,30 +647,9 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.extend(wrapper_body_translations)
 
         # Call function
-        if self._target_language == 'fortran':
-            static_args = []
-            for a in arguments:
-                if isinstance(a, Variable) and a.rank>0:
-                    # Add shape arguments for static function
-                    static_args.extend(FunctionCall(numpy_get_dim,[a,i])
-                            for i in range(a.rank))
-                    static_args.append(FunctionCall(numpy_get_data,[a]))
-                else:
-                    static_args.append(a)
-
-            static_function = as_static_function_call(expr, self._module_name, name=expr.name)
-        else:
-            static_function = expr
-            static_args = arguments
-
-        if len(expr.results)==0:
-            func_call = FunctionCall(static_function, static_args)
-        else:
-            results   = expr.results if len(expr.results)>1 else expr.results[0]
-            func_call = Assign(results,FunctionCall(static_function, static_args))
+        func_call = self._create_wrapper_results(expr.arguments, expr)
 
         wrapper_body.append(func_call)
-
 
         # Loop over results to carry out necessary casts and collect Py_BuildValue type string
         res_args = []
