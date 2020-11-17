@@ -732,7 +732,7 @@ class CCodePrinter(CodePrinter):
 
         args = []
         for a, f in zip(expr.arguments, func.arguments):
-            if self.stored_in_c_pointer(f):
+            if isinstance(a, Variable) and self.stored_in_c_pointer(f):
                 args.append(VariableAddress(a))
             elif isinstance(a, Variable) and f.is_optional and not isinstance(a, Nil):
                 tmp_var = self.create_tmp_var(f)
