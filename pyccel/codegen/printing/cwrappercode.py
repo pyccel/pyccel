@@ -689,7 +689,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         #TODO it should be a better way to do this :
         funcs = [i for i in expr.interfaces]
-        funcs += [f for x in expr.interfaces for f in expr.funcs if f not in x.functions]
+        funcs += [f for f in expr.funcs if f.name not in [item.name for s in funcs for item in s.functions]]
 
         function_defs = '\n\n'.join(self._print(f) for f in funcs)
         cast_functions = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f)
