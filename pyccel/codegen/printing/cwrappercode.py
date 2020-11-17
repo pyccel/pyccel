@@ -24,7 +24,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, Nativ
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
 from pyccel.ast.cwrapper import Py_None, flags_registry
-from pyccel.ast.cwrapper import PyErr_SetString, PyType_Check_2
+from pyccel.ast.cwrapper import PyErr_SetString, Type_Check
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 from pyccel.ast.cwrapper import PyccelPyArrayObject
 from pyccel.ast.cwrapper import numpy_get_ndims, numpy_get_data, numpy_get_dim
@@ -323,7 +323,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         default_value = VariableAddress(Py_None)
 
-        check = FunctionCall(PyType_Check(a.dtype), [collect_var])
+        check = Type_Check(a, collect_var)
         err = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(a, a.dtype))
         body = [If((PyccelNot(check), [err, Return([Nil()])]))]
         body += [Assign(optional_tmp_var, self.get_collect_function_call(optional_tmp_var, collect_var))]
@@ -387,7 +387,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # Loop for all args in every functions and create the corresponding condition and body
             for a, b in zip(parse_args, func.arguments):
-                check = PyType_Check_2(b, a) # get check type function
+                check = Type_Check(b, a) # get check type function
                 assign = [Assign(b, self.get_collect_function_call(b, a))] # get collect function
                 func_vars[b.name] = b
                 flag_value = flags_registry[(b.dtype, b.precision)] # add try catch block !

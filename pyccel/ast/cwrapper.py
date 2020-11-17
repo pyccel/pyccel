@@ -44,7 +44,7 @@ __all__ = (
     'Py_DECREF',
     'PyLong_AsLong',
     'PyFloat_AsDouble',
-    'PyType_Check',
+    'Type_Check',
     'PyErr_SetString',
 #------- CAST FUNCTIONS ------
     'pyint_to_bool',
@@ -380,38 +380,34 @@ numpy_dtype_registry = {('bool',4)     : numpy_bool_type,
                         ('complex',8)  : numpy_cdouble_type,
                         ('complex',16) : numpy_clongdouble_type}
 
-def PyType_Check(data_type):
-    try :
-        check_type = check_type_registry[data_type]
-    except KeyError:
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=data_type,severity='fatal')
-    func = FunctionDef(name = check_type,
-                    body = [],
-                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                    results   = [Variable(dtype=NativeBool(), name = 'r')])
-    return func
 
-def PyType_Check_2(data, argument):
+def Type_Check(data, argument):
+    # check for numpy type
     try :
         check_numpy_ref = numpy_type_check_registry[(data.dtype, data.precision)]
     except KeyError:
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=data_type,severity='fatal')
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=data.dtype,severity='fatal')
 
-    # check for numpy type
     check_numpy_func = FunctionDef(name = 'PyArray_IsScalar',
                     body = [],
                     arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True), check_numpy_ref],
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
 
     # check for python type
-    check_python_func = PyType_Check(data.dtype)
+    try :
+        check_type = python_type_check_registry[data.dtype]
+    except KeyError:
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=data.dtype,severity='fatal')
+    check_python_func = FunctionDef(name = check_type,
+                    body = [],
+                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                    results   = [Variable(dtype=NativeBool(), name = 'r')])
+
     check = PyccelAssociativeParenthesis(PyccelOr(
         FunctionCall(check_python_func, [argument]),
         FunctionCall(check_numpy_func, [argument, check_numpy_ref]
     )))
     return check
-
-
 
 def PyErr_SetString(error_type, error_msg):
     func = FunctionDef(name = 'PyErr_SetString',
@@ -512,7 +508,7 @@ collect_function_registry = {
     NativeReal() : PyFloat_AsDouble,
 }
 
-check_type_registry = {
+python_type_check_registry = {
     NativeInteger(): 'PyLong_Check',
     NativeComplex() : 'PyComplex_Check',
     NativeReal() : 'PyFloat_Check',
