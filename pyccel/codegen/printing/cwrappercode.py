@@ -16,7 +16,7 @@ from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, PyccelEq
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelOr, PyccelAnd,PyccelBitAnd
 from pyccel.ast.core import Interface, IfTernaryOperator, PyccelAssociativeParenthesis
-from pyccel.ast.core import PyccelMul, PyccelAdd
+from pyccel.ast.core import PyccelMul, PyccelAdd, AugAssign
 from pyccel.ast.datatypes import str_dtype
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
@@ -384,6 +384,12 @@ class CWrapperCodePrinter(CCodePrinter):
             flags = 0
 
             # Loop for all args in every functions and create the corresponding condition and body
+            pyArray_arguments = [Variable(PyccelPyArrayObject(),
+                a.name,
+                is_pointer = True,
+                rank  = a.rank,
+                order = a.order) if isinstance(a, Variable) and a.rank > 0 else a for a in expr.arguments]
+
             for a, b in zip(parse_args, func.arguments):
                 check = Type_Check(b, a) # get check type function
                 assign = [Assign(b, self.get_collect_function_call(b, a))] # get collect function
@@ -452,7 +458,7 @@ class CWrapperCodePrinter(CCodePrinter):
             types = []
             for s in types_dict[a] :
                 value = s[2] << flags
-                body.append((s[1], [Assign(check_var, value)]))
+                body.append((s[1], [AugAssign(check_var, '+' ,value)]))
                 types.append(s[0].dtype)
             flags -= 4
             error = ' or '.join([str_dtype(v) for v in types])
@@ -478,7 +484,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body_translations = [If(*body_tmp)]
 
         # Parsing Arguments
-        parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, funcs[0].arguments, parse_args, keyword_list)
+        parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, funcs[0].arguments, parse_args, keyword_list, True)
         wrapper_body += list(default_value.values())
         wrapper_body.append(If((PyccelNot(parse_node), [Return([Nil()])])))
 
@@ -688,7 +694,7 @@ class CWrapperCodePrinter(CCodePrinter):
             static_funcs = expr.funcs
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in static_funcs)
 
-        function_defs = '\n\n'.join(self._print_Interface(f) for f in expr.funcs)
+        function_defs = '\n\n'.join(self._print_Interface(f) if len(f.arguments) > 0 else self._print(f) for f in expr.funcs)
         cast_functions = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f)
                                         for f in self._cast_functions_dict.values())
         method_def_func = ',\n'.join(('{{\n'
