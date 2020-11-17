@@ -461,30 +461,18 @@ class CWrapperCodePrinter(CCodePrinter):
         error_func_name = self.get_new_name(used_names.union(self._global_names), 'error_check')
         self._global_names.add(error_func_name)
         error_body = [Assign(check_var, LiteralInteger(0))] + errors_body
+        error_body.append(Return([check_var]))
         error_func = FunctionDef(name = error_func_name,
             arguments = parse_args,
-            results = [],
-            body = error_body,
-            local_vars = [check_var])
-        funcs_def.append(error_func)
-
-
-
-        error_body = []
-        for a in errors_dict:
-            check = PyccelNot(PyccelAssociativeParenthesis(PyccelOr(*[x[1] for x in errors_dict[a]])))
-            error = ' or '.join([str_dtype(x[0]) for x in errors_dict[a]])
-            error_body.append((check, [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(a, error))]))
-        error_body = [If(*error_body)]
-        error_func = FunctionDef(name = error_func_name,
-            arguments = parse_args,
-            results = [],
+            results = [check_var],
             body = error_body,
             local_vars = [])
         funcs_def.append(error_func)
+        #PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(a, error))
 
         # Create the If condition with the cond and body collected above
-        body_tmp.append((LiteralTrue(), [FunctionCall(error_func, parse_args) , Return([Nil()])]))
+        body_tmp = [((PyccelNot(check_var), [Return([Nil()])]))] + body_tmp
+        body_tmp.append((LiteralTrue(), [Return([Nil()])]))
         wrapper_body_translations = [If(*body_tmp)]
 
         # Parsing Arguments
@@ -493,6 +481,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.append(If((PyccelNot(parse_node), [Return([Nil()])])))
 
         #finishing the wrapper body
+        wrapper_body.append(Assign(check_var, FunctionCall(error_func, parse_args)))
         wrapper_body.extend(wrapper_body_translations)
         wrapper_body.append(Return(wrapper_results)) # Return
 
