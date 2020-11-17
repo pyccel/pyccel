@@ -687,7 +687,11 @@ class CWrapperCodePrinter(CCodePrinter):
             static_funcs = expr.funcs
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in static_funcs)
 
-        function_defs = '\n\n'.join(self._print(f) for f in expr.funcs)
+        #TODO it should be a better way to do this :
+        funcs = [i for i in expr.interfaces]
+        funcs += [f for x in expr.interfaces for f in expr.funcs if f not in x.functions]
+
+        function_defs = '\n\n'.join(self._print(f) for f in funcs)
         cast_functions = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f)
                                         for f in self._cast_functions_dict.values())
         method_def_func = ',\n'.join(('{{\n'
@@ -698,8 +702,8 @@ class CWrapperCodePrinter(CCodePrinter):
                                      '}}').format(
                                             name = f.name,
                                             wrapper_name = self._function_wrapper_names[f.name],
-                                            doc_string = f.doc_string)
-                                     for f in expr.funcs)
+                                            doc_string = f.doc_string if isinstance(f, FunctionDef) else f.functions[0].doc_string)
+                                     for f in funcs)
 
         method_def_name = self.get_new_name(self._global_names, '{}_methods'.format(expr.name))
         method_def = ('static PyMethodDef {method_def_name}[] = {{\n'
