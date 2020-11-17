@@ -6,19 +6,16 @@ import operator
 
 from sympy.core import Tuple
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
-from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float, Integer
 
-from pyccel.ast.core      import Declare, IndexedVariable, Slice
+from pyccel.ast.core      import Declare, IndexedVariable, Slice, ValuedVariable
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import FunctionAddress
-from pyccel.ast.core      import Declare, ValuedVariable
 from pyccel.ast.core      import Nil, PyccelAssociativeParenthesis
 from pyccel.ast.core      import Assign, datatype, Variable, Import
 from pyccel.ast.core      import SeparatorComment, VariableAddress
 from pyccel.ast.core      import DottedName
-from pyccel.ast.core      import PyccelAdd, PyccelMul
+from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelMinus
 
-from pyccel.ast.core import PyccelAdd, PyccelMul, String, PyccelMinus
 from pyccel.ast.core import PyccelUnarySub, PyccelMod
 from pyccel.ast.core import create_incremented_string
 from pyccel.ast.datatypes import default_precision
@@ -618,7 +615,7 @@ class CCodePrinter(CodePrinter):
                 base.internal_variable.allows_negative_indexes)
         base = self._print(expr.base.label)
         for i, ind in enumerate(inds):
-            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], Integer):
+            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0])
             else:
                 if isinstance(ind, Slice):
@@ -633,7 +630,7 @@ class CCodePrinter(CodePrinter):
                 #indices of indexedElement of len==1 shouldn't be a Tuple
                 if isinstance(ind, Tuple) and len(ind) == 1:
                     inds[i].args = ind[0]
-                if allow_negative_indexes and not isinstance(ind, Integer):
+                if allow_negative_indexes and not isinstance(ind, LiteralInteger):
                     inds[i] = PyccelMod(ind, base_shape[i])
         inds = [self._print(i) for i in inds]
         #set dtype to the C struct types
@@ -932,13 +929,10 @@ class CCodePrinter(CodePrinter):
         rhs_code = self._print(expr.rhs)
         return "{0} {1}= {2};".format(lhs_code, op, rhs_code)
 
-    def _print_PythonTuple(self, expr):
-        pass
-
-    def _print_Tuple(self, expr):
-        pass
-
     def _print_Assign(self, expr):
+        if isinstance(expr.rhs, FunctionCall) and isinstance(expr.rhs.dtype, NativeTuple):
+            self._temporary_args = [VariableAddress(a) for a in expr.lhs]
+            return '{};'.format(self._print(expr.rhs))
         lhs = self._print(expr.lhs)
         rhs = expr.rhs
         if isinstance(rhs, (NumpyArray)):
