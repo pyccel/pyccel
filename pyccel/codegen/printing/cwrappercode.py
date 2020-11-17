@@ -370,12 +370,11 @@ class CWrapperCodePrinter(CCodePrinter):
         body_tmp = []
 
         # To store the mini function responsible of collecting value and calling interfaces functions and return the builded value
-        funcs_def = []
-        default_value = {}
-        errors_body = []
+        funcs_def = []  # list to collect all the function definition generated in the interface printer
+        default_value = {} # dict to collect all initialisation needed in the wrapper
         check_var = Variable(dtype = NativeInteger(), name = self.get_new_name(used_names , "check"))
         wrapper_vars[check_var.name] = check_var
-        types_dict = {}
+        types_dict = {} #dict to collect each variable possible type and the and the corresponding flags
         # Managing the body of wrapper
         # TODO split or re use exisiting functiond in the wrapper
         for func in funcs :
@@ -389,8 +388,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 check = Type_Check(b, a) # get check type function
                 assign = [Assign(b, self.get_collect_function_call(b, a))] # get collect function
                 mini_wrapper_func_vars[b.name] = b
-                flag_value = flags_registry[(b.dtype, b.precision)]
 
+                flag_value = flags_registry[(b.dtype, b.precision)]
                 flags = (flags << 4) + flag_value  # shift by 4 to the left
                 # Managing valued variable
                 if isinstance(b, ValuedVariable):
@@ -447,9 +446,9 @@ class CWrapperCodePrinter(CCodePrinter):
             body_tmp.append((PyccelEq(check_var, LiteralInteger(flags)), [AliasAssign(wrapper_results[0],
                     FunctionCall(mini_wrapper_func_def, parse_args))]))
 
-        # Errors / types management
-        error_func_name = self.get_new_name(used_names.union(self._global_names), 'type_check')
-        self._global_names.add(error_func_name)
+        # Errors / Types management
+        # Creating check_type function body
+        check_func_body = []
         flags = (len(types_dict) - 1) * 4
         for a in types_dict:
             body = []
@@ -461,16 +460,18 @@ class CWrapperCodePrinter(CCodePrinter):
             flags -= 4
             error = ' or '.join([str_dtype(v) for v in types])
             body.append((LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(s[0].name, error)), Return([LiteralInteger(0)])]))
-            errors_body += [If(*body)]
-
-        error_body = [Assign(check_var, LiteralInteger(0))] + errors_body
-        error_body.append(Return([check_var]))
-        error_func = FunctionDef(name = error_func_name,
+            check_func_body += [If(*body)]
+        check_func_body = [Assign(check_var, LiteralInteger(0))] + check_func_body
+        check_func_body.append(Return([check_var]))
+        # Creating check function definition
+        check_func_name = self.get_new_name(used_names.union(self._global_names), 'type_check')
+        self._global_names.add(check_func_name)
+        check_func_def = FunctionDef(name = check_func_name,
             arguments = parse_args,
             results = [check_var],
-            body = error_body,
+            body = check_func_body,
             local_vars = [])
-        funcs_def.append(error_func)
+        funcs_def.append(check_func_def)
 
         # Create the wrapper body with collected informations
         body_tmp = [((PyccelNot(check_var), [Return([Nil()])]))] + body_tmp
@@ -485,7 +486,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.append(If((PyccelNot(parse_node), [Return([Nil()])])))
 
         #finishing the wrapper body
-        wrapper_body.append(Assign(check_var, FunctionCall(error_func, parse_args)))
+        wrapper_body.append(Assign(check_var, FunctionCall(check_func_def, parse_args)))
         wrapper_body.extend(wrapper_body_translations)
         wrapper_body.append(Return(wrapper_results)) # Return
 
