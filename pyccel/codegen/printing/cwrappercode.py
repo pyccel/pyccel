@@ -16,6 +16,7 @@ from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, PyccelEq
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelOr, PyccelAnd,PyccelBitAnd
 from pyccel.ast.core import Interface, IfTernaryOperator, PyccelAssociativeParenthesis
+from pyccel.ast.core import PyccelMul, PyccelAdd
 from pyccel.ast.datatypes import str_dtype
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
@@ -372,6 +373,7 @@ class CWrapperCodePrinter(CCodePrinter):
         funcs_def = []
         errors_dict = {}
         default_value = {}
+        errors_body = []
 
         # Managing the body of wrapper
         # TODO split or re use exisiting functiond in the wrapper
@@ -380,14 +382,16 @@ class CWrapperCodePrinter(CCodePrinter):
             body = []
             res_args = []
             tmp_vars = {}
+            errors_set = set()
             check_var = Variable(dtype = NativeInteger(), name = self.get_new_name(used_names , "check"))
+            wrapper_vars[check_var.name] = check_var
             flags = 0
             # Loop for all args in every functions and create the corresponding condition and body
             for a, b in zip(parse_args, func.arguments):
                 check = PyType_Check_2(b, a) # get check type function
                 assign = [Assign(b, self.get_collect_function_call(b, a))] # get collect function
                 tmp_vars[b.name] = b
-                flags += test_type[(b.dtype, b.precision)]
+                flags += flags * 10 + test_type[(b.dtype, b.precision)]
                 # NOT WORKING FOR THE MOMENT : Managing valued variable
                 if isinstance(b, ValuedVariable):
                     check = PyccelAssociativeParenthesis(PyccelOr(PyccelEq(VariableAddress(a), VariableAddress(Py_None)), check))
@@ -403,10 +407,10 @@ class CWrapperCodePrinter(CCodePrinter):
                         assign = [If((PyccelEq(VariableAddress(a), VariableAddress(Py_None)),
                                     [Assign(VariableAddress(b), b.value)]), (LiteralTrue(), assign))]
 
+                errors_set.add((b, check, 0))
                 errors_dict.setdefault(b, set()).add((b.dtype, check)) # collect variable type for each arguments
-                check = PyccelBitAnd(check_var, LiteralInteger(flags))
-                cond.append(check)
                 body += assign
+            cond.append(PyccelBitAnd(check_var, LiteralInteger(flags)))
 
             # checking res length and create the corresponding function call
             if len(func.results)==0:
@@ -442,9 +446,29 @@ class CWrapperCodePrinter(CCodePrinter):
             cond = [LiteralTrue()] if not cond else cond # temporary to active some tests  for 0 args
             body_tmp.append((PyccelAnd(*cond), [AliasAssign(wrapper_results[0], FunctionCall(func_def, parse_args))]))
 
+            check = []
+            for a in errors_set :
+                flag = test_type[(a[0].dtype, a[0].precision)]
+                check.append((a[1], [Assign(check_var, PyccelAdd(PyccelMul(check_var , LiteralInteger(10)), LiteralInteger(flag)))]))
+            check.append((LiteralTrue(), [Return([LiteralInteger(0)])]))
+            errors_body += [If(*check)]
+
+        error_func_name = self.get_new_name(used_names.union(self._global_names), 'type_check')
+        self._global_names.add(error_func_name)
+
+
         # Errors management
         error_func_name = self.get_new_name(used_names.union(self._global_names), 'error_check')
         self._global_names.add(error_func_name)
+        error_body = [Assign(check_var, LiteralInteger(0))] + errors_body
+        error_func = FunctionDef(name = error_func_name,
+            arguments = parse_args,
+            results = [],
+            body = error_body,
+            local_vars = [check_var])
+        funcs_def.append(error_func)
+
+
 
         error_body = []
         for a in errors_dict:
