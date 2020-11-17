@@ -2572,16 +2572,12 @@ class SemanticParser(BasicParser):
 
             # insert the FunctionDef into the scope
             # to handle the case of a recursive function
+            # TODO improve in the case of an interface
             func = FunctionDef(name, args, results, [])
             self.insert_function(func)
-            # TODO - fully support recursive generic functions
-            if len(interfaces) > 1:
-                Inter = Interface(interface_name, [func])
-                self.insert_function(Inter)
 
             # we annotate the body
             body = self._visit(expr.body)
-            self.namespace.functions.pop(interface_name, None)
 
             args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(str(a.name)) for a in args]
 

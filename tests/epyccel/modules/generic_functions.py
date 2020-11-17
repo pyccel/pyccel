@@ -73,16 +73,6 @@ def tmplt_tmplt_1(x, y, z):
 def tmplt_2(x, y):
     return x + y
 
-@template('T', ['int', 'real'])
-@template('Z', ['int', 'real'])
-@types('T', 'Z', results=('int'))
-def generic_rec_1(a, b):
-    a = a - 1
-    b = b - 1
-    if (a > 0):
-        c = generic_rec_1(a, b)
-    return (0)
-
 def tst_gen_1():
     x = gen_1(5.5)
     return x
@@ -161,10 +151,3 @@ def tst_tmplt_2():
     x = tmplt_2(5, 5)
     y = tmplt_2(5.5, 7.3)
     return x, y
-
-def tst_generic_rec_1():
-    x = generic_rec_1(10, 30)
-    y = generic_rec_1(10.5, 30.5)
-    z = generic_rec_1(10, 30.5)
-    a = generic_rec_1(10.5, 30)
-    return x, y, z, a
