@@ -783,6 +783,7 @@ class CCodePrinter(CodePrinter):
         return code
 
     def _print_Nil(self, expr):
+        self._additional_imports.add("stdlib")
         return 'NULL'
 
     def _print_PyccelAdd(self, expr):
