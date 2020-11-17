@@ -282,13 +282,14 @@ class FunctionHeader(Header):
             # ... factorize the following 2 blocks
             results = []
             for i,d_var in enumerate(self.results):
-                d_var.pop('is_func')
+                is_func = d_var.pop('is_func')
                 dtype = d_var.pop('datatype')
                 var = Variable(dtype, 'res_{}'.format(i), **d_var)
                 results.append(var)
                 # we put back dtype otherwise macro will crash when it tries to
                 # call create_definition
                 d_var['datatype'] = dtype
+                d_var['is_func'] = is_func
 
             func= FunctionDef(name, args, results, body,
                              local_vars=[],

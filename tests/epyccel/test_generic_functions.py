@@ -99,3 +99,9 @@ def test_tmplt_2(language):
     x_expected = mod.tst_tmplt_2()
     x = modnew.tst_tmplt_2()
     assert np.array_equal(x, x_expected)
+
+def test_generic_rec_1(language):
+    modnew = epyccel(mod, language = language)
+    x_expected = mod.tst_generic_rec_1()
+    x = modnew.tst_generic_rec_1()
+    assert np.array_equal(x, x_expected)

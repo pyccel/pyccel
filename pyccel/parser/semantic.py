@@ -2486,6 +2486,7 @@ class SemanticParser(BasicParser):
 #            vec_func   = expr.vectorize(body_vec, header_vec)
 
         interface_name = name
+
         for i, m in enumerate(interfaces):
             args           = []
             results        = []
@@ -2571,12 +2572,16 @@ class SemanticParser(BasicParser):
 
             # insert the FunctionDef into the scope
             # to handle the case of a recursive function
-            # TODO improve in the case of an interface
             func = FunctionDef(name, args, results, [])
             self.insert_function(func)
+            # TODO - fully support recursive generic functions
+            if len(interfaces) > 1:
+                Inter = Interface(interface_name, [func])
+                self.insert_function(Inter)
 
             # we annotate the body
             body = self._visit(expr.body)
+            self.namespace.functions.pop(interface_name, None)
 
             args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(str(a.name)) for a in args]
 
@@ -2705,7 +2710,6 @@ class SemanticParser(BasicParser):
             #clear the sympy cache
             #TODO clear all variable except the global ones
             cache.clear_cache()
-        name = interface_name
         if len(funcs) == 1:
             funcs = funcs[0]
             self.insert_function(funcs)
@@ -2714,7 +2718,7 @@ class SemanticParser(BasicParser):
             for f in funcs:
                 self.insert_function(f)
 
-            funcs = Interface(name, funcs)
+            funcs = Interface(interface_name, funcs)
             self.insert_function(funcs)
 #        TODO move this to codegen
 #        if vec_func:
