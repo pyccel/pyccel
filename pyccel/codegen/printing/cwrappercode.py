@@ -341,9 +341,7 @@ class CWrapperCodePrinter(CCodePrinter):
         used_names = set([n.name for n in funcs])
 
         # Find a name for the wrapper function
-        #TODO this line should be : Test purpose
-        # wrapper_name = self.get_new_name(used_names.union(self._global_names), expr.name+"_wrapper")
-        wrapper_name = self.get_new_name(used_names.union(self._global_names), expr.name.name+"_wrapper")
+        wrapper_name = self.get_new_name(used_names.union(self._global_names), expr.name+"_wrapper")
         self._function_wrapper_names[expr.name] = wrapper_name
         self._global_names.add(wrapper_name)
 
@@ -370,7 +368,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body_tmp = []
 
         # To store the mini function responsible of collecting value and calling interfaces functions and return the builded value
-        funcs_def = []  # list to collect all the function definition generated in the interface printer
+        funcs_def = []
         default_value = {} # dict to collect all initialisation needed in the wrapper
         check_var = Variable(dtype = NativeInteger(), name = self.get_new_name(used_names , "check"))
         wrapper_vars[check_var.name] = check_var
@@ -384,12 +382,7 @@ class CWrapperCodePrinter(CCodePrinter):
             flags = 0
 
             # Loop for all args in every functions and create the corresponding condition and body
-            pyArray_arguments = [Variable(PyccelPyArrayObject(),
-                a.name,
-                is_pointer = True,
-                rank  = a.rank,
-                order = a.order) if isinstance(a, Variable) and a.rank > 0 else a for a in expr.arguments]
-
+            # TODO add array management like in the wrapper of simple function
             for a, b in zip(parse_args, func.arguments):
                 check = Type_Check(b, a) # get check type function
                 assign = [Assign(b, self.get_collect_function_call(b, a))] # get collect function
@@ -694,8 +687,7 @@ class CWrapperCodePrinter(CCodePrinter):
             static_funcs = expr.funcs
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in static_funcs)
 
-        function_defs = '\n\n'.join(self._print_Interface(f) if len(f.arguments) > 0 else self._print(f) for f in expr.funcs)
-        #function_defs = '\n\n'.join(self._print(f) for f in expr.funcs)
+        function_defs = '\n\n'.join(self._print(f) for f in expr.funcs)
         cast_functions = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f)
                                         for f in self._cast_functions_dict.values())
         method_def_func = ',\n'.join(('{{\n'
