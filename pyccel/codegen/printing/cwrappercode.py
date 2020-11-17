@@ -694,8 +694,8 @@ class CWrapperCodePrinter(CCodePrinter):
             static_funcs = expr.funcs
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in static_funcs)
 
-        #function_defs = '\n\n'.join(self._print_Interface(f) if len(f.arguments) > 0 else self._print(f) for f in expr.funcs)
-        function_defs = '\n\n'.join(self._print(f) for f in expr.funcs)
+        function_defs = '\n\n'.join(self._print_Interface(f) if len(f.arguments) > 0 else self._print(f) for f in expr.funcs)
+        #function_defs = '\n\n'.join(self._print(f) for f in expr.funcs)
         cast_functions = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f)
                                         for f in self._cast_functions_dict.values())
         method_def_func = ',\n'.join(('{{\n'
