@@ -395,7 +395,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     check = PyccelAssociativeParenthesis(PyccelOr(PyccelEq(VariableAddress(a), VariableAddress(Py_None)), check))
                     default_value[a.name] =  self.get_default_assign(a, b)
 
-                    if not b._is_optional :
+                    if not b.is_optional :
                         assign = [Assign(b, IfTernaryOperator(PyccelNe(VariableAddress(a), VariableAddress(Py_None)),
                             self.get_collect_function_call(b, a), b.value))]
                     else :  # Managing optional variable
@@ -455,7 +455,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 types.append(s[0].dtype)
             flags -= 4
             error = ' or '.join([str_dtype(v) for v in types])
-            body.append((LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(s[0].name, error)), Return([LiteralInteger(0)])]))
+            body.append((LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(types_dict[a][0].name, error)), Return([LiteralInteger(0)])]))
             check_func_body += [If(*body)]
         check_func_body = [Assign(check_var, LiteralInteger(0))] + check_func_body
         check_func_body.append(Return([check_var]))
