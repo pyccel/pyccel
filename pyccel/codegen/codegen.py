@@ -164,12 +164,12 @@ class Codegen(object):
             raise ValueError('{} language is not available'.format(language))
         self._language = language
 
-        # instanciat codePrinter
+        # instantiate codePrinter
         code_printer = printer_registry[language]
         errors = Errors()
         errors.set_parser_stage('codegen')
         # set the code printer
-        self._printer = code_printer(self.parser, **settings)
+        self._printer = code_printer(self.parser, settings)
 
     def _collect_statements(self):
         """Collects statements and split them into routines, classes, etc."""
