@@ -453,11 +453,14 @@ class CWrapperCodePrinter(CCodePrinter):
         flags = (len(errors_dict) - 1) * 4
         for a in errors_dict:
             check = []
+            types = []
             for s in errors_dict[a] :
                 value = s[2] << flags
                 check.append((s[1], [Assign(check_var, value)]))
+                types.append(s[0].dtype)
             flags -= 4
-            check.append((LiteralTrue(), [Return([LiteralInteger(0)])]))
+            error = ' or '.join([str_dtype(v) for v in types])
+            check.append((LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(s[0].name, error)), Return([LiteralInteger(0)])]))
             errors_body += [If(*check)]
 
         error_body = [Assign(check_var, LiteralInteger(0))] + errors_body
@@ -473,7 +476,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Create the If condition with the cond and body collected above
         body_tmp = [((PyccelNot(check_var), [Return([Nil()])]))] + body_tmp
-        body_tmp.append((LiteralTrue(), [Return([Nil()])]))
+        body_tmp.append((LiteralTrue(), [
+            PyErr_SetString('PyExc_TypeError', '"Arguments combinations don\'t exist"'),
+            Return([Nil()])]))
         wrapper_body_translations = [If(*body_tmp)]
 
         # Parsing Arguments
