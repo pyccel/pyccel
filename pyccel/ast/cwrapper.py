@@ -135,7 +135,7 @@ class PyArg_ParseTupleNode(Basic):
         A list of the names of the function arguments
     """
 
-    def __init__(self, python_func_args, python_func_kwargs, c_func_args, parse_args, arg_names):
+    def __init__(self, python_func_args, python_func_kwargs, c_func_args, parse_args, arg_names, is_interface=False):
         if not isinstance(python_func_args, Variable):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
@@ -154,11 +154,10 @@ class PyArg_ParseTupleNode(Basic):
         i = 0
 
         while i < len(c_func_args) and not isinstance(c_func_args[i], ValuedVariable):
-            if isinstance(c_func_args[i], FunctionAddress):
+            if isinstance(c_func_args[i], FunctionAddress) or  is_interface:
                 self._flags += 'O'
             else:
-                self._flags += 'O'
-                #self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
+                self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
             i+=1
         if i < len(c_func_args):
             self._flags += '|'
@@ -166,8 +165,7 @@ class PyArg_ParseTupleNode(Basic):
             if isinstance(c_func_args[i], FunctionAddress):
                 self._flags += 'O'
             else:
-                self._flags += 'O'
-                #self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
+                self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
             i+=1
 
         # Restriction as of python 3.8
