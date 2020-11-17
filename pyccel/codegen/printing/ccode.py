@@ -220,7 +220,7 @@ class CCodePrinter(CodePrinter):
         self.known_functions.update(userfuncs)
         self._dereference = set([] if settings is None else settings.get('dereference', []))
         self.prefix_module = prefix_module
-        self._additional_imports = set(['stdlib'])
+        self._additional_imports = set()
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
@@ -274,7 +274,7 @@ class CCodePrinter(CodePrinter):
         funcs = '\n\n'.join('{};'.format(self.function_signature(f)) for f in expr.module.funcs)
 
         # Print imports last to be sure that all additional_imports have been collected
-        imports = [*expr.module.imports,*map(Import, self._additional_imports)]
+        imports = [*expr.module.imports, *map(Import, self._additional_imports)]
         imports = '\n'.join(self._print(i) for i in imports)
 
         return ('#ifndef {name}_H\n'
