@@ -1,19 +1,22 @@
 # coding: utf-8
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
-
 import functools
 import operator
 
 from sympy.core import Tuple
-
+from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 from pyccel.ast.numbers   import BooleanTrue, ImaginaryUnit, Float, Integer
-from pyccel.ast.core import Nil, PyccelAssociativeParenthesis
-from pyccel.ast.core import Assign, datatype, Variable, Import
-from pyccel.ast.core import SeparatorComment, VariableAddress
-from pyccel.ast.core import DottedName
 
-from pyccel.ast.core import Declare, IndexedVariable, Slice
+from pyccel.ast.core      import Declare, IndexedVariable, Slice
+from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
+from pyccel.ast.core      import FunctionAddress
+from pyccel.ast.core      import Declare, ValuedVariable
+from pyccel.ast.core      import Nil, PyccelAssociativeParenthesis
+from pyccel.ast.core      import Assign, datatype, Variable, Import
+from pyccel.ast.core      import SeparatorComment, VariableAddress
+from pyccel.ast.core      import DottedName
+from pyccel.ast.core      import PyccelAdd, PyccelMul
 
 from pyccel.ast.core import PyccelAdd, PyccelMul, String, PyccelMinus
 from pyccel.ast.core import PyccelUnarySub, PyccelMod
@@ -21,16 +24,16 @@ from pyccel.ast.core import create_incremented_string
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
 
-from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
+from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
+from pyccel.ast.literals  import LiteralString, LiteralInteger
+
 from pyccel.ast.numpyext import NumpyFull, NumpyArray
-from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
-from pyccel.ast.core import FuncAddressDeclare, FunctionCall
-from pyccel.ast.core import FunctionAddress
-from pyccel.ast.core import ValuedVariable
+from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
+
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT )
 
@@ -273,16 +276,16 @@ class CCodePrinter(CodePrinter):
         value = self._print(expr.arg)
         return '({} != 0)'.format(value)
 
-    def _print_Complex(self, expr):
+    def _print_LiteralComplex(self, expr):
         return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
-                        PyccelMul(expr.imag, ImaginaryUnit()))))
+                        PyccelMul(expr.imag, LiteralImaginaryUnit()))))
 
     def _print_PythonComplex(self, expr):
         self._additional_imports.add("complex")
         return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real_part,
-                        PyccelMul(expr.imag_part, ImaginaryUnit()))))
+                        PyccelMul(expr.imag_part, LiteralImaginaryUnit()))))
 
-    def _print_ImaginaryUnit(self, expr):
+    def _print_LiteralImaginaryUnit(self, expr):
         return '_Complex_I'
 
     def _print_ModuleHeader(self, expr):
@@ -329,7 +332,7 @@ class CCodePrinter(CodePrinter):
                 break
             if i == 0:
                 lines.append("if (%s)\n{" % self._print(c))
-            elif i == len(expr.args) - 1 and c is BooleanTrue():
+            elif i == len(expr.args) - 1 and c is LiteralTrue():
                 lines.append("else\n{")
             else:
                 lines.append("else if (%s)\n{" % self._print(c))
@@ -342,10 +345,10 @@ class CCodePrinter(CodePrinter):
         value_false = self._print(expr.value_false)
         return '({cond}) ? {true} : {false}'.format(cond = cond, true =value_true, false = value_false)
 
-    def _print_BooleanTrue(self, expr):
+    def _print_LiteralTrue(self, expr):
         return '1'
 
-    def _print_BooleanFalse(self, expr):
+    def _print_LiteralFalse(self, expr):
         return '0'
 
     def _print_PyccelAnd(self, expr):
@@ -443,7 +446,7 @@ class CCodePrinter(CodePrinter):
         else:
             return '#include <{0}.h>'.format(source)
 
-    def _print_String(self, expr):
+    def _print_LiteralString(self, expr):
         format_str = format(expr.arg)
         format_str = format_str.replace("\\", "\\\\")\
                                .replace('\a', '\\a')\
@@ -511,7 +514,7 @@ class CCodePrinter(CodePrinter):
                 args.append(arg)
         args_format = sep.join(args_format)
         args_format += end
-        args_format = self._print(String(args_format))
+        args_format = self._print(LiteralString(args_format))
         code = ', '.join([args_format, *args])
         return "printf({});".format(code)
 
@@ -845,7 +848,7 @@ class CCodePrinter(CodePrinter):
             math.pi ==> 3.14159265358979
 
         """
-        val = Float(expr.value)
+        val = LiteralFloat(expr.value)
         return self._print(val)
 
     def _print_Return(self, expr):
@@ -996,8 +999,8 @@ class CCodePrinter(CodePrinter):
     def _print_Indexed(self, expr):
         # calculate index for 1d array
         dims = expr.shape
-        elem = Integer(0)
-        offset = Integer(1)
+        elem = LiteralInteger(0)
+        offset = LiteralInteger(1)
         for i in reversed(list(range(expr.rank))):
             elem += expr.indices[i]*offset
             offset *= dims[i]

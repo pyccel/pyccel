@@ -2,7 +2,6 @@
 # coding: utf-8
 
 import numpy as np
-import pytest
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
