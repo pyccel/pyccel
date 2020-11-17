@@ -407,7 +407,7 @@ class CWrapperCodePrinter(CCodePrinter):
                             self.get_collect_function_call(b, a), b.value))]
                     else :  # Managing optional variable
                         tmp_var = Variable(dtype=b.dtype, name = self.get_new_name(used_names, b.name+"_tmp"))
-                        func_vars[tmp_var.name] = tmp_var
+                        mini_wrapper_func_vars[tmp_var.name] = tmp_var
                         assign = [Assign(tmp_var, self.get_collect_function_call(tmp_var, a)), Assign(VariableAddress(b), VariableAddress(tmp_var))]
                         assign = [If((PyccelEq(VariableAddress(a), VariableAddress(Py_None)),
                                     [Assign(VariableAddress(b), b.value)]), (LiteralTrue(), assign))]

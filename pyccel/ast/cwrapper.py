@@ -154,7 +154,7 @@ class PyArg_ParseTupleNode(Basic):
         i = 0
 
         while i < len(c_func_args) and not isinstance(c_func_args[i], ValuedVariable):
-            if isinstance(c_func_args[i], FunctionAddress) or  is_interface:
+            if isinstance(c_func_args[i], FunctionAddress) or is_interface:
                 self._flags += 'O'
             else:
                 self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
@@ -162,7 +162,7 @@ class PyArg_ParseTupleNode(Basic):
         if i < len(c_func_args):
             self._flags += '|'
         while i < len(c_func_args):
-            if isinstance(c_func_args[i], FunctionAddress):
+            if isinstance(c_func_args[i], FunctionAddress) or is_interface:
                 self._flags += 'O'
             else:
                 self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
