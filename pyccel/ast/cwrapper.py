@@ -393,7 +393,7 @@ def PyType_Check(data_type):
 
 def PyType_Check_2(data, argument):
     try :
-        check_numpy_ref = check_type_registry_2[(data.dtype, data.precision)]
+        check_numpy_ref = numpy_type_check_registry[(data.dtype, data.precision)]
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=data_type,severity='fatal')
 
@@ -530,7 +530,7 @@ Numpy_Double_ref = Variable(dtype=NativeVoid(),  name = 'Double')
 Numpy_Complex_ref = Variable(dtype=NativeVoid(),  name = 'ComplexFloating')
 
 
-check_type_registry_2 = {
+numpy_type_check_registry = {
     (NativeInteger(), 4)       : Numpy_Int_ref,
     (NativeInteger(), 8)       : Numpy_Long_ref,
     (NativeInteger(), 2)       : Numpy_Short_ref,
@@ -542,7 +542,7 @@ check_type_registry_2 = {
     (NativeBool(), 4)          : Numpy_Bool_ref
 }
 
-test_type = {
+flags_registry = {
     (NativeInteger(), 4)       : 1,
     (NativeInteger(), 8)       : 2,
     (NativeInteger(), 2)       : 3,
@@ -551,5 +551,6 @@ test_type = {
     (NativeReal(), 4)          : 6,
     (NativeComplex(), 4)       : 7,
     (NativeComplex(), 8)       : 8,
-    (NativeBool(), 4)          : 9
+    (NativeBool(), 4)          : 9,
+    (NativeString(), 0)        : 10
 }

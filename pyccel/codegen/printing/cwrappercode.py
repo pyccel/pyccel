@@ -23,12 +23,12 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, Nativ
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
-from pyccel.ast.cwrapper import Py_None, test_type
+from pyccel.ast.cwrapper import Py_None, flags_registry
 from pyccel.ast.cwrapper import PyErr_SetString, PyType_Check_2
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 from pyccel.ast.cwrapper import PyccelPyArrayObject
 from pyccel.ast.cwrapper import numpy_get_ndims, numpy_get_data, numpy_get_dim
-from pyccel.ast.cwrapper import numpy_get_type, numpy_dtype_registry, check_type_registry_2
+from pyccel.ast.cwrapper import numpy_get_type, numpy_dtype_registry
 from pyccel.ast.cwrapper import numpy_check_flag, numpy_flag_c_contig, numpy_flag_f_contig
 
 from pyccel.ast.bind_c   import as_static_function_call
@@ -375,23 +375,22 @@ class CWrapperCodePrinter(CCodePrinter):
         errors_body = []
         check_var = Variable(dtype = NativeInteger(), name = self.get_new_name(used_names , "check"))
         wrapper_vars[check_var.name] = check_var
-        errors_dict = {}
+        types_dict = {}
         # Managing the body of wrapper
         # TODO split or re use exisiting functiond in the wrapper
         for func in funcs :
             cond = []
             body = []
             res_args = []
-            tmp_vars = {}
-            errors_set = set()
+            func_vars = {}
             flags = 0
 
             # Loop for all args in every functions and create the corresponding condition and body
             for a, b in zip(parse_args, func.arguments):
                 check = PyType_Check_2(b, a) # get check type function
                 assign = [Assign(b, self.get_collect_function_call(b, a))] # get collect function
-                tmp_vars[b.name] = b
-                flag_value = test_type[(b.dtype, b.precision)] # add try catch block !
+                func_vars[b.name] = b
+                flag_value = flags_registry[(b.dtype, b.precision)] # add try catch block !
                 flags = (flags << 4) + flag_value
                 # NOT WORKING FOR THE MOMENT : Managing valued variable
                 if isinstance(b, ValuedVariable):
@@ -403,13 +402,12 @@ class CWrapperCodePrinter(CCodePrinter):
                             self.get_collect_function_call(b, a), b.value))]
                     else :  # NOT WORKING FOR THE MOMENT : Managing optional variable
                         tmp_var = Variable(dtype=b.dtype, name = self.get_new_name(used_names, b.name+"_tmp"))
-                        tmp_vars[tmp_var.name] = tmp_var
+                        func_vars[tmp_var.name] = tmp_var
                         assign = [Assign(tmp_var, self.get_collect_function_call(tmp_var, a)), Assign(VariableAddress(b), VariableAddress(tmp_var))]
                         assign = [If((PyccelEq(VariableAddress(a), VariableAddress(Py_None)),
                                     [Assign(VariableAddress(b), b.value)]), (LiteralTrue(), assign))]
 
-                errors_set.add((b, check, 0))
-                errors_dict.setdefault(b, set()).add((b, check, flag_value)) # collect variable type for each arguments
+                types_dict.setdefault(b, set()).add((b, check, flag_value)) # collect variable type for each arguments
                 body += assign
             cond.append(PyccelEq(check_var, LiteralInteger(flags)))
 
@@ -423,10 +421,10 @@ class CWrapperCodePrinter(CCodePrinter):
             # Loop for all res in every functions and create the corresponding body and cast
             for r in func.results :
                 collect_var, cast_func = self.get_PyBuildValue(used_names, r)
-                tmp_vars[r.name] = r
+                func_vars[r.name] = r
                 if cast_func is not None:
                     body.append(cast_func)
-                    tmp_vars[collect_var.name] = collect_var
+                    func_vars[collect_var.name] = collect_var
                 res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
 
             # Building PybuildValue and freeing the allocated variable after.
@@ -435,33 +433,32 @@ class CWrapperCodePrinter(CCodePrinter):
             self._to_free_PyObject_list.clear()
 
             # Building Mini wrapper function
-            func_name = self.get_new_name(used_names.union(self._global_names), 'mini_wrapper')
+            func_name = self.get_new_name(used_names.union(self._global_names), func.name.name + '_mini_wrapper')
             self._global_names.add(func_name)
 
             func_def = FunctionDef(name = func_name,
                 arguments = parse_args,
                 results = wrapper_results,
                 body = body + [Return(wrapper_results)],
-                local_vars = tmp_vars.values())
+                local_vars = func_vars.values())
             funcs_def.append(func_def)
-            cond = [LiteralTrue()] if not cond else cond # temporary to active some tests  for 0 args
             body_tmp.append((PyccelAnd(*cond), [AliasAssign(wrapper_results[0], FunctionCall(func_def, parse_args))]))
 
-        # Errors / typs management
+        # Errors / types management
         error_func_name = self.get_new_name(used_names.union(self._global_names), 'type_check')
         self._global_names.add(error_func_name)
-        flags = (len(errors_dict) - 1) * 4
-        for a in errors_dict:
-            check = []
+        flags = (len(types_dict) - 1) * 4
+        for a in types_dict:
+            body = []
             types = []
-            for s in errors_dict[a] :
+            for s in types_dict[a] :
                 value = s[2] << flags
-                check.append((s[1], [Assign(check_var, value)]))
+                body.append((s[1], [Assign(check_var, value)]))
                 types.append(s[0].dtype)
             flags -= 4
             error = ' or '.join([str_dtype(v) for v in types])
-            check.append((LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(s[0].name, error)), Return([LiteralInteger(0)])]))
-            errors_body += [If(*check)]
+            body.append((LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(s[0].name, error)), Return([LiteralInteger(0)])]))
+            errors_body += [If(*body)]
 
         error_body = [Assign(check_var, LiteralInteger(0))] + errors_body
         error_body.append(Return([check_var]))
@@ -472,12 +469,10 @@ class CWrapperCodePrinter(CCodePrinter):
             local_vars = [])
         funcs_def.append(error_func)
 
-        #PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(a, error))
-
-        # Create the If condition with the cond and body collected above
+        # Create the wrapper body with collected informations
         body_tmp = [((PyccelNot(check_var), [Return([Nil()])]))] + body_tmp
-        body_tmp.append((LiteralTrue(), [
-            PyErr_SetString('PyExc_TypeError', '"Arguments combinations don\'t exist"'),
+        body_tmp.append((LiteralTrue(),
+            [PyErr_SetString('PyExc_TypeError', '"Arguments combinations don\'t exist"'),
             Return([Nil()])]))
         wrapper_body_translations = [If(*body_tmp)]
 
