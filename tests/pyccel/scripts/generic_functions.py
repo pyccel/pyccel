@@ -10,7 +10,7 @@ from pyccel.decorators import template
 #$ header template T(int|real)
 #$ header template R(int|real)
 #$ header template O(bool|complex)
-#$ header template S(int|real|complex)
+#$ header template S(int|real)
 
 @types('real')
 def gen_1(a):
@@ -102,8 +102,7 @@ def tst_gen_5():
 def tst_gen_6():
     x = gen_6(5.5, 5.5)
     y = gen_6(5, 5)
-    a = gen_6(1j, 1j)
-    return x * a * y
+    return x * y
 
 def tst_gen_7():
     x = gen_7(5, 5, 7)

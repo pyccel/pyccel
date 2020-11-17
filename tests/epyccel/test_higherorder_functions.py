@@ -1,5 +1,4 @@
  # pylint: disable=missing-function-docstring, missing-module-docstring/
-import pytest
 import modules.highorder_functions as mod
 from pyccel.epyccel import epyccel
 

@@ -235,7 +235,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
                 lines.append(self._print(e))
         return "\n".join(lines)
 
-    def _print_String(self, expr):
+    def _print_LiteralString(self, expr):
         return '"{}"'.format(self._print(expr.arg))
 
     def _print_Shape(self, expr):

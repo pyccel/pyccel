@@ -7,7 +7,7 @@ from .core      import Variable, create_incremented_string, PyccelArraySize
 
 from .mathext   import MathCeil
 
-from .numbers   import Integer as PyccelInteger, Float as PyccelFloat
+from .literals  import LiteralInteger, LiteralFloat
 
 from .datatypes import NativeInteger
 
@@ -31,19 +31,19 @@ def sympy_to_pyccel(expr, symbol_map):
 
     #Constants
     if isinstance(expr, sp.Integer):
-        return PyccelInteger(expr)
+        return LiteralInteger(expr)
     elif isinstance(expr, One):
-        return PyccelInteger(1)
+        return LiteralInteger(1)
     elif isinstance(expr, NegativeOne):
-        return PyccelInteger(-1)
+        return LiteralInteger(-1)
     elif isinstance(expr, Zero):
-        return PyccelInteger(0)
+        return LiteralInteger(0)
     elif isinstance(expr, sp.Float):
-        return PyccelFloat(expr)
+        return LiteralFloat(expr)
     elif isinstance(expr, Half):
-        return PyccelFloat(0.5)
+        return LiteralFloat(0.5)
     elif isinstance(expr, sp.Rational):
-        return PyccelFloat(expr)
+        return LiteralFloat(expr)
     elif isinstance(expr, sp.Symbol) and expr in symbol_map:
         return symbol_map[expr]
 
@@ -64,7 +64,7 @@ def sympy_to_pyccel(expr, symbol_map):
 
         # Find positive and negative elements
         for a in args:
-            if isinstance(a, PyccelMul) and a.args[0] == PyccelInteger(-1):
+            if isinstance(a, PyccelMul) and a.args[0] == LiteralInteger(-1):
                 minus_args.append(a.args[1])
             else:
                 plus_args.append(a)
@@ -73,7 +73,7 @@ def sympy_to_pyccel(expr, symbol_map):
         if len(minus_args) == 0:
             return PyccelAdd(*plus_args)
         elif len(plus_args) == 0:
-            return PyccelMul(PyccelInteger(-1), PyccelAssociativeParenthesis(PyccelAdd(*minus_args)))
+            return PyccelMul(LiteralInteger(-1), PyccelAssociativeParenthesis(PyccelAdd(*minus_args)))
         else:
             if len(plus_args)>1:
                 plus_args = [PyccelAdd(*plus_args)]
@@ -83,7 +83,7 @@ def sympy_to_pyccel(expr, symbol_map):
     elif isinstance(expr, sp.Pow):
         # Recognise division
         if isinstance(expr.args[1], NegativeOne):
-            return PyccelDiv(PyccelInteger(1), sympy_to_pyccel(expr.args[0], symbol_map))
+            return PyccelDiv(LiteralInteger(1), sympy_to_pyccel(expr.args[0], symbol_map))
         else:
             return PyccelPow(*[sympy_to_pyccel(e, symbol_map) for e in expr.args])
     elif isinstance(expr, sp.ceiling):
@@ -119,10 +119,10 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
     """
 
     #Constants
-    if isinstance(expr, PyccelInteger):
+    if isinstance(expr, LiteralInteger):
         return sp.Integer(expr)
 
-    elif isinstance(expr, PyccelFloat):
+    elif isinstance(expr, LiteralFloat):
         return sp.Float(expr)
 
     #Operators

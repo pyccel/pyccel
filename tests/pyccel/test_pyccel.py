@@ -391,7 +391,7 @@ def test_generic_functions():
     pyccel_test("scripts/runtest_generic_functions.py",
             dependencies = "scripts/generic_functions.py",
             compile_with_pyccel = False,
-            output_dtype = [float,float,float,float,float,complex,
+            output_dtype = [float,float,float,float,float,float,
                     float,float,float,float,float,float,float,int])
 
 #------------------------------------------------------------------------------

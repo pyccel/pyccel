@@ -21,7 +21,6 @@ from sympy import Dict
 from pyccel.ast.basic import PyccelAstNode
 
 from pyccel.ast.core import ParserResult
-from pyccel.ast.core import String
 from pyccel.ast.core import Nil
 from pyccel.ast.core import DottedName, DottedVariable
 from pyccel.ast.core import Assign
@@ -60,7 +59,8 @@ from pyccel.ast.core import PyccelUnary, PyccelUnarySub
 
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.headers  import Header, MetaVariable
-from pyccel.ast.numbers  import Integer, Float, Complex, BooleanFalse, BooleanTrue
+from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
+from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 
 from pyccel.parser.extend_tree import extend_tree
@@ -296,7 +296,7 @@ class SyntaxParser(BasicParser):
 
             # sympy does not allow keys to be strings
 
-            if isinstance(key, String):
+            if isinstance(key, LiteralString):
                 errors.report(SYMPY_RESTRICTION_DICT_KEYS,
                               severity='error')
 
@@ -314,17 +314,17 @@ class SyntaxParser(BasicParser):
         val =  stmt.s
         if isinstance(self._scope[-2], ast.Expr):
             return CommentBlock(val)
-        return String(val)
+        return LiteralString(val)
 
     def _visit_Num(self, stmt):
         val = stmt.n
 
         if isinstance(val, int):
-            return Integer(val)
+            return LiteralInteger(val)
         elif isinstance(val, float):
-            return Float(val)
+            return LiteralFloat(val)
         elif isinstance(val, complex):
-            return Complex(Float(val.real), Float(val.imag))
+            return LiteralComplex(LiteralFloat(val.real), LiteralFloat(val.imag))
         else:
             raise NotImplementedError('Num type {} not recognised'.format(type(val)))
 
@@ -389,19 +389,19 @@ class SyntaxParser(BasicParser):
             return Nil()
 
         elif stmt.value is True:
-            return BooleanTrue()
+            return LiteralTrue()
 
         elif stmt.value is False:
-            return BooleanFalse()
+            return LiteralFalse()
 
         elif isinstance(stmt.value, int):
-            return Integer(stmt.value)
+            return LiteralInteger(stmt.value)
 
         elif isinstance(stmt.value, float):
-            return Float(stmt.value)
+            return LiteralFloat(stmt.value)
 
         elif isinstance(stmt.value, complex):
-            return Complex(Float(stmt.value.real), Float(stmt.value.imag))
+            return LiteralComplex(LiteralFloat(stmt.value.real), LiteralFloat(stmt.value.imag))
 
         elif isinstance(stmt.value, str):
             return self._visit_Str(stmt)
@@ -414,10 +414,10 @@ class SyntaxParser(BasicParser):
             return Nil()
 
         elif stmt.value is True:
-            return BooleanTrue()
+            return LiteralTrue()
 
         elif stmt.value is False:
-            return BooleanFalse()
+            return LiteralFalse()
 
         else:
             raise NotImplementedError("Unknown NameConstant : {}".format(stmt.value))
@@ -688,7 +688,7 @@ class SyntaxParser(BasicParser):
                     if isinstance(arg, Symbol):
                         arg = arg.name
                         types.append(arg)
-                    elif isinstance(arg, String):
+                    elif isinstance(arg, LiteralString):
                         arg = str(arg)
                         arg = arg.strip("'").strip('"')
                         types.append(arg)
@@ -728,7 +728,7 @@ class SyntaxParser(BasicParser):
                     if isinstance(arg, Symbol):
                         arg = arg.name
                         container.append(arg)
-                    elif isinstance(arg, String):
+                    elif isinstance(arg, LiteralString):
                         arg = str(arg)
                         arg = arg.strip("'").strip('"')
                         container.append(arg)
@@ -980,11 +980,11 @@ class SyntaxParser(BasicParser):
         args = [index]
         target = IndexedBase(lhs)[args]
         target = Assign(target, result)
-        assign1 = Assign(index, Integer(0))
+        assign1 = Assign(index, LiteralInteger(0))
         assign1.set_fst(stmt)
         target.set_fst(stmt)
         generators[-1].insert2body(target)
-        assign2 = Assign(index, PyccelAdd(index, Integer(1)))
+        assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
         assign2.set_fst(stmt)
         generators[-1].insert2body(assign2)
 
@@ -1057,7 +1057,7 @@ class SyntaxParser(BasicParser):
             orelse = orelse[0]._args
             return If(Tuple(test, body, sympify=False), *orelse)
         else:
-            orelse = Tuple(BooleanTrue(), orelse, sympify=False)
+            orelse = Tuple(LiteralTrue(), orelse, sympify=False)
             return If(Tuple(test, body, sympify=False), orelse)
 
     def _visit_IfExp(self, stmt):
