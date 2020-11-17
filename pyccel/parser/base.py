@@ -459,6 +459,74 @@ class BasicParser(object):
                         container[source] = []
                     container[source] += name
 
+    def dump(self, filename=None):
+        """Dump the current ast using Pickle.
+        filename: str
+            output file name. if not given `name.pyccel` will be used and placed
+            in the Pyccel directory ($HOME/.pyccel)
+        """
+
+        # ...
+        import pickle
+        use_home_dir = False
+        if not filename:
+            if not self.filename:
+                raise ValueError('Expecting a filename to load the ast')
+
+            use_home_dir = True
+            name = os.path.basename(self.filename)
+            filename = '{}.pyccel'.format(name)
+
+        # check extension
+
+        if not filename.split(""".""")[-1] == 'pyccel':
+            raise ValueError('Expecting a .pyccel extension')
+
+#        print('>>> home = ', os.environ['HOME'])
+        # ...
+
+        # we are only exporting the AST.
+
+        f = open(filename, 'wb')
+        pickle.dump(self.ast, f, pickle.HIGHEST_PROTOCOL)
+        f.close()
+
+    # TODO shall we need to load the Parser too?
+
+    def load(self, filename=None):
+        """Load the current ast using Pickle.
+        filename: str
+            output file name. if not given `name.pyccel` will be used and placed
+            in the Pyccel directory ($HOME/.pyccel)
+        """
+
+        # ...
+        import pickle
+        use_home_dir = False
+        if not filename:
+            if not self.filename:
+                raise ValueError('Expecting a filename to load the ast')
+
+            use_home_dir = True
+            name = os.path.basename(self.filename)
+            filename = '{}.pyccel'.format(name)
+
+        # check extension
+
+        if not filename.split(""".""")[-1] == 'pyccel':
+            raise ValueError('Expecting a .pyccel extension')
+
+#        print('>>> home = ', os.environ['HOME'])
+        # ...
+
+        try:
+            f = open(filename, 'rb')
+            self._ast = pickle.load(f)
+            f.close()
+        except FileNotFoundError:
+            pass
+
+
     def print_namespace(self):
 
         # TODO improve spacing

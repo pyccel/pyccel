@@ -129,8 +129,9 @@ class SyntaxParser(BasicParser):
 
         self._used_names = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg)))
         self._dummy_counter = 1
-
-        self.parse(verbose=True)
+        self.load()
+        if self._ast is None:
+            self.parse(verbose=True)
 
     def parse(self, verbose=False):
         """converts python ast to sympy ast."""
