@@ -152,26 +152,22 @@ class PyArg_ParseTupleNode(Basic):
             raise TypeError('Parse args should be a list of Variables')
         if not isinstance(arg_names, PyArgKeywords):
             raise TypeError('Parse args should be a list of Variables')
-
         if len(parse_args) != len(c_func_args):
             raise TypeError('There should be the same number of c_func_args and parse_args')
+        if not isinstance(is_interface, bool):
+            raise TypeError('is_interface should be a boolean')
 
+        self._is_interface = is_interface
         self._flags      = ''
         i = 0
 
         while i < len(c_func_args) and not isinstance(c_func_args[i], ValuedVariable):
-            if isinstance(c_func_args[i], FunctionAddress) or is_interface:
-                self._flags += 'O'
-            else:
-                self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
+            self._flags += self.get_pytype(c_func_args[i], parse_args[i])
             i+=1
         if i < len(c_func_args):
             self._flags += '|'
         while i < len(c_func_args):
-            if isinstance(c_func_args[i], FunctionAddress) or is_interface:
-                self._flags += 'O'
-            else:
-                self._flags += pytype_parse_registry[(parse_args[i].dtype, parse_args[i].precision)]
+            self._flags += self.get_pytype(c_func_args[i], parse_args[i])
             i+=1
 
         # Restriction as of python 3.8
@@ -188,9 +184,8 @@ class PyArg_ParseTupleNode(Basic):
         self._parse_args = parse_args
         self._arg_names  = arg_names
 
-    @staticmethod
-    def get_pytype(c_arg, parse_arg):
-        if isinstance(c_arg, FunctionAddress):
+    def get_pytype(self, c_arg, parse_arg):
+        if isinstance(c_arg, FunctionAddress) or self._is_interface:
             return 'O'
         else:
             try:
