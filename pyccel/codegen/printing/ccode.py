@@ -220,7 +220,7 @@ class CCodePrinter(CodePrinter):
         self.known_functions.update(userfuncs)
         self._dereference = set([] if settings is None else settings.get('dereference', []))
         self.prefix_module = prefix_module
-        self._additional_imports = set()
+        self._additional_imports = set(['stdlib'])
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
@@ -783,7 +783,6 @@ class CCodePrinter(CodePrinter):
         return code
 
     def _print_Nil(self, expr):
-        self._additional_imports.add("stdlib")
         return 'NULL'
 
     def _print_PyccelAdd(self, expr):
