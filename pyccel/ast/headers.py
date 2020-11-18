@@ -91,7 +91,25 @@ class VariableHeader(Header):
 
 #==============================================================================
 class Template(Header):
-    """Represents a Template."""
+    """Represents a template.
+
+    Parameters
+    ----------
+    name: str
+        The name of the template.
+
+    args: iterable
+        The types the template represents
+
+    Examples
+    --------
+    >>> from pyccel.ast.headers import Template
+    >>> d_var0 = {'datatype': 'int', 'rank': 0, 'allocatable': False, 'is_pointer':False,\
+    >>>        'precision': 8, 'is_func': False, 'is_const': False}
+    >>> d_var1 = {'datatype': 'int', 'rank': 0, 'allocatable': False, 'is_pointer':False,\
+    >>>        'precision': 8, 'is_func': False, 'is_const': False}
+    >>> T = Template('T', [d_var0, d_var1])
+    """
 
     def __new__(cls, *args, **kwargs):
         return Basic.__new__(cls)
