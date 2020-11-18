@@ -133,6 +133,8 @@ class PyArg_ParseTupleNode(Basic):
         List of arguments into which the result will be collected
     arg_names : list of str
         A list of the names of the function arguments
+    is_interface : boolean
+        Default value False and True when working with interface functions
     """
 
     def __init__(self, python_func_args,
