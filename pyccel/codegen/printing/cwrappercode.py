@@ -373,7 +373,7 @@ class CWrapperCodePrinter(CCodePrinter):
         default_value = {} # dict to collect all initialisation needed in the wrapper
         check_var = Variable(dtype = NativeInteger(), name = self.get_new_name(used_names , "check"))
         wrapper_vars[check_var.name] = check_var
-        types_dict = {} #dict to collect each variable possible type and the corresponding flags
+        types_dict = {a : set() for a in funcs[0].arguments} #dict to collect each variable possible type and the corresponding flags
         # Managing the body of wrapper
         # TODO split or re use exisiting functions in the wrapper
         for func in funcs :
@@ -405,7 +405,7 @@ class CWrapperCodePrinter(CCodePrinter):
                         assign = [If((PyccelEq(VariableAddress(p_arg), VariableAddress(Py_None)),
                                     [Assign(VariableAddress(f_arg), f_arg.value)]), (LiteralTrue(), assign))]
 
-                types_dict.setdefault(f_arg, set()).add((f_arg, check, flag_value)) # collect variable type for each arguments
+                types_dict[f_arg].add((f_arg, check, flag_value)) # collect variable type for each arguments
                 mini_wrapper_func_body += assign
 
             # create the corresponding function call
