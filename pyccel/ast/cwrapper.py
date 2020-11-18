@@ -135,7 +135,11 @@ class PyArg_ParseTupleNode(Basic):
         A list of the names of the function arguments
     """
 
-    def __init__(self, python_func_args, python_func_kwargs, c_func_args, parse_args, arg_names, is_interface=False):
+    def __init__(self, python_func_args,
+                        python_func_kwargs,
+                        c_func_args, parse_args,
+                        arg_names,
+                        is_interface=False):
         if not isinstance(python_func_args, Variable):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
