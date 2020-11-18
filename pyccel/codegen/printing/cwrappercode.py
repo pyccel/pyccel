@@ -382,7 +382,7 @@ class CWrapperCodePrinter(CCodePrinter):
         for func in funcs :
             mini_wrapper_func_body = []
             res_args = []
-            mini_wrapper_func_vars = [a for a in func.arguments]
+            mini_wrapper_func_vars = func.arguments
             flags = 0
 
             # Loop for all args in every functions and create the corresponding condition and body
