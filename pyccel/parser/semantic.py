@@ -2482,7 +2482,7 @@ class SemanticParser(BasicParser):
             header_results = m.results
 
             if len(interfaces) > 1:
-                name = interface_name + '_' + str(i)
+                name = interface_name + '_' + str(i).zfill(2)
             self.create_new_function_scope(name, decorators)
 
             if cls_name and str(arguments[0].name) == 'self':
