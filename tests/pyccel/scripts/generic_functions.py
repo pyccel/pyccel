@@ -73,6 +73,12 @@ def tmplt_tmplt_1(x, y, z):
 def array_elem1(x):
     return x[0]
 
+@template('k', types=['int'])
+@template('g', types=['int', 'real'])
+@types('k', 'g')
+def multi_tmplt_2(y, z):
+    return y + z
+
 def tst_gen_1():
     x = gen_1(5.5)
     return x
@@ -151,4 +157,9 @@ def tst_array_elem1():
     y = array_elem1(x1)
     x2 = np.array([1.3,2.4,3.4], dtype=np.double)
     x = array_elem1(x2)
+    return x * y
+
+def tst_multi_tmplt_2():
+    x = multi_tmplt_2(5, 5)
+    y = multi_tmplt_2(5, 7.3)
     return x * y
