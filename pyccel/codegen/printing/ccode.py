@@ -199,7 +199,7 @@ dtype_registry = {('real',8)    : 'double',
                   ('int',1)     : 'char',
                   ('bool',4)    : 'bool'}
 
-arr_dtype_registry = {('real',8)    : 'nd_double',
+ndarray_type_registry = {('real',8)    : 'nd_double',
                   ('real',4)    : 'nd_float',
                   ('complex',8) : 'nd_cdouble',
                   ('complex',4) : 'nd_cfloat',
@@ -515,13 +515,21 @@ class CCodePrinter(CodePrinter):
         code = ', '.join([args_format, *args])
         return "printf({});".format(code)
 
-    def find_in_dtype_registry(self, dtype, prec, array=False):
+    def find_in_dtype_registry(self, dtype, prec):
         try :
-            return dtype_registry[(dtype, prec)] if not array else arr_dtype_registry[(dtype, prec)]
+            return dtype_registry[(dtype, prec)]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO,
                     symbol = "{}[kind = {}]".format(dtype, prec),
                     severity='fatal')
+
+    def find_in_ndarray_type_registry(self, dtype, prec):
+        try :
+            return ndarray_type_registry[(dtype, prec)]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = "{}[kind = {}]".format(dtype, prec),
+                    severity='fatal') 
 
     def get_declare_type(self, expr):
         dtype = self._print(expr.dtype)
@@ -635,7 +643,7 @@ class CCodePrinter(CodePrinter):
         #set dtype to the C struct types
         dtype = self._print(expr.dtype)
         base = self._print(expr.base.label)
-        dtype = self.find_in_dtype_registry(dtype, expr.precision, array=True)
+        dtype = self.find_in_ndarray_type_registry(dtype, expr.precision)
         if expr.rank > 0:
             return "array_slicing(%s, %s)" % (base, ", ".join(inds))
         return "%s.%s[get_index(%s, %s)]" % (base, dtype, base, ", ".join(inds))
@@ -653,7 +661,7 @@ class CCodePrinter(CodePrinter):
         shape = [self._print(i) for i in shape]
         shape = ", ".join(a for a in shape)
         dtype = self._print(expr.variable.dtype)
-        dtype = self.find_in_dtype_registry(dtype, expr.variable.precision, array=True)
+        dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
         shape_name, _ = create_incremented_string(self._parser.used_names, prefix = 'shape_dummy')
         init_shape = "int %s[] = {%s};" % (shape_name, shape)
         alloc_code = "{} = array_create({}, {}, {});".format(expr.variable, len(expr.shape), shape_name, dtype)
@@ -945,7 +953,7 @@ class CCodePrinter(CodePrinter):
                 arg = functools.reduce(operator.concat, arg)
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (dtype, dummy_array_name, arg)
-            dtype = self.find_in_dtype_registry(format(rhs.dtype), rhs.precision, array=True)
+            dtype = self.find_in_ndarray_type_registry(format(rhs.dtype), rhs.precision)
             cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
             return  '%s%s\n' % (dummy_array, cpy_data)
 
