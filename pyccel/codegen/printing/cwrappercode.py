@@ -382,7 +382,7 @@ class CWrapperCodePrinter(CCodePrinter):
         for func in funcs :
             mini_wrapper_func_body = []
             res_args = []
-            mini_wrapper_func_vars = {}
+            mini_wrapper_func_vars = {a.name : a for a in func.arguments}
             flags = 0
 
             # Loop for all args in every functions and create the corresponding condition and body
@@ -390,7 +390,6 @@ class CWrapperCodePrinter(CCodePrinter):
             for p_arg, f_arg in zip(parse_args, func.arguments):
                 check = Type_Check(f_arg, p_arg) # get check type function
                 assign = [Assign(f_arg, self.get_collect_function_call(f_arg, p_arg))] # get collect function
-                mini_wrapper_func_vars[f_arg.name] = f_arg
 
                 flag_value = flags_registry[(f_arg.dtype, f_arg.precision)]
                 flags = (flags << 4) + flag_value  # shift by 4 to the left
