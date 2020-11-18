@@ -688,6 +688,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Interface(self, expr):
         return ""
+
     def _print_FunctionDef(self, expr):
 
         if len(expr.results) > 1:
