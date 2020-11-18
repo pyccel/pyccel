@@ -529,7 +529,7 @@ class CCodePrinter(CodePrinter):
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO,
                     symbol = "{}[kind = {}]".format(dtype, prec),
-                    severity='fatal') 
+                    severity='fatal')
 
     def get_declare_type(self, expr):
         dtype = self._print(expr.dtype)
@@ -636,7 +636,7 @@ class CCodePrinter(CodePrinter):
         base_name = self._print(base.name)
         if base.is_ndarray:
             if expr.rank > 0:
-                #managing the Slice input 
+                #managing the Slice input
                 for i , ind in enumerate(inds):
                     if isinstance(ind, Slice):
                         #setting the slice start and end to their correct value if none is provided
@@ -651,9 +651,11 @@ class CCodePrinter(CodePrinter):
                         #setting the Slice start and end to their correct value when try to get a view with scalar index
                         inds[i] = Slice(ind, ind + 1)
                 inds = [self._print(i) for i in inds]
-                return "array_slicing(%s, %s)" % (base, ", ".join(inds))
+                return "array_slicing(%s, %s)" % (base_name, ", ".join(inds))
             inds = [self._print(i) for i in inds]
-            return "%s.%s[get_index(%s, %s)]" % (base, dtype, base, ", ".join(inds))
+        else:
+            raise NotImplementedError(expr)
+        return "%s.%s[get_index(%s, %s)]" % (base_name, dtype, base_name, ", ".join(inds))
 
     def _print_Allocate(self, expr):
         free_code = ''
