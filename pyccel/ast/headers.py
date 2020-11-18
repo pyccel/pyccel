@@ -133,6 +133,8 @@ class Template(Header):
 class FunctionHeader(Header):
     """Represents function/subroutine header in the code.
 
+    Parameters
+    ----------
     name: str
         function/subroutine name
 
@@ -153,6 +155,7 @@ class FunctionHeader(Header):
         argument declaration. default value: False
 
     Examples
+    --------
 
     >>> from pyccel.ast.core import FunctionHeader
     >>> FunctionHeader('f', ['double'])
