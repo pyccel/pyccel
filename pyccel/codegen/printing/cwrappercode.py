@@ -378,7 +378,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_vars[check_var.name] = check_var
         types_dict = {} #dict to collect each variable possible type and the corresponding flags
         # Managing the body of wrapper
-        # TODO split or re use exisiting functiond in the wrapper
+        # TODO split or re use exisiting functions in the wrapper
         for func in funcs :
             mini_wrapper_func_body = []
             res_args = []
@@ -387,29 +387,29 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # Loop for all args in every functions and create the corresponding condition and body
             # TODO add array management like in the wrapper of simple function
-            for a, b in zip(parse_args, func.arguments):
-                check = Type_Check(b, a) # get check type function
-                assign = [Assign(b, self.get_collect_function_call(b, a))] # get collect function
-                mini_wrapper_func_vars[b.name] = b
+            for p_arg, f_arg in zip(parse_args, func.arguments):
+                check = Type_Check(f_arg, p_arg) # get check type function
+                assign = [Assign(f_arg, self.get_collect_function_call(f_arg, p_arg))] # get collect function
+                mini_wrapper_func_vars[f_arg.name] = f_arg
 
-                flag_value = flags_registry[(b.dtype, b.precision)]
+                flag_value = flags_registry[(f_arg.dtype, f_arg.precision)]
                 flags = (flags << 4) + flag_value  # shift by 4 to the left
                 # Managing valued variable
-                if isinstance(b, ValuedVariable):
-                    check = PyccelAssociativeParenthesis(PyccelOr(PyccelEq(VariableAddress(a), VariableAddress(Py_None)), check))
-                    default_value[a.name] =  self.get_default_assign(a, b)
+                if isinstance(f_arg, ValuedVariable):
+                    check = PyccelAssociativeParenthesis(PyccelOr(PyccelEq(VariableAddress(p_arg), VariableAddress(Py_None)), check))
+                    default_value[p_arg.name] =  self.get_default_assign(p_arg, f_arg)
 
-                    if not b.is_optional :
-                        assign = [Assign(b, IfTernaryOperator(PyccelNe(VariableAddress(a), VariableAddress(Py_None)),
-                            self.get_collect_function_call(b, a), b.value))]
+                    if not f_arg.is_optional :
+                        assign = [Assign(f_arg, IfTernaryOperator(PyccelNe(VariableAddress(p_arg), VariableAddress(Py_None)),
+                            self.get_collect_function_call(f_arg, p_arg), f_arg.value))]
                     else :  # Managing optional variable
-                        tmp_var = Variable(dtype=b.dtype, name = self.get_new_name(used_names, b.name+"_tmp"))
+                        tmp_var = Variable(dtype=f_arg.dtype, name = self.get_new_name(used_names, f_arg.name+"_tmp"))
                         mini_wrapper_func_vars[tmp_var.name] = tmp_var
-                        assign = [Assign(tmp_var, self.get_collect_function_call(tmp_var, a)), Assign(VariableAddress(b), VariableAddress(tmp_var))]
-                        assign = [If((PyccelEq(VariableAddress(a), VariableAddress(Py_None)),
-                                    [Assign(VariableAddress(b), b.value)]), (LiteralTrue(), assign))]
+                        assign = [Assign(tmp_var, self.get_collect_function_call(tmp_var, p_arg)), Assign(VariableAddress(f_arg), VariableAddress(tmp_var))]
+                        assign = [If((PyccelEq(VariableAddress(p_arg), VariableAddress(Py_None)),
+                                    [Assign(VariableAddress(f_arg), f_arg.value)]), (LiteralTrue(), assign))]
 
-                types_dict.setdefault(b, set()).add((b, check, flag_value)) # collect variable type for each arguments
+                types_dict.setdefault(f_arg, set()).add((f_arg, check, flag_value)) # collect variable type for each arguments
                 mini_wrapper_func_body += assign
 
             # create the corresponding function call
