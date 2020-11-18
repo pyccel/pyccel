@@ -50,6 +50,8 @@ from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import _atomic
 from pyccel.ast.core import create_variable
 
+from pyccel.ast.datatypes import default_precision
+
 from pyccel.ast.core import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
@@ -388,7 +390,7 @@ class SyntaxParser(BasicParser):
             return Nil()
 
         elif stmt.value is True:
-            return LiteralTrue()
+            return LiteralTrue(default_precision['bool'])
 
         elif stmt.value is False:
             return LiteralFalse()
@@ -413,7 +415,7 @@ class SyntaxParser(BasicParser):
             return Nil()
 
         elif stmt.value is True:
-            return LiteralTrue()
+            return LiteralTrue(default_precision['bool'])
 
         elif stmt.value is False:
             return LiteralFalse()
@@ -973,7 +975,7 @@ class SyntaxParser(BasicParser):
             orelse = orelse[0]._args
             return If(Tuple(test, body, sympify=False), *orelse)
         else:
-            orelse = Tuple(LiteralTrue(), orelse, sympify=False)
+            orelse = Tuple(LiteralTrue(default_precision['bool']), orelse, sympify=False)
             return If(Tuple(test, body, sympify=False), orelse)
 
     def _visit_IfExp(self, stmt):

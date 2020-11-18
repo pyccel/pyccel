@@ -62,7 +62,7 @@ from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMi
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol
-from pyccel.ast.datatypes import DataTypeFactory
+from pyccel.ast.datatypes import DataTypeFactory, default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric, NativeComplex
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -2837,7 +2837,7 @@ class SemanticParser(BasicParser):
             if IsClass == IsNot:
                 return LiteralFalse()
             elif IsClass == Is:
-                return LiteralTrue()
+                return LiteralTrue(default_precision['bool'])
 
         if isinstance(var1, Nil):
             var1, var2 = var2, var1
@@ -2853,7 +2853,7 @@ class SemanticParser(BasicParser):
             if IsClass == Is:
                 return LiteralFalse()
             elif IsClass == IsNot:
-                return LiteralTrue()
+                return LiteralTrue(default_precision['bool'])
 
         if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
             (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):

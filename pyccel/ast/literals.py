@@ -34,6 +34,8 @@ class LiteralTrue(sp_BooleanTrue, Literal):
     """Represents the python value True"""
     _dtype     = NativeBool()
     _precision = default_precision['bool']
+    def __init__(self, precision):
+        self._precision = precision
 
 #------------------------------------------------------------------------------
 class LiteralFalse(sp_BooleanFalse, Literal):
