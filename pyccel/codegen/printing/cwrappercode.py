@@ -366,7 +366,7 @@ class CWrapperCodePrinter(CCodePrinter):
         arg_names         = [a.name for a in funcs[0].arguments]
         keyword_list_name = self.get_new_name(used_names,'kwlist')
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
-        wrapper_body              = [keyword_list]
+        wrapper_body      = [keyword_list]
 
         wrapper_body_translations = []
         body_tmp = []
@@ -702,7 +702,7 @@ class CWrapperCodePrinter(CCodePrinter):
         item_names = [item.name for s in funcs for item in s.functions]
         funcs += [f for f in expr.funcs if f.name not in item_names]
 
-        function_defs = '\n\n'.join(self._print_Interface(f) for f in funcs)
+        function_defs = '\n\n'.join(self._print_Interface(f) if len(f.arguments) > 1 else self._print(f) for f in funcs )
         cast_functions = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f)
                                         for f in self._cast_functions_dict.values())
         method_def_func = ',\n'.join(('{{\n'
