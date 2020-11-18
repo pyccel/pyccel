@@ -111,7 +111,7 @@ def get_filename_from_import(module,input_folder=''):
 class Scope(object):
     """."""
 
-    def __init__(self, *, headers=None, decorators=None):
+    def __init__(self, *, headers=None, decorators=None, templates=None):
 
         self._imports = OrderedDict()
 
@@ -127,7 +127,7 @@ class Scope(object):
         self._classes   = OrderedDict()
         self._functions = OrderedDict()
         self._macros    = OrderedDict()
-        self._templates = {}
+        self._templates = templates or OrderedDict()
         self._headers   = headers    or OrderedDict()
         self._decorators= decorators or OrderedDict()
 
