@@ -50,7 +50,6 @@ from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import _atomic
 from pyccel.ast.core import create_variable
 
-from pyccel.ast.datatypes import default_precision
 
 from pyccel.ast.core import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
@@ -390,10 +389,10 @@ class SyntaxParser(BasicParser):
             return Nil()
 
         elif stmt.value is True:
-            return LiteralTrue(default_precision['bool'])
+            return LiteralTrue()
 
         elif stmt.value is False:
-            return LiteralFalse(default_precision['bool'])
+            return LiteralFalse()
 
         elif isinstance(stmt.value, int):
             return LiteralInteger(stmt.value)
@@ -415,10 +414,10 @@ class SyntaxParser(BasicParser):
             return Nil()
 
         elif stmt.value is True:
-            return LiteralTrue(default_precision['bool'])
+            return LiteralTrue()
 
         elif stmt.value is False:
-            return LiteralFalse(default_precision['bool'])
+            return LiteralFalse()
 
         else:
             raise NotImplementedError("Unknown NameConstant : {}".format(stmt.value))
@@ -975,7 +974,7 @@ class SyntaxParser(BasicParser):
             orelse = orelse[0]._args
             return If(Tuple(test, body, sympify=False), *orelse)
         else:
-            orelse = Tuple(LiteralTrue(default_precision['bool']), orelse, sympify=False)
+            orelse = Tuple(LiteralTrue(), orelse, sympify=False)
             return If(Tuple(test, body, sympify=False), orelse)
 
     def _visit_IfExp(self, stmt):

@@ -33,16 +33,14 @@ class Literal(PyccelAstNode):
 class LiteralTrue(sp_BooleanTrue, Literal):
     """Represents the python value True"""
     _dtype     = NativeBool()
-    _precision = default_precision['bool']
-    def __init__(self, precision):
+    def __init__(self, precision = default_precision['bool']):
         self._precision = precision
 
 #------------------------------------------------------------------------------
 class LiteralFalse(sp_BooleanFalse, Literal):
     """Represents the python value False"""
     _dtype     = NativeBool()
-    _precision = default_precision['bool']
-    def __init__(self, precision):
+    def __init__(self, precision = default_precision['bool']):
         self._precision = precision
 
 #------------------------------------------------------------------------------

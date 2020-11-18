@@ -6,7 +6,7 @@ from .basic     import Basic
 
 from .builtins  import PythonBool
 
-from .datatypes import DataType, default_precision
+from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex
 from .datatypes import NativeBool, NativeString, NativeGeneric
 
@@ -413,7 +413,7 @@ def bool_to_pyobj(cast_function_name):
     cast_function_body = [If(
                             (PythonBool(cast_function_argument),
                                 [AliasAssign(cast_function_result, Py_True)]),
-                            (LiteralTrue(default_precision['bool']),
+                            (LiteralTrue(),
                                 [AliasAssign(cast_function_result, Py_False)])
                           ),
                           Return([cast_function_result])]
