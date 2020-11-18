@@ -683,8 +683,7 @@ class SyntaxParser(BasicParser):
                                     severity='fatal')
 
                 i = 0
-                while i<len(ls):
-                    arg = ls[i]
+                for arg in ls:
                     if isinstance(arg, Symbol):
                         arg = arg.name
                         types.append(arg)
@@ -698,8 +697,6 @@ class SyntaxParser(BasicParser):
                                     symbol = comb_types,
                                     bounding_box = (stmt.lineno, stmt.col_offset),
                                     severity='error')
-
-                    i += 1
 
                 txt  = '#$ header template ' + str(tp_name)
                 txt += '(' + '|'.join(types) + ')'
