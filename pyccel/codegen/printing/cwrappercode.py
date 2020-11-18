@@ -343,10 +343,7 @@ class CWrapperCodePrinter(CCodePrinter):
         used_names = set(n.name for n in funcs)
 
         # Find a name for the wrapper function
-        # TO DEBUG remove this line  later
-        wrapper_name = self.get_new_name(used_names.union(self._global_names), expr.name.name+"_wrapper")
-        #wrapper_name = self.get_new_name(used_names.union(self._global_names), expr.name+"_wrapper")
-        self._function_wrapper_names[expr.name] = wrapper_name
+        wrapper_name = self._get_wrapper_name(used_names, expr)
         self._global_names.add(wrapper_name)
 
         # Collect local variables
@@ -382,7 +379,7 @@ class CWrapperCodePrinter(CCodePrinter):
         for func in funcs :
             mini_wrapper_func_body = []
             res_args = []
-            mini_wrapper_func_vars = func.arguments
+            mini_wrapper_func_vars = list(func.arguments)
             flags = 0
 
             # Loop for all args in every functions and create the corresponding condition and body
@@ -530,6 +527,14 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return func_call
 
+    def _get_wrapper_name(self, used_names, func):
+        name = func.name.name if isinstance(func, FunctionDef) else func.name
+        wrapper_name = self.get_new_name(used_names.union(self._global_names), name+"_wrapper")
+        self._function_wrapper_names[func.name] = wrapper_name
+        self._global_names.add(wrapper_name)
+        return wrapper_name
+
+
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
     #--------------------------------------------------------------------
@@ -591,9 +596,7 @@ class CWrapperCodePrinter(CCodePrinter):
         used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name.name])
 
         # Find a name for the wrapper function
-        wrapper_name = self.get_new_name(used_names.union(self._global_names), expr.name.name+"_wrapper")
-        self._function_wrapper_names[expr.name] = wrapper_name
-        self._global_names.add(wrapper_name)
+        wrapper_name = self._get_wrapper_name(used_names, expr)
         used_names.add(wrapper_name)
         # Collect local variables
         wrapper_vars        = {a.name : a for a in expr.arguments}
