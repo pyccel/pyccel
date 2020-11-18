@@ -15,6 +15,7 @@ from sympy import IndexedBase
 from sympy import Tuple
 from sympy import Lambda
 from sympy import Dict
+from sympy.core import cache
 
 #==============================================================================
 
@@ -648,6 +649,7 @@ class SyntaxParser(BasicParser):
             if not isinstance(decorators['template'], list):
                 decorators['template'] = [decorators['template']]
             for comb_types in decorators['template']:
+                cache.clear_cache()
                 types = []
                 if len(comb_types.args) != 2:
                     msg = 'Number of Arguments provided to the template decorator is not valid'
@@ -713,6 +715,7 @@ class SyntaxParser(BasicParser):
             if not isinstance(decorators['types'], list):
                 decorators['types'] = [decorators['types']]
             for comb_types in decorators['types']:
+                cache.clear_cache()
                 types = []
                 results = []
                 container = types
