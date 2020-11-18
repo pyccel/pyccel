@@ -443,31 +443,8 @@ class CWrapperCodePrinter(CCodePrinter):
                     FunctionCall(mini_wrapper_func_def, parse_args))]))
 
         # Errors / Types management
-        # Creating check_type function body
-        check_func_body = []
-        flags = (len(types_dict) - 1) * 4
-        for a in types_dict:
-            body = []
-            types = []
-            for s in types_dict[a] :
-                value = s[2] << flags
-                body.append((s[1], [AugAssign(check_var, '+' ,value)]))
-                types.append(s[0].dtype)
-            flags -= 4
-            error = ' or '.join([str_dtype(v) for v in types])
-            body.append((LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(types_dict[a][0].name, error)), Return([LiteralInteger(0)])]))
-            check_func_body += [If(*body)]
-        check_func_body = [Assign(check_var, LiteralInteger(0))] + check_func_body
-        check_func_body.append(Return([check_var]))
-        # Creating check function definition
-        check_func_name = self.get_new_name(used_names.union(self._global_names), 'type_check')
-        self._global_names.add(check_func_name)
-        check_func_def = FunctionDef(name = check_func_name,
-            arguments = parse_args,
-            results = [check_var],
-            body = check_func_body,
-            local_vars = [])
-        funcs_def.append(check_func_def)
+        # Creating check_type function
+        funcs_def.append(self._create_wrapper_check)
 
         # Create the wrapper body with collected informations
         body_tmp = [((PyccelNot(check_var), [Return([Nil()])]))] + body_tmp
@@ -495,6 +472,32 @@ class CWrapperCodePrinter(CCodePrinter):
 
         sep = self._print(SeparatorComment(40))
         return sep + '\n'.join(CCodePrinter._print_FunctionDef(self, f) for f in funcs_def)
+
+    def _create_wrapper_check(self, type_dict):
+        check_func_body = []
+        flags = (len(types_dict) - 1) * 4
+        for a in types_dict:
+            body = []
+            types = []
+            for s in types_dict[a] :
+                value = s[2] << flags
+                body.append((s[1], [AugAssign(check_var, '+' ,value)]))
+                types.append(s[0].dtype)
+            flags -= 4
+            error = ' or '.join([str_dtype(v) for v in types])
+            body.append((LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(types_dict[a][0].name, error)), Return([LiteralInteger(0)])]))
+            check_func_body += [If(*body)]
+        check_func_body = [Assign(check_var, LiteralInteger(0))] + check_func_body
+        check_func_body.append(Return([check_var]))
+        # Creating check function definition
+        check_func_name = self.get_new_name(used_names.union(self._global_names), 'type_check')
+        self._global_names.add(check_func_name)
+        check_func_def = FunctionDef(name = check_func_name,
+            arguments = parse_args,
+            results = [check_var],
+            body = check_func_body,
+            local_vars = [])
+        return check_func_def
 
     def _create_wrapper_results(self, arguments, func):
         if self._target_language == 'fortran':
