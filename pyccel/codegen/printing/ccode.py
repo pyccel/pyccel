@@ -625,28 +625,35 @@ class CCodePrinter(CodePrinter):
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0])
             else:
-                if isinstance(ind, Slice):
-                    #setting the slice start and end to their correct value if none is provided
-                    start = ind.start
-                    end = ind.end
-                    if ind.start is None:
-                        start = 0
-                    if ind.end is None:
-                        end = base.shape[-1]
-                    inds[i] = Slice(start, end)
                 #indices of indexedElement of len==1 shouldn't be a Tuple
                 if isinstance(ind, Tuple) and len(ind) == 1:
                     inds[i].args = ind[0]
                 if allow_negative_indexes and not isinstance(ind, LiteralInteger):
                     inds[i] = PyccelMod(ind, base_shape[i])
-        inds = [self._print(i) for i in inds]
         #set dtype to the C struct types
         dtype = self._print(expr.dtype)
-        base = self._print(expr.base.label)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.precision)
-        if expr.rank > 0:
-            return "array_slicing(%s, %s)" % (base, ", ".join(inds))
-        return "%s.%s[get_index(%s, %s)]" % (base, dtype, base, ", ".join(inds))
+        base_name = self._print(base.name)
+        if base.is_ndarray:
+            if expr.rank > 0:
+                #managing the Slice input 
+                for i , ind in enumerate(inds):
+                    if isinstance(ind, Slice):
+                        #setting the slice start and end to their correct value if none is provided
+                        start = ind.start
+                        end = ind.end
+                        if ind.start is None:
+                            start = 0
+                        if ind.end is None:
+                            end = base.shape[-1]
+                        inds[i] = Slice(start, end)
+                    if isinstance(ind, LiteralInteger):
+                        #setting the Slice start and end to their correct value when try to get a view with scalar index
+                        inds[i] = Slice(ind, ind + 1)
+                inds = [self._print(i) for i in inds]
+                return "array_slicing(%s, %s)" % (base, ", ".join(inds))
+            inds = [self._print(i) for i in inds]
+            return "%s.%s[get_index(%s, %s)]" % (base, dtype, base, ", ".join(inds))
 
     def _print_Allocate(self, expr):
         free_code = ''
