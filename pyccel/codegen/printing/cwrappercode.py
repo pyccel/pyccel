@@ -336,9 +336,9 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_Interface(self, expr):
 
         #Collecting all functions names
-        funcs = [a for a in expr.functions] if isinstance(expr, Interface) else [expr]
+        funcs = [a for a in expr.functions]
         # Save all used names
-        used_names = set([n.name for n in funcs])
+        used_names = set(n.name for n in funcs)
 
         # Find a name for the wrapper function
         wrapper_name = self.get_new_name(used_names.union(self._global_names), expr.name+"_wrapper")
@@ -688,7 +688,7 @@ class CWrapperCodePrinter(CCodePrinter):
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in static_funcs)
 
         #TODO it should be a better way to do this :
-        funcs = [i for i in expr.interfaces]
+        funcs = expr.interfaces
         funcs += [f for f in expr.funcs if f.name not in [item.name for s in funcs for item in s.functions]]
 
         function_defs = '\n\n'.join(self._print(f) for f in funcs)

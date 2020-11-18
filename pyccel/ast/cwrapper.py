@@ -523,7 +523,6 @@ Numpy_Float_ref = Variable(dtype=NativeVoid(),  name = 'Float')
 Numpy_Double_ref = Variable(dtype=NativeVoid(),  name = 'Double')
 Numpy_Complex_ref = Variable(dtype=NativeVoid(),  name = 'ComplexFloating')
 
-
 numpy_type_check_registry = {
     (NativeInteger(), 4)       : Numpy_Int_ref,
     (NativeInteger(), 8)       : Numpy_Long_ref,
