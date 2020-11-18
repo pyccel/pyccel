@@ -382,7 +382,7 @@ class CWrapperCodePrinter(CCodePrinter):
         for func in funcs :
             mini_wrapper_func_body = []
             res_args = []
-            mini_wrapper_func_vars = {a.name : a for a in func.arguments}
+            mini_wrapper_func_vars = [a for a in func.arguments]
             flags = 0
 
             # Loop for all args in every functions and create the corresponding condition and body
@@ -403,7 +403,7 @@ class CWrapperCodePrinter(CCodePrinter):
                             self.get_collect_function_call(f_arg, p_arg), f_arg.value))]
                     else :  # Managing optional variable
                         tmp_var = Variable(dtype=f_arg.dtype, name = self.get_new_name(used_names, f_arg.name+"_tmp"))
-                        mini_wrapper_func_vars[tmp_var.name] = tmp_var
+                        mini_wrapper_func_vars.append(tmp_var)
                         assign = [Assign(tmp_var, self.get_collect_function_call(tmp_var, p_arg)), Assign(VariableAddress(f_arg), VariableAddress(tmp_var))]
                         assign = [If((PyccelEq(VariableAddress(p_arg), VariableAddress(Py_None)),
                                     [Assign(VariableAddress(f_arg), f_arg.value)]), (LiteralTrue(), assign))]
@@ -418,10 +418,10 @@ class CWrapperCodePrinter(CCodePrinter):
             # Loop for all res in every functions and create the corresponding body and cast
             for r in func.results :
                 collect_var, cast_func = self.get_PyBuildValue(used_names, r)
-                mini_wrapper_func_vars[r.name] = r
+                mini_wrapper_func_vars.append(r)
                 if cast_func is not None:
                     mini_wrapper_func_body.append(cast_func)
-                    mini_wrapper_func_vars[collect_var.name] = collect_var
+                    mini_wrapper_func_vars.append(collect_var)
                 res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
 
             # Building PybuildValue and freeing the allocated variable after.
@@ -438,7 +438,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 arguments = parse_args,
                 results = wrapper_results,
                 body = mini_wrapper_func_body,
-                local_vars = mini_wrapper_func_vars.values())
+                local_vars = mini_wrapper_func_vars)
             funcs_def.append(mini_wrapper_func_def)
 
             # append check condition to the functioncall
