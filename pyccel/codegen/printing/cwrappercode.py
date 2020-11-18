@@ -376,7 +376,7 @@ class CWrapperCodePrinter(CCodePrinter):
         default_value = {} # dict to collect all initialisation needed in the wrapper
         check_var = Variable(dtype = NativeInteger(), name = self.get_new_name(used_names , "check"))
         wrapper_vars[check_var.name] = check_var
-        types_dict = {} #dict to collect each variable possible type and the and the corresponding flags
+        types_dict = {} #dict to collect each variable possible type and the corresponding flags
         # Managing the body of wrapper
         # TODO split or re use exisiting functiond in the wrapper
         for func in funcs :
