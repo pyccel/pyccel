@@ -444,7 +444,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Errors / Types management
         # Creating check_type function
-        funcs_def.append(self._create_wrapper_check)
+        funcs_def.append(self._create_wrapper_check(types_dict, used_names))
 
         # Create the wrapper body with collected informations
         body_tmp = [((PyccelNot(check_var), [Return([Nil()])]))] + body_tmp
@@ -473,7 +473,7 @@ class CWrapperCodePrinter(CCodePrinter):
         sep = self._print(SeparatorComment(40))
         return sep + '\n'.join(CCodePrinter._print_FunctionDef(self, f) for f in funcs_def)
 
-    def _create_wrapper_check(self, type_dict):
+    def _create_wrapper_check(self, type_dict, used_names):
         check_func_body = []
         flags = (len(types_dict) - 1) * 4
         for a in types_dict:
