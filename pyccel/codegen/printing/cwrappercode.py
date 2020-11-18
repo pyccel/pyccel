@@ -336,12 +336,16 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_Interface(self, expr):
 
         #Collecting all functions names
-        funcs = expr.functions
+        #TO DEBUG remove this line and uncomment the next one
+        funcs = [expr]
+        #funcs = expr.functions
         # Save all used names
         used_names = set(n.name for n in funcs)
 
         # Find a name for the wrapper function
-        wrapper_name = self.get_new_name(used_names.union(self._global_names), expr.name+"_wrapper")
+        # TO DEBUG remove this line  later
+        wrapper_name = self.get_new_name(used_names.union(self._global_names), expr.name.name+"_wrapper")
+        #wrapper_name = self.get_new_name(used_names.union(self._global_names), expr.name+"_wrapper")
         self._function_wrapper_names[expr.name] = wrapper_name
         self._global_names.add(wrapper_name)
 
@@ -444,7 +448,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Errors / Types management
         # Creating check_type function
-        funcs_def.append(self._create_wrapper_check(types_dict, used_names))
+        check_func_def = self._create_wrapper_check(check_var, parse_args, types_dict, used_names)
+        funcs_def.append(check_func_def)
 
         # Create the wrapper body with collected informations
         body_tmp = [((PyccelNot(check_var), [Return([Nil()])]))] + body_tmp
@@ -473,19 +478,21 @@ class CWrapperCodePrinter(CCodePrinter):
         sep = self._print(SeparatorComment(40))
         return sep + '\n'.join(CCodePrinter._print_FunctionDef(self, f) for f in funcs_def)
 
-    def _create_wrapper_check(self, type_dict, used_names):
+    def _create_wrapper_check(self, check_var, parse_args, types_dict, used_names):
         check_func_body = []
         flags = (len(types_dict) - 1) * 4
         for a in types_dict:
+            var_name = ""
             body = []
             types = []
             for s in types_dict[a] :
+                var_name = s[0].name
                 value = s[2] << flags
                 body.append((s[1], [AugAssign(check_var, '+' ,value)]))
                 types.append(s[0].dtype)
             flags -= 4
             error = ' or '.join([str_dtype(v) for v in types])
-            body.append((LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(types_dict[a][0].name, error)), Return([LiteralInteger(0)])]))
+            body.append((LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(var_name, error)), Return([LiteralInteger(0)])]))
             check_func_body += [If(*body)]
         check_func_body = [Assign(check_var, LiteralInteger(0))] + check_func_body
         check_func_body.append(Return([check_var]))
@@ -695,7 +702,7 @@ class CWrapperCodePrinter(CCodePrinter):
         item_names = [item.name for s in funcs for item in s.functions]
         funcs += [f for f in expr.funcs if f.name not in item_names]
 
-        function_defs = '\n\n'.join(self._print(f) for f in funcs)
+        function_defs = '\n\n'.join(self._print_Interface(f) for f in funcs)
         cast_functions = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f)
                                         for f in self._cast_functions_dict.values())
         method_def_func = ',\n'.join(('{{\n'
