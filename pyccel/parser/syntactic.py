@@ -393,7 +393,7 @@ class SyntaxParser(BasicParser):
             return LiteralTrue(default_precision['bool'])
 
         elif stmt.value is False:
-            return LiteralFalse()
+            return LiteralFalse(default_precision['bool'])
 
         elif isinstance(stmt.value, int):
             return LiteralInteger(stmt.value)
@@ -418,7 +418,7 @@ class SyntaxParser(BasicParser):
             return LiteralTrue(default_precision['bool'])
 
         elif stmt.value is False:
-            return LiteralFalse()
+            return LiteralFalse(default_precision['bool'])
 
         else:
             raise NotImplementedError("Unknown NameConstant : {}".format(stmt.value))

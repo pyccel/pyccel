@@ -2835,7 +2835,7 @@ class SemanticParser(BasicParser):
 
         if (var1 is var2) or (isinstance(var2, Nil) and isinstance(var1, Nil)):
             if IsClass == IsNot:
-                return LiteralFalse()
+                return LiteralFalse(default_precision['bool'])
             elif IsClass == Is:
                 return LiteralTrue(default_precision['bool'])
 
@@ -2851,7 +2851,7 @@ class SemanticParser(BasicParser):
 
         if (var1.dtype != var2.dtype):
             if IsClass == Is:
-                return LiteralFalse()
+                return LiteralFalse(default_precision['bool'])
             elif IsClass == IsNot:
                 return LiteralTrue(default_precision['bool'])
 
