@@ -422,7 +422,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 if cast_func is not None:
                     mini_wrapper_func_body.append(cast_func)
                     mini_wrapper_func_vars.append(collect_var)
-                res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
+                res_args.append(VariableAddress(collect_var) if self.stored_in_c_pointer(collect_var) else collect_var)
 
             # Building PybuildValue and freeing the allocated variable after.
             mini_wrapper_func_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
