@@ -15,7 +15,7 @@ from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, Funct
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, PyccelEq
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelOr
-from pyccel.ast.core import Interface, IfTernaryOperator, PyccelAssociativeParenthesis
+from pyccel.ast.core import IfTernaryOperator, PyccelAssociativeParenthesis
 from pyccel.ast.core import AugAssign
 from pyccel.ast.datatypes import str_dtype
 
@@ -336,7 +336,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_Interface(self, expr):
 
         #Collecting all functions names
-        funcs = [a for a in expr.functions]
+        funcs = expr.functions
         # Save all used names
         used_names = set(n.name for n in funcs)
 
