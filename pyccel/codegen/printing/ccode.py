@@ -613,7 +613,6 @@ class CCodePrinter(CodePrinter):
         base_shape = base.shape
         allow_negative_indexes = (isinstance(base, IndexedVariable) and \
                 base.internal_variable.allows_negative_indexes)
-        base = self._print(expr.base.label)
         for i, ind in enumerate(inds):
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0])
@@ -625,7 +624,7 @@ class CCodePrinter(CodePrinter):
                     if ind.start is None:
                         start = 0
                     if ind.end is None:
-                        end = expr.base.shape[1]
+                        end = base.shape[-1]
                     inds[i] = Slice(start, end)
                 #indices of indexedElement of len==1 shouldn't be a Tuple
                 if isinstance(ind, Tuple) and len(ind) == 1:
@@ -635,6 +634,7 @@ class CCodePrinter(CodePrinter):
         inds = [self._print(i) for i in inds]
         #set dtype to the C struct types
         dtype = self._print(expr.dtype)
+        base = self._print(expr.base.label)
         dtype = self.find_in_dtype_registry(dtype, expr.precision, array=True)
         if expr.rank > 0:
             return "array_slicing(%s, %s)" % (base, ", ".join(inds))
@@ -946,7 +946,7 @@ class CCodePrinter(CodePrinter):
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (dtype, dummy_array_name, arg)
             dtype = self.find_in_dtype_registry(format(rhs.dtype), rhs.precision, array=True)
-            cpy_data = "memcpy({0}.nd_{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
+            cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
             return  '%s%s\n' % (dummy_array, cpy_data)
 
         if isinstance(rhs, (NumpyFull)):
