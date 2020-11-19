@@ -30,6 +30,7 @@ def set_num_threads(n):
   structured-block
 #$ omp end parallel
 ```
+
 #### Example
 
 ```python
