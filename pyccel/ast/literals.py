@@ -65,12 +65,13 @@ class LiteralFalse(sp_BooleanFalse, Literal):
 class LiteralInteger(sp_Integer, Literal):
     """Represents an integer literal in python"""
     _dtype     = NativeInteger()
-    def __new__(cls, val):
+    def __new__(cls, val, precision = default_precision['integer']):
         ival = int(val)
         obj = Expr.__new__(cls, ival)
+        obj._precision = precision
         obj.p = ival
         return obj
-    def __init__(self, value, *, precision = default_precision['integer']):
+    def __init__(self, value, precision = default_precision['integer']):
         self._precision = precision
 
     @property
