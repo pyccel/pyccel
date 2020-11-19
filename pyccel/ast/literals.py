@@ -36,11 +36,17 @@ class LiteralTrue(sp_BooleanTrue, Literal):
     def __init__(self, precision = default_precision['bool']):
         self._precision = precision
 
+    def set_precision(self, precision):
+        self._precision = precision
+
 #------------------------------------------------------------------------------
 class LiteralFalse(sp_BooleanFalse, Literal):
     """Represents the python value False"""
     _dtype     = NativeBool()
     def __init__(self,precision = default_precision['bool']):
+        self._precision = precision
+
+    def set_precision(self, precision):
         self._precision = precision
 
 #------------------------------------------------------------------------------
@@ -56,11 +62,17 @@ class LiteralInteger(sp_Integer, Literal):
     def __init__(self, value, *, precision = default_precision['integer']):
         self._precision = precision
 
+    def set_precision(self, precision):
+        self._precision = precision
+
 #------------------------------------------------------------------------------
 class LiteralFloat(sp_Float, Literal):
     """Represents a float literal in python"""
     _dtype     = NativeReal()
     def __init__(self, value, *, precision = default_precision['float']):
+        self._precision = precision
+
+    def set_precision(self, precision):
         self._precision = precision
 
 #------------------------------------------------------------------------------
@@ -75,6 +87,9 @@ class LiteralComplex(Basic, Literal):
         Basic.__init__(self)
         self._real_part = real
         self._imag_part = imag
+        self._precision = precision
+
+    def set_precision(self, precision):
         self._precision = precision
 
     @property
@@ -109,6 +124,9 @@ class LiteralString(Basic, Literal):
         if not isinstance(arg, str):
             raise TypeError('arg must be of type str')
         self._string = arg
+
+    def set_precision(self, precision):
+        self._precision = precision
 
     @property
     def arg(self):
