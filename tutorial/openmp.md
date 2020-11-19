@@ -76,18 +76,37 @@ for i in range(0, 1000):
 #$ omp end parallel
 ```
 
-### simd Constructs
+### Teams Constructs
 
 #### Syntax :
 
 ```python
-#$ omp simd [clause[ [,] clause] ... ]
-  for-loops
+#$ omp teams [clause[ [,]clause] ... ]
+  structured-block
+#$ omp end teams
 ```
 #### Example :
 
 ```python
-#$ omp simd
-for i in range(0, 1000):
-  result[i] = i
+from pyccel.stdlib.internal.openmp import omp_get_team_num, omp_get_num_teams
+result0 = 0
+result1 = 0
+nteams = 2
+#$ omp teams num_teams(nteams)
+tm_id = omp_get_team_num();
+if omp_get_num_teams() == 2:
+  if tm_id == 0:
+    #$ omp parallel
+    #$ omp for reduction (+:result0)
+    for i in range(0, 1000):
+       result0 += i
+    #$ omp end parallel
+  if tm_id == 1:
+    #$ omp parallel
+    #$ omp for reduction (+:result1)
+    for i in range(0, 5000):
+       result1 += i
+    #$ omp end parallel
+#$ omp end teams
+result = result1 + result2
 ```
