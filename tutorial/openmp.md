@@ -111,3 +111,25 @@ if omp_get_num_teams() == 2:
 #$ omp end teams
 result = result1 + result2
 ```
+
+### Target Construct
+
+#### Syntax :
+
+```python
+#$  omp target [clause[ [,]clause] ... ]
+  structured-block
+#$ omp end target
+```
+#### Example :
+
+```python
+
+#$ omp target
+#$ omp parallel
+#$ omp for private(i)
+for i in range(0, 1000):
+    result[i] = v1[i] * v2[i];
+#$ omp end parallel
+#$ omp end target
+```
