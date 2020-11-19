@@ -397,7 +397,7 @@ class CCodePrinter(CodePrinter):
         second = self._print(expr.args[1])
 
         if expr.dtype is NativeInteger():
-            return "{} % {}".format(first, second)
+            return "(({}) % {})".format(first, second)
 
         if expr.args[0].dtype is NativeInteger():
             first = self._print(PythonFloat(expr.args[0]))
@@ -619,8 +619,8 @@ class CCodePrinter(CodePrinter):
         inds = list(expr.indices)
         inds = inds[::-1]
         base_shape = base.shape
-        allow_negative_indexes = (isinstance(base, IndexedVariable) and \
-                base.internal_variable.allows_negative_indexes)
+        allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
+                base.allows_negative_indexes)
         for i, ind in enumerate(inds):
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0])
@@ -628,7 +628,8 @@ class CCodePrinter(CodePrinter):
                 #indices of indexedElement of len==1 shouldn't be a Tuple
                 if isinstance(ind, Tuple) and len(ind) == 1:
                     inds[i].args = ind[0]
-                if allow_negative_indexes and not isinstance(ind, LiteralInteger):
+                if allow_negative_indexes and \
+                        not isinstance(ind, LiteralInteger) and not isinstance(ind, Slice):
                     inds[i] = PyccelMod(ind, base_shape[i])
         #set dtype to the C struct types
         dtype = self._print(expr.dtype)
@@ -641,13 +642,20 @@ class CCodePrinter(CodePrinter):
                     if isinstance(ind, Slice):
                         #setting the slice start and end to their correct value if none is provided
                         start = ind.start
+                        #handling the negative indexes for a slice object
+                        if isinstance(start, PyccelUnarySub) and \
+                                isinstance(start.args[0], LiteralInteger):
+                            start = PyccelMinus(base_shape[i], start.args[0])
                         end = ind.end
+                        if isinstance(end, PyccelUnarySub) and \
+                                isinstance(end.args[0], LiteralInteger):
+                            end = PyccelMinus(base_shape[i], end.args[0])
                         if ind.start is None:
                             start = 0
                         if ind.end is None:
-                            end = base.shape[-1]
+                            end = base.shape[i]
                         inds[i] = Slice(start, end)
-                    if isinstance(ind, LiteralInteger):
+                    else:
                         #setting the Slice start and end to their correct value when try to get a view with scalar index
                         inds[i] = Slice(ind, ind + 1)
                 inds = [self._print(i) for i in inds]
