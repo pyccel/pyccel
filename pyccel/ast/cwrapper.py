@@ -384,7 +384,6 @@ def Type_Check(data, argument):
     # check for numpy array type
     if isinstance(argument, PyccelPyArrayObject):
         numpy_dtype = self.find_in_numpy_dtype_registry(data)
-        arg_dtype   = self.find_in_dtype_registry(self._print(data.dtype), data.precision)
         check = PyccelNe(FunctionCall(numpy_get_type, [argument]), numpy_dtype)
         return check
 

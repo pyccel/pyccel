@@ -164,6 +164,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return FunctionCall(cast_function, [arg])
 
+    def some_x_function(self, variable , collect_var):
+
+
     def get_PyArgParseType(self, used_names, variable):
         """
         Responsible for creating any necessary intermediate variables which are used
@@ -222,7 +225,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 body += [If((PyccelNot(check), [PyErr_SetString('PyExc_NotImplementedError',
                             '"Argument does not have the expected ordering ({})"'.format(variable.order)),
                             Return([Nil()])]))]
-                body += [Assign(VariableAddress(variable), self.get_collect_function_call(variable, collect_var))]
+            body += [Assign(VariableAddress(variable), self.get_collect_function_call(variable, collect_var))]
 
 
         elif variable.dtype is NativeBool():
