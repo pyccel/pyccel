@@ -3,4 +3,3 @@ engines:
     duplication:
         exclude_paths:
             - tests/**
-            - tutorial/**
