@@ -7,7 +7,9 @@ OpenMP Runtime Library Routines for Pyccel work by importing the OpenMP routine 
 ```python
 from pyccel.stdlib.internal.openmp import omp_set_num_threads
 ```
-#### Example :
+
+#### Example
+
 ```python
 from pyccel.decorators import types
 
@@ -28,7 +30,7 @@ def set_num_threads(n):
   structured-block
 #$ omp end parallel
 ```
-#### Example :
+#### Example
 
 ```python
 from pyccel.stdlib.internal.openmp import omp_get_num_threads
@@ -45,7 +47,8 @@ n = omp_get_num_threads()
 #$ omp for [clause[ [,] clause] ... ]
   for-loops
 ```
-#### Example :
+
+#### Example
 
 ```python
 result = 0
@@ -65,7 +68,8 @@ for i in range(0, 1000):
   structured-block
 #$ omp end single [end_clause[ [,] end_clause] ... ]
 ```
-#### Example :
+
+#### Example
 
 ```python
 result = 0
@@ -86,7 +90,8 @@ for i in range(0, 1000):
   structured-block
 #$ omp end teams
 ```
-#### Example :
+
+#### Example
 
 ```python
 from pyccel.stdlib.internal.openmp import omp_get_team_num, omp_get_num_teams
@@ -121,7 +126,8 @@ result = result1 + result2
   structured-block
 #$ omp end target
 ```
-#### Example :
+
+#### Example
 
 ```python
 
