@@ -247,7 +247,6 @@ class FunctionHeader(Header):
                         is_argument=True)
             return var
 
-
         for i in self.dtypes:
             if isinstance(i, UnionType):
                 dtypes += [i.args]
