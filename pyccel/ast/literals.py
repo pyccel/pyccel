@@ -36,7 +36,12 @@ class LiteralTrue(sp_BooleanTrue, Literal):
     def __init__(self, precision = default_precision['bool']):
         self._precision = precision
 
-    def set_precision(self, precision):
+    @property
+    def precision(self):
+        return self._precision
+
+    @precision.setter
+    def precision(self, precision):
         """ Set precision for the true literal """
         self._precision = precision
 
@@ -47,7 +52,12 @@ class LiteralFalse(sp_BooleanFalse, Literal):
     def __init__(self,precision = default_precision['bool']):
         self._precision = precision
 
-    def set_precision(self, precision):
+    @property
+    def precision(self):
+        return self._precision
+
+    @precision.setter
+    def precision(self, precision):
         """ Set precision for the false literal """
         self._precision = precision
 
@@ -55,7 +65,6 @@ class LiteralFalse(sp_BooleanFalse, Literal):
 class LiteralInteger(sp_Integer, Literal):
     """Represents an integer literal in python"""
     _dtype     = NativeInteger()
-    _precision = default_precision['integer']
     def __new__(cls, val):
         ival = int(val)
         obj = Expr.__new__(cls, ival)
@@ -64,7 +73,12 @@ class LiteralInteger(sp_Integer, Literal):
     def __init__(self, value, *, precision = default_precision['integer']):
         self._precision = precision
 
-    def set_precision(self, precision):
+    @property
+    def precision(self):
+        return self._precision
+
+    @precision.setter
+    def precision(self, precision):
         """ Set precision for the inetger literal """
         self._precision = precision
 
@@ -75,7 +89,12 @@ class LiteralFloat(sp_Float, Literal):
     def __init__(self, value, *, precision = default_precision['float']):
         self._precision = precision
 
-    def set_precision(self, precision):
+    @property
+    def precision(self):
+        return self._precision
+
+    @precision.setter
+    def precision(self, precision):
         """ Set precision for the float literal """
         self._precision = precision
 
@@ -87,13 +106,18 @@ class LiteralComplex(Basic, Literal):
     def __new__(cls, real, imag):
         return Basic.__new__(cls, real, imag)
 
-    def __init__(self, real, imag, precision = default_precision['float']):
+    def __init__(self, real, imag, precision = default_precision['complex']):
         Basic.__init__(self)
         self._real_part = real
         self._imag_part = imag
         self._precision = precision
 
-    def set_precision(self, precision):
+    @property
+    def precision(self):
+        return self._precision
+
+    @precision.setter
+    def precision(self, precision):
         """ Set precision for the complex literal """
         self._precision = precision
 
