@@ -37,7 +37,7 @@ class LiteralTrue(sp_BooleanTrue, Literal):
         self._precision = precision
 
     def set_precision(self, precision):
-        """ Set precision the true literal """
+        """ Set precision for the true literal """
         self._precision = precision
 
 #------------------------------------------------------------------------------
@@ -48,7 +48,7 @@ class LiteralFalse(sp_BooleanFalse, Literal):
         self._precision = precision
 
     def set_precision(self, precision):
-        """ Set precision the false literal """
+        """ Set precision for the false literal """
         self._precision = precision
 
 #------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ class LiteralInteger(sp_Integer, Literal):
         self._precision = precision
 
     def set_precision(self, precision):
-        """ Set precision the inetger literal """
+        """ Set precision for the inetger literal """
         self._precision = precision
 
 #------------------------------------------------------------------------------
@@ -76,7 +76,7 @@ class LiteralFloat(sp_Float, Literal):
         self._precision = precision
 
     def set_precision(self, precision):
-        """ Set precision the float literal """
+        """ Set precision for the float literal """
         self._precision = precision
 
 #------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ class LiteralComplex(Basic, Literal):
         self._precision = precision
 
     def set_precision(self, precision):
-        """ Set precision the complex literal """
+        """ Set precision for the complex literal """
         self._precision = precision
 
     @property
