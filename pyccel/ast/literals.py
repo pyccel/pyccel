@@ -154,9 +154,6 @@ class LiteralString(Basic, Literal):
             raise TypeError('arg must be of type str')
         self._string = arg
 
-    def set_precision(self, precision):
-        self._precision = precision
-
     @property
     def arg(self):
         """ Return the python string literal """
