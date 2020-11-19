@@ -8,7 +8,7 @@ OpenMP Runtime Library Routines for Pyccel work by importing the OpenMP routine 
 from pyccel.stdlib.internal.openmp import omp_set_num_threads
 ```
 
-#### Example
+### Example
 
 ```python
 from pyccel.decorators import types
