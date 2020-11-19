@@ -14,6 +14,7 @@ before_install:
   - sudo apt-get install gfortran
   - sudo apt-get install libblas-dev liblapack-dev
   - sudo apt-get install libopenmpi-dev openmpi-bin
+  - sudo apt-get install libomp-dev
 
 install:
   - ${PYTHON} -m pip install .
@@ -33,8 +34,9 @@ before_script:  # Coverage instructions - setup
 
 script:
   - cd tests
-  - ${PYTHON} -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic
-  - ${PYTHON} -m pytest -rx -m "not parallel and not c" --ignore=ast --ignore=printers --ignore=symbolic
+  - ${PYTHON} -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
+  - ${PYTHON} -m pytest -rx -m "not parallel and not c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
+  - ${PYTHON} -m pytest ndarrays/ -rx
   - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
 #  - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest epyccel -v -m parallel -rx
   - cd ..
@@ -44,11 +46,6 @@ after_script:  # Coverage instructions - collections
   - coverage xml
   - rm ${SITE_DIR}/pyccel_cov.pth
   - bash <(wget -q -O - https://coverage.codacy.com/get.sh)
-
-cache:
-  directories:
-    - /usr/local/Homebrew/
-    - $HOME/Library/Caches/Homebrew/
 
 #==============================================================================
 # Job matrix (including Windows build)
@@ -84,10 +81,17 @@ jobs:
       - brew pin poppler postgis postgresql pyenv sfcgal unbound
 #      - brew install gcc openblas lapack
       - brew install open-mpi
+      - brew install libomp
+
     before_script: null
     after_script : null
     before_cache:
       - brew cleanup
+    cache:
+      directories:
+        - /usr/local/Homebrew/
+        - $HOME/Library/Caches/Homebrew/
+        - $HOME/Library/Caches/pip/
 
   - os: windows
     language: c  # Python not supported, "language: generic" doesn't start VM
@@ -140,10 +144,5 @@ jobs:
       - dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
       - cd -
 
-    before_script:
-      # Call f2py once (it will fail) to clear some cache
-      - echo -e "subroutine foo()\nend subroutine\n" > faily.f90
-      - ${PYTHON} -m numpy.f2py -c -m faily faily.f90 || true
-      - rm faily.f90
-
+    before_script: null
     after_script : null

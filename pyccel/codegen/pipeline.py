@@ -80,7 +80,7 @@ def execute_pyccel(fname, *,
     else:
         folder = os.path.abspath(folder)
 
-    # Define directory name and path for pyccel & f2py build
+    # Define directory name and path for pyccel & cpython build
     pyccel_dirname = '__pyccel__'
     pyccel_dirpath = os.path.join(folder, pyccel_dirname)
 
@@ -105,6 +105,15 @@ def execute_pyccel(fname, *,
 
     if (language == "c"):
         libs = libs + ['m']
+    if accelerator == 'openmp':
+        if compiler in ["gcc","gfortran"]:
+            if sys.platform == "darwin" and compiler == "gcc":
+                libs = libs + ['omp']
+            else:
+                libs = libs + ['gomp']
+
+        elif compiler == 'ifort':
+            libs.append('iomp5')
 
     # ...
     # Construct flags for the Fortran compiler
@@ -113,8 +122,7 @@ def execute_pyccel(fname, *,
                                  fflags=None,
                                  debug=debug,
                                  accelerator=accelerator,
-                                 includes=(),
-                                 libdirs=())
+                                 includes=())
 
     # Build position-independent code, suited for use in shared library
     fflags = ' {} -fPIC '.format(fflags)
@@ -148,7 +156,9 @@ def execute_pyccel(fname, *,
             severity='error')
     except PyccelError:
         handle_error('annotation (semantic)')
-        raise
+        # Raise a new error to avoid a large traceback
+        raise PyccelSemanticError('Semantic step failed') from None
+
     if errors.has_errors():
         handle_error('annotation (semantic)')
         raise PyccelSemanticError('Semantic step failed')
@@ -177,14 +187,12 @@ def execute_pyccel(fname, *,
                 severity='error')
         except PyccelError:
             handle_error('code generation')
-            raise
+            # Raise a new error to avoid a large traceback
+            raise PyccelCodegenError('Code generation failed') from None
+
         if errors.has_errors():
             handle_error('code generation')
             raise PyccelCodegenError('Code generation failed')
-
-        if errors.has_warnings():
-            errors.check()
-            errors.reset()
 
         #------------------------------------------------------
         # TODO: collect dependencies and proceed recursively
@@ -236,8 +244,7 @@ def execute_pyccel(fname, *,
                                 fflags=fflags,
                                 debug=debug,
                                 accelerator=accelerator,
-                                includes=includes,
-                                libdirs=libdirs)
+                                includes=includes)
 
         # Compile Fortran code
         #
@@ -251,7 +258,9 @@ def execute_pyccel(fname, *,
                             modules=modules,
                             is_module=codegen.is_module,
                             output=pyccel_dirpath,
-                            libs=libs)
+                            libs=libs,
+                            libdirs=libdirs,
+                            language=language)
         except Exception:
             handle_error('Fortran compilation')
             raise
@@ -280,9 +289,22 @@ def execute_pyccel(fname, *,
                                                        extra_args,
                                                        output_name,
                                                        verbose)
+        except NotImplementedError as error:
+            msg = str(error)
+            errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
+                severity='error')
+            handle_error('code generation (wrapping)')
+            raise PyccelCodegenError(msg) from None
+        except PyccelError:
+            handle_error('code generation (wrapping)')
+            raise
         except Exception:
             handle_error('shared library generation')
             raise
+
+        if errors.has_errors():
+            handle_error('code generation (wrapping)')
+            raise PyccelCodegenError('Code generation failed')
 
         # Move shared library to folder directory
         # (First construct absolute path of target location)
@@ -293,6 +315,10 @@ def execute_pyccel(fname, *,
 
         if verbose:
             print( '> Shared library has been created: {}'.format(sharedlib_filepath))
+
+    # Print all warnings now
+    if errors.has_warnings():
+        errors.check()
 
     # Change working directory back to starting point
     os.chdir(base_dirpath)

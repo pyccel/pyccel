@@ -4,42 +4,23 @@
 import inspect
 
 from sympy.core.function import Application
-from sympy import Not
-from sympy import Function
+from sympy import Not, Function
 from numpy import pi
 
-from pyccel.symbolic import lambdify
-
-from .core import AsName
-from .core import Import
-from .core import Product
-from .core import FunctionDef
-from .core import ValuedVariable
-from .core import Constant, Variable, IndexedVariable
-from .core import String
-
-from .builtins import PythonBool, Enumerate, PythonInt, PythonFloat, PythonComplex, Len, Map, Range, Zip
-
-from .mathext  import math_functions, math_constants
-
-from .numpyext import Full, Empty, Zeros, Ones
-from .numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
-from .numpyext import Diag
-from .numpyext import NumpyMin, NumpyMax, NumpyAbs, NumpyFloor, Norm, Where
-from .numpyext import Array, Shape, Rand, NumpyRandint, NumpySum, Matmul, Real, NumpyComplex, Imag, NumpyMod
-from .numpyext import NumpyInt, Int32, Int64, NumpyFloat, Float32, Float64, Complex64, Complex128
-from .numpyext import NumpyExp, NumpyLog, NumpySqrt
-from .numpyext import NumpySin, NumpyCos, NumpyTan
-from .numpyext import NumpyArcsin, NumpyArccos, NumpyArctan, NumpyArctan2
-from .numpyext import NumpySinh, NumpyCosh, NumpyTanh, NumpyFabs
-from .numpyext import NumpyArcsinh, NumpyArccosh, NumpyArctanh
-from .numpyext import numpy_constants, Linspace
-from .numpyext import Product as Prod
-
 import pyccel.decorators as pyccel_decorators
-
+from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors
 
+from .core     import (AsName, Import, FunctionDef, Constant,
+                       Variable, IndexedVariable, ValuedVariable)
+
+from .builtins      import builtin_functions_dict, PythonMap
+from .itertoolsext  import Product
+from .mathext       import math_functions, math_constants
+from .literals      import LiteralString
+
+from .numpyext      import (numpy_functions, numpy_linalg_functions,
+                            numpy_random_functions, numpy_constants)
 
 __all__ = (
     'build_types_decorator',
@@ -48,100 +29,6 @@ __all__ = (
     'builtin_import_registery',
     'split_positional_keyword_arguments',
 )
-
-#==============================================================================
-# TODO split numpy_functions into multiple dictionaries following
-# https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
-# TODO [YG, 20.05.2020]: Move dictionary to 'numpyext' module
-numpy_functions = {
-    # ... array creation routines
-    'full'      : Full,
-    'empty'     : Empty,
-    'zeros'     : Zeros,
-    'ones'      : Ones,
-    'full_like' : FullLike,
-    'empty_like': EmptyLike,
-    'zeros_like': ZerosLike,
-    'ones_like' : OnesLike,
-    'array'     : Array,
-    # ...
-    'shape'     : Shape,
-    'norm'      : Norm,
-    'int'       : NumpyInt,
-    'real'      : Real,
-    'imag'      : Imag,
-    'float'     : NumpyFloat,
-    'double'    : Float64,
-    'mod'       : NumpyMod,
-    'float32'   : Float32,
-    'float64'   : Float64,
-    'int32'     : Int32,
-    'int64'     : Int64,
-    'complex'   : NumpyComplex,
-    'complex128': Complex128,
-    'complex64' : Complex64,
-    'matmul'    : Matmul,
-    'sum'       : NumpySum,
-    'max'      : NumpyMax,
-    'min'      : NumpyMin,
-    'prod'      : Prod,
-    'product'   : Prod,
-    'linspace'  : Linspace,
-    'diag'      : Diag,
-    'where'     : Where,
-#    'cross'     : Cross,   # Currently not correctly implemented
-    # ---
-    'abs'       : NumpyAbs,
-    'floor'     : NumpyFloor,
-    'absolute'  : NumpyAbs,
-    'fabs'      : NumpyFabs,
-    'exp'       : NumpyExp,
-    'log'       : NumpyLog,
-    'sqrt'      : NumpySqrt,
-    # ---
-    'sin'       : NumpySin,
-    'cos'       : NumpyCos,
-    'tan'       : NumpyTan,
-    'arcsin'    : NumpyArcsin,
-    'arccos'    : NumpyArccos,
-    'arctan'    : NumpyArctan,
-    'arctan2'   : NumpyArctan2,
-#    'hypot'     : NumpyHypot,
-    'sinh'      : NumpySinh,
-    'cosh'      : NumpyCosh,
-    'tanh'      : NumpyTanh,
-    'arcsinh'   : NumpyArcsinh,
-    'arccosh'   : NumpyArccosh,
-    'arctanh'   : NumpyArctanh,
-#    'deg2rad'   : NumpyDeg2rad,
-#    'rad2deg'   : NumpyRad2deg,
-}
-
-numpy_linalg_functions = {
-    'norm'      : Norm,
-}
-
-numpy_random_functions = {
-    'rand'      : Rand,
-    'random'    : Rand,
-    'randint'   : NumpyRandint,
-}
-
-builtin_functions_dict = {
-    'abs'      : NumpyAbs,  # TODO: create a built-in Abs
-    'range'    : Range,
-    'zip'      : Zip,
-    'enumerate': Enumerate,
-    'int'      : PythonInt,
-    'float'    : PythonFloat,
-    'complex'  : PythonComplex,
-    'bool'     : PythonBool,
-    'sum'      : NumpySum,
-    'len'      : Len,
-    'max'      : NumpyMax,
-    'min'      : NumpyMin,
-    'not'      : Not,   # TODO [YG, 20.05.2020]: do not use Sympy's Not
-}
 
 scipy_constants = {
     'pi': Constant('real', 'pi', value=pi),
@@ -169,7 +56,7 @@ def builtin_function(expr, args=None):
     if name == 'map':
         func = Function(str(expr.args[0].name))
         args = [func]+list(args[1:])
-        return Map(*args)
+        return PythonMap(*args)
 
     if name == 'lambdify':
         return lambdify(expr, args)
@@ -178,13 +65,18 @@ def builtin_function(expr, args=None):
 
 
 # TODO add documentation
-builtin_import_registery = {'numpy': {**numpy_functions, **numpy_constants, 'linalg':numpy_linalg_functions, 'random':numpy_random_functions},
-        'numpy.linalg': numpy_linalg_functions,
-        'numpy.random': numpy_random_functions,
-        'scipy.constants': scipy_constants,
-        'itertools': {'product': Product},
-        'math': {**math_functions, ** math_constants},
-        'pyccel.decorators': None}
+builtin_import_registery = {'numpy': {
+                                      **numpy_functions,
+                                      **numpy_constants,
+                                      'linalg':numpy_linalg_functions,
+                                      'random':numpy_random_functions
+                                      },
+                            'numpy.linalg': numpy_linalg_functions,
+                            'numpy.random': numpy_random_functions,
+                            'scipy.constants': scipy_constants,
+                            'itertools': {'product': Product},
+                            'math': {**math_functions, ** math_constants},
+                            'pyccel.decorators': None}
 
 #==============================================================================
 def collect_relevant_imports(func_dictionary, targets):
@@ -266,7 +158,7 @@ def build_types_decorator(args, order=None):
             if order and a.rank > 1:
                 dtype = "{dtype}(order={ordering})".format(dtype=dtype, ordering=order)
 
-        dtype = String(dtype)
+        dtype = LiteralString(dtype)
         types.append(dtype)
 
     return types

@@ -29,8 +29,8 @@ from pyccel.ast.core import Nil
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import Subroutine
-from pyccel.ast.core import ErrorExit
-from pyccel.ast.core import Product
+from pyccel.ast.core import ErrorExit, FunctionAddress
+from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              VariableAddress,
                              TupleVariable, Declare,
@@ -44,25 +44,27 @@ from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
 from pyccel.ast.core      import PyccelUnarySub, PyccelMod
 from pyccel.ast.core      import FunctionCall
 
-from pyccel.ast.builtins  import Enumerate, PythonInt, Len, Map, Print, Range, Zip, PythonTuple, PythonFloat
+from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
+                                  PythonMap, PythonPrint, PythonRange,
+                                  PythonZip, PythonTuple, PythonFloat)
 from pyccel.ast.builtins  import PythonComplex, PythonBool
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
-from pyccel.ast.datatypes import NativeSymbol, NativeString
+from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
+from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
-from pyccel.ast.numbers   import Integer, Float
-from pyccel.ast.numbers   import BooleanTrue
+from pyccel.ast.literals  import LiteralInteger, LiteralFloat
+from pyccel.ast.literals  import LiteralTrue
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
-from pyccel.ast.type_inference import str_dtype
 
-from pyccel.ast.numpyext import Full, Array, Linspace, Diag, Cross
-from pyccel.ast.numpyext import Real, Where
+from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyLinspace, NumpyDiag, NumpyCross
+from pyccel.ast.numpyext import NumpyReal, NumpyWhere
 from pyccel.ast.numpyext import NumpyComplex, NumpyMod, NumpyFloat
-from pyccel.ast.numpyext import FullLike, EmptyLike, ZerosLike, OnesLike
-from pyccel.ast.numpyext import Rand, NumpyRandint
+from pyccel.ast.numpyext import NumpyFullLike, NumpyEmptyLike, NumpyZerosLike, NumpyOnesLike
+from pyccel.ast.numpyext import NumpyRand, NumpyRandint
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import Shape
 
@@ -90,7 +92,7 @@ numpy_ufunc_to_fortran = {
     # ---
     'NumpyExp' : 'exp',
     'NumpyLog' : 'Log',
-#    'NumpySqrt': 'Sqrt',  # sqrt is printed using _Print_NumpySqrt
+    # 'NumpySqrt': 'Sqrt',  # sqrt is printed using _Print_NumpySqrt
     # ---
     'NumpySin'    : 'sin',
     'NumpyCos'    : 'cos',
@@ -118,39 +120,39 @@ math_function_to_fortran = {
     'MathCopysign': 'sign',
     'MathCos'    : 'cos',
     'MathCosh'   : 'cosh',
-#    'MathDegrees': '???',  # TODO
+    # 'MathDegrees': '???',  # TODO
     'MathErf'    : 'erf',
     'MathErfc'   : 'erfc',
     'MathExp'    : 'exp',
-#    'MathExpm1'  : '???', # TODO
+    # 'MathExpm1'  : '???', # TODO
     'MathFabs'   : 'abs',
-#    'MathFmod'   : '???',  # TODO
-#    'MathFsum'   : '???',  # TODO
+    # 'MathFmod'   : '???',  # TODO
+    # 'MathFsum'   : '???',  # TODO
     'MathGamma'  : 'gamma',
     'MathHypot'  : 'hypot',
-#    'MathLdexp'  : '???',  # TODO
+    # 'MathLdexp'  : '???',  # TODO
     'MathLgamma' : 'log_gamma',
     'MathLog'    : 'log',
     'MathLog10'  : 'log10',
-#    'MathLog1p'  : '???', # TODO
-#    'MathLog2'   : '???', # TODO
-#    'MathPow'    : '???', # TODO
-#    'MathRadians': '???', # TODO
+    # 'MathLog1p'  : '???', # TODO
+    # 'MathLog2'   : '???', # TODO
+    # 'MathPow'    : '???', # TODO
+    # 'MathRadians': '???', # TODO
     'MathSin'    : 'sin',
     'MathSinh'   : 'sinh',
-#    'MathSqrt'   : 'sqrt', # sqrt is printed using _Print_MathSqrt
+    # 'MathSqrt'   : 'sqrt', # sqrt is printed using _Print_MathSqrt
     'MathTan'    : 'tan',
     'MathTanh'   : 'tanh',
     # ---
     'MathCeil'     : 'ceiling',
-#    'MathFactorial': '???', # TODO
+    # 'MathFactorial': '???', # TODO
     'MathFloor'    : 'floor',
-#    'MathGcd'      : '???', # TODO
+    # 'MathGcd'      : '???', # TODO
     'MathTrunc'    : 'dint', # TODO
     # ---
-#    'MathIsclose' : '???', # TODO
-#    'MathIsfinite': '???', # TODO
-#    'MathIsinf'   : '???', # TODO
+    # 'MathIsclose' : '???', # TODO
+    # 'MathIsfinite': '???', # TODO
+    # 'MathIsinf'   : '???', # TODO
     'MathIsnan'   : 'isnan',
 }
 
@@ -269,7 +271,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_Module(self, expr):
         self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
-
         name = self._print(expr.name)
         name = name.replace('.', '_')
         if not name.startswith('mod_') and self.prefix_module:
@@ -277,6 +278,7 @@ class FCodePrinter(CodePrinter):
                                             name=name)
 
         imports = ''.join(self._print(i) for i in expr.imports)
+        imports += 'use ISO_C_BINDING\n'
         decs    = ''.join(self._print(i) for i in expr.declarations)
         body    = ''
 
@@ -327,9 +329,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_Program(self, expr):
         self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
-
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
+        imports += 'use ISO_C_BINDING\n'
         body    = self._print(expr.body)
 
         # Print the declarations of all variables in the namespace, which include:
@@ -421,7 +423,7 @@ class FCodePrinter(CodePrinter):
         code = '\n'.join(self._print(i) for i in expr.imports)
         return self._get_statement(code) + '\n'
 
-    def _print_Print(self, expr):
+    def _print_PythonPrint(self, expr):
         args = []
         for f in expr.expr:
             if isinstance(f, str):
@@ -498,6 +500,12 @@ class FCodePrinter(CodePrinter):
         fs = ', '.join(self._print(f) for f in expr)
         return '[{0}]'.format(fs)
 
+    def _print_PythonAbs(self, expr):
+        """ print the python builtin function abs
+        args : variable
+        """
+        return "abs({})".format(self._print(expr.arg))
+
     def _print_PythonTuple(self, expr):
         shape = Tuple(*reversed(expr.shape))
         if len(shape)>1:
@@ -526,7 +534,7 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.variable)
 
     def _print_Constant(self, expr):
-        val = Float(expr.value)
+        val = LiteralFloat(expr.value)
         return self._print(val)
 
     def _print_DottedVariable(self, expr):
@@ -587,33 +595,47 @@ class FCodePrinter(CodePrinter):
     def _print_SumFunction(self, expr):
         return str(expr)
 
-    def _print_Len(self, expr):
+    def _print_PythonLen(self, expr):
         var = expr.arg
         idx = 1 if var.order == 'F' else var.rank
         return 'size({},{})'.format(self._print(var), self._print(idx))
 
+    def _print_PythonSum(self, expr):
+        args = [self._print(arg) for arg in expr.args]
+        return "sum({})".format(", ".join(args))
+
+    #========================== Numpy Elements ===============================#
+
     def _print_NumpySum(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Product(self, expr):
+    def _print_NumpyProduct(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Matmul(self, expr):
+    def _print_NumpyMatmul(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Cross(self, expr):
+    def _print_NumpyCross(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Norm(self, expr):
+    def _print_NumpyNorm(self, expr):
         return expr.fprint(self._print)
 
+    def _print_NumpyLinspace(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_NumpyArray(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_NumpyFloor(self, expr):
+        result_code = self._print_MathFloor(expr)
+        return 'real({}, {})'.format(result_code, iso_c_binding["real"][8])
+
+    def _print_PythonFloat(self, expr):
+        return expr.fprint(self._print)
+
+    # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
-        return expr.fprint(self._print)
-
-    def _print_Linspace(self, expr):
-        return expr.fprint(self._print)
-
-    def _print_Array(self, expr):
         return expr.fprint(self._print)
 
     def _print_PythonInt(self, expr):
@@ -632,13 +654,6 @@ class FCodePrinter(CodePrinter):
         prec_code = self._print(prec)
         return 'floor({}, kind={})'.format(arg_code, prec_code)
 
-    def _print_NumpyFloor(self, expr):
-        result_code = self._print_MathFloor(expr)
-        return 'real({}, {})'.format(result_code, expr.precision)
-
-    def _print_PythonFloat(self, expr):
-        return expr.fprint(self._print)
-
     def _print_NumpyFloat(self, expr):
         return expr.fprint(self._print)
 
@@ -651,7 +666,7 @@ class FCodePrinter(CodePrinter):
     def _print_PythonBool(self, expr):
         return expr.fprint(self._print)
 
-    def _print_Rand(self, expr):
+    def _print_NumpyRand(self, expr):
         if expr.rank != 0:
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
@@ -679,7 +694,7 @@ class FCodePrinter(CodePrinter):
                           symbol=expr, severity='fatal')
         return expr.fprint(self._print)
 
-    def _print_Min(self, expr):
+    def _print_PythonMin(self, expr):
         args = expr.args
         if len(args) == 1:
             arg = args[0]
@@ -689,7 +704,7 @@ class FCodePrinter(CodePrinter):
             code = 'min('+code+')'
         return self._get_statement(code)
 
-    def _print_Max(self, expr):
+    def _print_PythonMax(self, expr):
         args = expr.args
         if len(args) == 1:
             arg = args[0]
@@ -801,10 +816,10 @@ class FCodePrinter(CodePrinter):
                     if i.start is None and i.end is None:
                         shape.append(s)
                     elif i.start is None:
-                        if (isinstance(i.end, (int, Integer)) and i.end>0) or not(isinstance(i.end, (int, Integer))):
+                        if (isinstance(i.end, (int, LiteralInteger)) and i.end>0) or not(isinstance(i.end, (int, LiteralInteger))):
                             shape.append(i.end)
                     elif i.end is None:
-                        if (isinstance(i.start, (int, Integer)) and i.start<s-1) or not(isinstance(i.start, (int, Integer))):
+                        if (isinstance(i.start, (int, LiteralInteger)) and i.start<s-1) or not(isinstance(i.start, (int, LiteralInteger))):
                             shape.append(s-i.start)
                     else:
                         shape.append(i.end-i.start+1)
@@ -852,6 +867,7 @@ class FCodePrinter(CodePrinter):
         shape       = var.alloc_shape
         is_pointer = var.is_pointer
         is_target = var.is_target
+        is_const = var.is_const
         is_stack_array = var.is_stack_array
         is_polymorphic = var.is_polymorphic
         is_optional = var.is_optional
@@ -902,7 +918,7 @@ class FCodePrinter(CodePrinter):
                     dtype = dtype[:9] +'(len =*)'
                     #TODO improve ,this is the case of character as argument
             else:
-                dtype += '(kind={0})'.format(str(expr.variable.precision))
+                dtype += '({0})'.format(str(iso_c_binding[dtype][expr.variable.precision]))
 
         code_value = ''
         if expr.value:
@@ -923,8 +939,10 @@ class FCodePrinter(CodePrinter):
 
         # Compute intent string
         if intent:
-            if intent == 'in' and rank == 0 and is_static is False:
+            if intent == 'in' and rank == 0 and not (is_static and is_optional):
                 intentstr = ', value'
+                if is_const:
+                    intentstr += ', intent(in)'
             else:
                 intentstr = ', intent({})'.format(intent)
 
@@ -946,7 +964,7 @@ class FCodePrinter(CodePrinter):
 
         # Compute rank string
         # TODO: improve
-        if ((rank == 1) and (isinstance(shape, (int, Integer, Variable, PyccelAdd))) and
+        if ((rank == 1) and (isinstance(shape, (int, LiteralInteger, Variable, PyccelAdd))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             rankstr = '({0}:{1}-1)'.format(self._print(s), self._print(shape))
 
@@ -1055,22 +1073,24 @@ class FCodePrinter(CodePrinter):
             rhs_code = 'Huge({0})'.format(lhs_code)
             return '{0} = {1}\n'.format(lhs_code, rhs_code)
 
-        if isinstance(rhs, (Range, Product)):
+        if isinstance(rhs, (PythonRange, Product)):
             return ''
 
-        if isinstance(rhs, (Len, NumpyRandint)):
+        if isinstance(rhs, (PythonLen, NumpyRandint)):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}\n'.format(lhs_code, rhs_code)
 
-        if isinstance(rhs, (PythonInt, Real, NumpyComplex)):
+        if isinstance(rhs, (PythonInt, NumpyReal, NumpyComplex)):
             lhs = self._print(expr.lhs)
             rhs = expr.rhs.fprint(self._print)
             return '{0} = {1}\n'.format(lhs,rhs)
 
-        if isinstance(rhs, (Array, Linspace, Diag, Cross, Where, PyccelArraySize)):
+        if isinstance(rhs, (NumpyArray, NumpyLinspace, NumpyDiag, NumpyCross,\
+						NumpyWhere, PyccelArraySize)):
             return rhs.fprint(self._print, expr.lhs) + '\n'
 
-        if isinstance(rhs, (Full, FullLike, EmptyLike, ZerosLike, OnesLike, Rand)):
+        if isinstance(rhs, (NumpyFull, NumpyFullLike, NumpyEmptyLike,\
+						NumpyZerosLike, NumpyOnesLike, NumpyRand)):
 
             stack_array = False
             if self._current_function:
@@ -1145,10 +1165,10 @@ class FCodePrinter(CodePrinter):
         rhs_code = self._print(rhs)
 
         code = ''
-        if (expr.status == 'unallocated') and not (expr.like is None):
-            stmt = ZerosLike(lhs=lhs_code, rhs=expr.like)
-            code += self._print(stmt)
-            code += '\n'
+        # if (expr.status == 'unallocated') and not (expr.like is None):
+        #     stmt = ZerosLike(lhs=lhs_code, rhs=expr.like)
+        #     code += self._print(stmt)
+        #     code += '\n'
         if not is_procedure:
             code += '{0} = {1}'.format(lhs_code, rhs_code)
 #        else:
@@ -1181,6 +1201,40 @@ class FCodePrinter(CodePrinter):
 #            code = 'call {0}({1})'.format(rhs_code, code_args)
         return self._get_statement(code) + '\n'
 
+#------------------------------------------------------------------------------
+    def _print_Allocate(self, expr):
+
+        # Transpose indices because of Fortran column-major ordering
+        shape = expr.shape if expr.order == 'F' else expr.shape[::-1]
+
+        var_code = self._print(expr.variable)
+        size_code = ', '.join(self._print(i) for i in shape)
+        shape_code = ', '.join('0:' + self._print(PyccelMinus(i, LiteralInteger(1))) for i in shape)
+        code = ''
+
+        if expr.status == 'unallocated':
+            code += 'allocate({0}({1}))\n'.format(var_code, shape_code)
+
+        elif expr.status == 'unknown':
+            code += 'if (allocated({})) then\n'.format(var_code)
+            code += '  if (any(size({}) /= [{}])) then\n'.format(var_code, size_code)
+            code += '    deallocate({})\n'     .format(var_code)
+            code += '    allocate({0}({1}))\n'.format(var_code, shape_code)
+            code += '  end if\n'
+            code += 'else\n'
+            code += '  allocate({0}({1}))\n'.format(var_code, shape_code)
+            code += 'end if\n'
+
+        elif expr.status == 'allocated':
+            code += 'if (any(size({}) /= [{}])) then\n'.format(var_code, size_code)
+            code += '  deallocate({})\n'     .format(var_code)
+            code += '  allocate({0}({1}))\n'.format(var_code, shape_code)
+            code += 'end if\n'
+
+        return code
+
+#------------------------------------------------------------------------------
+
     def _print_NativeBool(self, expr):
         return 'logical'
 
@@ -1200,13 +1254,13 @@ class FCodePrinter(CodePrinter):
     def _print_DataType(self, expr):
         return self._print(expr.name)
 
-    def _print_BooleanTrue(self, expr):
-        return '.True.'
+    def _print_LiteralTrue(self, expr):
+        return '.True._{}'.format(iso_c_binding["logical"][expr.precision])
 
-    def _print_BooleanFalse(self, expr):
-        return '.False.'
+    def _print_LiteralFalse(self, expr):
+        return '.False._{}'.format(iso_c_binding["logical"][expr.precision])
 
-    def _print_String(self, expr):
+    def _print_LiteralString(self, expr):
         sp_chars = ['\a', '\b', '\f', '\r', '\t', '\v', "'", '\n']
         sub_str = ''
         formatted_str = "''"
@@ -1225,6 +1279,19 @@ class FCodePrinter(CodePrinter):
     def _print_Interface(self, expr):
         # ... we don't print 'hidden' functions
         name = self._print(expr.name)
+        if expr.is_argument:
+            funcs_sigs = []
+            for f in expr.functions:
+                self._handle_fortran_specific_a_prioris(list(f.arguments) + list(f.results))
+                parts = self.function_signature(f, f.name)
+                parts = ["{}({}) {}\n".format(parts['sig'], parts['arg_code'], parts['func_end']),
+                        'use iso_c_binding\n',
+                        parts['arg_decs'],
+                        'end {} {}\n'.format(parts['func_type'], f.name)]
+                funcs_sigs.append(''.join(a for a in parts))
+            interface = 'interface\n' + '\n'.join(a for a in funcs_sigs) + 'end interface\n'
+            return interface
+
         if expr.functions[0].cls_name:
             for k, m in list(_default_methods.items()):
                 name = name.replace(k, m)
@@ -1276,12 +1343,15 @@ class FCodePrinter(CodePrinter):
                  '{body}\n'
                 'end Block {name}\n').format(name=expr.name, prelude=prelude, body=body_code)
 
-    def _print_F2PYFunctionDef(self, expr):
+    def _print_BindCFunctionDef(self, expr):
         name = self._print(expr.name)
         results   = list(expr.results)
         arguments = list(expr.arguments)
+        if any([isinstance(a, FunctionAddress) for a in arguments]):
+            # Functions with function addresses as arguments cannot be
+            # exposed to python so there is no need to print their signature
+            return ''
         arguments_inout = expr.arguments_inout
-
         args_decs = OrderedDict()
         for i,arg in enumerate(arguments):
             if arguments_inout[i]:
@@ -1310,52 +1380,40 @@ class FCodePrinter(CodePrinter):
             args_decs[str(result.name)] = dec
         # ...
 
+        interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         arg_code  = ', '.join(self._print(i) for i in chain( arguments, results ))
         imports   = ''.join(self._print(i) for i in expr.imports)
+        imports += 'use ISO_C_BINDING'
         prelude   = ''.join(self._print(i) for i in args_decs.values())
         body_code = self._print(expr.body)
 
-        parts = ['{0} {1}({2}) {3}\n'.format(func_type, name, arg_code, func_end),
+        parts = ['{0} {1}({2}) bind(c) {3}\n'.format(func_type, name, arg_code, func_end),
                  imports,
                 'implicit none\n',
                  prelude,
+                 interfaces,
                  body_code,
                  'end {} {}\n'.format(func_type, name)]
 
         return '\n'.join(parts)
 
-    def _print_FunctionDef(self, expr):
-        self._handle_fortran_specific_a_prioris(list(expr.local_vars) +
-                                                list(expr.arguments)  +
-                                                list(expr.results))
-        # ... we don't print 'hidden' functions
-        if expr.hide:
-            return ''
+    def _print_FunctionAddress(self, expr):
+        return expr.name
 
-        name = self._print(expr.name)
-        self.set_current_function(name)
-
+    def function_signature(self, expr, name):
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
-        is_procedure = expr.is_procedure
-
-        if expr.cls_name:
-            for k, m in list(_default_methods.items()):
-                name = name.replace(k, m)
-
-            cls_name = expr.cls_name
-            if not (cls_name == '__UNDEFINED__'):
-                name = '{0}_{1}'.format(cls_name, name)
-        else:
-            for i in _default_methods:
-                # because we may have a class Point with init: Point___init__
-                if i in name:
-                    name = name.replace(i, _default_methods[i])
-
         out_args = []
-        decs = OrderedDict()
         args_decs = OrderedDict()
-        # ... local variables declarations
+
+        for j, i in enumerate(expr.results):
+            if not i.name:
+                i.rename('out_{}'.format(j))
+        for j, i in enumerate(expr.arguments):
+            if not i.name:
+                i.rename('in_{}'.format(j))
+
+        is_procedure = expr.is_procedure
         func_end  = ''
         rec = 'recursive' if expr.is_recursive else ''
         if is_procedure:
@@ -1371,6 +1429,7 @@ class FCodePrinter(CodePrinter):
             functions = expr.functions
 
         else:
+           #todo: if return is a function
             func_type = 'function'
             result = expr.results[0]
             functions = expr.functions
@@ -1382,16 +1441,14 @@ class FCodePrinter(CodePrinter):
         # ...
 
         for i,arg in enumerate(expr.arguments):
-            if expr.arguments_inout[i]:
-                dec = Declare(arg.dtype, arg, intent='inout')
-
-            elif str(arg) == 'self':
-                dec = Declare(arg.dtype, arg, intent='inout')
-
-            else:
-                dec = Declare(arg.dtype, arg, intent='in')
-
-            args_decs[str(arg)] = dec
+            if isinstance(arg, Variable):
+                if expr.arguments_inout[i]:
+                    dec = Declare(arg.dtype, arg, intent='inout')
+                elif str(arg) == 'self':
+                    dec = Declare(arg.dtype, arg, intent='inout')
+                else:
+                    dec = Declare(arg.dtype, arg, intent='in')
+                args_decs[str(arg)] = dec
 
         #remove parametres intent(inout) from out_args to prevent repetition
         for i in expr.arguments:
@@ -1408,20 +1465,58 @@ class FCodePrinter(CodePrinter):
             sig = 'elemental {}'.format(sig)
 
         arg_code  = ', '.join(self._print(i) for i in chain( expr.arguments, out_args ))
+
+        arg_decs = ''.join(self._print(i) for i in args_decs.values())
+
+        parts = {
+                'sig' : sig,
+                'arg_code' : arg_code,
+                'func_end' : func_end,
+                'arg_decs' : arg_decs,
+                'func_type' : func_type
+        }
+        return parts
+
+    def _print_FunctionDef(self, expr):
+        self._handle_fortran_specific_a_prioris(list(expr.local_vars) +
+                                                list(expr.arguments)  +
+                                                list(expr.results))
+        # ... we don't print 'hidden' functions
+        if expr.hide:
+            return ''
+
+        name = self._print(expr.name)
+        self.set_current_function(name)
+
+        if expr.cls_name:
+            for k, m in list(_default_methods.items()):
+                name = name.replace(k, m)
+
+            cls_name = expr.cls_name
+            if not (cls_name == '__UNDEFINED__'):
+                name = '{0}_{1}'.format(cls_name, name)
+        else:
+            for i in _default_methods:
+                # because we may have a class Point with init: Point___init__
+                if i in name:
+                    name = name.replace(i, _default_methods[i])
+
+        sig_parts = self.function_signature(expr, name)
+        prelude = sig_parts.pop('arg_decs')
+        decs = OrderedDict()
+        functions = expr.functions
+        func_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         body_code = self._print(expr.body)
 
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
             decs[str(i)] = dec
 
-        args_decs.update(decs)
-
         vars_to_print = self.parser.get_variables(self._namespace)
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in expr.arguments):
-                args_decs[str(v)] = Declare(v.dtype,v)
-        prelude = ''.join(self._print(i) for i in args_decs.values())
-
+                decs[str(v)] = Declare(v.dtype,v)
+        prelude += ''.join(self._print(i) for i in decs.values())
         if len(functions)>0:
             functions_code = '\n'.join(self._print(i) for  i in functions)
             body_code = body_code +'\ncontains\n' + functions_code
@@ -1430,12 +1525,13 @@ class FCodePrinter(CodePrinter):
 
         self.set_current_function(None)
 
-        parts = ['{0}({1}) {2}\n'.format(sig, arg_code, func_end),
-                 imports,
+        parts = parts = ["{}({}) {}\n".format(sig_parts['sig'], sig_parts['arg_code'], sig_parts['func_end']),
+                imports,
                 'implicit none\n',
-                 prelude,
-                 body_code,
-                 'end {} {}\n'.format(func_type, name)]
+                prelude,
+                func_interfaces,
+                body_code,
+                'end {} {}\n'.format(sig_parts['func_type'], name)]
 
         return '\n'.join(a for a in parts if a)
 
@@ -1555,9 +1651,9 @@ class FCodePrinter(CodePrinter):
         stmt = Assign(lhs, rhs, strict=strict, status=status, like=like)
         return self._print_Assign(stmt)
 
-    def _print_Range(self, expr):
+    def _print_PythonRange(self, expr):
         start = self._print(expr.start)
-        stop  = self._print(expr.stop) + '-' + self._print(Integer(1))
+        stop  = self._print(expr.stop) + '-' + self._print(LiteralInteger(1))
         step  = self._print(expr.step)
         return '{0}, {1}, {2}'.format(start, stop, step)
 
@@ -1591,8 +1687,8 @@ class FCodePrinter(CodePrinter):
         # ...
 
         def _do_range(target, iterable, prolog, epilog):
-            if not isinstance(iterable, Range):
-                # Only iterable currently supported is Range
+            if not isinstance(iterable, PythonRange):
+                # Only iterable currently supported is PythonRange
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                     severity='fatal')
 
@@ -1605,36 +1701,37 @@ class FCodePrinter(CodePrinter):
             return prolog, epilog
         # ...
 
-        if not isinstance(expr.iterable, (Range, Product , Zip, Enumerate, Map)):
-            # Only iterable currently supported are Range or Product
+        if not isinstance(expr.iterable, (PythonRange, Product , PythonZip,
+                            PythonEnumerate, PythonMap)):
+            # Only iterable currently supported are PythonRange or Product
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                 severity='fatal')
 
-        if isinstance(expr.iterable, Range):
+        if isinstance(expr.iterable, PythonRange):
             prolog, epilog = _do_range(expr.target, expr.iterable, \
                                        prolog, epilog)
 
         elif isinstance(expr.iterable, Product):
             for i, a in zip(expr.target, expr.iterable.args):
-                if isinstance(a, Range):
+                if isinstance(a, PythonRange):
                     itr_ = a
                 else:
-                    itr_ = Range(a.shape[0])
+                    itr_ = PythonRange(a.shape[0])
                 prolog, epilog = _do_range(i, itr_, \
                                            prolog, epilog)
 
-        elif isinstance(expr.iterable, Zip):
-            itr_ = Range(expr.iterable.element.shape[0])
+        elif isinstance(expr.iterable, PythonZip):
+            itr_ = PythonRange(expr.iterable.element.shape[0])
             prolog, epilog = _do_range(expr.target, itr_, \
                                        prolog, epilog)
 
-        elif isinstance(expr.iterable, Enumerate):
-            itr_ = Range(Len(expr.iterable.element))
+        elif isinstance(expr.iterable, PythonEnumerate):
+            itr_ = PythonRange(PythonLen(expr.iterable.element))
             prolog, epilog = _do_range(expr.target, itr_, \
                                        prolog, epilog)
 
-        elif isinstance(expr.iterable, Map):
-            itr_ = Range(Len(expr.iterable.args[1]))
+        elif isinstance(expr.iterable, PythonMap):
+            itr_ = PythonRange(PythonLen(expr.iterable.args[1]))
             prolog, epilog = _do_range(expr.target, itr_, \
                                        prolog, epilog)
 
@@ -1646,6 +1743,26 @@ class FCodePrinter(CodePrinter):
 
     # .....................................................
     #                   OpenMP statements
+    # .....................................................
+    def _print_OMP_Parallel_Construct(self, expr):
+        omp_expr   = str(expr.txt)
+        ompexpr = '!$omp {}\n'.format(omp_expr)
+        return ompexpr
+
+    def _print_Omp_End_Clause(self, expr):
+        omp_expr = str(expr.txt)
+        ompexpr = '!$omp {}\n'.format(omp_expr)
+        return ompexpr
+
+    def _print_OMP_Single_Construct(self, expr):
+        omp_expr   = str(expr.txt)
+        ompexpr = '!$omp {}\n'.format(omp_expr)
+        return ompexpr
+
+    def _print_OMP_For_Loop(self, expr):
+        omp_expr   = str(expr.txt)
+        return '!$omp do{}\n'.format(omp_expr)
+
     # .....................................................
     def _print_OMP_Parallel(self, expr):
         clauses = ' '.join(self._print(i)  for i in expr.clauses)
@@ -2002,10 +2119,10 @@ class FCodePrinter(CodePrinter):
         DEBUG = True
 
         err = ErrorExit()
-        args = [(Not(expr.test), [Print(["'Assert Failed'"]), err])]
+        args = [(Not(expr.test), [PythonPrint(["'Assert Failed'"]), err])]
 
         if DEBUG:
-            args.append((True, Print(["'PASSED'"])))
+            args.append((True, PythonPrint(["'PASSED'"])))
 
         stmt = If(*args)
         code = self._print(stmt)
@@ -2053,7 +2170,7 @@ class FCodePrinter(CodePrinter):
 
             if i == 0:
                 lines.append("if (%s) then\n" % self._print(c))
-            elif i == len(expr.args) - 1 and c is BooleanTrue():
+            elif i == len(expr.args) - 1 and c is LiteralTrue():
                 lines.append("else\n")
             else:
                 lines.append("else if (%s) then\n" % self._print(c))
@@ -2147,9 +2264,9 @@ class FCodePrinter(CodePrinter):
                 b = PythonFloat(b)
             c = self._print(b)
             adtype = bdtype
-            code = 'FLOOR({}/{},{})'.format(code, c, expr.precision)
+            code = 'FLOOR({}/{},{})'.format(code, c, iso_c_binding["integer"][expr.precision])
             if is_real:
-                code = 'real({}, {})'.format(code, expr.precision)
+                code = 'real({}, {})'.format(code, iso_c_binding["real"][expr.precision])
         return code
 
     def _print_PyccelRShift(self, expr):
@@ -2305,27 +2422,27 @@ class FCodePrinter(CodePrinter):
         code = 'sqrt({})'.format(code_args)
         return self._get_statement(code)
 
-    def _print_ImaginaryUnit(self, expr):
+    def _print_LiteralImaginaryUnit(self, expr):
         # purpose: print complex numbers nicely in Fortran.
         return "cmplx(0,1)"
 
     def _print_int(self, expr):
         return str(expr)
 
-    def _print_Float(self, expr):
+    def _print_LiteralFloat(self, expr):
         printed = CodePrinter._print_Float(self, expr)
         e = printed.find('e')
         if e > -1:
             return "%sd%s" % (printed[:e], printed[e + 1:])
-        return "%sd0" % printed
+        return "%s_C_DOUBLE" % printed
 
-    def _print_Complex(self, expr):
+    def _print_LiteralComplex(self, expr):
         real_str = self._print_Float(expr.real)
         imag_str = self._print_Float(expr.imag)
         return "({}, {})".format(real_str, imag_str)
 
-    def _print_Integer(self, expr):
-        return "{0}_{1}".format(str(expr.p), expr.precision)
+    def _print_LiteralInteger(self, expr):
+        return "{0}_{1}".format(str(expr.p), iso_c_binding["integer"][expr.precision])
 
     def _print_IndexedElement(self, expr):
         if isinstance(expr.base, IndexedVariable):
@@ -2372,13 +2489,13 @@ class FCodePrinter(CodePrinter):
                 expr.base.internal_variable.allows_negative_indexes)
 
         for i, ind in enumerate(inds):
-            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], Integer):
+            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0])
             else:
                 #indices of indexedElement of len==1 shouldn't be a Tuple
                 if isinstance(ind, Tuple) and len(ind) == 1:
                     inds[i] = ind[0]
-                if allow_negative_indexes and not isinstance(ind, Integer):
+                if allow_negative_indexes and not isinstance(ind, LiteralInteger):
                     inds[i] = PyccelMod(ind, base_shape[i])
 
         inds = [self._print(i) for i in inds]
@@ -2397,7 +2514,7 @@ class FCodePrinter(CodePrinter):
         if (expr.end is None) or isinstance(expr.end, Nil):
             end = ''
         else:
-            end = PyccelMinus(expr.end, Integer(1))
+            end = PyccelMinus(expr.end, LiteralInteger(1))
             end = self._print(end)
         return '{0}:{1}'.format(start, end)
 
@@ -2533,11 +2650,13 @@ class FCodePrinter(CodePrinter):
         code = [line.lstrip(' \t') for line in code]
 
         inc_keyword = ('do ', 'if(', 'if ', 'do\n',
-                       'else', 'type', 'subroutine', 'function')
+                       'else', 'type', 'subroutine', 'function',
+                       'interface')
         dec_keyword = ('end do', 'enddo', 'end if', 'endif',
                        'else', 'endtype', 'end type',
                        'endfunction', 'end function',
-                       'endsubroutine', 'end subroutine')
+                       'endsubroutine', 'end subroutine',
+                       'endinterface', 'end interface')
 
         increase = [int(any(map(line.startswith, inc_keyword)))
                      for line in code]

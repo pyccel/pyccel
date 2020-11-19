@@ -5,11 +5,12 @@ This file contains some useful functions to compile the generated fortran code
 """
 
 import os
+import shutil
 import subprocess
 import sys
 import warnings
 
-__all__ = ['construct_flags', 'compile_files']
+__all__ = ['construct_flags', 'compile_files', 'get_gfortran_library_dir']
 
 #==============================================================================
 # TODO use constructor and a dict to map flags w.r.t the compiler
@@ -23,8 +24,7 @@ def construct_flags(compiler,
                     fflags=None,
                     debug=False,
                     accelerator=None,
-                    includes=(),
-                    libdirs=()):
+                    includes=()):
     """
     Constructs compiling flags for a given compiler.
 
@@ -70,7 +70,13 @@ def construct_flags(compiler,
 
     if accelerator is not None:
         if accelerator == "openmp":
+            if sys.platform == "darwin" and compiler == "gcc":
+                flags += " -Xpreprocessor"
+
             flags += " -fopenmp"
+            if compiler == 'ifort':
+                flags   += ' -nostandard-realloc-lhs '
+
         elif accelerator == "openacc":
             flags += " -ta=multicore -Minfo=accel"
         else:
@@ -78,7 +84,6 @@ def construct_flags(compiler,
 
     # Construct flags
     flags += ''.join(' -I"{0}"'.format(i) for i in includes)
-    flags += ''.join(' -L"{0}"'.format(i) for i in libdirs)
 
     return flags
 
@@ -86,9 +91,10 @@ def construct_flags(compiler,
 def compile_files(filename, compiler, flags,
                     binary=None,
                     verbose=False,
-                    modules=[],
+                    modules=(),
                     is_module=False,
                     libs=(),
+                    libdirs=(),
                     language="fortran",
                     output=''):
     """
@@ -101,23 +107,28 @@ def compile_files(filename, compiler, flags,
     if binary is None:
         if not is_module:
             binary = os.path.splitext(os.path.basename(filename))[0]
-            mod_file = ''
         else:
             f = os.path.join(output, os.path.splitext(os.path.basename(filename))[0])
             binary = '{}.o'.format(f)
 #            binary = "{folder}{binary}.o".format(folder=output,
 #                                binary=os.path.splitext(os.path.basename(filename))[0])
-            mod_file = '"{folder}"'.format(folder=output)
 
     o_code = '-o'
     j_code = ''
     if is_module:
         flags += ' -c '
         if (len(output)>0) and language == "fortran":
-            j_code = '-J'
+            if compiler == "ifort":
+                j_code = '-module "{folder}"'.format(folder=output)
+            else:
+                j_code = '-J"{folder}"'.format(folder=output)
 
     m_code = ' '.join('{}.o'.format(m) for m in modules)
-    libs_flags = ' '.join('-l{}'.format(i) for i in libs)
+    if is_module:
+        libs_flags = ''
+    else:
+        flags += ''.join(' -L"{0}"'.format(i) for i in libdirs)
+        libs_flags = ' '.join('-l{}'.format(i) for i in libs)
 
     filename = '"{}"'.format(filename)  # in case of spaces in path
     binary = '"{}"'.format(binary)
@@ -126,8 +137,8 @@ def compile_files(filename, compiler, flags,
         compiler = "gfortran"
         filename += ' "{}"'.format(os.path.join(os.environ["MSMPI_LIB64"], 'libmsmpi.a'))
 
-    cmd = '{0} {1} {2} {3} {4} {5} {6} {7} {8}'.format( \
-        compiler, flags, m_code, filename, o_code, binary, libs_flags, j_code, mod_file)
+    cmd = '{0} {1} {2} {3} {4} {5} {6} {7}'.format( \
+        compiler, flags, m_code, filename, o_code, binary, libs_flags, j_code)
 
     if verbose:
         print(cmd)
@@ -157,3 +168,11 @@ def compile_files(filename, compiler, flags,
 #        f.close()
 
     return output, cmd
+
+def get_gfortran_library_dir():
+    """Provide the location of the gfortran libraries for linking
+    """
+    file_location = subprocess.check_output([shutil.which('gfortran'), '-print-file-name=libgfortran.a'],
+            universal_newlines = True)
+    lib_dir = os.path.dirname(file_location)
+    return lib_dir

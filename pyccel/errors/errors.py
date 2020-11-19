@@ -64,13 +64,15 @@ class PyccelCodegenError(PyccelError):
 class ErrorInfo:
     """Representation of a single error message."""
 
-    def __init__(self, filename,
+    def __init__(self, *, stage, filename,
                  line=None,
                  column=None,
                  severity=None,
                  message='',
                  symbol=None,
                  blocker=False):
+        # The parser stage
+        self.stage = stage
         # The source file that was the source of this error.
         self.filename = basename(filename) if filename is not None else ''
         # The line number related to this error within file.
@@ -90,25 +92,26 @@ class ErrorInfo:
 
     def __str__(self):
 
-        pattern = '|{severity}'
-        text = pattern.format(severity=_severity_registry[self.severity])
+        pattern = '|{severity} [{stage}]: {filename}{location}| {message}{symbol}'
+        info = {
+            'stage'   : self.stage,
+            'severity': _severity_registry[self.severity],
+            'filename': self.filename,
+            'location': '',
+            'message' : self.message,
+            'symbol'  : ''
+        }
 
         if self.line:
-            if not self.column:
-                text = '{text}: {filename} [{line}]'.format(text=text,
-                        filename = self.filename, line=self.line)
+            if self.column:
+                info['location'] = ' [{line},{column}]'.format(line=self.line, column=self.column)
             else:
-                text = '{text}: {filename} [{line},{column}]'.format(text=text,
-                        filename = self.filename, line=self.line,
-                        column=self.column)
-
-        text = '{text}| {msg}'.format(text=text, msg=self.message)
+                info['location'] = ' [{line}]'.format(line=self.line)
 
         if self.symbol:
-            symbol = make_symbol(self.symbol)
-            text = '{text} ({symbol})'.format(text=text, symbol=symbol)
+            info['symbol'] = ' ({})'.format(self.symbol)
 
-        return text
+        return pattern.format(**info)
 
 
 def _singleton(cls):
@@ -236,7 +239,8 @@ class Errors:
                     line   = fst.lineno
                     column = fst.col_offset
 
-        info = ErrorInfo(filename,
+        info = ErrorInfo(stage=self._parser_stage,
+                         filename=filename,
                          line=line,
                          column=column,
                          severity=severity,
@@ -303,17 +307,14 @@ class Errors:
 
     def __str__(self):
         print_path = (len(self.error_info_map.keys()) > 1)
-        text = '{}:'.format(PYCCEL)
-        if self.parser_stage:
-            text = '{text} [{stage}] \n'.format(text=text,
-                                                stage=self.parser_stage)
+        text = '{}:\n'.format(PYCCEL)
 
         for path in self.error_info_map.keys():
             errors = self.error_info_map[path]
-
             if print_path: text += ' filename :: {path}\n'.format(path=path)
             for err in errors:
                 text += ' ' + str(err) + '\n'
+
         return text
 
 if __name__ == '__main__':

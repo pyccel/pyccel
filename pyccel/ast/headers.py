@@ -103,7 +103,7 @@ class FunctionHeader(Header):
         'function' or 'procedure'. default value: 'function'
 
     is_static: bool
-        True if we want to pass arrays in f2py mode. every argument of type
+        True if we want to pass arrays in bind(c) mode. every argument of type
         array will be preceeded by its shape, the later will appear in the
         argument declaration. default value: False
 
@@ -181,6 +181,7 @@ class FunctionHeader(Header):
             is_pointer = dc['is_pointer']
             precision = dc['precision']
             rank = dc['rank']
+            is_const = dc['is_const']
 
             order = None
             shape = None
@@ -193,7 +194,7 @@ class FunctionHeader(Header):
                 except ValueError:
                     dtype = DataTypeFactory(str(dtype), ("_name"))()
             var = Variable(dtype, var_name,
-                        allocatable=allocatable, is_pointer=is_pointer,
+                        allocatable=allocatable, is_pointer=is_pointer, is_const=is_const,
                         rank=rank, shape=shape ,order = order, precision = precision,
                         is_argument=True)
             return var
@@ -252,7 +253,7 @@ class FunctionHeader(Header):
         return funcs
 
     def to_static(self):
-        """returns a static function header. needed for f2py"""
+        """returns a static function header. needed for bind(c)"""
         return FunctionHeader(self.func,
                               self.dtypes,
                               self.results,
@@ -298,7 +299,7 @@ class MethodHeader(FunctionHeader):
         'function' or 'procedure'. default value: 'function'
 
     is_static: bool
-        True if we want to pass arrays in f2py mode. every argument of type
+        True if we want to pass arrays in bind(c) mode. every argument of type
         array will be preceeded by its shape, the later will appear in the
         argument declaration. default value: False
 

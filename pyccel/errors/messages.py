@@ -13,6 +13,9 @@ RECURSIVE_RESULTS_REQUIRED = ("A results type must be provided for recursive fun
 INCOMPATIBLE_TYPES = 'Incompatible types'
 INCOMPATIBLE_TYPES_IN_ASSIGNMENT = 'Incompatible types in assignment'
 INCOMPATIBLE_REDEFINITION = 'Incompatible redefinition'
+INCOMPATIBLE_REDEFINITION_STACK_ARRAY = 'Cannot change shape of stack array, because it does not support memory reallocation. Avoid redefinition, or use standard heap array.'
+STACK_ARRAY_DEFINITION_IN_LOOP = 'Cannot create stack array in loop, because if does not support memory reallocation. Create array before loop, or use standard heap array.'
+
 UNSUPPORTED_ARRAY_RETURN_VALUE = 'Array return arguments are currently not supported'
 
 INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION = 'Incompatible types in string interpolation'
@@ -124,3 +127,5 @@ INVALID_PYTHON_SYNTAX = 'Python syntax error'
 UNDEFINED_INIT_METHOD = 'Undefined `__init__` method'
 FOUND_SYMBOLIC_ASSIGN = 'Found symbolic assignment [Ignored]'
 FOUND_IS_IN_ASSIGN = 'Found `is` statement in assignment [Ignored]'
+ARRAY_REALLOCATION = 'Array redefinition may cause memory reallocation at runtime'
+ARRAY_DEFINITION_IN_LOOP = 'Array definition in for loop may cause memory reallocation at each cycle. Consider creating the array before the loop'

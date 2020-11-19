@@ -86,12 +86,15 @@ def compile_c(path_dir,test_file,dependencies):
     p.wait()
 
 #------------------------------------------------------------------------------
-def compile_fortran(path_dir,test_file,dependencies):
+def compile_fortran(path_dir,test_file,dependencies,is_mod=False):
     root = insert_pyccel_folder(test_file)[:-3]
 
     assert(os.path.isfile(root+".f90"))
 
-    command = [shutil.which("gfortran"), "-O3", "%s.f90" % root]
+    if is_mod:
+        command = [shutil.which("gfortran"), "-c", "%s.f90" % root]
+    else:
+        command = [shutil.which("gfortran"), "-O3", "%s.f90" % root]
     deps = [dependencies] if isinstance(dependencies, str) else dependencies
     for d in deps:
         d = insert_pyccel_folder(d)
@@ -99,8 +102,10 @@ def compile_fortran(path_dir,test_file,dependencies):
         command.append("-I"+os.path.dirname(d))
 
     command.append("-o")
-    command.append("%s" % test_file[:-3])
-
+    if is_mod:
+        command.append("%s.o" % root)
+    else:
+        command.append("%s" % test_file[:-3])
     p = subprocess.Popen(command, universal_newlines=True, cwd=path_dir)
     p.wait()
 
@@ -195,13 +200,16 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
     else:
         language='fortran'
 
-    if (isinstance(dependencies, list)):
+    if dependencies:
+        if isinstance(dependencies, str):
+            dependencies = [dependencies]
         for i, d in enumerate(dependencies):
             dependencies[i] = get_abs_path(d)
-            compile_pyccel(os.path.dirname(dependencies[i]), dependencies[i], pyccel_commands)
-    elif (isinstance(dependencies, str)):
-        dependencies = get_abs_path(dependencies)
-        compile_pyccel(os.path.dirname(dependencies), dependencies, pyccel_commands)
+            if not compile_with_pyccel and language=='fortran':
+                compile_pyccel (cwd, dependencies[i], pyccel_commands+" -t")
+                compile_fortran(cwd, dependencies[i], [], is_mod = True)
+            else:
+                compile_pyccel(os.path.dirname(dependencies[i]), dependencies[i], pyccel_commands)
 
     if compile_with_pyccel:
         compile_pyccel(cwd, test_file, pyccel_commands)
@@ -472,13 +480,12 @@ def test_numpy_kernels_compile():
     compile_pyccel(os.path.join(cwd, "scripts/numpy/"), "numpy_kernels.py")
 
 #------------------------------------------------------------------------------
-def test_multiple_results():
+def test_multiple_results(language):
     pyccel_test("scripts/runtest_multiple_results.py",
-            dependencies = "scripts/default_args_mod.py",
             output_dtype = [int,float,complex,bool,int,complex,
                 int,bool,float,float,float,float,float,float,
-                float,float,float,float,float,float,
-                float,float,float,float,float,float])
+                float,float,float,float,float,float
+                ,float,float,float,float], language=language)
 
 #------------------------------------------------------------------------------
 def test_elemental():

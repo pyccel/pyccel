@@ -3,16 +3,13 @@
 from sympy import Tuple
 
 from pyccel.ast.core import FunctionCall
-from pyccel.ast.core import FunctionDef, F2PYFunctionDef
+from pyccel.ast.core import FunctionAddress
+from pyccel.ast.core import FunctionDef, BindCFunctionDef
 from pyccel.ast.core import Variable
-from pyccel.ast.core import ValuedVariable
 from pyccel.ast.core import Assign
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
-from pyccel.ast.core import Comment
 from pyccel.ast.core import IndexedVariable
-
-from pyccel.ast.type_inference import str_dtype
 
 __all__ = (
    'as_static_function',
@@ -24,7 +21,7 @@ __all__ = (
 def sanitize_arguments(args):
     _args = []
     for a in args:
-        if isinstance( a, Variable ):
+        if isinstance(a, (Variable, FunctionAddress)):
             _args.append(a)
 
         elif isinstance( a, IndexedVariable ):
@@ -52,6 +49,7 @@ def as_static_function(func, name=None):
     arguments_inout = func.arguments_inout
     functions = func.functions
     _results = []
+    interfaces = func.interfaces
 
     # Convert array results to inout arguments
     for r in results:
@@ -62,7 +60,7 @@ def as_static_function(func, name=None):
             _results += [r]
 
     if name is None:
-        name = 'f2py_{}'.format(func.name).lower()
+        name = 'bind_c_{}'.format(func.name).lower()
 
     # ...
     results_names = [i.name for i in _results]
@@ -70,14 +68,12 @@ def as_static_function(func, name=None):
     _arguments_inout = []
 
     for i_a, a in enumerate(args):
-        if not isinstance(a, Variable):
-            raise TypeError('Expecting a Variable type for {}'.format(a))
-
-        rank = a.rank
-        if rank > 0:
+        if not isinstance(a, (Variable, FunctionAddress)):
+            raise TypeError('Expecting a Variable or FunctionAddress type for {}'.format(a))
+        if not isinstance(a, FunctionAddress) and a.rank > 0:
             # ...
             additional_args = []
-            for i in range(rank):
+            for i in range(a.rank):
                 n_name = 'n{i}_{name}'.format(name=str(a.name), i=i)
                 n_arg  = Variable('int', n_name, precision=4)
 
@@ -114,40 +110,14 @@ def as_static_function(func, name=None):
     results = _results
     arguments_inout = _arguments_inout
     # ...
-
-    # ... If needed, add !f2py instructions at beginning of function body
-    f2py_template = 'f2py integer(kind={kind}) :: n{index}_{name}=shape({name},{index_t})'
-    f2py_instructions = []
-    int_kind = Variable('int', 'f2py_array_dimension').precision
-
-    for a in args:
-        if a.rank > 1 and a.order == 'C':
-
-            # Reverse shape of array
-            transpose_stmts = [Comment(f2py_template.format(kind    = int_kind,
-                                                            index   = i,
-                                                            name    = a.name,
-                                                            index_t = str(i)))
-                               for i in range(a.rank)]
-
-            # Tell f2py that array has C ordering
-            c_intent_stmt = Comment('f2py intent(c) {}'.format(a.name))
-
-            # Update f2py directives
-            f2py_instructions += [*transpose_stmts, c_intent_stmt]
-        elif isinstance(a,ValuedVariable):
-            f2py_instructions += [Comment('f2py {type} :: {name} = {default_value}'.format(type = str_dtype(a.dtype),
-                name = a.name, default_value = a.value))]
-
-    if f2py_instructions:
-        body = f2py_instructions + body.body
-    # ...
-    return F2PYFunctionDef( name, list(args), results, body,
+    return BindCFunctionDef( name, list(args), results, body,
                         local_vars = func.local_vars,
                         is_static = True,
                         arguments_inout = arguments_inout,
                         functions = functions,
-                        imports = func.imports
+                        interfaces = interfaces,
+                        imports = func.imports,
+                        original_function = func
                         )
 
 #=======================================================================================
@@ -175,10 +145,11 @@ def as_static_function_call(func, mod_name, name=None):
     new_func = FunctionDef(func.name, list(args), func.results, body,
                        arguments_inout = func.arguments_inout,
                        functions = func.functions,
+                       interfaces = func.interfaces,
                        imports = imports,
                        )
 
-    # make it compatible with f2py
+    # make it compatible with c
     static_func = as_static_function(new_func, name)
 
     return static_func
