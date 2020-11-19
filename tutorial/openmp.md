@@ -23,7 +23,7 @@ def set_num_threads(n):
 
 ### Parallel Construct
 
-#### Syntax :
+#### Syntax
 
 ```python
 #$ omp parallel [clause[ [,] clause] ... ]
@@ -41,7 +41,7 @@ n = omp_get_num_threads()
 
 ### Loop Construct
 
-#### Syntax :
+#### Syntax
 
 ```python
 #$ omp for [clause[ [,] clause] ... ]
@@ -61,7 +61,7 @@ for i in range(0, 1000):
 
 ### Single Construct
 
-#### Syntax :
+#### Syntax
 
 ```python
 #$ omp single [clause[ [,] clause] ... ]
@@ -83,7 +83,7 @@ for i in range(0, 1000):
 
 ### Teams Construct
 
-#### Syntax :
+#### Syntax
 
 ```python
 #$ omp teams [clause[ [,]clause] ... ]
@@ -119,7 +119,7 @@ result = result1 + result2
 
 ### Target Construct
 
-#### Syntax :
+#### Syntax
 
 ```python
 #$  omp target [clause[ [,]clause] ... ]
