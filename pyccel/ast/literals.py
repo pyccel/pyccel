@@ -40,7 +40,7 @@ class LiteralTrue(sp_BooleanTrue, Literal):
 class LiteralFalse(sp_BooleanFalse, Literal):
     """Represents the python value False"""
     _dtype     = NativeBool()
-    def __init__(self, precision = default_precision['bool']):
+    def __init__(self,precision = default_precision['bool']):
         self._precision = precision
 
 #------------------------------------------------------------------------------
@@ -53,12 +53,14 @@ class LiteralInteger(sp_Integer, Literal):
         obj = Expr.__new__(cls, ival)
         obj.p = ival
         return obj
+    def __init__(self, value, *, precision = default_precision['integer']):
+        self._precision = precision
 
 #------------------------------------------------------------------------------
 class LiteralFloat(sp_Float, Literal):
     """Represents a float literal in python"""
     _dtype     = NativeReal()
-    def __init__(self, precision = default_precision['float']):
+    def __init__(self, value, *, precision = default_precision['float']):
         self._precision = precision
 
 #------------------------------------------------------------------------------
@@ -69,10 +71,11 @@ class LiteralComplex(Basic, Literal):
     def __new__(cls, real, imag):
         return Basic.__new__(cls, real, imag)
 
-    def __init__(self, real, imag):
+    def __init__(self, real, imag, precision = default_precision['float']):
         Basic.__init__(self)
         self._real_part = real
         self._imag_part = imag
+        self._precision = precision
 
     @property
     def real(self):
