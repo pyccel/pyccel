@@ -201,9 +201,7 @@ class CWrapperCodePrinter(CCodePrinter):
             body = [If((check, [err, Return([Nil()])]))]
 
             # Type check
-            numpy_dtype = self.find_in_numpy_dtype_registry(argument)
-            arg_dtype   = self.find_in_dtype_registry(self._print(argument.dtype), argument.precision)
-            check = PyccelNe(FunctionCall(numpy_get_type, [variable]), numpy_dtype)
+            check = Type_Check(argument, variable)
             info_dump = PythonPrint([FunctionCall(numpy_get_type, [variable]), numpy_dtype])
             err = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(argument, arg_dtype))
             body += [If((check, [info_dump, err, Return([Nil()])]))]
