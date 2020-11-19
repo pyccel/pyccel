@@ -623,7 +623,6 @@ class SyntaxParser(BasicParser):
         is_private   = False
         imports      = []
 
-        # TODO improve later
         decorators = {}
         for d in self._visit(stmt.decorator_list):
             tmp_var = str(d) if isinstance(d, Symbol) else str(type(d))
