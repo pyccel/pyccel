@@ -1,11 +1,11 @@
 # Headers and Decorators
 
 ### Template
-####Templates using header comments:
+#### Templates using header comments:
 
 A **template** in pyccel, is used to allow the same function to take arguments of different types from a selection of types the user specifies.
 
-#####The usage:
+##### The usage:
 ```
 #$ header template T(int|real)
 #$ header template Z(int|real)
@@ -50,9 +50,9 @@ def f1():
 ```
 The arguments of **f2** can either be bool or complex, they can not be int or float.
 
-####Templates using decorators:
+#### Templates using decorators:
 
-#####The usage:
+##### The usage:
 ```
 from pyccel.decorators import types, template
 @types('T', 'T')
