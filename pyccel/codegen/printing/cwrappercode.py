@@ -14,7 +14,7 @@ from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import VariableAddress, Import, PyccelNe
+from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelAnd, PyccelEq
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
@@ -159,7 +159,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return FunctionCall(cast_function, [arg])
 
-    def get_PyArgParseType(self, used_names, variable, argument):
+    def get_PyArgParseType2(self, used_names, variable):
         """
         Responsible for creating any necessary intermediate variables which are used
         to collect the result of PyArgParse, and collecting the required cast function
@@ -180,10 +180,82 @@ class CWrapperCodePrinter(CCodePrinter):
         collect_var : Variable
             The variable which will be used to collect the argument
 
-        cast_func_stmts : list
-            A list of statements to be carried out after parsing the arguments.
-            These handle casting collect_var to variable if necessary
+        cast_fun : FunctionCall
+            call to cast function responsible of the conversion of one data type into another
         """
+        cast_function = None
+        collect_var = variable
+
+        if variable.rank > 0:
+            collect_type = PyccelPyArrayObject()
+            collect_var = Variable(dtype= collect_type, is_pointer = True, rank = variable.rank,
+                                    order= variable.order, name=self.get_new_name(used_names, variable.name+"_tmp"))
+
+        elif isinstance(variable, ValuedVariable):
+            collect_type = PyccelPyObject()
+            collect_var = Variable(dtype=collect_type, is_pointer=True,
+                name = self.get_new_name(used_names, variable.name+"_tmp"))
+
+        elif variable.dtype is NativeBool():
+            collect_type = NativeInteger()
+            collect_var = Variable(dtype=collect_type, precision=4,
+                name = self.get_new_name(used_names, variable.name+"_tmp"))
+            cast_function =  self.get_cast_function_call('pyint_to_bool', collect_var)
+
+        elif variable.dtype is NativeComplex():
+            collect_type = PyccelPyObject()
+            collect_var = Variable(dtype=collect_type, is_pointer=True,
+                name = self.get_new_name(used_names, variable.name+"_tmp"))
+            cast_function = self.get_cast_function_call('pycomplex_to_complex', collect_var)
+
+        return collect_var, cast_function
+
+    def some_function(self, used_names, variable, collect_var, cast_function, check_type = False):
+
+        tmp_variable = None
+        body = []
+        error = []
+
+        if variable.is_optional:
+            tmp_variable = Variable(dtype=variable.dtype, name = self.get_new_name(used_names, variable.name+"_tmp"))
+            body += [(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
+                    [Assign(VariableAddress(variable), variable.value)])]
+            if check_type :
+                check = FunctionCall(PyType_Check(variable.dtype), [collect_var])
+                body += [(check,
+                    [Assign(tmp_variable, self.get_collect_function_call(tmp_variable, collect_var)),
+                    Assign(VariableAddress(variable), VariableAddress(tmp_variable))])]
+                error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, variable.dtype))
+                body += [(LiteralTrue(), [error, Return([Nil()])])]
+            else :
+                body += [(LiteralTrue(), [Assign(tmp_variable, self.get_collect_function_call(variable, collect_var)),
+                    Assign(VariableAddress(variable), VariableAddress(tmp_variable))])]
+            body = [If(*body)]
+
+        elif isinstance(variable, ValuedVariable):
+            body += [(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
+                    [Assign(variable, variable.value)])]
+            if check_type :
+                check = FunctionCall(PyType_Check(variable.dtype), [collect_var])
+                body += [(PyccelAnd(PyccelNe(VariableAddress(collect_var), VariableAddress(Py_None)), check),
+                    [Assign(variable, self.get_collect_function_call(variable, collect_var))])]
+                error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, variable.dtype))
+                body += [(LiteralTrue(), [error, Return([Nil()])])]
+            else :
+                body += [(LiteralTrue(), [Assign(variable, self.get_collect_function_call(variable, collect_var))])]
+            body = [If(*body)]
+
+        # array
+
+
+        elif cast_function is not None:
+            body = [Assign(variable, cast_function)]
+
+        return body, tmp_variable
+
+
+    def get_PyArgParseType(self, used_names, variable, argument):
+
         body = []
         collect_var = variable
 
@@ -432,23 +504,27 @@ class CWrapperCodePrinter(CCodePrinter):
             order = a.order) if isinstance(a, Variable) and a.rank > 0
                 else a for a in expr.arguments]
         for parse_arg, orig_arg in zip(arguments, expr.arguments):
-            collect_var, cast_func = self.get_PyArgParseType(used_names, parse_arg, orig_arg)
-
+            #collect_var, cast_func = self.get_PyArgParseType(used_names, parse_arg, orig_arg)
+            collect_var , cast_func = self.get_PyArgParseType2(used_names, parse_arg)
+            print(collect_var, collect_var.dtype)
+            body, tmp_variable = self.some_function(used_names, parse_arg, collect_var, cast_func, True)
+            if tmp_variable :
+                wrapper_vars[tmp_variable.name] = tmp_variable
             # If the variable cannot be collected from PyArgParse directly
             wrapper_vars[collect_var.name] = collect_var
 
             # Save cast to argument variable
-            wrapper_body_translations.extend(cast_func)
+            wrapper_body_translations.extend(body)
 
             parse_args.append(collect_var)
 
             # Write default values
-            if isinstance(parse_arg, ValuedVariable):
+            '''if isinstance(parse_arg, ValuedVariable):
                 wrapper_body.append(self.get_default_assign(parse_args[-1], parse_arg))
             if parse_arg.is_optional :
                 tmp_variable, body = self.optional_element_management(used_names, parse_arg, collect_var)
                 wrapper_vars[tmp_variable.name] = tmp_variable
-                wrapper_body_translations += body
+                wrapper_body_translations += body'''
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, expr.arguments, parse_args, keyword_list)
