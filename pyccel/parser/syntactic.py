@@ -683,7 +683,6 @@ class SyntaxParser(BasicParser):
                                     bounding_box = (stmt.lineno, stmt.col_offset),
                                     severity='fatal')
 
-                i = 0
                 for arg in ls:
                     if isinstance(arg, Symbol):
                         arg = arg.name
