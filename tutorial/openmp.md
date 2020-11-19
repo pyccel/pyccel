@@ -18,7 +18,8 @@ def set_num_threads(n):
 ```
 
 ## Directives Usage on Pyccel
-### Parallel Constructs
+
+### Parallel Construct
 
 #### Syntax :
 
@@ -36,7 +37,7 @@ n = omp_get_num_threads()
 #$ omp end parallel
 ```
 
-### Loop Constructs
+### Loop Construct
 
 #### Syntax :
 
@@ -55,7 +56,7 @@ for i in range(0, 1000):
 #$ omp end parallel
 ```
 
-### Single Constructs
+### Single Construct
 
 #### Syntax :
 
@@ -76,7 +77,7 @@ for i in range(0, 1000):
 #$ omp end parallel
 ```
 
-### Teams Constructs
+### Teams Construct
 
 #### Syntax :
 
