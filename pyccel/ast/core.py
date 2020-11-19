@@ -3822,9 +3822,6 @@ class Interface(Basic):
     functions : iterable
         The functions of the interface.
 
-    hide: bool
-        if True, the interface definition will not be generated.
-
     is_argument: bool
         True if the interface is used for a function argument.
 
@@ -3842,7 +3839,6 @@ class Interface(Basic):
         self,
         name,
         functions,
-        hide=False,
         is_argument = False,
         ):
 
@@ -3852,7 +3848,6 @@ class Interface(Basic):
             raise TypeError('Expecting a list')
         self._name = name
         self._functions = functions
-        self._hide = hide
         self._is_argument = is_argument
 
     @property
