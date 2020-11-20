@@ -231,7 +231,7 @@ class CWrapperCodePrinter(CCodePrinter):
             A list of statements
         """
         body = [(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
-                [Assign(VariableAddress(variable), variable.value)])]
+                [Assign(VariableAddress(variable), Nil())])]
         if check_type : # Type check
             check = PyccelNot(PythonType_Check(variable, collect_var))
             error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, variable.dtype))
