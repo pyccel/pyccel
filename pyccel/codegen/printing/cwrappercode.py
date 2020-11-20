@@ -206,6 +206,7 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
+            self._to_free_PyObject_list.append(collect_var)
             cast_function = self.get_cast_function_call('pycomplex_to_complex', collect_var)
 
         return collect_var, cast_function
@@ -519,8 +520,9 @@ class CWrapperCodePrinter(CCodePrinter):
             parse_args.append(collect_var)
 
             # Write default values
-            '''if isinstance(parse_arg, ValuedVariable):
+            if isinstance(parse_arg, ValuedVariable):
                 wrapper_body.append(self.get_default_assign(parse_args[-1], parse_arg))
+            '''
             if parse_arg.is_optional :
                 tmp_variable, body = self.optional_element_management(used_names, parse_arg, collect_var)
                 wrapper_vars[tmp_variable.name] = tmp_variable
