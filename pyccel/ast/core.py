@@ -5991,18 +5991,18 @@ def get_iterable_ranges(it, var_name=None):
 class ParserResult(Basic):
     def __new__(
         cls,
-        program=None,
-        module=None,
-        mod_name = None,
+        program   = None,
+        module    = None,
+        mod_name  = None,
         prog_name = None,
         ):
         return Basic.__new__(cls)
 
     def __init__(
         self,
-        program=None,
-        module=None,
-        mod_name = None,
+        program   = None,
+        module    = None,
+        mod_name  = None,
         prog_name = None,
         ):
 
@@ -6056,6 +6056,13 @@ class ParserResult(Basic):
         else:
             return self.module
 
+    def __reduce_ex__(self, i):
+        kwargs = dict(
+        program = self.program,
+        module  = self.module,
+        prog_name = self.prog_name,
+        mod_name  = self.mod_name)
+        return (apply, (self.__class__, (), kwargs))
 
 #==============================================================================
 def process_shape(shape):

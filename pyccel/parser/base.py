@@ -262,6 +262,7 @@ class BasicParser(object):
                  headers=None,
                  static=None,
                  show_traceback=False):
+
         self._fst = None
         self._ast = None
 
@@ -507,17 +508,19 @@ class BasicParser(object):
             in the Pyccel directory ($HOME/.pyccel)
         """
 
-        # ...
-        import pickle
-        use_home_dir = False
         if not filename:
             if not self.filename:
                 raise ValueError('Expecting a filename to load the ast')
 
-            use_home_dir = True
-            name = os.path.basename(self.filename)
-            filename = '{}.pyccel'.format(name)
+            path , name  = os.path.split(self.filename)
 
+            if not name.split('.')[-1] == 'pyh':
+                return
+            else:
+                name = name[:-4]
+
+            name     = '{}.pyccel'.format(name)
+            filename = path+ '/' + name
         # check extension
 
         if not filename.split(""".""")[-1] == 'pyccel':
@@ -528,8 +531,9 @@ class BasicParser(object):
 
         # we are only exporting the AST.
 
+        import pickle
         f = open(filename, 'wb')
-        pickle.dump(self.ast, f, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
         f.close()
 
     # TODO shall we need to load the Parser too?
@@ -543,15 +547,19 @@ class BasicParser(object):
 
         # ...
         import pickle
-        use_home_dir = False
         if not filename:
             if not self.filename:
                 raise ValueError('Expecting a filename to load the ast')
 
-            use_home_dir = True
-            name = os.path.basename(self.filename)
-            filename = '{}.pyccel'.format(name)
+            path , name = os.path.split(self.filename)
 
+            if not name.split('.')[-1] == 'pyh':
+                return
+            else:
+                name = name[:-4]
+
+            name     = '{}.pyccel'.format(name)
+            filename = path+ '/' + name
         # check extension
 
         if not filename.split(""".""")[-1] == 'pyccel':
@@ -559,26 +567,26 @@ class BasicParser(object):
 
 #        print('>>> home = ', os.environ['HOME'])
         # ...
-
         try:
             f = open(filename, 'rb')
-            self._ast = pickle.load(f)
+            parser = pickle.load(f)
             f.close()
         except FileNotFoundError:
-            pass
+            return
+        self.copy(parser)
 
+    def copy(self, parser):
+        self._fst = parser._fst
+        self._ast = parser._ast
 
-    def print_namespace(self):
+        self._metavars  = parser._metavars
+        self._namespace = parser._namespace
 
-        # TODO improve spacing
+        self._used_names = parser._used_names
 
-        print ('------- namespace -------')
-        for (k, v) in self.namespace.items():
-            print ('{var} \t :: \t {dtype}'.format(var=k, dtype=type(v)))
-        print ('-------------------------')
-
-    def _visit(self, expr, **settings):
-        raise NotImplementedError('Must be implemented by the extension')
+        # the following flags give us a status on the parsing stage
+        self._syntax_done   = parser._syntax_done
+        self._semantic_done = parser._semantic_done
 
 #==============================================================================
 

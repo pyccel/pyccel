@@ -77,6 +77,14 @@ from pyccel.errors.errors import Errors
 #      - use OrderedDict whenever it is possible
 from pyccel.errors.messages import *
 
+def get_name(a):
+    if isinstance(a, ast.Name):
+        return a.id
+    elif isinstance(a, ast.arg):
+        return a.arg
+    else:
+        raise NotImplementedError()
+
 #==============================================================================
 errors = Errors()
 #==============================================================================
@@ -111,33 +119,23 @@ class SyntaxParser(BasicParser):
 
             code = read_file(inputs)
 
-        self._code = code
-
+        self._code  = code
         self._scope = []
 
-        tree = extend_tree(code)
-
-        self._fst = tree
-
-        def get_name(a):
-            if isinstance(a, ast.Name):
-                return a.id
-            elif isinstance(a, ast.arg):
-                return a.arg
-            else:
-                raise NotImplementedError()
-
-        self._used_names = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg)))
-        self._dummy_counter = 1
         self.load()
-        if self._ast is None:
-            self.parse(verbose=True)
+
+        tree                = extend_tree(code)
+        self._fst           = tree
+        self._used_names    = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg)))
+        self._dummy_counter = 1
+
+        self.parse(verbose=True)
+        self.dump()
 
     def parse(self, verbose=False):
         """converts python ast to sympy ast."""
 
         if self.syntax_done:
-            print ('> syntax analysis already done')
             return self.ast
 
         # TODO - add settings to Errors
@@ -145,11 +143,11 @@ class SyntaxParser(BasicParser):
         errors.set_parser_stage('syntax')
 
         PyccelAstNode.stage = 'syntactic'
-        ast = self._visit(self.fst)
-
+        ast       = self._visit(self.fst)
         self._ast = ast
 
         self._visit_done = True
+        self._syntax_done = True
 
         return ast
 

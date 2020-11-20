@@ -14,19 +14,19 @@ class Parser(object):
     def __init__(self, filename, **kwargs):
 
         self._filename = filename
-        self._kwargs = kwargs
+        self._kwargs   = kwargs
 
         # we use it to store the imports
         self._parents = []
 
         # a Parser can have parents, who are importing it.
         # imports are then its sons.
-        self._sons = []
+        self._sons      = []
         self._d_parsers = OrderedDict()
 
-        self._syntax_parser = None
+        self._syntax_parser   = None
         self._semantic_parser = None
-        self._module_parser = None
+        self._module_parser   = None
 
         self._input_folder = os.path.dirname(filename)
 
@@ -89,12 +89,13 @@ class Parser(object):
         return self._module_parser
 
     def parse(self, d_parsers=None, verbose=False):
+
         if self._syntax_parser:
             return self._syntax_parser.ast
-        parser = SyntaxParser(self._filename, **self._kwargs)
-        self._syntax_parser = parser
 
-        parse_result = parser.ast
+        parser              = SyntaxParser(self._filename, **self._kwargs)
+        self._syntax_parser = parser
+        parse_result        = parser.ast
 
         if d_parsers is None:
             d_parsers = self._d_parsers
@@ -102,15 +103,15 @@ class Parser(object):
         self._d_parsers = self._parse_sons(d_parsers, verbose=verbose)
 
         if parse_result.has_additional_module():
-            new_mod_filename = os.path.join(os.path.dirname(self._filename),parse_result.mod_name+'.py')
+            new_mod_filename  = os.path.join(os.path.dirname(self._filename),parse_result.mod_name+'.py')
             new_prog_filename = os.path.join(os.path.dirname(self._filename),parse_result.prog_name+'.py')
-            self._filename = new_prog_filename
+            self._filename    = new_prog_filename
 
-            q = Parser(new_mod_filename)
-            q._syntax_parser = copy.copy(parser)
-            q._syntax_parser._namespace = copy.deepcopy(parser.namespace)
-            q._d_parsers = q._parse_sons(self._d_parsers)
-            q._syntax_parser._ast = parse_result.module
+            q                                = Parser(new_mod_filename)
+            q._syntax_parser                 = copy.copy(parser)
+            q._syntax_parser._namespace      = copy.deepcopy(parser.namespace)
+            q._d_parsers                     = q._parse_sons(self._d_parsers)
+            q._syntax_parser._ast            = parse_result.module
             d_parsers[parse_result.mod_name] = q
 
             q.append_parent(self)
@@ -120,7 +121,7 @@ class Parser(object):
 
             self._module_parser = q
         else:
-            parser._ast = parse_result.get_focus()
+            parser._ast         = parse_result.get_focus()
             self._module_parser = None
 
         return parser.ast
@@ -166,8 +167,8 @@ class Parser(object):
         for all involved files.
         """
 
-        imports = self.imports.keys()
-        treated = d_parsers.keys()
+        imports     = self.imports.keys()
+        treated     = d_parsers.keys()
         not_treated = [i for i in imports if i not in treated]
 
         for source in not_treated:
