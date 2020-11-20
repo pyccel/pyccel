@@ -55,6 +55,15 @@ after_script:  # Coverage instructions - collections
 jobs:
   Job1:
     runs-on: ${{ matrix.os }}
+    steps:
+      working-directory: ./tests
+      run:
+        python -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
+        python -m pytest -rx -m "not parallel and not c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
+        python -m pytest ndarrays/ -rx
+        mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
+#        mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel -v -m parallel -rx
+
     strategy:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
