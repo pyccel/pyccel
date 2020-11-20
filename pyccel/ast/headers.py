@@ -247,6 +247,16 @@ class FunctionHeader(Header):
                         is_argument=True)
             return var
 
+        def template_resolve(arg_code, Tname, type):
+            resolved = False
+            tmp_arg_code = arg_code.copy()
+            for i, t in enumerate(tmp_arg_code):
+                if 'datatype' in t and t['datatype'] == Tname:
+                    resolved = True
+                    tmp_arg_code[i] = type.copy()
+            return tmp_arg_code, resolved
+
+
         for i in self.dtypes:
             if isinstance(i, UnionType):
                 dtypes += [i.args]
@@ -256,28 +266,24 @@ class FunctionHeader(Header):
                 raise TypeError('element must be of type UnionType or dict')
 
         #TODO: handle the case of functions arguments
-        arg_codes = []
 
-        #generate possible combinations from uniontypes and iterate through them
-        for iterx in product(*dtypes):
-            iterx = list(iterx)
-            old_values = {}
-            #For each template type, replace only one in each combination, by
-            #a list of its args
-            for i, j in enumerate(iterx):
-                if 'datatype' in j and j['datatype'] in templates and not j['datatype'] in old_values:
-                    iterx[i] = templates[j['datatype']].args
-                    old_values[j['datatype']] = i
+        arg_codes = [list(arg_code) for arg_code in product(*dtypes)]
+        if isinstance(templates, dict):
+            templates = templates.values()
+        for T in templates:
+            i = 0
+            leng = len(arg_codes)
+            for i in range(leng):
+                for type in T.args:
+                    tmp_codes, resolved = template_resolve(arg_codes[0],
+                            T.name, type)
+                    if resolved:
+                        arg_codes.append(tmp_codes)
+                if resolved:
+                    arg_codes.pop(0)
                 else:
-                    iterx[i] = [j]
-            #generate combinations using product, and replace remaining
-            #templates with its appropriates values
-            for itery in product(*iterx):
-                itery = list(itery)
-                for j, i in enumerate(itery):
-                    if 'datatype' in i and i['datatype'] in templates:
-                        itery[j] = itery[old_values[i['datatype']]].copy()
-                arg_codes.append(itery)
+                    arg_codes.append(arg_codes.pop(0))
+
         for args_ in arg_codes:
             args = []
             for i, d in enumerate(args_):
