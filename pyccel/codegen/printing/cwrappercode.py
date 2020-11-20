@@ -203,7 +203,7 @@ class CWrapperCodePrinter(CCodePrinter):
     # -------------------------------------------------------------------
     def _body_optional_variable(self, tmp_variable, variable, collect_var, check_type = False):
         """
-        Responsible for collecting value and managing error and create body
+        Responsible for collecting value and managing error and create the body
         of optional arguments in format
                 if (pyobject == Py_None){
                     collect Null
@@ -244,7 +244,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _body_valued_variable(self, variable, collect_var, check_type = False) :
         """
-        Responsible for collecting value and managing error and create body
+        Responsible for collecting value and managing error and create the body
         of valued arguments in format
                 if (pyobject == Py_None){
                     collect default value
@@ -281,7 +281,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _body_array(self, variable, collect_var, check_type = False) :
         """
-        Responsible for collecting value and managing error and create body
+        Responsible for collecting value and managing error and create the body
         of arguments with rank greater than 0 in format
                 if (rank check == False){
                     print TypeError Wrong rank
