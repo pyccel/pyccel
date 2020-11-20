@@ -89,13 +89,16 @@ class PyccelOperator(Expr, PyccelAstNode):
     def __init__(self, *args):
         self._args = handle_precedence(args, self.precedence)
 
+    @property
+    def precedence(self):
+        return self._precedence
+
 class PyccelBitOperator(PyccelOperator):
     _rank = 0
     _shape = ()
 
     def __init__(self, args):
         if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
             return
 
         max_precision = 0
@@ -105,9 +108,6 @@ class PyccelBitOperator(PyccelOperator):
             else:
                 raise TypeError('unsupported operand type(s): {}'.format(self))
         self._precision = max_precision
-    @property
-    def precedence(self):
-        return self._precedence
 
 class PyccelRShift(PyccelBitOperator):
     _precedence = 11
@@ -182,8 +182,8 @@ class PyccelBinaryOperator(PyccelOperator):
 
     def __init__(self, *args):
 
+        PyccelOperator.__init__(self, *args)
         if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
             return
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
         reals     = [a for a in args if a.dtype is NativeReal()]
@@ -229,10 +229,6 @@ class PyccelBinaryOperator(PyccelOperator):
                 self._rank  = max(a.rank for a in args)
                 self._shape = [None]*self._rank
 
-    @property
-    def precedence(self):
-        return self._precedence
-
 class PyccelPow(PyccelBinaryOperator):
     _precedence  = 15
 class PyccelAdd(PyccelBinaryOperator):
@@ -245,8 +241,8 @@ class PyccelDiv(PyccelBinaryOperator):
     _precedence = 13
     def __init__(self, *args):
 
+        PyccelOperator.__init__(self, *args)
         if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
             return
 
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
@@ -291,8 +287,8 @@ class PyccelBooleanOperator(PyccelOperator):
 
     def __init__(self, *args):
 
+        PyccelOperator.__init__(self, *args)
         if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
             return
 
         self._dtype = NativeBool()
@@ -315,10 +311,6 @@ class PyccelBooleanOperator(PyccelOperator):
         else:
             self._rank = max(a.rank for a in args)
             self._shape = [None]*self._rank
-
-    @property
-    def precedence(self):
-        return self._precedence
 
 class PyccelEq(PyccelBooleanOperator):
     pass
@@ -343,10 +335,6 @@ class PyccelAssociativeParenthesis(PyccelOperator):
         self._precision = a.precision
         self._shape     = a.shape
 
-    @property
-    def precedence(self):
-        return self._precedence
-
 class PyccelUnary(PyccelOperator):
     _precedence = 14
 
@@ -363,10 +351,6 @@ class PyccelUnary(PyccelOperator):
         self._precision = a.precision
         self._shape     = a.shape
 
-    @property
-    def precedence(self):
-        return self._precedence
-
 class PyccelUnarySub(PyccelUnary):
     pass
 
@@ -378,12 +362,7 @@ class PyccelAnd(PyccelOperator):
     _precedence = 5
 
     def __init__(self, *args):
-        if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
-
-    @property
-    def precedence(self):
-        return self._precedence
+        PyccelOperator.__init__(self, *args)
 
 class PyccelOr(PyccelOperator):
     _dtype = NativeBool()
@@ -393,12 +372,7 @@ class PyccelOr(PyccelOperator):
     _precedence = 4
 
     def __init__(self, *args):
-        if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
-
-    @property
-    def precedence(self):
-        return self._precedence
+        PyccelOperator.__init__(self, *args)
 
 class PyccelNot(PyccelOperator):
     _dtype = NativeBool()
@@ -408,12 +382,7 @@ class PyccelNot(PyccelOperator):
     _precedence = 6
 
     def __init__(self, *args):
-        if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
-
-    @property
-    def precedence(self):
-        return self._precedence
+        PyccelOperator.__init__(self, *args)
 
 class Is(PyccelOperator):
 
@@ -434,8 +403,7 @@ class Is(PyccelOperator):
     _precedence = 7
 
     def __init__(self, *args):
-        if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
+        PyccelOperator.__init__(self, *args)
 
     @property
     def lhs(self):
@@ -444,10 +412,6 @@ class Is(PyccelOperator):
     @property
     def rhs(self):
         return self._args[1]
-
-    @property
-    def precedence(self):
-        return self._precedence
 
 
 class IsNot(PyccelOperator):
@@ -470,8 +434,7 @@ class IsNot(PyccelOperator):
     _precedence = 7
 
     def __init__(self, *args):
-        if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
+        PyccelOperator.__init__(self, *args)
 
     @property
     def lhs(self):
@@ -480,10 +443,6 @@ class IsNot(PyccelOperator):
     @property
     def rhs(self):
         return self._args[1]
-
-    @property
-    def precedence(self):
-        return self._precedence
 
 
 Relational = (PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe, PyccelAnd, PyccelOr,  PyccelNot, Is, IsNot)
