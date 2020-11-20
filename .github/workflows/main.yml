@@ -19,6 +19,22 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        uses: ./.github/actions/linux_install
+      - name: Install python dependencies
+        uses: ./.github/actions/pip_installation
+      - name: Coverage install
+        uses: ./.github/actions/coverage_install
+      - name: Test with pytest
+        uses: ./.github/actions/pytest_run
+      - name: Coverage collection
+        used: ./.github/actions/coverage_collection
+      - name: Collect coverage information
+        continue-on-error: True
       - uses: ./.github/actions/linux_tests
 
   Linux-Master:
@@ -31,4 +47,20 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        uses: ./.github/actions/linux_install
+      - name: Install python dependencies
+        uses: ./.github/actions/pip_installation
+      - name: Coverage install
+        uses: ./.github/actions/coverage_install
+      - name: Test with pytest
+        uses: ./.github/actions/pytest_run
+      - name: Coverage collection
+        used: ./.github/actions/coverage_collection
+      - name: Collect coverage information
+        continue-on-error: True
       - uses: ./.github/actions/linux_tests
