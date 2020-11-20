@@ -30,7 +30,7 @@ jobs:
         sudo apt-get install libomp5 libopenmpi-dev openmpi-bin
         sudo apt-get install libomp-dev
     - name: Install python dependencies
-      uses: actions/pip_action
+      uses: actions/action_pip
     - name: Coverage setup
       run: |
         python -m pip install coverage
@@ -41,7 +41,7 @@ jobs:
         echo -e "[run]\nparallel = True\nsource = ${INSTALL_DIR}\ndata_file = $(pwd)/.coverage\n[report]\ninclude = ${INSTALL_DIR}/*\n[xml]\noutput = cobertura.xml" > .coveragerc
         export COVERAGE_PROCESS_START=$(pwd)/.coveragerc
     - name: Test with pytest
-      uses: actions/pytest_action
+      uses: actions/action_pytest
     - name: Collect coverage information
       run: |
         coverage combine
