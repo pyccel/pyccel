@@ -29,6 +29,11 @@ class Literal(PyccelAstNode):
     _rank      = 0
     _shape     = ()
 
+    @PyccelAstNode.precision.setter
+    def precision(self, precision):
+        """ Set precision for a literal class"""
+        self._precision = precision
+
 #------------------------------------------------------------------------------
 class LiteralTrue(sp_BooleanTrue, Literal):
     """Represents the python value True"""
@@ -36,21 +41,11 @@ class LiteralTrue(sp_BooleanTrue, Literal):
     def __init__(self, precision = default_precision['bool']):
         self._precision = precision
 
-    @PyccelAstNode.precision.setter
-    def precision(self, precision):
-        """ Set precision for the true literal """
-        self._precision = precision
-
 #------------------------------------------------------------------------------
 class LiteralFalse(sp_BooleanFalse, Literal):
     """Represents the python value False"""
     _dtype     = NativeBool()
     def __init__(self,precision = default_precision['bool']):
-        self._precision = precision
-
-    @PyccelAstNode.precision.setter
-    def precision(self, precision):
-        """ Set precision for the false literal """
         self._precision = precision
 
 #------------------------------------------------------------------------------
@@ -66,11 +61,6 @@ class LiteralInteger(sp_Integer, Literal):
     def __init__(self, value, precision = default_precision['integer']):
         self._precision = precision
 
-    @PyccelAstNode.precision.setter
-    def precision(self, precision):
-        """ Set precision for the inetger literal """
-        self._precision = precision
-
 #------------------------------------------------------------------------------
 class LiteralFloat(sp_Float, Literal):
     """Represents a float literal in python"""
@@ -78,10 +68,6 @@ class LiteralFloat(sp_Float, Literal):
     def __init__(self, value, *, precision = default_precision['float']):
         self._precision = precision
 
-    @PyccelAstNode.precision.setter
-    def precision(self, precision):
-        """ Set precision for the float literal """
-        self._precision = precision
 
 #------------------------------------------------------------------------------
 class LiteralComplex(Basic, Literal):
@@ -95,11 +81,6 @@ class LiteralComplex(Basic, Literal):
         Basic.__init__(self)
         self._real_part = real
         self._imag_part = imag
-        self._precision = precision
-
-    @PyccelAstNode.precision.setter
-    def precision(self, precision):
-        """ Set precision for the complex literal """
         self._precision = precision
 
     @property
