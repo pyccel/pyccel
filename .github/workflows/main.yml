@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: ./.github/actions/linux_tests
 
-  Linux:
+  Linux-Master:
 
     runs-on: ubuntu-latest
     if: branch = master
