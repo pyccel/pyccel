@@ -384,7 +384,7 @@ def PythonType_Check(variable, argument):
 
     Returns
     -------
-    body : Check type FunctionCall
+    FunctionCall : Check type FunctionCall
     """
     try :
         check_type = check_type_registry[variable.dtype]
