@@ -119,6 +119,29 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             raise NotImplementedError('Default values are not implemented for this datatype : {}'.format(func_arg.dtype))
 
+    def _get_static_function(self, function, collect_dict):
+        """
+        Create arguments and functioncall for arguments rank > 0 in fortran.
+        Format : a is numpy array
+        func(a) ==> static_func(a.DIM , a.DATA)
+        where a.DATA = buffer holding data
+              a.DIM = size of array
+        """
+        if self._target_language == 'fortran':
+            static_args = []
+            for a in function.arguments:
+                if isinstance(a, Variable) and a.rank>0:
+                    # Add shape arguments for static function
+                    static_args.extend(FunctionCall(numpy_get_dim,[collect_dict[a],i])
+                            for i in range(collect_dict[a].rank))
+                static_args.append(a)
+
+            static_function = as_static_function_call(function, self._module_name, name=function.name)
+        else:
+            static_function = function
+            static_args = function.arguments
+        return static_function, static_args
+
     # -------------------------------------------------------------------
     # Functions that take care of creating cast or convert type function call :
     # -------------------------------------------------------------------
@@ -286,6 +309,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body : list
             A list of statements
         """
+        #TODO create and extern rank and order check function
         #rank check :
         check = PyccelNe(FunctionCall(numpy_get_ndims,[collect_var]), LiteralInteger(collect_var.rank))
         error = PyErr_SetString('PyExc_TypeError', '"{} must have rank {}"'.format(collect_var, str(collect_var.rank)))
@@ -313,7 +337,9 @@ class CWrapperCodePrinter(CCodePrinter):
         return body
 
     def _body_management(self, used_names, variable, collect_var, cast_function, check_type = False):
-        # create and extern check type function
+        """
+        Responsible for calling functions that take care of body creation
+        """
         tmp_variable = None
         body = []
         error = []
@@ -517,7 +543,6 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body_translations = []
 
         parse_args = []
-        arguments = expr.arguments
         collect_vars = {}
         for arg in expr.arguments:
             collect_var , cast_func = self.get_PyArgParseType(used_names, arg)
@@ -545,19 +570,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.extend(wrapper_body_translations)
 
         # Call function
-        if self._target_language == 'fortran':
-            static_args = []
-            for a in arguments:
-                if isinstance(a, Variable) and a.rank>0:
-                    # Add shape arguments for static function
-                    static_args.extend(FunctionCall(numpy_get_dim,[collect_vars[a],i])
-                            for i in range(collect_vars[a].rank))
-                static_args.append(a)
-
-            static_function = as_static_function_call(expr, self._module_name, name=expr.name)
-        else:
-            static_function = expr
-            static_args = arguments
+        static_function, static_args = self._get_static_function(expr, collect_vars)
 
         if len(expr.results)==0:
             func_call = FunctionCall(static_function, static_args)
