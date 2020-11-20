@@ -1068,7 +1068,9 @@ class SemanticParser(BasicParser):
 
         # look for a class attribute / property
         elif isinstance(expr.rhs, Symbol) and first.cls_base:
-
+            methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
+            if any(isinstance(method, Interface) for method in methods):
+                errors.report('Generic methods are not supported yet', severity='fatal')
             # standard class attribute
             if expr.rhs.name in attr_name:
                 self._current_class = first.cls_base
@@ -1078,7 +1080,6 @@ class SemanticParser(BasicParser):
 
             # class property?
             else:
-                methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
                 for i in methods:
                     if str(i.name) == expr.rhs.name and \
                             'property' in i.decorators.keys():
