@@ -373,6 +373,19 @@ numpy_dtype_registry = {('bool',4)     : numpy_bool_type,
                         ('complex',16) : numpy_clongdouble_type}
 
 def PythonType_Check(variable, argument):
+    """
+    Create FunctionCall responsible of checking python argument data type
+    Parameters:
+    ----------
+    variable : Variable
+        The variable needed for the generation of the type check
+    argument : Variable
+        argument of the check function
+
+    Returns
+    -------
+    body : Check type FunctionCall
+    """
     try :
         check_type = check_type_registry[variable.dtype]
     except KeyError:
