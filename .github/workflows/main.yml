@@ -23,7 +23,7 @@ jobs:
   Linux-Master:
 
     runs-on: ubuntu-latest
-    if: github.ref == "refs/heads/master"
+    if: github.ref == 'refs/heads/master'
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8]
