@@ -220,7 +220,31 @@ class CWrapperCodePrinter(CCodePrinter):
         return body
 
     def _body_valued_variable(self, variable, collect_var, check_type = False) :
-        #TODO add documentation :
+        """
+        Responsible for collecting value and managing error and create body
+        of valued arguments in format
+                if (pyobject == Py_None){
+                    collect default value
+                }else if(Type Check == False){
+                    Print TypeError
+                    return Null
+                }else{
+                    collect the value from PyObject
+                }
+        Parameters:
+        ----------
+        Variable : Variable
+            The optional variable
+        collect_var : variable
+            the pyobject type variable  holder of value
+        check_type : Boolean
+            True if the type is needed
+
+        Returns
+        -------
+        body : list
+            A list of statements
+        """
         body = [(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
                 [Assign(variable, variable.value)])]
         if check_type : # Type check
