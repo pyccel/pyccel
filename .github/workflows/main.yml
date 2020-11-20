@@ -27,7 +27,7 @@ jobs:
       run:
         sudo apt-get install gfortran;
         sudo apt-get install libblas-dev liblapack-dev;
-        sudo apt-get install libopenmpi-dev openmpi-bin;
+        sudo apt-get install libomp5 libopenmpi-dev openmpi-bin;
         sudo apt-get install libomp-dev;
     - name: Install python dependencies
       run: |
