@@ -1,5 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
-from pyccel.decorators import types
+# pylint: disable=missing-function-docstring, missing-module-docstring, unused-variable/
 #==============================================================================
 
 def array_create_C_literal_value():
@@ -16,7 +15,7 @@ def array_create_C_literal_value():
 
 def array_full_C():
 
-    from numpy import full, float
+    from numpy import full
 
     a = full((2, 2), 1,dtype=float)
 

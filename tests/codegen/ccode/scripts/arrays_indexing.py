@@ -1,20 +1,21 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
-from pyccel.decorators import allow_negative_index
+# pylint: disable=missing-function-docstring, missing-module-docstring, undefined-variable/
 #==============================================================================
+from pyccel.decorators import allow_negative_index
 
 def array_getitem_C():
 
     from numpy import array
 
-    a = array([0,0,0])
+    a = array([0, 0, 0])
+    b = 0
     for i in range(3):
-        b = a[i]
+        b = a[i] + b
 
 def array_setitem_C():
 
     from numpy import empty
 
-    a = empty((5,2))
+    a = empty((5, 2))
     for i in range(5):
         for j in range(2):
             a[i][j] = 1
