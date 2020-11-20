@@ -123,7 +123,7 @@ result = result1 + result2
 #### Syntax
 
 ```python
-#$  omp target [clause[ [,]clause] ... ]
+#$ omp target [clause[ [,]clause] ... ]
   structured-block
 #$ omp end target
 ```
@@ -139,4 +139,24 @@ for i in range(0, 1000):
     result[i] = v1[i] * v2[i];
 #$ omp end parallel
 #$ omp end target
+```
+
+### Barrier Construct
+
+#### Syntax
+
+```python
+#$ omp barrier
+```
+
+#### Example
+
+```python
+
+#$ omp parallel
+#$ omp for private(i)
+for i in range(0, 1000):
+    result[i] = v1[i] * v2[i];
+#$ omp barrier
+#$ omp end parallel
 ```
