@@ -24,15 +24,12 @@ jobs:
 
         - os: ubuntu-latest
           python-version: 3.6
-          if: branch = master
 
         - os: ubuntu-latest
           python-version: 3.7
-          if: branch = master
 
         - os: ubuntu-latest
           python-version: 3.8
-          if: branch = master
 
     steps:
     - uses: actions/checkout@v2
