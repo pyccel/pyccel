@@ -1,5 +1,8 @@
 from sympy.core.expr          import Expr
 from .basic     import PyccelAstNode
+
+from .builtins import PythonInt
+
 from .core      import PyccelArraySize
 
 from .datatypes import NativeBool, NativeInteger, NativeReal, NativeComplex, NativeString, default_precision
@@ -68,30 +71,80 @@ def broadcast(shape_1, shape_2):
             errors.report(msg,severity='fatal')
     return tuple(new_shape)
 
-def handle_precedence(args, my_precedence):
-    precedence = [getattr(a, 'precedence', 17) for a in args]
-
-    if min(precedence) <= my_precedence:
-
-        new_args = []
-
-        for i, (a,p) in enumerate(zip(args, precedence)):
-            if (p < my_precedence or (p == my_precedence and i != 0)):
-                new_args.append(PyccelAssociativeParenthesis(a))
-            else:
-                new_args.append(a)
-        args = tuple(new_args)
-
-    return args
 
 class PyccelOperator(Expr, PyccelAstNode):
 
     def __init__(self, *args):
-        self._args = handle_precedence(args, self.precedence)
+        self._args = self._handle_precedence(args)
 
     @property
     def precedence(self):
         return self._precedence
+
+    def _handle_precedence(self, args):
+        precedence = [getattr(a, 'precedence', 17) for a in args]
+
+        if min(precedence) <= self._precedence:
+
+            new_args = []
+
+            for i, (a,p) in enumerate(zip(args, precedence)):
+                if (p < self._precedence or (p == self._precedence and i != 0)):
+                    new_args.append(PyccelAssociativeParenthesis(a))
+                else:
+                    new_args.append(a)
+            args = tuple(new_args)
+
+        return args
+
+class PyccelUnaryOperator(PyccelOperator):
+    def __init__(self, a):
+        PyccelOperator.__init__(self, a)
+        if self.stage == 'syntactic':
+            return
+        self._set_AST_node_values(self._args[0])
+
+    def _set_AST_node_values(self, a):
+        if self._dtype is None:
+            self._dtype     = a.dtype
+        if self._rank is None:
+            self._rank      = a.rank
+        if self._precision is None:
+            self._precision = a.precision
+        if self._shape is None:
+            self._shape     = a.shape
+
+class PyccelUnary(PyccelOperator):
+    _precedence = 14
+
+class PyccelUnarySub(PyccelUnary):
+    pass
+
+class PyccelNot(PyccelUnaryOperator):
+    _precedence = 6
+    _dtype = NativeBool()
+    _rank  = 0
+    _shape = ()
+    _precision = default_precision['bool']
+
+class PyccelInvert(PyccelUnaryOperator):
+    _precedence = 14
+    _dtype     = NativeInteger()
+
+    def __init__(self, a):
+        PyccelUnaryOperator.__init__(self,a)
+        if self.stage == 'syntactic':
+            return
+
+        if self._args[0].dtype not in (NativeInteger(), NativeBool()):
+            raise TypeError('unsupported operand type(s): {}'.format(self))
+
+        self._args      = (PythonInt(a) if a.dtype is NativeBool() else a,)
+
+class PyccelAssociativeParenthesis(PyccelOperator):
+    _precedence = 18
+    def _handle_precedence(args):
+        pass
 
 class PyccelBitOperator(PyccelOperator):
     _rank = 0
@@ -169,15 +222,6 @@ class PyccelBitAnd(PyccelBitOperator):
             self._dtype = NativeInteger()
             self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
-class PyccelInvert(PyccelBitOperator):
-    _precedence = 14
-    _dtype = NativeInteger()
-    def __init__(self, *args):
-        super(PyccelInvert, self).__init__(args)
-        if self.stage == 'syntactic':
-            return
-        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
-
 class PyccelBinaryOperator(PyccelOperator):
 
     def __init__(self, *args):
@@ -235,7 +279,7 @@ class PyccelAdd(PyccelBinaryOperator):
     _precedence = 12
 class PyccelMul(PyccelBinaryOperator):
     _precedence = 13
-class PyccelMinus(PyccelBinaryAdd):
+class PyccelMinus(PyccelAdd):
     pass
 class PyccelDiv(PyccelBinaryOperator):
     _precedence = 13
@@ -325,35 +369,6 @@ class PyccelGt(PyccelBooleanOperator):
 class PyccelGe(PyccelBooleanOperator):
     pass
 
-class PyccelAssociativeParenthesis(PyccelOperator):
-    _precedence = 18
-    def __init__(self, a):
-        if self.stage == 'syntactic':
-            return
-        self._dtype     = a.dtype
-        self._rank      = a.rank
-        self._precision = a.precision
-        self._shape     = a.shape
-
-class PyccelUnary(PyccelOperator):
-    _precedence = 14
-
-    def __init__(self, a):
-
-        if self.stage == 'syntactic':
-            if (getattr(a, 'precedence', 17) <= self.precedence):
-                a = PyccelAssociativeParenthesis(a)
-                self._args = (a,)
-            return
-
-        self._dtype     = a.dtype
-        self._rank      = a.rank
-        self._precision = a.precision
-        self._shape     = a.shape
-
-class PyccelUnarySub(PyccelUnary):
-    pass
-
 class PyccelAnd(PyccelOperator):
     _dtype = NativeBool()
     _rank  = 0
@@ -370,16 +385,6 @@ class PyccelOr(PyccelOperator):
     _shape = ()
     _precision = default_precision['bool']
     _precedence = 4
-
-    def __init__(self, *args):
-        PyccelOperator.__init__(self, *args)
-
-class PyccelNot(PyccelOperator):
-    _dtype = NativeBool()
-    _rank  = 0
-    _shape = ()
-    _precision = default_precision['bool']
-    _precedence = 6
 
     def __init__(self, *args):
         PyccelOperator.__init__(self, *args)
