@@ -10,7 +10,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  Linux:
 
     runs-on: ubuntu-latest
     strategy:
@@ -30,14 +30,7 @@ jobs:
         sudo apt-get install libomp5 libopenmpi-dev openmpi-bin
         sudo apt-get install libomp-dev
     - name: Install python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install wheel
-        python -m pip install .
-        python -m pip install scipy
-        python -m pip install mpi4py
-        python -m pip install tblib
-        python -m pip install "pytest>=4.5"
+      uses: actions/pip_action
     - name: Coverage setup
       run: |
         python -m pip install coverage
@@ -48,18 +41,10 @@ jobs:
         echo -e "[run]\nparallel = True\nsource = ${INSTALL_DIR}\ndata_file = $(pwd)/.coverage\n[report]\ninclude = ${INSTALL_DIR}/*\n[xml]\noutput = cobertura.xml" > .coveragerc
         export COVERAGE_PROCESS_START=$(pwd)/.coveragerc
     - name: Test with pytest
-      run: |
-        cd tests
-        python -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
-        python -m pytest -rx -m "not parallel and not c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
-        python -m pytest ndarrays/ -rx
-        mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
-        #mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel -v -m parallel -rx
-        cd ..
+      uses: actions/pytest_action
     - name: Collect coverage information
       run: |
         coverage combine
         coverage xml
         rm ${SITE_DIR}/pyccel_cov.pth
         bash <(wget -q -O - https://coverage.codacy.com/get.sh)
-
