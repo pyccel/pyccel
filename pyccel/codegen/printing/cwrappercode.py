@@ -251,14 +251,10 @@ class CWrapperCodePrinter(CCodePrinter):
             body += [(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
                     [Assign(VariableAddress(variable), variable.value)])]
             if check_type : # Type check
-                check = FunctionCall(PyType_Check(variable.dtype), [collect_var])
-                body += [(check,
-                    [Assign(tmp_variable, self.get_collect_function_call(tmp_variable, collect_var)),
-                    Assign(VariableAddress(variable), VariableAddress(tmp_variable))])]
+                check = PyccelNot(FunctionCall(PyType_Check(variable.dtype), [collect_var]))
                 error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, variable.dtype))
-                body += [(LiteralTrue(), [error, Return([Nil()])])]
-            else :
-                body += [(LiteralTrue(), [Assign(tmp_variable, self.get_collect_function_call(variable, collect_var)),
+                body += [(check, [error, Return([Nil()])])]
+            body += [(LiteralTrue(), [Assign(tmp_variable, self.get_collect_function_call(variable, collect_var)),
                     Assign(VariableAddress(variable), VariableAddress(tmp_variable))])]
             body = [If(*body)]
 
@@ -266,13 +262,10 @@ class CWrapperCodePrinter(CCodePrinter):
             body += [(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
                     [Assign(variable, variable.value)])]
             if check_type : # Type check
-                check = FunctionCall(PyType_Check(variable.dtype), [collect_var])
-                body += [(PyccelAnd(PyccelNe(VariableAddress(collect_var), VariableAddress(Py_None)), check),
-                    [Assign(variable, self.get_collect_function_call(variable, collect_var))])]
+                check = PyccelNot(FunctionCall(PyType_Check(variable.dtype), [collect_var]))
                 error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, variable.dtype))
-                body += [(LiteralTrue(), [error, Return([Nil()])])]
-            else :
-                body += [(LiteralTrue(), [Assign(variable, self.get_collect_function_call(variable, collect_var))])]
+                body += [(check, [error, Return([Nil()])])]
+            body += [(LiteralTrue(), [Assign(variable, self.get_collect_function_call(variable, collect_var))])]
             body = [If(*body)]
 
         # array
