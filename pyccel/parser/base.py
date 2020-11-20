@@ -502,8 +502,12 @@ class BasicParser(object):
                     container[source] += name
 
     def dump(self, filename=None):
-        """Dump the current ast using Pickle.
-        filename: str
+        """
+        Dump the current ast using Pickle.
+
+          Parameters
+          ----------
+          filename: str
             output file name. if not given `name.pyccel` will be used and placed
             in the Pyccel directory ($HOME/.pyccel)
         """
@@ -539,8 +543,12 @@ class BasicParser(object):
     # TODO shall we need to load the Parser too?
 
     def load(self, filename=None):
-        """Load the current ast using Pickle.
-        filename: str
+        """
+        Load the current ast using Pickle.
+
+          Parameters
+          ----------
+          filename: str
             output file name. if not given `name.pyccel` will be used and placed
             in the Pyccel directory ($HOME/.pyccel)
         """
@@ -576,17 +584,25 @@ class BasicParser(object):
         self.copy(parser)
 
     def copy(self, parser):
-        self._fst = parser._fst
-        self._ast = parser._ast
+        """
+        Copy the parser attributes in self
 
-        self._metavars  = parser._metavars
-        self._namespace = parser._namespace
+          Parameters
+          ----------
+          parser : BasicParser
 
-        self._used_names = parser._used_names
+        """
+        self._fst = parser.fst
+        self._ast = parser.ast
+
+        self._metavars  = parser.metavars
+        self._namespace = parser.namespace
+
+        self._used_names = parser.used_names
 
         # the following flags give us a status on the parsing stage
-        self._syntax_done   = parser._syntax_done
-        self._semantic_done = parser._semantic_done
+        self._syntax_done   = parser.syntax_done
+        self._semantic_done = parser.semantic_done
 
 #==============================================================================
 
