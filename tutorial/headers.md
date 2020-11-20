@@ -52,8 +52,8 @@ def f(a,b):
 	pass
 ```
 Arguments:
-- name: the name of the template
-- types: the types the tamplate represents.
+-   name: the name of the template
+-   types: the types the tamplate represents.
 ---
 *Note:*
 The arguments **name** and **types** could also be passed of the form
@@ -61,9 +61,9 @@ The arguments **name** and **types** could also be passed of the form
 
 ---
 When  a function is decorated with the template decorator:
-- The templates are only available to the decorated function.
-- The templates overrides any existing templates with the same name (declared as header comment).
-- If the function is decorated with two templates with the same name, the first one gets overrided.
+-   The templates are only available to the decorated function.
+-   The templates overrides any existing templates with the same name (declared as header comment).
+-   If the function is decorated with two templates with the same name, the first one gets overrided.
 ##### Examples
 In this example the arguments of **f** can either be bool or complex, they can not be int or float.
 ```python

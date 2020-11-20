@@ -1042,7 +1042,9 @@ class SemanticParser(BasicParser):
 
         # look for a class method
         if isinstance(expr.rhs, Application):
-
+            methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
+            if any(isinstance(method, Interface) for method in methods):
+                errors.report('Generic methods are not supported yet', severity='fatal')
             macro = self.get_macro(rhs_name)
             if macro is not None:
                 master = macro.master
@@ -1055,7 +1057,6 @@ class SemanticParser(BasicParser):
 
             args = [self._visit(arg, **settings) for arg in
                     expr.rhs.args]
-            methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
             for i in methods:
                 if str(i.name) == rhs_name:
                     if 'numpy_wrapper' in i.decorators.keys():

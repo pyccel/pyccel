@@ -247,13 +247,13 @@ class FunctionHeader(Header):
                         is_argument=True)
             return var
 
-        def template_resolve(arg_code, Tname, type):
+        def template_resolve(arg_code, Tname, typ):
             resolved = False
             tmp_arg_code = arg_code.copy()
             for i, t in enumerate(tmp_arg_code):
                 if 'datatype' in t and t['datatype'] == Tname:
                     resolved = True
-                    tmp_arg_code[i] = type.copy()
+                    tmp_arg_code[i] = typ.copy()
             return tmp_arg_code, resolved
 
 
@@ -274,9 +274,9 @@ class FunctionHeader(Header):
             i = 0
             leng = len(arg_codes)
             for i in range(leng):
-                for type in T.args:
+                for typ in T.args:
                     tmp_codes, resolved = template_resolve(arg_codes[0],
-                            T.name, type)
+                            T.name, typ)
                     if resolved:
                         arg_codes.append(tmp_codes)
                 if resolved:
