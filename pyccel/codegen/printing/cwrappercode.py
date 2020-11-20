@@ -305,7 +305,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return collect_var, cast_function
 
-
     def get_PyBuildValue(self, used_names, variable):
         """
         Responsible for collecting the variable required to build the result
@@ -324,17 +323,17 @@ class CWrapperCodePrinter(CCodePrinter):
         collect_var : Variable
             The variable which will be provided to PyBuild
 
-        cast_func_stmts : list
-            A list of statements to be carried out before building the return tuple.
-            These handle casting variable to collect_var if necessary
+        cast_func_stmts : functionCall
+            call to cast function responsible of the conversion of one data type into another
         """
+        collect_var = variable
+        cast_function = None
 
         if variable.dtype is NativeBool():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function_call('bool_to_pyobj', variable)
-            return collect_var, AliasAssign(collect_var, cast_function)
 
         if variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
@@ -342,9 +341,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function_call('complex_to_pycomplex', variable)
             self._to_free_PyObject_list.append(collect_var)
-            return collect_var, AliasAssign(collect_var, cast_function)
 
-        return variable, None
+        return collect_var, cast_function
 
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
@@ -497,7 +495,7 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var, cast_func = self.get_PyBuildValue(used_names, a)
             if cast_func is not None:
                 wrapper_vars[collect_var.name] = collect_var
-                wrapper_body.append(cast_func)
+                wrapper_body.append(AliasAssign(collect_var, cast_func))
 
             res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
 
