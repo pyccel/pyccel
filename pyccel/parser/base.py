@@ -263,8 +263,9 @@ class BasicParser(object):
                  static=None,
                  show_traceback=False):
 
-        self._fst = None
-        self._ast = None
+        self._code = None
+        self._fst  = None
+        self._ast  = None
 
         self._filename  = None
         self._metavars  = OrderedDict()
@@ -511,6 +512,8 @@ class BasicParser(object):
             output file name. if not given `name.pyccel` will be used and placed
             in the Pyccel directory ($HOME/.pyccel)
         """
+        import pickle
+        import hashlib
 
         if not filename:
             if not self.filename:
@@ -534,11 +537,14 @@ class BasicParser(object):
         # ...
 
         # we are only exporting the AST.
-
-        import pickle
-        f = open(filename, 'wb')
-        pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
-        f.close()
+        try:
+            code = self.code.encode('utf-8')
+            hs   = hashlib.md5(code)
+            f    = open(filename, 'wb')
+            pickle.dump((hs.hexdigest(), self), f, pickle.HIGHEST_PROTOCOL)
+            f.close()
+        except:
+            return
 
     # TODO shall we need to load the Parser too?
 
@@ -555,6 +561,7 @@ class BasicParser(object):
 
         # ...
         import pickle
+
         if not filename:
             if not self.filename:
                 raise ValueError('Expecting a filename to load the ast')
@@ -577,11 +584,15 @@ class BasicParser(object):
         # ...
         try:
             f = open(filename, 'rb')
-            parser = pickle.load(f)
+            hs, parser = pickle.load(f)
             f.close()
-        except FileNotFoundError:
+        except:
             return
-        self.copy(parser)
+
+        import hashlib
+        code = self.code.encode('utf-8')
+        if hashlib.md5(code).hexdigest() == hs:
+            self.copy(parser)
 
     def copy(self, parser):
         """
