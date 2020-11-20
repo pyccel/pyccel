@@ -679,10 +679,9 @@ class CCodePrinter(CodePrinter):
         shape = ", ".join(a for a in shape)
         dtype = self._print(expr.variable.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
-        shape_name, _ = create_incremented_string(self._parser.used_names, prefix = 'shape_dummy')
-        init_shape = "int %s[] = {%s};" % (shape_name, shape)
-        alloc_code = "{} = array_create({}, {}, {});".format(expr.variable, len(expr.shape), shape_name, dtype)
-        return '{}{}\n{}'.format(free_code, init_shape, alloc_code)
+        shape_Assign = "(int[]){" + shape + "}"
+        alloc_code = "{} = array_create({}, {}, {});".format(expr.variable, len(expr.shape), shape_Assign, dtype)
+        return '{}\n{}'.format(free_code, alloc_code)
 
     def _print_Slice(self, expr):
         start = self._print(expr.start)
