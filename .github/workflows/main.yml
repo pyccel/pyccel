@@ -74,3 +74,24 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Test with pytest
         uses: ./.github/actions/pytest_run
+
+  MacOSX:
+
+    runs-on: macos-latest
+
+    strategy:
+      matrix:
+        python-version: [3.8]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        uses: ./.github/actions/macos_install
+      - name: Install python dependencies
+        uses: ./.github/actions/pip_installation
+      - name: Test with pytest
+        uses: ./.github/actions/pytest_run
