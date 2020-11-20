@@ -9,6 +9,7 @@ os: ubuntu-latest
 dist: xenial
 language: python
 env: PYTHON=python
+on: push
 
 before_install:
   - sudo apt-get install gfortran
