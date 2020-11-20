@@ -35,7 +35,7 @@ jobs:
         uses: ./.github/actions/coverage_collection
       - name: Collect coverage information
         continue-on-error: True
-      - uses: ./.github/actions/linux_tests
+        uses: ./.github/actions/linux_tests
 
   Linux-Master:
 
@@ -63,4 +63,4 @@ jobs:
         uses: ./.github/actions/coverage_collection
       - name: Collect coverage information
         continue-on-error: True
-      - uses: ./.github/actions/linux_tests
+        uses: ./.github/actions/linux_tests
