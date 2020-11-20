@@ -185,7 +185,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 if (pyobject == Py_None){
                     collect Null
                 }else if(Type Check == False){
-                    Print TypeError
+                    Print TypeError Wrong Type
                     return Null
                 }else{
                     assigne pyobject value to tmp variable
@@ -226,7 +226,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 if (pyobject == Py_None){
                     collect default value
                 }else if(Type Check == False){
-                    Print TypeError
+                    Print TypeError Wrong Type
                     return Null
                 }else{
                     collect the value from PyObject
@@ -257,7 +257,35 @@ class CWrapperCodePrinter(CCodePrinter):
         return body
 
     def _body_array(self, variable, collect_var, check_type = False) :
-        #TODO add documentation :
+        """
+        Responsible for collecting value and managing error and create body
+        of arguments with rank greater than 0 in format
+                if (rank check == False){
+                    print TypeError Wrong rank
+                    return Null
+                }else if(Type Check == False){
+                    Print TypeError Wrong type
+                    return Null
+                }else if (order check == False){ #check for order for rank > 1
+                    Print NotImplementedError Wrong Order
+                    return Null
+                }
+                collect the value from PyArrayObject
+
+        Parameters:
+        ----------
+        Variable : Variable
+            The optional variable
+        collect_var : variable
+            the pyobject type variable  holder of value
+        check_type : Boolean
+            True if the type is needed
+
+        Returns
+        -------
+        body : list
+            A list of statements
+        """
         #rank check :
         check = PyccelNe(FunctionCall(numpy_get_ndims,[collect_var]), LiteralInteger(collect_var.rank))
         error = PyErr_SetString('PyExc_TypeError', '"{} must have rank {}"'.format(collect_var, str(collect_var.rank)))
