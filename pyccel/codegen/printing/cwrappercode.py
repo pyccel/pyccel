@@ -120,6 +120,9 @@ class CWrapperCodePrinter(CCodePrinter):
         collect_var :
             the pyobject variable
         """
+        if variable.rank > 0 :
+            return FunctionCall(numpy_get_data,[collect_var])
+
         if isinstance(variable.dtype, NativeComplex):
             return self.get_cast_function_call('pycomplex_to_complex', collect_var)
 
@@ -217,11 +220,37 @@ class CWrapperCodePrinter(CCodePrinter):
         body = []
         error = []
 
-        if variable.is_optional:
+
+        if variable.rank > 0:
+            #rank check :
+            check = PyccelNe(FunctionCall(numpy_get_ndims,[collect_var]), LiteralInteger(collect_var.rank))
+            error = PyErr_SetString('PyExc_TypeError', '"{} must have rank {}"'.format(collect_var, str(collect_var.rank)))
+            body += [(check, [error, Return([Nil()])])]
+
+            if check_type : #Type check
+                numpy_dtype = self.find_in_numpy_dtype_registry(variable)
+                arg_dtype   = self.find_in_dtype_registry(self._print(variable.dtype), variable.precision)
+                check = PyccelNe(FunctionCall(numpy_get_type, [collect_var]), numpy_dtype)
+                info_dump = PythonPrint([FunctionCall(numpy_get_type, [collect_var]), numpy_dtype])
+                error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, arg_dtype))
+                body += [(check, [info_dump, error, Return([Nil()])])]
+
+            if collect_var.rank > 1 and self._target_language == 'fortran' :#Order check
+                if collect_var.order == 'F':
+                    check = FunctionCall(numpy_check_flag,[collect_var, numpy_flag_f_contig])
+                else:
+                    check = FunctionCall(numpy_check_flag,[collect_var, numpy_flag_c_contig])
+                    error = PyErr_SetString('PyExc_NotImplementedError',
+                            '"Argument does not have the expected ordering ({})"'.format(collect_var.order))
+                    body += [If((PyccelNot(check), [error, Return([Nil()])]))]
+            body = [If(*body)]
+            body += [Assign(VariableAddress(variable), self.get_collect_function_call(variable, collect_var))]
+
+        elif variable.is_optional:
             tmp_variable = Variable(dtype=variable.dtype, name = self.get_new_name(used_names, variable.name+"_tmp"))
             body += [(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
                     [Assign(VariableAddress(variable), variable.value)])]
-            if check_type :
+            if check_type : # Type check
                 check = FunctionCall(PyType_Check(variable.dtype), [collect_var])
                 body += [(check,
                     [Assign(tmp_variable, self.get_collect_function_call(tmp_variable, collect_var)),
@@ -236,7 +265,7 @@ class CWrapperCodePrinter(CCodePrinter):
         elif isinstance(variable, ValuedVariable):
             body += [(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
                     [Assign(variable, variable.value)])]
-            if check_type :
+            if check_type : # Type check
                 check = FunctionCall(PyType_Check(variable.dtype), [collect_var])
                 body += [(PyccelAnd(PyccelNe(VariableAddress(collect_var), VariableAddress(Py_None)), check),
                     [Assign(variable, self.get_collect_function_call(variable, collect_var))])]
@@ -498,16 +527,19 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body_translations = []
 
         parse_args = []
-        arguments = [Variable(PyccelPyArrayObject(),
+        '''arguments = [Variable(PyccelPyArrayObject(),
             a.name,
             is_pointer = True,
             rank  = a.rank,
             order = a.order) if isinstance(a, Variable) and a.rank > 0
-                else a for a in expr.arguments]
+                else a for a in expr.arguments]'''
+        arguments = expr.arguments
+        collect_vars = {}
         for parse_arg, orig_arg in zip(arguments, expr.arguments):
             #collect_var, cast_func = self.get_PyArgParseType(used_names, parse_arg, orig_arg)
             collect_var , cast_func = self.get_PyArgParseType2(used_names, parse_arg)
             print(collect_var, collect_var.dtype)
+            collect_vars[parse_arg] = collect_var
             body, tmp_variable = self.some_function(used_names, parse_arg, collect_var, cast_func, True)
             if tmp_variable :
                 wrapper_vars[tmp_variable.name] = tmp_variable
@@ -539,11 +571,9 @@ class CWrapperCodePrinter(CCodePrinter):
             for a in arguments:
                 if isinstance(a, Variable) and a.rank>0:
                     # Add shape arguments for static function
-                    static_args.extend(FunctionCall(numpy_get_dim,[a,i])
-                            for i in range(a.rank))
-                    static_args.append(FunctionCall(numpy_get_data,[a]))
-                else:
-                    static_args.append(a)
+                    static_args.extend(FunctionCall(numpy_get_dim,[collect_vars[a],i])
+                            for i in range(collect_vars[a].rank))
+                static_args.append(a)
 
             static_function = as_static_function_call(expr, self._module_name, name=expr.name)
         else:
