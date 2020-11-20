@@ -202,7 +202,28 @@ work(result)
 #$ omp for
 for i in range(0, N):
   #$ omp atomic
-  result += 1
+  result = result + 1
   #$ omp end atomic
+#$ omp end parallel
+```
+
+### Masked Construct
+
+#### Syntax
+
+```python
+#$ omp masked
+  structured-block
+#$ omp end masked
+```
+
+#### Example
+
+```python
+result = 0
+#$ omp parallel shared(result)
+#$ omp masked
+result = result + 1
+#$ omp end masked
 #$ omp end parallel
 ```
