@@ -1,6 +1,7 @@
 name: 'Pyccel pip commands for testing'
 
 runs:
+  using: "composite"
   steps:
     - name: Update pip
       shell: bash

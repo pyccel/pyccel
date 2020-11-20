@@ -1,6 +1,7 @@
 name: 'Pyccel pytest commands'
 
 runs:
+  using: "composite"
   steps:
     - name: Test with pytest
       run: |
