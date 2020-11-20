@@ -268,18 +268,16 @@ class FunctionHeader(Header):
         #TODO: handle the case of functions arguments
 
         arg_codes = [list(arg_code) for arg_code in product(*dtypes)]
-        if isinstance(templates, dict):
-            templates = templates.values()
-        for T in templates:
+        for Tname in templates:
             i = 0
             leng = len(arg_codes)
             for i in range(leng):
-                for typ in T.args:
+                for typ in templates[Tname].args:
                     tmp_codes, resolved = template_resolve(arg_codes[0],
-                            T.name, typ)
+                            Tname, typ)
                     if resolved:
                         arg_codes.append(tmp_codes)
-                if resolved:
+                if len(arg_codes) > leng:
                     arg_codes.pop(0)
                 else:
                     arg_codes.append(arg_codes.pop(0))
