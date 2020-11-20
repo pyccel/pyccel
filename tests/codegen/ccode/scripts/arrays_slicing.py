@@ -21,7 +21,7 @@ def array_view_C_negative_indexes_literals():
     z = full((2, 5), 2)
     v = z[-1:, 0:-3] #pylint:disable=unused-variable
 
-@allow_negative_index(y) #pylint:disable=undefined-variable
+@allow_negative_index('y')
 def array_view_C_negative_indexes_var():
 
     from numpy import full
@@ -42,7 +42,7 @@ def array_view_C_without_Slice_obj_var_pos():
     i = 1
     v = z[i] #pylint:disable=unused-variable
 
-@allow_negative_index(z) #pylint:disable=undefined-variable
+@allow_negative_index('z')
 def array_view_C_without_Slice_obj_negative():
     from numpy import zeros
 

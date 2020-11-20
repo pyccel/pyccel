@@ -27,7 +27,7 @@ def array_negative_indexing_literal():
     a = array([1, 2, 3])
     a[-1] = a[-1] + 1
 
-@allow_negative_index(a) #pylint:disable=undefined-variable
+@allow_negative_index('a')
 def array_negative_indexing():
 
     from numpy import array
