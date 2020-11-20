@@ -31,11 +31,9 @@ jobs:
         uses: ./.github/actions/coverage_install
       - name: Test with pytest
         uses: ./.github/actions/pytest_run
-      - name: Coverage collection
-        uses: ./.github/actions/coverage_collection
       - name: Collect coverage information
         continue-on-error: True
-        uses: ./.github/actions/linux_tests
+        uses: ./.github/actions/coverage_collection
 
   Linux-Master:
 
@@ -59,8 +57,20 @@ jobs:
         uses: ./.github/actions/coverage_install
       - name: Test with pytest
         uses: ./.github/actions/pytest_run
-      - name: Coverage collection
-        uses: ./.github/actions/coverage_collection
       - name: Collect coverage information
         continue-on-error: True
-        uses: ./.github/actions/linux_tests
+        uses: ./.github/actions/coverage_collection
+
+  Windows:
+
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        #TODO: Use setup-python
+        uses: ./.github/actions/windows_install
+      - name: Install python dependencies
+        uses: ./.github/actions/pip_installation
+      - name: Test with pytest
+        uses: ./.github/actions/pytest_run
