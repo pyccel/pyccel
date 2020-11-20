@@ -141,6 +141,27 @@ for i in range(0, 1000):
 #$ omp end target
 ```
 
+### Critical Construct
+
+#### Syntax
+
+```python
+#$ omp critical
+  structured-block
+#$ omp end critical
+```
+
+#### Example
+
+```python
+a = 0
+#$ omp parallel
+#$ omp critical
+a += 1
+#$ omp end critical
+#$ omp end parallel
+```
+
 ### Barrier Construct
 
 #### Syntax
@@ -158,5 +179,6 @@ for i in range(0, 1000):
 for i in range(0, 1000):
     result[i] = v1[i] * v2[i];
 #$ omp barrier
+work(result)
 #$ omp end parallel
 ```
