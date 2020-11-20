@@ -23,11 +23,17 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Install fortran
       run:
         sudo apt-get install gfortran;
+    - name: Install Lapack
+      run:
         sudo apt-get install libblas-dev liblapack-dev;
+    - name: Install OpenMPI
+      run:
         sudo apt-get install libomp5 libopenmpi-dev openmpi-bin;
+    - name: Install OMP
+      run:
         sudo apt-get install libomp-dev;
     - name: Install python dependencies
       run: |
