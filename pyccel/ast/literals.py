@@ -36,11 +36,7 @@ class LiteralTrue(sp_BooleanTrue, Literal):
     def __init__(self, precision = default_precision['bool']):
         self._precision = precision
 
-    @property
-    def precision(self):
-        return self._precision
-
-    @precision.setter
+    @PyccelAstNode.precision.setter
     def precision(self, precision):
         """ Set precision for the true literal """
         self._precision = precision
@@ -52,11 +48,7 @@ class LiteralFalse(sp_BooleanFalse, Literal):
     def __init__(self,precision = default_precision['bool']):
         self._precision = precision
 
-    @property
-    def precision(self):
-        return self._precision
-
-    @precision.setter
+    @PyccelAstNode.precision.setter
     def precision(self, precision):
         """ Set precision for the false literal """
         self._precision = precision
@@ -74,11 +66,7 @@ class LiteralInteger(sp_Integer, Literal):
     def __init__(self, value, precision = default_precision['integer']):
         self._precision = precision
 
-    @property
-    def precision(self):
-        return self._precision
-
-    @precision.setter
+    @PyccelAstNode.precision.setter
     def precision(self, precision):
         """ Set precision for the inetger literal """
         self._precision = precision
@@ -90,11 +78,7 @@ class LiteralFloat(sp_Float, Literal):
     def __init__(self, value, *, precision = default_precision['float']):
         self._precision = precision
 
-    @property
-    def precision(self):
-        return self._precision
-
-    @precision.setter
+    @PyccelAstNode.precision.setter
     def precision(self, precision):
         """ Set precision for the float literal """
         self._precision = precision
@@ -113,11 +97,7 @@ class LiteralComplex(Basic, Literal):
         self._imag_part = imag
         self._precision = precision
 
-    @property
-    def precision(self):
-        return self._precision
-
-    @precision.setter
+    @PyccelAstNode.precision.setter
     def precision(self, precision):
         """ Set precision for the complex literal """
         self._precision = precision
