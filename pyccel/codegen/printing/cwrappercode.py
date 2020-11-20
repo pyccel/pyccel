@@ -211,7 +211,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     Print TypeError Wrong Type
                     return Null
                 }else{
-                    assigne pyobject value to tmp variable
+                    assign pyobject value to tmp variable
                     collect the adress of the tmp variable
                 }
         Parameters:
