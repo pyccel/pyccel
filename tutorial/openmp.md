@@ -154,11 +154,12 @@ for i in range(0, 1000):
 #### Example
 
 ```python
-a = 0
-#$ omp parallel
-#$ omp critical
-a += 1
-#$ omp end critical
+result = 0
+#$ omp parallel num_threads(4) shared(result)
+for i in range(0, 1000):
+  #$ omp critical
+  result += i
+  #$ omp end critical
 #$ omp end parallel
 ```
 
