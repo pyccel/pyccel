@@ -1,5 +1,5 @@
 from sympy.core.expr          import Expr
-from .basic     import PyccelAstNode, Basic
+from .basic     import PyccelAstNode
 from .core      import PyccelArraySize
 
 from .datatypes import NativeBool, NativeInteger, NativeReal, NativeComplex, NativeString, default_precision
@@ -30,6 +30,7 @@ __all__ = (
     'PyccelInvert',
     'PyccelAssociativeParenthesis',
     'PyccelUnary',
+    'Relational'
 )
 
 #==============================================================================
@@ -83,7 +84,12 @@ def handle_precedence(args, my_precedence):
 
     return args
 
-class PyccelBitOperator(Expr, PyccelAstNode):
+class PyccelOperator(Expr, PyccelAstNode):
+
+    def __init__(self, *args):
+        self._args = handle_precedence(args, self.precedence)
+
+class PyccelBitOperator(PyccelOperator):
     _rank = 0
     _shape = ()
 
@@ -172,7 +178,7 @@ class PyccelInvert(PyccelBitOperator):
             return
         self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
-class PyccelOperator(Expr, PyccelAstNode):
+class PyccelBinaryOperator(PyccelOperator):
 
     def __init__(self, *args):
 
@@ -227,15 +233,15 @@ class PyccelOperator(Expr, PyccelAstNode):
     def precedence(self):
         return self._precedence
 
-class PyccelPow(PyccelOperator):
+class PyccelPow(PyccelBinaryOperator):
     _precedence  = 15
-class PyccelAdd(PyccelOperator):
+class PyccelAdd(PyccelBinaryOperator):
     _precedence = 12
-class PyccelMul(PyccelOperator):
+class PyccelMul(PyccelBinaryOperator):
     _precedence = 13
-class PyccelMinus(PyccelAdd):
+class PyccelMinus(PyccelBinaryAdd):
     pass
-class PyccelDiv(PyccelOperator):
+class PyccelDiv(PyccelBinaryOperator):
     _precedence = 13
     def __init__(self, *args):
 
@@ -275,12 +281,12 @@ class PyccelDiv(PyccelOperator):
             self._rank  = max(a.rank for a in args)
             self._shape = [None]*self._rank
 
-class PyccelMod(PyccelOperator):
+class PyccelMod(PyccelBinaryOperator):
     _precedence = 13
-class PyccelFloorDiv(PyccelOperator):
+class PyccelFloorDiv(PyccelBinaryOperator):
     _precedence = 13
 
-class PyccelBooleanOperator(Expr, PyccelAstNode):
+class PyccelBooleanOperator(PyccelOperator):
     _precedence = 7
 
     def __init__(self, *args):
@@ -327,7 +333,7 @@ class PyccelGt(PyccelBooleanOperator):
 class PyccelGe(PyccelBooleanOperator):
     pass
 
-class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
+class PyccelAssociativeParenthesis(PyccelOperator):
     _precedence = 18
     def __init__(self, a):
         if self.stage == 'syntactic':
@@ -341,7 +347,7 @@ class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
     def precedence(self):
         return self._precedence
 
-class PyccelUnary(Expr, PyccelAstNode):
+class PyccelUnary(PyccelOperator):
     _precedence = 14
 
     def __init__(self, a):
@@ -364,7 +370,7 @@ class PyccelUnary(Expr, PyccelAstNode):
 class PyccelUnarySub(PyccelUnary):
     pass
 
-class PyccelAnd(Expr, PyccelAstNode):
+class PyccelAnd(PyccelOperator):
     _dtype = NativeBool()
     _rank  = 0
     _shape = ()
@@ -379,7 +385,7 @@ class PyccelAnd(Expr, PyccelAstNode):
     def precedence(self):
         return self._precedence
 
-class PyccelOr(Expr, PyccelAstNode):
+class PyccelOr(PyccelOperator):
     _dtype = NativeBool()
     _rank  = 0
     _shape = ()
@@ -394,7 +400,7 @@ class PyccelOr(Expr, PyccelAstNode):
     def precedence(self):
         return self._precedence
 
-class PyccelNot(Expr, PyccelAstNode):
+class PyccelNot(PyccelOperator):
     _dtype = NativeBool()
     _rank  = 0
     _shape = ()
@@ -409,7 +415,7 @@ class PyccelNot(Expr, PyccelAstNode):
     def precedence(self):
         return self._precedence
 
-class Is(Basic, PyccelAstNode):
+class Is(PyccelOperator):
 
     """Represents a is expression in the code.
 
@@ -444,7 +450,7 @@ class Is(Basic, PyccelAstNode):
         return self._precedence
 
 
-class IsNot(Basic, PyccelAstNode):
+class IsNot(PyccelOperator):
 
     """Represents a is expression in the code.
 
