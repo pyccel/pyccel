@@ -24,6 +24,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
+      run:
         sudo apt-get install gfortran
         sudo apt-get install libblas-dev liblapack-dev
         sudo apt-get install libopenmpi-dev openmpi-bin
