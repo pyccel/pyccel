@@ -136,7 +136,7 @@ result = result1 + result2
 #$ omp parallel
 #$ omp for private(i)
 for i in range(0, 1000):
-    result[i] = v1[i] * v2[i];
+    result[i] = v1[i] * v2[i]
 #$ omp end parallel
 #$ omp end target
 ```
@@ -178,8 +178,31 @@ for i in range(0, 1000):
 #$ omp parallel
 #$ omp for private(i)
 for i in range(0, 1000):
-    result[i] = v1[i] * v2[i];
+  result[i] = v1[i] * v2[i]
 #$ omp barrier
 work(result)
+#$ omp end parallel
+```
+
+### Atomic Construct
+
+#### Syntax
+
+```python
+#$ omp atomic
+  structured-block
+#$ omp end atomic
+```
+
+#### Example
+
+```python
+
+#$ omp parallel shared(result)
+#$ omp for
+for i in range(0, N):
+  #$ omp atomic
+  result += 1
+  #$ omp end atomic
 #$ omp end parallel
 ```
