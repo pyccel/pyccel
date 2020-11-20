@@ -179,7 +179,34 @@ class CWrapperCodePrinter(CCodePrinter):
     # Functions managing  the creation of wrapper body
     # -------------------------------------------------------------------
     def _body_optional_variable(self, tmp_variable, variable, collect_var, check_type = False):
-        #TODO add documentation :
+        """
+        Responsible for collecting value and managing error and create body
+        of optional arguments in format
+                if (pyobject == Py_None){
+                    collect Null
+                }else if(Type Check == False){
+                    Print TypeError
+                    return Null
+                }else{
+                    assigne pyobject value to tmp variable
+                    collect the adress of the tmp variable
+                }
+        Parameters:
+        ----------
+        tmp_variable : Variable
+            The temporary variable  to hold result
+        Variable : Variable
+            The optional variable
+        collect_var : variable
+            the pyobject type variable  holder of value
+        check_type : Boolean
+            True if the type is needed
+
+        Returns
+        -------
+        body : list
+            A list of statements
+        """
         body = [(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
                 [Assign(VariableAddress(variable), variable.value)])]
         if check_type : # Type check
@@ -190,7 +217,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     Assign(VariableAddress(variable), VariableAddress(tmp_variable))])]
         body = [If(*body)]
 
-        return body, tmp_variable
+        return body
 
     def _body_valued_variable(self, variable, collect_var, check_type = False) :
         #TODO add documentation :
@@ -244,7 +271,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         elif variable.is_optional:
             tmp_variable = Variable(dtype=variable.dtype, name = self.get_new_name(used_names, variable.name+"_tmp"))
-            body, tmp_variable = self._body_optional_variable(tmp_variable, variable, collect_var, check_type)
+            body = self._body_optional_variable(tmp_variable, variable, collect_var, check_type)
 
         elif isinstance(variable, ValuedVariable):
             body = self._body_valued_variable(variable, collect_var, check_type)
