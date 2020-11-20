@@ -209,7 +209,6 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            self._to_free_PyObject_list.append(collect_var)
             cast_function = self.get_cast_function_call('pycomplex_to_complex', collect_var)
 
         return collect_var, cast_function
@@ -219,7 +218,6 @@ class CWrapperCodePrinter(CCodePrinter):
         tmp_variable = None
         body = []
         error = []
-
 
         if variable.rank > 0:
             #rank check :
@@ -267,9 +265,6 @@ class CWrapperCodePrinter(CCodePrinter):
                 body += [(check, [error, Return([Nil()])])]
             body += [(LiteralTrue(), [Assign(variable, self.get_collect_function_call(variable, collect_var))])]
             body = [If(*body)]
-
-        # array
-
 
         elif cast_function is not None:
             body = [Assign(variable, cast_function)]
