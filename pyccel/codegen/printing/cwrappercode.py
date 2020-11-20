@@ -21,7 +21,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, Nativ
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
 from pyccel.ast.cwrapper import Py_None
-from pyccel.ast.cwrapper import PyErr_SetString, PyType_Check
+from pyccel.ast.cwrapper import PyErr_SetString, PythonType_Check
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 from pyccel.ast.cwrapper import PyccelPyArrayObject
 from pyccel.ast.cwrapper import numpy_get_ndims, numpy_get_data, numpy_get_dim
@@ -183,7 +183,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body = [(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
                 [Assign(VariableAddress(variable), variable.value)])]
         if check_type : # Type check
-            check = PyccelNot(FunctionCall(PyType_Check(variable.dtype), [collect_var]))
+            check = PyccelNot(PythonType_Check(variable, collect_var))
             error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, variable.dtype))
             body += [(check, [error, Return([Nil()])])]
         body += [(LiteralTrue(), [Assign(tmp_variable, self.get_collect_function_call(variable, collect_var)),
@@ -197,11 +197,12 @@ class CWrapperCodePrinter(CCodePrinter):
         body = [(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
                 [Assign(variable, variable.value)])]
         if check_type : # Type check
-            check = PyccelNot(FunctionCall(PyType_Check(variable.dtype), [collect_var]))
+            check = PyccelNot(PythonType_Check(variable, collect_var))
             error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, variable.dtype))
             body += [(check, [error, Return([Nil()])])]
         body += [(LiteralTrue(), [Assign(variable, self.get_collect_function_call(variable, collect_var))])]
         body = [If(*body)]
+
         return body
 
     def _body_array(self, variable, collect_var, check_type = False) :
@@ -231,6 +232,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body += [Assign(VariableAddress(variable), self.get_collect_function_call(variable, collect_var))]
 
         return body
+
     def _body_management(self, used_names, variable, collect_var, cast_function, check_type = False):
         # create and extern check type function
         tmp_variable = None
