@@ -2,6 +2,9 @@
 
 import numpy as np
 
+from ..errors.errors import Errors
+from ..errors.messages import *
+
 from .basic     import Basic
 
 from .builtins  import PythonBool
@@ -11,15 +14,13 @@ from .datatypes import NativeInteger, NativeReal, NativeComplex
 from .datatypes import NativeBool, NativeString, NativeGeneric
 
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress, FunctionAddress
-from .core      import AliasAssign, Assign, Return
-from .core      import PyccelEq, If
+from .core      import AliasAssign, Assign, Return, If
 
 from .literals  import LiteralTrue, LiteralComplex
 
 from .numpyext  import NumpyReal, NumpyImag
 
-from pyccel.errors.errors import Errors
-from pyccel.errors.messages import *
+from .operators import PyccelEq
 
 
 errors = Errors()

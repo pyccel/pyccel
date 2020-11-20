@@ -33,7 +33,7 @@ from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ValuedFunctionAddress
-from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
+from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor, ForIterator
 from pyccel.ast.core import IfTernaryOperator
@@ -44,7 +44,6 @@ from pyccel.ast.core import EmptyNode
 from pyccel.ast.core import Slice, IndexedVariable, IndexedElement
 from pyccel.ast.core import ValuedVariable
 from pyccel.ast.core import ValuedArgument
-from pyccel.ast.core import Is, IsNot
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import With, Block
@@ -53,9 +52,10 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import _atomic
-from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
-from pyccel.ast.core import PyccelUnary, PyccelUnarySub, FunctionCall
+from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
+from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
+from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
+from pyccel.ast.operators import Is, IsNot
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin

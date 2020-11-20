@@ -1,8 +1,8 @@
 import sympy as sp
 from sympy.core.numbers import One, NegativeOne, Zero, Half
 
-from .core      import PyccelAdd, PyccelMul, PyccelPow
-from .core      import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
+from .operators import PyccelAdd, PyccelMul, PyccelPow
+from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
 from .core      import Variable, create_incremented_string, PyccelArraySize
 
 from .mathext   import MathCeil

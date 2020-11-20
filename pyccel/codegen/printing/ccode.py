@@ -7,11 +7,11 @@ from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Declare, ValuedVariable
-from pyccel.ast.core      import Nil, PyccelAssociativeParenthesis
+from pyccel.ast.core      import Nil
 from pyccel.ast.core      import Assign, datatype, Variable, Import
 from pyccel.ast.core      import SeparatorComment, VariableAddress
 from pyccel.ast.core      import DottedName
-from pyccel.ast.core      import PyccelAdd, PyccelMul
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelAssociativeParenthesis
 
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
