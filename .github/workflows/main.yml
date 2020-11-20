@@ -43,6 +43,7 @@ jobs:
     - name: Test with pytest
       uses: ./.github/actions/action_pytest
     - name: Collect coverage information
+      continue-on-error: True
       run: |
         cd tests
         coverage combine
