@@ -41,7 +41,8 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
                         NativeGeneric, NativeTuple, default_precision, is_iterable_datatype)
 
-from .numbers        import BooleanTrue, BooleanFalse, Integer as Py_Integer, ImaginaryUnit
+from .literals       import LiteralTrue, LiteralFalse, LiteralInteger
+from .literals       import LiteralImaginaryUnit, LiteralString
 from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
@@ -144,7 +145,6 @@ __all__ = (
     'SeparatorComment',
     'Slice',
     'StarredArguments',
-    'String',
     'SubOp',
     'Subroutine',
     'SumFunction',
@@ -828,8 +828,8 @@ def extract_subexpressions(expr):
 
     id_cls = (Symbol, Indexed, IndexedBase,
               DottedVariable, sp_Float, sp_Integer,
-              sp_Rational, ImaginaryUnit,sp_Boolean,
-              BooleanTrue, BooleanFalse, String,
+              sp_Rational, LiteralImaginaryUnit,sp_Boolean,
+              LiteralTrue, LiteralFalse, LiteralString,
               ValuedArgument, Nil, PythonList, PythonTuple,
               StarredArguments)
 
@@ -2707,12 +2707,12 @@ class Variable(Symbol, PyccelAstNode):
 
         new_shape = []
         for i,s in enumerate(shape):
-            if isinstance(s,(Py_Integer, PyccelArraySize)):
+            if isinstance(s,(LiteralInteger, PyccelArraySize)):
                 new_shape.append(s)
             elif isinstance(s, sp_Integer):
-                new_shape.append(Py_Integer(s.p))
+                new_shape.append(LiteralInteger(s.p))
             elif isinstance(s, int):
-                new_shape.append(Py_Integer(s))
+                new_shape.append(LiteralInteger(s))
             elif s is None or isinstance(s,(Variable, Slice, PyccelAstNode, Function)):
                 new_shape.append(PyccelArraySize(self, i))
             else:
@@ -4541,7 +4541,7 @@ class Load(Basic):
             elif not isinstance(funcs, (list, tuple, Tuple)):
                 raise TypeError('Expecting a string, list, tuple, Tuple')
 
-        if not isinstance(as_lambda, (BooleanTrue, BooleanFalse, bool)):
+        if not isinstance(as_lambda, (LiteralTrue, LiteralFalse, bool)):
             raise TypeError('Expecting a boolean, given {0}'.format(as_lambda))
 
         return Basic.__new__(cls, module, funcs, as_lambda, nargs)
@@ -5308,25 +5308,6 @@ class IndexedElement(Expr, PyccelAstNode):
     def indices(self):
         return self._indices
 
-class String(Basic, PyccelAstNode):
-
-    """Represents the String"""
-    _rank      = 0
-    _shape     = ()
-    _dtype     = NativeString()
-    _precision = 0
-    def __new__(cls, arg):
-        if not isinstance(arg, str):
-            raise TypeError('arg must be of type str')
-        return Basic.__new__(cls, arg)
-
-    @property
-    def arg(self):
-        return self._args[0]
-
-    def __str__(self):
-        return self.arg
-
 
 class Concatenate(Basic, PyccelAstNode):
 
@@ -6079,12 +6060,12 @@ def process_shape(shape):
 
     new_shape = []
     for s in shape:
-        if isinstance(s,(Py_Integer,Variable, Slice, PyccelAstNode, Function)):
+        if isinstance(s,(LiteralInteger,Variable, Slice, PyccelAstNode, Function)):
             new_shape.append(s)
         elif isinstance(s, sp_Integer):
-            new_shape.append(Py_Integer(s.p))
+            new_shape.append(LiteralInteger(s.p))
         elif isinstance(s, int):
-            new_shape.append(Py_Integer(s))
+            new_shape.append(LiteralInteger(s))
         else:
             raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
     return tuple(new_shape)
