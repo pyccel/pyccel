@@ -4,7 +4,7 @@ runs:
   using: "composite"
   steps:
     - name: Setup conda
-      runs: |
+      run: |
         choco install anaconda3
         source /c/tools/Anaconda3/etc/profile.d/conda.sh
         #source .travis/RefreshEnv.sh
@@ -14,7 +14,7 @@ runs:
         echo -e "[build]\ncompiler = mingw32" >> /c/tools/Anaconda3/Lib/distutils/distutils.cfg
       shell: bash
     - name: Install Lapack
-      runs: |
+      run: |
         #
         # Download x64 BLAS and LAPACK DLLs from https://icl.cs.utk.edu/lapack-for-windows/lapack/
         WEB_ADDRESS=https://icl.cs.utk.edu/lapack-for-windows/libraries/VisualStudio/3.7.0/Dynamic-MINGW/Win64
@@ -23,7 +23,7 @@ runs:
         curl $WEB_ADDRESS/liblapack.dll -o $LIBRARY_DIR/liblapack.dll
       shell: bash
     - name: Microsoft C runtime library
-      runs: |
+      run: |
         #
         # Microsoft C runtime library: generate static libmsvcr140.a from vcruntime140.dll
         cd "$LIBRARY_DIR"
@@ -33,14 +33,14 @@ runs:
         cd -
       shell: bash
     - name: Install MS MPI runtime and SDK
-      runs: |
+      run: |
         #
         # Download MS MPI runtime and SDK
         curl -L https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe -o msmpisetup.exe
         curl -L https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi -o msmpisdk.msi
       shell: bash
     - name: Install MS MPI
-      runs: |
+      run: |
         #
         # Install MS MPI
         ./msmpisetup.exe -unattend
@@ -48,14 +48,14 @@ runs:
         msiexec //quiet //i msmpisdk.msi
       shell: bash
     - name: Refresh environment
-      runs: |
+      run: |
         #refreshenv
         export MSMPI_INC="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Include\\"
         export MSMPI_LIB64="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Lib\\x64\\"
         export PATH=$PATH:"C:\\Program Files\\Microsoft MPI\\Bin"
       shell: bash
     - name: Generate mpi.mod
-      runs: |
+      run: |
         #
         # Generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html
         cd "$MSMPI_INC"
@@ -65,7 +65,7 @@ runs:
         cd -
       shell: bash
     - name: Generate mpi static library
-      runs: |
+      run: |
         #
         # Generate static libmsmpi.a from msmpi.dll
         cd "$MSMPI_LIB64"
