@@ -14,7 +14,7 @@ from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelAnd, PyccelEq
+from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelEq
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
@@ -342,7 +342,6 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         tmp_variable = None
         body = []
-        error = []
 
         if variable.rank > 0:
             body = self._body_array(variable, collect_var, check_type)
