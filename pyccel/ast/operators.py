@@ -1,5 +1,6 @@
 from sympy.core.expr          import Expr
 from .basic     import PyccelAstNode, Basic
+from .core      import PyccelArraySize
 
 from .datatypes import NativeBool, NativeInteger, NativeReal, NativeComplex, NativeString, default_precision
 
