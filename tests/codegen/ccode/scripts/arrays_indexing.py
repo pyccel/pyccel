@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring, undefined-variable/
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 #==============================================================================
 from pyccel.decorators import allow_negative_index
 
@@ -27,7 +27,7 @@ def array_negative_indexing_literal():
     a = array([1, 2, 3])
     a[-1] = a[-1] + 1
 
-@allow_negative_index(a)
+@allow_negative_index(a) #pylint:disable=undefined-variable
 def array_negative_indexing():
 
     from numpy import array
