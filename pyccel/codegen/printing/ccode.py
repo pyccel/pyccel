@@ -397,7 +397,7 @@ class CCodePrinter(CodePrinter):
         second = self._print(expr.args[1])
 
         if expr.dtype is NativeInteger():
-            return "(({}) % {})".format(first, second)
+            return "{} % {}".format(first, second)
 
         if expr.args[0].dtype is NativeInteger():
             first = self._print(PythonFloat(expr.args[0]))
