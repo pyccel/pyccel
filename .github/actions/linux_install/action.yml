@@ -1,0 +1,21 @@
+name: 'Linux installation commands'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install fortran
+      run: 
+        sudo apt-get install gfortran
+      shell: bash
+    - name: Install LaPack
+      run:
+        sudo apt-get install libblas-dev liblapack-dev
+      shell: bash
+    - name: Install MPI
+      run:
+        sudo apt-get install libomp5 libopenmpi-dev openmpi-bin
+      shell: bash
+    - name: Install OpenMP
+      run:
+        sudo apt-get install libomp-dev
+      shell: bash
