@@ -9,3 +9,4 @@ skips:
   - B603  # Ignore warnings about calling subprocess.Popen without shell=True
   - B403  # Ignore warnings about import pickle
   - B301  # Ignore warnings about pickle.load
+  - B303  # Ignore warnings about MD2, MD4, MD5, or SHA1 hash functions
