@@ -7,9 +7,6 @@ runs:
       run: |
         choco install anaconda3
         source /c/tools/Anaconda3/etc/profile.d/conda.sh
-      shell: bash
-    - name: Activate conda
-      run: |
         #source .travis/RefreshEnv.sh
         conda activate
         #
