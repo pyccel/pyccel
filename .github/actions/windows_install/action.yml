@@ -53,9 +53,6 @@ runs:
         export MSMPI_INC="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Include\\"
         export MSMPI_LIB64="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Lib\\x64\\"
         export PATH=$PATH:"C:\\Program Files\\Microsoft MPI\\Bin"
-      shell: bash
-    - name: Generate mpi.mod
-      run: |
         #
         # Generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html
         cd "$MSMPI_INC"
@@ -63,9 +60,6 @@ runs:
         sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpif.h
         gfortran -c -D_WIN64 -D INT_PTR_KIND\(\)=8 -fno-range-check mpi.f90
         cd -
-      shell: bash
-    - name: Generate mpi static library
-      run: |
         #
         # Generate static libmsmpi.a from msmpi.dll
         cd "$MSMPI_LIB64"
