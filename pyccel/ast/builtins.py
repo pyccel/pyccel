@@ -6,6 +6,7 @@ always available.
 In this module we implement some of them in alphabetical order.
 
 """
+from pyccel.ast.datatypes import iso_c_binding
 
 from sympy import Symbol, Function, Tuple
 from sympy import Expr, Not
@@ -16,7 +17,7 @@ from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
-from .numbers   import Integer, Float
+from .literals  import LiteralInteger, LiteralFloat
 
 __all__ = (
     'PythonBool',
@@ -71,7 +72,7 @@ class PythonBool(Expr, PyccelAstNode):
     def fprint(self, printer):
         """ Fortran printer. """
         if isinstance(self.arg.dtype, NativeBool):
-            return 'logical({}, kind = {prec})'.format(printer(self.arg), prec = self.precision)
+            return 'logical({}, kind = {prec})'.format(printer(self.arg), prec = iso_c_binding["logical"][self.precision])
         else:
             return '{} /= 0'.format(printer(self.arg))
 
@@ -85,7 +86,7 @@ class PythonComplex(Expr, PyccelAstNode):
     _precision = default_precision['complex']
     _dtype = NativeComplex()
 
-    def __new__(cls, arg0, arg1=Float(0)):
+    def __new__(cls, arg0, arg1=LiteralFloat(0)):
         return Expr.__new__(cls, arg0, arg1)
 
     @property
@@ -106,8 +107,7 @@ class PythonComplex(Expr, PyccelAstNode):
         """Fortran print."""
         real = printer(self.real_part)
         imag = printer(self.imag_part)
-        prec = printer(self.precision)
-        code = 'cmplx({0}, {1}, {2})'.format(real, imag, prec)
+        code = 'cmplx({0}, {1}, {2})'.format(real, imag, iso_c_binding["complex"][self.precision])
         return code
 
 #==============================================================================
@@ -145,7 +145,7 @@ class PythonFloat(Expr, PyccelAstNode):
 
 
     def __str__(self):
-        return 'Float({0})'.format(str(self.arg))
+        return 'LiteralFloat({0})'.format(str(self.arg))
 
     def _sympystr(self, printer):
         return self.__str__()
@@ -232,7 +232,7 @@ class PythonTuple(Expr, PyccelAstNode):
                 shapes = [a.shape for a in args]
 
                 if all(sh is not None for sh in shapes):
-                    self._shape = (Integer(len(args)), ) + shapes[0]
+                    self._shape = (LiteralInteger(len(args)), ) + shapes[0]
                     self._rank  = len(self._shape)
                 else:
                     self._rank = max(a.rank for a in args) + 1
@@ -240,7 +240,7 @@ class PythonTuple(Expr, PyccelAstNode):
             self._rank      = max(a.rank for a in args) + 1
             self._dtype     = NativeGeneric()
             self._precision = 0
-            self._shape     = (Integer(len(args)), ) + args[0].shape
+            self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
 
     def __getitem__(self,i):
         return self._args[i]
@@ -317,7 +317,7 @@ class PythonList(Tuple, PyccelAstNode):
 
             if all(sh is not None for sh in shapes):
                 assert all(sh==shapes[0] for sh in shapes)
-                self._shape = (Integer(len(args)), ) + shapes[0]
+                self._shape = (LiteralInteger(len(args)), ) + shapes[0]
                 self._rank  = len(self._shape)
             else:
                 self._rank = max(a.rank for a in args) + 1
@@ -374,11 +374,11 @@ class PythonRange(Basic):
     """
 
     def __new__(cls, *args):
-        start = Integer(0)
+        start = LiteralInteger(0)
         stop = None
-        step = Integer(1)
+        step = LiteralInteger(1)
 
-        _valid_args = (Integer, Symbol, Indexed)
+        _valid_args = (LiteralInteger, Symbol, Indexed)
 
         if isinstance(args, (tuple, list, Tuple)):
             if len(args) == 1:
