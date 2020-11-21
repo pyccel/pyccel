@@ -61,19 +61,19 @@ jobs:
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
 
-  Windows:
+  #Windows:
 
-    runs-on: windows-latest
+  #  runs-on: windows-latest
 
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install dependencies
-        #TODO: Use setup-python
-        uses: ./.github/actions/windows_install
-      - name: Install python dependencies
-        uses: ./.github/actions/pip_installation
-      - name: Test with pytest
-        uses: ./.github/actions/pytest_run
+  #  steps:
+  #    - uses: actions/checkout@v2
+  #    - name: Install dependencies
+  #      #TODO: Use setup-python
+  #      uses: ./.github/actions/windows_install
+  #    - name: Install python dependencies
+  #      uses: ./.github/actions/pip_installation
+  #    - name: Test with pytest
+  #      uses: ./.github/actions/pytest_run
 
   MacOSX:
 
