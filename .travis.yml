@@ -34,8 +34,9 @@ before_script:  # Coverage instructions - setup
 
 script:
   - cd tests
-  - ${PYTHON} -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic
-  - ${PYTHON} -m pytest -rx -m "not parallel and not c" --ignore=ast --ignore=printers --ignore=symbolic
+  - ${PYTHON} -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
+  - ${PYTHON} -m pytest -rx -m "not parallel and not c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
+  - ${PYTHON} -m pytest ndarrays/ -rx
   - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
 #  - mpiexec -n 4 ${MPI_OPTS} ${PYTHON} -m pytest epyccel -v -m parallel -rx
   - cd ..
@@ -143,10 +144,5 @@ jobs:
       - dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
       - cd -
 
-    before_script:
-      # Call f2py once (it will fail) to clear some cache
-      - echo -e "subroutine foo()\nend subroutine\n" > faily.f90
-      - ${PYTHON} -m numpy.f2py -c -m faily faily.f90 || true
-      - rm faily.f90
-
+    before_script: null
     after_script : null

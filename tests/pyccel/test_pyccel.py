@@ -385,14 +385,6 @@ def test_expressions(language):
             [float]*3 + [int]*2 + [float]*2 + [int]*5 + [complex] + [bool]*9
     pyccel_test("scripts/expressions.py", language=language,
                 output_dtype = types)
-#------------------------------------------------------------------------------
-def test_highorder():
-    pyccel_test("scripts/runtest_highorder_functions.py",
-            dependencies = "scripts/highorder_functions.py",
-            compile_with_pyccel = False,
-            output_dtype = [int,int,float,float,float,int,float,
-                float, int])
-
 
 #------------------------------------------------------------------------------
 def test_default_arguments():
@@ -488,13 +480,12 @@ def test_numpy_kernels_compile():
     compile_pyccel(os.path.join(cwd, "scripts/numpy/"), "numpy_kernels.py")
 
 #------------------------------------------------------------------------------
-def test_multiple_results():
+def test_multiple_results(language):
     pyccel_test("scripts/runtest_multiple_results.py",
-            dependencies = "scripts/default_args_mod.py",
             output_dtype = [int,float,complex,bool,int,complex,
                 int,bool,float,float,float,float,float,float,
-                float,float,float,float,float,float,
-                float,float,float,float,float,float])
+                float,float,float,float,float,float
+                ,float,float,float,float], language=language)
 
 #------------------------------------------------------------------------------
 def test_elemental():

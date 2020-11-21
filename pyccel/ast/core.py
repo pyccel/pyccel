@@ -33,13 +33,17 @@ from sympy.utilities.misc               import filldedent
 
 
 from .basic     import Basic, PyccelAstNode
-from .builtins  import Enumerate, Len, List, Map, Range, Zip, PythonTuple, PythonBool, PythonInt
+from .builtins  import (PythonEnumerate, PythonLen, PythonList, PythonMap,
+                        PythonRange, PythonZip, PythonTuple, PythonBool,
+                        PythonInt)
 from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
                         NativeGeneric, NativeTuple, default_precision, is_iterable_datatype)
 
-from .numbers        import BooleanTrue, BooleanFalse, Integer as Py_Integer, ImaginaryUnit
+from .literals       import LiteralTrue, LiteralFalse, LiteralInteger
+from .literals       import LiteralImaginaryUnit, LiteralString
+from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
@@ -79,6 +83,7 @@ __all__ = (
     'PyccelUnary',
     'AddOp',
     'AliasAssign',
+    'Allocate',
     'AnnotatedComment',
     'Argument',
     'AsName',
@@ -105,7 +110,7 @@ __all__ = (
     'ErrorExit',
     'Eval',
     'Exit',
-    'F2PYFunctionDef',
+    'BindCFunctionDef',
     'For',
     'ForAll',
     'ForIterator',
@@ -132,7 +137,6 @@ __all__ = (
     'ParallelRange',
     'ParserResult',
     'Pass',
-    'Product',
     'Program',
     'PyccelArraySize',
     'PythonFunction',
@@ -141,7 +145,6 @@ __all__ = (
     'SeparatorComment',
     'Slice',
     'StarredArguments',
-    'String',
     'SubOp',
     'Subroutine',
     'SumFunction',
@@ -825,9 +828,9 @@ def extract_subexpressions(expr):
 
     id_cls = (Symbol, Indexed, IndexedBase,
               DottedVariable, sp_Float, sp_Integer,
-              sp_Rational, ImaginaryUnit,sp_Boolean,
-              BooleanTrue, BooleanFalse, String,
-              ValuedArgument, Nil, List, PythonTuple,
+              sp_Rational, LiteralImaginaryUnit,sp_Boolean,
+              LiteralTrue, LiteralFalse, LiteralString,
+              ValuedArgument, Nil, PythonList, PythonTuple,
               StarredArguments)
 
     func_names = ('diag', 'empty', 'zip', 'enumerate')
@@ -861,12 +864,12 @@ def extract_subexpressions(expr):
             new.set_fst(expr.fst)
             stmts.append(new)
             return var
-        elif isinstance(expr, List):
+        elif isinstance(expr, PythonList):
             args = []
             for i in expr:
                 args.append(substitute(i))
 
-            return List(*args, sympify=False)
+            return PythonList(*args, sympify=False)
 
         elif isinstance(expr, (Tuple, tuple, list)):
             args = []
@@ -1243,7 +1246,7 @@ class Assign(Basic):
         if isinstance(lhs, Variable):
             return isinstance(lhs.dtype, NativeSymbol)
         elif isinstance(lhs, Symbol):
-            if isinstance(rhs, Range):
+            if isinstance(rhs, PythonRange):
                 return True
             elif isinstance(rhs, Variable):
                 return isinstance(rhs.dtype, NativeSymbol)
@@ -1252,7 +1255,99 @@ class Assign(Basic):
 
         return False
 
+#------------------------------------------------------------------------------
+class Allocate(Basic):
+    """
+    Represents memory allocation (usually of an array) for code generation.
+    This is relevant to low-level target languages, such as C or Fortran,
+    where the programmer must take care of heap memory allocation.
 
+    Parameters
+    ----------
+    variable : pyccel.ast.core.Variable
+        The typed variable (usually an array) that needs memory allocation.
+
+    shape : int or iterable or None
+        Shape of the array after allocation (None for scalars).
+
+    order : str {'C'|'F'}
+        Ordering of multi-dimensional array after allocation
+        ('C' = row-major, 'F' = column-major).
+
+    status : str {'allocated'|'unallocated'|'unknown'}
+        Variable allocation status at object creation.
+
+    Notes
+    -----
+    An object of this class is immutable, although it contains a reference to a
+    mutable Variable object.
+
+    """
+    def __new__(cls, *args, **kwargs):
+
+        return Basic.__new__(cls)
+
+    # ...
+    def __init__(self, variable, *, shape, order, status):
+
+        if not isinstance(variable, Variable):
+            raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
+
+        if not variable.allocatable:
+            raise ValueError("Variable must be allocatable")
+
+        if shape and not isinstance(shape, (int, tuple, list)):
+            raise TypeError("Cannot understand 'shape' parameter of type '{}'".format(type(shape)))
+
+        if variable.rank != len(shape):
+            raise ValueError("Incompatible rank in variable allocation")
+
+        if variable.rank > 1 and variable.order != order:
+            raise ValueError("Incompatible order in variable allocation")
+
+        if not isinstance(status, str):
+            raise TypeError("Cannot understand 'status' parameter of type '{}'".format(type(status)))
+
+        if status not in ('allocated', 'unallocated', 'unknown'):
+            raise ValueError("Value of 'status' not allowed: '{}'".format(status))
+
+        self._variable = variable
+        self._shape    = shape
+        self._order    = order
+        self._status   = status
+    # ...
+
+    @property
+    def variable(self):
+        return self._variable
+
+    @property
+    def shape(self):
+        return self._shape
+
+    @property
+    def order(self):
+        return self._order
+
+    @property
+    def status(self):
+        return self._status
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return 'Allocate({}, shape={}, order={}, status={})'.format(
+                sstr(self.variable), sstr(self.shape), sstr(self.order), sstr(self.status))
+
+    def __eq__(self, other):
+        return (self.variable is other.variable) and \
+               (self.shape    == other.shape   ) and \
+               (self.order    == other.order   ) and \
+               (self.status   == other.status  )
+
+    def __hash__(self):
+        return hash((id(self.variable), self.shape, self.order, self.status))
+
+#------------------------------------------------------------------------------
 class CodeBlock(Basic):
 
     """Represents a list of stmt for code generation.
@@ -1669,27 +1764,7 @@ class With(Basic):
         body +=  end.body.body
         return Block('with', [], body)
 
-
-class Product(Basic):
-
-    """
-    Represents a Product stmt.
-
-    """
-
-    def __new__(cls, *args):
-        if not isinstance(args, (tuple, list, Tuple)):
-            raise TypeError('args must be an iterable')
-        elif len(args) < 2:
-            return args[0]
-        return Basic.__new__(cls, *args)
-
-    @property
-    def elements(self):
-        return self._args
-
-
-class Tile(Range):
+class Tile(PythonRange):
 
     """
     Representes a tile.
@@ -1707,7 +1782,7 @@ class Tile(Range):
 
     def __new__(cls, start, stop):
         step = 1
-        return Range.__new__(cls, start, stop, step)
+        return PythonRange.__new__(cls, start, stop, step)
 
     @property
     def start(self):
@@ -1722,7 +1797,7 @@ class Tile(Range):
         return self.stop - self.start
 
 
-class ParallelRange(Range):
+class ParallelRange(PythonRange):
 
     """
     Representes a parallel range using OpenMP/OpenACC.
@@ -1761,7 +1836,7 @@ class Tensor(Basic):
         for r in args:
             cond = isinstance(r, Variable) and isinstance(r.dtype,
                     (NativeRange, NativeTensor))
-            cond = cond or isinstance(r, (Range, Tensor))
+            cond = cond or isinstance(r, (PythonRange, Tensor))
 
             if not cond:
                 raise TypeError('non valid argument, given {0}'.format(type(r)))
@@ -2208,8 +2283,8 @@ class For(Basic):
             target = sympify(target, locals=local_sympify)
 
             cond_iter = iterable(iter_obj)
-            cond_iter = cond_iter or isinstance(iter_obj, (Range, Product,
-                    Enumerate, Zip, Map))
+            cond_iter = cond_iter or isinstance(iter_obj, (PythonRange, Product,
+                    PythonEnumerate, PythonZip, PythonMap))
             cond_iter = cond_iter or isinstance(iter_obj, Variable) \
                 and is_iterable_datatype(iter_obj.dtype)
           #  cond_iter = cond_iter or isinstance(iter_obj, ConstructorCall) \
@@ -2254,7 +2329,7 @@ class ForAll(Basic):
     """ class that represents the forall statement in fortran"""
     def __new__(cls, iter_obj, target, mask, body):
 
-        if not isinstance(iter_obj, Range):
+        if not isinstance(iter_obj, PythonRange):
             raise TypeError('iterable must be of type Range')
 
         return Basic.__new__(cls, iter_obj, target, mask, body)
@@ -2289,7 +2364,7 @@ class ForIterator(For):
         ):
 
         if isinstance(iterable, Symbol):
-            iterable = Range(Len(iterable))
+            iterable = PythonRange(PythonLen(iterable))
         return For.__new__(cls, target, iterable, body, strict)
 
     # TODO uncomment later when we intriduce iterators
@@ -2497,6 +2572,9 @@ class Variable(Symbol, PyccelAstNode):
     is_kwonly: bool
         if object is an argument which can only be specified using its keyword
 
+    is_const: bool
+        if object is a const argument of a function [Default value: False]
+
     Examples
     --------
     >>> from pyccel.ast.core import Variable
@@ -2521,6 +2599,7 @@ class Variable(Symbol, PyccelAstNode):
         allocatable=False,
         is_stack_array = False,
         is_pointer=False,
+        is_const=False,
         is_target=False,
         is_polymorphic=None,
         is_optional=False,
@@ -2580,22 +2659,24 @@ class Variable(Symbol, PyccelAstNode):
             raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
         self._name = name
 
-        if allocatable is None:
-            allocatable = False
+        if not isinstance(allocatable, bool):
+            raise TypeError('allocatable must be a boolean.')
         self.allocatable = allocatable
 
-        if is_stack_array is None:
-            is_stack_array = False
-        elif not isinstance(is_stack_array, bool):
+        if not isinstance(is_const, bool):
+            raise TypeError('is_const must be a boolean.')
+        self.is_const = is_const
+
+        if not isinstance(is_stack_array, bool):
             raise TypeError('is_stack_array must be a boolean.')
         self._is_stack_array = is_stack_array
 
-        if is_pointer is None:
-            is_pointer = False
+        if not isinstance(is_pointer, bool):
+            raise TypeError('is_pointer must be a boolean.')
         self.is_pointer = is_pointer
 
-        if is_target is None:
-            is_target = False
+        if not isinstance(is_target, bool):
+            raise TypeError('is_target must be a boolean.')
         self.is_target = is_target
 
         if is_polymorphic is None:
@@ -2607,15 +2688,11 @@ class Variable(Symbol, PyccelAstNode):
             raise TypeError('is_polymorphic must be a boolean.')
         self._is_polymorphic = is_polymorphic
 
-        if is_optional is None:
-            is_optional = False
-        elif not isinstance(is_optional, bool):
+        if not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
         self._is_optional = is_optional
 
-        if allows_negative_indexes is None:
-            allows_negative_indexes = False
-        elif not isinstance(allows_negative_indexes, bool):
+        if not isinstance(allows_negative_indexes, bool):
             raise TypeError('allows_negative_indexes must be a boolean.')
         self._allows_negative_indexes = allows_negative_indexes
 
@@ -2630,12 +2707,12 @@ class Variable(Symbol, PyccelAstNode):
 
         new_shape = []
         for i,s in enumerate(shape):
-            if isinstance(s,(Py_Integer, PyccelArraySize)):
+            if isinstance(s,(LiteralInteger, PyccelArraySize)):
                 new_shape.append(s)
             elif isinstance(s, sp_Integer):
-                new_shape.append(Py_Integer(s.p))
+                new_shape.append(LiteralInteger(s.p))
             elif isinstance(s, int):
-                new_shape.append(Py_Integer(s))
+                new_shape.append(LiteralInteger(s))
             elif s is None or isinstance(s,(Variable, Slice, PyccelAstNode, Function)):
                 new_shape.append(PyccelArraySize(self, i))
             else:
@@ -2751,7 +2828,9 @@ class Variable(Symbol, PyccelAstNode):
         print('>>> Variable')
         print( '  name           = {}'.format(self.name))
         print( '  dtype          = {}'.format(self.dtype))
+        print( '  precision      = {}'.format(self.precision))
         print( '  rank           = {}'.format(self.rank))
+        print( '  order          = {}'.format(self.order))
         print( '  allocatable    = {}'.format(self.allocatable))
         print( '  shape          = {}'.format(self.shape))
         print( '  cls_base       = {}'.format(self.cls_base))
@@ -2830,7 +2909,7 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
             DottedVariable,
             )):
             raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
-                            type(lhs)))
+                            str(type(lhs))))
 
         if not isinstance(rhs, (
             Variable,
@@ -2843,7 +2922,7 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
             Function,
             )):
             raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
-                            type(rhs)))
+                            str(type(rhs))))
 
         return Basic.__new__(cls, lhs, rhs)
 
@@ -3197,7 +3276,7 @@ class FunctionCall(Basic, PyccelAstNode):
         if not isinstance(args, (tuple, list, Tuple)):
             raise TypeError('> expecting an iterable')
 
-        # add the messing argument in the case of optional arguments
+        # add the missing argument in the case of optional arguments
         f_args = func.arguments
         if not len(args) == len(f_args):
             f_args_dict = OrderedDict((a.name,a) if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else (a.name, None) for a in f_args)
@@ -3388,7 +3467,7 @@ class FunctionDef(Basic):
         True for a function that is private
 
     is_static: bool
-        True for static functions. Needed for f2py
+        True for static functions. Needed for iso_c_binding interface
 
     imports: list, tuple
         a list of needed imports
@@ -3942,8 +4021,35 @@ class PythonFunction(FunctionDef):
                               self.body, cls_name=self.cls_name)
 
 
-class F2PYFunctionDef(FunctionDef):
-    pass
+class BindCFunctionDef(FunctionDef):
+    """
+    Contains the c-compatible version of the function which is
+    used for the wrapper.
+    As compared to a normal FunctionDef, this version contains
+    arguments for the shape of arrays. It should be generated by
+    calling ast.bind_c.as_static_function_call
+
+    Parameters
+    ----------
+    *args : See FunctionDef
+
+    original_function : FunctionDef
+        The function from which the c-compatible version was created
+    """
+    def __new__(cls, *args, original_function, **kwargs):
+        return FunctionDef.__new__(cls, *args, **kwargs)
+
+    def __init__(self, *args, original_function, **kwargs):
+        self._original_function = original_function
+        FunctionDef.__init__(self, *args, **kwargs)
+
+    @property
+    def name(self):
+        return str(self._name).lower()
+
+    @property
+    def original_function(self):
+        return self._original_function
 
 
 class GetDefaultFunctionArg(Basic):
@@ -4435,7 +4541,7 @@ class Load(Basic):
             elif not isinstance(funcs, (list, tuple, Tuple)):
                 raise TypeError('Expecting a string, list, tuple, Tuple')
 
-        if not isinstance(as_lambda, (BooleanTrue, BooleanFalse, bool)):
+        if not isinstance(as_lambda, (LiteralTrue, LiteralFalse, bool)):
             raise TypeError('Expecting a boolean, given {0}'.format(as_lambda))
 
         return Basic.__new__(cls, module, funcs, as_lambda, nargs)
@@ -5202,25 +5308,6 @@ class IndexedElement(Expr, PyccelAstNode):
     def indices(self):
         return self._indices
 
-class String(Basic, PyccelAstNode):
-
-    """Represents the String"""
-    _rank      = 0
-    _shape     = ()
-    _dtype     = NativeString()
-    _precision = 0
-    def __new__(cls, arg):
-        if not isinstance(arg, str):
-            raise TypeError('arg must be of type str')
-        return Basic.__new__(cls, arg)
-
-    @property
-    def arg(self):
-        return self._args[0]
-
-    def __str__(self):
-        return self.arg
-
 
 class Concatenate(Basic, PyccelAstNode):
 
@@ -5649,8 +5736,7 @@ def get_assigned_symbols(expr):
             var = var.base
             symbols.append(var)
         elif isinstance(var, Variable):
-            if var.rank:
-                symbols.append(var)
+            symbols.append(var)
         return symbols
     elif isinstance(expr, FunctionCall):
         f = expr.funcdef
@@ -5690,7 +5776,7 @@ def get_iterable_ranges(it, var_name=None):
 
         cls_base = it.cls_base
 
-        if isinstance(cls_base, Range):
+        if isinstance(cls_base, PythonRange):
             if not isinstance(it.name, DottedName):
                 raise TypeError('Expecting a DottedName, given  {0}'.format(type(it.name)))
 
@@ -5708,7 +5794,7 @@ def get_iterable_ranges(it, var_name=None):
                     raise TypeError('Wrong type, given {0}'.format(type(i)))
                 args += [arg]
 
-            return [Range(*args)]
+            return [PythonRange(*args)]
         elif isinstance(cls_base, Tensor):
 
             if not isinstance(it.name, DottedName):
@@ -5896,7 +5982,7 @@ def get_iterable_ranges(it, var_name=None):
 
     # ...
 
-    return [Range(s, e, 1) for (s, e) in zip(starts, ends)]
+    return [PythonRange(s, e, 1) for (s, e) in zip(starts, ends)]
 
 class ParserResult(Basic):
     def __new__(
@@ -5974,12 +6060,12 @@ def process_shape(shape):
 
     new_shape = []
     for s in shape:
-        if isinstance(s,(Py_Integer,Variable, Slice, PyccelAstNode, Function)):
+        if isinstance(s,(LiteralInteger,Variable, Slice, PyccelAstNode, Function)):
             new_shape.append(s)
         elif isinstance(s, sp_Integer):
-            new_shape.append(Py_Integer(s.p))
+            new_shape.append(LiteralInteger(s.p))
         elif isinstance(s, int):
-            new_shape.append(Py_Integer(s))
+            new_shape.append(LiteralInteger(s))
         else:
             raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
     return tuple(new_shape)
@@ -5991,7 +6077,7 @@ class PyccelArraySize(Function, PyccelAstNode):
                                 tuple,
                                 Tuple,
                                 PythonTuple,
-                                List,
+                                PythonList,
                                 Variable,
                                 IndexedElement,
                                 IndexedBase)):

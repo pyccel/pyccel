@@ -19,7 +19,6 @@ __all__ = ['random_string', 'get_source_function', 'epyccel_seq', 'epyccel']
 random_selector = random.SystemRandom()
 
 def random_string( n ):
-    # we remove uppercase letters because of f2py
     chars    = string.ascii_lowercase + string.digits
     return ''.join( random_selector.choice( chars ) for _ in range(n) )
 
@@ -132,9 +131,6 @@ def epyccel_seq(function_or_module, *,
                        extra_args  = extra_args,
                        accelerator = accelerator,
                        output_name = module_name)
-    except PyccelError:
-        # Raise a new error to avoid a large traceback
-        raise RuntimeError("Pyccel translation failed")
     finally:
         # Change working directory back to starting point
         os.chdir(base_dirpath)
@@ -157,7 +153,7 @@ def epyccel_seq(function_or_module, *,
 
     # If Python object was function, extract it from module
     if isinstance(function_or_module, FunctionType):
-        func = getattr(package, pyfunc.__name__.lower())
+        func = getattr(package, pyfunc.__name__)
     else:
         func = None
 
