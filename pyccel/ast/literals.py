@@ -29,48 +29,59 @@ class Literal(PyccelAstNode):
     _rank      = 0
     _shape     = ()
 
+    @PyccelAstNode.precision.setter
+    def precision(self, precision):
+        """ Set precision for a literal class"""
+        self._precision = precision
+
 #------------------------------------------------------------------------------
 class LiteralTrue(sp_BooleanTrue, Literal):
     """Represents the python value True"""
     _dtype     = NativeBool()
-    _precision = default_precision['bool']
+    def __init__(self, precision = default_precision['bool']):
+        self._precision = precision
 
 #------------------------------------------------------------------------------
 class LiteralFalse(sp_BooleanFalse, Literal):
     """Represents the python value False"""
     _dtype     = NativeBool()
-    _precision = default_precision['bool']
+    def __init__(self,precision = default_precision['bool']):
+        self._precision = precision
 
 #------------------------------------------------------------------------------
 class LiteralInteger(sp_Integer, Literal):
     """Represents an integer literal in python"""
     _dtype     = NativeInteger()
-    _precision = default_precision['int']
-    def __new__(cls, val):
+    def __new__(cls, val, precision = default_precision['integer']):
         ival = int(val)
         obj = Expr.__new__(cls, ival)
+        obj._precision = precision
         obj.p = ival
         return obj
+    def __init__(self, value, precision = default_precision['integer']):
+        self._precision = precision
 
 #------------------------------------------------------------------------------
 class LiteralFloat(sp_Float, Literal):
     """Represents a float literal in python"""
     _dtype     = NativeReal()
-    _precision = default_precision['real']
+    def __init__(self, value, *, precision = default_precision['float']):
+        self._precision = precision
+
 
 #------------------------------------------------------------------------------
 class LiteralComplex(Basic, Literal):
     """Represents a complex literal in python"""
     _dtype     = NativeComplex()
-    _precision = default_precision['complex']
 
     def __new__(cls, real, imag):
         return Basic.__new__(cls, real, imag)
 
-    def __init__(self, real, imag):
+    def __init__(self, real, imag, precision = default_precision['complex']):
         Basic.__init__(self)
         self._real_part = real
         self._imag_part = imag
+        self._precision = precision
 
     @property
     def real(self):
