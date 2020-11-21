@@ -1,0 +1,15 @@
+name: 'Coverage Collection'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Coverage collection
+      run: |
+        cd tests
+        coverage combine
+        coverage xml
+        rm ${SITE_DIR}/pyccel_cov.pth
+        bash <(wget -q -O - https://coverage.codacy.com/get.sh)
+        cd ..
+      shell: bash
+
