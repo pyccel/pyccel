@@ -496,14 +496,15 @@ hdr_classes = [Header, TypeHeader,
                MacroList,
                FunctionMacroStmt,StringStmt]
 
-def parse(filename=None, stmts=None, debug=False):
-    this_folder = dirname(__file__)
+this_folder = dirname(__file__)
 
-    # Get meta-model from language description
-    grammar = join(this_folder, '../grammar/headers.tx')
+# Get meta-model from language description
+grammar = join(this_folder, '../grammar/headers.tx')
 
-    from textx.metamodel import metamodel_from_file
-    meta = metamodel_from_file(grammar, debug=debug, classes=hdr_classes)
+from textx.metamodel import metamodel_from_file
+meta = metamodel_from_file(grammar, classes=hdr_classes)
+
+def parse(filename=None, stmts=None):
 
     # Instantiate model
     if filename:

@@ -412,14 +412,16 @@ omp_clauses = [OmpCollapse,
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 
-def parse(filename=None, stmts=None, debug=False):
-    this_folder = dirname(__file__)
 
-    # Get meta-model from language description
-    grammar = join(this_folder, '../grammar/openmp.tx')
+this_folder = dirname(__file__)
 
-    from textx.metamodel import metamodel_from_file
-    meta = metamodel_from_file(grammar, debug=debug, classes=omp_classes)
+# Get meta-model from language description
+grammar = join(this_folder, '../grammar/openmp.tx')
+
+from textx.metamodel import metamodel_from_file
+meta = metamodel_from_file(grammar, classes=omp_classes)
+
+def parse(filename=None, stmts=None):
 
     # Instantiate model
     if filename:
