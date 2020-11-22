@@ -6,6 +6,7 @@ import os
 import re
 
 #==============================================================================
+from pyccel.version import __version__
 
 from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
@@ -541,7 +542,7 @@ class BasicParser(object):
             code = self.code.encode('utf-8')
             hs   = hashlib.md5(code)
             f    = open(filename, 'wb')
-            pickle.dump((hs.hexdigest(), self), f, pickle.HIGHEST_PROTOCOL)
+            pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
             f.close()
         except:
             return
@@ -584,14 +585,14 @@ class BasicParser(object):
         # ...
         try:
             f = open(filename, 'rb')
-            hs, parser = pickle.load(f)
+            hs, version, parser = pickle.load(f)
             f.close()
         except:
             return
 
         import hashlib
         code = self.code.encode('utf-8')
-        if hashlib.md5(code).hexdigest() == hs:
+        if hashlib.md5(code).hexdigest() == hs and __version__ == version:
             self.copy(parser)
 
     def copy(self, parser):
