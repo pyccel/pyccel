@@ -553,8 +553,8 @@ class BasicParser(object):
             f    = open(filename, 'wb')
             pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
             f.close()
-        except:
-            return
+        except PermissionError or FileNotFoundError:
+            pass
 
     # TODO shall we need to load the Parser too?
 

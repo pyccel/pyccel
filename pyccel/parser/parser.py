@@ -32,10 +32,12 @@ class Parser(object):
 
     @property
     def semantic_parser(self):
+        """ Semantic parser """
         return self._semantic_parser
 
     @property
     def syntax_parser(self):
+        """ Syntax parser """
         return self._syntax_parser
 
     @semantic_parser.setter
@@ -106,14 +108,18 @@ class Parser(object):
         Returns None otherwise"""
         return self._module_parser
 
+    @module_parser.setter
+    def module_parser(self, module_parser):
+        self._module_parser = module_parser
+
     def parse(self, d_parsers=None, verbose=False):
 
         if self._syntax_parser:
             return self._syntax_parser.ast
 
-        parser              = SyntaxParser(self._filename, **self._kwargs)
-        self._syntax_parser = parser
-        parse_result        = parser.ast
+        parser             = SyntaxParser(self._filename, **self._kwargs)
+        self.syntax_parser = parser
+        parse_result       = parser.ast
 
         if d_parsers is None:
             d_parsers = self._d_parsers
@@ -129,18 +135,18 @@ class Parser(object):
             q.syntax_parser                  = copy.copy(parser)
             q.syntax_parser.namespace        = copy.deepcopy(parser.namespace)
             q.d_parsers                      = q.parse_sons(self.d_parsers)
-            q.syntax_parser._ast             = parse_result.module
+            q.syntax_parser.ast              = parse_result.module
             d_parsers[parse_result.mod_name] = q
 
             q.append_parent(self)
             self.append_son(q)
 
-            parser._ast = parse_result.program
+            parser.ast = parse_result.program
 
-            self._module_parser = q
+            self.module_parser = q
         else:
-            parser._ast         = parse_result.get_focus()
-            self._module_parser = None
+            parser.ast         = parse_result.get_focus()
+            self.module_parser = None
 
         return parser.ast
 
