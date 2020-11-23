@@ -27,7 +27,7 @@ def set_num_threads(n):
 
 ```python
 #$ omp parallel [clause[ [,] clause] ... ]
-  structured-block
+structured-block
 #$ omp end parallel
 ```
 
@@ -46,7 +46,7 @@ n = omp_get_num_threads()
 
 ```python
 #$ omp for [clause[ [,] clause] ... ]
-  for-loops
+for-loops
 ```
 
 #### Example
@@ -66,7 +66,7 @@ for i in range(0, 1337):
 
 ```python
 #$ omp single [clause[ [,] clause] ... ]
-  structured-block
+structured-block
 #$ omp end single [end_clause[ [,] end_clause] ... ]
 ```
 
@@ -88,7 +88,7 @@ for i in range(0, 1337):
 
 ```python
 #$ omp teams [clause[ [,]clause] ... ]
-  structured-block
+structured-block
 #$ omp end teams
 ```
 
@@ -124,7 +124,7 @@ result = result1 + result2
 
 ```python
 #$ omp target [clause[ [,]clause] ... ]
-  structured-block
+structured-block
 #$ omp end target
 ```
 
@@ -136,7 +136,7 @@ result = result1 + result2
 #$ omp parallel
 #$ omp for private(i)
 for i in range(0, 1337):
-    result[i] = v1[i] * v2[i]
+  result[i] = v1[i] * v2[i]
 #$ omp end parallel
 #$ omp end target
 ```
@@ -147,7 +147,7 @@ for i in range(0, 1337):
 
 ```python
 #$ omp critical [(name) [ [,] hint (hint-expression)]]
-  structured-block
+structured-block
 #$ omp end critical
 ```
 
@@ -190,7 +190,7 @@ work(result)
 
 ```python
 #$ omp atomic [clause[ [,]clause] ... ]
-  structured-block
+structured-block
 #$ omp end atomic
 ```
 
@@ -213,7 +213,7 @@ for i in range(0, N):
 
 ```python
 #$ omp masked [ filter(integer-expression) ]
-  structured-block
+structured-block
 #$ omp end masked
 ```
 
@@ -234,7 +234,7 @@ result = result + 1
 
 ```python
 #$ omp task [clause[ [,]clause] ... ]
-  structured-block
+structured-block
 #$ omp end task
 ```
 
@@ -339,7 +339,7 @@ for i in range(len(v)):
 
 ```python
 #$ omp simd [clause[ [,]clause] ... ]
-  loop-nest
+loop-nest
 ```
 
 #### Example
@@ -359,10 +359,10 @@ for i in range(N):
 ```python
 #$ omp sections [clause[ [,]clause] ... ]
 #$ omp section
-  structured-block-sequence
+structured-block-sequence
 #$ omp end section
 #$ omp section
-  structured-block-sequence
+structured-block-sequence
 #$ omp end section
 #$ omp end sections
 ```
