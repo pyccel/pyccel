@@ -151,15 +151,15 @@ def test_optional_args_1d(language):
             x[:] *= 2
         else :
             x[:] = x // y
-        f = epyccel(f12, language = language)
+    f = epyccel(f12, language = language)
 
-        x1 = np.array( [1,2,3], dtype=np.int )
-        x2 = np.copy(x1)
-        f(x1)
-        f12(x2)
+    x1 = np.array( [1,2,3], dtype=np.int )
+    x2 = np.copy(x1)
+    f(x1)
+    f12(x2)
 
-        # ...
-        assert np.array_equal(x1, x2)
+    # ...
+    assert np.array_equal(x1, x2)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', [
@@ -176,13 +176,13 @@ def test_optional_2d_F(language):
             x[:] *= 2
         else :
             x[:] = x // y
-        f = epyccel(f13, language = language)
+    f = epyccel(f13, language = language)
 
-        x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
-        x2 = np.copy(x1)
-        f(x1)
-        f13 (x2)
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
+    x2 = np.copy(x1)
+    f(x1)
+    f13 (x2)
 
-        # ...
-        assert np.array_equal(x1, x2)
+    # ...
+    assert np.array_equal(x1, x2)
 #------------------------------------------------------------------------------
