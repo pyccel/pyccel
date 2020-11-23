@@ -146,7 +146,6 @@ class CWrapperCodePrinter(CCodePrinter):
                         additional_body.append(body)
                         static_args.append(var)
                 static_args.append(a)
-            print(static_args)
             static_function = as_static_function_call(function, self._module_name, name=function.name)
         else:
             static_function = function
@@ -405,6 +404,7 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
+            cast_function = self.get_collect_function_call(variable, collect_var)
 
         elif variable.rank > 0:
             collect_type = PyccelPyArrayObject()
@@ -468,7 +468,7 @@ class CWrapperCodePrinter(CCodePrinter):
             self._to_free_PyObject_list.append(collect_var)
             return collect_var, AliasAssign(collect_var, cast_function)
 
-        return variable, None
+        return collect_var, None
 
     def get_default_assign(self, arg, func_arg):
         if func_arg.is_optional:
@@ -526,7 +526,7 @@ class CWrapperCodePrinter(CCodePrinter):
         for func in funcs :
             mini_wrapper_func_body = []
             res_args = []
-            mini_wrapper_func_vars = {a : a.name for a in func.arguments}
+            mini_wrapper_func_vars = {a.name : a for a in func.arguments}
             flags = 0
             collect_vars = {}
             parse_args = []
@@ -538,7 +538,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 check = PythonType_Check(f_arg, collect_var)
                 body, tmp_variable = self._body_management(used_names, f_arg, collect_var, cast_func)
                 if tmp_variable :
-                    wrapper_vars[tmp_variable.name] = tmp_variable
+                    mini_wrapper_func_vars[tmp_variable.name] = tmp_variable
 
                 # If the variable cannot be collected from PyArgParse directly
                 wrapper_vars[collect_var.name] = collect_var
@@ -560,18 +560,18 @@ class CWrapperCodePrinter(CCodePrinter):
                     check = PyccelAssociativeParenthesis(PyccelOr(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)), check))
 
                 types_dict[f_arg].add((f_arg, check, flag_value)) # collect variable type for each arguments
-                mini_wrapper_func_body = body
+                mini_wrapper_func_body += body
 
             # create the corresponding function call
-            static_function, static_args, additional_body = self._get_static_function(used_names, expr, collect_vars)
+            static_function, static_args, additional_body = self._get_static_function(used_names, func, collect_vars)
             mini_wrapper_func_body.extend(additional_body)
-            for var in static_args :
+            for var in static_args and additional_body:
                 wrapper_vars[var.name] = var
 
-            if len(expr.results)==0:
+            if len(func.results)==0:
                 func_call = FunctionCall(static_function, static_args)
             else:
-                results   = expr.results if len(expr.results)>1 else expr.results[0]
+                results   = func.results if len(func.results)>1 else func.results[0]
                 func_call = Assign(results,FunctionCall(static_function, static_args))
 
             mini_wrapper_func_body.append(func_call)
@@ -580,9 +580,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
             for r in func.results :
                 collect_var, cast_func = self.get_PyBuildValue(used_names, r)
+                mini_wrapper_func_vars[collect_var.name] = collect_var
                 if cast_func is not None:
                     mini_wrapper_func_body.append(AliasAssign(collect_var, cast_func))
-                    mini_wrapper_func_vars[collect_var.name] = collect_var
                 res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
 
             # Building PybuildValue and freeing the allocated variable after.
@@ -590,7 +590,6 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_func_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
             mini_wrapper_func_body.append(Return(wrapper_results))
             self._to_free_PyObject_list.clear()
-
             # Building Mini wrapper function
             mini_wrapper_func_name = self.get_new_name(used_names.union(self._global_names), func.name.name + '_mini_wrapper')
             self._global_names.add(mini_wrapper_func_name)
@@ -599,7 +598,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 arguments = parse_args,
                 results = wrapper_results,
                 body = mini_wrapper_func_body,
-                local_vars = mini_wrapper_func_vars)
+                local_vars = mini_wrapper_func_vars.values())
             funcs_def.append(mini_wrapper_func_def)
 
             # append check condition to the functioncall
@@ -636,6 +635,7 @@ class CWrapperCodePrinter(CCodePrinter):
             local_vars = wrapper_vars.values()))
 
         sep = self._print(SeparatorComment(40))
+
         return sep + '\n'.join(CCodePrinter._print_FunctionDef(self, f) for f in funcs_def)
 
     def _create_wrapper_check(self, check_var, parse_args, types_dict, used_names):
@@ -825,7 +825,6 @@ class CWrapperCodePrinter(CCodePrinter):
         self._to_free_PyObject_list.clear()
         #Return
         wrapper_body.append(Return(wrapper_results))
-
         # Create FunctionDef and write using classic method
         wrapper_func = FunctionDef(name = wrapper_name,
             arguments = wrapper_args,
