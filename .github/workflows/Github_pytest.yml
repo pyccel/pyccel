@@ -84,18 +84,21 @@ jobs:
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
       - name: Serial C tests
-        run:  python -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
+        run: |
+          python -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
       - name: Serial fortran tests and non-tagged tests
-        run:  python -m pytest -rx -m "not parallel and not c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
+        run: |
+          python -m pytest -rx -m "not parallel and not c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
       - name: ND-Array tests
-        run:  python -m pytest ndarrays/ -rx
+        run: |
+          python -m pytest ndarrays/ -rx
         working-directory: ./tests
       - name: Parallel tests
         run: |
-        mpiexec -n 4 python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
-        mpiexec -n 4 python -m pytest epyccel -v -m parallel -rx
+          mpiexec -n 4 python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
+          mpiexec -n 4 python -m pytest epyccel -v -m parallel -rx
         working-directory: ./tests
 
   #MacOSX:
