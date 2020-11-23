@@ -25,7 +25,6 @@ runs:
         cp $Env:SystemRoot\\SysWOW64\\vcruntime140.dll .
         gendef vcruntime140.dll
         dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
-        cd -
       shell: powershell
     - name: Install MS MPI runtime and SDK
       run: |
@@ -49,16 +48,16 @@ runs:
         echo "Path=${PATH}" >> $GITHUB_ENV
         #
         # Generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html
-        cd "$MSMPI_INC"
+        pushd "$MSMPI_INC"
         sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpi.f90
         sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpif.h
         gfortran -c -D_WIN64 -D INT_PTR_KIND\(\)=8 -fno-range-check mpi.f90
-        cd -
+        popd
         #
         # Generate static libmsmpi.a from msmpi.dll
-        cd "$MSMPI_LIB64"
+        pushd "$MSMPI_LIB64"
         cp $SYSTEMROOT\\SysWOW64\\msmpi.dll .
         gendef msmpi.dll
         dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
-        cd -
+        popd
       shell: powershell
