@@ -723,7 +723,7 @@ class SyntaxParser(BasicParser):
                 results = []
                 ls = comb_types.args
 
-                if len(ls) and isinstance(ls[-1], ValuedArgument):
+                if len(ls) > 0 and isinstance(ls[-1], ValuedArgument):
                     arg_name = ls[-1].name
                     if not arg_name == 'results':
                         msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
