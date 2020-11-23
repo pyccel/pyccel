@@ -104,7 +104,10 @@ def execute_pyccel(fname, *,
     f90exec = mpi_compiler if mpi_compiler else compiler
 
     if (language == "c"):
-        libs = libs + ['m']
+        if sys.platform == 'win32':
+            libs = libs + ['quadmath']
+        else:
+            libs = libs + ['m']
     if accelerator == 'openmp':
         if compiler in ["gcc","gfortran"]:
             if sys.platform == "darwin" and compiler == "gcc":

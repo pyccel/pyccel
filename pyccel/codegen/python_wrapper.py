@@ -88,9 +88,6 @@ def create_shared_library(codegen,
             elif compiler == 'ifort':
                 extra_libs.append('ifcore')
 
-        if sys.platform == 'win32':
-            extra_libs.append('quadmath')
-
         module_old_name = codegen.expr.name
         codegen.expr.set_name(sharedlib_modname)
 
