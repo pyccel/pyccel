@@ -14,7 +14,7 @@ runs:
     - name: Install distutils
       shell: bash
       run:
-        python -m pip install distutils
+        python -m pip install setuptools
     - name: Install pyccel
       shell: bash
       run:
