@@ -146,7 +146,7 @@ for i in range(0, 1000):
 #### Syntax
 
 ```python
-#$ omp critical
+#$ omp critical [(name) [ [,] hint (hint-expression)]]
   structured-block
 #$ omp end critical
 ```
@@ -189,7 +189,7 @@ work(result)
 #### Syntax
 
 ```python
-#$ omp atomic
+#$ omp atomic [clause[ [,]clause] ... ]
   structured-block
 #$ omp end atomic
 ```
@@ -212,7 +212,7 @@ for i in range(0, N):
 #### Syntax
 
 ```python
-#$ omp masked
+#$ omp masked [ filter(integer-expression) ]
   structured-block
 #$ omp end masked
 ```
@@ -225,5 +225,43 @@ result = 0
 #$ omp masked
 result = result + 1
 #$ omp end masked
+#$ omp end parallel
+```
+
+### Task / Taskwait Construct
+
+#### Syntax Task Construct
+
+```python
+#$ omp task [clause[ [,]clause] ... ]
+  structured-block
+#$ omp end task
+```
+
+#### Syntax Taskwait Construct
+
+```python
+#$ omp taskwait
+```
+
+#### Example
+
+```python
+@types('int')
+def fib(n):
+  if n < 2:
+    return n
+  else:
+    #$ omp task shared(i) firstprivate(n)
+    i = fib(n-1)
+    #$ omp task shared(j) firstprivate(n)
+    j = fib(n-2)
+    #$ omp taskwait
+    return i+j
+
+#$ omp parallel
+#$ omp omp single
+result = fib(10)
+#$ omp end single
 #$ omp end parallel
 ```
