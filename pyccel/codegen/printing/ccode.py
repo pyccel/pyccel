@@ -1,26 +1,31 @@
 # coding: utf-8
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
+import functools
+import operator
 
+from sympy.core import Tuple
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
+from pyccel.ast.core      import Declare, IndexedVariable, Slice, ValuedVariable
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import FunctionAddress
-from pyccel.ast.core      import Declare, ValuedVariable
 from pyccel.ast.core      import Nil, PyccelAssociativeParenthesis
 from pyccel.ast.core      import Assign, datatype, Variable, Import
 from pyccel.ast.core      import SeparatorComment, VariableAddress
 from pyccel.ast.core      import DottedName
-from pyccel.ast.core      import PyccelAdd, PyccelMul
+from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelMinus
 
+from pyccel.ast.core import PyccelUnarySub, PyccelMod
+from pyccel.ast.core import create_incremented_string
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
 
 from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger
 
-from pyccel.ast.numpyext  import NumpyFloat
-from pyccel.ast.numpyext  import NumpyReal, NumpyImag
+from pyccel.ast.numpyext import NumpyFull, NumpyArray
+from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -28,6 +33,7 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT )
+
 
 errors = Errors()
 
@@ -192,6 +198,16 @@ dtype_registry = {('real',8)    : 'double',
                   ('int',2)     : 'short int',
                   ('int',1)     : 'char',
                   ('bool',4)    : 'bool'}
+
+ndarray_type_registry = {('real',8)    : 'nd_double',
+                  ('real',4)    : 'nd_float',
+                  ('complex',8) : 'nd_cdouble',
+                  ('complex',4) : 'nd_cfloat',
+                  ('int',4)     : 'nd_int',
+                  ('int',8)     : 'nd_long',
+                  ('int',2)     : 'nd_sint',
+                  ('int',1)     : 'nd_char',
+                  ('bool',4)    : 'nd_bool'}
 
 import_dict = {'omp_lib' : 'omp' }
 
@@ -493,7 +509,6 @@ class CCodePrinter(CodePrinter):
                 arg_format, arg = self.get_print_format_and_arg(f)
                 args_format.append(arg_format)
                 args.append(arg)
-
         args_format = sep.join(args_format)
         args_format += end
         args_format = self._print(LiteralString(args_format))
@@ -508,13 +523,22 @@ class CCodePrinter(CodePrinter):
                     symbol = "{}[kind = {}]".format(dtype, prec),
                     severity='fatal')
 
+    def find_in_ndarray_type_registry(self, dtype, prec):
+        try :
+            return ndarray_type_registry[(dtype, prec)]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = "{}[kind = {}]".format(dtype, prec),
+                    severity='fatal')
+
     def get_declare_type(self, expr):
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         rank  = expr.rank
         dtype = self.find_in_dtype_registry(dtype, prec)
-
         if rank > 0:
+            if expr.is_ndarray:
+                return 't_ndarray '
             errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
 
         if self.stored_in_c_pointer(expr):
@@ -586,6 +610,83 @@ class CCodePrinter(CodePrinter):
             return '{}(*{})({})'.format(ret_type, name, arg_code)
         else:
             return '{0}{1}({2})'.format(ret_type, name, arg_code)
+
+    def _print_IndexedElement(self, expr):
+        if isinstance(expr.base, IndexedVariable):
+            base = expr.base.internal_variable
+        else:
+            base = expr.base
+        inds = list(expr.indices)
+        inds = inds[::-1]
+        base_shape = base.shape
+        allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
+                base.allows_negative_indexes)
+        for i, ind in enumerate(inds):
+            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
+                inds[i] = PyccelMinus(base_shape[i], ind.args[0])
+            else:
+                #indices of indexedElement of len==1 shouldn't be a Tuple
+                if isinstance(ind, Tuple) and len(ind) == 1:
+                    inds[i].args = ind[0]
+                if allow_negative_indexes and \
+                        not isinstance(ind, LiteralInteger) and not isinstance(ind, Slice):
+                    inds[i] = PyccelMod(ind, base_shape[i])
+        #set dtype to the C struct types
+        dtype = self._print(expr.dtype)
+        dtype = self.find_in_ndarray_type_registry(dtype, expr.precision)
+        base_name = self._print(base.name)
+        if base.is_ndarray:
+            if expr.rank > 0:
+                #managing the Slice input
+                for i , ind in enumerate(inds):
+                    if isinstance(ind, Slice):
+                        #setting the slice start and end to their correct value if none is provided
+                        start = ind.start
+                        #handling the negative indexes for a slice object
+                        if isinstance(start, PyccelUnarySub) and \
+                                isinstance(start.args[0], LiteralInteger):
+                            start = PyccelMinus(base_shape[i], start.args[0])
+                        end = ind.end
+                        if isinstance(end, PyccelUnarySub) and \
+                                isinstance(end.args[0], LiteralInteger):
+                            end = PyccelMinus(base_shape[i], end.args[0])
+                        if ind.start is None:
+                            start = 0
+                        if ind.end is None:
+                            end = base.shape[i]
+                        inds[i] = Slice(start, end)
+                    else:
+                        #setting the Slice start and end to their correct value when try to get a view with scalar index
+                        inds[i] = Slice(ind, ind + 1)
+                inds = [self._print(i) for i in inds]
+                return "array_slicing(%s, %s)" % (base_name, ", ".join(inds))
+            inds = [self._print(i) for i in inds]
+        else:
+            raise NotImplementedError(expr)
+        return "%s.%s[get_index(%s, %s)]" % (base_name, dtype, base_name, ", ".join(inds))
+
+    def _print_Allocate(self, expr):
+        free_code = ''
+        #free the array if its already allocated and checking if its not null if the status is unknown
+        if  (expr.status == 'unknown'):
+            free_code = 'if (%s.raw_data != NULL)\n' % self._print(expr.variable.name)
+            free_code += '{\nfree_array(%s);\n}\n' % self._print(expr.variable.name)
+        elif  (expr.status == 'allocated'):
+            free_code += 'free_array(%s);\n' % self._print(expr.variable.name)
+        self._additional_imports.add('ndarrays')
+        shape = expr.shape
+        shape = [self._print(i) for i in shape]
+        shape = ", ".join(a for a in shape)
+        dtype = self._print(expr.variable.dtype)
+        dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
+        shape_Assign = "(int[]){" + shape + "}"
+        alloc_code = "{} = array_create({}, {}, {});".format(expr.variable, len(expr.shape), shape_Assign, dtype)
+        return '{}\n{}'.format(free_code, alloc_code)
+
+    def _print_Slice(self, expr):
+        start = self._print(expr.start)
+        end = self._print(expr.end)
+        return 'new_slice({}, {}, {})'.format(start, end, 1)
 
     def _print_NumpyUfuncBase(self, expr):
         """ Convert a Python expression with a Numpy function call to C
@@ -709,7 +810,7 @@ class CCodePrinter(CodePrinter):
         return ('{sep}\n'
                 '{signature}\n{{\n'
                 '{imports}\n'
-                '{decs}\n'
+                '{decs}\n\n'
                 '{body}\n'
                 '}}\n{sep}'.format(
                     sep = sep,
@@ -732,7 +833,6 @@ class CCodePrinter(CodePrinter):
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
          # Ensure the correct syntax is used for pointers
-
         args = []
         for a, f in zip(expr.arguments, func.arguments):
             if isinstance(a, Variable) and self.stored_in_c_pointer(f):
@@ -861,7 +961,30 @@ class CCodePrinter(CodePrinter):
             self._temporary_args = [VariableAddress(a) for a in expr.lhs]
             return '{};'.format(self._print(expr.rhs))
         lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
+        rhs = expr.rhs
+        if isinstance(rhs, (NumpyArray)):
+            if rhs.rank == 0:
+                raise NotImplementedError(expr.lhs + "=" + expr.rhs)
+            dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
+            dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+            arg = rhs.arg
+            if rhs.rank > 1:
+                arg = functools.reduce(operator.concat, arg)
+            arg = ', '.join(self._print(i) for i in arg)
+            dummy_array = "%s %s[] = {%s};\n" % (dtype, dummy_array_name, arg)
+            dtype = self.find_in_ndarray_type_registry(format(rhs.dtype), rhs.precision)
+            cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
+            return  '%s%s\n' % (dummy_array, cpy_data)
+
+        if isinstance(rhs, (NumpyFull)):
+            code_init = ''
+            if rhs.fill_value is not None:
+                code_init = 'array_fill({0}, {1});'.format(self._print(rhs.fill_value), lhs)
+            else:
+                return ''
+            return '{}\n'.format(code_init)
+
+        rhs = self._print(rhs)
         return '{} = {};'.format(lhs, rhs)
 
     def _print_AliasAssign(self, expr):
@@ -1061,10 +1184,9 @@ class CCodePrinter(CodePrinter):
         # PythonPrint imports last to be sure that all additional_imports have been collected
         imports  = [*expr.imports, *map(Import, self._additional_imports)]
         imports  = '\n'.join(self._print(i) for i in imports)
-
         return ('{imports}\n'
                 'int main()\n{{\n'
-                '{decs}\n'
+                '{decs}\n\n'
                 '{body}\n'
                 'return 0;\n'
                 '}}').format(imports=imports,
