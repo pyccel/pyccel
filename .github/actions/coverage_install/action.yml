@@ -22,5 +22,5 @@ runs:
       shell: bash
     - name: Coveragerc directory definition
       id: covrc-dir-report
-      run: echo "::set-output name=COVERAGE_PROCESS_START::$(pwd)/tests/.coveragerc"
+      run: echo "::set-output name=COVERAGE_PROCESS_START::$(pwd)/.coveragerc"
       shell: bash
