@@ -75,7 +75,14 @@ def test_pow_special_cases(language):
 
 # ---------------------------- Complex numbers ----------------------------- #
 
-@pytest.mark.skipif(sys.platform == "win32", reason="complex library not correctly passed in tests")
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = [
+            pytest.mark.skipif(sys.platform == "win32", reason="complex library not correctly passed in tests"),
+            pytest.mark.c]
+        ),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    )
+)
 def test_pow_c_c(language):
     @types('complex', 'complex')
     def pow_c_c(x, y):
@@ -89,7 +96,14 @@ def test_pow_c_c(language):
     assert(isclose(f(b, -e), pow_c_c(b, -e), rtol=1e-14, atol=1e-15))
     assert(isclose(f(-b, -e), pow_c_c(-b, -e), rtol=1e-14, atol=1e-15))
 
-@pytest.mark.skipif(sys.platform == "win32", reason="complex library not correctly passed in tests")
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = [
+            pytest.mark.skipif(sys.platform == "win32", reason="complex library not correctly passed in tests"),
+            pytest.mark.c]
+        ),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    )
+)
 def test_pow_c_i(language):
     @types('complex', 'int')
     def pow_c_i(x, y):
@@ -103,7 +117,14 @@ def test_pow_c_i(language):
     assert(isclose(f(b, -e), pow_c_i(b, -e), rtol=1e-14, atol=1e-15))
     assert(isclose(f(-b, -e), pow_c_i(-b, -e), rtol=1e-14, atol=1e-15))
 
-@pytest.mark.skipif(sys.platform == "win32", reason="complex library not correctly passed in tests")
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = [
+            pytest.mark.skipif(sys.platform == "win32", reason="complex library not correctly passed in tests"),
+            pytest.mark.c]
+        ),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    )
+)
 def test_pow_c_r(language):
     @types('complex', 'real')
     def pow_c_r(x, y):
@@ -117,7 +138,14 @@ def test_pow_c_r(language):
     assert(isclose(f(b, -e), pow_c_r(b, -e), rtol=1e-14, atol=1e-15))
     assert(isclose(f(-b, -e), pow_c_r(-b, -e), rtol=1e-14, atol=1e-15))
 
-@pytest.mark.skipif(sys.platform == "win32", reason="complex library not correctly passed in tests")
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = [
+            pytest.mark.skipif(sys.platform == "win32", reason="complex library not correctly passed in tests"),
+            pytest.mark.c]
+        ),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    )
+)
 def test_pow_r_c(language):
     @types('real', 'complex')
     def pow_r_c(x, y):
