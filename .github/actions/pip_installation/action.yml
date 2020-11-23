@@ -11,6 +11,10 @@ runs:
       shell: bash
       run:
         python -m pip install wheel
+    - name: Install distutils
+      shell: bash
+      run:
+        python -m pip install distutils
     - name: Install pyccel
       shell: bash
       run:
