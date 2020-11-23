@@ -37,7 +37,6 @@ runs:
         ./msmpisetup.exe -unattend
         sleep 5
         msiexec //i msmpisdk.msi
-        Get-Childitem -Path Env:* | Sort-Object Name
       shell: powershell
     - name: Setup MPI
       run: |
