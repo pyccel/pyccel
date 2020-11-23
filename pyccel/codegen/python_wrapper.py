@@ -83,11 +83,8 @@ def create_shared_library(codegen,
 
             dep_mods = (os.path.join(pyccel_dirpath,'bind_c_{}'.format(module_name)), *dep_mods)
             if compiler == 'gfortran':
-                if sys.platform == "win32":
-                    flags += " -static-libgfortran"
-                else:
-                    extra_libdirs.append(get_gfortran_library_dir())
-                    extra_libs.append('gfortran')
+                extra_libs.append('gfortran')
+                extra_libdirs.append(get_gfortran_library_dir())
             elif compiler == 'ifort':
                 extra_libs.append('ifcore')
 
