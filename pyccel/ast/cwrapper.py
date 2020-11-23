@@ -185,7 +185,7 @@ class PyArg_ParseTupleNode(Basic):
         self._arg_names  = arg_names
 
     def get_pytype(self, c_arg, parse_arg):
-        if isinstance(c_arg, FunctionAddress) or self._is_interface:
+        if isinstance(c_arg, FunctionAddress) or (self._is_interface and c_arg.rank == 0):
             return 'O'
         else:
             try:
