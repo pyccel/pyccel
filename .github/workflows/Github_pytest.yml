@@ -27,9 +27,12 @@ jobs:
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
       - name: Coverage install
+        id: cov-install
         uses: ./.github/actions/coverage_install
       - name: Test with pytest
         uses: ./.github/actions/pytest_run
+        env:
+            COVERAGE_PROCESS_START: ${{ steps.cov-install.outputs.COVERAGE_PROCESS_START }}
       - name: Check for coverage
         run: |
             ls -a
