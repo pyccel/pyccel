@@ -15,6 +15,11 @@ from pyccel.codegen.python_wrapper import create_shared_library
 
 __all__ = ['execute_pyccel']
 
+internal_libs = [
+    "ndarrays",
+    "pyc_math",
+]
+
 #==============================================================================
 # NOTE:
 # [..]_dirname is the name of a directory
@@ -174,6 +179,46 @@ def execute_pyccel(fname, *,
         parsers = [parser]
         module_names = [module_name]
 
+    # -------------------------------------------------------------------------
+    internal_lib_dict = {}
+
+    def get_internal_lib(import_lib):
+        # get path to pyccel/stdlib/import_lib
+        import pyccel.stdlib as stdlib_folder
+        stdlib_path = os.path.dirname(stdlib_folder.__file__)
+        lib_path = os.path.join(stdlib_path, import_lib)
+
+        # remove library folder from pyccel if exist then copy new one
+        lib_dest_path = os.path.join(pyccel_dirpath, import_lib)
+        if os.path.exists(lib_dest_path):
+            shutil.rmtree(lib_dest_path)
+        shutil.copytree(lib_path, lib_dest_path)
+        # get all c files in library directory
+        c_files = []
+        for e in os.listdir(lib_dest_path):
+            if e.endswith(".c"):
+                c_files.append(os.path.join(lib_dest_path, e))
+        # compile
+        flags = construct_flags(f90exec,
+                                fflags=fflags,
+                                debug=debug,
+                                includes=[lib_dest_path])
+        try:
+            for c_file in c_files:
+                compile_files(c_file, f90exec, flags,
+                                binary=None,
+                                verbose=verbose,
+                                is_module=True,
+                                output=lib_dest_path,
+                                language=language)
+        except Exception:
+            handle_error('C {} library compilation'.format(import_lib))
+            raise
+        objs = [f[:-2] for f in c_files]
+        return objs, lib_dest_path
+    # -------------------------------------------------------------------------
+    lib_mods = []
+    lib_incs = []
     for parser, module_name in zip(parsers, module_names):
         semantic_parser = parser.semantic_parser
         # Generate .f90 file
@@ -202,9 +247,6 @@ def execute_pyccel(fname, *,
     #            pass
         #------------------------------------------------------
 
-        if convert_only:
-            continue
-
         # ...
         # Determine all .o files and all folders needed by executable
         def get_module_dependencies(parser, mods=(), folders=()):
@@ -227,6 +269,19 @@ def execute_pyccel(fname, *,
             return mods, folders
 
         dep_mods, inc_dirs = get_module_dependencies(parser)
+
+        if language == 'c':
+            # check for used internal libraries
+            for lib in internal_libs:
+                if lib in codegen._printer._additional_imports:
+                    objs, incs = get_internal_lib(lib)
+                    lib_incs.append(incs)
+                    lib_mods.extend(objs)
+            dep_mods = (*dep_mods, *lib_mods)
+            inc_dirs = (*inc_dirs, *lib_incs)
+
+        if convert_only:
+            continue
 
         # Remove duplicates without changing order
         dep_mods = tuple(OrderedDict.fromkeys(dep_mods))
