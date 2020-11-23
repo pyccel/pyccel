@@ -297,7 +297,7 @@ long_function_2()
 
 ```python
 from pyccel.stdlib.internal.openmp import omp_get_thread_num
- flag = 0
+flag = 0
 #$ omp parallel num_threads(2)
 if omp_get_thread_num() == 0:
   data = 1337
