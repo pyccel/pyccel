@@ -83,6 +83,9 @@ jobs:
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
+      - name: Temp tests
+        run: |
+          python -m pytest -rx -sv --maxfail=2 tests\\epyccel\\test_base.py
       - name: Serial C tests
         run: |
           python -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
