@@ -11,10 +11,11 @@ from pyccel.stdlib.internal.openmp import omp_set_num_threads
 ### Example
 
 The following example show how ``` omp_set_num_threads ``` is used to set the number of threads to ``` 4 threads ``` and how ``` omp_get_num_threads ``` is used to get the number of thread in the current team within a prallel region, ``` omp_get_num_threads ``` will return ``` 4 threads ```.
-The output of this program is :
+The output of this program is (you may get different result because of threads running at the same time):
 ```
-hello from thread number: 1
+hello from thread number: 0
 hello from thread number: 2
+hello from thread number: 1
 hello from thread number: 3
 ```
 
