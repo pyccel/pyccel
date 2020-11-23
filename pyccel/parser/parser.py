@@ -35,6 +35,20 @@ class Parser(object):
         return self._semantic_parser
 
     @property
+    def syntax_parser(self):
+        return self._syntax_parser
+
+    @semantic_parser.setter
+    def semantic_parser(self, parser):
+        assert isinstance(parser, SemanticParser)
+        self._semantic_parser = parser
+
+    @syntax_parser.setter
+    def syntax_parser(self, parser):
+        assert isinstance(parser, SyntaxParser)
+        self._syntax_parse = parser
+
+    @property
     def filename(self):
         """ Python file to be parsed. """
         return self._filename
@@ -44,6 +58,10 @@ class Parser(object):
         """Returns the d_parsers parser."""
 
         return self._d_parsers
+
+    @d_parsers.setter
+    def d_parsers(self, d_parsers):
+        self._d_parsers = d_parsers
 
     @property
     def parents(self):
@@ -100,7 +118,7 @@ class Parser(object):
         if d_parsers is None:
             d_parsers = self._d_parsers
 
-        self._d_parsers = self._parse_sons(d_parsers, verbose=verbose)
+        self._d_parsers = self.parse_sons(d_parsers, verbose=verbose)
 
         if parse_result.has_additional_module():
             new_mod_filename  = os.path.join(os.path.dirname(self._filename),parse_result.mod_name+'.py')
@@ -108,10 +126,10 @@ class Parser(object):
             self._filename    = new_prog_filename
 
             q                                = Parser(new_mod_filename)
-            q._syntax_parser                 = copy.copy(parser)
-            q._syntax_parser._namespace      = copy.deepcopy(parser.namespace)
-            q._d_parsers                     = q._parse_sons(self._d_parsers)
-            q._syntax_parser._ast            = parse_result.module
+            q.syntax_parser                  = copy.copy(parser)
+            q.syntax_parser.namespace        = copy.deepcopy(parser.namespace)
+            q.d_parsers                      = q.parse_sons(self.d_parsers)
+            q.syntax_parser._ast             = parse_result.module
             d_parsers[parse_result.mod_name] = q
 
             q.append_parent(self)
@@ -160,7 +178,7 @@ class Parser(object):
 
         self._sons.append(son)
 
-    def _parse_sons(self, d_parsers, verbose=False):
+    def parse_sons(self, d_parsers, verbose=False):
         """Recursive algorithm for syntax analysis on a given file and its
         dependencies.
         This function always terminates with an OrderedDict that contains parsers

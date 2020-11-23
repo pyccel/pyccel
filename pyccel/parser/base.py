@@ -322,6 +322,11 @@ class BasicParser(object):
     def namespace(self):
         return self._namespace
 
+    @namespace.setter
+    def namespace(self, namespace):
+        assert isinstance(namespace, Scope)
+        self._namespace = namespace
+
     @property
     def filename(self):
         return self._filename
@@ -339,6 +344,10 @@ class BasicParser(object):
         if self._ast is None:
             self._ast = self.parse()
         return self._ast
+
+    @ast.setter
+    def ast(self, ast):
+        self._ast = ast
 
     @property
     def metavars(self):
