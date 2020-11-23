@@ -46,7 +46,8 @@ runs:
         $PATH="${Env:Path}C:\\Program Files\\Microsoft MPI\\Bin;"
         [System.Environment]::SetEnvironmentVariable("Path",$PATH)
         echo "Path=${PATH}" >> $GITHUB_ENV
-        Get-Childitem -Path "C:\\" -Recurse -ErrorAction SilentlyContinue -Include mpi.f90
+        Get-Childitem -Path "C:\\Program Files" -Recurse -ErrorAction SilentlyContinue -Include mpi.f90
+        Get-Childitem -Path "C:\\Program Files (x86)" -Recurse -ErrorAction SilentlyContinue -Include mpi.f90
         #
         # Generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html
         pushd "$MSMPI_INC"
