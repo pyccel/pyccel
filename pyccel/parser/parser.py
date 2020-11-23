@@ -48,7 +48,7 @@ class Parser(object):
     @syntax_parser.setter
     def syntax_parser(self, parser):
         assert isinstance(parser, SyntaxParser)
-        self._syntax_parse = parser
+        self._syntax_parser = parser
 
     @property
     def filename(self):
