@@ -400,16 +400,16 @@ class CWrapperCodePrinter(CCodePrinter):
         cast_function = None
         collect_var = variable
 
-        if is_interface :
+        if variable.rank > 0:
+            collect_type = PyccelPyArrayObject()
+            collect_var = Variable(dtype= collect_type, is_pointer = True, rank = variable.rank,
+                                    order= variable.order, name=self.get_new_name(used_names, variable.name+"_tmp"))
+
+        elif is_interface :
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_collect_function_call(variable, collect_var)
-
-        elif variable.rank > 0:
-            collect_type = PyccelPyArrayObject()
-            collect_var = Variable(dtype= collect_type, is_pointer = True, rank = variable.rank,
-                                    order= variable.order, name=self.get_new_name(used_names, variable.name+"_tmp"))
 
         elif isinstance(variable, ValuedVariable):
             collect_type = PyccelPyObject()
@@ -466,9 +466,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function_call('complex_to_pycomplex', variable)
             self._to_free_PyObject_list.append(collect_var)
-            return collect_var, AliasAssign(collect_var, cast_function)
 
-        return collect_var, None
+        return collect_var, cast_function
 
     def get_default_assign(self, arg, func_arg):
         if func_arg.is_optional:
@@ -565,7 +564,7 @@ class CWrapperCodePrinter(CCodePrinter):
             # create the corresponding function call
             static_function, static_args, additional_body = self._get_static_function(used_names, func, collect_vars)
             mini_wrapper_func_body.extend(additional_body)
-            for var in static_args and additional_body:
+            for var in static_args and:
                 wrapper_vars[var.name] = var
 
             if len(func.results)==0:
@@ -577,11 +576,11 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_func_body.append(func_call)
 
             # Loop for all res in every functions and create the corresponding body and cast
-
             for r in func.results :
                 collect_var, cast_func = self.get_PyBuildValue(used_names, r)
                 mini_wrapper_func_vars[collect_var.name] = collect_var
                 if cast_func is not None:
+                    mini_wrapper_func_vars[r.name] = r
                     mini_wrapper_func_body.append(AliasAssign(collect_var, cast_func))
                 res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
 
