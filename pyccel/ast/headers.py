@@ -257,6 +257,7 @@ class FunctionHeader(Header):
                     tmp_arg_code[i] = d_type.copy()
             if resolved or type_index == 0:
                 return tmp_arg_code
+            return None
 
         for i in self.dtypes:
             if isinstance(i, UnionType):

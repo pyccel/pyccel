@@ -624,6 +624,26 @@ class SyntaxParser(BasicParser):
         is_private   = False
         imports      = []
 
+        def fill_types(ls):
+            container = []
+            for arg in ls:
+                if isinstance(arg, Symbol):
+                    arg = arg.name
+                    container.append(arg)
+                elif isinstance(arg, LiteralString):
+                    arg = str(arg)
+                    arg = arg.strip("'").strip('"')
+                    container.append(arg)
+                elif isinstance(arg, ValuedArgument):
+                    break
+                else:
+                    msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
+                    errors.report(msg,
+                                bounding_box = (stmt.lineno, stmt.col_offset),
+                                severity='error')
+            return container
+
+
         decorators = {}
         for d in self._visit(stmt.decorator_list):
             tmp_var = str(d) if isinstance(d, Symbol) else str(type(d))
@@ -721,37 +741,22 @@ class SyntaxParser(BasicParser):
                 i = 0
                 ls = comb_types.args
 
-                while i<len(ls) :
-                    arg = ls[i]
 
-                    if isinstance(arg, Symbol):
-                        arg = arg.name
-                        container.append(arg)
-                    elif isinstance(arg, LiteralString):
-                        arg = str(arg)
-                        arg = arg.strip("'").strip('"')
-                        container.append(arg)
-                    elif isinstance(arg, ValuedArgument):
-                        arg_name = arg.name
-                        arg  = arg.value
-                        container = results
-                        if not arg_name == 'results':
-                            msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
-                            errors.report(msg,
-                                        symbol = comb_types,
-                                        bounding_box = (stmt.lineno, stmt.col_offset),
-                                        severity='error')
-                        else:
-                            ls = arg if isinstance(arg, PythonTuple) else [arg]
-                            i = -1
-                    else:
-                        msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
+                if len(ls) and isinstance(ls[-1], ValuedArgument):
+                    arg_name = ls[-1].name
+                    if not arg_name == 'results':
+                        msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
                         errors.report(msg,
                                     symbol = comb_types,
                                     bounding_box = (stmt.lineno, stmt.col_offset),
                                     severity='error')
-
-                    i = i+1
+                    else:
+                        container = ls[-1].value
+                        container = container if isinstance(container, PythonTuple) else [container]
+                        results = fill_types(container)
+                    types = fill_types(ls[:-1])
+                else:
+                    types = fill_types(ls)
 
                 txt  = '#$ header ' + name
                 txt += '(' + ','.join(types) + ')'
