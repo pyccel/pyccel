@@ -223,7 +223,6 @@ class Parser(object):
         imports     = self.imports.keys()
         treated     = d_parsers.keys()
         not_treated = [i for i in imports if i not in treated]
-
         for source in not_treated:
             if verbose:
                 print ('>>> treating :: {}'.format(source))
@@ -231,7 +230,6 @@ class Parser(object):
             # get the absolute path corresponding to source
 
             filename = get_filename_from_import(source, self._input_folder)
-
             q = Parser(filename)
             q.parse(d_parsers=d_parsers)
             if q.module_parser:

@@ -2439,7 +2439,16 @@ class SemanticParser(BasicParser):
                 else:
                     errors.report(msg, symbol=expr.arguments, severity='fatal')
 
-        if expr.arguments and not header:
+        if header is None:
+            # check if a header is imported from a header file
+            # TODO improve in the case of multiple headers ( interface )
+            func       = self.get_function(name)
+            if func and func.is_header:
+                interfaces = [func]
+            else:
+                interfaces = []
+
+        if expr.arguments and not header and not interfaces:
 
             # TODO ERROR wrong position
 
@@ -2453,11 +2462,12 @@ class SemanticParser(BasicParser):
             # get function kind from the header
 
             kind = header.kind
-        else:
+        elif not interfaces:
 
             # this for the case of a function without arguments => no header
 
             interfaces = [FunctionDef(name, [], [], [])]
+
 #        TODO move this to codegen
 #        vec_func = None
 #        if 'vectorize' in decorators:
