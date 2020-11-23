@@ -30,8 +30,8 @@ runs:
       run: |
         #
         # Download MS MPI runtime and SDK
-        curl -L https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe -o msmpisetup.exe
-        curl -L https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi -o msmpisdk.msi
+        curl https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe -o msmpisetup.exe
+        curl https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi -o msmpisdk.msi
         #
         # Install MS MPI
         ./msmpisetup.exe -unattend
