@@ -85,19 +85,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - name: Install dependencies
-        run: |
-            # $CONDA is an environment variable pointing to the root of the miniconda directory
-            $CONDA/bin/conda env update --file environment.yml --name base
-      - name: Debug info
-        run: |
-            echo $CONDA
-            ls $CONDA
-            ls $CONDA/Lib/distutils
       - name: Install dependencies
         #TODO: Use setup-python
         uses: ./.github/actions/windows_install
