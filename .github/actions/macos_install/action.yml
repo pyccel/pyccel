@@ -1,0 +1,23 @@
+name: 'Macosx installation commands'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Update packages
+      run:
+        brew update
+      shell: bash
+    - name: Avoid upgrade of useless packages
+      run: |
+        # Avoid upgrade of useless packages that depend on open-mpi
+        # We only let upgrading: hdf5 netcdf numpy openblas python3
+        brew pin ansible cairo cgal gdal geos glib gnupg gnutls libdap
+        brew pin libpq libxml2 libspatialite libssh mercurial nettle
+        brew pin poppler postgis postgresql pyenv sfcgal unbound
+      shell: bash
+    - name: Install MPI, OpenMP
+      run: |
+        #brew install gcc openblas lapack
+        brew install open-mpi
+        brew install libomp
+      shell: bash
