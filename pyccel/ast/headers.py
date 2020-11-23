@@ -82,6 +82,23 @@ class VariableHeader(Header):
         return self._args[1]
 
     def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callablle that can be called
+           to create the initial version of the object
+           and its arguments
+           """
         return (self.__class__, self.args)
 
 #==============================================================================
@@ -272,6 +289,25 @@ class FunctionHeader(Header):
                               self.is_static)
 
     def __reduce_ex__(self, i):
+
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callablle function that can be called
+           to create the initial version of the object
+           and its arguments
+           """
+
         args = (self.func,
             self.dtypes,
             self.results,

@@ -537,7 +537,7 @@ class BasicParser(object):
                 name = name[:-4]
 
             name     = '{}.pyccel'.format(name)
-            filename = path+ '/' + name
+            filename = os.path.join(path, name)
         # check extension
 
         if not filename.split(""".""")[-1] == 'pyccel':
@@ -550,19 +550,15 @@ class BasicParser(object):
         try:
             code = self.code.encode('utf-8')
             hs   = hashlib.md5(code)
-            f    = open(filename, 'wb')
-            pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
-            f.close()
+            with open(filename, 'wb') as f:
+                pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
         except: FileNotFoundError:
             pass
         except PermissionError:
             pass
 
-    # TODO shall we need to load the Parser too?
-
     def load(self, filename=None):
-        """
-        Load the current ast using Pickle.
+        """ Load the current ast using Pickle.
 
           Parameters
           ----------
@@ -586,18 +582,14 @@ class BasicParser(object):
                 name = name[:-4]
 
             name     = '{}.pyccel'.format(name)
-            filename = path+ '/' + name
-        # check extension
+            filename = os.path.join(path, name)
 
         if not filename.split(""".""")[-1] == 'pyccel':
             raise ValueError('Expecting a .pyccel extension')
 
-#        print('>>> home = ', os.environ['HOME'])
-        # ...
         try:
-            f = open(filename, 'rb')
-            hs, version, parser = pickle.load(f)
-            f.close()
+            with open(filename, 'rb') as f:
+                hs, version, parser = pickle.load(f)
         except Exception:
             return
 

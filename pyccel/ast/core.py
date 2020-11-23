@@ -2869,6 +2869,23 @@ class Variable(Symbol, PyccelAstNode):
         self._name = newname
 
     def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callablle function that can be called
+           to create the initial version of the object
+           and its arguments.
+        """
         args = (
             self.dtype,
             self.name)
@@ -2881,7 +2898,9 @@ class Variable(Symbol, PyccelAstNode):
             'shape':self.shape,
             'cls_base':self.cls_base,
             }
-        return (apply, (Variable, args, kwargs))
+
+        out =  (apply, (Variable, args, kwargs))
+        return out
 
     def _eval_subs(self, old, new):
         return self
@@ -3820,6 +3839,10 @@ class FunctionDef(Basic):
 
 
     def __getnewargs__(self):
+        """
+          This method returns the positional and keyword arguments
+            used to create an instance of this class.
+        """
         args = (
         self._name,
         self._arguments,
@@ -3846,8 +3869,26 @@ class FunctionDef(Basic):
         return args, kwargs
 
     def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callablle function that can be called
+           to create the initial version of the object
+           and its arguments.
+        """
         args, kwargs = self.__getnewargs__()
-        return (apply, (self.__class__, args, kwargs))
+        out = (apply, (self.__class__, args, kwargs))
+        return out
 
     # TODO
     def check_pure(self):
@@ -6057,6 +6098,23 @@ class ParserResult(Basic):
             return self.module
 
     def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callablle function that can be called
+           to create the initial version of the object
+           and its arguments.
+        """
         kwargs = dict(
         program = self.program,
         module  = self.module,
