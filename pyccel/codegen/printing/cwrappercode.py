@@ -136,22 +136,21 @@ class CWrapperCodePrinter(CCodePrinter):
             for a in function.arguments:
                 if isinstance(a, Variable) and a.rank>0:
                     # Add shape arguments for static function
-                    for i in range(collect_dict[a].rank) :
+                    for i in range(collect_dict[a].rank):
                         var = Variable(dtype=NativeInteger() ,name = self.get_new_name(used_names, a.name + "_dim"))
                         body = FunctionCall(numpy_get_dim, [collect_dict[a], i])
                         if a.is_optional:
                             body = IfTernaryOperator(PyccelNot(VariableAddress(collect_dict[a])), body , LiteralInteger(0))
                         body = Assign(var, body)
-                        additional_vars.append(var)
                         additional_body.append(body)
-                    static_args.extend(additional_vars)
+                        static_args.append(var)
                 static_args.append(a)
-
+            print(static_args)
             static_function = as_static_function_call(function, self._module_name, name=function.name)
         else:
             static_function = function
             static_args = function.arguments
-        return static_function, static_args, additional_vars, additional_body
+        return static_function, static_args, additional_body
 
     # -------------------------------------------------------------------
     # Functions that take care of creating cast or convert type function call :
@@ -586,9 +585,9 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.extend(wrapper_body_translations)
 
         # Call function
-        static_function, static_args, additional_vars, additional_body = self._get_static_function(used_names, expr, collect_vars)
+        static_function, static_args, additional_body = self._get_static_function(used_names, expr, collect_vars)
         wrapper_body.extend(additional_body)
-        for var in additional_vars :
+        for var in static_args :
             wrapper_vars[var.name] = var
 
         if len(expr.results)==0:
