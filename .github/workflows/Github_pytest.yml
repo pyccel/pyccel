@@ -91,6 +91,7 @@ jobs:
           python-version: 3.8
       - name: Debug info
         run: |
+            echo $CONDA
             ls $CONDA
             ls $CONDA/Lib/distutils
       - name: Install dependencies
