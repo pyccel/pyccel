@@ -553,7 +553,9 @@ class BasicParser(object):
             f    = open(filename, 'wb')
             pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
             f.close()
-        except PermissionError or FileNotFoundError:
+        except: FileNotFoundError:
+            pass
+        except PermissionError:
             pass
 
     # TODO shall we need to load the Parser too?
@@ -596,7 +598,7 @@ class BasicParser(object):
             f = open(filename, 'rb')
             hs, version, parser = pickle.load(f)
             f.close()
-        except:
+        except Exception:
             return
 
         import hashlib
