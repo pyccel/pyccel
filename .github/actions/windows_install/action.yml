@@ -60,3 +60,7 @@ runs:
         dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
         cd -
       shell: bash
+    - name: Set bash as default terminal
+      run: |
+          echo "COMSPEC=bash" >> $GITHUB_ENV
+      shell: bash
