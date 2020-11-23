@@ -564,8 +564,8 @@ class CWrapperCodePrinter(CCodePrinter):
             # create the corresponding function call
             static_function, static_args, additional_body = self._get_static_function(used_names, func, collect_vars)
             mini_wrapper_func_body.extend(additional_body)
-            for var in static_args and:
-                wrapper_vars[var.name] = var
+            for var in static_args:
+                mini_wrapper_func_vars[var.name] = var
 
             if len(func.results)==0:
                 func_call = FunctionCall(static_function, static_args)
