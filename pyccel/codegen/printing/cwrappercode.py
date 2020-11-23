@@ -110,7 +110,9 @@ class CWrapperCodePrinter(CCodePrinter):
                     severity='fatal')
 
     def get_default_assign(self, arg, func_arg):
-        if func_arg.is_optional:
+        if arg.rank > 0 :
+            return AliasAssign(arg, Nil())
+        elif func_arg.is_optional:
             return AliasAssign(arg, Py_None)
         elif isinstance(arg.dtype, (NativeReal, NativeInteger, NativeBool)):
             return Assign(arg, func_arg.value)
@@ -309,12 +311,17 @@ class CWrapperCodePrinter(CCodePrinter):
         body : list
             A list of statements
         """
+        body = []
         #TODO create and extern rank and order check function
+        #check optional :
+        if variable.is_optional :
+            check = PyccelNot(VariableAddress(collect_var))
+            body += [(check, [Assign(VariableAddress(variable), Nil())])]
+
         #rank check :
         check = PyccelNe(FunctionCall(numpy_get_ndims,[collect_var]), LiteralInteger(collect_var.rank))
         error = PyErr_SetString('PyExc_TypeError', '"{} must have rank {}"'.format(collect_var, str(collect_var.rank)))
-        body  = [(check, [error, Return([Nil()])])]
-
+        body  += [(check, [error, Return([Nil()])])]
         if check_type : #Type check
             numpy_dtype = self.find_in_numpy_dtype_registry(variable)
             arg_dtype   = self.find_in_dtype_registry(self._print(variable.dtype), variable.precision)
@@ -331,8 +338,9 @@ class CWrapperCodePrinter(CCodePrinter):
                 error = PyErr_SetString('PyExc_NotImplementedError',
                         '"Argument does not have the expected ordering ({})"'.format(collect_var.order))
                 body += [(PyccelNot(check), [error, Return([Nil()])])]
+        body += [(LiteralTrue(), [Assign(VariableAddress(variable),
+                                self.get_collect_function_call(variable, collect_var))])]
         body = [If(*body)]
-        body += [Assign(VariableAddress(variable), self.get_collect_function_call(variable, collect_var))]
 
         return body
 
