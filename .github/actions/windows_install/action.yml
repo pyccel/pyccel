@@ -6,11 +6,10 @@ runs:
     - name: Setup conda
       run: |
         # Use utf for output
-        $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
+        $PSDefaultParameterValues['Out-File:Encoding'] = 'Ascii'
         #
         # Change default C compiler from M$ to mingw in distutils.cfg
-        echo "[build]" >> ${Env:pythonLocation}\\Lib\\distutils\\distutils.cfg
-        echo "compiler = mingw32" >> ${Env:pythonLocation}\\Lib\\distutils\\distutils.cfg
+        echo "[build]`ncompiler = mingw32" >> ${Env:pythonLocation}\\Lib\\distutils\\distutils.cfg
         cat ${Env:pythonLocation}\\Lib\\distutils\\distutils.cfg
       shell: powershell
     - name: Install Lapack
