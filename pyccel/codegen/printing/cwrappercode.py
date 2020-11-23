@@ -130,7 +130,6 @@ class CWrapperCodePrinter(CCodePrinter):
               a.DIM = size of array
         """
         additional_body = []
-        additional_vars = []
         if self._target_language == 'fortran':
             static_args = []
             for a in function.arguments:
@@ -145,7 +144,6 @@ class CWrapperCodePrinter(CCodePrinter):
                         additional_body.append(body)
                         static_args.append(var)
                 static_args.append(a)
-            print(static_args)
             static_function = as_static_function_call(function, self._module_name, name=function.name)
         else:
             static_function = function
