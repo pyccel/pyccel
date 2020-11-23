@@ -139,7 +139,7 @@ class CWrapperCodePrinter(CCodePrinter):
                         var = Variable(dtype=NativeInteger() ,name = self.get_new_name(used_names, a.name + "_dim"))
                         body = FunctionCall(numpy_get_dim, [collect_dict[a], i])
                         if a.is_optional:
-                            body = IfTernaryOperator(PyccelNot(VariableAddress(collect_dict[a])), body , LiteralInteger(0))
+                            body = IfTernaryOperator(VariableAddress(collect_dict[a]), body , LiteralInteger(0))
                         body = Assign(var, body)
                         additional_body.append(body)
                         static_args.append(var)

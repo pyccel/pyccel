@@ -2,6 +2,8 @@
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
+import numpy as np
+import pytest
 
 #------------------------------------------------------------------------------
 def test_f1(language):
@@ -132,3 +134,56 @@ def test_f11(language):
     # ...
     assert mod.call_optional_11() == modnew.call_optional_11()
     assert mod.call_optional_12() == modnew.call_optional_12()
+
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Numpy array are not yet implemented for C language"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
+def test_optional_args_1d(language):
+    @types( 'int[:]', 'int[:]')
+    def f12(x, y = None):
+        if y is None:
+            x[:] *= 2
+        else :
+            x[:] = x // y
+        f = epyccel(f12, language = language)
+
+        x1 = np.array( [1,2,3], dtype=np.int )
+        x2 = np.copy(x1)
+        a  = np.array( [1,2,3], dtype=np.int )
+        f(x1)
+        f12(x1)
+
+        # ...
+        assert np.array_equal(x1, x2)
+
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Numpy array are not yet implemented for C language"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
+def test_optional_2d_F(language):
+    @types('int32[:,:]', 'int32[:,:]')
+    def f13(x, y = None):
+        if y is None:
+            x[:] *= 2
+        else :
+            x[:] = x // y
+        f = epyccel(f13, language = language)
+
+        x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
+        x2 = np.copy(x1)
+        a  = np.array( [[-1,-2,-3], [-4,-5,-6]], dtype=np.int32, order='F' )
+        f(x1)
+        f12(x1)
+
+        # ...
+        assert np.array_equal(x1, x2)
+#------------------------------------------------------------------------------
