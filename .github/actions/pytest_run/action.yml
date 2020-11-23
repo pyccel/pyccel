@@ -1,5 +1,11 @@
 name: 'Pyccel pytest commands'
 
+inputs:
+  shell-used:
+    description: "Bash or powershell"
+    required: true
+    default: bash
+
 runs:
   using: "composite"
   steps:
@@ -11,5 +17,5 @@ runs:
         #python -m pytest ndarrays/ -rx
         #mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
         #mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel -v -m parallel -rx
-      shell: default
+      shell: ${{inputs.shell-used}}
       working-directory: ./tests

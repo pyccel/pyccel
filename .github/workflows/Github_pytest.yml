@@ -85,6 +85,8 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Test with pytest
         uses: ./.github/actions/pytest_run
+        with:
+          shell-used: powershell
 
   #MacOSX:
 
