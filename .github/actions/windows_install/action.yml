@@ -42,12 +42,13 @@ runs:
     - name: Setup MPI
       run: |
         #refreshenv
-        $MSMPI_INC="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Include\\"
-        $MSMPI_LIB64="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Lib\\x64\\"
+        $MSMPI_INC="C:\\Program Files\\Microsoft MPI\\Include\\"
+        $MSMPI_LIB64="C:\\Program Files\\Microsoft MPI\\Lib\\x64\\"
         $PATH="${Env:Path}C:\\Program Files\\Microsoft MPI\\Bin;"
         [System.Environment]::SetEnvironmentVariable("Path",$PATH)
         echo "Path=${PATH}" >> $GITHUB_ENV
         ls "C:\\Program Files"
+        ls "C:\\Program Files\\Microsoft MPI\\"
         ls "C:\\Program Files (x86)"
         ls "C:\\Program Files (x86)\\Microsoft SDKs"
         ls "C:\\Program Files (x86)\\Microsoft SDKs\\MPI"
