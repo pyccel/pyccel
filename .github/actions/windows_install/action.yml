@@ -62,5 +62,6 @@ runs:
       shell: bash
     - name: Set bash as default terminal
       run: |
-          echo "COMSPEC=bash" >> $GITHUB_ENV
+          export COMSPEC="bash --noprofile --norc -eo pipefail"
+          echo "COMSPEC=${COMSPEC}" >> $GITHUB_ENV
       shell: bash
