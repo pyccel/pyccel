@@ -55,7 +55,7 @@ n = omp_get_num_threads()
 result = 0
 #$ omp parallel private(i)
 #$ omp for reduction (+:result)
-for i in range(0, 1000):
+for i in range(0, 1337):
   result += i
 #$ omp end parallel
 ```
@@ -76,7 +76,7 @@ for i in range(0, 1000):
 result = 0
 #$ omp parallel
 #$ omp single
-for i in range(0, 1000):
+for i in range(0, 1337):
   result += i
 #$ omp end single
 #$ omp end parallel
@@ -105,13 +105,13 @@ if omp_get_num_teams() == 2:
   if tm_id == 0:
     #$ omp parallel
     #$ omp for reduction (+:result0)
-    for i in range(0, 1000):
+    for i in range(0, 1337):
        result0 += i
     #$ omp end parallel
   if tm_id == 1:
     #$ omp parallel
     #$ omp for reduction (+:result1)
-    for i in range(0, 5000):
+    for i in range(0, 1337):
        result1 += i
     #$ omp end parallel
 #$ omp end teams
@@ -135,7 +135,7 @@ result = result1 + result2
 #$ omp target
 #$ omp parallel
 #$ omp for private(i)
-for i in range(0, 1000):
+for i in range(0, 1337):
     result[i] = v1[i] * v2[i]
 #$ omp end parallel
 #$ omp end target
@@ -156,7 +156,7 @@ for i in range(0, 1000):
 ```python
 result = 0
 #$ omp parallel num_threads(4) shared(result)
-for i in range(0, 1000):
+for i in range(0, 1337):
   #$ omp critical
   result += i
   #$ omp end critical
@@ -177,7 +177,7 @@ for i in range(0, 1000):
 
 #$ omp parallel
 #$ omp for private(i)
-for i in range(0, 1000):
+for i in range(0, 1337):
   result[i] = v1[i] * v2[i]
 #$ omp barrier
 work(result)
@@ -262,7 +262,7 @@ def fib(n):
 
 #$ omp parallel
 #$ omp omp single
-result = fib(10)
+result = fib(42)
 #$ omp end single
 #$ omp end parallel
 ```
@@ -281,7 +281,32 @@ result = fib(10)
 #$ omp task
 long_function()
 #pragma omp taskyield
-long_function2()
+long_function_2()
 #$ omp end task
+```
 
+### Flush Construct
+
+#### Syntax
+
+```python
+#$ omp flush
+```
+
+#### Example
+
+```python
+from pyccel.stdlib.internal.openmp import omp_get_thread_num
+ flag = 0
+#$ omp parallel num_threads(2)
+if omp_get_thread_num() == 0:
+  data = 1337
+  #$ omp flush(flag, data)
+  flag = 1
+  #$ omp flush(flag)
+elif omp_get_thread_num() == 1:
+  #$ omp flush(flag, data)
+  while flag < 1:
+    #$ omp flush(flag, data)
+  #$ flush(flag, data)
 ```
