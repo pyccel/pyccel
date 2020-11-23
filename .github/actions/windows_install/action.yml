@@ -26,6 +26,7 @@ runs:
         gendef vcruntime140.dll
         dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
         cd -
+        echo $PATH
       shell: bash
     - name: Install MS MPI runtime and SDK
       run: |
