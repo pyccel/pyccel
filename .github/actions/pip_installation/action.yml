@@ -31,8 +31,4 @@ runs:
       shell: bash
       run:
         python -m pip install "pytest>=4.5"
-    - name: Install pytest coverage
-      shell: bash
-      run:
-        python -m pip install pytest-cov
 

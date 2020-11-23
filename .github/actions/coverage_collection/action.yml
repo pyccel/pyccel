@@ -9,7 +9,6 @@ runs:
         coverage combine
         coverage xml
         rm ${SITE_DIR}/pyccel_cov.pth
-        bash <(wget -q -O - https://coverage.codacy.com/get.sh)
         cd ..
       shell: bash
 
