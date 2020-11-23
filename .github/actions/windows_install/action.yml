@@ -8,6 +8,7 @@ runs:
         #
         # Change default C compiler from M$ to mingw in distutils.cfg
         echo "[build]`ncompiler = mingw32" >> ${Env:pythonLocation}\\Lib\\distutils\\distutils.cfg
+        cat ${Env:pythonLocation}\\Lib\\distutils\\distutils.cfg
       shell: powershell
     - name: Install Lapack
       run: |
