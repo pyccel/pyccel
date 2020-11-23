@@ -125,6 +125,8 @@ def create_shared_library(codegen,
 
         setup_filename = os.path.join(pyccel_dirpath, setup_filename)
         cmd = [sys.executable, setup_filename, "build"]
+        if sys.platform == "win32":
+            cmd += ["--compiler", "mingw32"]
 
         if verbose:
             print(' '.join(cmd))
