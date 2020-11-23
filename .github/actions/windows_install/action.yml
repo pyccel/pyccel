@@ -11,7 +11,9 @@ runs:
         conda activate
         #
         # Change default C compiler from M$ to mingw in distutils.cfg
+        ls /c/tools/Anaconda3/Lib/distutils/
         echo -e "[build]\ncompiler = mingw32" >> /c/tools/Anaconda3/Lib/distutils/distutils.cfg
+        cat /c/tools/Anaconda3/Lib/distutils/distutils.cfg
       shell: bash
     - name: Install Lapack
       run: |
