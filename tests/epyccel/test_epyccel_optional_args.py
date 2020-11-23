@@ -1,9 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 
+import pytest
+import numpy as np
+
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
-import numpy as np
-import pytest
 
 #------------------------------------------------------------------------------
 def test_f1(language):
@@ -154,9 +155,8 @@ def test_optional_args_1d(language):
 
         x1 = np.array( [1,2,3], dtype=np.int )
         x2 = np.copy(x1)
-        a  = np.array( [1,2,3], dtype=np.int )
         f(x1)
-        f12(x1)
+        f12(x2)
 
         # ...
         assert np.array_equal(x1, x2)
@@ -170,7 +170,7 @@ def test_optional_args_1d(language):
     ]
 )
 def test_optional_2d_F(language):
-    @types('int32[:,:]', 'int32[:,:]')
+    @types('int32[:,:](order=F)', 'int32[:,:](order=F)')
     def f13(x, y = None):
         if y is None:
             x[:] *= 2
@@ -180,9 +180,8 @@ def test_optional_2d_F(language):
 
         x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
         x2 = np.copy(x1)
-        a  = np.array( [[-1,-2,-3], [-4,-5,-6]], dtype=np.int32, order='F' )
         f(x1)
-        f12(x1)
+        f13 (x2)
 
         # ...
         assert np.array_equal(x1, x2)
