@@ -514,14 +514,7 @@ def test_headers(language):
     types = int
     test_file = "scripts/test_headers.py"
 
-    test_file = os.path.normpath(test_file)
-    cwd = os.path.dirname(test_file)
-    cwd = get_abs_path(cwd)
-    test_file = get_abs_path(test_file)
-
-    pyccel_commands = " --language="+language
-
-    with open('scripts/test_headers.py', 'w') as f:
+    with open(test_file, 'w') as f:
         code = ("from headers import f\n"
                 "def f(x):\n"
                 "    y = x\n"
@@ -535,6 +528,13 @@ def test_headers(language):
                "#$ header function f(int)")
 
         f.write(code)
+
+    test_file = os.path.normpath(test_file)
+    cwd = os.path.dirname(test_file)
+    cwd = get_abs_path(cwd)
+    test_file = get_abs_path(test_file)
+
+    pyccel_commands = " --language="+language
 
     compile_pyccel(cwd, test_file, pyccel_commands)
 
