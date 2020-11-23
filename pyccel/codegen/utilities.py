@@ -172,11 +172,7 @@ def compile_files(filename, compiler, flags,
 def get_gfortran_library_dir():
     """Provide the location of the gfortran libraries for linking
     """
-    if sys.platform == "win32":
-        lib_name = 'gfortran.lib'
-    else:
-        lib_name = 'libgfortran.a'
-    file_location = subprocess.check_output([shutil.which('gfortran'), '-print-file-name='+lib_name],
+    file_location = subprocess.check_output([shutil.which('gfortran'), '-print-file-name=libgfortran.a'],
             universal_newlines = True)
     print(file_location)
     lib_dir = os.path.dirname(file_location)
