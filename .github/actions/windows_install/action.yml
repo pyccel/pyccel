@@ -5,6 +5,8 @@ runs:
   steps:
     - name: Setup conda
       run: |
+        # Use utf for output
+        $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
         #
         # Change default C compiler from M$ to mingw in distutils.cfg
         echo "[build]`ncompiler = mingw32" >> ${Env:pythonLocation}\\Lib\\distutils\\distutils.cfg
@@ -37,7 +39,7 @@ runs:
         # Install MS MPI
         ./msmpisetup.exe -unattend
         sleep 5
-        msiexec //quiet //i msmpisdk.msi
+        msiexec /quiet /i msmpisdk.msi
       shell: powershell
     #- name: Setup MPI
     #  run: |
