@@ -10,7 +10,6 @@ runs:
         #
         # Change default C compiler from M$ to mingw in distutils.cfg
         echo "[build]`ncompiler = mingw32" >> ${Env:pythonLocation}\\Lib\\distutils\\distutils.cfg
-        cat ${Env:pythonLocation}\\Lib\\distutils\\distutils.cfg
         sed '/return \[''msvcr100''\]/ a \        elif msc_ver == ''1927'':\\n            return [''msvcr140'']' ${Env:pythonLocation}\\Lib\\distutils\\cygwinccompiler.py > sed_tmp.py
         Move-Item -Path sed_tmp.py -Destination ${Env:pythonLocation}\\Lib\\distutils\\cygwinccompiler.py -Force
       shell: powershell
@@ -20,8 +19,6 @@ runs:
         # Download x64 BLAS and LAPACK DLLs from https://icl.cs.utk.edu/lapack-for-windows/lapack/
         $WEB_ADDRESS="https://icl.cs.utk.edu/lapack-for-windows/libraries/VisualStudio/3.7.0/Dynamic-MINGW/Win64"
         $LIBRARY_DIR="C:\\ProgramData\\chocolatey\\lib\\mingw\\tools\\install\\mingw64\\lib"
-        echo $LIBRARY_DIR
-        ls $LIBRARY_DIR
         curl $WEB_ADDRESS/libblas.dll -o $LIBRARY_DIR\\libblas.dll
         curl $WEB_ADDRESS/liblapack.dll -o $LIBRARY_DIR\\liblapack.dll
         #
