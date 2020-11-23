@@ -5,8 +5,6 @@ runs:
   steps:
     - name: Test with pytest
       run: |
-        echo $PATH
-        gfortran --version
         python -m pytest -rx -v -s --maxfail=2 epyccel/test_base.py
         #python -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
         #python -m pytest -rx -m "not parallel and not c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
