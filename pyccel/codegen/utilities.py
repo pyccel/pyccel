@@ -158,7 +158,8 @@ def compile_files(filename, compiler, flags,
 
 
     if output:
-        output = output.decode("utf-8")
+        if isinstance(output,bytes):
+            output = output.decode("utf-8")
         warnings.warn(UserWarning(output))
 
     # TODO shall we uncomment this?
