@@ -9,5 +9,4 @@ runs:
         coverage xml
         rm ${SITE_DIR}/pyccel_cov.pth
       shell: bash
-      working-directory: ./tests
 
