@@ -5,15 +5,11 @@ runs:
   steps:
     - name: Setup conda
       run: |
-        choco install anaconda3
-        source /c/tools/Anaconda3/etc/profile.d/conda.sh
-        #source .travis/RefreshEnv.sh
-        conda activate
         #
         # Change default C compiler from M$ to mingw in distutils.cfg
-        ls /c/tools/Anaconda3/Lib/distutils/
-        echo -e "[build]\ncompiler = mingw32" >> /c/tools/Anaconda3/Lib/distutils/distutils.cfg
-        cat /c/tools/Anaconda3/Lib/distutils/distutils.cfg
+        ls ${pythonLocation}/Lib/distutils/
+        echo -e "[build]\ncompiler = mingw32" >> ${pythonLocation}/Lib/distutils/distutils.cfg
+        cat ${pythonLocation}/Lib/distutils/distutils.cfg
       shell: bash
     - name: Install Lapack
       run: |
