@@ -35,8 +35,6 @@ def get_num_threads(n):
 print(get_num_threads(4))
 ```
 
-This example
-
 ## Directives Usage on Pyccel
 
 ### Parallel Construct
