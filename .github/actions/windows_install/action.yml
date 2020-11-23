@@ -46,6 +46,8 @@ runs:
         $PATH="${Env:Path}C:\\Program Files\\Microsoft MPI\\Bin;"
         [System.Environment]::SetEnvironmentVariable("Path",$PATH)
         echo "Path=${PATH}" >> $GITHUB_ENV
+        ls "C:\\Program Files (x86)\\Microsoft SDKs"
+        ls "C:\\Program Files (x86)\\Microsoft SDKs\\MPI"
         #
         # Generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html
         pushd "$MSMPI_INC"
