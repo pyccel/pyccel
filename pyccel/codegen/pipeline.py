@@ -125,7 +125,8 @@ def execute_pyccel(fname, *,
                                  includes=())
 
     # Build position-independent code, suited for use in shared library
-    fflags = ' {} -fPIC '.format(fflags)
+    if sys.platform == "win32":
+        fflags = ' {} -fPIC '.format(fflags)
     # ...
 
     # Parse Python file
