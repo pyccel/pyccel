@@ -9,38 +9,38 @@ on:
     branches: [ master ]
 
 jobs:
-  Linux:
+  #Linux:
 
-    runs-on: ubuntu-latest
+  #  runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.5
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.5
-      - name: Install dependencies
-        uses: ./.github/actions/linux_install
-      - name: Install python dependencies
-        uses: ./.github/actions/pip_installation
-      - name: Coverage install
-        id: cov-install
-        uses: ./.github/actions/coverage_install
-      - name: Test with pytest
-        uses: ./.github/actions/pytest_run
-        env:
-            COVERAGE_PROCESS_START: ${{ steps.cov-install.outputs.COVERAGE_PROCESS_START }}
-      - name: Collect coverage information
-        continue-on-error: True
-        uses: ./.github/actions/coverage_collection
-        env:
-            COVERAGE_PROCESS_START: ${{ steps.cov-install.outputs.COVERAGE_PROCESS_START }}
-      - name: Run codacy-coverage-reporter
-        uses: codacy/codacy-coverage-reporter-action@master
-        continue-on-error: True
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: cobertura.xml
+  #  steps:
+  #    - uses: actions/checkout@v2
+  #    - name: Set up Python 3.5
+  #      uses: actions/setup-python@v2
+  #      with:
+  #        python-version: 3.5
+  #    - name: Install dependencies
+  #      uses: ./.github/actions/linux_install
+  #    - name: Install python dependencies
+  #      uses: ./.github/actions/pip_installation
+  #    - name: Coverage install
+  #      id: cov-install
+  #      uses: ./.github/actions/coverage_install
+  #    - name: Test with pytest
+  #      uses: ./.github/actions/pytest_run
+  #      env:
+  #          COVERAGE_PROCESS_START: ${{ steps.cov-install.outputs.COVERAGE_PROCESS_START }}
+  #    - name: Collect coverage information
+  #      continue-on-error: True
+  #      uses: ./.github/actions/coverage_collection
+  #      env:
+  #          COVERAGE_PROCESS_START: ${{ steps.cov-install.outputs.COVERAGE_PROCESS_START }}
+  #    - name: Run codacy-coverage-reporter
+  #      uses: codacy/codacy-coverage-reporter-action@master
+  #      continue-on-error: True
+  #      with:
+  #        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+  #        coverage-reports: cobertura.xml
 
   Linux-Master:
 
