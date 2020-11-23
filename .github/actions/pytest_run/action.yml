@@ -6,7 +6,7 @@ runs:
     - name: Test with pytest
       run: |
         cd tests
-        python -m pytest -rx -v tests/epyccel/test_base.py
+        python -m pytest -rx -v epyccel/test_base.py
         #python -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
         #python -m pytest -rx -m "not parallel and not c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
         #python -m pytest ndarrays/ -rx
