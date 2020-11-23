@@ -14,7 +14,7 @@ from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelEq
+from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelEq, IfTernaryOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
@@ -121,7 +121,7 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             raise NotImplementedError('Default values are not implemented for this datatype : {}'.format(func_arg.dtype))
 
-    def _get_static_function(self, function, collect_dict):
+    def _get_static_function(self, used_names, function, collect_dict):
         """
         Create arguments and functioncall for arguments rank > 0 in fortran.
         Format : a is numpy array
@@ -129,20 +129,29 @@ class CWrapperCodePrinter(CCodePrinter):
         where a.DATA = buffer holding data
               a.DIM = size of array
         """
+        additional_body = []
+        additional_vars = []
         if self._target_language == 'fortran':
             static_args = []
             for a in function.arguments:
                 if isinstance(a, Variable) and a.rank>0:
                     # Add shape arguments for static function
-                    static_args.extend(FunctionCall(numpy_get_dim,[collect_dict[a],i])
-                            for i in range(collect_dict[a].rank))
+                    for i in range(collect_dict[a].rank) :
+                        var = Variable(dtype=NativeInteger() ,name = self.get_new_name(used_names, a.name + "_dim"))
+                        body = FunctionCall(numpy_get_dim, [collect_dict[a], i])
+                        if a.is_optional:
+                            body = IfTernaryOperator(PyccelNot(VariableAddress(collect_dict[a])), body , LiteralInteger(0))
+                        body = Assign(var, body)
+                        additional_vars.append(var)
+                        additional_body.append(body)
+                    static_args.extend(additional_vars)
                 static_args.append(a)
 
             static_function = as_static_function_call(function, self._module_name, name=function.name)
         else:
             static_function = function
             static_args = function.arguments
-        return static_function, static_args
+        return static_function, static_args, additional_vars, additional_body
 
     # -------------------------------------------------------------------
     # Functions that take care of creating cast or convert type function call :
@@ -577,7 +586,10 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.extend(wrapper_body_translations)
 
         # Call function
-        static_function, static_args = self._get_static_function(expr, collect_vars)
+        static_function, static_args, additional_vars, additional_body = self._get_static_function(used_names, expr, collect_vars)
+        wrapper_body.extend(additional_body)
+        for var in additional_vars :
+            wrapper_vars[var.name] = var
 
         if len(expr.results)==0:
             func_call = FunctionCall(static_function, static_args)
