@@ -103,7 +103,7 @@ def execute_pyccel(fname, *,
 
     f90exec = mpi_compiler if mpi_compiler else compiler
 
-    if (language == "c" and sys.platform != 'win32'):
+    if (language == "c"):
         libs = libs + ['m']
     if accelerator == 'openmp':
         if compiler in ["gcc","gfortran"]:
@@ -125,8 +125,7 @@ def execute_pyccel(fname, *,
                                  includes=())
 
     # Build position-independent code, suited for use in shared library
-    if sys.platform == "win32":
-        fflags = ' {} -fPIC '.format(fflags)
+    fflags = ' {} -fPIC '.format(fflags)
     # ...
 
     # Parse Python file
