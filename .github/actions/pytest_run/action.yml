@@ -11,5 +11,5 @@ runs:
         #python -m pytest ndarrays/ -rx
         #mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
         #mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel -v -m parallel -rx
-      shell: python
+      shell: default
       working-directory: ./tests
