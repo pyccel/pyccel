@@ -351,3 +351,37 @@ for i in range(N):
   result[i] = i
 #$ omp end parallel
 ```
+
+### Sections Worksharing Construct
+
+#### Syntax
+
+```python
+#$ omp sections [clause[ [,]clause] ... ]
+#$ omp section
+  structured-block-sequence
+#$ omp end section
+#$ omp section
+  structured-block-sequence
+#$ omp end section
+#$ omp end sections
+```
+
+#### Example
+
+```python
+section_count = 0
+#$ omp parallel num_threads(2)
+#$ omp omp sections firstprivate( section_count )
+
+#$ omp section
+section_count = section_count + 1
+#$ omp end section
+
+#$ omp section
+section_count = section_count + 1
+#$ omp end section
+#$ omp omp end sections
+
+#$ omp end parallel
+```
