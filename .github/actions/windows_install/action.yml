@@ -7,9 +7,7 @@ runs:
       run: |
         #
         # Change default C compiler from M$ to mingw in distutils.cfg
-        ls ${pythonLocation}/Lib/distutils/
         echo -e "[build]\ncompiler = mingw32" >> ${pythonLocation}/Lib/distutils/distutils.cfg
-        cat ${pythonLocation}/Lib/distutils/distutils.cfg
       shell: bash
     - name: Install Lapack
       run: |
@@ -48,6 +46,7 @@ runs:
         export MSMPI_LIB64="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Lib\\x64\\"
         export PATH=$PATH:"/c/Program Files/Microsoft MPI/Bin"
         echo "PATH=${PATH}" >> $GITHUB_ENV
+        echo $PATH
         #
         # Generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html
         cd "$MSMPI_INC"
