@@ -1252,55 +1252,16 @@ class SemanticParser(BasicParser):
                     self._infere_type(a, **settings)
             expr = func(*args, **kwargs)
 
-            if isinstance(expr, (NumpyWhere, NumpyDiag, NumpyLinspace)):
-                self.insert_variable(expr.index)
-
-            #if len(stmts) > 0:
-            #    stmts.append(expr)
-            #    return CodeBlock(stmts)
             return expr
         else:
-            #if isinstance(func, Interface):
-            #    arg_dvar = [self._infere_type(i, **settings) for i in args]
-            #    f_dvar = [[self._infere_type(j, **settings)
-            #              for j in i.arguments] for i in
-            #              func.functions]
-            #    j = -1
-            #    for i in f_dvar:
-            #        j += 1
-            #        found = True
-            #        for (idx, dt) in enumerate(arg_dvar):
-            #            dtype1 = str_dtype(dt['datatype'])
-            #            dtype2 = str_dtype(i[idx]['datatype'])
-            #            found = found and (dtype1 in dtype2
-            #                          or dtype2 in dtype1)
-            #            found = found and dt['rank'] \
-            #                          == i[idx]['rank']
-            #        if found:
-            #            break
-            #
-            #    if found:
-            #        f_args = func.functions[j].arguments
-            #    else:
-            #        msg = 'function not found in the interface'
-            #        # TODO: Add message to parser/messages.py
-            #        errors.report(msg,
-            #            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            #            severity='fatal', blocker=self.blocking)
 
             expr = FunctionCall(func, args, self._current_function)
 
-            #if len(stmts) > 0:
-            #    stmts.append(expr)
-            #    return CodeBlock(stmts)
             return expr
 
     def _visit_Application(self, expr, **settings):
         name     = type(expr).__name__
         func     = self.get_function(name)
-
-        #stmts, new_args = extract_subexpressions(expr.args)
-        #stmts = [self._visit(stmt, **settings) for stmt in stmts]
 
         args = self._handle_function_args(expr.args, **settings)
 
@@ -1309,9 +1270,6 @@ class SemanticParser(BasicParser):
         F = pyccel_builtin_function(expr, args)
 
         if F is not None:
-            #if len(stmts) > 0:
-            #    stmts.append(F)
-            #    return CodeBlock(stmts)
             return F
 
         elif name in self._namespace.cls_constructs.keys():
@@ -1352,7 +1310,6 @@ class SemanticParser(BasicParser):
                 args = macro.apply(args)
             else:
                 func = self.get_function(name)
-
             if func is None:
                 # TODO [SH, 25.02.2020] Report error
                 errors.report(UNDEFINED_FUNCTION, symbol=name,

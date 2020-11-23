@@ -224,6 +224,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
 
     compare_pyth_fort_output(pyth_out, lang_out, output_dtype)
 
+
 #==============================================================================
 # PYTEST MODULE SETUP AND TEARDOWN
 #==============================================================================
@@ -247,7 +248,7 @@ def teardown(path_dir = None):
             shutil.rmtree( file_name )
         elif not os.path.isfile(file_name):
             teardown(file_name)
-        elif not f.endswith(".py"):
+        elif not f.endswith(".py") and not f.endswith(".pyh") and not f.endswith(".pyccel"):
             os.remove(file_name)
 
 #==============================================================================
@@ -508,3 +509,56 @@ def test_print_strings(language):
 def test_print_sp_and_end(language):
     types = str
     pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
+
+def test_headers(language):
+    types = int
+    test_file = "scripts/test_headers.py"
+
+    test_file = os.path.normpath(test_file)
+    cwd = os.path.dirname(test_file)
+    cwd = get_abs_path(cwd)
+    test_file = get_abs_path(test_file)
+
+    pyccel_commands = " --language="+language
+
+    with open('scripts/test_headers.py', 'w') as f:
+        code = ("from headers import f\n"
+                "def f(x):\n"
+                "    y = x\n"
+                "    return y\n"
+                "print(f(1))\n")
+
+        f.write(code)
+
+    with open('scripts/headers.pyh', 'w') as f:
+        code =("#$ header metavar ignore_at_import=True\n"
+               "#$ header function f(int)")
+
+        f.write(code)
+
+    compile_pyccel(cwd, test_file, pyccel_commands)
+
+
+    lang_out = get_lang_output(get_exe(test_file))
+    assert int(lang_out)
+
+    with open('scripts/test_headers.py', 'w') as f:
+        code = ("from headers import f\n"
+                "def f(x):\n"
+                "    y = x\n"
+                "    return y\n"
+                "print(f(1.))\n")
+
+        f.write(code)
+
+    with open('scripts/headers.pyh', 'w') as f:
+        code =("#$ header metavar ignore_at_import=True\n"
+               "#$ header function f(float)")
+
+        f.write(code)
+
+    compile_pyccel(cwd, test_file, pyccel_commands)
+
+
+    lang_out = get_lang_output(get_exe(test_file))
+    assert float(lang_out)

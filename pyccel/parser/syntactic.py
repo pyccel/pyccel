@@ -187,6 +187,11 @@ class SyntaxParser(BasicParser):
         is_prog       = False
         body          = [self._visit(v) for v in stmt.body]
 
+        # Define the names of the module and program
+        # The module name allows it to be correctly referenced from an import command
+        current_mod_name = os.path.splitext(os.path.basename(self._filename))[0]
+        prog_name = 'prog_' + current_mod_name
+
         new_body      = []
         for i in body:
             if isinstance(i, CodeBlock):
@@ -205,6 +210,8 @@ class SyntaxParser(BasicParser):
                 mod.append(v)
                 targets.append(v.name)
                 current_file = mod
+                im = Import(source=current_mod_name, target = [v.name])
+                prog.append(im)
             elif isinstance(v,(Header, Comment, CommentBlock)):
                 # Headers and Comments are defined in the same block as the following object
                 n_empty_lines = 0
@@ -233,15 +240,8 @@ class SyntaxParser(BasicParser):
         if len(start)>0:
             mod.extend(start)
 
-        # Define the names of the module and program
-        # The module name allows it to be correctly referenced from an import command
-        current_mod_name = os.path.splitext(os.path.basename(self._filename))[0]
-        prog_name = 'prog_' + current_mod_name
         mod_code = CodeBlock(mod) if len(targets)>0 else None
         if is_prog:
-            if mod_code:
-                expr = Import(source=current_mod_name, target = targets)
-                prog.insert(0,expr)
             prog_code = CodeBlock(prog)
             prog_code.set_fst(stmt)
         else:
