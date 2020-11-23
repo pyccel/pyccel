@@ -14,7 +14,7 @@ class epyccel_test:
     """
     def __init__(self, f, lang='fortran'):
         self._f  = f
-        self._f2 = epyccel(f, language=lang)
+        self._f2 = epyccel(f, language=lang, verbose = True)
 
     def compare_epyccel(self, *args):
         out1 = self._f(*args)
