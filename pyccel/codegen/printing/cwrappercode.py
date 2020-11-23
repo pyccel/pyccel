@@ -15,7 +15,7 @@ from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, Funct
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, PyccelEq
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelEq, IfTernaryOperator
-from pyccel.ast.core import AugAssign
+from pyccel.ast.core import AugAssign, PyccelAssociativeParenthesis, PyccelOr
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, str_dtype
 
