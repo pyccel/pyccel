@@ -552,7 +552,7 @@ class BasicParser(object):
             hs   = hashlib.md5(code)
             with open(filename, 'wb') as f:
                 pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
-        except: FileNotFoundError:
+        except FileNotFoundError:
             pass
         except PermissionError:
             pass

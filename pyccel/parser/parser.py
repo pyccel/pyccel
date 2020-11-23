@@ -113,7 +113,22 @@ class Parser(object):
         self._module_parser = module_parser
 
     def parse(self, d_parsers=None, verbose=False):
+        """
+          Parse the parent file an all its dependencies.
 
+          Parameters
+          ----------
+          d_parsers : dict
+            A dictionary of parsed sons.
+
+          verbose: bool
+            Determine the verbosity.
+
+          Returns
+          -------
+          ast: Ast
+           The ast created in the syntactic stage.
+          """
         if self._syntax_parser:
             return self._syntax_parser.ast
 
@@ -189,6 +204,20 @@ class Parser(object):
         dependencies.
         This function always terminates with an OrderedDict that contains parsers
         for all involved files.
+
+         Parameters
+         ----------
+         d_parsers : dict
+          A dictionary of parsed sons.
+
+        verbose: bool
+          Determine the verbosity.
+
+         Results
+         -------
+         d_parsers: dict
+          The updated dictionary of parsed sons.
+
         """
 
         imports     = self.imports.keys()
@@ -205,8 +234,8 @@ class Parser(object):
 
             q = Parser(filename)
             q.parse(d_parsers=d_parsers)
-            if q._module_parser:
-                d_parsers[source] = q._module_parser
+            if q.module_parser:
+                d_parsers[source] = q.module_parser
             else:
                 d_parsers[source] = q
 
