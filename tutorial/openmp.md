@@ -332,3 +332,22 @@ for i in range(len(v)):
     #$ omp cancel for
 #$ omp end parallel
 ```
+
+### SIMD Construct
+
+#### Syntax
+
+```python
+#$ omp simd [clause[ [,]clause] ... ]
+  loop-nest
+```
+
+#### Example
+
+```python
+#$ omp parallel
+#$ omp simd private(i)
+for i in range(N):
+  result[i] = i
+#$ omp end parallel
+```
