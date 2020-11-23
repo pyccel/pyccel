@@ -251,17 +251,37 @@ result = result + 1
 def fib(n):
   if n < 2:
     return n
-  else:
-    #$ omp task shared(i) firstprivate(n)
-    i = fib(n-1)
-    #$ omp task shared(j) firstprivate(n)
-    j = fib(n-2)
-    #$ omp taskwait
-    return i+j
+  #$ omp task shared(i) firstprivate(n)
+  i = fib(n-1)
+  #$ omp end task
+  #$ omp task shared(j) firstprivate(n)
+  j = fib(n-2)
+  #$ omp end task
+  #$ omp taskwait
+  return i+j
 
 #$ omp parallel
 #$ omp omp single
 result = fib(10)
 #$ omp end single
 #$ omp end parallel
+```
+
+### Taskyield Construct
+
+#### Syntax
+
+```python
+#$ omp taskyield
+```
+
+#### Example
+
+```python
+#$ omp task
+long_function()
+#pragma omp taskyield
+long_function2()
+#$ omp end task
+
 ```
