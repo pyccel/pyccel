@@ -47,7 +47,7 @@ runs:
         [System.Environment]::SetEnvironmentVariable("Path",$PATH)
         echo "Path=${PATH}" >> $GITHUB_ENV
         ls "C:\\Program Files"
-        ls "C:\\Program Files (x64)"
+        ls "C:\\Program Files (x86)"
         ls "C:\\Program Files\\Microsoft MPI\\Bin"
         ls "C:\\Program Files\\Microsoft SDKs\\"
         #
