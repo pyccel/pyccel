@@ -65,6 +65,7 @@ def test_call_div_r_r(language):
 
 # -------------------- Complex division ---------------------- #
 
+@pytest.mark.skipif(sys.platform == "win32", reason="complex library not correctly passed in tests")
 def test_call_div_c_c(language):
     @types('complex', 'complex')
     def div_c_c(x, y):
@@ -78,6 +79,7 @@ def test_call_div_c_c(language):
     assert isclose(f(x, -y), div_c_c(x, -y), rtol=1e-14, atol=1e-15)
     assert isclose(f(-x, -y), div_c_c(-x, -y), rtol=1e-14, atol=1e-15)
 
+@pytest.mark.skipif(sys.platform == "win32", reason="complex library not correctly passed in tests")
 def test_call_div_i_c(language):
     @types(int, 'complex')
     def div_i_c(x, y):
@@ -104,6 +106,7 @@ def test_call_div_c_i(language):
     assert isclose(f(x, -y), div_c_i(x, -y), rtol=1e-14, atol=1e-15)
     assert isclose(f(-x, -y), div_c_i(-x, -y), rtol=1e-14, atol=1e-15)
 
+@pytest.mark.skipif(sys.platform == "win32", reason="complex library not correctly passed in tests")
 def test_call_div_r_c(language):
     @types('real', 'complex')
     def div_r_c(x, y):
