@@ -418,15 +418,15 @@ def NumpyType_Check(variable, argument):
     FunctionCall : Check type FunctionCall
     """
     try :
-        check_numpy_ref = numpy_type_check_registry[(data.dtype, data.precision)]
+        check_numpy_ref = numpy_type_check_registry[(variable.dtype, variable.precision)]
     except KeyError:
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=data.dtype,severity='fatal')
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=variable.dtype,severity='fatal')
 
     check_numpy_func = FunctionDef(name = 'PyArray_IsScalar',
                     body = [],
                     arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True), check_numpy_ref],
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
-    return FunctionCall(check_func, [argument])
+    return FunctionCall(check_numpy_func, [argument, check_numpy_ref])
 
 
 def PyErr_SetString(error_type, error_msg):

@@ -24,7 +24,7 @@ from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
 from pyccel.ast.cwrapper import Py_None, flags_registry
 from pyccel.ast.cwrapper import PyErr_SetString, PythonType_Check
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
-from pyccel.ast.cwrapper import PyccelPyArrayObject
+from pyccel.ast.cwrapper import PyccelPyArrayObject, NumpyType_Check
 from pyccel.ast.cwrapper import numpy_get_ndims, numpy_get_data, numpy_get_dim
 from pyccel.ast.cwrapper import numpy_get_type, numpy_dtype_registry
 from pyccel.ast.cwrapper import numpy_check_flag, numpy_flag_c_contig, numpy_flag_f_contig
@@ -151,6 +151,23 @@ class CWrapperCodePrinter(CCodePrinter):
             static_function = function
             static_args = function.arguments
         return static_function, static_args, additional_body
+
+    def _get_check_type_statement(self, variable, collect_var):
+
+        if variable.rank > 0 :
+            numpy_dtype = self.find_in_numpy_dtype_registry(variable)
+            check = PyccelEq(FunctionCall(numpy_get_type, [collect_var]), numpy_dtype)
+
+        else :
+            python_check = PythonType_Check(variable, collect_var)
+            numpy_check = NumpyType_Check(variable, collect_var)
+            check = PyccelOr(python_check, numpy_check)
+
+        if isinstance(variable, ValuedVariable):
+            default = PyccelNot(collect_var) if variable.rank > 0 else PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
+            check = PyccelAssociativeParenthesis(PyccelOr(default, check))
+
+        return check
 
     # -------------------------------------------------------------------
     # Functions that take care of creating cast or convert type function call :
@@ -534,11 +551,12 @@ class CWrapperCodePrinter(CCodePrinter):
             for f_arg in func.arguments:
                 collect_var , cast_func = self.get_PyArgParseType(used_names, f_arg, True)
                 collect_vars[f_arg] = collect_var
-                check = PythonType_Check(f_arg, collect_var)
                 body, tmp_variable = self._body_management(used_names, f_arg, collect_var, cast_func)
                 if tmp_variable :
                     mini_wrapper_func_vars[tmp_variable.name] = tmp_variable
 
+                # get check type function
+                check = self._get_check_type_statement(f_arg, collect_var)
                 # If the variable cannot be collected from PyArgParse directly
                 wrapper_vars[collect_var.name] = collect_var
 
@@ -547,16 +565,13 @@ class CWrapperCodePrinter(CCodePrinter):
 
                 parse_args.append(collect_var)
 
+                # Managing valued variable
                 # Write default values
                 if isinstance(f_arg, ValuedVariable):
                     wrapper_body.append(self.get_default_assign(parse_args[-1], f_arg))
-                # get check type function
 
                 flag_value = flags_registry[(f_arg.dtype, f_arg.precision)]
                 flags = (flags << 4) + flag_value  # shift by 4 to the left
-                # Managing valued variable
-                if isinstance(f_arg, ValuedVariable):
-                    check = PyccelAssociativeParenthesis(PyccelOr(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)), check))
 
                 types_dict[f_arg].add((f_arg, check, flag_value)) # collect variable type for each arguments
                 mini_wrapper_func_body += body
@@ -848,7 +863,7 @@ class CWrapperCodePrinter(CCodePrinter):
         funcs = interfaces + [f for f in expr.funcs if f.name not in interface_funcs]
 
 
-        function_defs = '\n\n'.join(self._print_Interface(f) if len(f.arguments) > 1 else self._print(f) for f in funcs )
+        function_defs = '\n\n'.join(self._print_Interface(f) if len(f.arguments) >= 1 else self._print(f) for f in funcs )
         cast_functions = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f)
                                         for f in self._cast_functions_dict.values())
         method_def_func = ',\n'.join(('{{\n'
