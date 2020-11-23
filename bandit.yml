@@ -10,3 +10,4 @@ skips:
   - B403  # Ignore warnings about import pickle
   - B301  # Ignore warnings about pickle.load
   - B303  # Ignore warnings about MD2, MD4, MD5, or SHA1 hash functions
+  - W0703 # Ignore warnings about broad-except

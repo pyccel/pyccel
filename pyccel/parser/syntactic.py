@@ -79,6 +79,7 @@ from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
 
 def get_name(a):
+    """ get the name of variable or an argument of the AST node."""
     if isinstance(a, ast.Name):
         return a.id
     elif isinstance(a, ast.arg):
