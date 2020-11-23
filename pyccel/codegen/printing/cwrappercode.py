@@ -533,9 +533,9 @@ class CWrapperCodePrinter(CCodePrinter):
             # Loop for all args in every functions and create the corresponding condition and body
             # TODO add array management like in the wrapper of simple function
             for f_arg in func.arguments:
-                collect_var , cast_func = self.get_PyArgParseType(used_names, f_arg)
+                collect_var , cast_func = self.get_PyArgParseType(used_names, f_arg, True)
                 collect_vars[f_arg] = collect_var
-                check = LiteralTrue()
+                check = PythonType_Check(f_arg, collect_var)
                 body, tmp_variable = self._body_management(used_names, f_arg, collect_var, cast_func)
                 if tmp_variable :
                     wrapper_vars[tmp_variable.name] = tmp_variable

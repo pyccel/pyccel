@@ -394,7 +394,7 @@ def PythonType_Check(variable, argument):
     FunctionCall : Check type FunctionCall
     """
     try :
-        check_type = check_type_registry[variable.dtype]
+        check_type = python_type_check_registry[variable.dtype]
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=variable.dtype,severity='fatal')
     check_func = FunctionDef(name = check_type,
@@ -402,6 +402,32 @@ def PythonType_Check(variable, argument):
                     arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
     return FunctionCall(check_func, [argument])
+
+def NumpyType_Check(variable, argument):
+    """
+    Create FunctionCall responsible of checking numpy argument data type
+    Parameters:
+    ----------
+    variable : Variable
+        The variable needed for the generation of the type check
+    argument : Variable
+        argument of the check function
+
+    Returns
+    -------
+    FunctionCall : Check type FunctionCall
+    """
+    try :
+        check_numpy_ref = numpy_type_check_registry[(data.dtype, data.precision)]
+    except KeyError:
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=data.dtype,severity='fatal')
+
+    check_numpy_func = FunctionDef(name = 'PyArray_IsScalar',
+                    body = [],
+                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True), check_numpy_ref],
+                    results   = [Variable(dtype=NativeBool(), name = 'r')])
+    return FunctionCall(check_func, [argument])
+
 
 def PyErr_SetString(error_type, error_msg):
     func = FunctionDef(name = 'PyErr_SetString',
