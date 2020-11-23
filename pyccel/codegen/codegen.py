@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from pyccel.codegen.printing.fcode  import fcode
-from pyccel.codegen.printing.ccode  import ccode
-from pyccel.codegen.printing.pycode import pycode
+from pyccel.codegen.printing.fcode  import FCodePrinter
+from pyccel.codegen.printing.ccode  import CCodePrinter
+from pyccel.codegen.printing.pycode import PythonCodePrinter
 
 from pyccel.ast.core      import FunctionDef, Module, Program, Interface, ModuleHeader
 from pyccel.ast.core      import EmptyNode, NewLine, Comment, CommentBlock
@@ -12,7 +12,11 @@ from pyccel.errors.errors import Errors
 
 _extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
 _header_extension_registry = {'fortran': None, 'c':'h',  'python':None}
-printer_registry    = {'fortran':fcode, 'c':ccode, 'python':pycode}
+printer_registry    = {
+                        'fortran':FCodePrinter,
+                        'c':CCodePrinter,
+                        'python':PythonCodePrinter
+                      }
 
 
 class Codegen(object):
@@ -31,6 +35,7 @@ class Codegen(object):
         self._parser   = parser
         self._ast      = parser.ast
         self._name     = name
+        self._printer  = None
         self._kind     = None
         self._code     = None
         self._language = None
@@ -149,6 +154,23 @@ class Codegen(object):
 
         return self._code
 
+    def set_printer(self, **settings):
+        """ Set the current codeprinter instance"""
+        # Get language used (default language used is fortran)
+        language = settings.pop('language', 'fortran')
+
+        # Set language
+        if not language in ['fortran', 'c', 'python']:
+            raise ValueError('{} language is not available'.format(language))
+        self._language = language
+
+        # instantiate codePrinter
+        code_printer = printer_registry[language]
+        errors = Errors()
+        errors.set_parser_stage('codegen')
+        # set the code printer
+        self._printer = code_printer(self.parser, settings)
+
     def _collect_statements(self):
         """Collects statements and split them into routines, classes, etc."""
 
@@ -218,58 +240,30 @@ class Codegen(object):
 
     def doprint(self, **settings):
         """Prints the code in the target language."""
-
-        # ... finds the target language
-
-        language = settings.pop('language', 'fortran')
-
-        if not language in ['fortran', 'c', 'python']:
-            raise ValueError('{} language is not available'.format(language))
-
-        self._language = language
-
-        # ... define the printing function to be used
-
-        printer = printer_registry[language]
-
-        errors = Errors()
-        errors.set_parser_stage('codegen')
-
-        code = printer(self.expr, parser=self.parser, **settings)
-
-        self._code = code
-
-        return code
+        if not self._printer:
+            self.set_printer(**settings)
+        self._code = self._printer.doprint(self.expr)
+        return self._code
 
     def export(self, filename=None, **settings):
+        """Export code in filename"""
+        self.set_printer(**settings)
+        ext = _extension_registry[self._language]
+        header_ext = _header_extension_registry[self._language]
 
-        if self.code is None:
-            code = self.doprint(**settings)
-        else:
-            code = self.code
-
-        ext = _extension_registry[self.language]
-        header_ext = _header_extension_registry[self.language]
-        if filename is None:
-            header_filename = '{name}.{ext}'.format(name=self.name, ext=header_ext)
-            filename = '{name}.{ext}'.format(name=self.name, ext=ext)
-        else:
-            header_filename = '{name}.{ext}'.format(name=filename, ext=header_ext)
-            filename = '{name}.{ext}'.format(name=filename, ext=ext)
-
-        with open(filename, 'w') as f:
-            for line in code:
-                f.write(line)
+        if filename is None: filename = self.name
+        header_filename = '{name}.{ext}'.format(name=filename, ext=header_ext)
+        filename = '{name}.{ext}'.format(name=filename, ext=ext)
 
         if header_ext is not None and self.is_module:
-            printer = printer_registry[self.language]
-
-            settings.pop('language', 'fortran')
-            code = printer(ModuleHeader(self.expr), parser=self.parser, **settings)
+            code = self._printer.doprint(ModuleHeader(self.expr))
             with open(header_filename, 'w') as f:
                 for line in code:
                     f.write(line)
+        # print module or program code
+        self._code = self._printer.doprint(self.expr)
+        with open(filename, 'w') as f:
+            for line in self._code:
+                f.write(line)
 
         return filename
-
-
