@@ -164,7 +164,7 @@ class CWrapperCodePrinter(CCodePrinter):
             check = PyccelOr(python_check, numpy_check)
 
         if isinstance(variable, ValuedVariable):
-            default = PyccelNot(collect_var) if variable.rank > 0 else PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
+            default = PyccelNot(VariableAddress(collect_var)) if variable.rank > 0 else PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
             check = PyccelAssociativeParenthesis(PyccelOr(default, check))
 
         return check
@@ -487,6 +487,8 @@ class CWrapperCodePrinter(CCodePrinter):
         return collect_var, cast_function
 
     def get_default_assign(self, arg, func_arg):
+        if arg.rank > 0 :
+            return AliasAssign(arg, Nil())
         if func_arg.is_optional:
             return AliasAssign(arg, Py_None)
         elif isinstance(arg.dtype, (NativeReal, NativeInteger, NativeBool)):
