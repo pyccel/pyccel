@@ -1,10 +1,5 @@
 name: 'Coverage Setup'
 
-outputs:
-    COVERAGE_PROCESS_START:
-        description: ".coveragerc file location. Needs to be set for coverage to run"
-        value: ${{steps.covrc-dir-report.outputs.COVERAGE_PROCESS_START }}
-
 runs:
   using: "composite"
   steps:
@@ -20,8 +15,5 @@ runs:
         echo -e "import coverage; coverage.process_startup(); print('starting')" > ${SITE_DIR}/pyccel_cov.pth
         cat ${SITE_DIR}/pyccel_cov.pth
         echo -e "[run]\nparallel = True\nsource = ${INSTALL_DIR}\ndata_file = $(pwd)/.coverage\n[report]\ninclude = ${INSTALL_DIR}/*\n[xml]\noutput = cobertura.xml" > .coveragerc
-      shell: bash
-    - name: Coveragerc directory definition
-      id: covrc-dir-report
-      run: echo "::set-output name=COVERAGE_PROCESS_START::$(pwd)/.coveragerc"
+        echo "COVERAGE_PROCESS_START=$(pwd)/.coveragerc" >> $GITHUB_ENV
       shell: bash

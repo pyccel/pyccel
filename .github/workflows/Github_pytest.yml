@@ -24,17 +24,12 @@ jobs:
   #    - name: Install python dependencies
   #      uses: ./.github/actions/pip_installation
   #    - name: Coverage install
-  #      id: cov-install
   #      uses: ./.github/actions/coverage_install
   #    - name: Test with pytest
   #      uses: ./.github/actions/pytest_run
-  #      env:
-  #          COVERAGE_PROCESS_START: ${{ steps.cov-install.outputs.COVERAGE_PROCESS_START }}
   #    - name: Collect coverage information
   #      continue-on-error: True
   #      uses: ./.github/actions/coverage_collection
-  #      env:
-  #          COVERAGE_PROCESS_START: ${{ steps.cov-install.outputs.COVERAGE_PROCESS_START }}
   #    - name: Run codacy-coverage-reporter
   #      uses: codacy/codacy-coverage-reporter-action@master
   #      continue-on-error: True
@@ -61,17 +56,12 @@ jobs:
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
       - name: Coverage install
-        id: cov-install
         uses: ./.github/actions/coverage_install
       - name: Test with pytest
         uses: ./.github/actions/pytest_run
-        env:
-            COVERAGE_PROCESS_START: ${{ steps.cov-install.outputs.COVERAGE_PROCESS_START }}
       - name: Collect coverage information
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
-        env:
-            COVERAGE_PROCESS_START: ${{ steps.cov-install.outputs.COVERAGE_PROCESS_START }}
       - name: Run codacy-coverage-reporter
         uses: codacy/codacy-coverage-reporter-action@master
         continue-on-error: True
@@ -90,7 +80,6 @@ jobs:
         with:
           python-version: 3.8
       - name: Install dependencies
-        #TODO: Use setup-python
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
