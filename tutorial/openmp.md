@@ -309,4 +309,26 @@ elif omp_get_thread_num() == 1:
   while flag < 1:
     #$ omp flush(flag, data)
   #$ flush(flag, data)
+#$ omp end parallel
+```
+
+### Cancel Construct
+
+#### Syntax
+
+```python
+#$ omp cancel construct-type-clause[ [ , ] if-clause]
+```
+
+#### Example
+
+```python
+result = 0
+#$ omp parallel
+#$ omp for private(i) reduction (+:result)
+for i in range(len(v)):
+  result = result + v[i]
+  if result < 0:
+    #$ omp cancel for
+#$ omp end parallel
 ```
