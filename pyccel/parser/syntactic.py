@@ -634,15 +634,12 @@ class SyntaxParser(BasicParser):
                     arg = str(arg)
                     arg = arg.strip("'").strip('"')
                     container.append(arg)
-                elif isinstance(arg, ValuedArgument):
-                    break
                 else:
                     msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
                     errors.report(msg,
                                 bounding_box = (stmt.lineno, stmt.col_offset),
                                 severity='error')
             return container
-
 
         decorators = {}
         for d in self._visit(stmt.decorator_list):
@@ -704,20 +701,7 @@ class SyntaxParser(BasicParser):
                                     bounding_box = (stmt.lineno, stmt.col_offset),
                                     severity='fatal')
 
-                for arg in ls:
-                    if isinstance(arg, Symbol):
-                        arg = arg.name
-                        types.append(arg)
-                    elif isinstance(arg, LiteralString):
-                        arg = str(arg)
-                        arg = arg.strip("'").strip('"')
-                        types.append(arg)
-                    else:
-                        msg = 'Invalid argument type of type {} passed to template decorator'.format(type(arg))
-                        errors.report(msg,
-                                    symbol = comb_types,
-                                    bounding_box = (stmt.lineno, stmt.col_offset),
-                                    severity='error')
+                types = fill_types(ls)
 
                 txt  = '#$ header template ' + str(tp_name)
                 txt += '(' + '|'.join(types) + ')'
@@ -734,13 +718,10 @@ class SyntaxParser(BasicParser):
             if not isinstance(decorators['types'], list):
                 decorators['types'] = [decorators['types']]
             for comb_types in decorators['types']:
-                cache.clear_cache()
-                types = []
-                results = []
-                container = types
-                i = 0
-                ls = comb_types.args
 
+                cache.clear_cache()
+                results = []
+                ls = comb_types.args
 
                 if len(ls) and isinstance(ls[-1], ValuedArgument):
                     arg_name = ls[-1].name
