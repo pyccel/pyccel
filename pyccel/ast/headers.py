@@ -247,15 +247,16 @@ class FunctionHeader(Header):
                         is_argument=True)
             return var
 
-        def template_resolve(arg_code, Tname, typ):
-            resolved = False
+        def process_template(arg_code, Tname, d_type, type_index):
             tmp_arg_code = arg_code.copy()
+            resolved = False
+
             for i, t in enumerate(tmp_arg_code):
                 if 'datatype' in t and t['datatype'] == Tname:
                     resolved = True
-                    tmp_arg_code[i] = typ.copy()
-            return tmp_arg_code, resolved
-
+                    tmp_arg_code[i] = d_type.copy()
+            if resolved or type_index == 0:
+                return tmp_arg_code
 
         for i in self.dtypes:
             if isinstance(i, UnionType):
@@ -268,19 +269,11 @@ class FunctionHeader(Header):
         #TODO: handle the case of functions arguments
 
         arg_codes = [list(arg_code) for arg_code in product(*dtypes)]
-        for Tname in templates:
-            i = 0
-            leng = len(arg_codes)
-            for i in range(leng):
-                for typ in templates[Tname].args:
-                    tmp_codes, resolved = template_resolve(arg_codes[0],
-                            Tname, typ)
-                    if resolved:
-                        arg_codes.append(tmp_codes)
-                if len(arg_codes) > leng:
-                    arg_codes.pop(0)
-                else:
-                    arg_codes.append(arg_codes.pop(0))
+        for tmplt in templates:
+            arg_codes = [process_template(arg_code, tmplt, d_type, j) for arg_code in arg_codes\
+                    for j, d_type, in enumerate(templates[tmplt].args) if arg_code]
+        if len(arg_codes) > 1:
+            arg_codes = list(filter(None, arg_codes))
 
         for args_ in arg_codes:
             args = []
