@@ -230,104 +230,100 @@ class PyccelBitAnd(PyccelBitOperator):
 class PyccelBinaryOperator(PyccelOperator):
 
     def __init__(self, *args):
-
         PyccelOperator.__init__(self, *args)
+
         if self.stage == 'syntactic':
             return
-        integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
-        reals     = [a for a in args if a.dtype is NativeReal()]
-        complexes = [a for a in args if a.dtype is NativeComplex()]
-        strs      = [a for a in args if a.dtype is NativeString()]
+        self._set_dtype()
+        self._set_shape_rank()
+
+
+    def _set_dtype(self):
+        integers  = [a for a in self._args if a.dtype in (NativeInteger(),NativeBool())]
+        reals     = [a for a in self._args if a.dtype is NativeReal()]
+        complexes = [a for a in self._args if a.dtype is NativeComplex()]
+        strs      = [a for a in self._args if a.dtype is NativeString()]
 
         if strs:
-            self._dtype = NativeString()
+            self._handle_str_type(strs)
+            assert len(integers + reals + complexes) == 0
+        elif complexes:
+            self._handle_complex_type(complexes)
+        elif reals:
+            self._handle_real_type(reals)
+        elif integers:
+            self._handle_integer_type(integers)
+        else:
+            raise TypeError('cannot determine the type of {}'.format(self))
+
+    def _handle_str_type(self, strs):
+        self._dtype = NativeString()
+
+    def _handle_complex_type(self, complexes):
+        self._dtype     = NativeComplex()
+        self._precision = max(a.precision for a in complexes)
+
+    def _handle_real_type(self, reals):
+        self._dtype     = NativeReal()
+        self._precision = max(a.precision for a in reals)
+
+    def _handle_integer_type(self, integers):
+        self._dtype     = NativeInteger()
+        self._precision = max(a.precision for a in integers)
+
+    def _set_shape_rank(self):
+        if self._dtype is NativeString():
             self._rank  = 0
             self._shape = ()
-            assert len(integers + reals + complexes) == 0
         else:
-            if complexes:
-                self._dtype     = NativeComplex()
-                self._precision = max(a.precision for a in complexes)
-            elif reals:
-                self._dtype     = NativeReal()
-                self._precision = max(a.precision for a in reals)
-            elif integers:
-                self._dtype     = NativeInteger()
-                self._precision = max(a.precision for a in integers)
-            else:
-                raise TypeError('cannot determine the type of {}'.format(self))
-
-            ranks  = [a.rank for a in args]
-            shapes = [a.shape for a in args]
+            ranks  = [a.rank for a in  self._args]
+            shapes = [a.shape for a in self._args]
 
             if None in ranks:
                 self._rank  = None
                 self._shape = None
-            elif all(sh is not None for tup in shapes for sh in tup):
-                if len(args) == 1:
-                    shape = args[0].shape
-                else:
-                    shape = broadcast(args[0].shape, args[1].shape)
 
-                    for a in args[2:]:
-                        shape = broadcast(shape, a.shape)
+            elif all(sh is not None for tup in shapes for sh in tup):
+                shape = self._broadcast()
 
                 self._shape = shape
                 self._rank  = len(shape)
             else:
-                self._rank  = max(a.rank for a in args)
+                self._rank  = max(a.rank for a in self._args)
                 self._shape = [None]*self._rank
+
+    def _broadcast(self):
+        shape = broadcast(self._args[0].shape, self._args[1].shape)
+
+        for a in self._args[2:]:
+            shape = broadcast(shape, a.shape)
+        return shape
 
 class PyccelPow(PyccelBinaryOperator):
     _precedence  = 15
+
 class PyccelAdd(PyccelBinaryOperator):
     _precedence = 12
+
 class PyccelMul(PyccelBinaryOperator):
     _precedence = 13
+
 class PyccelMinus(PyccelAdd):
     pass
+
 class PyccelDiv(PyccelBinaryOperator):
     _precedence = 13
-    def __init__(self, *args):
 
-        PyccelOperator.__init__(self, *args)
-        if self.stage == 'syntactic':
-            return
+    def _handle_str_type(self, strs):
+        raise TypeError("unsupported operand type(s) for /: 'str' and 'str'")
 
-        integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
-        reals     = [a for a in args if a.dtype is NativeReal()]
-        complexes = [a for a in args if a.dtype is NativeComplex()]
-        if complexes:
-            self._dtype     = NativeComplex()
-            self._precision = max(a.precision for a in complexes)
-        elif reals:
-            self._dtype     = NativeReal()
-            self._precision = max(a.precision for a in reals)
-        elif integers:
-            self._dtype     = NativeReal()
-            self._precision = default_precision['real']
-
-        ranks  = [a.rank for a in args]
-        shapes = [a.shape for a in args]
-
-        if None in ranks:
-            self._rank  = None
-            self._shape = None
-
-        elif all(sh is not None for tup in shapes for sh in tup):
-            shape = broadcast(args[0].shape, args[1].shape)
-
-            for a in args[2:]:
-                shape = broadcast(shape, a.shape)
-
-            self._shape = shape
-            self._rank  = len(shape)
-        else:
-            self._rank  = max(a.rank for a in args)
-            self._shape = [None]*self._rank
+    def _handle_integer_type(self, integers):
+        self._dtype     = NativeReal()
+        self._precision = default_precision['real']
 
 class PyccelMod(PyccelBinaryOperator):
     _precedence = 13
+
 class PyccelFloorDiv(PyccelBinaryOperator):
     _precedence = 13
 
