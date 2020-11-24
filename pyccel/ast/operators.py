@@ -105,13 +105,15 @@ class PyccelOperator(Expr, PyccelAstNode):
 
 class PyccelUnaryOperator(PyccelOperator):
 
-    def _set_dtype(self, a):
+    def _set_dtype(self):
+        a = self._args[0]
         if self._dtype is None:
             self._dtype     = a.dtype
         if self._precision is None:
             self._precision = a.precision
 
-    def _set_shape_rank(self, a):
+    def _set_shape_rank(self):
+        a = self._args[0]
         if self._rank is None:
             self._rank      = a.rank
         if self._shape is None:
@@ -138,7 +140,8 @@ class PyccelInvert(PyccelUnaryOperator):
     _precedence = 14
     _dtype     = NativeInteger()
 
-    def _set_dtype(self, a):
+    def _set_dtype(self):
+        a = self._args[0]
         if self._args[0].dtype not in (NativeInteger(), NativeBool()):
             raise TypeError('unsupported operand type(s): {}'.format(self))
 
@@ -278,7 +281,7 @@ class PyccelRShift(PyccelBitOperator):
 class PyccelLShift(PyccelBitOperator):
     _precedence = 11
 
-class PyccelBooleanBitOperator(PyccelBitOperator):
+class PyccelBitComparisonOperator(PyccelBitOperator):
     def _handle_integer_type(self, integers):
         if all(a.dtype is NativeInteger() for a in integers):
             self._dtype = NativeInteger()
@@ -289,79 +292,53 @@ class PyccelBooleanBitOperator(PyccelBitOperator):
             self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
         self._precision = max(a.precision for a in integers)
 
-class PyccelBitXor(PyccelBooleanBitOperator):
+class PyccelBitXor(PyccelBitComparisonOperator):
     _precedence = 9
 
-class PyccelBitOr(PyccelBooleanBitOperator):
+class PyccelBitOr(PyccelBitComparisonOperator):
     _precedence = 8
 
-class PyccelBitAnd(PyccelBooleanBitOperator):
+class PyccelBitAnd(PyccelBitComparisonOperator):
     _precedence = 10
 
-class PyccelBooleanOperator(PyccelOperator):
+class PyccelComparisonOperator(PyccelBinaryOperator):
     _precedence = 7
+    _dtype = NativeBool()
+    _precision = default_precision['bool']
+    def _set_dtype(self):
+        pass
 
-    def __init__(self, *args):
-
-        PyccelOperator.__init__(self, *args)
-        if self.stage == 'syntactic':
-            return
-
-        self._dtype = NativeBool()
-        self._precision = default_precision['bool']
-
-        ranks  = [a.rank for a in args]
-        shapes = [a.shape for a in args]
-
-        if None in ranks:
-            self._rank  = None
-            self._shape = None
-
-        elif all(sh is not None for tup in shapes for sh in tup):
-            shape = broadcast(args[0].shape, args[1].shape)
-            for a in args[2:]:
-                shape = broadcast(shape, a.shape)
-
-            self._shape = shape
-            self._rank  = len(shape)
-        else:
-            self._rank = max(a.rank for a in args)
-            self._shape = [None]*self._rank
-
-class PyccelEq(PyccelBooleanOperator):
+class PyccelEq(PyccelComparisonOperator):
     pass
-class PyccelNe(PyccelBooleanOperator):
+class PyccelNe(PyccelComparisonOperator):
     pass
-class PyccelLt(PyccelBooleanOperator):
+class PyccelLt(PyccelComparisonOperator):
     pass
-class PyccelLe(PyccelBooleanOperator):
+class PyccelLe(PyccelComparisonOperator):
     pass
-class PyccelGt(PyccelBooleanOperator):
+class PyccelGt(PyccelComparisonOperator):
     pass
-class PyccelGe(PyccelBooleanOperator):
+class PyccelGe(PyccelComparisonOperator):
     pass
 
-class PyccelAnd(PyccelOperator):
+class PyccelBooleanOperator(PyccelOperator):
     _dtype = NativeBool()
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+
+    def _set_dtype(self):
+        pass
+    def _set_shape_rank(self):
+        pass
+
+class PyccelAnd(PyccelBooleanOperator):
     _precedence = 5
 
-    def __init__(self, *args):
-        PyccelOperator.__init__(self, *args)
-
-class PyccelOr(PyccelOperator):
-    _dtype = NativeBool()
-    _rank  = 0
-    _shape = ()
-    _precision = default_precision['bool']
+class PyccelOr(PyccelBooleanOperator):
     _precedence = 4
 
-    def __init__(self, *args):
-        PyccelOperator.__init__(self, *args)
-
-class Is(PyccelOperator):
+class Is(PyccelBooleanOperator):
 
     """Represents a is expression in the code.
 
@@ -373,14 +350,7 @@ class Is(PyccelOperator):
     >>> Is(x, Nil())
     Is(x, None)
     """
-    _dtype = NativeBool()
-    _rank  = 0
-    _shape = ()
-    _precision = default_precision['bool']
     _precedence = 7
-
-    def __init__(self, *args):
-        PyccelOperator.__init__(self, *args)
 
     @property
     def lhs(self):
@@ -403,23 +373,6 @@ class IsNot(PyccelOperator):
     >>> IsNot(x, Nil())
     IsNot(x, None)
     """
-
-    _dtype = NativeBool()
-    _rank  = 0
-    _shape = ()
-    _precision = default_precision['bool']
-    _precedence = 7
-
-    def __init__(self, *args):
-        PyccelOperator.__init__(self, *args)
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
 
 
 Relational = (PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe, PyccelAnd, PyccelOr,  PyccelNot, Is, IsNot)
