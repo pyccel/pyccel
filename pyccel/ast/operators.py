@@ -114,7 +114,7 @@ class PyccelUnaryOperator(PyccelOperator):
         if self._shape is None:
             self._shape     = a.shape
 
-class PyccelUnary(PyccelOperator):
+class PyccelUnary(PyccelUnaryOperator):
     _precedence = 14
 
 class PyccelUnarySub(PyccelUnary):
@@ -144,7 +144,7 @@ class PyccelInvert(PyccelUnaryOperator):
 class PyccelAssociativeParenthesis(PyccelOperator):
     _precedence = 18
     def _handle_precedence(self, args):
-        pass
+        return args
 
 class PyccelBitOperator(PyccelOperator):
     _rank = 0
