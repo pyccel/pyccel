@@ -119,7 +119,6 @@ def create_shared_library(codegen,
                 idx += 1
 
         if sys.platform == "win32":
-            linker_flags.append("-Wc,-Wl,-static")
             extra_libs.append("pthread")
 
             extra_libs = [":lib{}.a".format(l) for l in extra_libs]
