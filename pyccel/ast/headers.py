@@ -270,6 +270,7 @@ class FunctionHeader(Header):
                 for d_type in i.args:
                     if d_type['datatype'] in templates:
                         errors.report(TEMPLATE_IN_UNIONTYPE,
+                                symbol=self.name,
                                 severity='error')
                 dtypes += [i.args]
             elif isinstance(i, dict):

@@ -1044,7 +1044,9 @@ class SemanticParser(BasicParser):
         if isinstance(expr.rhs, Application):
             methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
             if any(isinstance(method, Interface) for method in methods):
-                errors.report('Generic methods are not supported yet', severity='fatal')
+                errors.report('Generic methods are not supported yet',
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='fatal')
             macro = self.get_macro(rhs_name)
             if macro is not None:
                 master = macro.master
@@ -1070,7 +1072,9 @@ class SemanticParser(BasicParser):
         elif isinstance(expr.rhs, Symbol) and first.cls_base:
             methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
             if any(isinstance(method, Interface) for method in methods):
-                errors.report('Generic methods are not supported yet', severity='fatal')
+                errors.report('Generic methods are not supported yet',
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='fatal')
             # standard class attribute
             if expr.rhs.name in attr_name:
                 self._current_class = first.cls_base
