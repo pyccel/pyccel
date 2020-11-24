@@ -1,3 +1,0 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
-#$ header metavar ignore_at_import=True
-#$ header function f(float)

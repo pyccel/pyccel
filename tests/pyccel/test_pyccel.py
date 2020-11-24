@@ -512,6 +512,12 @@ def test_print_sp_and_end(language):
 
 def test_headers(language):
     test_file = "scripts/test_headers.py"
+    test_file = os.path.normpath(test_file)
+    test_file = get_abs_path(test_file)
+
+    header_file = 'scripts/headers.pyh'
+    header_file = os.path.normpath(header_file)
+    header_file = get_abs_path(header_file)
 
     with open(test_file, 'w') as f:
         code = ("from headers import f\n"
@@ -522,7 +528,7 @@ def test_headers(language):
 
         f.write(code)
 
-    with open('scripts/headers.pyh', 'w') as f:
+    with open(header_file, 'w') as f:
         code =("#$ header metavar ignore_at_import=True\n"
                "#$ header function f(int)")
 
@@ -531,7 +537,6 @@ def test_headers(language):
     test_file = os.path.normpath(test_file)
     cwd = os.path.dirname(test_file)
     cwd = get_abs_path(cwd)
-    test_file = get_abs_path(test_file)
 
     pyccel_commands = " --language="+language
 
@@ -541,7 +546,7 @@ def test_headers(language):
     lang_out = get_lang_output(get_exe(test_file))
     assert int(lang_out)
 
-    with open('scripts/test_headers.py', 'w') as f:
+    with open(test_file, 'w') as f:
         code = ("from headers import f\n"
                 "def f(x):\n"
                 "    y = x\n"
@@ -550,7 +555,7 @@ def test_headers(language):
 
         f.write(code)
 
-    with open('scripts/headers.pyh', 'w') as f:
+    with open(header_file, 'w') as f:
         code =("#$ header metavar ignore_at_import=True\n"
                "#$ header function f(float)")
 
