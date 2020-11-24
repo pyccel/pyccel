@@ -143,6 +143,20 @@ def epyccel_seq(function_or_module, *,
     # https://docs.python.org/3/library/importlib.html#importlib.invalidate_caches
     importlib.invalidate_caches()
 
+    import glob, subprocess
+
+    lib_file = glob.glob(os.path.join(epyccel_dirpath,module_name)+".*.so")[0]
+    print(lib_file)
+    p = subprocess.Popen(['ldd', lib_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    out, err = p.communicate()
+    print(out)
+    if p.returncode != 0:
+        err_msg = "Failed to ldd"
+        err_msg += "\n" + err
+        print(err_msg)
+    if err:
+        print(err)
+
     package = importlib.import_module(module_name)
     sys.path.remove(epyccel_dirpath)
 
