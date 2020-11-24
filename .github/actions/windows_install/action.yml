@@ -25,6 +25,7 @@ runs:
         # Microsoft C runtime library: generate static libmsvcr140.a from vcruntime140.dll
         cd $LIBRARY_DIR
         ls $LIBRARY_DIR
+        ls $Env:SystemRoot\\SysWOW64
         cp $Env:SystemRoot\\SysWOW64\\vcruntime142.dll .
         gendef vcruntime142.dll
         dlltool -d vcruntime142.def -l libmsvcr142.a -D vcruntime142.dll
