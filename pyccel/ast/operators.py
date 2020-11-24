@@ -143,7 +143,7 @@ class PyccelInvert(PyccelUnaryOperator):
 
 class PyccelAssociativeParenthesis(PyccelOperator):
     _precedence = 18
-    def _handle_precedence(args):
+    def _handle_precedence(self, args):
         pass
 
 class PyccelBitOperator(PyccelOperator):
