@@ -253,7 +253,7 @@ class FunctionHeader(Header):
             return var
 
         def process_template(signature, Tname, d_type):
-            new_sig = tuple(d_type.copy() if 'datatype' in t and t['datatype'] == Tname\
+            new_sig = tuple(d_type if 'datatype' in t and t['datatype'] == Tname\
                     else t for t in signature)
             return new_sig
 
