@@ -6,6 +6,8 @@ from sympy.utilities.iterables import iterable
 from sympy.core import Symbol
 from sympy import sympify, Tuple
 
+from ..errors.errors import Errors
+from ..errors.messages import TEMPLATE_IN_UNIONTYPE
 from .core import Basic
 from .core import Variable
 from .core import ValuedArgument, ValuedVariable
@@ -26,6 +28,9 @@ __all__ = (
     'MethodHeader',
     'VariableHeader',
 )
+
+#==============================================================================
+errors = Errors()
 
 #==============================================================================
 class Header(Basic):
@@ -90,10 +95,52 @@ class VariableHeader(Header):
         return args
 
 #==============================================================================
+class Template(Header):
+    """Represents a template.
+
+    Parameters
+    ----------
+    name: str
+        The name of the template.
+
+    args: iterable
+        The types the template represents
+
+    Examples
+    --------
+    >>> from pyccel.ast.headers import Template
+    >>> d_var0 = {'datatype': 'int', 'rank': 0, 'allocatable': False, 'is_pointer':False,\
+    >>>        'precision': 8, 'is_func': False, 'is_const': False}
+    >>> d_var1 = {'datatype': 'int', 'rank': 0, 'allocatable': False, 'is_pointer':False,\
+    >>>        'precision': 8, 'is_func': False, 'is_const': False}
+    >>> T = Template('T', [d_var0, d_var1])
+    """
+
+    def __new__(cls, *args, **kwargs):
+        return Basic.__new__(cls)
+
+    def __init__(self, name, args):
+        Header.__init__(self)
+        self._name = name
+        self._args = args
+
+    @property
+    def name(self):
+        "The name of the template."
+        return self._name
+
+    @property
+    def args(self):
+        "Types the template represents."
+        return self._args
+
+#==============================================================================
 class FunctionHeader(Header):
     """Represents function/subroutine header in the code.
 
-    func: str
+    Parameters
+    ----------
+    name: str
         function/subroutine name
 
     dtypes: tuple/list
@@ -113,6 +160,7 @@ class FunctionHeader(Header):
         argument declaration. default value: False
 
     Examples
+    --------
 
     >>> from pyccel.ast.core import FunctionHeader
     >>> FunctionHeader('f', ['double'])
@@ -120,11 +168,11 @@ class FunctionHeader(Header):
     """
 
     # TODO dtypes should be a dictionary (useful in syntax)
-    def __new__(cls, func, dtypes,
+    def __new__(cls, name, dtypes,
                 results=None,
                 kind='function',
                 is_static=False):
-        func = str(func)
+        name = str(name)
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
 
@@ -141,10 +189,10 @@ class FunctionHeader(Header):
         if not isinstance(is_static, bool):
             raise TypeError('is_static must be a boolean')
 
-        return Basic.__new__(cls, func, dtypes, results, kind, is_static)
+        return Basic.__new__(cls, name, dtypes, results, kind, is_static)
 
     @property
-    def func(self):
+    def name(self):
         return self._args[0]
 
     @property
@@ -163,12 +211,12 @@ class FunctionHeader(Header):
     def is_static(self):
         return self._args[4]
 
-    def create_definition(self):
+    def create_definition(self, templates = ()):
         """Returns a FunctionDef with empy body."""
         # TODO factorize what can be factorized
         from itertools import product
 
-        name = str(self.func)
+        name = str(self.name)
 
         body      = []
         cls_name  = None
@@ -204,15 +252,42 @@ class FunctionHeader(Header):
                         is_argument=True)
             return var
 
+        def process_template(signature, Tname, d_type):
+            #Replaces templates named Tname inside signature, with the given type.
+            new_sig = tuple(d_type if 'datatype' in t and t['datatype'] == Tname\
+                    else t for t in signature)
+            return new_sig
+
+        def find_templates(signature, templates):
+            #Creates a dictionary of only used templates in signature.
+            new_templates = {d_type['datatype']:templates[d_type['datatype']]\
+                    for d_type in signature\
+                    if 'datatype' in d_type and d_type['datatype'] in templates}
+            return new_templates
 
         for i in self.dtypes:
             if isinstance(i, UnionType):
+                for d_type in i.args:
+                    if d_type['datatype'] in templates:
+                        errors.report(TEMPLATE_IN_UNIONTYPE,
+                                symbol=self.name,
+                                severity='error')
                 dtypes += [i.args]
             elif isinstance(i, dict):
                 dtypes += [[i]]
             else:
                 raise TypeError('element must be of type UnionType or dict')
-        for args_ in product(*dtypes):
+
+        #TODO: handle the case of functions arguments
+
+        signatures = list(product(*dtypes))
+        new_templates = find_templates(signatures[0], templates)
+
+        for tmplt in new_templates:
+            signatures = tuple(process_template(s, tmplt, d_type)\
+                    for s in signatures for d_type in new_templates[tmplt].args)
+
+        for args_ in signatures:
             args = []
             for i, d in enumerate(args_):
                 # TODO  handle function as argument, which itself has a function argument
@@ -236,13 +311,14 @@ class FunctionHeader(Header):
             # ... factorize the following 2 blocks
             results = []
             for i,d_var in enumerate(self.results):
-                d_var.pop('is_func')
+                is_func = d_var.pop('is_func')
                 dtype = d_var.pop('datatype')
                 var = Variable(dtype, 'res_{}'.format(i), **d_var)
                 results.append(var)
                 # we put back dtype otherwise macro will crash when it tries to
                 # call create_definition
                 d_var['datatype'] = dtype
+                d_var['is_func'] = is_func
 
             func= FunctionDef(name, args, results, body,
                              local_vars=[],
@@ -259,7 +335,7 @@ class FunctionHeader(Header):
 
     def to_static(self):
         """returns a static function header. needed for bind(c)"""
-        return FunctionHeader(self.func,
+        return FunctionHeader(self.name,
                               self.dtypes,
                               self.results,
                               self.kind,
@@ -270,7 +346,7 @@ class FunctionHeader(Header):
         types = self.dtypes
         types[index]['rank'] += 1
         types[index]['allocatable'] = True
-        return FunctionHeader(self.func,
+        return FunctionHeader(self.name,
                               types,
                               self.results,
                               self.kind,
@@ -278,7 +354,7 @@ class FunctionHeader(Header):
 
     def __getnewargs__(self):
         """used for Pickling self."""
-        args = (self.func,
+        args = (self.name,
                 self.dtypes,
                 self.results,
                 self.kind,
