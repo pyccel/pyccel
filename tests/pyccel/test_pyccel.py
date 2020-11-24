@@ -565,3 +565,7 @@ def test_headers(language):
 
     lang_out = get_lang_output(get_exe(test_file))
     assert float(lang_out)
+
+    with open(test_file, 'w') as f:
+        code = ("")
+        f.write(code)
