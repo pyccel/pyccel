@@ -551,7 +551,7 @@ def test_headers(language):
                 "def f(x):\n"
                 "    y = x\n"
                 "    return y\n"
-                "print(f(1.))\n")
+                "print(f(1.5))\n")
 
         f.write(code)
 
@@ -564,7 +564,7 @@ def test_headers(language):
     compile_pyccel(cwd, test_file, pyccel_commands)
 
     lang_out = get_lang_output(get_exe(test_file))
-    assert float(lang_out)
+    assert float(lang_out) == 1.5
 
     with open(test_file, 'w') as f:
         code = ("")
