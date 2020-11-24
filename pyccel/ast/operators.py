@@ -820,7 +820,7 @@ class PyccelGe(PyccelComparisonOperator):
 
 #==============================================================================
 
-class PyccelBooleanOperator(PyccelOperator):
+class PyccelBooleanOperator(PyccelBinaryOperator):
     """ Abstract superclass representing a python
     boolean operator with two arguments
 
