@@ -6,6 +6,8 @@ from sympy.utilities.iterables import iterable
 from sympy.core import Symbol
 from sympy import sympify, Tuple
 
+from ..errors.errors import Errors
+from ..errors.messages import TEMPLATE_IN_UNIONTYPE
 from .core import Basic
 from .core import Variable
 from .core import ValuedArgument, ValuedVariable
@@ -14,8 +16,6 @@ from .core import DottedName, DottedVariable
 from .datatypes import datatype, DataTypeFactory, UnionType
 from .macros import Macro, MacroShape, construct_macro
 from .core import local_sympify
-from pyccel.errors.errors import Errors
-from pyccel.errors.messages import TEMPLATE_IN_UNIONTYPE
 
 __all__ = (
     'ClassHeader',
@@ -253,11 +253,13 @@ class FunctionHeader(Header):
             return var
 
         def process_template(signature, Tname, d_type):
+            #Replaces templates named Tname inside signature, with the given type.
             new_sig = tuple(d_type if 'datatype' in t and t['datatype'] == Tname\
                     else t for t in signature)
             return new_sig
 
         def find_templates(signature, templates):
+            #Creates a dictionary of only used templates in signature.
             new_templates = {d_type['datatype']:templates[d_type['datatype']]\
                     for d_type in signature\
                     if 'datatype' in d_type and d_type['datatype'] in templates}
@@ -281,8 +283,8 @@ class FunctionHeader(Header):
         new_templates = find_templates(signatures[0], templates)
 
         for tmplt in new_templates:
-            signatures = [process_template(s, tmplt, d_type)\
-                    for s in signatures for d_type in new_templates[tmplt].args]
+            signatures = tuple(process_template(s, tmplt, d_type)\
+                    for s in signatures for d_type in new_templates[tmplt].args)
 
         for args_ in signatures:
             args = []
