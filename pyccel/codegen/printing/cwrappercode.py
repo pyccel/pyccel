@@ -12,7 +12,7 @@ from pyccel.ast.literals  import LiteralTrue, LiteralInteger
 from pyccel.ast.builtins import PythonPrint
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
-from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, PyccelEq
+from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelEq, IfTernaryOperator, PyccelOr
 from pyccel.ast.core import PyccelAssociativeParenthesis, AugAssign
@@ -485,19 +485,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return collect_var, cast_function
 
-    def get_default_assign(self, arg, func_arg):
-        if arg.rank > 0 :
-            return AliasAssign(arg, Nil())
-        if func_arg.is_optional:
-            return AliasAssign(arg, Py_None)
-        elif isinstance(arg.dtype, (NativeReal, NativeInteger, NativeBool)):
-            return Assign(arg, func_arg.value)
-        elif isinstance(arg.dtype, PyccelPyObject):
-            return AliasAssign(arg, Py_None)
-        else:
-            raise NotImplementedError('Default values are not implemented for this datatype : {}'.format(func_arg.dtype))
-
-
     def _print_Interface(self, expr):
 
         #Collecting all functions names
@@ -688,8 +675,6 @@ class CWrapperCodePrinter(CCodePrinter):
         self._function_wrapper_names[func.name] = wrapper_name
         self._global_names.add(wrapper_name)
         return wrapper_name
-
-        return collect_var, cast_function
 
     #--------------------------------------------------------------------
     #                 _print_ClassName functions

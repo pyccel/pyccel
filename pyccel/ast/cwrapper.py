@@ -12,7 +12,7 @@ from .datatypes import NativeBool, NativeString, NativeGeneric, NativeVoid
 
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress, FunctionAddress
 from .core      import AliasAssign, Assign, Return
-from .core      import PyccelEq, If, PyccelOr, PyccelAssociativeParenthesis
+from .core      import PyccelEq, If
 
 from .literals  import LiteralTrue, LiteralComplex
 

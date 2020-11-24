@@ -59,7 +59,7 @@ def test_func_no_return_2(language):
     unexpected_arg = 0
     with pytest.raises(TypeError):
         c_func(unexpected_arg)
-'''
+
 def test_func_no_args_f1():
     def f1():
         from numpy import pi
@@ -318,7 +318,7 @@ def test_decorator_f18(language):
         return b
     f = epyccel(f18, language=language)
     assert f(np.int32(5)) == f18(np.int32(5))
-'''
+
 def test_decorator_f19(language):
     @types('int64')
     def f19(a):
