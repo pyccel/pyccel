@@ -55,7 +55,7 @@ from pyccel.ast.core import _atomic
 from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
-from pyccel.ast.operators import Is, IsNot
+from pyccel.ast.operators import PyccelIs, PyccelIsNot
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
@@ -2834,9 +2834,9 @@ class SemanticParser(BasicParser):
         var2 = self._visit(expr.rhs)
 
         if (var1 is var2) or (isinstance(var2, Nil) and isinstance(var1, Nil)):
-            if IsClass == IsNot:
+            if IsClass == PyccelIsNot:
                 return LiteralFalse()
-            elif IsClass == Is:
+            elif IsClass == PyccelIs:
                 return LiteralTrue()
 
         if isinstance(var1, Nil):
@@ -2850,9 +2850,9 @@ class SemanticParser(BasicParser):
             return IsClass(var1, expr.rhs)
 
         if (var1.dtype != var2.dtype):
-            if IsClass == Is:
+            if IsClass == PyccelIs:
                 return LiteralFalse()
-            elif IsClass == IsNot:
+            elif IsClass == PyccelIsNot:
                 return LiteralTrue()
 
         if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
@@ -2871,11 +2871,11 @@ class SemanticParser(BasicParser):
             severity='error', blocker=self.blocking)
         return IsClass(var1, var2)
 
-    def _visit_Is(self, expr, **settings):
-        return self._handle_is_operator(Is, expr, **settings)
+    def _visit_PyccelIs(self, expr, **settings):
+        return self._handle_is_operator(PyccelIs, expr, **settings)
 
-    def _visit_IsNot(self, expr, **settings):
-        return self._handle_is_operator(IsNot, expr, **settings)
+    def _visit_PyccelIsNot(self, expr, **settings):
+        return self._handle_is_operator(PyccelIsNot, expr, **settings)
 
     def _visit_Import(self, expr, **settings):
 

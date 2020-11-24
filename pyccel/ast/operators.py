@@ -889,36 +889,36 @@ class PyccelOr(PyccelBooleanOperator):
 
 #==============================================================================
 
-class Is(PyccelBooleanOperator):
+class PyccelIs(PyccelBooleanOperator):
 
     """Represents a is expression in the code.
 
     Examples
     --------
-    >>> from pyccel.ast import Is
+    >>> from pyccel.ast import PyccelIs
     >>> from pyccel.ast import Nil
     >>> from sympy.abc import x
-    >>> Is(x, Nil())
-    Is(x, None)
+    >>> PyccelIs(x, Nil())
+    PyccelIs(x, None)
     """
     _precedence = 7
 
 #==============================================================================
 
-class IsNot(Is):
+class PyccelIsNot(PyccelIs):
 
     """Represents a is expression in the code.
 
     Examples
     --------
-    >>> from pyccel.ast import IsNot
+    >>> from pyccel.ast import PyccelIsNot
     >>> from pyccel.ast import Nil
     >>> from sympy.abc import x
-    >>> IsNot(x, Nil())
-    IsNot(x, None)
+    >>> PyccelIsNot(x, Nil())
+    PyccelIsNot(x, None)
     """
 
 #==============================================================================
 
-Relational = (PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe, PyccelAnd, PyccelOr,  PyccelNot, Is, IsNot)
+Relational = (PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe, PyccelAnd, PyccelOr,  PyccelNot, PyccelIs, PyccelIsNot)
 

@@ -1074,10 +1074,10 @@ class CCodePrinter(CodePrinter):
             errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
                           symbol=expr, severity='fatal')
 
-    def _print_IsNot(self, expr):
+    def _print_PyccelIsNot(self, expr):
         return self._handle_is_operator("!=", expr)
 
-    def _print_Is(self, expr):
+    def _print_PyccelIs(self, expr):
         return self._handle_is_operator("==", expr)
 
     def _print_Piecewise(self, expr):

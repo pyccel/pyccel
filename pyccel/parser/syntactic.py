@@ -54,7 +54,7 @@ from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, Pyc
 from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
-from pyccel.ast.operators import Is, IsNot
+from pyccel.ast.operators import PyccelIs, PyccelIsNot
 
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.headers  import Header, MetaVariable
@@ -581,10 +581,10 @@ class SyntaxParser(BasicParser):
             return PyccelLe(first, second)
         if isinstance(op, ast.GtE):
             return PyccelGe(first, second)
-        if isinstance(op, ast.Is):
-            return Is(first, second)
-        if isinstance(op, ast.IsNot):
-            return IsNot(first, second)
+        if isinstance(op, ast.PyccelIs):
+            return PyccelIs(first, second)
+        if isinstance(op, ast.PyccelIsNot):
+            return PyccelIsNot(first, second)
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       symbol = stmt,

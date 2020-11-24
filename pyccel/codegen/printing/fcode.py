@@ -2128,7 +2128,7 @@ class FCodePrinter(CodePrinter):
         code = self._print(stmt)
         return self._get_statement(code)
 
-    def _print_Is(self, expr):
+    def _print_PyccelIs(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         a = expr.args[0]
@@ -2143,7 +2143,7 @@ class FCodePrinter(CodePrinter):
         errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
                       symbol=expr, severity='fatal')
 
-    def _print_IsNot(self, expr):
+    def _print_PyccelIsNot(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         a = expr.args[0]

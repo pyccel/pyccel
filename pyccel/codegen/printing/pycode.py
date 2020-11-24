@@ -206,7 +206,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_Pass(self, expr):
         return 'pass'
 
-    def _print_Is(self, expr):
+    def _print_PyccelIs(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         return'{0} is {1}'.format(lhs,rhs)
