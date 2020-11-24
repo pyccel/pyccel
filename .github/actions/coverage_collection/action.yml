@@ -1,0 +1,12 @@
+name: 'Coverage Collection'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Coverage collection
+      run: |
+        coverage combine
+        coverage xml
+        rm ${SITE_DIR}/pyccel_cov.pth
+      shell: bash
+

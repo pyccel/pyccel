@@ -12,14 +12,26 @@ t_ndarray   array_create(int nd, int *shape, enum e_types type)
     arr.type = type;
     switch (type)
     {
+        case nd_bool:
+            arr.type_size = sizeof(bool);
+            break;
+        case nd_sint:
+            arr.type_size = sizeof(short int);
+            break;
         case nd_int:
             arr.type_size = sizeof(int);
+            break;
+        case nd_long:
+            arr.type_size = sizeof(long);
             break;
         case nd_float:
             arr.type_size = sizeof(float);
             break;
         case nd_double:
             arr.type_size = sizeof(double);
+            break;
+        case nd_cfloat:
+            arr.type_size = sizeof(float complex);
             break;
         case nd_cdouble:
             arr.type_size = sizeof(double complex);
@@ -52,6 +64,38 @@ void   _array_fill_int(int c, t_ndarray arr)
     else
         for (int i = 0; i < arr.length; i++)
             arr.nd_int[i] = c;
+}
+void   _array_fill_long(long c, t_ndarray arr)
+{
+    if (c == 0)
+        memset(arr.raw_data, 0, arr.buffer_size);
+    else
+        for (int i = 0; i < arr.length; i++)
+            arr.nd_long[i] = c;
+}
+void   _array_fill_sint(short int c, t_ndarray arr)
+{
+    if (c == 0)
+        memset(arr.raw_data, 0, arr.buffer_size);
+    else
+        for (int i = 0; i < arr.length; i++)
+            arr.nd_sint[i] = c;
+}
+void   _array_fill_bool(bool c, t_ndarray arr)
+{
+    if (c == 0)
+        memset(arr.raw_data, 0, arr.buffer_size);
+    else
+        for (int i = 0; i < arr.length; i++)
+            arr.nd_bool[i] = c;
+}
+void   _array_fill_cfloat(float complex c, t_ndarray arr)
+{
+    if (c == 0)
+        memset(arr.raw_data, 0, arr.buffer_size);
+    else
+        for (int i = 0; i < arr.length; i++)
+            arr.nd_cfloat[i] = c;
 }
 
 void   _array_fill_double(double c, t_ndarray arr)
@@ -152,3 +196,4 @@ int get_index(t_ndarray arr, ...)
     va_end(va);
     return (index);
 }
+

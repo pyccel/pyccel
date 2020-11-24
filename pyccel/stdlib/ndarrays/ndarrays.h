@@ -21,9 +21,13 @@ typedef struct  s_slice
 
 enum e_types
 {
+        nd_bool,
         nd_int,
+        nd_sint,
+        nd_long,
         nd_float,
         nd_double,
+        nd_cfloat,
         nd_cdouble
 };
 
@@ -36,6 +40,11 @@ typedef struct  s_ndarray
             float           *nd_float;
             double          *nd_double;
             double complex  *nd_cdouble;
+            float  complex  *nd_cfloat;
+            long            *nd_long;
+            short int       *nd_sint;
+            char            *nd_char;
+            bool            *nd_bool;
             };
     /* number of dimensions */
     int             nd;
