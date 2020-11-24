@@ -45,6 +45,7 @@ runs:
           echo ${Env:LDSHARED}
           echo ${Env:LDFLAGS}
           echo "LDFLAGS=-Wl,-Bstatic" >> $GITHUB_ENV
+          echo "LDSHARED=gcc -Wl,-Bstatic -Wl,-Bsymbolic-functions"
       shell: powershell
     #- name: Setup MPI
     #  run: |
