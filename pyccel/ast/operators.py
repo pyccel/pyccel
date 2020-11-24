@@ -78,6 +78,11 @@ class PyccelOperator(Expr, PyccelAstNode):
     def __init__(self, *args):
         self._args = tuple(self._handle_precedence(args))
 
+        if self.stage == 'syntactic':
+            return
+        self._set_dtype()
+        self._set_shape_rank()
+
     @property
     def precedence(self):
         return self._precedence
@@ -99,19 +104,16 @@ class PyccelOperator(Expr, PyccelAstNode):
         return args
 
 class PyccelUnaryOperator(PyccelOperator):
-    def __init__(self, a):
-        PyccelOperator.__init__(self, a)
-        if self.stage == 'syntactic':
-            return
-        self._set_AST_node_values(self._args[0])
 
-    def _set_AST_node_values(self, a):
+    def _set_dtype(self, a):
         if self._dtype is None:
             self._dtype     = a.dtype
-        if self._rank is None:
-            self._rank      = a.rank
         if self._precision is None:
             self._precision = a.precision
+
+    def _set_shape_rank(self, a):
+        if self._rank is None:
+            self._rank      = a.rank
         if self._shape is None:
             self._shape     = a.shape
 
