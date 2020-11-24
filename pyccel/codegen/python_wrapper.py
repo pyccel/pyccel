@@ -109,7 +109,7 @@ def create_shared_library(codegen,
                 else f for f in flags.strip().split(' ') if f != '']
 
         if sys.platform == "win32":
-            flags += ["-Wl,-Bstatic", "-lpthread"]
+            c_flags += ["-Wl,-Bstatic", "-lpthread"]
 
         if sys.platform == "darwin" and "-fopenmp" in c_flags and "-Xpreprocessor" not in c_flags:
             idx = 0
