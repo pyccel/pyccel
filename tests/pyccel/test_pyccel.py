@@ -511,7 +511,6 @@ def test_print_sp_and_end(language):
     pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
 
 def test_headers(language):
-    types = int
     test_file = "scripts/test_headers.py"
 
     with open(test_file, 'w') as f:
@@ -558,7 +557,6 @@ def test_headers(language):
         f.write(code)
 
     compile_pyccel(cwd, test_file, pyccel_commands)
-
 
     lang_out = get_lang_output(get_exe(test_file))
     assert float(lang_out)
