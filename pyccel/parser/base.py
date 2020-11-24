@@ -552,9 +552,7 @@ class BasicParser(object):
             hs   = hashlib.md5(code)
             with open(filename, 'wb') as f:
                 pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
-        except FileNotFoundError:
-            pass
-        except PermissionError:
+        except (FileNotFoundError, PermissionError, pickle.PickleError):
             pass
 
     def load(self, filename=None):
@@ -590,7 +588,7 @@ class BasicParser(object):
         try:
             with open(filename, 'rb') as f:
                 hs, version, parser = pickle.load(f)
-        except Exception:
+        except (FileNotFoundError, PermissionError, pickle.PickleError):
             return
 
         import hashlib
