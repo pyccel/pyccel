@@ -361,7 +361,7 @@ class Is(PyccelBooleanOperator):
         return self._args[1]
 
 
-class IsNot(PyccelOperator):
+class IsNot(Is):
 
     """Represents a is expression in the code.
 
