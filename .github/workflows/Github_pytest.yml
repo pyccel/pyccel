@@ -84,6 +84,10 @@ jobs:
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
+      - name: Interesting case
+        run: |
+          python -m pytest -rx -sv epyccel/test_epyccel_pow.py
+        working-directory: ./tests
       - name: Serial fortran tests and non-tagged tests
         run: |
           python -m pytest -rx -m "not parallel and not c" -x --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
