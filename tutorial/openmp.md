@@ -10,14 +10,7 @@ from pyccel.stdlib.internal.openmp import omp_set_num_threads
 
 ### Example
 
-The following example show how ``` omp_set_num_threads ``` is used to set the number of threads to ``` 4 threads ``` and how ``` omp_get_num_threads ``` is used to get the number of thread in the current team within a parallel region, ``` omp_get_num_threads ``` will return ``` 4 threads ```.
-The output of this program is (you may get different result because of threads running at the same time):
-```shell
-hello from thread number: 0
-hello from thread number: 2
-hello from thread number: 1
-hello from thread number: 3
-```
+The following example show how ``` omp_set_num_threads ``` is used to set the number of threads to ``` 4 threads ``` and how ``` omp_get_num_threads ``` is used to get the number of thread in the current team within a parallel region, ``` omp_get_num_threads ``` will return ``` 4 threads ```.\
 
 ```python
 from pyccel.decorators import types
@@ -35,6 +28,17 @@ def get_num_threads(n):
 print(get_num_threads(4))
 ```
 
+The output of this program is (you may get different result because of threads running at the same time):
+```shell
+❯ pyccel omp_test.py --language c --openmp
+❯ ./omp_test
+hello from thread number: 0
+hello from thread number: 2
+hello from thread number: 1
+hello from thread number: 3
+4
+```
+
 ## Directives Usage on Pyccel
 
 ### Parallel Construct
@@ -49,12 +53,23 @@ structured-block
 
 #### Example
 
+The following example show how to use the ``` #$ omp parallel ``` pragma to create a team of 2 threads, each thread with its own private copy of the variables ``` n ```.\
+
 ```python
-from pyccel.stdlib.internal.openmp import omp_get_num_threads
-#$ omp parallel
+from pyccel.stdlib.internal.openmp import omp_get_thread_num
+
+#$ omp parallel private (n) num_threads(2)
 n = omp_get_thread_num()
-print()
+print("hello from thread:", n)
 #$ omp end parallel
+```
+
+The output of this program is (you may get different result because of threads running at the same time):
+```shell
+❯ pyccel omp_test.py --language c --openmp
+❯ ./omp_test
+hello from thread: 0
+hello from thread: 1
 ```
 
 ### Loop Construct
@@ -68,13 +83,24 @@ for-loops
 
 #### Example
 
+This example show how we can use the ``` #$ omp for ``` pragma to specify the loop that we want to b executed in parallel, each iteration of the loop is executed by one of the threads in the team.\
+The ``` reduction ``` clause is used to deal with the data race, each thread has its own local copy of the reduction variable ``` result ```, when the threads join together, all the local copies of the reduction variable are combined to the global shared variable.\
+
 ```python
 result = 0
-#$ omp parallel private(i)
+#$ omp parallel private(i) shared(result)  num_threads(4)
 #$ omp for reduction (+:result)
 for i in range(0, 1337):
   result += i
 #$ omp end parallel
+print(result)
+```
+
+The output of this program is:
+```shell
+❯ pyccel omp_test.py --language c --openmp
+❯ ./omp_test
+893116
 ```
 
 ### Single Construct
