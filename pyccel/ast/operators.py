@@ -123,7 +123,7 @@ class PyccelUnary(PyccelUnaryOperator):
     _precedence = 14
     def _handle_precedence(self, args):
         args = PyccelUnaryOperator._handle_precedence(self, args)
-        args = tuple(PyccelAssociativeParenthesis(a) if isinstance(a, (PyccelUnary, PyccelUnarySub)) else a for a in args)
+        args = tuple(PyccelAssociativeParenthesis(a) if isinstance(a, PyccelUnary) else a for a in args)
         return args
 
 class PyccelUnarySub(PyccelUnary):
@@ -226,19 +226,25 @@ class PyccelBinaryOperator(PyccelOperator):
             shape = broadcast(shape, a.shape)
         return shape
 
-class PyccelPow(PyccelBinaryOperator):
+class PyccelArithmeticOperator(PyccelBinaryOperator):
+    def _handle_precedence(self, args):
+        args = PyccelBinaryOperator._handle_precedence(self, args)
+        args = tuple(PyccelAssociativeParenthesis(a) if isinstance(a, PyccelUnary) else a for a in args)
+        return args
+
+class PyccelPow(PyccelArithmeticOperator):
     _precedence  = 15
 
-class PyccelAdd(PyccelBinaryOperator):
+class PyccelAdd(PyccelArithmeticOperator):
     _precedence = 12
 
-class PyccelMul(PyccelBinaryOperator):
+class PyccelMul(PyccelArithmeticOperator):
     _precedence = 13
 
 class PyccelMinus(PyccelAdd):
     pass
 
-class PyccelDiv(PyccelBinaryOperator):
+class PyccelDiv(PyccelArithmeticOperator):
     _precedence = 13
 
     def _handle_str_type(self, strs):
@@ -248,10 +254,10 @@ class PyccelDiv(PyccelBinaryOperator):
         self._dtype     = NativeReal()
         self._precision = default_precision['real']
 
-class PyccelMod(PyccelBinaryOperator):
+class PyccelMod(PyccelArithmeticOperator):
     _precedence = 13
 
-class PyccelFloorDiv(PyccelBinaryOperator):
+class PyccelFloorDiv(PyccelArithmeticOperator):
     _precedence = 13
 
 class PyccelBitOperator(PyccelBinaryOperator):
@@ -334,9 +340,17 @@ class PyccelBooleanOperator(PyccelOperator):
 
 class PyccelAnd(PyccelBooleanOperator):
     _precedence = 5
+    def _handle_precedence(self, args):
+        args = PyccelBooleanOperator._handle_precedence(self, args)
+        args = tuple(PyccelAssociativeParenthesis(a) if isinstance(a, PyccelOr) else a for a in args)
+        return args
 
 class PyccelOr(PyccelBooleanOperator):
     _precedence = 4
+    def _handle_precedence(self, args):
+        args = PyccelBooleanOperator._handle_precedence(self, args)
+        args = tuple(PyccelAssociativeParenthesis(a) if isinstance(a, PyccelAnd) else a for a in args)
+        return args
 
 class Is(PyccelBooleanOperator):
 
