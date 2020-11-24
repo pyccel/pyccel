@@ -24,11 +24,8 @@ runs:
         #
         # Microsoft C runtime library: generate static libmsvcr140.a from vcruntime140.dll
         cd $LIBRARY_DIR
-        ls $LIBRARY_DIR
-        ls $Env:SystemRoot\\SysWOW64
         cp $Env:SystemRoot\\SysWOW64\\vcruntime140.dll .
         gendef vcruntime140.dll
-        cat vcruntime140.def
         dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
         echo "DISTUTILS_USE_SDK=1" >> $GITHUB_ENV
         echo "py_vcruntime_redist=true" >> $GITHUB_ENV
