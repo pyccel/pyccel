@@ -47,6 +47,8 @@ from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
+from .operators import PyccelMinus
+
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
 
