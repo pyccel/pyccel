@@ -581,9 +581,9 @@ class SyntaxParser(BasicParser):
             return PyccelLe(first, second)
         if isinstance(op, ast.GtE):
             return PyccelGe(first, second)
-        if isinstance(op, ast.PyccelIs):
+        if isinstance(op, ast.Is):
             return PyccelIs(first, second)
-        if isinstance(op, ast.PyccelIsNot):
+        if isinstance(op, ast.IsNot):
             return PyccelIsNot(first, second)
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
