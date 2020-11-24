@@ -2939,6 +2939,13 @@ class SemanticParser(BasicParser):
             if len(expr.target) == 0 and isinstance(expr.source,AsName):
                 expr = Import(expr.source.name)
 
+            if source_target in container['imports']:
+                targets = container['imports'][source_target].target + expr.target
+            else:
+                targets = expr.target
+
+            expr = Import(expr.source, targets)
+
             if __import_all__:
                 expr = Import(__module_name__)
                 container['imports'][source_target] = expr
@@ -2954,6 +2961,7 @@ class SemanticParser(BasicParser):
                 expr   = Import(source, expr.target)
                 container['imports'][source_target] = expr
             elif not __ignore_at_import__:
+
                 container['imports'][source_target] = expr
 
         return EmptyNode()
