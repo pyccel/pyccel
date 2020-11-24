@@ -14,11 +14,12 @@ from pyccel.ast.core      import Nil
 from pyccel.ast.core      import Assign, datatype, Variable, Import
 from pyccel.ast.core      import SeparatorComment, VariableAddress
 from pyccel.ast.core      import DottedName
+from pyccel.ast.core      import create_incremented_string
+
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus
 from pyccel.ast.operators import PyccelAssociativeParenthesis
+from pyccel.ast.operators import PyccelUnarySub, PyccelMod
 
-from pyccel.ast.core import PyccelUnarySub, PyccelMod
-from pyccel.ast.core import create_incremented_string
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
 
