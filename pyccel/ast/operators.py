@@ -117,6 +117,10 @@ class PyccelUnaryOperator(PyccelOperator):
 
 class PyccelUnary(PyccelUnaryOperator):
     _precedence = 14
+    def _handle_precedence(self, args):
+        args = PyccelUnaryOperator._handle_precedence(self, args)
+        args = [PyccelAssociativeParenthesis(a) if isinstance(a, (PyccelUnary, PyccelUnarySub)) else a for a in args]
+        return args
 
 class PyccelUnarySub(PyccelUnary):
     pass
