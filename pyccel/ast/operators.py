@@ -76,7 +76,7 @@ def broadcast(shape_1, shape_2):
 class PyccelOperator(Expr, PyccelAstNode):
 
     def __init__(self, *args):
-        self._args = self._handle_precedence(args)
+        self._args = tuple(self._handle_precedence(args))
 
     @property
     def precedence(self):
@@ -119,7 +119,7 @@ class PyccelUnary(PyccelUnaryOperator):
     _precedence = 14
     def _handle_precedence(self, args):
         args = PyccelUnaryOperator._handle_precedence(self, args)
-        args = [PyccelAssociativeParenthesis(a) if isinstance(a, (PyccelUnary, PyccelUnarySub)) else a for a in args]
+        args = tuple(PyccelAssociativeParenthesis(a) if isinstance(a, (PyccelUnary, PyccelUnarySub)) else a for a in args)
         return args
 
 class PyccelUnarySub(PyccelUnary):
