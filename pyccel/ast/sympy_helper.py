@@ -59,27 +59,17 @@ def sympy_to_pyccel(expr, symbol_map):
         return PyccelMul(*args)
     elif isinstance(expr, sp.Add):
         args = [sympy_to_pyccel(e, symbol_map) for e in expr.args]
+        result = args[0]
         minus_args = []
         plus_args = []
 
         # Find positive and negative elements
-        for a in args:
+        for a in args[1:]:
             if isinstance(a, PyccelMul) and a.args[0] == LiteralInteger(-1):
-                minus_args.append(a.args[1])
+                result = PyccelMinus(result, a.args[1])
             else:
-                plus_args.append(a)
-
-        #Use pyccel Add or Minus as appropriate
-        if len(minus_args) == 0:
-            return PyccelAdd(*plus_args)
-        elif len(plus_args) == 0:
-            return PyccelMul(LiteralInteger(-1), PyccelAssociativeParenthesis(PyccelAdd(*minus_args)))
-        else:
-            if len(plus_args)>1:
-                plus_args = [PyccelAdd(*plus_args)]
-            if len(minus_args)>1:
-                minus_args = [PyccelAssociativeParenthesis(PyccelAdd(*minus_args))]
-            return PyccelMinus(*plus_args,*minus_args)
+                result = PyccelAdd(result, a)
+        return result
     elif isinstance(expr, sp.Pow):
         # Recognise division
         if isinstance(expr.args[1], NegativeOne):
