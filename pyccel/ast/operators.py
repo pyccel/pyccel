@@ -381,16 +381,6 @@ class PyccelBinaryOperator(PyccelOperator):
                 self._rank  = max(a.rank for a in self._args)
                 self._shape = [None]*self._rank
 
-    @property
-    def lhs(self):
-        """ First operator argument"""
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        """ First operator argument"""
-        return self._args[1]
-
 #==============================================================================
 
 class PyccelArithmeticOperator(PyccelBinaryOperator):
@@ -555,7 +545,7 @@ class PyccelFloorDiv(PyccelArithmeticOperator):
 
 #==============================================================================
 
-class PyccelBitOperator(PyccelBinaryOperator):
+class PyccelBitOperator(PyccelOperator):
     """ Abstract superclass representing a python
     bitwise operator with two arguments
 
@@ -569,14 +559,30 @@ class PyccelBitOperator(PyccelBinaryOperator):
     _rank = 0
     _shape = ()
 
+    def _set_dtype(self):
+        """ Sets the dtype and precision
+
+        If one argument is a string then all arguments must be strings
+
+        If the arguments are numeric then the dtype and precision
+        match the broadest type and the largest precision
+        e.g.
+            1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
+        """
+        integers  = [a for a in self._args if a.dtype in (NativeInteger(),NativeBool())]
+        reals     = [a for a in self._args if a.dtype is NativeReal()]
+        complexes = [a for a in self._args if a.dtype is NativeComplex()]
+        strs      = [a for a in self._args if a.dtype is NativeString()]
+
+        if strs or complexes or reals:
+            raise TypeError('unsupported operand type(s): {}'.format(self))
+        elif integers:
+            self._handle_integer_type(integers)
+        else:
+            raise TypeError('cannot determine the type of {}'.format(self))
+
     def _set_shape_rank(self):
         pass
-
-    def _handle_complex_type(self, complexes):
-        raise TypeError('unsupported operand type(s): {}'.format(self))
-
-    def _handle_real_type(self, reals):
-        raise TypeError('unsupported operand type(s): {}'.format(self))
 
     def _handle_integer_type(self, integers):
         self._dtype     = NativeInteger()
@@ -820,7 +826,7 @@ class PyccelGe(PyccelComparisonOperator):
 
 #==============================================================================
 
-class PyccelBooleanOperator(PyccelBinaryOperator):
+class PyccelBooleanOperator(PyccelOperator):
     """ Abstract superclass representing a python
     boolean operator with two arguments
 
@@ -902,6 +908,19 @@ class PyccelIs(PyccelBooleanOperator):
     PyccelIs(x, None)
     """
     _precedence = 7
+
+    def __init__(self, arg1, arg2):
+        PyccelBooleanOperator.__init__(self, arg1, arg2)
+
+    @property
+    def lhs(self):
+        """ First operator argument"""
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        """ First operator argument"""
+        return self._args[1]
 
 #==============================================================================
 
