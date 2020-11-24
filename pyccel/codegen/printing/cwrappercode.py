@@ -487,10 +487,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_Interface(self, expr):
 
-        #Collecting all functions names
-        #TO DEBUG remove this line and uncomment the next one
-        funcs = [expr]
-        #funcs = expr.functions
+        # Collecting all functions
+        funcs = expr.functions
         # Save all used names
         used_names = set(n.name for n in funcs)
 
@@ -525,8 +523,8 @@ class CWrapperCodePrinter(CCodePrinter):
         check_var = Variable(dtype = NativeInteger(), name = self.get_new_name(used_names , "check"))
         wrapper_vars[check_var.name] = check_var
         types_dict = {a : set() for a in funcs[0].arguments} #dict to collect each variable possible type and the corresponding flags
+
         # Managing the body of wrapper
-        # TODO split or re use exisiting functions in the wrapper
         for func in funcs :
             mini_wrapper_func_body = []
             res_args = []
@@ -535,7 +533,6 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_vars = {}
             parse_args = []
             # Loop for all args in every functions and create the corresponding condition and body
-            # TODO add array management like in the wrapper of simple function
             for f_arg in func.arguments:
                 collect_var , cast_func = self.get_PyArgParseType(used_names, f_arg, True)
                 collect_vars[f_arg] = collect_var
@@ -548,12 +545,11 @@ class CWrapperCodePrinter(CCodePrinter):
                 # If the variable cannot be collected from PyArgParse directly
                 wrapper_vars[collect_var.name] = collect_var
 
-                # Save cast to argument variable
+                # Save the body
                 wrapper_body_translations.extend(body)
 
                 parse_args.append(collect_var)
 
-                # Managing valued variable
                 # Write default values
                 if isinstance(f_arg, ValuedVariable):
                     wrapper_body.append(self.get_default_assign(parse_args[-1], f_arg))
@@ -567,6 +563,7 @@ class CWrapperCodePrinter(CCodePrinter):
             # create the corresponding function call
             static_function, static_args, additional_body = self._get_static_function(used_names, func, collect_vars)
             mini_wrapper_func_body.extend(additional_body)
+
             for var in static_args:
                 mini_wrapper_func_vars[var.name] = var
 
@@ -850,7 +847,7 @@ class CWrapperCodePrinter(CCodePrinter):
         funcs = interfaces + [f for f in expr.funcs if f.name not in interface_funcs]
 
 
-        function_defs = '\n\n'.join(self._print_Interface(f) if len(f.arguments) >= 1 else self._print(f) for f in funcs )
+        function_defs = '\n\n'.join(self._print(f) for f in funcs)
         cast_functions = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f)
                                         for f in self._cast_functions_dict.values())
         method_def_func = ',\n'.join(('{{\n'
