@@ -142,7 +142,7 @@ class PyccelInvert(PyccelUnaryOperator):
 
         self._args      = (PythonInt(a) if a.dtype is NativeBool() else a,)
 
-class PyccelAssociativeParenthesis(PyccelOperator):
+class PyccelAssociativeParenthesis(PyccelUnaryOperator):
     _precedence = 18
     def _handle_precedence(self, args):
         return args
