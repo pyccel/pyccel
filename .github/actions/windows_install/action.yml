@@ -18,15 +18,15 @@ runs:
         #
         # Download x64 BLAS and LAPACK DLLs from https://icl.cs.utk.edu/lapack-for-windows/lapack/
         #$WEB_ADDRESS="https://icl.cs.utk.edu/lapack-for-windows/libraries/VisualStudio/3.7.0/Dynamic-MINGW/Win64"
-        #$LIBRARY_DIR="C:\\ProgramData\\chocolatey\\lib\\mingw\\tools\\install\\mingw64\\lib"
+        $LIBRARY_DIR="C:\\ProgramData\\chocolatey\\lib\\mingw\\tools\\install\\mingw64\\lib"
         #curl $WEB_ADDRESS/libblas.dll -o $LIBRARY_DIR\\libblas.dll
         #curl $WEB_ADDRESS/liblapack.dll -o $LIBRARY_DIR\\liblapack.dll
         #
         # Microsoft C runtime library: generate static libmsvcr140.a from vcruntime140.dll
-        #cd $LIBRARY_DIR
-        #cp $Env:SystemRoot\\SysWOW64\\vcruntime140.dll .
-        #gendef vcruntime140.dll
-        #dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
+        cd $LIBRARY_DIR
+        cp $Env:SystemRoot\\SysWOW64\\vcruntime140.dll .
+        gendef vcruntime140.dll
+        dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
       shell: powershell
     - name: Install MS MPI runtime and SDK
       run: |
