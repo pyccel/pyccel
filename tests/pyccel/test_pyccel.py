@@ -388,6 +388,14 @@ def test_expressions(language):
                 output_dtype = types)
 
 #------------------------------------------------------------------------------
+def test_generic_functions():
+    pyccel_test("scripts/runtest_generic_functions.py",
+            dependencies = "scripts/generic_functions.py",
+            compile_with_pyccel = False,
+            output_dtype = [float,float,float,float,float,float,
+                    float,float,float,float,float,float,float,int,float])
+
+#------------------------------------------------------------------------------
 def test_default_arguments():
     pyccel_test("scripts/runtest_default_args.py",
             dependencies = "scripts/default_args_mod.py",

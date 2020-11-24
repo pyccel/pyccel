@@ -296,10 +296,7 @@ class FCodePrinter(CodePrinter):
         sep = self._print(SeparatorComment(40))
         interfaces = ''
         if expr.interfaces:
-            interfaces = '\n'.join(self._print(i) for i in expr.interfaces if not i.hide)
-            for interface in expr.interfaces:
-                if not interface.hide:
-                    body += '\n'.join(''.join([sep, self._print(i), sep]) for i in interface.functions)
+            interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
 
         if expr.funcs:
             body += '\n'.join(''.join([sep, self._print(i), sep]) for i in expr.funcs)
@@ -1145,7 +1142,7 @@ class FCodePrinter(CodePrinter):
             # we should append them to the procedure arguments
             if isinstance(expr.lhs, (tuple, list, Tuple, PythonTuple)):
 
-                rhs_code = self._print(rhs.func)
+                rhs_code = rhs.funcdef.name
                 args = rhs.arguments
                 code_args = [self._print(i) for i in args]
                 func = rhs.funcdef
@@ -2522,6 +2519,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
+        f_name = func.name if not expr.interface else expr.interface.name
         args = [a for a in expr.arguments if not isinstance(a, Nil)]
         results = func.results
 
@@ -2529,7 +2527,7 @@ class FCodePrinter(CodePrinter):
             args = ['{}'.format(self._print(a)) for a in args]
 
             args = ', '.join(args)
-            code = '{name}({args})'.format( name = str(func.name),
+            code = '{name}({args})'.format( name = str(f_name),
                                             args = args)
 
         elif len(results)>1:
@@ -2560,7 +2558,7 @@ class FCodePrinter(CodePrinter):
 
             newargs = ', '.join(args+results)
 
-            code = 'call {name}({args})\n'.format( name = str(func.name),
+            code = 'call {name}({args})\n'.format( name = str(f_name),
                                                  args = newargs )
         return code
 

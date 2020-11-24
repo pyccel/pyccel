@@ -12,7 +12,7 @@ from sympy import Tuple
 from textx.metamodel import metamodel_from_file
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
+from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader, VariableHeader, Template
 from pyccel.ast.headers   import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.core      import ValuedArgument
@@ -55,6 +55,19 @@ class FuncType(BasicStmt):
         d_var['is_func'] = True
 
         return d_var
+
+class TemplateStmt(BasicStmt):
+    """Base class representing a  template in the grammar."""
+    def __init__(self, **kwargs):
+        self.dtype  = kwargs.pop('dtype')
+        self.name   = kwargs.pop('name')
+        BasicStmt.__init__(self)
+
+    @property
+    def expr(self):
+        l = [i.expr for i in self.dtype]
+        return Template(self.name, l)
+
 
 class ListType(BasicStmt):
     """Base class representing a  ListType in the grammar."""
@@ -489,6 +502,7 @@ hdr_classes = [Header, TypeHeader,
                Type, ListType, UnionTypeStmt, FuncType,
                HeaderResults,
                FunctionHeaderStmt,
+               TemplateStmt,
                ClassHeaderStmt,
                VariableHeaderStmt,
                MetavarHeaderStmt,
