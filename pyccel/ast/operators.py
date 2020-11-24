@@ -138,96 +138,65 @@ class PyccelInvert(PyccelUnaryOperator):
     _precedence = 14
     _dtype     = NativeInteger()
 
-    def __init__(self, a):
-        PyccelUnaryOperator.__init__(self,a)
-        if self.stage == 'syntactic':
-            return
-
+    def _set_dtype(self, a):
         if self._args[0].dtype not in (NativeInteger(), NativeBool()):
             raise TypeError('unsupported operand type(s): {}'.format(self))
 
         self._args      = (PythonInt(a) if a.dtype is NativeBool() else a,)
+
+        precision = a.precision
 
 class PyccelAssociativeParenthesis(PyccelUnaryOperator):
     _precedence = 18
     def _handle_precedence(self, args):
         return args
 
-class PyccelBitOperator(PyccelOperator):
+class PyccelBitOperator(PyccelBinaryOperator):
     _rank = 0
     _shape = ()
 
-    def __init__(self, args):
-        if self.stage == 'syntactic':
-            return
+    def _set_shape_rank(self):
+        pass
 
-        max_precision = 0
-        for a in args:
-            if a.dtype is NativeInteger() or a.dtype is NativeBool():
-                max_precision = max(a.precision, max_precision)
-            else:
-                raise TypeError('unsupported operand type(s): {}'.format(self))
-        self._precision = max_precision
+    def _handle_str_type(self, strs):
+        raise TypeError('unsupported operand type(s): {}'.format(self))
+
+    def _handle_complex_type(self, complexes):
+        raise TypeError('unsupported operand type(s): {}'.format(self))
+
+    def _handle_real_type(self, reals):
+        raise TypeError('unsupported operand type(s): {}'.format(self))
+
+    def _handle_integer_type(self, integers):
+        self._dtype     = NativeInteger()
+        self._precision = max(a.precision for a in integers)
+        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
 
 class PyccelRShift(PyccelBitOperator):
     _precedence = 11
-    _dtype = NativeInteger()
-    def __init__(self, *args):
-        super(PyccelRShift, self).__init__(args)
-        if self.stage == 'syntactic':
-            return
-        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelLShift(PyccelBitOperator):
     _precedence = 11
-    _dtype = NativeInteger()
-    def __init__(self, *args):
-        super(PyccelLShift, self).__init__(args)
-        if self.stage == 'syntactic':
-            return
-        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
-class PyccelBitXor(PyccelBitOperator):
+class PyccelBooleanBitOperator(PyccelBitOperator):
+    def _handle_integer_type(self, integers):
+        if all(a.dtype is NativeInteger() for a in integers):
+            self._dtype = NativeInteger()
+        elif all(a.dtype is NativeBool() for a in integers):
+            self._dtype = NativeBool()
+        else:
+            self._dtype = NativeInteger()
+            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
+        self._precision = max(a.precision for a in integers)
+
+class PyccelBitXor(PyccelBooleanBitOperator):
     _precedence = 9
-    def __init__(self, *args):
-        super(PyccelBitXor, self).__init__(args)
-        if self.stage == 'syntactic':
-            return
-        if all(a.dtype is NativeInteger() for a in args):
-            self._dtype = NativeInteger()
-        elif all(a.dtype is NativeBool() for a in args):
-            self._dtype = NativeBool()
-        else:
-            self._dtype = NativeInteger()
-            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
-class PyccelBitOr(PyccelBitOperator):
+class PyccelBitOr(PyccelBooleanBitOperator):
     _precedence = 8
-    def __init__(self, *args):
-        super(PyccelBitOr, self).__init__(args)
-        if self.stage == 'syntactic':
-            return
-        if all(a.dtype is NativeInteger() for a in args):
-            self._dtype = NativeInteger()
-        elif all(a.dtype is NativeBool() for a in args):
-            self._dtype = NativeBool()
-        else:
-            self._dtype = NativeInteger()
-            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
-class PyccelBitAnd(PyccelBitOperator):
+class PyccelBitAnd(PyccelBooleanBitOperator):
     _precedence = 10
-    def __init__(self, *args):
-        super(PyccelBitAnd, self).__init__(args)
-        if self.stage == 'syntactic':
-            return
-        if all(a.dtype is NativeInteger() for a in args):
-            self._dtype = NativeInteger()
-        elif all(a.dtype is NativeBool() for a in args):
-            self._dtype = NativeBool()
-        else:
-            self._dtype = NativeInteger()
-            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
 
 class PyccelBinaryOperator(PyccelOperator):
 
