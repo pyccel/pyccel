@@ -151,53 +151,6 @@ class PyccelAssociativeParenthesis(PyccelUnaryOperator):
     def _handle_precedence(self, args):
         return args
 
-class PyccelBitOperator(PyccelBinaryOperator):
-    _rank = 0
-    _shape = ()
-
-    def _set_shape_rank(self):
-        pass
-
-    def _handle_str_type(self, strs):
-        raise TypeError('unsupported operand type(s): {}'.format(self))
-
-    def _handle_complex_type(self, complexes):
-        raise TypeError('unsupported operand type(s): {}'.format(self))
-
-    def _handle_real_type(self, reals):
-        raise TypeError('unsupported operand type(s): {}'.format(self))
-
-    def _handle_integer_type(self, integers):
-        self._dtype     = NativeInteger()
-        self._precision = max(a.precision for a in integers)
-        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
-
-class PyccelRShift(PyccelBitOperator):
-    _precedence = 11
-
-class PyccelLShift(PyccelBitOperator):
-    _precedence = 11
-
-class PyccelBooleanBitOperator(PyccelBitOperator):
-    def _handle_integer_type(self, integers):
-        if all(a.dtype is NativeInteger() for a in integers):
-            self._dtype = NativeInteger()
-        elif all(a.dtype is NativeBool() for a in integers):
-            self._dtype = NativeBool()
-        else:
-            self._dtype = NativeInteger()
-            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
-        self._precision = max(a.precision for a in integers)
-
-class PyccelBitXor(PyccelBooleanBitOperator):
-    _precedence = 9
-
-class PyccelBitOr(PyccelBooleanBitOperator):
-    _precedence = 8
-
-class PyccelBitAnd(PyccelBooleanBitOperator):
-    _precedence = 10
-
 class PyccelBinaryOperator(PyccelOperator):
 
     def __init__(self, *args):
@@ -297,6 +250,53 @@ class PyccelMod(PyccelBinaryOperator):
 
 class PyccelFloorDiv(PyccelBinaryOperator):
     _precedence = 13
+
+class PyccelBitOperator(PyccelBinaryOperator):
+    _rank = 0
+    _shape = ()
+
+    def _set_shape_rank(self):
+        pass
+
+    def _handle_str_type(self, strs):
+        raise TypeError('unsupported operand type(s): {}'.format(self))
+
+    def _handle_complex_type(self, complexes):
+        raise TypeError('unsupported operand type(s): {}'.format(self))
+
+    def _handle_real_type(self, reals):
+        raise TypeError('unsupported operand type(s): {}'.format(self))
+
+    def _handle_integer_type(self, integers):
+        self._dtype     = NativeInteger()
+        self._precision = max(a.precision for a in integers)
+        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
+
+class PyccelRShift(PyccelBitOperator):
+    _precedence = 11
+
+class PyccelLShift(PyccelBitOperator):
+    _precedence = 11
+
+class PyccelBooleanBitOperator(PyccelBitOperator):
+    def _handle_integer_type(self, integers):
+        if all(a.dtype is NativeInteger() for a in integers):
+            self._dtype = NativeInteger()
+        elif all(a.dtype is NativeBool() for a in integers):
+            self._dtype = NativeBool()
+        else:
+            self._dtype = NativeInteger()
+            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
+        self._precision = max(a.precision for a in integers)
+
+class PyccelBitXor(PyccelBooleanBitOperator):
+    _precedence = 9
+
+class PyccelBitOr(PyccelBooleanBitOperator):
+    _precedence = 8
+
+class PyccelBitAnd(PyccelBooleanBitOperator):
+    _precedence = 10
 
 class PyccelBooleanOperator(PyccelOperator):
     _precedence = 7
