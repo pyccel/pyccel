@@ -394,7 +394,7 @@ def PythonType_Check(variable, argument):
     FunctionCall : Check type FunctionCall
     """
     try :
-        check_type = python_type_check_registry[variable.dtype]
+        check_type = check_type_registry[variable.dtype]
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=variable.dtype,severity='fatal')
     check_func = FunctionDef(name = check_type,
@@ -528,7 +528,7 @@ collect_function_registry = {
     NativeReal() : PyFloat_AsDouble,
 }
 
-python_type_check_registry = {
+check_type_registry  = {
     NativeInteger(): 'PyLong_Check',
     NativeComplex() : 'PyComplex_Check',
     NativeReal() : 'PyFloat_Check',

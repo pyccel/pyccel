@@ -14,8 +14,8 @@ from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot, PyccelEq
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelEq, IfTernaryOperator
-from pyccel.ast.core import AugAssign, PyccelAssociativeParenthesis, PyccelOr
+from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelEq, IfTernaryOperator, PyccelOr
+from pyccel.ast.core import PyccelAssociativeParenthesis, AugAssign
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, str_dtype
 
@@ -131,7 +131,6 @@ class CWrapperCodePrinter(CCodePrinter):
               a.DIM = size of array
         """
         additional_body = []
-        additional_vars = []
         if self._target_language == 'fortran':
             static_args = []
             for a in function.arguments:
@@ -141,7 +140,7 @@ class CWrapperCodePrinter(CCodePrinter):
                         var = Variable(dtype=NativeInteger() ,name = self.get_new_name(used_names, a.name + "_dim"))
                         body = FunctionCall(numpy_get_dim, [collect_dict[a], i])
                         if a.is_optional:
-                            body = IfTernaryOperator(PyccelNot(VariableAddress(collect_dict[a])), body , LiteralInteger(0))
+                            body = IfTernaryOperator(VariableAddress(collect_dict[a]), body , LiteralInteger(0))
                         body = Assign(var, body)
                         additional_body.append(body)
                         static_args.append(var)
@@ -690,6 +689,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self._global_names.add(wrapper_name)
         return wrapper_name
 
+        return collect_var, cast_function
 
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
