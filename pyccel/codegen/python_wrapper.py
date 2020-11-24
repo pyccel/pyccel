@@ -110,10 +110,6 @@ def create_shared_library(codegen,
 
         linker_flags = []
 
-        if sys.platform == "win32":
-            linker_flags.append("-Wl,-Bstatic")
-            extra_libs.append("pthread")
-
         if sys.platform == "darwin" and "-fopenmp" in c_flags and "-Xpreprocessor" not in c_flags:
             idx = 0
             while idx < len(c_flags):
@@ -121,6 +117,12 @@ def create_shared_library(codegen,
                     c_flags.insert(idx, "-Xpreprocessor")
                     idx += 1
                 idx += 1
+
+        if sys.platform == "win32":
+            linker_flags.append("-Wl,-Bstatic")
+            extra_libs.append("pthread")
+
+            extra_libs = [":lib{}.a".format(l) for l in extra_libs]
 
         setup_code = create_c_setup(sharedlib_modname, wrapper_filename,
                 dep_mods, compiler, includes, libs + extra_libs, libdirs + extra_libdirs,
