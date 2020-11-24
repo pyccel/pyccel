@@ -14,6 +14,8 @@ from .core import DottedName, DottedVariable
 from .datatypes import datatype, DataTypeFactory, UnionType
 from .macros import Macro, MacroShape, construct_macro
 from .core import local_sympify
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import TEMPLATE_IN_UNIONTYPE
 
 __all__ = (
     'ClassHeader',
@@ -26,6 +28,9 @@ __all__ = (
     'MethodHeader',
     'VariableHeader',
 )
+
+#==============================================================================
+errors = Errors()
 
 #==============================================================================
 class Header(Basic):
@@ -247,20 +252,23 @@ class FunctionHeader(Header):
                         is_argument=True)
             return var
 
-        def process_template(arg_code, Tname, d_type, type_index):
-            tmp_arg_code = arg_code.copy()
-            resolved = False
+        def process_template(signature, Tname, d_type):
+            new_sig = tuple(d_type.copy() if 'datatype' in t and t['datatype'] == Tname\
+                    else t for t in signature)
+            return new_sig
 
-            for i, t in enumerate(tmp_arg_code):
-                if 'datatype' in t and t['datatype'] == Tname:
-                    resolved = True
-                    tmp_arg_code[i] = d_type.copy()
-            if resolved or type_index == 0:
-                return tmp_arg_code
-            return None
+        def find_templates(signature, templates):
+            new_templates = {d_type['datatype']:templates[d_type['datatype']]\
+                    for d_type in signature\
+                    if 'datatype' in d_type and d_type['datatype'] in templates}
+            return new_templates
 
         for i in self.dtypes:
             if isinstance(i, UnionType):
+                for d_type in i.args:
+                    if d_type['datatype'] in templates:
+                        errors.report(TEMPLATE_IN_UNIONTYPE,
+                                severity='error')
                 dtypes += [i.args]
             elif isinstance(i, dict):
                 dtypes += [[i]]
@@ -269,14 +277,14 @@ class FunctionHeader(Header):
 
         #TODO: handle the case of functions arguments
 
-        arg_codes = [list(arg_code) for arg_code in product(*dtypes)]
-        for tmplt in templates:
-            arg_codes = [process_template(arg_code, tmplt, d_type, j) for arg_code in arg_codes\
-                    for j, d_type, in enumerate(templates[tmplt].args) if arg_code]
-        if len(arg_codes) > 1:
-            arg_codes = list(filter(None, arg_codes))
+        signatures = list(product(*dtypes))
+        new_templates = find_templates(signatures[0], templates)
 
-        for args_ in arg_codes:
+        for tmplt in new_templates:
+            signatures = [process_template(s, tmplt, d_type)\
+                    for s in signatures for d_type in new_templates[tmplt].args]
+
+        for args_ in signatures:
             args = []
             for i, d in enumerate(args_):
                 # TODO  handle function as argument, which itself has a function argument
