@@ -10,7 +10,7 @@ runs:
         #
         # Change default C compiler from M$ to mingw in distutils.cfg
         echo "[build]`ncompiler = mingw32" >> ${Env:pythonLocation}\\Lib\\distutils\\distutils.cfg
-        sed '/return \[''msvcr100''\]/ a \        elif msc_ver == ''1927'':\\n            return [''msvcr142'']' ${Env:pythonLocation}\\Lib\\distutils\\cygwinccompiler.py > sed_tmp.py
+        sed '/return \[''msvcr100''\]/ a \        elif msc_ver == ''1927'':\\n            return [''msvcr140d'']' ${Env:pythonLocation}\\Lib\\distutils\\cygwinccompiler.py > sed_tmp.py
         Move-Item -Path sed_tmp.py -Destination ${Env:pythonLocation}\\Lib\\distutils\\cygwinccompiler.py -Force
       shell: powershell
     - name: Install Lapack
@@ -26,9 +26,9 @@ runs:
         cd $LIBRARY_DIR
         ls $LIBRARY_DIR
         ls $Env:SystemRoot\\SysWOW64
-        cp $Env:SystemRoot\\SysWOW64\\vcruntime142.dll .
-        gendef vcruntime142.dll
-        dlltool -d vcruntime142.def -l libmsvcr142.a -D vcruntime142.dll
+        cp $Env:SystemRoot\\SysWOW64\\vcruntime140d.dll .
+        gendef vcruntime140d.dll
+        dlltool -d vcruntime140d.def -l libmsvcr140d.a -D vcruntime140d.dll
       shell: powershell
     - name: Install MS MPI runtime and SDK
       run: |
