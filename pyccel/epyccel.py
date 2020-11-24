@@ -145,7 +145,10 @@ def epyccel_seq(function_or_module, *,
 
     import glob, subprocess
 
-    lib_file = glob.glob(os.path.join(epyccel_dirpath,module_name)+".*.so")[0]
+    if sys.platform == "win32":
+        lib_file = glob.glob(os.path.join(epyccel_dirpath,module_name)+".*.pyd")[0]
+    else:
+        lib_file = glob.glob(os.path.join(epyccel_dirpath,module_name)+".*.so")[0]
     print(lib_file)
     p = subprocess.Popen(['ldd', lib_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     out, err = p.communicate()
