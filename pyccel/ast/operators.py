@@ -1,9 +1,8 @@
 from sympy.core.expr          import Expr
+
 from .basic     import PyccelAstNode
 
 from .builtins import PythonInt
-
-from .core      import PyccelArraySize
 
 from .datatypes import NativeBool, NativeInteger, NativeReal, NativeComplex, NativeString, default_precision
 
@@ -39,6 +38,8 @@ __all__ = (
 #==============================================================================
 def broadcast(shape_1, shape_2):
     """ This function broadcast two shapes using numpy broadcasting rules """
+    from .core      import PyccelArraySize
+
     a = len(shape_1)
     b = len(shape_2)
     if a>b:
