@@ -288,7 +288,7 @@ def int_types(x, y):
 def float_types(x, y):
     return x + y
 
-@template('g', types=['complex', 'complex64'])
+@template('g', types=['complex', 'complex64', 'complex128'])
 @types('g', 'g')
 def complex_types(x, y):
     return x + y
