@@ -13,11 +13,10 @@ def create_c_setup(mod_name,
         wrapper_file,
         dependencies,
         compiler,
-        include = '',
-        libs = '',
-        libdirs = '',
-        flags = '',
-        linker_flags = ''):
+        include = (),
+        libs    = (),
+        libdirs = (),
+        flags   = () ):
     """
     Create the code for the setup file which uses python setuptools
     to compile a c file and generate the corresponding shared
@@ -74,6 +73,7 @@ def create_c_setup(mod_name,
     flags_str   = ('extra_compile_args = {0}'.format(print_list(flags))
                    if flags else None)
 
+    linker_flags = [f for f in flags if f.startswith("-Wl")]
     linker_flags_str   = ('extra_link_args = {0}'.format(print_list(linker_flags))
                    if flags else None)
 
