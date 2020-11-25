@@ -471,7 +471,7 @@ class PyccelMul(PyccelArithmeticOperator):
 
 #==============================================================================
 
-class PyccelMinus(PyccelAdd):
+class PyccelMinus(PyccelArithmeticOperator):
     """
     Class representing a call to the python subtraction operator.
     I.e:
@@ -486,6 +486,7 @@ class PyccelMinus(PyccelAdd):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    _precedence = 12
 
 #==============================================================================
 
