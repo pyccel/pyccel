@@ -163,7 +163,7 @@ class CWrapperCodePrinter(CCodePrinter):
             if variable.precision == default_precision[str_dtype(variable.dtype)] :
                 check = PyccelOr(python_check, numpy_check)
             else :
-                check = numpy_check
+                check = PyccelAnd( PyccelNot(python_check), numpy_check)
 
         if isinstance(variable, ValuedVariable):
             default = PyccelNot(VariableAddress(collect_var)) if variable.rank > 0 else PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
