@@ -281,3 +281,32 @@ def tst_optional_var_4():
 @types('g', 'g')
 def int_types(x, y):
     return x + y
+
+
+@template('g', types=['real', 'float32', 'float64'])
+@types('g', 'g')
+def float_types(x, y):
+    return x + y
+
+@template('g', types=['complex', 'complex64'])
+@types('g', 'g')
+def complex_types(x, y):
+    return x + y
+
+
+@template('g', types=['complex', 'int'])
+@template('h', types=['int', 'float64'])
+@template('k', types=['int16', 'bool'])
+@types('g', 'h', 'k')
+def mix_types_1(x, y, z):
+    if z :
+        return x + y
+    return x - y
+
+
+@template('g', types=['int', 'int32', 'int16', 'real', 'complex', 'float32'])
+@types('g', 'g')
+def mix_types_2(x, y):
+    if y != x:
+        return y - x
+    return -x
