@@ -6,11 +6,15 @@ They also have specific rules to determine the dtype, precision, rank, shape
 """
 from sympy.core.expr          import Expr
 
+from ..errors.errors import Errors
+
 from .basic     import PyccelAstNode
 
 from .builtins import PythonInt
 
 from .datatypes import NativeBool, NativeInteger, NativeReal, NativeComplex, NativeString, default_precision
+
+errors = Errors()
 
 __all__ = (
     'PyccelOperator',
@@ -326,7 +330,8 @@ class PyccelBinaryOperator(PyccelOperator):
             raise TypeError('cannot determine the type of {}'.format(self))
 
 
-    def _handle_str_type(self, strs):
+    @staticmethod
+    def _handle_str_type(strs):
         """
         Set dtype and precision when both arguments are strings
         """

@@ -3,7 +3,7 @@
 import numpy as np
 
 from ..errors.errors import Errors
-from ..errors.messages import *
+from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
 from .basic     import Basic
 
