@@ -76,8 +76,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Setup conda with default python version
-        uses: s-weigand/setup-conda@v1
+      - name: Try to setup conda
+        run: |
+            $CONDA\bin\conda activate
+        shell: powershell
+      #- name: Setup conda with default python version
+      #  uses: s-weigand/setup-conda@v1
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
