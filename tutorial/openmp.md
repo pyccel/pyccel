@@ -339,7 +339,7 @@ def fib(n):
 
 #$ omp parallel
 #$ omp omp single
-print(fib(42))
+print(fib(10))
 #$ omp end single
 #$ omp end parallel
 
