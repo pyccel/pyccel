@@ -392,7 +392,7 @@ class CWrapperCodePrinter(CCodePrinter):
     # -------------------------------------------------------------------
     # Parsing arguments and building values Types functions
     # -------------------------------------------------------------------
-    def get_PyArgParseType(self, used_names, variable, is_interface = False):
+    def get_PyArgParseType(self, used_names, variable, collect_var_interface = None):
         """
         Responsible for creating any necessary intermediate variables which are used
         to collect the result of PyArgParse, and collecting the required cast function
@@ -421,11 +421,9 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var = Variable(dtype= collect_type, is_pointer = True, rank = variable.rank,
                                     order= variable.order, name=self.get_new_name(used_names, variable.name+"_tmp"))
 
-        elif is_interface :
-            collect_type = PyccelPyObject()
-            collect_var = Variable(dtype=collect_type, is_pointer=True,
-                name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_collect_function_call(variable, collect_var)
+        elif collect_var_interface :
+            collect_var = collect_var_interface
+            cast_function = self.get_collect_function_call(variable, collect_var_interface)
 
         elif isinstance(variable, ValuedVariable):
             collect_type = PyccelPyObject()
@@ -531,11 +529,12 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_func_vars = {a.name : a for a in func.arguments}
             flags = 0
             collect_vars = {}
-            parse_args = []
+            parse_args = [Variable(dtype = PyccelPyObject() ,
+                                    name = a.name + "tmp", is_pointer= True) for a in func.arguments]
             # Loop for all args in every functions and create the corresponding condition and body
-            for f_arg in func.arguments:
-                collect_var , cast_func = self.get_PyArgParseType(used_names, f_arg, True)
-                collect_vars[f_arg] = collect_var
+            for p_arg, f_arg in zip(parse_args, func.arguments):
+                collect_var, cast_func = self.get_PyArgParseType(used_names, f_arg, p_arg)
+                collect_vars[collect_var] = collect_var
                 body, tmp_variable = self._body_management(used_names, f_arg, collect_var, cast_func)
                 if tmp_variable :
                     mini_wrapper_func_vars[tmp_variable.name] = tmp_variable
@@ -543,12 +542,10 @@ class CWrapperCodePrinter(CCodePrinter):
                 # get check type function
                 check = self._get_check_type_statement(f_arg, collect_var)
                 # If the variable cannot be collected from PyArgParse directly
-                wrapper_vars[collect_var.name] = collect_var
+                wrapper_vars[p_arg.name] = collect_var
 
                 # Save the body
                 wrapper_body_translations.extend(body)
-
-                parse_args.append(collect_var)
 
                 # Write default values
                 if isinstance(f_arg, ValuedVariable):
