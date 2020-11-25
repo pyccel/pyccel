@@ -52,9 +52,6 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import _atomic
-from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelAssociativeParenthesis
-from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
 from pyccel.ast.operators import PyccelIs, PyccelIsNot
 from pyccel.ast.itertoolsext import Product
 
@@ -1151,9 +1148,6 @@ class SemanticParser(BasicParser):
         else:
             expr_new = self._visit_PyccelOperator(expr, **settings)
         return expr_new
-
-    def _visit_PyccelAssociativeParenthesis(self, expr, **settings):
-        return PyccelAssociativeParenthesis(self._visit(expr.args[0]))
 
     def _visit_Lambda(self, expr, **settings):
 
@@ -2740,7 +2734,9 @@ class SemanticParser(BasicParser):
         ls = [self._visit(i, **settings) for i in expr.variables]
         return Del(ls)
 
-    def _handle_is_operator(self, IsClass, expr, **settings):
+    def _visit_PyccelIs(self, expr, **settings):
+        # Handles PyccelIs and PyccelIsNot
+        IsClass = type(expr)
 
         # TODO ERROR wrong position ??
 
@@ -2784,12 +2780,6 @@ class SemanticParser(BasicParser):
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='error', blocker=self.blocking)
         return IsClass(var1, var2)
-
-    def _visit_PyccelIs(self, expr, **settings):
-        return self._handle_is_operator(PyccelIs, expr, **settings)
-
-    def _visit_PyccelIsNot(self, expr, **settings):
-        return self._handle_is_operator(PyccelIsNot, expr, **settings)
 
     def _visit_Import(self, expr, **settings):
 
