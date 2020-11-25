@@ -115,7 +115,7 @@ structured-block
 
 #### Example
 
-This example show how we can use the ``` #$ omp single ``` pragma to specify the section of code that must be run by a single available thread.
+This example show how we can use the ``` #$ omp single ``` pragma to specify a section of code that must be run by a single available thread.
 
 ```python
 result = 0
