@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import sys
-import pytest
 from numpy.random import rand, randint, uniform
 from numpy import isclose
 
@@ -15,7 +14,7 @@ def test_pow_int_int(language):
     def f_call(x, y):
         return x ** y
 
-    f = epyccel(f_call, language=language, verbose = True)
+    f = epyccel(f_call, language=language)
     x = randint(50)
     y = randint(5)
 
@@ -30,7 +29,7 @@ def test_pow_real_real(language):
     def pow_r_r(x, y):
         return x ** y
 
-    f = epyccel(pow_r_r, language=language, verbose = True)
+    f = epyccel(pow_r_r, language=language)
     x = uniform(low=min_float, high=50)
     y = uniform(high=5)
 
@@ -43,7 +42,7 @@ def test_pow_real_int(language):
     def pow_r_i(x, y):
         return x ** y
 
-    f = epyccel(pow_r_i, language=language, verbose = True)
+    f = epyccel(pow_r_i, language=language)
     x = uniform(low=min_float, high=50)
     y = randint(5)
 
@@ -56,7 +55,7 @@ def test_pow_int_real(language):
     def pow_i_r(x, y):
         return x ** y
 
-    f = epyccel(pow_i_r, language=language, verbose = True)
+    f = epyccel(pow_i_r, language=language)
     x = randint(40)
     y = uniform()
 
@@ -68,7 +67,7 @@ def test_pow_special_cases(language):
     def pow_sp(x, y):
         return x ** y
 
-    f = epyccel(pow_sp, language=language, verbose = True)
+    f = epyccel(pow_sp, language=language)
     e = uniform(high=1e6)
     assert(isclose(f(0.0, e), pow_sp(0.0, e), rtol=1e-14, atol=1e-15))
     assert(isclose(f(0.0, e), pow_sp(0.0, e), rtol=1e-14, atol=1e-15))
@@ -80,7 +79,7 @@ def test_pow_c_c(language):
     def pow_c_c(x, y):
         return x ** y
 
-    f = epyccel(pow_c_c, language=language, verbose = True)
+    f = epyccel(pow_c_c, language=language)
     b = complex(rand(), rand())
     e = complex(rand(), rand())
     assert(isclose(f(b, e), pow_c_c(b, e), rtol=1e-14, atol=1e-15))
@@ -93,7 +92,7 @@ def test_pow_c_i(language):
     def pow_c_i(x, y):
         return x ** y
 
-    f = epyccel(pow_c_i, language=language, verbose = True)
+    f = epyccel(pow_c_i, language=language)
     b = complex(rand(), rand())
     e = randint(10)
     assert(isclose(f(b, e), pow_c_i(b, e), rtol=1e-14, atol=1e-15))
@@ -106,7 +105,7 @@ def test_pow_c_r(language):
     def pow_c_r(x, y):
         return x ** y
 
-    f = epyccel(pow_c_r, language=language, verbose = True)
+    f = epyccel(pow_c_r, language=language)
     b = complex(rand(), rand())
     e = rand()
     assert(isclose(f(b, e), pow_c_r(b, e), rtol=1e-14, atol=1e-15))
@@ -119,7 +118,7 @@ def test_pow_r_c(language):
     def pow_r_c(x, y):
         return x ** y
 
-    f = epyccel(pow_r_c, language=language, verbose = True)
+    f = epyccel(pow_r_c, language=language)
     b = rand()
     e = complex(rand(), rand())
     assert(isclose(f(b, e), pow_r_c(b, e), rtol=1e-14, atol=1e-15))
