@@ -1117,7 +1117,7 @@ class SemanticParser(BasicParser):
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal', blocker=True)
 
-    def _handle_PyccelOperator(self, expr, **settings):
+    def _visit_PyccelOperator(self, expr, **settings):
         #stmts, expr = extract_subexpressions(expr)
         #stmts = []
         #if stmts:
@@ -1141,7 +1141,7 @@ class SemanticParser(BasicParser):
             tuple_args = [ai for a in args for ai in get_vars(a)]
             expr_new = PythonTuple(*tuple_args)
         else:
-            expr_new = self._handle_PyccelOperator(expr, **settings)
+            expr_new = self._visit_PyccelOperator(expr, **settings)
         return expr_new
 
     def _visit_PyccelMul(self, expr, **settings):
@@ -1149,93 +1149,11 @@ class SemanticParser(BasicParser):
         if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, PythonList)):
             expr_new = self._visit(Dlist(args[0], args[1]))
         else:
-            expr_new = self._handle_PyccelOperator(expr, **settings)
+            expr_new = self._visit_PyccelOperator(expr, **settings)
         return expr_new
-
-    def _visit_PyccelDiv(self, expr, **settings):
-        return self._handle_PyccelOperator(expr, **settings)
-
-    def _visit_PyccelMod(self, expr, **settings):
-        return self._handle_PyccelOperator(expr, **settings)
-
-    def _visit_PyccelFloorDiv(self, expr, **settings):
-        return self._handle_PyccelOperator(expr, **settings)
-
-    def _visit_PyccelPow(self, expr, **settings):
-        return self._handle_PyccelOperator(expr, **settings)
-
-    def _visit_PyccelRShift(self, expr, **settings):
-        return self._handle_PyccelOperator(expr, **settings)
-
-    def _visit_PyccelLShift(self, expr, **settings):
-        return self._handle_PyccelOperator(expr, **settings)
-
-    def _visit_PyccelBitXor(self, expr, **settings):
-        return self._handle_PyccelOperator(expr, **settings)
-
-    def _visit_PyccelBitOr(self, expr, **settings):
-        return self._handle_PyccelOperator(expr, **settings)
-
-    def _visit_PyccelBitAnd(self, expr, **settings):
-        return self._handle_PyccelOperator(expr, **settings)
-
-    def _visit_PyccelInvert(self, expr, **settings):
-        return self._handle_PyccelOperator(expr, **settings)
 
     def _visit_PyccelAssociativeParenthesis(self, expr, **settings):
         return PyccelAssociativeParenthesis(self._visit(expr.args[0]))
-
-    def _visit_PyccelUnary(self, expr, **settings):
-        return PyccelUnary(self._visit(expr.args[0]))
-
-    def _visit_PyccelUnarySub(self, expr, **settings):
-        return PyccelUnarySub(self._visit(expr.args[0]))
-
-    def _visit_PyccelAnd(self, expr, **settings):
-        args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = PyccelAnd(*args)
-
-        return expr_new
-
-    def _visit_PyccelOr(self, expr, **settings):
-        args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = PyccelOr(*args)
-
-        return expr_new
-
-    def _visit_PyccelEq(self, expr, **settings):
-        args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = PyccelEq(*args)
-        return expr_new
-
-    def _visit_PyccelNe(self, expr, **settings):
-        args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = PyccelNe(*args)
-        return expr_new
-
-    def _visit_PyccelLt(self, expr, **settings):
-        args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = PyccelLt(*args)
-        return expr_new
-
-    def _visit_PyccelGe(self, expr, **settings):
-        args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = PyccelGe(*args)
-        return expr_new
-
-    def _visit_PyccelLe(self, expr, **settings):
-        args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = PyccelLe(*args)
-        return expr_new
-
-    def _visit_PyccelGt(self, expr, **settings):
-        args = [self._visit(a, **settings) for a in expr.args]
-        expr_new = PyccelGt(*args)
-        return expr_new
-
-    def _visit_PyccelNot(self, expr, **settings):
-        a = self._visit(expr.args[0], **settings)
-        return PyccelNot(a)
 
     def _visit_Lambda(self, expr, **settings):
 
