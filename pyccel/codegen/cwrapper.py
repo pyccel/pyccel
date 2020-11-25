@@ -56,6 +56,7 @@ def create_c_setup(mod_name,
     deps  = ['{0}.o'.format(d) for d in dependencies]
 
     if sys.platform == "win32":
+        deps.insert(0, "-Wl,-Bsymbolic-functions")
         deps.insert(0, "-Wl,-Bstatic")
 
     mod = '"{mod}"'.format(mod=mod_name)
