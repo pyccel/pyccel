@@ -17,7 +17,7 @@ from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelEq, IfTernaryOperator, PyccelOr
 from pyccel.ast.core import PyccelAssociativeParenthesis, AugAssign
 
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, str_dtype
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, str_dtype, default_precision
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
@@ -160,7 +160,10 @@ class CWrapperCodePrinter(CCodePrinter):
         else :
             python_check = PythonType_Check(variable, collect_var)
             numpy_check = NumpyType_Check(variable, collect_var)
-            check = PyccelOr(python_check, numpy_check)
+            if variable.precision == default_precision[str_dtype(variable.dtype)] :
+                check = PyccelOr(python_check, numpy_check)
+            else :
+                check = numpy_check
 
         if isinstance(variable, ValuedVariable):
             default = PyccelNot(VariableAddress(collect_var)) if variable.rank > 0 else PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))

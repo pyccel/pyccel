@@ -15,7 +15,7 @@ from pyccel.epyccel import epyccel
 )
 def language(request):
     return request.param
-
+'''
 def test_gen_1(language):
     modnew = epyccel(mod, language = language)
     x_expected = mod.tst_gen_1()
@@ -105,3 +105,62 @@ def test_multi_tmplt_2(language):
     x_expected = mod.tst_multi_tmplt_2()
     x = modnew.tst_multi_tmplt_2()
     assert np.array_equal(x, x_expected)
+
+def test_default_var_1(language):
+    modnew = epyccel(mod, language = language)
+    x_expected = mod.tst_default_var_1()
+    x = modnew.tst_default_var_1()
+    assert np.array_equal(x, x_expected)
+
+def test_default_var_2(language):
+    modnew = epyccel(mod, language = language)
+    x_expected = mod.tst_default_var_2()
+    x = modnew.tst_default_var_2()
+    assert np.array_equal(x, x_expected)
+
+def test_default_var_3(language):
+    modnew = epyccel(mod, language = language)
+    x_expected = mod.tst_default_var_3()
+    x = modnew.tst_default_var_3()
+    assert np.array_equal(x, x_expected)
+
+def test_default_var_4(language):
+    modnew = epyccel(mod, language = language)
+    x_expected = mod.tst_default_var_4()
+    x = modnew.tst_default_var_4()
+    assert np.array_equal(x, x_expected)
+
+def test_optional_var_1(language):
+    modnew = epyccel(mod, language = language)
+    x_expected = mod.tst_optional_var_1()
+    x = modnew.tst_optional_var_1()
+    assert np.array_equal(x, x_expected)
+
+def test_optional_var_2(language):
+    modnew = epyccel(mod, language = language)
+    x_expected = mod.tst_optional_var_2()
+    x = modnew.tst_optional_var_2()
+    assert np.array_equal(x, x_expected)
+
+def test_optional_var_3(language):
+    modnew = epyccel(mod, language = language)
+    x_expected = mod.tst_optional_var_3()
+    x = modnew.tst_optional_var_3()
+    assert np.array_equal(x, x_expected)
+
+def test_optional_var_4(language):
+    modnew = epyccel(mod, language = language)
+    x_expected = mod.tst_optional_var_4()
+    x = modnew.tst_optional_var_4()
+    assert np.array_equal(x, x_expected)
+'''
+def test_int_types(language):
+    f1 = epyccel(mod.int_types , language = language, verbose=True)
+    f2 = mod.int_types
+
+    assert f1(10, 5) == f2(10, 5)
+    assert f1(np.int(15) , np.int(10)) == f2(np.int(15) , np.int(10))
+    assert f1(np.int16(5), np.int16(4)) == f2(np.int16(5), np.int16(4))
+    assert f1(np.int8(4), np.int8(7)) == f2(np.int8(4), np.int8(7))
+    assert f1(np.int32(155), np.int32(177)) == f2(np.int32(155), np.int32(177))
+    assert f1(np.int64(166), np.int64(255)) == f2(np.int64(166), np.int64(255))
