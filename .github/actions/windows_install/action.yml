@@ -40,13 +40,6 @@ runs:
         sleep 5
         msiexec /quiet /i msmpisdk.msi
       shell: powershell
-    - name: Linker info
-      run: |
-          echo ${Env:LDSHARED}
-          echo ${Env:LDFLAGS}
-          echo "LDFLAGS=-Wl,-Bstatic" >> $GITHUB_ENV
-          echo "LDSHARED=gcc -Wl,-Bstatic -Wl,-Bsymbolic-functions"
-      shell: powershell
     #- name: Setup MPI
     #  run: |
     #    #refreshenv
