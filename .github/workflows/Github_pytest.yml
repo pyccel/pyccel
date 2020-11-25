@@ -76,6 +76,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Look for conda
+        run: |
+            ls ${Env:CONDA}
+        shell: powershell
       - name: Try to setup conda
         run: |
             ls ${Env:CONDA}
