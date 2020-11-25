@@ -309,7 +309,7 @@ def test_decorator_f17(language):
         b = a
         return b
     f = epyccel(f17, language=language)
-    assert f(np.int8(25555555555)) == f17(np.int8(25555555555))
+    assert f(np.int8(2)) == f17(np.int8(2))
 
 def test_decorator_f18(language):
     @types('int32')
