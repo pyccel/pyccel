@@ -524,7 +524,8 @@ class CWrapperCodePrinter(CCodePrinter):
         check_var = Variable(dtype = NativeInteger(), name = self.get_new_name(used_names , "check"))
         wrapper_vars[check_var.name] = check_var
         types_dict = {a : set() for a in funcs[0].arguments} #dict to collect each variable possible type and the corresponding flags
-
+        parse_args = [Variable(dtype = PyccelPyObject() ,
+                            name = a.name + "_tmp", is_pointer= True) for a in funcs[0].arguments]
         # Managing the body of wrapper
         for func in funcs :
             mini_wrapper_func_body = []
@@ -532,8 +533,7 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_func_vars = {a.name : a for a in func.arguments}
             flags = 0
             collect_vars = {}
-            parse_args = [Variable(dtype = PyccelPyObject() ,
-                                    name = a.name + "tmp", is_pointer= True) for a in func.arguments]
+
             # Loop for all args in every functions and create the corresponding condition and body
             for p_arg, f_arg in zip(parse_args, func.arguments):
                 collect_var, cast_func = self.get_PyArgParseType(used_names, f_arg, p_arg)
