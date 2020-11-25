@@ -48,11 +48,13 @@ for i in range(3):
         print(af4[i][j])
     print()
 
-# af5 = np.full(5, complex(12.2, 13), dtype=complex)
-
+af5 = np.full(5, complex(12.2, 13), dtype=complex)
+for i in range(5):
+    print(af5[i])
+print()
 # ------------------------------ Array empty ----------------------------------
 ao3 = np.ones(10)
-for j in range(10):
+for i in range(10):
     print(ao3[i])
 print()
 
@@ -75,8 +77,8 @@ for i in range(3):
         print(aol[i][j])
     print()
 
-azl = np.zeros_like(aol)
-for i in range(3):
-    for j in range(10):
+azl = np.zeros_like(afl)
+for i in range(2):
+    for j in range(3):
         print(azl[i][j])
     print()
