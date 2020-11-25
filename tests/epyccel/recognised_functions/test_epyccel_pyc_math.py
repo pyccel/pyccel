@@ -12,7 +12,7 @@ from pyccel.decorators import types
 @pytest.mark.parametrize( 'language', (
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="gcd not implemented in fortrand"),
+            pytest.mark.xfail(reason="gcd not implemented in fortran"),
             pytest.mark.fortran]
         )
     )
