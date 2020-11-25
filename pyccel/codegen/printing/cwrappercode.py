@@ -16,7 +16,7 @@ from pyccel.ast.core import If, Nil, Return, FunctionCall
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, IfTernaryOperator
 
-from pyccel.ast.operators import PyccelNe, PyccelNot
+from pyccel.ast.operators import PyccelEq, PyccelNe, PyccelNot
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
