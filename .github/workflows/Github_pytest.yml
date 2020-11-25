@@ -78,7 +78,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Try to setup conda
         run: |
-            $CONDA\\bin\\conda activate
+            ${Env:CONDA}\bin\conda activate
         shell: powershell
       #- name: Setup conda with default python version
       #  uses: s-weigand/setup-conda@v1
