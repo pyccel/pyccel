@@ -5,6 +5,7 @@ import importlib
 from collections.abc import Iterable
 from collections     import OrderedDict
 
+from pyccel.ast.datatypes  import str_dtype
 from sympy import sympify
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
 from sympy import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Le as sp_Le, Gt as sp_Gt, Ge as sp_Ge
@@ -3258,12 +3259,25 @@ class FunctionCall(Basic, PyccelAstNode):
 
     """Represents a function call in the code.
     """
+    def __new__(
+        cls,
+        *args,
+        **kwargs
+        ):
+        return Basic.__new__(cls)
 
-    def __new__(cls, func, args, current_function=None):
+
+    def __init__(self, func, args, current_function=None):
 
         # ...
-        if not isinstance(func, FunctionDef):
-            raise TypeError('> expecting a FunctionDef')
+        if not isinstance(func, (FunctionDef, Interface)):
+            raise TypeError('> expecting a FunctionDef or an Interface')
+
+        if isinstance(func, Interface):
+            self._interface = func
+            func = func.point(args)
+        else:
+            self._interface = None
 
         name = func.name
         # ...
@@ -3295,34 +3309,28 @@ class FunctionCall(Basic, PyccelAstNode):
 
         args = [FunctionAddress(a.name, a.arguments, a.results, []) if isinstance(a, FunctionDef) else a for a in args]
 
-        args = Tuple(*args, sympify=False)
-        # ...
-
-        return Basic.__new__(cls, name, args)
-
-    def __init__(self, func, args, current_function=None):
-
         if str(current_function) == str(func.name):
             if len(func.results)>0 and not isinstance(func.results[0], PyccelAstNode):
                 errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
 
-        self._funcdef     = func
-        self._dtype       = func.results[0].dtype if len(func.results) == 1 else NativeTuple()
-        self._rank        = func.results[0].rank if len(func.results) == 1 else None
-        self._shape       = func.results[0].shape if len(func.results) == 1 else None
-        self._precision   = func.results[0].precision if len(func.results) == 1 else None
-
-    @property
-    def func(self):
-        return self._args[0]
+        self._funcdef       = func
+        self._arguments     = args
+        self._dtype         = func.results[0].dtype if len(func.results) == 1 else NativeTuple()
+        self._rank          = func.results[0].rank if len(func.results) == 1 else None
+        self._shape         = func.results[0].shape if len(func.results) == 1 else None
+        self._precision     = func.results[0].precision if len(func.results) == 1 else None
 
     @property
     def arguments(self):
-        return self._args[1]
+        return self._arguments
 
     @property
     def funcdef(self):
         return self._funcdef
+
+    @property
+    def interface(self):
+        return self._interface
 
 class Return(Basic):
 
@@ -3356,73 +3364,6 @@ class Return(Basic):
 
         args = (self.expr, self.stmt)
         return args
-
-
-class Interface(Basic):
-
-    """Represent an Interface"""
-    def __new__( cls, *args, **kwargs ):
-        return Basic.__new__(cls)
-
-    def __init__(
-        self,
-        name,
-        functions,
-        hide=False,
-        is_argument = False,
-        ):
-
-        if not isinstance(name, str):
-            raise TypeError('Expecting an str')
-        if not isinstance(functions, list):
-            raise TypeError('Expecting a list')
-        self._name = name
-        self._functions = functions
-        self._hide = hide
-        self._is_argument = is_argument
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def functions(self):
-        return self._functions
-
-    @property
-    def hide(self):
-        return self._functions[0].hide or self._hide
-
-    @property
-    def is_argument(self):
-        return self._is_argument
-
-    @property
-    def global_vars(self):
-        return self._functions[0].global_vars
-
-    @property
-    def cls_name(self):
-        return self._functions[0].cls_name
-
-    @property
-    def kind(self):
-        return self._functions[0].kind
-
-    @property
-    def imports(self):
-        return self._functions[0].imports
-
-    @property
-    def decorators(self):
-        return self._functions[0].decorators
-
-    @property
-    def is_procedure(self):
-        return self._functions[0].is_procedure
-
-    def rename(self, newname):
-        return Interface(newname, self.functions)
 
 class FunctionDef(Basic):
 
@@ -3528,7 +3469,8 @@ class FunctionDef(Basic):
         is_static=False,
         imports=[],
         decorators={},
-        header=None,
+        headers=[],
+        templates={},
         is_recursive=False,
         is_pure=False,
         is_elemental=False,
@@ -3646,7 +3588,8 @@ class FunctionDef(Basic):
         self._is_static       = is_static
         self._imports         = imports
         self._decorators      = decorators
-        self._header          = header
+        self._headers         = headers
+        self._templates       = templates
         self._is_recursive    = is_recursive
         self._is_pure         = is_pure
         self._is_elemental    = is_elemental
@@ -3705,8 +3648,12 @@ class FunctionDef(Basic):
         return self._decorators
 
     @property
-    def header(self):
-        return self._header
+    def headers(self):
+        return self._headers
+
+    @property
+    def templates(self):
+        return self._templates
 
     @property
     def is_recursive(self):
@@ -3834,14 +3781,16 @@ class FunctionDef(Basic):
                 self._is_static,
                 self._imports,
                 self._decorators,
-                self._header,
+                self._headers,
+                self._templates,
                 self._is_recursive,
                 self._is_pure,
                 self._is_elemental,
                 self._is_private,
                 self._is_header,
                 self._arguments_inout,
-                self._functions
+                self._functions,
+                self._interfaces
             )
         return args
 
@@ -3860,6 +3809,85 @@ class FunctionDef(Basic):
                 name   = self.name,
                 args   = ', '.join(self.args),
                 result = result)
+
+class Interface(Basic):
+
+    """Represents an Interface.
+
+    Parameters
+    ----------
+    name : str
+        The name of the interface.
+
+    functions : iterable
+        The functions of the interface.
+
+    is_argument: bool
+        True if the interface is used for a function argument.
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Interface, FunctionDef
+    >>> f = FunctionDef('F', [], [], [])
+    >>> Interface('I', [f])
+    """
+
+    def __new__( cls, *args, **kwargs ):
+        return Basic.__new__(cls)
+
+    def __init__(
+        self,
+        name,
+        functions,
+        is_argument = False,
+        ):
+
+        if not isinstance(name, str):
+            raise TypeError('Expecting an str')
+        if not isinstance(functions, list):
+            raise TypeError('Expecting a list')
+        self._name = name
+        self._functions = functions
+        self._is_argument = is_argument
+
+    @property
+    def name(self):
+        """Name of the interface."""
+        return self._name
+
+    @property
+    def functions(self):
+        """"Functions of the interface."""
+        return self._functions
+
+    @property
+    def is_argument(self):
+        """True if the interface is used for a function argument."""
+        return self._is_argument
+
+    def point(self, args):
+        """Returns the actual function that will be called, depending on the passed arguments."""
+        fs_args = [[j for j in i.arguments] for i in
+                    self._functions]
+        j = -1
+        for i in fs_args:
+            j += 1
+            found = True
+            for (x, y) in enumerate(args):
+                dtype1 = str_dtype(y.dtype)
+                dtype2 = str_dtype(i[x].dtype)
+                found = found and (dtype1 in dtype2
+                                or dtype2 in dtype1)
+                found = found and y.rank \
+                                == i[x].rank
+            if found:
+                break
+
+        if found:
+            return  self._functions[j]
+        else:
+            errors.report('Arguments types provided to {} are incompatible'.format(self.name),
+                        severity='fatal')
 
 class FunctionAddress(FunctionDef):
 
