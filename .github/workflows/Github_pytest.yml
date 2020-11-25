@@ -76,10 +76,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.7
+      - name: Setup conda with default python version
+        uses: s-weigand/setup-conda@v1
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
