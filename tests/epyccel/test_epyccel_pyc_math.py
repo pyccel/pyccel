@@ -119,7 +119,7 @@ def test_call_degrees(language):
     )
 )
 def test_call_degrees_i(language):
-    @types('real')
+    @types('int')
     def call_degrees_i(x):
         from math import degrees
         return degrees(x)
