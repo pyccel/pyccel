@@ -82,9 +82,7 @@ jobs:
         shell: powershell
       - name: Try to setup conda
         run: |
-            ls ${Env:CONDA}
-            ls ${Env:CONDA}\\bin
-            "${Env:CONDA}\\bin\\conda" activate
+            ${Env:CONDA}/condabin/conda activate
         shell: powershell
       #- name: Setup conda with default python version
       #  uses: s-weigand/setup-conda@v1
