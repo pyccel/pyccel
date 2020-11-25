@@ -180,7 +180,7 @@ def test_complex_types(language):
     f1 = epyccel(mod.complex_types , language = language, verbose=True)
     f2 = mod.complex_types
 
-    for i in range(1000):
+    for i in range(100000):
         assert f1(complex(1, 2.2), complex(1, 2.2)) == f2(complex(1, 2.2), complex(1, 2.2))
         assert f1(np.complex(15.5, 2.0) , np.complex(10.5, 3.4)) == f2(np.complex(15.5, 2.0) , np.complex(10.5, 3.4))
         np.isclose(f1(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j)), f2(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j)), rtol = 1e-7, atol = 1e-8)
@@ -190,7 +190,7 @@ def test_mix_types_1(language):
     f1 = epyccel(mod.mix_types_1 , language = language, verbose=True)
     f2 = mod.mix_types_1
 
-    for i in range(1000):
+    for i in range(100000):
         assert f1(complex(1, 2), 15, np.int16(5)) == f2(complex(1, 2), 15, np.int16(5))
         assert f1(complex(1, 2), 15, True) == f2(complex(1, 2), 15, True)
         assert f1(complex(1, 2), 7.0, np.int16(5)) == f2(complex(1, 2), 7.0, np.int16(5))
@@ -205,7 +205,7 @@ def test_mix_types_2(language):
     f1 = epyccel(mod.mix_types_2 , language = language, verbose=True)
     f2 = mod.mix_types_2
 
-    for i in range(1000):
+    for i in range(100000):
         assert f1(-1, -1) == f2(-1, -1)
         assert f1(np.int32(4), np.int32(16)) == f2(np.int32(4), np.int32(16))
         assert f1(np.int16(4), np.int16(4)) == f2(np.int16(4), np.int16(4))

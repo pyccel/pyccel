@@ -648,9 +648,10 @@ class CWrapperCodePrinter(CCodePrinter):
                 var_name = s[0].name
                 value = s[2] << flags
                 body.append((s[1], [AugAssign(check_var, '+' ,value)]))
-                types.append(s[0].dtype)
+                types.append(s[0])
             flags -= 4
-            error = ' or '.join([str_dtype(v) for v in types])
+            error = ' or '.join(['{} bit {}'.format(v.precision * 8 , str_dtype(v.dtype)) if not isinstance(v.dtype, NativeBool)
+                            else  str_dtype(v.dtype) for v in types])
             body.append((LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(var_name, error)), Return([LiteralInteger(0)])]))
             check_func_body += [If(*body)]
         check_func_body = [Assign(check_var, LiteralInteger(0))] + check_func_body
