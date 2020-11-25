@@ -10,7 +10,7 @@ from pyccel.stdlib.internal.openmp import omp_set_num_threads
 
 ### Example
 
-The following example show how ``` omp_set_num_threads ``` is used to set the number of threads to ``` 4 threads ``` and how ``` omp_get_num_threads ``` is used to get the number of thread in the current team within a parallel region, ``` omp_get_num_threads ``` will return ``` 4 threads ```.\
+The following example show how ``` omp_set_num_threads ``` is used to set the number of threads to ``` 4 threads ``` and how ``` omp_get_num_threads ``` is used to get the number of thread in the current team within a parallel region, ``` omp_get_num_threads ``` will return ``` 4 threads ```.
 
 ```python
 from pyccel.decorators import types
@@ -24,8 +24,8 @@ def get_num_threads(n):
     result = omp_get_num_threads()
     #$ omp end parallel
     return result
-
-print(get_num_threads(4))
+x = get_num_threads(4)
+print(x)
 ```
 
 The output of this program is (you may get different result because of threads running at the same time):
