@@ -1,7 +1,6 @@
 """ Functions necessary for creating the setup_X.py file which
 uses python setuptools to compile a c file and generate the
 corresponding shared library file"""
-import sys
 
 def print_list(l):
     """ Convert a list of strings to a string that contains the
@@ -50,17 +49,11 @@ def create_c_setup(mod_name,
 
     code  = "from setuptools import Extension, setup\n"
     code += "import numpy\n"
-    if sys.platform == "win32":
-        code += "import distutils.cygwinccompiler\n"
     code += "\n"
 
     wrapper_file = "[ r'{0}' ]".format(wrapper_file)
 
     deps  = ['{0}.o'.format(d) for d in dependencies]
-
-    if sys.platform == "win32":
-        deps.insert(0, "-Wl,-Bsymbolic-functions")
-        deps.insert(0, "-Wl,-Bstatic")
 
     mod = '"{mod}"'.format(mod=mod_name)
 
@@ -87,8 +80,6 @@ def create_c_setup(mod_name,
     args = [mod, wrapper_file, files, include_str, libs_str, libdirs_str, flags_str, linker_flags_str]
     args = ',\n\t\t'.join(a for a in args if a is not None)
 
-    if sys.platform == "win32":
-        code += "distutils.cygwinccompiler.get_msvcr = lambda: []\n\n"
     code += "extension_mod = Extension({args})\n\n".format(args=args)
     code += "setup(name = \"" + mod_name + "\", ext_modules=[extension_mod])"
     return code
