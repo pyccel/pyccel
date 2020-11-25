@@ -11,6 +11,10 @@
 # define array_fill(c, arr) _Generic((c), int : _array_fill_int,\
                                         float : _array_fill_float,\
                                         double : _array_fill_double,\
+                                        bool : _array_fill_bool,\
+                                        short int : _array_fill_sint,\
+                                        long : _array_fill_long,\
+                                        float complex : _array_fill_cfloat,\
                                         double complex : _array_fill_cdouble)(c, arr)
 typedef struct  s_slice
 {
@@ -67,7 +71,11 @@ t_ndarray   array_create(int nd, int *shape, enum e_types type);
 void        _array_fill_int(int c, t_ndarray arr);
 void        _array_fill_float(float c, t_ndarray arr);
 void        _array_fill_double(double c, t_ndarray arr);
-void        _array_fill_cdouble(complex double c, t_ndarray arr);
+void        _array_fill_bool(bool c, t_ndarray arr);
+void        _array_fill_sint(short int c, t_ndarray arr);
+void        _array_fill_long(long c, t_ndarray arr);
+void        _array_fill_cfloat(float complex c, t_ndarray arr);
+void        _array_fill_cdouble(double complex c, t_ndarray arr);
 
 /* slicing */
 t_slice     new_slice(int start, int end, int step);
