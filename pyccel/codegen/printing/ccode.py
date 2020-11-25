@@ -280,7 +280,7 @@ class CCodePrinter(CodePrinter):
     def _print_PythonComplex(self, expr):
         self._additional_imports.add("complex")
         return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real_part,
-                        PyccelMul(expr.imag_part, LiteralImaginaryUnit()))))
+                        PyccelMul(PythonFloat(expr.imag_part), LiteralImaginaryUnit()))))
 
     def _print_LiteralImaginaryUnit(self, expr):
         return '_Complex_I'
