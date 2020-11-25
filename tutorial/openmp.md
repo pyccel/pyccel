@@ -31,7 +31,7 @@ print(get_num_threads(4))
 The output of this program is (you may get different result because of threads running at the same time):
 ```shell
 ❯ pyccel omp_test.py --language c --openmp
-❯ ./omp_test
+❯ ./prog_omp_test
 hello from thread number: 0
 hello from thread number: 2
 hello from thread number: 1
@@ -53,7 +53,7 @@ structured-block
 
 #### Example
 
-The following example show how to use the ``` #$ omp parallel ``` pragma to create a team of 2 threads, each thread with its own private copy of the variables ``` n ```.\
+The following example show how to use the ``` #$ omp parallel ``` pragma to create a team of 2 threads, each thread with its own private copy of the variables ``` n ```.
 
 ```python
 from pyccel.stdlib.internal.openmp import omp_get_thread_num
@@ -83,12 +83,12 @@ for-loops
 
 #### Example
 
-This example show how we can use the ``` #$ omp for ``` pragma to specify the loop that we want to b executed in parallel, each iteration of the loop is executed by one of the threads in the team.\
-The ``` reduction ``` clause is used to deal with the data race, each thread has its own local copy of the reduction variable ``` result ```, when the threads join together, all the local copies of the reduction variable are combined to the global shared variable.\
+This example show how we can use the ``` #$ omp for ``` pragma to specify the loop that we want to be executed in parallel, each iteration of the loop is executed by one of the threads in the team.\
+The ``` reduction ``` clause is used to deal with the data race, each thread has its own local copy of the reduction variable ``` result ```, when the threads join together, all the local copies of the reduction variable are combined to the global shared variable.
 
 ```python
 result = 0
-#$ omp parallel private(i) shared(result)  num_threads(4)
+#$ omp parallel private(i) shared(result) num_threads(4)
 #$ omp for reduction (+:result)
 for i in range(0, 1337):
   result += i
@@ -115,6 +115,8 @@ structured-block
 
 #### Example
 
+This example show how we can use the ``` #$ omp single ``` pragma to specify the section of code that must be run by a single available thread.
+
 ```python
 result = 0
 #$ omp parallel
@@ -125,7 +127,14 @@ for i in range(0, 1337):
 #$ omp end parallel
 ```
 
-### Teams Construct
+The output of this program is:
+```shell
+❯ pyccel omp_test.py --language c --openmp
+❯ ./omp_test
+893116
+```
+
+### Teams/Target Constructs
 
 #### Syntax
 
@@ -143,7 +152,7 @@ result0 = 0
 result1 = 0
 nteams = 2
 #$ omp teams num_teams(nteams)
-tm_id = omp_get_team_num();
+tm_id = omp_get_team_num()
 if omp_get_num_teams() == 2:
   if tm_id == 0:
     #$ omp parallel
@@ -161,29 +170,6 @@ if omp_get_num_teams() == 2:
 result = result1 + result2
 ```
 
-### Target Construct
-
-#### Syntax
-
-```python
-#$ omp target [clause[ [,]clause] ... ]
-structured-block
-#$ omp end target
-```
-
-#### Example
-
-```python
-
-#$ omp target
-#$ omp parallel
-#$ omp for private(i)
-for i in range(0, 1337):
-  result[i] = v1[i] * v2[i]
-#$ omp end parallel
-#$ omp end target
-```
-
 ### Critical Construct
 
 #### Syntax
@@ -196,14 +182,24 @@ structured-block
 
 #### Example
 
+In this example show how ``` #$ omp critical ``` is used to specify the code which must be executed by one thread at a time.
 ```python
-result = 0
-#$ omp parallel num_threads(4) shared(result)
+int sum = 0
+#$ omp parallel num_threads(4) private(i) shared(sum)
+#$ omp for
 for i in range(0, 1337):
   #$ omp critical
-  result += i
+  sum += i
   #$ omp end critical
 #$ omp end parallel
+print(sum)
+```
+
+The output of this program is:
+```shell
+❯ pyccel omp_test.py --language c --openmp
+❯ ./omp_test
+893116
 ```
 
 ### Barrier Construct
@@ -216,15 +212,32 @@ for i in range(0, 1337):
 
 #### Example
 
+In this example show how ``` #$ omp barrier ``` is used to specify a point in the code where each thread must wait until all threads in the team arrive.
 ```python
+from numpy import zeros
 
-#$ omp parallel
-#$ omp for private(i)
-for i in range(0, 1337):
-  result[i] = v1[i] * v2[i]
+n = 1337
+arr = zeros((n))
+arr_2 = zeros((n))
+#$ omp parallel num_threads(4) private(i, j) shared(arr)
+
+#$ omp for
+for i in range(0, n):
+  arr[i] = i
 #$ omp barrier
-work(result)
+#$ omp for
+for j in range(0, n):
+  arr_2[j] = arr[j] x 2
+
 #$ omp end parallel
+print(sum(arr_2))
+```
+
+The output of this program is:
+```shell
+❯ pyccel omp_test.py --language c --openmp
+❯ ./omp_test
+1786232
 ```
 
 ### Atomic Construct
@@ -238,16 +251,26 @@ structured-block
 ```
 
 #### Example
-
+In this example the ``` #$ omp atomic ``` specify the computation that must be executed atomically .
 ```python
+from pyccel.stdlib.internal.openmp import omp_get_thread_num
 
-#$ omp parallel shared(result)
-#$ omp for
-for i in range(0, N):
+#$ omp parallel num_threads(2)
+result = 0
+for i in range(0, 10):
   #$ omp atomic
   result = result + 1
   #$ omp end atomic
+print("thread :", omp_get_thread_num(), " sum : ", sum);
 #$ omp end parallel
+```
+
+The output of this program is (you may get different output but the sum must be the same for each thread in this example):
+```shell
+❯ pyccel omp_test.py --language c --openmp
+❯ ./omp_test
+thread : 0  sum :  10
+thread : 1  sum :  10
 ```
 
 ### Masked Construct
@@ -262,13 +285,22 @@ structured-block
 
 #### Example
 
+The ``` #$ omp masked ``` pragma is used here to specify a structured block that is executed by a subset of the threads of the current team.
 ```python
 result = 0
-#$ omp parallel shared(result)
+#$ omp parallel num_threads(4)
 #$ omp masked
 result = result + 1
 #$ omp end masked
 #$ omp end parallel
+print("result :", result)
+```
+
+The output of this program is :
+```shell
+❯ pyccel omp_test.py --language c --openmp
+❯ ./omp_test
+result : 1
 ```
 
 ### Task / Taskwait Construct
@@ -289,6 +321,8 @@ structured-block
 
 #### Example
 
+The ``` #$ omp task ``` pragma is used here to define an explicit task.\
+The ``` #$ omp taskwait ``` pragma is used here to specify a wait on the completion of child tasks of the current task. .
 ```python
 @types('int')
 def fib(n):
@@ -305,9 +339,18 @@ def fib(n):
 
 #$ omp parallel
 #$ omp omp single
-result = fib(42)
+print(fib(42))
 #$ omp end single
 #$ omp end parallel
+
+print("result :", result)
+```
+
+The output of this program is :
+```shell
+❯ pyccel omp_test.py --language c --openmp
+❯ ./omp_test
+55
 ```
 
 ### Taskyield Construct
@@ -320,10 +363,12 @@ result = fib(42)
 
 #### Example
 
+The ``` #$ omp taskyield ``` pragma specify that the current task can be suspended at this point, in favor of execution of a different task.
+
 ```python
 #$ omp task
 long_function()
-#pragma omp taskyield
+#$ omp taskyield
 long_function_2()
 #$ omp end task
 ```
@@ -338,21 +383,31 @@ long_function_2()
 
 #### Example
 
+The ``` #$ omp flush ``` pragma is used to ensure that all threads in a team have a consistent view of certain objects in memory.
 ```python
 from pyccel.stdlib.internal.openmp import omp_get_thread_num
 flag = 0
 #$ omp parallel num_threads(2)
 if omp_get_thread_num() == 0:
-  data = 1337
-  #$ omp flush(flag, data)
-  flag = 1
-  #$ omp flush(flag)
+  #$ omp atomic update
+  flag = flag + 1
 elif omp_get_thread_num() == 1:
-  #$ omp flush(flag, data)
+  #$ omp flush(flag)
   while flag < 1:
-    #$ omp flush(flag, data)
-  #$ flush(flag, data)
+    #$ omp flush(flag)
+  print("Thread 1 released")
+  #$ omp atomic update
+  flag = flag + 1
 #$ omp end parallel
+print("flag:", flag)
+```
+
+The output of this program is :
+```shell
+❯ pyccel omp_test.py --language c --openmp
+❯ ./omp_test
+Thread 1 released
+flag: 2
 ```
 
 ### Cancel Construct
@@ -365,6 +420,7 @@ elif omp_get_thread_num() == 1:
 
 #### Example
 
+The ``` #$ omp cancel ``` is used to requests cancellation of the innermost enclosing region of the type specified.
 ```python
 result = 0
 #$ omp parallel
@@ -386,13 +442,26 @@ loop-nest
 ```
 
 #### Example
-
+The ``` #$ omp cancel ``` is used to requests cancellation of the innermost enclosing region of the type specified.
 ```python
-#$ omp parallel
-#$ omp simd private(i)
-for i in range(N):
-  result[i] = i
+result = 0
+n = 1337
+arr = zeros(n, dtype=int)
+#$ omp parallel num_threads(4)
+#$ omp simd
+for i in range(0, n):
+  arr[i] = i
 #$ omp end parallel
+for i in range(0, n):
+  result = result + arr[i]
+print("Result:", result)
+```
+
+The output of this program is :
+```shell
+❯ pyccel omp_test.py --language c --openmp
+❯ ./omp_test
+Result: 893116
 ```
 
 ### Sections Worksharing Construct
