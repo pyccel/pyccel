@@ -110,7 +110,7 @@ def test_default_var_1(language):
     modnew = epyccel(mod, language = language)
     x_expected = mod.tst_default_var_1()
     x = modnew.tst_default_var_1()
-    assert np.array_equal(x, x_expected)
+    assert np.array_equal(x   , x_expected)
 
 def test_default_var_2(language):
     modnew = epyccel(mod, language = language)
@@ -119,62 +119,78 @@ def test_default_var_2(language):
     assert np.array_equal(x, x_expected)
 
 def test_default_var_3(language):
-    modnew = epyccel(mod, language = language)
-    x_expected = mod.tst_default_var_3()
-    x = modnew.tst_default_var_3()
-    assert np.array_equal(x, x_expected)
+    f1 = epyccel(mod.default_var_3 , language = language)
+    f2 = mod.default_var_3
+
+    assert f1(5.3) == f1(5.3)
+    assert f1(5) == f1(5)
+    assert f1(5.3, True) == f1(5.3, True)
+    assert f1(5, True) == f2(5, True)
 
 def test_default_var_4(language):
-    modnew = epyccel(mod, language = language)
-    x_expected = mod.tst_default_var_4()
-    x = modnew.tst_default_var_4()
-    assert np.array_equal(x, x_expected)
+    f1 = epyccel(mod.default_var_4 , language = language)
+    f2 = mod.default_var_4
+
+    assert f1(5, 5) == f2(5, 5)
+    assert f1(5.3, 5) == f2(5.3, 5)
+    assert f1(4) == f2(4)
+    assert f1(5.2) == f2(5.2)
 
 def test_optional_var_1(language):
-    modnew = epyccel(mod, language = language)
-    x_expected = mod.tst_optional_var_1()
-    x = modnew.tst_optional_var_1()
-    assert np.array_equal(x, x_expected)
+    f1 = epyccel(mod.optional_var_1 , language = language)
+    f2 = mod.optional_var_1
+
+    assert f1(5.3) == f2(5.3)
+    assert f1(5) == f2(5)
+    assert f1(5.3, 2) == f2(5.3, 2)
+    assert f1(5, 2) == f2(5, 2)
 
 def test_optional_var_2(language):
-    modnew = epyccel(mod, language = language)
-    x_expected = mod.tst_optional_var_2()
-    x = modnew.tst_optional_var_2()
-    assert np.array_equal(x, x_expected)
+    f1 = epyccel(mod.optional_var_2 , language = language)
+    f2 = mod.optional_var_2
+
+    assert f1(5.3) == f2(5.3)
+    assert f1(5) == f2(5)
+    assert f1(5.3, complex(1, 5)) == f2(5.3, complex(1, 5))
+    assert f1(5, complex(1, 4)) == f2(5, complex(1, 4))
 
 def test_optional_var_3(language):
-    modnew = epyccel(mod, language = language)
-    x_expected = mod.tst_optional_var_3()
-    x = modnew.tst_optional_var_3()
-    assert np.array_equal(x, x_expected)
+    f1 = epyccel(mod.optional_var_3 , language = language)
+    f2 = mod.optional_var_3
+
+    assert f1(5, 5.5) == f2(5, 5.5)
+    assert f1(5.3, 5) == f2(5.3, 5)
+    assert f1(4) == f2(4)
+    assert f1(5.2) == f2(5.2)
+
 
 def test_optional_var_4(language):
-    modnew = epyccel(mod, language = language)
-    x_expected = mod.tst_optional_var_4()
-    x = modnew.tst_optional_var_4()
-    assert np.array_equal(x, x_expected)
+    f1 = epyccel(mod.optional_var_4 , language = language)
+    f2 = mod.optional_var_4
 
+    assert f1(5, complex(5, 4)) == f2(5, complex(5, 4))
+    assert f1(complex(4, 3), 5)  == f2(complex(4, 3), 5)
+    assert f1(4) == f2(4)
+    assert f1(complex(4, 6)) == f2(complex(4, 6))
 def test_int_types(language):
     f1 = epyccel(mod.int_types , language = language, verbose=True)
     f2 = mod.int_types
 
-    for i in range(400):
-        assert f1(10, 5) == f2(10, 5)
-        assert f1(np.int(15) , np.int(10)) == f2(np.int(15) , np.int(10))
-        assert f1(np.int16(5), np.int16(4)) == f2(np.int16(5), np.int16(4))
-        assert f1(np.int8(4), np.int8(7)) == f2(np.int8(4), np.int8(7))
-        assert f1(np.int32(155), np.int32(177)) == f2(np.int32(155), np.int32(177))
-        assert f1(np.int64(166), np.int64(255)) == f2(np.int64(166), np.int64(255))
+    assert f1(10, 5) == f2(10, 5)
+    assert f1(np.int(15) , np.int(10)) == f2(np.int(15) , np.int(10))
+    assert f1(np.int16(5), np.int16(4)) == f2(np.int16(5), np.int16(4))
+    assert f1(np.int8(4), np.int8(7)) == f2(np.int8(4), np.int8(7))
+    assert f1(np.int32(155), np.int32(177)) == f2(np.int32(155), np.int32(177))
+    assert f1(np.int64(166), np.int64(255)) == f2(np.int64(166), np.int64(255))
 
 def test_float_types(language):
     f1 = epyccel(mod.float_types , language = language, verbose=True)
     f2 = mod.float_types
 
-    for i in range(400):
-        assert f1(10.5, 5.5) == f2(10.5, 5.5)
-        assert f1(np.float(15.5) , np.float(10.5)) == f2(np.float(15.5) , np.float(10.5))
-        assert f1(np.float32(155.2), np.float32(177.1)) == f2(np.float32(155.2), np.float32(177.1))
-        assert f1(np.float64(166.6), np.float64(255.6)) == f2(np.float64(166.6), np.float64(255.6))
+    assert f1(10.5, 5.5) == f2(10.5, 5.5)
+    assert f1(np.float(15.5) , np.float(10.5)) == f2(np.float(15.5) , np.float(10.5))
+    assert f1(np.float32(155.2), np.float32(177.1)) == f2(np.float32(155.2), np.float32(177.1))
+    assert f1(np.float64(166.6), np.float64(255.6)) == f2(np.float64(166.6), np.float64(255.6))
 
 def test_complex_types(language):
     f1 = epyccel(mod.complex_types , language = language, verbose=True)
