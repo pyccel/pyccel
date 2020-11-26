@@ -15,7 +15,7 @@ from pyccel.epyccel import epyccel
 )
 def language(request):
     return request.param
-
+'''
 def test_gen_1(language):
     modnew = epyccel(mod, language = language)
     x_expected = mod.tst_gen_1()
@@ -105,21 +105,29 @@ def test_multi_tmplt_2(language):
     x_expected = mod.tst_multi_tmplt_2()
     x = modnew.tst_multi_tmplt_2()
     assert np.array_equal(x, x_expected)
-
+'''
 def test_default_var_1(language):
-    modnew = epyccel(mod, language = language)
-    x_expected = mod.tst_default_var_1()
-    x = modnew.tst_default_var_1()
-    assert np.array_equal(x   , x_expected)
+    f1 = epyccel(mod.default_var_1, language = language)
+    f2 = mod.default_var_1
+
+    assert f1(5.3) == f2(5.3)
+    assert f1(5) == f2(5)
+    assert f1(5.3, 2) == f2(5.3, 2)
+    assert f1(5, 2) == f2(5, 2)
+
 
 def test_default_var_2(language):
-    modnew = epyccel(mod, language = language)
-    x_expected = mod.tst_default_var_2()
-    x = modnew.tst_default_var_2()
-    assert np.array_equal(x, x_expected)
+    f1 = epyccel(mod.default_var_2, language = language)
+    f2 = mod.default_var_2
+
+    assert f1(5.3) == f2(5.3)
+    assert f1(5) ==  f2(5)
+    assert f1(5.3, complex(1, 3)) == f2(5.3, complex(1, 3))
+    assert f1(5, complex(4, 3)) == f2(5, complex(4, 3))
+
 
 def test_default_var_3(language):
-    f1 = epyccel(mod.default_var_3 , language = language)
+    f1 = epyccel(mod.default_var_3, language = language)
     f2 = mod.default_var_3
 
     assert f1(5.3) == f1(5.3)
@@ -163,7 +171,6 @@ def test_optional_var_3(language):
     assert f1(4) == f2(4)
     assert f1(5.2) == f2(5.2)
 
-
 def test_optional_var_4(language):
     f1 = epyccel(mod.optional_var_4 , language = language)
     f2 = mod.optional_var_4
@@ -172,6 +179,7 @@ def test_optional_var_4(language):
     assert f1(complex(4, 3), 5)  == f2(complex(4, 3), 5)
     assert f1(4) == f2(4)
     assert f1(complex(4, 6)) == f2(complex(4, 6))
+
 def test_int_types(language):
     f1 = epyccel(mod.int_types , language = language, verbose=True)
     f2 = mod.int_types

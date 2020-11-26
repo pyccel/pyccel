@@ -170,25 +170,12 @@ def tst_multi_tmplt_2():
 def default_var_1(x , y = 5):
     return x + y
 
-def tst_default_var_1():
-    x = default_var_1(5.3)
-    y = default_var_1(5)
-    z = default_var_1(5.3, 2)
-    a = default_var_1(5, 2)
-    return x, y
 
 @template('k', types=['complex'])
 @template('g', types=['int', 'real'])
 @types('g', 'k')
 def default_var_2(x , y = 5j):
     return x + y
-
-def tst_default_var_2():
-    x = default_var_2(5.3)
-    y = default_var_2(5)
-    z = default_var_2(5.3, complex(1, 3))
-    a = default_var_2(5, complex(4, 3))
-    return x, y, z ,a
 
 @template('k', types=['bool'])
 @template('g', types=['int', 'real'])
@@ -198,24 +185,11 @@ def default_var_3(x , y = False):
         return x
     return x - 1
 
-def tst_default_var_3():
-    x = default_var_3(5.3)
-    y = default_var_3(5)
-    z = default_var_3(5.3, True)
-    a = default_var_3(5, True)
-    return x, y, z, a
-
 @types('int', 'int')
 @types('real', 'int')
 def default_var_4(x, y = 5):
     return x + y
 
-def tst_default_var_4():
-    x = default_var_4(5, 5)
-    y = default_var_4(5.3, 5)
-    z = default_var_4(4)
-    a = default_var_4(5.2)
-    return x, y, z, a
 
 @template('k', types=['int'])
 @template('g', types=['int', 'real'])
@@ -225,12 +199,6 @@ def optional_var_1(x , y = None):
         return x
     return x + y
 
-def tst_optional_var_1():
-    x = optional_var_1(5.3)
-    y = optional_var_1(5)
-    z = optional_var_1(5.3, 2)
-    a = optional_var_1(5, 2)
-    return x, y, z, a
 
 @template('k', types=['complex'])
 @template('g', types=['int', 'real'])
@@ -240,13 +208,6 @@ def optional_var_2(x , y = None):
         return x + 1j
     return x + y
 
-def tst_optional_var_2():
-    x = optional_var_2(5.3)
-    y = optional_var_2(5)
-    z = optional_var_2(5.3, complex(1, 5))
-    a = optional_var_2(5, complex(1, 4))
-    return x, y, z, a
-
 @types('int', 'real')
 @types('real', 'int')
 def optional_var_3(x, y = None):
@@ -254,12 +215,6 @@ def optional_var_3(x, y = None):
         return x + 1.0
     return x + y
 
-def tst_optional_var_3():
-    x = optional_var_3(5, 5.5)
-    y = optional_var_3(5.3, 5)
-    z = optional_var_3(4)
-    a = optional_var_3(5.2)
-    return x, y, z, a
 
 @types('int', 'complex')
 @types('complex', 'int')
@@ -268,14 +223,7 @@ def optional_var_4(x, y = None):
         return x + 0j
     return x + y
 
-def tst_optional_var_4():
-    x = optional_var_4(5, complex(5, 4))
-    y = optional_var_4(complex(4, 3), 5)
-    z = optional_var_4(4)
-    a = optional_var_4(complex(4, 6))
-    return x, y, z, a
-
-#----------------------------------------------------
+#-------------------------------------------------
 
 @template('g', types=['int', 'int32', 'int64', 'int8', 'int16'])
 @types('g', 'g')
