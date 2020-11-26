@@ -324,7 +324,7 @@ structured-block
 The ``` #$ omp task ``` pragma is used here to define an explicit task.\
 The ``` #$ omp taskwait ``` pragma is used here to specify a wait on the completion of child tasks of the current task. .
 ```python
-@types('int')
+@types('int', results='int')
 def fib(n):
   if n < 2:
     return n
