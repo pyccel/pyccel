@@ -148,7 +148,7 @@ structured-block
 
 In this example show how ``` #$ omp critical ``` is used to specify the code which must be executed by one thread at a time.
 ```python
-int sum = 0
+sum = 0
 #$ omp parallel num_threads(4) private(i) shared(sum)
 #$ omp for
 for i in range(0, 1337):
