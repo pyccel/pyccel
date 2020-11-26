@@ -623,7 +623,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         #finishing the wrapper body
         wrapper_body.append(Assign(check_var, FunctionCall(check_func_def, parse_args)))
-        wrapper_body.append(PythonPrint([LiteralString("check is : "), check_var]))
         wrapper_body.extend(wrapper_body_translations)
         wrapper_body.append(Return(wrapper_results)) # Return
 
@@ -641,13 +640,13 @@ class CWrapperCodePrinter(CCodePrinter):
     def _create_wrapper_check(self, check_var, parse_args, types_dict, used_names, func_name):
         check_func_body = []
         flags = (len(types_dict) - 1) * 4
+        debug = []
         for a in types_dict:
             var_name = ""
             body = []
             types = []
             l = list(types_dict[a])
             l.sort(key= lambda x : x[0].precision)
-            debug = []
             for s in l:
                 var_name = s[0].name
                 value = s[2] << flags
@@ -659,10 +658,11 @@ class CWrapperCodePrinter(CCodePrinter):
                             else  str_dtype(v.dtype) for v in types])
             body.append((LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(var_name, error)), Return([LiteralInteger(0)])]))
             check_func_body += [If(*body)]
-            debug = [PythonPrint(debug)]
-            check_func_body =  debug + check_func_body
 
+        debug = [PythonPrint(debug)]
+        check_func_body =  debug + check_func_body
         check_func_body = [Assign(check_var, LiteralInteger(0))] + check_func_body
+        check_func_body += [PythonPrint([LiteralString("total check is :"), check_var])]
         check_func_body.append(Return([check_var]))
         # Creating check function definition
         check_func_name = self.get_new_name(used_names.union(self._global_names), 'type_check')
