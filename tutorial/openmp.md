@@ -215,7 +215,7 @@ structured-block
 ```
 
 #### Example
-In this example the ``` #$ omp atomic ``` specify the computation that must be executed atomically .
+In this example the ``` #$ omp atomic ``` is used to ensures that a specific storage location is accessed atomically.
 ```python
 from pyccel.stdlib.internal.openmp import omp_get_thread_num
 
