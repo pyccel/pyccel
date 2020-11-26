@@ -26,6 +26,9 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Coverage install
         uses: ./.github/actions/coverage_install
+      - name: Test cwrapper interface
+        run: |
+            python -m pytest -m c -sv tests/epyccel/test_generic_functions.py
       - name: Test with pytest
         uses: ./.github/actions/pytest_run
       - name: Collect coverage information
@@ -89,6 +92,9 @@ jobs:
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
+      - name: Test cwrapper interface
+        run: |
+            python -m pytest -m c -sv tests/epyccel/test_generic_functions.py
       - name: Serial C tests
         run: |
           python -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
@@ -121,5 +127,8 @@ jobs:
         uses: ./.github/actions/macos_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
+      - name: Test cwrapper interface
+        run: |
+            python -m pytest -m c -sv tests/epyccel/test_generic_functions.py
       - name: Test with pytest
         uses: ./.github/actions/pytest_run
