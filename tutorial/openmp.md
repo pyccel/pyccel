@@ -10,7 +10,7 @@ from pyccel.stdlib.internal.openmp import omp_set_num_threads
 
 ### Example
 
-The following example show how ``` omp_set_num_threads ``` is used to set the number of threads to ``` 4 threads ``` and how ``` omp_get_num_threads ``` is used to get the number of thread in the current team within a parallel region, ``` omp_get_num_threads ``` will return ``` 4 threads ```.
+The following example shows how ``` omp_set_num_threads ``` is used to set the number of threads to ``` 4 threads ``` and how ``` omp_get_num_threads ``` is used to get the number of threads in the current team within a parallel region; ``` omp_get_num_threads ``` will return ``` 4 threads ```.
 
 ```python
 from pyccel.decorators import types
@@ -27,7 +27,7 @@ def get_num_threads(n):
 x = get_num_threads(4)
 print(x)
 ```
-Please Note that the variable ``` result ``` is a shared variable, Right now Pyccel consider all variables as shared only if you specified that the variable is private using ``` private() ``` clauses.
+Please note that the variable ``` result ``` is a shared variable; Pyccel considers all variables as shared unless you specify them as private using the ``` private() ``` clause.
 
 The output of this program is (you may get different result because of threads running at the same time):
 ```shell
@@ -54,7 +54,7 @@ structured-block
 
 #### Example
 
-The following example show how to use the ``` #$ omp parallel ``` pragma to create a team of 2 threads, each thread with its own private copy of the variables ``` n ```.
+The following example shows how to use the ``` #$ omp parallel ``` pragma to create a team of 2 threads, each thread with its own private copy of the variables ``` n ```.
 
 ```python
 from pyccel.stdlib.internal.openmp import omp_get_thread_num
@@ -84,7 +84,7 @@ for-loops
 
 #### Example
 
-This example show how we can use the ``` #$ omp for ``` pragma to specify the loop that we want to be executed in parallel, each iteration of the loop is executed by one of the threads in the team.\
+This example shows how we can use the ``` #$ omp for ``` pragma to specify the loop that we want to be executed in parallel; each iteration of the loop is executed by one of the threads in the team.\
 The ``` reduction ``` clause is used to deal with the data race, each thread has its own local copy of the reduction variable ``` result ```, when the threads join together, all the local copies of the reduction variable are combined to the global shared variable.
 
 ```python
@@ -116,7 +116,7 @@ structured-block
 
 #### Example
 
-This example show how we can use the ``` #$ omp single ``` pragma to specify a section of code that must be run by a single available thread.
+This example shows how we can use the ``` #$ omp single ``` pragma to specify a section of code that must be run by a single available thread.
 
 ```python
 result = 0
@@ -147,7 +147,7 @@ structured-block
 
 #### Example
 
-In this example show how ``` #$ omp critical ``` is used to specify the code which must be executed by one thread at a time.
+This example shows how ``` #$ omp critical ``` is used to specify the code which must be executed by one thread at a time.
 ```python
 sum = 0
 #$ omp parallel num_threads(4) private(i) shared(sum)
@@ -177,7 +177,7 @@ The output of this program is:
 
 #### Example
 
-In this example show how ``` #$ omp barrier ``` is used to specify a point in the code where each thread must wait until all threads in the team arrive.
+This example shows how ``` #$ omp barrier ``` is used to specify a point in the code where each thread must wait until all threads in the team arrive.
 ```python
 from numpy import zeros
 
@@ -224,7 +224,7 @@ structured-block
 
 #### Example
 The ``` #$ omp taskloop ``` construct specifies that the iterations of one or more associated loops will be executed in parallel using explicit tasks.\
-The ``` #$ omp atomic ``` is used to ensures that a specific storage location is accessed atomically.
+The ``` #$ omp atomic ``` is used to ensure that a specific storage location is accessed atomically.
 ```python
 from pyccel.stdlib.internal.openmp import omp_get_thread_num
 
@@ -251,7 +251,7 @@ print("x1 : ", x1);
 print("x2 : ", x2);
 ```
 
-The output of this program is (you may get different output but the sum must be the same for each thread in this example):
+The output of this program is (you may get a different output, but the sum must be the same for each thread):
 ```shell
 ❯ pyccel omp_test.py --language c --openmp
 ❯ ./omp_test
@@ -282,7 +282,7 @@ result = result + 1
 print("result :", result)
 ```
 
-The output of this program is :
+The output of this program is:
 ```shell
 ❯ pyccel omp_test.py --language c --openmp
 ❯ ./omp_test
@@ -299,7 +299,7 @@ loop-nest
 ```
 
 #### Example
-The ``` #$ omp cancel ``` is used to requests cancellation of the innermost enclosing region of the type specified.
+The ``` #$ omp cancel ``` is used to request cancellation of the innermost enclosing region of the type specified.
 ```python
 from numpy import zeros
 result = 0
@@ -315,7 +315,7 @@ for i in range(0, n):
 print("Result:", result)
 ```
 
-The output of this program is :
+The output of this program is:
 ```shell
 ❯ pyccel omp_test.py --language c --openmp
 ❯ ./omp_test
@@ -341,7 +341,7 @@ structured-block
 #### Example
 
 The ``` #$ omp task ``` pragma is used here to define an explicit task.\
-The ``` #$ omp taskwait ``` pragma is used here to specify a wait on the completion of child tasks of the current task. .
+The ``` #$ omp taskwait ``` pragma is used here to specify a wait on the completion of child tasks of the current task.
 ```python
 @types('int', results='int')
 def fib(n):
@@ -365,7 +365,7 @@ print(fib(10))
 print("result :", result)
 ```
 
-The output of this program is :
+The output of this program is:
 ```shell
 ❯ pyccel omp_test.py --language c --openmp
 ❯ ./omp_test
@@ -382,7 +382,7 @@ The output of this program is :
 
 #### Example
 
-The ``` #$ omp taskyield ``` pragma specify that the current task can be suspended at this point, in favor of execution of a different task.
+The ``` #$ omp taskyield ``` pragma specifies that the current task can be suspended at this point, in favor of execution of a different task.
 
 ```python
 #$ omp task
@@ -421,7 +421,7 @@ elif omp_get_thread_num() == 1:
 print("flag:", flag)
 ```
 
-The output of this program is :
+The output of this program is:
 ```shell
 ❯ pyccel omp_test.py --language c --openmp
 ❯ ./omp_test
@@ -439,7 +439,7 @@ flag: 2
 
 #### Example
 
-The ``` #$ omp cancel ``` is used to requests cancellation of the innermost enclosing region of the type specified.
+The ``` #$ omp cancel ``` is used to request cancellation of the innermost enclosing region of the type specified.
 ```python
 result = 0
 #$ omp parallel
@@ -478,7 +478,7 @@ for-loops
 
 #### Example
 
-In this example we show how we can use the ``` #$ omp target ``` pragma define a target region, which is a block of computation that operates within a distinct data environment and is intended to be offloaded onto a parallel computation device during execution.\
+In this example we show how we can use the ``` #$ omp target ``` pragma to define a target region, which is a block of computation that operates within a distinct data environment and is intended to be offloaded onto a parallel computation device during execution.\
 The ``` #$ omp teams ``` directive creates a collection of thread teams. The master thread of each team executes the teams region.\
 The ``` #$ omp distribute ``` directive specifies that the iterations of one or more loops will be executed by the thread teams in the context of their implicit tasks.
 ```python
@@ -528,7 +528,7 @@ structured-block-sequence
 
 #### Example
 
-The ``` #$ omp sections ``` directive is used to distributes work among threads (2 threads).
+The ``` #$ omp sections ``` directive is used to distribute work among threads (2 threads).
 
 ```python
 from pyccel.stdlib.internal.openmp import omp_get_thread_num
