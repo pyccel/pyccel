@@ -2215,12 +2215,16 @@ def test_rand_expr_array(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="randint not implemented"),
             pytest.mark.c]
         )
     )
 )
 def test_randint_basic(language):
+    def create_rand():
+        from numpy.random import randint # pylint: disable=reimported
+        return randint(-10, 10)
+
     @types('int')
     def create_val(high):
         from numpy.random import randint # pylint: disable=reimported
@@ -2230,6 +2234,13 @@ def test_randint_basic(language):
     def create_val_low(low, high):
         from numpy.random import randint # pylint: disable=reimported
         return randint(low, high)
+
+    f0 = epyccel(create_rand, language = language)
+    y = [f0() for i in range(10)]
+    assert(all([yi <  10 for yi in y]))
+    assert(all([yi >= -10 for yi in y]))
+    assert(all([isinstance(yi,int) for yi in y]))
+    assert(len(set(y))>1)
 
     f1 = epyccel(create_val, language = language)
     y = [f1(100) for i in range(10)]
@@ -2248,7 +2259,7 @@ def test_randint_basic(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="randint not implemented"),
             pytest.mark.c]
         )
     )
