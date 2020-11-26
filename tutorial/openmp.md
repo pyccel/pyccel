@@ -299,7 +299,8 @@ loop-nest
 ```
 
 #### Example
-The ``` #$ omp cancel ``` is used to request cancellation of the innermost enclosing region of the type specified.
+
+The ``` #$ omp simd ``` pragma is used to transform the loop into a loop that will be executed concurrently using Single Instruction Multiple Data (SIMD) instructions.
 ```python
 from numpy import zeros
 result = 0
