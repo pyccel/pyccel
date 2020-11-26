@@ -134,66 +134,6 @@ The output of this program is:
 893116
 ```
 
-### Teams/Target/distribute Constructs
-
-#### Syntax Teams Constructs
-
-```python
-#$ omp teams [clause[ [,]clause] ... ]
-structured-block
-#$ omp end teams
-```
-
-#### Syntax Target Constructs
-
-```python
-#$ omp target [clause[ [,]clause] ... ]
-structured-block
-#$ omp end target
-```
-
-#### Syntax Distribute Constructs
-
-```python
-#$ omp distribute [clause[ [,]clause] ... ]
-for-loops
-```
-
-#### Example
-
-In this example we show how we can use the ``` #$ omp target ``` pragma define a target region, which is a block of computation that operates within a distinct data environment and is intended to be offloaded onto a parallel computation device during execution.\
-The ``` #$ omp teams ``` directive creates a collection of thread teams. The master thread of each team executes the teams region.\
-The ``` #$ omp distribute ``` directive specifies that the iterations of one or more loops will be executed by the thread teams in the context of their implicit tasks.
-```python
-from numpy import zeros
-from pyccel.stdlib.internal.openmp import omp_get_team_num
-n = 8
-a = zeros(n, dtype=int)
-#$ omp target map(to: n) map(tofrom: a)
-#$ omp teams num_teams(2) thread_limit(n/2)
-#$ omp distribute
-for i in range(0, n):
-  a[i] = omp_get_team_num()
-#$ omp end teams
-#$ omp end target
-for i in range(0, n):
-  print("Team num :", a[i])
-```
-
-The output of this program is:
-```shell
-❯ pyccel omp_test.py --language c --openmp
-❯ ./omp_test
-Team num : 0
-Team num : 0
-Team num : 0
-Team num : 0
-Team num : 1
-Team num : 1
-Team num : 1
-Team num : 1
-```
-
 ### Critical Construct
 
 #### Syntax
@@ -327,6 +267,39 @@ The output of this program is :
 result : 1
 ```
 
+### SIMD Construct
+
+#### Syntax
+
+```python
+#$ omp simd [clause[ [,]clause] ... ]
+loop-nest
+```
+
+#### Example
+The ``` #$ omp cancel ``` is used to requests cancellation of the innermost enclosing region of the type specified.
+```python
+from numpy import zeros
+result = 0
+n = 1337
+arr = zeros(n, dtype=int)
+#$ omp parallel num_threads(4)
+#$ omp simd
+for i in range(0, n):
+  arr[i] = i
+#$ omp end parallel
+for i in range(0, n):
+  result = result + arr[i]
+print("Result:", result)
+```
+
+The output of this program is :
+```shell
+❯ pyccel omp_test.py --language c --openmp
+❯ ./omp_test
+Result: 893116
+```
+
 ### Task / Taskwait Construct
 
 #### Syntax Task Construct
@@ -456,37 +429,64 @@ for i in range(len(v)):
 #$ omp end parallel
 ```
 
-### SIMD Construct
+### Teams/Target/distribute Constructs
 
-#### Syntax
+#### Syntax Teams Constructs
 
 ```python
-#$ omp simd [clause[ [,]clause] ... ]
-loop-nest
+#$ omp teams [clause[ [,]clause] ... ]
+structured-block
+#$ omp end teams
+```
+
+#### Syntax Target Constructs
+
+```python
+#$ omp target [clause[ [,]clause] ... ]
+structured-block
+#$ omp end target
+```
+
+#### Syntax Distribute Constructs
+
+```python
+#$ omp distribute [clause[ [,]clause] ... ]
+for-loops
 ```
 
 #### Example
-The ``` #$ omp cancel ``` is used to requests cancellation of the innermost enclosing region of the type specified.
+
+In this example we show how we can use the ``` #$ omp target ``` pragma define a target region, which is a block of computation that operates within a distinct data environment and is intended to be offloaded onto a parallel computation device during execution.\
+The ``` #$ omp teams ``` directive creates a collection of thread teams. The master thread of each team executes the teams region.\
+The ``` #$ omp distribute ``` directive specifies that the iterations of one or more loops will be executed by the thread teams in the context of their implicit tasks.
 ```python
 from numpy import zeros
-result = 0
-n = 1337
-arr = zeros(n, dtype=int)
-#$ omp parallel num_threads(4)
-#$ omp simd
+from pyccel.stdlib.internal.openmp import omp_get_team_num
+n = 8
+a = zeros(n, dtype=int)
+#$ omp target map(to: n) map(tofrom: a)
+#$ omp teams num_teams(2) thread_limit(n/2)
+#$ omp distribute
 for i in range(0, n):
-  arr[i] = i
-#$ omp end parallel
+  a[i] = omp_get_team_num()
+#$ omp end teams
+#$ omp end target
 for i in range(0, n):
-  result = result + arr[i]
-print("Result:", result)
+  print("Team num :", a[i])
 ```
 
-The output of this program is :
+The output of this program is:
 ```shell
 ❯ pyccel omp_test.py --language c --openmp
 ❯ ./omp_test
-Result: 893116
+Team num : 0
+Team num : 0
+Team num : 0
+Team num : 0
+Team num : 1
+Team num : 1
+Team num : 1
+Team num : 1
 ```
 
 ### Sections Worksharing Construct
