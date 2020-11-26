@@ -2349,6 +2349,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_PyccelNot(self, expr):
         a = self._print(expr.args[0])
+        if (expr.args[0].dtype is not NativeBool()):
+            return '{} == 0'.format(a)
         return '.not. {}'.format(a)
 
     def _print_Header(self, expr):
