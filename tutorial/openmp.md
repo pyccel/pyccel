@@ -134,9 +134,9 @@ The output of this program is:
 893116
 ```
 
-### Teams/Target Constructs
+### Teams/Target/distribute Constructs
 
-#### Syntax
+#### Syntax Teams Constructs
 
 ```python
 #$ omp teams [clause[ [,]clause] ... ]
@@ -144,30 +144,54 @@ structured-block
 #$ omp end teams
 ```
 
-#### Example
+#### Syntax Target Constructs
 
 ```python
-from pyccel.stdlib.internal.openmp import omp_get_team_num, omp_get_num_teams
-result0 = 0
-result1 = 0
-nteams = 2
-#$ omp teams num_teams(nteams)
-tm_id = omp_get_team_num()
-if omp_get_num_teams() == 2:
-  if tm_id == 0:
-    #$ omp parallel
-    #$ omp for reduction (+:result0)
-    for i in range(0, 1337):
-       result0 += i
-    #$ omp end parallel
-  if tm_id == 1:
-    #$ omp parallel
-    #$ omp for reduction (+:result1)
-    for i in range(0, 1337):
-       result1 += i
-    #$ omp end parallel
+#$ omp target [clause[ [,]clause] ... ]
+structured-block
+#$ omp end target
+```
+
+#### Syntax Distribute Constructs
+
+```python
+#$ omp distribute [clause[ [,]clause] ... ]
+for-loops
+```
+
+#### Example
+
+In this example we show how we can use the ``` #$ omp target ``` pragma define a target region, which is a block of computation that operates within a distinct data environment and is intended to be offloaded onto a parallel computation device during execution.\
+The ``` #$ omp teams ``` directive creates a collection of thread teams. The master thread of each team executes the teams region.\
+The ``` #$ omp distribute ``` directive specifies that the iterations of one or more loops will be executed by the thread teams in the context of their implicit tasks.
+```python
+from numpy import zeros
+from pyccel.stdlib.internal.openmp import omp_get_team_num
+n = 8
+a = zeros(n, dtype=int)
+#$ omp target map(to: n) map(tofrom: a)
+#$ omp teams num_teams(nteams) thread_limit(n/2)
+#$ omp distribute
+for i in range(0, n):
+  a[i] = omp_get_team_num()
 #$ omp end teams
-result = result1 + result2
+#$ omp end target
+for i in range(0, n):
+  print("Team num :", a[i])
+```
+
+The output of this program is:
+```shell
+❯ pyccel omp_test.py --language c --openmp
+❯ ./omp_test
+Team num : 0
+Team num : 0
+Team num : 0
+Team num : 0
+Team num : 1
+Team num : 1
+Team num : 1
+Team num : 1
 ```
 
 ### Critical Construct
@@ -444,6 +468,7 @@ loop-nest
 #### Example
 The ``` #$ omp cancel ``` is used to requests cancellation of the innermost enclosing region of the type specified.
 ```python
+from numpy import zeros
 result = 0
 n = 1337
 arr = zeros(n, dtype=int)
