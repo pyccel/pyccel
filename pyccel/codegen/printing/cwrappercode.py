@@ -163,7 +163,7 @@ class CWrapperCodePrinter(CCodePrinter):
             if variable.precision == default_precision[str_dtype(variable.dtype)] :
                 check = PyccelOr(python_check, numpy_check)
             else :
-                check = PyccelAnd( PyccelNot(python_check), numpy_check)
+                check = PyccelAssociativeParenthesis(PyccelAnd(PyccelNot(python_check), numpy_check))
 
         if isinstance(variable, ValuedVariable):
             default = PyccelNot(VariableAddress(collect_var)) if variable.rank > 0 else PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
@@ -557,7 +557,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
                 flag_value = flags_registry[(f_arg.dtype, f_arg.precision)]
                 flags = (flags << 4) + flag_value  # shift by 4 to the left
-
                 types_dict[f_arg].add((f_arg, check, flag_value)) # collect variable type for each arguments
                 mini_wrapper_func_body += body
 
