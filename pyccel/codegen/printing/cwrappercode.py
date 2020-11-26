@@ -7,7 +7,7 @@ import numpy as np
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
-from pyccel.ast.literals  import LiteralTrue, LiteralInteger
+from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
 
 from pyccel.ast.builtins import PythonPrint
 
@@ -623,6 +623,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         #finishing the wrapper body
         wrapper_body.append(Assign(check_var, FunctionCall(check_func_def, parse_args)))
+        wrapper_body.append(PythonPrint([LiteralString("check is : "), check_var]))
         wrapper_body.extend(wrapper_body_translations)
         wrapper_body.append(Return(wrapper_results)) # Return
 
@@ -646,9 +647,11 @@ class CWrapperCodePrinter(CCodePrinter):
             types = []
             l = list(types_dict[a])
             l.sort(key= lambda x : x[0].precision)
+            debug = []
             for s in l:
                 var_name = s[0].name
                 value = s[2] << flags
+                debug.append(PythonPrint([LiteralString("Debug {} {} :".format(str_dtype(s[0].dtype), s[0].precision)), s[1]]))
                 body.append((s[1], [AugAssign(check_var, '+' ,value)]))
                 types.append(s[0])
             flags -= 4
@@ -656,6 +659,7 @@ class CWrapperCodePrinter(CCodePrinter):
                             else  str_dtype(v.dtype) for v in types])
             body.append((LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(var_name, error)), Return([LiteralInteger(0)])]))
             check_func_body += [If(*body)]
+            check_func_body += debug
         check_func_body = [Assign(check_var, LiteralInteger(0))] + check_func_body
         check_func_body.append(Return([check_var]))
         # Creating check function definition
