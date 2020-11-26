@@ -606,7 +606,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Errors / Types management
         # Creating check_type function
-        check_func_def = self._create_wrapper_check(check_var, parse_args, types_dict, used_names)
+        check_func_def = self._create_wrapper_check(check_var, parse_args, types_dict, used_names, funcs[0].name.name)
         funcs_def.append(check_func_def)
 
         # Create the wrapper body with collected informations
@@ -638,7 +638,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return sep + '\n'.join(CCodePrinter._print_FunctionDef(self, f) for f in funcs_def)
 
-    def _create_wrapper_check(self, check_var, parse_args, types_dict, used_names):
+    def _create_wrapper_check(self, check_var, parse_args, types_dict, used_names, func_name):
         check_func_body = []
         flags = (len(types_dict) - 1) * 4
         for a in types_dict:
@@ -651,7 +651,7 @@ class CWrapperCodePrinter(CCodePrinter):
             for s in l:
                 var_name = s[0].name
                 value = s[2] << flags
-                debug += [LiteralString(" | Debug {} {} :".format(str_dtype(s[0].dtype),s[0].precision)), s[1]]
+                debug += [LiteralString(func_name + " => Debug {} {} :".format(str_dtype(s[0].dtype),s[0].precision)), s[1]]
                 body.append((s[1], [AugAssign(check_var, '+' ,value)]))
                 types.append(s[0])
             flags -= 4
