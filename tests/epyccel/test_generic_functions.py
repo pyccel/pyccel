@@ -167,7 +167,7 @@ def test_optional_var_3(language):
     f2 = mod.optional_var_3
 
     assert f1(5, 5.5) == f2(5, 5.5)
-    assert f1(5.3, 5) == f2(5.3, 5)
+    assert f1(5.3, 5.5) == f2(5.3, 5.5)
     assert f1(4) == f2(4)
     assert f1(5.2) == f2(5.2)
 
@@ -175,9 +175,9 @@ def test_optional_var_4(language):
     f1 = epyccel(mod.optional_var_4 , language = language)
     f2 = mod.optional_var_4
 
-    assert f1(5, complex(5, 4)) == f2(5, complex(5, 4))
-    assert f1(complex(4, 3), 5)  == f2(complex(4, 3), 5)
-    assert f1(4) == f2(4)
+    assert f1(complex(5, 4), 5) == f2(complex(5, 4), 5)
+    assert f1(2.2, 5)  == f2(2.2, 5)
+    assert f1(4.2) == f2(4.2)
     assert f1(complex(4, 6)) == f2(complex(4, 6))
 
 def test_int_types(language):

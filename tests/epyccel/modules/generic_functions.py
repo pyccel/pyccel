@@ -209,18 +209,18 @@ def optional_var_2(x , y = None):
     return x + y
 
 @types('int', 'real')
-@types('real', 'int')
+@types('real', 'real')
 def optional_var_3(x, y = None):
     if y is None:
-        return x + 1.0
-    return x + y
+        return x / 2.0
+    return x / y
 
 
-@types('int', 'complex')
 @types('complex', 'int')
+@types('real', 'int')
 def optional_var_4(x, y = None):
     if y is None:
-        return x + 0j
+        return x
     return x + y
 
 #-------------------------------------------------
