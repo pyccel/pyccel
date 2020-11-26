@@ -15,7 +15,7 @@ from pyccel.epyccel import epyccel
 )
 def language(request):
     return request.param
-'''
+
 def test_gen_1(language):
     modnew = epyccel(mod, language = language)
     x_expected = mod.tst_gen_1()
@@ -105,7 +105,7 @@ def test_multi_tmplt_2(language):
     x_expected = mod.tst_multi_tmplt_2()
     x = modnew.tst_multi_tmplt_2()
     assert np.array_equal(x, x_expected)
-'''
+
 def test_default_var_1(language):
     f1 = epyccel(mod.default_var_1, language = language)
     f2 = mod.default_var_1
