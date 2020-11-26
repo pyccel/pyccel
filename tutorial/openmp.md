@@ -27,7 +27,7 @@ def get_num_threads(n):
 x = get_num_threads(4)
 print(x)
 ```
-Please Note that the variable ``` result ``` is a shared variable, Right now Pyccel consider all variables as shared only if you specified that the variable is private using ``` private() ``` clauses.\
+Please Note that the variable ``` result ``` is a shared variable, Right now Pyccel consider all variables as shared only if you specified that the variable is private using ``` private() ``` clauses.
 
 The output of this program is (you may get different result because of threads running at the same time):
 ```shell
