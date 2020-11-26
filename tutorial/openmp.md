@@ -219,8 +219,8 @@ In this example the ``` #$ omp atomic ``` specify the computation that must be e
 ```python
 from pyccel.stdlib.internal.openmp import omp_get_thread_num
 
-#$ omp parallel num_threads(2)
 result = 0
+#$ omp parallel num_threads(2)
 for i in range(0, 10):
   #$ omp atomic
   result = result + 1
