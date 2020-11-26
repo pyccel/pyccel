@@ -506,7 +506,7 @@ structured-block-sequence
 
 #### Example
 
-The ``` #$ omp sections ``` directive is used to give the compiler a hint that the various sections can be performed in parallel and to distributes work among threads (2 threads).
+The ``` #$ omp sections ``` directive is used to distributes work among threads (2 threads).
 
 ```python
 from pyccel.stdlib.internal.openmp import omp_get_thread_num
@@ -514,11 +514,12 @@ from pyccel.stdlib.internal.openmp import omp_get_thread_num
 n = 8
 sum1 = 0
 sum2 = 0
+sum3 = 0
 #$ omp parallel num_threads(2)
 #$ omp omp sections
 
 #$ omp section
-for i in range(0, n):
+for i in range(0, int(n/3)):
   sum1 = sum1 + i
 print("sum1 :", sum1, ", thread :", omp_get_thread_num())
 #$ omp end section
@@ -526,7 +527,13 @@ print("sum1 :", sum1, ", thread :", omp_get_thread_num())
 #$ omp section
 for i in range(0, int(n/2)):
   sum2 = sum2 + i
-print("sum2 :", sum1, ", thread :", omp_get_thread_num())
+print("sum2 :", sum2, ", thread :", omp_get_thread_num())
+#$ omp end section
+
+#$ omp section
+for i in range(0, n):
+  sum3 = sum3 + i
+print("sum3 :", sum3, ", thread :", omp_get_thread_num())
 #$ omp end section
 #$ omp omp end sections
 
@@ -537,6 +544,7 @@ The output of this program is :
 ```shell
 ❯ pyccel omp_test.py --language c --openmp
 ❯ ./omp_test
-sum1 : 28, thread : 0
-sum2 : 6, thread : 1
+sum1 : 1, thread : 0
+sum2 : 6, thread : 0
+sum3 : 28, thread : 1
 ```
