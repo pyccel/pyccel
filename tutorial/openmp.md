@@ -204,9 +204,16 @@ The output of this program is:
 1786232
 ```
 
-### Atomic Construct
+### Taskloop/Atomic Construct
 
-#### Syntax
+#### Syntax Taskloop
+
+```python
+#$ omp taskloop [clause[ [,]clause] ... ]
+for-loops
+```
+
+#### Syntax Atomic
 
 ```python
 #$ omp atomic [clause[ [,]clause] ... ]
@@ -215,26 +222,40 @@ structured-block
 ```
 
 #### Example
-In this example the ``` #$ omp atomic ``` is used to ensures that a specific storage location is accessed atomically.
+The ``` #$ omp taskloop ``` construct specifies that the iterations of one or more associated loops will be executed in parallel using explicit tasks.\
+The ``` #$ omp atomic ``` is used to ensures that a specific storage location is accessed atomically.
 ```python
 from pyccel.stdlib.internal.openmp import omp_get_thread_num
 
-result = 0
-#$ omp parallel num_threads(2)
-for i in range(0, 10):
+x1 = 0
+x2 = 0
+#$ omp parallel shared(x1,x2) num_threads(2)
+
+#$ omp taskloop
+for i in range(0, 100):
   #$ omp atomic
-  result = result + 1
+  x1 = x1 + 1 #Will be executed (100 x 2) times.
   #$ omp end atomic
-print("thread :", omp_get_thread_num(), " sum : ", sum);
+
+#$ omp single
+#$ omp taskloop
+for i in range(0, 100):
+  #$ omp atomic
+  x2 = x2 + 1 #Will be executed (100) times.
+  #$ omp end atomic
+#$ omp end single
+
 #$ omp end parallel
+print("x1 : ", x1);
+print("x2 : ", x2);
 ```
 
 The output of this program is (you may get different output but the sum must be the same for each thread in this example):
 ```shell
 ❯ pyccel omp_test.py --language c --openmp
 ❯ ./omp_test
-thread : 0  sum :  10
-thread : 1  sum :  10
+x1 : 200
+x2 : 100
 ```
 
 ### Masked Construct
