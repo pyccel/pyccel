@@ -1,5 +1,5 @@
 """
-Module handling alll python builtin operators
+Module handling all python builtin operators
 These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the dtype, precision, rank, shape
