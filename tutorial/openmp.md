@@ -170,7 +170,7 @@ from pyccel.stdlib.internal.openmp import omp_get_team_num
 n = 8
 a = zeros(n, dtype=int)
 #$ omp target map(to: n) map(tofrom: a)
-#$ omp teams num_teams(nteams) thread_limit(n/2)
+#$ omp teams num_teams(2) thread_limit(n/2)
 #$ omp distribute
 for i in range(0, n):
   a[i] = omp_get_team_num()
