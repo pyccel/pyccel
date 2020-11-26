@@ -525,7 +525,8 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_vars[check_var.name] = check_var
         types_dict = {a : set() for a in funcs[0].arguments} #dict to collect each variable possible type and the corresponding flags
         parse_args = [Variable(dtype = PyccelPyObject() ,
-                            name = a.name + "_tmp", is_pointer= True) for a in funcs[0].arguments]
+                            name = self.get_new_name(used_names, a.name + "_tmp"),
+                            is_pointer= True) for a in funcs[0].arguments]
         # Managing the body of wrapper
         for func in funcs :
             mini_wrapper_func_body = []
