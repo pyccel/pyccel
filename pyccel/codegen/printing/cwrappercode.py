@@ -651,7 +651,7 @@ class CWrapperCodePrinter(CCodePrinter):
             for s in l:
                 var_name = s[0].name
                 value = s[2] << flags
-                debug.append(PythonPrint([LiteralString("Debug {} {} :".format(str_dtype(s[0].dtype), s[0].precision)), s[1]]))
+                debug.append(PythonPrint([LiteralString("Debug {} {} :".format(str_dtype(s[0].dtype),s[0].precision)), s[1]]))
                 body.append((s[1], [AugAssign(check_var, '+' ,value)]))
                 types.append(s[0])
             flags -= 4
@@ -659,7 +659,8 @@ class CWrapperCodePrinter(CCodePrinter):
                             else  str_dtype(v.dtype) for v in types])
             body.append((LiteralTrue(), [PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(var_name, error)), Return([LiteralInteger(0)])]))
             check_func_body += [If(*body)]
-            check_func_body += debug
+            check_func_body =  debug + check_func_body
+
         check_func_body = [Assign(check_var, LiteralInteger(0))] + check_func_body
         check_func_body.append(Return([check_var]))
         # Creating check function definition
