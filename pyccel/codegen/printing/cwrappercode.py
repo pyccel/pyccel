@@ -523,7 +523,7 @@ class CWrapperCodePrinter(CCodePrinter):
         default_value = {} # dict to collect all initialisation needed in the wrapper
         check_var = Variable(dtype = NativeInteger(), name = self.get_new_name(used_names , "check"))
         wrapper_vars[check_var.name] = check_var
-        types_dict = {a : set() for a in funcs[0].arguments} #dict to collect each variable possible type and the corresponding flags
+        types_dict = OrderedDict((a, set()) for a in funcs[0].arguments) #dict to collect each variable possible type and the corresponding flags
         parse_args = [Variable(dtype = PyccelPyObject() ,
                             name = self.get_new_name(used_names, a.name + "_tmp"),
                             is_pointer= True) for a in funcs[0].arguments]
