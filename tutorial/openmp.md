@@ -275,13 +275,13 @@ for i in range(0, 100):
   x1 = x1 + 1 #Will be executed (100 x 2) times.
   #$ omp end atomic
 
-#$ omp masked
+#$ omp single
 #$ omp taskloop
 for i in range(0, 100):
   #$ omp atomic
   x2 = x2 + 1 #Will be executed (100) times.
   #$ omp end atomic
-#$ omp end masked
+#$ omp end single
 
 #$ omp end parallel
 print("x1 : ", x1);
