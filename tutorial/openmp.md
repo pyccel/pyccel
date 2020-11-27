@@ -46,7 +46,7 @@ hello from thread number: 3
 
 Pyccel uses the same clauses as OpenMP, you can refer to the references bellow for more information on how to use them:
 
-[*OpenMP 5.1 API Specification*](https://www.openmp.org/wp-content/uploads/OpenMP-API-Specification-5-1.pdf)
+[*OpenMP 5.1 API Specification*](https://www.openmp.org/wp-content/uploads/OpenMP-API-Specification-5-1.pdf)\
 [*OpenMP 5.1 Syntax Reference Guide*](https://www.openmp.org/wp-content/uploads/OpenMPRefCard-5.1-web.pdf)
 
 Other references:
