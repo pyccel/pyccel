@@ -7,7 +7,7 @@ import numpy as np
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
-from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
+from pyccel.ast.literals  import LiteralTrue, LiteralInteger
 
 from pyccel.ast.builtins import PythonPrint
 
@@ -178,6 +178,11 @@ class CWrapperCodePrinter(CCodePrinter):
     def _create_collecting_value_body(self, variable, collect_var, tmp_variable = None):
         """
         Create If block to différence between python and numpy data types in collecting value
+        format :
+            if (collect_var is numpy_scalar)
+                collect_value from numpy type
+            else
+                collect value from python type
         Parameters:
         ----------
         variable: variable
@@ -457,7 +462,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         elif collect_var_interface :
             collect_var = collect_var_interface
-            cast_function = self.get_collect_function_call(variable, collect_var_interface)
 
         elif isinstance(variable, ValuedVariable):
             collect_type = PyccelPyObject()
@@ -567,9 +571,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # Loop for all args in every functions and create the corresponding condition and body
             for p_arg, f_arg in zip(parse_args, func.arguments):
-                collect_var, cast_func = self.get_PyArgParseType(used_names, f_arg, p_arg)
+                collect_var,_ = self.get_PyArgParseType(used_names, f_arg, p_arg)
                 collect_vars[collect_var] = collect_var
-                body, tmp_variable = self._body_management(used_names, f_arg, collect_var, cast_func)
+                body, tmp_variable = self._body_management(used_names, f_arg, collect_var, None)
                 if tmp_variable :
                     mini_wrapper_func_vars[tmp_variable.name] = tmp_variable
 
