@@ -121,20 +121,25 @@ structured-block
 This example shows how we can use the ``` #$ omp single ``` pragma to specify a section of code that must be run by a single available thread.
 
 ```python
-result = 0
+from pyccel.stdlib.internal.openmp import omp_set_num_threads, omp_get_num_threads, omp_get_thread_num
+omp_set_num_threads(4)
 #$ omp parallel
+print("hello from thread number:", omp_get_thread_num())
 #$ omp single
-for i in range(0, 1337):
-  result += i
+print("The best thread is number : ", omp_get_thread_num())
 #$ omp end single
 #$ omp end parallel
 ```
 
-The output of this program is:
+The output of this program is (you may get different result because of threads running at the same time):
 ```shell
 ❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
-893116
+hello from thread number:            1
+The best thread is number :             1
+hello from thread number:            2
+hello from thread number:            3
+hello from thread number:            0
 ```
 
 ### Critical Construct
