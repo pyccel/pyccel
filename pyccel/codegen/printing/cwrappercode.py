@@ -296,7 +296,8 @@ class CWrapperCodePrinter(CCodePrinter):
         body = [(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
                 [Assign(VariableAddress(variable), Nil())])]
         if check_type : # Type check
-            check = PyccelNot(PythonType_Check(variable, collect_var))
+            check = PyccelNot(PyccelAssociativeParenthesis(PyccelOr(NumpyType_Check(variable, collect_var)
+                    , PythonType_Check(variable, collect_var))))
             error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, variable.dtype))
             body += [(check, [error, Return([Nil()])])]
         body += [(LiteralTrue(), [self._create_collecting_value_body(variable, collect_var, tmp_variable),
@@ -334,7 +335,8 @@ class CWrapperCodePrinter(CCodePrinter):
         body = [(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
                 [Assign(variable, variable.value)])]
         if check_type : # Type check
-            check = PyccelNot(PythonType_Check(variable, collect_var))
+            check = PyccelNot(PyccelAssociativeParenthesis(PyccelOr(NumpyType_Check(variable, collect_var)
+                    , PythonType_Check(variable, collect_var))))
             error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, variable.dtype))
             body += [(check, [error, Return([Nil()])])]
         body += [(LiteralTrue(), [self._create_collecting_value_body(variable, collect_var)])]
