@@ -535,6 +535,18 @@ check_type_registry  = {
     NativeBool() : 'PyBool_Check',
 }
 
+PyArray_CheckScalar = FunctionDef(name = 'PyArray_CheckScalar',
+                                  body= [],
+                                  arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                                  results = [Variable(dtype=NativeBool(), name = 'r')])
+
+PyArray_ScalarAsCtype = FunctionDef(name = 'PyArray_ScalarAsCtype',
+                                    body = [],
+                                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
+                                                Variable(dtype=NativeVoid(), name = 'c', is_pointer = True)],
+                                    results = [])
+
+
 # Needed to check for numpy arguments type
 Numpy_Bool_ref = Variable(dtype=NativeVoid(),  name = 'Bool')
 Numpy_Byte_ref = Variable(dtype=NativeVoid(),  name = 'Byte')
