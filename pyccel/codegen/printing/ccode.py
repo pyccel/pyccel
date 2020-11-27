@@ -195,10 +195,10 @@ dtype_registry = {('real',8)    : 'double',
                   ('real',4)    : 'float',
                   ('complex',8) : 'double complex',
                   ('complex',4) : 'float complex',
-                  ('int',4)     : 'int',
-                  ('int',8)     : 'long',
-                  ('int',2)     : 'short int',
-                  ('int',1)     : 'char',
+                  ('int',4)     : 'int32_t',
+                  ('int',8)     : 'int64_t',
+                  ('int',2)     : 'int16_t',
+                  ('int',1)     : 'int8_t',
                   ('bool',4)    : 'bool'}
 
 ndarray_type_registry = {('real',8)    : 'nd_double',
@@ -239,7 +239,7 @@ class CCodePrinter(CodePrinter):
         self.known_functions.update(userfuncs)
         self._dereference = set([] if settings is None else settings.get('dereference', []))
         self.prefix_module = prefix_module
-        self._additional_imports = set(['stdlib'])
+        self._additional_imports = set(['stdlib', 'stdint'])
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
