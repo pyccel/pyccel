@@ -44,11 +44,16 @@ hello from thread number: 3
 
 ## Directives Usage on Pyccel
 
-Pyccel use the same clauses as OpenMP, you can refer to this [Page](https://docs.microsoft.com/en-us/cpp/parallel/openmp/reference/openmp-clauses) for more information on how to use them.
+Pyccel uses the same clauses as OpenMP, you can refer to the references bellow for more information on how to use them:
+- [*OpenMP 5.1 API Specification*](https://www.openmp.org/wp-content/uploads/OpenMP-API-Specification-5-1.pdf)
+- [*OpenMP 5.1 Syntax Reference Guide*](https://www.openmp.org/wp-content/uploads/OpenMPRefCard-5.1-web.pdf)
 
-### Parallel Construct
+Other references:
+- [*OpenMP Clauses*](https://docs.microsoft.com/en-us/cpp/parallel/openmp/reference/openmp-clauses)
 
-#### Syntax
+### parallel Construct
+
+#### Syntax of *parallel*
 
 ```python
 #$ omp parallel [clause[ [,] clause] ... ]
@@ -77,9 +82,9 @@ hello from thread: 0
 hello from thread: 1
 ```
 
-### Loop Construct
+### loop Construct
 
-#### Syntax
+#### Syntax of *loop*
 
 ```python
 #$ omp for [clause[ [,] clause] ... ]
@@ -108,9 +113,9 @@ The output of this program is:
 893116
 ```
 
-### Single Construct
+### single Construct
 
-#### Syntax
+#### Syntax of *single*
 
 ```python
 #$ omp single [clause[ [,] clause] ... ]
@@ -144,9 +149,9 @@ hello from thread number:            3
 hello from thread number:            0
 ```
 
-### Critical Construct
+### critical Construct
 
-#### Syntax
+#### Syntax of *critical*
 
 ```python
 #$ omp critical [(name) [ [,] hint (hint-expression)]]
@@ -176,9 +181,9 @@ The output of this program is:
 893116
 ```
 
-### Barrier Construct
+### barrier Construct
 
-#### Syntax
+#### Syntax of *barrier*
 
 ```python
 #$ omp barrier
@@ -214,9 +219,9 @@ The output of this program is:
 1786232
 ```
 
-### Masked Construct
+### masked Construct
 
-#### Syntax
+#### Syntax of *masked*
 
 ```python
 #$ omp masked [ filter(integer-expression) ]
@@ -244,16 +249,16 @@ The output of this program is:
 result : 1
 ```
 
-### Taskloop/Atomic Construct
+### taskloop/atomic Construct
 
-#### Syntax Taskloop
+#### Syntax of *taskloop*
 
 ```python
 #$ omp taskloop [clause[ [,]clause] ... ]
 for-loops
 ```
 
-#### Syntax Atomic
+#### Syntax of *atomic*
 
 ```python
 #$ omp atomic [clause[ [,]clause] ... ]
@@ -298,9 +303,9 @@ x1 : 200
 x2 : 100
 ```
 
-### SIMD Construct
+### simd Construct
 
-#### Syntax
+#### Syntax of *simd*
 
 ```python
 #$ omp simd [clause[ [,]clause] ... ]
@@ -332,9 +337,9 @@ The output of this program is:
 Result: 893116
 ```
 
-### Task / Taskwait Construct
+### task / taskwait Construct
 
-#### Syntax Task Construct
+#### Syntax of *task*
 
 ```python
 #$ omp task [clause[ [,]clause] ... ]
@@ -342,7 +347,7 @@ structured-block
 #$ omp end task
 ```
 
-#### Syntax Taskwait Construct
+#### Syntax *taskwait*
 
 ```python
 #$ omp taskwait
@@ -351,7 +356,7 @@ structured-block
 #### Example
 
 The ``` #$ omp task ``` pragma is used here to define an explicit task.\
-The ``` #$ omp taskwait ``` pragma is used here to specify a wait on the completion of child tasks of the current task.
+The ``` #$ omp taskwait ``` pragma is used here to specify that the current task region remains suspended until all child tasks that it generated before the taskwait construct complete execution.
 ```python
 @types('int', results='int')
 def fib(n):
@@ -382,9 +387,9 @@ The output of this program is:
 55
 ```
 
-### Taskyield Construct
+### taskyield Construct
 
-#### Syntax
+#### Syntax of *taskyield*
 
 ```python
 #$ omp taskyield
@@ -402,9 +407,9 @@ long_function_2()
 #$ omp end task
 ```
 
-### Flush Construct
+### flush Construct
 
-#### Syntax
+#### Syntax of *flush*
 
 ```python
 #$ omp flush
@@ -439,9 +444,9 @@ Thread 1 released
 flag: 2
 ```
 
-### Cancel Construct
+### cancel Construct
 
-#### Syntax
+#### Syntax of *cancel*
 
 ```python
 #$ omp cancel construct-type-clause[ [ , ] if-clause]
@@ -462,17 +467,9 @@ for i in range(len(v)):
 #$ omp end parallel
 ```
 
-### Teams/Target/distribute Constructs
+### teams/target/distribute Constructs
 
-#### Syntax Teams Constructs
-
-```python
-#$ omp teams [clause[ [,]clause] ... ]
-structured-block
-#$ omp end teams
-```
-
-#### Syntax Target Constructs
+#### Syntax *target*
 
 ```python
 #$ omp target [clause[ [,]clause] ... ]
@@ -480,7 +477,15 @@ structured-block
 #$ omp end target
 ```
 
-#### Syntax Distribute Constructs
+#### Syntax of *teams*
+
+```python
+#$ omp teams [clause[ [,]clause] ... ]
+structured-block
+#$ omp end teams
+```
+
+#### Syntax *distribute*
 
 ```python
 #$ omp distribute [clause[ [,]clause] ... ]
@@ -522,9 +527,9 @@ Team num : 1
 Team num : 1
 ```
 
-### Sections Worksharing Construct
+### sections Construct
 
-#### Syntax
+#### Syntax of *sections*
 
 ```python
 #$ omp sections [clause[ [,]clause] ... ]
