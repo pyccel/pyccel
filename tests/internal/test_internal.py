@@ -4,9 +4,10 @@
 # TODO test if compiler exists before execute_pyccelning mpi, openacc
 #      execute the binary file
 
-from pyccel.codegen.pipeline import execute_pyccel
 import os
+import sys
 import pytest
+from pyccel.codegen.pipeline import execute_pyccel
 
 def get_files_from_folder(foldername):
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -24,6 +25,7 @@ def test_blas(f):
 def test_lapack(f):
     execute_pyccel(f, libs=['blas', 'lapack'])
 
+@pytest.mark.skipif(sys.platform == "win32", reason = "Mpi not yet correctly installed")
 @pytest.mark.parametrize("f", get_files_from_folder('mpi'))
 def test_mpi(f):
     execute_pyccel(f, compiler='mpif90')
