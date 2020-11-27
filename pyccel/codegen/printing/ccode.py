@@ -239,7 +239,7 @@ class CCodePrinter(CodePrinter):
         self.known_functions.update(userfuncs)
         self._dereference = set([] if settings is None else settings.get('dereference', []))
         self.prefix_module = prefix_module
-        self._additional_imports = set(['stdlib', 'stdint'])
+        self._additional_imports = set(['stdlib'])
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
@@ -568,6 +568,8 @@ class CCodePrinter(CodePrinter):
         return '{}(*{})({});'.format(ret_type, name, arg_code)
 
     def _print_Declare(self, expr):
+        if isinstance(expr.variable.dtype, NativeInteger) :
+            self._additional_imports.add('stdint')
         declaration_type = self.get_declare_type(expr.variable)
         variable = self._print(expr.variable.name)
 
