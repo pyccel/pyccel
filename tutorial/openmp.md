@@ -44,6 +44,8 @@ hello from thread number: 3
 
 ## Directives Usage on Pyccel
 
+Pyccel use the same clauses as OpenMP, you can refer to this [Page](https://docs.microsoft.com/en-us/cpp/parallel/openmp/reference/openmp-clauses) for more information on how to use them.
+
 ### Parallel Construct
 
 #### Syntax
