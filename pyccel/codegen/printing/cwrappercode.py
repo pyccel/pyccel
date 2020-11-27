@@ -172,9 +172,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return check
 
-    # -------------------------------------------------------------------
+    # --------------------------------------------------------------------
     # Functions that take care of creating cast or convert type function call :
-    # -------------------------------------------------------------------
+    # --------------------------------------------------------------------
     def _create_collecting_value_body(self, variable, collect_var, tmp_variable = None):
         """
         Create If block to différence between python and numpy data types in collecting value
