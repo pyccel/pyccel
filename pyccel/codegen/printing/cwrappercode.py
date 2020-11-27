@@ -678,17 +678,17 @@ class CWrapperCodePrinter(CCodePrinter):
     def _create_wrapper_check(self, check_var, parse_args, types_dict, used_names, func_name):
         check_func_body = []
         flags = (len(types_dict) - 1) * 4
-        for a in types_dict:
+        for arg in types_dict:
             var_name = ""
             body = []
             types = []
-            l = list(types_dict[a])
-            l.sort(key= lambda x : x[0].precision)
-            for s in l:
-                var_name = s[0].name
-                value = s[2] << flags
-                body.append((s[1], [AugAssign(check_var, '+' ,value)]))
-                types.append(s[0])
+            arg_type_check_list = list(types_dict[arg])
+            arg_type_check_list.sort(key= lambda x : x[0].precision)
+            for elem in arg_type_check_list:
+                var_name = elem[0].name
+                value = elem[2] << flags
+                body.append((elem[1], [AugAssign(check_var, '+' ,value)]))
+                types.append(elem[0])
             flags -= 4
             error = ' or '.join(['{} bit {}'.format(v.precision * 8 , str_dtype(v.dtype)) if not isinstance(v.dtype, NativeBool)
                             else  str_dtype(v.dtype) for v in types])
