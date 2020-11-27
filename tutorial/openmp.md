@@ -207,6 +207,36 @@ The output of this program is:
 1786232
 ```
 
+### Masked Construct
+
+#### Syntax
+
+```python
+#$ omp masked [ filter(integer-expression) ]
+structured-block
+#$ omp end masked
+```
+
+#### Example
+
+The ``` #$ omp masked ``` pragma is used here to specify a structured block that is executed by a subset of the threads of the current team.
+```python
+result = 0
+#$ omp parallel num_threads(4)
+#$ omp masked
+result = result + 1
+#$ omp end masked
+#$ omp end parallel
+print("result :", result)
+```
+
+The output of this program is:
+```shell
+❯ pyccel omp_test.py --openmp
+❯ ./omp_test
+result : 1
+```
+
 ### Taskloop/Atomic Construct
 
 #### Syntax Taskloop
@@ -240,13 +270,13 @@ for i in range(0, 100):
   x1 = x1 + 1 #Will be executed (100 x 2) times.
   #$ omp end atomic
 
-#$ omp single
+#$ omp masked
 #$ omp taskloop
 for i in range(0, 100):
   #$ omp atomic
   x2 = x2 + 1 #Will be executed (100) times.
   #$ omp end atomic
-#$ omp end single
+#$ omp end masked
 
 #$ omp end parallel
 print("x1 : ", x1);
@@ -259,36 +289,6 @@ The output of this program is (you may get a different output, but the sum must 
 ❯ ./omp_test
 x1 : 200
 x2 : 100
-```
-
-### Masked Construct
-
-#### Syntax
-
-```python
-#$ omp masked [ filter(integer-expression) ]
-structured-block
-#$ omp end masked
-```
-
-#### Example
-
-The ``` #$ omp masked ``` pragma is used here to specify a structured block that is executed by a subset of the threads of the current team.
-```python
-result = 0
-#$ omp parallel num_threads(4)
-#$ omp masked
-result = result + 1
-#$ omp end masked
-#$ omp end parallel
-print("result :", result)
-```
-
-The output of this program is:
-```shell
-❯ pyccel omp_test.py --openmp
-❯ ./omp_test
-result : 1
 ```
 
 ### SIMD Construct
