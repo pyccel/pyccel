@@ -28,6 +28,7 @@ from pyccel.ast.cwrapper import PyccelPyArrayObject, NumpyType_Check
 from pyccel.ast.cwrapper import numpy_get_ndims, numpy_get_data, numpy_get_dim
 from pyccel.ast.cwrapper import numpy_get_type, numpy_dtype_registry
 from pyccel.ast.cwrapper import numpy_check_flag, numpy_flag_c_contig, numpy_flag_f_contig
+from pyccel.ast.cwrapper import PyArray_CheckScalar, PyArray_ScalarAsCtype
 
 from pyccel.ast.bind_c   import as_static_function_call
 
@@ -171,6 +172,22 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return check
 
+    def _create_collecting_value_body(self, variable, collect_var, tmp_variable = None):
+        """
+            doc needed
+        """
+        var = tmp_variable if tmp_variable else variable
+        python_type_collect_func_call =  self.get_collect_function_call(variable, collect_var)
+
+        numpy_type_collect_func_call = FunctionCall(PyArray_ScalarAsCtype, [collect_var, var])
+        check_scalar_type = FunctionCall(PyArray_CheckScalar, [collect_var])
+
+        body = If((check_scalar_type, [numpy_type_collect_func_call]),
+                (LiteralTrue() , [Assign(var, python_type_collect_func_call)]))
+
+        return body
+
+
     # -------------------------------------------------------------------
     # Functions that take care of creating cast or convert type function call :
     # -------------------------------------------------------------------
@@ -264,7 +281,7 @@ class CWrapperCodePrinter(CCodePrinter):
             check = PyccelNot(PythonType_Check(variable, collect_var))
             error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, variable.dtype))
             body += [(check, [error, Return([Nil()])])]
-        body += [(LiteralTrue(), [Assign(tmp_variable, self.get_collect_function_call(variable, collect_var)),
+        body += [(LiteralTrue(), [self._create_collecting_value_body(variable, collect_var, tmp_variable),
                     Assign(VariableAddress(variable), VariableAddress(tmp_variable))])]
         body = [If(*body)]
 

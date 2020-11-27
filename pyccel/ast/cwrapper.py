@@ -523,6 +523,18 @@ cast_function_registry = {
     'pybool_to_bool' : pybool_to_bool,
 }
 
+
+PyArray_CheckScalar = FunctionDef(name = 'PyArray_CheckScalar',
+                                  body= [],
+                                  arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                                  results = [Variable(dtype=NativeBool(), name = 'r')])
+
+PyArray_ScalarAsCtype = FunctionDef(name = 'PyArray_ScalarAsCtype',
+                                    body = [],
+                                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
+                                                Variable(dtype=NativeVoid(), name = 'c', is_pointer = True)],
+                                    results = [])
+
 collect_function_registry = {
     NativeInteger(): PyLong_AsLong,
     NativeReal() : PyFloat_AsDouble,
@@ -535,16 +547,6 @@ check_type_registry  = {
     NativeBool() : 'PyBool_Check',
 }
 
-PyArray_CheckScalar = FunctionDef(name = 'PyArray_CheckScalar',
-                                  body= [],
-                                  arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                                  results = [Variable(dtype=NativeBool(), name = 'r')])
-
-PyArray_ScalarAsCtype = FunctionDef(name = 'PyArray_ScalarAsCtype',
-                                    body = [],
-                                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
-                                                Variable(dtype=NativeVoid(), name = 'c', is_pointer = True)],
-                                    results = [])
 
 
 # Needed to check for numpy arguments type
