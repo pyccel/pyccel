@@ -455,8 +455,8 @@ result = 0
 for i in range(len(v)):
   result = result + v[i]
   if result < 0:
-    break
     #$ omp cancel for
+    break
 #$ omp end parallel
 ```
 
