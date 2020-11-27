@@ -37,21 +37,7 @@ def gen_6(x, y):
 def gen_7(x, y, z):
     return x + y + z
 
-@types('int', 'int')
-@types('int', 'real')
-def multi_heads_1(x, y):
-    return x + y
 
-@template('z', types=['int', 'real'])
-@types('z', 'z')
-def tmplt_1(x, y):
-    return x + y
-
-@template('z', types=['int', 'real'])
-@template('y', types=['int', 'real'])
-@types('z', 'z', 'y')
-def multi_tmplt_1(x, y, z):
-    return x + y + z
 
 @template('z', types=['int', 'real'])
 @types('z', 'z')
@@ -67,17 +53,6 @@ def local_overide_1(x, y):
 @types('z', 'z', 'R')
 def tmplt_tmplt_1(x, y, z):
     return x + y + z
-
-@template(types=['int', 'real'], name = 'z')
-@types('z', 'z')
-def tmplt_2(x, y):
-    return x + y
-
-@template('k', types=['int'])
-@template('g', types=['int', 'real'])
-@types('k', 'g')
-def multi_tmplt_2(y, z):
-    return y + z
 
 def tst_gen_1():
     x = gen_1(5.5)
@@ -118,22 +93,6 @@ def tst_gen_7():
     a = gen_7(7.5, 3.5, 7.7)
     return x, a, y, z
 
-def tst_multi_heads_1():
-    x = multi_heads_1(5, 5)
-    y = multi_heads_1(5, 7.3)
-    return x, y
-
-def tst_tmplt_1():
-    x = tmplt_1(5, 5)
-    y = tmplt_1(5.5, 7.3)
-    return x, y
-
-def tst_multi_tmplt_1():
-    x = multi_tmplt_1(5, 5, 7)
-    y = multi_tmplt_1(5, 5, 7.3)
-    z = multi_tmplt_1(4.5, 4.5, 8)
-    a = multi_tmplt_1(7.5, 3.5, 7.7)
-    return x, a, y, z
 
 def tst_tmplt_head_1():
     x = tmplt_head_1(5, 5)
@@ -152,13 +111,3 @@ def tst_tmplt_tmplt_1():
     z = tmplt_tmplt_1(5.5, 5.56, 7)
     a = tmplt_tmplt_1(5, 5, 7.7)
     return x, y, z, a
-
-def tst_tmplt_2():
-    x = tmplt_2(5, 5)
-    y = tmplt_2(5.5, 7.3)
-    return x, y
-
-def tst_multi_tmplt_2():
-    x = multi_tmplt_2(5, 5)
-    y = multi_tmplt_2(5, 7.3)
-    return x, y

@@ -2,6 +2,35 @@
 from pyccel.decorators import types
 from pyccel.decorators import template
 
+
+@template('z', types=['int', 'real'])
+@types('z', 'z')
+def tmplt_1(x, y):
+    return x + y
+
+@template('z', types=['int', 'real'])
+@template('y', types=['int', 'real'])
+@types('z', 'z', 'y')
+def multi_tmplt_1(x, y, z):
+    return x + y + z
+
+@types('int', 'int')
+@types('int', 'real')
+def multi_heads_1(x, y):
+    return x + y
+
+@template(types=['int', 'real'], name = 'z')
+@types('z', 'z')
+def tmplt_2(x, y):
+    return x + y
+
+@template('k', types=['int'])
+@template('g', types=['int', 'real'])
+@types('k', 'g')
+def multi_tmplt_2(y, z):
+    return y + z
+
+
 #------------------------------------------------------
 
 @template('k', types=['int'])

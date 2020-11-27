@@ -60,22 +60,29 @@ def test_gen_7(language):
     assert np.array_equal(x, x_expected)
 
 def test_multi_heads_1(language):
-    modnew = epyccel(mod, language = language)
-    x_expected = mod.tst_multi_heads_1()
-    x = modnew.tst_multi_heads_1()
-    assert np.array_equal(x, x_expected)
+
+    f1 = epyccel(mod2.multi_heads_1, language = language)
+    f2 = mod2.multi_heads_1
+
+    assert f1(5, 5) == f2(5, 5)
+    assert f1(5, 7.3) == f2(5, 7.3)
+
 
 def test_tmplt_1(language):
-    modnew = epyccel(mod, language = language)
-    x_expected = mod.tst_tmplt_1()
-    x = modnew.tst_tmplt_1()
-    assert np.array_equal(x, x_expected)
+    f1 = epyccel(mod2.tmplt_1, language = language)
+    f2 = mod2.tmplt_1
+
+    assert f1(5, 5) == f2(5, 5)
+    assert f1(5.5, 7.3) == f2(5.5, 7.3)
 
 def test_multi_tmplt_1(language):
-    modnew = epyccel(mod, language = language)
-    x_expected = mod.tst_multi_tmplt_1()
-    x = modnew.tst_multi_tmplt_1()
-    assert np.array_equal(x, x_expected)
+    f1 = epyccel(mod2.multi_tmplt_1, language = language)
+    f2 = mod2.multi_tmplt_1
+
+    assert f1(5, 5, 7) == f2(5, 5, 7)
+    assert f1(5, 5, 7.3) == f2(5, 5, 7.3)
+    assert f1(4.5, 4.5, 8) == f2(4.5, 4.5, 8)
+    assert f1(7.5, 3.5, 7.7) == f2(7.5, 3.5, 7.7)
 
 def test_tmplt_head_1(language):
     modnew = epyccel(mod, language = language)
@@ -96,16 +103,19 @@ def test_tmplt_tmplt_1(language):
     assert np.array_equal(x, x_expected)
 
 def test_tmplt_2(language):
-    modnew = epyccel(mod, language = language)
-    x_expected = mod.tst_tmplt_2()
-    x = modnew.tst_tmplt_2()
-    assert np.array_equal(x, x_expected)
+    f1 = epyccel(mod2.tmplt_2, language = language)
+    f2 = mod2.tmplt_2
+
+    assert f1(5, 5) == f2(5, 5)
+    assert f1(5.5, 7.3) == f2(5.5, 7.3)
 
 def test_multi_tmplt_2(language):
-    modnew = epyccel(mod, language = language)
-    x_expected = mod.tst_multi_tmplt_2()
-    x = modnew.tst_multi_tmplt_2()
-    assert np.array_equal(x, x_expected)
+    f1 = epyccel(mod2.multi_tmplt_2, language = language)
+    f2 = mod2.multi_tmplt_2
+
+    assert f1(5, 5) == f2(5, 5)
+    assert f1(5, 7.3) == f2(5, 7.3)
+
 
 def test_default_var_1(language):
     f1 = epyccel(mod2.default_var_1, language = language)
