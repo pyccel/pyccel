@@ -45,11 +45,11 @@ hello from thread number: 3
 ## Directives Usage on Pyccel
 
 Pyccel uses the same clauses as OpenMP, you can refer to the references bellow for more information on how to use them:
-- [*OpenMP 5.1 API Specification*](https://www.openmp.org/wp-content/uploads/OpenMP-API-Specification-5-1.pdf)
-- [*OpenMP 5.1 Syntax Reference Guide*](https://www.openmp.org/wp-content/uploads/OpenMPRefCard-5.1-web.pdf)
+  - [*OpenMP 5.1 API Specification*](https://www.openmp.org/wp-content/uploads/OpenMP-API-Specification-5-1.pdf)
+  - [*OpenMP 5.1 Syntax Reference Guide*](https://www.openmp.org/wp-content/uploads/OpenMPRefCard-5.1-web.pdf)
 
 Other references:
-- [*OpenMP Clauses*](https://docs.microsoft.com/en-us/cpp/parallel/openmp/reference/openmp-clauses)
+  - [*OpenMP Clauses*](https://docs.microsoft.com/en-us/cpp/parallel/openmp/reference/openmp-clauses)
 
 ### parallel Construct
 
