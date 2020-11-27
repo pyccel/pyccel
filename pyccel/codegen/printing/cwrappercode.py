@@ -172,9 +172,24 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return check
 
+    # -------------------------------------------------------------------
+    # Functions that take care of creating cast or convert type function call :
+    # -------------------------------------------------------------------
     def _create_collecting_value_body(self, variable, collect_var, tmp_variable = None):
         """
-            doc needed
+        Create If block to différence between python and numpy data types in collecting value
+        Parameters:
+        ----------
+        variable: variable
+            the variable needed to collect
+        collect_var : variable
+            the pyobject variable
+        tmp_variable : variable
+            temporary variable to hold value default None
+
+        Returns
+        -------
+        body : If block
         """
         var = tmp_variable if tmp_variable else variable
         python_type_collect_func_call =  self.get_collect_function_call(variable, collect_var)
@@ -187,10 +202,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return body
 
-
-    # -------------------------------------------------------------------
-    # Functions that take care of creating cast or convert type function call :
-    # -------------------------------------------------------------------
     def get_collect_function_call(self, variable, collect_var):
         """
         Represents a call to cast function responsible of collecting value from python object.
@@ -319,7 +330,7 @@ class CWrapperCodePrinter(CCodePrinter):
             check = PyccelNot(PythonType_Check(variable, collect_var))
             error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, variable.dtype))
             body += [(check, [error, Return([Nil()])])]
-        body += [(LiteralTrue(), [Assign(variable, self.get_collect_function_call(variable, collect_var))])]
+        body += [(LiteralTrue(), [self._create_collecting_value_body(variable, collect_var)])]
         body = [If(*body)]
 
         return body
@@ -404,6 +415,9 @@ class CWrapperCodePrinter(CCodePrinter):
         elif isinstance(variable, ValuedVariable):
             body = self._body_valued_variable(variable, collect_var, check_type)
 
+        elif isinstance(collect_var.dtype, PyccelPyObject):
+            body = [self._create_collecting_value_body(variable, collect_var)]
+
         elif cast_function is not None:
             body = [Assign(variable, cast_function)]
 
@@ -460,7 +474,6 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = self.get_cast_function_call('pycomplex_to_complex', collect_var)
 
         return collect_var, cast_function
 
