@@ -10,14 +10,16 @@ from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 from pyccel.ast.core      import Declare, IndexedVariable, Slice, ValuedVariable
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import FunctionAddress
-from pyccel.ast.core      import Nil, PyccelAssociativeParenthesis
+from pyccel.ast.core      import Nil
 from pyccel.ast.core      import Assign, datatype, Variable, Import
 from pyccel.ast.core      import SeparatorComment, VariableAddress
 from pyccel.ast.core      import DottedName
-from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelMinus
+from pyccel.ast.core      import create_incremented_string
 
-from pyccel.ast.core import PyccelUnarySub, PyccelMod
-from pyccel.ast.core import create_incremented_string
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus
+from pyccel.ast.operators import PyccelAssociativeParenthesis
+from pyccel.ast.operators import PyccelUnarySub, PyccelMod
+
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
 
@@ -1075,10 +1077,10 @@ class CCodePrinter(CodePrinter):
             errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
                           symbol=expr, severity='fatal')
 
-    def _print_IsNot(self, expr):
+    def _print_PyccelIsNot(self, expr):
         return self._handle_is_operator("!=", expr)
 
-    def _print_Is(self, expr):
+    def _print_PyccelIs(self, expr):
         return self._handle_is_operator("==", expr)
 
     def _print_Piecewise(self, expr):

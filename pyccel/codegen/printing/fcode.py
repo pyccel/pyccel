@@ -40,8 +40,8 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              If, PyccelArraySize)
 
 
-from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-from pyccel.ast.core      import PyccelUnarySub, PyccelMod
+from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
+from pyccel.ast.operators      import PyccelUnarySub, PyccelMod
 from pyccel.ast.core      import FunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
@@ -2125,7 +2125,7 @@ class FCodePrinter(CodePrinter):
         code = self._print(stmt)
         return self._get_statement(code)
 
-    def _print_Is(self, expr):
+    def _print_PyccelIs(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         a = expr.args[0]
@@ -2140,7 +2140,7 @@ class FCodePrinter(CodePrinter):
         errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
                       symbol=expr, severity='fatal')
 
-    def _print_IsNot(self, expr):
+    def _print_PyccelIsNot(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         a = expr.args[0]
@@ -2349,6 +2349,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_PyccelNot(self, expr):
         a = self._print(expr.args[0])
+        if (expr.args[0].dtype is not NativeBool()):
+            return '{} == 0'.format(a)
         return '.not. {}'.format(a)
 
     def _print_Header(self, expr):

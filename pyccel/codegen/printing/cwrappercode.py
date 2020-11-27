@@ -12,10 +12,12 @@ from pyccel.ast.literals  import LiteralTrue, LiteralInteger
 from pyccel.ast.builtins import PythonPrint
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
-from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
+from pyccel.ast.core import If, Nil, Return, FunctionCall
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import VariableAddress, Import, PyccelNe, PyccelEq, IfTernaryOperator, PyccelOr
-from pyccel.ast.core import PyccelAssociativeParenthesis, AugAssign, PyccelAnd
+from pyccel.ast.core import VariableAddress, Import, IfTernaryOperator
+from pyccel.ast.core import AugAssign
+
+from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelAnd, PyccelNe, PyccelOr, PyccelAssociativeParenthesis
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, str_dtype, default_precision
 

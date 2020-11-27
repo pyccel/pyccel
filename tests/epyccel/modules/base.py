@@ -92,6 +92,13 @@ def not_val(a):
         c = True
     return c
 
+@types('int')
+def not_int(a):
+    c = False
+    if not a:
+        c = True
+    return c
+
 @types('bool')
 def is_nil(a = None):
     c = False
