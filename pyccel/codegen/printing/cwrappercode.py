@@ -883,7 +883,6 @@ class CWrapperCodePrinter(CCodePrinter):
             static_funcs = expr.funcs
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in static_funcs)
 
-        #TODO it should be a better way to do this :
         interfaces = expr.interfaces
         interface_funcs = [f.name for i in interfaces for f in i.functions]
         funcs = interfaces + [f for f in expr.funcs if f.name not in interface_funcs]
