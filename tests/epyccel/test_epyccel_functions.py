@@ -333,7 +333,7 @@ def test_decorator_f20(language):
         b = a
         return b
     f = epyccel(f20, language=language)
-    assert f(complex(1, 2.2)), f20(complex(1, 2.2))
+    assert f(complex(1, 2.2)) == f20(complex(1, 2.2))
 
 def test_decorator_f21(language):
     @types('complex64')
@@ -349,7 +349,7 @@ def test_decorator_f22(language):
         b = a
         return b
     f = epyccel(f22, language=language)
-    assert f(complex(1, 2.2)), f22(complex(1, 2.2))
+    assert f(complex(1, 2.2)) == f22(complex(1, 2.2))
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
