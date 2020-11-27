@@ -12,23 +12,26 @@ t_ndarray   array_create(int nd, int *shape, enum e_types type)
     arr.type = type;
     switch (type)
     {
-        case nd_bool:
-            arr.type_size = sizeof(bool);
+        case nd_int8:
+            arr.type_size = sizeof(int8_t);
             break;
-        case nd_sint:
-            arr.type_size = sizeof(short int);
+        case nd_int16:
+            arr.type_size = sizeof(int16_t);
             break;
-        case nd_int:
-            arr.type_size = sizeof(int);
+        case nd_int32:
+            arr.type_size = sizeof(int32_t);
             break;
-        case nd_long:
-            arr.type_size = sizeof(long);
+        case nd_int64:
+            arr.type_size = sizeof(int64_t);
             break;
         case nd_float:
             arr.type_size = sizeof(float);
             break;
         case nd_double:
             arr.type_size = sizeof(double);
+            break;
+        case nd_bool:
+            arr.type_size = sizeof(bool);
             break;
         case nd_cfloat:
             arr.type_size = sizeof(float complex);
@@ -57,30 +60,42 @@ t_ndarray   array_create(int nd, int *shape, enum e_types type)
     return (arr);
 }
 
-void   _array_fill_int(int c, t_ndarray arr)
+void   _array_fill_int8(int8_t c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
     else
         for (int i = 0; i < arr.length; i++)
-            arr.nd_int[i] = c;
+            arr.nd_int8[i] = c;
 }
-void   _array_fill_long(long c, t_ndarray arr)
+
+void   _array_fill_int16(int16_t c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
     else
         for (int i = 0; i < arr.length; i++)
-            arr.nd_long[i] = c;
+            arr.nd_int16[i] = c;
 }
-void   _array_fill_sint(short int c, t_ndarray arr)
+
+void   _array_fill_int32(int32_t c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
     else
         for (int i = 0; i < arr.length; i++)
-            arr.nd_sint[i] = c;
+            arr.nd_int32[i] = c;
 }
+
+void   _array_fill_int64(int64_t c, t_ndarray arr)
+{
+    if (c == 0)
+        memset(arr.raw_data, 0, arr.buffer_size);
+    else
+        for (int i = 0; i < arr.length; i++)
+            arr.nd_int64[i] = c;
+}
+
 void   _array_fill_bool(bool c, t_ndarray arr)
 {
     if (c == 0)
@@ -89,13 +104,14 @@ void   _array_fill_bool(bool c, t_ndarray arr)
         for (int i = 0; i < arr.length; i++)
             arr.nd_bool[i] = c;
 }
-void   _array_fill_cfloat(float complex c, t_ndarray arr)
+
+void   _array_fill_float(float c, t_ndarray arr)
 {
     if (c == 0)
         memset(arr.raw_data, 0, arr.buffer_size);
     else
         for (int i = 0; i < arr.length; i++)
-            arr.nd_cfloat[i] = c;
+            arr.nd_float[i] = c;
 }
 
 void   _array_fill_double(double c, t_ndarray arr)
@@ -106,6 +122,16 @@ void   _array_fill_double(double c, t_ndarray arr)
         for (int i = 0; i < arr.length; i++)
             arr.nd_double[i] = c;
 }
+
+void   _array_fill_cfloat(float complex c, t_ndarray arr)
+{
+    if (c == 0)
+        memset(arr.raw_data, 0, arr.buffer_size);
+    else
+        for (int i = 0; i < arr.length; i++)
+            arr.nd_cfloat[i] = c;
+}
+
 
 void   _array_fill_cdouble(double complex c, t_ndarray arr)
 {
@@ -196,4 +222,3 @@ int get_index(t_ndarray arr, ...)
     va_end(va);
     return (index);
 }
-
