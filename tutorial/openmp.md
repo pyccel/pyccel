@@ -261,7 +261,7 @@ structured-block
 
 #### Example
 The ``` #$ omp taskloop ``` construct specifies that the iterations of one or more associated loops will be executed in parallel using explicit tasks.\
-The ``` #$ omp atomic ``` is used to ensure that a specific storage location is accessed atomically.
+The ``` #$ omp atomic ``` is used to ensure that a specific storage location is accessed atomically; which prevent the possibility of multiple, simultaneous reading and writing of threads.
 ```python
 from pyccel.stdlib.internal.openmp import omp_get_thread_num
 
