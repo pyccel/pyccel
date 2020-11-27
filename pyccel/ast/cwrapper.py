@@ -555,20 +555,20 @@ check_type_registry  = {
 
 # Needed to check for numpy arguments type
 Numpy_Bool_ref = Variable(dtype=NativeVoid(),  name = 'Bool')
-Numpy_Byte_ref = Variable(dtype=NativeVoid(),  name = 'Int8')
-Numpy_Short_ref = Variable(dtype=NativeVoid(),  name = 'Int16')
-Numpy_Int_ref = Variable(dtype=NativeVoid(),  name = 'Int32')
-Numpy_Long_ref = Variable(dtype=NativeVoid(),  name = 'Int64')
+Numpy_Int8_ref = Variable(dtype=NativeVoid(),  name = 'Int8')
+Numpy_Int16_ref = Variable(dtype=NativeVoid(),  name = 'Int16')
+Numpy_Int32_ref = Variable(dtype=NativeVoid(),  name = 'Int32')
+Numpy_Int64_ref = Variable(dtype=NativeVoid(),  name = 'Int64')
 Numpy_Float_ref = Variable(dtype=NativeVoid(),  name = 'Float32')
 Numpy_Double_ref = Variable(dtype=NativeVoid(),  name = 'Float64')
 Numpy_Complex64_ref = Variable(dtype=NativeVoid(),  name = 'Complex64')
 Numpy_Complex128_ref = Variable(dtype=NativeVoid(),  name = 'Complex128')
 
 numpy_type_check_registry = {
-    (NativeInteger(), 4)       : Numpy_Int_ref,
-    (NativeInteger(), 8)       : Numpy_Long_ref,
-    (NativeInteger(), 2)       : Numpy_Short_ref,
-    (NativeInteger(), 1)       : Numpy_Byte_ref,
+    (NativeInteger(), 4)       : Numpy_Int32_ref,
+    (NativeInteger(), 8)       : Numpy_Int64_ref,
+    (NativeInteger(), 2)       : Numpy_Int16_ref,
+    (NativeInteger(), 1)       : Numpy_Int8_ref,
     (NativeReal(), 8)          : Numpy_Double_ref,
     (NativeReal(), 4)          : Numpy_Float_ref,
     (NativeComplex(), 4)       : Numpy_Complex64_ref,
