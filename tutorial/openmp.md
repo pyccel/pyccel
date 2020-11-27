@@ -4,6 +4,8 @@
 
 OpenMP Runtime Library Routines for Pyccel work by importing the OpenMP routine needed from the Pyccel stdlib:
 
+Please note that files using the OpenMP Runtime library routines will only work when compiled with pyccel (i.e. they won't work in pure python mode).
+
 ```python
 from pyccel.stdlib.internal.openmp import omp_set_num_threads
 ```
@@ -31,7 +33,7 @@ Please note that the variable ``` result ``` is a shared variable; Pyccel consid
 
 The output of this program is (you may get different result because of threads running at the same time):
 ```shell
-❯ pyccel omp_test.py --language c --openmp
+❯ pyccel omp_test.py --openmp
 ❯ ./prog_omp_test
 hello from thread number: 0
 hello from thread number: 2
@@ -67,7 +69,7 @@ print("hello from thread:", n)
 
 The output of this program is (you may get different result because of threads running at the same time):
 ```shell
-❯ pyccel omp_test.py --language c --openmp
+❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
 hello from thread: 0
 hello from thread: 1
@@ -99,7 +101,7 @@ print(result)
 
 The output of this program is:
 ```shell
-❯ pyccel omp_test.py --language c --openmp
+❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
 893116
 ```
@@ -130,7 +132,7 @@ for i in range(0, 1337):
 
 The output of this program is:
 ```shell
-❯ pyccel omp_test.py --language c --openmp
+❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
 893116
 ```
@@ -162,7 +164,7 @@ print(sum)
 
 The output of this program is:
 ```shell
-❯ pyccel omp_test.py --language c --openmp
+❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
 893116
 ```
@@ -192,7 +194,7 @@ for i in range(0, n):
 #$ omp barrier
 #$ omp for
 for j in range(0, n):
-  arr_2[j] = arr[j] x 2
+  arr_2[j] = arr[j] * 2
 
 #$ omp end parallel
 print(sum(arr_2))
@@ -200,7 +202,7 @@ print(sum(arr_2))
 
 The output of this program is:
 ```shell
-❯ pyccel omp_test.py --language c --openmp
+❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
 1786232
 ```
@@ -253,7 +255,7 @@ print("x2 : ", x2);
 
 The output of this program is (you may get a different output, but the sum must be the same for each thread):
 ```shell
-❯ pyccel omp_test.py --language c --openmp
+❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
 x1 : 200
 x2 : 100
@@ -284,7 +286,7 @@ print("result :", result)
 
 The output of this program is:
 ```shell
-❯ pyccel omp_test.py --language c --openmp
+❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
 result : 1
 ```
@@ -318,7 +320,7 @@ print("Result:", result)
 
 The output of this program is:
 ```shell
-❯ pyccel omp_test.py --language c --openmp
+❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
 Result: 893116
 ```
@@ -368,7 +370,7 @@ print("result :", result)
 
 The output of this program is:
 ```shell
-❯ pyccel omp_test.py --language c --openmp
+❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
 55
 ```
@@ -424,7 +426,7 @@ print("flag:", flag)
 
 The output of this program is:
 ```shell
-❯ pyccel omp_test.py --language c --openmp
+❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
 Thread 1 released
 flag: 2
@@ -479,7 +481,7 @@ for-loops
 
 #### Example
 
-In this example we show how we can use the ``` #$ omp target ``` pragma to define a target region, which is a block of computation that operates within a distinct data environment and is intended to be offloaded onto a parallel computation device during execution.\
+In this example we show how we can use the ``` #$ omp target ``` pragma to define a target region, which is a computational block that operates within a distinct data environment and is intended to be offloaded onto a parallel computation device during execution.\
 The ``` #$ omp teams ``` directive creates a collection of thread teams. The master thread of each team executes the teams region.\
 The ``` #$ omp distribute ``` directive specifies that the iterations of one or more loops will be executed by the thread teams in the context of their implicit tasks.
 ```python
@@ -500,7 +502,7 @@ for i in range(0, n):
 
 The output of this program is:
 ```shell
-❯ pyccel omp_test.py --language c --openmp
+❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
 Team num : 0
 Team num : 0
@@ -565,7 +567,7 @@ print("sum3 :", sum3, ", thread :", omp_get_thread_num())
 
 The output of this program is :
 ```shell
-❯ pyccel omp_test.py --language c --openmp
+❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
 sum1 : 1, thread : 0
 sum2 : 6, thread : 0
