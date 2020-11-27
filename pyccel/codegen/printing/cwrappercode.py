@@ -179,7 +179,7 @@ class CWrapperCodePrinter(CCodePrinter):
     # --------------------------------------------------------------------
     def _create_collecting_value_body(self, variable, collect_var, tmp_variable = None):
         """
-        Create If block to différence between python and numpy data types in collecting value
+        Create If block to differentiate between python and numpy data types when collecting value
         format :
             if (collect_var is numpy_scalar)
                 collect_value from numpy type
