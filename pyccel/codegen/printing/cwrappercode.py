@@ -899,7 +899,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                      '}}').format(
                                             name = f.name,
                                             wrapper_name = self._function_wrapper_names[f.name],
-                                            doc_string = f.doc_string if isinstance(f, FunctionDef) else f.functions[0].doc_string)
+                                            doc_string = f.doc_string)
                                      for f in funcs)
 
         method_def_name = self.get_new_name(self._global_names, '{}_methods'.format(expr.name))
