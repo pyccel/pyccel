@@ -341,7 +341,7 @@ def test_decorator_f21(language):
         b = a
         return b
     f = epyccel(f21, language=language)
-    assert np.isclose(f(complex(1, 2.2)), f21(complex(1, 2.2)), rtol = 1e7, atol = 1e8)
+    assert f(np.complex64(1+ 2.2j)) == f21(np.complex64(1+ 2.2j))
 
 def test_decorator_f22(language):
     @types('complex128')

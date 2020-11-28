@@ -217,7 +217,7 @@ def test_complex_types(language):
 
     assert f1(complex(1, 2.2), complex(1, 2.2)) == f2(complex(1, 2.2), complex(1, 2.2))
     assert f1(np.complex(15.5, 2.0) , np.complex(10.5, 3.4)) == f2(np.complex(15.5, 2.0) , np.complex(10.5, 3.4))
-    assert np.isclose(f1(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j)), f2(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j)))
+    assert f1(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j)) == f2(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j))
     assert f1(np.complex128(15.5+ 2.0j) , np.complex(10.5+ 3.4j)) == f2(np.complex128(15.5+ 2.0j) , np.complex(10.5+ 3.4j))
 
 def test_mix_types_1(language):
