@@ -205,10 +205,10 @@ ndarray_type_registry = {('real',8)    : 'nd_double',
                   ('real',4)    : 'nd_float',
                   ('complex',8) : 'nd_cdouble',
                   ('complex',4) : 'nd_cfloat',
-                  ('int',8)     : 'nd_int64',
-                  ('int',4)     : 'nd_int32',
-                  ('int',2)     : 'nd_int16',
-                  ('int',1)     : 'nd_int8',
+                  ('int',4)     : 'nd_int',
+                  ('int',8)     : 'nd_long',
+                  ('int',2)     : 'nd_sint',
+                  ('int',1)     : 'nd_char',
                   ('bool',4)    : 'nd_bool'}
 
 import_dict = {'omp_lib' : 'omp' }
