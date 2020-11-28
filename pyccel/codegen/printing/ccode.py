@@ -319,10 +319,10 @@ class CCodePrinter(CodePrinter):
                         body    = body)
 
     def _print_Break(self, expr):
-        return 'break;\n'
+        return 'break;'
 
     def _print_Continue(self, expr):
-        return 'continue;\n'
+        return 'continue;'
 
     def _print_While(self, expr):
         body = self._print(expr.body)
