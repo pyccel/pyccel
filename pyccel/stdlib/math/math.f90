@@ -1,4 +1,4 @@
-module pyf_math
+module math
     implicit none
 
         real, parameter,private :: pi = 3.1415926536
@@ -16,4 +16,4 @@ module pyf_math
             enddo
         end function factorial
 
-end module pyf_math
+end module math
