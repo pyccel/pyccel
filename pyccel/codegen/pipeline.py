@@ -15,10 +15,11 @@ from pyccel.codegen.python_wrapper import create_shared_library
 
 __all__ = ['execute_pyccel']
 
-internal_libs = [
-    "ndarrays",
-    "pyc_math",
-]
+# map internal libraries with it's path name
+internal_libs = {
+    "ndarrays" : "ndarray",
+    "pyc_math" : "math",
+}
 
 #==============================================================================
 # NOTE:
@@ -274,7 +275,7 @@ def execute_pyccel(fname, *,
             # check for used internal libraries
             for lib in internal_libs:
                 if lib in codegen._printer._additional_imports:
-                    objs, incs = get_internal_lib(lib)
+                    objs, incs = get_internal_lib(internal_libs[lib])
                     lib_incs.append(incs)
                     lib_mods.extend(objs)
             dep_mods = (*dep_mods, *lib_mods)
