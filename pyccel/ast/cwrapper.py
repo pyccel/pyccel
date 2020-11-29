@@ -146,6 +146,7 @@ class PyArg_ParseTupleNode(Basic):
                         c_func_args, parse_args,
                         arg_names,
                         is_interface=False):
+        Basic.__init__(self)
         if not isinstance(python_func_args, Variable):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
