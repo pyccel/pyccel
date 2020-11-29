@@ -244,6 +244,10 @@ class CCodePrinter(CodePrinter):
         self._additional_args = []
         self._temporary_args = []
 
+    def get_additional_imports(self):
+        """return the additional imports collected in printing stage"""
+        return self._additional_imports
+
     def _get_statement(self, codestring):
         return "%s;" % codestring
 
