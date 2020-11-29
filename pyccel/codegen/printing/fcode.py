@@ -216,8 +216,13 @@ class FCodePrinter(CodePrinter):
         self._current_function = None
 
         self._additional_code = None
+        self._additional_imports = set([])
 
         self.prefix_module = prefix_module
+
+    def get_additional_imports(self):
+        """return the additional imports collected in printing stage"""
+        return self._additional_imports
 
     def set_current_function(self, name):
 
@@ -279,6 +284,7 @@ class FCodePrinter(CodePrinter):
 
         imports = ''.join(self._print(i) for i in expr.imports)
         imports += 'use ISO_C_BINDING\n'
+
         decs    = ''.join(self._print(i) for i in expr.declarations)
         body    = ''
 
