@@ -2,11 +2,10 @@
 
 ## Header files
 
-A header file in Pyccel is a file containing function/variable declarations, macro definitions , templates and metavariable declarations.\
-the rule is to give header files names that end with `.pyh` .\
+A header file in Pyccel is a file with a name ending with `.pyh`, which contains function/variable declarations, macro definitions, templates and metavariable declarations.\
 Header files serve two purposes:
--   Link external libraries in the targeted languages by providing their function definitions.
--   Accelerate the parsing process by parsing the header file instead of the original file in the case of pyccelizing multiple files.
+-   Link external libraries in the targeted languages by providing their function declarations;
+-   Accelerate the parsing process of an imported Python module by parsing only its header file (automatically generated) instead of the full module.
 
 ### Example
 We create the file `header.pyh` that contains an openmp function definition:
@@ -27,6 +26,10 @@ Pyccel can compile the Python file with the following command: `pyccel openmp.py
 , It will then create the executable file `openmp`
 
 ## Picklizing header files
-Pyccel uses the Python Module [pickle](https://docs.python.org/3/library/pickle.html) to cache the header files.\
-When compiling a header file Pyccel will generate in the same directory a `.pyccel` file that contains the cached result of the parser,\
-This will accelerate the compiling process of big header files, by compiling them only once and storing the results for future compilation, Pyccel will generate a new `.pyccel` after the modification of the header file  or downloading a new Pyccel version.
+Parsing a large Pyccel header file with hundreds of function declarations may require a significant amount of time, therefore it is important that this process is only done once when pyccelizing multiple Python source files in a large project.
+
+To this end, Pyccel uses the [pickle](https://docs.python.org/3/library/pickle.html) Python module to store the result of the parser to a `.pyccel` binary file, which is created in the same directory of the header file.
+Afterwards Pyccel will load the precompiled parser from the `.pyccel` file, instead of parsing the header file again.
+This results in a performance gain.
+
+Pyccel will generate a new `.pyccel` binary if the corresponding header file was modified, or if the installed version of Pyccel does not match the one used to parse the header.
