@@ -435,7 +435,7 @@ class CWrapperCodePrinter(CCodePrinter):
     # -------------------------------------------------------------------
     # Parsing arguments and building values Types functions
     # -------------------------------------------------------------------
-    def get_PyArgParseType(self, used_names, variable, collect_var_interface = None):
+    def get_PyArgParseType(self, used_names, variable):
         """
         Responsible for creating any necessary intermediate variables which are used
         to collect the result of PyArgParse, and collecting the required cast function
@@ -463,9 +463,6 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = PyccelPyArrayObject()
             collect_var = Variable(dtype= collect_type, is_pointer = True, rank = variable.rank,
                                     order= variable.order, name=self.get_new_name(used_names, variable.name+"_tmp"))
-
-        elif collect_var_interface :
-            collect_var = collect_var_interface
 
         elif isinstance(variable, ValuedVariable):
             collect_type = PyccelPyObject()
@@ -562,9 +559,13 @@ class CWrapperCodePrinter(CCodePrinter):
         check_var = Variable(dtype = NativeInteger(), name = self.get_new_name(used_names , "check"))
         wrapper_vars[check_var.name] = check_var
         types_dict = OrderedDict((a, set()) for a in funcs[0].arguments) #dict to collect each variable possible type and the corresponding flags
-        parse_args = [Variable(dtype = PyccelPyObject() ,
-                            name = self.get_new_name(used_names, a.name + "_tmp"),
-                            is_pointer= True) for a in funcs[0].arguments]
+        # collect parse arg
+        parse_args = [Variable(dtype= PyccelPyArrayObject(), is_pointer = True, rank = a.rank,
+                            order= a.order,
+                            name=self.get_new_name(used_names, a.name+"_tmp")) if a.rank > 0 else
+            Variable(dtype = PyccelPyObject() ,
+                    name = self.get_new_name(used_names, a.name + "_tmp"),
+                    is_pointer= True) for a in funcs[0].arguments]
         # Managing the body of wrapper
         for func in funcs :
             mini_wrapper_func_body = []
@@ -575,17 +576,15 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # Loop for all args in every functions and create the corresponding condition and body
             for p_arg, f_arg in zip(parse_args, func.arguments):
-                collect_var,_ = self.get_PyArgParseType(used_names, f_arg, p_arg)
-                print(collect_var, type(collect_var))
-                collect_vars[collect_var] = collect_var
-                body, tmp_variable = self._body_management(used_names, f_arg, collect_var, None)
+                collect_vars[f_arg] = p_arg
+                body, tmp_variable = self._body_management(used_names, f_arg, p_arg, None)
                 if tmp_variable :
                     mini_wrapper_func_vars[tmp_variable.name] = tmp_variable
 
                 # get check type function
-                check = self._get_check_type_statement(f_arg, collect_var)
+                check = self._get_check_type_statement(f_arg, p_arg)
                 # If the variable cannot be collected from PyArgParse directly
-                wrapper_vars[p_arg.name] = collect_var
+                wrapper_vars[p_arg.name] = p_arg
 
                 # Save the body
                 wrapper_body_translations.extend(body)

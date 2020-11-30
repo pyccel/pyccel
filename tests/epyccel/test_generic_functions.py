@@ -58,7 +58,6 @@ def test_multi_heads_1(language):
     assert f1(5, 5) == f2(5, 5)
     assert f1(5, 7.3) == f2(5, 7.3)
 
-
 def test_tmplt_1(language):
     f1 = epyccel(mod2.tmplt_1, language = language)
     f2 = mod2.tmplt_1
@@ -107,6 +106,9 @@ def test_multi_tmplt_2(language):
     assert f1(5, 5) == f2(5, 5)
     assert f1(5, 7.3) == f2(5, 7.3)
 
+#--------------------------------------------------------------------
+# TEST DEFAULT ARGUMENTS
+#--------------------------------------------------------------------
 
 def test_default_var_1(language):
     f1 = epyccel(mod2.default_var_1, language = language)
@@ -146,6 +148,10 @@ def test_default_var_4(language):
     assert f1(4) == f2(4)
     assert f1(5.2) == f2(5.2)
 
+#--------------------------------------------------------------------
+# TEST OPTIONAL ARGUMENTS
+#--------------------------------------------------------------------
+
 def test_optional_var_1(language):
     f1 = epyccel(mod2.optional_var_1 , language = language)
     f2 = mod2.optional_var_1
@@ -181,6 +187,10 @@ def test_optional_var_4(language):
     assert f1(2.2, 5)  == f2(2.2, 5)
     assert f1(4.2) == f2(4.2)
     assert f1(complex(4, 6)) == f2(complex(4, 6))
+
+#--------------------------------------------------------------------
+# TEST DATA TYPES
+#--------------------------------------------------------------------
 
 def test_int_types(language):
     f1 = epyccel(mod2.int_types , language = language, verbose=True)
@@ -235,3 +245,149 @@ def test_mix_types_2(language):
     assert f1(5.7, -1.2) == f2(5.7, -1.2)
     assert f1(complex(7.2, 3.12), complex(7.2, 3.12)) == f2(complex(7.2, 3.12), complex(7.2, 3.12))
     assert f1(np.float32(16), np.float32(16)) == f2(np.float32(16), np.float32(16))
+
+#--------------------------------------------------------------------
+# TEST ARRAYS
+#--------------------------------------------------------------------
+
+def test_mix_array_1():
+    f1 = epyccel(mod2.mix_array_1)
+    f2 = mod2.mix_array_1
+
+    a = 5
+    x1 = np.array( [1,2,3], dtype=np.int64)
+    x2 = np.copy(x1)
+    f1(x1, a)
+    f2(x2, a)
+    assert np.array_equal( x1, x2 )
+
+    x1 = np.array( [1.0,2.0,3.0], dtype=np.float64)
+    x2 = np.copy(x1)
+    f1(x1, a)
+    f2(x2, a)
+    assert np.array_equal( x1, x2)
+
+    x1 = np.array( [1+ 2j,5 +2j,3.0 + 3j], dtype=np.complex128)
+    x2 = np.copy(x1)
+    f1(x1, a)
+    f2(x2, a)
+    assert np.array_equal( x1, x2)
+
+def test_mix_array_2():
+    f1 = epyccel(mod2.mix_array_1)
+    f2 = mod2.mix_array_1
+
+    a = 5
+    x1 = np.array([1,2,3], dtype=np.int64)
+    x2 = np.copy(x1)
+    f1(x1, a)
+    f2(x2, a)
+    assert np.array_equal( x1, x2 )
+
+    x1 = np.array([1.0,2.0,3.0], dtype=np.float64)
+    x2 = np.copy(x1)
+    f1(x1, a)
+    f2(x2, a)
+    assert np.array_equal( x1, x2)
+
+    x1 = np.array([1+ 2j,5 +2j,3.0 + 3j], dtype=np.complex128)
+    x2 = np.copy(x1)
+    f1(x1, a)
+    f2(x2, a)
+    assert np.array_equal( x1, x2)
+
+def test_mix_array_2():
+    f1 = epyccel(mod2.mix_array_2)
+    f2 = mod2.mix_array_2
+
+    a = 5
+    x1 = np.array([1.0,2.0,3.0], dtype=np.float64)
+    x2 = np.copy(x1)
+    y1 = np.array([1,2,3], dtype=np.int64)
+    y2 = np.copy(y1)
+    f1(x1, y1, a)
+    f2(x2, y2, a)
+
+    assert np.array_equal(x1, x2)
+    assert np.array_equal(y1, y2)
+
+    x1 = np.array([1+ 2j, 5 +2j, 3.0 + 3j], dtype=np.complex128)
+    x2 = np.copy(x1)
+    y1 = np.array([0+ 5j, 5.0 -2j, 3.0 - 3j], dtype=np.complex128)
+    y2 = np.copy(y1)
+    f1(x1, y1, a)
+    f2(x2, y2, a)
+
+    assert np.array_equal(x1, x2)
+    assert np.array_equal(y1, y2)
+
+def test_mix_int_array():
+    f1 = epyccel(mod2.mix_int_array_1)
+    f2 = mod2.mix_int_array_1
+
+    a = 5
+    x1 = np.array([155,221,333], dtype=np.int64)
+    x2 = np.copy(x1)
+    f1(x1, a)
+    f2(x2, a)
+    assert np.array_equal( x1, x2 )
+
+    x1 = np.array([127,229,3], dtype=np.int32)
+    x2 = np.copy(x1)
+    f1(x1, a)
+    f2(x2, a)
+    assert np.array_equal( x1, x2 )
+
+    x1 = np.array([16,-27,34], dtype=np.int16)
+    x2 = np.copy(x1)
+    f1(x1, a)
+    f2(x2, a)
+    assert np.array_equal( x1, x2 )
+
+    x1 = np.array([166,20,-5], dtype=np.int8)
+    x2 = np.copy(x1)
+    f1(x1, a)
+    f2(x2, a)
+    assert np.array_equal( x1, x2 )
+
+def test_mix_float_array():
+    f1 = epyccel(mod2.mix_float_array_1)
+    f2 = mod2.mix_float_array_1
+
+    a = 5.44
+    x1 = np.array([1.15,2.44,3.785], dtype=np.float64)
+    x2 = np.copy(x1)
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal(x1, x2)
+
+    x1 = np.array([1.1555,2115.44,3492.785], dtype=np.float32)
+    x2 = np.copy(x1)
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal(x1, x2)
+
+def test_mix_complex_array():
+    f1 = epyccel(mod2.mix_complex_array_1)
+    f2 = mod2.mix_complex_array_1
+
+    a = 7.5
+    x1 = np.array([10.33+ 2.55j, 5.125 +2.10j, 314.0 + 3.44j], dtype=np.complex128)
+    x2 = np.copy(x1)
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal(x1, x2)
+
+    x1 = np.array([145.32+ 25.55j, 57.15 +2.15j, 13.44j], dtype=np.complex64)
+    x2 = np.copy(x1)
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal(x1, x2)

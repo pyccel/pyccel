@@ -94,18 +94,18 @@ def optional_var_4(x, y = None):
 
 #-------------------------------------------------
 
-@template('g', types=['int', 'int32', 'int64', 'int8', 'int16'])
+@template('g', types=['int', 'int32', 'int8', 'int16'])
 @types('g', 'g')
 def int_types(x, y):
     return x + y
 
 
-@template('g', types=['real', 'float32', 'float64'])
+@template('g', types=['real', 'float32'])
 @types('g', 'g')
 def float_types(x, y):
     return x + y
 
-@template('g', types=['complex', 'complex64', 'complex128'])
+@template('g', types=['complex', 'complex64'])
 @types('g', 'g')
 def complex_types(x, y):
     return x + y
@@ -127,3 +127,32 @@ def mix_types_2(x, y):
     if y != x:
         return y - x
     return -x
+
+
+@template('g', types=['int[:]', 'real[:]', 'complex[:]'])
+@types('g', 'int')
+def mix_array_1(x, a):
+    x[:] += a
+
+
+@types('complex[:]', 'complex[:]', 'int')
+@types('real[:]', 'int[:]', 'int')
+def mix_array_2(x, y, a):
+    x[:] += a
+    y[:] -= a
+
+@template('g', types=['int[:]', 'int8[:]', 'int16[:]', 'int32[:]'])
+@types('g', 'int')
+def mix_int_array_1(x, a):
+    x[:] += a
+
+@template('g', types=['real[:]', 'float32[:]'])
+@types('g', 'real')
+def mix_float_array_1(x, a):
+    x[:] *= a
+
+@template('g', types=['complex[:]', 'complex64[:]'])
+@types('g', 'real')
+def mix_complex_array_1(x, a):
+    x[:] *= a
+
