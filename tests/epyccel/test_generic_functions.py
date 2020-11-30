@@ -367,7 +367,7 @@ def test_mix_int_array():
     f2(x2, a)
     assert np.array_equal( x1, x2 )
 
-@pytest.mark.xfail(sys.platform == 'win32', reason='issue #567 and #568: Duplicated types in a template and header')
+@pytest.mark.xfail(reason = 'issue #567 and #568: Duplicated types in a template and header')
 def test_mix_int_array_2():
     f1 = epyccel(mod2.mix_int_array_2)
     f2 = mod2.mix_int_array_2
