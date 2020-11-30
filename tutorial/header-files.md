@@ -28,7 +28,7 @@ Pyccel can compile the Python file with the following command: `pyccel openmp.py
 ## Picklizing header files
 Parsing a large Pyccel header file with hundreds of function declarations may require a significant amount of time, therefore it is important that this process is only done once when pyccelizing multiple Python source files in a large project.
 
-To this end, Pyccel uses the [pickle](https://docs.python.org/3/library/pickle.html) Python module to store the result of the parser to a `.pyccel` binary file, which is created in the same directory of the header file.
+To this end, Pyccel uses the [pickle](https://docs.python.org/3/library/pickle.html) Python module to store the result of the parser to a `.pyccel` binary file, which is created in the same directory as the header file.
 Afterwards Pyccel will load the precompiled parser from the `.pyccel` file, instead of parsing the header file again.
 This results in a performance gain.
 
