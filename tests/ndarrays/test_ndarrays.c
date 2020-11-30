@@ -15,7 +15,7 @@
 
 void assert_double(double v1 , double v2,
         const char *v1_name, const char *v2_name,const char *dscr,
-        const char * func, const char *file, int line)
+        const char * func, const char *file, int32_t line)
 {
     if (v1 != v2)
     {
@@ -30,7 +30,7 @@ void assert_double(double v1 , double v2,
 
 void assert_float(float v1 , float v2,
         const char *v1_name, const char *v2_name,const char *dscr,
-        const char * func, const char *file, int line)
+        const char * func, const char *file, int32_t line)
 {
     if (v1 != v2)
     {
@@ -45,7 +45,7 @@ void assert_float(float v1 , float v2,
 
 void assert_int64(int64_t v1 , int64_t v2,
         const char *v1_name, const char *v2_name,const char *dscr,
-        const char * func, const char *file, int line)
+        const char * func, const char *file, int32_t line)
 {
     if (v1 != v2)
     {
@@ -60,7 +60,7 @@ void assert_int64(int64_t v1 , int64_t v2,
 
 void assert_int32(int32_t v1 , int32_t v2,
         const char *v1_name, const char *v2_name,const char *dscr,
-        const char * func, const char *file, int line)
+        const char * func, const char *file, int32_t line)
 {
     if (v1 != v2)
     {
@@ -75,7 +75,7 @@ void assert_int32(int32_t v1 , int32_t v2,
 
 void assert_int16(int16_t v1 , int16_t v2,
         const char *v1_name, const char *v2_name,const char *dscr,
-        const char * func, const char *file, int line)
+        const char * func, const char *file, int32_t line)
 {
     if (v1 != v2)
     {
@@ -90,7 +90,7 @@ void assert_int16(int16_t v1 , int16_t v2,
 
 void assert_int8(int8_t v1 , int8_t v2,
         const char *v1_name, const char *v2_name,const char *dscr,
-        const char * func, const char *file, int line)
+        const char * func, const char *file, int32_t line)
 {
     if (v1 != v2)
     {
@@ -105,7 +105,7 @@ void assert_int8(int8_t v1 , int8_t v2,
 
 void assert_cfloat(float complex v1 , float complex v2,
         const char *v1_name, const char *v2_name,const char *dscr,
-        const char * func, const char *file, int line)
+        const char * func, const char *file, int32_t line)
 {
     if (v1 != v2)
     {
@@ -120,7 +120,7 @@ void assert_cfloat(float complex v1 , float complex v2,
 
 void assert_cdouble(double complex v1 , double complex v2,
         const char *v1_name, const char *v2_name,const char *dscr,
-        const char * func, const char *file, int line)
+        const char * func, const char *file, int32_t line)
 {
     if (v1 != v2)
     {
@@ -135,24 +135,24 @@ void assert_cdouble(double complex v1 , double complex v2,
 
 void assert_ns(float v1 , float v2,
         const char *v1_name, const char *v2_name, const char *dscr,
-        const char * func, const char *file, int line)
+        const char * func, const char *file, int32_t line)
 {
     printf("[FAIL] %s:%d:%s\n", file, line, func);
     printf("[INFO] not supported type\n");
     printf("[DSCR] %s\n", dscr);
 }
 
-int test_indexing_int64(void)
+int32_t test_indexing_int64(void)
 {
     int64_t m_1[] = {2, 3, 5, 5, 6, 7, 10, 11,
                 12, 260, 6, 8, 8, 0, 45, 0,
                 1, 0, 0, 1, 200, 33, 5, 57,
                 62, 70, 103, 141, 122, 26, 36, 82,
                 8, 10, 4115, 22, 1, 11, 1, 19};
-    int m_1_shape[] = {5, 8};
+    int32_t m_1_shape[] = {5, 8};
     t_ndarray x;
-    int index;
-    int c_index;
+    int32_t index;
+    int32_t c_index;
     int64_t value;
     int64_t c_value;
 
@@ -171,17 +171,17 @@ int test_indexing_int64(void)
     return (0);
 }
 
-int test_indexing_int32(void)
+int32_t test_indexing_int32(void)
 {
     int32_t m_1[] = {2, 3, 5, 5, 6, 7, 10, 11,
                 12, 260, 6, 8, 8, 0, 45, 0,
                 1, 0, 0, 1, 200, 33, 5, 57,
                 62, 70, 103, 141, 122, 26, 36, 82,
                 8, 10, 4115, 22, 1, 11, 1, 19};
-    int m_1_shape[] = {5, 8};
+    int32_t m_1_shape[] = {5, 8};
     t_ndarray x;
-    int index;
-    int c_index;
+    int32_t index;
+    int32_t c_index;
     int32_t value;
     int32_t c_value;
 
@@ -200,17 +200,17 @@ int test_indexing_int32(void)
     return (0);
 }
 
-int test_indexing_int16(void)
+int32_t test_indexing_int16(void)
 {
     int16_t m_1[] = {2, 3, 5, 5, 6, 7, 10, 11,
                 12, 260, 6, 8, 8, 0, 45, 0,
                 1, 0, 0, 1, 200, 33, 5, 57,
                 62, 70, 103, 141, 122, 26, 36, 82,
                 8, 10, 4115, 22, 1, 11, 1, 19};
-    int m_1_shape[] = {5, 8};
+    int32_t m_1_shape[] = {5, 8};
     t_ndarray x;
-    int index;
-    int c_index;
+    int32_t index;
+    int32_t c_index;
     int16_t value;
     int16_t c_value;
 
@@ -229,17 +229,17 @@ int test_indexing_int16(void)
     return (0);
 }
 
-int test_indexing_int8(void)
+int32_t test_indexing_int8(void)
 {
     int8_t m_1[] = {2, 3, 5, 5, 6, 7, 10, 11,
                 12, 250, 6, 8, 8, 0, 45, 0,
                 1, 0, 0, 1, 200, 33, 5, 57,
                 62, 70, 103, 141, 122, 26, 36, 82,
                 8, 10, 251, 22, 1, 11, 1, 19};
-    int m_1_shape[] = {5, 8};
+    int32_t m_1_shape[] = {5, 8};
     t_ndarray x;
-    int index;
-    int c_index;
+    int32_t index;
+    int32_t c_index;
     int8_t value;
     int8_t c_value;
 
@@ -258,17 +258,17 @@ int test_indexing_int8(void)
     return (0);
 }
 
-int test_indexing_double(void)
+int32_t test_indexing_double(void)
 {
     double m_1[] = {2, 3, 5, 5, 6, 7, 10, 11,
                     12, 260, 6.34, 8, 8.002, 0.056, 45, 0.1,
                     1.02, 0.25, 0.00005, 1, 200, 33, 5, 57,
                     62, 70, 103.009, 141, 122, 26.50, 36.334, 82,
                     8.44002, 10.056, 4115, 22.1, 1.1102, 011.25, 1.01110005, 19};
-    int m_1_shape[] = {5, 8};
+    int32_t m_1_shape[] = {5, 8};
     t_ndarray x;
-    int index;
-    int c_index;
+    int32_t index;
+    int32_t c_index;
     double value;
     double c_value;
 
@@ -287,17 +287,17 @@ int test_indexing_double(void)
     return (0);
 }
 
-int test_indexing_cdouble(void)
+int32_t test_indexing_cdouble(void)
 {
     double complex m_1[] = {0.37 + 0.588*I,  0.92689451+0.57106791*I,
                             0.93598206+0.30289964*I,  0.54404246+0.09516331*I,
                             0.02827254+0.00432899*I,  0.06873651+0.24810741*I,
                             0.94040543+0.43508215*I,  0.58532094+0.67890618*I,
                             0.68742283+0.64951155*I,  0.15372315+0.89699101*I};
-    int m_1_shape[] = {5, 2};
+    int32_t m_1_shape[] = {5, 2};
     t_ndarray x;
-    int index;
-    int c_index;
+    int32_t index;
+    int32_t c_index;
     double complex value;
     double complex c_value;
 
@@ -316,17 +316,17 @@ int test_indexing_cdouble(void)
     return (0);
 }
 
-int test_indexing_cfloat(void)
+int32_t test_indexing_cfloat(void)
 {
     float complex m_1[] = {0.37 + 0.588*I,  0.92689451+0.57106791*I,
                             0.93598206+0.30289964*I,  0.54404246+0.09516331*I,
                             0.02827254+0.00432899*I,  0.06873651+0.24810741*I,
                             0.94040543+0.43508215*I,  0.58532094+0.67890618*I,
                             0.68742283+0.64951155*I,  0.15372315+0.89699101*I};
-    int m_1_shape[] = {5, 2};
+    int32_t m_1_shape[] = {5, 2};
     t_ndarray x;
-    int index;
-    int c_index;
+    int32_t index;
+    int32_t c_index;
     float complex value;
     float complex c_value;
 
@@ -349,7 +349,7 @@ int test_indexing_cfloat(void)
 **  slicing tests
 */
 
-int test_slicing_int64(void)
+int32_t test_slicing_int64(void)
 {
     int64_t m_1[] = {2, 3, 5, 5, 6,
                 7, 10, 11, 12, 260,
@@ -359,10 +359,10 @@ int test_slicing_int64(void)
                 70, 103, 141, 122, 26,
                 36, 82, 8, 10, 4115,
                 22, 1, 11, 1, 19};
-    int m_1_shape[] = {8, 5};
+    int32_t m_1_shape[] = {8, 5};
     t_ndarray x;
     t_ndarray xview;
-    int c_index;
+    int32_t c_index;
     int64_t value;
     int64_t c_value;
 
@@ -370,9 +370,9 @@ int test_slicing_int64(void)
     memcpy(x.raw_data, m_1, x.buffer_size);
     xview = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
-    for (int i = 0; i < xview.shape[0]; i++)
+    for (int32_t i = 0; i < xview.shape[0]; i++)
     {
-        for (int j = 0; j < xview.shape[1]; j++)
+        for (int32_t j = 0; j < xview.shape[1]; j++)
         {
             value = xview.nd_int64[get_index(xview, i, j)];
             c_value = m_1[c_index];
@@ -390,7 +390,7 @@ int test_slicing_int64(void)
     return (0);
 }
 
-int test_slicing_int32(void)
+int32_t test_slicing_int32(void)
 {
     int32_t m_1[] = {2, 3, 5, 5, 6,
                 7, 10, 11, 12, 260,
@@ -400,10 +400,10 @@ int test_slicing_int32(void)
                 70, 103, 141, 122, 26,
                 36, 82, 8, 10, 4115,
                 22, 1, 11, 1, 19};
-    int m_1_shape[] = {8, 5};
+    int32_t m_1_shape[] = {8, 5};
     t_ndarray x;
     t_ndarray xview;
-    int c_index;
+    int32_t c_index;
     int32_t value;
     int32_t c_value;
 
@@ -411,9 +411,9 @@ int test_slicing_int32(void)
     memcpy(x.raw_data, m_1, x.buffer_size);
     xview = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
-    for (int i = 0; i < xview.shape[0]; i++)
+    for (int32_t i = 0; i < xview.shape[0]; i++)
     {
-        for (int j = 0; j < xview.shape[1]; j++)
+        for (int32_t j = 0; j < xview.shape[1]; j++)
         {
             value = xview.nd_int32[get_index(xview, i, j)];
             c_value = m_1[c_index];
@@ -430,7 +430,7 @@ int test_slicing_int32(void)
     free_array(xview);
     return (0);
 }
-int test_slicing_int16(void)
+int32_t test_slicing_int16(void)
 {
     int16_t m_1[] = {2, 3, 5, 5, 6,
                 7, 10, 11, 12, 260,
@@ -440,10 +440,10 @@ int test_slicing_int16(void)
                 70, 103, 141, 122, 26,
                 36, 82, 8, 10, 4115,
                 22, 1, 11, 1, 19};
-    int m_1_shape[] = {8, 5};
+    int32_t m_1_shape[] = {8, 5};
     t_ndarray x;
     t_ndarray xview;
-    int c_index;
+    int32_t c_index;
     int16_t value;
     int16_t c_value;
 
@@ -451,9 +451,9 @@ int test_slicing_int16(void)
     memcpy(x.raw_data, m_1, x.buffer_size);
     xview = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
-    for (int i = 0; i < xview.shape[0]; i++)
+    for (int32_t i = 0; i < xview.shape[0]; i++)
     {
-        for (int j = 0; j < xview.shape[1]; j++)
+        for (int32_t j = 0; j < xview.shape[1]; j++)
         {
             value = xview.nd_int16[get_index(xview, i, j)];
             c_value = m_1[c_index];
@@ -471,7 +471,7 @@ int test_slicing_int16(void)
     return (0);
 }
 
-int test_slicing_int8(void)
+int32_t test_slicing_int8(void)
 {
     int8_t m_1[] = {2, 3, 5, 5, 6,
                 7, 10, 11, 12, 250,
@@ -481,10 +481,10 @@ int test_slicing_int8(void)
                 70, 103, 141, 122, 26,
                 36, 82, 8, 10, 251,
                 22, 1, 11, 1, 19};
-    int m_1_shape[] = {8, 5};
+    int32_t m_1_shape[] = {8, 5};
     t_ndarray x;
     t_ndarray xview;
-    int c_index;
+    int32_t c_index;
     int8_t value;
     int8_t c_value;
 
@@ -492,9 +492,9 @@ int test_slicing_int8(void)
     memcpy(x.raw_data, m_1, x.buffer_size);
     xview = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
-    for (int i = 0; i < xview.shape[0]; i++)
+    for (int32_t i = 0; i < xview.shape[0]; i++)
     {
-        for (int j = 0; j < xview.shape[1]; j++)
+        for (int32_t j = 0; j < xview.shape[1]; j++)
         {
             value = xview.nd_int8[get_index(xview, i, j)];
             c_value = m_1[c_index];
@@ -512,7 +512,7 @@ int test_slicing_int8(void)
     return (0);
 }
 
-int test_slicing_double(void)
+int32_t test_slicing_double(void)
 {
     double m_1[] = {2, 3, 5, 5, 6,
                     7, 10, 11, 12, 260,
@@ -522,10 +522,10 @@ int test_slicing_double(void)
                     103.009, 141, 122, 26.50, 36.334,
                     82, 8.44002, 10.056, 4115, 22.1,
                     1.1102, 011.25, 1.01110005, 19, 70};
-    int m_1_shape[] = {8, 5};
+    int32_t m_1_shape[] = {8, 5};
     t_ndarray x;
     t_ndarray xview;
-    int c_index;
+    int32_t c_index;
     double value;
     double c_value;
 
@@ -533,9 +533,9 @@ int test_slicing_double(void)
     memcpy(x.raw_data, m_1, x.buffer_size);
     xview = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
-    for (int i = 0; i < xview.shape[0]; i++)
+    for (int32_t i = 0; i < xview.shape[0]; i++)
     {
-        for (int j = 0; j < xview.shape[1]; j++)
+        for (int32_t j = 0; j < xview.shape[1]; j++)
         {
             value = xview.nd_double[get_index(xview, i, j)];
             c_value = m_1[c_index];
@@ -553,16 +553,16 @@ int test_slicing_double(void)
     return (0);
 }
 
-int test_slicing_cdouble(void)
+int32_t test_slicing_cdouble(void)
 {
     double complex m_1[] = {
                     0.37 + 0.588*I,  0.92+0.57*I, 0.93+0.30*I,  0.54+0.09*I, 0.02+0.01*I,
                     0.03+0.24*I, 0.94+0.43*I,  0.58+0.67*I, 0.68+0.64*I,  0.15+0.89*I
                     };
-    int m_1_shape[] = {2, 5};
+    int32_t m_1_shape[] = {2, 5};
     t_ndarray x;
     t_ndarray xview;
-    int c_index;
+    int32_t c_index;
     double complex value;
     double complex c_value;
 
@@ -570,9 +570,9 @@ int test_slicing_cdouble(void)
     memcpy(x.raw_data, m_1, x.buffer_size);
     xview = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
-    for (int i = 0; i < xview.shape[0]; i++)
+    for (int32_t i = 0; i < xview.shape[0]; i++)
     {
-        for (int j = 0; j < xview.shape[1]; j++)
+        for (int32_t j = 0; j < xview.shape[1]; j++)
         {
             value = xview.nd_cdouble[get_index(xview, i, j)];
             c_value = m_1[c_index];
@@ -592,12 +592,12 @@ int test_slicing_cdouble(void)
 
 /* array_fill tests */
 
-int test_array_fill_int64(void)
+int32_t test_array_fill_int64(void)
 {
-    int m_1_shape[] = {5, 2};
+    int32_t m_1_shape[] = {5, 2};
     t_ndarray x;
-    int index;
-    int c_index;
+    int32_t index;
+    int32_t c_index;
     int64_t value;
     int64_t c_value;
 
@@ -616,12 +616,12 @@ int test_array_fill_int64(void)
     return (0);
 }
 
-int test_array_fill_int32(void)
+int32_t test_array_fill_int32(void)
 {
-    int m_1_shape[] = {5, 2};
+    int32_t m_1_shape[] = {5, 2};
     t_ndarray x;
-    int index;
-    int c_index;
+    int32_t index;
+    int32_t c_index;
     int32_t value;
     int32_t c_value;
 
@@ -640,12 +640,12 @@ int test_array_fill_int32(void)
     return (0);
 }
 
-int test_array_fill_int16(void)
+int32_t test_array_fill_int16(void)
 {
-    int m_1_shape[] = {5, 2};
+    int32_t m_1_shape[] = {5, 2};
     t_ndarray x;
-    int index;
-    int c_index;
+    int32_t index;
+    int32_t c_index;
     int16_t value;
     int16_t c_value;
 
@@ -664,12 +664,12 @@ int test_array_fill_int16(void)
     return (0);
 }
 
-int test_array_fill_int8(void)
+int32_t test_array_fill_int8(void)
 {
-    int m_1_shape[] = {5, 2};
+    int32_t m_1_shape[] = {5, 2};
     t_ndarray x;
-    int index;
-    int c_index;
+    int32_t index;
+    int32_t c_index;
     int8_t value;
     int8_t c_value;
 
@@ -688,12 +688,12 @@ int test_array_fill_int8(void)
     return (0);
 }
 
-int test_array_fill_double(void)
+int32_t test_array_fill_double(void)
 {
-    int m_1_shape[] = {5, 2};
+    int32_t m_1_shape[] = {5, 2};
     t_ndarray x;
-    int index;
-    int c_index;
+    int32_t index;
+    int32_t c_index;
     double value;
     double c_value;
 
@@ -712,12 +712,12 @@ int test_array_fill_double(void)
     return (0);
 }
 
-int test_array_fill_cdouble(void)
+int32_t test_array_fill_cdouble(void)
 {
-    int m_1_shape[] = {5, 2};
+    int32_t m_1_shape[] = {5, 2};
     t_ndarray x;
-    int index;
-    int c_index;
+    int32_t index;
+    int32_t c_index;
     double complex value;
     double complex c_value;
 
@@ -738,12 +738,12 @@ int test_array_fill_cdouble(void)
 
 /* array_zeros tests */
 
-int test_array_zeros_double(void)
+int32_t test_array_zeros_double(void)
 {
-    int m_1_shape[] = {5, 2};
+    int32_t m_1_shape[] = {5, 2};
     t_ndarray x;
-    int index;
-    int c_index;
+    int32_t index;
+    int32_t c_index;
     double value;
     double c_value;
 
@@ -762,12 +762,12 @@ int test_array_zeros_double(void)
     return (0);
 }
 
-int test_array_zeros_int32(void)
+int32_t test_array_zeros_int32(void)
 {
-    int m_1_shape[] = {5, 2};
+    int32_t m_1_shape[] = {5, 2};
     t_ndarray x;
-    int index;
-    int c_index;
+    int32_t index;
+    int32_t c_index;
     int32_t value;
     int32_t c_value;
 
@@ -786,12 +786,12 @@ int test_array_zeros_int32(void)
     return (0);
 }
 
-int test_array_zeros_cdouble(void)
+int32_t test_array_zeros_cdouble(void)
 {
-    int m_1_shape[] = {5, 2};
+    int32_t m_1_shape[] = {5, 2};
     t_ndarray x;
-    int index;
-    int c_index;
+    int32_t index;
+    int32_t c_index;
     double complex value;
     double complex c_value;
 
@@ -810,7 +810,7 @@ int test_array_zeros_cdouble(void)
     return (0);
 }
 
-int main(void)
+int32_t main(void)
 {
     /* indexing tests */
     test_indexing_double();
