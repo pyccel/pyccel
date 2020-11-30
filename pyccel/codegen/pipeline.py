@@ -292,7 +292,7 @@ def execute_pyccel(fname, *,
         # implemented inside pyccel and compare them by module includes
         # returned by printer includes through get_additional_imports function
         for lib in internal_libs:
-            if lib in codegen._printer.get_additional_imports():
+            if lib in codegen.get_printer_imports():
                 # get the include folder path and library files
                 if lib not in internal_lib_dict:
                     internal_lib_dict[lib] = get_internal_lib(lib)
