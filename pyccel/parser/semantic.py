@@ -218,7 +218,6 @@ class SemanticParser(BasicParser):
 
             target = set(target)
             target_headers = target.intersection(self.namespace.headers.keys())
-
             for name in list(target_headers):
                 v = self.namespace.headers[name][0]
                 if isinstance(v, FunctionHeader) and not isinstance(v,
@@ -229,7 +228,6 @@ class SemanticParser(BasicParser):
                         for F in interfaces:
                             self.insert_function(F)
                     else:
-
                         errors.report(IMPORTING_EXISTING_IDENTIFIED,
                                 symbol=name, blocker=True,
                                 severity='fatal')

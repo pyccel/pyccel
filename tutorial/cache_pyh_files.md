@@ -29,5 +29,5 @@ it will then create the executable file `openmp`
 ## picklizing the header file
 When compiling a header file pyccel will generate in the same directory `.pyccel` file that contains the cached result of the parser, 
 This will accelerate the compiling process of big header files, by compiling them only once and storing the results for futur compilation, Pyccel will generate a new
-`.pyccel` when changing the `.pyh` or downloading a new version of Pyccel
+`.pyccel` when changing the `.pyh` or downloading a new version of Pyccel.
 

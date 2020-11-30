@@ -56,6 +56,26 @@ class MetaVariable(Header):
     def value(self):
         return self._args[1]
 
+    def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callablle that can be called
+           to create the initial version of the object
+           and its arguments
+           """
+        return (self.__class__, (self.name, self.value))
+
 #==============================================================================
 # TODO rename dtypes to arguments
 class VariableHeader(Header):
@@ -104,7 +124,7 @@ class VariableHeader(Header):
            to create the initial version of the object
            and its arguments
            """
-        return (self.__class__, self.args)
+        return (self.__class__, (self.name, self.dtypes))
 
 #==============================================================================
 class Template(Header):
@@ -145,6 +165,27 @@ class Template(Header):
     def args(self):
         "Types the template represents."
         return self._args
+
+    def __reduce_ex__(self, i):
+
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callablle function that can be called
+           to create the initial version of the object
+           and its arguments
+           """
+        return (self.__class__, (self.name, self.args))
 
 #==============================================================================
 class FunctionHeader(Header):
@@ -364,6 +405,7 @@ class FunctionHeader(Header):
                               self.kind,
                               self.is_static)
 
+
     def __reduce_ex__(self, i):
 
         """ Used by pickle to create an object of this class.
@@ -384,7 +426,7 @@ class FunctionHeader(Header):
            and its arguments
            """
 
-        args = (self.func,
+        args = (self.name,
             self.dtypes,
             self.results,
             self.kind,
@@ -476,6 +518,34 @@ class MethodHeader(FunctionHeader):
     @property
     def is_static(self):
         return self._args[4]
+
+
+    def __reduce_ex__(self, i):
+
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callablle function that can be called
+           to create the initial version of the object
+           and its arguments
+           """
+
+        args = (self.name,
+            self.dtypes,
+            self.results,
+            self.kind,
+            self.is_static,)
+        return (self.__class__, args)
 
 #==============================================================================
 class ClassHeader(Header):
