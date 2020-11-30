@@ -179,7 +179,10 @@ local_sympify = {
 #      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
 #      - add a new Idx that uses Variable instead of Symbol
 
+#==============================================================================
+def apply(func, args, kwargs):return func(*args, **kwargs)
 
+#==============================================================================
 def subs(expr, new_elements):
     """
     Substitutes old for new in an expression after sympifying args.
