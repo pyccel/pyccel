@@ -201,7 +201,6 @@ def test_int_types(language):
     assert f1(np.int16(5), np.int16(4)) == f2(np.int16(5), np.int16(4))
     assert f1(np.int8(4), np.int8(7)) == f2(np.int8(4), np.int8(7))
     assert f1(np.int32(155), np.int32(177)) == f2(np.int32(155), np.int32(177))
-    assert f1(np.int64(166), np.int64(255)) == f2(np.int64(166), np.int64(255))
 
 def test_float_types(language):
     f1 = epyccel(mod2.float_types , language = language, verbose=True)
