@@ -17,7 +17,7 @@ We create the file `header.pyh` that contains an openmp function definiton:
 
 #$ header function omp_get_num_threads() results(int)
 ```
-We then create `openmp.py` file that contains:
+We then create `openmp.py` file:
 
 ```python
 from header import omp_get_num_threads
