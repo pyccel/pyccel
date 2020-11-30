@@ -39,8 +39,8 @@ def gen_7(x, y, z):
 
 
 
-@template('z', types=['int', 'real'])
-@types('z', 'z')
+@template('Z', types=['int', 'real'])
+@types('Z', 'Z')
 def tmplt_head_1(x, y):
     return x + y
 
@@ -49,8 +49,8 @@ def tmplt_head_1(x, y):
 def local_overide_1(x, y):
     return x + y
 
-@template('z', types=['int', 'real'])
-@types('z', 'z', 'R')
+@template('Z', types=['int', 'real'])
+@types('Z', 'Z', 'R')
 def tmplt_tmplt_1(x, y, z):
     return x + y + z
 
