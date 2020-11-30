@@ -29,4 +29,4 @@ Pyccel can compile the Python file with the following command: `pyccel openmp.py
 ## Picklizing header files
 Pyccel uses the Python Module [pickle](https://docs.python.org/3/library/pickle.html) to cache the header files.\
 When compiling a header file Pyccel will generate in the same directory a `.pyccel` file that contains the cached result of the parser,\
-This will accelerate the compiling process of big header files, by compiling them only once and storing the results for future compilation, Pyccel will generate a new `.pyccel` when after the modification the header file  or downloading a new Pyccel version.
+This will accelerate the compiling process of big header files, by compiling them only once and storing the results for future compilation, Pyccel will generate a new `.pyccel` after the modification of the header file  or downloading a new Pyccel version.
