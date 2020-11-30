@@ -129,14 +129,14 @@ def mix_types_2(x, y):
     return -x
 
 
-@template('g', types=['int[:]', 'real[:]', 'complex[:]'])
+@template('g', types=['int64[:]', 'real[:]', 'complex[:]'])
 @types('g', 'int')
 def mix_array_1(x, a):
     x[:] += a
 
 
 @types('complex[:]', 'complex[:]', 'int')
-@types('real[:]', 'int[:]', 'int')
+@types('real[:]', 'int64[:]', 'int')
 def mix_array_2(x, y, a):
     x[:] += a
     y[:] -= a

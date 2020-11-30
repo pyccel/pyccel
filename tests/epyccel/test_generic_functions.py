@@ -278,7 +278,7 @@ def test_mix_array_1():
     f2 = mod2.mix_array_1
 
     a = 5
-    x1 = np.array( [1,2,3], dtype=np.int)
+    x1 = np.array( [1,2,3], dtype=np.int64)
     x2 = np.copy(x1)
     f1(x1, a)
     f2(x2, a)
@@ -303,7 +303,7 @@ def test_mix_array_2():
     a = 5
     x1 = np.array([1.0,2.0,3.0], dtype=np.float64)
     x2 = np.copy(x1)
-    y1 = np.array([1,2,3], dtype=np.int)
+    y1 = np.array([1,2,3], dtype=np.int64)
     y2 = np.copy(y1)
     f1(x1, y1, a)
     f2(x2, y2, a)
