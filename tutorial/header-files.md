@@ -1,6 +1,6 @@
-# Picklize Header files
+# Header files
 
-## Header files
+## Using header files
 
 A header file in Pyccel is a file with a name ending with `.pyh`, which contains function/variable declarations, macro definitions, templates and metavariable declarations.\
 Header files serve two purposes:
@@ -25,7 +25,7 @@ print('number of threads is :', omp_get_num_threads())
 Pyccel can compile the Python file with the following command: `pyccel openmp.py --language fortran --flags="-fopenmp"`
 , It will then create the executable file `openmp`
 
-## Picklizing header files
+## Pickling header files
 Parsing a large Pyccel header file with hundreds of function declarations may require a significant amount of time, therefore it is important that this process is only done once when pyccelizing multiple Python source files in a large project.
 
 To this end, Pyccel uses the [pickle](https://docs.python.org/3/library/pickle.html) Python module to store the result of the parser to a `.pyccel` binary file, which is created in the same directory as the header file.
