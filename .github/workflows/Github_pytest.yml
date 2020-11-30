@@ -5,17 +5,14 @@ name: Pyccel tests
 
 on:
   push:
+    branches: [ master ]
   pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
+    branches: [ master ]
 
 jobs:
   Linux:
 
     runs-on: ubuntu-latest
-    on: push
 
     steps:
       - uses: actions/checkout@v2
@@ -76,7 +73,6 @@ jobs:
   Windows:
 
     runs-on: windows-latest
-    if: ${{ github.event_name == 'pull_request' }}
 
     steps:
       - uses: actions/checkout@v2
@@ -114,7 +110,6 @@ jobs:
   MacOSX:
 
     runs-on: macos-latest
-    if: ${{ github.event_name == 'pull_request' }}
 
     steps:
       - uses: actions/checkout@v2
