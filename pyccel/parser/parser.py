@@ -14,25 +14,41 @@ class Parser(object):
     def __init__(self, filename, **kwargs):
 
         self._filename = filename
-        self._kwargs = kwargs
+        self._kwargs   = kwargs
 
         # we use it to store the imports
         self._parents = []
 
         # a Parser can have parents, who are importing it.
         # imports are then its sons.
-        self._sons = []
+        self._sons      = []
         self._d_parsers = OrderedDict()
 
-        self._syntax_parser = None
+        self._syntax_parser   = None
         self._semantic_parser = None
-        self._module_parser = None
+        self._module_parser   = None
 
         self._input_folder = os.path.dirname(filename)
 
     @property
     def semantic_parser(self):
+        """ Semantic parser """
         return self._semantic_parser
+
+    @property
+    def syntax_parser(self):
+        """ Syntax parser """
+        return self._syntax_parser
+
+    @semantic_parser.setter
+    def semantic_parser(self, parser):
+        assert isinstance(parser, SemanticParser)
+        self._semantic_parser = parser
+
+    @syntax_parser.setter
+    def syntax_parser(self, parser):
+        assert isinstance(parser, SyntaxParser)
+        self._syntax_parser = parser
 
     @property
     def filename(self):
@@ -44,6 +60,10 @@ class Parser(object):
         """Returns the d_parsers parser."""
 
         return self._d_parsers
+
+    @d_parsers.setter
+    def d_parsers(self, d_parsers):
+        self._d_parsers = d_parsers
 
     @property
     def parents(self):
@@ -88,40 +108,60 @@ class Parser(object):
         Returns None otherwise"""
         return self._module_parser
 
+    @module_parser.setter
+    def module_parser(self, module_parser):
+        self._module_parser = module_parser
+
     def parse(self, d_parsers=None, verbose=False):
+        """
+          Parse the parent file an all its dependencies.
+
+          Parameters
+          ----------
+          d_parsers : dict
+            A dictionary of parsed sons.
+
+          verbose: bool
+            Determine the verbosity.
+
+          Returns
+          -------
+          ast: Ast
+           The ast created in the syntactic stage.
+          """
         if self._syntax_parser:
             return self._syntax_parser.ast
-        parser = SyntaxParser(self._filename, **self._kwargs)
-        self._syntax_parser = parser
 
-        parse_result = parser.ast
+        parser             = SyntaxParser(self._filename, **self._kwargs)
+        self.syntax_parser = parser
+        parse_result       = parser.ast
 
         if d_parsers is None:
             d_parsers = self._d_parsers
 
-        self._d_parsers = self._parse_sons(d_parsers, verbose=verbose)
+        self._d_parsers = self.parse_sons(d_parsers, verbose=verbose)
 
         if parse_result.has_additional_module():
-            new_mod_filename = os.path.join(os.path.dirname(self._filename),parse_result.mod_name+'.py')
+            new_mod_filename  = os.path.join(os.path.dirname(self._filename),parse_result.mod_name+'.py')
             new_prog_filename = os.path.join(os.path.dirname(self._filename),parse_result.prog_name+'.py')
-            self._filename = new_prog_filename
+            self._filename    = new_prog_filename
 
-            q = Parser(new_mod_filename)
-            q._syntax_parser = copy.copy(parser)
-            q._syntax_parser._namespace = copy.deepcopy(parser.namespace)
-            q._d_parsers = q._parse_sons(self._d_parsers)
-            q._syntax_parser._ast = parse_result.module
+            q                                = Parser(new_mod_filename)
+            q.syntax_parser                  = copy.copy(parser)
+            q.syntax_parser.namespace        = copy.deepcopy(parser.namespace)
+            q.d_parsers                      = q.parse_sons(self.d_parsers)
+            q.syntax_parser.ast              = parse_result.module
             d_parsers[parse_result.mod_name] = q
 
             q.append_parent(self)
             self.append_son(q)
 
-            parser._ast = parse_result.program
+            parser.ast = parse_result.program
 
-            self._module_parser = q
+            self.module_parser = q
         else:
-            parser._ast = parse_result.get_focus()
-            self._module_parser = None
+            parser.ast         = parse_result.get_focus()
+            self.module_parser = None
 
         return parser.ast
 
@@ -159,17 +199,30 @@ class Parser(object):
 
         self._sons.append(son)
 
-    def _parse_sons(self, d_parsers, verbose=False):
+    def parse_sons(self, d_parsers, verbose=False):
         """Recursive algorithm for syntax analysis on a given file and its
         dependencies.
         This function always terminates with an OrderedDict that contains parsers
         for all involved files.
+
+         Parameters
+         ----------
+         d_parsers : dict
+          A dictionary of parsed sons.
+
+        verbose: bool
+          Determine the verbosity.
+
+         Results
+         -------
+         d_parsers: dict
+          The updated dictionary of parsed sons.
+
         """
 
-        imports = self.imports.keys()
-        treated = d_parsers.keys()
+        imports     = self.imports.keys()
+        treated     = d_parsers.keys()
         not_treated = [i for i in imports if i not in treated]
-
         for source in not_treated:
             if verbose:
                 print ('>>> treating :: {}'.format(source))
@@ -177,11 +230,10 @@ class Parser(object):
             # get the absolute path corresponding to source
 
             filename = get_filename_from_import(source, self._input_folder)
-
             q = Parser(filename)
             q.parse(d_parsers=d_parsers)
-            if q._module_parser:
-                d_parsers[source] = q._module_parser
+            if q.module_parser:
+                d_parsers[source] = q.module_parser
             else:
                 d_parsers[source] = q
 

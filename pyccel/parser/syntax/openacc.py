@@ -5,6 +5,8 @@
 
 from os.path import join, dirname
 
+from textx.metamodel import metamodel_from_file
+
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import AnnotatedComment
 
@@ -1302,15 +1304,30 @@ acc_clauses = [AccAsync,
 
 acc_classes = [Openacc, OpenaccStmt] + acc_directives + acc_clauses
 
-def parse(filename=None, stmts=None, debug=False):
-    this_folder = dirname(__file__)
 
-    # Get meta-model from language description
-    grammar = join(this_folder, '../grammar/openacc.tx')
+this_folder = dirname(__file__)
 
-    from textx.metamodel import metamodel_from_file
-    meta = metamodel_from_file(grammar, debug=debug, classes=acc_classes)
+# Get meta-model from language description
+grammar = join(this_folder, '../grammar/openacc.tx')
 
+meta = metamodel_from_file(grammar, classes=acc_classes)
+
+def parse(filename=None, stmts=None):
+    """ Parse openacc pragmas
+
+      Parameters
+      ----------
+
+      filename: str
+
+      stmts   : list
+
+      Results
+      -------
+
+      stmts  : list
+
+    """
     # Instantiate model
     if filename:
         model = meta.model_from_file(filename)

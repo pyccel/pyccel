@@ -19,6 +19,9 @@ class CommentLine(AST):
         self.lineno     = lineno
         self.col_offset = col_offset
 
+    def __reduce_ex__(self, i):
+        return (self.__class__, (self.s, self.lineno, self.col_offset))
+
 class CommentMultiLine(CommentLine):
     """"New AST node representing a multi-line comment"""
 

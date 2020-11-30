@@ -10,14 +10,16 @@ from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 from pyccel.ast.core      import Declare, IndexedVariable, Slice, ValuedVariable
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import FunctionAddress
-from pyccel.ast.core      import Nil, PyccelAssociativeParenthesis
+from pyccel.ast.core      import Nil
 from pyccel.ast.core      import Assign, datatype, Variable, Import
 from pyccel.ast.core      import SeparatorComment, VariableAddress
 from pyccel.ast.core      import DottedName
-from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelMinus
+from pyccel.ast.core      import create_incremented_string
 
-from pyccel.ast.core import PyccelUnarySub, PyccelMod
-from pyccel.ast.core import create_incremented_string
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus
+from pyccel.ast.operators import PyccelAssociativeParenthesis
+from pyccel.ast.operators import PyccelUnarySub, PyccelMod
+
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
 
@@ -203,10 +205,10 @@ ndarray_type_registry = {('real',8)    : 'nd_double',
                   ('real',4)    : 'nd_float',
                   ('complex',8) : 'nd_cdouble',
                   ('complex',4) : 'nd_cfloat',
-                  ('int',4)     : 'nd_int',
-                  ('int',8)     : 'nd_long',
-                  ('int',2)     : 'nd_sint',
-                  ('int',1)     : 'nd_char',
+                  ('int',8)     : 'nd_int64',
+                  ('int',4)     : 'nd_int32',
+                  ('int',2)     : 'nd_int16',
+                  ('int',1)     : 'nd_int8',
                   ('bool',4)    : 'nd_bool'}
 
 import_dict = {'omp_lib' : 'omp' }
@@ -315,6 +317,12 @@ class CCodePrinter(CodePrinter):
                 '{body}').format(
                         imports = imports,
                         body    = body)
+
+    def _print_Break(self, expr):
+        return 'break;'
+
+    def _print_Continue(self, expr):
+        return 'continue;'
 
     def _print_While(self, expr):
         body = self._print(expr.body)
@@ -787,6 +795,9 @@ class CCodePrinter(CodePrinter):
     def _print_NumpyRandint(self, expr):
         raise NotImplementedError("Randint not implemented")
 
+    def _print_Interface(self, expr):
+        return ""
+
     def _print_FunctionDef(self, expr):
 
         if len(expr.results) > 1:
@@ -1072,10 +1083,10 @@ class CCodePrinter(CodePrinter):
             errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
                           symbol=expr, severity='fatal')
 
-    def _print_IsNot(self, expr):
+    def _print_PyccelIsNot(self, expr):
         return self._handle_is_operator("!=", expr)
 
-    def _print_Is(self, expr):
+    def _print_PyccelIs(self, expr):
         return self._handle_is_operator("==", expr)
 
     def _print_Piecewise(self, expr):

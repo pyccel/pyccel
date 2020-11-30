@@ -9,8 +9,10 @@ from sympy.core import Symbol
 from sympy import sympify
 from sympy import Tuple
 
+from textx.metamodel import metamodel_from_file
+
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader, VariableHeader
+from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader, VariableHeader, Template
 from pyccel.ast.headers   import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.core      import ValuedArgument
@@ -53,6 +55,19 @@ class FuncType(BasicStmt):
         d_var['is_func'] = True
 
         return d_var
+
+class TemplateStmt(BasicStmt):
+    """Base class representing a  template in the grammar."""
+    def __init__(self, **kwargs):
+        self.dtype  = kwargs.pop('dtype')
+        self.name   = kwargs.pop('name')
+        BasicStmt.__init__(self)
+
+    @property
+    def expr(self):
+        l = [i.expr for i in self.dtype]
+        return Template(self.name, l)
+
 
 class ListType(BasicStmt):
     """Base class representing a  ListType in the grammar."""
@@ -487,6 +502,7 @@ hdr_classes = [Header, TypeHeader,
                Type, ListType, UnionTypeStmt, FuncType,
                HeaderResults,
                FunctionHeaderStmt,
+               TemplateStmt,
                ClassHeaderStmt,
                VariableHeaderStmt,
                MetavarHeaderStmt,
@@ -496,15 +512,29 @@ hdr_classes = [Header, TypeHeader,
                MacroList,
                FunctionMacroStmt,StringStmt]
 
-def parse(filename=None, stmts=None, debug=False):
-    this_folder = dirname(__file__)
+this_folder = dirname(__file__)
 
-    # Get meta-model from language description
-    grammar = join(this_folder, '../grammar/headers.tx')
+# Get meta-model from language description
+grammar = join(this_folder, '../grammar/headers.tx')
 
-    from textx.metamodel import metamodel_from_file
-    meta = metamodel_from_file(grammar, debug=debug, classes=hdr_classes)
+meta = metamodel_from_file(grammar, classes=hdr_classes)
 
+def parse(filename=None, stmts=None):
+    """ Parse header pragmas
+
+      Parameters
+      ----------
+
+      filename: str
+
+      stmts   : list
+
+      Results
+      -------
+
+      stmts  : list
+
+    """
     # Instantiate model
     if filename:
         model = meta.model_from_file(filename)

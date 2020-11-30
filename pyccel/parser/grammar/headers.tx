@@ -10,6 +10,7 @@ Statement:
   | FunctionHeaderStmt 
   | ClassHeaderStmt
   | MetavarHeaderStmt
+  | TemplateStmt
   | InterfaceStmt
 ;
 
@@ -31,6 +32,8 @@ VariableHeaderStmt: 'variable'  name=ID ('::')? dec=TypeHeader;
 FunctionHeaderStmt: 
   (kind=FunctionKind)? (static=Static)? name=ID '(' decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
 ;
+
+TemplateStmt: 'template' name = ID '(' dtype+=TypeHeader['|'] ')';
 
 FunctionKind: 'function' | 'procedure' | 'method';
 Static: 'static';

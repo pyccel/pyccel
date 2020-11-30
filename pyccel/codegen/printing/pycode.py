@@ -78,19 +78,24 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         decorators = expr.decorators
 
         if decorators:
-            for n,func in decorators.items():
-                args = func.args
-                if args:
-                    args = ', '.join("{}".format(self._print(i)) for i in args)
-                    dec = '@{name}({args})'.format(name=n, args=args)
+            for n,f in decorators.items():
+                # TODO - All decorators must be stored in a list
+                if not isinstance(f, list):
+                    f = [f]
+                dec = ''
+                for func in f:
+                    args = func.args
+                    if args:
+                        args = ', '.join("{}".format(self._print(i)) for i in args)
+                        dec += '@{name}({args})\n'.format(name=n, args=args)
 
-                else:
-                    dec = '@{name}'.format(name=n)
+                    else:
+                        dec += '@{name}\n'.format(name=n)
 
-                code = '{dec}\n{code}'.format(dec=dec, code=code)
-        header = expr.header
-        if header:
-            header = self._print(header)
+                code = '{dec}{code}'.format(dec=dec, code=code)
+        headers = expr.headers
+        if headers:
+            headers = self._print(headers)
             code = '{header}\n{code}'.format(header=header, code=code)
 
         return code
@@ -206,7 +211,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_Pass(self, expr):
         return 'pass'
 
-    def _print_Is(self, expr):
+    def _print_PyccelIs(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         return'{0} is {1}'.format(lhs,rhs)

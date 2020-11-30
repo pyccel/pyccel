@@ -40,8 +40,8 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              If, PyccelArraySize)
 
 
-from pyccel.ast.core      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-from pyccel.ast.core      import PyccelUnarySub, PyccelMod
+from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
+from pyccel.ast.operators      import PyccelUnarySub, PyccelMod
 from pyccel.ast.core      import FunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
@@ -296,10 +296,7 @@ class FCodePrinter(CodePrinter):
         sep = self._print(SeparatorComment(40))
         interfaces = ''
         if expr.interfaces:
-            interfaces = '\n'.join(self._print(i) for i in expr.interfaces if not i.hide)
-            for interface in expr.interfaces:
-                if not interface.hide:
-                    body += '\n'.join(''.join([sep, self._print(i), sep]) for i in interface.functions)
+            interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
 
         if expr.funcs:
             body += '\n'.join(''.join([sep, self._print(i), sep]) for i in expr.funcs)
@@ -1145,7 +1142,7 @@ class FCodePrinter(CodePrinter):
             # we should append them to the procedure arguments
             if isinstance(expr.lhs, (tuple, list, Tuple, PythonTuple)):
 
-                rhs_code = self._print(rhs.func)
+                rhs_code = rhs.funcdef.name
                 args = rhs.arguments
                 code_args = [self._print(i) for i in args]
                 func = rhs.funcdef
@@ -2127,7 +2124,7 @@ class FCodePrinter(CodePrinter):
         code = self._print(stmt)
         return self._get_statement(code)
 
-    def _print_Is(self, expr):
+    def _print_PyccelIs(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         a = expr.args[0]
@@ -2142,7 +2139,7 @@ class FCodePrinter(CodePrinter):
         errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
                       symbol=expr, severity='fatal')
 
-    def _print_IsNot(self, expr):
+    def _print_PyccelIsNot(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         a = expr.args[0]
@@ -2351,6 +2348,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_PyccelNot(self, expr):
         a = self._print(expr.args[0])
+        if (expr.args[0].dtype is not NativeBool()):
+            return '{} == 0'.format(a)
         return '.not. {}'.format(a)
 
     def _print_Header(self, expr):
@@ -2521,6 +2520,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
+        f_name = func.name if not expr.interface else expr.interface.name
         args = [a for a in expr.arguments if not isinstance(a, Nil)]
         results = func.results
 
@@ -2528,7 +2528,7 @@ class FCodePrinter(CodePrinter):
             args = ['{}'.format(self._print(a)) for a in args]
 
             args = ', '.join(args)
-            code = '{name}({args})'.format( name = str(func.name),
+            code = '{name}({args})'.format( name = str(f_name),
                                             args = args)
 
         elif len(results)>1:
@@ -2559,7 +2559,7 @@ class FCodePrinter(CodePrinter):
 
             newargs = ', '.join(args+results)
 
-            code = 'call {name}({args})\n'.format( name = str(func.name),
+            code = 'call {name}({args})\n'.format( name = str(f_name),
                                                  args = newargs )
         return code
 
