@@ -57,15 +57,15 @@ class FuncType(BasicStmt):
 class TemplateStmt(BasicStmt):
     """Base class representing a  template in the grammar."""
     def __init__(self, **kwargs):
-        self.dtype  = kwargs.pop('dtype')
+        self.dtypes  = kwargs.pop('dtypes')
         self.name   = kwargs.pop('name')
         BasicStmt.__init__(self)
 
     @property
     def expr(self):
-        l = [i.expr for i in self.dtype]
-        return Template(self.name, l)
-
+        dtypes = tuple(dict(d_type) for d_type in {tuple(t.expr.items())\
+            for t in self.dtypes})
+        return Template(self.name, dtypes)
 
 class ListType(BasicStmt):
     """Base class representing a  ListType in the grammar."""
@@ -165,22 +165,23 @@ class UnionTypeStmt(BasicStmt):
 
         dtype: list fo str
         """
-        self.dtype = kwargs.pop('dtype')
+        self.dtypes = kwargs.pop('dtypes')
         self.const = kwargs.pop('const')
 
         super(UnionTypeStmt, self).__init__(**kwargs)
 
     @property
     def expr(self):
-        l = [i.expr for i in self.dtype]
+        dtypes = [dict(d_type) for d_type in {tuple(t.expr.items())\
+            for t in self.dtypes}]
         if self.const:
-            for e in l:
+            for e in dtypes:
                 e["is_const"] = True
 
-        if len(l)>1:
-            return UnionType(l)
+        if len(dtypes)>1:
+            return UnionType(dtypes)
         else:
-            return l[0]
+            return dtypes[0]
 
 class HeaderResults(BasicStmt):
     """Base class representing a HeaderResults in the grammar."""

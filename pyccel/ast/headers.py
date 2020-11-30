@@ -103,7 +103,7 @@ class Template(Header):
     name: str
         The name of the template.
 
-    args: iterable
+    dtypes: iterable
         The types the template represents
 
     Examples
@@ -119,10 +119,10 @@ class Template(Header):
     def __new__(cls, *args, **kwargs):
         return Basic.__new__(cls)
 
-    def __init__(self, name, args):
+    def __init__(self, name, dtypes):
         Header.__init__(self)
         self._name = name
-        self._args = args
+        self._dtypes = dtypes
 
     @property
     def name(self):
@@ -130,9 +130,9 @@ class Template(Header):
         return self._name
 
     @property
-    def args(self):
+    def dtypes(self):
         "Types the template represents."
-        return self._args
+        return self._dtypes
 
 #==============================================================================
 class FunctionHeader(Header):
@@ -285,7 +285,7 @@ class FunctionHeader(Header):
 
         for tmplt in new_templates:
             signatures = tuple(process_template(s, tmplt, d_type)\
-                    for s in signatures for d_type in new_templates[tmplt].args)
+                    for s in signatures for d_type in new_templates[tmplt].dtypes)
 
         for args_ in signatures:
             args = []
