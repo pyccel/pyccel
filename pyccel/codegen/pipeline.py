@@ -188,52 +188,6 @@ def execute_pyccel(fname, *,
 
     # -------------------------------------------------------------------------
     internal_lib_dict = {}
-
-    def get_internal_lib(import_lib):
-        """copy the library into __pyccel__ directory then compile its files,
-        and return them (without the extension) with the new path of
-        the library inside __pyccel__ directory"""
-
-        # get the library folder name
-        lib_name = internal_libs[import_lib]
-        # get path to pyccel/stdlib/lib_name
-        import pyccel.stdlib as stdlib_folder
-        stdlib_path = os.path.dirname(stdlib_folder.__file__)
-        lib_path = os.path.join(stdlib_path, lib_name)
-
-        # remove library folder to avoid missing files and copy new one from
-        # pyccel stdlib
-        lib_dest_path = os.path.join(pyccel_dirpath, lib_name)
-        if os.path.exists(lib_dest_path):
-            shutil.rmtree(lib_dest_path)
-        shutil.copytree(lib_path, lib_dest_path)
-
-        # get library source files
-        source_files = []
-        for e in os.listdir(lib_dest_path):
-            if e.endswith(lang_ext_dict[language]):
-                source_files.append(os.path.join(lib_dest_path, e))
-        # compile source files
-        flags = construct_flags(f90exec,
-                                fflags=fflags,
-                                debug=debug,
-                                includes=[lib_dest_path])
-        try:
-            for f in source_files:
-                compile_files(f, f90exec, flags,
-                                binary=None,
-                                verbose=verbose,
-                                is_module=True,
-                                output=lib_dest_path,
-                                language=language)
-        except Exception:
-            handle_error('C {} library compilation'.format(import_lib))
-            raise
-        objs = [f[:-2] for f in source_files]
-        return objs, lib_dest_path
-    # -------------------------------------------------------------------------
-    lib_mods = []
-    lib_incs = []
     for parser, module_name in zip(parsers, module_names):
         semantic_parser = parser.semantic_parser
         # Generate .f90 file
@@ -261,6 +215,66 @@ def execute_pyccel(fname, *,
         #         # Call same function on 'dep'
         #         pass
         #------------------------------------------------------
+        dep_mods = []
+        inc_dirs = []
+        # Determine if the module or program requires internal libraries
+        # by iterating over internal_libs list that containes internal libs
+        # implemented inside pyccel and compare them by module includes
+        # returned by printer includes through get_additional_imports function
+        for lib in internal_libs:
+            if lib in codegen.get_printer_imports():
+                # get the include folder path and library files
+                if lib not in internal_lib_dict:
+                    # get the library folder name
+                    lib_name = internal_libs[lib]
+                    # get path to pyccel/stdlib/lib_name
+                    import pyccel.stdlib as stdlib_folder
+                    stdlib_path = os.path.dirname(stdlib_folder.__file__)
+                    lib_path = os.path.join(stdlib_path, lib_name)
+                    # remove library folder to avoid missing files and copy
+                    # new one from pyccel stdlib
+                    lib_dest_path = os.path.join(pyccel_dirpath, lib_name)
+                    if os.path.exists(lib_dest_path):
+                        shutil.rmtree(lib_dest_path)
+                    shutil.copytree(lib_path, lib_dest_path)
+
+                    # stop after copying lib to __pyccel__ directory for
+                    # convert only
+                    if convert_only:
+                        continue
+
+                    # get library source files
+                    source_files = []
+                    for e in os.listdir(lib_dest_path):
+                        if e.endswith(lang_ext_dict[language]):
+                            source_files.append(os.path.join(lib_dest_path, e))
+
+                    # compile library source files
+                    flags = construct_flags(f90exec,
+                                            fflags=fflags,
+                                            debug=debug,
+                                            includes=[lib_dest_path])
+                    try:
+                        for f in source_files:
+                            compile_files(f, f90exec, flags,
+                                            binary=None,
+                                            verbose=verbose,
+                                            is_module=True,
+                                            output=lib_dest_path,
+                                            language=language)
+                    except Exception:
+                        handle_error('C {} library compilation'.format(lib))
+                        raise
+                    # get source file without extension
+                    pure_files = [os.path.splitext(f)[0] for f in source_files]
+                    internal_lib_dict[lib] = pure_files, lib_dest_path
+                internal_lib = internal_lib_dict[lib]
+
+                # append the internal library files to obj
+                dep_mods.extend(internal_lib[0])
+                # append include path to incs
+                inc_dirs.append(internal_lib[1])
+
         if convert_only:
             continue
 
@@ -285,28 +299,9 @@ def execute_pyccel(fname, *,
 
             return mods, folders
 
-        dep_mods, inc_dirs = get_module_dependencies(parser)
-
-        # Determine if the module or program requires internal libraries
-        # by iterating over internal_libs list that containes internal libs
-        # implemented inside pyccel and compare them by module includes
-        # returned by printer includes through get_additional_imports function
-        for lib in internal_libs:
-            if lib in codegen.get_printer_imports():
-                # get the include folder path and library files
-                if lib not in internal_lib_dict:
-                    internal_lib_dict[lib] = get_internal_lib(lib)
-                internal_lib = internal_lib_dict[lib]
-                objs, incs = internal_lib[0], internal_lib[1]
-
-                # append include path to incs
-                lib_incs.append(incs)
-                # append the internal library files to obj
-                lib_mods.extend(objs)
-        dep_mods = (*dep_mods, *lib_mods)
-        inc_dirs = (*inc_dirs, *lib_incs)
-
-
+        module_dep = get_module_dependencies(parser)
+        dep_mods.extend(module_dep[0])
+        inc_dirs.extend(module_dep[1])
         # Remove duplicates without changing order
         dep_mods = tuple(OrderedDict.fromkeys(dep_mods))
         inc_dirs = tuple(OrderedDict.fromkeys(inc_dirs))
