@@ -6,7 +6,10 @@ name: Pyccel tests
 on:
   push:
   pull_request:
-    types: [ opened, reopened, edited ]
+    types:
+      - opened
+      - reopened
+      - edited
 
 jobs:
   Linux:
