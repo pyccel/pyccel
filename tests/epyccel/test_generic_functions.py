@@ -274,29 +274,6 @@ def test_mix_array_1():
     assert np.array_equal( x1, x2)
 
 def test_mix_array_2():
-    f1 = epyccel(mod2.mix_array_1)
-    f2 = mod2.mix_array_1
-
-    a = 5
-    x1 = np.array([1,2,3], dtype=np.int64)
-    x2 = np.copy(x1)
-    f1(x1, a)
-    f2(x2, a)
-    assert np.array_equal( x1, x2 )
-
-    x1 = np.array([1.0,2.0,3.0], dtype=np.float64)
-    x2 = np.copy(x1)
-    f1(x1, a)
-    f2(x2, a)
-    assert np.array_equal( x1, x2)
-
-    x1 = np.array([1+ 2j,5 +2j,3.0 + 3j], dtype=np.complex128)
-    x2 = np.copy(x1)
-    f1(x1, a)
-    f2(x2, a)
-    assert np.array_equal( x1, x2)
-
-def test_mix_array_2():
     f1 = epyccel(mod2.mix_array_2)
     f2 = mod2.mix_array_2
 
