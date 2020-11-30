@@ -51,6 +51,7 @@ class OmpParallelConstruct(BasicStmt):
         """
         """
         self.clauses = kwargs.pop('clauses')
+        self.combined = kwargs.pop('combined')
 
         super(OmpParallelConstruct, self).__init__(**kwargs)
 
@@ -69,6 +70,8 @@ class OmpParallelConstruct(BasicStmt):
                          OmpProcBind)
 
         txt = 'parallel'
+        for value in self.combined:
+            txt += ' '+value
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)

@@ -5,7 +5,7 @@ Openmp:
   statements*=OpenmpStmt
 ;
 
-OpenmpStmt: 
+OpenmpStmt:
   '#$' 'omp' stmt=OmpConstructOrDirective
 ;
 
@@ -13,7 +13,7 @@ OpenmpStmt:
 //         Constructs and Directives
 ////////////////////////////////////////////////////
 OmpConstructOrDirective:
-    OmpParallelConstruct 
+    OmpParallelConstruct
   | OmpLoopConstruct
   | OmpSingleConstruct
   | OmpEndClause
@@ -23,9 +23,15 @@ OmpConstructOrDirective:
 ////////////////////////////////////////////////////
 //     Constructs and Directives definitions
 ////////////////////////////////////////////////////
-OmpParallelConstruct: 'parallel' clauses*=OmpParallelClause;
+OmpParallelConstruct: 'parallel' combined*=ParallelCombined? clauses*=OmpParallelClause;
 OmpLoopConstruct:      'for'       clauses*=OmpLoopClause;
 OmpSingleConstruct:   'single'   clauses*=OmpSingleClause;
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//         Combined Constructs
+////////////////////////////////////////////////////
+ParallelCombined: ('for' | 'sections');
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
