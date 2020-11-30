@@ -3332,7 +3332,7 @@ class FunctionDef(Basic):
         'is_static':self._is_static,
         'imports':self._imports,
         'decorators':self._decorators,
-        'header':self._header,
+        'headers':self._headers,
         'templates':self._templates,
         'is_recursive':self._is_recursive,
         'is_pure':self._is_pure,
