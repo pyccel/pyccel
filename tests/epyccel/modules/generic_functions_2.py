@@ -94,18 +94,18 @@ def optional_var_4(x, y = None):
 
 #-------------------------------------------------
 
-@template('g', types=['int', 'int32', 'int8', 'int16'])
+@template('g', types=['int', 'int32', 'int8', 'int16', 'int64'])
 @types('g', 'g')
 def int_types(x, y):
     return x + y
 
 
-@template('g', types=['real', 'float32'])
+@template('g', types=['real', 'float32', 'float64'])
 @types('g', 'g')
 def float_types(x, y):
     return x + y
 
-@template('g', types=['complex', 'complex64'])
+@template('g', types=['complex', 'complex64', 'complex128'])
 @types('g', 'g')
 def complex_types(x, y):
     return x + y

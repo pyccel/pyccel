@@ -191,7 +191,14 @@ def test_optional_var_4(language):
 #--------------------------------------------------------------------
 # TEST DATA TYPES
 #--------------------------------------------------------------------
-
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason='issue #567 and 568: Duplicated types in a template and header'),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_int_types(language):
     f1 = epyccel(mod2.int_types , language = language, verbose=True)
     f2 = mod2.int_types
@@ -201,7 +208,16 @@ def test_int_types(language):
     assert f1(np.int16(5), np.int16(4)) == f2(np.int16(5), np.int16(4))
     assert f1(np.int8(4), np.int8(7)) == f2(np.int8(4), np.int8(7))
     assert f1(np.int32(155), np.int32(177)) == f2(np.int32(155), np.int32(177))
+    assert f1(np.int64(155), np.int64(177)) == f2(np.int64(155), np.int64(177))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason='issue #567 and 568: Duplicated types in a template and header'),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_float_types(language):
     f1 = epyccel(mod2.float_types , language = language, verbose=True)
     f2 = mod2.float_types
@@ -211,6 +227,14 @@ def test_float_types(language):
     assert f1(np.float32(155.2), np.float32(177.1)) == f2(np.float32(155.2), np.float32(177.1))
     assert f1(np.float64(166.6), np.float64(255.6)) == f2(np.float64(166.6), np.float64(255.6))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason='issue #567 and 568: Duplicated types in a template and header'),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_complex_types(language):
     f1 = epyccel(mod2.complex_types , language = language, verbose=True)
     f2 = mod2.complex_types
