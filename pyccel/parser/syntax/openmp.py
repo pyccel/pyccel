@@ -5,6 +5,8 @@
 
 from os.path import join, dirname
 
+from textx.metamodel import metamodel_from_file
+
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct, Omp_End_Clause
 
@@ -415,15 +417,30 @@ omp_clauses = [OmpCollapse,
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 
-def parse(filename=None, stmts=None, debug=False):
-    this_folder = dirname(__file__)
 
-    # Get meta-model from language description
-    grammar = join(this_folder, '../grammar/openmp.tx')
+this_folder = dirname(__file__)
 
-    from textx.metamodel import metamodel_from_file
-    meta = metamodel_from_file(grammar, debug=debug, classes=omp_classes)
+# Get meta-model from language description
+grammar = join(this_folder, '../grammar/openmp.tx')
 
+meta = metamodel_from_file(grammar, classes=omp_classes)
+
+def parse(filename=None, stmts=None):
+    """ Parse openmp pragmas
+
+      Parameters
+      ----------
+
+      filename : str
+
+      stmts : list
+
+      Results
+      -------
+
+      stmts : list
+
+    """
     # Instantiate model
     if filename:
         model = meta.model_from_file(filename)
