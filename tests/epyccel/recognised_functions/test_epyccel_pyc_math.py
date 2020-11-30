@@ -9,14 +9,7 @@ from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 
 # -----------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="gcd not implemented in fortran"),
-            pytest.mark.fortran]
-        )
-    )
-)
+
 def test_call_gcd(language):
     @types(int, int)
     def call_gcd(x, y):
@@ -28,15 +21,9 @@ def test_call_gcd(language):
     y = randint(1e9)
 
     assert(f(x,y) == call_gcd(x, y))
+
 # -----------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="factorial not implemented in fortran"),
-            pytest.mark.fortran]
-        )
-    )
-)
+
 def test_call_factorial(language):
     @types(int)
     def call_factorial(x):
@@ -47,17 +34,11 @@ def test_call_factorial(language):
     x = randint(15)
 
     assert(f(x) == call_factorial(x))
+
 # -----------------------------------------------------------------------------
+
 # New in version 3.9.
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="requires python3.9 or higher")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="lcm not implemented in fortran"),
-            pytest.mark.fortran]
-        )
-    )
-)
 def test_call_lcm(language):
     @types(int, int)
     def call_lcm(x, y):
@@ -69,15 +50,9 @@ def test_call_lcm(language):
     y = randint(1e9)
 
     assert(f(x,y) == call_lcm(x, y))
+
 # -----------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="radians not implemented in fortran"),
-            pytest.mark.fortran]
-        )
-    )
-)
+
 def test_call_radians(language):
     @types('real')
     def call_radians(x):
@@ -89,15 +64,9 @@ def test_call_radians(language):
 
     assert isclose(f(x), call_radians(x), rtol=1e-14, atol=1e-14)
     assert isclose(f(-x), call_radians(-x), rtol=1e-14, atol=1e-14)
+
 # -----------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="degrees not implemented in fortran"),
-            pytest.mark.fortran]
-        )
-    )
-)
+
 def test_call_degrees(language):
     @types('real')
     def call_degrees(x):
@@ -110,14 +79,7 @@ def test_call_degrees(language):
     assert isclose(f(x), call_degrees(x), rtol=1e-14, atol=1e-14)
     assert isclose(f(-x), call_degrees(-x), rtol=1e-14, atol=1e-14)
 # -----------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="degrees not implemented in fortran"),
-            pytest.mark.fortran]
-        )
-    )
-)
+
 def test_call_degrees_i(language):
     @types('int')
     def call_degrees_i(x):
@@ -129,4 +91,5 @@ def test_call_degrees_i(language):
 
     assert isclose(f(x), call_degrees_i(x), rtol=1e-14, atol=1e-14)
     assert isclose(f(-x), call_degrees_i(-x), rtol=1e-14, atol=1e-14)
+
 # -----------------------------------------------------------------------------
