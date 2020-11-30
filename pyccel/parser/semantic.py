@@ -1879,7 +1879,7 @@ class SemanticParser(BasicParser):
 
         for l, r in zip(lhs,rhs):
             is_pointer_i = l.is_pointer if isinstance(l, (Variable, DottedVariable)) else is_pointer
-            if isinstance(l, Variable):
+            if isinstance(l, Variable) and l.is_ndarray:
                 if l.is_target:
                     errors.report(REASSIGN_TARGET,
                           bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
