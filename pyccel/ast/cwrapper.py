@@ -138,9 +138,6 @@ class PyArg_ParseTupleNode(Basic):
         Default value False and True when working with interface functions
     """
 
-    def __new__(cls, *args, **kwargs):
-        return Basic.__new__(cls, *args, **kwargs)
-
     def __init__(self, python_func_args,
                         python_func_kwargs,
                         c_func_args, parse_args,
