@@ -7,7 +7,8 @@ from pyccel.errors.errors import Errors, PyccelSemanticError
 from pyccel.errors.messages import (ARRAY_REALLOCATION,
                                     ARRAY_DEFINITION_IN_LOOP,
                                     INCOMPATIBLE_REDEFINITION_STACK_ARRAY,
-                                    STACK_ARRAY_DEFINITION_IN_LOOP)
+                                    STACK_ARRAY_DEFINITION_IN_LOOP,
+                                    REASSIGN_TARGET, ASSIGN_ALLOCATABLES)
 
 @pytest.fixture(params=[
     pytest.param('fortran', marks = pytest.mark.fortran),
@@ -164,6 +165,69 @@ def test_creation_in_if_heap(language):
     import numpy as np
     c = np.random.random()
     assert f(c) == g(c)
+
+#==============================================================================
+def test_Reassign_to_Target(language):
+
+    def f():
+        import numpy as np
+        x = np.zeros((3, 7), dtype=int)
+        c = x
+        x = np.ones ((4, 5), dtype=int)
+        return c.sum()
+
+     # Initialize singleton that stores Pyccel errors
+    errors = Errors()
+
+    # epyccel should raise an Exception
+    with pytest.raises(PyccelSemanticError):
+        epyccel(f, language=language)
+
+    # Check that we got exactly 1 Pyccel error
+    assert errors.has_errors()
+    assert errors.has_warnings()
+    assert errors.num_messages() == 2
+
+    # Check that we the warning is correct
+    warning_info = [*errors.error_info_map.values()][0][0]
+    assert warning_info.symbol  == 'x'
+    assert warning_info.message == ARRAY_REALLOCATION
+    # Check that we the error is correct
+    error_info = [*errors.error_info_map.values()][0][1]
+    assert error_info.symbol  == 'x'
+    assert error_info.message == REASSIGN_TARGET
+
+#==============================================================================
+def test_Assign_Allocatables(language):
+
+    def f():
+        import numpy as np
+        x = np.zeros((3, 7), dtype=int)
+        y = np.ones ((4, 5), dtype=int)
+        x = y
+        x[0][0] = 1
+        return y.sum()
+
+     # Initialize singleton that stores Pyccel errors
+    errors = Errors()
+
+    # epyccel should raise an Exception
+    with pytest.raises(PyccelSemanticError):
+        epyccel(f, language=language)
+
+    # Check that we got exactly 1 Pyccel error and  warning
+    assert errors.has_errors()
+    assert errors.has_warnings()
+    assert errors.num_messages() == 2
+
+    # Check that we the warning is correct
+    warning_info = [*errors.error_info_map.values()][0][0]
+    assert warning_info.symbol  == 'x'
+    assert warning_info.message == ARRAY_REALLOCATION
+    # Check that we the error is correct
+    error_info = [*errors.error_info_map.values()][0][1]
+    assert error_info.symbol  == 'x'
+    assert error_info.message == ASSIGN_ALLOCATABLES
 
 #==============================================================================
 if __name__ == '__main__':
