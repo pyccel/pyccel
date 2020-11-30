@@ -9,14 +9,13 @@ on:
     types:
       - opened
       - reopened
-      - edited
       - synchronize
 
 jobs:
   Linux:
 
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' }}
+    on: push
 
     steps:
       - uses: actions/checkout@v2
@@ -115,7 +114,7 @@ jobs:
   MacOSX:
 
     runs-on: macos-latest
-    #if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.event_name == 'pull_request' }}
 
     steps:
       - uses: actions/checkout@v2
