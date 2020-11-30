@@ -52,7 +52,7 @@ from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
-from pyccel.ast.datatypes import iso_c_binding
+from pyccel.ast.datatypes import iso_c_binding, default_precision
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat
@@ -621,8 +621,26 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyLinspace(self, expr):
         return expr.fprint(self._print)
 
-    def _print_NumpyArray(self, expr):
-        return expr.fprint(self._print)
+    def _print_NumpyArray(self, lhs, shape, rank, arg, order):
+        """Fortran print."""
+
+        # Always transpose indices because Numpy initial values are given with
+        # row-major ordering, while Fortran initial values are column-major
+        shape = shape[::-1]
+
+        # Construct right-hand-side code
+        if rank > 1:
+            arg = functools.reduce(operator.concat, arg)
+            rhs_code = 'reshape({array}, {shape})'.format(
+                    array=self._print(arg), shape=self._print(Tuple(*shape)))
+        else:
+            rhs_code = self._print(arg)
+
+        # If Numpy array is stored with column-major ordering, transpose values
+        if order == 'F' and rank > 1:
+            rhs_code = 'transpose({})'.format(rhs_code)
+
+        return '{0} = {1}'.format(lhs, rhs_code)
 
     def _print_NumpyFloor(self, expr):
         result_code = self._print_MathFloor(expr)
@@ -657,8 +675,11 @@ class FCodePrinter(CodePrinter):
     def _print_Real(self, expr):
         return expr.fprint(self._print)
 
-    def _print_PythonComplex(self, expr):
-        return expr.fprint(self._print)
+    def _print_PythonComplex(self, real_part, imag_part, precision = default_precision['complex']):
+        real = self._print(real_part)
+        imag = self._print(imag_part)
+        code = 'cmplx({0}, {1}, {2})'.format(real, imag, iso_c_binding["complex"][precision])
+        return code
 
     def _print_PythonBool(self, expr):
         return expr.fprint(self._print)
@@ -1044,6 +1065,13 @@ class FCodePrinter(CodePrinter):
         stmt = Comment(str(expr))
         return self._print_Comment(stmt)
 
+    def _print_NumpyReal(self, arg, precision=default_precision['real']):
+        value = self._print(arg)
+        prec = self._print(precision)
+        code = 'Real({0}, {1})'.format(value, prec)
+        return code
+    
+
 
     def _print_Assign(self, expr):
         if isinstance(expr.lhs, TupleVariable) and not expr.lhs.is_homogeneous \
@@ -1077,11 +1105,24 @@ class FCodePrinter(CodePrinter):
             rhs_code = self._print(expr.rhs)
             return '{0} = {1}\n'.format(lhs_code, rhs_code)
 
-        if isinstance(rhs, (PythonInt, NumpyReal, NumpyComplex)):
+        if isinstance(rhs, PythonInt):
             lhs = self._print(expr.lhs)
             rhs = expr.rhs.fprint(self._print)
             return '{0} = {1}\n'.format(lhs,rhs)
+        
+        if isinstance(rhs, NumpyComplex):
+            lhs = self._print(expr.lhs)
+            rhs = self._print_PythonComplex(rhs.real_part, rhs.imag_part, rhs.precision)
+            return '{0} = {1}\n'.format(lhs,rhs)
 
+        if isinstance(rhs, NumpyReal):
+            lhs = self._print(expr.lhs)
+            rhs = self._print_NumpyReal(rhs.arg, rhs.precision)
+            return '{0} = {1}\n'.format(lhs,rhs)
+        
+        if isinstance(rhs, NumpyArray):
+            lhs = self._print(expr.lhs)
+            return self._print_NumpyArray(lhs, expr.rhs.shape, expr.rhs.rank, expr.rhs.arg, expr.rhs.order)
         if isinstance(rhs, (NumpyArray, NumpyLinspace, NumpyDiag, NumpyCross,\
 						NumpyWhere, PyccelArraySize)):
             return rhs.fprint(self._print, expr.lhs) + '\n'

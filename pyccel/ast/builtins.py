@@ -103,12 +103,6 @@ class PythonComplex(Expr, PyccelAstNode):
     def _sympystr(self, printer):
         return self.fprint(str)
 
-    def fprint(self, printer):
-        """Fortran print."""
-        real = printer(self.real_part)
-        imag = printer(self.imag_part)
-        code = 'cmplx({0}, {1}, {2})'.format(real, imag, iso_c_binding["complex"][self.precision])
-        return code
 
 #==============================================================================
 class PythonEnumerate(Basic):

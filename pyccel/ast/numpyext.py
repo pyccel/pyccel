@@ -392,13 +392,7 @@ class NumpyReal(Function, PyccelAstNode):
     def arg(self):
         return self._args[0]
 
-    def fprint(self, printer):
-        """Fortran print."""
 
-        value = printer(self.arg)
-        prec  = printer(self.precision)
-        code = 'Real({0}, {1})'.format(value, prec)
-        return code
 
 
     def __str__(self):
