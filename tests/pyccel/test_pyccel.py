@@ -392,7 +392,8 @@ def test_generic_functions():
             dependencies = "scripts/generic_functions.py",
             compile_with_pyccel = False,
             output_dtype = [float,float,float,float,float,float,
-                    float,float,float,float,float,float,float,int,float])
+                    float,float,float,float,float,float,float,int,float,
+                    int,int])
 
 #------------------------------------------------------------------------------
 def test_default_arguments():
