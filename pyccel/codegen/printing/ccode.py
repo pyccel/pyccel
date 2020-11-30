@@ -788,36 +788,26 @@ class CCodePrinter(CodePrinter):
         # include of the pyc_math header
         self._additional_imports.add('pyc_math')
         arg = expr.args[0]
-        if arg.dtype is not NativeInteger() or len(expr.args) > 1:
-            raise ("factoral function accept one integer argument")
         return 'pyc_factorial({})'.format(self._print(arg))
 
     def _print_MathGcd(self, expr):
         """ Print the equivalent code to pycthon gcd function call"""
         # include of the pyc_math header
         self._additional_imports.add('pyc_math')
-        args = expr.args
-        if len(args) != 2 or not all(arg.dtype is NativeInteger() for arg in args):
-            raise ("gcd function accept two integer arguments")
-        return 'pyc_gcd({}, {})'.format(self._print(args[0]), self._print(args[1]))
+        args = ", ".join(self._print(arg) for arg in expr.args)
+        return 'pyc_gcd({})'.format(args)
 
     def _print_MathDegrees(self, expr):
         """ Print the equivalent code to pycthon degrees function call"""
         # include of the pyc_math header
         self._additional_imports.add('pyc_math')
-        arg = expr.args[0]
-        if len(expr.args) != 1 or arg.dtype is NativeComplex():
-            raise ("degrees function accept one float or integer argument")
-        return 'pyc_degrees({})'.format(self._print(arg))
+        return 'pyc_degrees({})'.format(self._print(expr.args[0]))
 
     def _print_MathRadians(self, expr):
         """ Print the equivalent code to pycthon radians function call"""
         # include of the pyc_math header
         self._additional_imports.add('pyc_math')
-        arg = expr.args[0]
-        if len(expr.args) != 1 or arg.dtype is NativeComplex():
-            raise ("radians function accept one float or integer argument")
-        return 'pyc_radians({})'.format(self._print(arg))
+        return 'pyc_radians({})'.format(self._print(expr.args[0]))
     # -------------- end of pyc_math functions --------------------------------
     def _print_FunctionAddress(self, expr):
         return expr.name
