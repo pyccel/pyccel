@@ -121,9 +121,17 @@ def mix_types_1(x, y, z):
     return x - y
 
 
-@template('g', types=['int', 'int32', 'int16', 'real', 'complex', 'float32'])
+@template('g', types=['int64', 'int32', 'int16', 'real', 'complex', 'float32'])
 @types('g', 'g')
 def mix_types_2(x, y):
+    if y != x:
+        return y - x
+    return -x
+
+
+@template('g', types=['int', 'int32'])
+@types('g', 'g')
+def mix_types_3(x, y):
     if y != x:
         return y - x
     return -x
@@ -141,9 +149,14 @@ def mix_array_2(x, y, a):
     x[:] += a
     y[:] -= a
 
-@template('g', types=['int[:]', 'int8[:]', 'int16[:]', 'int32[:]'])
+@template('g', types=['int32[:]', 'int8[:]', 'int16[:]', 'int64[:]'])
 @types('g', 'int')
 def mix_int_array_1(x, a):
+    x[:] += a
+
+@template('g', types=['int[:]', 'int32[:]', 'int64[:]'])
+@types('g', 'int')
+def mix_int_array_2(x, a):
     x[:] += a
 
 @template('g', types=['real[:]', 'float32[:]'])

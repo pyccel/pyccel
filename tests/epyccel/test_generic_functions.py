@@ -1,6 +1,7 @@
  # pylint: disable=missing-function-docstring, missing-module-docstring/
 import pytest
 import numpy as np
+import sys
 import modules.generic_functions as mod
 import modules.generic_functions_2 as mod2
 from pyccel.epyccel import epyccel
@@ -263,11 +264,27 @@ def test_mix_types_2(language):
     f2 = mod2.mix_types_2
 
     assert f1(-1, -1) == f2(-1, -1)
-    assert f1(np.int32(4), np.int32(16)) == f2(np.int32(4), np.int32(16))
+    assert f1(np.int64(4), np.int64(16)) == f2(np.int64(4), np.int64(16))
     assert f1(np.int16(4), np.int16(4)) == f2(np.int16(4), np.int16(4))
     assert f1(5.7, -1.2) == f2(5.7, -1.2)
     assert f1(complex(7.2, 3.12), complex(7.2, 3.12)) == f2(complex(7.2, 3.12), complex(7.2, 3.12))
     assert f1(np.float32(16), np.float32(16)) == f2(np.float32(16), np.float32(16))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(sys.platform == 'win32', reason='issue #567 and #568: Duplicated types in a template and header'),
+            pytest.mark.fortran]
+        )
+    )
+)
+def test_mix_types_3(language):
+    f1 = epyccel(mod2.mix_types_3 , language = language, verbose=True)
+    f2 = mod2.mix_types_3
+
+    assert f1(-1, -1) == f2(-1, -1)
+    assert f1(np.int64(4), np.int64(16)) == f2(np.int64(4), np.int64(16))
+    assert f1(np.int32(4), np.int32(16)) == f2(np.int32(4), np.int32(16))
 
 #--------------------------------------------------------------------
 # TEST ARRAYS
@@ -345,6 +362,30 @@ def test_mix_int_array():
     assert np.array_equal( x1, x2 )
 
     x1 = np.array([166,20,-5], dtype=np.int8)
+    x2 = np.copy(x1)
+    f1(x1, a)
+    f2(x2, a)
+    assert np.array_equal( x1, x2 )
+
+@pytest.mark.xfail(sys.platform == 'win32', reason='issue #567 and #568: Duplicated types in a template and header')
+def test_mix_int_array_2():
+    f1 = epyccel(mod2.mix_int_array_2)
+    f2 = mod2.mix_int_array_2
+
+    a = 5
+    x1 = np.array([155,221,333], dtype=np.int64)
+    x2 = np.copy(x1)
+    f1(x1, a)
+    f2(x2, a)
+    assert np.array_equal( x1, x2 )
+
+    x1 = np.array([127,229,3], dtype=np.int32)
+    x2 = np.copy(x1)
+    f1(x1, a)
+    f2(x2, a)
+    assert np.array_equal( x1, x2 )
+
+    x1 = np.array([127,229,3], dtype=np.int)
     x2 = np.copy(x1)
     f1(x1, a)
     f2(x2, a)
