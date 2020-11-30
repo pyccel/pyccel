@@ -1317,7 +1317,6 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.internal_variable.allocatable:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
-
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
             rhs.base.internal_variable.is_target = True
@@ -1534,7 +1533,6 @@ class SemanticParser(BasicParser):
 
         rhs = expr.rhs
         lhs = expr.lhs
-
         if isinstance(rhs, Application):
             name = type(rhs).__name__
             macro = self.get_macro(name)
@@ -1869,7 +1867,15 @@ class SemanticParser(BasicParser):
 
         for l, r in zip(lhs,rhs):
             is_pointer_i = l.is_pointer if isinstance(l, (Variable, DottedVariable)) else is_pointer
-
+            if isinstance(l, Variable):
+                if l.is_target:
+                    errors.report(REASSIGN_TARGET,
+                          bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                          severity='error', symbol=l.name)
+                if isinstance(r, Variable) and r.allocatable and l.allocatable:
+                    errors.report(ASSIGN_ALLOCATABLES,
+                          bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                          severity='error', symbol=l.name)
             new_expr = Assign(l, r)
 
             if is_pointer_i:
@@ -1896,7 +1902,6 @@ class SemanticParser(BasicParser):
         if (len(new_expressions)==1):
             new_expressions = new_expressions[0]
             new_expressions.set_fst(fst)
-
             return new_expressions
         else:
             result = CodeBlock(new_expressions)
