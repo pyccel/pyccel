@@ -318,6 +318,12 @@ class CCodePrinter(CodePrinter):
                         imports = imports,
                         body    = body)
 
+    def _print_Break(self, expr):
+        return 'break;'
+
+    def _print_Continue(self, expr):
+        return 'continue;'
+
     def _print_While(self, expr):
         body = self._print(expr.body)
         cond = self._print(expr.test)
