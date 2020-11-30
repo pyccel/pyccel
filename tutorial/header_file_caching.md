@@ -9,7 +9,7 @@ Header files serve two purposes:
 -   Accelerate the parsing process by parsing the header file instead of the original file in the case of pyccelizing multiple files.
 
 ### Example
-We create the file `header.pyh` that contains an openmp function definiton:
+We create the file `header.pyh` that contains an openmp function definition:
 
 ```python
 #$ header metavar module_name = 'omp_lib'

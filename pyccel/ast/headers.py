@@ -70,7 +70,7 @@ class MetaVariable(Header):
 
           out : tuple
            A tuple of two elements
-           a callablle that can be called
+           a callable that can be called
            to create the initial version of the object
            and its arguments
            """
@@ -120,7 +120,7 @@ class VariableHeader(Header):
 
           out : tuple
            A tuple of two elements
-           a callablle that can be called
+           a callable that can be called
            to create the initial version of the object
            and its arguments
            """
@@ -181,7 +181,7 @@ class Template(Header):
 
           out : tuple
            A tuple of two elements
-           a callablle function that can be called
+           a callable function that can be called
            to create the initial version of the object
            and its arguments
            """
@@ -421,7 +421,7 @@ class FunctionHeader(Header):
 
           out : tuple
            A tuple of two elements
-           a callablle function that can be called
+           a callable function that can be called
            to create the initial version of the object
            and its arguments
            """
@@ -535,7 +535,7 @@ class MethodHeader(FunctionHeader):
 
           out : tuple
            A tuple of two elements
-           a callablle function that can be called
+           a callable function that can be called
            to create the initial version of the object
            and its arguments
            """

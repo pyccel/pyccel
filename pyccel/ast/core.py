@@ -2410,7 +2410,7 @@ class Variable(Symbol, PyccelAstNode):
 
           out : tuple
            A tuple of two elements
-           a callablle function that can be called
+           a callable function that can be called
            to create the initial version of the object
            and its arguments.
         """
@@ -3357,7 +3357,7 @@ class FunctionDef(Basic):
 
           out : tuple
            A tuple of two elements
-           a callablle function that can be called
+           a callable function that can be called
            to create the initial version of the object
            and its arguments.
         """
@@ -5666,7 +5666,7 @@ class ParserResult(Basic):
 
           out : tuple
            A tuple of two elements
-           a callablle function that can be called
+           a callable function that can be called
            to create the initial version of the object
            and its arguments.
         """
