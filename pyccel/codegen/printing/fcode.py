@@ -320,7 +320,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
-
+        imports += "\n".join('use ' + lib for lib in self._additional_imports)
         parts = ['module {}\n'.format(name),
                  imports,
                  'implicit none\n',
@@ -361,7 +361,7 @@ class FCodePrinter(CodePrinter):
 
             decs += '\ninteger :: ierr = -1' +\
                     '\ninteger, allocatable :: status (:)'
-
+        imports += "\n".join('use ' + lib for lib in self._additional_imports)
         parts = ['program {}\n'.format(name),
                  imports,
                 'implicit none\n',
@@ -659,6 +659,41 @@ class FCodePrinter(CodePrinter):
         prec = expr.precision
         prec_code = self._print(prec)
         return 'floor({}, kind={})'.format(arg_code, prec_code)
+
+    # --------------------------- pyc_math functions --------------------------
+
+    def _print_MathFactorial(self, expr):
+        """ Print the equivalent code to pycthon factorial function call"""
+        # include of the pyc_math header
+        self._additional_imports.add('pyc_math')
+        return 'pyc_factorial({})'.format(self._print(expr.args[0]))
+
+    def _print_MathGcd(self, expr):
+        """ Print the equivalent code to pycthon gcd function call"""
+        # include of the pyc_math header
+        self._additional_imports.add('pyc_math')
+        args = ", ".join(self._print(arg) for arg in expr.args)
+        return 'pyc_gcd({})'.format(args)
+
+    def _print_MathDegrees(self, expr):
+        """ Print the equivalent code to pycthon degrees function call"""
+        # include of the pyc_math header
+        self._additional_imports.add('pyc_math')
+        arg = expr.args[0]
+        if arg.dtype is not NativeReal():
+            arg = PythonFloat(arg)
+        return 'pyc_degrees({})'.format(self._print(arg))
+
+    def _print_MathRadians(self, expr):
+        """ Print the equivalent code to pycthon radians function call"""
+        # include of the pyc_math header
+        self._additional_imports.add('pyc_math')
+        arg = expr.args[0]
+        if arg.dtype is not NativeReal():
+            arg = PythonFloat(arg)
+        return 'pyc_radians({})'.format(self._print(arg))
+
+    # -------------------------------------------------------------------------
 
     def _print_NumpyFloat(self, expr):
         return expr.fprint(self._print)
