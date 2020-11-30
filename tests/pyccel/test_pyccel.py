@@ -224,6 +224,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
 
     compare_pyth_fort_output(pyth_out, lang_out, output_dtype)
 
+
 #==============================================================================
 # PYTEST MODULE SETUP AND TEARDOWN
 #==============================================================================
@@ -247,7 +248,7 @@ def teardown(path_dir = None):
             shutil.rmtree( file_name )
         elif not os.path.isfile(file_name):
             teardown(file_name)
-        elif not f.endswith(".py"):
+        elif not f.endswith(".py") and not f.endswith(".pyh") and not f.endswith(".pyccel"):
             os.remove(file_name)
 
 #==============================================================================
@@ -387,6 +388,14 @@ def test_expressions(language):
                 output_dtype = types)
 
 #------------------------------------------------------------------------------
+def test_generic_functions():
+    pyccel_test("scripts/runtest_generic_functions.py",
+            dependencies = "scripts/generic_functions.py",
+            compile_with_pyccel = False,
+            output_dtype = [float,float,float,float,float,float,
+                    float,float,float,float,float,float,float,int,float])
+
+#------------------------------------------------------------------------------
 def test_default_arguments():
     pyccel_test("scripts/runtest_default_args.py",
             dependencies = "scripts/default_args_mod.py",
@@ -509,8 +518,70 @@ def test_print_sp_and_end(language):
     types = str
     pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
 
+
 def test_c_arrays(language):
     types = [int]*15 + [float]*5 + [int]*25 + [float]* 20 * 5 + \
             [complex] * 3 * 10 + [complex] * 5 + [float] * 10 + [float] * 6 + \
             [float] * 2 * 3 + [complex] * 3 * 10 + [float] * 2 * 3
     pyccel_test("scripts/c_arrays.py", language=language, output_dtype=types)
+
+def test_headers(language):
+    test_file = "scripts/test_headers.py"
+    test_file = os.path.normpath(test_file)
+    test_file = get_abs_path(test_file)
+
+    header_file = 'scripts/headers.pyh'
+    header_file = os.path.normpath(header_file)
+    header_file = get_abs_path(header_file)
+
+    with open(test_file, 'w') as f:
+        code = ("from headers import f\n"
+                "def f(x):\n"
+                "    y = x\n"
+                "    return y\n"
+                "print(f(1))\n")
+
+        f.write(code)
+
+    with open(header_file, 'w') as f:
+        code =("#$ header metavar ignore_at_import=True\n"
+               "#$ header function f(int)")
+
+        f.write(code)
+
+    test_file = os.path.normpath(test_file)
+    cwd = os.path.dirname(test_file)
+    cwd = get_abs_path(cwd)
+
+    pyccel_commands = " --language="+language
+
+    compile_pyccel(cwd, test_file, pyccel_commands)
+
+
+    lang_out = get_lang_output(get_exe(test_file))
+    assert int(lang_out)
+
+    with open(test_file, 'w') as f:
+        code = ("from headers import f\n"
+                "def f(x):\n"
+                "    y = x\n"
+                "    return y\n"
+                "print(f(1.5))\n")
+
+        f.write(code)
+
+    with open(header_file, 'w') as f:
+        code =("#$ header metavar ignore_at_import=True\n"
+               "#$ header function f(float)")
+
+        f.write(code)
+
+    compile_pyccel(cwd, test_file, pyccel_commands)
+
+    lang_out = get_lang_output(get_exe(test_file))
+    assert float(lang_out) == 1.5
+
+    with open(test_file, 'w') as f:
+        code = ("")
+        f.write(code)
+

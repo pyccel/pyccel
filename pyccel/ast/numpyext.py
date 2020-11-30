@@ -9,12 +9,13 @@ from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from sympy           import (Basic, Function, Tuple, Integer as sp_Integer,
                              Rational as sp_Rational, Expr)
 
-from .core           import (PyccelPow, PyccelMinus, PyccelMul, PyccelAdd,
-                             PyccelAssociativeParenthesis, broadcast, ClassDef,
-                             FunctionDef, IndexedVariable, Assign, PythonList,
-                             Variable, IndexedElement, Slice, PythonLen, For,
-                             PythonRange, Nil, process_shape, ValuedArgument,
-                             Constant)
+from .core           import (ClassDef, FunctionDef, IndexedVariable, Assign,
+                             PythonList, Variable, IndexedElement, Slice,
+                             PythonLen, For, PythonRange, Nil, process_shape,
+                             ValuedArgument, Constant)
+
+from .operators      import (PyccelPow, PyccelMinus, PyccelMul, PyccelAdd,
+                             PyccelAssociativeParenthesis, broadcast)
 
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex)

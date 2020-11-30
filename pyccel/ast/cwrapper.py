@@ -2,6 +2,9 @@
 
 import numpy as np
 
+from ..errors.errors import Errors
+from ..errors.messages import PYCCEL_RESTRICTION_TODO
+
 from .basic     import Basic
 
 from .builtins  import PythonBool
@@ -11,15 +14,13 @@ from .datatypes import NativeInteger, NativeReal, NativeComplex
 from .datatypes import NativeBool, NativeString, NativeGeneric
 
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress, FunctionAddress
-from .core      import AliasAssign, Assign, Return
-from .core      import PyccelEq, If
+from .core      import AliasAssign, Assign, Return, If
 
 from .literals  import LiteralTrue, LiteralComplex
 
 from .numpyext  import NumpyReal, NumpyImag
 
-from pyccel.errors.errors import Errors
-from pyccel.errors.messages import *
+from .operators import PyccelEq
 
 
 errors = Errors()
@@ -372,16 +373,29 @@ numpy_dtype_registry = {('bool',4)     : numpy_bool_type,
                         ('complex',8)  : numpy_cdouble_type,
                         ('complex',16) : numpy_clongdouble_type}
 
-def PyType_Check(data_type):
+def PythonType_Check(variable, argument):
+    """
+    Create FunctionCall responsible of checking python argument data type
+    Parameters:
+    ----------
+    variable : Variable
+        The variable needed for the generation of the type check
+    argument : Variable
+        argument of the check function
+
+    Returns
+    -------
+    FunctionCall : Check type FunctionCall
+    """
     try :
-        check_type = check_type_registry[data_type]
+        check_type = check_type_registry[variable.dtype]
     except KeyError:
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=data_type,severity='fatal')
-    func = FunctionDef(name = check_type,
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=variable.dtype,severity='fatal')
+    check_func = FunctionDef(name = check_type,
                     body = [],
                     arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
-    return func
+    return FunctionCall(check_func, [argument])
 
 def PyErr_SetString(error_type, error_msg):
     func = FunctionDef(name = 'PyErr_SetString',
