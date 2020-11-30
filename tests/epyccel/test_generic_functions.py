@@ -283,7 +283,6 @@ def test_mix_types_3(language):
     f2 = mod2.mix_types_3
 
     assert f1(-1, -1) == f2(-1, -1)
-    assert f1(np.int64(4), np.int64(16)) == f2(np.int64(4), np.int64(16))
     assert f1(np.int32(4), np.int32(16)) == f2(np.int32(4), np.int32(16))
 
 #--------------------------------------------------------------------

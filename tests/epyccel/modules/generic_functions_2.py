@@ -129,7 +129,7 @@ def mix_types_2(x, y):
     return -x
 
 
-@template('g', types=['int', 'int32', 'int64'])
+@template('g', types=['int', 'int32'])
 @types('g', 'g')
 def mix_types_3(x, y):
     if y != x:
