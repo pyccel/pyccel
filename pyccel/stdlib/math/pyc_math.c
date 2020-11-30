@@ -2,9 +2,9 @@
 #include <math.h>
 
 /*---------------------------------------------------------------------------*/
-long        pyc_factorial(long n)
+int64_t        pyc_factorial(int64_t n)
 {
-    long    res = 1;
+    int64_t    res = 1;
 
     /* ValueError: factorial() not defined for negative values */
     if (n < 0)
@@ -14,7 +14,7 @@ long        pyc_factorial(long n)
     return (res);
 }
 /*---------------------------------------------------------------------------*/
-long        pyc_gcd (long a, long b)
+int64_t        pyc_gcd (int64_t a, int64_t b)
 {
     while (b) {
         a %= b;
@@ -26,7 +26,7 @@ long        pyc_gcd (long a, long b)
     return a;
 }
 /*---------------------------------------------------------------------------*/
-long        pyc_lcm (long a, long b)
+int64_t        pyc_lcm (int64_t a, int64_t b)
 {
     return a / pyc_gcd(a, b) * b;
 }
