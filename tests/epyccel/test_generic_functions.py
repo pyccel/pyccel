@@ -1,7 +1,7 @@
  # pylint: disable=missing-function-docstring, missing-module-docstring/
+import sys
 import pytest
 import numpy as np
-import sys
 import modules.generic_functions as mod
 import modules.generic_functions_2 as mod2
 from pyccel.epyccel import epyccel
