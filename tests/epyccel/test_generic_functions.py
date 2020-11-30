@@ -128,7 +128,7 @@ def test_default_var_2(language):
     assert f1(5.3) == f2(5.3)
     assert f1(5) ==  f2(5)
     assert f1(5.3, complex(1, 3)) == f2(5.3, complex(1, 3))
-    assert f1(5, complex(4, 3)) == f2(5, complex(4, 3))
+    assert f1(5, 4.44+15.2j) == f2(5, 4.44+15.2j)
 
 
 def test_default_var_3(language):

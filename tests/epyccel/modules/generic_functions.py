@@ -84,7 +84,8 @@ def tst_gen_6():
     x = gen_6(5.5, 5.5)
     y = gen_6(5, 5)
     z = gen_6(complex(1, 2), complex(1, 2))
-    return x, y, z
+    a = gen_6(5.22 + 3.14j, 0.15 + 12j)
+    return x, y, z, a
 
 def tst_gen_7():
     x = gen_7(5, 5, 7)
