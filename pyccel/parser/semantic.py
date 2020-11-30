@@ -83,7 +83,6 @@ from pyccel.ast.numpyext import NumpyZeros
 from pyccel.ast.numpyext import NumpyInt, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
-from pyccel.ast.numpyext import NumpyWhere, NumpyDiag, NumpyLinspace
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
@@ -219,7 +218,6 @@ class SemanticParser(BasicParser):
 
             target = set(target)
             target_headers = target.intersection(self.namespace.headers.keys())
-
             for name in list(target_headers):
                 v = self.namespace.headers[name][0]
                 if isinstance(v, FunctionHeader) and not isinstance(v,
@@ -230,7 +228,6 @@ class SemanticParser(BasicParser):
                         for F in interfaces:
                             self.insert_function(F)
                     else:
-
                         errors.report(IMPORTING_EXISTING_IDENTIFIED,
                                 symbol=name, blocker=True,
                                 severity='fatal')
@@ -1194,19 +1191,14 @@ class SemanticParser(BasicParser):
                     self._infere_type(a, **settings)
             expr = func(*args, **kwargs)
 
-            if isinstance(expr, (NumpyWhere, NumpyDiag, NumpyLinspace)):
-                self.insert_variable(expr.index)
             return expr
-
         else:
             expr = FunctionCall(func, args, self._current_function)
             return expr
+
     def _visit_Application(self, expr, **settings):
         name     = type(expr).__name__
         func     = self.get_function(name)
-
-        #stmts, new_args = extract_subexpressions(expr.args)
-        #stmts = [self._visit(stmt, **settings) for stmt in stmts]
 
         args = self._handle_function_args(expr.args, **settings)
 
@@ -1215,9 +1207,6 @@ class SemanticParser(BasicParser):
         F = pyccel_builtin_function(expr, args)
 
         if F is not None:
-            #if len(stmts) > 0:
-            #    stmts.append(F)
-            #    return CodeBlock(stmts)
             return F
 
         elif name in self._namespace.cls_constructs.keys():
@@ -1258,7 +1247,6 @@ class SemanticParser(BasicParser):
                 args = macro.apply(args)
             else:
                 func = self.get_function(name)
-
             if func is None:
                 # TODO [SH, 25.02.2020] Report error
                 errors.report(UNDEFINED_FUNCTION, symbol=name,
@@ -2357,7 +2345,15 @@ class SemanticParser(BasicParser):
                 else:
                     errors.report(msg, symbol=expr.arguments, severity='fatal')
 
-        if expr.arguments and not header:
+        interfaces = []
+        if len(header) == 0:
+            # check if a header is imported from a header file
+            # TODO improve in the case of multiple headers ( interface )
+            func       = self.get_function(name)
+            if func and func.is_header:
+                interfaces = [func]
+
+        if expr.arguments and not header and not interfaces:
 
             # TODO ERROR wrong position
 
@@ -2366,18 +2362,16 @@ class SemanticParser(BasicParser):
                    severity='error', blocker=self.blocking)
 
         # we construct a FunctionDef from its header
-        interfaces = []
         for hd in header:
             interfaces += hd.create_definition(templates)
 
         if header:
             # get function kind from the header
             kind = header[0].kind
-        else:
-
+        elif not interfaces:
             # this for the case of a function without arguments => no header
-
             interfaces = [FunctionDef(name, [], [], [])]
+
 #        TODO move this to codegen
 #        vec_func = None
 #        if 'vectorize' in decorators:
@@ -2881,6 +2875,13 @@ class SemanticParser(BasicParser):
             if len(expr.target) == 0 and isinstance(expr.source,AsName):
                 expr = Import(expr.source.name)
 
+            if source_target in container['imports']:
+                targets = container['imports'][source_target].target + expr.target
+            else:
+                targets = expr.target
+
+            expr = Import(expr.source, targets)
+
             if __import_all__:
                 expr = Import(__module_name__)
                 container['imports'][source_target] = expr
@@ -2896,6 +2897,7 @@ class SemanticParser(BasicParser):
                 expr   = Import(source, expr.target)
                 container['imports'][source_target] = expr
             elif not __ignore_at_import__:
+
                 container['imports'][source_target] = expr
 
         return EmptyNode()

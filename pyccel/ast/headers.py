@@ -56,6 +56,26 @@ class MetaVariable(Header):
     def value(self):
         return self._args[1]
 
+    def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable that can be called
+           to create the initial version of the object
+           and its arguments
+           """
+        return (self.__class__, (self.name, self.value))
+
 #==============================================================================
 # TODO rename dtypes to arguments
 class VariableHeader(Header):
@@ -86,13 +106,25 @@ class VariableHeader(Header):
     def dtypes(self):
         return self._args[1]
 
-# TODO rename dtypes to arguments
+    def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
 
-    def __getnewargs__(self):
-        """used for Pickling self."""
-        # TODO improve after renaming the args property
-        args = (self._args[0],)
-        return args
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable that can be called
+           to create the initial version of the object
+           and its arguments
+           """
+        return (self.__class__, (self.name, self.dtypes))
 
 #==============================================================================
 class Template(Header):
@@ -133,6 +165,27 @@ class Template(Header):
     def args(self):
         "Types the template represents."
         return self._args
+
+    def __reduce_ex__(self, i):
+
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable function that can be called
+           to create the initial version of the object
+           and its arguments
+           """
+        return (self.__class__, (self.name, self.args))
 
 #==============================================================================
 class FunctionHeader(Header):
@@ -352,14 +405,34 @@ class FunctionHeader(Header):
                               self.kind,
                               self.is_static)
 
-    def __getnewargs__(self):
-        """used for Pickling self."""
+
+    def __reduce_ex__(self, i):
+
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable function that can be called
+           to create the initial version of the object
+           and its arguments
+           """
+
         args = (self.name,
-                self.dtypes,
-                self.results,
-                self.kind,
-                self.is_static,)
-        return args
+            self.dtypes,
+            self.results,
+            self.kind,
+            self.is_static,)
+        return (self.__class__, args)
+
 
 #==============================================================================
 # TODO to be improved => use FunctionHeader
@@ -445,6 +518,34 @@ class MethodHeader(FunctionHeader):
     @property
     def is_static(self):
         return self._args[4]
+
+
+    def __reduce_ex__(self, i):
+
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable function that can be called
+           to create the initial version of the object
+           and its arguments
+           """
+
+        args = (self.name,
+            self.dtypes,
+            self.results,
+            self.kind,
+            self.is_static,)
+        return (self.__class__, args)
 
 #==============================================================================
 class ClassHeader(Header):
