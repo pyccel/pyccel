@@ -148,9 +148,9 @@ def test_loop_on_real_array():
 
     assert np.array_equal( out1, out2 )
 
-def test_breaks():
+def test_breaks(language):
     f1 = loops.fizzbuzz_search_with_breaks
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1, language = language )
 
     fizz = 2
     buzz = 3
@@ -161,9 +161,9 @@ def test_breaks():
 
     assert( out1 == out2 )
 
-def test_continue():
+def test_continue(language):
     f1 = loops.fizzbuzz_sum_with_continue
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1, language = language )
 
     fizz = 2
     buzz = 3

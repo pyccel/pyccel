@@ -205,10 +205,10 @@ ndarray_type_registry = {('real',8)    : 'nd_double',
                   ('real',4)    : 'nd_float',
                   ('complex',8) : 'nd_cdouble',
                   ('complex',4) : 'nd_cfloat',
-                  ('int',4)     : 'nd_int',
-                  ('int',8)     : 'nd_long',
-                  ('int',2)     : 'nd_sint',
-                  ('int',1)     : 'nd_char',
+                  ('int',8)     : 'nd_int64',
+                  ('int',4)     : 'nd_int32',
+                  ('int',2)     : 'nd_int16',
+                  ('int',1)     : 'nd_int8',
                   ('bool',4)    : 'nd_bool'}
 
 import_dict = {'omp_lib' : 'omp' }
@@ -317,6 +317,12 @@ class CCodePrinter(CodePrinter):
                 '{body}').format(
                         imports = imports,
                         body    = body)
+
+    def _print_Break(self, expr):
+        return 'break;'
+
+    def _print_Continue(self, expr):
+        return 'continue;'
 
     def _print_While(self, expr):
         body = self._print(expr.body)
