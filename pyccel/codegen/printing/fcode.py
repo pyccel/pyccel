@@ -1391,7 +1391,6 @@ class FCodePrinter(CodePrinter):
                  interfaces,
                  body_code,
                  'end {} {}\n'.format(func_type, name)]
-
         return '\n'.join(parts)
 
     def _print_FunctionAddress(self, expr):
@@ -1748,6 +1747,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Omp_End_Clause(self, expr):
         omp_expr = str(expr.txt)
+        omp_expr = omp_expr.replace("for", "do")
         ompexpr = '!$omp {}\n'.format(omp_expr)
         return ompexpr
 
@@ -1787,7 +1787,6 @@ class FCodePrinter(CodePrinter):
         if not(expr.nowait is None):
             nowait = 'nowait'
         # ...
-
         # ... TODO adapt get_statement to have continuation with OpenMP
         prolog = '!$omp do {clauses}\n'.format(clauses=clauses)
         epilog = '!$omp end do {0}\n'.format(nowait)
