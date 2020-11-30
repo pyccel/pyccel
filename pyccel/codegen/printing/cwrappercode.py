@@ -576,6 +576,7 @@ class CWrapperCodePrinter(CCodePrinter):
             # Loop for all args in every functions and create the corresponding condition and body
             for p_arg, f_arg in zip(parse_args, func.arguments):
                 collect_var,_ = self.get_PyArgParseType(used_names, f_arg, p_arg)
+                print(collect_var, type(collect_var))
                 collect_vars[collect_var] = collect_var
                 body, tmp_variable = self._body_management(used_names, f_arg, collect_var, None)
                 if tmp_variable :

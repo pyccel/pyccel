@@ -5,15 +5,6 @@ import modules.generic_functions as mod
 import modules.generic_functions_2 as mod2
 from pyccel.epyccel import epyccel
 
-@pytest.fixture( params=[
-        pytest.param("fortran", marks = [
-            pytest.mark.fortran,
-            pytest.mark.skip(reason="issue #512")]),
-        pytest.param("c", marks = [
-            pytest.mark.c]
-        )
-    ]
-)
 def language(request):
     return request.param
 

@@ -8,8 +8,8 @@ from pyccel.decorators import template
 #$ header function tmplt_head_1(int, real)
 #$ header template T(int|real)
 #$ header template R(int|real)
-#$ header template O(bool|complex)
-#$ header template S(int|real|complex|bool)
+#$ header template O(real|complex)
+#$ header template S(int|real|complex)
 
 @types('real')
 def gen_1(a):
@@ -83,7 +83,7 @@ def tst_gen_5():
 def tst_gen_6():
     x = gen_6(5.5, 5.5)
     y = gen_6(5, 5)
-    z = gen_6(1j, 1j)
+    z = gen_6(complex(1, 2), complex(1, 2))
     return x, y, z
 
 def tst_gen_7():
