@@ -39,11 +39,11 @@ def sympy_to_pyccel(expr, symbol_map):
     elif isinstance(expr, Zero):
         return LiteralInteger(0)
     elif isinstance(expr, sp.Float):
-        return LiteralFloat(expr)
+        return LiteralFloat(float(expr))
     elif isinstance(expr, Half):
         return LiteralFloat(0.5)
     elif isinstance(expr, sp.Rational):
-        return LiteralFloat(expr)
+        return LiteralFloat(float(expr))
     elif isinstance(expr, sp.Symbol) and expr in symbol_map:
         return symbol_map[expr]
 
