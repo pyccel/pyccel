@@ -264,6 +264,22 @@ def test_omp_arraysum(language):
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
 )
+def test_omp_arraysum_combined(language):
+    f1 = epyccel(openmp.omp_arraysum_combined, accelerator='openmp', language=language)
+    set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp', language=language)
+    set_num_threads(4)
+    from numpy import random
+    x = random.randint(20, size=(5))
+
+    assert f1(x) == np.sum(x)
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Numpy Arrays not implemented in C !"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_omp_arraysum_single(language):
     f1 = epyccel(openmp.omp_arraysum_single, accelerator='openmp', language=language)
     set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp', language=language)

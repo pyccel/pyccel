@@ -266,6 +266,14 @@ def omp_arraysum(x):
     return result
 
 @types('int[:]')
+def omp_arraysum_combined(x):
+    result = 0
+    #$ omp parallel for reduction (+:result)
+    for i in range(0, 5):
+        result += x[i]
+    return result
+
+@types('int[:]')
 def omp_arraysum_single(x):
     result = 0
     #$ omp parallel
