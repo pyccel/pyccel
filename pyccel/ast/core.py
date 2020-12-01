@@ -4774,8 +4774,6 @@ class IndexedVariable(IndexedBase, PyccelAstNode):
         if self.shape and len(self.shape) != len(args):
             raise IndexError('Rank mismatch.')
 
-        args = tuple(a.p if isinstance(a, LiteralInteger) else a for a in args)
-
         obj = IndexedElement(self, *args)
         return obj
 
