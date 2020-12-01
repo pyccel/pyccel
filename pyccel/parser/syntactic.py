@@ -6,6 +6,7 @@ import os
 import re
 
 import ast
+
 #==============================================================================
 
 from sympy.core.function import Function
@@ -14,6 +15,7 @@ from sympy import IndexedBase
 from sympy import Tuple
 from sympy import Lambda
 from sympy import Dict
+from sympy.core import cache
 
 #==============================================================================
 
@@ -39,7 +41,6 @@ from pyccel.ast.core import Comment, EmptyNode, NewLine
 from pyccel.ast.core import Break, Continue
 from pyccel.ast.core import Slice
 from pyccel.ast.core import Argument, ValuedArgument
-from pyccel.ast.core import Is, IsNot
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import CommentBlock
@@ -50,12 +51,12 @@ from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import _atomic
 from pyccel.ast.core import create_variable
 
-
-from pyccel.ast.core import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
-from pyccel.ast.core import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
-from pyccel.ast.core import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
-from pyccel.ast.core import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
-from pyccel.ast.core import PyccelUnary, PyccelUnarySub
+from pyccel.ast.operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
+from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
+from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
+from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
+from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
+from pyccel.ast.operators import PyccelIs, PyccelIsNot
 
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.headers  import Header, MetaVariable
@@ -77,6 +78,15 @@ from pyccel.errors.errors import Errors
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
 from pyccel.errors.messages import *
+
+def get_name(a):
+    """ get the name of variable or an argument of the AST node."""
+    if isinstance(a, ast.Name):
+        return a.id
+    elif isinstance(a, ast.arg):
+        return a.arg
+    else:
+        raise NotImplementedError()
 
 #==============================================================================
 errors = Errors()
@@ -112,32 +122,23 @@ class SyntaxParser(BasicParser):
 
             code = read_file(inputs)
 
-        self._code = code
-
+        self._code  = code
         self._scope = []
 
-        tree = extend_tree(code)
+        self.load()
 
-        self._fst = tree
-
-        def get_name(a):
-            if isinstance(a, ast.Name):
-                return a.id
-            elif isinstance(a, ast.arg):
-                return a.arg
-            else:
-                raise NotImplementedError()
-
-        self._used_names = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg)))
+        tree                = extend_tree(code)
+        self._fst           = tree
+        self._used_names    = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg)))
         self._dummy_counter = 1
 
         self.parse(verbose=True)
+        self.dump()
 
     def parse(self, verbose=False):
         """converts python ast to sympy ast."""
 
         if self.syntax_done:
-            print ('> syntax analysis already done')
             return self.ast
 
         # TODO - add settings to Errors
@@ -145,11 +146,11 @@ class SyntaxParser(BasicParser):
         errors.set_parser_stage('syntax')
 
         PyccelAstNode.stage = 'syntactic'
-        ast = self._visit(self.fst)
-
+        ast       = self._visit(self.fst)
         self._ast = ast
 
         self._visit_done = True
+        self._syntax_done = True
 
         return ast
 
@@ -187,6 +188,11 @@ class SyntaxParser(BasicParser):
         is_prog       = False
         body          = [self._visit(v) for v in stmt.body]
 
+        # Define the names of the module and program
+        # The module name allows it to be correctly referenced from an import command
+        current_mod_name = os.path.splitext(os.path.basename(self._filename))[0]
+        prog_name = 'prog_' + current_mod_name
+
         new_body      = []
         for i in body:
             if isinstance(i, CodeBlock):
@@ -205,6 +211,8 @@ class SyntaxParser(BasicParser):
                 mod.append(v)
                 targets.append(v.name)
                 current_file = mod
+                im = Import(source=current_mod_name, target = [v.name])
+                prog.append(im)
             elif isinstance(v,(Header, Comment, CommentBlock)):
                 # Headers and Comments are defined in the same block as the following object
                 n_empty_lines = 0
@@ -233,15 +241,8 @@ class SyntaxParser(BasicParser):
         if len(start)>0:
             mod.extend(start)
 
-        # Define the names of the module and program
-        # The module name allows it to be correctly referenced from an import command
-        current_mod_name = os.path.splitext(os.path.basename(self._filename))[0]
-        prog_name = 'prog_' + current_mod_name
         mod_code = CodeBlock(mod) if len(targets)>0 else None
         if is_prog:
-            if mod_code:
-                expr = Import(source=current_mod_name, target = targets)
-                prog.insert(0,expr)
             prog_code = CodeBlock(prog)
             prog_code.set_fst(stmt)
         else:
@@ -583,9 +584,9 @@ class SyntaxParser(BasicParser):
         if isinstance(op, ast.GtE):
             return PyccelGe(first, second)
         if isinstance(op, ast.Is):
-            return Is(first, second)
+            return PyccelIs(first, second)
         if isinstance(op, ast.IsNot):
-            return IsNot(first, second)
+            return PyccelIsNot(first, second)
 
         errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       symbol = stmt,
@@ -613,7 +614,8 @@ class SyntaxParser(BasicParser):
 
         local_vars   = []
         global_vars  = []
-        header       = None
+        headers      = []
+        templates    = {}
         hide         = False
         kind         = 'function'
         is_pure      = False
@@ -621,9 +623,33 @@ class SyntaxParser(BasicParser):
         is_private   = False
         imports      = []
 
-        # TODO improve later
-        decorators = {str(d) if isinstance(d, Symbol) else str(type(d)): d \
-                            for d in self._visit(stmt.decorator_list)}
+        def fill_types(ls):
+            container = []
+            for arg in ls:
+                if isinstance(arg, Symbol):
+                    arg = arg.name
+                    container.append(arg)
+                elif isinstance(arg, LiteralString):
+                    arg = str(arg)
+                    arg = arg.strip("'").strip('"')
+                    container.append(arg)
+                else:
+                    msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
+                    errors.report(msg,
+                                bounding_box = (stmt.lineno, stmt.col_offset),
+                                severity='error')
+            return container
+
+        decorators = {}
+        for d in self._visit(stmt.decorator_list):
+            tmp_var = str(d) if isinstance(d, Symbol) else str(type(d))
+            if tmp_var in decorators:
+                if isinstance(decorators[tmp_var], list):
+                    decorators[tmp_var] += [d]
+                else:
+                    decorators[tmp_var] = [decorators[tmp_var]] + [d]
+            else:
+                decorators[tmp_var] = d
 
         if 'bypass' in decorators:
             return EmptyNode()
@@ -634,54 +660,94 @@ class SyntaxParser(BasicParser):
         if 'allow_negative_index' in decorators:
             decorators['allow_negative_index'] = tuple(str(a) for a in decorators['allow_negative_index'].args)
 
+        # extract the templates
+        if 'template' in decorators:
+            if not isinstance(decorators['template'], list):
+                decorators['template'] = [decorators['template']]
+            for comb_types in decorators['template']:
+                cache.clear_cache()
+                types = []
+                if len(comb_types.args) != 2:
+                    msg = 'Number of Arguments provided to the template decorator is not valid'
+                    errors.report(msg,
+                                    symbol = comb_types,
+                                    bounding_box = (stmt.lineno, stmt.col_offset),
+                                    severity='error')
+
+                for i in comb_types.args:
+                    if isinstance(i, ValuedArgument) and not i.name in ('name',
+                            'types'):
+                        msg = 'Argument provided to the template decorator is not valid'
+                        errors.report(msg,
+                                        symbol = comb_types,
+                                        bounding_box = (stmt.lineno, stmt.col_offset),
+                                        severity='error')
+                if all(isinstance(i, ValuedArgument) for i in comb_types.args):
+                    tp_name, ls = (comb_types.args[0].value, comb_types.args[1].value) if\
+                            comb_types.args[0].name == 'name' else\
+                            (comb_types.args[1].value, comb_types.args[0].value)
+                else:
+                    tp_name = comb_types.args[0]
+                    ls = comb_types.args[1]
+                    ls = ls.value if isinstance(ls, ValuedArgument) else ls
+                try:
+                    tp_name = str(tp_name)
+                    ls = ls if isinstance(ls, PythonTuple) else list(ls)
+                except TypeError:
+                    msg = 'Argument provided to the template decorator is not valid'
+                    errors.report(msg,
+                                    symbol = comb_types,
+                                    bounding_box = (stmt.lineno, stmt.col_offset),
+                                    severity='fatal')
+
+                types = fill_types(ls)
+
+                txt  = '#$ header template ' + str(tp_name)
+                txt += '(' + '|'.join(types) + ')'
+                if tp_name in templates:
+                    msg = 'The template "{}" is duplicated'.format(tp_name)
+                    errors.report(msg,
+                                bounding_box = (stmt.lineno, stmt.col_offset),
+                                severity='warning')
+
+                templates[tp_name] = hdr_parse(stmts=txt)
+
         # extract the types to construct a header
         if 'types' in decorators:
-            types = []
-            results = []
-            container = types
-            i = 0
-            ls = decorators['types'].args
-            while i<len(ls) :
-                arg = ls[i]
+            if not isinstance(decorators['types'], list):
+                decorators['types'] = [decorators['types']]
+            for comb_types in decorators['types']:
 
-                if isinstance(arg, Symbol):
-                    arg = arg.name
-                    container.append(arg)
-                elif isinstance(arg, LiteralString):
-                    arg = str(arg)
-                    arg = arg.strip("'").strip('"')
-                    container.append(arg)
-                elif isinstance(arg, ValuedArgument):
-                    arg_name = arg.name
-                    arg  = arg.value
-                    container = results
+                cache.clear_cache()
+                results = []
+                ls = comb_types.args
+
+                if len(ls) > 0 and isinstance(ls[-1], ValuedArgument):
+                    arg_name = ls[-1].name
                     if not arg_name == 'results':
                         msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
                         errors.report(msg,
-                                      symbol = decorators['types'],
-                                      bounding_box = (stmt.lineno, stmt.col_offset),
-                                      severity='error')
+                                    symbol = comb_types,
+                                    bounding_box = (stmt.lineno, stmt.col_offset),
+                                    severity='error')
                     else:
-                        ls = arg if isinstance(arg, PythonTuple) else [arg]
-                        i = -1
+                        container = ls[-1].value
+                        container = container if isinstance(container, PythonTuple) else [container]
+                        results = fill_types(container)
+                    types = fill_types(ls[:-1])
                 else:
-                    msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
-                    errors.report(msg,
-                                  symbol = decorators['types'],
-                                  bounding_box = (stmt.lineno, stmt.col_offset),
-                                  severity='error')
+                    types = fill_types(ls)
 
-                i = i+1
+                txt  = '#$ header ' + name
+                txt += '(' + ','.join(types) + ')'
 
-            txt  = '#$ header ' + name
-            txt += '(' + ','.join(types) + ')'
+                if results:
+                    txt += ' results(' + ','.join(results) + ')'
 
-            if results:
-                txt += ' results(' + ','.join(results) + ')'
-
-            header = hdr_parse(stmts=txt)
-            if name in self.namespace.static_functions:
-                header = header.to_static()
+                header = hdr_parse(stmts=txt)
+                if name in self.namespace.static_functions:
+                    header = header.to_static()
+                headers += [header]
 
         body = stmt.body
 
@@ -754,7 +820,8 @@ class SyntaxParser(BasicParser):
                is_private=is_private,
                imports=imports,
                decorators=decorators,
-               header=header)
+               headers=headers,
+               templates=templates)
 
         func.set_fst(stmt)
         return func

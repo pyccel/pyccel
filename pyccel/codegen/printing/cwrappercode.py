@@ -12,16 +12,18 @@ from pyccel.ast.literals  import LiteralTrue, LiteralInteger
 from pyccel.ast.builtins import PythonPrint
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
-from pyccel.ast.core import If, Nil, Return, FunctionCall, PyccelNot
+from pyccel.ast.core import If, Nil, Return, FunctionCall
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import VariableAddress, Import, PyccelNe
+from pyccel.ast.core import VariableAddress, Import, IfTernaryOperator
+
+from pyccel.ast.operators import PyccelEq, PyccelNe, PyccelNot
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal
 
 from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
 from pyccel.ast.cwrapper import Py_None
-from pyccel.ast.cwrapper import PyErr_SetString, PyType_Check
+from pyccel.ast.cwrapper import PyErr_SetString, PythonType_Check
 from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 from pyccel.ast.cwrapper import PyccelPyArrayObject
 from pyccel.ast.cwrapper import numpy_get_ndims, numpy_get_data, numpy_get_dim
@@ -109,6 +111,50 @@ class CWrapperCodePrinter(CCodePrinter):
                     symbol = "{}[kind = {}]".format(dtype, prec),
                     severity='fatal')
 
+    def get_default_assign(self, arg, func_arg):
+        if arg.rank > 0 :
+            return AliasAssign(arg, Nil())
+        elif func_arg.is_optional:
+            return AliasAssign(arg, Py_None)
+        elif isinstance(arg.dtype, (NativeReal, NativeInteger, NativeBool)):
+            return Assign(arg, func_arg.value)
+        elif isinstance(arg.dtype, PyccelPyObject):
+            return AliasAssign(arg, Py_None)
+        else:
+            raise NotImplementedError('Default values are not implemented for this datatype : {}'.format(func_arg.dtype))
+
+    def _get_static_function(self, used_names, function, collect_dict):
+        """
+        Create arguments and functioncall for arguments rank > 0 in fortran.
+        Format : a is numpy array
+        func(a) ==> static_func(a.DIM , a.DATA)
+        where a.DATA = buffer holding data
+              a.DIM = size of array
+        """
+        additional_body = []
+        if self._target_language == 'fortran':
+            static_args = []
+            for a in function.arguments:
+                if isinstance(a, Variable) and a.rank>0:
+                    # Add shape arguments for static function
+                    for i in range(collect_dict[a].rank):
+                        var = Variable(dtype=NativeInteger() ,name = self.get_new_name(used_names, a.name + "_dim"))
+                        body = FunctionCall(numpy_get_dim, [collect_dict[a], i])
+                        if a.is_optional:
+                            body = IfTernaryOperator(VariableAddress(collect_dict[a]), body , LiteralInteger(0))
+                        body = Assign(var, body)
+                        additional_body.append(body)
+                        static_args.append(var)
+                static_args.append(a)
+            static_function = as_static_function_call(function, self._module_name, name=function.name)
+        else:
+            static_function = function
+            static_args = function.arguments
+        return static_function, static_args, additional_body
+
+    # -------------------------------------------------------------------
+    # Functions that take care of creating cast or convert type function call :
+    # -------------------------------------------------------------------
     def get_collect_function_call(self, variable, collect_var):
         """
         Represents a call to cast function responsible of collecting value from python object.
@@ -120,6 +166,9 @@ class CWrapperCodePrinter(CCodePrinter):
         collect_var :
             the pyobject variable
         """
+        if variable.rank > 0 :
+            return FunctionCall(numpy_get_data,[collect_var])
+
         if isinstance(variable.dtype, NativeComplex):
             return self.get_cast_function_call('pycomplex_to_complex', collect_var)
 
@@ -159,7 +208,176 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return FunctionCall(cast_function, [arg])
 
-    def get_PyArgParseType(self, used_names, variable, argument):
+    # -------------------------------------------------------------------
+    # Functions managing  the creation of wrapper body
+    # -------------------------------------------------------------------
+    def _body_optional_variable(self, tmp_variable, variable, collect_var, check_type = False):
+        """
+        Responsible for collecting value and managing error and create the body
+        of optional arguments in format
+                if (pyobject == Py_None){
+                    collect Null
+                }else if(Type Check == False){
+                    Print TypeError Wrong Type
+                    return Null
+                }else{
+                    assign pyobject value to tmp variable
+                    collect the adress of the tmp variable
+                }
+        Parameters:
+        ----------
+        tmp_variable : Variable
+            The temporary variable  to hold result
+        Variable : Variable
+            The optional variable
+        collect_var : variable
+            the pyobject type variable  holder of value
+        check_type : Boolean
+            True if the type is needed
+
+        Returns
+        -------
+        body : list
+            A list of statements
+        """
+        body = [(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
+                [Assign(VariableAddress(variable), Nil())])]
+        if check_type : # Type check
+            check = PyccelNot(PythonType_Check(variable, collect_var))
+            error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, variable.dtype))
+            body += [(check, [error, Return([Nil()])])]
+        body += [(LiteralTrue(), [Assign(tmp_variable, self.get_collect_function_call(variable, collect_var)),
+                    Assign(VariableAddress(variable), VariableAddress(tmp_variable))])]
+        body = [If(*body)]
+
+        return body
+
+    def _body_valued_variable(self, variable, collect_var, check_type = False) :
+        """
+        Responsible for collecting value and managing error and create the body
+        of valued arguments in format
+                if (pyobject == Py_None){
+                    collect default value
+                }else if(Type Check == False){
+                    Print TypeError Wrong Type
+                    return Null
+                }else{
+                    collect the value from PyObject
+                }
+        Parameters:
+        ----------
+        Variable : Variable
+            The optional variable
+        collect_var : variable
+            the pyobject type variable  holder of value
+        check_type : Boolean
+            True if the type is needed
+
+        Returns
+        -------
+        body : list
+            A list of statements
+        """
+        body = [(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
+                [Assign(variable, variable.value)])]
+        if check_type : # Type check
+            check = PyccelNot(PythonType_Check(variable, collect_var))
+            error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, variable.dtype))
+            body += [(check, [error, Return([Nil()])])]
+        body += [(LiteralTrue(), [Assign(variable, self.get_collect_function_call(variable, collect_var))])]
+        body = [If(*body)]
+
+        return body
+
+    def _body_array(self, variable, collect_var, check_type = False) :
+        """
+        Responsible for collecting value and managing error and create the body
+        of arguments with rank greater than 0 in format
+                if (rank check == False){
+                    print TypeError Wrong rank
+                    return Null
+                }else if(Type Check == False){
+                    Print TypeError Wrong type
+                    return Null
+                }else if (order check == False){ #check for order for rank > 1
+                    Print NotImplementedError Wrong Order
+                    return Null
+                }
+                collect the value from PyArrayObject
+
+        Parameters:
+        ----------
+        Variable : Variable
+            The optional variable
+        collect_var : variable
+            the pyobject type variable  holder of value
+        check_type : Boolean
+            True if the type is needed
+
+        Returns
+        -------
+        body : list
+            A list of statements
+        """
+        body = []
+        #TODO create and extern rank and order check function
+        #check optional :
+        if variable.is_optional :
+            check = PyccelNot(VariableAddress(collect_var))
+            body += [(check, [Assign(VariableAddress(variable), Nil())])]
+
+        #rank check :
+        check = PyccelNe(FunctionCall(numpy_get_ndims,[collect_var]), LiteralInteger(collect_var.rank))
+        error = PyErr_SetString('PyExc_TypeError', '"{} must have rank {}"'.format(collect_var, str(collect_var.rank)))
+        body  += [(check, [error, Return([Nil()])])]
+        if check_type : #Type check
+            numpy_dtype = self.find_in_numpy_dtype_registry(variable)
+            arg_dtype   = self.find_in_dtype_registry(self._print(variable.dtype), variable.precision)
+            check = PyccelNe(FunctionCall(numpy_get_type, [collect_var]), numpy_dtype)
+            info_dump = PythonPrint([FunctionCall(numpy_get_type, [collect_var]), numpy_dtype])
+            error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, arg_dtype))
+            body += [(check, [info_dump, error, Return([Nil()])])]
+
+        if collect_var.rank > 1 and self._target_language == 'fortran' :#Order check
+            if collect_var.order == 'F':
+                check = FunctionCall(numpy_check_flag,[collect_var, numpy_flag_f_contig])
+            else:
+                check = FunctionCall(numpy_check_flag,[collect_var, numpy_flag_c_contig])
+                error = PyErr_SetString('PyExc_NotImplementedError',
+                        '"Argument does not have the expected ordering ({})"'.format(collect_var.order))
+                body += [(PyccelNot(check), [error, Return([Nil()])])]
+        body += [(LiteralTrue(), [Assign(VariableAddress(variable),
+                                self.get_collect_function_call(variable, collect_var))])]
+        body = [If(*body)]
+
+        return body
+
+    def _body_management(self, used_names, variable, collect_var, cast_function, check_type = False):
+        """
+        Responsible for calling functions that take care of body creation
+        """
+        tmp_variable = None
+        body = []
+
+        if variable.rank > 0:
+            body = self._body_array(variable, collect_var, check_type)
+
+        elif variable.is_optional:
+            tmp_variable = Variable(dtype=variable.dtype, name = self.get_new_name(used_names, variable.name+"_tmp"))
+            body = self._body_optional_variable(tmp_variable, variable, collect_var, check_type)
+
+        elif isinstance(variable, ValuedVariable):
+            body = self._body_valued_variable(variable, collect_var, check_type)
+
+        elif cast_function is not None:
+            body = [Assign(variable, cast_function)]
+
+        return body, tmp_variable
+
+    # -------------------------------------------------------------------
+    # Parsing arguments and building values Types functions
+    # -------------------------------------------------------------------
+    def get_PyArgParseType(self, used_names, variable):
         """
         Responsible for creating any necessary intermediate variables which are used
         to collect the result of PyArgParse, and collecting the required cast function
@@ -172,68 +390,40 @@ class CWrapperCodePrinter(CCodePrinter):
         variable : Variable
             The variable which will be passed to the translated function
 
-        argument : Variable
-            The original argument provided to the function
-
         Returns
         -------
         collect_var : Variable
             The variable which will be used to collect the argument
 
-        cast_func_stmts : list
-            A list of statements to be carried out after parsing the arguments.
-            These handle casting collect_var to variable if necessary
+        cast_fun : FunctionCall
+            call to cast function responsible of the conversion of one data type into another
         """
-        body = []
+        cast_function = None
         collect_var = variable
 
-        if variable.is_optional:
+        if variable.rank > 0:
+            collect_type = PyccelPyArrayObject()
+            collect_var = Variable(dtype= collect_type, is_pointer = True, rank = variable.rank,
+                                    order= variable.order, name=self.get_new_name(used_names, variable.name+"_tmp"))
+
+        elif isinstance(variable, ValuedVariable):
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-
-        elif variable.rank > 0:
-            check = PyccelNe(FunctionCall(numpy_get_ndims,[variable]), LiteralInteger(variable.rank))
-            err = PyErr_SetString('PyExc_TypeError', '"{} must have rank {}"'.format(variable, str(variable.rank)))
-            body = [If((check, [err, Return([Nil()])]))]
-
-            # Type check
-            numpy_dtype = self.find_in_numpy_dtype_registry(argument)
-            arg_dtype   = self.find_in_dtype_registry(self._print(argument.dtype), argument.precision)
-            check = PyccelNe(FunctionCall(numpy_get_type, [variable]), numpy_dtype)
-            info_dump = PythonPrint([FunctionCall(numpy_get_type, [variable]), numpy_dtype])
-            err = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(argument, arg_dtype))
-            body += [If((check, [info_dump, err, Return([Nil()])]))]
-
-            # Order check
-            if variable.rank > 1 and self._target_language == 'fortran':
-                if variable.order == 'F':
-                    check = FunctionCall(numpy_check_flag,[variable, numpy_flag_f_contig])
-                else:
-                    check = FunctionCall(numpy_check_flag,[variable, numpy_flag_c_contig])
-                body += [If((PyccelNot(check), [PyErr_SetString('PyExc_NotImplementedError',
-                            '"Argument does not have the expected ordering ({})"'.format(variable.order)),
-                            Return([Nil()])]))]
 
         elif variable.dtype is NativeBool():
             collect_type = NativeInteger()
             collect_var = Variable(dtype=collect_type, precision=4,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = 'pyint_to_bool'
-            body = [Assign(variable, self.get_cast_function_call(cast_function, collect_var))]
+            cast_function =  self.get_cast_function_call('pyint_to_bool', collect_var)
 
         elif variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function = 'pycomplex_to_complex'
-            body = [Assign(variable, self.get_cast_function_call(cast_function, collect_var))]
-            if isinstance(variable, ValuedVariable):
-                default_value = VariableAddress(Py_None)
-                body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
-                        (LiteralTrue(), [Assign(variable, variable.value)]))]
+            cast_function = self.get_cast_function_call('pycomplex_to_complex', collect_var)
 
-        return collect_var, body
+        return collect_var, cast_function
 
     def get_PyBuildValue(self, used_names, variable):
         """
@@ -253,17 +443,17 @@ class CWrapperCodePrinter(CCodePrinter):
         collect_var : Variable
             The variable which will be provided to PyBuild
 
-        cast_func_stmts : list
-            A list of statements to be carried out before building the return tuple.
-            These handle casting variable to collect_var if necessary
+        cast_func_stmts : functionCall
+            call to cast function responsible of the conversion of one data type into another
         """
+        collect_var = variable
+        cast_function = None
 
         if variable.dtype is NativeBool():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function_call('bool_to_pyobj', variable)
-            return collect_var, AliasAssign(collect_var, cast_function)
 
         if variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
@@ -271,65 +461,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
             cast_function = self.get_cast_function_call('complex_to_pycomplex', variable)
             self._to_free_PyObject_list.append(collect_var)
-            return collect_var, AliasAssign(collect_var, cast_function)
 
-        return variable, None
-
-    def get_default_assign(self, arg, func_arg):
-        if func_arg.is_optional:
-            return AliasAssign(arg, Py_None)
-        elif isinstance(arg.dtype, (NativeReal, NativeInteger, NativeBool)):
-            return Assign(arg, func_arg.value)
-        elif isinstance(arg.dtype, PyccelPyObject):
-            return AliasAssign(arg, Py_None)
-        else:
-            raise NotImplementedError('Default values are not implemented for this datatype : {}'.format(func_arg.dtype))
-
-    def optional_element_management(self, used_names, a, collect_var):
-        """
-        Responsible for collecting the variable required to build the result
-        into a temporary variable and create body of optional args check
-        in format
-            if (pyobject != Py_None){
-                assigne pyobject value to tmp variable
-                collect the adress of the tmp variable
-            }else{
-                collect Null
-            }
-
-        Parameters:
-        ----------
-        used_names : list of strings
-            List of variable and function names to avoid name collisions
-
-        a : Variable
-            The optional variable
-        collect_var : variable
-            the pyobject type variable  holder of value
-
-        Returns
-        -------
-        optional_tmp_var : Variable
-            The tmp variable
-
-        body : list
-            A list of statements
-        """
-        optional_tmp_var = Variable(dtype=a.dtype,
-                name = self.get_new_name(used_names, a.name+"_tmp"))
-
-        default_value = VariableAddress(Py_None)
-
-        check = FunctionCall(PyType_Check(a.dtype), [collect_var])
-        err = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(a, a.dtype))
-        body = [If((PyccelNot(check), [err, Return([Nil()])]))]
-        body += [Assign(optional_tmp_var, self.get_collect_function_call(optional_tmp_var, collect_var))]
-        body += [Assign(VariableAddress(a), VariableAddress(optional_tmp_var))]
-
-        body = [If((PyccelNe(VariableAddress(collect_var), default_value), body),
-        (LiteralTrue(), [Assign(VariableAddress(a), a.value)]))]
-        return optional_tmp_var, body
-
+        return collect_var, cast_function
 
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
@@ -425,30 +558,26 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body_translations = []
 
         parse_args = []
-        arguments = [Variable(PyccelPyArrayObject(),
-            a.name,
-            is_pointer = True,
-            rank  = a.rank,
-            order = a.order) if isinstance(a, Variable) and a.rank > 0
-                else a for a in expr.arguments]
-        for parse_arg, orig_arg in zip(arguments, expr.arguments):
-            collect_var, cast_func = self.get_PyArgParseType(used_names, parse_arg, orig_arg)
+        collect_vars = {}
+        for arg in expr.arguments:
+            collect_var , cast_func = self.get_PyArgParseType(used_names, arg)
+            collect_vars[arg] = collect_var
+
+            body, tmp_variable = self._body_management(used_names, arg, collect_var, cast_func, True)
+            if tmp_variable :
+                wrapper_vars[tmp_variable.name] = tmp_variable
 
             # If the variable cannot be collected from PyArgParse directly
             wrapper_vars[collect_var.name] = collect_var
 
             # Save cast to argument variable
-            wrapper_body_translations.extend(cast_func)
+            wrapper_body_translations.extend(body)
 
             parse_args.append(collect_var)
 
             # Write default values
-            if isinstance(parse_arg, ValuedVariable):
-                wrapper_body.append(self.get_default_assign(parse_args[-1], parse_arg))
-            if parse_arg.is_optional :
-                tmp_variable, body = self.optional_element_management(used_names, parse_arg, collect_var)
-                wrapper_vars[tmp_variable.name] = tmp_variable
-                wrapper_body_translations += body
+            if isinstance(arg, ValuedVariable):
+                wrapper_body.append(self.get_default_assign(parse_args[-1], arg))
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, expr.arguments, parse_args, keyword_list)
@@ -456,21 +585,10 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.extend(wrapper_body_translations)
 
         # Call function
-        if self._target_language == 'fortran':
-            static_args = []
-            for a in arguments:
-                if isinstance(a, Variable) and a.rank>0:
-                    # Add shape arguments for static function
-                    static_args.extend(FunctionCall(numpy_get_dim,[a,i])
-                            for i in range(a.rank))
-                    static_args.append(FunctionCall(numpy_get_data,[a]))
-                else:
-                    static_args.append(a)
-
-            static_function = as_static_function_call(expr, self._module_name, name=expr.name)
-        else:
-            static_function = expr
-            static_args = arguments
+        static_function, static_args, additional_body = self._get_static_function(used_names, expr, collect_vars)
+        wrapper_body.extend(additional_body)
+        for var in static_args :
+            wrapper_vars[var.name] = var
 
         if len(expr.results)==0:
             func_call = FunctionCall(static_function, static_args)
@@ -487,7 +605,7 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var, cast_func = self.get_PyBuildValue(used_names, a)
             if cast_func is not None:
                 wrapper_vars[collect_var.name] = collect_var
-                wrapper_body.append(cast_func)
+                wrapper_body.append(AliasAssign(collect_var, cast_func))
 
             res_args.append(VariableAddress(collect_var) if collect_var.is_pointer else collect_var)
 
