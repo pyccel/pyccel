@@ -2436,9 +2436,9 @@ class FCodePrinter(CodePrinter):
         return "%s_C_DOUBLE" % printed
 
     def _print_LiteralComplex(self, expr):
-        real_str = self._print(expr.real)
-        imag_str = self._print(expr.imag)
-        return "cmplx({}, {}, kind = {})".format(real_str, imag_str, expr.precision)
+        real_str = self._print_Float(expr.real)
+        imag_str = self._print_Float(expr.imag)
+        return "({}, {})".format(real_str, imag_str)
 
     def _print_LiteralInteger(self, expr):
         return "{0}_{1}".format(str(expr.p), iso_c_binding["integer"][expr.precision])
