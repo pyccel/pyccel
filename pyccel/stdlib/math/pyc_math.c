@@ -9,7 +9,7 @@ int64_t        pyc_factorial(int64_t n)
     /* ValueError: factorial() not defined for negative values */
     if (n < 0)
         return 0;
-    for (int i = 2; i <= n; i++)
+    for (int64_t i = 2; i <= n; i++)
         res *= i;
     return (res);
 }
