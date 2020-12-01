@@ -168,6 +168,8 @@ python_builtin_datatypes = {
     'complex' : PythonComplex
 }
 
+omploop_dict = {'for' : 'do'}
+
 errors = Errors()
 
 class FCodePrinter(CodePrinter):
@@ -1743,6 +1745,9 @@ class FCodePrinter(CodePrinter):
     def _print_OMP_Parallel_Construct(self, expr):
         clauses = ''
         if expr.combined:
+            for i, value in enumerate(expr.combined):
+                if value in omploop_dict: # pylint: disable=consider-using-get
+                    expr.combined[i] = omploop_dict[value]
             clauses = ' ' + ' '.join(expr.combined)
         clauses += str(expr.txt)
         omp_expr = '!$omp parallel{}\n'.format(clauses)
