@@ -79,6 +79,15 @@ from pyccel.errors.errors import Errors
 #      - use OrderedDict whenever it is possible
 from pyccel.errors.messages import *
 
+def get_name(a):
+    """ get the name of variable or an argument of the AST node."""
+    if isinstance(a, ast.Name):
+        return a.id
+    elif isinstance(a, ast.arg):
+        return a.arg
+    else:
+        raise NotImplementedError()
+
 #==============================================================================
 errors = Errors()
 #==============================================================================
@@ -113,32 +122,23 @@ class SyntaxParser(BasicParser):
 
             code = read_file(inputs)
 
-        self._code = code
-
+        self._code  = code
         self._scope = []
 
-        tree = extend_tree(code)
+        self.load()
 
-        self._fst = tree
-
-        def get_name(a):
-            if isinstance(a, ast.Name):
-                return a.id
-            elif isinstance(a, ast.arg):
-                return a.arg
-            else:
-                raise NotImplementedError()
-
-        self._used_names = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg)))
+        tree                = extend_tree(code)
+        self._fst           = tree
+        self._used_names    = set(get_name(a) for a in ast.walk(self._fst) if isinstance(a, (ast.Name, ast.arg)))
         self._dummy_counter = 1
 
         self.parse(verbose=True)
+        self.dump()
 
     def parse(self, verbose=False):
         """converts python ast to sympy ast."""
 
         if self.syntax_done:
-            print ('> syntax analysis already done')
             return self.ast
 
         # TODO - add settings to Errors
@@ -146,11 +146,11 @@ class SyntaxParser(BasicParser):
         errors.set_parser_stage('syntax')
 
         PyccelAstNode.stage = 'syntactic'
-        ast = self._visit(self.fst)
-
+        ast       = self._visit(self.fst)
         self._ast = ast
 
         self._visit_done = True
+        self._syntax_done = True
 
         return ast
 
@@ -188,6 +188,11 @@ class SyntaxParser(BasicParser):
         is_prog       = False
         body          = [self._visit(v) for v in stmt.body]
 
+        # Define the names of the module and program
+        # The module name allows it to be correctly referenced from an import command
+        current_mod_name = os.path.splitext(os.path.basename(self._filename))[0]
+        prog_name = 'prog_' + current_mod_name
+
         new_body      = []
         for i in body:
             if isinstance(i, CodeBlock):
@@ -206,6 +211,8 @@ class SyntaxParser(BasicParser):
                 mod.append(v)
                 targets.append(v.name)
                 current_file = mod
+                im = Import(source=current_mod_name, target = [v.name])
+                prog.append(im)
             elif isinstance(v,(Header, Comment, CommentBlock)):
                 # Headers and Comments are defined in the same block as the following object
                 n_empty_lines = 0
@@ -234,15 +241,8 @@ class SyntaxParser(BasicParser):
         if len(start)>0:
             mod.extend(start)
 
-        # Define the names of the module and program
-        # The module name allows it to be correctly referenced from an import command
-        current_mod_name = os.path.splitext(os.path.basename(self._filename))[0]
-        prog_name = 'prog_' + current_mod_name
         mod_code = CodeBlock(mod) if len(targets)>0 else None
         if is_prog:
-            if mod_code:
-                expr = Import(source=current_mod_name, target = targets)
-                prog.insert(0,expr)
             prog_code = CodeBlock(prog)
             prog_code.set_fst(stmt)
         else:
