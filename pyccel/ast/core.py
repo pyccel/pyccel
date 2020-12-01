@@ -3437,6 +3437,10 @@ class Interface(Basic):
         """True if the interface is used for a function argument."""
         return self._is_argument
 
+    @property
+    def doc_string(self):
+        return self._functions[0].doc_string
+
     def point(self, args):
         """Returns the actual function that will be called, depending on the passed arguments."""
         fs_args = [[j for j in i.arguments] for i in
