@@ -79,7 +79,7 @@ def print_fib(x):
     from header import fib
     print(fib(x))
 ```
-To compile this file we execute the follwing command `pyccel test_funcs.py --libs=funcs --libdir=$PWD`, this will create the shared library `test_funcs.so`
+To compile this file we execute the following command `pyccel test_funcs.py --libs=funcs --libdir=$PWD`, this will create the shared library `test_funcs.so`
 
 ## Pickling header files
 Parsing a large Pyccel header file with hundreds of function declarations may require a significant amount of time, therefore it is important that this process is only done once when pyccelizing multiple Python source files in a large project.
