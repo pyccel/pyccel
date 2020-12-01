@@ -95,7 +95,7 @@ class LiteralComplex(Basic, Literal):
 
         if isinstance(imag, LiteralFloat):
             if imag.precision == precision:
-        self._imag_part = imag
+                self._imag_part = imag
             else:
                 self._imag_part = LiteralFloat(imag.args[0], precision = precision)
         elif isinstance(imag, (int, float)):
