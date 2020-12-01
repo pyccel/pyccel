@@ -17,13 +17,13 @@ We create the file `header.pyh` that contains an openmp function definition:
 
 #$ header function omp_get_num_threads() results(int)
 ```
-We then create `openmp.py` file:
+We then create `example.py` file:
 
 ```python
 from header import omp_get_num_threads
 print('number of threads is :', omp_get_num_threads())
 ```
-Pyccel can compile the Python file with the following command: `pyccel openmp.py --language fortran --flags="-fopenmp"`
+Pyccel can compile the Python file with the following command: `pyccel example.py --openmp`
 , It will then create the executable file `openmp`
 #### Link with a static library
 We have the following Fortran Module that we put in the file `funcs.f90`  
