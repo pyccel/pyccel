@@ -195,10 +195,10 @@ dtype_registry = {('real',8)    : 'double',
                   ('real',4)    : 'float',
                   ('complex',8) : 'double complex',
                   ('complex',4) : 'float complex',
-                  ('int',4)     : 'int',
-                  ('int',8)     : 'long',
-                  ('int',2)     : 'short int',
-                  ('int',1)     : 'char',
+                  ('int',4)     : 'int32_t',
+                  ('int',8)     : 'int64_t',
+                  ('int',2)     : 'int16_t',
+                  ('int',1)     : 'int8_t',
                   ('bool',4)    : 'bool'}
 
 ndarray_type_registry = {('real',8)    : 'nd_double',
@@ -242,6 +242,7 @@ class CCodePrinter(CodePrinter):
         self._additional_imports = set(['stdlib'])
         self._parser = parser
         self._additional_code = ''
+        self._allocs = set()
         self._additional_declare = []
         self._additional_args = []
         self._temporary_args = []
@@ -687,7 +688,7 @@ class CCodePrinter(CodePrinter):
         shape = ", ".join(a for a in shape)
         dtype = self._print(expr.variable.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
-        shape_Assign = "(int[]){" + shape + "}"
+        shape_Assign = "(int32_t[]){" + shape + "}"
         alloc_code = "{} = array_create({}, {}, {});".format(expr.variable, len(expr.shape), shape_Assign, dtype)
         return '{}\n{}'.format(free_code, alloc_code)
 
@@ -814,7 +815,6 @@ class CCodePrinter(CodePrinter):
         if self._additional_args :
             self._additional_args.pop()
         imports = ''.join(self._print(i) for i in expr.imports)
-
         return ('{sep}\n'
                 '{signature}\n{{\n'
                 '{imports}\n'
@@ -888,6 +888,7 @@ class CCodePrinter(CodePrinter):
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
         if expr.stmt:
             code += self._print(expr.stmt)+'\n'
+        code += self.free_allocs(self._allocs)
         if len(args) == 1:
             code +='return {0};'.format(self._print(args[0]))
         elif len(args) > 1:
@@ -1018,10 +1019,17 @@ class CCodePrinter(CodePrinter):
 
     def _print_CodeBlock(self, expr):
         body = []
+        from pyccel.ast.core import Allocate, Return
         for b in expr.body :
+            if isinstance(b, Allocate):
+                self._allocs.add(b.variable)
             code = self._print(b)
             code = self._additional_code + code
             self._additional_code = ''
+            body.append(code)
+        if len(self._allocs):
+            code = self.free_allocs(self._allocs)
+            self._allocs = set()
             body.append(code)
         return '\n'.join(self._print(b) for b in body)
 
@@ -1181,6 +1189,16 @@ class CCodePrinter(CodePrinter):
     def _print_Omp_End_Clause(self, expr):
         return '}'
     #=====================================
+    def free_allocs(self, variables):
+        allocs = []
+        for var in variables:
+            if var.allocatable:
+                allocs.append(var)
+        if len(allocs):
+            allocs = ', '.join(self._print(i) for i in allocs)
+            self._allocs = set()
+            return 'free_allocs(' + allocs + ');\n'
+        return ''
 
     def _print_Program(self, expr):
         body  = self._print(expr.body)
@@ -1188,7 +1206,6 @@ class CCodePrinter(CodePrinter):
         decs    += [self._print(Declare(i.dtype, i)) for i in self._additional_declare]
         decs    = '\n'.join(self._print(i) for i in decs)
         self._additional_declare.clear()
-
         # PythonPrint imports last to be sure that all additional_imports have been collected
         imports  = [*expr.imports, *map(Import, self._additional_imports)]
         imports  = '\n'.join(self._print(i) for i in imports)
