@@ -1195,10 +1195,10 @@ class CCodePrinter(CodePrinter):
             for v in var:
                 if v.allocatable:
                     allocs.add(v)
-        if len(allocs):
-            allocs = ', '.join(self._print(i) for i in allocs)
+        if len(allocs) > 0:
+            allocs_str = ', '.join(self._print(i) for i in allocs)
             self._allocs = self._allocs[:len(self._allocs) - 2]
-            return 'free_allocs(' + allocs + ');\n'
+            return 'free_allocs(' + str(len(allocs)) + ', ' + allocs_str + ');\n'
         return ''
 
     def _print_Program(self, expr):
