@@ -17,8 +17,10 @@ from pyccel.ast.core      import ValuedArgument
 from pyccel.ast.core      import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
 from pyccel.ast.literals  import LiteralString
+from pyccel.errors.errors import Errors
 
 DEBUG = False
+errors = Errors()
 
 class Header(object):
     """Class for Header syntax."""
@@ -63,6 +65,11 @@ class TemplateStmt(BasicStmt):
 
     @property
     def expr(self):
+        if any(isinstance(d_type, FuncType) for d_type in self.dtypes):
+            msg = 'Functions a in template are not supported yet'
+            errors.report(msg,
+                        severity='fatal')
+
         dtypes = tuple(dict(d_type) for d_type in {tuple(t.expr.items())\
             for t in self.dtypes})
         return Template(self.name, dtypes)
@@ -172,16 +179,18 @@ class UnionTypeStmt(BasicStmt):
 
     @property
     def expr(self):
-        dtypes = [dict(d_type) for d_type in {tuple(t.expr.items())\
-            for t in self.dtypes}]
         if self.const:
             for e in dtypes:
                 e["is_const"] = True
-
-        if len(dtypes)>1:
-            return UnionType(dtypes)
-        else:
-            return dtypes[0]
+        if len(self.dtypes)==1:
+            return self.dtypes[0].expr
+        if any(isinstance(d_type, FuncType) for d_type in self.dtypes):
+            msg = 'Functions in a uniontype are not supported yet'
+            errors.report(msg,
+                        severity='fatal')
+        dtypes = [dict(d_type) for d_type in {tuple(t.expr.items())\
+            for t in self.dtypes}]
+        return UnionType(dtypes)
 
 class HeaderResults(BasicStmt):
     """Base class representing a HeaderResults in the grammar."""
