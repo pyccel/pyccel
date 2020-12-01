@@ -2433,8 +2433,8 @@ class FCodePrinter(CodePrinter):
         return "{}_{}".format(printed, iso_c_binding["real"][expr.precision])
 
     def _print_LiteralComplex(self, expr):
-        real_str = self._print_Float(expr.real)
-        imag_str = self._print_Float(expr.imag)
+        real_str = self._print(expr.real)
+        imag_str = self._print(expr.imag)
         return "({}, {})".format(real_str, imag_str)
 
     def _print_LiteralInteger(self, expr):
