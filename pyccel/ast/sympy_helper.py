@@ -180,15 +180,14 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         start = pyccel_to_sympy(expr.start, symbol_map, used_names)
         stop  = pyccel_to_sympy(expr.stop , symbol_map, used_names)
         step  = pyccel_to_sympy(expr.step , symbol_map, used_names)
-        print(start, stop, step)
-        return PythonRange(start, stop, step)
+        return sp.Range(start, stop, step)
 
     elif isinstance(expr, Assign):
         lhs = pyccel_to_sympy(expr.lhs, symbol_map, used_names)
         rhs = pyccel_to_sympy(expr.rhs, symbol_map, used_names)
         return Assign(lhs, rhs)
 
-    elif isinstance(expr, (sp.core.basic.Atom, sp.core.operations.AssocOp)):
+    elif isinstance(expr, (sp.core.basic.Atom, sp.core.operations.AssocOp, sp.Set)):
         # Already translated
         return expr
 
