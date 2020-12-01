@@ -7,6 +7,7 @@ import operator
 from sympy.core import Tuple
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
+from pyccel.ast.core      import Allocate
 from pyccel.ast.core      import Declare, IndexedVariable, Slice, ValuedVariable
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import FunctionAddress
@@ -242,7 +243,7 @@ class CCodePrinter(CodePrinter):
         self._additional_imports = set(['stdlib'])
         self._parser = parser
         self._additional_code = ''
-        self._allocs = set()
+        self._allocs = []
         self._additional_declare = []
         self._additional_args = []
         self._temporary_args = []
@@ -1019,17 +1020,14 @@ class CCodePrinter(CodePrinter):
 
     def _print_CodeBlock(self, expr):
         body = []
-        from pyccel.ast.core import Allocate, Return
+        allocs = set()
+        self._allocs.append(allocs)
         for b in expr.body :
             if isinstance(b, Allocate):
-                self._allocs.add(b.variable)
+                allocs.add(b.variable)
             code = self._print(b)
             code = self._additional_code + code
             self._additional_code = ''
-            body.append(code)
-        if len(self._allocs):
-            code = self.free_allocs(self._allocs)
-            self._allocs = set()
             body.append(code)
         return '\n'.join(self._print(b) for b in body)
 
@@ -1190,13 +1188,14 @@ class CCodePrinter(CodePrinter):
         return '}'
     #=====================================
     def free_allocs(self, variables):
-        allocs = []
+        allocs = set()
         for var in variables:
-            if var.allocatable:
-                allocs.append(var)
+            for v in var:
+                if v.allocatable:
+                    allocs.add(v)
         if len(allocs):
             allocs = ', '.join(self._print(i) for i in allocs)
-            self._allocs = set()
+            self._allocs = self._allocs[:len(self._allocs) - 2]
             return 'free_allocs(' + allocs + ');\n'
         return ''
 
@@ -1209,14 +1208,17 @@ class CCodePrinter(CodePrinter):
         # PythonPrint imports last to be sure that all additional_imports have been collected
         imports  = [*expr.imports, *map(Import, self._additional_imports)]
         imports  = '\n'.join(self._print(i) for i in imports)
+        free_allocs = self.free_allocs(self._allocs)
         return ('{imports}\n'
                 'int main()\n{{\n'
                 '{decs}\n\n'
                 '{body}\n'
+                '{free_allocs}\n'
                 'return 0;\n'
                 '}}').format(imports=imports,
                                     decs=decs,
-                                    body=body)
+                                    body=body,
+                                    free_allocs=free_allocs)
 
 
 
