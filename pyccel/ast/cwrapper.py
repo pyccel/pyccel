@@ -11,7 +11,7 @@ from .builtins  import PythonBool, PythonComplex
 
 from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex
-from .datatypes import NativeBool, NativeString, NativeGeneric
+from .datatypes import NativeBool, NativeString, NativeGeneric, NativeVoid
 
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress, FunctionAddress
 from .core      import AliasAssign, Assign, Return, If
@@ -45,7 +45,7 @@ __all__ = (
     'Py_DECREF',
     'PyLong_AsLong',
     'PyFloat_AsDouble',
-    'PyType_Check',
+    'Type_Check',
     'PyErr_SetString',
 #------- CAST FUNCTIONS ------
     'pyint_to_bool',
@@ -134,9 +134,16 @@ class PyArg_ParseTupleNode(Basic):
         List of arguments into which the result will be collected
     arg_names : list of str
         A list of the names of the function arguments
+    is_interface : boolean
+        Default value False and True when working with interface functions
     """
 
-    def __init__(self, python_func_args, python_func_kwargs, c_func_args, parse_args, arg_names):
+    def __init__(self, python_func_args,
+                        python_func_kwargs,
+                        c_func_args, parse_args,
+                        arg_names,
+                        is_interface=False):
+        Basic.__init__(self)
         if not isinstance(python_func_args, Variable):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
@@ -147,10 +154,12 @@ class PyArg_ParseTupleNode(Basic):
             raise TypeError('Parse args should be a list of Variables')
         if not isinstance(arg_names, PyArgKeywords):
             raise TypeError('Parse args should be a list of Variables')
-
         if len(parse_args) != len(c_func_args):
             raise TypeError('There should be the same number of c_func_args and parse_args')
+        if not isinstance(is_interface, bool):
+            raise TypeError('is_interface should be a boolean')
 
+        self._is_interface = is_interface
         self._flags      = ''
         i = 0
 
@@ -177,9 +186,8 @@ class PyArg_ParseTupleNode(Basic):
         self._parse_args = parse_args
         self._arg_names  = arg_names
 
-    @staticmethod
-    def get_pytype(c_arg, parse_arg):
-        if isinstance(c_arg, FunctionAddress):
+    def get_pytype(self, c_arg, parse_arg):
+        if isinstance(c_arg, FunctionAddress) or (self._is_interface and c_arg.rank == 0):
             return 'O'
         else:
             try:
@@ -323,11 +331,11 @@ numpy_byte_type = Variable(dtype=NativeInteger(),  name = 'NPY_BYTE', precision 
 numpy_ubyte_type = Variable(dtype=NativeInteger(),  name = 'NPY_UBYTE', precision = 4)
 numpy_short_type = Variable(dtype=NativeInteger(),  name = 'NPY_SHORT', precision = 4)
 numpy_ushort_type = Variable(dtype=NativeInteger(),  name = 'NPY_USHORT', precision = 4)
-numpy_int_type = Variable(dtype=NativeInteger(),  name = 'NPY_INT', precision = 4)
+numpy_int_type = Variable(dtype=NativeInteger(),  name = 'NPY_INT32', precision = 4)
 numpy_uint_type = Variable(dtype=NativeInteger(),  name = 'NPY_UINT', precision = 4)
 numpy_long_type = Variable(dtype=NativeInteger(),  name = 'NPY_LONG', precision = 4)
 numpy_ulong_type = Variable(dtype=NativeInteger(),  name = 'NPY_ULONG', precision = 4)
-numpy_longlong_type = Variable(dtype=NativeInteger(),  name = 'NPY_LONGLONG', precision = 4)
+numpy_longlong_type = Variable(dtype=NativeInteger(),  name = 'NPY_INT64', precision = 4)
 numpy_ulonglong_type = Variable(dtype=NativeInteger(),  name = 'NPY_ULONGLONG', precision = 4)
 numpy_float_type = Variable(dtype=NativeInteger(),  name = 'NPY_FLOAT', precision = 4)
 numpy_double_type = Variable(dtype=NativeInteger(),  name = 'NPY_DOUBLE', precision = 4)
@@ -396,6 +404,32 @@ def PythonType_Check(variable, argument):
                     arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
     return FunctionCall(check_func, [argument])
+
+def NumpyType_Check(variable, argument):
+    """
+    Create FunctionCall responsible of checking numpy argument data type
+    Parameters:
+    ----------
+    variable : Variable
+        The variable needed for the generation of the type check
+    argument : Variable
+        argument of the check function
+
+    Returns
+    -------
+    FunctionCall : Check type FunctionCall
+    """
+    try :
+        check_numpy_ref = numpy_type_check_registry[(variable.dtype, variable.precision)]
+    except KeyError:
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=variable.dtype,severity='fatal')
+
+    check_numpy_func = FunctionDef(name = 'PyArray_IsScalar',
+                    body = [],
+                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True), check_numpy_ref],
+                    results   = [Variable(dtype=NativeBool(), name = 'r')])
+    return FunctionCall(check_numpy_func, [argument, check_numpy_ref])
+
 
 def PyErr_SetString(error_type, error_msg):
     func = FunctionDef(name = 'PyErr_SetString',
@@ -491,14 +525,64 @@ cast_function_registry = {
     'pybool_to_bool' : pybool_to_bool,
 }
 
+
+PyArray_CheckScalar = FunctionDef(name = 'PyArray_CheckScalar',
+                                  body= [],
+                                  arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                                  results = [Variable(dtype=NativeBool(), name = 'r')])
+
+PyArray_ScalarAsCtype = FunctionDef(name = 'PyArray_ScalarAsCtype',
+                                    body = [],
+                                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
+                                                Variable(dtype=NativeVoid(), name = 'c', is_pointer = True)],
+                                    results = [])
+
 collect_function_registry = {
     NativeInteger(): PyLong_AsLong,
     NativeReal() : PyFloat_AsDouble,
 }
 
-check_type_registry = {
+check_type_registry  = {
     NativeInteger(): 'PyLong_Check',
     NativeComplex() : 'PyComplex_Check',
     NativeReal() : 'PyFloat_Check',
     NativeBool() : 'PyBool_Check',
+}
+
+
+
+# Needed to check for numpy arguments type
+Numpy_Bool_ref = Variable(dtype=NativeVoid(),  name = 'Bool')
+Numpy_Int8_ref = Variable(dtype=NativeVoid(),  name = 'Int8')
+Numpy_Int16_ref = Variable(dtype=NativeVoid(),  name = 'Int16')
+Numpy_Int32_ref = Variable(dtype=NativeVoid(),  name = 'Int32')
+Numpy_Int64_ref = Variable(dtype=NativeVoid(),  name = 'Int64')
+Numpy_Float_ref = Variable(dtype=NativeVoid(),  name = 'Float32')
+Numpy_Double_ref = Variable(dtype=NativeVoid(),  name = 'Float64')
+Numpy_Complex64_ref = Variable(dtype=NativeVoid(),  name = 'Complex64')
+Numpy_Complex128_ref = Variable(dtype=NativeVoid(),  name = 'Complex128')
+
+numpy_type_check_registry = {
+    (NativeInteger(), 4)       : Numpy_Int32_ref,
+    (NativeInteger(), 8)       : Numpy_Int64_ref,
+    (NativeInteger(), 2)       : Numpy_Int16_ref,
+    (NativeInteger(), 1)       : Numpy_Int8_ref,
+    (NativeReal(), 8)          : Numpy_Double_ref,
+    (NativeReal(), 4)          : Numpy_Float_ref,
+    (NativeComplex(), 4)       : Numpy_Complex64_ref,
+    (NativeComplex(), 8)       : Numpy_Complex128_ref,
+    (NativeBool(), 4)          : Numpy_Bool_ref
+}
+
+flags_registry = {
+    (NativeInteger(), 4)       : 1,
+    (NativeInteger(), 8)       : 2,
+    (NativeInteger(), 2)       : 3,
+    (NativeInteger(), 1)       : 4,
+    (NativeReal(), 8)          : 5,
+    (NativeReal(), 4)          : 6,
+    (NativeComplex(), 4)       : 7,
+    (NativeComplex(), 8)       : 8,
+    (NativeBool(), 4)          : 9,
+    (NativeString(), 0)        : 10
 }
