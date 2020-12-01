@@ -7,7 +7,7 @@ from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
 from .basic     import Basic
 
-from .builtins  import PythonBool
+from .builtins  import PythonBool, PythonComplex
 
 from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex
@@ -16,7 +16,7 @@ from .datatypes import NativeBool, NativeString, NativeGeneric
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress, FunctionAddress
 from .core      import AliasAssign, Assign, Return, If
 
-from .literals  import LiteralTrue, LiteralComplex
+from .literals  import LiteralTrue
 
 from .numpyext  import NumpyReal, NumpyImag
 
@@ -463,7 +463,7 @@ def pycomplex_to_complex(cast_function_name):
 
     cast_function_body = [Assign(real_part, FunctionCall(pycomplex_real, [cast_function_argument])),
                           Assign(imag_part, FunctionCall(pycomplex_imag, [cast_function_argument])),
-                          Assign(cast_function_result, LiteralComplex(real_part, imag_part)),
+                          Assign(cast_function_result, PythonComplex(real_part, imag_part)),
                           Return([cast_function_result])]
     return FunctionDef(name      = cast_function_name,
                        arguments = [cast_function_argument],
