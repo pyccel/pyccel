@@ -1,9 +1,12 @@
 import sympy as sp
 from sympy.core.numbers import One, NegativeOne, Zero, Half
 
-from .operators import PyccelAdd, PyccelMul, PyccelPow
+from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
 from .core      import Variable, create_incremented_string, PyccelArraySize
+from .core      import CodeBlock, Comment, For, Assign
+
+from .builtins  import PythonRange
 
 from .mathext   import MathCeil
 
@@ -128,6 +131,10 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
         return args[0] - args[1]
 
+    elif isinstance(expr, PyccelUnarySub):
+        arg = pyccel_to_sympy(expr.args[0], symbol_map, used_names)
+        return -arg
+
     elif isinstance(expr, PyccelAdd):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
         return sp.Add(*args)
@@ -155,6 +162,35 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         sym = sp.Symbol(sym_name)
         symbol_map[sym] = expr
         return sym
+
+    elif isinstance(expr, CodeBlock):
+        body = (pyccel_to_sympy(b, symbol_map, used_names) for b in expr.body)
+        return CodeBlock(body)
+
+    elif isinstance(expr, (Comment)):
+        return Comment('')
+
+    elif isinstance(expr, For):
+        target = pyccel_to_sympy(expr.target, symbol_map, used_names)
+        iter_obj = pyccel_to_sympy(expr.iterable, symbol_map, used_names)
+        body = pyccel_to_sympy(expr.body, symbol_map, used_names)
+        return For(target, iter_obj, body)
+
+    elif isinstance(expr, PythonRange):
+        start = pyccel_to_sympy(expr.start, symbol_map, used_names)
+        stop  = pyccel_to_sympy(expr.stop , symbol_map, used_names)
+        step  = pyccel_to_sympy(expr.step , symbol_map, used_names)
+        print(start, stop, step)
+        return PythonRange(start, stop, step)
+
+    elif isinstance(expr, Assign):
+        lhs = pyccel_to_sympy(expr.lhs, symbol_map, used_names)
+        rhs = pyccel_to_sympy(expr.rhs, symbol_map, used_names)
+        return Assign(lhs, rhs)
+
+    elif isinstance(expr, (sp.core.basic.Atom, sp.core.operations.AssocOp)):
+        # Already translated
+        return expr
 
     else:
         raise TypeError(str(type(expr)))
