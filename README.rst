@@ -28,13 +28,14 @@ Requirements
 ============
 
 First of all, Pyccel requires a working Fortran/C compiler   
-for Fortran it supports
+
+For Fortran it supports
 
 -   GFortran <https://gcc.gnu.org/fortran/>
 -   Intel® Fortran Compiler <https://software.intel.com/en-us/fortran-compilers>
 -   PGI Fortran <https://www.pgroup.com/index.htm>
 
-for C it supports
+For C it supports
 
 -   Gcc <https://gcc.gnu.org/>
 -   Intel® Compiler <https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/dpc-compiler.html>
