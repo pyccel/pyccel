@@ -24,7 +24,7 @@ from header import omp_get_num_threads
 print('number of threads is :', omp_get_num_threads())
 ```
 Pyccel can compile the Python file with the following command: `pyccel example.py --openmp`
-, It will then create the executable file `openmp`
+, It will then create the executable file `example`
 #### Link with a static library
 We have the following Fortran Module that we put in the file `funcs.f90`  
 
