@@ -2649,6 +2649,8 @@ class TupleVariable(Variable):
         self._vars[variable_idx] = self._vars[variable_idx].clone(new_name)
 
     def __getitem__(self,idx):
+        if isinstance(idx, LiteralInteger):
+            idx = idx.p
         return self.get_var(idx)
 
     def __iter__(self):
@@ -4767,6 +4769,8 @@ class IndexedVariable(IndexedBase, PyccelAstNode):
 
         if self.shape and len(self.shape) != len(args):
             raise IndexError('Rank mismatch.')
+
+        args = tuple(a.p if isinstance(a, LiteralInteger) else a for a in args)
 
         obj = IndexedElement(self, *args)
         return obj
