@@ -29,6 +29,10 @@ class Literal(PyccelAstNode):
     _rank      = 0
     _shape     = ()
 
+    def __init__(self, precision):
+        if not isinstance(precision, int):
+            raise TypeError("precision must be an integer")
+        self._precision = precision
     @PyccelAstNode.precision.setter
     def precision(self, precision):
         """ Set precision for a literal class"""
@@ -39,14 +43,14 @@ class LiteralTrue(sp_BooleanTrue, Literal):
     """Represents the python value True"""
     _dtype     = NativeBool()
     def __init__(self, precision = default_precision['bool']):
-        self._precision = precision
+        Literal.__init__(self, precision)
 
 #------------------------------------------------------------------------------
 class LiteralFalse(sp_BooleanFalse, Literal):
     """Represents the python value False"""
     _dtype     = NativeBool()
     def __init__(self,precision = default_precision['bool']):
-        self._precision = precision
+        Literal.__init__(self, precision)
 
 #------------------------------------------------------------------------------
 class LiteralInteger(sp_Integer, Literal):
@@ -59,14 +63,14 @@ class LiteralInteger(sp_Integer, Literal):
         obj.p = ival
         return obj
     def __init__(self, value, precision = default_precision['integer']):
-        self._precision = precision
+        Literal.__init__(self, precision)
 
 #------------------------------------------------------------------------------
 class LiteralFloat(sp_Float, Literal):
     """Represents a float literal in python"""
     _dtype     = NativeReal()
     def __init__(self, value, *, precision = default_precision['float']):
-        self._precision = precision
+        Literal.__init__(self, precision)
 
 
 #------------------------------------------------------------------------------
@@ -81,7 +85,7 @@ class LiteralComplex(Basic, Literal):
         Basic.__init__(self)
         self._real_part = real
         self._imag_part = imag
-        self._precision = precision
+        Literal.__init__(self, precision)
 
     @property
     def real(self):
