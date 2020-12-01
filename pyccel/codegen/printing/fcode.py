@@ -2430,10 +2430,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_LiteralFloat(self, expr):
         printed = CodePrinter._print_Float(self, expr)
-        e = printed.find('e')
-        if e > -1:
-            return "%sd%s" % (printed[:e], printed[e + 1:])
-        return "%s_C_DOUBLE" % printed
+        return "{}_{}".format(printed, iso_c_binding["real"][expr.precision])
 
     def _print_LiteralComplex(self, expr):
         real_str = self._print_Float(expr.real)
