@@ -187,7 +187,9 @@ def execute_pyccel(fname, *,
         module_names = [module_name]
 
     # -------------------------------------------------------------------------
-    internal_lib_dict = {}
+    internal_libs_name = {}
+    internal_libs_path = []
+    internal_libs_files = []
     for parser, module_name in zip(parsers, module_names):
         semantic_parser = parser.semantic_parser
         # Generate .f90 file
@@ -215,8 +217,7 @@ def execute_pyccel(fname, *,
         #         # Call same function on 'dep'
         #         pass
         #------------------------------------------------------
-        dep_mods = []
-        inc_dirs = []
+
         # Determine if the module or program requires internal libraries
         # by iterating over internal_libs list that containes internal libs
         # implemented inside pyccel and compare them by module includes
@@ -224,7 +225,7 @@ def execute_pyccel(fname, *,
         for lib in internal_libs:
             if lib in codegen.get_printer_imports():
                 # get the include folder path and library files
-                if lib not in internal_lib_dict:
+                if lib not in internal_libs_name:
                     # get the library folder name
                     lib_name = internal_libs[lib]
                     # get path to pyccel/stdlib/lib_name
@@ -265,15 +266,12 @@ def execute_pyccel(fname, *,
                     except Exception:
                         handle_error('C {} library compilation'.format(lib))
                         raise
-                    # get source file without extension
-                    pure_files = [os.path.splitext(f)[0] for f in source_files]
-                    internal_lib_dict[lib] = pure_files, lib_dest_path
-                internal_lib = internal_lib_dict[lib]
-
-                # append the internal library files to obj
-                dep_mods.extend(internal_lib[0])
-                # append include path to incs
-                inc_dirs.append(internal_lib[1])
+                    # Add internal lib to internal_libs_name dict
+                    internal_libs_name[lib] = 1
+                    # add source file without extension to internal_libs_files
+                    internal_libs_files.extend([os.path.splitext(f)[0] for f in source_files])
+                    # add library path to internal_libs_path
+                    internal_libs_path.append(lib_dest_path)
 
         if convert_only:
             continue
@@ -299,9 +297,12 @@ def execute_pyccel(fname, *,
 
             return mods, folders
 
-        module_dep = get_module_dependencies(parser)
-        dep_mods.extend(module_dep[0])
-        inc_dirs.extend(module_dep[1])
+        dep_mods, inc_dirs = get_module_dependencies(parser)
+
+        # Add internal dependencies
+        dep_mods = [*dep_mods, *internal_libs_files]
+        inc_dirs = [*inc_dirs, *internal_libs_path]
+
         # Remove duplicates without changing order
         dep_mods = tuple(OrderedDict.fromkeys(dep_mods))
         inc_dirs = tuple(OrderedDict.fromkeys(inc_dirs))
