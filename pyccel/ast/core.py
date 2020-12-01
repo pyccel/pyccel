@@ -170,6 +170,7 @@ local_sympify = {
     'ones' : Symbol('ones'),
     'Point': Symbol('Point')
 }
+
 # TODO - add EmptyStmt => empty lines
 #      - update code examples
 #      - add examples
@@ -178,7 +179,10 @@ local_sympify = {
 #      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
 #      - add a new Idx that uses Variable instead of Symbol
 
+#==============================================================================
+def apply(func, args, kwargs):return func(*args, **kwargs)
 
+#==============================================================================
 def subs(expr, new_elements):
     """
     Substitutes old for new in an expression after sympifying args.
@@ -2392,21 +2396,39 @@ class Variable(Symbol, PyccelAstNode):
 
         self._name = newname
 
-    def __getnewargs__(self):
-        """used for Pickling self."""
+    def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
 
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable function that can be called
+           to create the initial version of the object
+           and its arguments.
+        """
         args = (
             self.dtype,
-            self.name,
-            self.rank,
-            self.allocatable,
-            self.is_pointer,
-            self.is_polymorphic,
-            self.is_optional,
-            self.shape,
-            self.cls_base,
-            )
-        return args
+            self.name)
+        kwargs = {
+            'rank' : self.rank,
+            'allocatable': self.allocatable,
+            'is_pointer':self.is_pointer,
+            'is_polymorphic':self.is_polymorphic,
+            'is_optional':self.is_optional,
+            'shape':self.shape,
+            'cls_base':self.cls_base,
+            }
+
+        out =  (apply, (Variable, args, kwargs))
+        return out
 
     def _eval_subs(self, old, new):
         return self
@@ -2414,7 +2436,6 @@ class Variable(Symbol, PyccelAstNode):
     def _eval_is_positive(self):
         #we do this inorder to infere the type of Pow expression correctly
         return self.is_real
-
 
 class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
 
@@ -3236,8 +3257,8 @@ class FunctionDef(Basic):
         newname: str
             new name for the FunctionDef
         """
-        args = self.__getnewargs__()
-        new_func = FunctionDef(*args)
+        args, kwargs = self.__getnewargs__()
+        new_func = FunctionDef(*args, **kwargs)
         new_func.rename(newname)
         return new_func
 
@@ -3290,34 +3311,60 @@ class FunctionDef(Basic):
             or len(set(self.results).intersection(self.arguments)) > 0
         return flag
 
-    def __getnewargs__(self):
-        """used for Pickling self."""
 
+    def __getnewargs__(self):
+        """
+          This method returns the positional and keyword arguments
+            used to create an instance of this class.
+        """
         args = (
-                self._name,
-                self._arguments,
-                self._results,
-                self._body,
-                self._local_vars,
-                self._global_vars,
-                self._cls_name,
-                self._hide,
-                self._kind,
-                self._is_static,
-                self._imports,
-                self._decorators,
-                self._headers,
-                self._templates,
-                self._is_recursive,
-                self._is_pure,
-                self._is_elemental,
-                self._is_private,
-                self._is_header,
-                self._arguments_inout,
-                self._functions,
-                self._interfaces
-            )
-        return args
+        self._name,
+        self._arguments,
+        self._results,
+        self._body)
+
+        kwargs = {
+        'local_vars':self._local_vars,
+        'global_vars':self._global_vars,
+        'cls_name':self._cls_name,
+        'hide':self._hide,
+        'kind':self._kind,
+        'is_static':self._is_static,
+        'imports':self._imports,
+        'decorators':self._decorators,
+        'headers':self._headers,
+        'templates':self._templates,
+        'is_recursive':self._is_recursive,
+        'is_pure':self._is_pure,
+        'is_elemental':self._is_elemental,
+        'is_private':self._is_private,
+        'is_header':self._is_header,
+        'arguments_inout':self._arguments_inout,
+        'functions':self._functions}
+        return args, kwargs
+
+    def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable function that can be called
+           to create the initial version of the object
+           and its arguments.
+        """
+        args, kwargs = self.__getnewargs__()
+        out = (apply, (self.__class__, args, kwargs))
+        return out
+
 
     # TODO
     def check_pure(self):
@@ -5544,18 +5591,18 @@ def get_iterable_ranges(it, var_name=None):
 class ParserResult(Basic):
     def __new__(
         cls,
-        program=None,
-        module=None,
-        mod_name = None,
+        program   = None,
+        module    = None,
+        mod_name  = None,
         prog_name = None,
         ):
         return Basic.__new__(cls)
 
     def __init__(
         self,
-        program=None,
-        module=None,
-        mod_name = None,
+        program   = None,
+        module    = None,
+        mod_name  = None,
         prog_name = None,
         ):
 
@@ -5609,6 +5656,30 @@ class ParserResult(Basic):
         else:
             return self.module
 
+    def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable function that can be called
+           to create the initial version of the object
+           and its arguments.
+        """
+        kwargs = dict(
+        program = self.program,
+        module  = self.module,
+        prog_name = self.prog_name,
+        mod_name  = self.mod_name)
+        return (apply, (self.__class__, (), kwargs))
 
 #==============================================================================
 def process_shape(shape):
