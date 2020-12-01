@@ -751,7 +751,7 @@ class SemanticParser(BasicParser):
                 return obj
 
         # Unknown object, we raise an error.
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=type(expr),
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal', blocker=self.blocking)
 
