@@ -195,10 +195,10 @@ dtype_registry = {('real',8)    : 'double',
                   ('real',4)    : 'float',
                   ('complex',8) : 'double complex',
                   ('complex',4) : 'float complex',
-                  ('int',4)     : 'int',
-                  ('int',8)     : 'long',
-                  ('int',2)     : 'short int',
-                  ('int',1)     : 'char',
+                  ('int',4)     : 'int32_t',
+                  ('int',8)     : 'int64_t',
+                  ('int',2)     : 'int16_t',
+                  ('int',1)     : 'int8_t',
                   ('bool',4)    : 'bool'}
 
 ndarray_type_registry = {('real',8)    : 'nd_double',
@@ -547,6 +547,8 @@ class CCodePrinter(CodePrinter):
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         rank  = expr.rank
+        if isinstance(expr.dtype, NativeInteger):
+            self._additional_imports.add('stdint')
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
             if expr.is_ndarray:
