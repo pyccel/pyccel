@@ -17,7 +17,7 @@ from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
-from .literals  import LiteralInteger, LiteralFloat
+from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
 
 __all__ = (
     'PythonBool',
@@ -87,13 +87,21 @@ class PythonComplex(Expr, PyccelAstNode):
     _dtype = NativeComplex()
 
     def __new__(cls, arg0, arg1=LiteralFloat(0)):
-        if isinstance(arg, LiteralFloat):
-            return LiteralFloat(arg.arg[0], precision = cls._precision)
-        elif isinstance(arg, LiteralInt):
-            return LiteralFloat(arg.p, precision = cls._precision)
+        if isinstance(arg0, LiteralFloat):
+            arg0 = LiteralFloat(arg0, precision = cls._precision)
+        elif isinstance(arg0, LiteralInteger):
+            arg0 = LiteralFloat(arg0.p, precision = cls._precision)
+        if isinstance(arg1, LiteralFloat):
+            arg1 = LiteralFloat(arg1, precision = cls._precision)
+        elif isinstance(arg1, LiteralInteger):
+            arg1 = LiteralFloat(arg1.p, precision = cls._precision)
+
+        if isinstance(arg0, LiteralFloat) and isinstance(arg1, LiteralFloat):
+            return LiteralComplex(arg0, arg1, precision = cls._precision)
+        elif isinstance(arg0, LiteralComplex):
+            return LiteralComplex(arg0.real, arg0.imag, precision = cls._precision)
         else:
-            return Expr.__new__(cls, arg)
-        return Expr.__new__(cls, arg0, arg1)
+            return Expr.__new__(cls, arg0, arg1)
 
     @property
     def real_part(self):
