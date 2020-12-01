@@ -275,6 +275,9 @@ class CCodePrinter(CodePrinter):
         value = self._print(expr.arg)
         return '({} != 0)'.format(value)
 
+    def _print_LiteralInteger(self, expr):
+        return str(expr.p)
+
     def _print_LiteralComplex(self, expr):
         return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
                         PyccelMul(expr.imag, LiteralImaginaryUnit()))))
@@ -665,7 +668,7 @@ class CCodePrinter(CodePrinter):
                         inds[i] = Slice(start, end)
                     else:
                         #setting the Slice start and end to their correct value when try to get a view with scalar index
-                        inds[i] = Slice(ind, ind + 1)
+                        inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1)))
                 inds = [self._print(i) for i in inds]
                 return "array_slicing(%s, %s)" % (base_name, ", ".join(inds))
             inds = [self._print(i) for i in inds]
