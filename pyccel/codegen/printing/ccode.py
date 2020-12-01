@@ -545,6 +545,8 @@ class CCodePrinter(CodePrinter):
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         rank  = expr.rank
+        if isinstance(expr.dtype, NativeInteger):
+            self._additional_imports.add('stdint')
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
             if expr.is_ndarray:
