@@ -68,7 +68,7 @@ class TemplateStmt(BasicStmt):
     @property
     def expr(self):
         if any(isinstance(d_type, FuncType) for d_type in self.dtypes):
-            msg = 'Functions a in template are not supported yet'
+            msg = 'Functions in a template are not supported yet'
             errors.report(msg,
                         severity='fatal')
 
@@ -181,17 +181,18 @@ class UnionTypeStmt(BasicStmt):
 
     @property
     def expr(self):
+        dtypes = [i.expr for i in self.dtypes]
         if self.const:
-            for e in dtypes:
-                e["is_const"] = True
-        if len(self.dtypes)==1:
-            return self.dtypes[0].expr
+            for d_type in dtypes:
+                d_type["is_const"] = True
+        if len(dtypes)==1:
+            return dtypes[0]
         if any(isinstance(d_type, FuncType) for d_type in self.dtypes):
             msg = 'Functions in a uniontype are not supported yet'
             errors.report(msg,
                         severity='fatal')
-        dtypes = [dict(d_type) for d_type in {tuple(t.expr.items())\
-            for t in self.dtypes}]
+        dtypes = [dict(d_type) for d_type in {tuple(t.items())\
+            for t in dtypes}]
         return UnionType(dtypes)
 
 class HeaderResults(BasicStmt):
