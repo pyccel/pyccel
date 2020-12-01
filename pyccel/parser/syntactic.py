@@ -654,7 +654,8 @@ class SyntaxParser(BasicParser):
             return EmptyNode()
 
         if 'stack_array' in decorators:
-            decorators['stack_array'] = tuple(str(a) for a in decorators['stack_array'].args)
+            decorators['stack_array'] = tuple(str(b) for a in decorators['stack_array']
+                for b in a.args)
 
         if 'allow_negative_index' in decorators:
             decorators['allow_negative_index'] = tuple(str(b) for a in decorators['allow_negative_index'] for b in a.args)
