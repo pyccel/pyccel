@@ -1170,7 +1170,7 @@ class CCodePrinter(CodePrinter):
     #=================== OMP ==================
     def _print_OMP_For_Loop(self, expr):
         omp_expr   = str(expr.txt)
-        return '#pragma omp for{}\n{{'.format(omp_expr)
+        return '#pragma omp for{}'.format(omp_expr)
 
     def _print_OMP_Parallel_Construct(self, expr):
         clauses = ''
