@@ -435,10 +435,6 @@ class PythonRange(Basic):
     def step(self):
         return self._args[2]
 
-    @property
-    def size(self):
-        return (self.stop - self.start) / self.step
-
 
 #==============================================================================
 class PythonZip(Basic):
