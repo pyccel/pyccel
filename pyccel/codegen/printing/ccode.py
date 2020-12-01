@@ -8,11 +8,11 @@ from sympy.core import Tuple
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
 from pyccel.ast.core      import Allocate
-from pyccel.ast.core      import Declare, IndexedVariable, Slice, ValuedVariable
+from pyccel.ast.core      import Declare, IndexedVariable, IndexedElement, Slice, ValuedVariable
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Nil
-from pyccel.ast.core      import Assign, datatype, Variable, Import
+from pyccel.ast.core      import Assign, AliasAssign, datatype, Variable, Import
 from pyccel.ast.core      import SeparatorComment, VariableAddress
 from pyccel.ast.core      import DottedName
 from pyccel.ast.core      import create_incremented_string
@@ -974,6 +974,16 @@ class CCodePrinter(CodePrinter):
             return '{};'.format(self._print(expr.rhs))
         lhs = self._print(expr.lhs)
         rhs = expr.rhs
+        if isinstance(rhs, IndexedElement) and isinstance(expr.lhs, Variable):
+            free_code = ''
+            for i in rhs.args:
+                if isinstance(i, Slice):
+                    free_code += 'free_array(%s);\n' % self._print(expr.lhs.name)
+                    self._additional_imports.add('ndarrays')
+                    break
+            rhs = self._print(rhs)
+            return '{}{} = {};'.format(free_code, lhs, rhs)
+
         if isinstance(rhs, (NumpyArray)):
             if rhs.rank == 0:
                 raise NotImplementedError(expr.lhs + "=" + expr.rhs)
@@ -1027,6 +1037,12 @@ class CCodePrinter(CodePrinter):
         for b in expr.body :
             if isinstance(b, Allocate):
                 allocs.add(b.variable)
+            if isinstance(b, AliasAssign):
+                if isinstance(b.rhs, IndexedElement):
+                    for i in b.rhs.args:
+                        if isinstance(i, Slice):
+                            allocs.add(b.lhs)
+                            break
             code = self._print(b)
             code = self._additional_code + code
             self._additional_code = ''
@@ -1193,10 +1209,9 @@ class CCodePrinter(CodePrinter):
         allocs = set()
         for var in variables:
             for v in var:
-                if v.allocatable:
-                    allocs.add(v)
+                allocs.add(v)
         if len(allocs) > 0:
-            allocs_str = ', '.join(self._print(i) for i in allocs)
+            allocs_str = ', '.join(self._print(i.name) for i in allocs)
             self._allocs = self._allocs[:len(self._allocs) - 2]
             return 'free_allocs(' + str(len(allocs)) + ', ' + allocs_str + ');\n'
         return ''
