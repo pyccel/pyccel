@@ -27,7 +27,7 @@ Pyccel comes with a selection of **extensions** allowing you to convert calls to
 Requirements
 ============
 
-First of all, Pyccel requires a working Fortran/C compiler\n
+First of all, Pyccel requires a working Fortran/C compiler   
 for Fortran it supports
 
 -   GFortran <https://gcc.gnu.org/fortran/>
