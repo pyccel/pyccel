@@ -446,6 +446,29 @@ def array_real_1d_div_stack_array():
         s += 1.0 / a[i]
     return s
 
+@stack_array('a')
+@stack_array('b')
+def multiple_stack_array_1():
+    from numpy import ones, array
+    a = ones(5)
+    b = array([1, 3, 5, 7, 9])
+    s = 0.0
+    for i in range(5):
+        s += a[i] / b[i]
+    return s
+
+@stack_array('a')
+@stack_array('b', 'c')
+def multiple_stack_array_2():
+    from numpy import ones, array
+    a = ones(5)
+    b = array([2, 4, 6, 8, 10])
+    c = array([1, 3, 5, 7, 9])
+    s = 0.0
+    for i in range(5):
+        s = s + b[i] - a[i] / c[i]
+    return s
+
 #==============================================================================
 # TEST: Product and matrix multiplication
 #==============================================================================
@@ -576,6 +599,39 @@ def expr_negative_index(n, idx_1, idx_2):
         a[i] = i
 
     return a[idx_1-idx_2]
+
+@allow_negative_index('a')
+@allow_negative_index('b')
+def test_multiple_negative_index():
+    import numpy as np
+    a = np.array([1, 2, 3, 4, 5, 6])
+    b = np.array([1, 2, 3])
+    x = a[-2]
+    y = b[-1]
+
+    return x, y
+
+@allow_negative_index('a', 'b')
+@types('real', 'real')
+def test_multiple_negative_index_2(c, d):
+    import numpy as np
+    a = np.array([1.2, 2.2, 3.2, 4.2])
+    b = np.array([1, 5, 9, 13])
+
+    x = a[-4] * c
+    y = b[-2] * d
+
+    return x, y
+
+@allow_negative_index('a')
+@allow_negative_index('b', 'c')
+def test_multiple_negative_index_3():
+    import numpy as np
+    a = np.array([1.2, 2.2, 3.2, 4.2])
+    b = np.array([1])
+    c = np.array([1, 2, 3])
+
+    return a[-1], b[-1], c[-3]
 
 
 #==============================================================================
