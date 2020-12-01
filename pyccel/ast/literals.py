@@ -58,6 +58,8 @@ class LiteralInteger(Basic, Literal):
     _dtype     = NativeInteger()
     def __init__(self, value, precision = default_precision['integer']):
         Literal.__init__(self, precision)
+        if not isinstance(value, int):
+            raise TypeError("A LiteralInteger can only be created with an integer")
         self.p = value
 
 #------------------------------------------------------------------------------
@@ -65,6 +67,8 @@ class LiteralFloat(sp_Float, Literal):
     """Represents a float literal in python"""
     _dtype     = NativeReal()
     def __init__(self, value, *, precision = default_precision['float']):
+        if not isinstance(value, (int, float, LiteralFloat)):
+            raise TypeError("A LiteralFloat can only be created with an integer or a float")
         Literal.__init__(self, precision)
 
 
@@ -78,9 +82,26 @@ class LiteralComplex(Basic, Literal):
 
     def __init__(self, real, imag, precision = default_precision['complex']):
         Basic.__init__(self)
-        self._real_part = real
-        self._imag_part = imag
         Literal.__init__(self, precision)
+        if isinstance(real, LiteralFloat):
+            if real.precision == precision:
+                self._real_part = real
+            else:
+                self._real_part = LiteralFloat(real.args[0], precision = precision)
+        elif isinstance(real, (int, float)):
+            self._real_part = LiteralFloat(real, precision = precision)
+        else:
+            raise TypeError("The real part of a LiteralComplex must be an int/float/LiteralFloat")
+
+        if isinstance(imag, LiteralFloat):
+            if imag.precision == precision:
+        self._imag_part = imag
+            else:
+                self._imag_part = LiteralFloat(imag.args[0], precision = precision)
+        elif isinstance(imag, (int, float)):
+            self._imag_part = LiteralFloat(imag, precision = precision)
+        else:
+            raise TypeError("The imaginary part of a LiteralComplex must be an int/float/LiteralFloat")
 
     @property
     def real(self):
