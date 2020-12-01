@@ -31,7 +31,7 @@ def sympy_to_pyccel(expr, symbol_map):
 
     #Constants
     if isinstance(expr, sp.Integer):
-        return LiteralInteger(expr)
+        return LiteralInteger(expr.p)
     elif isinstance(expr, One):
         return LiteralInteger(1)
     elif isinstance(expr, NegativeOne):
@@ -110,7 +110,7 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     #Constants
     if isinstance(expr, LiteralInteger):
-        return sp.Integer(expr)
+        return sp.Integer(expr.p)
 
     elif isinstance(expr, LiteralFloat):
         return sp.Float(expr)
