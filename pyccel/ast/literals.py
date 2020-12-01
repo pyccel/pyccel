@@ -42,6 +42,8 @@ class Literal(PyccelAstNode):
 class LiteralTrue(sp_BooleanTrue, Literal):
     """Represents the python value True"""
     _dtype     = NativeBool()
+    def __new__(cls, precision = default_precision['bool']):
+        return sp_BooleanTrue(cls)
     def __init__(self, precision = default_precision['bool']):
         Literal.__init__(self, precision)
 
@@ -49,6 +51,8 @@ class LiteralTrue(sp_BooleanTrue, Literal):
 class LiteralFalse(sp_BooleanFalse, Literal):
     """Represents the python value False"""
     _dtype     = NativeBool()
+    def __new__(cls, precision = default_precision['bool']):
+        return sp_BooleanFalse(cls)
     def __init__(self,precision = default_precision['bool']):
         Literal.__init__(self, precision)
 
@@ -56,6 +60,9 @@ class LiteralFalse(sp_BooleanFalse, Literal):
 class LiteralInteger(Basic, Literal):
     """Represents an integer literal in python"""
     _dtype     = NativeInteger()
+    def __new__(cls, value, precision = default_precision['integer']):
+        return Basic.__new__(cls, value)
+
     def __init__(self, value, precision = default_precision['integer']):
         Literal.__init__(self, precision)
         if not isinstance(value, int):
@@ -66,6 +73,9 @@ class LiteralInteger(Basic, Literal):
 class LiteralFloat(sp_Float, Literal):
     """Represents a float literal in python"""
     _dtype     = NativeReal()
+    def __new__(cls, value, *, precision = default_precision['float']):
+        return sp_Float.__new__(cls, value)
+
     def __init__(self, value, *, precision = default_precision['float']):
         if not isinstance(value, (int, float, LiteralFloat)):
             raise TypeError("A LiteralFloat can only be created with an integer or a float")
@@ -77,7 +87,7 @@ class LiteralComplex(Basic, Literal):
     """Represents a complex literal in python"""
     _dtype     = NativeComplex()
 
-    def __new__(cls, real, imag):
+    def __new__(cls, real, imag, precision = default_precision['complex']):
         return Basic.__new__(cls, real, imag)
 
     def __init__(self, real, imag, precision = default_precision['complex']):
