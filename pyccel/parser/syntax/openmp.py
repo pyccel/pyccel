@@ -71,16 +71,14 @@ class OmpParallelConstruct(BasicStmt):
                          OmpReduction, \
                          OmpProcBind)
 
-        txt = 'parallel'
-        for value in self.combined:
-            txt += ' '+value
+        txt = ''
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpParallelConstruct')
 
-        return OMP_Parallel_Construct(txt)
+        return OMP_Parallel_Construct(txt, self.combined)
 
 class OmpLoopConstruct(BasicStmt):
     """Class representing a ."""

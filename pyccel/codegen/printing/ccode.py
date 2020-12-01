@@ -1171,8 +1171,14 @@ class CCodePrinter(CodePrinter):
         return '#pragma omp for{}\n{{'.format(omp_expr)
 
     def _print_OMP_Parallel_Construct(self, expr):
-        omp_expr   = str(expr.txt)
-        return '#pragma omp {}\n{{'.format(omp_expr)
+        clauses = ''
+        if expr.combined:
+            clauses = ' ' + ' '.join(expr.combined)
+        clauses += str(expr.txt)
+        omp_expr   = '#pragma omp parallel{}'.format(clauses)
+        if 'for' not in expr.combined:
+            omp_expr += '\n{'
+        return omp_expr
 
     def _print_OMP_Single_Construct(self, expr):
         omp_expr   = str(expr.txt)
