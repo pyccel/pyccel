@@ -4,7 +4,6 @@
 import numpy
 
 from sympy.core.function import Application
-from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
 from sympy           import (Basic, Function, Tuple, Integer as sp_Integer,
                              Rational as sp_Rational, Expr)
@@ -25,6 +24,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              NativeReal, NativeComplex, NativeBool, str_dtype)
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
+from .literals       import LiteralTrue, LiteralFalse
 from .basic          import PyccelAstNode
 
 
@@ -977,7 +977,7 @@ class NumpyZeros(NumpyEmpty):
         elif isinstance(dtype, NativeComplex):
             value = LiteralComplex(LiteralFloat(0.), LiteralFloat(0.))
         elif isinstance(dtype, NativeBool):
-            value = BooleanFalse()
+            value = LiteralFalse()
         else:
             raise TypeError('Unknown type')
         return value
@@ -997,7 +997,7 @@ class NumpyOnes(NumpyEmpty):
         elif isinstance(dtype, NativeComplex):
             value = LiteralComplex(LiteralFloat(1.), LiteralFloat(0.))
         elif isinstance(dtype, NativeBool):
-            value = BooleanTrue()
+            value = LiteralTrue()
         else:
             raise TypeError('Unknown type')
         return value
