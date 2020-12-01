@@ -53,17 +53,12 @@ class LiteralFalse(sp_BooleanFalse, Literal):
         Literal.__init__(self, precision)
 
 #------------------------------------------------------------------------------
-class LiteralInteger(sp_Integer, Literal):
+class LiteralInteger(Basic, Literal):
     """Represents an integer literal in python"""
     _dtype     = NativeInteger()
-    def __new__(cls, val, precision = default_precision['integer']):
-        ival = int(val)
-        obj = Expr.__new__(cls, ival)
-        obj._precision = precision
-        obj.p = ival
-        return obj
     def __init__(self, value, precision = default_precision['integer']):
         Literal.__init__(self, precision)
+        self.p = value
 
 #------------------------------------------------------------------------------
 class LiteralFloat(sp_Float, Literal):
