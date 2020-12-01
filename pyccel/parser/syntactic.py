@@ -155,7 +155,6 @@ class SyntaxParser(BasicParser):
         return ast
 
     def _treat_iterable(self, stmt):
-
         return [self._visit(i) for i in stmt]
 
     def _visit(self, stmt):
@@ -649,7 +648,7 @@ class SyntaxParser(BasicParser):
                 else:
                     decorators[tmp_var] = [decorators[tmp_var]] + [d]
             else:
-                decorators[tmp_var] = d
+                decorators[tmp_var] = [d]
 
         if 'bypass' in decorators:
             return EmptyNode()
@@ -658,7 +657,7 @@ class SyntaxParser(BasicParser):
             decorators['stack_array'] = tuple(str(a) for a in decorators['stack_array'].args)
 
         if 'allow_negative_index' in decorators:
-            decorators['allow_negative_index'] = tuple(str(a) for a in decorators['allow_negative_index'].args)
+            decorators['allow_negative_index'] = tuple(str(b) for a in decorators['allow_negative_index'] for b in a.args)
 
         # extract the templates
         if 'template' in decorators:
