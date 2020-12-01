@@ -2972,6 +2972,8 @@ class SemanticParser(BasicParser):
 
         val = expr.args[0]
         length = expr.args[1]
+        if isinstance(length, LiteralInteger):
+            length = length.p
         if isinstance(val, (TupleVariable, PythonTuple)):
             if isinstance(val, TupleVariable):
                 return PythonTuple(*(val.get_vars()*length))
@@ -2983,7 +2985,10 @@ class SemanticParser(BasicParser):
         name = expr.args_var
         var = self._visit(name)
         assert(var.rank==1)
-        return StarredArguments([self._visit(Indexed(name,i)) for i in range(var.shape[0])])
+        size = var.shape[0]
+        if isinstance(size, LiteralInteger):
+            size = size.p
+        return StarredArguments([self._visit(Indexed(name,i)) for i in range(size)])
 
 #==============================================================================
 
