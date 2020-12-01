@@ -325,7 +325,7 @@ class SyntaxParser(BasicParser):
         elif isinstance(val, float):
             return LiteralFloat(val)
         elif isinstance(val, complex):
-            return LiteralComplex(LiteralFloat(val.real), LiteralFloat(val.imag))
+            return LiteralComplex(val.real, val.imag)
         else:
             raise NotImplementedError('Num type {} not recognised'.format(type(val)))
 
@@ -402,7 +402,7 @@ class SyntaxParser(BasicParser):
             return LiteralFloat(stmt.value)
 
         elif isinstance(stmt.value, complex):
-            return LiteralComplex(LiteralFloat(stmt.value.real), LiteralFloat(stmt.value.imag))
+            return LiteralComplex(stmt.value.real, stmt.value.imag)
 
         elif isinstance(stmt.value, str):
             return self._visit_Str(stmt)

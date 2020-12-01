@@ -975,7 +975,7 @@ class NumpyZeros(NumpyEmpty):
         elif isinstance(dtype, NativeReal):
             value = LiteralFloat(0.)
         elif isinstance(dtype, NativeComplex):
-            value = LiteralComplex(LiteralFloat(0.), LiteralFloat(0.))
+            value = LiteralComplex(0., 0.)
         elif isinstance(dtype, NativeBool):
             value = LiteralFalse()
         else:
@@ -995,7 +995,7 @@ class NumpyOnes(NumpyEmpty):
         elif isinstance(dtype, NativeReal):
             value = LiteralFloat(1.)
         elif isinstance(dtype, NativeComplex):
-            value = LiteralComplex(LiteralFloat(1.), LiteralFloat(0.))
+            value = LiteralComplex(1., 0.)
         elif isinstance(dtype, NativeBool):
             value = LiteralTrue()
         else:
