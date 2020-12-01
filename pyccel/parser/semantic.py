@@ -806,7 +806,7 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_Integer(self, expr, **settings):
         """Visit sympy.Integer"""
-        return LiteralInteger(expr)
+        return LiteralInteger(expr.p)
     def _visit_Float(self, expr, **settings):
         """Visit sympy.Integer"""
         return LiteralFloat(expr)
