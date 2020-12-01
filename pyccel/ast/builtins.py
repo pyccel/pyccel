@@ -87,6 +87,12 @@ class PythonComplex(Expr, PyccelAstNode):
     _dtype = NativeComplex()
 
     def __new__(cls, arg0, arg1=LiteralFloat(0)):
+        if isinstance(arg, LiteralFloat):
+            return LiteralFloat(arg.arg[0], precision = cls._precision)
+        elif isinstance(arg, LiteralInt):
+            return LiteralFloat(arg.p, precision = cls._precision)
+        else:
+            return Expr.__new__(cls, arg)
         return Expr.__new__(cls, arg0, arg1)
 
     @property
@@ -137,7 +143,12 @@ class PythonFloat(Expr, PyccelAstNode):
     _dtype = NativeReal()
 
     def __new__(cls, arg):
-        return Expr.__new__(cls, arg)
+        if isinstance(arg, LiteralFloat):
+            return LiteralFloat(arg, precision = cls._precision)
+        elif isinstance(arg, LiteralInteger):
+            return LiteralFloat(arg.p, precision = cls._precision)
+        else:
+            return Expr.__new__(cls, arg)
 
     @property
     def arg(self):
@@ -168,7 +179,10 @@ class PythonInt(Expr, PyccelAstNode):
     _dtype     = NativeInteger()
 
     def __new__(cls, arg):
-        return Expr.__new__(cls, arg)
+        if isinstance(arg, LiteralInteger):
+            return LiteralInteger(arg.p, precision = cls._precision)
+        else:
+            return Expr.__new__(cls, arg)
 
     @property
     def arg(self):
