@@ -43,7 +43,7 @@ class LiteralTrue(sp_BooleanTrue, Literal):
     """Represents the python value True"""
     _dtype     = NativeBool()
     def __new__(cls, precision = default_precision['bool']):
-        return sp_BooleanTrue(cls)
+        return sp_BooleanTrue.__new__(cls)
     def __init__(self, precision = default_precision['bool']):
         Literal.__init__(self, precision)
 
@@ -52,7 +52,7 @@ class LiteralFalse(sp_BooleanFalse, Literal):
     """Represents the python value False"""
     _dtype     = NativeBool()
     def __new__(cls, precision = default_precision['bool']):
-        return sp_BooleanFalse(cls)
+        return sp_BooleanFalse.__new__(cls)
     def __init__(self,precision = default_precision['bool']):
         Literal.__init__(self, precision)
 
