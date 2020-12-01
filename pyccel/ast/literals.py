@@ -1,7 +1,5 @@
 """ This module contains all literal types
 """
-from sympy               import Expr
-from sympy               import Integer as sp_Integer
 from sympy               import Float as sp_Float
 from sympy.logic.boolalg import BooleanTrue as sp_BooleanTrue, BooleanFalse as sp_BooleanFalse
 
@@ -124,7 +122,7 @@ class LiteralComplex(Basic, Literal):
         return self._imag_part
 
 #------------------------------------------------------------------------------
-class LiteralImaginaryUnit(LiteralComplex, Literal):
+class LiteralImaginaryUnit(LiteralComplex):
     """Represents the python value j"""
     def __new__(cls):
         return LiteralComplex.__new__(cls, 0, 1)
