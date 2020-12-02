@@ -284,8 +284,11 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonComplex(self, expr):
         self._additional_imports.add("complex")
-        return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real_part,
-                        PyccelMul(expr.imag_part, LiteralImaginaryUnit()))))
+        if expr.is_cast:
+            return self._print(expr.internal_var)
+        else:
+            return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real_part,
+                            PyccelMul(expr.imag_part, LiteralImaginaryUnit()))))
 
     def _print_LiteralImaginaryUnit(self, expr):
         return '_Complex_I'
@@ -1055,17 +1058,11 @@ class CCodePrinter(CodePrinter):
     def _print_NegativeInfinity(self, expr):
         return '-HUGE_VAL'
 
-    def _print_NumpyReal(self, expr):
-        if expr.arg.dtype is NativeComplex():
-            return 'creal({})'.format(self._print(expr.arg))
-        else:
-            return self._print(expr.arg)
+    def _print_PythonReal(self, expr):
+        return 'creal({})'.format(self._print(expr.arg))
 
-    def _print_NumpyImag(self, expr):
-        if expr.arg.dtype is NativeComplex():
-            return 'cimag({})'.format(self._print(expr.arg))
-        else:
-            return '0'
+    def _print_PythonImag(self, expr):
+        return 'cimag({})'.format(self._print(expr.arg))
 
     def _handle_is_operator(self, Op, expr):
 
