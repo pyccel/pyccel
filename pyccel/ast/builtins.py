@@ -12,6 +12,7 @@ from sympy import Symbol, Function, Tuple
 from sympy import Expr, Not
 from sympy import sympify
 from sympy.tensor import Indexed, IndexedBase
+from sympy.core.function import Application
 
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
@@ -51,7 +52,7 @@ local_sympify = {
 }
 
 #==============================================================================
-class PythonComplexProperty(Function, PyccelAstNode):
+class PythonComplexProperty(Application, PyccelAstNode):
     """Represents a call to the .real or .imag property
 
     e.g:
@@ -74,7 +75,7 @@ class PythonComplexProperty(Function, PyccelAstNode):
         return self._args[0]
 
     def __str__(self):
-        return 'Real({0})'.format(str(self.arg))
+        return 'Real({0})'.format(str(self.internal_var))
 
 #==============================================================================
 class PythonReal(PythonComplexProperty):
