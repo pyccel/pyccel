@@ -176,33 +176,41 @@ class PythonComplex(Expr, PyccelAstNode):
 
         # Split arguments depending on their type to ensure that the arguments are
         # either a complex and LiteralFloat(0) or 2 floats
-        from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelUnarySub
+        from .operators import PyccelAdd, PyccelMul, PyccelUnarySub
 
-        if arg0.dtype is NativeComplex():
-            if arg1.dtype is NativeComplex():
+        if arg0.dtype is NativeComplex() and arg1.dtype is NativeComplex():
                 # both args are complex
                 return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit()))
-            elif not (isinstance(arg1, Literal) and arg1.python_value == 0):
-                # first arg is complex. Second arg is non-0
-                return PythonComplex(PythonReal(arg0), PyccelAdd(PythonImag(arg0), arg1))
-        elif arg1.dtype is NativeComplex():
-            if isinstance(arg0, Literal) and arg0.python_value == 0:
-                # second arg is complex. First arg is 0
-                return PythonComplex(PyccelUnarySub(PythonImag(arg1)), PythonReal(arg1))
-            else:
-                # Second arg is complex. First arg is non-0
-                return PythonComplex(PyccelMinus(arg0, PythonImag(arg1)), PythonReal(arg1))
         return Expr.__new__(cls, arg0, arg1)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
-        self._is_cast = isinstance(arg1, Literal) and arg1.python_value == 0
+        self._is_cast = arg0.dtype is NativeComplex() and \
+                        isinstance(arg1, Literal) and arg1.python_value == 0
         if self._is_cast:
             self._real_part = PythonReal(arg0)
             self._imag_part = PythonImag(arg0)
             self._internal_var = arg0
+
         else:
-            self._real_part = arg0
-            self._imag_part = arg1
+            from .operators import PyccelAdd, PyccelMinus, PyccelUnarySub
+
+            if arg0.dtype is NativeComplex() and \
+                    not (isinstance(arg1, Literal) and arg1.python_value == 0):
+                # first arg is complex. Second arg is non-0
+                self._real_part = PythonReal(arg0)
+                self._imag_part = PyccelAdd(PythonImag(arg0), arg1)
+            elif arg1.dtype is NativeComplex():
+                if isinstance(arg0, Literal) and arg0.python_value == 0:
+                    # second arg is complex. First arg is 0
+                    self._real_part = PyccelUnarySub(PythonImag(arg1))
+                    self._imag_part = PythonReal(arg1)
+                else:
+                    # Second arg is complex. First arg is non-0
+                    self._real_part = PyccelMinus(arg0, PythonImag(arg1))
+                    self._imag_part = PythonReal(arg1)
+            else:
+                self._real_part = arg0
+                self._imag_part = arg1
 
     @property
     def is_cast(self):
