@@ -62,7 +62,7 @@ def test_reallocation_heap(language):
     assert errors.has_warnings()
     assert errors.num_messages() == 1
 
-    # Check that we the warning is correct
+    # Check that the warning is correct
     warning_info = [*errors.error_info_map.values()][0][0]
     assert warning_info.symbol  == 'x'
     assert warning_info.message == ARRAY_REALLOCATION
@@ -88,7 +88,7 @@ def test_reallocation_stack(language):
     assert errors.has_errors()
     assert errors.num_messages() == 1
 
-    # Check that we the error is correct
+    # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
     assert error_info.symbol  == 'x'
     assert error_info.message == INCOMPATIBLE_REDEFINITION_STACK_ARRAY
@@ -115,7 +115,7 @@ def test_creation_in_loop_heap(language):
     assert errors.has_warnings()
     assert errors.num_messages() == 1
 
-    # Check that we the warning is correct
+    # Check that the warning is correct
     warning_info = [*errors.error_info_map.values()][0][0]
     assert warning_info.symbol  == 'x'
     assert warning_info.message == ARRAY_DEFINITION_IN_LOOP
@@ -141,7 +141,7 @@ def test_creation_in_loop_stack(language):
     assert errors.has_errors()
     assert errors.num_messages() == 1
 
-    # Check that we the error is correct
+    # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
     assert error_info.symbol  == 'x'
     assert error_info.message == STACK_ARRAY_DEFINITION_IN_LOOP
@@ -183,16 +183,16 @@ def test_Reassign_to_Target(language):
     with pytest.raises(PyccelSemanticError):
         epyccel(f, language=language)
 
-    # Check that we got exactly 1 Pyccel error
-    assert errors.has_errors()
-    assert errors.has_warnings()
+    # Check that we got exactly 1 Pyccel error and  1 warning
+    assert errors.has_errors() == 1
+    assert errors.has_warnings() == 1
     assert errors.num_messages() == 2
 
-    # Check that we the warning is correct
+    # Check that the warning is correct
     warning_info = [*errors.error_info_map.values()][0][0]
     assert warning_info.symbol  == 'x'
     assert warning_info.message == ARRAY_REALLOCATION
-    # Check that we the error is correct
+    # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][1]
     assert error_info.symbol  == 'x'
     assert error_info.message == REASSIGN_TARGET
@@ -215,16 +215,16 @@ def test_Assign_Allocatables(language):
     with pytest.raises(PyccelSemanticError):
         epyccel(f, language=language)
 
-    # Check that we got exactly 1 Pyccel error and  warning
-    assert errors.has_errors()
-    assert errors.has_warnings()
+    # Check that we got exactly 1 Pyccel error and 1 warning
+    assert errors.has_errors() == 1
+    assert errors.has_warnings() == 1
     assert errors.num_messages() == 2
 
-    # Check that we the warning is correct
+    # Check that the warning is correct
     warning_info = [*errors.error_info_map.values()][0][0]
     assert warning_info.symbol  == 'x'
     assert warning_info.message == ARRAY_REALLOCATION
-    # Check that we the error is correct
+    # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][1]
     assert error_info.symbol  == 'x'
     assert error_info.message == ASSIGN_ALLOCATABLES
