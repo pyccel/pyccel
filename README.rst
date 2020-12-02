@@ -7,13 +7,13 @@ Welcome to Pyccel
 
 The aim of **Pyccel** is to provide a simple way to generate automatically, parallel low level code. The main uses would be:
 
-1. Convert a *Python* code (or project) into a Fortran
+1. Convert a *Python* code (or project) into a Fortran or C code.
 
-2. Accelerate *Python* functions by converting them to *Fortran* then calling *f2py*. For the moment, only *f2py* is available, but we are working on other solutions too (*f2x* and *fffi*)
+2. Accelerate *Python* functions by converting them to *Fortran* or *C* functions.
 
 **Pyccel** can be viewed as:
 
-- *Python-to-Fortran* converter
+- *Python-to-Fortran/C* converter
 
 - a compiler for a *Domain Specific Language* with *Python* syntax
 
@@ -27,11 +27,19 @@ Pyccel comes with a selection of **extensions** allowing you to convert calls to
 Requirements
 ============
 
-First of all, Pyccel requires a working Fortran compiler; it supports
+First of all, Pyccel requires a working Fortran/C compiler   
 
-- GFortran <https://gcc.gnu.org/fortran/>
-- Intel® Fortran Compiler <https://software.intel.com/en-us/fortran-compilers>
-- PGI Fortran <https://www.pgroup.com/index.htm>
+For Fortran it supports
+
+-   GFortran <https://gcc.gnu.org/fortran/>
+-   Intel® Fortran Compiler <https://software.intel.com/en-us/fortran-compilers>
+-   PGI Fortran <https://www.pgroup.com/index.htm>
+
+For C it supports
+
+-   Gcc <https://gcc.gnu.org/>
+-   Intel® Compiler <https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/dpc-compiler.html>
+-   PGI <https://www.pgroup.com/index.htm>
 
 In order to perform fast linear algebra calculations, Pyccel uses the following libraries:
 
@@ -44,7 +52,7 @@ Finally, Pyccel supports distributed-memory parallel programming through the Mes
 - MPICH <https://www.mpich.org/>
 - Intel® MPI Library <https://software.intel.com/en-us/mpi-library>
 
-We recommend using GFortran and Open-MPI.
+We recommend using GFortran/Gcc and Open-MPI.
 
 Pyccel also depends on several Python3 packages, which are automatically downloaded by pip, the Python Package Installer, during the installation process. In addition to these, unit tests require the *scipy*, *mpi4py*, *pytest* and *coverage* packages, while building the documentation requires Sphinx <http://www.sphinx-doc.org/>.
 
@@ -54,6 +62,7 @@ Linux Debian/Ubuntu/Mint
 To install all requirements on a Linux Ubuntu machine, just use APT, the Advanced Package Tool::
 
   sudo apt update
+  sudo apt install gcc
   sudo apt install gfortran
   sudo apt install libblas-dev liblapack-dev
   sudo apt install libopenmpi-dev openmpi-bin
@@ -65,6 +74,7 @@ Install all requirements using the DNF software package manager::
 
   su
   dnf check-update
+  dnf install gcc
   dnf install gfortran
   dnf install blas-devel lapack-devel
   dnf install openmpi-devel
