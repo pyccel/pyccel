@@ -17,7 +17,7 @@ from .operators      import (PyccelPow, PyccelMinus, PyccelMul, PyccelAdd,
                              PyccelAssociativeParenthesis, broadcast)
 
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
-                             PythonComplex)
+                             PythonComplex, PythonReal, PythonImag)
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
@@ -365,70 +365,22 @@ def Shape(arg):
         return PythonTuple(*arg.shape)
 
 #==============================================================================
-class NumpyReal(Function, PyccelAstNode):
-
+class NumpyReal(PythonReal):
     """Represents a call to  numpy.real for code generation.
 
     > a = 1+2j
     > np.real(a)
     1.0
-
-    arg : Variable, LiteralFloat, sp_Integer, LiteralComplex
     """
-
-    def __new__(cls, arg):
-
-        _valid_args = (Variable, IndexedElement, sp_Integer, Nil,
-                       LiteralFloat, Expr, Application)
-
-        if not isinstance(arg, _valid_args):
-            raise TypeError('Uknown type of  %s.' % type(arg))
-        return Basic.__new__(cls, arg)
-
-    def __init__(self, arg):
-        self._dtype = NativeReal()
-        self._rank  = 0
-        self._shape = ()
-        self._precision = default_precision['real']
-
-    @property
-    def arg(self):
-        return self._args[0]
-
-    def fprint(self, printer):
-        """Fortran print."""
-
-        value = printer(self.arg)
-        prec  = printer(self.precision)
-        code = 'Real({0}, {1})'.format(value, prec)
-        return code
-
-
-    def __str__(self):
-        return 'NumpyReal({0})'.format(str(self.arg))
-
-
-    def _sympystr(self, printer):
-        return self.__str__()
 
 #==============================================================================
-class NumpyImag(NumpyReal):
+class NumpyImag(PythonImag):
+    """Represents a call to  numpy.real for code generation.
 
-    """Represents a call to  numpy.imag for code generation.
-
-    arg : Variable, LiteralFloat, sp_Integer, LiteralComplex
+    > a = 1+2j
+    > np.imag(a)
+    2.0
     """
-
-    def fprint(self, printer):
-        """Fortran print."""
-
-        value = printer(self.arg)
-        code = 'aimag({0})'.format(value)
-        return code
-
-
-    def __str__(self):
-        return 'imag({0})'.format(str(self.arg))
 
 #==============================================================================
 class NumpyLinspace(Application, NumpyNewArray):
