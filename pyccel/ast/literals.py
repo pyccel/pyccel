@@ -45,6 +45,10 @@ class LiteralTrue(sp_BooleanTrue, Literal):
     def __init__(self, precision = default_precision['bool']):
         Literal.__init__(self, precision)
 
+    @property
+    def python_value(self):
+        return True
+
 #------------------------------------------------------------------------------
 class LiteralFalse(sp_BooleanFalse, Literal):
     """Represents the python value False"""
@@ -53,6 +57,10 @@ class LiteralFalse(sp_BooleanFalse, Literal):
         return sp_BooleanFalse.__new__(cls)
     def __init__(self,precision = default_precision['bool']):
         Literal.__init__(self, precision)
+
+    @property
+    def python_value(self):
+        return False
 
 #------------------------------------------------------------------------------
 class LiteralInteger(Basic, Literal):
@@ -67,6 +75,10 @@ class LiteralInteger(Basic, Literal):
             raise TypeError("A LiteralInteger can only be created with an integer")
         self.p = value
 
+    @property
+    def python_value(self):
+        return self.p
+
 #------------------------------------------------------------------------------
 class LiteralFloat(sp_Float, Literal):
     """Represents a float literal in python"""
@@ -78,6 +90,10 @@ class LiteralFloat(sp_Float, Literal):
         if not isinstance(value, (int, float, LiteralFloat)):
             raise TypeError("A LiteralFloat can only be created with an integer or a float")
         Literal.__init__(self, precision)
+
+    @property
+    def python_value(self):
+        return float(self)
 
 
 #------------------------------------------------------------------------------
@@ -125,6 +141,10 @@ class LiteralComplex(Basic, Literal):
         """ Return the imaginary part of the complex literal """
         return self._imag_part
 
+    @property
+    def python_value(self):
+        return self.real.python_value + self.imag.python_value*1j
+
 #------------------------------------------------------------------------------
 class LiteralImaginaryUnit(LiteralComplex):
     """Represents the python value j"""
@@ -133,6 +153,10 @@ class LiteralImaginaryUnit(LiteralComplex):
 
     def __init__(self):
         LiteralComplex.__init__(self, 0, 1)
+
+    @property
+    def python_value(self):
+        return 1j
 
 #------------------------------------------------------------------------------
 class LiteralString(Basic, Literal):
@@ -154,6 +178,10 @@ class LiteralString(Basic, Literal):
         return self._string
 
     def __str__(self):
+        return self.arg
+
+    @property
+    def python_value(self):
         return self.arg
 
 #------------------------------------------------------------------------------
