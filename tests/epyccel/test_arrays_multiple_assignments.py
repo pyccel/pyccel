@@ -217,15 +217,10 @@ def test_Assign_Allocatables(language):
 
     # Check that we got exactly 1 Pyccel error and 1 warning
     assert errors.has_errors() == 1
-    assert errors.has_warnings() == 1
-    assert errors.num_messages() == 2
+    assert errors.num_messages() == 1
 
-    # Check that the warning is correct
-    warning_info = [*errors.error_info_map.values()][0][0]
-    assert warning_info.symbol  == 'x'
-    assert warning_info.message == ARRAY_REALLOCATION
     # Check that the error is correct
-    error_info = [*errors.error_info_map.values()][0][1]
+    error_info = [*errors.error_info_map.values()][0][0]
     assert error_info.symbol  == 'x'
     assert error_info.message == ASSIGN_ALLOCATABLES
 
