@@ -205,18 +205,22 @@ class PythonComplex(Expr, PyccelAstNode):
 
     @property
     def is_cast(self):
+        """ Indicates if the function is casting or assembling a complex """
         return self._is_cast
 
     @property
     def real_part(self):
+        """ Returns the real part of the complex """
         return self._real_part
 
     @property
     def imag_part(self):
+        """ Returns the imaginary part of the complex """
         return self._imag_part
 
     @property
     def internal_var(self):
+        """ When the complex call is a cast, returns the variable being cast """
         assert(self._is_cast)
         return self._internal_var
 
