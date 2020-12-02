@@ -2515,6 +2515,8 @@ class FCodePrinter(CodePrinter):
         else:
             end = PyccelMinus(expr.end, LiteralInteger(1))
             end = self._print(end)
+        if expr.step is not None :
+            return '{0}:{1}:{2}'.format(start, end, self._print(expr.step))
         return '{0}:{1}'.format(start, end)
 
 #=======================================================================================
