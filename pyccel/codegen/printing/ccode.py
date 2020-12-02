@@ -195,20 +195,20 @@ dtype_registry = {('real',8)    : 'double',
                   ('real',4)    : 'float',
                   ('complex',8) : 'double complex',
                   ('complex',4) : 'float complex',
-                  ('int',4)     : 'int',
-                  ('int',8)     : 'long',
-                  ('int',2)     : 'short int',
-                  ('int',1)     : 'char',
+                  ('int',4)     : 'int32_t',
+                  ('int',8)     : 'int64_t',
+                  ('int',2)     : 'int16_t',
+                  ('int',1)     : 'int8_t',
                   ('bool',4)    : 'bool'}
 
 ndarray_type_registry = {('real',8)    : 'nd_double',
                   ('real',4)    : 'nd_float',
                   ('complex',8) : 'nd_cdouble',
                   ('complex',4) : 'nd_cfloat',
-                  ('int',4)     : 'nd_int',
-                  ('int',8)     : 'nd_long',
-                  ('int',2)     : 'nd_sint',
-                  ('int',1)     : 'nd_char',
+                  ('int',8)     : 'nd_int64',
+                  ('int',4)     : 'nd_int32',
+                  ('int',2)     : 'nd_int16',
+                  ('int',1)     : 'nd_int8',
                   ('bool',4)    : 'nd_bool'}
 
 import_dict = {'omp_lib' : 'omp' }
@@ -543,6 +543,8 @@ class CCodePrinter(CodePrinter):
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         rank  = expr.rank
+        if isinstance(expr.dtype, NativeInteger):
+            self._additional_imports.add('stdint')
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
             if expr.is_ndarray:

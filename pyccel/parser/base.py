@@ -6,6 +6,7 @@ import os
 import re
 
 #==============================================================================
+from pyccel.version import __version__
 
 from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
@@ -268,8 +269,10 @@ class BasicParser(object):
                  headers=None,
                  static=None,
                  show_traceback=False):
-        self._fst = None
-        self._ast = None
+
+        self._code = None
+        self._fst  = None
+        self._ast  = None
 
         self._filename  = None
         self._metavars  = OrderedDict()
@@ -325,6 +328,11 @@ class BasicParser(object):
     def namespace(self):
         return self._namespace
 
+    @namespace.setter
+    def namespace(self, namespace):
+        assert isinstance(namespace, Scope)
+        self._namespace = namespace
+
     @property
     def filename(self):
         return self._filename
@@ -342,6 +350,10 @@ class BasicParser(object):
         if self._ast is None:
             self._ast = self.parse()
         return self._ast
+
+    @ast.setter
+    def ast(self, ast):
+        self._ast = ast
 
     @property
     def metavars(self):
@@ -506,17 +518,110 @@ class BasicParser(object):
                         container[source] = []
                     container[source] += name
 
-    def print_namespace(self):
+    def dump(self, filename=None):
+        """
+        Dump the current ast using Pickle.
 
-        # TODO improve spacing
+          Parameters
+          ----------
+          filename: str
+            output file name. if not given `name.pyccel` will be used and placed
+            in the Pyccel directory ($HOME/.pyccel)
+        """
+        import pickle
+        import hashlib
 
-        print ('------- namespace -------')
-        for (k, v) in self.namespace.items():
-            print ('{var} \t :: \t {dtype}'.format(var=k, dtype=type(v)))
-        print ('-------------------------')
+        if not filename:
+            if not self.filename:
+                raise ValueError('Expecting a filename to load the ast')
 
-    def _visit(self, expr, **settings):
-        raise NotImplementedError('Must be implemented by the extension')
+            path , name  = os.path.split(self.filename)
+
+            if not name.split('.')[-1] == 'pyh':
+                return
+            else:
+                name = name[:-4]
+
+            name     = '{}.pyccel'.format(name)
+            filename = os.path.join(path, name)
+        # check extension
+
+        if not filename.split(""".""")[-1] == 'pyccel':
+            raise ValueError('Expecting a .pyccel extension')
+
+#        print('>>> home = ', os.environ['HOME'])
+        # ...
+
+        # we are only exporting the AST.
+        try:
+            code = self.code.encode('utf-8')
+            hs   = hashlib.md5(code)
+            with open(filename, 'wb') as f:
+                pickle.dump((hs.hexdigest(), __version__, self), f, pickle.HIGHEST_PROTOCOL)
+        except (FileNotFoundError, PermissionError, pickle.PickleError):
+            pass
+
+    def load(self, filename=None):
+        """ Load the current ast using Pickle.
+
+          Parameters
+          ----------
+          filename: str
+            output file name. if not given `name.pyccel` will be used and placed
+            in the Pyccel directory ($HOME/.pyccel)
+        """
+
+        # ...
+        import pickle
+
+        if not filename:
+            if not self.filename:
+                raise ValueError('Expecting a filename to load the ast')
+
+            path , name = os.path.split(self.filename)
+
+            if not name.split('.')[-1] == 'pyh':
+                return
+            else:
+                name = name[:-4]
+
+            name     = '{}.pyccel'.format(name)
+            filename = os.path.join(path, name)
+
+        if not filename.split(""".""")[-1] == 'pyccel':
+            raise ValueError('Expecting a .pyccel extension')
+
+        try:
+            with open(filename, 'rb') as f:
+                hs, version, parser = pickle.load(f)
+        except (FileNotFoundError, PermissionError, pickle.PickleError):
+            return
+
+        import hashlib
+        code = self.code.encode('utf-8')
+        if hashlib.md5(code).hexdigest() == hs and __version__ == version:
+            self.copy(parser)
+
+    def copy(self, parser):
+        """
+        Copy the parser attributes in self
+
+          Parameters
+          ----------
+          parser : BasicParser
+
+        """
+        self._fst = parser.fst
+        self._ast = parser.ast
+
+        self._metavars  = parser.metavars
+        self._namespace = parser.namespace
+
+        self._used_names = parser.used_names
+
+        # the following flags give us a status on the parsing stage
+        self._syntax_done   = parser.syntax_done
+        self._semantic_done = parser.semantic_done
 
 #==============================================================================
 
