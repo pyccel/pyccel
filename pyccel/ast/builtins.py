@@ -17,7 +17,7 @@ from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
-from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
+from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, get_default_literal_value
 
 __all__ = (
     'PythonBool',
@@ -573,7 +573,7 @@ class PythonImag(Function, PyccelAstNode):
     _shape = ()
     def __new__(cls, arg):
         if arg.dtype is not NativeComplex():
-            return LiteralFloat(0)
+            return get_default_literal_value(arg.dtype)
         else:
             return Function.__new__(cls, arg)
 
