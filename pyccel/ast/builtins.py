@@ -89,21 +89,40 @@ class PythonComplex(Expr, PyccelAstNode):
     _dtype = NativeComplex()
 
     def __new__(cls, arg0, arg1=LiteralFloat(0)):
-        if isinstance(arg0, LiteralFloat):
-            arg0 = LiteralFloat(arg0, precision = cls._precision)
-        elif isinstance(arg0, LiteralInteger):
-            arg0 = LiteralFloat(arg0.p, precision = cls._precision)
-        if isinstance(arg1, LiteralFloat):
-            arg1 = LiteralFloat(arg1, precision = cls._precision)
-        elif isinstance(arg1, LiteralInteger):
-            arg1 = LiteralFloat(arg1.p, precision = cls._precision)
 
-        if isinstance(arg0, LiteralFloat) and isinstance(arg1, LiteralFloat):
-            return LiteralComplex(arg0, arg1, precision = cls._precision)
-        elif isinstance(arg0, LiteralComplex):
-            return LiteralComplex(arg0.real, arg0.imag, precision = cls._precision)
+        if isinstance(arg0, Literal) and isinstance(arg1, Literal):
+            real_part = 0
+            imag_part = 0
+            if isinstance(arg0, LiteralComplex):
+                real_part += arg0.real
+                imag_part += arg0.imag
+            elif isinstance(arg0, LiteralFloat):
+                real_part += float(arg0)
+            elif isinstance(arg0, LiteralInteger):
+                real_part += arg0.p
+
+            if isinstance(arg1, LiteralComplex):
+                real_part -= arg1.imag
+                imag_part += arg1.real
+            elif isinstance(arg1, LiteralFloat):
+                imag_part += float(arg1)
+            elif isinstance(arg1, LiteralInteger):
+                imag_part += arg1.p
+
+            return LiteralComplex(real_part, imag_part, precision = cls._precision)
+
+        if arg0.dtype is NativeComplex():
+            if arg1.dtype is NativeComplex():
+                return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit))
+            elif arg1 is LiteralFloat(0):
+                return Expr.__new__(cls, PythonReal(arg0), PythonImag(arg0))
+            else:
+                return Expr.__new__(cls, PythonReal(arg0), PyccelAdd(PythonImag(arg0), arg1))
         else:
-            return Expr.__new__(cls, arg0, arg1)
+            if arg1.dtype is NativeComplex():
+                return Expr.__new__(cls, PyccelMinus(arg0, PythonImag(arg1)), PythonReal(arg1))
+            else:
+                return Expr.__new__(cls, arg0, arg1)
 
     @property
     def real_part(self):
