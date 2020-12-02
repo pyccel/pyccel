@@ -601,6 +601,16 @@ class FCodePrinter(CodePrinter):
         args = [self._print(arg) for arg in expr.args]
         return "sum({})".format(", ".join(args))
 
+    def _print_PythonReal(self, expr):
+        value = self._print(expr.internal_var)
+        prec  = str(iso_c_binding[dtype][expr.precision])
+        return 'real({0}, {1})'.format(value, prec)
+
+    def _print_PythonImag(self, expr):
+        value = self._print(expr.internal_var)
+        prec  = str(iso_c_binding[dtype][expr.precision])
+        return 'aimag({0}, {1})'.format(value, prec)
+
     #========================== Numpy Elements ===============================#
 
     def _print_NumpySum(self, expr):
@@ -628,14 +638,14 @@ class FCodePrinter(CodePrinter):
         result_code = self._print_MathFloor(expr)
         return 'real({}, {})'.format(result_code, iso_c_binding["real"][8])
 
-    def _print_PythonFloat(self, expr):
-        return expr.fprint(self._print)
-
     # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
         return expr.fprint(self._print)
 
     def _print_PythonInt(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_PythonFloat(self, expr):
         return expr.fprint(self._print)
 
     def _print_MathFloor(self, expr):
@@ -1073,11 +1083,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, (PythonRange, Product)):
             return ''
 
-        if isinstance(rhs, (PythonLen, NumpyRandint)):
-            rhs_code = self._print(expr.rhs)
-            return '{0} = {1}\n'.format(lhs_code, rhs_code)
-
-        if isinstance(rhs, (PythonInt, NumpyReal, NumpyComplex)):
+        if isinstance(rhs, (PythonInt, NumpyComplex)):
             lhs = self._print(expr.lhs)
             rhs = expr.rhs.fprint(self._print)
             return '{0} = {1}\n'.format(lhs,rhs)

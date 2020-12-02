@@ -365,10 +365,13 @@ def Shape(arg):
         return PythonTuple(*arg.shape)
 
 #==============================================================================
-# TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.LiteralFloat
 class NumpyReal(Function, PyccelAstNode):
 
     """Represents a call to  numpy.real for code generation.
+
+    > a = 1+2j
+    > np.real(a)
+    1.0
 
     arg : Variable, LiteralFloat, sp_Integer, LiteralComplex
     """
@@ -402,7 +405,7 @@ class NumpyReal(Function, PyccelAstNode):
 
 
     def __str__(self):
-        return 'LiteralFloat({0})'.format(str(self.arg))
+        return 'NumpyReal({0})'.format(str(self.arg))
 
 
     def _sympystr(self, printer):

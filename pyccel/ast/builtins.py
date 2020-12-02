@@ -34,6 +34,8 @@ __all__ = (
     'PythonZip',
     'PythonMax',
     'PythonMin',
+    'PythonReal',
+    'PythonImag',
     'python_builtin_datatype'
 )
 
@@ -525,6 +527,65 @@ class PythonMin(Function, PyccelAstNode):
         self._rank      = 0
         self._dtype     = x.dtype
         self._precision = x.precision
+
+#==============================================================================
+class PythonReal(Function, PyccelAstNode):
+    """Represents a call to the .real property
+
+    e.g:
+    > a = 1+2j
+    > a.real
+    1.0
+
+    arg : Variable, Literal
+    """
+    _dtype = NativeReal()
+    _rank  = 0
+    _shape = ()
+    def __new__(cls, arg):
+        if arg.dtype is not NativeComplex():
+            return arg
+        else:
+            return Function.__new__(cls, arg)
+
+    def __init__(self, arg):
+        self._precision = arg.precision
+
+    def internal_var(self):
+        return self._args[0]
+
+    def __str__(self):
+        return 'Real({0})'.format(str(self.arg))
+
+#==============================================================================
+class PythonImag(Function, PyccelAstNode):
+    """Represents a call to the .imag property
+
+    e.g:
+    > a = 1+2j
+    > a.imag
+    1.0
+
+    arg : Variable, Literal
+    """
+    _dtype = NativeReal()
+    _rank  = 0
+    _shape = ()
+    def __new__(cls, arg):
+        if arg.dtype is not NativeComplex():
+            return LiteralFloat(0)
+        else:
+            return Function.__new__(cls, arg)
+
+    def __init__(self, arg):
+        self._precision = arg.precision
+
+    def internal_var(self):
+        return self._args[0]
+
+    def __str__(self):
+        return 'Imag({0})'.format(str(self.arg))
+
 
 #==============================================================================
 python_builtin_datatypes_dict = {
