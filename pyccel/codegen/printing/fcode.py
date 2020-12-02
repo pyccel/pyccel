@@ -33,7 +33,7 @@ from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              VariableAddress,
-                             TupleVariable, Declare,
+                             TupleVariable, For, Declare,
                              IndexedVariable, CodeBlock,
                              IndexedElement, Slice, Dlist,
                              DottedName, AsName,
@@ -603,24 +603,183 @@ class FCodePrinter(CodePrinter):
 
     #========================== Numpy Elements ===============================#
 
-    def _print_NumpySum(self, expr):
-        return expr.fprint(self._print)
+    def _print_NumpySum(self, expr, lhs=None):
+        """Fortran print."""
 
-    def _print_NumpyProduct(self, expr):
-        return expr.fprint(self._print)
+        rhs_code = self._print(expr.arg)
+        if lhs:
+            lhs_code = self._print(lhs)
+            return '{0} = sum({1})'.format(lhs_code, rhs_code)
+        return 'sum({0})'.format(rhs_code)
 
-    def _print_NumpyMatmul(self, expr):
-        return expr.fprint(self._print)
+    def _print_NumpyProduct(self, expr, lhs=None):
+        """Fortran print."""
+        
+        rhs_code = self._print(expr.arg)
+        if lhs:
+            lhs_code = self._print(lhs)
+            return '{0} = product({1})'.format(lhs_code, rhs_code)
+        return 'product({0})'.format(rhs_code)
 
-    def _print_NumpyCross(self, expr):
-        return expr.fprint(self._print)
+    def _print_NumpyMatmul(self, expr, lhs=None):
+        """Fortran print."""
+        a_code = self._print(expr.a)
+        b_code = self._print(expr.b)
+
+        if lhs:
+            lhs_code = self._print(lhs)
+
+        if expr.a.order and expr.b.order:
+            if expr.a.order != expr.b.order:
+                raise NotImplementedError("Mixed order matmul not supported.")
+
+        # Fortran ordering
+        if expr.a.order == 'F':
+            if lhs:
+                return '{0} = matmul({1},{2})'.format(lhs_code, a_code, b_code)
+            return 'matmul({0},{1})'.format(a_code, b_code)
+
+        # C ordering
+        if lhs:
+            return '{0} = matmul({2},{1})'.format(lhs_code, a_code, b_code)
+        return 'matmul({1},{0})'.format(a_code, b_code)
+
+    def _print_NumpyImag(self, expr):
+        """Fortran print."""
+
+        value = self._print(expr.arg)
+        code = 'aimag({0})'.format(value)
+        return code
+
+    def _print_NumpyCross(self, expr, lhs=None):
+        """Fortran print."""
+
+        a     = IndexedVariable(expr.first)
+        b     = IndexedVariable(expr.second)
+        slc   = Slice(None, None)
+        rank  = expr.rank
+
+        if rank > 2:
+            raise NotImplementedError('TODO')
+
+        if rank == 2:
+            a_inds = [[slc,0], [slc,1], [slc,2]]
+            b_inds = [[slc,0], [slc,1], [slc,2]]
+
+            if expr.first.order == 'C':
+                for inds in a_inds:
+                    inds.reverse()
+            if expr.second.order == 'C':
+                for inds in b_inds:
+                    inds.reverse()
+
+            a = [a[tuple(inds)] for inds in a_inds]
+            b = [b[tuple(inds)] for inds in b_inds]
+
+
+        cross_product = [a[1]*b[2]-a[2]*b[1],
+                         a[2]*b[0]-a[0]*b[2],
+                         a[0]*b[1]-a[1]*b[0]]
+
+        cross_product = PythonTuple(cross_product)
+        cross_product = self._print(cross_product)
+        first = self._print(expr.first)
+        order = expr.order
+
+        if lhs is not None:
+            lhs  = self._print(lhs)
+
+            if rank == 2:
+                alloc = 'allocate({0}(0:size({1},1)-1,0:size({1},2)-1))'.format(lhs, first)
+
+            elif rank == 1:
+                alloc = 'allocate({}(0:size({})-1)'.format(lhs, first)
+
+
+
+        if rank == 2:
+
+            if order == 'C':
+
+                code = 'reshape({}, shape({}), order=[2, 1])'.format(cross_product, first)
+            else:
+
+                code = 'reshape({}, shape({})'.format(cross_product, first)
+
+        elif rank == 1:
+            code = cross_product
+
+        if lhs is not None:
+            code = '{} = {}'.format(lhs, code)
+
+        #return alloc + '\n' + code
+        return code
+
+    def _print_NumpyDiag(self, expr, lhs):
+        """Fortran print."""
+
+        array = self._print(expr.array)
+        rank  = expr.array.rank
+
+        if rank == 2:
+            lhs   = IndexedVariable(lhs)[expr.index]
+            rhs   = IndexedVariable(expr.array)[expr.index,expr.index]
+            body  = [Assign(lhs, rhs)]
+            body  = For(expr.index, PythonRange(PythonLen(expr.array)), body)
+            code  = self._print(body)
+            alloc = 'allocate({0}(0: size({1},1)-1))'.format(lhs.base, array)
+        elif rank == 1:
+
+            lhs   = IndexedVariable(lhs)[expr.index, expr.index]
+            rhs   = IndexedVariable(expr.array)[expr.index]
+            body  = [Assign(lhs, rhs)]
+            body  = For(expr.index, PythonRange(PythonLen(expr.array)), body)
+            code  = expr._print(body)
+            alloc = 'allocate({0}(0: size({1},1)-1, 0: size({1},1)-1))'.format(lhs, array)
+
+        return alloc + '\n' + code
 
     def _print_NumpyNorm(self, expr):
-        return expr.fprint(self._print)
+        """Fortran print."""
 
-    def _print_NumpyLinspace(self, expr):
-        return expr.fprint(self._print)
-    
+        if expr.dim:
+            rhs = 'Norm2({},{})'.format(self._print(expr.arg),self._print(expr.dim))
+        else:
+            rhs = 'Norm2({})'.format(self._print(expr.arg))
+
+        return rhs
+
+    def _print_NumpyLinspace(self, expr, lhs=None):
+
+        template = '[({start} + {index}*{step},{index} = {zero},{end})]'
+
+        init_value = template.format(
+            start = self._print(expr.start),
+            step  = self._print(expr.step ),
+            index = self._print(expr.index),
+            zero  = self._print(LiteralInteger(0)),
+            end   = self._print(PyccelMinus(expr.size, LiteralInteger(1))),
+        )
+
+        if lhs:
+            code = '{0} = {1}\n'.format(self._print(lhs), init_value)
+        else:
+            code = init_value
+
+        return code
+
+    def _print_NumpyWhere(self, expr, lhs):
+
+        ind   = self._print(expr.index)
+        mask  = self._print(expr.mask)
+        lhs   = self._print(lhs)
+
+        stmt  = 'pack([({ind},{ind}=0,size({mask})-1)],{mask})'.format(ind=ind,mask=mask)
+        stmt  = '{lhs}(:,0) = {stmt}'.format(lhs=lhs, stmt=stmt)
+        alloc = 'allocate({}(0:count({})-1,0:0))'.format(lhs, mask)
+
+        return alloc +'\n' + stmt
+
     def _print_NumpyArray(self, expr, lhs):
         """Fortran print."""
 
@@ -713,6 +872,24 @@ class FCodePrinter(CodePrinter):
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
         return expr.fprint(self._print)
+    
+    def _print_NumpyFull(self, expr, lhs, stack_array=False):
+        
+        lhs_code = self._print(lhs)
+        stmts = []
+
+        # Create statement for initialization
+        if expr.fill_value is not None:
+            init_value = self._print(expr.fill_value)
+            code_init = '{0} = {1}'.format(lhs_code, init_value)
+            stmts.append(code_init)
+
+        if len(stmts) == 0:
+            return ''
+        else:
+            return '\n'.join(stmts) + '\n'
+    
+
 
     def _print_PythonMin(self, expr):
         args = expr.args
@@ -1123,12 +1300,37 @@ class FCodePrinter(CodePrinter):
         
         if isinstance(rhs, NumpyArray):
             return self._print_NumpyArray(rhs, expr.lhs)
+        
+        if isinstance(rhs, NumpyCross):
+            return self._print_NumpyCross(rhs, expr.lhs) + '\n'
+        
+        if isinstance(rhs, NumpyLinspace):
+            return self._print_NumpyLinspace(rhs, expr.lhs) + '\n'
+        
+        if isinstance(rhs, NumpyDiag):
+            return self._print_NumpyDiag(rhs, expr.lhs) + '\n'
+        
+        if isinstance(rhs, NumpyWhere):
+            return self._print_NumpyWhere(rhs, expr.lhs) + '\n'
 
-        if isinstance(rhs, (NumpyLinspace, NumpyDiag, NumpyCross,\
-						NumpyWhere, PyccelArraySize)):
+        if isinstance(rhs, PyccelArraySize):
             return rhs.fprint(self._print, expr.lhs) + '\n'
 
-        if isinstance(rhs, (NumpyFull, NumpyFullLike, NumpyEmptyLike,\
+
+        if isinstance(rhs, NumpyFull):
+
+            stack_array = False
+            if self._current_function:
+                name = self._current_function
+                func = self.get_function(name)
+                lhs_name = expr.lhs.name
+                vars_dict = {i.name: i for i in func.local_vars}
+                if lhs_name in vars_dict:
+                    stack_array = vars_dict[lhs_name].is_stack_array
+
+            return self._print_NumpyFull(expr.lhs, stack_array)
+
+        if isinstance(rhs, (NumpyFullLike, NumpyEmptyLike,\
 						NumpyZerosLike, NumpyOnesLike, NumpyRand)):
 
             stack_array = False

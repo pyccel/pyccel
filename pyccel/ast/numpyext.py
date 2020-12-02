@@ -213,16 +213,6 @@ class NumpySum(Function, PyccelAstNode):
     def arg(self):
         return self._args[0]
 
-
-    # def fprint(self, printer, lhs=None):
-    #     """Fortran print."""
-
-    #     rhs_code = printer(self.arg)
-    #     if lhs:
-    #         lhs_code = printer(lhs)
-    #         return '{0} = sum({1})'.format(lhs_code, rhs_code)
-    #     return 'sum({0})'.format(rhs_code)
-
 #==============================================================================
 class NumpyProduct(Function, PyccelAstNode):
     """Represents a call to  numpy.prod for code generation.
@@ -246,14 +236,6 @@ class NumpyProduct(Function, PyccelAstNode):
     def arg(self):
         return self._args[0]
 
-    def fprint(self, printer, lhs=None):
-        """Fortran print."""
-
-        rhs_code = printer(self.arg)
-        if lhs:
-            lhs_code = printer(lhs)
-            return '{0} = product({1})'.format(lhs_code, rhs_code)
-        return 'product({0})'.format(rhs_code)
 
 #==============================================================================
 class NumpyMatmul(Application, PyccelAstNode):
@@ -308,28 +290,6 @@ class NumpyMatmul(Application, PyccelAstNode):
     def b(self):
         return self._args[1]
 
-    def fprint(self, printer, lhs=None):
-        """Fortran print."""
-        a_code = printer(self.a)
-        b_code = printer(self.b)
-
-        if lhs:
-            lhs_code = printer(lhs)
-
-        if self.a.order and self.b.order:
-            if self.a.order != self.b.order:
-                raise NotImplementedError("Mixed order matmul not supported.")
-
-        # Fortran ordering
-        if self.a.order == 'F':
-            if lhs:
-                return '{0} = matmul({1},{2})'.format(lhs_code, a_code, b_code)
-            return 'matmul({0},{1})'.format(a_code, b_code)
-
-        # C ordering
-        if lhs:
-            return '{0} = matmul({2},{1})'.format(lhs_code, a_code, b_code)
-        return 'matmul({1},{0})'.format(a_code, b_code)
 
 #==============================================================================
 
@@ -384,14 +344,6 @@ class NumpyImag(NumpyReal):
 
     arg : Variable, LiteralFloat, sp_Integer, LiteralComplex
     """
-
-    def fprint(self, printer):
-        """Fortran print."""
-
-        value = printer(self.arg)
-        code = 'aimag({0})'.format(value)
-        return code
-
 
     def __str__(self):
         return 'imag({0})'.format(str(self.arg))
@@ -475,27 +427,7 @@ class NumpyLinspace(Application, NumpyNewArray):
                                              sstr(self.stop),
                                              sstr(self.size))
         return code
-
-
-    def fprint(self, printer, lhs=None):
-        """Fortran print."""
-
-        template = '[({start} + {index}*{step},{index} = {zero},{end})]'
-
-        init_value = template.format(
-            start = printer(self.start),
-            step  = printer(self.step ),
-            index = printer(self.index),
-            zero  = printer(LiteralInteger(0)),
-            end   = printer(PyccelMinus(self.size, LiteralInteger(1))),
-        )
-
-        if lhs:
-            code = '{0} = {1}\n'.format(printer(lhs), init_value)
-        else:
-            code = init_value
-
-        return code
+ 
 
 #==============================================================================
 class NumpyDiag(Application, NumpyNewArray):
@@ -561,29 +493,6 @@ class NumpyDiag(Application, NumpyNewArray):
         rank = 1 if self.array.rank == 2 else 2
         return rank
 
-    def fprint(self, printer, lhs):
-        """Fortran print."""
-
-        array = printer(self.array)
-        rank  = self.array.rank
-
-        if rank == 2:
-            lhs   = IndexedVariable(lhs)[self.index]
-            rhs   = IndexedVariable(self.array)[self.index,self.index]
-            body  = [Assign(lhs, rhs)]
-            body  = For(self.index, PythonRange(PythonLen(self.array)), body)
-            code  = printer(body)
-            alloc = 'allocate({0}(0: size({1},1)-1))'.format(lhs.base, array)
-        elif rank == 1:
-
-            lhs   = IndexedVariable(lhs)[self.index, self.index]
-            rhs   = IndexedVariable(self.array)[self.index]
-            body  = [Assign(lhs, rhs)]
-            body  = For(self.index, PythonRange(PythonLen(self.array)), body)
-            code  = printer(body)
-            alloc = 'allocate({0}(0: size({1},1)-1, 0: size({1},1)-1))'.format(lhs, array)
-
-        return alloc + '\n' + code
 
 #==============================================================================
 class NumpyCross(Application, NumpyNewArray):
@@ -641,70 +550,6 @@ class NumpyCross(Application, NumpyNewArray):
         return ()
 
 
-    def fprint(self, printer, lhs=None):
-        """Fortran print."""
-
-        a     = IndexedVariable(self.first)
-        b     = IndexedVariable(self.second)
-        slc   = Slice(None, None)
-        rank  = self.rank
-
-        if rank > 2:
-            raise NotImplementedError('TODO')
-
-        if rank == 2:
-            a_inds = [[slc,0], [slc,1], [slc,2]]
-            b_inds = [[slc,0], [slc,1], [slc,2]]
-
-            if self.first.order == 'C':
-                for inds in a_inds:
-                    inds.reverse()
-            if self.second.order == 'C':
-                for inds in b_inds:
-                    inds.reverse()
-
-            a = [a[tuple(inds)] for inds in a_inds]
-            b = [b[tuple(inds)] for inds in b_inds]
-
-
-        cross_product = [a[1]*b[2]-a[2]*b[1],
-                         a[2]*b[0]-a[0]*b[2],
-                         a[0]*b[1]-a[1]*b[0]]
-
-        cross_product = PythonTuple(cross_product)
-        cross_product = printer(cross_product)
-        first = printer(self.first)
-        order = self.order
-
-        if lhs is not None:
-            lhs  = printer(lhs)
-
-            if rank == 2:
-                alloc = 'allocate({0}(0:size({1},1)-1,0:size({1},2)-1))'.format(lhs, first)
-
-            elif rank == 1:
-                alloc = 'allocate({}(0:size({})-1)'.format(lhs, first)
-
-
-
-        if rank == 2:
-
-            if order == 'C':
-
-                code = 'reshape({}, shape({}), order=[2, 1])'.format(cross_product, first)
-            else:
-
-                code = 'reshape({}, shape({})'.format(cross_product, first)
-
-        elif rank == 1:
-            code = cross_product
-
-        if lhs is not None:
-            code = '{} = {}'.format(lhs, code)
-
-        #return alloc + '\n' + code
-        return code
-
 #==============================================================================
 class NumpyWhere(Application, NumpyNewArray):
     """ Represents a call to  numpy.where """
@@ -739,20 +584,7 @@ class NumpyWhere(Application, NumpyNewArray):
     def order(self):
         return 'F'
 
-
-    def fprint(self, printer, lhs):
-
-        ind   = printer(self.index)
-        mask  = printer(self.mask)
-        lhs   = printer(lhs)
-
-        stmt  = 'pack([({ind},{ind}=0,size({mask})-1)],{mask})'.format(ind=ind,mask=mask)
-        stmt  = '{lhs}(:,0) = {stmt}'.format(lhs=lhs, stmt=stmt)
-        alloc = 'allocate({}(0:count({})-1,0:0))'.format(lhs, mask)
-
-        return alloc +'\n' + stmt
-
-#==============================================================================
+ #==============================================================================
 class NumpyRand(Function, NumpyNewArray):
 
     """
@@ -892,23 +724,6 @@ class NumpyFull(Application, NumpyNewArray):
     def rank(self):
         return len(self.shape)
 
-    #--------------------------------------------------------------------------
-    def fprint(self, printer, lhs, stack_array=False):
-        """Fortran print."""
-
-        lhs_code = printer(lhs)
-        stmts = []
-
-        # Create statement for initialization
-        if self.fill_value is not None:
-            init_value = printer(self.fill_value)
-            code_init = '{0} = {1}'.format(lhs_code, init_value)
-            stmts.append(code_init)
-
-        if len(stmts) == 0:
-            return ''
-        else:
-            return '\n'.join(stmts) + '\n'
 
 #==============================================================================
 class NumpyEmpty(NumpyFull):
@@ -1057,16 +872,6 @@ class NumpyNorm(Function, PyccelAstNode):
         if self.dim is not None:
             return self.arg.rank-1
         return 0
-
-    def fprint(self, printer):
-        """Fortran print."""
-
-        if self.dim:
-            rhs = 'Norm2({},{})'.format(printer(self.arg),printer(self.dim))
-        else:
-            rhs = 'Norm2({})'.format(printer(self.arg))
-
-        return rhs
 
 #=====================================================
 class Sqrt(PyccelPow):
