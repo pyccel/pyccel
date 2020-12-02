@@ -51,8 +51,8 @@ local_sympify = {
 }
 
 #==============================================================================
-class PythonReal(Function, PyccelAstNode):
-    """Represents a call to the .real property
+class PythonComplexProperty(Function, PyccelAstNode):
+    """Represents a call to the .real or .imag property
 
     e.g:
     > a = 1+2j
@@ -64,24 +64,37 @@ class PythonReal(Function, PyccelAstNode):
     _dtype = NativeReal()
     _rank  = 0
     _shape = ()
-    def __new__(cls, arg):
-        if arg.dtype is not NativeComplex():
-            return arg
-        else:
-            return Function.__new__(cls, arg)
 
     def __init__(self, arg):
         self._precision = arg.precision
 
     @property
     def internal_var(self):
+        """Return the variable on which the function was called"""
         return self._args[0]
 
     def __str__(self):
         return 'Real({0})'.format(str(self.arg))
 
 #==============================================================================
-class PythonImag(Function, PyccelAstNode):
+class PythonReal(PythonComplexProperty):
+    """Represents a call to the .real property
+
+    e.g:
+    > a = 1+2j
+    > a.real
+    1.0
+
+    arg : Variable, Literal
+    """
+    def __new__(cls, arg):
+        if arg.dtype is not NativeComplex():
+            return arg
+        else:
+            return PythonComplexProperty.__new__(cls, arg)
+
+#==============================================================================
+class PythonImag(PythonComplexProperty):
     """Represents a call to the .imag property
 
     e.g:
@@ -91,24 +104,11 @@ class PythonImag(Function, PyccelAstNode):
 
     arg : Variable, Literal
     """
-    _dtype = NativeReal()
-    _rank  = 0
-    _shape = ()
     def __new__(cls, arg):
         if arg.dtype is not NativeComplex():
             return get_default_literal_value(arg.dtype)
         else:
-            return Function.__new__(cls, arg)
-
-    def __init__(self, arg):
-        self._precision = arg.precision
-
-    @property
-    def internal_var(self):
-        return self._args[0]
-
-    def __str__(self):
-        return 'Imag({0})'.format(str(self.arg))
+            return PythonComplexProperty.__new__(cls, arg)
 
 
 #==============================================================================
@@ -175,16 +175,13 @@ class PythonComplex(Expr, PyccelAstNode):
 
         # Split arguments depending on their type to ensure that the arguments are
         # either a complex and LiteralFloat(0) or 2 floats
-        from .operators import PyccelAdd, PyccelMinus, PyccelMul
+        from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelUnarySub
 
         if arg0.dtype is NativeComplex():
             if arg1.dtype is NativeComplex():
                 # both args are complex
                 return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit()))
-            elif isinstance(arg1, Literal) and arg1.python_value == 0:
-                # first arg is complex. Second arg is 0
-                return PythonComplex(PythonReal(arg0), PythonImag(arg0))
-            else:
+            elif not (isinstance(arg1, Literal) and arg1.python_value == 0):
                 # first arg is complex. Second arg is non-0
                 return PythonComplex(PythonReal(arg0), PyccelAdd(PythonImag(arg0), arg1))
         elif arg1.dtype is NativeComplex():
@@ -194,8 +191,7 @@ class PythonComplex(Expr, PyccelAstNode):
             else:
                 # Second arg is complex. First arg is non-0
                 return PythonComplex(PyccelMinus(arg0, PythonImag(arg1)), PythonReal(arg1))
-        else:
-            return Expr.__new__(cls, arg0, arg1)
+        return Expr.__new__(cls, arg0, arg1)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
         self._is_cast = isinstance(arg1, Literal) and arg1.python_value == 0
