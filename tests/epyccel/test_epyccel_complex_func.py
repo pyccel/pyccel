@@ -4,8 +4,8 @@ import pytest
 
 from numpy.random import rand, randint
 
-from pyccel.epyccel import epyccel
 import modules.complex_func as mod
+from pyccel.epyccel import epyccel
 
 @pytest.mark.parametrize("f", [ mod.create_complex_literal__int_int,
                            mod.create_complex_literal__int_float,
@@ -88,14 +88,14 @@ def test_create_complex__complex_complex(language):
     assert f_epyc(a) == f(a)
 
 def test_cast_complex_1(language):
-    f = mod.create_complex__complex_complex
+    f = mod.cast_complex_1
     f_epyc = epyccel(f, language = language)
 
     a = np.complex64(complex(randint(100), randint(100)))
     assert np.isclose(f_epyc(a), f(a), rtol = 1e-7, atol = 1e-8)
 
-def test_cast_complex_1(language):
-    f = mod.create_complex__complex_complex
+def test_cast_complex_2(language):
+    f = mod.cast_complex_2
     f_epyc = epyccel(f, language = language)
 
     a = np.complex128(complex(randint(100), randint(100)))

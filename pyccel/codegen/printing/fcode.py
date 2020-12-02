@@ -61,10 +61,10 @@ from pyccel.ast.literals  import LiteralTrue
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyLinspace, NumpyDiag, NumpyCross
-from pyccel.ast.numpyext import NumpyReal, NumpyWhere
+from pyccel.ast.numpyext import NumpyWhere
 from pyccel.ast.numpyext import NumpyMod, NumpyFloat
 from pyccel.ast.numpyext import NumpyFullLike, NumpyEmptyLike, NumpyZerosLike, NumpyOnesLike
-from pyccel.ast.numpyext import NumpyRand, NumpyRandint
+from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import Shape
 

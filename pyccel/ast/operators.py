@@ -498,13 +498,13 @@ class PyccelMinus(PyccelArithmeticOperator):
     """
     _precedence = 12
 
-    def __new__(self, arg1, arg2):
+    def __new__(cls, arg1, arg2):
         if isinstance(arg1, LiteralFloat) and \
            isinstance(arg2, LiteralComplex) and \
            arg2.real_part == LiteralFloat(0):
             return LiteralComplex(arg1, -float(arg2.imag_part))
         else:
-            return PyccelArithmeticOperator.__new__(self, arg1, arg2)
+            return PyccelArithmeticOperator.__new__(cls, arg1, arg2)
 
 #==============================================================================
 

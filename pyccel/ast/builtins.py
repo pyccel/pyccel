@@ -6,13 +6,14 @@ always available.
 In this module we implement some of them in alphabetical order.
 
 """
-from pyccel.ast.datatypes import iso_c_binding
 
 from sympy import Symbol, Function, Tuple
 from sympy import Expr, Not
 from sympy import sympify
 from sympy.tensor import Indexed, IndexedBase
 from sympy.core.function import Application
+
+from pyccel.ast.datatypes import iso_c_binding
 
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
@@ -176,11 +177,11 @@ class PythonComplex(Expr, PyccelAstNode):
 
         # Split arguments depending on their type to ensure that the arguments are
         # either a complex and LiteralFloat(0) or 2 floats
-        from .operators import PyccelAdd, PyccelMul, PyccelUnarySub
+        from .operators import PyccelAdd, PyccelMul
 
         if arg0.dtype is NativeComplex() and arg1.dtype is NativeComplex():
-                # both args are complex
-                return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit()))
+            # both args are complex
+            return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit()))
         return Expr.__new__(cls, arg0, arg1)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):

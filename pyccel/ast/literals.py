@@ -74,6 +74,7 @@ class LiteralInteger(Basic, Literal):
         return Basic.__new__(cls, value)
 
     def __init__(self, value, precision = default_precision['integer']):
+        Basic.__init__(self)
         Literal.__init__(self, precision)
         if not isinstance(value, int):
             raise TypeError("A LiteralInteger can only be created with an integer")
