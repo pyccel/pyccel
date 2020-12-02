@@ -1059,10 +1059,10 @@ class CCodePrinter(CodePrinter):
         return '-HUGE_VAL'
 
     def _print_PythonReal(self, expr):
-        return 'creal({})'.format(self._print(expr.arg))
+        return 'creal({})'.format(self._print(expr.internal_var))
 
     def _print_PythonImag(self, expr):
-        return 'cimag({})'.format(self._print(expr.arg))
+        return 'cimag({})'.format(self._print(expr.internal_var))
 
     def _handle_is_operator(self, Op, expr):
 
