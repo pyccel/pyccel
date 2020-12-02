@@ -4990,8 +4990,8 @@ class Slice(Basic):
     # TODO add step
     # TODO check that args are integers
     # TODO add negative indices
-    def __new__(cls, start, end):
-        return Basic.__new__(cls, start, end)
+    def __new__(cls, start, end, step = None):
+        return Basic.__new__(cls, start, end, step)
 
     @property
     def start(self):
@@ -5000,6 +5000,10 @@ class Slice(Basic):
     @property
     def end(self):
         return self._args[1]
+
+    @property
+    def step(self):
+        return self._args[2]
 
     def _sympystr(self, printer):
         sstr = printer.doprint
