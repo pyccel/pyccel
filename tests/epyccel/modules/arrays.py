@@ -602,36 +602,38 @@ def expr_negative_index(n, idx_1, idx_2):
 
 @allow_negative_index('a')
 @allow_negative_index('b')
-def test_multiple_negative_index():
+@types('int', 'int')
+def test_multiple_negative_index(c, d):
     import numpy as np
     a = np.array([1, 2, 3, 4, 5, 6])
     b = np.array([1, 2, 3])
-    x = a[-2]
-    y = b[-1]
+    x = a[c]
+    y = b[d]
 
     return x, y
 
 @allow_negative_index('a', 'b')
-@types('real', 'real')
+@types('int', 'int')
 def test_multiple_negative_index_2(c, d):
     import numpy as np
     a = np.array([1.2, 2.2, 3.2, 4.2])
     b = np.array([1, 5, 9, 13])
 
-    x = a[-4] * c
-    y = b[-2] * d
+    x = a[c] * d
+    y = b[d] * c
 
     return x, y
 
 @allow_negative_index('a')
 @allow_negative_index('b', 'c')
-def test_multiple_negative_index_3():
+@types('int', 'int', 'int')
+def test_multiple_negative_index_3(d, e, f):
     import numpy as np
     a = np.array([1.2, 2.2, 3.2, 4.2])
     b = np.array([1])
     c = np.array([1, 2, 3])
 
-    return a[-1], b[-1], c[-3]
+    return a[d], b[e], c[f]
 
 
 #==============================================================================

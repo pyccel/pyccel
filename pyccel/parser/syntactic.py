@@ -643,10 +643,7 @@ class SyntaxParser(BasicParser):
         for d in self._visit(stmt.decorator_list):
             tmp_var = str(d) if isinstance(d, Symbol) else str(type(d))
             if tmp_var in decorators:
-                if isinstance(decorators[tmp_var], list):
-                    decorators[tmp_var] += [d]
-                else:
-                    decorators[tmp_var] = [decorators[tmp_var]] + [d]
+                decorators[tmp_var] += [d]
             else:
                 decorators[tmp_var] = [d]
 
@@ -662,8 +659,6 @@ class SyntaxParser(BasicParser):
 
         # extract the templates
         if 'template' in decorators:
-            if not isinstance(decorators['template'], list):
-                decorators['template'] = [decorators['template']]
             for comb_types in decorators['template']:
                 cache.clear_cache()
                 types = []
@@ -714,8 +709,6 @@ class SyntaxParser(BasicParser):
 
         # extract the types to construct a header
         if 'types' in decorators:
-            if not isinstance(decorators['types'], list):
-                decorators['types'] = [decorators['types']]
             for comb_types in decorators['types']:
 
                 cache.clear_cache()

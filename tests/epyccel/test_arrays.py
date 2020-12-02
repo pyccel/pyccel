@@ -1462,19 +1462,19 @@ def test_multiple_negative_index():
     f1 = arrays.test_multiple_negative_index
     f2 = epyccel(f1)
 
-    assert np.array_equal(f1(), f2())
+    assert np.array_equal(f1(-2, -1), f2(-2, -1))
 
 def test_multiple_negative_index_2():
     f1 = arrays.test_multiple_negative_index_2
     f2 = epyccel(f1)
 
-    assert np.array_equal(f1(2.2, 3.1), f2(2.2, 3.1))
+    assert np.array_equal(f1(-4, -2), f2(-4, -2))
 
 def test_multiple_negative_index_3():
     f1 = arrays.test_multiple_negative_index_3
     f2 = epyccel(f1)
 
-    assert np.array_equal(f1(), f2())
+    assert np.array_equal(f1(-1, -1, -3), f2(-1, -1, -3))
 
 #==============================================================================
 # TEST: shape initialisation
