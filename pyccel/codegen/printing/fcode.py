@@ -62,7 +62,7 @@ from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_impo
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyLinspace, NumpyDiag, NumpyCross
 from pyccel.ast.numpyext import NumpyReal, NumpyWhere
-from pyccel.ast.numpyext import NumpyComplex, NumpyMod, NumpyFloat
+from pyccel.ast.numpyext import NumpyMod, NumpyFloat
 from pyccel.ast.numpyext import NumpyFullLike, NumpyEmptyLike, NumpyZerosLike, NumpyOnesLike
 from pyccel.ast.numpyext import NumpyRand, NumpyRandint
 from pyccel.ast.numpyext import NumpyNewArray
@@ -1088,11 +1088,6 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(rhs, (PythonRange, Product)):
             return ''
-
-        if isinstance(rhs, (PythonInt, NumpyComplex)):
-            lhs = self._print(expr.lhs)
-            rhs = expr.rhs.fprint(self._print)
-            return '{0} = {1}\n'.format(lhs,rhs)
 
         if isinstance(rhs, (NumpyArray, NumpyLinspace, NumpyDiag, NumpyCross,\
 						NumpyWhere, PyccelArraySize)):
