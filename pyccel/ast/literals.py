@@ -36,6 +36,10 @@ class Literal(PyccelAstNode):
         """ Set precision for a literal class"""
         self._precision = precision
 
+    @property
+    def python_value(self):
+        """ Get python literal represented by this instance """
+
 #------------------------------------------------------------------------------
 class LiteralTrue(sp_BooleanTrue, Literal):
     """Represents the python value True"""
