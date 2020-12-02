@@ -449,13 +449,13 @@ class PyccelAdd(PyccelArithmeticOperator):
     """
     _precedence = 12
 
-    def __new__(self, arg1, arg2):
+    def __new__(cls, arg1, arg2):
         if isinstance(arg1, (LiteralInteger, LiteralFloat)) and \
            isinstance(arg2, LiteralComplex) and \
            arg2.real == LiteralFloat(0):
             return LiteralComplex(arg1, arg2.imag)
         else:
-            return PyccelArithmeticOperator.__new__(self, arg1, arg2)
+            return PyccelArithmeticOperator.__new__(cls, arg1, arg2)
 
     def _handle_str_type(self, strs):
         self._dtype = NativeString()
