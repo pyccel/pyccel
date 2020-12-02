@@ -835,6 +835,9 @@ class SemanticParser(BasicParser):
 
         if args[1] is not None:
             args[1] = self._visit(args[1], **settings)
+
+        if args[2] is not None:
+            args[2] = self._visit(args[1], **settings)
         return Slice(*args)
 
     def _extract_indexed_from_var(self, var, args, name):
