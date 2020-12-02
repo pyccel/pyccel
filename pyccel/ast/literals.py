@@ -96,6 +96,8 @@ class LiteralComplex(Basic, Literal):
                 self._real_part = real
             else:
                 self._real_part = LiteralFloat(real.args[0], precision = precision)
+        elif isinstance(real, LiteralInteger):
+            self._real_part = LiteralFloat(real.p, precision = precision)
         elif isinstance(real, (int, float)):
             self._real_part = LiteralFloat(real, precision = precision)
         else:
@@ -106,6 +108,8 @@ class LiteralComplex(Basic, Literal):
                 self._imag_part = imag
             else:
                 self._imag_part = LiteralFloat(imag.args[0], precision = precision)
+        elif isinstance(imag, LiteralInteger):
+            self._imag_part = LiteralFloat(imag.p, precision = precision)
         elif isinstance(imag, (int, float)):
             self._imag_part = LiteralFloat(imag, precision = precision)
         else:
