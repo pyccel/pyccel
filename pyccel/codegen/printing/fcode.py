@@ -666,7 +666,15 @@ class FCodePrinter(CodePrinter):
         return expr.fprint(self._print)
 
     def _print_PythonComplex(self, expr):
-        return expr.fprint(self._print)
+        if expr.is_cast:
+            code = 'cmplx({0}, kind={1})'.format(expr.internal_var,
+                                iso_c_binding["complex"][expr.precision])
+        else:
+            real = self._print(expr.real_part)
+            imag = self._print(expr.imag_part)
+            code = 'cmplx({0}, {1}, {2})'.format(real, imag,
+                                iso_c_binding["complex"][expr.precision])
+        return code
 
     def _print_PythonBool(self, expr):
         return expr.fprint(self._print)

@@ -202,6 +202,7 @@ class PythonComplex(Expr, PyccelAstNode):
         if self._is_cast:
             self._real_part = PythonReal(arg0)
             self._imag_part = PythonImag(arg0)
+            self._internal_var = arg0
         else:
             self._real_part = arg0
             self._imag_part = arg1
@@ -218,18 +219,13 @@ class PythonComplex(Expr, PyccelAstNode):
     def imag_part(self):
         return self._imag_part
 
+    @property
+    def internal_var(self):
+        assert(self._is_cast)
+        return self._internal_var
+
     def __str__(self):
-        return self.fprint(str)
-
-    def _sympystr(self, printer):
-        return self.fprint(str)
-
-    def fprint(self, printer):
-        """Fortran print."""
-        real = printer(self.real_part)
-        imag = printer(self.imag_part)
-        code = 'cmplx({0}, {1}, {2})'.format(real, imag, iso_c_binding["complex"][self.precision])
-        return code
+        return "complex({}, {})".format(str(self._args[0]), str(self._args[1]))
 
 #==============================================================================
 class PythonEnumerate(Basic):
