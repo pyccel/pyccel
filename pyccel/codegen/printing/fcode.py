@@ -603,13 +603,11 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonReal(self, expr):
         value = self._print(expr.internal_var)
-        prec  = str(iso_c_binding[dtype][expr.precision])
-        return 'real({0}, {1})'.format(value, prec)
+        return 'real({0})'.format(value)
 
     def _print_PythonImag(self, expr):
         value = self._print(expr.internal_var)
-        prec  = str(iso_c_binding[dtype][expr.precision])
-        return 'aimag({0}, {1})'.format(value, prec)
+        return 'aimag({0})'.format(value)
 
     #========================== Numpy Elements ===============================#
 
