@@ -189,31 +189,6 @@ class NumpyArray(Application, NumpyNewArray):
     def rank(self):
         return self._rank
 
-    def fprint(self, printer, lhs):
-        """Fortran print."""
-
-        lhs_code = printer(lhs)
-
-        # Always transpose indices because Numpy initial values are given with
-        # row-major ordering, while Fortran initial values are column-major
-        shape = self.shape[::-1]
-
-        # Construct right-hand-side code
-        if self.rank > 1:
-            import functools
-            import operator
-            arg = functools.reduce(operator.concat, self.arg)
-            rhs_code = 'reshape({array}, {shape})'.format(
-                    array=printer(arg), shape=printer(Tuple(*shape)))
-        else:
-            rhs_code = printer(self.arg)
-
-        # If Numpy array is stored with column-major ordering, transpose values
-        if self.order == 'F' and self.rank > 1:
-            rhs_code = 'transpose({})'.format(rhs_code)
-
-        return '{0} = {1}'.format(lhs_code, rhs_code)
-
 #==============================================================================
 class NumpySum(Function, PyccelAstNode):
     """Represents a call to  numpy.sum for code generation.
@@ -239,14 +214,14 @@ class NumpySum(Function, PyccelAstNode):
         return self._args[0]
 
 
-    def fprint(self, printer, lhs=None):
-        """Fortran print."""
+    # def fprint(self, printer, lhs=None):
+    #     """Fortran print."""
 
-        rhs_code = printer(self.arg)
-        if lhs:
-            lhs_code = printer(lhs)
-            return '{0} = sum({1})'.format(lhs_code, rhs_code)
-        return 'sum({0})'.format(rhs_code)
+    #     rhs_code = printer(self.arg)
+    #     if lhs:
+    #         lhs_code = printer(lhs)
+    #         return '{0} = sum({1})'.format(lhs_code, rhs_code)
+    #     return 'sum({0})'.format(rhs_code)
 
 #==============================================================================
 class NumpyProduct(Function, PyccelAstNode):

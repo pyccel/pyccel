@@ -621,28 +621,27 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyLinspace(self, expr):
         return expr.fprint(self._print)
     
-    def _print_NumpyArray(self, expr):
-        return expr.fprint(self._print)
-    # def _print_NumpyArray(self, lhs, shape, rank, arg, order):
-    #     """Fortran print."""
+    def _print_NumpyArray(self, expr, lhs):
+        """Fortran print."""
 
-    #     # Always transpose indices because Numpy initial values are given with
-    #     # row-major ordering, while Fortran initial values are column-major
-    #     shape = shape[::-1]
+        lhs_code = self._print(lhs)
+        # Always transpose indices because Numpy initial values are given with
+        # row-major ordering, while Fortran initial values are column-major
+        shape = expr.shape[::-1]
 
-    #     # Construct right-hand-side code
-    #     if rank > 1:
-    #         arg = functools.reduce(operator.concat, arg)
-    #         rhs_code = 'reshape({array}, {shape})'.format(
-    #                 array=self._print(arg), shape=self._print(Tuple(*shape)))
-    #     else:
-    #         rhs_code = self._print(arg)
+        # Construct right-hand-side code
+        if expr.rank > 1:
+            arg = functools.reduce(operator.concat, expr.arg)
+            rhs_code = 'reshape({array}, {shape})'.format(
+                    array=self._print(arg), shape=self._print(Tuple(*shape)))
+        else:
+            rhs_code = self._print(expr.arg)
 
-    #     # If Numpy array is stored with column-major ordering, transpose values
-    #     if order == 'F' and rank > 1:
-    #         rhs_code = 'transpose({})'.format(rhs_code)
+        # If Numpy array is stored with column-major ordering, transpose values
+        if expr.order == 'F' and expr.rank > 1:
+            rhs_code = 'transpose({})'.format(rhs_code)
 
-    #     return '{0} = {1}'.format(lhs, rhs_code)
+        return '{0} = {1}'.format(lhs_code, rhs_code) + '\n'
 
     def _print_NumpyFloor(self, expr):
         result_code = self._print_MathFloor(expr)
@@ -677,11 +676,10 @@ class FCodePrinter(CodePrinter):
     def _print_Real(self, expr):
         return expr.fprint(self._print)
 
-    # def _print_PythonComplex(self, expr):
-    #     return expr.fprint(self._print)
-    def _print_PythonComplex(self, real_part, imag_part, precision = default_precision['complex']):
-        real = self._print(real_part)
-        imag = self._print(imag_part)
+    def _print_PythonComplex(self, expr):
+        real = self._print(expr.real_part)
+        imag = self._print(expr.imag_part)
+        precision = expr.precision
         code = 'cmplx({0}, {1}, {2})'.format(real, imag, iso_c_binding["complex"][precision])
         return code
 
@@ -1069,9 +1067,9 @@ class FCodePrinter(CodePrinter):
         stmt = Comment(str(expr))
         return self._print_Comment(stmt)
 
-    def _print_NumpyReal(self, arg, precision=default_precision['real']):
-        value = self._print(arg)
-        prec = self._print(precision)
+    def _print_NumpyReal(self, expr):
+        value = self._print(expr.arg)
+        prec = self._print(expr.precision)
         code = 'Real({0}, {1})'.format(value, prec)
         return code
     
@@ -1116,18 +1114,17 @@ class FCodePrinter(CodePrinter):
         
         if isinstance(rhs, NumpyComplex):
             lhs = self._print(expr.lhs)
-            rhs = self._print_PythonComplex(rhs.real_part, rhs.imag_part, rhs.precision)
+            rhs = self._print_PythonComplex(rhs)
             return '{0} = {1}\n'.format(lhs,rhs)
 
         if isinstance(rhs, NumpyReal):
-            lhs = self._print(expr.lhs)
-            rhs = self._print_NumpyReal(rhs.arg, rhs.precision)
+            rhs = self._print_NumpyReal(rhs)
             return '{0} = {1}\n'.format(lhs,rhs)
         
-        # if isinstance(rhs, NumpyArray):
-        #     lhs = self._print(expr.lhs)
-        #     return self._print_NumpyArray(lhs, expr.rhs.shape, expr.rhs.rank, expr.rhs.arg, expr.rhs.order)
-        if isinstance(rhs, (NumpyArray, NumpyLinspace, NumpyDiag, NumpyCross,\
+        if isinstance(rhs, NumpyArray):
+            return self._print_NumpyArray(rhs, expr.lhs)
+
+        if isinstance(rhs, (NumpyLinspace, NumpyDiag, NumpyCross,\
 						NumpyWhere, PyccelArraySize)):
             return rhs.fprint(self._print, expr.lhs) + '\n'
 
@@ -2232,9 +2229,6 @@ class FCodePrinter(CodePrinter):
         value_true = expr.value_true
         value_false = expr.value_false
 
-        print("allo\n")
-        print(expr.dtype)
-        print("allo\n")
         if value_true.dtype != value_false.dtype :
             try :
                 cast_func = python_builtin_datatypes[str_dtype(expr.dtype)]
