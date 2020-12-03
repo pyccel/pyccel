@@ -2,40 +2,40 @@
 from pyccel.decorators import types
 
 def create_complex_literal__int_int():
-    a = complex(1,2)
+    a = complex(1,-2)
     return a
 
 def create_complex_literal__int_float():
-    a = complex(1,2.7)
+    a = complex(-1,2.7)
     return a
 
 def create_complex_literal__int_complex():
-    a = complex(1,2j)
+    a = complex(1,-2j)
     b = complex(1,1+3j)
     return a, b
 
 def create_complex_literal__float_int():
-    a = complex(1.6,2)
+    a = complex(-1.6,2)
     return a
 
 def create_complex_literal__float_float():
-    a = complex(1.6,2.9)
+    a = complex(1.6,-2.9)
     return a
 
 def create_complex_literal__float_complex():
-    a = complex(1.6,2.8+7j)
+    a = complex(1.6,2.8-7j)
     return a
 
 def create_complex_literal__complex_int():
-    a = complex(2.8+7j,1)
+    a = complex(2.8-7j,1)
     return a
 
 def create_complex_literal__complex_float():
-    a = complex(2.8+7j,1.8)
+    a = complex(-2.8+7j,1.8)
     return a
 
 def create_complex_literal__complex_complex():
-    a = complex(2.8+7j,1.5+22j)
+    a = complex(2.8+7j,-1.5-22j)
     return a
 
 @types('int','int')
@@ -72,7 +72,7 @@ def create_complex_0__float_float(a):
 
 @types('complex')
 def create_complex__complex_complex(a):
-    return complex(a,1+2j), complex(1+2j,a)
+    return complex(a,1-2j), complex(1+2j,a)
 
 @types('complex64')
 def cast_complex_1(a):
