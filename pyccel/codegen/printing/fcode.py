@@ -670,8 +670,8 @@ class FCodePrinter(CodePrinter):
             code = 'cmplx({0}, kind={1})'.format(expr.internal_var,
                                 iso_c_binding["complex"][expr.precision])
         else:
-            real = self._print(expr.real_part)
-            imag = self._print(expr.imag_part)
+            real = self._print(expr.real)
+            imag = self._print(expr.imag)
             code = 'cmplx({0}, {1}, {2})'.format(real, imag,
                                 iso_c_binding["complex"][expr.precision])
         return code

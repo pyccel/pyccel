@@ -219,14 +219,14 @@ class PythonComplex(Expr, PyccelAstNode):
         return self._is_cast
 
     @property
-    def real_part(self):
+    def real(self):
         """ Returns the real part of the complex """
         return self._real_part
 
     @property
-    def imag_part(self):
+    def imag(self):
         """ Returns the imaginary part of the complex """
-        return self._imag_part
+        return self._imag
 
     @property
     def internal_var(self):

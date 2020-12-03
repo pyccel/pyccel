@@ -290,8 +290,8 @@ class CCodePrinter(CodePrinter):
         if expr.is_cast:
             return self._print(expr.internal_var)
         else:
-            return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real_part,
-                            PyccelMul(expr.imag_part, LiteralImaginaryUnit()))))
+            return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
+                            PyccelMul(expr.imag, LiteralImaginaryUnit()))))
 
     def _print_LiteralImaginaryUnit(self, expr):
         return '_Complex_I'
