@@ -107,34 +107,29 @@ class LiteralComplex(Basic, Literal):
     _dtype     = NativeComplex()
 
     def __new__(cls, real, imag, precision = default_precision['complex']):
-        return Basic.__new__(cls, real, imag)
+        if cls is LiteralImaginaryUnit:
+            return Basic.__new__(cls, real, imag)
+        real_part = cls._collect_python_val(real)
+        imag_part = cls._collect_python_val(imag)
+        if real_part == 0 and imag_part == 1:
+            return LiteralImaginaryUnit()
+        else:
+            return Basic.__new__(cls, real, imag)
 
     def __init__(self, real, imag, precision = default_precision['complex']):
         Basic.__init__(self)
         Literal.__init__(self, precision)
-        if isinstance(real, LiteralFloat):
-            if real.precision == precision:
-                self._real_part = real
-            else:
-                self._real_part = LiteralFloat(real.args[0], precision = precision)
-        elif isinstance(real, LiteralInteger):
-            self._real_part = LiteralFloat(real.p, precision = precision)
-        elif isinstance(real, (int, float)):
-            self._real_part = LiteralFloat(real, precision = precision)
-        else:
-            raise TypeError("The real part of a LiteralComplex must be an int/float/LiteralFloat")
+        self._real_part = LiteralFloat(self._collect_python_val(real))
+        self._imag_part = LiteralFloat(self._collect_python_val(imag))
 
-        if isinstance(imag, LiteralFloat):
-            if imag.precision == precision:
-                self._imag_part = imag
-            else:
-                self._imag_part = LiteralFloat(imag.args[0], precision = precision)
-        elif isinstance(imag, LiteralInteger):
-            self._imag_part = LiteralFloat(imag.p, precision = precision)
-        elif isinstance(imag, (int, float)):
-            self._imag_part = LiteralFloat(imag, precision = precision)
+    @staticmethod
+    def _collect_python_val(arg):
+        if isinstance(arg, Literal):
+            return arg.python_value
+        elif isinstance(arg, (int, float)):
+            return arg
         else:
-            raise TypeError("The imaginary part of a LiteralComplex must be an int/float/LiteralFloat")
+            raise TypeError("LiteralComplex argument must be an int/float/LiteralInt/LiteralFloat")
 
     @property
     def real(self):
