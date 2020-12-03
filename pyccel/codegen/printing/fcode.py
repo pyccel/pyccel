@@ -2488,7 +2488,9 @@ class FCodePrinter(CodePrinter):
                 expr.base.internal_variable.allows_negative_indexes)
 
         for i, ind in enumerate(inds):
-            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
+            if isinstance(ind, Slice):
+                inds[i] = self._slice_management(ind, base_shape[i], allow_negative_indexes)
+            elif isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0])
             else:
                 #indices of indexedElement of len==1 shouldn't be a Tuple
@@ -2504,6 +2506,22 @@ class FCodePrinter(CodePrinter):
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
+
+    def _slice_management(self, _slice, shape, allow_negative_index):
+        start = _slice.start
+        end = _slice.end
+
+        if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
+            start = PyccelMinus(shape, start.args[0])
+        elif allow_negative_index and isinstance(start, Variable):
+            start = PyccelMod(start, shape)
+
+        if isinstance(end, PyccelUnarySub) and isinstance(end.args[0], LiteralInteger):
+            end = PyccelMinus(shape, end.args[0])
+        elif allow_negative_index and isinstance(end, Variable):
+            end = PyccelMod(end, shape)
+
+        return Slice(start, end)
 
     def _print_Slice(self, expr):
         if expr.start is None or  isinstance(expr.start, Nil):
