@@ -454,6 +454,10 @@ class PyccelAdd(PyccelArithmeticOperator):
            isinstance(arg2, LiteralComplex) and \
            arg2.real == LiteralFloat(0):
             return LiteralComplex(arg1, arg2.imag)
+        elif isinstance(arg2, (LiteralInteger, LiteralFloat)) and \
+           isinstance(arg1, LiteralComplex) and \
+           arg1.real == LiteralFloat(0):
+            return LiteralComplex(arg2, arg1.imag)
         else:
             return PyccelArithmeticOperator.__new__(cls, arg1, arg2)
 
@@ -502,7 +506,11 @@ class PyccelMinus(PyccelArithmeticOperator):
         if isinstance(arg1, LiteralFloat) and \
            isinstance(arg2, LiteralComplex) and \
            arg2.real_part == LiteralFloat(0):
-            return LiteralComplex(arg1, -float(arg2.imag_part))
+            return LiteralComplex(arg1, -arg2.imag_part.python_value)
+        elif isinstance(arg2, LiteralFloat) and \
+           isinstance(arg1, LiteralComplex) and \
+           arg1.real_part == LiteralFloat(0):
+            return LiteralComplex(-arg2.python_value, arg1.imag_part)
         else:
             return PyccelArithmeticOperator.__new__(cls, arg1, arg2)
 
