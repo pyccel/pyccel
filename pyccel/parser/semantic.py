@@ -751,7 +751,7 @@ class SemanticParser(BasicParser):
                 return obj
 
         # Unknown object, we raise an error.
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=type(expr),
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal', blocker=self.blocking)
 
@@ -806,7 +806,7 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_Integer(self, expr, **settings):
         """Visit sympy.Integer"""
-        return LiteralInteger(expr)
+        return LiteralInteger(expr.p)
     def _visit_Float(self, expr, **settings):
         """Visit sympy.Integer"""
         return LiteralFloat(expr)
@@ -2984,6 +2984,8 @@ class SemanticParser(BasicParser):
         val = expr.args[0]
         length = expr.args[1]
         if isinstance(val, (TupleVariable, PythonTuple)):
+            if isinstance(length, LiteralInteger):
+                length = length.p
             if isinstance(val, TupleVariable):
                 return PythonTuple(*(val.get_vars()*length))
             else:
@@ -2994,7 +2996,10 @@ class SemanticParser(BasicParser):
         name = expr.args_var
         var = self._visit(name)
         assert(var.rank==1)
-        return StarredArguments([self._visit(Indexed(name,i)) for i in range(var.shape[0])])
+        size = var.shape[0]
+        if isinstance(size, LiteralInteger):
+            size = size.p
+        return StarredArguments([self._visit(Indexed(name,i)) for i in range(size)])
 
 #==============================================================================
 
