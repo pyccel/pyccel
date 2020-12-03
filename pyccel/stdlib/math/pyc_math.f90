@@ -6,22 +6,6 @@ module pyc_math
 
     contains
 
-        ! Implementation of math factorial function
-        function pyc_factorial(x) result(fx)
-
-            implicit none
-            integer(kind=8), value  :: x
-            integer(kind=8)         :: fx
-
-            fx = 1
-            do while (x > 0)
-                fx = fx * x
-                x = x - 1
-            enddo
-            return
-
-        end function pyc_factorial
-
         ! Implementation of math radians function
         function pyc_radians(deg) result(rad)
 

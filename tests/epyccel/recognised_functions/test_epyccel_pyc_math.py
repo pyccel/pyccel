@@ -30,7 +30,14 @@ def test_call_gcd(language):
     assert(f(x,y) == call_gcd(x, y))
 
 # -----------------------------------------------------------------------------
-
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="factorial not implemented in fortran"),
+            pytest.mark.fortran]
+        )
+    )
+)
 def test_call_factorial(language):
     @types(int)
     def call_factorial(x):

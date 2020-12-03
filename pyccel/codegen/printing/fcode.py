@@ -658,20 +658,6 @@ class FCodePrinter(CodePrinter):
         return 'floor({}, kind={})'.format(arg_code, prec_code)
 
     # --------------------------- pyc_math functions --------------------------
-
-    def _print_MathFactorial(self, expr):
-        """ Print the equivalent code to pycthon factorial function call"""
-        # include of the pyc_math header
-        self._additional_imports.add('pyc_math')
-        return 'pyc_factorial({})'.format(self._print(expr.args[0]))
-
-    def _print_MathGcd(self, expr):
-        """ Print the equivalent code to pycthon gcd function call"""
-        # include of the pyc_math header
-        self._additional_imports.add('pyc_math')
-        args = ", ".join(self._print(arg) for arg in expr.args)
-        return 'pyc_gcd({})'.format(args)
-
     def _print_MathDegrees(self, expr):
         """ Print the equivalent code to pycthon degrees function call"""
         # include of the pyc_math header
