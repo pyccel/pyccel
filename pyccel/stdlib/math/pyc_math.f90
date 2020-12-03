@@ -22,38 +22,6 @@ module pyc_math
 
         end function pyc_factorial
 
-        ! Implementation of math gcd function
-        function pyc_gcd(a, b) result(gcd)
-
-            implicit none
-            integer(kind=8), value  :: a
-            integer(kind=8), value  :: b
-            integer(kind=8)         :: gcd
-
-            do while (b > 0)
-                a = MOD(a, b)
-                a = XOR(a, b)
-                b = XOR(b, a)
-                a = XOR(a, b)
-            enddo
-            gcd = a
-            return
-
-        end function pyc_gcd
-
-        ! Implementation of math lcm function
-        function pyc_lcm(a, b) result(lcm)
-
-            implicit none
-            integer(kind=8), value :: a
-            integer(kind=8), value :: b
-            integer(kind=8)        :: lcm
-
-            lcm = a / pyc_gcd(a, b) * b
-            return
-
-        end function pyc_lcm
-
         ! Implementation of math radians function
         function pyc_radians(deg) result(rad)
 
