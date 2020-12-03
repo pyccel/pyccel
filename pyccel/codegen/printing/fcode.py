@@ -877,7 +877,6 @@ class FCodePrinter(CodePrinter):
         
         lhs_code = self._print(lhs)
         stmts = []
-
         # Create statement for initialization
         if expr.fill_value is not None:
             init_value = self._print(expr.fill_value)
@@ -1328,7 +1327,7 @@ class FCodePrinter(CodePrinter):
                 if lhs_name in vars_dict:
                     stack_array = vars_dict[lhs_name].is_stack_array
 
-            return self._print_NumpyFull(expr.lhs, stack_array)
+            return self._print_NumpyFull(rhs, expr.lhs, stack_array)
 
         if isinstance(rhs, (NumpyFullLike, NumpyEmptyLike,\
 						NumpyZerosLike, NumpyOnesLike, NumpyRand)):
