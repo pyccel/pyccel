@@ -280,7 +280,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_LiteralComplex(self, expr):
         if expr.real == LiteralFloat(0):
-            return self._print(PyccelMul(expr.imag, LiteralImaginaryUnit()))
+            return self._print(PyccelAssociativeParenthesis(PyccelMul(expr.imag, LiteralImaginaryUnit())))
         else:
             return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
                             PyccelMul(expr.imag, LiteralImaginaryUnit()))))
