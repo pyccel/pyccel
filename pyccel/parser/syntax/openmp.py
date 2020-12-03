@@ -8,7 +8,7 @@ from os.path import join, dirname
 from textx.metamodel import metamodel_from_file
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct, Omp_End_Clause
+from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct, Omp_End_Clause, OMP_Critical_Construct
 
 DEBUG = False
 
@@ -43,6 +43,8 @@ class OpenmpStmt(BasicStmt):
         elif isinstance(stmt, OmpLoopConstruct):
             return stmt.expr
         elif isinstance(stmt, OmpSingleConstruct):
+            return stmt.expr
+        elif isinstance(stmt, OmpCriticalConstruct):
             return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
@@ -138,6 +140,32 @@ class OmpSingleConstruct(BasicStmt):
 
         return OMP_Single_Construct(txt)
 
+class OmpCriticalConstruct(BasicStmt):
+    """Class representing a Critical stmt."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.clauses = kwargs.pop('clauses')
+
+        super(OmpCriticalConstruct, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpCriticalConstruct: expr")
+
+        _valid_clauses = (OmpCriticalName)
+
+        txt = 'critical'
+        for clause in self.clauses:
+            if isinstance(clause, _valid_clauses):
+                txt = '{0} {1}'.format(txt, clauses.expr)
+            else:
+              raise TypeError('Wrong clause for OmpCriticalConstruct')
+
+        return OMP_Critical_Construct(txt)
+
+
 class OmpEndClause(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
@@ -224,6 +252,24 @@ class OmpPrivate(BasicStmt):
         # TODO check if variable exist in namespace
         args = ', '.join(str(arg) for arg in self.args)
         return 'private({})'.format(args)
+
+class OmpCriticalName(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.args = kwargs.pop('name')
+
+        super(OmpPrivate, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpPrivate: expr")
+
+        # TODO check if variable exist in namespace
+        args = ', '.join(str(arg) for arg in self.args)
+        return '({})'.format(args)
 
 class OmpShared(BasicStmt):
     """Class representing a ."""
@@ -396,7 +442,8 @@ class OmpSchedule(BasicStmt):
 omp_directives = [OmpParallelConstruct,
                   OmpLoopConstruct,
                   OmpSingleConstruct,
-                  OmpEndClause]
+                  OmpEndClause,
+                  OmpCriticalConstruct]
 
 omp_clauses = [OmpCollapse,
                OmpCopyin,
@@ -411,7 +458,8 @@ omp_clauses = [OmpCollapse,
                OmpPrivate,
                OmpReduction,
                OmpSchedule,
-               OmpShared]
+               OmpShared,
+               OmpCriticalName]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 
