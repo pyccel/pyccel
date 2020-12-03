@@ -271,6 +271,17 @@ def omp_arraysum_combined(x):
         result += x[i]
     return result
 
+@types('int')
+def omp_range_sum_critical(x):
+    result = 0
+    #$ omp parallel for num_threads(4) shared(result)
+    for i in range(0, x):
+      #$ omp critical
+      result += i
+      #$ omp end critical
+    return result
+
+
 @types('int[:]')
 def omp_arraysum_single(x):
     result = 0

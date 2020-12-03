@@ -273,6 +273,15 @@ def test_omp_arraysum_combined(language):
 
     assert f1(x) == np.sum(x)
 
+def test_omp_range_sum_critical(language):
+    f1 = epyccel(openmp.omp_range_sum_critical, accelerator='openmp', language=language)
+    from random import randint
+
+    for i in range(0, 4):
+      x = randint(10, 1000)
+      assert f1(x) == openmp.omp_range_sum_critical(x)
+
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="Numpy Arrays not implemented in C !"),
