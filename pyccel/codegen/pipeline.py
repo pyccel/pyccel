@@ -15,13 +15,13 @@ from pyccel.codegen.python_wrapper import create_shared_library
 
 __all__ = ['execute_pyccel']
 
-# map internal libraries with it's folder name inside pyccel/stdlib
+# map internal libraries to their folders inside pyccel/stdlib
 internal_libs = {
     "ndarrays" : "ndarrays",
     "pyc_math" : "math",
 }
 
-# map language to it's file extension
+# map language to its file extension
 lang_ext_dict = {
     "c" : ".c",
     "fortran": ".f90",
@@ -218,10 +218,9 @@ def execute_pyccel(fname, *,
         #         pass
         #------------------------------------------------------
 
-        # Determine if the module or program requires internal libraries
-        # by iterating over internal_libs list that containes internal libs
-        # implemented inside pyccel and compare them by module includes
-        # returned by printer includes through get_additional_imports function
+        # Iterate over internal_libs list and determine if the printer
+        # requires an internal lib to be included, if so then copy lib
+        # source to the working directory, and link
         for lib in internal_libs:
             if lib in codegen.get_printer_imports():
                 # get the include folder path and library files
