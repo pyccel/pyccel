@@ -640,7 +640,6 @@ def array_1d_slice_4():
 
     return s, np.shape(b)[0]
 
-@allow_negative_index('a')
 def array_1d_slice_5():
     import numpy as np
     a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
@@ -651,7 +650,6 @@ def array_1d_slice_5():
 
     return s, np.shape(b)[0]
 
-@allow_negative_index('a')
 def array_1d_slice_6():
     import numpy as np
     a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
@@ -662,11 +660,47 @@ def array_1d_slice_6():
 
     return s, np.shape(b)[0]
 
-@allow_negative_index('a')
 def array_1d_slice_7():
     import numpy as np
     a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[-6:-1]
+    s = 0
+    for i in b:
+        s += i
+
+    return s, np.shape(b)[0]
+
+@allow_negative_index('a')
+def array_1d_slice_8():
+    import numpy as np
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    c = -5
+    b = a[c:]
+    s = 0
+    for i in b:
+        s += i
+
+    return s, np.shape(b)[0]
+
+@allow_negative_index('a')
+def array_1d_slice_9():
+    import numpy as np
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    c = -2
+    b = a[:c]
+    s = 0
+    for i in b:
+        s += i
+
+    return s, np.shape(b)[0]
+
+@allow_negative_index('a')
+def array_1d_slice_10():
+    import numpy as np
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    c = -6
+    d = -1
+    b = a[c:d]
     s = 0
     for i in b:
         s += i

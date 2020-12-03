@@ -1504,6 +1504,21 @@ def test_array_1d_slice_7():
     f2 = epyccel(f1)
     assert np.array_equal(f1(), f2())
 
+def test_array_1d_slice_8():
+    f1 = arrays.array_1d_slice_8
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_1d_slice_9():
+    f1 = arrays.array_1d_slice_9
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_1d_slice_10():
+    f1 = arrays.array_1d_slice_10
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
