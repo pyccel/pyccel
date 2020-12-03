@@ -11,8 +11,8 @@ a = zeros(n)
 b = zeros(n)
 
 #$ omp parallel
-#$ omp do
+#$ omp for
 for i in range(1, n):
     b[i] = (a[i] + a[i-1]) / 2.0
-#$ omp end do
+#$ omp end for
 #$ omp end parallel
