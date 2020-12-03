@@ -243,8 +243,8 @@ class CCodePrinter(CodePrinter):
         self._additional_imports = set(['stdlib'])
         self._parser = parser
         self._additional_code = ''
-        self._allocs = []
         self._additional_declare = []
+        self._allocs = []
         self._additional_args = []
         self._temporary_args = []
 
@@ -807,7 +807,10 @@ class CCodePrinter(CodePrinter):
 
         if len(expr.results) > 1:
             self._additional_args.append(expr.results)
+        self._allocs = [i for i in expr.local_vars if i.allocatable and i.is_ndarray]
         body  = self._print(expr.body)
+        if len(expr.results) == 0:
+            body += self.free_allocs(self._allocs)
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
             decs += [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.results]
@@ -892,7 +895,9 @@ class CCodePrinter(CodePrinter):
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
         if expr.stmt:
             code += self._print(expr.stmt)+'\n'
-        code += self.free_allocs(self._allocs)
+        if len(self._allocs) > 0:
+            code += self.free_allocs(self._allocs)
+            code += '\n'
         if len(args) == 1:
             code +='return {0};'.format(self._print(args[0]))
         elif len(args) > 1:
@@ -1033,17 +1038,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_CodeBlock(self, expr):
         body = []
-        allocs = set()
-        self._allocs.append(allocs)
         for b in expr.body :
-            if isinstance(b, Allocate):
-                allocs.add(b.variable)
-            if isinstance(b, AliasAssign):
-                if isinstance(b.rhs, IndexedElement):
-                    for i in b.rhs.args:
-                        if isinstance(i, Slice):
-                            allocs.add(b.lhs)
-                            break
             code = self._print(b)
             code = self._additional_code + code
             self._additional_code = ''
@@ -1207,18 +1202,17 @@ class CCodePrinter(CodePrinter):
         return '}'
     #=====================================
     def free_allocs(self, variables):
-        allocs = set()
-        for var in variables:
-            for v in var:
-                allocs.add(v)
-        if len(allocs) > 0:
-            allocs_str = ', '.join(self._print(i.name) for i in allocs)
-            self._allocs = self._allocs[:len(self._allocs) - 2]
-            return 'free_allocs(' + str(len(allocs)) + ', ' + allocs_str + ');\n'
-        return ''
+
+        free_str = ''
+        for i in variables:
+            free_str += '\nfree_array(%s);' % i.name
+        return free_str
 
     def _print_Program(self, expr):
+        self._allocs = [i for i in expr.variables if i.allocatable and i.is_ndarray]
         body  = self._print(expr.body)
+        if len(free_allocs) > 0:
+            free_allocs = self.free_allocs(self._allocs)
         decs     = [self._print(i) for i in expr.declarations]
         decs    += [self._print(Declare(i.dtype, i)) for i in self._additional_declare]
         decs    = '\n'.join(self._print(i) for i in decs)
@@ -1226,7 +1220,6 @@ class CCodePrinter(CodePrinter):
         # PythonPrint imports last to be sure that all additional_imports have been collected
         imports  = [*expr.imports, *map(Import, self._additional_imports)]
         imports  = '\n'.join(self._print(i) for i in imports)
-        free_allocs = self.free_allocs(self._allocs)
         return ('{imports}\n'
                 'int main()\n{{\n'
                 '{decs}\n\n'

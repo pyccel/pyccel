@@ -215,7 +215,7 @@ def test_Assign_Allocatables(language):
     with pytest.raises(PyccelSemanticError):
         epyccel(f, language=language)
 
-    # Check that we got exactly 1 Pyccel error and 1 warning
+    # Check that we got exactly 1 Pyccel error
     assert errors.has_errors() == 1
     assert errors.num_messages() == 1
 
