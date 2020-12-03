@@ -168,6 +168,8 @@ python_builtin_datatypes = {
     'complex' : PythonComplex
 }
 
+omploop_dict = {'for' : 'do'}
+
 errors = Errors()
 
 class FCodePrinter(CodePrinter):
@@ -1741,9 +1743,15 @@ class FCodePrinter(CodePrinter):
     #                   OpenMP statements
     # .....................................................
     def _print_OMP_Parallel_Construct(self, expr):
-        omp_expr   = str(expr.txt)
-        ompexpr = '!$omp {}\n'.format(omp_expr)
-        return ompexpr
+        clauses = ''
+        if expr.combined:
+            for i, value in enumerate(expr.combined):
+                if value in omploop_dict: # pylint: disable=consider-using-get
+                    expr.combined[i] = omploop_dict[value]
+            clauses = ' ' + ' '.join(expr.combined)
+        clauses += str(expr.txt)
+        omp_expr = '!$omp parallel{}\n'.format(clauses)
+        return omp_expr
 
     def _print_Omp_End_Clause(self, expr):
         omp_expr = str(expr.txt)
@@ -2435,8 +2443,8 @@ class FCodePrinter(CodePrinter):
         return "%s_C_DOUBLE" % printed
 
     def _print_LiteralComplex(self, expr):
-        real_str = self._print_Float(expr.real)
-        imag_str = self._print_Float(expr.imag)
+        real_str = self._print(expr.real)
+        imag_str = self._print(expr.imag)
         return "({}, {})".format(real_str, imag_str)
 
     def _print_LiteralInteger(self, expr):

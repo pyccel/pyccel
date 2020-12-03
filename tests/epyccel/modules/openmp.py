@@ -238,7 +238,6 @@ def omp_matmul(A, x, out):
         for j in range(len(x[0])):# pylint: disable=C0200
             for k in range(len(x)):# pylint: disable=C0200
                 out[i][j] += A[i][k] * x[k][j]
-    #$ omp end for
     #$ omp end parallel
     #to let the function compile using epyccel issue #468
     "bypass issue #468" # pylint: disable=W0105
@@ -261,8 +260,15 @@ def omp_arraysum(x):
     #$ omp for reduction (+:result)
     for i in range(0, 5):
         result += x[i]
-    #$ omp end for
     #$ omp end parallel
+    return result
+
+@types('int[:]')
+def omp_arraysum_combined(x):
+    result = 0
+    #$ omp parallel for reduction (+:result)
+    for i in range(0, 5):
+        result += x[i]
     return result
 
 @types('int[:]')

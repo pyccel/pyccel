@@ -3437,6 +3437,10 @@ class Interface(Basic):
         """True if the interface is used for a function argument."""
         return self._is_argument
 
+    @property
+    def doc_string(self):
+        return self._functions[0].doc_string
+
     def point(self, args):
         """Returns the actual function that will be called, depending on the passed arguments."""
         fs_args = [[j for j in i.arguments] for i in
@@ -4619,8 +4623,8 @@ class AnnotatedComment(Basic):
     AnnotatedComment(omp, parallel)
     """
 
-    def __new__(cls, accel, txt):
-        return Basic.__new__(cls, accel, txt)
+    def __new__(cls, accel, txt, combined=None):
+        return Basic.__new__(cls, accel, txt, combined)
 
     @property
     def accel(self):
@@ -4629,6 +4633,10 @@ class AnnotatedComment(Basic):
     @property
     def txt(self):
         return self._args[1]
+
+    @property
+    def combined(self):
+        return self._args[2]
 
     def __getnewargs__(self):
         """used for Pickling self."""
@@ -4643,8 +4651,8 @@ class OMP_For_Loop(AnnotatedComment):
 
 class OMP_Parallel_Construct(AnnotatedComment):
     """ Represents an OpenMP Parallel construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
+    def __new__(cls, txt, combined=None):
+        return AnnotatedComment.__new__(cls, 'omp', txt, combined)
 
 class OMP_Single_Construct(AnnotatedComment):
     """ Represents an OpenMP Single construct. """
