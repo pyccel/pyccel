@@ -600,109 +600,206 @@ def array_variable_size(n,m):
 #==============================================================================
 # 1D ARRAY SLICING
 #==============================================================================
-def array_1d_slice_1():
-    import numpy as np
-    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-    b = a[5:]
-    s = 0
-    for i in b:
-        s += i
+# TODO return the slice when issue Handle functions that return Numpy arrays #537 is fixed
 
-    return s, np.shape(b)[0]
+def array_1d_slice_1():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
+    b = a[5:]
+
+    return np_sum(b), shape(b)[0]
 
 def array_1d_slice_2():
-    import numpy as np
-    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
     b = a[:]
-    s = 0
-    for i in b:
-        s += i
 
-    return s, np.shape(b)[0]
+    return np_sum(b), shape(b)[0]
 
 def array_1d_slice_3():
-    import numpy as np
-    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
     b = a[:6]
-    s = 0
-    for i in b:
-        s += i
 
-    return s, np.shape(b)[0]
+    return np_sum(b), shape(b)[0]
 
 def array_1d_slice_4():
-    import numpy as np
-    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
     b = a[3:8]
-    s = 0
-    for i in b:
-        s += i
 
-    return s, np.shape(b)[0]
+    return np_sum(b), shape(b)[0]
 
 def array_1d_slice_5():
-    import numpy as np
-    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
     b = a[:-3]
-    s = 0
-    for i in b:
-        s += i
 
-    return s, np.shape(b)[0]
+    return np_sum(b), shape(b)[0]
 
 def array_1d_slice_6():
-    import numpy as np
-    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
     b = a[-4:]
-    s = 0
-    for i in b:
-        s += i
 
-    return s, np.shape(b)[0]
+    return np_sum(b), shape(b)[0]
 
 def array_1d_slice_7():
-    import numpy as np
-    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
     b = a[-6:-1]
-    s = 0
-    for i in b:
-        s += i
 
-    return s, np.shape(b)[0]
+    return np_sum(b), shape(b)[0]
 
 @allow_negative_index('a')
 def array_1d_slice_8():
-    import numpy as np
-    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
     c = -5
     b = a[c:]
-    s = 0
-    for i in b:
-        s += i
 
-    return s, np.shape(b)[0]
+    return np_sum(b), shape(b)[0]
 
 @allow_negative_index('a')
 def array_1d_slice_9():
-    import numpy as np
-    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
     c = -2
     b = a[:c]
-    s = 0
-    for i in b:
-        s += i
 
-    return s, np.shape(b)[0]
+    return np_sum(b), shape(b)[0]
 
 @allow_negative_index('a')
 def array_1d_slice_10():
-    import numpy as np
-    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
     c = -6
     d = -1
     b = a[c:d]
-    s = 0
-    for i in b:
-        s += i
 
-    return s, np.shape(b)[0]
+    return np_sum(b), shape(b)[0]
+
+#==============================================================================
+# 2D ARRAY SLICE
+#==============================================================================
+def array_2d_slice_1():
+    from numpy import array, shape, sum as np_sum
+    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+    b = a[:2]
+
+    return np_sum(b), shape(b)[0] , shape(b)[1]
+
+def array_2d_slice_2():
+    from numpy import array, shape, sum as np_sum
+    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+    b = a[2:]
+
+    return np_sum(b), shape(b)[0] , shape(b)[1]
+
+def array_2d_slice_3():
+    from numpy import array, shape, sum as np_sum
+    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+    b = a[1:, 1:]
+
+    return np_sum(b), shape(b)[0] , shape(b)[1]
+
+def array_2d_slice_4():
+    from numpy import array, shape, sum as np_sum
+    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+    b = a[:2, 1:]
+
+    return np_sum(b), shape(b)[0] , shape(b)[1]
+
+def array_2d_slice_5():
+    from numpy import array, shape, sum as np_sum
+    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+    b = a[:]
+
+    return np_sum(b), shape(b)[0] , shape(b)[1]
+
+def array_2d_slice_6():
+    from numpy import array, shape, sum as np_sum
+    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+    b = a[::]
+
+    return np_sum(b), shape(b)[0] , shape(b)[1]
+
+def array_2d_slice_7():
+    from numpy import array, shape, sum as np_sum
+    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+    b = a[:-1]
+
+    return np_sum(b), shape(b)[0] , shape(b)[1]
+
+def array_2d_slice_8():
+    from numpy import array, shape, sum as np_sum
+    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+    b = a[-2:]
+
+    return np_sum(b), shape(b)[0] , shape(b)[1]
+
+def array_2d_slice_9():
+    from numpy import array, shape, sum as np_sum
+    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+    b = a[-2:, :-1]
+
+    return np_sum(b), shape(b)[0] , shape(b)[1]
+
+def array_2d_slice_10():
+    from numpy import array, shape, sum as np_sum
+    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+    b = a[-2:, -2:]
+
+    return np_sum(b), shape(b)[0] , shape(b)[1]
+
+def array_2d_slice_11():
+    from numpy import array, shape, sum as np_sum
+    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+    b = a[:-1, -2:]
+
+    return np_sum(b), shape(b)[0] , shape(b)[1]
+
+def array_2d_slice_12():
+    from numpy import array, shape, sum as np_sum
+    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+    b = a[:-1, :-1]
+
+    return np_sum(b), shape(b)[0] , shape(b)[1]
+
+@allow_negative_index('a')
+def array_2d_slice_13():
+    from numpy import array, shape, sum as np_sum
+    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+    c  = -2
+    b = a[c:]
+
+    return np_sum(b), shape(b)[0] , shape(b)[1]
+
+@allow_negative_index('a')
+def array_2d_slice_14():
+    from numpy import array, shape, sum as np_sum
+    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+    c = -1
+    b = a[:c]
+
+    return np_sum(b), shape(b)[0] , shape(b)[1]
+
+@allow_negative_index('a')
+def array_2d_slice_15():
+    from numpy import array, shape, sum as np_sum
+    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+    c = -1
+    b = a[c:,:2]
+
+    return np_sum(b), shape(b)[0] , shape(b)[1]
+
+@allow_negative_index('a')
+def array_2d_slice_16():
+    from numpy import array, shape, sum as np_sum
+    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+    c = -2
+    b = a[:c,-1:]
+
+    return np_sum(b), shape(b)[0] , shape(b)[1]
+
+

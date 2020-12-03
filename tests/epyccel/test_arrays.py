@@ -1466,7 +1466,7 @@ def test_array_variable_size():
     assert s1 == s2
 
 #==============================================================================
-# TEST : array slices
+# TEST : 1d array slices
 #==============================================================================
 
 def test_array_1d_slice_1():
@@ -1519,6 +1519,90 @@ def test_array_1d_slice_10():
     f2 = epyccel(f1)
     assert np.array_equal(f1(), f2())
 
+#==============================================================================
+# TEST : 2d array slices
+#==============================================================================
+
+def test_array_2d_slice_1():
+    f1 = arrays.array_2d_slice_1
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_2d_slice_2():
+    f1 = arrays.array_2d_slice_2
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_2d_slice_3():
+    f1 = arrays.array_2d_slice_3
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_2d_slice_4():
+    f1 = arrays.array_2d_slice_4
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_2d_slice_5():
+    f1 = arrays.array_2d_slice_5
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_2d_slice_6():
+    f1 = arrays.array_2d_slice_6
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_2d_slice_7():
+    f1 = arrays.array_2d_slice_7
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
+def test_array_2d_slice_8():
+    f1 = arrays.array_2d_slice_8
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_2d_slice_9():
+    f1 = arrays.array_2d_slice_9
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_2d_slice_10():
+    f1 = arrays.array_2d_slice_10
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_2d_slice_11():
+    f1 = arrays.array_2d_slice_11
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_2d_slice_12():
+    f1 = arrays.array_2d_slice_12
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_2d_slice_13():
+    f1 = arrays.array_2d_slice_13
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_2d_slice_14():
+    f1 = arrays.array_2d_slice_14
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_2d_slice_15():
+    f1 = arrays.array_2d_slice_15
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_2d_slice_16():
+    f1 = arrays.array_2d_slice_16
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
