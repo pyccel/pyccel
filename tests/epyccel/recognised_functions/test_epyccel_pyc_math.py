@@ -9,14 +9,7 @@ from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 
 # -----------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="gcd not implemented in fortran"),
-            pytest.mark.fortran]
-        )
-    )
-)
+
 def test_call_gcd(language):
     @types(int, int)
     def call_gcd(x, y):
@@ -30,14 +23,7 @@ def test_call_gcd(language):
     assert(f(x,y) == call_gcd(x, y))
 
 # -----------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="factorial not implemented in fortran"),
-            pytest.mark.fortran]
-        )
-    )
-)
+
 def test_call_factorial(language):
     @types(int)
     def call_factorial(x):
@@ -53,14 +39,6 @@ def test_call_factorial(language):
 
 # New in version 3.9.
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="requires python3.9 or higher")
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="lcm not implemented in fortran"),
-            pytest.mark.fortran]
-        )
-    )
-)
 def test_call_lcm(language):
     @types(int, int)
     def call_lcm(x, y):
