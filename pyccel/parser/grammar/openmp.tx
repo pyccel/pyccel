@@ -17,15 +17,17 @@ OmpConstructOrDirective:
   | OmpLoopConstruct
   | OmpSingleConstruct
   | OmpEndClause
+  | OmpCriticalConstruct
 ;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
 //     Constructs and Directives definitions
 ////////////////////////////////////////////////////
-OmpParallelConstruct: 'parallel' combined*=ParallelCombined? clauses*=OmpParallelClause;
-OmpLoopConstruct:      'for'       clauses*=OmpLoopClause;
-OmpSingleConstruct:   'single'   clauses*=OmpSingleClause;
+OmpParallelConstruct: 'parallel'  combined*=ParallelCombined? clauses*=OmpParallelClause;
+OmpLoopConstruct:     'for'       clauses*=OmpLoopClause;
+OmpSingleConstruct:   'single'    clauses*=OmpSingleClause;
+OmpCriticalConstruct: 'critical'  clauses*=OmpCriticalClause?;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -63,6 +65,10 @@ OmpSingleClause:
     OmpPrivate
   | OmpFirstPrivate
 ;
+
+OmpCriticalClause:
+    OmpCriticalName
+;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -82,6 +88,7 @@ OmpLinear: 'linear' '(' val=ID ':' step=INT ')';
 OmpOrdered: 'ordered' ('(' n=INT ')')?;
 OmpSchedule: 'schedule' '(' kind=OmpScheduleKind (',' chunk_size=INT)? ')';
 OmpEndClause: 'end' construct=OpenmpConstructs (simd='simd')? (nowait='nowait')?;
+OmpCriticalName: '(' name=ID ')';
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -89,7 +96,7 @@ OmpScheduleKind: ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' );
 OmpProcBindStatus: ('master' | 'close' | 'spread');
 OmpReductionOperator: ('+' | '-' | '*' | '/');
 OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
-OpenmpConstructs: ('single' | 'parallel' | 'for');
+OpenmpConstructs: ('single' | 'parallel' | 'for' | 'critical');
 
 ThreadIndex: (ID | INT);
 NotaStmt: /.*$/;
