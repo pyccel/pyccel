@@ -226,7 +226,7 @@ class PythonComplex(Expr, PyccelAstNode):
     @property
     def imag(self):
         """ Returns the imaginary part of the complex """
-        return self._imag
+        return self._imag_part
 
     @property
     def internal_var(self):
