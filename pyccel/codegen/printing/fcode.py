@@ -2429,8 +2429,8 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
     def _print_LiteralImaginaryUnit(self, expr):
-        # purpose: print complex numbers nicely in Fortran.
-        return "cmplx(0,1)"
+        """ purpose: print complex numbers nicely in Fortran."""
+        return "cmplx(0,1, kind = {})".format(iso_c_binding["complex"][expr.precision])
 
     def _print_int(self, expr):
         return str(expr)
