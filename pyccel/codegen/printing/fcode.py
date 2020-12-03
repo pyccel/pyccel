@@ -1753,9 +1753,17 @@ class FCodePrinter(CodePrinter):
         omp_expr = '!$omp parallel{}\n'.format(clauses)
         return omp_expr
 
+<<<<<<< HEAD
     def _print_OMP_For_Loop(self, expr):
         omp_expr   = str(expr.txt)
         return '!$omp do{}\n'.format(omp_expr)
+=======
+    def _print_Omp_End_Clause(self, expr):
+        omp_expr = str(expr.txt)
+        omp_expr = omp_expr.replace("for", "do")
+        ompexpr = '!$omp {}\n'.format(omp_expr)
+        return ompexpr
+>>>>>>> master
 
     def _print_OMP_Single_Construct(self, expr):
         omp_expr   = str(expr.txt)
