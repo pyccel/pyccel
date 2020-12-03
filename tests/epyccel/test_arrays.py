@@ -1465,6 +1465,46 @@ def test_array_variable_size():
     s1, s2 = f2(n,m)
     assert s1 == s2
 
+#==============================================================================
+# TEST : array slices
+#==============================================================================
+
+def test_array_1d_slice_1():
+    f1 = arrays.array_1d_slice_1
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_1d_slice_2():
+    f1 = arrays.array_1d_slice_2
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_1d_slice_3():
+    f1 = arrays.array_1d_slice_3
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_1d_slice_4():
+    f1 = arrays.array_1d_slice_4
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_1d_slice_5():
+    f1 = arrays.array_1d_slice_5
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_1d_slice_6():
+    f1 = arrays.array_1d_slice_6
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_1d_slice_7():
+    f1 = arrays.array_1d_slice_7
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================

@@ -596,3 +596,79 @@ def array_variable_size(n,m):
     s = m
     c = np.zeros_like(a)
     return np.shape(a)[0], np.shape(c)[0]
+
+#==============================================================================
+# 1D ARRAY SLICING
+#==============================================================================
+def array_1d_slice_1():
+    import numpy as np
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    b = a[5:]
+    s = 0
+    for i in b:
+        s += i
+
+    return s, np.shape(b)[0]
+
+def array_1d_slice_2():
+    import numpy as np
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    b = a[:]
+    s = 0
+    for i in b:
+        s += i
+
+    return s, np.shape(b)[0]
+
+def array_1d_slice_3():
+    import numpy as np
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    b = a[:6]
+    s = 0
+    for i in b:
+        s += i
+
+    return s, np.shape(b)[0]
+
+def array_1d_slice_4():
+    import numpy as np
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    b = a[3:8]
+    s = 0
+    for i in b:
+        s += i
+
+    return s, np.shape(b)[0]
+
+@allow_negative_index('a')
+def array_1d_slice_5():
+    import numpy as np
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    b = a[:-3]
+    s = 0
+    for i in b:
+        s += i
+
+    return s, np.shape(b)[0]
+
+@allow_negative_index('a')
+def array_1d_slice_6():
+    import numpy as np
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    b = a[-4:]
+    s = 0
+    for i in b:
+        s += i
+
+    return s, np.shape(b)[0]
+
+@allow_negative_index('a')
+def array_1d_slice_7():
+    import numpy as np
+    a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    b = a[-6:-1]
+    s = 0
+    for i in b:
+        s += i
+
+    return s, np.shape(b)[0]
