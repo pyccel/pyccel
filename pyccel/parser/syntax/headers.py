@@ -72,8 +72,8 @@ class TemplateStmt(BasicStmt):
             errors.report(msg,
                         severity='fatal')
 
-        dtypes = tuple(dict(d_type) for d_type in {tuple(t.expr.items())\
-            for t in self.dtypes})
+        possible_dtypes = {tuple(t.expr.items())  for t in self.dtypes}
+        dtypes = tuple(dict(d_type) for d_type in possible_dtypes)
         return Template(self.name, dtypes)
 
 class ListType(BasicStmt):
@@ -191,8 +191,9 @@ class UnionTypeStmt(BasicStmt):
             msg = 'Functions in a uniontype are not supported yet'
             errors.report(msg,
                         severity='fatal')
-        dtypes = [dict(d_type) for d_type in {tuple(t.items())\
-            for t in dtypes}]
+
+        possible_dtypes = {tuple(t.items())  for t in dtypes}
+        dtypes = [dict(d_type) for d_type in possible_dtypes]
         return UnionType(dtypes)
 
 class HeaderResults(BasicStmt):
