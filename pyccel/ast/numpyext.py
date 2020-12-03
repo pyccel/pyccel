@@ -362,8 +362,10 @@ def Shape(arg):
     if isinstance(arg.shape, PythonTuple):
         return arg.shape
     else:
-        return PythonTuple(*arg.shape)
-
+        if arg.order == 'F':
+            return PythonTuple(*arg.shape)
+        else :
+            return PythonTuple(*arg.shape[::-1])
 #==============================================================================
 # TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.LiteralFloat
 class NumpyReal(Function, PyccelAstNode):
