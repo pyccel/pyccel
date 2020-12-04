@@ -1247,8 +1247,6 @@ class FCodePrinter(CodePrinter):
         prec = self._print(expr.precision)
         code = 'Real({0}, {1})'.format(value, prec)
         return code
-    
-
 
     def _print_Assign(self, expr):
         if isinstance(expr.lhs, TupleVariable) and not expr.lhs.is_homogeneous \
@@ -1285,14 +1283,14 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, PythonInt):
             rhs = expr.rhs.fprint(self._print)
             return '{0} = {1}\n'.format(lhs_code,rhs)
-        
+
         if isinstance(rhs, (NumpyCross, NumpyComplex, NumpyReal, NumpyArray, NumpyLinspace)):
             rhs = self._print(rhs)
             return '{0} = {1}\n'.format(lhs_code,rhs)
-        
+
         if isinstance(rhs, (NumpyDiag, NumpyWhere)):
             return self._print(rhs, expr.lhs)
-        
+
         if isinstance(rhs, PyccelArraySize):
             return rhs.fprint(self._print, expr.lhs) + '\n'
 
