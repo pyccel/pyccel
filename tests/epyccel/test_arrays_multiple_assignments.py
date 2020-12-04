@@ -183,7 +183,7 @@ def test_Reassign_to_Target(language):
     with pytest.raises(PyccelSemanticError):
         epyccel(f, language=language)
 
-    # Check that we got exactly 1 Pyccel error and  1 warning
+    # Check that we got exactly 1 Pyccel error
     assert errors.has_errors() == 1
     assert errors.num_messages() == 1
 
@@ -210,13 +210,13 @@ def test_Assign_Between_Allocatables(language):
     epyccel(f, language=language)
 
     # Check that we got exactly 1 Pyccel error
-    assert errors.has_warnings() == 1
+    assert errors.has_errors() == 1
     assert errors.num_messages() == 1
 
     # Check that the error is correct
-    warning_info = [*errors.error_info_map.values()][0][0]
-    assert warning_info.symbol  == 'x'
-    assert warning_info.message == ASSIGN_ARRAYS_ONE_ANOTHER
+    error_info = [*errors.error_info_map.values()][0][0]
+    assert error_info.symbol  == 'x'
+    assert error_info.message == ASSIGN_ARRAYS_ONE_ANOTHER
 
 #==============================================================================
 if __name__ == '__main__':
