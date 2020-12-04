@@ -610,6 +610,7 @@ class NumpyRandint(Function, NumpyNewArray):
 
     @property
     def low(self):
+        """ return low property of NumpyRandint"""
         return self._low
 
 #==============================================================================
