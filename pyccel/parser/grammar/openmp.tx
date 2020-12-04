@@ -98,7 +98,7 @@ OmpScheduleKind: ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' );
 OmpProcBindStatus: ('master' | 'close' | 'spread');
 OmpReductionOperator: ('+' | '-' | '*' | '/');
 OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
-OpenmpConstructs: ('single' | 'parallel' | 'for' | 'critical');
+OpenmpConstructs: ('single' | 'parallel' | 'for' | ('critical' ('(' ID  ')')?));
 
 ThreadIndex: (ID | INT);
 CriticalName: ID;
