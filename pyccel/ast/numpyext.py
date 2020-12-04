@@ -605,6 +605,7 @@ class NumpyRandint(Function, NumpyNewArray):
 
     @property
     def high(self):
+        """ return high property of NumpyRandint"""
         return self._high
 
     @property
