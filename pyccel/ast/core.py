@@ -3170,7 +3170,6 @@ class FunctionDef(Basic):
 
     @property
     def global_vars(self):
-        sys.exit("global vars in functiondef\n")
         return self._global_vars
 
     @property
@@ -3251,7 +3250,6 @@ class FunctionDef(Basic):
         self._is_recursive = True
 
     def set_cls_name(self, cls_name):
-        sys.exit("set cls name in functiondef\n")
         self._cls_name = cls_name
 
     def clone(self, newname):
