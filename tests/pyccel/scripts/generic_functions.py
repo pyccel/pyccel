@@ -79,6 +79,15 @@ def array_elem1(x):
 def multi_tmplt_2(y, z):
     return y + z
 
+@template('g', types=['int', 'int'])
+@types('g')
+def dup_types_1(a):
+    return a
+
+@types('int|int')
+def dup_types_2(a):
+    return a
+
 def tst_gen_1():
     x = gen_1(5.5)
     return x
@@ -163,3 +172,11 @@ def tst_multi_tmplt_2():
     x = multi_tmplt_2(5, 5)
     y = multi_tmplt_2(5, 7.3)
     return x * y
+
+def tst_dup_types_1():
+    x = dup_types_1(5)
+    return x
+
+def tst_dup_types_2():
+    x = dup_types_2(5)
+    return x

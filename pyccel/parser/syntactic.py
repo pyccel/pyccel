@@ -155,7 +155,6 @@ class SyntaxParser(BasicParser):
         return ast
 
     def _treat_iterable(self, stmt):
-
         return [self._visit(i) for i in stmt]
 
     def _visit(self, stmt):
@@ -325,7 +324,7 @@ class SyntaxParser(BasicParser):
         elif isinstance(val, float):
             return LiteralFloat(val)
         elif isinstance(val, complex):
-            return LiteralComplex(LiteralFloat(val.real), LiteralFloat(val.imag))
+            return LiteralComplex(val.real, val.imag)
         else:
             raise NotImplementedError('Num type {} not recognised'.format(type(val)))
 
@@ -402,7 +401,7 @@ class SyntaxParser(BasicParser):
             return LiteralFloat(stmt.value)
 
         elif isinstance(stmt.value, complex):
-            return LiteralComplex(LiteralFloat(stmt.value.real), LiteralFloat(stmt.value.imag))
+            return LiteralComplex(stmt.value.real, stmt.value.imag)
 
         elif isinstance(stmt.value, str):
             return self._visit_Str(stmt)
@@ -644,26 +643,22 @@ class SyntaxParser(BasicParser):
         for d in self._visit(stmt.decorator_list):
             tmp_var = str(d) if isinstance(d, Symbol) else str(type(d))
             if tmp_var in decorators:
-                if isinstance(decorators[tmp_var], list):
-                    decorators[tmp_var] += [d]
-                else:
-                    decorators[tmp_var] = [decorators[tmp_var]] + [d]
+                decorators[tmp_var] += [d]
             else:
-                decorators[tmp_var] = d
+                decorators[tmp_var] = [d]
 
         if 'bypass' in decorators:
             return EmptyNode()
 
         if 'stack_array' in decorators:
-            decorators['stack_array'] = tuple(str(a) for a in decorators['stack_array'].args)
+            decorators['stack_array'] = tuple(str(b) for a in decorators['stack_array']
+                for b in a.args)
 
         if 'allow_negative_index' in decorators:
-            decorators['allow_negative_index'] = tuple(str(a) for a in decorators['allow_negative_index'].args)
+            decorators['allow_negative_index'] = tuple(str(b) for a in decorators['allow_negative_index'] for b in a.args)
 
         # extract the templates
         if 'template' in decorators:
-            if not isinstance(decorators['template'], list):
-                decorators['template'] = [decorators['template']]
             for comb_types in decorators['template']:
                 cache.clear_cache()
                 types = []
@@ -714,8 +709,6 @@ class SyntaxParser(BasicParser):
 
         # extract the types to construct a header
         if 'types' in decorators:
-            if not isinstance(decorators['types'], list):
-                decorators['types'] = [decorators['types']]
             for comb_types in decorators['types']:
 
                 cache.clear_cache()

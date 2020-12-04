@@ -24,7 +24,7 @@ OmpConstructOrDirective:
 //     Constructs and Directives definitions
 ////////////////////////////////////////////////////
 OmpParallelConstruct: 'parallel' clauses*=OmpParallelClause;
-OmpLoopConstruct:     'do'       clauses*=OmpLoopClause;
+OmpLoopConstruct:      'for'       clauses*=OmpLoopClause;
 OmpSingleConstruct:   'single'   clauses*=OmpSingleClause;
 ////////////////////////////////////////////////////
 
@@ -83,7 +83,7 @@ OmpScheduleKind: ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' );
 OmpProcBindStatus: ('master' | 'close' | 'spread');
 OmpReductionOperator: ('+' | '-' | '*' | '/');
 OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
-OpenmpConstructs: ('single' | 'parallel' | 'do');
+OpenmpConstructs: ('single' | 'parallel' | 'for');
 
 ThreadIndex: (ID | INT);
 NotaStmt: /.*$/;
