@@ -61,10 +61,10 @@ __all__ = (
 #==============================================================================
 iso_c_binding = {
     "integer" : {
-        1  : 'C_SIGNED_CHAR',
-        2  : 'C_SHORT',
-        4  : 'C_INT',
-        8  : 'C_LONG_LONG',
+        1  : 'C_INT8_T',
+        2  : 'C_INT16_T',
+        4  : 'C_INT32_T',
+        8  : 'C_INT64_T',
         16 : 'C_INT128'}, #no supported yet
     "real"    : {
         4  : 'C_FLOAT',

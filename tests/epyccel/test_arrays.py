@@ -1300,6 +1300,18 @@ def test_array_real_div_stack_array():
     x2 = f2()
     assert np.equal( x1, x2 )
 
+def test_multiple_stack_array_1():
+
+    f1 = arrays.multiple_stack_array_1
+    f2 = epyccel(f1)
+    assert np.equal(f1(), f2())
+
+def test_multiple_stack_array_2():
+
+    f1 = arrays.multiple_stack_array_2
+    f2 = epyccel(f1)
+    assert np.equal(f1(), f2())
+
 #==============================================================================
 # TEST: Product and matrix multiplication
 #==============================================================================
@@ -1445,6 +1457,24 @@ def test_expr_negative_index():
     f1 = arrays.expr_negative_index
     f2 = epyccel( f1 )
     assert f1(n,idx1,idx2) == f2(n,idx1,idx2)
+
+def test_multiple_negative_index():
+    f1 = arrays.test_multiple_negative_index
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(-2, -1), f2(-2, -1))
+
+def test_multiple_negative_index_2():
+    f1 = arrays.test_multiple_negative_index_2
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(-4, -2), f2(-4, -2))
+
+def test_multiple_negative_index_3():
+    f1 = arrays.test_multiple_negative_index_3
+    f2 = epyccel(f1)
+
+    assert np.array_equal(f1(-1, -1, -3), f2(-1, -1, -3))
 
 #==============================================================================
 # TEST: shape initialisation

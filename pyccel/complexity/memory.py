@@ -7,6 +7,7 @@ from sympy.core.expr import Expr
 
 from pyccel.ast.core     import For, Assign, NewLine, CodeBlock, Comment
 from pyccel.ast.numpyext import NumpyZeros, NumpyOnes
+from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.complexity.basic import Complexity
 
 
@@ -30,6 +31,10 @@ def count_access(expr, visual=True):
 
     WRITE = Symbol('WRITE')
     READ  = Symbol('READ')
+
+    symbol_map = {}
+    used_names = set()
+    expr = pyccel_to_sympy(expr, symbol_map, used_names)
 
 
     if isinstance(expr, Expr):
