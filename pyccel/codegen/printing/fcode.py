@@ -617,22 +617,16 @@ class FCodePrinter(CodePrinter):
         rhs_code = self._print(expr.arg)
         return 'sum({0})'.format(rhs_code)
 
-    def _print_NumpyProduct(self, expr, lhs=None):
+    def _print_NumpyProduct(self, expr):
         """Fortran print."""
 
         rhs_code = self._print(expr.arg)
-        if lhs:
-            lhs_code = self._print(lhs)
-            return '{0} = product({1})'.format(lhs_code, rhs_code)
         return 'product({0})'.format(rhs_code)
 
-    def _print_NumpyMatmul(self, expr, lhs=None):
+    def _print_NumpyMatmul(self, expr):
         """Fortran print."""
         a_code = self._print(expr.a)
         b_code = self._print(expr.b)
-
-        if lhs:
-            lhs_code = self._print(lhs)
 
         if expr.a.order and expr.b.order:
             if expr.a.order != expr.b.order:
@@ -640,13 +634,9 @@ class FCodePrinter(CodePrinter):
 
         # Fortran ordering
         if expr.a.order == 'F':
-            if lhs:
-                return '{0} = matmul({1},{2})'.format(lhs_code, a_code, b_code)
             return 'matmul({0},{1})'.format(a_code, b_code)
 
         # C ordering
-        if lhs:
-            return '{0} = matmul({2},{1})'.format(lhs_code, a_code, b_code)
         return 'matmul({1},{0})'.format(a_code, b_code)
 
     def _print_NumpyImag(self, expr):
@@ -760,15 +750,13 @@ class FCodePrinter(CodePrinter):
 
         return code
 
-    def _print_NumpyWhere(self, expr, lhs):
+    def _print_NumpyWhere(self, expr):
 
         ind   = self._print(expr.index)
         mask  = self._print(expr.mask)
         lhs   = self._print(lhs)
 
         stmt  = 'pack([({ind},{ind}=0,size({mask})-1)],{mask})'.format(ind=ind,mask=mask)
-        stmt  = '{lhs}(:,0) = {stmt}'.format(lhs=lhs, stmt=stmt)
-        alloc = 'allocate({}(0:count({})-1,0:0))'.format(lhs, mask)
 
         return alloc +'\n' + stmt
 
@@ -869,25 +857,18 @@ class FCodePrinter(CodePrinter):
         if expr.high is None:
             randreal = self._print(PyccelMul(expr.low, NumpyRand()))
         else:
-            randreal = self._print(PyccelAdd(PyccelMul(PyccelAssociativeParenthesis(PyccelMinus(expr.high, expr.low)), NumpyRand()), expr.low))
+            randreal = self._print(PyccelAdd(PyccelMul(PyccelMinus(expr.high, expr.low), NumpyRand()), expr.low))
 
-        prec_code = self._print(expr.precision)
+        prec_code = self._print(iso_c_binding["integer"][expr.precision])
         return 'floor({}, kind={})'.format(randreal, prec_code)
 
-    def _print_NumpyFull(self, expr, lhs_code):
+    def _print_NumpyFull(self, expr):
 
-        stmts = []
         # Create statement for initialization
         if expr.fill_value is not None:
             init_value = self._print(expr.fill_value)
-            code_init = '{0} = {1}'.format(lhs_code, init_value)
-            stmts.append(code_init)
 
-        if len(stmts) == 0:
-            return ''
-        else:
-            return '\n'.join(stmts) + '\n'
-
+        return init_value
 
     def _print_PythonMin(self, expr):
         args = expr.args
@@ -1284,56 +1265,32 @@ class FCodePrinter(CodePrinter):
             rhs = expr.rhs.fprint(self._print)
             return '{0} = {1}\n'.format(lhs_code,rhs)
 
-        if isinstance(rhs, (NumpyCross, NumpyComplex, NumpyReal, NumpyArray, NumpyLinspace)):
+        if isinstance(rhs, (NumpyWhere, NumpyCross, NumpyComplex, NumpyReal, NumpyArray, NumpyLinspace)):
             rhs = self._print(rhs)
             return '{0} = {1}\n'.format(lhs_code,rhs)
 
-        if isinstance(rhs, (NumpyDiag, NumpyWhere)):
+        if isinstance(rhs, NumpyDiag):
             return self._print(rhs, expr.lhs)
 
         if isinstance(rhs, PyccelArraySize):
             return rhs.fprint(self._print, expr.lhs) + '\n'
 
-
         if isinstance(rhs, NumpyRand):
-
-            stack_array = False
-            if self._current_function:
-                name = self._current_function
-                func = self.get_function(name)
-                lhs_name = expr.lhs.name
-                vars_dict = {i.name: i for i in func.local_vars}
-                if lhs_name in vars_dict:
-                    stack_array = vars_dict[lhs_name].is_stack_array
-
             return 'call random_number({0})\n'.format(self._print(expr.lhs))
 
         if isinstance(rhs, NumpyFull):
-
-            stack_array = False
-            if self._current_function:
-                name = self._current_function
-                func = self.get_function(name)
-                lhs_name = expr.lhs.name
-                vars_dict = {i.name: i for i in func.local_vars}
-                if lhs_name in vars_dict:
-                    stack_array = vars_dict[lhs_name].is_stack_array
-
-            return self._print_NumpyFull(rhs, lhs_code)
+            stmts = []
+            if rhs.fill_value is not None:
+                code_init = '{0} = {1}'.format(lhs_code, self._print(rhs))
+                stmts.append(code_init)
+            if len(stmts) == 0:
+                return ''
+            else:
+                return '\n'.join(stmts) + '\n'
 
         if isinstance(rhs, (NumpyFullLike, NumpyEmptyLike,\
 						NumpyZerosLike, NumpyOnesLike)):
-
-            stack_array = False
-            if self._current_function:
-                name = self._current_function
-                func = self.get_function(name)
-                lhs_name = expr.lhs.name
-                vars_dict = {i.name: i for i in func.local_vars}
-                if lhs_name in vars_dict:
-                    stack_array = vars_dict[lhs_name].is_stack_array
-
-            return rhs.fprint(self._print, expr.lhs, stack_array)
+            return rhs.fprint(self._print, expr.lhs)
 
         if isinstance(rhs, NumpyMod):
             lhs = self._print(expr.lhs)
