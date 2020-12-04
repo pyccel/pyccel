@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import sys
 import importlib
 from collections.abc import Iterable
 from collections     import OrderedDict
@@ -3185,11 +3184,6 @@ class FunctionDef(Basic):
         return self._kind
 
     @property
-    def is_static(self):
-        sys.exit("is static in functiondef\n")
-        return self._is_static
-
-    @property
     def imports(self):
         return self._imports
 
@@ -3241,11 +3235,6 @@ class FunctionDef(Basic):
     def doc_string(self):
         return ""
 
-    def print_body(self):
-        sys.exit("print body in functiondef\n")
-        for s in self.body:
-            print(s)
-
     def set_recursive(self):
         self._is_recursive = True
 
@@ -3282,7 +3271,6 @@ class FunctionDef(Basic):
         self._name = newname
 
     def vectorize(self, body , header):
-        sys.exit("vectorize in functiondef\n")
         """ return vectorized FunctionDef """
         decorators = self.decorators
         decorators.pop('vectorize')
@@ -3374,12 +3362,10 @@ class FunctionDef(Basic):
 
     # TODO
     def check_pure(self):
-        sys.exit("check_pure in functiondef\n")
         raise NotImplementedError('')
 
     # TODO
     def check_elemental(self):
-        sys.exit("check_elemental in functiondef\n")
         raise NotImplementedError('')
 
     def __str__(self):
