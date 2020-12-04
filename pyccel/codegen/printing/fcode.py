@@ -41,7 +41,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
 
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-from pyccel.ast.operators      import PyccelUnarySub, PyccelMod, PyccelAssociativeParenthesis
+from pyccel.ast.operators      import PyccelUnarySub, PyccelMod
 from pyccel.ast.core      import FunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
