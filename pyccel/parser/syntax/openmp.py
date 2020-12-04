@@ -8,7 +8,7 @@ from os.path import join, dirname
 from textx.metamodel import metamodel_from_file
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct, Omp_End_Clause, OMP_Critical_Construct
+from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct, Omp_End_Clause, OMP_Critical_Construct, OMP_Barrier_Construct
 
 DEBUG = False
 
@@ -45,6 +45,8 @@ class OpenmpStmt(BasicStmt):
         elif isinstance(stmt, OmpSingleConstruct):
             return stmt.expr
         elif isinstance(stmt, OmpCriticalConstruct):
+            return stmt.expr
+        elif isinstance(stmt, OmpBarrierConstruct):
             return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
@@ -165,6 +167,22 @@ class OmpCriticalConstruct(BasicStmt):
 
         return OMP_Critical_Construct(txt)
 
+class OmpBarrierConstruct(BasicStmt):
+    """Class representing a Critical stmt."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name = kwargs.pop('name')
+        super(OmpBarrierConstruct, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpBarrierConstruct: expr")
+
+        txt = self.name
+
+        return OMP_Barrier_Construct(txt)
 
 class OmpEndClause(BasicStmt):
     """Class representing a ."""
@@ -443,7 +461,8 @@ omp_directives = [OmpParallelConstruct,
                   OmpLoopConstruct,
                   OmpSingleConstruct,
                   OmpEndClause,
-                  OmpCriticalConstruct]
+                  OmpCriticalConstruct,
+                  OmpBarrierConstruct]
 
 omp_clauses = [OmpCollapse,
                OmpCopyin,

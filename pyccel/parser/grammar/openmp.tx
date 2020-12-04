@@ -18,6 +18,7 @@ OmpConstructOrDirective:
   | OmpSingleConstruct
   | OmpEndClause
   | OmpCriticalConstruct
+  | OmpBarrierConstruct
 ;
 ////////////////////////////////////////////////////
 
@@ -27,7 +28,8 @@ OmpConstructOrDirective:
 OmpParallelConstruct: 'parallel'  combined*=ParallelCombined? clauses*=OmpParallelClause;
 OmpLoopConstruct:     'for'       clauses*=OmpLoopClause;
 OmpSingleConstruct:   'single'    clauses*=OmpSingleClause;
-OmpCriticalConstruct: 'critical'  clauses*=OmpCriticalClause?;
+OmpCriticalConstruct: 'critical'  clauses*=OmpCriticalClause;
+OmpBarrierConstruct:  name='barrier';
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////

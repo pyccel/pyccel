@@ -160,7 +160,8 @@ __all__ = (
     'OMP_Parallel_Construct',
     'OMP_Single_Construct',
     'Omp_End_Clause',
-    'Omp_Critical_Construct'
+    'OMP_Critical_Construct',
+    'OMP_Barrier_Construct'
 )
 
 #==============================================================================
@@ -4661,7 +4662,12 @@ class OMP_Single_Construct(AnnotatedComment):
         return AnnotatedComment.__new__(cls, 'omp', txt)
 
 class OMP_Critical_Construct(AnnotatedComment):
-    """ Represents an OpenMP Single construct. """
+    """ Represents an OpenMP Critical construct. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
+
+class OMP_Barrier_Construct(AnnotatedComment):
+    """ Represents an OpenMP Barrier construct. """
     def __new__(cls, txt):
         return AnnotatedComment.__new__(cls, 'omp', txt)
 
