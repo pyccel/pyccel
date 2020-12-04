@@ -207,7 +207,8 @@ def test_Assign_Between_Allocatables(language):
     errors = Errors()
 
     # epyccel should raise an Exception
-    epyccel(f, language=language)
+    with pytest.raises(PyccelSemanticError):
+        epyccel(f, language=language)
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors() == 1
