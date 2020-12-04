@@ -19,8 +19,10 @@ from pyccel.ast.core      import ValuedArgument
 from pyccel.ast.core      import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
 from pyccel.ast.literals  import LiteralString
+from pyccel.errors.errors import Errors
 
 DEBUG = False
+errors = Errors()
 
 class Header(object):
     """Class for Header syntax."""
@@ -59,15 +61,20 @@ class FuncType(BasicStmt):
 class TemplateStmt(BasicStmt):
     """Base class representing a  template in the grammar."""
     def __init__(self, **kwargs):
-        self.dtype  = kwargs.pop('dtype')
+        self.dtypes  = kwargs.pop('dtypes')
         self.name   = kwargs.pop('name')
         BasicStmt.__init__(self)
 
     @property
     def expr(self):
-        l = [i.expr for i in self.dtype]
-        return Template(self.name, l)
+        if any(isinstance(d_type, FuncType) for d_type in self.dtypes):
+            msg = 'Functions in a template are not supported yet'
+            errors.report(msg,
+                        severity='fatal')
 
+        possible_dtypes = {tuple(t.expr.items())  for t in self.dtypes}
+        dtypes = tuple(dict(d_type) for d_type in possible_dtypes)
+        return Template(self.name, dtypes)
 
 class ListType(BasicStmt):
     """Base class representing a  ListType in the grammar."""
@@ -167,22 +174,27 @@ class UnionTypeStmt(BasicStmt):
 
         dtype: list fo str
         """
-        self.dtype = kwargs.pop('dtype')
+        self.dtypes = kwargs.pop('dtypes')
         self.const = kwargs.pop('const')
 
         super(UnionTypeStmt, self).__init__(**kwargs)
 
     @property
     def expr(self):
-        l = [i.expr for i in self.dtype]
+        dtypes = [i.expr for i in self.dtypes]
         if self.const:
-            for e in l:
-                e["is_const"] = True
+            for d_type in dtypes:
+                d_type["is_const"] = True
+        if len(dtypes)==1:
+            return dtypes[0]
+        if any(isinstance(d_type, FuncType) for d_type in self.dtypes):
+            msg = 'Functions in a uniontype are not supported yet'
+            errors.report(msg,
+                        severity='fatal')
 
-        if len(l)>1:
-            return UnionType(l)
-        else:
-            return l[0]
+        possible_dtypes = {tuple(t.items())  for t in dtypes}
+        dtypes = [dict(d_type) for d_type in possible_dtypes]
+        return UnionType(dtypes)
 
 class HeaderResults(BasicStmt):
     """Base class representing a HeaderResults in the grammar."""

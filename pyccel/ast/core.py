@@ -49,7 +49,7 @@ from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
-from .operators import PyccelMinus
+from .operators import PyccelMinus, PyccelMul
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -622,7 +622,7 @@ class Dlist(Basic, PyccelAstNode):
 
     def __init__(self, val, length):
         self._rank = val.rank
-        self._shape = tuple(s if i!= 0 else s*length for i,s in enumerate(val.shape))
+        self._shape = tuple(s if i!= 0 else PyccelMul(s, length) for i,s in enumerate(val.shape))
 
     @property
     def val(self):
@@ -2650,6 +2650,8 @@ class TupleVariable(Variable):
         self._vars[variable_idx] = self._vars[variable_idx].clone(new_name)
 
     def __getitem__(self,idx):
+        if isinstance(idx, LiteralInteger):
+            idx = idx.p
         return self.get_var(idx)
 
     def __iter__(self):
