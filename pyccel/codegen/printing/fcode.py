@@ -754,11 +754,10 @@ class FCodePrinter(CodePrinter):
 
         ind   = self._print(expr.index)
         mask  = self._print(expr.mask)
-        lhs   = self._print(lhs)
 
         stmt  = 'pack([({ind},{ind}=0,size({mask})-1)],{mask})'.format(ind=ind,mask=mask)
 
-        return alloc +'\n' + stmt
+        return stmt
 
     def _print_NumpyArray(self, expr):
         """Fortran print."""
