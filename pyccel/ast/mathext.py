@@ -13,6 +13,7 @@ __all__ = (
     'math_functions',
     # ---
     'MathFunctionBase',
+    'PycMathFunctionBase',
     'MathFunctionFloat',
     'MathFunctionInt',
     'MathFunctionBool',
@@ -56,6 +57,7 @@ __all__ = (
     'MathFactorial',
     'MathFloor',
     'MathGcd',
+    'MathLcm',
     'MathTrunc',
     # ---
     'MathIsclose',
@@ -85,6 +87,8 @@ class MathFunctionBase(Function, PyccelAstNode):
     _shape = ()
     _rank  = 0
 
+class PycMathFunctionBase(Function, PyccelAstNode): pass
+
 class MathFunctionFloat(MathFunctionBase):
     _dtype = NativeReal()
     _precision = default_precision['real']
@@ -112,7 +116,6 @@ class MathAtanh   (MathFunctionFloat): pass
 class MathCopysign(MathFunctionFloat): pass
 class MathCos     (MathFunctionFloat): pass
 class MathCosh    (MathFunctionFloat): pass
-class MathDegrees (MathFunctionFloat): pass
 class MathErf     (MathFunctionFloat): pass
 class MathErfc    (MathFunctionFloat): pass
 class MathExp     (MathFunctionFloat): pass
@@ -129,7 +132,6 @@ class MathLog10   (MathFunctionFloat): pass
 class MathLog1p   (MathFunctionFloat): pass
 class MathLog2    (MathFunctionFloat): pass
 class MathPow     (MathFunctionFloat): pass
-class MathRadians (MathFunctionFloat): pass
 class MathSin     (MathFunctionFloat): pass
 class MathSinh    (MathFunctionFloat): pass
 class MathSqrt    (MathFunctionFloat): pass
@@ -137,11 +139,16 @@ class MathTan     (MathFunctionFloat): pass
 class MathTanh    (MathFunctionFloat): pass
 class MathRemainder (MathFunctionFloat): pass
 
+class MathRadians (PycMathFunctionBase, MathFunctionFloat): pass
+class MathDegrees (PycMathFunctionBase, MathFunctionFloat): pass
+
 # Integer result
+class MathFactorial(PycMathFunctionBase, MathFunctionInt): pass
+class MathGcd      (PycMathFunctionBase, MathFunctionInt): pass
+class MathLcm      (PycMathFunctionBase, MathFunctionInt): pass
+
 class MathCeil     (MathFunctionInt): pass
-class MathFactorial(MathFunctionInt): pass
 class MathFloor    (MathFunctionInt): pass
-class MathGcd      (MathFunctionInt): pass
 class MathTrunc    (MathFunctionInt): pass
 
 # Boolean result
@@ -179,6 +186,7 @@ class MathModf(MathFunctionBase):
 
 _base_classes = (
     'MathFunctionBase',
+    'PycMathFunctionBase',
     'MathFunctionFloat',
     'MathFunctionInt',
     'MathFunctionBool'
