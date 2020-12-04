@@ -52,7 +52,7 @@ from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
-from pyccel.ast.datatypes import iso_c_binding, default_precision
+from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat
@@ -622,7 +622,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyProduct(self, expr, lhs=None):
         """Fortran print."""
-        
+
         rhs_code = self._print(expr.arg)
         if lhs:
             lhs_code = self._print(lhs)
@@ -697,14 +697,6 @@ class FCodePrinter(CodePrinter):
         if lhs is not None:
             lhs  = self._print(lhs)
 
-            if rank == 2:
-                alloc = 'allocate({0}(0:size({1},1)-1,0:size({1},2)-1))'.format(lhs, first)
-
-            elif rank == 1:
-                alloc = 'allocate({}(0:size({})-1)'.format(lhs, first)
-
-
-
         if rank == 2:
 
             if order == 'C':
@@ -720,7 +712,6 @@ class FCodePrinter(CodePrinter):
         if lhs is not None:
             code = '{} = {}'.format(lhs, code)
 
-        #return alloc + '\n' + code
         return code
 
     def _print_NumpyDiag(self, expr, lhs):

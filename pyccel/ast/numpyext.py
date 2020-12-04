@@ -396,7 +396,6 @@ class NumpyLinspace(Application, NumpyNewArray):
                                              sstr(self.stop),
                                              sstr(self.size))
         return code
- 
 
 #==============================================================================
 class NumpyDiag(Application, NumpyNewArray):
