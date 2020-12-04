@@ -123,8 +123,9 @@ INVALID_FILE_DIRECTORY = 'No file or directory of this name'
 INVALID_FILE_EXTENSION = 'Wrong file extension. Expecting `py` of `pyh`, but found'
 INVALID_PYTHON_SYNTAX = 'Python syntax error'
 
-# unacessible memory errors
-UNACESSIBLE_MEMORY = 'Array redefinition will cause unaccessible memory'
+# ARRAY ERRORS
+ASSIGN_ARRAYS_ONE_ANOTHER = 'assigning arrays one another will cause reallocation at runtime'
+ARRAY_ALREADY_IN_USE = 'attempt to reallocate an array wich is being used by another variable'
 
 # warnings
 UNDEFINED_INIT_METHOD = 'Undefined `__init__` method'

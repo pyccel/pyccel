@@ -991,11 +991,9 @@ class CCodePrinter(CodePrinter):
         rhs = expr.rhs
         if isinstance(rhs, IndexedElement) and isinstance(expr.lhs, Variable):
             free_code = ''
-            for i in rhs.args:
-                if isinstance(i, Slice):
-                    free_code += 'free_array(%s);\n' % self._print(expr.lhs.name)
-                    self._additional_imports.add('ndarrays')
-                    break
+            if any(isinstance(i, Slice) for i in rhs.args):
+                free_code += 'free_array(%s);\n' % self._print(expr.lhs.name)
+                self._additional_imports.add('ndarrays')
             rhs = self._print(rhs)
             return '{}{} = {};'.format(free_code, lhs, rhs)
 

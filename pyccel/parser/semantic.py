@@ -1429,11 +1429,16 @@ class SemanticParser(BasicParser):
                             symbol = '|{name}| <module> -> {rhs}'.format(name=name, rhs=rhs),
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
-                elif isinstance(rhs, Variable) and rhs.allocatable:
-                        errors.report(ASSIGN_ALLOCATABLES,
-                                bounding_box=(self._current_fst_node.lineno,
-                                    self._current_fst_node.col_offset),severity='error', symbol=lhs.name)
-
+                elif var.is_ndarray and isinstance(rhs, Variable) and rhs.allocatable:
+                    errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset),
+                                severity='warning', symbol=lhs.name)
+                elif var.is_ndarray and var.is_target:
+                    errors.report(ARRAY_ALREADY_IN_USE,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset),
+                                severity='error', symbol=var.name)
                 elif not is_augassign and str(dtype) != str(getattr(var, 'dtype', 'None')):
                     txt = '|{name}| {old} <-> {new}'
                     txt = txt.format(name=name, old=var.dtype, new=dtype)
@@ -1873,15 +1878,7 @@ class SemanticParser(BasicParser):
 
         for l, r in zip(lhs,rhs):
             is_pointer_i = l.is_pointer if isinstance(l, (Variable, DottedVariable)) else is_pointer
-            if isinstance(l, Variable) and l.is_ndarray:
-                if l.is_target:
-                    errors.report(REASSIGN_TARGET,
-                          bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                          severity='error', symbol=l.name)
-                #if isinstance(r, Variable) and r.allocatable and l.allocatable:
-                #    errors.report(ASSIGN_ALLOCATABLES,
-                #          bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                #          severity='error', symbol=l.name)
+
             new_expr = Assign(l, r)
 
             if is_pointer_i:

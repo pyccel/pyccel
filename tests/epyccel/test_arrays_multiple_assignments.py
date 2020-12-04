@@ -8,7 +8,7 @@ from pyccel.errors.messages import (ARRAY_REALLOCATION,
                                     ARRAY_DEFINITION_IN_LOOP,
                                     INCOMPATIBLE_REDEFINITION_STACK_ARRAY,
                                     STACK_ARRAY_DEFINITION_IN_LOOP,
-                                    REASSIGN_TARGET, ASSIGN_ALLOCATABLES)
+                                    ASSIGN_ARRAYS_ONE_ANOTHER, ARRAY_ALREADY_IN_USE)
 
 @pytest.fixture(params=[
     pytest.param('fortran', marks = pytest.mark.fortran),
@@ -185,20 +185,15 @@ def test_Reassign_to_Target(language):
 
     # Check that we got exactly 1 Pyccel error and  1 warning
     assert errors.has_errors() == 1
-    assert errors.has_warnings() == 1
-    assert errors.num_messages() == 2
+    assert errors.num_messages() == 1
 
-    # Check that the warning is correct
-    warning_info = [*errors.error_info_map.values()][0][0]
-    assert warning_info.symbol  == 'x'
-    assert warning_info.message == ARRAY_REALLOCATION
     # Check that the error is correct
-    error_info = [*errors.error_info_map.values()][0][1]
+    error_info = [*errors.error_info_map.values()][0][0]
     assert error_info.symbol  == 'x'
-    assert error_info.message == REASSIGN_TARGET
+    assert error_info.message == ARRAY_ALREADY_IN_USE
 
 #==============================================================================
-def test_Assign_Allocatables(language):
+def test_Assign_Between_Allocatables(language):
 
     def f():
         import numpy as np
@@ -212,17 +207,16 @@ def test_Assign_Allocatables(language):
     errors = Errors()
 
     # epyccel should raise an Exception
-    with pytest.raises(PyccelSemanticError):
-        epyccel(f, language=language)
+    epyccel(f, language=language)
 
     # Check that we got exactly 1 Pyccel error
-    assert errors.has_errors() == 1
+    assert errors.has_warnings() == 1
     assert errors.num_messages() == 1
 
     # Check that the error is correct
-    error_info = [*errors.error_info_map.values()][0][0]
-    assert error_info.symbol  == 'x'
-    assert error_info.message == ASSIGN_ALLOCATABLES
+    warning_info = [*errors.error_info_map.values()][0][0]
+    assert warning_info.symbol  == 'x'
+    assert warning_info.message == ASSIGN_ARRAYS_ONE_ANOTHER
 
 #==============================================================================
 if __name__ == '__main__':
