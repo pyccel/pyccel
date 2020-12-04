@@ -41,7 +41,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
 
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-from pyccel.ast.operators      import PyccelUnarySub, PyccelMod
+from pyccel.ast.operators      import PyccelUnarySub, PyccelMod, PyccelAssociativeParenthesis
 from pyccel.ast.core      import FunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
@@ -734,7 +734,7 @@ class FCodePrinter(CodePrinter):
             rhs   = IndexedVariable(expr.array)[expr.index]
             body  = [Assign(lhs, rhs)]
             body  = For(expr.index, PythonRange(PythonLen(expr.array)), body)
-            code  = expr._print(body)
+            code  = self._print(body)
             alloc = 'allocate({0}(0: size({1},1)-1, 0: size({1},1)-1))'.format(lhs, array)
 
         return alloc + '\n' + code
@@ -749,7 +749,7 @@ class FCodePrinter(CodePrinter):
 
         return rhs
 
-    def _print_NumpyLinspace(self, expr, lhs=None):
+    def _print_NumpyLinspace(self, expr):
 
         template = '[({start} + {index}*{step},{index} = {zero},{end})]'
 
@@ -760,11 +760,7 @@ class FCodePrinter(CodePrinter):
             zero  = self._print(LiteralInteger(0)),
             end   = self._print(PyccelMinus(expr.size, LiteralInteger(1))),
         )
-
-        if lhs:
-            code = '{0} = {1}\n'.format(self._print(lhs), init_value)
-        else:
-            code = init_value
+        code = init_value
 
         return code
 
@@ -780,10 +776,9 @@ class FCodePrinter(CodePrinter):
 
         return alloc +'\n' + stmt
 
-    def _print_NumpyArray(self, expr, lhs):
+    def _print_NumpyArray(self, expr):
         """Fortran print."""
 
-        lhs_code = self._print(lhs)
         # Always transpose indices because Numpy initial values are given with
         # row-major ordering, while Fortran initial values are column-major
         shape = expr.shape[::-1]
@@ -800,7 +795,7 @@ class FCodePrinter(CodePrinter):
         if expr.order == 'F' and expr.rank > 1:
             rhs_code = 'transpose({})'.format(rhs_code)
 
-        return '{0} = {1}'.format(lhs_code, rhs_code) + '\n'
+        return rhs_code
 
     def _print_NumpyFloor(self, expr):
         result_code = self._print_MathFloor(expr)
@@ -871,11 +866,16 @@ class FCodePrinter(CodePrinter):
         if expr.rank != 0:
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
-        return expr.fprint(self._print)
+        if expr.high is None:
+            randreal = self._print(PyccelMul(expr.low, NumpyRand()))
+        else:
+            randreal = self._print(PyccelAdd(PyccelMul(PyccelAssociativeParenthesis(PyccelMinus(expr.high, expr.low)), NumpyRand()), expr.low))
+
+        prec_code = self._print(expr.precision)
+        return 'floor({}, kind={})'.format(randreal, prec_code)
     
-    def _print_NumpyFull(self, expr, lhs, stack_array=False):
+    def _print_NumpyFull(self, expr, lhs_code):
         
-        lhs_code = self._print(lhs)
         stmts = []
         # Create statement for initialization
         if expr.fill_value is not None:
@@ -1280,41 +1280,36 @@ class FCodePrinter(CodePrinter):
             return ''
 
         if isinstance(rhs, (PythonLen, NumpyRandint)):
-            rhs_code = self._print(expr.rhs)
+            rhs_code = self._print(rhs)
             return '{0} = {1}\n'.format(lhs_code, rhs_code)
 
         if isinstance(rhs, PythonInt):
-            lhs = self._print(expr.lhs)
             rhs = expr.rhs.fprint(self._print)
-            return '{0} = {1}\n'.format(lhs,rhs)
+            return '{0} = {1}\n'.format(lhs_code,rhs)
         
-        if isinstance(rhs, NumpyComplex):
-            lhs = self._print(expr.lhs)
-            rhs = self._print_PythonComplex(rhs)
-            return '{0} = {1}\n'.format(lhs,rhs)
-
-        if isinstance(rhs, NumpyReal):
-            rhs = self._print_NumpyReal(rhs)
-            return '{0} = {1}\n'.format(lhs,rhs)
+        if isinstance(rhs, (NumpyComplex, NumpyReal, NumpyArray, NumpyLinspace)):
+            rhs = self._print(rhs)
+            return '{0} = {1}\n'.format(lhs_code,rhs)
         
-        if isinstance(rhs, NumpyArray):
-            return self._print_NumpyArray(rhs, expr.lhs)
+        if isinstance(rhs, (NumpyCross, NumpyDiag, NumpyWhere)):
+            return self._print(rhs, expr.lhs)
         
-        if isinstance(rhs, NumpyCross):
-            return self._print_NumpyCross(rhs, expr.lhs) + '\n'
-        
-        if isinstance(rhs, NumpyLinspace):
-            return self._print_NumpyLinspace(rhs, expr.lhs) + '\n'
-        
-        if isinstance(rhs, NumpyDiag):
-            return self._print_NumpyDiag(rhs, expr.lhs) + '\n'
-        
-        if isinstance(rhs, NumpyWhere):
-            return self._print_NumpyWhere(rhs, expr.lhs) + '\n'
-
         if isinstance(rhs, PyccelArraySize):
             return rhs.fprint(self._print, expr.lhs) + '\n'
 
+
+        if isinstance(rhs, NumpyRand):
+
+            stack_array = False
+            if self._current_function:
+                name = self._current_function
+                func = self.get_function(name)
+                lhs_name = expr.lhs.name
+                vars_dict = {i.name: i for i in func.local_vars}
+                if lhs_name in vars_dict:
+                    stack_array = vars_dict[lhs_name].is_stack_array
+
+            return 'call random_number({0})\n'.format(self._print(expr.lhs))
 
         if isinstance(rhs, NumpyFull):
 
@@ -1327,10 +1322,10 @@ class FCodePrinter(CodePrinter):
                 if lhs_name in vars_dict:
                     stack_array = vars_dict[lhs_name].is_stack_array
 
-            return self._print_NumpyFull(rhs, expr.lhs, stack_array)
+            return self._print_NumpyFull(rhs, lhs_code)
 
         if isinstance(rhs, (NumpyFullLike, NumpyEmptyLike,\
-						NumpyZerosLike, NumpyOnesLike, NumpyRand)):
+						NumpyZerosLike, NumpyOnesLike)):
 
             stack_array = False
             if self._current_function:

@@ -602,11 +602,6 @@ class NumpyRand(Function, NumpyNewArray):
     def order(self):
         return 'C'
 
-    def fprint(self, printer, lhs, stack_array=False):
-        """Fortran print."""
-
-        return 'call random_number({0})\n'.format(printer(lhs))
-
 #==============================================================================
 class NumpyRandint(Function, NumpyNewArray):
 
@@ -640,15 +635,13 @@ class NumpyRandint(Function, NumpyNewArray):
     def rand_expr(self):
         return self._rand
 
-    def fprint(self, printer):
-        assert(self._rank == 0)
-        if self._high is None:
-            randreal = printer(PyccelMul(self._low, NumpyRand()))
-        else:
-            randreal = printer(PyccelAdd(PyccelMul(PyccelAssociativeParenthesis(PyccelMinus(self._high, self._low)), NumpyRand()), self._low))
+    @property
+    def high(self):
+        return self._high
 
-        prec_code = printer(self.precision)
-        return 'floor({}, kind={})'.format(randreal, prec_code)
+    @property
+    def low(self):
+        return self._low
 
 #==============================================================================
 class NumpyFull(Application, NumpyNewArray):
