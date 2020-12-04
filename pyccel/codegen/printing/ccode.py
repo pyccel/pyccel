@@ -1221,6 +1221,7 @@ class CCodePrinter(CodePrinter):
         # PythonPrint imports last to be sure that all additional_imports have been collected
         imports  = [*expr.imports, *map(Import, self._additional_imports)]
         imports  = '\n'.join(self._print(i) for i in imports)
+        free_allocs = self.free_allocs(self._allocs)
         return ('{imports}\n'
                 'int main()\n{{\n'
                 '{decs}\n\n'

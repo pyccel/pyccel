@@ -1317,7 +1317,6 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.internal_variable.allocatable:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
-
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
             rhs.base.internal_variable.is_target = True
@@ -1543,7 +1542,6 @@ class SemanticParser(BasicParser):
 
         rhs = expr.rhs
         lhs = expr.lhs
-
         if isinstance(rhs, Application):
             name = type(rhs).__name__
             macro = self.get_macro(name)
