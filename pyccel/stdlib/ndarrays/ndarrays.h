@@ -93,7 +93,6 @@ t_ndarray   array_slicing(t_ndarray p, ...);
 
 /* free */
 int32_t         free_array(t_ndarray dump);
-void		free_allocs(int32_t nbr, ...);
 
 /* indexing */
 int32_t         get_index(t_ndarray arr, ...);
