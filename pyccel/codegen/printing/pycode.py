@@ -354,4 +354,4 @@ def pycode(expr, target_language='python', **settings):
     'math.tan(x) + 1'
     """
     settings.pop('parser', None)
-    return PythonCodePrinter(language, settings).doprint(expr)
+    return PythonCodePrinter(target_language, settings).doprint(expr)
