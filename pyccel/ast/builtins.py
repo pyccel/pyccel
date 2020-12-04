@@ -6,20 +6,25 @@ always available.
 In this module we implement some of them in alphabetical order.
 
 """
-from pyccel.ast.datatypes import iso_c_binding
 
 from sympy import Symbol, Function, Tuple
 from sympy import Expr, Not
 from sympy import sympify
 from sympy.tensor import Indexed, IndexedBase
+from sympy.core.function import Application
+
+from pyccel.ast.datatypes import iso_c_binding
 
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
-from .literals  import LiteralInteger, LiteralFloat
+from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
+from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 
 __all__ = (
+    'PythonReal',
+    'PythonImag',
     'PythonBool',
     'PythonComplex',
     'PythonEnumerate',
@@ -46,6 +51,67 @@ local_sympify = {
     'ones' : Symbol('ones'),
     'Point': Symbol('Point')
 }
+
+#==============================================================================
+class PythonComplexProperty(Application, PyccelAstNode):
+    """Represents a call to the .real or .imag property
+
+    e.g:
+    > a = 1+2j
+    > a.real
+    1.0
+
+    arg : Variable, Literal
+    """
+    _dtype = NativeReal()
+    _rank  = 0
+    _shape = ()
+
+    def __init__(self, arg):
+        self._precision = arg.precision
+
+    @property
+    def internal_var(self):
+        """Return the variable on which the function was called"""
+        return self._args[0]
+
+    def __str__(self):
+        return 'Real({0})'.format(str(self.internal_var))
+
+#==============================================================================
+class PythonReal(PythonComplexProperty):
+    """Represents a call to the .real property
+
+    e.g:
+    > a = 1+2j
+    > a.real
+    1.0
+
+    arg : Variable, Literal
+    """
+    def __new__(cls, arg):
+        if arg.dtype is not NativeComplex():
+            return arg
+        else:
+            return PythonComplexProperty.__new__(cls, arg)
+
+#==============================================================================
+class PythonImag(PythonComplexProperty):
+    """Represents a call to the .imag property
+
+    e.g:
+    > a = 1+2j
+    > a.imag
+    1.0
+
+    arg : Variable, Literal
+    """
+    def __new__(cls, arg):
+        if arg.dtype is not NativeComplex():
+            return get_default_literal_value(arg.dtype)
+        else:
+            return PythonComplexProperty.__new__(cls, arg)
+
 
 #==============================================================================
 class PythonBool(Expr, PyccelAstNode):
@@ -87,28 +153,89 @@ class PythonComplex(Expr, PyccelAstNode):
     _dtype = NativeComplex()
 
     def __new__(cls, arg0, arg1=LiteralFloat(0)):
+
+        if isinstance(arg0, Literal) and isinstance(arg1, Literal):
+            real_part = 0
+            imag_part = 0
+
+            # Collect real and imag part from first argument
+            if isinstance(arg0, LiteralComplex):
+                real_part += arg0.real.python_value
+                imag_part += arg0.imag.python_value
+            else:
+                real_part += arg0.python_value
+
+            # Collect real and imag part from second argument
+            if isinstance(arg1, LiteralComplex):
+                real_part -= arg1.imag.python_value
+                imag_part += arg1.real.python_value
+            else:
+                imag_part += arg1.python_value
+
+            return LiteralComplex(real_part, imag_part, precision = cls._precision)
+
+
+        # Split arguments depending on their type to ensure that the arguments are
+        # either a complex and LiteralFloat(0) or 2 floats
+        from .operators import PyccelAdd, PyccelMul
+
+        if arg0.dtype is NativeComplex() and arg1.dtype is NativeComplex():
+            # both args are complex
+            return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit()))
         return Expr.__new__(cls, arg0, arg1)
 
-    @property
-    def real_part(self):
-        return self._args[0]
+    def __init__(self, arg0, arg1 = LiteralFloat(0)):
+        self._is_cast = arg0.dtype is NativeComplex() and \
+                        isinstance(arg1, Literal) and arg1.python_value == 0
+        if self._is_cast:
+            self._real_part = PythonReal(arg0)
+            self._imag_part = PythonImag(arg0)
+            self._internal_var = arg0
+
+        else:
+            from .operators import PyccelAdd, PyccelMinus, PyccelUnarySub
+
+            if arg0.dtype is NativeComplex() and \
+                    not (isinstance(arg1, Literal) and arg1.python_value == 0):
+                # first arg is complex. Second arg is non-0
+                self._real_part = PythonReal(arg0)
+                self._imag_part = PyccelAdd(PythonImag(arg0), arg1)
+            elif arg1.dtype is NativeComplex():
+                if isinstance(arg0, Literal) and arg0.python_value == 0:
+                    # second arg is complex. First arg is 0
+                    self._real_part = PyccelUnarySub(PythonImag(arg1))
+                    self._imag_part = PythonReal(arg1)
+                else:
+                    # Second arg is complex. First arg is non-0
+                    self._real_part = PyccelMinus(arg0, PythonImag(arg1))
+                    self._imag_part = PythonReal(arg1)
+            else:
+                self._real_part = arg0
+                self._imag_part = arg1
 
     @property
-    def imag_part(self):
-        return self._args[1]
+    def is_cast(self):
+        """ Indicates if the function is casting or assembling a complex """
+        return self._is_cast
+
+    @property
+    def real(self):
+        """ Returns the real part of the complex """
+        return self._real_part
+
+    @property
+    def imag(self):
+        """ Returns the imaginary part of the complex """
+        return self._imag_part
+
+    @property
+    def internal_var(self):
+        """ When the complex call is a cast, returns the variable being cast """
+        assert(self._is_cast)
+        return self._internal_var
 
     def __str__(self):
-        return self.fprint(str)
-
-    def _sympystr(self, printer):
-        return self.fprint(str)
-
-    def fprint(self, printer):
-        """Fortran print."""
-        real = printer(self.real_part)
-        imag = printer(self.imag_part)
-        code = 'cmplx({0}, {1}, {2})'.format(real, imag, iso_c_binding["complex"][self.precision])
-        return code
+        return "complex({}, {})".format(str(self._args[0]), str(self._args[1]))
 
 #==============================================================================
 class PythonEnumerate(Basic):
@@ -137,7 +264,12 @@ class PythonFloat(Expr, PyccelAstNode):
     _dtype = NativeReal()
 
     def __new__(cls, arg):
-        return Expr.__new__(cls, arg)
+        if isinstance(arg, LiteralFloat):
+            return LiteralFloat(arg, precision = cls._precision)
+        elif isinstance(arg, LiteralInteger):
+            return LiteralFloat(arg.p, precision = cls._precision)
+        else:
+            return Expr.__new__(cls, arg)
 
     @property
     def arg(self):
@@ -168,7 +300,10 @@ class PythonInt(Expr, PyccelAstNode):
     _dtype     = NativeInteger()
 
     def __new__(cls, arg):
-        return Expr.__new__(cls, arg)
+        if isinstance(arg, LiteralInteger):
+            return LiteralInteger(arg.p, precision = cls._precision)
+        else:
+            return Expr.__new__(cls, arg)
 
     @property
     def arg(self):
@@ -243,6 +378,8 @@ class PythonTuple(Expr, PyccelAstNode):
             self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
 
     def __getitem__(self,i):
+        if isinstance(i, LiteralInteger):
+            i = i.p
         return self._args[i]
 
     def __add__(self,other):
@@ -410,10 +547,6 @@ class PythonRange(Basic):
     @property
     def step(self):
         return self._args[2]
-
-    @property
-    def size(self):
-        return (self.stop - self.start) / self.step
 
 
 #==============================================================================
