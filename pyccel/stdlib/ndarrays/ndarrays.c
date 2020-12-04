@@ -160,18 +160,6 @@ int32_t free_array(t_ndarray dump)
     return (1);
 }
 
-void free_allocs(int32_t nbr, ...)
-{
-    va_list va;
-
-    va_start(va, nbr);
-    for (int32_t i = 0; i < nbr; ++i)
-    {
-        free_array(va_arg(va, t_ndarray));
-    }
-    va_end(va);
-}
-
 /*
 ** slices
 */
