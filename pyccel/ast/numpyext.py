@@ -718,7 +718,7 @@ class NumpyZeros(NumpyEmpty):
         if isinstance(dtype, NativeInteger):
             value = LiteralInteger(0)
         elif isinstance(dtype, NativeReal):
-            value = LiteralFloat(0.)
+            value = LiteralFloat0.)
         elif isinstance(dtype, NativeComplex):
             value = LiteralComplex(0., 0.)
         elif isinstance(dtype, NativeBool):

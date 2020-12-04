@@ -611,13 +611,10 @@ class FCodePrinter(CodePrinter):
 
     #========================== Numpy Elements ===============================#
 
-    def _print_NumpySum(self, expr, lhs=None):
+    def _print_NumpySum(self, expr):
         """Fortran print."""
 
         rhs_code = self._print(expr.arg)
-        if lhs:
-            lhs_code = self._print(lhs)
-            return '{0} = sum({1})'.format(lhs_code, rhs_code)
         return 'sum({0})'.format(rhs_code)
 
     def _print_NumpyProduct(self, expr, lhs=None):
@@ -876,9 +873,9 @@ class FCodePrinter(CodePrinter):
 
         prec_code = self._print(expr.precision)
         return 'floor({}, kind={})'.format(randreal, prec_code)
-    
+
     def _print_NumpyFull(self, expr, lhs_code):
-        
+
         stmts = []
         # Create statement for initialization
         if expr.fill_value is not None:
@@ -890,7 +887,6 @@ class FCodePrinter(CodePrinter):
             return ''
         else:
             return '\n'.join(stmts) + '\n'
-    
 
 
     def _print_PythonMin(self, expr):
