@@ -656,7 +656,7 @@ class FCodePrinter(CodePrinter):
         code = 'aimag({0})'.format(value)
         return code
 
-    def _print_NumpyCross(self, expr, lhs=None):
+    def _print_NumpyCross(self, expr):
         """Fortran print."""
 
         a     = IndexedVariable(expr.first)
@@ -1286,11 +1286,11 @@ class FCodePrinter(CodePrinter):
             rhs = expr.rhs.fprint(self._print)
             return '{0} = {1}\n'.format(lhs_code,rhs)
         
-        if isinstance(rhs, (NumpyComplex, NumpyReal, NumpyArray, NumpyLinspace)):
+        if isinstance(rhs, (NumpyCross, NumpyComplex, NumpyReal, NumpyArray, NumpyLinspace)):
             rhs = self._print(rhs)
             return '{0} = {1}\n'.format(lhs_code,rhs)
         
-        if isinstance(rhs, (NumpyCross, NumpyDiag, NumpyWhere)):
+        if isinstance(rhs, (NumpyDiag, NumpyWhere)):
             return self._print(rhs, expr.lhs)
         
         if isinstance(rhs, PyccelArraySize):
