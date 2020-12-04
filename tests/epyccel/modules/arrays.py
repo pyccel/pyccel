@@ -983,3 +983,147 @@ def array_2d_C_slice_16():
 
     return np_sum(b), shape(b)[0] , shape(b)[1]
 
+#==============================================================================
+# 1D ARRAY SLICE STRIDE
+#==============================================================================
+def array_1d_slice_stride_1():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[::1]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_2():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[::2]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_3():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[::3]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_4():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[::-1]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_5():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[::-2]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_6():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[::-3]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_7():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[2::2]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_8():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[:6:2]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_9():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[-6::2]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+
+def array_1d_slice_stride_10():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[:-1:3]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_11():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[1:-1:3]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_12():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[-6:-1:2]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_13():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[::-1]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_14():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[::-2]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_15():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[::-3]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_16():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[:2:-1]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_17():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[7::-2]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_18():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[:-7:-2]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_19():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[-1::-2]
+
+    return np_sum(b), b[0], shape(b)[0]
+
+def array_1d_slice_stride_20():
+    from numpy import array, shape, sum as np_sum
+    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+    b = a[7:-7:-2]
+
+    return np_sum(b), b[0], shape(b)[0]
+

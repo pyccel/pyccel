@@ -1719,6 +1719,126 @@ def test_array_2d_C_slice_16():
     f2 = epyccel(f1)
     assert np.array_equal(f1(), f2())
 
+#==============================================================================
+# TEST : 1d array slices stride
+#==============================================================================
+
+def test_array_1d_slice_stride_1():
+    f1 = arrays.array_1d_slice_stride_1
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
+def test_array_1d_slice_stride_2():
+    f1 = arrays.array_1d_slice_stride_2
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
+def test_array_1d_slice_stride_3():
+    f1 = arrays.array_1d_slice_stride_3
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
+def test_array_1d_slice_stride_4():
+    f1 = arrays.array_1d_slice_stride_4
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
+def test_array_1d_slice_stride_5():
+    f1 = arrays.array_1d_slice_stride_5
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
+def test_array_1d_slice_stride_6():
+    f1 = arrays.array_1d_slice_stride_6
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
+def test_array_1d_slice_stride_7():
+    f1 = arrays.array_1d_slice_stride_7
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
+def test_array_1d_slice_stride_8():
+    f1 = arrays.array_1d_slice_stride_8
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
+def test_array_1d_slice_stride_9():
+    f1 = arrays.array_1d_slice_stride_9
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
+def test_array_1d_slice_stride_10():
+    f1 = arrays.array_1d_slice_stride_10
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
+def test_array_1d_slice_stride_11():
+    f1 = arrays.array_1d_slice_stride_11
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
+def test_array_1d_slice_stride_12():
+    f1 = arrays.array_1d_slice_stride_12
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
+def test_array_1d_slice_stride_13():
+    f1 = arrays.array_1d_slice_stride_13
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
+def test_array_1d_slice_stride_14():
+    f1 = arrays.array_1d_slice_stride_14
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
+def test_array_1d_slice_stride_15():
+    f1 = arrays.array_1d_slice_stride_15
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
+def test_array_1d_slice_stride_16():
+    f1 = arrays.array_1d_slice_stride_16
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_1d_slice_stride_17():
+    f1 = arrays.array_1d_slice_stride_17
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_1d_slice_stride_18():
+    f1 = arrays.array_1d_slice_stride_18
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_1d_slice_stride_19():
+    f1 = arrays.array_1d_slice_stride_19
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_array_1d_slice_stride_20():
+    f1 = arrays.array_1d_slice_stride_20
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
