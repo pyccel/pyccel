@@ -7,12 +7,11 @@ import operator
 from sympy.core import Tuple
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
-from pyccel.ast.core      import Allocate
 from pyccel.ast.core      import Declare, IndexedVariable, IndexedElement, Slice, ValuedVariable
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Nil
-from pyccel.ast.core      import Assign, AliasAssign, datatype, Variable, Import
+from pyccel.ast.core      import Assign, datatype, Variable, Import
 from pyccel.ast.core      import SeparatorComment, VariableAddress
 from pyccel.ast.core      import DottedName
 from pyccel.ast.core      import create_incremented_string
@@ -228,7 +227,7 @@ class CCodePrinter(CodePrinter):
         'dereference': set()
     }
 
-    def __init__(self, parser, settings=None):
+    def __init__(self, parser, target_language, settings=None):
 
         if parser.filename:
             errors.set_target(parser.filename, 'file')
@@ -236,6 +235,7 @@ class CCodePrinter(CodePrinter):
         prefix_module = None if settings is None else settings.pop('prefix_module', None)
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
+        self._target_language = target_language
         userfuncs = {} if settings is None else settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
         self._dereference = set([] if settings is None else settings.get('dereference', []))
@@ -816,7 +816,8 @@ class CCodePrinter(CodePrinter):
 
         if len(expr.results) > 1:
             self._additional_args.append(expr.results)
-        self._allocs = [i for i in expr.local_vars if i.allocatable and i.is_ndarray]
+        if self._target_language == 'c':
+            self._allocs = [i for i in expr.local_vars if i.allocatable and i.is_ndarray]
         body  = self._print(expr.body)
         if len(expr.results) == 0:
             body += self.free_allocs(self._allocs)
@@ -1212,8 +1213,6 @@ class CCodePrinter(CodePrinter):
     def _print_Program(self, expr):
         self._allocs = [i for i in expr.variables if i.allocatable and i.is_ndarray]
         body  = self._print(expr.body)
-        if len(free_allocs) > 0:
-            free_allocs = self.free_allocs(self._allocs)
         decs     = [self._print(i) for i in expr.declarations]
         decs    += [self._print(Declare(i.dtype, i)) for i in self._additional_declare]
         decs    = '\n'.join(self._print(i) for i in decs)
@@ -1265,7 +1264,7 @@ class CCodePrinter(CodePrinter):
 
     _print_Function = CodePrinter._print_not_supported
 
-def ccode(expr, parser, assign_to=None, **settings):
+def ccode(expr, parser, target_language, assign_to=None, **settings):
     """Converts an expr to a string of c code
 
     expr : Expr
@@ -1290,4 +1289,4 @@ def ccode(expr, parser, assign_to=None, **settings):
         For example, if ``dereference=[a]``, the resulting code would print
         ``(*a)`` instead of ``a``.
     """
-    return CCodePrinter(parser, settings).doprint(expr, assign_to)
+    return CCodePrinter(parser, target_language, settings).doprint(expr, assign_to)

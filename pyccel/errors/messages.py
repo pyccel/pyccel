@@ -124,7 +124,7 @@ INVALID_FILE_EXTENSION = 'Wrong file extension. Expecting `py` of `pyh`, but fou
 INVALID_PYTHON_SYNTAX = 'Python syntax error'
 
 # ARRAY ERRORS
-ASSIGN_ARRAYS_ONE_ANOTHER = 'assigning arrays one another will cause reallocation at runtime'
+ASSIGN_ARRAYS_ONE_ANOTHER = 'assigning arrays one another NOT IMPLEMENTED'
 ARRAY_ALREADY_IN_USE = 'attempt to reallocate an array wich is being used by another variable'
 
 # warnings

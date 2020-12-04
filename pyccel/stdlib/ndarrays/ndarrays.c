@@ -149,7 +149,7 @@ void   _array_fill_cdouble(double complex c, t_ndarray arr)
 int32_t free_array(t_ndarray dump)
 {
     if (dump.shape == NULL)
-        return (0)
+        return (0);
     if (!dump.is_slice)
     {
         free(dump.raw_data);

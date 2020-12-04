@@ -64,9 +64,9 @@ def create_shared_library(codegen,
         if language == 'fortran':
             # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
             funcs = codegen.routines
-            sep = fcode(SeparatorComment(40), codegen.parser)
+            sep = fcode(SeparatorComment(40), codegen.parser, language)
             bind_c_funcs = [as_static_function_call(f, module_name, name=f.name) for f in funcs]
-            bind_c_code = '\n'.join([sep + fcode(f, codegen.parser) + sep for f in bind_c_funcs])
+            bind_c_code = '\n'.join([sep + fcode(f, codegen.parser, language) + sep for f in bind_c_funcs])
             bind_c_filename = 'bind_c_{}.f90'.format(module_name)
 
             with open(bind_c_filename, 'w') as f:
