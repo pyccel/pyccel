@@ -20,7 +20,7 @@ from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus
 from pyccel.ast.operators import PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, PyccelMod
 
-from pyccel.ast.datatypes import default_precision
+from pyccel.ast.datatypes import default_precision, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
 
 from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
@@ -36,6 +36,7 @@ from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT )
 
+from .fcode import python_builtin_datatypes
 
 errors = Errors()
 
@@ -189,6 +190,16 @@ math_function_to_c = {
     'MathErfc'   : 'erfc',
     'MathGamma'  : 'tgamma',
     'MathLgamma' : 'lgamma',
+}
+
+# dictionary mapping pyc_Math function to its equivalent in the internal
+# pyc_math C library.
+pyc_math_dic = {
+    'MathFactorial' : 'pyc_factorial',
+    'MathGcd'       : 'pyc_gcd',
+    'MathDegrees'   : 'pyc_degrees',
+    'MathRadians'   : 'pyc_radians',
+    'MathLcm'       : 'pyc_lcm',
 }
 
 dtype_registry = {('real',8)    : 'double',
@@ -792,32 +803,43 @@ class CCodePrinter(CodePrinter):
             code_args = self._print(arg)
         return 'sqrt({})'.format(code_args)
 
-    # -------------- pyc_math functions ---------------------------------------
-    def _print_MathFactorial(self, expr):
-        """ Print the equivalent code to pycthon factorial function call"""
-        # include of the pyc_math header
-        self._additional_imports.add('pyc_math')
-        arg = expr.args[0]
-        return 'pyc_factorial({})'.format(self._print(arg))
+    def _print_PycMathFunctionBase(self, expr):
+        """ Convert a Python expression with a Pyc_math functions call to C
+        functions call in pyc_math library
 
-    def _print_MathGcd(self, expr):
-        """ Print the equivalent code to pycthon gcd function call"""
-        # include of the pyc_math header
-        self._additional_imports.add('pyc_math')
-        args = ", ".join(self._print(arg) for arg in expr.args)
-        return 'pyc_gcd({})'.format(args)
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                Python expression with a Math function call
 
-    def _print_MathDegrees(self, expr):
-        """ Print the equivalent code to pycthon degrees function call"""
-        # include of the pyc_math header
-        self._additional_imports.add('pyc_math')
-        return 'pyc_degrees({})'.format(self._print(expr.args[0]))
+        Returns
+        -------
+            string
+                Equivalent expression in C language
 
-    def _print_MathRadians(self, expr):
-        """ Print the equivalent code to pycthon radians function call"""
+        ------
+        Example:
+        --------
+            math.gcd(x, y) ==> pyc_gcd(x, y)
+
+        """
         # include of the pyc_math header
         self._additional_imports.add('pyc_math')
-        return 'pyc_radians({})'.format(self._print(expr.args[0]))
+        type_name = type(expr).__name__
+        try:
+            func_name = pyc_math_dic[type_name]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+        args = []
+        for arg in expr.args:
+            if arg.dtype != expr.dtype:
+                cast_func = python_builtin_datatypes[str_dtype(expr.dtype)]
+                args.append(self._print(cast_func(arg)))
+            else:
+                args.append(self._print(arg))
+        code_args = ', '.join(args)
+        return '{0}({1})'.format(func_name, code_args)
+
     # -------------- end of pyc_math functions --------------------------------
     def _print_FunctionAddress(self, expr):
         return expr.name

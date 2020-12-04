@@ -156,6 +156,16 @@ math_function_to_fortran = {
     'MathIsnan'   : 'isnan',
 }
 
+# dictionary mapping pyc_Math function to its equivalent in the internal
+# pyc_math fortran module
+pyc_math_dic = {
+    'MathFactorial' : 'pyc_factorial',
+    'MathGcd'       : 'pyc_gcd',
+    'MathDegrees'   : 'pyc_degrees',
+    'MathRadians'   : 'pyc_radians',
+    'MathLcm'       : 'pyc_lcm',
+}
+
 _default_methods = {
     '__init__': 'create',
     '__del__' : 'free',
@@ -657,40 +667,42 @@ class FCodePrinter(CodePrinter):
         prec_code = self._print(prec)
         return 'floor({}, kind={})'.format(arg_code, prec_code)
 
-    # --------------------------- pyc_math functions --------------------------
+    def _print_PycMathFunctionBase(self, expr):
+        """ Convert a Python expression with a Pyc_math functions call to
+        Fotran functions call in pyc_math module
 
-    def _print_MathFactorial(self, expr):
-        """ Print the equivalent code to pycthon factorial function call"""
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                Python expression with a Math function call
+
+        Returns
+        -------
+            string
+                Equivalent expression in C language
+
+        ------
+        Example:
+        --------
+            math.gcd(x, y) ==> pyc_gcd(x, y)
+
+        """
         # include of the pyc_math header
         self._additional_imports.add('pyc_math')
-        return 'pyc_factorial({})'.format(self._print(expr.args[0]))
-
-    def _print_MathGcd(self, expr):
-        """ Print the equivalent code to pycthon gcd function call"""
-        # include of the pyc_math header
-        self._additional_imports.add('pyc_math')
-        args = ", ".join(self._print(arg) for arg in expr.args)
-        return 'pyc_gcd({})'.format(args)
-
-    def _print_MathDegrees(self, expr):
-        """ Print the equivalent code to pycthon degrees function call"""
-        # include of the pyc_math header
-        self._additional_imports.add('pyc_math')
-        arg = expr.args[0]
-        if arg.dtype is not NativeReal():
-            arg = PythonFloat(arg)
-        return 'pyc_degrees({})'.format(self._print(arg))
-
-    def _print_MathRadians(self, expr):
-        """ Print the equivalent code to pycthon radians function call"""
-        # include of the pyc_math header
-        self._additional_imports.add('pyc_math')
-        arg = expr.args[0]
-        if arg.dtype is not NativeReal():
-            arg = PythonFloat(arg)
-        return 'pyc_radians({})'.format(self._print(arg))
-
-    # -------------------------------------------------------------------------
+        type_name = type(expr).__name__
+        try:
+            func_name = pyc_math_dic[type_name]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+        args = []
+        for arg in expr.args:
+            if arg.dtype != expr.dtype:
+                cast_func = python_builtin_datatypes[str_dtype(expr.dtype)]
+                args.append(self._print(cast_func(arg)))
+            else:
+                args.append(self._print(arg))
+        code_args = ', '.join(args)
+        return '{0}({1})'.format(func_name, code_args)
 
     def _print_NumpyFloat(self, expr):
         return expr.fprint(self._print)
