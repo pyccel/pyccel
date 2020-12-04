@@ -161,7 +161,7 @@ class OmpCriticalConstruct(BasicStmt):
         txt = 'critical'
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clauses.expr)
+                txt = '{0} {1}'.format(txt, clause.expr)
             else:
               raise TypeError('Wrong clause for OmpCriticalConstruct')
 
@@ -276,18 +276,18 @@ class OmpCriticalName(BasicStmt):
     def __init__(self, **kwargs):
         """
         """
-        self.args = kwargs.pop('name')
+        self.args = kwargs.pop('args')
 
-        super(OmpPrivate, self).__init__(**kwargs)
+        super(OmpCriticalName, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> OmpPrivate: expr")
+            print("> OmpCriticalName: expr")
 
         # TODO check if variable exist in namespace
-        args = ', '.join(str(arg) for arg in self.args)
-        return '({})'.format(args)
+        txt = str(self.args)
+        return '({})'.format(txt)
 
 class OmpShared(BasicStmt):
     """Class representing a ."""

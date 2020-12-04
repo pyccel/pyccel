@@ -90,7 +90,7 @@ OmpLinear: 'linear' '(' val=ID ':' step=INT ')';
 OmpOrdered: 'ordered' ('(' n=INT ')')?;
 OmpSchedule: 'schedule' '(' kind=OmpScheduleKind (',' chunk_size=INT)? ')';
 OmpEndClause: 'end' construct=OpenmpConstructs (simd='simd')? (nowait='nowait')?;
-OmpCriticalName: '(' name=ID ')';
+OmpCriticalName: '(' args=CriticalName ')';
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -101,5 +101,6 @@ OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
 OpenmpConstructs: ('single' | 'parallel' | 'for' | 'critical');
 
 ThreadIndex: (ID | INT);
+CriticalName: ID;
 NotaStmt: /.*$/;
 ////////////////////////////////////////////////////
