@@ -61,8 +61,8 @@ from pyccel.ast.literals  import LiteralTrue
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyLinspace, NumpyDiag, NumpyCross
-from pyccel.ast.numpyext import NumpyReal, NumpyWhere
-from pyccel.ast.numpyext import NumpyComplex, NumpyMod, NumpyFloat
+from pyccel.ast.numpyext import NumpyWhere
+from pyccel.ast.numpyext import NumpyMod, NumpyFloat, NumpyComplex, NumpyReal
 from pyccel.ast.numpyext import NumpyFullLike, NumpyEmptyLike, NumpyZerosLike, NumpyOnesLike
 from pyccel.ast.numpyext import NumpyRand, NumpyRandint
 from pyccel.ast.numpyext import NumpyNewArray
@@ -601,6 +601,14 @@ class FCodePrinter(CodePrinter):
         args = [self._print(arg) for arg in expr.args]
         return "sum({})".format(", ".join(args))
 
+    def _print_PythonReal(self, expr):
+        value = self._print(expr.internal_var)
+        return 'real({0})'.format(value)
+
+    def _print_PythonImag(self, expr):
+        value = self._print(expr.internal_var)
+        return 'aimag({0})'.format(value)
+
     #========================== Numpy Elements ===============================#
 
     def _print_NumpySum(self, expr, lhs=None):
@@ -801,14 +809,14 @@ class FCodePrinter(CodePrinter):
         result_code = self._print_MathFloor(expr)
         return 'real({}, {})'.format(result_code, iso_c_binding["real"][8])
 
-    def _print_PythonFloat(self, expr):
-        return expr.fprint(self._print)
-
     # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
         return expr.fprint(self._print)
 
     def _print_PythonInt(self, expr):
+        return expr.fprint(self._print)
+
+    def _print_PythonFloat(self, expr):
         return expr.fprint(self._print)
 
     def _print_MathFloor(self, expr):
@@ -831,10 +839,14 @@ class FCodePrinter(CodePrinter):
         return expr.fprint(self._print)
 
     def _print_PythonComplex(self, expr):
-        real = self._print(expr.real_part)
-        imag = self._print(expr.imag_part)
-        precision = expr.precision
-        code = 'cmplx({0}, {1}, {2})'.format(real, imag, iso_c_binding["complex"][precision])
+        if expr.is_cast:
+            code = 'cmplx({0}, kind={1})'.format(expr.internal_var,
+                                iso_c_binding["complex"][expr.precision])
+        else:
+            real = self._print(expr.real)
+            imag = self._print(expr.imag)
+            code = 'cmplx({0}, {1}, {2})'.format(real, imag,
+                                iso_c_binding["complex"][expr.precision])
         return code
 
     def _print_PythonBool(self, expr):
@@ -1629,7 +1641,6 @@ class FCodePrinter(CodePrinter):
                  interfaces,
                  body_code,
                  'end {} {}\n'.format(func_type, name)]
-
         return '\n'.join(parts)
 
     def _print_FunctionAddress(self, expr):
@@ -1986,6 +1997,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Omp_End_Clause(self, expr):
         omp_expr = str(expr.txt)
+        omp_expr = omp_expr.replace("for", "do")
         ompexpr = '!$omp {}\n'.format(omp_expr)
         return ompexpr
 
@@ -2025,7 +2037,6 @@ class FCodePrinter(CodePrinter):
         if not(expr.nowait is None):
             nowait = 'nowait'
         # ...
-
         # ... TODO adapt get_statement to have continuation with OpenMP
         prolog = '!$omp do {clauses}\n'.format(clauses=clauses)
         epilog = '!$omp end do {0}\n'.format(nowait)
@@ -2660,18 +2671,15 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
     def _print_LiteralImaginaryUnit(self, expr):
-        # purpose: print complex numbers nicely in Fortran.
-        return "cmplx(0,1)"
+        """ purpose: print complex numbers nicely in Fortran."""
+        return "cmplx(0,1, kind = {})".format(iso_c_binding["complex"][expr.precision])
 
     def _print_int(self, expr):
         return str(expr)
 
     def _print_LiteralFloat(self, expr):
         printed = CodePrinter._print_Float(self, expr)
-        e = printed.find('e')
-        if e > -1:
-            return "%sd%s" % (printed[:e], printed[e + 1:])
-        return "%s_C_DOUBLE" % printed
+        return "{}_{}".format(printed, iso_c_binding["real"][expr.precision])
 
     def _print_LiteralComplex(self, expr):
         real_str = self._print(expr.real)
