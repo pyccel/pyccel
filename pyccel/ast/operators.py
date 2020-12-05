@@ -14,6 +14,8 @@ from .builtins import PythonInt
 
 from .datatypes import NativeBool, NativeInteger, NativeReal, NativeComplex, NativeString, default_precision
 
+from .literals import LiteralInteger, LiteralFloat, LiteralComplex
+
 errors = Errors()
 
 __all__ = (
@@ -447,6 +449,18 @@ class PyccelAdd(PyccelArithmeticOperator):
     """
     _precedence = 12
 
+    def __new__(cls, arg1, arg2):
+        if isinstance(arg1, (LiteralInteger, LiteralFloat)) and \
+           isinstance(arg2, LiteralComplex) and \
+           arg2.real == LiteralFloat(0):
+            return LiteralComplex(arg1, arg2.imag)
+        elif isinstance(arg2, (LiteralInteger, LiteralFloat)) and \
+           isinstance(arg1, LiteralComplex) and \
+           arg1.real == LiteralFloat(0):
+            return LiteralComplex(arg2, arg1.imag)
+        else:
+            return PyccelArithmeticOperator.__new__(cls, arg1, arg2)
+
     def _handle_str_type(self, strs):
         self._dtype = NativeString()
 
@@ -487,6 +501,18 @@ class PyccelMinus(PyccelArithmeticOperator):
         The second argument passed to the operator
     """
     _precedence = 12
+
+    def __new__(cls, arg1, arg2):
+        if isinstance(arg1, LiteralFloat) and \
+           isinstance(arg2, LiteralComplex) and \
+           arg2.real == LiteralFloat(0):
+            return LiteralComplex(arg1, -arg2.imag.python_value)
+        elif isinstance(arg2, LiteralFloat) and \
+           isinstance(arg1, LiteralComplex) and \
+           arg1.real == LiteralFloat(0):
+            return LiteralComplex(-arg2.python_value, arg1.imag)
+        else:
+            return PyccelArithmeticOperator.__new__(cls, arg1, arg2)
 
 #==============================================================================
 

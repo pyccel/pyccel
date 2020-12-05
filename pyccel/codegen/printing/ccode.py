@@ -290,14 +290,28 @@ class CCodePrinter(CodePrinter):
         value = self._print(expr.arg)
         return '({} != 0)'.format(value)
 
+    def _print_LiteralInteger(self, expr):
+        return str(expr.p)
+
     def _print_LiteralComplex(self, expr):
-        return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
-                        PyccelMul(expr.imag, LiteralImaginaryUnit()))))
+        if expr.real == LiteralFloat(0):
+            return self._print(PyccelAssociativeParenthesis(PyccelMul(expr.imag, LiteralImaginaryUnit())))
+        else:
+            return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
+                            PyccelMul(expr.imag, LiteralImaginaryUnit()))))
 
     def _print_PythonComplex(self, expr):
         self._additional_imports.add("complex")
-        return self._print(PyccelAssociativeParenthesis(PyccelAdd(PythonFloat(expr.real_part),
+# <<<<<<< HEAD
+        # return self._print(PyccelAssociativeParenthesis(PyccelAdd(PythonFloat(expr.real_part),
+        #                 PyccelMul(PythonFloat(expr.imag_part), LiteralImaginaryUnit()))))
+# =======
+        if expr.is_cast:
+            return self._print(expr.internal_var)
+        else:
+            return self._print(PyccelAssociativeParenthesis(PyccelAdd(PythonFloat(expr.real_part),
                         PyccelMul(PythonFloat(expr.imag_part), LiteralImaginaryUnit()))))
+# >>>>>>> master
 
     def _print_LiteralImaginaryUnit(self, expr):
         return '_Complex_I'
@@ -682,7 +696,7 @@ class CCodePrinter(CodePrinter):
                         inds[i] = Slice(start, end)
                     else:
                         #setting the Slice start and end to their correct value when try to get a view with scalar index
-                        inds[i] = Slice(ind, ind + 1)
+                        inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1)))
                 inds = [self._print(i) for i in inds]
                 return "array_slicing(%s, %s)" % (base_name, ", ".join(inds))
             inds = [self._print(i) for i in inds]
@@ -1042,7 +1056,8 @@ class CCodePrinter(CodePrinter):
         if isinstance(rhs, (NumpyFull)):
             code_init = ''
             if rhs.fill_value is not None:
-                code_init = 'array_fill({0}, {1});'.format(self._print(rhs.fill_value), lhs)
+                dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+                code_init = 'array_fill(({0}){1}, {2});'.format(dtype, self._print(rhs.fill_value), lhs)
             else:
                 return ''
             return '{}\n'.format(code_init)
@@ -1105,17 +1120,11 @@ class CCodePrinter(CodePrinter):
     def _print_NegativeInfinity(self, expr):
         return '-HUGE_VAL'
 
-    def _print_NumpyReal(self, expr):
-        if expr.arg.dtype is NativeComplex():
-            return 'creal({})'.format(self._print(expr.arg))
-        else:
-            return self._print(expr.arg)
+    def _print_PythonReal(self, expr):
+        return 'creal({})'.format(self._print(expr.internal_var))
 
-    def _print_NumpyImag(self, expr):
-        if expr.arg.dtype is NativeComplex():
-            return 'cimag({})'.format(self._print(expr.arg))
-        else:
-            return '0'
+    def _print_PythonImag(self, expr):
+        return 'cimag({})'.format(self._print(expr.internal_var))
 
     def _handle_is_operator(self, Op, expr):
 
