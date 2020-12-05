@@ -87,7 +87,8 @@ class MathFunctionBase(Function, PyccelAstNode):
     _shape = ()
     _rank  = 0
 
-class PycMathFunctionBase(Function, PyccelAstNode): pass
+class PycMathFunctionBase(Function, PyccelAstNode):
+    """Abstract base class for the Math Functions"""
 
 class MathFunctionFloat(MathFunctionBase):
     _dtype = NativeReal()
@@ -139,13 +140,18 @@ class MathTan     (MathFunctionFloat): pass
 class MathTanh    (MathFunctionFloat): pass
 class MathRemainder (MathFunctionFloat): pass
 
-class MathRadians (PycMathFunctionBase, MathFunctionFloat): pass
-class MathDegrees (PycMathFunctionBase, MathFunctionFloat): pass
+class MathRadians (PycMathFunctionBase, MathFunctionFloat):
+    """Represent a call to the radians function in the Math library"""
+class MathDegrees (PycMathFunctionBase, MathFunctionFloat):
+    """Represent a call to the degrees function in the Math library"""
 
 # Integer result
-class MathFactorial(PycMathFunctionBase, MathFunctionInt): pass
-class MathGcd      (PycMathFunctionBase, MathFunctionInt): pass
-class MathLcm      (PycMathFunctionBase, MathFunctionInt): pass
+class MathFactorial(PycMathFunctionBase, MathFunctionInt):
+    """Represent a call to the factorial function in the Math library"""
+class MathGcd      (PycMathFunctionBase, MathFunctionInt):
+    """Represent a call to the gcd function in the Math library"""
+class MathLcm      (PycMathFunctionBase, MathFunctionInt):
+    """Represent a call to the lcm function in the Math library"""
 
 class MathCeil     (MathFunctionInt): pass
 class MathFloor    (MathFunctionInt): pass
