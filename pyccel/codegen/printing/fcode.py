@@ -2524,11 +2524,14 @@ class FCodePrinter(CodePrinter):
             end = PyccelMinus(shape, end.args[0])
         elif allow_negative_index and isinstance(end, Variable):
             end = PyccelMod(end, shape)
-
+        ok =  False
         if step is not None :
-            start = PyccelMinus(shape, LiteralInteger(1)) if start is None else start
-            end = LiteralInteger(0) if end is None else end
-
+            if isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
+                ok = True
+                end = PyccelAdd(end, LiteralInteger(1) )if end is not None else LiteralInteger(0)
+                start = start if start is not None else PyccelMinus(shape, LiteralInteger(1))
+        if not ok :
+            end = None if end is None else PyccelMinus(end, LiteralInteger(1))
         return Slice(start, end, step)
 
     def _print_Slice(self, expr):
@@ -2539,8 +2542,7 @@ class FCodePrinter(CodePrinter):
         if (expr.end is None) or isinstance(expr.end, Nil):
             end = ''
         else:
-            end = PyccelMinus(expr.end, LiteralInteger(1))
-            end = self._print(end)
+            end = self._print(expr.end)
         if expr.step is not None :
             return '{0}:{1}:{2}'.format(start, end, self._print(expr.step))
         return '{0}:{1}'.format(start, end)
