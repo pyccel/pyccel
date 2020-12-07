@@ -292,3 +292,12 @@ def omp_arraysum_single(x):
     #$ omp end single
     #$ omp end parallel
     return result
+
+def omp_master():
+    result = 30
+    #$omp parallel num_threads(3) reduction(+:result)
+    #$omp master
+    result += 1
+    #$omp end master
+    #$omp end parallel
+    return result
