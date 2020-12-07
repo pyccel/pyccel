@@ -1289,7 +1289,7 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(rhs, (NumpyFullLike, NumpyEmptyLike,\
 						NumpyZerosLike, NumpyOnesLike)):
-            return rhs.fprint(self._print, expr.lhs)
+            return self._print(rhs)
 
         if isinstance(rhs, NumpyMod):
             lhs = self._print(expr.lhs)
