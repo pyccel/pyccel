@@ -3270,19 +3270,6 @@ class FunctionDef(Basic):
 
         self._name = newname
 
-    def vectorize(self, body , header):
-        """ return vectorized FunctionDef """
-        decorators = self.decorators
-        decorators.pop('vectorize')
-
-        self._name       = 'vec_'+str(self.name)
-        self._results    = []
-        self._body       = body
-        self._kind       = procedure
-        self._header     = header
-        self._decorators = decorators
-        return self
-
     @property
     def is_procedure(self):
         """Returns True if a procedure."""
@@ -3359,14 +3346,6 @@ class FunctionDef(Basic):
         out = (apply, (self.__class__, args, kwargs))
         return out
 
-
-    # TODO
-    def check_pure(self):
-        raise NotImplementedError('')
-
-    # TODO
-    def check_elemental(self):
-        raise NotImplementedError('')
 
     def __str__(self):
         result = 'None' if len(self.results) == 0 else \
