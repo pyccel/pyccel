@@ -48,7 +48,7 @@ from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
-from .operators import PyccelMinus, PyccelMul
+from .operators import PyccelMinus, PyccelMul, PyccelDiv
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -4888,11 +4888,14 @@ class IndexedElement(Expr, PyccelAstNode):
                 if isinstance(a, Slice):
                     start = a.start
                     end   = a.end
+                    step = a.step if a.step is not None else LiteralInteger(1)
                     end   = s if end   is None else end
                     if start is None:
-                        new_shape.append(end)
+                        #new_shape.append(end)
+                        new_shape.append(PyccelDiv(end, step))
                     else:
-                        new_shape.append(PyccelMinus(end, start))
+                        #new_shape.append(PyccelMinus(end, start))
+                        new_shape.append(PyccelDiv(PyccelMinus(end, start), step))
             self._shape = tuple(new_shape)
             self._rank  = len(new_shape)
         else:
