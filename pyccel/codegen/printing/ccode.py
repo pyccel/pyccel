@@ -129,12 +129,10 @@ math_function_to_c = {
     # 'MathComb'   : 'com' # TODO
     'MathCopysign': 'copysign',
     'MathFabs'   : 'fabs',
-    # 'MathFactorial': '???', # TODO
     'MathFloor'    : 'floor',
     # 'MathFmod'   : '???',  # TODO
     # 'MathRexp'   : '???'   TODO requires two output
     # 'MathFsum'   : '???',  # TODO
-    # 'MathGcd'   : '???',  # TODO
     # 'MathIsclose' : '???',  # TODO
     'MathIsfinite': 'isfinite', # int isfinite(real-floating x);
     'MathIsinf'   : 'isinf', # int isinf(real-floating x);
@@ -156,7 +154,7 @@ math_function_to_c = {
     'MathLog2'  : 'log2',
     'MathLog10'  : 'log10',
     'MathPow'    : 'pow',
-    # 'MathSqrt'   : 'sqrt',    # sqrt is printed using _Print_MathSqrt
+    'MathSqrt'   : 'sqrt',
 
     # --------------------- Trigonometric functions ---------------------------
 
@@ -170,10 +168,6 @@ math_function_to_c = {
     'MathSin'    : 'sin',
     'MathTan'    : 'tan',
 
-    # -------------------------- Angular conversion ---------------------------
-
-    # 'MathDegrees': '???',  # TODO
-    # 'MathRadians': '???', # TODO
 
     # -------------------------- Hyperbolic functions -------------------------
 
@@ -190,11 +184,8 @@ math_function_to_c = {
     'MathErfc'   : 'erfc',
     'MathGamma'  : 'tgamma',
     'MathLgamma' : 'lgamma',
-}
 
-# dictionary mapping pyc_Math function to its equivalent in the internal
-# pyc_math C library.
-pyc_math_dic = {
+    # --------------------------- internal functions --------------------------
     'MathFactorial' : 'pyc_factorial',
     'MathGcd'       : 'pyc_gcd',
     'MathDegrees'   : 'pyc_degrees',
@@ -785,60 +776,19 @@ class CCodePrinter(CodePrinter):
 
         """
         # add necessary include
-        self._additional_imports.add('math')
         type_name = type(expr).__name__
         try:
             func_name = math_function_to_c[type_name]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
-        args = []
-        for arg in expr.args:
-            if arg.dtype is NativeComplex():
-                self._additional_imports.add('complex')
-            if arg.dtype is not NativeReal():
-                args.append(self._print(NumpyFloat(arg)))
-            else :
-                args.append(self._print(arg))
-        code_args = ', '.join(args)
-        return '{0}({1})'.format(func_name, code_args)
 
-    def _print_MathSqrt(self, expr):
-        # add necessary include
-        self._additional_imports.add('math')
-        arg = expr.args[0]
-        if arg.dtype is not NativeReal():
-            code_args = self._print(NumpyFloat(arg))
-        else :
-            code_args = self._print(arg)
-        return 'sqrt({})'.format(code_args)
-
-    def _print_PycMathFunctionBase(self, expr):
-        """ Convert a Python expression with a Pyc_math functions call to C
-        functions call in pyc_math library
-
-        Parameters
-        ----------
-            expr : Pyccel ast node
-                Python expression with a Math function call
-
-        Returns
-        -------
-            string
-                Equivalent expression in C language
-
-        ------
-        Example:
-        --------
-            math.gcd(x, y) ==> pyc_gcd(x, y)
-
-        """
-        # include of the pyc_math header
-        self._additional_imports.add('pyc_math')
-        type_name = type(expr).__name__
-        try:
-            func_name = pyc_math_dic[type_name]
-        except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+        if func_name.startswith("pyc"):
+            self._additional_imports.add('pyc_math')
+        else:
+            if expr.dtype is NativeComplex():
+                self._additional_imports.add('cmath')
+            else:
+                self._additional_imports.add('math')
         args = []
         for arg in expr.args:
             if arg.dtype != expr.dtype:
@@ -849,7 +799,66 @@ class CCodePrinter(CodePrinter):
         code_args = ', '.join(args)
         return '{0}({1})'.format(func_name, code_args)
 
-    # -------------- end of pyc_math functions --------------------------------
+    def _print_MathCeil(self, expr):
+        """Convert a Python expression with a math ceil function call to C
+        function call"""
+        # add necessary include
+        self._additional_imports.add('math')
+        arg = expr.args[0]
+        if arg.dtype is NativeInteger():
+            code_arg = self._print(PythonFloat(arg))
+        else:
+            code_arg = self._print(arg)
+        return "ceil({})".format(code_arg)
+
+    def _print_MathIsfinite(self, expr):
+        """Convert a Python expression with a math isfinite function call to C
+        function call"""
+        # add necessary include
+        self._additional_imports.add('math')
+        arg = expr.args[0]
+        if arg.dtype is NativeInteger():
+            code_arg = self._print(PythonFloat(arg))
+        else:
+            code_arg = self._print(arg)
+        return "isfinite({})".format(code_arg)
+
+    def _print_MathIsinf(self, expr):
+        """Convert a Python expression with a math isinf function call to C
+        function call"""
+        # add necessary include
+        self._additional_imports.add('math')
+        arg = expr.args[0]
+        if arg.dtype is NativeInteger():
+            code_arg = self._print(PythonFloat(arg))
+        else:
+            code_arg = self._print(arg)
+        return "isinf({})".format(code_arg)
+
+    def _print_MathIsnan(self, expr):
+        """Convert a Python expression with a math isnan function call to C
+        function call"""
+        # add necessary include
+        self._additional_imports.add('math')
+        arg = expr.args[0]
+        if arg.dtype is NativeInteger():
+            code_arg = self._print(PythonFloat(arg))
+        else:
+            code_arg = self._print(arg)
+        return "isnan({})".format(code_arg)
+
+    def _print_MathTrunc(self, expr):
+        """Convert a Python expression with a math trunc function call to C
+        function call"""
+        # add necessary include
+        self._additional_imports.add('math')
+        arg = expr.args[0]
+        if arg.dtype is NativeInteger():
+            code_arg = self._print(PythonFloat(arg))
+        else:
+            code_arg = self._print(arg)
+        return "trunc({})".format(code_arg)
+
     def _print_FunctionAddress(self, expr):
         return expr.name
 
