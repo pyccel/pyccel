@@ -60,7 +60,7 @@ from pyccel.ast.literals  import LiteralTrue
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
-from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyLinspace, NumpyDiag, NumpyCross
+from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyLinspace, NumpyDiag, NumpyCross, NumpyEmpty
 from pyccel.ast.numpyext import NumpyWhere
 from pyccel.ast.numpyext import NumpyMod, NumpyFloat, NumpyComplex, NumpyReal
 from pyccel.ast.numpyext import NumpyFullLike, NumpyEmptyLike, NumpyZerosLike, NumpyOnesLike
@@ -1268,28 +1268,11 @@ class FCodePrinter(CodePrinter):
             rhs = self._print(rhs)
             return '{0} = {1}\n'.format(lhs_code,rhs)
 
-        if isinstance(rhs, NumpyDiag):
-            return self._print(rhs, expr.lhs)
-
-        if isinstance(rhs, PyccelArraySize):
-            return rhs.fprint(self._print, expr.lhs) + '\n'
-
         if isinstance(rhs, NumpyRand):
             return 'call random_number({0})\n'.format(self._print(expr.lhs))
 
-        if isinstance(rhs, NumpyFull):
-            stmts = []
-            if rhs.fill_value is not None:
-                code_init = '{0} = {1}'.format(lhs_code, self._print(rhs))
-                stmts.append(code_init)
-            if len(stmts) == 0:
+        if isinstance(rhs, NumpyEmpty):
                 return ''
-            else:
-                return '\n'.join(stmts) + '\n'
-
-        if isinstance(rhs, (NumpyFullLike, NumpyEmptyLike,\
-						NumpyZerosLike, NumpyOnesLike)):
-            return self._print(rhs)
 
         if isinstance(rhs, NumpyMod):
             lhs = self._print(expr.lhs)

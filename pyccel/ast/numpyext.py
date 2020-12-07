@@ -687,11 +687,8 @@ class NumpyFull(Application, NumpyNewArray):
     def rank(self):
         return len(self.shape)
 
-
 #==============================================================================
-class NumpyEmpty(NumpyFull):
-    """ Represents a call to numpy.empty for code generation.
-    """
+class NumpyAutoFill(NumpyFull):
     def __new__(cls, shape, dtype='float', order='C'):
 
         # Convert shape to PythonTuple
@@ -704,13 +701,17 @@ class NumpyEmpty(NumpyFull):
         order = cls._process_order(order)
 
         return Basic.__new__(cls, shape, dtype, order, precision)
-
+#==============================================================================
+class NumpyEmpty(NumpyAutoFill):
+    """ Represents a call to numpy.empty for code generation.
+    """
     @property
     def fill_value(self):
         return None
 
+
 #==============================================================================
-class NumpyZeros(NumpyEmpty):
+class NumpyZeros(NumpyAutoFill):
     """ Represents a call to numpy.zeros for code generation.
     """
     # TODO [YG, 09.11.2020]: create LiteralInteger/LiteralFloat/LiteralComplex w/ correct precision
@@ -730,7 +731,7 @@ class NumpyZeros(NumpyEmpty):
         return value
 
 #==============================================================================
-class NumpyOnes(NumpyEmpty):
+class NumpyOnes(NumpyAutoFill):
     """ Represents a call to numpy.ones for code generation.
     """
     # TODO [YG, 09.11.2020]: create LiteralInteger/LiteralFloat/LiteralComplex w/ correct precision
