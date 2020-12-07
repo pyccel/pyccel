@@ -13,6 +13,8 @@ from pyccel.codegen.utilities      import construct_flags
 from pyccel.codegen.utilities      import compile_files
 from pyccel.codegen.python_wrapper import create_shared_library
 
+import pyccel.stdlib as stdlib_folder
+
 __all__ = ['execute_pyccel']
 
 # map internal libraries to their folders inside pyccel/stdlib
@@ -187,7 +189,10 @@ def execute_pyccel(fname, *,
         module_names = [module_name]
 
     # -------------------------------------------------------------------------
-    internal_libs_name = {}
+    # get path to pyccel/stdlib/lib_name
+    stdlib_path = os.path.dirname(stdlib_folder.__file__)
+
+    internal_libs_name = set()
     internal_libs_path = []
     internal_libs_files = []
     for parser, module_name in zip(parsers, module_names):
@@ -226,9 +231,7 @@ def execute_pyccel(fname, *,
                 if lib not in internal_libs_name:
                     # get the library folder name
                     lib_name = internal_libs[lib]
-                    # get path to pyccel/stdlib/lib_name
-                    import pyccel.stdlib as stdlib_folder
-                    stdlib_path = os.path.dirname(stdlib_folder.__file__)
+                    # get lib path (stdlib_path/lib_name)
                     lib_path = os.path.join(stdlib_path, lib_name)
                     # remove library folder to avoid missing files and copy
                     # new one from pyccel stdlib
@@ -264,10 +267,10 @@ def execute_pyccel(fname, *,
                     except Exception:
                         handle_error('C {} library compilation'.format(lib))
                         raise
-                    # Add internal lib to internal_libs_name dict
-                    internal_libs_name[lib] = 1
+                    # Add internal lib to internal_libs_name set
+                    internal_libs_name.add(lib)
                     # add source file without extension to internal_libs_files
-                    internal_libs_files.extend([os.path.splitext(f)[0] for f in source_files])
+                    internal_libs_files.extend(os.path.splitext(f)[0] for f in source_files)
                     # add library path to internal_libs_path
                     internal_libs_path.append(lib_dest_path)
 
