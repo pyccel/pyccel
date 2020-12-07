@@ -1,5 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
-# pylint: disable=wildcard-import
 import sys
 import pytest
 from numpy.random import randint, uniform
