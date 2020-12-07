@@ -658,472 +658,708 @@ def array_variable_size(n,m):
 #==============================================================================
 # 1D ARRAY SLICING
 #==============================================================================
-# TODO return the slice when issue Handle functions that return Numpy arrays #537 is fixed
 
-def array_1d_slice_1():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
-    b = a[5:]
-
-    return np_sum(b), shape(b)[0]
-
-def array_1d_slice_2():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
+@types('int[:]')
+def array_1d_slice_1(a):
+    import numpy as np
     b = a[:]
+    return np.sum(b), b[0], b[-1], len(b)
 
-    return np_sum(b), shape(b)[0]
+@types('int[:]')
+def array_1d_slice_2(a):
+    import numpy as np
+    b = a[5:]
+    return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_3():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
-    b = a[:6]
+@types('int[:]')
+def array_1d_slice_3(a):
+    import numpy as np
+    b = a[:5]
+    return np.sum(b), b[0], b[-1], len(b)
 
-    return np_sum(b), shape(b)[0]
+@types('int[:]')
+def array_1d_slice_4(a):
+    import numpy as np
+    b = a[5:15]
+    return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_4():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
-    b = a[3:8]
+@types('int[:]')
+def array_1d_slice_5(a):
+    import numpy as np
+    b = a[:-5]
+    return np.sum(b), b[0], b[-1], len(b)
 
-    return np_sum(b), shape(b)[0]
+@types('int[:]')
+def array_1d_slice_6(a):
+    import numpy as np
+    b = a[-5:]
+    return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_5():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
-    b = a[:-3]
+@types('int[:]')
+def array_1d_slice_7(a):
+    import numpy as np
+    b = a[-15:-5]
+    return np.sum(b), b[0], b[-1], len(b)
 
-    return np_sum(b), shape(b)[0]
+@types('int[:]')
+def array_1d_slice_8(a):
+    import numpy as np
+    b = a[5:-5]
+    return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_6():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
-    b = a[-4:]
-
-    return np_sum(b), shape(b)[0]
-
-def array_1d_slice_7():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
-    b = a[-6:-1]
-
-    return np_sum(b), shape(b)[0]
-
-@allow_negative_index('a')
-def array_1d_slice_8():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
-    c = -5
-    b = a[c:]
-
-    return np_sum(b), shape(b)[0]
-
-@allow_negative_index('a')
-def array_1d_slice_9():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
-    c = -2
-    b = a[:c]
-
-    return np_sum(b), shape(b)[0]
+@types('int[:]')
+def array_1d_slice_9(a):
+    import numpy as np
+    b = a[-15:15]
+    return np.sum(b), b[0], b[-1], len(b)
 
 @allow_negative_index('a')
 def array_1d_slice_10():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
-    c = -6
-    d = -1
-    b = a[c:d]
+    import numpy as np
+    a = np.empty(21, dtype=np.int)
+    for i in range(21):
+        a[i] = 2**i
+    c = -15
+    b = a[c:]
+    return np.sum(b), b[0], b[-1], len(b)
 
-    return np_sum(b), shape(b)[0]
+@allow_negative_index('a')
+def array_1d_slice_11():
+    import numpy as np
+    a = np.empty(21, dtype=np.int)
+    for i in range(21):
+        a[i] = 2**i
+    c = -5
+    b = a[:c]
+    return np.sum(b), b[0], b[-1], len(b)
+
+@allow_negative_index('a')
+def array_1d_slice_12():
+    import numpy as np
+    a = np.empty(21, dtype=np.int)
+    for i in range(21):
+        a[i] = 2**i
+    c = -15
+    d = -5
+    b = a[c:d]
+    return np.sum(b), b[0], b[-1], len(b)
 
 #==============================================================================
 # 2D ARRAY SLICE ORDER F
 #==============================================================================
-def array_2d_F_slice_1():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
-    b = a[:2]
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
-
-def array_2d_F_slice_2():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
-    b = a[2:]
-
-    return np_sum(b), shape(b)[0] , shape(b)[1]
-
-def array_2d_F_slice_3():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
-    b = a[1:, 1:]
-
-    return np_sum(b), shape(b)[0] , shape(b)[1]
-
-def array_2d_F_slice_4():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
-    b = a[:2, 1:]
-
-    return np_sum(b), shape(b)[0] , shape(b)[1]
-
-def array_2d_F_slice_5():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+@types('int[:,:](order=F)')
+def array_2d_F_slice_1(a):
+    import numpy as np
     b = a[:]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_2(a):
+    import numpy as np
+    b = a[5:]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_6():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
+@types('int[:,:](order=F)')
+def array_2d_F_slice_3(a):
+    import numpy as np
+    b = a[:5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:](order=F)')
+def array_2d_F_slice_4(a):
+    import numpy as np
+    b = a[-15:]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:](order=F)')
+def array_2d_F_slice_5(a):
+    import numpy as np
+    b = a[:-5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:](order=F)')
+def array_2d_F_slice_6(a):
+    import numpy as np
+    b = a[5:15]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:](order=F)')
+def array_2d_F_slice_7(a):
+    import numpy as np
+    b = a[-15:-5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:](order=F)')
+def array_2d_F_slice_8(a):
+    import numpy as np
     b = a[::]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_9(a):
+    import numpy as np
+    b = a[5:, :]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_7():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
-    b = a[:-1]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_10(a):
+    import numpy as np
+    b = a[:5, :]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_11(a):
+    import numpy as np
+    b = a[:, 5:]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_8():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
-    b = a[-2:]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_12(a):
+    import numpy as np
+    b = a[:, :5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_13(a):
+    import numpy as np
+    b = a[:-5, :]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_9():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
-    b = a[-2:, :-1]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_14(a):
+    import numpy as np
+    b = a[-5:, :]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_15(a):
+    import numpy as np
+    b = a[:, -5:]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_10():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
-    b = a[-2:, -2:]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_16(a):
+    import numpy as np
+    b = a[:, :-5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_17(a):
+    import numpy as np
+    b = a[:, 5:-5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_11():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
-    b = a[:-1, -2:]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_18(a):
+    import numpy as np
+    b = a[5:15, :]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
 
-def array_2d_F_slice_12():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
-    b = a[:-1, :-1]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_19(a):
+    import numpy as np
+    b = a[5:15, -5:]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
-
-@allow_negative_index('a')
-def array_2d_F_slice_13():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
-    c  = -2
-    b = a[c:]
-
-    return np_sum(b), shape(b)[0] , shape(b)[1]
-
-@allow_negative_index('a')
-def array_2d_F_slice_14():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
-    c = -1
-    b = a[:c]
-
-    return np_sum(b), shape(b)[0] , shape(b)[1]
-
-@allow_negative_index('a')
-def array_2d_F_slice_15():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
-    c = -1
-    b = a[c:,:2]
-
-    return np_sum(b), shape(b)[0] , shape(b)[1]
-
-@allow_negative_index('a')
-def array_2d_F_slice_16():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]], order='F')
-    c = -2
-    b = a[:c,-1:]
-
-    return np_sum(b), shape(b)[0] , shape(b)[1]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_20(a):
+    import numpy as np
+    b = a[5:15, 5:-5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 #==============================================================================
 # 2D ARRAY SLICE ORDER C
 #==============================================================================
-def array_2d_C_slice_1():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]])
-    b = a[:2]
-
-    return np_sum(b), shape(b)[0] , shape(b)[1]
-
-def array_2d_C_slice_2():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]])
-    b = a[2:]
-
-    return np_sum(b), shape(b)[0] , shape(b)[1]
-
-def array_2d_C_slice_3():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]])
-    b = a[1:, 1:]
-
-    return np_sum(b), shape(b)[0] , shape(b)[1]
-
-def array_2d_C_slice_4():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]])
-    b = a[:2, 1:]
-
-    return np_sum(b), shape(b)[0] , shape(b)[1]
-
-def array_2d_C_slice_5():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]])
+@types('int[:,:]')
+def array_2d_C_slice_1(a):
+    import numpy as np
     b = a[:]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
+@types('int[:,:]')
+def array_2d_C_slice_2(a):
+    import numpy as np
+    b = a[5:]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_6():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]])
+@types('int[:,:]')
+def array_2d_C_slice_3(a):
+    import numpy as np
+    b = a[:5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_4(a):
+    import numpy as np
+    b = a[-15:]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_5(a):
+    import numpy as np
+    b = a[:-5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_6(a):
+    import numpy as np
+    b = a[5:15]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_7(a):
+    import numpy as np
+    b = a[-15:-5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_8(a):
+    import numpy as np
     b = a[::]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
+@types('int[:,:]')
+def array_2d_C_slice_9(a):
+    import numpy as np
+    b = a[5:, :]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_7():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]])
-    b = a[:-1]
+@types('int[:,:]')
+def array_2d_C_slice_10(a):
+    import numpy as np
+    b = a[:5, :]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
+@types('int[:,:]')
+def array_2d_C_slice_11(a):
+    import numpy as np
+    b = a[:, 5:]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_8():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]])
-    b = a[-2:]
+@types('int[:,:]')
+def array_2d_C_slice_12(a):
+    import numpy as np
+    b = a[:, :5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
+@types('int[:,:]')
+def array_2d_C_slice_13(a):
+    import numpy as np
+    b = a[:-5, :]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_9():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]])
-    b = a[-2:, :-1]
+@types('int[:,:]')
+def array_2d_C_slice_14(a):
+    import numpy as np
+    b = a[-5:, :]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
+@types('int[:,:]')
+def array_2d_C_slice_15(a):
+    import numpy as np
+    b = a[:, -5:]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_10():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]])
-    b = a[-2:, -2:]
+@types('int[:,:]')
+def array_2d_C_slice_16(a):
+    import numpy as np
+    b = a[:, :-5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
+@types('int[:,:]')
+def array_2d_C_slice_17(a):
+    import numpy as np
+    b = a[:, 5:-5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_11():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]])
-    b = a[:-1, -2:]
+@types('int[:,:]')
+def array_2d_C_slice_18(a):
+    import numpy as np
+    b = a[5:15, :]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
 
-def array_2d_C_slice_12():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]])
-    b = a[:-1, :-1]
+@types('int[:,:]')
+def array_2d_C_slice_19(a):
+    import numpy as np
+    b = a[5:15, -5:]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), shape(b)[0] , shape(b)[1]
-
-@allow_negative_index('a')
-def array_2d_C_slice_13():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]])
-    c  = -2
-    b = a[c:]
-
-    return np_sum(b), shape(b)[0] , shape(b)[1]
-
-@allow_negative_index('a')
-def array_2d_C_slice_14():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]])
-    c = -1
-    b = a[:c]
-
-    return np_sum(b), shape(b)[0] , shape(b)[1]
-
-@allow_negative_index('a')
-def array_2d_C_slice_15():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]])
-    c = -1
-    b = a[c:,:2]
-
-    return np_sum(b), shape(b)[0] , shape(b)[1]
-
-@allow_negative_index('a')
-def array_2d_C_slice_16():
-    from numpy import array, shape, sum as np_sum
-    a = array([[1, 2, 4, 8], [16, 32, 64, 128], [256, 512, 1024, 2048]])
-    c = -2
-    b = a[:c,-1:]
-
-    return np_sum(b), shape(b)[0] , shape(b)[1]
+@types('int[:,:]')
+def array_2d_C_slice_20(a):
+    import numpy as np
+    b = a[5:15, 5:-5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 #==============================================================================
 # 1D ARRAY SLICE STRIDE
 #==============================================================================
-def array_1d_slice_stride_1():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+@types('int[:]')
+def array_1d_slice_stride_1(a):
+    import numpy as np
     b = a[::1]
+    return np.sum(b), b[0], b[-1], len(b)
 
-    return np_sum(b), b[0], shape(b)[0]
+@types('int[:]')
+def array_1d_slice_stride_2(a):
+    import numpy as np
+    b = a[::-1]
+    return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_2():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+@types('int[:]')
+def array_1d_slice_stride_3(a):
+    import numpy as np
     b = a[::2]
+    return np.sum(b), b[0], b[-1], len(b)
 
-    return np_sum(b), b[0], shape(b)[0]
-
-def array_1d_slice_stride_3():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
-    b = a[::3]
-
-    return np_sum(b), b[0], shape(b)[0]
-
-def array_1d_slice_stride_4():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
-    b = a[::-1]
-
-    return np_sum(b), b[0], shape(b)[0]
-
-def array_1d_slice_stride_5():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+@types('int[:]')
+def array_1d_slice_stride_4(a):
+    import numpy as np
     b = a[::-2]
+    return np.sum(b), b[0], b[-1], len(b)
 
-    return np_sum(b), b[0], shape(b)[0]
+@types('int[:]')
+def array_1d_slice_stride_5(a):
+    import numpy as np
+    b = a[5::2]
+    return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_6():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
-    b = a[::-3]
+@types('int[:]')
+def array_1d_slice_stride_6(a):
+    import numpy as np
+    b = a[5::-2]
+    return np.sum(b), b[0], b[-1], len(b)
 
-    return np_sum(b), b[0], shape(b)[0]
+@types('int[:]')
+def array_1d_slice_stride_7(a):
+    import numpy as np
+    b = a[:15:2]
+    return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_7():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
-    b = a[2::2]
+@types('int[:]')
+def array_1d_slice_stride_8(a):
+    import numpy as np
+    b = a[:15:-2]
+    return np.sum(b), b[0], b[-1], len(b)
 
-    return np_sum(b), b[0], shape(b)[0]
+@types('int[:]')
+def array_1d_slice_stride_9(a):
+    import numpy as np
+    b = a[5:15:2]
+    return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_8():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
-    b = a[:6:2]
+@types('int[:]')
+def array_1d_slice_stride_10(a):
+    import numpy as np
+    b = a[15:5:-2]
+    return np.sum(b), b[0], b[-1], len(b)
 
-    return np_sum(b), b[0], shape(b)[0]
+@types('int[:]')
+def array_1d_slice_stride_11(a):
+    import numpy as np
+    b = a[-15:-5:2]
+    return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_9():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
-    b = a[-6::2]
+@types('int[:]')
+def array_1d_slice_stride_12(a):
+    import numpy as np
+    b = a[-5:-15:-2]
+    return np.sum(b), b[0], b[-1], len(b)
 
-    return np_sum(b), b[0], shape(b)[0]
+@types('int[:]')
+def array_1d_slice_stride_13(a):
+    import numpy as np
+    b = a[-5::2]
+    return np.sum(b), b[0], b[-1], len(b)
 
+@types('int[:]')
+def array_1d_slice_stride_14(a):
+    import numpy as np
+    b = a[:-5:-2]
+    return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_10():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
-    b = a[:-1:3]
+@types('int[:]')
+def array_1d_slice_stride_15(a):
+    import numpy as np
+    b = a[::-5]
+    return np.sum(b), b[0], b[-1], len(b)
 
-    return np_sum(b), b[0], shape(b)[0]
+@types('int[:]')
+def array_1d_slice_stride_16(a):
+    import numpy as np
+    b = a[-15::2]
+    return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_11():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
-    b = a[1:-1:3]
+@types('int[:]')
+def array_1d_slice_stride_17(a):
+    import numpy as np
+    b = a[:-15:-2]
+    return np.sum(b), b[0], b[-1], len(b)
 
-    return np_sum(b), b[0], shape(b)[0]
+@types('int[:]')
+def array_1d_slice_stride_18(a):
+    import numpy as np
+    b = a[5::-5]
+    return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_12():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
-    b = a[-6:-1:2]
+@types('int[:]')
+def array_1d_slice_stride_19(a):
+    import numpy as np
+    b = a[5:-5:5]
+    return np.sum(b), b[0], b[-1], len(b)
 
-    return np_sum(b), b[0], shape(b)[0]
+@types('int[:]')
+def array_1d_slice_stride_20(a):
+    import numpy as np
+    b = a[-5:5:-5]
+    return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_13():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+#==============================================================================
+# 2D ARRAY SLICE STRIDE ORDER F
+#==============================================================================
+
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_1(a):
+    import numpy as np
+    b = a[::2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_2(a):
+    import numpy as np
     b = a[::-1]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), b[0], shape(b)[0]
-
-def array_1d_slice_stride_14():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_3(a):
+    import numpy as np
     b = a[::-2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), b[0], shape(b)[0]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_4(a):
+    import numpy as np
+    b = a[::, ::2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_1d_slice_stride_15():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
-    b = a[::-3]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_5(a):
+    import numpy as np
+    b = a[::, ::-2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), b[0], shape(b)[0]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_6(a):
+    import numpy as np
+    b = a[::2, ::]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_1d_slice_stride_16():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
-    b = a[:2:-1]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_7(a):
+    import numpy as np
+    b = a[::-2, ::]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), b[0], shape(b)[0]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_8(a):
+    import numpy as np
+    b = a[::2, ::2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_1d_slice_stride_17():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
-    b = a[7::-2]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_9(a):
+    import numpy as np
+    b = a[::-2, ::2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), b[0], shape(b)[0]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_10(a):
+    import numpy as np
+    b = a[::2, ::-2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_1d_slice_stride_18():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
-    b = a[:-7:-2]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_11(a):
+    import numpy as np
+    b = a[::-2, ::-2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), b[0], shape(b)[0]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_12(a):
+    import numpy as np
+    b = a[5:15:2, 15:5:-2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_1d_slice_stride_19():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
-    b = a[-1::-2]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_13(a):
+    import numpy as np
+    b = a[15:5:-2, 5:15]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), b[0], shape(b)[0]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_14(a):
+    import numpy as np
+    b = a[-15:-5:2, -5:-15:-2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_1d_slice_stride_20():
-    from numpy import array, shape, sum as np_sum
-    a = array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024])
-    b = a[7:-7:-2]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_15(a):
+    import numpy as np
+    b = a[-5:-15:-2, -15:-5:2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-    return np_sum(b), b[0], shape(b)[0]
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_16(a):
+    import numpy as np
+    b = a[::-5, ::5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_17(a):
+    import numpy as np
+    b = a[::5, ::-5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_18(a):
+    import numpy as np
+    b = a[::-1, ::-1]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_19(a):
+    import numpy as np
+    b = a[5:15:3, 15:5:-3]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_20(a):
+    import numpy as np
+    b = a[::-10, ::-10]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+#==============================================================================
+# 2D ARRAY SLICE STRIDE ORDER C
+#==============================================================================
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_1(a):
+    import numpy as np
+    b = a[::2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_2(a):
+    import numpy as np
+    b = a[::-1]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_3(a):
+    import numpy as np
+    b = a[::-2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_4(a):
+    import numpy as np
+    b = a[::, ::2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_5(a):
+    import numpy as np
+    b = a[::, ::-2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_6(a):
+    import numpy as np
+    b = a[::2, ::]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_7(a):
+    import numpy as np
+    b = a[::-2, ::]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_8(a):
+    import numpy as np
+    b = a[::2, ::2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_9(a):
+    import numpy as np
+    b = a[::-2, ::2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_10(a):
+    import numpy as np
+    b = a[::2, ::-2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_11(a):
+    import numpy as np
+    b = a[::-2, ::-2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_12(a):
+    import numpy as np
+    b = a[5:15:2, 15:5:-2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_13(a):
+    import numpy as np
+    b = a[15:5:-2, 5:15]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_14(a):
+    import numpy as np
+    b = a[-15:-5:2, -5:-15:-2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_15(a):
+    import numpy as np
+    b = a[-5:-15:-2, -15:-5:2]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_16(a):
+    import numpy as np
+    b = a[::-5, ::5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_17(a):
+    import numpy as np
+    b = a[::5, ::-5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_18(a):
+    import numpy as np
+    b = a[::-1, ::-1]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_19(a):
+    import numpy as np
+    b = a[5:15:3, 15:5:-3]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@types('int[:,:]')
+def array_2d_C_slice_stride_20(a):
+    import numpy as np
+    b = a[::-10, ::-10]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
