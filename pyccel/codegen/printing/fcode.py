@@ -60,7 +60,7 @@ from pyccel.ast.literals  import LiteralTrue
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
-from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyLinspace, NumpyDiag, NumpyCross, NumpyEmpty
+from pyccel.ast.numpyext import NumpyArray, NumpyLinspace, NumpyDiag, NumpyCross, NumpyEmpty
 from pyccel.ast.numpyext import NumpyWhere
 from pyccel.ast.numpyext import NumpyMod, NumpyFloat, NumpyComplex, NumpyReal
 from pyccel.ast.numpyext import NumpyFullLike, NumpyEmptyLike, NumpyZerosLike, NumpyOnesLike
@@ -1272,7 +1272,7 @@ class FCodePrinter(CodePrinter):
             return 'call random_number({0})\n'.format(self._print(expr.lhs))
 
         if isinstance(rhs, NumpyEmpty):
-                return ''
+            return ''
 
         if isinstance(rhs, NumpyMod):
             lhs = self._print(expr.lhs)
