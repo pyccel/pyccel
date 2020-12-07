@@ -84,11 +84,13 @@ math_constants = {
 # Base classes
 #==============================================================================
 class MathFunctionBase(Function, PyccelAstNode):
+    """Abstract base class for the Math Functions"""
     _shape = ()
     _rank  = 0
 
 class PycMathFunctionBase(Function, PyccelAstNode):
-    """Abstract base class for the Math Functions"""
+    """Abstract base class for the Math Functions implemented in Pyc_math
+    libray"""
 
 class MathFunctionFloat(MathFunctionBase):
     _dtype = NativeReal()
