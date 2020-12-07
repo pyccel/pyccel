@@ -27,6 +27,7 @@ OmpConstructOrDirective:
 ////////////////////////////////////////////////////
 OmpParallelConstruct: 'parallel'  combined*=ParallelCombined? clauses*=OmpParallelClause;
 OmpLoopConstruct:     'for'       clauses*=OmpLoopClause;
+OmpTaskLoopConstruct: 'taskloop'  clauses*=OmpTaskLoopClause;
 OmpSingleConstruct:   'single'    clauses*=OmpSingleClause;
 OmpCriticalConstruct: 'critical'  clauses*=OmpCriticalClause;
 OmpBarrierConstruct:  name='barrier';
@@ -61,6 +62,14 @@ OmpLoopClause:
   | OmpSchedule
   | OmpCollapse
   | OmpOrdered
+;
+
+OmpTaskLoopClause:
+    OmpShared
+  | OmpPrivate
+  | OmpFirstPrivate
+  | OmpLastPrivate
+  | OmpReduction
 ;
 
 OmpSingleClause:
