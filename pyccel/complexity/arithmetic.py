@@ -7,6 +7,7 @@ from sympy import Tuple
 from pyccel.ast.core     import For, Assign, NewLine, CodeBlock, Comment
 from pyccel.ast.numpyext import NumpyZeros, NumpyOnes
 from pyccel.ast.builtins import PythonTuple
+from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.complexity.basic import Complexity
 
 __all__ = ["count_ops", "OpComplexity"]
@@ -25,6 +26,10 @@ class OpComplexity(Complexity):
 
 
 def count_ops(expr, visual=None):
+
+    symbol_map = {}
+    used_names = set()
+    expr = pyccel_to_sympy(expr, symbol_map, used_names)
 
     if isinstance(expr, Assign):
         return sympy_count_ops(expr.rhs, visual)

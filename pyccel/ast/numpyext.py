@@ -4,26 +4,27 @@
 import numpy
 
 from sympy.core.function import Application
-from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 
 from sympy           import (Basic, Function, Tuple, Integer as sp_Integer,
                              Rational as sp_Rational, Expr)
 
-from .core           import (PyccelPow, PyccelMinus, PyccelMul, PyccelAdd,
-                             PyccelAssociativeParenthesis, broadcast, ClassDef,
-                             FunctionDef, IndexedVariable, Assign, PythonList,
-                             Variable, IndexedElement, Slice, PythonLen, For,
-                             PythonRange, Nil, process_shape, ValuedArgument,
-                             Constant)
+from .core           import (ClassDef, FunctionDef, IndexedVariable, Assign,
+                             PythonList, Variable, IndexedElement, Slice,
+                             PythonLen, For, PythonRange, Nil, process_shape,
+                             ValuedArgument, Constant)
+
+from .operators      import (PyccelPow, PyccelMinus, PyccelMul, PyccelAdd,
+                             PyccelAssociativeParenthesis, broadcast)
 
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
-                             PythonComplex)
+                             PythonComplex, PythonReal, PythonImag)
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
                              NativeReal, NativeComplex, NativeBool, str_dtype)
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
+from .literals       import LiteralTrue, LiteralFalse
 from .basic          import PyccelAstNode
 
 
@@ -364,67 +365,22 @@ def Shape(arg):
         return PythonTuple(*arg.shape)
 
 #==============================================================================
-# TODO [YG, 09.03.2020]: Reconsider this class, given new ast.builtins.LiteralFloat
-class NumpyReal(Function, PyccelAstNode):
-
+class NumpyReal(PythonReal):
     """Represents a call to  numpy.real for code generation.
 
-    arg : Variable, LiteralFloat, sp_Integer, LiteralComplex
+    > a = 1+2j
+    > np.real(a)
+    1.0
     """
-
-    def __new__(cls, arg):
-
-        _valid_args = (Variable, IndexedElement, sp_Integer, Nil,
-                       LiteralFloat, Expr, Application)
-
-        if not isinstance(arg, _valid_args):
-            raise TypeError('Uknown type of  %s.' % type(arg))
-        return Basic.__new__(cls, arg)
-
-    def __init__(self, arg):
-        self._dtype = NativeReal()
-        self._rank  = 0
-        self._shape = ()
-        self._precision = default_precision['real']
-
-    @property
-    def arg(self):
-        return self._args[0]
-
-    def fprint(self, printer):
-        """Fortran print."""
-
-        value = printer(self.arg)
-        prec  = printer(self.precision)
-        code = 'Real({0}, {1})'.format(value, prec)
-        return code
-
-
-    def __str__(self):
-        return 'LiteralFloat({0})'.format(str(self.arg))
-
-
-    def _sympystr(self, printer):
-        return self.__str__()
 
 #==============================================================================
-class NumpyImag(NumpyReal):
+class NumpyImag(PythonImag):
+    """Represents a call to  numpy.real for code generation.
 
-    """Represents a call to  numpy.imag for code generation.
-
-    arg : Variable, LiteralFloat, sp_Integer, LiteralComplex
+    > a = 1+2j
+    > np.imag(a)
+    2.0
     """
-
-    def fprint(self, printer):
-        """Fortran print."""
-
-        value = printer(self.arg)
-        code = 'aimag({0})'.format(value)
-        return code
-
-
-    def __str__(self):
-        return 'imag({0})'.format(str(self.arg))
 
 #==============================================================================
 class NumpyLinspace(Application, NumpyNewArray):
@@ -974,9 +930,9 @@ class NumpyZeros(NumpyEmpty):
         elif isinstance(dtype, NativeReal):
             value = LiteralFloat(0.)
         elif isinstance(dtype, NativeComplex):
-            value = LiteralComplex(LiteralFloat(0.), LiteralFloat(0.))
+            value = LiteralComplex(0., 0.)
         elif isinstance(dtype, NativeBool):
-            value = BooleanFalse()
+            value = LiteralFalse()
         else:
             raise TypeError('Unknown type')
         return value
@@ -994,9 +950,9 @@ class NumpyOnes(NumpyEmpty):
         elif isinstance(dtype, NativeReal):
             value = LiteralFloat(1.)
         elif isinstance(dtype, NativeComplex):
-            value = LiteralComplex(LiteralFloat(1.), LiteralFloat(0.))
+            value = LiteralComplex(1., 0.)
         elif isinstance(dtype, NativeBool):
-            value = BooleanTrue()
+            value = LiteralTrue()
         else:
             raise TypeError('Unknown type')
         return value

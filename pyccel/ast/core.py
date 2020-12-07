@@ -5,6 +5,7 @@ import importlib
 from collections.abc import Iterable
 from collections     import OrderedDict
 
+from pyccel.ast.datatypes  import str_dtype
 from sympy import sympify
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
 from sympy import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Le as sp_Le, Gt as sp_Gt, Ge as sp_Ge
@@ -47,6 +48,8 @@ from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
+from .operators import PyccelMinus, PyccelMul
+
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
 
@@ -56,31 +59,6 @@ errors = Errors()
 # TODO [YG, 12.03.2020]: Rename classes to avoid name clashes in pyccel/ast
 # NOTE: commented-out symbols are never used in Pyccel
 __all__ = (
-    'PyccelOperator',
-    'PyccelPow',
-    'PyccelAdd',
-    'PyccelMinus',
-    'PyccelMul',
-    'PyccelDiv',
-    'PyccelMod',
-    'PyccelFloorDiv',
-    'PyccelEq',
-    'PyccelNe',
-    'PyccelLt',
-    'PyccelLe',
-    'PyccelGt',
-    'PyccelGe',
-    'PyccelAnd',
-    'PyccelOr',
-    'PyccelNot',
-    'PyccelRShift',
-    'PyccelLShift',
-    'PyccelBitXor',
-    'PyccelBitOr',
-    'PyccelBitAnd',
-    'PyccelInvert',
-    'PyccelAssociativeParenthesis',
-    'PyccelUnary',
     'AddOp',
     'AliasAssign',
     'Allocate',
@@ -123,8 +101,6 @@ __all__ = (
     'IndexedElement',
     'IndexedVariable',
     'Interface',
-    'Is',
-    'IsNot',
     'Load',
     'ModOp',
     'Module',
@@ -195,455 +171,6 @@ local_sympify = {
     'Point': Symbol('Point')
 }
 
-#==============================================================================
-def broadcast(shape_1, shape_2):
-    """ This function broadcast two shapes using numpy broadcasting rules """
-    a = len(shape_1)
-    b = len(shape_2)
-    if a>b:
-        new_shape_2 = (1,)*(a-b) + tuple(shape_2)
-        new_shape_1 = shape_1
-    elif b>a:
-        new_shape_1 = (1,)*(b-a) + tuple(shape_1)
-        new_shape_2 = shape_2
-    else:
-        new_shape_2 = shape_2
-        new_shape_1 = shape_1
-
-    new_shape = []
-    for e1,e2 in zip(new_shape_1, new_shape_2):
-        if e1 == e2:
-            new_shape.append(e1)
-        elif e1 == 1:
-            new_shape.append(e2)
-        elif e2 == 1:
-            new_shape.append(e1)
-        elif isinstance(e1, PyccelArraySize) and isinstance(e2, PyccelArraySize):
-            new_shape.append(e1)
-        elif isinstance(e1, PyccelArraySize):
-            new_shape.append(e2)
-        elif isinstance(e2, PyccelArraySize):
-            new_shape.append(e1)
-        else:
-            msg = 'operands could not be broadcast together with shapes {} {}'
-            msg = msg.format(shape_1, shape_2)
-            errors.report(msg,severity='fatal')
-    return tuple(new_shape)
-
-def handle_precedence(args, my_precedence):
-    precedence = [getattr(a, 'precedence', 17) for a in args]
-
-    if min(precedence) <= my_precedence:
-
-        new_args = []
-
-        for i, (a,p) in enumerate(zip(args, precedence)):
-            if (p < my_precedence or (p == my_precedence and i != 0)):
-                new_args.append(PyccelAssociativeParenthesis(a))
-            else:
-                new_args.append(a)
-        args = tuple(new_args)
-
-    return args
-
-class PyccelBitOperator(Expr, PyccelAstNode):
-    _rank = 0
-    _shape = ()
-
-    def __init__(self, args):
-        if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
-            return
-
-        max_precision = 0
-        for a in args:
-            if a.dtype is NativeInteger() or a.dtype is NativeBool():
-                max_precision = max(a.precision, max_precision)
-            else:
-                raise TypeError('unsupported operand type(s): {}'.format(self))
-        self._precision = max_precision
-    @property
-    def precedence(self):
-        return self._precedence
-
-class PyccelRShift(PyccelBitOperator):
-    _precedence = 11
-    _dtype = NativeInteger()
-    def __init__(self, *args):
-        super(PyccelRShift, self).__init__(args)
-        if self.stage == 'syntactic':
-            return
-        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
-
-class PyccelLShift(PyccelBitOperator):
-    _precedence = 11
-    _dtype = NativeInteger()
-    def __init__(self, *args):
-        super(PyccelLShift, self).__init__(args)
-        if self.stage == 'syntactic':
-            return
-        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
-
-class PyccelBitXor(PyccelBitOperator):
-    _precedence = 9
-    def __init__(self, *args):
-        super(PyccelBitXor, self).__init__(args)
-        if self.stage == 'syntactic':
-            return
-        if all(a.dtype is NativeInteger() for a in args):
-            self._dtype = NativeInteger()
-        elif all(a.dtype is NativeBool() for a in args):
-            self._dtype = NativeBool()
-        else:
-            self._dtype = NativeInteger()
-            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
-
-class PyccelBitOr(PyccelBitOperator):
-    _precedence = 8
-    def __init__(self, *args):
-        super(PyccelBitOr, self).__init__(args)
-        if self.stage == 'syntactic':
-            return
-        if all(a.dtype is NativeInteger() for a in args):
-            self._dtype = NativeInteger()
-        elif all(a.dtype is NativeBool() for a in args):
-            self._dtype = NativeBool()
-        else:
-            self._dtype = NativeInteger()
-            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
-
-class PyccelBitAnd(PyccelBitOperator):
-    _precedence = 10
-    def __init__(self, *args):
-        super(PyccelBitAnd, self).__init__(args)
-        if self.stage == 'syntactic':
-            return
-        if all(a.dtype is NativeInteger() for a in args):
-            self._dtype = NativeInteger()
-        elif all(a.dtype is NativeBool() for a in args):
-            self._dtype = NativeBool()
-        else:
-            self._dtype = NativeInteger()
-            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
-
-class PyccelInvert(PyccelBitOperator):
-    _precedence = 14
-    _dtype = NativeInteger()
-    def __init__(self, *args):
-        super(PyccelInvert, self).__init__(args)
-        if self.stage == 'syntactic':
-            return
-        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in args]
-
-class PyccelOperator(Expr, PyccelAstNode):
-
-    def __init__(self, *args):
-
-        if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
-            return
-        integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
-        reals     = [a for a in args if a.dtype is NativeReal()]
-        complexes = [a for a in args if a.dtype is NativeComplex()]
-        strs      = [a for a in args if a.dtype is NativeString()]
-
-        if strs:
-            self._dtype = NativeString()
-            self._rank  = 0
-            self._shape = ()
-            assert len(integers + reals + complexes) == 0
-        else:
-            if complexes:
-                self._dtype     = NativeComplex()
-                self._precision = max(a.precision for a in complexes)
-            elif reals:
-                self._dtype     = NativeReal()
-                self._precision = max(a.precision for a in reals)
-            elif integers:
-                self._dtype     = NativeInteger()
-                self._precision = max(a.precision for a in integers)
-            else:
-                raise TypeError('cannot determine the type of {}'.format(self))
-
-            ranks  = [a.rank for a in args]
-            shapes = [a.shape for a in args]
-
-            if None in ranks:
-                self._rank  = None
-                self._shape = None
-            elif all(sh is not None for tup in shapes for sh in tup):
-                if len(args) == 1:
-                    shape = args[0].shape
-                else:
-                    shape = broadcast(args[0].shape, args[1].shape)
-
-                    for a in args[2:]:
-                        shape = broadcast(shape, a.shape)
-
-                self._shape = shape
-                self._rank  = len(shape)
-            else:
-                self._rank  = max(a.rank for a in args)
-                self._shape = [None]*self._rank
-
-    @property
-    def precedence(self):
-        return self._precedence
-
-class PyccelPow(PyccelOperator):
-    _precedence  = 15
-class PyccelAdd(PyccelOperator):
-    _precedence = 12
-class PyccelMul(PyccelOperator):
-    _precedence = 13
-class PyccelMinus(PyccelAdd):
-    pass
-class PyccelDiv(PyccelOperator):
-    _precedence = 13
-    def __init__(self, *args):
-
-        if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
-            return
-
-        integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
-        reals     = [a for a in args if a.dtype is NativeReal()]
-        complexes = [a for a in args if a.dtype is NativeComplex()]
-        if complexes:
-            self._dtype     = NativeComplex()
-            self._precision = max(a.precision for a in complexes)
-        elif reals:
-            self._dtype     = NativeReal()
-            self._precision = max(a.precision for a in reals)
-        elif integers:
-            self._dtype     = NativeReal()
-            self._precision = default_precision['real']
-
-        ranks  = [a.rank for a in args]
-        shapes = [a.shape for a in args]
-
-        if None in ranks:
-            self._rank  = None
-            self._shape = None
-
-        elif all(sh is not None for tup in shapes for sh in tup):
-            shape = broadcast(args[0].shape, args[1].shape)
-
-            for a in args[2:]:
-                shape = broadcast(shape, a.shape)
-
-            self._shape = shape
-            self._rank  = len(shape)
-        else:
-            self._rank  = max(a.rank for a in args)
-            self._shape = [None]*self._rank
-
-class PyccelMod(PyccelOperator):
-    _precedence = 13
-class PyccelFloorDiv(PyccelOperator):
-    _precedence = 13
-
-class PyccelBooleanOperator(Expr, PyccelAstNode):
-    _precedence = 7
-
-    def __init__(self, *args):
-
-        if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
-            return
-
-        self._dtype = NativeBool()
-        self._precision = default_precision['bool']
-
-        ranks  = [a.rank for a in args]
-        shapes = [a.shape for a in args]
-
-        if None in ranks:
-            self._rank  = None
-            self._shape = None
-
-        elif all(sh is not None for tup in shapes for sh in tup):
-            shape = broadcast(args[0].shape, args[1].shape)
-            for a in args[2:]:
-                shape = broadcast(shape, a.shape)
-
-            self._shape = shape
-            self._rank  = len(shape)
-        else:
-            self._rank = max(a.rank for a in args)
-            self._shape = [None]*self._rank
-
-    @property
-    def precedence(self):
-        return self._precedence
-
-class PyccelEq(PyccelBooleanOperator):
-    pass
-class PyccelNe(PyccelBooleanOperator):
-    pass
-class PyccelLt(PyccelBooleanOperator):
-    pass
-class PyccelLe(PyccelBooleanOperator):
-    pass
-class PyccelGt(PyccelBooleanOperator):
-    pass
-class PyccelGe(PyccelBooleanOperator):
-    pass
-
-class PyccelAssociativeParenthesis(Expr, PyccelAstNode):
-    _precedence = 18
-    def __init__(self, a):
-        if self.stage == 'syntactic':
-            return
-        self._dtype     = a.dtype
-        self._rank      = a.rank
-        self._precision = a.precision
-        self._shape     = a.shape
-
-    @property
-    def precedence(self):
-        return self._precedence
-
-class PyccelUnary(Expr, PyccelAstNode):
-    _precedence = 14
-
-    def __init__(self, a):
-
-        if self.stage == 'syntactic':
-            if (getattr(a, 'precedence', 17) <= self.precedence):
-                a = PyccelAssociativeParenthesis(a)
-                self._args = (a,)
-            return
-
-        self._dtype     = a.dtype
-        self._rank      = a.rank
-        self._precision = a.precision
-        self._shape     = a.shape
-
-    @property
-    def precedence(self):
-        return self._precedence
-
-class PyccelUnarySub(PyccelUnary):
-    pass
-
-class PyccelAnd(Expr, PyccelAstNode):
-    _dtype = NativeBool()
-    _rank  = 0
-    _shape = ()
-    _precision = default_precision['bool']
-    _precedence = 5
-
-    def __init__(self, *args):
-        if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
-
-    @property
-    def precedence(self):
-        return self._precedence
-
-class PyccelOr(Expr, PyccelAstNode):
-    _dtype = NativeBool()
-    _rank  = 0
-    _shape = ()
-    _precision = default_precision['bool']
-    _precedence = 4
-
-    def __init__(self, *args):
-        if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
-
-    @property
-    def precedence(self):
-        return self._precedence
-
-class PyccelNot(Expr, PyccelAstNode):
-    _dtype = NativeBool()
-    _rank  = 0
-    _shape = ()
-    _precision = default_precision['bool']
-    _precedence = 6
-
-    def __init__(self, *args):
-        if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
-
-    @property
-    def precedence(self):
-        return self._precedence
-
-class Is(Basic, PyccelAstNode):
-
-    """Represents a is expression in the code.
-
-    Examples
-    --------
-    >>> from pyccel.ast import Is
-    >>> from pyccel.ast import Nil
-    >>> from sympy.abc import x
-    >>> Is(x, Nil())
-    Is(x, None)
-    """
-    _dtype = NativeBool()
-    _rank  = 0
-    _shape = ()
-    _precision = default_precision['bool']
-    _precedence = 7
-
-    def __init__(self, *args):
-        if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
-
-    @property
-    def precedence(self):
-        return self._precedence
-
-
-class IsNot(Basic, PyccelAstNode):
-
-    """Represents a is expression in the code.
-
-    Examples
-    --------
-    >>> from pyccel.ast import IsNot
-    >>> from pyccel.ast import Nil
-    >>> from sympy.abc import x
-    >>> IsNot(x, Nil())
-    IsNot(x, None)
-    """
-
-    _dtype = NativeBool()
-    _rank  = 0
-    _shape = ()
-    _precision = default_precision['bool']
-    _precedence = 7
-
-    def __init__(self, *args):
-        if self.stage == 'syntactic':
-            self._args = handle_precedence(args, self.precedence)
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
-
-    @property
-    def precedence(self):
-        return self._precedence
-
-
-Relational = (PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe, PyccelAnd, PyccelOr,  PyccelNot, Is, IsNot)
 # TODO - add EmptyStmt => empty lines
 #      - update code examples
 #      - add examples
@@ -652,7 +179,10 @@ Relational = (PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe, P
 #      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
 #      - add a new Idx that uses Variable instead of Symbol
 
+#==============================================================================
+def apply(func, args, kwargs):return func(*args, **kwargs)
 
+#==============================================================================
 def subs(expr, new_elements):
     """
     Substitutes old for new in an expression after sympifying args.
@@ -1091,7 +621,7 @@ class Dlist(Basic, PyccelAstNode):
 
     def __init__(self, val, length):
         self._rank = val.rank
-        self._shape = tuple(s if i!= 0 else s*length for i,s in enumerate(val.shape))
+        self._shape = tuple(s if i!= 0 else PyccelMul(s, length) for i,s in enumerate(val.shape))
 
     @property
     def val(self):
@@ -2866,21 +2396,39 @@ class Variable(Symbol, PyccelAstNode):
 
         self._name = newname
 
-    def __getnewargs__(self):
-        """used for Pickling self."""
+    def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
 
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable function that can be called
+           to create the initial version of the object
+           and its arguments.
+        """
         args = (
             self.dtype,
-            self.name,
-            self.rank,
-            self.allocatable,
-            self.is_pointer,
-            self.is_polymorphic,
-            self.is_optional,
-            self.shape,
-            self.cls_base,
-            )
-        return args
+            self.name)
+        kwargs = {
+            'rank' : self.rank,
+            'allocatable': self.allocatable,
+            'is_pointer':self.is_pointer,
+            'is_polymorphic':self.is_polymorphic,
+            'is_optional':self.is_optional,
+            'shape':self.shape,
+            'cls_base':self.cls_base,
+            }
+
+        out =  (apply, (Variable, args, kwargs))
+        return out
 
     def _eval_subs(self, old, new):
         return self
@@ -2888,7 +2436,6 @@ class Variable(Symbol, PyccelAstNode):
     def _eval_is_positive(self):
         #we do this inorder to infere the type of Pow expression correctly
         return self.is_real
-
 
 class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
 
@@ -3102,6 +2649,8 @@ class TupleVariable(Variable):
         self._vars[variable_idx] = self._vars[variable_idx].clone(new_name)
 
     def __getitem__(self,idx):
+        if isinstance(idx, LiteralInteger):
+            idx = idx.p
         return self.get_var(idx)
 
     def __iter__(self):
@@ -3258,12 +2807,25 @@ class FunctionCall(Basic, PyccelAstNode):
 
     """Represents a function call in the code.
     """
+    def __new__(
+        cls,
+        *args,
+        **kwargs
+        ):
+        return Basic.__new__(cls)
 
-    def __new__(cls, func, args, current_function=None):
+
+    def __init__(self, func, args, current_function=None):
 
         # ...
-        if not isinstance(func, FunctionDef):
-            raise TypeError('> expecting a FunctionDef')
+        if not isinstance(func, (FunctionDef, Interface)):
+            raise TypeError('> expecting a FunctionDef or an Interface')
+
+        if isinstance(func, Interface):
+            self._interface = func
+            func = func.point(args)
+        else:
+            self._interface = None
 
         name = func.name
         # ...
@@ -3295,34 +2857,28 @@ class FunctionCall(Basic, PyccelAstNode):
 
         args = [FunctionAddress(a.name, a.arguments, a.results, []) if isinstance(a, FunctionDef) else a for a in args]
 
-        args = Tuple(*args, sympify=False)
-        # ...
-
-        return Basic.__new__(cls, name, args)
-
-    def __init__(self, func, args, current_function=None):
-
         if str(current_function) == str(func.name):
             if len(func.results)>0 and not isinstance(func.results[0], PyccelAstNode):
                 errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
 
-        self._funcdef     = func
-        self._dtype       = func.results[0].dtype if len(func.results) == 1 else NativeTuple()
-        self._rank        = func.results[0].rank if len(func.results) == 1 else None
-        self._shape       = func.results[0].shape if len(func.results) == 1 else None
-        self._precision   = func.results[0].precision if len(func.results) == 1 else None
-
-    @property
-    def func(self):
-        return self._args[0]
+        self._funcdef       = func
+        self._arguments     = args
+        self._dtype         = func.results[0].dtype if len(func.results) == 1 else NativeTuple()
+        self._rank          = func.results[0].rank if len(func.results) == 1 else None
+        self._shape         = func.results[0].shape if len(func.results) == 1 else None
+        self._precision     = func.results[0].precision if len(func.results) == 1 else None
 
     @property
     def arguments(self):
-        return self._args[1]
+        return self._arguments
 
     @property
     def funcdef(self):
         return self._funcdef
+
+    @property
+    def interface(self):
+        return self._interface
 
 class Return(Basic):
 
@@ -3356,73 +2912,6 @@ class Return(Basic):
 
         args = (self.expr, self.stmt)
         return args
-
-
-class Interface(Basic):
-
-    """Represent an Interface"""
-    def __new__( cls, *args, **kwargs ):
-        return Basic.__new__(cls)
-
-    def __init__(
-        self,
-        name,
-        functions,
-        hide=False,
-        is_argument = False,
-        ):
-
-        if not isinstance(name, str):
-            raise TypeError('Expecting an str')
-        if not isinstance(functions, list):
-            raise TypeError('Expecting a list')
-        self._name = name
-        self._functions = functions
-        self._hide = hide
-        self._is_argument = is_argument
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def functions(self):
-        return self._functions
-
-    @property
-    def hide(self):
-        return self._functions[0].hide or self._hide
-
-    @property
-    def is_argument(self):
-        return self._is_argument
-
-    @property
-    def global_vars(self):
-        return self._functions[0].global_vars
-
-    @property
-    def cls_name(self):
-        return self._functions[0].cls_name
-
-    @property
-    def kind(self):
-        return self._functions[0].kind
-
-    @property
-    def imports(self):
-        return self._functions[0].imports
-
-    @property
-    def decorators(self):
-        return self._functions[0].decorators
-
-    @property
-    def is_procedure(self):
-        return self._functions[0].is_procedure
-
-    def rename(self, newname):
-        return Interface(newname, self.functions)
 
 class FunctionDef(Basic):
 
@@ -3528,7 +3017,8 @@ class FunctionDef(Basic):
         is_static=False,
         imports=[],
         decorators={},
-        header=None,
+        headers=[],
+        templates={},
         is_recursive=False,
         is_pure=False,
         is_elemental=False,
@@ -3646,7 +3136,8 @@ class FunctionDef(Basic):
         self._is_static       = is_static
         self._imports         = imports
         self._decorators      = decorators
-        self._header          = header
+        self._headers         = headers
+        self._templates       = templates
         self._is_recursive    = is_recursive
         self._is_pure         = is_pure
         self._is_elemental    = is_elemental
@@ -3705,8 +3196,12 @@ class FunctionDef(Basic):
         return self._decorators
 
     @property
-    def header(self):
-        return self._header
+    def headers(self):
+        return self._headers
+
+    @property
+    def templates(self):
+        return self._templates
 
     @property
     def is_recursive(self):
@@ -3764,8 +3259,8 @@ class FunctionDef(Basic):
         newname: str
             new name for the FunctionDef
         """
-        args = self.__getnewargs__()
-        new_func = FunctionDef(*args)
+        args, kwargs = self.__getnewargs__()
+        new_func = FunctionDef(*args, **kwargs)
         new_func.rename(newname)
         return new_func
 
@@ -3818,32 +3313,60 @@ class FunctionDef(Basic):
             or len(set(self.results).intersection(self.arguments)) > 0
         return flag
 
-    def __getnewargs__(self):
-        """used for Pickling self."""
 
+    def __getnewargs__(self):
+        """
+          This method returns the positional and keyword arguments
+            used to create an instance of this class.
+        """
         args = (
-                self._name,
-                self._arguments,
-                self._results,
-                self._body,
-                self._local_vars,
-                self._global_vars,
-                self._cls_name,
-                self._hide,
-                self._kind,
-                self._is_static,
-                self._imports,
-                self._decorators,
-                self._header,
-                self._is_recursive,
-                self._is_pure,
-                self._is_elemental,
-                self._is_private,
-                self._is_header,
-                self._arguments_inout,
-                self._functions
-            )
-        return args
+        self._name,
+        self._arguments,
+        self._results,
+        self._body)
+
+        kwargs = {
+        'local_vars':self._local_vars,
+        'global_vars':self._global_vars,
+        'cls_name':self._cls_name,
+        'hide':self._hide,
+        'kind':self._kind,
+        'is_static':self._is_static,
+        'imports':self._imports,
+        'decorators':self._decorators,
+        'headers':self._headers,
+        'templates':self._templates,
+        'is_recursive':self._is_recursive,
+        'is_pure':self._is_pure,
+        'is_elemental':self._is_elemental,
+        'is_private':self._is_private,
+        'is_header':self._is_header,
+        'arguments_inout':self._arguments_inout,
+        'functions':self._functions}
+        return args, kwargs
+
+    def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable function that can be called
+           to create the initial version of the object
+           and its arguments.
+        """
+        args, kwargs = self.__getnewargs__()
+        out = (apply, (self.__class__, args, kwargs))
+        return out
+
 
     # TODO
     def check_pure(self):
@@ -3860,6 +3383,89 @@ class FunctionDef(Basic):
                 name   = self.name,
                 args   = ', '.join(self.args),
                 result = result)
+
+class Interface(Basic):
+
+    """Represents an Interface.
+
+    Parameters
+    ----------
+    name : str
+        The name of the interface.
+
+    functions : iterable
+        The functions of the interface.
+
+    is_argument: bool
+        True if the interface is used for a function argument.
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Interface, FunctionDef
+    >>> f = FunctionDef('F', [], [], [])
+    >>> Interface('I', [f])
+    """
+
+    def __new__( cls, *args, **kwargs ):
+        return Basic.__new__(cls)
+
+    def __init__(
+        self,
+        name,
+        functions,
+        is_argument = False,
+        ):
+
+        if not isinstance(name, str):
+            raise TypeError('Expecting an str')
+        if not isinstance(functions, list):
+            raise TypeError('Expecting a list')
+        self._name = name
+        self._functions = functions
+        self._is_argument = is_argument
+
+    @property
+    def name(self):
+        """Name of the interface."""
+        return self._name
+
+    @property
+    def functions(self):
+        """"Functions of the interface."""
+        return self._functions
+
+    @property
+    def is_argument(self):
+        """True if the interface is used for a function argument."""
+        return self._is_argument
+
+    @property
+    def doc_string(self):
+        return self._functions[0].doc_string
+
+    def point(self, args):
+        """Returns the actual function that will be called, depending on the passed arguments."""
+        fs_args = [[j for j in i.arguments] for i in
+                    self._functions]
+        j = -1
+        for i in fs_args:
+            j += 1
+            found = True
+            for (x, y) in enumerate(args):
+                dtype1 = str_dtype(y.dtype)
+                dtype2 = str_dtype(i[x].dtype)
+                found = found and (dtype1 in dtype2
+                                or dtype2 in dtype1)
+                found = found and y.rank \
+                                == i[x].rank
+            if found:
+                break
+
+        if found:
+            return  self._functions[j]
+        else:
+            errors.report('Arguments types provided to {} are incompatible'.format(self.name),
+                        severity='fatal')
 
 class FunctionAddress(FunctionDef):
 
@@ -5987,18 +5593,18 @@ def get_iterable_ranges(it, var_name=None):
 class ParserResult(Basic):
     def __new__(
         cls,
-        program=None,
-        module=None,
-        mod_name = None,
+        program   = None,
+        module    = None,
+        mod_name  = None,
         prog_name = None,
         ):
         return Basic.__new__(cls)
 
     def __init__(
         self,
-        program=None,
-        module=None,
-        mod_name = None,
+        program   = None,
+        module    = None,
+        mod_name  = None,
         prog_name = None,
         ):
 
@@ -6052,6 +5658,30 @@ class ParserResult(Basic):
         else:
             return self.module
 
+    def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable function that can be called
+           to create the initial version of the object
+           and its arguments.
+        """
+        kwargs = dict(
+        program = self.program,
+        module  = self.module,
+        prog_name = self.prog_name,
+        mod_name  = self.mod_name)
+        return (apply, (self.__class__, (), kwargs))
 
 #==============================================================================
 def process_shape(shape):

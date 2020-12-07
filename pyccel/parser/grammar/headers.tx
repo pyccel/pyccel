@@ -10,6 +10,7 @@ Statement:
   | FunctionHeaderStmt 
   | ClassHeaderStmt
   | MetavarHeaderStmt
+  | TemplateStmt
   | InterfaceStmt
 ;
 
@@ -23,7 +24,7 @@ ListType : '[' dtype+=Type[','] ']';
 FuncType: '('(results*=TypeHeader[','])?')' '('decs*=TypeHeader[',']')';
 
 TypeHeader: FuncType|Type|ListType;
-UnionTypeStmt: (const=Const)? dtype+=TypeHeader['|'] ;
+UnionTypeStmt: (const=Const)? dtypes+=TypeHeader['|'] ;
 Const: 'const';
 
 VariableHeaderStmt: 'variable'  name=ID ('::')? dec=TypeHeader;
@@ -31,6 +32,8 @@ VariableHeaderStmt: 'variable'  name=ID ('::')? dec=TypeHeader;
 FunctionHeaderStmt: 
   (kind=FunctionKind)? (static=Static)? name=ID '(' decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
 ;
+
+TemplateStmt: 'template' name = ID '(' dtypes+=TypeHeader['|'] ')';
 
 FunctionKind: 'function' | 'procedure' | 'method';
 Static: 'static';
