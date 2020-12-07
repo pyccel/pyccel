@@ -69,7 +69,7 @@ OmpTaskLoopClause:
   | OmpPrivate
   | OmpFirstPrivate
   | OmpLastPrivate
-  | OmpReduction
+  | OmpTaskloopReduction
 ;
 
 OmpSingleClause:
@@ -94,6 +94,7 @@ OmpFirstPrivate: 'firstprivate' '(' args+=ID[','] ')';
 OmpLastPrivate: 'lastprivate' '(' args+=ID[','] ')';
 OmpCopyin: 'copyin' '(' args+=ID[','] ')';
 OmpReduction: 'reduction' '('op=OmpReductionOperator ':' args+=ID[','] ')';
+OmpTaskloopReduction: ('in_reduction' | 'reduction') '('op=OmpReductionOperator ':' args+=ID[','] ')';
 OmpCollapse: 'collapse' '(' n=INT ')';
 OmpLinear: 'linear' '(' val=ID ':' step=INT ')';
 OmpOrdered: 'ordered' ('(' n=INT ')')?;
