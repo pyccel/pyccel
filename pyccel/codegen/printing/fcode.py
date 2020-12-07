@@ -60,9 +60,8 @@ from pyccel.ast.literals  import LiteralTrue
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
-from pyccel.ast.numpyext import NumpyArray, NumpyLinspace, NumpyCross, NumpyEmpty
-from pyccel.ast.numpyext import NumpyWhere
-from pyccel.ast.numpyext import NumpyMod, NumpyFloat, NumpyComplex, NumpyReal
+from pyccel.ast.numpyext import NumpyArray
+from pyccel.ast.numpyext import NumpyMod, NumpyFloat
 from pyccel.ast.numpyext import NumpyRand, NumpyRandint
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import Shape
@@ -1261,10 +1260,6 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(rhs, PythonInt):
             rhs = expr.rhs.fprint(self._print)
-            return '{0} = {1}\n'.format(lhs_code,rhs)
-
-        if isinstance(rhs, (NumpyWhere, NumpyCross, NumpyComplex, NumpyReal, NumpyArray, NumpyLinspace)):
-            rhs = self._print(rhs)
             return '{0} = {1}\n'.format(lhs_code,rhs)
 
         if isinstance(rhs, NumpyRand):
