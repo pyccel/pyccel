@@ -13,7 +13,6 @@ __all__ = (
     'math_functions',
     # ---
     'MathFunctionBase',
-    'PycMathFunctionBase',
     'MathFunctionFloat',
     'MathFunctionInt',
     'MathFunctionBool',
@@ -88,10 +87,6 @@ class MathFunctionBase(Function, PyccelAstNode):
     _shape = ()
     _rank  = 0
 
-class PycMathFunctionBase(Function, PyccelAstNode):
-    """Abstract base class for the Math Functions implemented in Pyc_math
-    libray"""
-
 class MathFunctionFloat(MathFunctionBase):
     _dtype = NativeReal()
     _precision = default_precision['real']
@@ -142,17 +137,17 @@ class MathTan     (MathFunctionFloat): pass
 class MathTanh    (MathFunctionFloat): pass
 class MathRemainder (MathFunctionFloat): pass
 
-class MathRadians (PycMathFunctionBase, MathFunctionFloat):
+class MathRadians (MathFunctionFloat):
     """Represent a call to the radians function in the Math library"""
-class MathDegrees (PycMathFunctionBase, MathFunctionFloat):
+class MathDegrees (MathFunctionFloat):
     """Represent a call to the degrees function in the Math library"""
 
 # Integer result
-class MathFactorial(PycMathFunctionBase, MathFunctionInt):
+class MathFactorial(MathFunctionInt):
     """Represent a call to the factorial function in the Math library"""
-class MathGcd      (PycMathFunctionBase, MathFunctionInt):
+class MathGcd      (MathFunctionInt):
     """Represent a call to the gcd function in the Math library"""
-class MathLcm      (PycMathFunctionBase, MathFunctionInt):
+class MathLcm      (MathFunctionInt):
     """Represent a call to the lcm function in the Math library"""
 
 class MathCeil     (MathFunctionInt): pass
@@ -194,7 +189,6 @@ class MathModf(MathFunctionBase):
 
 _base_classes = (
     'MathFunctionBase',
-    'PycMathFunctionBase',
     'MathFunctionFloat',
     'MathFunctionInt',
     'MathFunctionBool'
