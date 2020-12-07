@@ -1211,7 +1211,7 @@ class CCodePrinter(CodePrinter):
         return free_str
 
     def _print_Program(self, expr):
-        self._allocs = [i for i in expr.variables if i.allocatable and i.is_ndarray]
+        self._allocs = [i for i in expr.variables if i.is_ndarray]
         body  = self._print(expr.body)
         decs     = [self._print(i) for i in expr.declarations]
         decs    += [self._print(Declare(i.dtype, i)) for i in self._additional_declare]
