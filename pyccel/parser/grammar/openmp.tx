@@ -19,6 +19,7 @@ OmpConstructOrDirective:
   | OmpEndClause
   | OmpCriticalConstruct
   | OmpBarrierConstruct
+  | OmpMasterConstruct
 ;
 ////////////////////////////////////////////////////
 
@@ -31,6 +32,7 @@ OmpTaskLoopConstruct: 'taskloop'  clauses*=OmpTaskLoopClause;
 OmpSingleConstruct:   'single'    clauses*=OmpSingleClause;
 OmpCriticalConstruct: 'critical'  clauses*=OmpCriticalClause;
 OmpBarrierConstruct:  name='barrier';
+OmpMasterConstruct: name='master';
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -108,7 +110,7 @@ OmpScheduleKind: ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' );
 OmpProcBindStatus: ('master' | 'close' | 'spread');
 OmpReductionOperator: ('+' | '-' | '*' | '/');
 OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
-OpenmpConstructs: ('single' | 'parallel' | 'for' | ('critical' ('(' ID  ')')?));
+OpenmpConstructs: ('master' | 'single' | 'parallel' | 'for' | ('critical' ('(' ID  ')')?));
 
 ThreadIndex: (ID | INT);
 CriticalName: ID;

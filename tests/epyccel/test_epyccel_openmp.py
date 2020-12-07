@@ -297,3 +297,7 @@ def test_omp_arraysum_single(language):
     x = random.randint(20, size=(10))
 
     assert f1(x) == np.sum(x)
+
+def test_omp_master(language):
+    f1 = epyccel(openmp.omp_master, accelerator='openmp', language=language)
+    assert f1() == openmp.omp_master()
