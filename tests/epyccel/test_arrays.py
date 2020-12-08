@@ -2148,6 +2148,30 @@ def test_array_1d_slice_stride_20():
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
+def test_array_1d_slice_stride_21():
+    a = np.empty(21, dtype=np.int)
+    for i in range(21):
+        a[i] = 2**i
+    f1 = arrays.array_1d_slice_stride_21
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_stride_22():
+    a = np.empty(21, dtype=np.int)
+    for i in range(21):
+        a[i] = 2**i
+    f1 = arrays.array_1d_slice_stride_22
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_1d_slice_stride_23():
+    a = np.empty(21, dtype=np.int)
+    for i in range(21):
+        a[i] = 2**i
+    f1 = arrays.array_1d_slice_stride_23
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
 #==============================================================================
 # TEST : 2d array slices stride order F
 #==============================================================================
@@ -2333,6 +2357,34 @@ def test_array_2d_F_slice_stride_20():
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
+
+def test_array_2d_F_slice_stride_21():
+    a = np.empty((21,21), dtype=np.int, order='F')
+    for i in range(21):
+        for j in range(21):
+            a[i][j] = 2**j
+    f1 = arrays.array_2d_F_slice_stride_21
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_22():
+    a = np.empty((21,21), dtype=np.int, order='F')
+    for i in range(21):
+        for j in range(21):
+            a[i][j] = 2**j
+    f1 = arrays.array_2d_F_slice_stride_22
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_F_slice_stride_23():
+    a = np.empty((21,21), dtype=np.int, order='F')
+    for i in range(21):
+        for j in range(21):
+            a[i][j] = 2**j
+    f1 = arrays.array_2d_F_slice_stride_23
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
 #==============================================================================
 # TEST : 2d array slices stride order C
 #==============================================================================
@@ -2515,6 +2567,33 @@ def test_array_2d_C_slice_stride_20():
         for j in range(21):
             a[i][j] = 2**j
     f1 = arrays.array_2d_C_slice_stride_20
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_21():
+    a = np.empty((21,21), dtype=np.int)
+    for i in range(21):
+        for j in range(21):
+            a[i][j] = 2**j
+    f1 = arrays.array_2d_C_slice_stride_21
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_22():
+    a = np.empty((21,21), dtype=np.int)
+    for i in range(21):
+        for j in range(21):
+            a[i][j] = 2**j
+    f1 = arrays.array_2d_C_slice_stride_22
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(a), f2(a))
+
+def test_array_2d_C_slice_stride_23():
+    a = np.empty((21,21), dtype=np.int)
+    for i in range(21):
+        for j in range(21):
+            a[i][j] = 2**j
+    f1 = arrays.array_2d_C_slice_stride_23
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 

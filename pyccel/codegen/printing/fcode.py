@@ -37,11 +37,11 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              IndexedVariable, CodeBlock,
                              IndexedElement, Slice, Dlist,
                              DottedName, AsName,
-                             If, PyccelArraySize)
+                             If, PyccelArraySize, IfTernaryOperator)
 
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-from pyccel.ast.operators      import PyccelUnarySub, PyccelMod
+from pyccel.ast.operators      import PyccelUnarySub, PyccelMod, PyccelGt
 from pyccel.ast.core      import FunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
@@ -2530,6 +2530,20 @@ class FCodePrinter(CodePrinter):
                 ok = True
                 end = PyccelAdd(end, LiteralInteger(1) )if end is not None else LiteralInteger(0)
                 start = start if start is not None else PyccelMinus(shape, LiteralInteger(1))
+            if isinstance(step, Variable) or (isinstance(step, PyccelUnarySub) and
+                        isinstance(step.args[0], Variable)):
+                if end is None :
+                    end = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
+                        PyccelMinus(shape, LiteralInteger(1)), LiteralInteger(0))
+                else:
+                    end = PyccelAdd(end, LiteralInteger(1))
+                if start is None :
+                    start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
+                        LiteralInteger(0), PyccelMinus(shape, LiteralInteger(1)))
+                else :
+                    start = start
+                ok = True
+
         if not ok :
             end = None if end is None else PyccelMinus(end, LiteralInteger(1))
         return Slice(start, end, step)
