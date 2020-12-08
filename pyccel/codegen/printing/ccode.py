@@ -227,7 +227,7 @@ class CCodePrinter(CodePrinter):
         'dereference': set()
     }
 
-    def __init__(self, parser, target_language, settings=None):
+    def __init__(self, parser, settings=None):
 
         if parser.filename:
             errors.set_target(parser.filename, 'file')
@@ -235,7 +235,6 @@ class CCodePrinter(CodePrinter):
         prefix_module = None if settings is None else settings.pop('prefix_module', None)
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
-        self._target_language = target_language
         userfuncs = {} if settings is None else settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
         self._dereference = set([] if settings is None else settings.get('dereference', []))
@@ -244,7 +243,6 @@ class CCodePrinter(CodePrinter):
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
-        self._allocs = []
         self._additional_args = []
         self._temporary_args = []
 
@@ -705,6 +703,9 @@ class CCodePrinter(CodePrinter):
         alloc_code = "{} = array_create({}, {}, {});".format(expr.variable, len(expr.shape), shape_Assign, dtype)
         return '{}\n{}'.format(free_code, alloc_code)
 
+    def _print_Deallocate(self, expr):
+        return 'free_array({})'.format(self._print(expr.variable.name))
+
     def _print_Slice(self, expr):
         start = self._print(expr.start)
         end = self._print(expr.end)
@@ -816,11 +817,9 @@ class CCodePrinter(CodePrinter):
 
         if len(expr.results) > 1:
             self._additional_args.append(expr.results)
-        if self._target_language == 'c':
-            self._allocs = [i for i in expr.local_vars if i.allocatable and i.is_ndarray]
+
         body  = self._print(expr.body)
-        if len(expr.results) == 0:
-            body += self.free_allocs(self._allocs)
+
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
             decs += [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.results]
@@ -903,11 +902,10 @@ class CCodePrinter(CodePrinter):
     def _print_Return(self, expr):
         code = ''
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
+
         if expr.stmt:
             code += self._print(expr.stmt)+'\n'
-        if len(self._allocs) > 0:
-            code += self.free_allocs(self._allocs)
-            code += '\n'
+
         if len(args) == 1:
             code +='return {0};'.format(self._print(args[0]))
         elif len(args) > 1:
@@ -1203,15 +1201,8 @@ class CCodePrinter(CodePrinter):
     def _print_Omp_End_Clause(self, expr):
         return '}'
     #=====================================
-    def free_allocs(self, variables):
-
-        free_str = ''
-        for i in variables:
-            free_str += '\nfree_array(%s);' % i.name
-        return free_str
 
     def _print_Program(self, expr):
-        self._allocs = [i for i in expr.variables if i.is_ndarray]
         body  = self._print(expr.body)
         decs     = [self._print(i) for i in expr.declarations]
         decs    += [self._print(Declare(i.dtype, i)) for i in self._additional_declare]
@@ -1220,17 +1211,14 @@ class CCodePrinter(CodePrinter):
         # PythonPrint imports last to be sure that all additional_imports have been collected
         imports  = [*expr.imports, *map(Import, self._additional_imports)]
         imports  = '\n'.join(self._print(i) for i in imports)
-        free_allocs = self.free_allocs(self._allocs)
         return ('{imports}\n'
                 'int main()\n{{\n'
                 '{decs}\n\n'
                 '{body}\n'
-                '{free_allocs}\n'
                 'return 0;\n'
                 '}}').format(imports=imports,
                                     decs=decs,
-                                    body=body,
-                                    free_allocs=free_allocs)
+                                    body=body)
 
 
 
@@ -1264,7 +1252,7 @@ class CCodePrinter(CodePrinter):
 
     _print_Function = CodePrinter._print_not_supported
 
-def ccode(expr, parser, target_language, assign_to=None, **settings):
+def ccode(expr, parser, assign_to=None, **settings):
     """Converts an expr to a string of c code
 
     expr : Expr
@@ -1289,4 +1277,4 @@ def ccode(expr, parser, target_language, assign_to=None, **settings):
         For example, if ``dereference=[a]``, the resulting code would print
         ``(*a)`` instead of ``a``.
     """
-    return CCodePrinter(parser, target_language, settings).doprint(expr, assign_to)
+    return CCodePrinter(parser, settings).doprint(expr, assign_to)

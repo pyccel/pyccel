@@ -22,7 +22,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import PyccelAstNode
 
-from pyccel.ast.core import Allocate
+from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Constant
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Variable
@@ -52,6 +52,7 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import _atomic
+from pyccel.ast.core import NewLine, Comment, CommentBlock, Module
 from pyccel.ast.operators import PyccelIs, PyccelIsNot
 from pyccel.ast.itertoolsext import Product
 
@@ -67,6 +68,7 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.headers import MacroFunction, MacroVariable
+from pyccel.ast.headers import Header
 
 from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
@@ -158,6 +160,8 @@ class SemanticParser(BasicParser):
         self._used_names = parser.used_names
         self._dummy_counter = parser._dummy_counter
 
+        self._allocs = []
+
         # we use it to detect the current method or function
 
         #
@@ -233,6 +237,16 @@ class SemanticParser(BasicParser):
                                 severity='fatal')
 
         self._semantic_done = True
+
+        #check if the ast CodeBlock is a Program to add the Garbage collecting
+        cls = (Header, EmptyNode, NewLine, Comment, CommentBlock, Module)
+        body = ast.body
+        is_module = all(isinstance(i,cls) for i in body)
+        if not isinstance(body[-1], Return) and not is_module:
+            dealloc = [Deallocate(i) for i in self._allocs]
+            body += dealloc
+            ast = CodeBlock(body)
+            self._allocs = []
 
         return ast
 
@@ -1401,6 +1415,13 @@ class SemanticParser(BasicParser):
                     new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
                 # ...
 
+                # ...
+                # Add memory deallocation for array variables
+                if lhs.is_ndarray:
+                    # Create Deallocate node
+                    self._allocs.append(lhs)
+                # ...
+
                 # We cannot allow the definition of a stack array in a loop
                 if lhs.is_stack_array and self._namespace.is_loop:
                     errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=name,
@@ -2299,8 +2320,13 @@ class SemanticParser(BasicParser):
         assigns = [self._visit_Assign(e) for e in assigns]
         results = [self._visit_Symbol(i, **settings) for i in return_vars]
 
-        if assigns:
-            expr  = Return(results, CodeBlock(assigns))
+        #add the Deallocate node before the Return node
+        code = []
+        code += (assigns)
+        deallocs = [Deallocate(i) for i in self._allocs]
+        code += (deallocs)
+        if code:
+            expr  = Return(results, CodeBlock(code))
         else:
             expr  = Return(results)
         return expr
@@ -2488,8 +2514,13 @@ class SemanticParser(BasicParser):
             # we annotate the body
             body = self._visit(expr.body)
 
-            args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(str(a.name)) for a in args]
+            #checking if the Function don't have Return then call the garbage collector
+            if not isinstance(expr.body.args[-1][-1], Return):
+                dealloc = [Deallocate(i) for i in self._allocs]
+                body = CodeBlock([body, CodeBlock(dealloc)])
+            self._allocs = []
 
+            args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(str(a.name)) for a in args]
             results = list(OrderedDict((a.name,self.get_variable(a.name)) for a in results).values())
 
             if arg and cls_name:

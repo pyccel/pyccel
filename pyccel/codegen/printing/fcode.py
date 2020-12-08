@@ -200,7 +200,7 @@ class FCodePrinter(CodePrinter):
     }
 
 
-    def __init__(self, parser, target_language, settings={}):
+    def __init__(self, parser, settings={}):
 
         prefix_module = settings.pop('prefix_module', None)
 
@@ -2693,7 +2693,7 @@ class FCodePrinter(CodePrinter):
         return new_code
 
 
-def fcode(expr, parser, target_language, assign_to=None, **settings):
+def fcode(expr, parser, assign_to=None, **settings):
     """Converts an expr to a string of Fortran code
 
     expr : Expr
@@ -2714,4 +2714,4 @@ def fcode(expr, parser, target_language, assign_to=None, **settings):
         for examples.
     """
 
-    return FCodePrinter(parser, target_language, settings).doprint(expr, assign_to)
+    return FCodePrinter(parser, settings).doprint(expr, assign_to)

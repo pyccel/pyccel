@@ -878,6 +878,52 @@ class Allocate(Basic):
         return hash((id(self.variable), self.shape, self.order, self.status))
 
 #------------------------------------------------------------------------------
+class Deallocate(Basic):
+    """
+    Represents memory deallocation (usually of an array) for code generation.
+    This is relevant to low-level target languages, such as C or Fortran,
+    where the programmer must take care of heap memory deallocation.
+
+    Parameters
+    ----------
+    variable : pyccel.ast.core.Variable
+        The typed variable (usually an array) that needs memory deallocation.
+
+    Notes
+    -----
+    An object of this class is immutable, although it contains a reference to a
+    mutable Variable object.
+
+    """
+    def __new__(cls, *args, **kwargs):
+
+        return Basic.__new__(cls)
+
+    # ...
+    def __init__(self, variable):
+
+        if not isinstance(variable, Variable):
+            raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
+
+        self._variable = variable
+
+    # ...
+
+    @property
+    def variable(self):
+        return self._variable
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return 'Deallocate({})'.format(sstr(self.variable))
+
+    def __eq__(self, other):
+        return (self.variable is other.variable)
+
+    def __hash__(self):
+        return hash(id(self.variable))
+
+#------------------------------------------------------------------------------
 class CodeBlock(Basic):
 
     """Represents a list of stmt for code generation.

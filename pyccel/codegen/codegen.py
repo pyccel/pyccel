@@ -169,7 +169,7 @@ class Codegen(object):
         errors = Errors()
         errors.set_parser_stage('codegen')
         # set the code printer
-        self._printer = code_printer(self.parser, language, settings)
+        self._printer = code_printer(self.parser, settings)
 
     def _collect_statements(self):
         """Collects statements and split them into routines, classes, etc."""

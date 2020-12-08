@@ -34,7 +34,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     ))
     _kc = {k: ''+v for k, v in _known_constants_math.items()}
 
-    def __init__(self, target_language, parser=None, settings=None):
+    def __init__(self, parser=None, settings=None):
         self.assert_contiguous = settings.pop('assert_contiguous', False)
         self.parser = parser
         SympyPythonCodePrinter.__init__(self, settings=settings)
@@ -337,7 +337,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return 'not {}'.format(a)
 
 #==============================================================================
-def pycode(expr, target_language='python', **settings):
+def pycode(expr, **settings):
     """ Converts an expr to a string of Python code
     Parameters
     ==========
@@ -354,4 +354,4 @@ def pycode(expr, target_language='python', **settings):
     'math.tan(x) + 1'
     """
     settings.pop('parser', None)
-    return PythonCodePrinter(target_language, settings).doprint(expr)
+    return PythonCodePrinter(settings).doprint(expr)
