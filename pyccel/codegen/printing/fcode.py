@@ -637,13 +637,6 @@ class FCodePrinter(CodePrinter):
         # C ordering
         return 'matmul({1},{0})'.format(a_code, b_code)
 
-    def _print_NumpyImag(self, expr):
-        """Fortran print."""
-
-        value = self._print(expr.arg)
-        code = 'aimag({0})'.format(value)
-        return code
-
     def _print_NumpyCross(self, expr):
         """Fortran print."""
 
