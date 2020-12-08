@@ -3183,6 +3183,10 @@ class FunctionDef(Basic):
         If the function is not a class procedure then this returns None """
         return self._cls_name
 
+    @cls_name.setter
+    def cls_name(self, cls_name):
+        self._cls_name = cls_name
+
     @property
     def hide(self):
         """ False if function is pyccelized, True otherwise """
@@ -3281,10 +3285,8 @@ class FunctionDef(Basic):
         return ""
 
     def set_recursive(self):
+        """ Mark the function as a recursive function """
         self._is_recursive = True
-
-    def set_cls_name(self, cls_name):
-        self._cls_name = cls_name
 
     def clone(self, newname):
         """
