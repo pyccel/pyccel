@@ -2442,7 +2442,9 @@ class SemanticParser(BasicParser):
                         dtype = d_var.pop('datatype')
                         if d_var['rank']>0:
                             d_var['cls_base'] = NumpyArrayClass
-
+                        if 'allow_negative_index' in self._namespace.decorators:
+                            if a.name in decorators['allow_negative_index']:
+                                d_var.update(allows_negative_indexes=True)
                         # this is needed for the static case
                         if isinstance(a, ValuedArgument):
 

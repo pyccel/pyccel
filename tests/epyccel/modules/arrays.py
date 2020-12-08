@@ -635,6 +635,19 @@ def test_multiple_negative_index_3(d, e, f):
 
     return a[d], b[e], c[f]
 
+@allow_negative_index('a')
+@types('int[:]')
+def test_argument_negative_index_1(a):
+    c = -2
+    d = 5
+    return a[c], a[d]
+
+@allow_negative_index('a', 'b')
+@types('int[:]', 'int[:]')
+def test_argument_negative_index_2(a, b):
+    c = -2
+    d = 3
+    return a[c], a[d], b[c], b[d]
 
 #==============================================================================
 # SHAPE INITIALISATION
@@ -714,31 +727,25 @@ def array_1d_slice_9(a):
     return np.sum(b), b[0], b[-1], len(b)
 
 @allow_negative_index('a')
-def array_1d_slice_10():
+@types('int[:]')
+def array_1d_slice_10(a):
     import numpy as np
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 2**i
     c = -15
     b = a[c:]
     return np.sum(b), b[0], b[-1], len(b)
 
 @allow_negative_index('a')
-def array_1d_slice_11():
+@types('int[:]')
+def array_1d_slice_11(a):
     import numpy as np
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 2**i
     c = -5
     b = a[:c]
     return np.sum(b), b[0], b[-1], len(b)
 
 @allow_negative_index('a')
-def array_1d_slice_12():
+@types('int[:]')
+def array_1d_slice_12(a):
     import numpy as np
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 2**i
     c = -15
     d = -5
     b = a[c:d]
@@ -869,6 +876,32 @@ def array_2d_F_slice_20(a):
     b = a[5:15, 5:-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
+@allow_negative_index('a')
+@types('int[:,:](order=F)')
+def array_2d_F_slice_21(a):
+    import numpy as np
+    c = -5
+    d = 5
+    b = a[d:15, 5:c]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@allow_negative_index('a')
+@types('int[:,:](order=F)')
+def array_2d_F_slice_22(a):
+    import numpy as np
+    c = -5
+    d = -15
+    b = a[d:15, 5:c]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@allow_negative_index('a')
+@types('int[:,:](order=F)')
+def array_2d_F_slice_23(a):
+    import numpy as np
+    c = -5
+    b = a[:c, :c]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
 #==============================================================================
 # 2D ARRAY SLICE ORDER C
 #==============================================================================
@@ -991,6 +1024,32 @@ def array_2d_C_slice_19(a):
 def array_2d_C_slice_20(a):
     import numpy as np
     b = a[5:15, 5:-5]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@allow_negative_index('a')
+@types('int[:,:]')
+def array_2d_C_slice_21(a):
+    import numpy as np
+    c = -5
+    d = 5
+    b = a[d:15, 5:c]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@allow_negative_index('a')
+@types('int[:,:]')
+def array_2d_C_slice_22(a):
+    import numpy as np
+    c = -5
+    d = -15
+    b = a[d:15, 5:c]
+    return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
+@allow_negative_index('a')
+@types('int[:,:]')
+def array_2d_C_slice_23(a):
+    import numpy as np
+    c = -5
+    b = a[:c, :c]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 #==============================================================================
