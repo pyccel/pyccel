@@ -2312,6 +2312,7 @@ class SemanticParser(BasicParser):
         is_pure         = expr.is_pure
         is_elemental    = expr.is_elemental
         is_private      = expr.is_private
+        doc_string      = self._visit(expr.doc_string)
 
         header = expr.headers
 
@@ -2588,7 +2589,8 @@ class SemanticParser(BasicParser):
                     is_recursive=is_recursive,
                     arguments_inout=args_inout,
                     functions = sub_funcs,
-                    interfaces = func_interfaces)
+                    interfaces = func_interfaces,
+                    doc_string = doc_string)
 
             if cls_name:
                 cls = self.get_class(cls_name)
