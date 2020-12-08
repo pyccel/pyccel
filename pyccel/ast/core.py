@@ -1954,8 +1954,6 @@ class ConstructorCall(AtomicExpr):
     arguments: list, tuple, None
         a list of arguments.
 
-    kind: str
-        'function' or 'procedure'. default value: 'function'
     """
 
     is_commutative = True
@@ -1967,7 +1965,6 @@ class ConstructorCall(AtomicExpr):
         func,
         arguments,
         cls_variable=None,
-        kind='function',
         ):
         if not isinstance(func, (FunctionDef, Interface, str)):
             raise TypeError('Expecting func to be a FunctionDef or str')
@@ -1981,15 +1978,9 @@ class ConstructorCall(AtomicExpr):
         func,
         arguments,
         cls_variable=None,
-        kind='function',
         ):
 
-        if isinstance(func, FunctionDef):
-            kind = func.kind
-
         self._cls_variable = cls_variable
-
-        self._kind = kind
         self._func = func
         self._arguments = arguments
 
@@ -2004,10 +1995,6 @@ class ConstructorCall(AtomicExpr):
     @property
     def func(self):
         return self._func
-
-    @property
-    def kind(self):
-        return self._kind
 
     @property
     def arguments(self):
@@ -2943,9 +2930,6 @@ class FunctionDef(Basic):
     hide: bool
         if True, the function definition will not be generated.
 
-    kind: str
-        'function' or 'procedure'. default value: 'function'
-
     is_pure: bool
         True for a function without side effect
 
@@ -3013,7 +2997,6 @@ class FunctionDef(Basic):
         global_vars=[],
         cls_name=None,
         hide=False,
-        kind='function',
         is_static=False,
         imports=[],
         decorators={},
@@ -3078,17 +3061,8 @@ class FunctionDef(Basic):
             # if not cls_variable:
              #   raise TypeError('Expecting a instance of {0}'.format(cls_name))
 
-        if kind is None:
-            kind = 'function'
-
-        if not isinstance(kind, str):
-            raise TypeError('Expecting a string for kind.')
-
         if not isinstance(is_static, bool):
             raise TypeError('Expecting a boolean for is_static attribute')
-
-        if not kind in ['function', 'procedure']:
-            raise ValueError("kind must be one among {'function', 'procedure'}")
 
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
@@ -3132,7 +3106,6 @@ class FunctionDef(Basic):
         self._global_vars     = global_vars
         self._cls_name        = cls_name
         self._hide            = hide
-        self._kind            = kind
         self._is_static       = is_static
         self._imports         = imports
         self._decorators      = decorators
@@ -3191,11 +3164,6 @@ class FunctionDef(Basic):
     def hide(self):
         """ False if function is pyccelized, True otherwise """
         return self._hide
-
-    @property
-    def kind(self):
-        """ Returns function or procedure """
-        return self._kind
 
     @property
     def imports(self):
@@ -3334,7 +3302,6 @@ class FunctionDef(Basic):
                 and self.results[0].rank > 0
         flag = flag or len(self.results) > 1
         flag = flag or len(self.results) == 0
-        flag = flag or self.kind == 'procedure'
         flag = flag \
             or len(set(self.results).intersection(self.arguments)) > 0
         return flag
@@ -3356,7 +3323,6 @@ class FunctionDef(Basic):
         'global_vars':self._global_vars,
         'cls_name':self._cls_name,
         'hide':self._hide,
-        'kind':self._kind,
         'is_static':self._is_static,
         'imports':self._imports,
         'decorators':self._decorators,
@@ -3873,7 +3839,7 @@ class ClassDef(Basic):
 
          #   free = FunctionDef('__del__', [this], [], \
          #                      body, local_vars=[], global_vars=[], \
-         #                      cls_name='__UNDEFINED__', kind='procedure', imports=[])
+         #                      cls_name='__UNDEFINED__', imports=[])
 
          #  methods = list(methods) + [free]
          # TODO move this somewhere else

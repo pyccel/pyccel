@@ -2305,7 +2305,6 @@ class SemanticParser(BasicParser):
         name            = name.replace("'", '')
         cls_name        = expr.cls_name
         hide            = False
-        kind            = 'function'
         decorators      = expr.decorators
         funcs           = []
         sub_funcs       = []
@@ -2360,10 +2359,7 @@ class SemanticParser(BasicParser):
         for hd in header:
             interfaces += hd.create_definition(templates)
 
-        if header:
-            # get function kind from the header
-            kind = header[0].kind
-        elif not interfaces:
+        if not interfaces:
             # this for the case of a function without arguments => no header
             interfaces = [FunctionDef(name, [], [], [])]
 
@@ -2584,7 +2580,6 @@ class SemanticParser(BasicParser):
                     global_vars=global_vars,
                     cls_name=cls_name,
                     hide=hide,
-                    kind=kind,
                     is_pure=is_pure,
                     is_elemental=is_elemental,
                     is_private=is_private,

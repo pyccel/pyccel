@@ -1138,7 +1138,6 @@ class FCodePrinter(CodePrinter):
             rhs_code = self._print(name)
             rhs_code = '{0} % {1}'.format(lhs_code, rhs_code)
             #TODO use is_procedure property
-            is_procedure = (rhs.kind == 'procedure')
 
             code_args = ', '.join(self._print(i) for i in rhs.arguments)
             return 'call {0}({1})\n'.format(rhs_code, code_args)
