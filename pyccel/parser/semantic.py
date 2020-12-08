@@ -2312,7 +2312,7 @@ class SemanticParser(BasicParser):
         is_pure         = expr.is_pure
         is_elemental    = expr.is_elemental
         is_private      = expr.is_private
-        doc_string      = self._visit(expr.doc_string)
+        doc_string      = self._visit(expr.doc_string) if expr.doc_string else expr.doc_string
 
         header = expr.headers
 
