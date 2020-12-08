@@ -239,6 +239,24 @@ class OmpNumThread(BasicStmt):
         thread = self.thread
         return 'num_threads({})'.format(thread)
 
+class OmpNumTasks(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.tasks = kwargs.pop('tasks')
+
+        super(OmpNumTasks, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        # TODO check if variable exist in namespace
+        if DEBUG:
+            print("> OmpNumTasks: expr")
+
+        tasks = self.tasks
+        return 'num_tasks({})'.format(tasks)
+
 class OmpDefault(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
@@ -398,6 +416,28 @@ class OmpReduction(BasicStmt):
         op   = self.op
         args = ', '.join(str(arg) for arg in self.args)
         return 'reduction({0}: {1})'.format(op, args)
+
+class OmpTaskloopReduction(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.ctype  = kwargs.pop('ctype') 
+        self.op     = kwargs.pop('op')
+        self.args   = kwargs.pop('args')
+
+        super(OmpTaskloopReduction, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpTaskloopReduction: expr")
+
+        # TODO check if variable exist in namespace
+        ctype = self.ctype
+        op    = self.op
+        args  = ', '.join(str(arg) for arg in self.args)
+        return '{0}({1}: {2})'.format(ctype, op, args)
 
 class OmpCollapse(BasicStmt):
     """Class representing a ."""

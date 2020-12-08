@@ -72,6 +72,8 @@ OmpTaskLoopClause:
   | OmpFirstPrivate
   | OmpLastPrivate
   | OmpTaskloopReduction
+  | OmpNumTasks
+  | OmpGrainSize
 ;
 
 OmpSingleClause:
@@ -88,6 +90,8 @@ OmpCriticalClause:
 //              Clauses definitions
 ////////////////////////////////////////////////////
 OmpNumThread: 'num_threads' '(' thread=ThreadIndex ')';
+OmpNumTasks: 'num_tasks' '(' tasks=TaskIndex ')';
+OmpGrainSize: 'grainsize' '(' tasks=TaskIndex ')';
 OmpDefault: 'default' '(' status=OmpDefaultStatus ')';
 OmpProcBind: 'proc_bind' '(' status=OmpProcBindStatus ')';
 OmpPrivate: 'private' '(' args+=ID[','] ')';
@@ -96,7 +100,7 @@ OmpFirstPrivate: 'firstprivate' '(' args+=ID[','] ')';
 OmpLastPrivate: 'lastprivate' '(' args+=ID[','] ')';
 OmpCopyin: 'copyin' '(' args+=ID[','] ')';
 OmpReduction: 'reduction' '('op=OmpReductionOperator ':' args+=ID[','] ')';
-OmpTaskloopReduction: ('in_reduction' | 'reduction') '('op=OmpReductionOperator ':' args+=ID[','] ')';
+OmpTaskloopReduction: ctype=OmpTLReductionType '('op=OmpReductionOperator ':' args+=ID[','] ')';
 OmpCollapse: 'collapse' '(' n=INT ')';
 OmpLinear: 'linear' '(' val=ID ':' step=INT ')';
 OmpOrdered: 'ordered' ('(' n=INT ')')?;
@@ -109,10 +113,12 @@ OmpCriticalName: '(' args=CriticalName ')';
 OmpScheduleKind: ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' );
 OmpProcBindStatus: ('master' | 'close' | 'spread');
 OmpReductionOperator: ('+' | '-' | '*' | '/');
+OmpTLReductionType: ('in_reduction' | 'reduction');
 OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
 OpenmpConstructs: ('master' | 'single' | 'parallel' | 'for' | ('critical' ('(' ID  ')')?));
 
 ThreadIndex: (ID | INT);
+TaskIndex: (ID | INT);
 CriticalName: ID;
 NotaStmt: /.*$/;
 ////////////////////////////////////////////////////
