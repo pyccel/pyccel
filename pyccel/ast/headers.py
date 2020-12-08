@@ -204,9 +204,6 @@ class FunctionHeader(Header):
         a list of datatypes. an element of this list can be str/DataType of a
         tuple (str/DataType, attr, allocatable)
 
-    kind: str
-        'function' or 'procedure'. default value: 'function'
-
     is_static: bool
         True if we want to pass arrays in bind(c) mode. every argument of type
         array will be preceeded by its shape, the later will appear in the
@@ -223,7 +220,6 @@ class FunctionHeader(Header):
     # TODO dtypes should be a dictionary (useful in syntax)
     def __new__(cls, name, dtypes,
                 results=None,
-                kind='function',
                 is_static=False):
         name = str(name)
         if not(iterable(dtypes)):
@@ -233,16 +229,10 @@ class FunctionHeader(Header):
             if not(iterable(results)):
                 raise TypeError("Expecting results to be iterable.")
 
-        if not isinstance(kind, str):
-            raise TypeError("Expecting a string for kind.")
-
-        if kind not in ['function', 'procedure']:
-            raise ValueError("kind must be one among {'function', 'procedure'}")
-
         if not isinstance(is_static, bool):
             raise TypeError('is_static must be a boolean')
 
-        return Basic.__new__(cls, name, dtypes, results, kind, is_static)
+        return Basic.__new__(cls, name, dtypes, results, is_static)
 
     @property
     def name(self):
@@ -257,12 +247,8 @@ class FunctionHeader(Header):
         return self._args[2]
 
     @property
-    def kind(self):
-        return self._args[3]
-
-    @property
     def is_static(self):
-        return self._args[4]
+        return self._args[3]
 
     def create_definition(self, templates = ()):
         """Returns a FunctionDef with empy body."""
@@ -274,7 +260,6 @@ class FunctionHeader(Header):
         body      = []
         cls_name  = None
         hide      = False
-        kind      = self.kind
         is_static = self.is_static
         imports   = []
         funcs = []
@@ -378,7 +363,6 @@ class FunctionHeader(Header):
                              global_vars=[],
                              cls_name=cls_name,
                              hide=hide,
-                             kind=kind,
                              is_static=is_static,
                              imports=imports,
                              is_header=True)
@@ -391,7 +375,6 @@ class FunctionHeader(Header):
         return FunctionHeader(self.name,
                               self.dtypes,
                               self.results,
-                              self.kind,
                               True)
 
     def vectorize(self,index):
@@ -402,7 +385,6 @@ class FunctionHeader(Header):
         return FunctionHeader(self.name,
                               types,
                               self.results,
-                              self.kind,
                               self.is_static)
 
 
@@ -429,7 +411,6 @@ class FunctionHeader(Header):
         args = (self.name,
             self.dtypes,
             self.results,
-            self.kind,
             self.is_static,)
         return (self.__class__, args)
 
@@ -450,9 +431,6 @@ class MethodHeader(FunctionHeader):
         a list of datatypes. an element of this list can be str/DataType of a
         tuple (str/DataType, attr)
 
-    kind: str
-        'function' or 'procedure'. default value: 'function'
-
     is_static: bool
         True if we want to pass arrays in bind(c) mode. every argument of type
         array will be preceeded by its shape, the later will appear in the
@@ -468,7 +446,7 @@ class MethodHeader(FunctionHeader):
     'point.rotate'
     """
 
-    def __new__(cls, name, dtypes, results=None, kind='function', is_static=False):
+    def __new__(cls, name, dtypes, results=None, is_static=False):
         if not isinstance(name, (list, tuple)):
             raise TypeError("Expecting a list/tuple of strings.")
 
@@ -484,16 +462,10 @@ class MethodHeader(FunctionHeader):
                 raise TypeError("Wrong element in dtypes.")
 
 
-        if not isinstance(kind, str):
-            raise TypeError("Expecting a string for kind.")
-
-        if kind not in ['function', 'procedure']:
-            raise ValueError("kind must be one among {'function', 'procedure'}")
-
         if not isinstance(is_static, bool):
             raise TypeError('is_static must be a boolean')
 
-        return Basic.__new__(cls, name, dtypes, results, kind, is_static)
+        return Basic.__new__(cls, name, dtypes, results, is_static)
 
     @property
     def name(self):
@@ -512,12 +484,8 @@ class MethodHeader(FunctionHeader):
         return self._args[2]
 
     @property
-    def kind(self):
-        return self._args[3]
-
-    @property
     def is_static(self):
-        return self._args[4]
+        return self._args[3]
 
 
     def __reduce_ex__(self, i):
@@ -543,7 +511,6 @@ class MethodHeader(FunctionHeader):
         args = (self.name,
             self.dtypes,
             self.results,
-            self.kind,
             self.is_static,)
         return (self.__class__, args)
 

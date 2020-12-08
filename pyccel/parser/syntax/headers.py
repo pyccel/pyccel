@@ -249,7 +249,7 @@ class FunctionHeaderStmt(BasicStmt):
         name: str
             function name
         kind: str
-            one among {function, procedure, method}
+            one among {function, method}
         decs: list, tuple
             list of argument types
         results: list, tuple
@@ -291,9 +291,7 @@ class FunctionHeaderStmt(BasicStmt):
             else:
                 cls_instance = dtype['datatype']
             dtypes = dtypes[1:] # remove the attribut
-            kind = 'procedure'
-            if results:
-                kind = 'function'
+            kind = 'function'
             return MethodHeader((cls_instance, self.name), dtypes, [],kind=kind )
         else:
             return FunctionHeader(self.name,
