@@ -3149,46 +3149,58 @@ class FunctionDef(Basic):
 
     @property
     def name(self):
+        """ Name of the function """
         return self._name
 
     @property
     def arguments(self):
+        """ List of variables which are the function arguments """
         return self._arguments
 
     @property
     def results(self):
+        """ List of variables which are the function results """
         return self._results
 
     @property
     def body(self):
+        """ CodeBlock containing all the statements in the function """
         return self._body
 
     @property
     def local_vars(self):
+        """ List of variables defined in the function """
         return self._local_vars
 
     @property
     def global_vars(self):
+        """ List of global variables used in the function """
         return self._global_vars
 
     @property
     def cls_name(self):
+        """ String containing the name of the class to which the method belongs.
+        If the function is not a class procedure then this returns None """
         return self._cls_name
 
     @property
     def hide(self):
+        """ False if function is pyccelized, True otherwise """
         return self._hide
 
     @property
     def kind(self):
+        """ Returns function or procedure """
         return self._kind
 
     @property
     def imports(self):
+        """ List of imports in the function """
         return self._imports
 
     @property
     def decorators(self):
+        """ List of decorators applied to the function """
         return self._decorators
 
     @property
@@ -3197,42 +3209,74 @@ class FunctionDef(Basic):
 
     @property
     def templates(self):
+        """ List of templates used to determine the types """
         return self._templates
 
     @property
     def is_recursive(self):
+        """ Returns True if the function is recursive (i.e. calls itself)
+        and False otherwise """
         return self._is_recursive
 
     @property
     def is_pure(self):
+        """ Returns True if the function is marked as pure and False otherwise
+        Pure functions must not have any side effects.
+        In other words this means that the result must be the same no matter 
+        how many times the function is called
+        e.g:
+        >>> a = f()
+        >>> a = f()
+
+        gives the same result as
+        >>> a = f()
+
+        This is notably not true for I/O functions
+        """
         return self._is_pure
 
     @property
     def is_elemental(self):
+        """ returns True if the function is marked as elemental and
+        False otherwise
+        An elemental function is a function with a single scalar operator
+        and a scalar return value which can also be called on an array.
+        When it is called on an array it returns the result of the function
+        called elementwise on the array """
         return self._is_elemental
 
     @property
     def is_private(self):
+        """ True if the function should not be exposed to
+        other modules. This includes the wrapper module and
+        means that the function cannot be used in an import
+        or exposed to python """
         return self._is_private
 
     @property
     def is_header(self):
+        """ True if the function body is not provided
+        False otherwise """
         return self._is_header
 
     @property
     def arguments_inout(self):
+        """ List of variables which are the modifiable function arguments """
         return self._arguments_inout
 
     @property
     def functions(self):
+        """ List of functions within this function """
         return self._functions
 
     @property
     def interfaces(self):
+        """ List of interfaces within this function """
         return self._interfaces
 
     @property
     def doc_string(self):
+        """ The docstring of the function """
         return ""
 
     def set_recursive(self):
