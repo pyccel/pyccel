@@ -5,7 +5,7 @@ import functools
 import operator
 
 from sympy.core import Tuple
-from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
+from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex, PythonInt
 
 from pyccel.ast.core      import Declare, IndexedVariable, Slice, ValuedVariable
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
@@ -1060,8 +1060,11 @@ class CCodePrinter(CodePrinter):
         if isinstance(rhs, (NumpyFull)):
             code_init = ''
             if rhs.fill_value is not None:
-                dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-                code_init = 'array_fill(({0}){1}, {2});'.format(dtype, self._print(rhs.fill_value), lhs)
+                if isinstance(rhs.fill_value, PythonInt):
+                    code_init = 'array_fill({0}, {1});'.format(self._print(rhs.fill_value), lhs)
+                else:
+                    dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+                    code_init = 'array_fill(({0}){1}, {2});'.format(dtype, self._print(rhs.fill_value), lhs)
             else:
                 return ''
             return '{}\n'.format(code_init)
