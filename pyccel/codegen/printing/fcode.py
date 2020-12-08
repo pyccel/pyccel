@@ -2515,37 +2515,40 @@ class FCodePrinter(CodePrinter):
         end = _slice.end
         step = _slice.step
 
+        # negative start and end in slice
         if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
             start = PyccelMinus(shape, start.args[0])
-        elif allow_negative_index and isinstance(start, Variable):
+        elif start is not None and allow_negative_index and not isinstance(start,LiteralInteger):
             start = PyccelMod(start, shape)
 
         if isinstance(end, PyccelUnarySub) and isinstance(end.args[0], LiteralInteger):
             end = PyccelMinus(shape, end.args[0])
-        elif allow_negative_index and isinstance(end, Variable):
+        elif end is not None and allow_negative_index and not isinstance(end, LiteralInteger):
             end = PyccelMod(end, shape)
-        ok =  False
+
+        tmp_end = end #save temporary value of end
+        # steps in slices
         if step is not None :
+            #negative step in slice
             if isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
-                ok = True
-                end = PyccelAdd(end, LiteralInteger(1) )if end is not None else LiteralInteger(0)
+                end = PyccelAdd(end, LiteralInteger(1)) if end is not None else LiteralInteger(0)
                 start = start if start is not None else PyccelMinus(shape, LiteralInteger(1))
-            if isinstance(step, Variable) or (isinstance(step, PyccelUnarySub) and
-                        isinstance(step.args[0], Variable)):
-                if end is None :
-                    end = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
-                        PyccelMinus(shape, LiteralInteger(1)), LiteralInteger(0))
-                else:
-                    end = PyccelAdd(end, LiteralInteger(1))
+
+            # variable step in slice
+            elif allow_negative_index and not isinstance(step, LiteralInteger):
                 if start is None :
                     start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
                         LiteralInteger(0), PyccelMinus(shape, LiteralInteger(1)))
-                else :
-                    start = start
-                ok = True
 
-        if not ok :
-            end = None if end is None else PyccelMinus(end, LiteralInteger(1))
+                if end is None :
+                    end = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
+                        PyccelMinus(shape, LiteralInteger(1)), LiteralInteger(0))
+                else :
+                    end = PyccelAdd(end, LiteralInteger(1))
+
+        if end != None and end == tmp_end:
+            end = PyccelMinus(end, LiteralInteger(1))
+
         return Slice(start, end, step)
 
     def _print_Slice(self, expr):
