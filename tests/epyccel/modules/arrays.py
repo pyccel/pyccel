@@ -1175,6 +1175,7 @@ def array_1d_slice_stride_20(a):
     b = a[-5:5:-5]
     return np.sum(b), b[0], b[-1], len(b)
 
+@allow_negative_index('a')
 @types('int[:]')
 def array_1d_slice_stride_21(a):
     import numpy as np
@@ -1189,12 +1190,14 @@ def array_1d_slice_stride_22(a):
     b = a[5:-5:c]
     return np.sum(b), b[0], b[-1], len(b)
 
+@allow_negative_index('a')
 @types('int[:]')
 def array_1d_slice_stride_23(a):
     import numpy as np
     c = -5
     b = a[::c]
     return np.sum(b), b[0], b[-1], len(b)
+
 #==============================================================================
 # 2D ARRAY SLICE STRIDE ORDER F
 #==============================================================================
@@ -1319,6 +1322,7 @@ def array_2d_F_slice_stride_20(a):
     b = a[::-10, ::-10]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
+@allow_negative_index('a')
 @types('int[:,:](order=F)')
 def array_2d_F_slice_stride_21(a):
     import numpy as np
@@ -1326,6 +1330,7 @@ def array_2d_F_slice_stride_21(a):
     b = a[::c, ::c]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
+@allow_negative_index('a')
 @types('int[:,:](order=F)')
 def array_2d_F_slice_stride_22(a):
     import numpy as np
@@ -1334,7 +1339,7 @@ def array_2d_F_slice_stride_22(a):
     b = a[::c, ::d]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-
+@allow_negative_index('a')
 @types('int[:,:](order=F)')
 def array_2d_F_slice_stride_23(a):
     import numpy as np
@@ -1467,6 +1472,7 @@ def array_2d_C_slice_stride_20(a):
     b = a[::-10, ::-10]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
+@allow_negative_index('a')
 @types('int[:,:]')
 def array_2d_C_slice_stride_21(a):
     import numpy as np
@@ -1474,6 +1480,7 @@ def array_2d_C_slice_stride_21(a):
     b = a[::c, ::c]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
+@allow_negative_index('a')
 @types('int[:,:]')
 def array_2d_C_slice_stride_22(a):
     import numpy as np
@@ -1482,6 +1489,7 @@ def array_2d_C_slice_stride_22(a):
     b = a[::c, ::d]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
+@allow_negative_index('a')
 @types('int[:,:]')
 def array_2d_C_slice_stride_23(a):
     import numpy as np
