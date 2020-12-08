@@ -1497,3 +1497,4 @@ def array_2d_C_slice_stride_23(a):
     d = 5
     b = a[::d, ::c]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
+
