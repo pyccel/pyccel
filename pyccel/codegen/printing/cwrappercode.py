@@ -899,7 +899,8 @@ class CWrapperCodePrinter(CCodePrinter):
                                      '}}').format(
                                             name = f.name,
                                             wrapper_name = self._function_wrapper_names[f.name],
-                                            doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))))
+                                            doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
+                                                        if f.doc_string else '""')
                                      for f in funcs)
 
         method_def_name = self.get_new_name(self._global_names, '{}_methods'.format(expr.name))
