@@ -564,7 +564,7 @@ class NumpyFull(Application, NumpyNewArray):
 
 #==============================================================================
 class NumpyAutoFill(NumpyFull):
-    """ Abstract class for all classes which inherit from NumpyFull but 
+    """ Abstract class for all classes which inherit from NumpyFull but
         the fill_value is implicitly specified
     """
     def __new__(cls, shape, dtype='float', order='C'):
