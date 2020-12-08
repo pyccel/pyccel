@@ -457,10 +457,10 @@ class FCodePrinter(CodePrinter):
         if ln<max(20, header_size+2):
             ln = 20
         top  = '!' + '_'*int((ln-header_size)/2) + header + '_'*int((ln-header_size)/2) + '!'
-        ln = len(top)
-        bottom = '!' + '_'*(ln-2) + '!'
+        ln = len(top) - 2
+        bottom = '!' + '_'*ln + '!'
 
-        txts = ['!' + txt + ' '*(ln -2 - len(txt)) + '!' for txt in txts]
+        txts = ['!' + txt + ' '*(ln - len(txt)) + '!' for txt in txts]
 
         body = '\n'.join(i for i in txts)
 

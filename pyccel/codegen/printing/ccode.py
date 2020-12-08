@@ -1153,13 +1153,13 @@ class CCodePrinter(CodePrinter):
         header_size = len(expr.header)
 
         ln = max(len(i) for i in txts)
-        if ln<max(20, header_size+2):
+        if ln<max(20, header_size+4):
             ln = 20
         top  = '/*' + '_'*int((ln-header_size)/2) + header + '_'*int((ln-header_size)/2) + '*/'
-        ln = len(top)
-        bottom = '/*' + '_'*(ln-2) + '*/'
+        ln = len(top)-4
+        bottom = '/*' + '_'*ln + '*/'
 
-        txts = ['/*' + t + ' '*(ln -2 - len(t)) + '*/' for t in txts]
+        txts = ['/*' + t + ' '*(ln - len(t)) + '*/' for t in txts]
 
         body = '\n'.join(i for i in txts)
 
