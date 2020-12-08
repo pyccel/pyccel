@@ -8,13 +8,11 @@ from sympy.core.function import Application
 from sympy           import (Basic, Function, Tuple, Integer as sp_Integer,
                              Rational as sp_Rational, Expr)
 
-from .core           import (ClassDef, FunctionDef, IndexedVariable, Assign,
-                             PythonList, Variable, IndexedElement, Slice,
-                             PythonLen, For, PythonRange, Nil, process_shape,
-                             ValuedArgument, Constant)
+from .core           import (ClassDef, FunctionDef,
+                             PythonList, Variable, IndexedElement,
+                             Nil, process_shape, ValuedArgument, Constant)
 
-from .operators      import (PyccelPow, PyccelMinus, PyccelMul, PyccelAdd,
-                             PyccelAssociativeParenthesis, broadcast)
+from .operators      import (PyccelPow, PyccelAssociativeParenthesis, broadcast)
 
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag)
@@ -50,8 +48,6 @@ __all__ = (
     'NumpyArccosh',
     'NumpyArctanh',
     # ---
-    'NumpyCross',
-    'NumpyDiag',
     'NumpyEmpty',
     'NumpyEmptyLike',
     'NumpyFloat',
@@ -396,127 +392,6 @@ class NumpyLinspace(Application, NumpyNewArray):
                                              sstr(self.stop),
                                              sstr(self.size))
         return code
-
-#==============================================================================
-class NumpyDiag(Application, NumpyNewArray):
-
-    """
-    Represents numpy.diag.
-
-    """
-    #TODO improve the properties dtype, rank, shape
-    # to be more general
-
-
-    def __new__(cls, array, v=0, k=0):
-
-
-        _valid_args = (Variable, IndexedElement, PythonTuple, Tuple)
-
-
-        if not isinstance(array, _valid_args):
-            raise TypeError('Expecting valid args')
-
-        if not isinstance(k, (int, sp_Integer)):
-            raise ValueError('k must be an integer')
-
-        index = Variable('int', 'diag_index')
-        return Basic.__new__(cls, array, v, k, index)
-
-    @property
-    def array(self):
-        return self._args[0]
-
-    @property
-    def v(self):
-        return self._args[1]
-
-    @property
-    def k(self):
-        return self._args[2]
-
-    @property
-    def index(self):
-        return self._args[3]
-
-
-    @property
-    def dtype(self):
-        return 'real'
-
-    @property
-    def order(self):
-        return 'C'
-
-    @property
-    def precision(self):
-        return default_precision['real']
-
-    @property
-    def shape(self):
-        return PythonLen(self.array)
-
-    @property
-    def rank(self):
-        rank = 1 if self.array.rank == 2 else 2
-        return rank
-
-
-#==============================================================================
-class NumpyCross(Application, NumpyNewArray):
-
-    """
-    Represents numpy.cross.
-
-    """
-    #TODO improve the properties dtype, rank, shape
-    # to be more general
-
-    def __new__(cls, a, b):
-
-
-        _valid_args = (Variable, IndexedElement, PythonTuple, Tuple)
-
-
-        if not isinstance(a, _valid_args):
-            raise TypeError('Expecting valid args')
-
-        if not isinstance(b, _valid_args):
-            raise TypeError('Expecting valid args')
-
-        return Basic.__new__(cls, a, b)
-
-    @property
-    def first(self):
-        return self._args[0]
-
-    @property
-    def second(self):
-        return self._args[1]
-
-
-    @property
-    def dtype(self):
-        return self.first.dtype
-
-    @property
-    def order(self):
-        #TODO which order should we give it
-        return 'C'
-
-    @property
-    def precision(self):
-        return self.first.precision
-
-
-    @property
-    def rank(self):
-        return self.first.rank
-
-    @property
-    def shape(self):
-        return ()
-
 
 #==============================================================================
 class NumpyWhere(Application, NumpyNewArray):
@@ -1036,9 +911,7 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
             FunctionDef('imag',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':NumpyImag}),
             FunctionDef('real',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':NumpyReal}),
-            FunctionDef('diagonal',[],[],body=[],
-                decorators={'numpy_wrapper':NumpyDiag})])
+                decorators={'property':'property', 'numpy_wrapper':NumpyReal})])
 
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
@@ -1077,9 +950,7 @@ numpy_functions = {
     'prod'      : NumpyProduct,
     'product'   : NumpyProduct,
     'linspace'  : NumpyLinspace,
-    'diag'      : NumpyDiag,
     'where'     : NumpyWhere,
-    # 'cross'     : NumpyCross,   # Currently not correctly implemented
     # ---
     'abs'       : NumpyAbs,
     'floor'     : NumpyFloor,

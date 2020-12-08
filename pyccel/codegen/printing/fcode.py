@@ -672,8 +672,6 @@ class FCodePrinter(CodePrinter):
         first = self._print(expr.first)
         order = expr.order
 
-        if lhs is not None:
-            lhs  = self._print(lhs)
 
         if rank == 2:
 
@@ -686,9 +684,6 @@ class FCodePrinter(CodePrinter):
 
         elif rank == 1:
             code = cross_product
-
-        if lhs is not None:
-            code = '{} = {}'.format(lhs, code)
 
         return code
 
@@ -855,9 +850,7 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyFull(self, expr):
 
         # Create statement for initialization
-        if expr.fill_value is not None:
-            init_value = self._print(expr.fill_value)
-
+        init_value = self._print(expr.fill_value)
         return init_value
 
     def _print_PythonMin(self, expr):
