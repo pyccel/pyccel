@@ -670,7 +670,7 @@ class CCodePrinter(CodePrinter):
                                 isinstance(end.args[0], LiteralInteger):
                             end = PyccelMinus(base_shape[i], end.args[0])
                         if ind.start is None:
-                            start = 0
+                            start = LiteralInteger(0)
                         if ind.end is None:
                             end = base.shape[i]
                         inds[i] = Slice(start, end)
