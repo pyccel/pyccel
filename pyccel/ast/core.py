@@ -4655,7 +4655,7 @@ class CommentBlock(Basic):
     txt : str
 
     """
-    def __new__(cls, txt):
+    def __new__(cls, txt, header = 'CommentBlock'):
         if not isinstance(txt, str):
             raise TypeError('txt must be of type str')
         txt = txt.replace('"','')
@@ -4663,9 +4663,20 @@ class CommentBlock(Basic):
 
         return Basic.__new__(cls, txts)
 
+    def __init__(self, txt, header = 'CommentBlock'):
+        self._header = header
+
     @property
     def comments(self):
         return self._args[0]
+
+    @property
+    def header(self):
+        return self._header
+
+    @header.setter
+    def header(self, header):
+        self._header = header
 
 class IndexedVariable(IndexedBase, PyccelAstNode):
 

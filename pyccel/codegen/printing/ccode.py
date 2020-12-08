@@ -1149,10 +1149,13 @@ class CCodePrinter(CodePrinter):
 
     def _print_CommentBlock(self, expr):
         txts = expr.comments
+        header = expr.header
+        header_size = len(expr.header)
+
         ln = max(len(i) for i in txts)
-        if ln<20:
+        if ln<max(20, header_size+2):
             ln = 20
-        top  = '/*' + '_'*int((ln-12)/2) + 'CommentBlock' + '_'*int((ln-12)/2) + '*/'
+        top  = '/*' + '_'*int((ln-header_size)/2) + header + '_'*int((ln-header_size)/2) + '*/'
         ln = len(top)
         bottom = '/*' + '_'*(ln-2) + '*/'
 
