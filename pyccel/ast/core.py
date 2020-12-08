@@ -4989,13 +4989,14 @@ class Slice(Basic):
         return Basic.__new__(cls, start, end, step)
 
     def __init__(self, start, end, step = None):
-        if start is not None and (not isinstance(start, (Symbol, LiteralInteger, PyccelOperator)) or\
+        print(type(start), type(end), type(step))
+        if start is not None and (not isinstance(start, (Symbol, LiteralInteger, PyccelOperator, IfTernaryOperator)) or\
             (isinstance(start, Variable) and not isinstance(start.dtype, NativeInteger))):
             raise TypeError('Slice start must be Integer or None')
-        if end is not None and (not isinstance(end, (Symbol, LiteralInteger, PyccelOperator)) or\
+        if end is not None and (not isinstance(end, (Symbol, LiteralInteger, PyccelOperator, IfTernaryOperator)) or\
             (isinstance(end, Variable) and not isinstance(end.dtype, NativeInteger))):
             raise TypeError('Slice end must be Integer or None')
-        if step is not None and (not isinstance(step, (Symbol, LiteralInteger, PyccelOperator)) or\
+        if step is not None and (not isinstance(step, (Symbol, LiteralInteger, PyccelOperator, IfTernaryOperator)) or\
             (isinstance(step, Variable) and not isinstance(step.dtype, NativeInteger))):
             raise TypeError('Slice step must be Integer or None')
         self._start = start
