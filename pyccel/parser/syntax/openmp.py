@@ -9,7 +9,8 @@ from textx.metamodel import metamodel_from_file
 
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct,\
-        Omp_End_Clause, OMP_Critical_Construct, OMP_Barrier_Construct, OMP_Master_Construct
+        Omp_End_Clause, OMP_Critical_Construct, OMP_Barrier_Construct, OMP_Master_Construct,\
+        OMP_Masked_Construct
 
 DEBUG = False
 
@@ -50,6 +51,8 @@ class OpenmpStmt(BasicStmt):
         elif isinstance(stmt, OmpBarrierConstruct):
             return stmt.expr
         elif isinstance(stmt, OmpMasterConstruct):
+            return stmt.expr
+        elif isinstance(stmt, OmpMaskedConstruct):
             return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
@@ -185,8 +188,32 @@ class OmpMasterConstruct(BasicStmt):
 
         return OMP_Master_Construct(txt)
 
+class OmpMaskedConstruct(BasicStmt):
+    """Class representing the Masked construct."""
+    def __init__(self, **kwargs):
+        self.name = kwargs.pop('name')
+        self.clauses = kwargs.pop('clauses')
+
+        super(OmpMaskedConstruct, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpMaskedConstruct: expr")
+
+        _valid_clauses = (OmpFilter)
+
+        txt = self.name
+        for clause in self.clauses:
+            if isinstance(clause, _valid_clauses):
+                txt = '{0} {1}'.format(txt, clause.expr)
+            else:
+              raise TypeError('Wrong clause for OmpMaskedConstruct')
+
+        return OMP_Masked_Construct(txt)
+
 class OmpBarrierConstruct(BasicStmt):
-    """Class representing a Critical stmt."""
+    """Class representing a Barrier stmt."""
     def __init__(self, **kwargs):
         """
         """
@@ -470,6 +497,23 @@ class OmpSchedule(BasicStmt):
             return 'schedule({0}, {1})'.format(self.kind, self.chunk_size)
         else:
             return 'schedule({0})'.format(self.kind)
+
+class OmpFilter(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name = kwargs.pop('name')
+        self.n = kwargs.pop('n')
+
+        super(OmpFilter, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpFilter: expr")
+
+        return '{}({})'.format(self.name, self.n)
 #################################################
 
 #################################################
@@ -481,7 +525,8 @@ omp_directives = [OmpParallelConstruct,
                   OmpEndClause,
                   OmpCriticalConstruct,
                   OmpBarrierConstruct,
-                  OmpMasterConstruct]
+                  OmpMasterConstruct,
+                  OmpMaskedConstruct]
 
 omp_clauses = [OmpCollapse,
                OmpCopyin,
@@ -497,7 +542,8 @@ omp_clauses = [OmpCollapse,
                OmpReduction,
                OmpSchedule,
                OmpShared,
-               OmpCriticalName]
+               OmpCriticalName,
+               OmpFilter]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 
