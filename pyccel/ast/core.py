@@ -3009,7 +3009,8 @@ class FunctionDef(Basic):
         is_header=False,
         arguments_inout=[],
         functions=[],
-        interfaces=[]):
+        interfaces=[],
+        doc_string=None):
 
         if isinstance(name, str):
             name = Symbol(name)
@@ -3119,6 +3120,7 @@ class FunctionDef(Basic):
         self._arguments_inout = arguments_inout
         self._functions       = functions
         self._interfaces      = interfaces
+        self._doc_string      = doc_string
 
     @property
     def name(self):
@@ -3250,7 +3252,7 @@ class FunctionDef(Basic):
     @property
     def doc_string(self):
         """ The docstring of the function """
-        return ""
+        return self._doc_string
 
     def set_recursive(self):
         """ Mark the function as a recursive function """
