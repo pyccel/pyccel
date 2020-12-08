@@ -768,7 +768,7 @@ class SyntaxParser(BasicParser):
             body = self._visit(body)
         if len(body) > 0 and isinstance(body[0], CommentBlock):
             doc_string = body[0]
-            doc_string.header = True
+            doc_string.header = ''
             body = body[1:]
 
         if 'pure' in decorators.keys():
