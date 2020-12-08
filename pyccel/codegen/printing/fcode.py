@@ -460,9 +460,7 @@ class FCodePrinter(CodePrinter):
         ln = len(top)
         bottom = '!' + '_'*(ln-2) + '!'
 
-        for i,txt in enumerate(txts):
-            txts[i] = '!' + txt + ' '*(ln -2 - len(txt)) + '!'
-
+        txts = ['!' + txt + ' '*(ln -2 - len(txt)) + '!' for txt in txts]
 
         body = '\n'.join(i for i in txts)
 
