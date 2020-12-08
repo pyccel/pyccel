@@ -48,7 +48,7 @@ from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
-from .operators import PyccelMinus, PyccelMul, PyccelDiv
+from .operators import PyccelMinus, PyccelMul, PyccelDiv, PyccelOperator
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -4974,32 +4974,45 @@ class Slice(Basic):
     --------
     >>> from sympy import symbols
     >>> from pyccel.ast.core import Slice
-    >>> m, n = symbols('m, n', integer=True)
+    >>> m, n, p = symbols('m, n, p', integer=True)
     >>> Slice(m,n)
     m : n
     >>> Slice(None,n)
      : n
     >>> Slice(m,None)
     m :
+    >>> Slice(m, n, p)
+    m : n : p
     """
 
-    # TODO add step
-    # TODO check that args are integers
-    # TODO add negative indices
     def __new__(cls, start, end, step = None):
         return Basic.__new__(cls, start, end, step)
 
+    def __init__(self, start, end, step = None):
+        if start is not None and (not isinstance(start, (Symbol, LiteralInteger, PyccelOperator)) or\
+            (isinstance(start, Variable) and not isinstance(start.dtype, NativeInteger))):
+            raise TypeError('Slice start must be Integer or None')
+        if end is not None and (not isinstance(end, (Symbol, LiteralInteger, PyccelOperator)) or\
+            (isinstance(end, Variable) and not isinstance(end.dtype, NativeInteger))):
+            raise TypeError('Slice end must be Integer or None')
+        if step is not None and (not isinstance(step, (Symbol, LiteralInteger, PyccelOperator)) or\
+            (isinstance(step, Variable) and not isinstance(step.dtype, NativeInteger))):
+            raise TypeError('Slice step must be Integer or None')
+        self._start = start
+        self._end = end
+        self._step = step
+
     @property
     def start(self):
-        return self._args[0]
+        return self._start
 
     @property
     def end(self):
-        return self._args[1]
+        return self._end
 
     @property
     def step(self):
-        return self._args[2]
+        return self._step
 
     def _sympystr(self, printer):
         sstr = printer.doprint
