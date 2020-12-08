@@ -564,6 +564,8 @@ class NumpyFull(Application, NumpyNewArray):
 
 #==============================================================================
 class NumpyAutoFill(NumpyFull):
+	""" Manage the inheritance between NumpyFull, NumpyEmpty, NumpyZeros and NumpyOnes
+	"""
     def __new__(cls, shape, dtype='float', order='C'):
 
         # Convert shape to PythonTuple
