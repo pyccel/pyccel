@@ -16,10 +16,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.5
+      - name: Set up Python 3.6
         uses: actions/setup-python@v2
         with:
-          python-version: 3.5
+          python-version: 3.6
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install python dependencies
@@ -44,7 +44,7 @@ jobs:
     if: github.ref == 'refs/heads/master'
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.7, 3.8, 3.9]
 
     steps:
       - uses: actions/checkout@v2
@@ -113,10 +113,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.8
+      - name: Set up Python 3.9
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.9
       - name: Install dependencies
         uses: ./.github/actions/macos_install
       - name: Install python dependencies
