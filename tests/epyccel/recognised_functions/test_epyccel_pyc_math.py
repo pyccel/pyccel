@@ -24,13 +24,13 @@ def test_call_gcd(language):
 # -----------------------------------------------------------------------------
 
 def test_call_factorial(language):
-    @types('int64')
+    @types('int')
     def call_factorial(x):
         from math import factorial
         return factorial(x)
 
     f = epyccel(call_factorial, language=language)
-    x = randint(15)
+    x = randint(10)
 
     assert(f(x) == call_factorial(x))
 
