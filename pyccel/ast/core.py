@@ -3205,6 +3205,7 @@ class FunctionDef(Basic):
 
     @property
     def headers(self):
+        """ List of headers applied to the function """
         return self._headers
 
     @property
