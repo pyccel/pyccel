@@ -2546,7 +2546,7 @@ class FCodePrinter(CodePrinter):
                 else :
                     end = PyccelAdd(end, LiteralInteger(1))
 
-        if end != None and end == tmp_end:
+        if end is not None and end == tmp_end:
             end = PyccelMinus(end, LiteralInteger(1))
 
         return Slice(start, end, step)
