@@ -163,6 +163,7 @@ __all__ = (
     'OMP_Critical_Construct',
     'OMP_Barrier_Construct'
     'OMP_Master_Construct'
+    'OMP_Masked_Construct'
 )
 
 #==============================================================================
@@ -4647,6 +4648,11 @@ class OMP_Barrier_Construct(AnnotatedComment):
 
 class OMP_Master_Construct(AnnotatedComment):
     """ Represents OpenMP Master construct. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
+
+class OMP_Masked_Construct(AnnotatedComment):
+    """ Represents OpenMP Masked construct. """
     def __new__(cls, txt):
         return AnnotatedComment.__new__(cls, 'omp', txt)
 

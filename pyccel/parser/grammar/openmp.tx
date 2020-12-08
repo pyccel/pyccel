@@ -20,6 +20,7 @@ OmpConstructOrDirective:
   | OmpCriticalConstruct
   | OmpBarrierConstruct
   | OmpMasterConstruct
+  | OmpMaskedConstruct
 ;
 ////////////////////////////////////////////////////
 
@@ -31,8 +32,9 @@ OmpLoopConstruct:     'for'       clauses*=OmpLoopClause;
 OmpTaskLoopConstruct: 'taskloop'  clauses*=OmpTaskLoopClause;
 OmpSingleConstruct:   'single'    clauses*=OmpSingleClause;
 OmpCriticalConstruct: 'critical'  clauses*=OmpCriticalClause;
+OmpMaskedConstruct:   name='masked'  clauses*=OmpMaskedClause;
 OmpBarrierConstruct:  name='barrier';
-OmpMasterConstruct: name='master';
+OmpMasterConstruct:   name='master';
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -84,6 +86,10 @@ OmpSingleClause:
 OmpCriticalClause:
     OmpCriticalName
 ;
+
+OmpMaskedClause:
+    OmpFilter
+;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -106,7 +112,8 @@ OmpLinear: 'linear' '(' val=ID ':' step=INT ')';
 OmpOrdered: 'ordered' ('(' n=INT ')')?;
 OmpSchedule: 'schedule' '(' kind=OmpScheduleKind (',' chunk_size=INT)? ')';
 OmpEndClause: 'end' construct=OpenmpConstructs (simd='simd')? (nowait='nowait')?;
-OmpCriticalName: '(' args=CriticalName ')';
+OmpCriticalName: '(' args=ID ')';
+OmpFilter: name='filter' '(' n=INT ')';
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -115,10 +122,9 @@ OmpProcBindStatus: ('master' | 'close' | 'spread');
 OmpReductionOperator: ('+' | '-' | '*' | '/');
 OmpTLReductionType: ('in_reduction' | 'reduction');
 OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
-OpenmpConstructs: ('master' | 'single' | 'parallel' | 'for' | ('critical' ('(' ID  ')')?));
+OpenmpConstructs: ('masked' | 'master' | 'single' | 'parallel' | 'for' | 'critical' ('(' ID  ')')?);
 
 ThreadIndex: (ID | INT);
 TaskIndex: (ID | INT);
-CriticalName: ID;
 NotaStmt: /.*$/;
 ////////////////////////////////////////////////////
