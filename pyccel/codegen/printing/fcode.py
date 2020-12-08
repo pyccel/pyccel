@@ -1075,7 +1075,6 @@ class FCodePrinter(CodePrinter):
                         ) for lhs,rhs in zip(expr.lhs,expr.rhs))
 
         lhs_code = self._print(expr.lhs)
-        is_procedure = False
         rhs = expr.rhs
         # we don't print Range, Tensor
         # TODO treat the case of iterable classes
@@ -1114,12 +1113,6 @@ class FCodePrinter(CodePrinter):
             rhs  = 'modulo({})'.format(args)
             return '{0} = {1}\n'.format(lhs, rhs)
 
-        # TODO [YG, 10.03.2020]: I have just commented out this block and
-        # everything still seems to work; is it dead code?
-#        if isinstance(rhs, FunctionDef):
-#            rhs_code = self._print(rhs.name)
-#            is_procedure = rhs.is_procedure
-
         if isinstance(rhs, ConstructorCall):
             func = rhs.func
             name = str(func.name)
@@ -1138,7 +1131,6 @@ class FCodePrinter(CodePrinter):
                 name = "create"
             rhs_code = self._print(name)
             rhs_code = '{0} % {1}'.format(lhs_code, rhs_code)
-            #TODO use is_procedure property
 
             code_args = ', '.join(self._print(i) for i in rhs.arguments)
             return 'call {0}({1})\n'.format(rhs_code, code_args)
@@ -1173,8 +1165,7 @@ class FCodePrinter(CodePrinter):
         #     stmt = ZerosLike(lhs=lhs_code, rhs=expr.like)
         #     code += self._print(stmt)
         #     code += '\n'
-        if not is_procedure:
-            code += '{0} = {1}'.format(lhs_code, rhs_code)
+        code += '{0} = {1}'.format(lhs_code, rhs_code)
 #        else:
 #            code_args = ''
 #            func = expr.rhs
@@ -1373,7 +1364,7 @@ class FCodePrinter(CodePrinter):
             dec = Declare(result.dtype, result, intent='out', static=True)
             args_decs[str(result)] = dec
 
-        if expr.is_procedure:
+        if len(results) != 1:
             func_type = 'subroutine'
             func_end  = ''
         else:
@@ -1418,10 +1409,9 @@ class FCodePrinter(CodePrinter):
             if not i.name:
                 i.rename('in_{}'.format(j))
 
-        is_procedure = expr.is_procedure
         func_end  = ''
         rec = 'recursive' if expr.is_recursive else ''
-        if is_procedure:
+        if len(expr.results) == 1:
             func_type = 'subroutine'
             out_args = list(expr.results)
             for result in out_args:

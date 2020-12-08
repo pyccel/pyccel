@@ -3287,27 +3287,6 @@ class FunctionDef(Basic):
 
         self._name = newname
 
-    @property
-    def is_procedure(self):
-        """Returns True if a procedure."""
-
-        flag = False
-        if len(self.results) == 1 and isinstance(self.results[0], Expr):
-            vars_ = [i for i in preorder_traversal(self.results)
-                     if isinstance(i, Variable)]
-            flag = flag or any([i.allocatable or i.rank > 0 for i in
-                               vars_])
-        else:
-            flag = flag or len(self.results) == 1 \
-                and self.results[0].allocatable
-            flag = flag or len(self.results) == 1 \
-                and self.results[0].rank > 0
-        flag = flag or len(self.results) > 1
-        flag = flag or len(self.results) == 0
-        flag = flag \
-            or len(set(self.results).intersection(self.arguments)) > 0
-        return flag
-
 
     def __getnewargs__(self):
         """
