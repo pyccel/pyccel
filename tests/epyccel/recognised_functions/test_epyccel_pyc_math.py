@@ -24,7 +24,7 @@ def test_call_gcd(language):
 # -----------------------------------------------------------------------------
 
 def test_call_factorial(language):
-    @types(int)
+    @types('int64')
     def call_factorial(x):
         from math import factorial
         return factorial(x)
