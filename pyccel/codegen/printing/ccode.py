@@ -825,18 +825,18 @@ class CCodePrinter(CodePrinter):
         if self._additional_args :
             self._additional_args.pop()
         imports = ''.join(self._print(i) for i in expr.imports)
+        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
 
-        return ('{sep}\n'
-                '{signature}\n{{\n'
-                '{imports}\n'
-                '{decs}\n\n'
-                '{body}\n'
-                '}}\n{sep}'.format(
-                    sep = sep,
-                    signature = self.function_signature(expr),
-                    imports = imports,
-                    decs = decs,
-                    body = body))
+        parts = [sep,
+                 doc_string,
+                '{signature}\n{{'.format(signature=self.function_signature(expr)),
+                 imports,
+                 decs,
+                 body,
+                 '}',
+                 sep]
+
+        return '\n'.join(p for p in parts if p)
 
     def stored_in_c_pointer(self, a):
         if not isinstance(a, Variable):

@@ -1392,15 +1392,17 @@ class FCodePrinter(CodePrinter):
         imports += 'use ISO_C_BINDING'
         prelude   = ''.join(self._print(i) for i in args_decs.values())
         body_code = self._print(expr.body)
+        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
 
-        parts = ['{0} {1}({2}) bind(c) {3}\n'.format(func_type, name, arg_code, func_end),
+        parts = [doc_string,
+                '{0} {1}({2}) bind(c) {3}\n'.format(func_type, name, arg_code, func_end),
                  imports,
                 'implicit none\n',
                  prelude,
                  interfaces,
                  body_code,
                  'end {} {}\n'.format(func_type, name)]
-        return '\n'.join(parts)
+        return '\n'.join(p for p in parts if p)
 
     def _print_FunctionAddress(self, expr):
         return expr.name
@@ -1512,6 +1514,7 @@ class FCodePrinter(CodePrinter):
         functions = expr.functions
         func_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         body_code = self._print(expr.body)
+        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
 
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
@@ -1530,7 +1533,8 @@ class FCodePrinter(CodePrinter):
 
         self.set_current_function(None)
 
-        parts = parts = ["{}({}) {}\n".format(sig_parts['sig'], sig_parts['arg_code'], sig_parts['func_end']),
+        parts = [doc_string,
+                "{}({}) {}\n".format(sig_parts['sig'], sig_parts['arg_code'], sig_parts['func_end']),
                 imports,
                 'implicit none\n',
                 prelude,
