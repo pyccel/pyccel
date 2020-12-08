@@ -705,7 +705,8 @@ class CCodePrinter(CodePrinter):
     def _print_Slice(self, expr):
         start = self._print(expr.start)
         end = self._print(expr.end)
-        return 'new_slice({}, {}, {})'.format(start, end, 1)
+        step = self._print(expr.step)
+        return 'new_slice({}, {}, {})'.format(start, end, step)
 
     def _print_NumpyUfuncBase(self, expr):
         """ Convert a Python expression with a Numpy function call to C
