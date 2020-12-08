@@ -687,7 +687,7 @@ class FCodePrinter(CodePrinter):
 
         return code
 
-    def _print_NumpyDiag(self, expr, lhs):
+    def _print_NumpyDiag(self, expr):
         """Fortran print."""
 
         array = self._print(expr.array)
@@ -1208,8 +1208,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyReal(self, expr):
         value = self._print(expr.arg)
-        prec = self._print(expr.precision)
-        code = 'Real({0}, {1})'.format(value, prec)
+        code = 'Real({0}, {1})'.format(value, iso_c_binding['real'][expr.precision])
         return code
 
     def _print_Assign(self, expr):
