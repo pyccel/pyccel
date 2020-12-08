@@ -602,7 +602,8 @@ class FCodePrinter(CodePrinter):
     def _print_PythonReal(self, expr):
         value = self._print(expr.internal_var)
         return 'real({0})'.format(value)
-
+    def _print_PythonFloat(self, expr):
+        return expr.fprint(self._print)
     def _print_PythonImag(self, expr):
         value = self._print(expr.internal_var)
         return 'aimag({0})'.format(value)
@@ -637,6 +638,8 @@ class FCodePrinter(CodePrinter):
         # C ordering
         return 'matmul({1},{0})'.format(a_code, b_code)
 
+    def _print_NumpyEmpty(self, expr):
+        errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION, symbol=expr, severity='fatal')
 
     def _print_NumpyNorm(self, expr):
         """Fortran print."""
@@ -699,13 +702,28 @@ class FCodePrinter(CodePrinter):
 
     # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
-        return expr.fprint(self._print)
+        init_value = self._print(expr.arg)
+
+        if expr.arg.order == 'C':
+            index = self._print(expr.arg.rank - expr.index)
+        else:
+            index = self._print(expr.index + 1)
+
+        code_init = 'size({0}, {1})'.format(init_value, index)
+
+        return code_init
 
     def _print_PythonInt(self, expr):
-        return expr.fprint(self._print)
+        value = self._print(expr.arg)
+        if (expr.arg.dtype is NativeBool()):
+            code = 'MERGE(1_8, 0_8, {})'.format(value)
+        else:
+            code  = 'Int({0}, {1})'.format(value, iso_c_binding['integer'][expr.precision])
+        return code
 
     def _print_PythonFloat(self, expr):
-        return expr.fprint(self._print)
+        value = self._print(expr.arg)
+        return 'Real({0}, {1})'.format(value, iso_c_binding["real"][expr.precision])
 
     def _print_MathFloor(self, expr):
         arg = expr.args[0]
@@ -719,9 +737,6 @@ class FCodePrinter(CodePrinter):
         prec = expr.precision
         prec_code = self._print(prec)
         return 'floor({}, kind={})'.format(arg_code, prec_code)
-
-    def _print_NumpyFloat(self, expr):
-        return expr.fprint(self._print)
 
     def _print_Real(self, expr):
         return expr.fprint(self._print)
@@ -738,7 +753,10 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_PythonBool(self, expr):
-        return expr.fprint(self._print)
+        if isinstance(expr.arg.dtype, NativeBool):
+            return 'logical({}, kind = {prec})'.format(self._print(expr.arg), prec = iso_c_binding["logical"][expr.precision])
+        else:
+            return '{} /= 0'.format(self._print(expr.arg))
 
     def _print_NumpyRand(self, expr):
         if expr.rank != 0:
@@ -1169,10 +1187,6 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, (PythonLen, NumpyRandint)):
             rhs_code = self._print(rhs)
             return '{0} = {1}\n'.format(lhs_code, rhs_code)
-
-        if isinstance(rhs, PythonInt):
-            rhs = expr.rhs.fprint(self._print)
-            return '{0} = {1}\n'.format(lhs_code,rhs)
 
         if isinstance(rhs, NumpyRand):
             return 'call random_number({0})\n'.format(self._print(expr.lhs))
