@@ -7,7 +7,7 @@ import numpy as np
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
-from pyccel.ast.literals  import LiteralTrue, LiteralInteger
+from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
 
 from pyccel.ast.builtins import PythonPrint
 
@@ -789,6 +789,14 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_args    = [python_func_selfarg, python_func_args, python_func_kwargs]
         wrapper_results = [self.get_new_PyObject("result", used_names)]
 
+        if expr.is_private:
+            wrapper_func = FunctionDef(name = wrapper_name,
+                arguments = wrapper_args,
+                results = wrapper_results,
+                body = [PyErr_SetString('PyExc_NotImplementedError', '"Private functions are not accessible from python"'),
+                        AliasAssign(wrapper_results[0], Nil()),
+                        Return(wrapper_results)])
+            return CCodePrinter._print_FunctionDef(self, wrapper_func)
         if any(isinstance(arg, FunctionAddress) for arg in expr.arguments):
             wrapper_func = FunctionDef(name = wrapper_name,
                 arguments = wrapper_args,
@@ -895,11 +903,12 @@ class CWrapperCodePrinter(CCodePrinter):
                                      '"{name}",\n'
                                      '(PyCFunction){wrapper_name},\n'
                                      'METH_VARARGS | METH_KEYWORDS,\n'
-                                     '"{doc_string}"\n'
+                                     '{doc_string}\n'
                                      '}}').format(
                                             name = f.name,
                                             wrapper_name = self._function_wrapper_names[f.name],
-                                            doc_string = f.doc_string)
+                                            doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
+                                                        if f.doc_string else '""')
                                      for f in funcs)
 
         method_def_name = self.get_new_name(self._global_names, '{}_methods'.format(expr.name))

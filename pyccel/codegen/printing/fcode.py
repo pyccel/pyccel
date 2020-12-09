@@ -447,17 +447,18 @@ class FCodePrinter(CodePrinter):
         return '!' + comments + '\n'
 
     def _print_CommentBlock(self, expr):
-        txts = expr.comments
+        txts   = expr.comments
+        header = expr.header
+        header_size = len(expr.header)
+
         ln = max(len(i) for i in txts)
-        if ln<20:
+        if ln<max(20, header_size+2):
             ln = 20
-        top  = '!' + '_'*int((ln-12)/2) + 'CommentBlock' + '_'*int((ln-12)/2) + '!'
-        ln = len(top)
-        bottom = '!' + '_'*(ln-2) + '!'
+        top  = '!' + '_'*int((ln-header_size)/2) + header + '_'*int((ln-header_size)/2) + '!'
+        ln = len(top) - 2
+        bottom = '!' + '_'*ln + '!'
 
-        for i,txt in enumerate(txts):
-            txts[i] = '!' + txt + ' '*(ln -2 - len(txt)) + '!'
-
+        txts = ['!' + txt + ' '*(ln - len(txt)) + '!' for txt in txts]
 
         body = '\n'.join(i for i in txts)
 
@@ -1169,7 +1170,6 @@ class FCodePrinter(CodePrinter):
                         ) for lhs,rhs in zip(expr.lhs,expr.rhs))
 
         lhs_code = self._print(expr.lhs)
-        is_procedure = False
         rhs = expr.rhs
         # we don't print Range, Tensor
         # TODO treat the case of iterable classes
@@ -1196,12 +1196,6 @@ class FCodePrinter(CodePrinter):
             rhs  = 'modulo({})'.format(args)
             return '{0} = {1}\n'.format(lhs, rhs)
 
-        # TODO [YG, 10.03.2020]: I have just commented out this block and
-        # everything still seems to work; is it dead code?
-#        if isinstance(rhs, FunctionDef):
-#            rhs_code = self._print(rhs.name)
-#            is_procedure = rhs.is_procedure
-
         if isinstance(rhs, ConstructorCall):
             func = rhs.func
             name = str(func.name)
@@ -1220,8 +1214,6 @@ class FCodePrinter(CodePrinter):
                 name = "create"
             rhs_code = self._print(name)
             rhs_code = '{0} % {1}'.format(lhs_code, rhs_code)
-            #TODO use is_procedure property
-            is_procedure = (rhs.kind == 'procedure')
 
             code_args = ', '.join(self._print(i) for i in rhs.arguments)
             return 'call {0}({1})\n'.format(rhs_code, code_args)
@@ -1256,8 +1248,7 @@ class FCodePrinter(CodePrinter):
         #     stmt = ZerosLike(lhs=lhs_code, rhs=expr.like)
         #     code += self._print(stmt)
         #     code += '\n'
-        if not is_procedure:
-            code += '{0} = {1}'.format(lhs_code, rhs_code)
+        code += '{0} = {1}'.format(lhs_code, rhs_code)
 #        else:
 #            code_args = ''
 #            func = expr.rhs
@@ -1456,7 +1447,7 @@ class FCodePrinter(CodePrinter):
             dec = Declare(result.dtype, result, intent='out', static=True)
             args_decs[str(result)] = dec
 
-        if expr.is_procedure:
+        if len(results) != 1:
             func_type = 'subroutine'
             func_end  = ''
         else:
@@ -1473,15 +1464,17 @@ class FCodePrinter(CodePrinter):
         imports += 'use ISO_C_BINDING'
         prelude   = ''.join(self._print(i) for i in args_decs.values())
         body_code = self._print(expr.body)
+        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
 
-        parts = ['{0} {1}({2}) bind(c) {3}\n'.format(func_type, name, arg_code, func_end),
+        parts = [doc_string,
+                '{0} {1}({2}) bind(c) {3}\n'.format(func_type, name, arg_code, func_end),
                  imports,
                 'implicit none\n',
                  prelude,
                  interfaces,
                  body_code,
                  'end {} {}\n'.format(func_type, name)]
-        return '\n'.join(parts)
+        return '\n'.join(p for p in parts if p)
 
     def _print_FunctionAddress(self, expr):
         return expr.name
@@ -1499,10 +1492,9 @@ class FCodePrinter(CodePrinter):
             if not i.name:
                 i.rename('in_{}'.format(j))
 
-        is_procedure = expr.is_procedure
         func_end  = ''
         rec = 'recursive' if expr.is_recursive else ''
-        if is_procedure:
+        if len(expr.results) != 1:
             func_type = 'subroutine'
             out_args = list(expr.results)
             for result in out_args:
@@ -1567,9 +1559,6 @@ class FCodePrinter(CodePrinter):
         self._handle_fortran_specific_a_prioris(list(expr.local_vars) +
                                                 list(expr.arguments)  +
                                                 list(expr.results))
-        # ... we don't print 'hidden' functions
-        if expr.hide:
-            return ''
 
         name = self._print(expr.name)
         self.set_current_function(name)
@@ -1593,6 +1582,7 @@ class FCodePrinter(CodePrinter):
         functions = expr.functions
         func_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         body_code = self._print(expr.body)
+        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
 
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
@@ -1611,7 +1601,8 @@ class FCodePrinter(CodePrinter):
 
         self.set_current_function(None)
 
-        parts = parts = ["{}({}) {}\n".format(sig_parts['sig'], sig_parts['arg_code'], sig_parts['func_end']),
+        parts = [doc_string,
+                "{}({}) {}\n".format(sig_parts['sig'], sig_parts['arg_code'], sig_parts['func_end']),
                 imports,
                 'implicit none\n',
                 prelude,
