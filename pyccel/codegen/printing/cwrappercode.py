@@ -789,6 +789,14 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_args    = [python_func_selfarg, python_func_args, python_func_kwargs]
         wrapper_results = [self.get_new_PyObject("result", used_names)]
 
+        if expr.is_private:
+            wrapper_func = FunctionDef(name = wrapper_name,
+                arguments = wrapper_args,
+                results = wrapper_results,
+                body = [PyErr_SetString('PyExc_NotImplementedError', '"Private functions are not accessible from python"'),
+                        AliasAssign(wrapper_results[0], Nil()),
+                        Return(wrapper_results)])
+            return CCodePrinter._print_FunctionDef(self, wrapper_func)
         if any(isinstance(arg, FunctionAddress) for arg in expr.arguments):
             wrapper_func = FunctionDef(name = wrapper_name,
                 arguments = wrapper_args,
