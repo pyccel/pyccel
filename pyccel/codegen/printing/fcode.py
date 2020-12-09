@@ -1476,9 +1476,6 @@ class FCodePrinter(CodePrinter):
         self._handle_fortran_specific_a_prioris(list(expr.local_vars) +
                                                 list(expr.arguments)  +
                                                 list(expr.results))
-        # ... we don't print 'hidden' functions
-        if expr.hide:
-            return ''
 
         name = self._print(expr.name)
         self.set_current_function(name)

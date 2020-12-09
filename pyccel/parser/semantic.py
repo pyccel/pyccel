@@ -2255,27 +2255,6 @@ class SemanticParser(BasicParser):
         self.insert_header(expr)
         return expr
 
-    def _visit_InterfaceHeader(self, expr, **settings):
-
-        containers = [self.namespace.functions ,
-        self.namespace.imports['functions']]
-        # TODO improve test all possible containers
-        name = None
-        for container in containers:
-            if set(expr.funcs).issubset(container.keys()):
-                name  = expr.name
-                funcs = []
-                for i in expr.funcs:
-                    funcs += [container[i]]
-
-        if name is None:
-            errors.report(UNDEFINED_INTERFACE_FUNCTION, symbol=expr.funcs,
-                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                   severity='fatal', blocker=self.blocking)
-        expr            = Interface(name, funcs, hide=True)
-        container[name] = expr
-        return expr
-
     def _visit_Return(self, expr, **settings):
 
         results     = expr.expr
@@ -2304,7 +2283,6 @@ class SemanticParser(BasicParser):
         name            = str(expr.name)
         name            = name.replace("'", '')
         cls_name        = expr.cls_name
-        hide            = False
         decorators      = expr.decorators
         funcs           = []
         sub_funcs       = []
@@ -2580,7 +2558,6 @@ class SemanticParser(BasicParser):
                     local_vars=local_vars,
                     global_vars=global_vars,
                     cls_name=cls_name,
-                    hide=hide,
                     is_pure=is_pure,
                     is_elemental=is_elemental,
                     is_private=is_private,

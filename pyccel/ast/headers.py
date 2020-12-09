@@ -259,7 +259,6 @@ class FunctionHeader(Header):
 
         body      = []
         cls_name  = None
-        hide      = False
         is_static = self.is_static
         imports   = []
         funcs = []
@@ -362,7 +361,6 @@ class FunctionHeader(Header):
                              local_vars=[],
                              global_vars=[],
                              cls_name=cls_name,
-                             hide=hide,
                              is_static=is_static,
                              imports=imports,
                              is_header=True)

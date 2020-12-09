@@ -615,7 +615,6 @@ class SyntaxParser(BasicParser):
         global_vars  = []
         headers      = []
         templates    = {}
-        hide         = False
         is_pure      = False
         is_elemental = False
         is_private   = False
@@ -810,7 +809,6 @@ class SyntaxParser(BasicParser):
                body,
                local_vars=local_vars,
                global_vars=global_vars,
-               hide=hide,
                is_pure=is_pure,
                is_elemental=is_elemental,
                is_private=is_private,

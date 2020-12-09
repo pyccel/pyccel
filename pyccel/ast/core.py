@@ -2927,9 +2927,6 @@ class FunctionDef(Basic):
     cls_name: str
         Class name if the function is a method of cls_name
 
-    hide: bool
-        if True, the function definition will not be generated.
-
     is_pure: bool
         True for a function without side effect
 
@@ -2996,7 +2993,6 @@ class FunctionDef(Basic):
         local_vars=[],
         global_vars=[],
         cls_name=None,
-        hide=False,
         is_static=False,
         imports=[],
         decorators={},
@@ -3106,7 +3102,6 @@ class FunctionDef(Basic):
         self._local_vars      = local_vars
         self._global_vars     = global_vars
         self._cls_name        = cls_name
-        self._hide            = hide
         self._is_static       = is_static
         self._imports         = imports
         self._decorators      = decorators
@@ -3161,11 +3156,6 @@ class FunctionDef(Basic):
     @cls_name.setter
     def cls_name(self, cls_name):
         self._cls_name = cls_name
-
-    @property
-    def hide(self):
-        """ False if function is pyccelized, True otherwise """
-        return self._hide
 
     @property
     def imports(self):
@@ -3303,7 +3293,6 @@ class FunctionDef(Basic):
         'local_vars':self._local_vars,
         'global_vars':self._global_vars,
         'cls_name':self._cls_name,
-        'hide':self._hide,
         'is_static':self._is_static,
         'imports':self._imports,
         'decorators':self._decorators,
