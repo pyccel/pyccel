@@ -10,7 +10,7 @@ from textx.metamodel import metamodel_from_file
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct,\
         Omp_End_Clause, OMP_Critical_Construct, OMP_Barrier_Construct, OMP_Master_Construct,\
-        OMP_Masked_Construct
+        OMP_Masked_Construct, OMP_TaskLoop_Construct
 
 DEBUG = False
 
@@ -53,6 +53,8 @@ class OpenmpStmt(BasicStmt):
         elif isinstance(stmt, OmpMasterConstruct):
             return stmt.expr
         elif isinstance(stmt, OmpMaskedConstruct):
+            return stmt.expr
+        elif isinstance(stmt, OmpTaskLoopConstruct):
             return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
@@ -142,7 +144,8 @@ class OmpTaskLoopConstruct(BasicStmt):
                          OmpLastPrivate, \
                          OmpTaskloopReduction, \
                          OmpNumTasks, \
-                         OmpGrainSize)
+                         OmpGrainSize, \
+                         OmpCollapse)
 
         txt = ''
         for clause in self.clauses:
@@ -151,7 +154,7 @@ class OmpTaskLoopConstruct(BasicStmt):
             else:
                 raise TypeError('Wrong clause for OmpTaskLoopConstruct. Given : ', \
                                 type(clause))
-        return OMP_For_Loop(txt)
+        return OMP_TaskLoop_Construct(txt)
 
 class OmpSingleConstruct(BasicStmt):
     """Class representing a ."""

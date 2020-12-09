@@ -21,6 +21,7 @@ OmpConstructOrDirective:
   | OmpBarrierConstruct
   | OmpMasterConstruct
   | OmpMaskedConstruct
+  | OmpTaskLoopConstruct
 ;
 ////////////////////////////////////////////////////
 
@@ -77,6 +78,7 @@ OmpTaskLoopClause:
   | OmpTaskloopReduction
   | OmpNumTasks
   | OmpGrainSize
+  | OmpCollapse
 ;
 
 OmpSingleClause:
