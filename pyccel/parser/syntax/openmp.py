@@ -122,6 +122,37 @@ class OmpLoopConstruct(BasicStmt):
                                 type(clause))
         return OMP_For_Loop(txt)
 
+class OmpTaskLoopConstruct(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.clauses = kwargs.pop('clauses')
+
+        super(OmpTaskLoopConstruct, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpTaskLoopConstruct: expr")
+
+        _valid_clauses = (OmpShared, \
+                         OmpPrivate, \
+                         OmpFirstPrivate, \
+                         OmpLastPrivate, \
+                         OmpTaskloopReduction, \
+                         OmpNumTasks, \
+                         OmpGrainSize)
+
+        txt = ''
+        for clause in self.clauses:
+            if isinstance(clause, _valid_clauses):
+                txt = '{0} {1}'.format(txt, clause.expr)
+            else:
+                raise TypeError('Wrong clause for OmpTaskLoopConstruct. Given : ', \
+                                type(clause))
+        return OMP_For_Loop(txt)
+
 class OmpSingleConstruct(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
@@ -283,6 +314,24 @@ class OmpNumTasks(BasicStmt):
 
         tasks = self.tasks
         return 'num_tasks({})'.format(tasks)
+
+class OmpGrainSize(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.size = kwargs.pop('tasks')
+
+        super(OmpGrainSize, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        # TODO check if variable exist in namespace
+        if DEBUG:
+            print("> OmpGrainSize: expr")
+
+        size = self.size
+        return 'grainsize({})'.format(size)
 
 class OmpDefault(BasicStmt):
     """Class representing a ."""
@@ -566,7 +615,8 @@ omp_directives = [OmpParallelConstruct,
                   OmpCriticalConstruct,
                   OmpBarrierConstruct,
                   OmpMasterConstruct,
-                  OmpMaskedConstruct]
+                  OmpMaskedConstruct,
+                  OmpTaskLoopConstruct]
 
 omp_clauses = [OmpCollapse,
                OmpCopyin,
@@ -583,7 +633,10 @@ omp_clauses = [OmpCollapse,
                OmpSchedule,
                OmpShared,
                OmpCriticalName,
-               OmpFilter]
+               OmpFilter,
+               OmpTaskloopReduction,
+               OmpNumTasks,
+               OmpGrainSize]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 

@@ -46,6 +46,7 @@ ParallelCombined: ('for' 'simd'? | 'sections');
 ////////////////////////////////////////////////////
 //      Clauses for Constructs and Directives
 ////////////////////////////////////////////////////
+
 OmpParallelClause:
     OmpNumThread
   | OmpDefault
