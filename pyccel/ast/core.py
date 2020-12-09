@@ -161,9 +161,10 @@ __all__ = (
     'OMP_Single_Construct',
     'Omp_End_Clause',
     'OMP_Critical_Construct',
-    'OMP_Barrier_Construct'
-    'OMP_Master_Construct'
-    'OMP_Masked_Construct'
+    'OMP_Barrier_Construct',
+    'OMP_Master_Construct',
+    'OMP_Masked_Construct',
+    'OMP_TaskLoop_Construct'
 )
 
 #==============================================================================
@@ -4630,6 +4631,11 @@ class OMP_Parallel_Construct(AnnotatedComment):
     """ Represents an OpenMP Parallel construct. """
     def __new__(cls, txt, combined=None):
         return AnnotatedComment.__new__(cls, 'omp', txt, combined)
+
+class OMP_TaskLoop_Construct(AnnotatedComment):
+    """ Represents an OpenMP TaskLoop construct. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
 
 class OMP_Single_Construct(AnnotatedComment):
     """ Represents an OpenMP Single construct. """
