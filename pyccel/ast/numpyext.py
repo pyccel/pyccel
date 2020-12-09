@@ -362,10 +362,7 @@ def Shape(arg):
     if isinstance(arg.shape, PythonTuple):
         return arg.shape
     else:
-        if arg.order == 'F':
-            return PythonTuple(*arg.shape)
-        else :
-            return PythonTuple(*arg.shape[::-1])
+        return PythonTuple(*arg.shape)
 #==============================================================================
 class NumpyReal(PythonReal):
     """Represents a call to  numpy.real for code generation.
