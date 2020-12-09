@@ -1184,10 +1184,6 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, (PythonRange, Product)):
             return ''
 
-        if isinstance(rhs, (PythonLen, NumpyRandint)):
-            rhs_code = self._print(rhs)
-            return '{0} = {1}\n'.format(lhs_code, rhs_code)
-
         if isinstance(rhs, NumpyRand):
             return 'call random_number({0})\n'.format(self._print(expr.lhs))
 

@@ -5702,21 +5702,3 @@ class PyccelArraySize(Function, PyccelAstNode):
 
     def _sympystr(self, printer):
         return 'Shape({},{})'.format(str(self.arg), str(self.index))
-
-    def fprint(self, printer, lhs = None):
-        """Fortran print."""
-
-        lhs_code = printer(lhs)
-        init_value = printer(self.arg)
-
-        if self.arg.order == 'C':
-            index = printer(self.arg.rank - self.index)
-        else:
-            index = printer(self.index + 1)
-
-        if lhs:
-            code_init = '{0} = size({1}, {2})'.format(lhs_code, init_value, index)
-        else:
-            code_init = 'size({0}, {1})'.format(init_value, index)
-
-        return code_init
