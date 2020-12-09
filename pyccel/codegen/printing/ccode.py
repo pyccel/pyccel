@@ -1185,6 +1185,10 @@ class CCodePrinter(CodePrinter):
             omp_expr += '\n{'
         return omp_expr
 
+    def _print_OMP_TaskLoop_Construct(self, expr):
+        omp_expr   = str(expr.txt)
+        return '#pragma taskloop {}'.format(omp_expr)
+
     def _print_OMP_Single_Construct(self, expr):
         omp_expr   = str(expr.txt)
         return '#pragma omp {}\n{{'.format(omp_expr)
