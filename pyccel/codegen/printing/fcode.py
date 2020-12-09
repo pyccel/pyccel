@@ -62,7 +62,7 @@ from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_impo
 
 from pyccel.ast.numpyext import NumpyEmpty
 from pyccel.ast.numpyext import NumpyMod, NumpyFloat
-from pyccel.ast.numpyext import NumpyRand, NumpyRandint
+from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import Shape
 
