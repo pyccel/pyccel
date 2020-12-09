@@ -23,7 +23,7 @@ errors = Errors()
 def _construct_header(func_name, args):
     args = build_types_decorator(args, order='F')
     args = ','.join("{}".format(i) for i in args)
-    pattern = '#$ header procedure static {name}({args})'
+    pattern = '#$ header function static {name}({args})'
     return pattern.format(name=func_name, args=args)
 
 #==============================================================================
