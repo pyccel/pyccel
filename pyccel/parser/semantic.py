@@ -830,13 +830,13 @@ class SemanticParser(BasicParser):
 
     def _visit_Slice(self, expr, **settings):
         args = list(expr.args)
-        if args[0] is not None:
+        if args[0]:
             args[0] = self._visit(args[0], **settings)
 
-        if args[1] is not None:
+        if args[1]:
             args[1] = self._visit(args[1], **settings)
 
-        if args[2] is not None:
+        if args[2]:
             args[2] = self._visit(args[2], **settings)
         return Slice(*args)
 
