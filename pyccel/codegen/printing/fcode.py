@@ -1411,7 +1411,7 @@ class FCodePrinter(CodePrinter):
 
         func_end  = ''
         rec = 'recursive' if expr.is_recursive else ''
-        if len(expr.results) == 1:
+        if len(expr.results) != 1:
             func_type = 'subroutine'
             out_args = list(expr.results)
             for result in out_args:
