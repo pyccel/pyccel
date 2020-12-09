@@ -9,6 +9,7 @@ from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
 from pyccel.ast.core      import Declare, IndexedVariable, IndexedElement, Slice, ValuedVariable
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
+from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Nil
 from pyccel.ast.core      import Assign, datatype, Variable, Import
@@ -688,10 +689,10 @@ class CCodePrinter(CodePrinter):
         free_code = ''
         #free the array if its already allocated and checking if its not null if the status is unknown
         if  (expr.status == 'unknown'):
-            free_code = 'if (%s.raw_data != NULL)\n' % self._print(expr.variable.name)
-            free_code += '{\nfree_array(%s);\n}\n' % self._print(expr.variable.name)
+            free_code = 'if (%s.shape != NULL)\n' % self._print(expr.variable.name)
+            free_code += "{{\n{};\n}}\n".format(self._print(Deallocate(expr.variable)))
         elif  (expr.status == 'allocated'):
-            free_code += 'free_array(%s);\n' % self._print(expr.variable.name)
+            free_code += self._print(Deallocate(expr.variable))
         self._additional_imports.add('ndarrays')
         shape = expr.shape
         shape = [self._print(i) for i in shape]
@@ -704,7 +705,7 @@ class CCodePrinter(CodePrinter):
         return '{}\n{}'.format(free_code, alloc_code)
 
     def _print_Deallocate(self, expr):
-        return 'free_array({})'.format(self._print(expr.variable.name))
+        return 'free_array({})'.format(self._print(expr.variable))
 
     def _print_Slice(self, expr):
         start = self._print(expr.start)
@@ -817,9 +818,7 @@ class CCodePrinter(CodePrinter):
 
         if len(expr.results) > 1:
             self._additional_args.append(expr.results)
-
         body  = self._print(expr.body)
-
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
             decs += [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.results]
@@ -831,6 +830,7 @@ class CCodePrinter(CodePrinter):
         if self._additional_args :
             self._additional_args.pop()
         imports = ''.join(self._print(i) for i in expr.imports)
+
         return ('{sep}\n'
                 '{signature}\n{{\n'
                 '{imports}\n'
@@ -846,7 +846,7 @@ class CCodePrinter(CodePrinter):
     def stored_in_c_pointer(self, a):
         if not isinstance(a, Variable):
             return False
-        return a.is_pointer or a.is_optional or any(a in b for b in self._additional_args)
+        return (a.is_pointer and not a.is_ndarray) or a.is_optional or any(a in b for b in self._additional_args)
 
     def create_tmp_var(self, match_var):
         tmp_var_name = self._parser.get_new_name('tmp')
@@ -902,10 +902,8 @@ class CCodePrinter(CodePrinter):
     def _print_Return(self, expr):
         code = ''
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
-
         if expr.stmt:
             code += self._print(expr.stmt)+'\n'
-
         if len(args) == 1:
             code +='return {0};'.format(self._print(args[0]))
         elif len(args) > 1:
@@ -991,7 +989,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(rhs, IndexedElement) and isinstance(expr.lhs, Variable):
             free_code = ''
             if any(isinstance(i, Slice) for i in rhs.args):
-                free_code += 'free_array(%s);\n' % self._print(expr.lhs.name)
+                free_code += self._print(Deallocate(expr.lhs))
                 self._additional_imports.add('ndarrays')
             rhs = self._print(rhs)
             return '{}{} = {};'.format(free_code, lhs, rhs)
@@ -1208,6 +1206,7 @@ class CCodePrinter(CodePrinter):
         decs    += [self._print(Declare(i.dtype, i)) for i in self._additional_declare]
         decs    = '\n'.join(self._print(i) for i in decs)
         self._additional_declare.clear()
+
         # PythonPrint imports last to be sure that all additional_imports have been collected
         imports  = [*expr.imports, *map(Import, self._additional_imports)]
         imports  = '\n'.join(self._print(i) for i in imports)

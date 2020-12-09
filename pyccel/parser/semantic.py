@@ -203,6 +203,7 @@ class SemanticParser(BasicParser):
 
         ast = self.ast
 
+        self._allocs.append([])
         # we add the try/except to allow the parser to find all possible errors
         PyccelAstNode.stage = 'semantic'
         ast = self._visit(ast, **settings)
@@ -238,17 +239,26 @@ class SemanticParser(BasicParser):
 
         self._semantic_done = True
 
-        #check if the ast CodeBlock is a Program to add the Garbage collecting
+        # check if the ast CodeBlock is a Program to call the Garbage collecting
         cls = (Header, EmptyNode, NewLine, Comment, CommentBlock, Module)
-        body = ast.body
-        is_module = all(isinstance(i,cls) for i in body)
-        if not isinstance(body[-1], Return) and not is_module:
-            dealloc = [Deallocate(i) for i in self._allocs]
-            body += dealloc
-            ast = CodeBlock(body)
-            self._allocs = []
+        is_module = all(isinstance(i,cls) for i in ast.body)
+        if not is_module:
+            self._ast = ast = self.garbage_collector(ast)
+        self._allocs = []
 
         return ast
+
+    def garbage_collector(self, expr):
+        """
+        Search in a CodeBlock if no trailing Return Node is present add the needed frees.
+
+        Return the same CodeBlock if a trailing Return found otherwise Return a new CodeBlock with additionals Deallocate Nodes.
+        """
+        if not isinstance(expr.body[-1], Return):
+            code = expr.body + [Deallocate(i) for i in self._allocs[-1]]
+            print(code)
+            return CodeBlock(code)
+        return expr
 
     def get_variable_from_scope(self, name):
         """
@@ -1419,7 +1429,7 @@ class SemanticParser(BasicParser):
                 # Add memory deallocation for array variables
                 if lhs.is_ndarray:
                     # Create Deallocate node
-                    self._allocs.append(lhs)
+                    self._allocs[-1].append(lhs)
                 # ...
 
                 # We cannot allow the definition of a stack array in a loop
@@ -2322,9 +2332,7 @@ class SemanticParser(BasicParser):
 
         #add the Deallocate node before the Return node
         code = []
-        code += (assigns)
-        deallocs = [Deallocate(i) for i in self._allocs]
-        code += (deallocs)
+        code = assigns + [Deallocate(i) for i in self._allocs[-1]]
         if code:
             expr  = Return(results, CodeBlock(code))
         else:
@@ -2511,14 +2519,13 @@ class SemanticParser(BasicParser):
             func = FunctionDef(name, args, results, [])
             self.insert_function(func)
 
+            self._allocs.append([])
             # we annotate the body
             body = self._visit(expr.body)
 
-            #checking if the Function don't have Return then call the garbage collector
-            if not isinstance(expr.body.args[-1][-1], Return):
-                dealloc = [Deallocate(i) for i in self._allocs]
-                body = CodeBlock([body, CodeBlock(dealloc)])
-            self._allocs = []
+            #Call to the garbage collector
+            body = self.garbage_collector(body)
+            self._allocs = self._allocs[:-1]
 
             args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(str(a.name)) for a in args]
             results = list(OrderedDict((a.name,self.get_variable(a.name)) for a in results).values())

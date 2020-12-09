@@ -913,9 +913,8 @@ class Deallocate(Basic):
     def variable(self):
         return self._variable
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return 'Deallocate({})'.format(sstr(self.variable))
+    def __repr__(self):
+        return 'Deallocate({})'.format(self.variable.name)
 
     def __eq__(self, other):
         return (self.variable is other.variable)
