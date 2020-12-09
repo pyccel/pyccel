@@ -3220,8 +3220,8 @@ class FunctionDef(Basic):
 
     @property
     def is_header(self):
-        """ True if the function body is not provided
-        False otherwise """
+        """ True if the implementation of the function body
+        is not provided False otherwise """
         return self._is_header
 
     @property
