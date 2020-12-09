@@ -121,7 +121,7 @@ FunctionHeaderStmt:
   (results=HeaderResults)?
 ;
 
-FunctionKind: 'function' | 'procedure';
+FunctionKind: 'function';
 
 ClassOptions: 
     'abstract' 

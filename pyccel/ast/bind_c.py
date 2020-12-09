@@ -117,7 +117,8 @@ def as_static_function(func, name=None):
                         functions = functions,
                         interfaces = interfaces,
                         imports = func.imports,
-                        original_function = func
+                        original_function = func,
+                        doc_string = func.doc_string,
                         )
 
 #=======================================================================================
@@ -147,6 +148,7 @@ def as_static_function_call(func, mod_name, name=None):
                        functions = func.functions,
                        interfaces = func.interfaces,
                        imports = imports,
+                       doc_string = func.doc_string,
                        )
 
     # make it compatible with c
