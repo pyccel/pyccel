@@ -1,8 +1,10 @@
 module pyc_math
 
+use ISO_C_BINDING
+
 implicit none
 
-real(kind=8), parameter, private :: pi = 4.D0 * DATAN(1.D0)
+real(C_DOUBLE), parameter, private :: pi = 4.D0 * DATAN(1.D0)
 
 interface pyc_gcd
     module procedure pyc_gcd_4
@@ -22,35 +24,34 @@ end interface pyc_lcm
 contains
 
 ! Implementation of math factorial function
-function pyc_factorial_4(x) result(fx) ! integers with precision 4
+pure function pyc_factorial_4(x) result(fx) ! integers with precision 4
 
     implicit none
 
-    integer(kind=4), value  :: x
-    integer(kind=4)         :: fx
+    integer(C_INT32_T), intent(in) :: x
+    integer(C_INT32_T)             :: i
+    integer(C_INT32_T)             :: fx
 
     fx = 1
-    do while (x > 0)
-        fx = fx * x
-        x = x - 1
+    do i = 2, x
+        fx = fx * i
     enddo
     return
 
 end function pyc_factorial_4
 
-function pyc_factorial_8(x) result(fx) ! integers with precision 8
+pure function pyc_factorial_8(x) result(fx) ! integers with precision 8
 
     implicit none
 
-    integer(kind=8), value  :: x
-    integer(kind=8)         :: fx
+    integer(C_INT64_T), intent(in)  :: x
+    integer(C_INT64_T)              :: fx
+    integer(C_INT64_T)              :: i
 
     fx = 1
-    do while (x > 0)
-        fx = fx * x
-        x = x - 1
+    do i = 2, x
+        fx = fx * i
     enddo
-    return
 
 end function pyc_factorial_8
 
@@ -59,9 +60,9 @@ function pyc_gcd_4(a, b) result(gcd) ! integers with precision 4
 
     implicit none
 
-    integer(kind=4), value  :: a
-    integer(kind=4), value  :: b
-    integer(kind=4)         :: gcd
+    integer(C_INT32_T), value  :: a
+    integer(C_INT32_T), value  :: b
+    integer(C_INT32_T)         :: gcd
 
     do while (b > 0)
         a = MOD(a, b)
@@ -78,9 +79,9 @@ function pyc_gcd_8(a, b) result(gcd) ! integers with precision 8
 
     implicit none
 
-    integer(kind=8), value  :: a
-    integer(kind=8), value  :: b
-    integer(kind=8)         :: gcd
+    integer(C_INT64_T), value  :: a
+    integer(C_INT64_T), value  :: b
+    integer(C_INT64_T)         :: gcd
 
     do while (b > 0)
         a = MOD(a, b)
@@ -98,9 +99,9 @@ function pyc_lcm_4(a, b) result(lcm)
 
     implicit none
 
-    integer(kind=4), value :: a
-    integer(kind=4), value :: b
-    integer(kind=4)        :: lcm
+    integer(C_INT32_T), intent(in) :: a
+    integer(C_INT32_T), intent(in) :: b
+    integer(C_INT32_T)        :: lcm
 
     lcm = a / pyc_gcd(a, b) * b
     return
@@ -111,9 +112,9 @@ function pyc_lcm_8(a, b) result(lcm)
 
     implicit none
 
-    integer(kind=8), value :: a
-    integer(kind=8), value :: b
-    integer(kind=8)        :: lcm
+    integer(C_INT64_T), intent(in) :: a
+    integer(C_INT64_T), intent(in) :: b
+    integer(C_INT64_T)        :: lcm
 
     lcm = a / pyc_gcd(a, b) * b
     return
@@ -121,12 +122,12 @@ function pyc_lcm_8(a, b) result(lcm)
 end function pyc_lcm_8
 
 ! Implementation of math radians function
-function pyc_radians(deg) result(rad)
+pure function pyc_radians(deg) result(rad)
 
     implicit none
 
-    real(kind=8), value     :: deg
-    real(kind=8)            :: rad
+    real(C_DOUBLE), intent(in)     :: deg
+    real(C_DOUBLE)            :: rad
 
     rad = deg * (pi / 180.0)
     return
@@ -134,12 +135,12 @@ function pyc_radians(deg) result(rad)
 end function pyc_radians
 
 ! Implementation of math degrees function
-function pyc_degrees(rad) result(deg)
+pure function pyc_degrees(rad) result(deg)
 
     implicit none
 
-    real(kind=8), value     :: rad
-    real(kind=8)            :: deg
+    real(C_DOUBLE), intent(in)     :: rad
+    real(C_DOUBLE)            :: deg
 
     deg = rad * (180.0 / pi)
     return
