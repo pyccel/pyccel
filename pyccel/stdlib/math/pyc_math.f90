@@ -4,7 +4,7 @@ use ISO_C_BINDING
 
 implicit none
 
-real(C_DOUBLE), parameter, private :: pi = 4.D0 * DATAN(1.D0)
+real(C_DOUBLE), parameter, private :: pi = 4.0_C_DOUBLE * DATAN(1.0_C_DOUBLE)
 
 interface pyc_gcd
     module procedure pyc_gcd_4
@@ -32,8 +32,8 @@ pure function pyc_factorial_4(x) result(fx) ! integers with precision 4
     integer(C_INT32_T)             :: i
     integer(C_INT32_T)             :: fx
 
-    fx = 1
-    do i = 2, x
+    fx = 1_C_INT32_T
+    do i = 2_C_INT32_T, x
         fx = fx * i
     enddo
     return
@@ -48,8 +48,8 @@ pure function pyc_factorial_8(x) result(fx) ! integers with precision 8
     integer(C_INT64_T)              :: fx
     integer(C_INT64_T)              :: i
 
-    fx = 1
-    do i = 2, x
+    fx = 1_C_INT64_T
+    do i = 2_C_INT64_T, x
         fx = fx * i
     enddo
 
@@ -129,7 +129,7 @@ pure function pyc_radians(deg) result(rad)
     real(C_DOUBLE), intent(in)     :: deg
     real(C_DOUBLE)            :: rad
 
-    rad = deg * (pi / 180.0)
+    rad = deg * (pi / 180.0_C_DOUBLE)
     return
 
 end function pyc_radians
@@ -142,7 +142,7 @@ pure function pyc_degrees(rad) result(deg)
     real(C_DOUBLE), intent(in)     :: rad
     real(C_DOUBLE)            :: deg
 
-    deg = rad * (180.0 / pi)
+    deg = rad * (180.0_C_DOUBLE / pi)
     return
 
 end function pyc_degrees
