@@ -1840,7 +1840,7 @@ class FCodePrinter(CodePrinter):
     
     def _print_OMP_TaskLoop_Construct(self, expr):
         omp_expr   = str(expr.txt)
-        return '!$omp taskloop {}\n'.format(omp_expr)
+        return '!$omp taskloop{}\n'.format(omp_expr)
  
     def _print_OMP_Single_Construct(self, expr):
         omp_expr   = str(expr.txt)

@@ -79,6 +79,9 @@ OmpTaskLoopClause:
   | OmpNumTasks
   | OmpGrainSize
   | OmpCollapse
+  | OmpUntied
+  | OmpMergeable
+  | OmpNogroup
 ;
 
 OmpSingleClause:
@@ -117,6 +120,9 @@ OmpSchedule: 'schedule' '(' kind=OmpScheduleKind (',' chunk_size=INT)? ')';
 OmpEndClause: 'end' construct=OpenmpConstructs (simd='simd')? (nowait='nowait')?;
 OmpCriticalName: '(' args=ID ')';
 OmpFilter: name='filter' '(' n=INT ')';
+OmpUntied: 'untied';
+OmpMergeable: 'mergeable';
+OmpNogroup: 'nogroup';
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
