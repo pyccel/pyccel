@@ -99,8 +99,8 @@ function pyc_lcm_4(a, b) result(lcm)
 
     implicit none
 
-    integer(C_INT32_T), intent(in) :: a
-    integer(C_INT32_T), intent(in) :: b
+    integer(C_INT32_T), value :: a
+    integer(C_INT32_T), value :: b
     integer(C_INT32_T)        :: lcm
 
     lcm = a / pyc_gcd(a, b) * b
@@ -112,8 +112,8 @@ function pyc_lcm_8(a, b) result(lcm)
 
     implicit none
 
-    integer(C_INT64_T), intent(in) :: a
-    integer(C_INT64_T), intent(in) :: b
+    integer(C_INT64_T), value :: a
+    integer(C_INT64_T), value :: b
     integer(C_INT64_T)        :: lcm
 
     lcm = a / pyc_gcd(a, b) * b
