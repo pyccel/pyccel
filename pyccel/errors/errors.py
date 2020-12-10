@@ -1,5 +1,5 @@
 #This file is part of pyccel which is released under MIT License. See file LICENSE or go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.
-
+# pylint: disable=missing-module-docstring
 from collections import OrderedDict
 from os.path import basename
 from ast import dump as ast_dump
