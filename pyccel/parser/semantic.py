@@ -239,12 +239,8 @@ class SemanticParser(BasicParser):
 
         self._semantic_done = True
 
-        # check if the ast CodeBlock is a Program to call the Garbage collecting
-        cls = (Header, EmptyNode, NewLine, Comment, CommentBlock, Module)
-        is_module = all(isinstance(i,cls) for i in ast.body)
-        if not is_module:
-            self._ast = ast = self.garbage_collector(ast)
-        self._allocs = []
+        #calling the Garbage collecting, it will add the necessary Deallocate nodes if needed to the ast
+        self._ast = ast = self.garbage_collector(ast)
 
         return ast
 
@@ -252,13 +248,14 @@ class SemanticParser(BasicParser):
         """
         Search in a CodeBlock if no trailing Return Node is present add the needed frees.
 
-        Return the same CodeBlock if a trailing Return found otherwise Return a new CodeBlock with additionals Deallocate Nodes.
+        Return the same CodeBlock if a trailing Return is found otherwise Return a new CodeBlock with additional Deallocate Nodes.
         """
+        code = expr
         if not isinstance(expr.body[-1], Return):
             code = expr.body + [Deallocate(i) for i in self._allocs[-1]]
-            print(code)
-            return CodeBlock(code)
-        return expr
+            code = CodeBlock(code)
+        self._allocs.pop()
+        return code
 
     def get_variable_from_scope(self, name):
         """
@@ -2525,7 +2522,6 @@ class SemanticParser(BasicParser):
 
             #Call to the garbage collector
             body = self.garbage_collector(body)
-            self._allocs = self._allocs[:-1]
 
             args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(str(a.name)) for a in args]
             results = list(OrderedDict((a.name,self.get_variable(a.name)) for a in results).values())
