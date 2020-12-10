@@ -136,13 +136,6 @@ class PythonBool(Expr, PyccelAstNode):
     def _sympystr(self, printer):
         return self.__str__()
 
-    def fprint(self, printer):
-        """ Fortran printer. """
-        if isinstance(self.arg.dtype, NativeBool):
-            return 'logical({}, kind = {prec})'.format(printer(self.arg), prec = iso_c_binding["logical"][self.precision])
-        else:
-            return '{} /= 0'.format(printer(self.arg))
-
 #==============================================================================
 class PythonComplex(Expr, PyccelAstNode):
     """ Represents a call to Python's native complex() function.
@@ -283,13 +276,6 @@ class PythonFloat(Expr, PyccelAstNode):
     def _sympystr(self, printer):
         return self.__str__()
 
-    def fprint(self, printer):
-        """Fortran print."""
-        value = printer(self.arg)
-        prec  = printer(self.precision)
-        code = 'Real({0}, {1})'.format(value, prec)
-        return code
-
 #==============================================================================
 class PythonInt(Expr, PyccelAstNode):
     """ Represents a call to Python's native int() function.
@@ -309,16 +295,6 @@ class PythonInt(Expr, PyccelAstNode):
     @property
     def arg(self):
         return self._args[0]
-
-    def fprint(self, printer):
-        """Fortran print."""
-        value = printer(self.arg)
-        prec  = printer(self.precision)
-        if (self.arg.dtype is NativeBool()):
-            code = 'MERGE(1_8, 0_8, {})'.format(value)
-        else:
-            code  = 'Int({0}, {1})'.format(value, prec)
-        return code
 
 #==============================================================================
 class PythonTuple(Expr, PyccelAstNode):
