@@ -19,6 +19,7 @@
                                         bool : _array_fill_bool,\
                                         float complex : _array_fill_cfloat,\
                                         double complex : _array_fill_cdouble)(c, arr)
+
 typedef struct  s_slice
 {
     int32_t start;
@@ -68,7 +69,8 @@ typedef struct  s_ndarray
     int32_t                 length;
     /* size of the array */
     int32_t                 buffer_size;
-    bool                is_slice;
+
+    bool                 is_view;
 }               t_ndarray;
 
 /* functions prototypes */
@@ -93,6 +95,7 @@ t_ndarray   array_slicing(t_ndarray p, ...);
 
 /* free */
 int32_t         free_array(t_ndarray dump);
+int32_t         free_pointer(t_ndarray dump);
 
 /* indexing */
 int32_t         get_index(t_ndarray arr, ...);

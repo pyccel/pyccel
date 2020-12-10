@@ -40,7 +40,7 @@ t_ndarray   array_create(int32_t nd, int32_t *shape, enum e_types type)
             arr.type_size = sizeof(double complex);
             break;
     }
-    arr.is_slice = false;
+    arr.is_view = false;
     arr.length = 1;
     arr.shape = malloc(arr.nd * sizeof(int32_t));
     for (int32_t i = 0; i < arr.nd; i++)
@@ -150,11 +150,19 @@ int32_t free_array(t_ndarray dump)
 {
     if (dump.shape == NULL)
         return (0);
-    if (!dump.is_slice)
-    {
-        free(dump.raw_data);
-        dump.raw_data = NULL;
-    }
+    free(dump.raw_data);
+    dump.raw_data = NULL;
+    free(dump.shape);
+    dump.shape = NULL;
+    free(dump.strides);
+    dump.strides = NULL;
+    return (1);
+}
+
+int32_t free_pointer(t_ndarray dump)
+{
+    if (dump.is_view == false || dump.shape == NULL)
+        return (0);
     free(dump.shape);
     dump.shape = NULL;
     free(dump.strides);
@@ -189,7 +197,7 @@ t_ndarray array_slicing(t_ndarray p, ...)
     slice.shape = malloc(sizeof(int32_t) * p.nd);
     slice.strides = malloc(sizeof(int32_t) * p.nd);
     memcpy(slice.strides, p.strides, sizeof(int32_t) * p.nd);
-    slice.is_slice = true;
+    slice.is_view = true;
     va_start(va, p);
     for (int32_t i = 0; i < p.nd ; i++)
     {
