@@ -35,7 +35,7 @@ FunctionHeaderStmt:
 
 TemplateStmt: 'template' name = ID '(' dtypes+=TypeHeader['|'] ')';
 
-FunctionKind: 'function' | 'procedure' | 'method';
+FunctionKind: 'function' | 'method';
 Static: 'static';
 HeaderResults: 'results' '(' decs+=TypeHeader[','] ')'; 
 

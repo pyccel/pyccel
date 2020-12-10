@@ -1959,8 +1959,6 @@ class ConstructorCall(AtomicExpr):
     arguments: list, tuple, None
         a list of arguments.
 
-    kind: str
-        'function' or 'procedure'. default value: 'function'
     """
 
     is_commutative = True
@@ -1972,7 +1970,6 @@ class ConstructorCall(AtomicExpr):
         func,
         arguments,
         cls_variable=None,
-        kind='function',
         ):
         if not isinstance(func, (FunctionDef, Interface, str)):
             raise TypeError('Expecting func to be a FunctionDef or str')
@@ -1986,15 +1983,9 @@ class ConstructorCall(AtomicExpr):
         func,
         arguments,
         cls_variable=None,
-        kind='function',
         ):
 
-        if isinstance(func, FunctionDef):
-            kind = func.kind
-
         self._cls_variable = cls_variable
-
-        self._kind = kind
         self._func = func
         self._arguments = arguments
 
@@ -2009,10 +2000,6 @@ class ConstructorCall(AtomicExpr):
     @property
     def func(self):
         return self._func
-
-    @property
-    def kind(self):
-        return self._kind
 
     @property
     def arguments(self):
@@ -2945,12 +2932,6 @@ class FunctionDef(Basic):
     cls_name: str
         Class name if the function is a method of cls_name
 
-    hide: bool
-        if True, the function definition will not be generated.
-
-    kind: str
-        'function' or 'procedure'. default value: 'function'
-
     is_pure: bool
         True for a function without side effect
 
@@ -3017,8 +2998,6 @@ class FunctionDef(Basic):
         local_vars=[],
         global_vars=[],
         cls_name=None,
-        hide=False,
-        kind='function',
         is_static=False,
         imports=[],
         decorators={},
@@ -3031,7 +3010,8 @@ class FunctionDef(Basic):
         is_header=False,
         arguments_inout=[],
         functions=[],
-        interfaces=[]):
+        interfaces=[],
+        doc_string=None):
 
         if isinstance(name, str):
             name = Symbol(name)
@@ -3083,17 +3063,8 @@ class FunctionDef(Basic):
             # if not cls_variable:
              #   raise TypeError('Expecting a instance of {0}'.format(cls_name))
 
-        if kind is None:
-            kind = 'function'
-
-        if not isinstance(kind, str):
-            raise TypeError('Expecting a string for kind.')
-
         if not isinstance(is_static, bool):
             raise TypeError('Expecting a boolean for is_static attribute')
-
-        if not kind in ['function', 'procedure']:
-            raise ValueError("kind must be one among {'function', 'procedure'}")
 
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
@@ -3136,8 +3107,6 @@ class FunctionDef(Basic):
         self._local_vars      = local_vars
         self._global_vars     = global_vars
         self._cls_name        = cls_name
-        self._hide            = hide
-        self._kind            = kind
         self._is_static       = is_static
         self._imports         = imports
         self._decorators      = decorators
@@ -3151,100 +3120,138 @@ class FunctionDef(Basic):
         self._arguments_inout = arguments_inout
         self._functions       = functions
         self._interfaces      = interfaces
+        self._doc_string      = doc_string
 
     @property
     def name(self):
+        """ Name of the function """
         return self._name
 
     @property
     def arguments(self):
+        """ List of variables which are the function arguments """
         return self._arguments
 
     @property
     def results(self):
+        """ List of variables which are the function results """
         return self._results
 
     @property
     def body(self):
+        """ CodeBlock containing all the statements in the function """
         return self._body
 
     @property
     def local_vars(self):
+        """ List of variables defined in the function """
         return self._local_vars
 
     @property
     def global_vars(self):
+        """ List of global variables used in the function """
         return self._global_vars
 
     @property
     def cls_name(self):
+        """ String containing the name of the class to which the method belongs.
+        If the function is not a class procedure then this returns None """
         return self._cls_name
 
-    @property
-    def hide(self):
-        return self._hide
-
-    @property
-    def kind(self):
-        return self._kind
+    @cls_name.setter
+    def cls_name(self, cls_name):
+        self._cls_name = cls_name
 
     @property
     def imports(self):
+        """ List of imports in the function """
         return self._imports
 
     @property
     def decorators(self):
+        """ List of decorators applied to the function """
         return self._decorators
 
     @property
     def headers(self):
+        """ List of headers applied to the function """
         return self._headers
 
     @property
     def templates(self):
+        """ List of templates used to determine the types """
         return self._templates
 
     @property
     def is_recursive(self):
+        """ Returns True if the function is recursive (i.e. calls itself)
+        and False otherwise """
         return self._is_recursive
 
     @property
     def is_pure(self):
+        """ Returns True if the function is marked as pure and False otherwise
+        Pure functions must not have any side effects.
+        In other words this means that the result must be the same no matter 
+        how many times the function is called
+        e.g:
+        >>> a = f()
+        >>> a = f()
+
+        gives the same result as
+        >>> a = f()
+
+        This is notably not true for I/O functions
+        """
         return self._is_pure
 
     @property
     def is_elemental(self):
+        """ returns True if the function is marked as elemental and
+        False otherwise
+        An elemental function is a function with a single scalar operator
+        and a scalar return value which can also be called on an array.
+        When it is called on an array it returns the result of the function
+        called elementwise on the array """
         return self._is_elemental
 
     @property
     def is_private(self):
+        """ True if the function should not be exposed to
+        other modules. This includes the wrapper module and
+        means that the function cannot be used in an import
+        or exposed to python """
         return self._is_private
 
     @property
     def is_header(self):
+        """ True if the implementation of the function body
+        is not provided False otherwise """
         return self._is_header
 
     @property
     def arguments_inout(self):
+        """ List of variables which are the modifiable function arguments """
         return self._arguments_inout
 
     @property
     def functions(self):
+        """ List of functions within this function """
         return self._functions
 
     @property
     def interfaces(self):
+        """ List of interfaces within this function """
         return self._interfaces
 
     @property
     def doc_string(self):
-        return ""
+        """ The docstring of the function """
+        return self._doc_string
 
     def set_recursive(self):
+        """ Mark the function as a recursive function """
         self._is_recursive = True
-
-    def set_cls_name(self, cls_name):
-        self._cls_name = cls_name
 
     def clone(self, newname):
         """
@@ -3275,28 +3282,6 @@ class FunctionDef(Basic):
 
         self._name = newname
 
-    @property
-    def is_procedure(self):
-        """Returns True if a procedure."""
-
-        flag = False
-        if len(self.results) == 1 and isinstance(self.results[0], Expr):
-            vars_ = [i for i in preorder_traversal(self.results)
-                     if isinstance(i, Variable)]
-            flag = flag or any([i.allocatable or i.rank > 0 for i in
-                               vars_])
-        else:
-            flag = flag or len(self.results) == 1 \
-                and self.results[0].allocatable
-            flag = flag or len(self.results) == 1 \
-                and self.results[0].rank > 0
-        flag = flag or len(self.results) > 1
-        flag = flag or len(self.results) == 0
-        flag = flag or self.kind == 'procedure'
-        flag = flag \
-            or len(set(self.results).intersection(self.arguments)) > 0
-        return flag
-
 
     def __getnewargs__(self):
         """
@@ -3313,8 +3298,6 @@ class FunctionDef(Basic):
         'local_vars':self._local_vars,
         'global_vars':self._global_vars,
         'cls_name':self._cls_name,
-        'hide':self._hide,
-        'kind':self._kind,
         'is_static':self._is_static,
         'imports':self._imports,
         'decorators':self._decorators,
@@ -3831,7 +3814,7 @@ class ClassDef(Basic):
 
          #   free = FunctionDef('__del__', [this], [], \
          #                      body, local_vars=[], global_vars=[], \
-         #                      cls_name='__UNDEFINED__', kind='procedure', imports=[])
+         #                      cls_name='__UNDEFINED__', imports=[])
 
          #  methods = list(methods) + [free]
          # TODO move this somewhere else
@@ -4676,7 +4659,7 @@ class CommentBlock(Basic):
     txt : str
 
     """
-    def __new__(cls, txt):
+    def __new__(cls, txt, header = 'CommentBlock'):
         if not isinstance(txt, str):
             raise TypeError('txt must be of type str')
         txt = txt.replace('"','')
@@ -4684,9 +4667,20 @@ class CommentBlock(Basic):
 
         return Basic.__new__(cls, txts)
 
+    def __init__(self, txt, header = 'CommentBlock'):
+        self._header = header
+
     @property
     def comments(self):
         return self._args[0]
+
+    @property
+    def header(self):
+        return self._header
+
+    @header.setter
+    def header(self, header):
+        self._header = header
 
 class IndexedVariable(IndexedBase, PyccelAstNode):
 
@@ -5736,21 +5730,3 @@ class PyccelArraySize(Function, PyccelAstNode):
 
     def _sympystr(self, printer):
         return 'Shape({},{})'.format(str(self.arg), str(self.index))
-
-    def fprint(self, printer, lhs = None):
-        """Fortran print."""
-
-        lhs_code = printer(lhs)
-        init_value = printer(self.arg)
-
-        if self.arg.order == 'C':
-            index = printer(self.arg.rank - self.index)
-        else:
-            index = printer(self.index + 1)
-
-        if lhs:
-            code_init = '{0} = size({1}, {2})'.format(lhs_code, init_value, index)
-        else:
-            code_init = 'size({0}, {1})'.format(init_value, index)
-
-        return code_init
