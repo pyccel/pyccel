@@ -51,6 +51,9 @@ tests/scripts/core/*.f90
 tests/scripts/core/*.mod
 tests/scripts/core/*.o
 
+tests/pyccel/scripts/headers.pyh
+tests/pyccel/scripts/test_headers.py
+
 tests/examples/*.pyccel
 tests/examples/*.f90
 tests/examples/*.mod

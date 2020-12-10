@@ -705,7 +705,7 @@ class CCodePrinter(CodePrinter):
         return '{}\n{}'.format(free_code, alloc_code)
 
     def _print_Deallocate(self, expr):
-        return 'free_array({})'.format(self._print(expr.variable))
+        return 'free_array({});'.format(self._print(expr.variable))
 
     def _print_Slice(self, expr):
         start = self._print(expr.start)
