@@ -1,4 +1,4 @@
-
+#This file is part of pyccel which is released under MIT License. See file LICENSE or go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.
 from sympy import cse as sympy_cse
 from sympy import Sum
 from sympy import IndexedBase, Indexed
