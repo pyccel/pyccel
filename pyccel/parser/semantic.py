@@ -52,7 +52,6 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import _atomic
-from pyccel.ast.core import NewLine, Comment, CommentBlock, Module
 from pyccel.ast.operators import PyccelIs, PyccelIsNot
 from pyccel.ast.itertoolsext import Product
 
@@ -68,7 +67,6 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.headers import MacroFunction, MacroVariable
-from pyccel.ast.headers import Header
 
 from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
@@ -160,6 +158,7 @@ class SemanticParser(BasicParser):
         self._used_names = parser.used_names
         self._dummy_counter = parser._dummy_counter
 
+        # used to strore the local variables of a code block needed for garbage collecting
         self._allocs = []
 
         # we use it to detect the current method or function
@@ -239,7 +238,9 @@ class SemanticParser(BasicParser):
 
         self._semantic_done = True
 
-        #calling the Garbage collecting, it will add the necessary Deallocate nodes if needed to the ast
+        # Calling the Garbage collecting,
+        # it will add the necessary Deallocate nodes
+        # to the ast
         self._ast = ast = self.garbage_collector(ast)
 
         return ast
@@ -1456,16 +1457,19 @@ class SemanticParser(BasicParser):
                             symbol = '|{name}| <module> -> {rhs}'.format(name=name, rhs=rhs),
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
+
                 elif var.is_ndarray and isinstance(rhs, Variable) and rhs.allocatable:
                     errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
                                 severity='error', symbol=lhs.name)
+
                 elif var.is_ndarray and var.is_target:
                     errors.report(ARRAY_ALREADY_IN_USE,
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
                                 severity='error', symbol=var.name)
+
                 elif not is_augassign and str(dtype) != str(getattr(var, 'dtype', 'None')):
                     txt = '|{name}| {old} <-> {new}'
                     txt = txt.format(name=name, old=var.dtype, new=dtype)
@@ -1570,6 +1574,7 @@ class SemanticParser(BasicParser):
 
         rhs = expr.rhs
         lhs = expr.lhs
+
         if isinstance(rhs, Application):
             name = type(rhs).__name__
             macro = self.get_macro(name)
@@ -1931,6 +1936,7 @@ class SemanticParser(BasicParser):
         if (len(new_expressions)==1):
             new_expressions = new_expressions[0]
             new_expressions.set_fst(fst)
+
             return new_expressions
         else:
             result = CodeBlock(new_expressions)
@@ -2491,11 +2497,15 @@ class SemanticParser(BasicParser):
             func = FunctionDef(name, args, results, [])
             self.insert_function(func)
 
+            # Create a new list that store local variables for each FunctionDef to hanld nested functions
             self._allocs.append([])
+
             # we annotate the body
             body = self._visit(expr.body)
 
-            #Call to the garbage collector
+            # Calling the Garbage collecting,
+            # it will add the necessary Deallocate nodes
+            # to the body of the function
             body = self.garbage_collector(body)
 
             args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(str(a.name)) for a in args]
