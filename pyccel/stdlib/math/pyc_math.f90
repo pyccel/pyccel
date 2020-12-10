@@ -56,65 +56,69 @@ pure function pyc_factorial_8(x) result(fx) ! integers with precision 8
 end function pyc_factorial_8
 
 ! Implementation of math gcd function
-function pyc_gcd_4(a, b) result(gcd) ! integers with precision 4
+pure function pyc_gcd_4(a, b) result(gcd) ! integers with precision 4
 
     implicit none
 
-    integer(C_INT32_T), value  :: a
-    integer(C_INT32_T), value  :: b
-    integer(C_INT32_T)         :: gcd
+    integer(C_INT32_T), intent(in) :: a, b
+    integer(C_INT32_T)             :: x, y
+    integer(C_INT32_T)             :: gcd
 
-    do while (b > 0)
-        a = MOD(a, b)
-        a = XOR(a, b)
-        b = XOR(b, a)
-        a = XOR(a, b)
+    x = a
+    y = b
+    do while (y > 0)
+        x = MOD(x, y)
+        x = IEOR(x, y)
+        y = IEOR(y, x)
+        x = IEOR(x, y)
     enddo
-    gcd = a
+    gcd = x
     return
 
 end function pyc_gcd_4
 
-function pyc_gcd_8(a, b) result(gcd) ! integers with precision 8
+pure function pyc_gcd_8(a, b) result(gcd) ! integers with precision 8
 
     implicit none
 
-    integer(C_INT64_T), value  :: a
-    integer(C_INT64_T), value  :: b
-    integer(C_INT64_T)         :: gcd
+    integer(C_INT64_T), intent(in) :: a, b
+    integer(C_INT64_T)              :: x, y
+    integer(C_INT64_T)              :: gcd
 
-    do while (b > 0)
-        a = MOD(a, b)
-        a = XOR(a, b)
-        b = XOR(b, a)
-        a = XOR(a, b)
+    x = a
+    y = b
+    do while (y > 0)
+        x = MOD(x, y)
+        x = IEOR(x, y)
+        y = IEOR(y, x)
+        x = IEOR(x, y)
     enddo
-    gcd = a
+    gcd = x
     return
 
 end function pyc_gcd_8
 
 ! Implementation of math lcm function
-function pyc_lcm_4(a, b) result(lcm)
+pure function pyc_lcm_4(a, b) result(lcm)
 
     implicit none
 
-    integer(C_INT32_T), value :: a
-    integer(C_INT32_T), value :: b
-    integer(C_INT32_T)        :: lcm
+    integer(C_INT32_T), intent(in) :: a
+    integer(C_INT32_T), intent(in) :: b
+    integer(C_INT32_T)             :: lcm
 
     lcm = a / pyc_gcd(a, b) * b
     return
 
 end function pyc_lcm_4
 
-function pyc_lcm_8(a, b) result(lcm)
+pure function pyc_lcm_8(a, b) result(lcm)
 
     implicit none
 
-    integer(C_INT64_T), value :: a
-    integer(C_INT64_T), value :: b
-    integer(C_INT64_T)        :: lcm
+    integer(C_INT64_T), intent(in) :: a
+    integer(C_INT64_T), intent(in) :: b
+    integer(C_INT64_T)             :: lcm
 
     lcm = a / pyc_gcd(a, b) * b
     return
