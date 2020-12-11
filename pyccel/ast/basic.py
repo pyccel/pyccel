@@ -1,5 +1,6 @@
-#This file is part of pyccel which is released under MIT License. See file LICENSE or go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.
-# pylint: disable=missing-module-docstring
+"""This file is part of pyccel which is released under MIT License.
+See file LICENSE or go to https://github.com/pyccel/pyccel/blob/master/LICENSE
+for full license details."""
 from sympy.core.basic import Basic as sp_Basic
 
 __all__ = ('Basic', 'PyccelAstNode')

@@ -1,6 +1,8 @@
 #!/usr/bin/python
-#This file is part of pyccel which is released under MIT License. See file LICENSE or go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.
 # -*- coding: utf-8 -*-
+"""This file is part of pyccel which is released under MIT License.
+See file LICENSE or go to https://github.com/pyccel/pyccel/blob/master/LICENSE
+for full license details."""
 
 from pyccel.codegen.printing.fcode  import FCodePrinter
 from pyccel.codegen.printing.ccode  import CCodePrinter
