@@ -677,7 +677,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
             start = PyccelMinus(shape, start.args[0])
         elif allow_negative_index and not isinstance(start, LiteralInteger):
-            start = IfTernaryOperator(PyccelLt(start < LiteralInteger(0)),
+            start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
                             PyccelMinus(shape, start), start)
 
         if isinstance(end, PyccelUnarySub) and isinstance(end.args[0], LiteralInteger):

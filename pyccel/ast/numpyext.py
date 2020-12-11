@@ -363,6 +363,7 @@ def Shape(arg):
         return arg.shape
     else:
         return PythonTuple(*arg.shape)
+
 #==============================================================================
 class NumpyReal(PythonReal):
     """Represents a call to  numpy.real for code generation.
