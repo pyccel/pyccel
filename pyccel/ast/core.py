@@ -3187,7 +3187,7 @@ class FunctionDef(Basic):
     def is_pure(self):
         """ Returns True if the function is marked as pure and False otherwise
         Pure functions must not have any side effects.
-        In other words this means that the result must be the same no matter 
+        In other words this means that the result must be the same no matter
         how many times the function is called
         e.g:
         >>> a = f()
@@ -4941,6 +4941,8 @@ class Slice(Basic):
     end : Symbol or int
         ending index
 
+    step : Symbol or int default None
+
     Examples
     --------
     >>> from sympy import symbols
@@ -4960,14 +4962,15 @@ class Slice(Basic):
         return Basic.__new__(cls, start, end, step)
 
     def __init__(self, start, end, step = None):
-        if start is not None and (not isinstance(start, (Symbol, LiteralInteger, PyccelOperator, IfTernaryOperator)) or\
-            (isinstance(start, Variable) and not isinstance(start.dtype, NativeInteger))):
+        print(type(start), type(end), type(step))
+        if start is not None and not (isinstance(start, (Symbol, PyccelOperator)) or
+                (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger))):
             raise TypeError('Slice start must be Integer or None')
-        if end is not None and (not isinstance(end, (Symbol, LiteralInteger, PyccelOperator, IfTernaryOperator)) or\
-            (isinstance(end, Variable) and not isinstance(end.dtype, NativeInteger))):
+        if end is not None and not (isinstance(end, (Symbol, PyccelOperator)) or
+                (hasattr(end, 'dtype') and isinstance(end.dtype, NativeInteger))):
             raise TypeError('Slice end must be Integer or None')
-        if step is not None and (not isinstance(step, (Symbol, LiteralInteger, PyccelOperator, IfTernaryOperator)) or\
-            (isinstance(step, Variable) and not isinstance(step.dtype, NativeInteger))):
+        if step is not None and not (isinstance(step, (Symbol, PyccelOperator)) or
+                (hasattr(step, 'dtype') and isinstance(step.dtype, NativeInteger))):
             raise TypeError('Slice step must be Integer or None')
         self._start = start
         self._end = end
