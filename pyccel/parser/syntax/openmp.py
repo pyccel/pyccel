@@ -145,7 +145,11 @@ class OmpTaskLoopConstruct(BasicStmt):
                          OmpTaskloopReduction, \
                          OmpNumTasks, \
                          OmpGrainSize, \
-                         OmpCollapse)
+                         OmpCollapse, \
+                         OmpUntied, \
+                         OmpMergeable, \
+                         OmpNogroup, \
+                         OmpPriority)
 
         txt = ''
         for clause in self.clauses:
@@ -606,6 +610,72 @@ class OmpFilter(BasicStmt):
             print("> OmpFilter: expr")
 
         return '{}({})'.format(self.name, self.n)
+
+class OmpUntied(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name = kwargs.pop('name')
+
+        super(OmpUntied, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpUntied: expr")
+
+        return 'untied'
+
+class OmpMergeable(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name = kwargs.pop('name')
+
+        super(OmpMergeable, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpMergeable: expr")
+
+        return 'mergeable'
+
+class OmpNogroup(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name = kwargs.pop('name')
+
+        super(OmpNogroup, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpNogroup: expr")
+
+        return 'nogroup'
+
+class OmpPriority(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name = kwargs.pop('name')
+        self.n = kwargs.pop('n')
+
+        super(OmpPriority, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpPriority: expr")
+
+        return '{}({})'.format(self.name, self.n)
+
 #################################################
 
 #################################################
@@ -639,7 +709,11 @@ omp_clauses = [OmpCollapse,
                OmpFilter,
                OmpTaskloopReduction,
                OmpNumTasks,
-               OmpGrainSize]
+               OmpGrainSize,
+               OmpUntied,
+               OmpMergeable,
+               OmpNogroup,
+               OmpPriority]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 
