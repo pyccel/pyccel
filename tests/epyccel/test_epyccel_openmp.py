@@ -301,3 +301,14 @@ def test_omp_arraysum_single(language):
 def test_omp_master(language):
     f1 = epyccel(openmp.omp_master, accelerator='openmp', language=language)
     assert f1() == openmp.omp_master()
+
+def test_omp_taskloop(language):
+    f1 = epyccel(openmp.omp_taskloop, accelerator='openmp', language=language)
+    from random import randint
+
+    for i in range(0, 4):
+      x = randint(1, 4)
+      result = 0
+      for j in range(0, x * 10):
+        result = result + 1
+      assert result == f1(x)

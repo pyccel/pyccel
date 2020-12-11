@@ -301,3 +301,14 @@ def omp_master():
     #$omp end master
     #$omp end parallel
     return result
+
+@types('int')
+def omp_taskloop(n):
+    result = 0
+    #$omp parallel num_threads(n)
+    #$omp taskloop
+    for i in range(0, 10):
+        result = result + 1
+    #$omp end parallel
+    return result
+
