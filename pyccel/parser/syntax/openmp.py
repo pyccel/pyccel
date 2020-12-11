@@ -10,7 +10,7 @@ from textx.metamodel import metamodel_from_file
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct,\
         Omp_End_Clause, OMP_Critical_Construct, OMP_Barrier_Construct, OMP_Master_Construct,\
-        OMP_Masked_Construct, OMP_TaskLoop_Construct
+        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct
 
 DEBUG = False
 
@@ -55,6 +55,8 @@ class OpenmpStmt(BasicStmt):
         elif isinstance(stmt, OmpMaskedConstruct):
             return stmt.expr
         elif isinstance(stmt, OmpTaskLoopConstruct):
+            return stmt.expr
+        elif isinstance(stmt, OmpSimdConstruct):
             return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
@@ -210,6 +212,33 @@ class OmpCriticalConstruct(BasicStmt):
               raise TypeError('Wrong clause for OmpCriticalConstruct')
 
         return OMP_Critical_Construct(txt)
+
+class OmpSimdConstruct(BasicStmt):
+    """Class representing a Simd construct."""
+    def __init__(self, **kwargs):
+        self.name = kwargs.pop('name')
+        self.clauses = kwargs.pop('clauses')
+
+        super(OmpSimdConstruct, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpSimdConstruct: expr")
+
+        _valid_clauses = (OmpLinear, \
+                         OmpReduction, \
+                         OmpCollapse, \
+                         OmpLastPrivate)
+
+        txt = self.name
+        for clause in self.clauses:
+            if isinstance(clause, _valid_clauses):
+                txt = '{0} {1}'.format(txt, clause.expr)
+            else:
+              raise TypeError('Wrong clause for OmpSimdConstruct')
+
+        return OMP_Simd_Construct(txt)
 
 class OmpMasterConstruct(BasicStmt):
     """Class representing the master construct."""
@@ -689,7 +718,8 @@ omp_directives = [OmpParallelConstruct,
                   OmpBarrierConstruct,
                   OmpMasterConstruct,
                   OmpMaskedConstruct,
-                  OmpTaskLoopConstruct]
+                  OmpTaskLoopConstruct,
+                  OmpSimdConstruct]
 
 omp_clauses = [OmpCollapse,
                OmpCopyin,
