@@ -95,6 +95,7 @@ t_ndarray   array_slicing(t_ndarray p, ...);
 
 /* free */
 int32_t         free_array(t_ndarray dump);
+int32_t         free_pointer(t_ndarray dump);
 
 /* indexing */
 int32_t         get_index(t_ndarray arr, ...);

@@ -2107,9 +2107,6 @@ class Variable(Symbol, PyccelAstNode):
     is_pointer: bool
         if object is a pointer [Default value: False]
 
-    is_view: bool
-        if object is a view of an array [Default value: False]
-
     is_target: bool
         if object is pointed to by another variable [Default value: False]
 
@@ -2164,7 +2161,6 @@ class Variable(Symbol, PyccelAstNode):
         allocatable=False,
         is_stack_array = False,
         is_pointer=False,
-        is_view=False,
         is_const=False,
         is_target=False,
         is_polymorphic=None,
@@ -2241,10 +2237,6 @@ class Variable(Symbol, PyccelAstNode):
             raise TypeError('is_pointer must be a boolean.')
         self.is_pointer = is_pointer
 
-        if not isinstance(is_view, bool):
-            raise TypeError('is_view must be a boolean.')
-        self.is_view = is_view
-
         if not isinstance(is_target, bool):
             raise TypeError('is_target must be a boolean.')
         self.is_target = is_target
@@ -2320,16 +2312,6 @@ class Variable(Symbol, PyccelAstNode):
         if not isinstance(is_pointer, bool):
             raise TypeError('is_pointer must be a boolean.')
         self._is_pointer = is_pointer
-
-    @property
-    def is_view(self):
-        return self._is_view
-
-    @is_view.setter
-    def is_view(self, is_view):
-        if not isinstance(is_view, bool):
-            raise TypeError('is_view must be a boolean.')
-        self._is_view = is_view
 
     @property
     def is_target(self):
@@ -2415,7 +2397,6 @@ class Variable(Symbol, PyccelAstNode):
         print( '  shape          = {}'.format(self.shape))
         print( '  cls_base       = {}'.format(self.cls_base))
         print( '  is_pointer     = {}'.format(self.is_pointer))
-        print( '  is_view        = {}'.format(self.is_view))
         print( '  is_target      = {}'.format(self.is_target))
         print( '  is_polymorphic = {}'.format(self.is_polymorphic))
         print( '  is_optional    = {}'.format(self.is_optional))
@@ -2438,7 +2419,6 @@ class Variable(Symbol, PyccelAstNode):
             shape=kwargs.pop('shape',self.shape),
             is_pointer=kwargs.pop('is_pointer',self.is_pointer),
             is_target=kwargs.pop('is_target',self.is_target),
-            is_view=kwargs.pop('is_view',self.is_view),
             is_polymorphic=kwargs.pop('is_polymorphic',self.is_polymorphic),
             is_optional=kwargs.pop('is_optional',self.is_optional),
             cls_base=kwargs.pop('cls_base',self.cls_base),
@@ -2473,7 +2453,6 @@ class Variable(Symbol, PyccelAstNode):
             'rank' : self.rank,
             'allocatable': self.allocatable,
             'is_pointer':self.is_pointer,
-            'is_view':self.is_view,
             'is_polymorphic':self.is_polymorphic,
             'is_optional':self.is_optional,
             'shape':self.shape,

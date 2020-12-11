@@ -1339,9 +1339,6 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.internal_variable.allocatable:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
-            if rhs.args[0].rank != len(rhs.args) - 1 or any(isinstance(a, Slice) for a in rhs.args):
-                d_lhs['is_view' ] = True
-
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
             rhs.base.internal_variable.is_target = True
@@ -1429,7 +1426,7 @@ class SemanticParser(BasicParser):
                 # ...
                 # Add memory deallocation for array variables
                 # check if the variable is an ndarray and not astacked variable and that is a view
-                if lhs.is_ndarray and not lhs.is_stack_array and not (lhs.is_pointer and not lhs.is_view):
+                if lhs.is_ndarray and not lhs.is_stack_array:
                     # Create Deallocate node
                     self._allocs[-1].append(lhs)
                 # ...
