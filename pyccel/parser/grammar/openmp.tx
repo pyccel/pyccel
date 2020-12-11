@@ -22,6 +22,7 @@ OmpConstructOrDirective:
   | OmpMasterConstruct
   | OmpMaskedConstruct
   | OmpTaskLoopConstruct
+  | OmpSimdConstruct
 ;
 ////////////////////////////////////////////////////
 
@@ -34,6 +35,7 @@ OmpTaskLoopConstruct: 'taskloop'  clauses*=OmpTaskLoopClause;
 OmpSingleConstruct:   'single'    clauses*=OmpSingleClause;
 OmpCriticalConstruct: 'critical'  clauses*=OmpCriticalClause;
 OmpMaskedConstruct:   name='masked'  clauses*=OmpMaskedClause;
+OmpSimdConstruct:   name='simd'  clauses*=OmpSimdClause;
 OmpBarrierConstruct:  name='barrier';
 OmpMasterConstruct:   name='master';
 ////////////////////////////////////////////////////
@@ -97,6 +99,14 @@ OmpCriticalClause:
 OmpMaskedClause:
     OmpFilter
 ;
+
+OmpSimdClause:
+  OmpLinear
+  | OmpReduction
+  | OmpCollapse
+  | OmpLastPrivate
+;
+
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -133,7 +143,7 @@ OmpProcBindStatus: ('master' | 'close' | 'spread');
 OmpReductionOperator: ('+' | '-' | '*' | '/');
 OmpTLReductionType: ('in_reduction' | 'reduction');
 OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
-OpenmpConstructs: ('masked' | 'master' | 'single' | 'parallel' | 'for' | 'critical' ('(' ID  ')')?);
+OpenmpConstructs: ('simd' | 'masked' | 'master' | 'single' | 'parallel' | 'for' | 'critical' ('(' ID  ')')?);
 
 ThreadIndex: (ID | INT);
 TaskIndex: (ID | INT);
