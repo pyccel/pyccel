@@ -150,19 +150,11 @@ int32_t free_array(t_ndarray dump)
 {
     if (dump.shape == NULL)
         return (0);
-    free(dump.raw_data);
-    dump.raw_data = NULL;
-    free(dump.shape);
-    dump.shape = NULL;
-    free(dump.strides);
-    dump.strides = NULL;
-    return (1);
-}
-
-int32_t free_pointer(t_ndarray dump)
-{
-    if (dump.is_view == false || dump.shape == NULL)
-        return (0);
+    if (!dump.is_view)
+    {
+        free(dump.raw_data);
+        dump.raw_data = NULL;
+    }
     free(dump.shape);
     dump.shape = NULL;
     free(dump.strides);

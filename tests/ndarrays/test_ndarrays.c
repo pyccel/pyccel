@@ -386,7 +386,7 @@ int32_t test_slicing_int64(void)
     value = x.nd_int64[get_index(x, 1, 2)];
     my_assert(value , c_value, "testing xview assignment");
     free_array(x);
-    free_pointer(xview);
+    free_array(xview);
     return (0);
 }
 
@@ -427,7 +427,7 @@ int32_t test_slicing_int32(void)
     value = x.nd_int32[get_index(x, 1, 2)];
     my_assert(value , c_value, "testing xview assignment");
     free_array(x);
-    free_pointer(xview);
+    free_array(xview);
     return (0);
 }
 int32_t test_slicing_int16(void)
@@ -467,7 +467,7 @@ int32_t test_slicing_int16(void)
     value = x.nd_int16[get_index(x, 1, 2)];
     my_assert(value , c_value, "testing xview assignment");
     free_array(x);
-    free_pointer(xview);
+    free_array(xview);
     return (0);
 }
 
@@ -508,7 +508,7 @@ int32_t test_slicing_int8(void)
     value = x.nd_int8[get_index(x, 1, 2)];
     my_assert(value , c_value, "testing xview assignment");
     free_array(x);
-    free_pointer(xview);
+    free_array(xview);
     return (0);
 }
 
@@ -549,7 +549,7 @@ int32_t test_slicing_double(void)
     value = x.nd_double[get_index(x, 1, 2)];
     my_assert(value, c_value, "testing xview assignment");
     free_array(x);
-    free_pointer(xview);
+    free_array(xview);
     return (0);
 }
 
@@ -586,7 +586,7 @@ int32_t test_slicing_cdouble(void)
     value = x.nd_cdouble[get_index(x, 1, 2)];
     my_assert(value, c_value, "testing xview assignment");
     free_array(x);
-    free_pointer(xview);
+    free_array(xview);
     return (0);
 }
 
