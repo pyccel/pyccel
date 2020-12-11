@@ -4962,7 +4962,6 @@ class Slice(Basic):
         return Basic.__new__(cls, start, end, step)
 
     def __init__(self, start, end, step = None):
-        print(type(start), type(end), type(step))
         if start is not None and not (isinstance(start, (Symbol, PyccelOperator)) or
                 (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger))):
             raise TypeError('Slice start must be Integer or None')
