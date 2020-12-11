@@ -2483,30 +2483,29 @@ class FCodePrinter(CodePrinter):
                     shape = var.shape, prec = var.precision,
                     order = var.order, rank = var.rank)[expr.indices[:-1]])
         else:
-            base = self._print(expr.base.label)
+            base_code = self._print(expr.base.label)
 
         inds = list(expr.indices)
         base_shape = Shape(expr.base)
-        if (expr.order == 'C'):
-            base_shape = base_shape[::-1]
         allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
                 expr.base.internal_variable.allows_negative_indexes)
 
         for i, ind in enumerate(inds):
+            _shape = PyccelArraySize(base, i if expr.order != 'C' else len(inds) - i - 1)
             if isinstance(ind, Slice):
-                inds[i] = self._slice_management(ind, base_shape[i], allow_negative_indexes)
+                inds[i] = self._slice_management(ind, _shape, allow_negative_indexes)
             elif isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
-                inds[i] = PyccelMinus(base_shape[i], ind.args[0])
+                inds[i] = PyccelMinus(_shape, ind.args[0])
             else:
                 #indices of indexedElement of len==1 shouldn't be a Tuple
                 if isinstance(ind, Tuple) and len(ind) == 1:
                     inds[i] = ind[0]
                 if allow_negative_indexes and not isinstance(ind, LiteralInteger):
-                    inds[i] = PyccelMod(ind, base_shape[i])
+                    inds[i] = PyccelMod(ind, _shape)
 
         inds = [self._print(i) for i in inds]
 
-        return "%s(%s)" % (base, ", ".join(inds))
+        return "%s(%s)" % (base_code, ", ".join(inds))
 
 
     def _print_Idx(self, expr):
