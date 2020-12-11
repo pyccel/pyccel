@@ -28,7 +28,7 @@ pure function pyc_factorial_4(x) result(fx) ! integers with precision 4
 
     implicit none
 
-    integer(C_INT32_T), intent(in) :: x
+    integer(C_INT32_T), value      :: x
     integer(C_INT32_T)             :: i
     integer(C_INT32_T)             :: fx
 
@@ -44,7 +44,7 @@ pure function pyc_factorial_8(x) result(fx) ! integers with precision 8
 
     implicit none
 
-    integer(C_INT64_T), intent(in)  :: x
+    integer(C_INT64_T), value       :: x
     integer(C_INT64_T)              :: fx
     integer(C_INT64_T)              :: i
 
@@ -60,7 +60,7 @@ pure function pyc_gcd_4(a, b) result(gcd) ! integers with precision 4
 
     implicit none
 
-    integer(C_INT32_T), intent(in) :: a, b
+    integer(C_INT32_T), value      :: a, b
     integer(C_INT32_T)             :: x, y
     integer(C_INT32_T)             :: gcd
 
@@ -81,7 +81,7 @@ pure function pyc_gcd_8(a, b) result(gcd) ! integers with precision 8
 
     implicit none
 
-    integer(C_INT64_T), intent(in) :: a, b
+    integer(C_INT64_T), value       :: a, b
     integer(C_INT64_T)              :: x, y
     integer(C_INT64_T)              :: gcd
 
@@ -103,8 +103,8 @@ pure function pyc_lcm_4(a, b) result(lcm)
 
     implicit none
 
-    integer(C_INT32_T), intent(in) :: a
-    integer(C_INT32_T), intent(in) :: b
+    integer(C_INT32_T), value      :: a
+    integer(C_INT32_T), value      :: b
     integer(C_INT32_T)             :: lcm
 
     lcm = a / pyc_gcd(a, b) * b
@@ -116,8 +116,8 @@ pure function pyc_lcm_8(a, b) result(lcm)
 
     implicit none
 
-    integer(C_INT64_T), intent(in) :: a
-    integer(C_INT64_T), intent(in) :: b
+    integer(C_INT64_T), value      :: a
+    integer(C_INT64_T), value      :: b
     integer(C_INT64_T)             :: lcm
 
     lcm = a / pyc_gcd(a, b) * b
@@ -130,7 +130,7 @@ pure function pyc_radians(deg) result(rad)
 
     implicit none
 
-    real(C_DOUBLE), intent(in)     :: deg
+    real(C_DOUBLE), value     :: deg
     real(C_DOUBLE)            :: rad
 
     rad = deg * (pi / 180.0_C_DOUBLE)
@@ -143,7 +143,7 @@ pure function pyc_degrees(rad) result(deg)
 
     implicit none
 
-    real(C_DOUBLE), intent(in)     :: rad
+    real(C_DOUBLE), value     :: rad
     real(C_DOUBLE)            :: deg
 
     deg = rad * (180.0_C_DOUBLE / pi)
