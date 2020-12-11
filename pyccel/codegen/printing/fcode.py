@@ -118,7 +118,6 @@ math_function_to_fortran = {
     'MathCopysign': 'sign',
     'MathCos'    : 'cos',
     'MathCosh'   : 'cosh',
-    # 'MathDegrees': '???',  # TODO
     'MathErf'    : 'erf',
     'MathErfc'   : 'erfc',
     'MathExp'    : 'exp',
@@ -135,23 +134,23 @@ math_function_to_fortran = {
     # 'MathLog1p'  : '???', # TODO
     # 'MathLog2'   : '???', # TODO
     # 'MathPow'    : '???', # TODO
-    # 'MathRadians': '???', # TODO
     'MathSin'    : 'sin',
     'MathSinh'   : 'sinh',
-    # 'MathSqrt'   : 'sqrt', # sqrt is printed using _Print_MathSqrt
+    'MathSqrt'   : 'sqrt',
     'MathTan'    : 'tan',
     'MathTanh'   : 'tanh',
     # ---
-    'MathCeil'     : 'ceiling',
-    # 'MathFactorial': '???', # TODO
     'MathFloor'    : 'floor',
-    # 'MathGcd'      : '???', # TODO
-    'MathTrunc'    : 'dint', # TODO
     # ---
     # 'MathIsclose' : '???', # TODO
     # 'MathIsfinite': '???', # TODO
     # 'MathIsinf'   : '???', # TODO
-    'MathIsnan'   : 'isnan',
+    # --------------------------- internal functions --------------------------
+    'MathFactorial' : 'pyc_factorial',
+    'MathGcd'       : 'pyc_gcd',
+    'MathDegrees'   : 'pyc_degrees',
+    'MathRadians'   : 'pyc_radians',
+    'MathLcm'       : 'pyc_lcm',
 }
 
 _default_methods = {
@@ -214,8 +213,13 @@ class FCodePrinter(CodePrinter):
         self._current_function = None
 
         self._additional_code = None
+        self._additional_imports = set([])
 
         self.prefix_module = prefix_module
+
+    def get_additional_imports(self):
+        """return the additional imports collected in printing stage"""
+        return self._additional_imports
 
     def set_current_function(self, name):
 
@@ -277,6 +281,7 @@ class FCodePrinter(CodePrinter):
 
         imports = ''.join(self._print(i) for i in expr.imports)
         imports += 'use ISO_C_BINDING\n'
+
         decs    = ''.join(self._print(i) for i in expr.declarations)
         body    = ''
 
@@ -309,7 +314,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
-
+        imports += "\n".join('use ' + lib for lib in self._additional_imports)
         parts = ['module {}\n'.format(name),
                  imports,
                  'implicit none\n',
@@ -350,7 +355,7 @@ class FCodePrinter(CodePrinter):
 
             decs += '\ninteger :: ierr = -1' +\
                     '\ninteger, allocatable :: status (:)'
-
+        imports += "\n".join('use ' + lib for lib in self._additional_imports)
         parts = ['program {}\n'.format(name),
                  imports,
                 'implicit none\n',
@@ -2462,20 +2467,74 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code)
 
     def _print_MathFunctionBase(self, expr):
+        """ Convert a Python expression with a math function call to Fortran
+        function call
+
+        Parameters
+        ----------
+            expr : Pyccel ast node
+                Python expression with a Math function call
+
+        Returns
+        -------
+            string
+                Equivalent expression in Fortran language
+
+        ------
+        Example:
+        --------
+            math.cos(x)    ==> cos(x)
+            math.gcd(x, y) ==> pyc_gcd(x, y) # with include of pyc_math module
+        """
         type_name = type(expr).__name__
         try:
             func_name = math_function_to_fortran[type_name]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
+        if func_name.startswith("pyc"):
+            self._additional_imports.add('pyc_math')
         args = []
         for arg in expr.args:
-            if arg.dtype is not NativeReal():
-                args.append(self._print(PythonFloat(arg)))
-            else :
+            if arg.dtype != expr.dtype:
+                cast_func = python_builtin_datatypes[str_dtype(expr.dtype)]
+                args.append(self._print(cast_func(arg)))
+            else:
                 args.append(self._print(arg))
         code_args = ', '.join(args)
-        code = '{0}({1})'.format(func_name, code_args)
-        return self._get_statement(code)
+        return '{0}({1})'.format(func_name, code_args)
+
+    def _print_MathCeil(self, expr):
+        """Convert a Python expression with a math ceil function call to
+        Fortran function call"""
+        # add necessary include
+        arg = expr.args[0]
+        if arg.dtype is NativeInteger():
+            code_arg = self._print(PythonFloat(arg))
+        else:
+            code_arg = self._print(arg)
+        return "ceiling({})".format(code_arg)
+
+    def _print_MathIsnan(self, expr):
+        """Convert a Python expression with a math isnan function call to
+        Fortran function call"""
+        # add necessary include
+        arg = expr.args[0]
+        if arg.dtype is NativeInteger():
+            code_arg = self._print(PythonFloat(arg))
+        else:
+            code_arg = self._print(arg)
+        return "isnan({})".format(code_arg)
+
+    def _print_MathTrunc(self, expr):
+        """Convert a Python expression with a math trunc function call to
+        Fortran function call"""
+        # add necessary include
+        arg = expr.args[0]
+        if arg.dtype is NativeInteger():
+            code_arg = self._print(PythonFloat(arg))
+        else:
+            code_arg = self._print(arg)
+        return "dint({})".format(code_arg)
 
     def _print_MathPow(self, expr):
         base = expr.args[0]
@@ -2486,14 +2545,6 @@ class FCodePrinter(CodePrinter):
         return '{} ** {}'.format(base_c, e_c)
 
     def _print_NumpySqrt(self, expr):
-        arg = expr.args[0]
-        if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
-            arg = PythonFloat(arg)
-        code_args = self._print(arg)
-        code = 'sqrt({})'.format(code_args)
-        return self._get_statement(code)
-
-    def _print_MathSqrt(self, expr):
         arg = expr.args[0]
         if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
             arg = PythonFloat(arg)

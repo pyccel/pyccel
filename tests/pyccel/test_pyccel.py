@@ -519,6 +519,13 @@ def test_print_sp_and_end(language):
     types = str
     pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
 
+
+def test_c_arrays(language):
+    types = [int]*15 + [float]*5 + [int]*25 + [float]* 20 * 5 + \
+            [complex] * 3 * 10 + [complex] * 5 + [float] * 10 + [float] * 6 + \
+            [float] * 2 * 3 + [complex] * 3 * 10 + [float] * 2 * 3
+    pyccel_test("scripts/c_arrays.py", language=language, output_dtype=types)
+
 def test_headers(language):
     test_file = "scripts/test_headers.py"
     test_file = os.path.normpath(test_file)
@@ -578,3 +585,4 @@ def test_headers(language):
     with open(test_file, 'w') as f:
         code = ("")
         f.write(code)
+
