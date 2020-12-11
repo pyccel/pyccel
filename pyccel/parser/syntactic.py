@@ -615,12 +615,11 @@ class SyntaxParser(BasicParser):
         global_vars  = []
         headers      = []
         templates    = {}
-        hide         = False
-        kind         = 'function'
         is_pure      = False
         is_elemental = False
         is_private   = False
         imports      = []
+        doc_string   = None
 
         def fill_types(ls):
             container = []
@@ -766,6 +765,10 @@ class SyntaxParser(BasicParser):
 
         else:
             body = self._visit(body)
+        if len(body) > 0 and isinstance(body[0], CommentBlock):
+            doc_string = body[0]
+            doc_string.header = ''
+            body = body[1:]
 
         if 'pure' in decorators.keys():
             is_pure = True
@@ -806,15 +809,14 @@ class SyntaxParser(BasicParser):
                body,
                local_vars=local_vars,
                global_vars=global_vars,
-               hide=hide,
-               kind=kind,
                is_pure=is_pure,
                is_elemental=is_elemental,
                is_private=is_private,
                imports=imports,
                decorators=decorators,
                headers=headers,
-               templates=templates)
+               templates=templates,
+               doc_string=doc_string)
 
         func.set_fst(stmt)
         return func
@@ -824,7 +826,7 @@ class SyntaxParser(BasicParser):
         name = stmt.name
         methods = [self._visit(i) for i in stmt.body if isinstance(i, ast.FunctionDef)]
         for i in methods:
-            i.set_cls_name(name)
+            i.cls_name = name
         attributes = methods[0].arguments
         parent = [self._visit(i) for i in stmt.bases]
         expr = ClassDef(name=name, attributes=attributes,

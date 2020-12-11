@@ -847,18 +847,18 @@ class CCodePrinter(CodePrinter):
         if self._additional_args :
             self._additional_args.pop()
         imports = ''.join(self._print(i) for i in expr.imports)
+        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
 
-        return ('{sep}\n'
-                '{signature}\n{{\n'
-                '{imports}\n'
-                '{decs}\n\n'
-                '{body}\n'
-                '}}\n{sep}'.format(
-                    sep = sep,
-                    signature = self.function_signature(expr),
-                    imports = imports,
-                    decs = decs,
-                    body = body))
+        parts = [sep,
+                 doc_string,
+                '{signature}\n{{'.format(signature=self.function_signature(expr)),
+                 imports,
+                 decs,
+                 body,
+                 '}',
+                 sep]
+
+        return '\n'.join(p for p in parts if p)
 
     def stored_in_c_pointer(self, a):
         if not isinstance(a, Variable):
@@ -1171,14 +1171,17 @@ class CCodePrinter(CodePrinter):
 
     def _print_CommentBlock(self, expr):
         txts = expr.comments
-        ln = max(len(i) for i in txts)
-        if ln<20:
-            ln = 20
-        top  = '/*' + '_'*int((ln-12)/2) + 'CommentBlock' + '_'*int((ln-12)/2) + '*/'
-        ln = len(top)
-        bottom = '/*' + '_'*(ln-2) + '*/'
+        header = expr.header
+        header_size = len(expr.header)
 
-        txts = ['/*' + t + ' '*(ln -2 - len(t)) + '*/' for t in txts]
+        ln = max(len(i) for i in txts)
+        if ln<max(20, header_size+4):
+            ln = 20
+        top  = '/*' + '_'*int((ln-header_size)/2) + header + '_'*int((ln-header_size)/2) + '*/'
+        ln = len(top)-4
+        bottom = '/*' + '_'*ln + '*/'
+
+        txts = ['/*' + t + ' '*(ln - len(t)) + '*/' for t in txts]
 
         body = '\n'.join(i for i in txts)
 
