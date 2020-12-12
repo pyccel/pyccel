@@ -1339,6 +1339,7 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.internal_variable.allocatable:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
+
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
             rhs.base.internal_variable.is_target = True
@@ -1425,7 +1426,6 @@ class SemanticParser(BasicParser):
 
                 # ...
                 # Add memory deallocation for array variables
-                # check if the variable is an ndarray and not astacked variable and that is a view
                 if lhs.is_ndarray and not lhs.is_stack_array:
                     # Create Deallocate node
                     self._allocs[-1].append(lhs)
@@ -1459,7 +1459,7 @@ class SemanticParser(BasicParser):
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
 
-                elif var.is_ndarray and isinstance(rhs, Variable) and rhs.allocatable:
+                elif var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
                     errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
@@ -1502,6 +1502,10 @@ class SemanticParser(BasicParser):
                                 severity='error', blocker=False,
                                 bounding_box=(self._current_fst_node.lineno,
                                     self._current_fst_node.col_offset))
+
+                        elif var.is_pointer:
+                            # we allow pointers to be reassigned multiple times
+                            pass
 
                         else:
                             # TODO [YG, 04.11.2020] If we could be sure that the

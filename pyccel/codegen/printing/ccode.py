@@ -988,14 +988,6 @@ class CCodePrinter(CodePrinter):
             return '{};'.format(self._print(expr.rhs))
         lhs = self._print(expr.lhs)
         rhs = expr.rhs
-        if isinstance(rhs, IndexedElement) and isinstance(expr.lhs, Variable):
-            free_code = ''
-            if any(isinstance(i, Slice) for i in rhs.args):
-                free_code += self._print(Deallocate(expr.lhs))
-                self._additional_imports.add('ndarrays')
-            rhs = self._print(rhs)
-            return '{}{} = {};'.format(free_code, lhs, rhs)
-
         if isinstance(rhs, (NumpyArray)):
             if rhs.rank == 0:
                 raise NotImplementedError(expr.lhs + "=" + expr.rhs)
