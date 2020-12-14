@@ -4947,15 +4947,15 @@ class Slice(Basic):
     --------
     >>> from sympy import symbols
     >>> from pyccel.ast.core import Slice
-    >>> m, n, p = symbols('m, n, p', integer=True)
-    >>> Slice(m,n)
-    m : n
-    >>> Slice(None,n)
-     : n
-    >>> Slice(m,None)
-    m :
-    >>> Slice(m, n, p)
-    m : n : p
+    >>> start, end, step = symbols('start, end, step', integer=True)
+    >>> Slice(start, end)
+    start : end
+    >>> Slice(None, end)
+     : end
+    >>> Slice(start, None)
+    start :
+    >>> Slice(start, end, step)
+    start : end : step
     """
 
     def __new__(cls, start, end, step = None):
