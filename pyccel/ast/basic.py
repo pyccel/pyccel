@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------------------#
 
 """
-basic module docstring.
+This module contains tow classes. Basic that provids a python AST and PyccelAstNode wich describes each PyccelAstNode
 """
 
 from sympy.core.basic import Basic as sp_Basic

@@ -5,9 +5,6 @@
 #$ header metavar print=True
 
 
-"""
-dfftpack module docstring.
-"""
 
 from pyccel.stdlib.internal.dfftpack import dffti
 from pyccel.stdlib.internal.dfftpack import dfftf
