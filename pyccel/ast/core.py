@@ -4780,19 +4780,13 @@ class IndexedElement(Expr, PyccelAstNode):
     Examples
     --------
     >>> from sympy import symbols, Idx
-    >>> from pyccel.ast.core import IndexedVariable
+    >>> from pyccel.ast.core import IndexedVariable, IndexedElement
     >>> i, j = symbols('i j', cls=Idx)
+    >>> A = IndexedVariable('A', dtype='int')
     >>> IndexedElement(A, i, j)
-    A[i, j]
-
-    It is recommended that ``IndexedElement`` objects be created via ``IndexedVariable``:
-
-    >>> from pyccel.ast.core import IndexedElement
-    >>> A = IndexedVariable('A')
+    IndexedElement(A, i, j)
     >>> IndexedElement(A, i, j) == A[i, j]
-    False
-
-    **todo:** fix bug. the last result must be : True
+    True
     """
 
     def __new__(
