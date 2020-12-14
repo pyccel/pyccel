@@ -1,8 +1,10 @@
 # coding: utf-8
-
+#--------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See file LICENSE or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details. #
+#--------------------------------------------------------------------------------------#
 """
 """
-
 from os.path import join, dirname
 
 from sympy.core import Symbol
