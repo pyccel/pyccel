@@ -1851,6 +1851,11 @@ class FCodePrinter(CodePrinter):
         omp_expr = str(expr.txt)
         omp_expr = '!$omp {}\n'.format(omp_expr)
         return omp_expr
+    
+    def _print_OMP_Atomic_Construct(self, expr):
+        omp_expr = str(expr.txt)
+        omp_expr = '!$omp {}\n'.format(omp_expr)
+        return omp_expr
 
     def _print_OMP_Master_Construct(self, expr):
         omp_expr = str(expr.txt)

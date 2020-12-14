@@ -23,6 +23,7 @@ OmpConstructOrDirective:
   | OmpMaskedConstruct
   | OmpTaskLoopConstruct
   | OmpSimdConstruct
+  | OmpAtomicConstruct
 ;
 ////////////////////////////////////////////////////
 
@@ -30,12 +31,13 @@ OmpConstructOrDirective:
 //     Constructs and Directives definitions
 ////////////////////////////////////////////////////
 OmpParallelConstruct: 'parallel'  combined*=ParallelCombined? clauses*=OmpParallelClause;
-OmpLoopConstruct:     'for'       clauses*=OmpLoopClause;
-OmpTaskLoopConstruct: 'taskloop'  clauses*=OmpTaskLoopClause;
-OmpSingleConstruct:   'single'    clauses*=OmpSingleClause;
-OmpCriticalConstruct: 'critical'  clauses*=OmpCriticalClause;
-OmpMaskedConstruct:   name='masked'  clauses*=OmpMaskedClause;
-OmpSimdConstruct:   name='simd'  clauses*=OmpSimdClause;
+OmpLoopConstruct:     'for'           clauses*=OmpLoopClause;
+OmpTaskLoopConstruct: 'taskloop'      clauses*=OmpTaskLoopClause;
+OmpSingleConstruct:   'single'        clauses*=OmpSingleClause;
+OmpCriticalConstruct: 'critical'      clauses*=OmpCriticalClause;
+OmpMaskedConstruct:   name='masked'   clauses*=OmpMaskedClause;
+OmpSimdConstruct:     name='simd'     clauses*=OmpSimdClause;
+OmpAtomicConstruct:   name='atomic'   clauses*=AllOmpClauses;
 OmpBarrierConstruct:  name='barrier';
 OmpMasterConstruct:   name='master';
 ////////////////////////////////////////////////////
@@ -49,6 +51,11 @@ ParallelCombined: ('for' 'simd'? | 'sections');
 ////////////////////////////////////////////////////
 //      Clauses for Constructs and Directives
 ////////////////////////////////////////////////////
+
+AllOmpClauses:
+    OmpAtomicClause
+  | AtomicMemoryClause
+;
 
 OmpParallelClause:
     OmpNumThread
@@ -135,6 +142,8 @@ OmpPriority: name='priority' '(' n=INT ')';
 OmpUntied: name='untied';
 OmpMergeable: name='mergeable';
 OmpNogroup: name='nogroup';
+OmpAtomicClause: name=AtomicClause;
+AtomicMemoryClause: name=AtomicMClause;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -145,6 +154,8 @@ OmpTLReductionType: ('in_reduction' | 'reduction');
 OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
 OpenmpConstructs: ('simd' | 'masked' | 'master' | 'single' | 'parallel' | 'for' | 'critical' ('(' ID  ')')?);
 
+AtomicClause: ('write' | 'read' | 'update' | 'capture' | 'compare' | 'weak');
+AtomicMClause: ('seq_cst' | 'acq_rel' | 'release' | 'acquire' | 'relaxed');
 ThreadIndex: (ID | INT);
 TaskIndex: (ID | INT);
 NotaStmt: /.*$/;

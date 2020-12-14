@@ -308,6 +308,7 @@ def omp_taskloop(n):
     #$omp parallel num_threads(n)
     #$omp taskloop
     for i in range(0, 10):
+        #$omp atomic
         result = result + 1
     #$omp end parallel
     return result

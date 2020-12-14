@@ -10,7 +10,7 @@ from textx.metamodel import metamodel_from_file
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct,\
         Omp_End_Clause, OMP_Critical_Construct, OMP_Barrier_Construct, OMP_Master_Construct,\
-        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct
+        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct, OMP_Atomic_Construct
 
 DEBUG = False
 
@@ -57,6 +57,8 @@ class OpenmpStmt(BasicStmt):
         elif isinstance(stmt, OmpTaskLoopConstruct):
             return stmt.expr
         elif isinstance(stmt, OmpSimdConstruct):
+            return stmt.expr
+        elif isinstance(stmt, OmpAtomicConstruct):
             return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
@@ -275,7 +277,7 @@ class OmpMaskedConstruct(BasicStmt):
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
-              raise TypeError('Wrong clause for OmpMaskedConstruct')
+                raise TypeError('Wrong clause for OmpMaskedConstruct')
 
         return OMP_Masked_Construct(txt)
 
@@ -295,6 +297,32 @@ class OmpBarrierConstruct(BasicStmt):
         txt = self.name
 
         return OMP_Barrier_Construct(txt)
+
+class OmpAtomicConstruct(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name   = kwargs.pop('name')
+        self.clauses = kwargs.pop('clauses')
+
+        super(OmpAtomicConstruct, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpBarrierConstruct: expr")
+
+        _valid_clauses = (OmpAtomicClause, \
+                          AtomicMemoryClause)
+
+        txt = self.name
+        for clause in self.clauses:
+            if isinstance(clause, _valid_clauses):
+                txt = '{0} {1}'.format(txt, clause.expr)
+            else:
+                raise TypeError('Wrong clause for OmpAtomicConstruct')
+        return OMP_Atomic_Construct(txt)
 
 class OmpEndClause(BasicStmt):
     """Class representing a ."""
@@ -705,6 +733,38 @@ class OmpPriority(BasicStmt):
 
         return '{}({})'.format(self.name, self.n)
 
+class OmpAtomicClause(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name = kwargs.pop('name')
+
+        super(OmpAtomicClause, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpAtomicClause: expr")
+
+        return '{}'.format(self.name)
+
+class AtomicMemoryClause(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name = kwargs.pop('name')
+
+        super(AtomicMemoryClause, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> AtomicMemoryClause: expr")
+
+        return '{}'.format(self.name)
+
 #################################################
 
 #################################################
@@ -719,7 +779,8 @@ omp_directives = [OmpParallelConstruct,
                   OmpMasterConstruct,
                   OmpMaskedConstruct,
                   OmpTaskLoopConstruct,
-                  OmpSimdConstruct]
+                  OmpSimdConstruct,
+                  OmpAtomicConstruct]
 
 omp_clauses = [OmpCollapse,
                OmpCopyin,
@@ -743,7 +804,9 @@ omp_clauses = [OmpCollapse,
                OmpUntied,
                OmpMergeable,
                OmpNogroup,
-               OmpPriority]
+               OmpPriority,
+               OmpAtomicClause,
+               AtomicMemoryClause]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 

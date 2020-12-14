@@ -1190,7 +1190,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_OMP_TaskLoop_Construct(self, expr):
         omp_expr   = str(expr.txt)
-        return '#pragma taskloop {}'.format(omp_expr)
+        return '#pragma omp taskloop {}'.format(omp_expr)
 
     def _print_OMP_Single_Construct(self, expr):
         omp_expr   = str(expr.txt)
@@ -1209,6 +1209,11 @@ class CCodePrinter(CodePrinter):
     def _print_OMP_Masked_Construct(self, expr):
         omp_expr = str(expr.txt)
         omp_expr = '#pragma omp {}\n{{'.format(omp_expr)
+        return omp_expr
+
+    def _print_OMP_Atomic_Construct(self, expr):
+        omp_expr = str(expr.txt)
+        omp_expr = '#pragma omp {}'.format(omp_expr)
         return omp_expr
 
     def _print_Omp_End_Clause(self, expr):
