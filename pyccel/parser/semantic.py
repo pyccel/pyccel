@@ -1340,6 +1340,8 @@ class SemanticParser(BasicParser):
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
 
+            if rhs.base.internal_variable.rank != len(rhs.args) - 1 or any(isinstance(a, Slice) for a in rhs.args):
+                d_lhs['is_view' ] = True
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
             rhs.base.internal_variable.is_target = True
@@ -1505,6 +1507,11 @@ class SemanticParser(BasicParser):
 
                         elif var.is_pointer:
                             # we allow pointers to be reassigned multiple times
+                            # Create new variable that contains the current variable attributes
+                            lhs = self._create_variable(name, dtype, rhs, d_lhs)
+                            if var.is_view:
+                                new_expressions.append(Deallocate(var))
+                            var.is_view = lhs.is_view
                             pass
 
                         else:
