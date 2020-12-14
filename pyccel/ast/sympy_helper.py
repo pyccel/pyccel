@@ -4,6 +4,8 @@
 #--------------------------------------------------------------------------------------#
 
 """
+Module containing functions which allow us to treat expressions expressed as pyccel nodes with sympy,
+by providing translations between the sympy representation and the pyccel nodes
 """
 
 import sympy as sp
