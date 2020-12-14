@@ -652,6 +652,7 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['cls_base'      ] = expr.cls_base
             d_var['is_pointer'    ] = expr.is_pointer
+            d_var['is_view'    ] = expr.is_view
             d_var['is_polymorphic'] = expr.is_polymorphic
             d_var['is_target'     ] = expr.is_target
             d_var['order'         ] = expr.order
@@ -1507,11 +1508,8 @@ class SemanticParser(BasicParser):
 
                         elif var.is_pointer:
                             # we allow pointers to be reassigned multiple times
-                            # Create new variable that contains the current variable attributes
-                            lhs = self._create_variable(name, dtype, rhs, d_lhs)
                             if var.is_view:
                                 new_expressions.append(Deallocate(var))
-                            var.is_view = lhs.is_view
                             pass
 
                         else:
