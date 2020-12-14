@@ -652,7 +652,7 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['cls_base'      ] = expr.cls_base
             d_var['is_pointer'    ] = expr.is_pointer
-            d_var['is_view'    ] = expr.is_view
+            d_var['is_view'       ] = expr.is_view
             d_var['is_polymorphic'] = expr.is_polymorphic
             d_var['is_target'     ] = expr.is_target
             d_var['order'         ] = expr.order

@@ -7,7 +7,7 @@ import operator
 from sympy.core import Tuple
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
-from pyccel.ast.core      import Declare, IndexedVariable, IndexedElement, Slice, ValuedVariable
+from pyccel.ast.core      import Declare, IndexedVariable, Slice, ValuedVariable
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
