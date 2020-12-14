@@ -695,18 +695,19 @@ class CCodePrinter(CodePrinter):
 
         # steps in slices
         step = _slice.step
-        if step is not None :
-            # negative step in slice
-            if isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
-                start = shape if _slice.start is None else start
-                end = LiteralInteger(0) if _slice.end is None else end
 
-            # variable step in slice
-            elif allow_negative_index and not isinstance(step, LiteralInteger):
-                start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, end)
-                end = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), end, start)
+        # negative step in slice
+        if isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
+            start = shape if _slice.start is None else start
+            end = LiteralInteger(0) if _slice.end is None else end
+
+        # variable step in slice
+        elif allow_negative_index and not isinstance(step, LiteralInteger):
+            start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, end)
+            end = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), end, start)
         else :
             step = LiteralInteger(1)
+
         return Slice(start, end, step)
 
     def _print_PyccelArraySize(self, expr):
