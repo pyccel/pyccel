@@ -702,7 +702,7 @@ class CCodePrinter(CodePrinter):
             end = LiteralInteger(0) if _slice.end is None else end
 
         # variable step in slice
-        elif allow_negative_index and not isinstance(step, LiteralInteger):
+        elif allow_negative_index and step and not isinstance(step, LiteralInteger):
             start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, end)
             end = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), end, start)
         else :
