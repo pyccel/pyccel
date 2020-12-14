@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------------------#
 
 """
-decorators module docstring.
+This module contains all the provided decorators methods.
 """
 
 #TODO use pycode and call exec after that in lambdify
