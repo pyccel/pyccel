@@ -829,16 +829,11 @@ class SemanticParser(BasicParser):
         return repr(expr)
 
     def _visit_Slice(self, expr, **settings):
-        args = list(expr.args)
-        if args[0]:
-            args[0] = self._visit(args[0], **settings)
+        start = self._visit(expr.start) if expr.start else expr.start
+        end = self._visit(expr.end) if expr.end else expr.end
+        step = self._visit(expr.step) if expr.step else expr.step
 
-        if args[1]:
-            args[1] = self._visit(args[1], **settings)
-
-        if args[2]:
-            args[2] = self._visit(args[2], **settings)
-        return Slice(*args)
+        return Slice(start, end, step)
 
     def _extract_indexed_from_var(self, var, args, name):
 
