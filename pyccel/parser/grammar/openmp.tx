@@ -32,12 +32,12 @@ OmpConstructOrDirective:
 ////////////////////////////////////////////////////
 OmpParallelConstruct: 'parallel'  combined*=ParallelCombined? clauses*=OmpParallelClause;
 OmpLoopConstruct:     'for'           clauses*=OmpLoopClause;
-OmpTaskLoopConstruct: 'taskloop'      clauses*=OmpTaskLoopClause;
+OmpTaskLoopConstruct: 'taskloop'      clauses*=OmpTaskLoopClause; // TODO: add IF and Final clauses when issue #590 is resolved.
 OmpSingleConstruct:   'single'        clauses*=OmpSingleClause;
 OmpCriticalConstruct: 'critical'      clauses*=OmpCriticalClause;
 OmpMaskedConstruct:   name='masked'   clauses*=OmpMaskedClause;
 OmpSimdConstruct:     name='simd'     clauses*=OmpSimdClause;
-OmpAtomicConstruct:   name='atomic'   clauses*=AllOmpClauses;
+OmpAtomicConstruct:   name='atomic'   clauses*=AllOmpClauses; // Not all clause were added (cant test them).
 OmpBarrierConstruct:  name='barrier';
 OmpMasterConstruct:   name='master';
 ////////////////////////////////////////////////////
@@ -84,7 +84,7 @@ OmpTaskLoopClause:
   | OmpPrivate
   | OmpFirstPrivate
   | OmpLastPrivate
-  | OmpTaskloopReduction
+  | OmpTaskloopReduction // Deprecated in OpenMP 5.0 for TaskLoop Construct
   | OmpNumTasks
   | OmpGrainSize
   | OmpCollapse
