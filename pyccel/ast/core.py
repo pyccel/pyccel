@@ -4852,7 +4852,6 @@ class IndexedElement(Expr, PyccelAstNode):
                         new_shape.append(end)
                     else:
                         new_shape.append(PyccelMinus(end, start))
-
             self._shape = tuple(new_shape)
             self._rank  = len(new_shape)
         else:
