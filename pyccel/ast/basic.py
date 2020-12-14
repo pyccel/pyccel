@@ -4,6 +4,7 @@
 #--------------------------------------------------------------------------------------#
 
 """
+basic module docstring.
 """
 
 from sympy.core.basic import Basic as sp_Basic

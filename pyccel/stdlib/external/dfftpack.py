@@ -6,6 +6,7 @@
 
 
 """
+dfftpack module docstring.
 """
 
 from pyccel.stdlib.internal.dfftpack import dffti

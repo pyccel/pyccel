@@ -6,6 +6,7 @@
 
 
 """
+lapack module docstring.
 """
 
 from pyccel.stdlib.internal.lapack import dgetrf

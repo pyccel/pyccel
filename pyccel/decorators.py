@@ -4,6 +4,7 @@
 #--------------------------------------------------------------------------------------#
 
 """
+decorators module docstring.
 """
 
 #TODO use pycode and call exec after that in lambdify
