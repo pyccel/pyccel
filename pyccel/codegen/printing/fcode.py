@@ -41,7 +41,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
 
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-from pyccel.ast.operators      import PyccelUnarySub, PyccelMod, PyccelGt
+from pyccel.ast.operators      import PyccelUnarySub, PyccelMod, PyccelGt, PyccelLt
 from pyccel.ast.core      import FunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
@@ -2645,12 +2645,14 @@ class FCodePrinter(CodePrinter):
         if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
             start = PyccelMinus(shape, start.args[0])
         elif start is not None and allow_negative_index and not isinstance(start,LiteralInteger):
-            start = PyccelMod(start, shape)
+            start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
+                        PyccelAdd(shape, start), start)
 
         if isinstance(end, PyccelUnarySub) and isinstance(end.args[0], LiteralInteger):
             end = PyccelMinus(shape, end.args[0])
         elif end is not None and allow_negative_index and not isinstance(end, LiteralInteger):
-            end = PyccelMod(end, shape)
+            end = IfTernaryOperator(PyccelLt(end, LiteralInteger(0)),
+                        PyccelAdd(shape, end), end)
 
         tmp_end = end #save temporary value of end
         # steps in slices
