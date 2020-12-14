@@ -18,7 +18,7 @@ from pyccel.ast.core      import create_incremented_string
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis
-from pyccel.ast.operators import PyccelUnarySub, PyccelMod
+from pyccel.ast.operators import PyccelUnarySub, PyccelLt
 
 from pyccel.ast.datatypes import default_precision, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
@@ -655,7 +655,8 @@ class CCodePrinter(CodePrinter):
                     inds[i].args = ind[0]
                 if allow_negative_indexes and \
                         not isinstance(ind, LiteralInteger) and not isinstance(ind, Slice):
-                    inds[i] = PyccelMod(ind, base_shape[i])
+                    inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
+                        PyccelAdd(base_shape[i], ind), ind)
         #set dtype to the C struct types
         dtype = self._print(expr.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.precision)
