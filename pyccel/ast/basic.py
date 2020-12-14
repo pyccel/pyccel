@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------------------#
 
 """
-This module contains tow classes. Basic that provides a python AST and PyccelAstNode which describes each PyccelAstNode
+This module contains two classes. Basic that provides a python AST and PyccelAstNode which describes each PyccelAstNode
 """
 
 from sympy.core.basic import Basic as sp_Basic

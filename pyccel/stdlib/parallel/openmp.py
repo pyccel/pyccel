@@ -1,5 +1,4 @@
 # coding: utf-8
-# pylint: disable=missing-module-docstring
 
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #

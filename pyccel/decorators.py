@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------------------#
 
 """
-This module contains all the provided decorators methods.
+This module contains all the provided decorator methods.
 """
 
 #TODO use pycode and call exec after that in lambdify
