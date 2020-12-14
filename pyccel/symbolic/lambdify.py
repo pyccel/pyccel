@@ -1,7 +1,7 @@
-#--------------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details. #
-#--------------------------------------------------------------------------------------#
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 from sympy import cse as sympy_cse
 from sympy import Sum
 from sympy import IndexedBase, Indexed

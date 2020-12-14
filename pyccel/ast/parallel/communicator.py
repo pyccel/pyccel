@@ -1,8 +1,8 @@
 # coding: utf-8
-#--------------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
-# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details. #
-#--------------------------------------------------------------------------------------#
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 # pylint: disable=missing-module-docstring
 from pyccel.ast.parallel.basic import Basic
 from pyccel.ast.parallel.group import UniversalGroup
