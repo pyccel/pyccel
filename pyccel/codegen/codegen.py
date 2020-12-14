@@ -175,6 +175,10 @@ class Codegen(object):
         # set the code printer
         self._printer = code_printer(self.parser, settings)
 
+    def get_printer_imports(self):
+        """return the imports of the current codeprinter"""
+        return self._printer.get_additional_imports()
+
     def _collect_statements(self):
         """Collects statements and split them into routines, classes, etc."""
 
