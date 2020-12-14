@@ -167,7 +167,8 @@ __all__ = (
     'OMP_TaskLoop_Construct',
     'OMP_Simd_Construct',
     'OMP_Atomic_Construct',
-    'OMP_TaskWait_Construct'
+    'OMP_TaskWait_Construct',
+    'OMP_Task_Construct'
 )
 
 #==============================================================================
@@ -4620,6 +4621,11 @@ class OMP_Parallel_Construct(AnnotatedComment):
 
 class OMP_TaskLoop_Construct(AnnotatedComment):
     """ Represents an OpenMP TaskLoop construct. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
+
+class OMP_Task_Construct(AnnotatedComment):
+    """ Represents an OpenMP Task construct. """
     def __new__(cls, txt):
         return AnnotatedComment.__new__(cls, 'omp', txt)
 

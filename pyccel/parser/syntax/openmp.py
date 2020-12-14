@@ -10,7 +10,7 @@ from textx.metamodel import metamodel_from_file
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct,\
         Omp_End_Clause, OMP_Critical_Construct, OMP_Barrier_Construct, OMP_Master_Construct,\
-        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct, OMP_Atomic_Construct, OMP_TaskWait_Construct
+        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct, OMP_Atomic_Construct, OMP_TaskWait_Construct, OMP_Task_Construct
 
 DEBUG = False
 
