@@ -1477,17 +1477,15 @@ def test_multiple_negative_index_3():
     assert np.array_equal(f1(-1, -1, -3), f2(-1, -1, -3))
 
 def test_argument_negative_index_1():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.test_argument_negative_index_1
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_argument_negative_index_2():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.test_argument_negative_index_2
     f2 = epyccel(f1)
     assert np.array_equal(f1(a, a), f2(a, a))
@@ -1516,108 +1514,96 @@ def test_array_variable_size():
 #==============================================================================
 
 def test_array_1d_slice_1():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_1
     f2 = epyccel(f1)
 
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_2():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_2
     f2 = epyccel(f1)
 
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_3():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_3
     f2 = epyccel(f1)
 
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_4():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_4
     f2 = epyccel(f1)
 
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_5():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_5
     f2 = epyccel(f1)
 
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_6():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_6
     f2 = epyccel(f1)
 
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_7():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_7
     f2 = epyccel(f1)
 
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_8():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_8
     f2 = epyccel(f1)
 
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_9():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_9
     f2 = epyccel(f1)
 
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_10():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_10
     f2 = epyccel(f1)
 
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_11():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_11
     f2 = epyccel(f1)
 
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_12():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_12
     f2 = epyccel(f1)
 
@@ -1628,209 +1614,163 @@ def test_array_1d_slice_12():
 #==============================================================================
 
 def test_array_2d_F_slice_1():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_1
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_2():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_2
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_3():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_3
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_4():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_4
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_5():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_5
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_6():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_6
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_7():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_7
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_2d_F_slice_8():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_8
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_9():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_9
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_10():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_10
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_11():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_11
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_12():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_12
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_13():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_13
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_14():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_14
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_15():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_15
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_16():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_16
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_17():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_17
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_18():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_18
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_19():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_19
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_20():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_20
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_21():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_21
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_22():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_22
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_23():
-    a = np.empty((21,21), dtype=np.int, order = 'F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_23
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
@@ -1841,209 +1781,163 @@ def test_array_2d_F_slice_23():
 
 
 def test_array_2d_C_slice_1():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_1
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_2():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_2
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_3():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_3
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_4():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_4
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_5():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_5
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_6():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_6
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_7():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_7
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_2d_C_slice_8():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_8
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_9():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_9
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_10():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_10
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_11():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_11
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_12():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_12
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_13():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_13
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_14():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_14
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_15():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_15
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_16():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_16
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_17():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_17
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_18():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_18
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_19():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_19
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_20():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_20
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_21():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_21
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_22():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_22
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_23():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_23
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
@@ -2053,200 +1947,177 @@ def test_array_2d_C_slice_23():
 #==============================================================================
 
 def test_array_1d_slice_stride_1():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_1
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_1d_slice_stride_2():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_2
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_1d_slice_stride_3():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_3
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_1d_slice_stride_4():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_4
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_1d_slice_stride_5():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_5
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_1d_slice_stride_6():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_6
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_1d_slice_stride_7():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_7
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_1d_slice_stride_8():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_8
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_1d_slice_stride_9():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_9
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_1d_slice_stride_10():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_10
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_1d_slice_stride_11():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_11
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_1d_slice_stride_12():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_12
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_1d_slice_stride_13():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_13
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_1d_slice_stride_14():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_14
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_1d_slice_stride_15():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_15
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_1d_slice_stride_16():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_16
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_stride_17():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_17
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_stride_18():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_18
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_stride_19():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_19
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_stride_20():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_20
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_stride_21():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_21
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_stride_22():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_22
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_1d_slice_stride_23():
-    a = np.empty(21, dtype=np.int)
-    for i in range(21):
-        a[i] = 1 << i
+    a = np.array([1 << i for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_1d_slice_stride_23
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
@@ -2256,210 +2127,164 @@ def test_array_1d_slice_stride_23():
 #==============================================================================
 
 def test_array_2d_F_slice_stride_1():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_1
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_2():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_2
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_3():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_3
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_4():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_4
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_5():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_5
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_6():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_6
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_7():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_7
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_2d_F_slice_stride_8():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_8
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_9():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_9
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_10():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_10
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_11():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_11
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_12():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_12
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_13():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_13
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_14():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_14
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_15():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_15
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_16():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_16
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_17():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_17
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_18():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_18
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_19():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_19
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_20():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_20
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_2d_F_slice_stride_21():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_21
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_22():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_22
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_F_slice_stride_23():
-    a = np.empty((21,21), dtype=np.int, order='F')
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+
     f1 = arrays.array_2d_F_slice_stride_23
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
@@ -2469,209 +2294,163 @@ def test_array_2d_F_slice_stride_23():
 #==============================================================================
 
 def test_array_2d_C_slice_stride_1():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_1
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_2():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_2
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_3():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_3
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_4():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_4
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_5():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_5
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_6():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_6
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_7():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_7
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 
 def test_array_2d_C_slice_stride_8():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_8
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_9():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_9
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_10():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_10
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_11():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_11
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_12():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_12
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_13():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_13
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_14():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_14
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_15():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_15
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_16():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_16
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_17():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_17
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_18():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_18
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_19():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_19
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_20():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_20
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_21():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_21
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_22():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_22
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
 def test_array_2d_C_slice_stride_23():
-    a = np.empty((21,21), dtype=np.int)
-    for i in range(21):
-        for j in range(21):
-            a[i][j] = 1 << j
+    a = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
+
     f1 = arrays.array_2d_C_slice_stride_23
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
