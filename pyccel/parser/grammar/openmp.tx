@@ -24,6 +24,7 @@ OmpConstructOrDirective:
   | OmpTaskLoopConstruct
   | OmpSimdConstruct
   | OmpAtomicConstruct
+  | OmpTaskWaitConstruct
 ;
 ////////////////////////////////////////////////////
 
@@ -40,6 +41,7 @@ OmpSimdConstruct:     name='simd'     clauses*=OmpSimdClause;
 OmpAtomicConstruct:   name='atomic'   clauses*=AllOmpClauses; // Not all clause were added (cant test them).
 OmpBarrierConstruct:  name='barrier';
 OmpMasterConstruct:   name='master';
+OmpTaskWaitConstruct: name='taskwait';
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////

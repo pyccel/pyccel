@@ -1282,6 +1282,11 @@ class CCodePrinter(CodePrinter):
         omp_expr = '#pragma omp {}'.format(omp_expr)
         return omp_expr
 
+    def _print_OMP_TaskWait_Construct(self, expr):
+        omp_expr = str(expr.txt)
+        omp_expr = '#pragma omp {}'.format(omp_expr)
+        return omp_expr
+
     def _print_Omp_End_Clause(self, expr):
         return '}'
     #=====================================

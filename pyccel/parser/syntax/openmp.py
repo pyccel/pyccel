@@ -10,7 +10,7 @@ from textx.metamodel import metamodel_from_file
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct,\
         Omp_End_Clause, OMP_Critical_Construct, OMP_Barrier_Construct, OMP_Master_Construct,\
-        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct, OMP_Atomic_Construct
+        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct, OMP_Atomic_Construct, OMP_TaskWait_Construct
 
 DEBUG = False
 
@@ -59,6 +59,8 @@ class OpenmpStmt(BasicStmt):
         elif isinstance(stmt, OmpSimdConstruct):
             return stmt.expr
         elif isinstance(stmt, OmpAtomicConstruct):
+            return stmt.expr
+        elif isinstance(stmt, OmpTaskWaitConstruct):
             return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
@@ -295,8 +297,23 @@ class OmpBarrierConstruct(BasicStmt):
             print("> OmpBarrierConstruct: expr")
 
         txt = self.name
-
         return OMP_Barrier_Construct(txt)
+
+class OmpTaskWaitConstruct(BasicStmt):
+    """Class representing a TaskWait stmt."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name = kwargs.pop('name')
+        super(OmpTaskWaitConstruct, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpTaskWaitConstruct: expr")
+
+        txt = self.name
+        return OMP_TaskWait_Construct(txt)
 
 class OmpAtomicConstruct(BasicStmt):
     """Class representing a ."""
@@ -780,7 +797,8 @@ omp_directives = [OmpParallelConstruct,
                   OmpMaskedConstruct,
                   OmpTaskLoopConstruct,
                   OmpSimdConstruct,
-                  OmpAtomicConstruct]
+                  OmpAtomicConstruct,
+                  OmpTaskWaitConstruct]
 
 omp_clauses = [OmpCollapse,
                OmpCopyin,
