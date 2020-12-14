@@ -4,6 +4,7 @@
 #------------------------------------------------------------------------------------------#
 
 """
+Module exposing the lapack library functions to pyccel (see http://www.netlib.org/lapack/)
 """
 
 #$ header metavar ignore_at_import=True
