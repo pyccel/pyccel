@@ -158,7 +158,7 @@ class SemanticParser(BasicParser):
         self._used_names = parser.used_names
         self._dummy_counter = parser._dummy_counter
 
-        # used to strore the local variables of a code block needed for garbage collecting
+        # used to store the local variables of a code block needed for garbage collecting
         self._allocs = []
 
         # we use it to detect the current method or function
@@ -652,7 +652,6 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['cls_base'      ] = expr.cls_base
             d_var['is_pointer'    ] = expr.is_pointer
-            d_var['is_view'       ] = expr.is_view
             d_var['is_polymorphic'] = expr.is_polymorphic
             d_var['is_target'     ] = expr.is_target
             d_var['order'         ] = expr.order
@@ -1341,8 +1340,6 @@ class SemanticParser(BasicParser):
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
 
-            if rhs.base.internal_variable.rank != len(rhs.args) - 1 or any(isinstance(a, Slice) for a in rhs.args):
-                d_lhs['is_view' ] = True
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
             rhs.base.internal_variable.is_target = True
@@ -1508,9 +1505,9 @@ class SemanticParser(BasicParser):
 
                         elif var.is_pointer:
                             # we allow pointers to be reassigned multiple times
-                            if var.is_view:
-                                new_expressions.append(Deallocate(var))
-                            pass
+                            # pointers reassigning need to call free_pointer func
+                            # to remove memory leaks
+                            new_expressions.append(Deallocate(var))
 
                         else:
                             # TODO [YG, 04.11.2020] If we could be sure that the
@@ -2507,7 +2504,7 @@ class SemanticParser(BasicParser):
             func = FunctionDef(name, args, results, [])
             self.insert_function(func)
 
-            # Create a new list that store local variables for each FunctionDef to hanld nested functions
+            # Create a new list that store local variables for each FunctionDef to handle nested functions
             self._allocs.append([])
 
             # we annotate the body
