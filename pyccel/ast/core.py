@@ -4852,10 +4852,11 @@ class IndexedElement(Expr, PyccelAstNode):
             for a,s in zip(args, shape):
                 if isinstance(a, Slice):
                     start = a.start
-                    end = s if a.end is None else a.end
-                    if start is None :
+                    end   = a.end
+                    end   = s if end   is None else end
+                    if start is None:
                         new_shape.append(end)
-                    else :
+                    else:
                         new_shape.append(PyccelMinus(end, start))
 
             self._shape = tuple(new_shape)
