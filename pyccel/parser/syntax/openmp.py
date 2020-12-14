@@ -62,6 +62,8 @@ class OpenmpStmt(BasicStmt):
             return stmt.expr
         elif isinstance(stmt, OmpTaskWaitConstruct):
             return stmt.expr
+        elif isinstance(stmt, OmpTaskConstruct):
+            return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
 
@@ -165,6 +167,31 @@ class OmpTaskLoopConstruct(BasicStmt):
                 raise TypeError('Wrong clause for OmpTaskLoopConstruct. Given : ', \
                                 type(clause))
         return OMP_TaskLoop_Construct(txt)
+
+class OmpTaskConstruct(BasicStmt):
+    """Class representing a Task Construct """
+    def __init__(self, **kwargs):
+        """
+        """
+        self.clauses = kwargs.pop('clauses')
+
+        super(OmpTaskConstruct, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpTaskConstruct: expr")
+
+        _valid_clauses = ()
+        
+        txt = 'task'
+        for clause in self.clauses:
+            if isinstance(clause, _valid_clauses):
+                txt = '{0} {1}'.format(txt, clause.expr)
+            else:
+                raise TypeError('Wrong clause for OmpTaskConstruct')
+
+        return OMP_Task_Construct(txt)
 
 class OmpSingleConstruct(BasicStmt):
     """Class representing a ."""

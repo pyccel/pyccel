@@ -25,6 +25,7 @@ OmpConstructOrDirective:
   | OmpSimdConstruct
   | OmpAtomicConstruct
   | OmpTaskWaitConstruct
+  | OmpTaskConstruct
 ;
 ////////////////////////////////////////////////////
 
@@ -39,6 +40,7 @@ OmpCriticalConstruct: 'critical'      clauses*=OmpCriticalClause;
 OmpMaskedConstruct:   name='masked'   clauses*=OmpMaskedClause;
 OmpSimdConstruct:     name='simd'     clauses*=OmpSimdClause;
 OmpAtomicConstruct:   name='atomic'   clauses*=AllOmpClauses; // Not all clause were added (cant test them).
+OmpTaskConstruct:     'task'          clauses*=AllOmpClauses;
 OmpBarrierConstruct:  name='barrier';
 OmpMasterConstruct:   name='master';
 OmpTaskWaitConstruct: name='taskwait';
@@ -154,7 +156,7 @@ OmpProcBindStatus: ('master' | 'close' | 'spread');
 OmpReductionOperator: ('+' | '-' | '*' | '/');
 OmpTLReductionType: ('in_reduction' | 'reduction');
 OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
-OpenmpConstructs: ('simd' | 'masked' | 'master' | 'single' | 'parallel' | 'for' | 'critical' ('(' ID  ')')?);
+OpenmpConstructs: ('simd' | 'masked' | 'master' | 'single' | 'parallel' | 'for' | 'critical' ('(' ID  ')')? | 'task');
 
 AtomicClause: ('write' | 'read' | 'update' | 'capture' | 'compare' | 'weak');
 AtomicMClause: ('seq_cst' | 'acq_rel' | 'release' | 'acquire' | 'relaxed');
