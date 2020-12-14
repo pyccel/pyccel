@@ -1,9 +1,12 @@
-# Constants that represent simple type checker error message, i.e. messages
-# that do not have any parameters.
 #------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+
+
+""" Constants that represent simple type checker error message, i.e. messages
+	that do not have any parameters.
+"""
 
 NO_RETURN_VALUE_EXPECTED = 'No return value expected'
 MISSING_RETURN_STATEMENT = 'Missing return statement'
