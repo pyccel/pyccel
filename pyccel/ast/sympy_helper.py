@@ -3,6 +3,9 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details. #
 #--------------------------------------------------------------------------------------#
 
+"""
+"""
+
 import sympy as sp
 from sympy.core.numbers import One, NegativeOne, Zero, Half
 
