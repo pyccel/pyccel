@@ -1459,6 +1459,12 @@ class SemanticParser(BasicParser):
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
 
+                elif var.is_ndarray and var.is_pointer:
+                        # we allow pointers to be reassigned multiple times
+                        # pointers reassigning need to call free_pointer func
+                        # to remove memory leaks
+                        new_expressions.append(Deallocate(var))
+
                 elif var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
                     errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
                         bounding_box=(self._current_fst_node.lineno,
@@ -1502,12 +1508,6 @@ class SemanticParser(BasicParser):
                                 severity='error', blocker=False,
                                 bounding_box=(self._current_fst_node.lineno,
                                     self._current_fst_node.col_offset))
-
-                        elif var.is_pointer:
-                            # we allow pointers to be reassigned multiple times
-                            # pointers reassigning need to call free_pointer func
-                            # to remove memory leaks
-                            new_expressions.append(Deallocate(var))
 
                         else:
                             # TODO [YG, 04.11.2020] If we could be sure that the
