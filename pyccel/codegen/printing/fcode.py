@@ -2655,28 +2655,25 @@ class FCodePrinter(CodePrinter):
             stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
                         PyccelAdd(shape, stop), stop)
 
-        tmp_stop = stop #save temporary value of end
-        # steps in slices
-        if step is not None :
-            #negative step in slice
-            if isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
-                stop = PyccelAdd(stop, LiteralInteger(1)) if stop is not None else LiteralInteger(0)
-                start = start if start is not None else PyccelMinus(shape, LiteralInteger(1))
+        # negative step in slice
+        if isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
+            stop = PyccelAdd(stop, LiteralInteger(1)) if stop is not None else LiteralInteger(0)
+            start = start if start is not None else PyccelMinus(shape, LiteralInteger(1))
 
-            # variable step in slice
-            elif allow_negative_index and not isinstance(step, LiteralInteger):
-                if start is None :
-                    start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
-                        LiteralInteger(0), PyccelMinus(shape, LiteralInteger(1)))
+        # variable step in slice
+        elif step and allow_negative_index and not isinstance(step, LiteralInteger):
+            if start is None :
+                start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
+                    LiteralInteger(0), PyccelMinus(shape, LiteralInteger(1)))
 
-                if stop is None :
-                    stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
-                        PyccelMinus(shape, LiteralInteger(1)), LiteralInteger(0))
-                else :
-                    stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
-                        stop, PyccelAdd(stop, LiteralInteger(1)))
+            if stop is None :
+                stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
+                    PyccelMinus(shape, LiteralInteger(1)), LiteralInteger(0))
+            else :
+                stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
+                    stop, PyccelAdd(stop, LiteralInteger(1)))
 
-        if stop is not None and stop == tmp_stop:
+        elif stop is not None:
             stop = PyccelMinus(stop, LiteralInteger(1))
 
         return Slice(start, stop, step)
