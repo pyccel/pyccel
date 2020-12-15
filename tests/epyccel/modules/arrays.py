@@ -1,5 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 from pyccel.decorators import types, stack_array, allow_negative_index
+import numpy as np
+
+a_1d   = np.array([1 << i for i in range(21)], dtype=np.int)
+a_2d_f = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int, order='F')
+a_2d_c = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=np.int)
 
 #==============================================================================
 # 1D ARRAYS OF INT-32
