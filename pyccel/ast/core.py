@@ -4986,7 +4986,7 @@ class Slice(Basic, PyccelOperator):
             start = ''
         else:
             start = sstr(self.start)
-        if self.sop is None:
+        if self.stop is None:
             stop = ''
         else:
             stop = sstr(self.stop)
