@@ -239,8 +239,6 @@ def omp_matmul(A, x, out):
             for k in range(len(x)):# pylint: disable=C0200
                 out[i][j] += A[i][k] * x[k][j]
     #$ omp end parallel
-    #to let the function compile using epyccel issue #468
-    "bypass issue #468" # pylint: disable=W0105
 
 @types('real[:,:], real[:,:], real[:,:]')
 def omp_matmul_single(A, x, out):
