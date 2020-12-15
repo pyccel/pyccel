@@ -52,7 +52,7 @@ from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
-from .operators import PyccelMinus, PyccelMul
+from .operators import PyccelMinus, PyccelMul, PyccelDiv, PyccelOperator
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -3191,7 +3191,7 @@ class FunctionDef(Basic):
     def is_pure(self):
         """ Returns True if the function is marked as pure and False otherwise
         Pure functions must not have any side effects.
-        In other words this means that the result must be the same no matter 
+        In other words this means that the result must be the same no matter
         how many times the function is called
         e.g:
         >>> a = f()
@@ -4784,19 +4784,13 @@ class IndexedElement(Expr, PyccelAstNode):
     Examples
     --------
     >>> from sympy import symbols, Idx
-    >>> from pyccel.ast.core import IndexedVariable
+    >>> from pyccel.ast.core import IndexedVariable, IndexedElement
     >>> i, j = symbols('i j', cls=Idx)
+    >>> A = IndexedVariable('A', dtype='int')
     >>> IndexedElement(A, i, j)
-    A[i, j]
-
-    It is recommended that ``IndexedElement`` objects be created via ``IndexedVariable``:
-
-    >>> from pyccel.ast.core import IndexedElement
-    >>> A = IndexedVariable('A')
+    IndexedElement(A, i, j)
     >>> IndexedElement(A, i, j) == A[i, j]
-    False
-
-    **todo:** fix bug. the last result must be : True
+    True
     """
 
     def __new__(
@@ -4856,12 +4850,12 @@ class IndexedElement(Expr, PyccelAstNode):
             for a,s in zip(args, shape):
                 if isinstance(a, Slice):
                     start = a.start
-                    end   = a.end
-                    end   = s if end   is None else end
+                    stop   = a.stop
+                    stop   = s if stop is None else stop
                     if start is None:
-                        new_shape.append(end)
+                        new_shape.append(stop)
                     else:
-                        new_shape.append(PyccelMinus(end, start))
+                        new_shape.append(PyccelMinus(stop, start))
             self._shape = tuple(new_shape)
             self._rank  = len(new_shape)
         else:
@@ -4933,7 +4927,7 @@ class Concatenate(Basic, PyccelAstNode):
 
 
 
-class Slice(Basic):
+class Slice(Basic, PyccelOperator):
 
     """Represents a slice in the code.
 
@@ -4942,35 +4936,53 @@ class Slice(Basic):
     start : Symbol or int
         starting index
 
-    end : Symbol or int
+    stop : Symbol or int
         ending index
+
+    step : Symbol or int default None
 
     Examples
     --------
     >>> from sympy import symbols
     >>> from pyccel.ast.core import Slice
-    >>> m, n = symbols('m, n', integer=True)
-    >>> Slice(m,n)
-    m : n
-    >>> Slice(None,n)
-     : n
-    >>> Slice(m,None)
-    m :
+    >>> start, end, step = symbols('start, stop, step', integer=True)
+    >>> Slice(start, stop)
+    start : stop
+    >>> Slice(None, stop)
+     : stop
+    >>> Slice(start, None)
+    start :
+    >>> Slice(start, stop, step)
+    start : stop : step
     """
 
-    # TODO add step
-    # TODO check that args are integers
-    # TODO add negative indices
-    def __new__(cls, start, end):
-        return Basic.__new__(cls, start, end)
+    def __new__(cls, start, stop, step = None):
+        return Basic.__new__(cls, start, stop, step)
+
+    def __init__(self, start, stop, step = None):
+        self._start = start
+        self._stop = stop
+        self._step = step
+        if self.stage == 'syntactic':
+                return
+        if start is not None and not (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger)):
+            raise TypeError('Slice start must be Integer or None')
+        if stop is not None and not (hasattr(stop, 'dtype') and isinstance(stop.dtype, NativeInteger)):
+            raise TypeError('Slice stop must be Integer or None')
+        if step is not None and not (hasattr(step, 'dtype') and isinstance(step.dtype, NativeInteger)):
+            raise TypeError('Slice step must be Integer or None')
 
     @property
     def start(self):
-        return self._args[0]
+        return self._start
 
     @property
-    def end(self):
-        return self._args[1]
+    def stop(self):
+        return self._stop
+
+    @property
+    def step(self):
+        return self._step
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -4978,22 +4990,22 @@ class Slice(Basic):
             start = ''
         else:
             start = sstr(self.start)
-        if self.end is None:
-            end = ''
+        if self.stop is None:
+            stop = ''
         else:
-            end = sstr(self.end)
-        return '{0} : {1}'.format(start, end)
+            stop = sstr(self.stop)
+        return '{0} : {1}'.format(start, stop)
 
     def __str__(self):
         if self.start is None:
             start = ''
         else:
             start = str(self.start)
-        if self.end is None:
-            end = ''
+        if self.stop is None:
+            stop = ''
         else:
-            end = str(self.end)
-        return '{0} : {1}'.format(start, end)
+            stop = str(self.stop)
+        return '{0} : {1}'.format(start, stop)
 
 class Assert(Basic):
 
