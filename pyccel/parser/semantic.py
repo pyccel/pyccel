@@ -4,7 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-# pylint: R0201, missing-function-docstring
+# pylint: disable=R0201, missing-function-docstring
 
 from collections import OrderedDict
 from itertools import chain
