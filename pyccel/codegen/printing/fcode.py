@@ -932,7 +932,7 @@ class FCodePrinter(CodePrinter):
                         if (isinstance(i.start, (int, LiteralInteger)) and i.start<s-1) or not(isinstance(i.start, (int, LiteralInteger))):
                             shape.append(PyccelMinus(s, i.start))
                     else:
-                        shape.append(PyccelMinus(i.stop, PyccelAdd(i.start, literalInteger(1))))
+                        shape.append(PyccelMinus(i.stop, PyccelAdd(i.start, LiteralInteger(1))))
 
             rank = len(shape)
 
