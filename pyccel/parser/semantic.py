@@ -829,9 +829,9 @@ class SemanticParser(BasicParser):
         return repr(expr)
 
     def _visit_Slice(self, expr, **settings):
-        start = self._visit(expr.start) if expr.start else None
-        stop = self._visit(expr.stop) if expr.stop else None
-        step = self._visit(expr.step) if expr.step else None
+        start = self._visit(expr.start) if expr.start is not None else None
+        stop = self._visit(expr.stop) if expr.stop is not None else None
+        step = self._visit(expr.step) if expr.step is not None else None
 
         return Slice(start, stop, step)
 
