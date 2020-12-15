@@ -678,7 +678,7 @@ class CCodePrinter(CodePrinter):
     def _slice_elements_managements(self, _slice, shape, allow_negative_index):
 
         start = LiteralInteger(0) if _slice.start is None else _slice.start
-        end = shape if _slice.end is None else _slice.end
+        stop = shape if _slice.stop is None else _slice.stop
 
         # negative start and end in slice
         if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
@@ -687,11 +687,11 @@ class CCodePrinter(CodePrinter):
             start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
                             PyccelMinus(shape, start), start)
 
-        if isinstance(end, PyccelUnarySub) and isinstance(end.args[0], LiteralInteger):
-            end = PyccelMinus(shape, end.args[0])
-        elif allow_negative_index and not isinstance(end, LiteralInteger):
-            end = IfTernaryOperator(PyccelLt(end, LiteralInteger(0)),
-                            PyccelMinus(shape, end), end)
+        if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
+            stop = PyccelMinus(shape, stop.args[0])
+        elif allow_negative_index and not isinstance(stop, LiteralInteger):
+            stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
+                            PyccelMinus(shape, stop), stop)
 
         # steps in slices
         step = _slice.step
@@ -699,16 +699,16 @@ class CCodePrinter(CodePrinter):
         # negative step in slice
         if isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
             start = shape if _slice.start is None else start
-            end = LiteralInteger(0) if _slice.end is None else end
+            stop = LiteralInteger(0) if _slice.stop is None else stop
 
         # variable step in slice
         elif allow_negative_index and step and not isinstance(step, LiteralInteger):
-            start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, end)
-            end = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), end, start)
+            start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, stop)
+            stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, start)
         else :
             step = LiteralInteger(1)
 
-        return Slice(start, end, step)
+        return Slice(start, stop, step)
 
     def _print_PyccelArraySize(self, expr):
         return '{}.shape[{}]'.format(expr.arg, expr.index)
@@ -733,9 +733,9 @@ class CCodePrinter(CodePrinter):
 
     def _print_Slice(self, expr):
         start = self._print(expr.start)
-        end = self._print(expr.end)
+        stop = self._print(expr.stop)
         step = self._print(expr.step)
-        return 'new_slice({}, {}, {})'.format(start, end, step)
+        return 'new_slice({}, {}, {})'.format(start, stop, step)
 
     def _print_NumpyUfuncBase(self, expr):
         """ Convert a Python expression with a Numpy function call to C

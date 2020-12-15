@@ -923,16 +923,16 @@ class FCodePrinter(CodePrinter):
             shape = []
             for (s, i) in zip(_shape, var.indices):
                 if isinstance(i, Slice):
-                    if i.start is None and i.end is None:
+                    if i.start is None and i.stop is None:
                         shape.append(s)
                     elif i.start is None:
-                        if (isinstance(i.end, (int, LiteralInteger)) and i.end>0) or not(isinstance(i.end, (int, LiteralInteger))):
-                            shape.append(i.end)
-                    elif i.end is None:
+                        if (isinstance(i.stop, (int, LiteralInteger)) and i.stop>0) or not(isinstance(i.stop, (int, LiteralInteger))):
+                            shape.append(i.stop)
+                    elif i.stop is None:
                         if (isinstance(i.start, (int, LiteralInteger)) and i.start<s-1) or not(isinstance(i.start, (int, LiteralInteger))):
-                            shape.append(s-i.start)
+                            shape.append(s - i.start)
                     else:
-                        shape.append(i.end-i.start+1)
+                        shape.append(i.stop - i.start + 1)
 
             rank = len(shape)
 
@@ -2639,7 +2639,7 @@ class FCodePrinter(CodePrinter):
 
     def _slice_management(self, _slice, shape, allow_negative_index):
         start = _slice.start
-        end = _slice.end
+        stop = _slice.stop
         step = _slice.step
 
         # negative start and end in slice
@@ -2649,18 +2649,18 @@ class FCodePrinter(CodePrinter):
             start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
                         PyccelAdd(shape, start), start)
 
-        if isinstance(end, PyccelUnarySub) and isinstance(end.args[0], LiteralInteger):
-            end = PyccelMinus(shape, end.args[0])
-        elif end is not None and allow_negative_index and not isinstance(end, LiteralInteger):
-            end = IfTernaryOperator(PyccelLt(end, LiteralInteger(0)),
-                        PyccelAdd(shape, end), end)
+        if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
+            stop = PyccelMinus(shape, stop.args[0])
+        elif stop is not None and allow_negative_index and not isinstance(stop, LiteralInteger):
+            stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
+                        PyccelAdd(shape, stop), stop)
 
-        tmp_end = end #save temporary value of end
+        tmp_stop = stop #save temporary value of end
         # steps in slices
         if step is not None :
             #negative step in slice
             if isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
-                end = PyccelAdd(end, LiteralInteger(1)) if end is not None else LiteralInteger(0)
+                stop = PyccelAdd(stop, LiteralInteger(1)) if stop is not None else LiteralInteger(0)
                 start = start if start is not None else PyccelMinus(shape, LiteralInteger(1))
 
             # variable step in slice
@@ -2669,29 +2669,29 @@ class FCodePrinter(CodePrinter):
                     start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
                         LiteralInteger(0), PyccelMinus(shape, LiteralInteger(1)))
 
-                if end is None :
-                    end = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
+                if stop is None :
+                    stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
                         PyccelMinus(shape, LiteralInteger(1)), LiteralInteger(0))
                 else :
-                    end = PyccelAdd(end, LiteralInteger(1))
+                    stop = PyccelAdd(stop, LiteralInteger(1))
 
-        if end is not None and end == tmp_end:
-            end = PyccelMinus(end, LiteralInteger(1))
+        if stop is not None and stop == tmp_stop:
+            stop = PyccelMinus(stop, LiteralInteger(1))
 
-        return Slice(start, end, step)
+        return Slice(start, stop, step)
 
     def _print_Slice(self, expr):
         if expr.start is None or  isinstance(expr.start, Nil):
             start = ''
         else:
             start = self._print(expr.start)
-        if (expr.end is None) or isinstance(expr.end, Nil):
-            end = ''
+        if (expr.stop is None) or isinstance(expr.stop, Nil):
+            stop = ''
         else:
-            end = self._print(expr.end)
+            stop = self._print(expr.stop)
         if expr.step is not None :
-            return '{0}:{1}:{2}'.format(start, end, self._print(expr.step))
-        return '{0}:{1}'.format(start, end)
+            return '{0}:{1}:{2}'.format(start, stop, self._print(expr.step))
+        return '{0}:{1}'.format(start, stop)
 
 #=======================================================================================
 

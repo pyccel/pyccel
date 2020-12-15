@@ -4846,12 +4846,12 @@ class IndexedElement(Expr, PyccelAstNode):
             for a,s in zip(args, shape):
                 if isinstance(a, Slice):
                     start = a.start
-                    end   = a.end
-                    end   = s if end   is None else end
+                    stop   = a.stop
+                    stop   = s if stop is None else stop
                     if start is None:
-                        new_shape.append(end)
+                        new_shape.append(stop)
                     else:
-                        new_shape.append(PyccelMinus(end, start))
+                        new_shape.append(PyccelMinus(stop, start))
             self._shape = tuple(new_shape)
             self._rank  = len(new_shape)
         else:
@@ -4932,7 +4932,7 @@ class Slice(Basic):
     start : Symbol or int
         starting index
 
-    end : Symbol or int
+    stop : Symbol or int
         ending index
 
     step : Symbol or int default None
@@ -4941,32 +4941,32 @@ class Slice(Basic):
     --------
     >>> from sympy import symbols
     >>> from pyccel.ast.core import Slice
-    >>> start, end, step = symbols('start, end, step', integer=True)
-    >>> Slice(start, end)
-    start : end
-    >>> Slice(None, end)
-     : end
+    >>> start, end, step = symbols('start, stop, step', integer=True)
+    >>> Slice(start, stop)
+    start : stop
+    >>> Slice(None, stop)
+     : stop
     >>> Slice(start, None)
     start :
-    >>> Slice(start, end, step)
-    start : end : step
+    >>> Slice(start, stop, step)
+    start : stop : step
     """
 
-    def __new__(cls, start, end, step = None):
-        return Basic.__new__(cls, start, end, step)
+    def __new__(cls, start, stop, step = None):
+        return Basic.__new__(cls, start, stop, step)
 
-    def __init__(self, start, end, step = None):
+    def __init__(self, start, stop, step = None):
         if start is not None and not (isinstance(start, (Symbol, PyccelOperator)) or
                 (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger))):
             raise TypeError('Slice start must be Integer or None')
-        if end is not None and not (isinstance(end, (Symbol, PyccelOperator)) or
-                (hasattr(end, 'dtype') and isinstance(end.dtype, NativeInteger))):
-            raise TypeError('Slice end must be Integer or None')
+        if stop is not None and not (isinstance(stop, (Symbol, PyccelOperator)) or
+                (hasattr(stop, 'dtype') and isinstance(stop.dtype, NativeInteger))):
+            raise TypeError('Slice stop must be Integer or None')
         if step is not None and not (isinstance(step, (Symbol, PyccelOperator)) or
                 (hasattr(step, 'dtype') and isinstance(step.dtype, NativeInteger))):
             raise TypeError('Slice step must be Integer or None')
         self._start = start
-        self._end = end
+        self._stop = stop
         self._step = step
 
     @property
@@ -4974,8 +4974,8 @@ class Slice(Basic):
         return self._start
 
     @property
-    def end(self):
-        return self._end
+    def stop(self):
+        return self._stop
 
     @property
     def step(self):
@@ -4987,22 +4987,22 @@ class Slice(Basic):
             start = ''
         else:
             start = sstr(self.start)
-        if self.end is None:
-            end = ''
+        if self.sop is None:
+            stop = ''
         else:
-            end = sstr(self.end)
-        return '{0} : {1}'.format(start, end)
+            stop = sstr(self.stop)
+        return '{0} : {1}'.format(start, stop)
 
     def __str__(self):
         if self.start is None:
             start = ''
         else:
             start = str(self.start)
-        if self.end is None:
-            end = ''
+        if self.stop is None:
+            stop = ''
         else:
-            end = str(self.end)
-        return '{0} : {1}'.format(start, end)
+            stop = str(self.stop)
+        return '{0} : {1}'.format(start, stop)
 
 class Assert(Basic):
 

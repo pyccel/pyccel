@@ -829,11 +829,11 @@ class SemanticParser(BasicParser):
         return repr(expr)
 
     def _visit_Slice(self, expr, **settings):
-        start = self._visit(expr.start) if expr.start else expr.start
-        end = self._visit(expr.end) if expr.end else expr.end
-        step = self._visit(expr.step) if expr.step else expr.step
+        start = self._visit(expr.start) if expr.start else None
+        stop = self._visit(expr.stop) if expr.stop else None
+        step = self._visit(expr.step) if expr.step else None
 
-        return Slice(start, end, step)
+        return Slice(start, stop, step)
 
     def _extract_indexed_from_var(self, var, args, name):
 
@@ -857,12 +857,12 @@ class SemanticParser(BasicParser):
 
             if isinstance(arg, Slice):
                 if ((arg.start is not None and not isinstance(arg.start, LiteralInteger)) or
-                        (arg.end is not None and not isinstance(arg.end, LiteralInteger))):
+                        (arg.stop is not None and not isinstance(arg.stop, LiteralInteger))):
                     errors.report(INDEXED_TUPLE, symbol=var,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=self.blocking)
 
-                idx = slice(arg.start, arg.end)
+                idx = slice(arg.start, arg.stop)
                 selected_vars = var.get_var(idx)
                 if len(selected_vars)==1:
                     if len(args) == 1:
