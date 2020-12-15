@@ -4923,7 +4923,7 @@ class Concatenate(Basic, PyccelAstNode):
 
 
 
-class Slice(Basic):
+class Slice(Basic, PyccelOperator):
 
     """Represents a slice in the code.
 
@@ -4956,18 +4956,17 @@ class Slice(Basic):
         return Basic.__new__(cls, start, stop, step)
 
     def __init__(self, start, stop, step = None):
-        if start is not None and not (isinstance(start, (Symbol, PyccelOperator)) or
-                (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger))):
-            raise TypeError('Slice start must be Integer or None')
-        if stop is not None and not (isinstance(stop, (Symbol, PyccelOperator)) or
-                (hasattr(stop, 'dtype') and isinstance(stop.dtype, NativeInteger))):
-            raise TypeError('Slice stop must be Integer or None')
-        if step is not None and not (isinstance(step, (Symbol, PyccelOperator)) or
-                (hasattr(step, 'dtype') and isinstance(step.dtype, NativeInteger))):
-            raise TypeError('Slice step must be Integer or None')
         self._start = start
         self._stop = stop
         self._step = step
+        if self.stage == 'syntactic':
+                return
+        if start is not None and not (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger)):
+            raise TypeError('Slice start must be Integer or None')
+        if stop is not None and not (hasattr(stop, 'dtype') and isinstance(stop.dtype, NativeInteger)):
+            raise TypeError('Slice stop must be Integer or None')
+        if step is not None and not (hasattr(step, 'dtype') and isinstance(step.dtype, NativeInteger)):
+            raise TypeError('Slice step must be Integer or None')
 
     @property
     def start(self):
