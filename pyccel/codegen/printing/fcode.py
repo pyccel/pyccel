@@ -29,7 +29,7 @@ from sympy.logic.boolalg import Not
 
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
-from pyccel.ast.core import Nil
+from pyccel.ast.core import Nil, IfTernaryOperator
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import Subroutine
@@ -45,7 +45,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
 
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-from pyccel.ast.operators      import PyccelUnarySub, PyccelMod
+from pyccel.ast.operators      import PyccelUnarySub, PyccelLt
 from pyccel.ast.core      import FunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
@@ -2627,7 +2627,8 @@ class FCodePrinter(CodePrinter):
                 if isinstance(ind, Tuple) and len(ind) == 1:
                     inds[i] = ind[0]
                 if allow_negative_indexes and not isinstance(ind, LiteralInteger):
-                    inds[i] = PyccelMod(ind, base_shape[i])
+                    inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
+                            PyccelAdd(base_shape[i], ind), ind)
 
         inds = [self._print(i) for i in inds]
 
