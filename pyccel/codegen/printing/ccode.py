@@ -666,7 +666,7 @@ class CCodePrinter(CodePrinter):
                 #managing the Slice input
                 for i , ind in enumerate(inds):
                     if isinstance(ind, Slice):
-                        inds[i] = self._slice_elements_managements(ind, PyccelArraySize(base, i),
+                        inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArraySize(base, i),
                             allow_negative_indexes)
                 inds = [self._print(i) for i in inds]
                 return "array_slicing(%s, %s)" % (base_name, ", ".join(inds))
@@ -675,23 +675,37 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError(expr)
         return "%s.%s[get_index(%s, %s)]" % (base_name, dtype, base_name, ", ".join(inds))
 
-    def _slice_elements_managements(self, _slice, shape, allow_negative_index):
+    @staticmethod
+    def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
+        """ Create new slice with informations collected from old slice and decorators
 
+        Parameters
+        ----------
+            _slice : Slice
+                slice needed to collect (start, stop, step)
+            array_size : PyccelArraySize
+                call to function size()
+            allow_negative_index : Bool
+                True when the decorator allow_negative_index is present
+        Returns
+        -------
+            Slice
+        """
         start = LiteralInteger(0) if _slice.start is None else _slice.start
-        stop = shape if _slice.stop is None else _slice.stop
+        stop = array_size if _slice.stop is None else _slice.stop
 
         # negative start and end in slice
         if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
-            start = PyccelMinus(shape, start.args[0])
+            start = PyccelMinus(array_size, start.args[0])
         elif allow_negative_index and not isinstance(start, LiteralInteger):
             start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
-                            PyccelMinus(shape, start), start)
+                            PyccelMinus(array_size, start), start)
 
         if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
-            stop = PyccelMinus(shape, stop.args[0])
+            stop = PyccelMinus(array_size, stop.args[0])
         elif allow_negative_index and not isinstance(stop, LiteralInteger):
             stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
-                            PyccelMinus(shape, stop), stop)
+                            PyccelMinus(array_size, stop), stop)
 
         # steps in slices
         step = _slice.step
@@ -701,7 +715,7 @@ class CCodePrinter(CodePrinter):
 
         # negative step in slice
         elif isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
-            start = shape if _slice.start is None else start
+            start = array_size if _slice.start is None else start
             stop = LiteralInteger(0) if _slice.stop is None else stop
 
         # variable step in slice
