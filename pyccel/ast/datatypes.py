@@ -5,6 +5,10 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
+"""
+Manupilating supprted datatypes in C/Fortran.
+"""
+
 from .basic import Basic
 
 from sympy.core.singleton import Singleton
