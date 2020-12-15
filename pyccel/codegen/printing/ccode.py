@@ -696,8 +696,11 @@ class CCodePrinter(CodePrinter):
         # steps in slices
         step = _slice.step
 
+        if step is None:
+            step = LiteralInteger(1)
+
         # negative step in slice
-        if isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
+        elif isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
             start = shape if _slice.start is None else start
             stop = LiteralInteger(0) if _slice.stop is None else stop
 
@@ -705,8 +708,6 @@ class CCodePrinter(CodePrinter):
         elif allow_negative_index and step and not isinstance(step, LiteralInteger):
             start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, stop)
             stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, start)
-        else :
-            step = LiteralInteger(1)
 
         return Slice(start, stop, step)
 
