@@ -5,7 +5,7 @@
 
 
 """
-Module exposing the fitpack library function to pyccel.
+Module exposing the fitpack library function to pyccel (see  http://www.netlib.org/dierckx/).
 """
 
 #$ header metavar print=True

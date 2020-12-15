@@ -5,7 +5,6 @@
 #------------------------------------------------------------------------------------------#
 
 """
-This module contains the Base class for all objects in Pyccel.
 """
 __all__ = ["BasicStmt"]
 
