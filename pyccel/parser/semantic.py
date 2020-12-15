@@ -1459,12 +1459,6 @@ class SemanticParser(BasicParser):
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
 
-                elif var.is_ndarray and var.is_pointer:
-                        # we allow pointers to be reassigned multiple times
-                        # pointers reassigning need to call free_pointer func
-                        # to remove memory leaks
-                        new_expressions.append(Deallocate(var))
-
                 elif var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
                     errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
                         bounding_box=(self._current_fst_node.lineno,
@@ -1476,6 +1470,12 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
                                 severity='error', symbol=var.name)
+
+                elif var.is_ndarray and var.is_pointer:
+                    # we allow pointers to be reassigned multiple times
+                    # pointers reassigning need to call free_pointer func
+                    # to remove memory leaks
+                    new_expressions.append(Deallocate(var))
 
                 elif not is_augassign and str(dtype) != str(getattr(var, 'dtype', 'None')):
                     txt = '|{name}| {old} <-> {new}'
@@ -2320,7 +2320,6 @@ class SemanticParser(BasicParser):
         results = [self._visit_Symbol(i, **settings) for i in return_vars]
 
         #add the Deallocate node before the Return node
-        code = []
         code = assigns + [Deallocate(i) for i in self._allocs[-1]]
         if code:
             expr  = Return(results, CodeBlock(code))
