@@ -4,6 +4,9 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
+"""
+This module contains all classes and functions used for handling macros.
+"""
 
 from sympy.core.expr import AtomicExpr
 from sympy import sympify
