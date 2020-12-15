@@ -4,6 +4,10 @@
 #------------------------------------------------------------------------------------------#
 
 
+"""
+Module exposing the fitpack library function to pyccel.
+"""
+
 #$ header metavar print=True
 from pyccel.stdlib.internal.fitpack import bispev
 

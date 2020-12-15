@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------------------#
 
 """
-Module exposing the dfftpack library functions to pyccel
+Module exposing the dfftpack library functions to pyccel (see https://www.netlib.org/fftpack/)
 """
 
 #$ header metavar print=True

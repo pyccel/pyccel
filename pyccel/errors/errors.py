@@ -3,6 +3,11 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
+"""
+This module contains classes and methods that manupilate the various errors and warnnigs
+that could be shown by pyccel.
+"""
+
 from collections import OrderedDict
 from os.path import basename
 from ast import dump as ast_dump
