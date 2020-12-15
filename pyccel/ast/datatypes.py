@@ -6,7 +6,7 @@
 #------------------------------------------------------------------------------------------#
 
 """
-Manupilating supprted datatypes in C/Fortran.
+Classes and methods that handling supported datatypes in C/Fortran.
 """
 
 from .basic import Basic
