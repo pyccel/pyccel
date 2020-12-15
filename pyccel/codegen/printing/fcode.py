@@ -2673,7 +2673,8 @@ class FCodePrinter(CodePrinter):
                     stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
                         PyccelMinus(shape, LiteralInteger(1)), LiteralInteger(0))
                 else :
-                    stop = PyccelAdd(stop, LiteralInteger(1))
+                    stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
+                        stop, PyccelAdd(stop, LiteralInteger(1)))
 
         if stop is not None and stop == tmp_stop:
             stop = PyccelMinus(stop, LiteralInteger(1))
