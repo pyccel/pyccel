@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------------------#
 
 """
-This module Contains functions mapping the python mpi4py interface onto their equivalent fortran/c mpi calls.
+This module contains functions mapping the python mpi4py interface onto their equivalent fortran/c mpi calls.
 """
 
 from numpy import int32

@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------------------#
 
 """
-This module contains classes and methods that manupilate the various errors and warnnigs
+This module contains classes and methods that manipilate the various errors and warnings
 that could be shown by pyccel.
 """
 
