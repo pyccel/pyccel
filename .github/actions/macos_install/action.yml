@@ -7,4 +7,5 @@ runs:
       run: |
         brew install open-mpi
         brew install libomp
+        brew install gcc
       shell: bash
