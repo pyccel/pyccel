@@ -48,9 +48,8 @@ runs:
         #refreshenv
         $MSMPI_INC="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Include\\"
         $MSMPI_LIB64="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Lib\\x64\\"
-        $PATH="${Env:Path};C:\\Program Files\\Microsoft MPI\\Bin"
-        [System.Environment]::SetEnvironmentVariable("Path",$PATH)
-        echo "Path=${PATH}" >> $GITHUB_ENV
+        echo "C:\\Program Files\\Microsoft MPI\\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
         # Get-Childitem -Path "C:\\Program Files" -Recurse -ErrorAction SilentlyContinue -Include mpi.f90
         # Get-Childitem -Path "C:\\Program Files (x86)" -Recurse -ErrorAction SilentlyContinue -Include mpi.f90
         #
