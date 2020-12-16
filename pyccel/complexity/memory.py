@@ -4,6 +4,33 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
+"""
+This module provides us with functions and objects that allow us to compute
+the memory complexity a of a program.
+
+Example
+-------
+
+>>> code = '''
+... n = 10
+... for i in range(0,n):
+...     for j in range(0,n):
+...         x = pow(i,2) + pow(i,3) + 3*i
+...         y = x / 3 + 2* x
+... '''
+
+>>> from pyccel.complexity.memory import MemComplexity
+>>> M = MemComplexity(code)
+>>> d = M.cost()
+>>> print "f = ", d['f']
+f =  n**2*(2*ADD + DIV + 2*MUL + 2*POW)
+>>> print "m = ", d['m']
+m =  WRITE + 2*n**2*(READ + WRITE)
+>>> q = M.intensity()
+>>> print "+++ computational intensity ~", q
++++ computational intensity ~ (2*ADD + DIV + 2*MUL + 2*POW)/(2*READ + 2*WRITE)
+
+"""
 
 from sympy import Symbol, sympify, Tuple
 from sympy import Poly, LT
