@@ -88,7 +88,9 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Parallel tests
         run: |
-          echo ${Env:Path}
+          $PATH="${Env:Path};C:\\Program Files\\Microsoft MPI\\Bin"
+          [System.Environment]::SetEnvironmentVariable("Path",$PATH)
+          cat $GITHUB_ENV
           mpiexec -n 4 python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
           # mpiexec -n 4 python -m pytest epyccel -v -m parallel -rx
         working-directory: ./tests
