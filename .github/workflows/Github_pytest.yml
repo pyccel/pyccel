@@ -1,6 +1,3 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
 name: Pyccel tests
 
 on:
@@ -9,66 +6,66 @@ on:
   pull_request:
     branches: [ master ]
 
-jobs:
-  Linux:
+# jobs:
+#   Linux:
 
-    runs-on: ubuntu-latest
+#     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.6
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.6
-      - name: Install dependencies
-        uses: ./.github/actions/linux_install
-      - name: Install python dependencies
-        uses: ./.github/actions/pip_installation
-      - name: Coverage install
-        uses: ./.github/actions/coverage_install
-      - name: Test with pytest
-        uses: ./.github/actions/pytest_run
-      - name: Collect coverage information
-        continue-on-error: True
-        uses: ./.github/actions/coverage_collection
-      - name: Run codacy-coverage-reporter
-        uses: codacy/codacy-coverage-reporter-action@master
-        continue-on-error: True
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: cobertura.xml
+#     steps:
+#       - uses: actions/checkout@v2
+#       - name: Set up Python 3.6
+#         uses: actions/setup-python@v2
+#         with:
+#           python-version: 3.6
+#       - name: Install dependencies
+#         uses: ./.github/actions/linux_install
+#       - name: Install python dependencies
+#         uses: ./.github/actions/pip_installation
+#       - name: Coverage install
+#         uses: ./.github/actions/coverage_install
+#       - name: Test with pytest
+#         uses: ./.github/actions/pytest_run
+#       - name: Collect coverage information
+#         continue-on-error: True
+#         uses: ./.github/actions/coverage_collection
+#       - name: Run codacy-coverage-reporter
+#         uses: codacy/codacy-coverage-reporter-action@master
+#         continue-on-error: True
+#         with:
+#           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+#           coverage-reports: cobertura.xml
 
-  Linux-Master:
+#   Linux-Master:
 
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
-    strategy:
-      matrix:
-        python-version: [3.7, 3.8, 3.9]
+#     runs-on: ubuntu-latest
+#     if: github.ref == 'refs/heads/master'
+#     strategy:
+#       matrix:
+#         python-version: [3.7, 3.8, 3.9]
 
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        uses: ./.github/actions/linux_install
-      - name: Install python dependencies
-        uses: ./.github/actions/pip_installation
-      - name: Coverage install
-        uses: ./.github/actions/coverage_install
-      - name: Test with pytest
-        uses: ./.github/actions/pytest_run
-      - name: Collect coverage information
-        continue-on-error: True
-        uses: ./.github/actions/coverage_collection
-      - name: Run codacy-coverage-reporter
-        uses: codacy/codacy-coverage-reporter-action@master
-        continue-on-error: True
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: cobertura.xml
+#     steps:
+#       - uses: actions/checkout@v2
+#       - name: Set up Python ${{ matrix.python-version }}
+#         uses: actions/setup-python@v2
+#         with:
+#           python-version: ${{ matrix.python-version }}
+#       - name: Install dependencies
+#         uses: ./.github/actions/linux_install
+#       - name: Install python dependencies
+#         uses: ./.github/actions/pip_installation
+#       - name: Coverage install
+#         uses: ./.github/actions/coverage_install
+#       - name: Test with pytest
+#         uses: ./.github/actions/pytest_run
+#       - name: Collect coverage information
+#         continue-on-error: True
+#         uses: ./.github/actions/coverage_collection
+#       - name: Run codacy-coverage-reporter
+#         uses: codacy/codacy-coverage-reporter-action@master
+#         continue-on-error: True
+#         with:
+#           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+#           coverage-reports: cobertura.xml
 
   Windows:
 
@@ -107,19 +104,19 @@ jobs:
       #    mpiexec -n 4 python -m pytest epyccel -v -m parallel -rx
       #  working-directory: ./tests
 
-  MacOSX:
+#   MacOSX:
 
-    runs-on: macos-latest
+#     runs-on: macos-latest
 
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-      - name: Install dependencies
-        uses: ./.github/actions/macos_install
-      - name: Install python dependencies
-        uses: ./.github/actions/pip_installation
-      - name: Test with pytest
-        uses: ./.github/actions/pytest_run
+#     steps:
+#       - uses: actions/checkout@v2
+#       - name: Set up Python 3.9
+#         uses: actions/setup-python@v2
+#         with:
+#           python-version: 3.9
+#       - name: Install dependencies
+#         uses: ./.github/actions/macos_install
+#       - name: Install python dependencies
+#         uses: ./.github/actions/pip_installation
+#       - name: Test with pytest
+#         uses: ./.github/actions/pytest_run
