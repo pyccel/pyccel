@@ -38,7 +38,7 @@ runs:
         #
         # Install MS MPI
         ./msmpisetup.exe -unattend
-        sleep 5
+        sleep 10
         msiexec /quiet /i msmpisdk.msi
         echo "MS MPI runtime and SDK installed"
       shell: powershell
