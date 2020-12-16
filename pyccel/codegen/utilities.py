@@ -151,6 +151,7 @@ def compile_files(filename, compiler, flags,
         err_msg = "Failed to build module"
         if verbose:
             err_msg += "\n" + err
+        print(err_msg)
         raise RuntimeError(err_msg)
     if err:
         warnings.warn(UserWarning(err))

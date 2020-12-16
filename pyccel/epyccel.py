@@ -242,6 +242,7 @@ def epyccel( python_function_or_module, **kwargs ):
             # error handling carried out after broadcast to prevent deadlocks
             except: # pylint: disable=bare-except
                 exc_info = sys.exc_info()
+                print(exc_info)
                 success  = False
 
         # Non-master processes initialize empty variables
