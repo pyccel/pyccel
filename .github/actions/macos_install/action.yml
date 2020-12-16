@@ -5,6 +5,7 @@ runs:
   steps:
     - name: Install MPI, OpenMP
       run: |
+        brew install gfortran
         brew install open-mpi
         brew install libomp
       shell: bash
