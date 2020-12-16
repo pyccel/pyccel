@@ -313,3 +313,20 @@ def omp_taskloop(n):
     #$omp end parallel
     return result
 
+@types('int')
+def omp_tasks(x):
+    @types('int', results='int')
+    def fib(n):
+        if n < 2:
+          return n
+        #$ omp task shared(i) firstprivate(n)
+        i = fib(n-1)
+        #$ omp end task
+        #$ omp task shared(j) firstprivate(n)
+        j = fib(n-2)
+        #$ omp end task
+        #$ omp taskwait
+        return i + j
+    m = fib(x)
+    return m
+

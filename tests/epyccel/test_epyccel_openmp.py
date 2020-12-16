@@ -312,3 +312,18 @@ def test_omp_taskloop(language):
       for j in range(0, x * 10):
         result = result + 1
       assert result == f1(x)
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Nested functions not handled for C !"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
+def test_omp_tasks(language):
+    f1 = epyccel(openmp.omp_tasks, accelerator='openmp', language=language)
+    from random import randint
+
+    for i in range(0, 4):
+      x = randint(10, 20)
+      assert openmp.omp_tasks(x) == f1(x)
