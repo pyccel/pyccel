@@ -150,7 +150,8 @@ class OmpTaskLoopConstruct(BasicStmt):
                          OmpPrivate, \
                          OmpFirstPrivate, \
                          OmpLastPrivate, \
-                         OmpTaskloopReduction, \
+                         OmpReduction, \
+                         OmpinReduction, \
                          OmpNumTasks, \
                          OmpGrainSize, \
                          OmpCollapse, \
@@ -182,7 +183,15 @@ class OmpTaskConstruct(BasicStmt):
         if DEBUG:
             print("> OmpTaskConstruct: expr")
 
-        _valid_clauses = ()
+        _valid_clauses = (OmpPriority, \
+                          OmpDefault, \
+                          OmpPrivate, \
+                          OmpShared, \
+                          OmpFirstPrivate, \
+                          OmpUntied, \
+                          OmpMergeable, \
+                          OmpinReduction, \
+                          OmpDepend)
         
         txt = 'task'
         for clause in self.clauses:
@@ -601,7 +610,26 @@ class OmpReduction(BasicStmt):
         args = ', '.join(str(arg) for arg in self.args)
         return 'reduction({0}: {1})'.format(op, args)
 
-class OmpTaskloopReduction(BasicStmt):
+class OmpDepend(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.dtype   = kwargs.pop('dtype')
+        self.args = kwargs.pop('args')
+
+        super(OmpDepend, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpDepend: expr")
+
+        dtype   = self.dtype
+        args = ', '.join(str(arg) for arg in self.args)
+        return 'depend({0}: {1})'.format(dtype, args)
+
+class OmpinReduction(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
         """
@@ -610,12 +638,12 @@ class OmpTaskloopReduction(BasicStmt):
         self.op     = kwargs.pop('op')
         self.args   = kwargs.pop('args')
 
-        super(OmpTaskloopReduction, self).__init__(**kwargs)
+        super(OmpinReduction, self).__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
-            print("> OmpTaskloopReduction: expr")
+            print("> OmpinReduction: expr")
 
         # TODO check if variable exist in namespace
         ctype = self.ctype
@@ -825,7 +853,8 @@ omp_directives = [OmpParallelConstruct,
                   OmpTaskLoopConstruct,
                   OmpSimdConstruct,
                   OmpAtomicConstruct,
-                  OmpTaskWaitConstruct]
+                  OmpTaskWaitConstruct,
+                  OmpTaskConstruct]
 
 omp_clauses = [OmpCollapse,
                OmpCopyin,
@@ -843,7 +872,7 @@ omp_clauses = [OmpCollapse,
                OmpShared,
                OmpCriticalName,
                OmpFilter,
-               OmpTaskloopReduction,
+               OmpinReduction,
                OmpNumTasks,
                OmpGrainSize,
                OmpUntied,
@@ -851,7 +880,8 @@ omp_clauses = [OmpCollapse,
                OmpNogroup,
                OmpPriority,
                OmpAtomicClause,
-               AtomicMemoryClause]
+               AtomicMemoryClause,
+               OmpDepend]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 
