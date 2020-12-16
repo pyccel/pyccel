@@ -49,6 +49,8 @@ runs:
         $MSMPI_INC="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Include\\"
         $MSMPI_LIB64="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Lib\\x64\\"
         echo "C:\\Program Files\\Microsoft MPI\\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "$MSMPI_INC" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "$MSMPI_LIB64" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
         # Get-Childitem -Path "C:\\Program Files" -Recurse -ErrorAction SilentlyContinue -Include mpi.f90
         # Get-Childitem -Path "C:\\Program Files (x86)" -Recurse -ErrorAction SilentlyContinue -Include mpi.f90
