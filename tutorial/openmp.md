@@ -556,7 +556,7 @@ sum1 = 0
 sum2 = 0
 sum3 = 0
 #$ omp parallel num_threads(2)
-#$ omp omp sections
+#$ omp sections
 
 #$ omp section
 for i in range(0, int(n/3)):
@@ -575,7 +575,7 @@ for i in range(0, n):
   sum3 = sum3 + i
 print("sum3 :", sum3, ", thread :", omp_get_thread_num())
 #$ omp end section
-#$ omp omp end sections
+#$ omp end sections
 
 #$ omp end parallel
 ```

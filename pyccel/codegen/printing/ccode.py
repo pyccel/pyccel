@@ -1306,6 +1306,11 @@ class CCodePrinter(CodePrinter):
         omp_expr = '#pragma omp {}\n{{'.format(omp_expr)
         return omp_expr
 
+    def _print_OMP_Barrier_Construct(self, expr):
+        omp_expr = str(expr.txt)
+        omp_expr = '#pragma omp {}'.format(omp_expr)
+        return omp_expr
+
     def _print_OMP_Master_Construct(self, expr):
         omp_expr = str(expr.txt)
         omp_expr = '#pragma omp {}\n{{'.format(omp_expr)
