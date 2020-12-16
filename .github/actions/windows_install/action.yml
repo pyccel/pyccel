@@ -45,7 +45,7 @@ runs:
         #refreshenv
         $MSMPI_INC="C:\\Program Files (x86)\\Microsoft SDKs\\Include\\"
         $MSMPI_LIB64="C:\\Program Files (x86)\\Microsoft SDKs\\Lib\\x64\\"
-        $PATH="${Env:Path}C:\\Program Files\\Microsoft MPI\\Bin;"
+        $PATH="${Env:Path};C:\\Program Files\\Microsoft MPI\\Bin"
         [System.Environment]::SetEnvironmentVariable("Path",$PATH)
         echo "Path=${PATH}" >> $GITHUB_ENV
         Get-Childitem -Path "C:\\Program Files" -Recurse -ErrorAction SilentlyContinue -Include mpi.f90
