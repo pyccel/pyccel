@@ -27,6 +27,7 @@ runs:
         cp $Env:SystemRoot\\SysWOW64\\vcruntime140.dll .
         gendef vcruntime140.dll
         dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
+        echo "BLAS/LAPACK installed"
       shell: powershell
     - name: Install MS MPI runtime and SDK
       run: |
@@ -39,6 +40,7 @@ runs:
         ./msmpisetup.exe -unattend
         sleep 5
         msiexec /quiet /i msmpisdk.msi
+        echo "MS MPI runtime and SDK installed"
       shell: powershell
     - name: Setup MPI
       run: |
@@ -64,4 +66,5 @@ runs:
         gendef msmpi.dll
         dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
         popd
+        echo "MS MPI set up for use"
       shell: powershell
