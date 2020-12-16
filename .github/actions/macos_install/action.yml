@@ -5,8 +5,8 @@ runs:
   steps:
     - name: Install MPI, OpenMP
       run: |
-        brew install gfortran
         brew install open-mpi
         brew install libomp
+        ln -s gfortran-8 gfortran
         echo "MPI_OPTS='--oversubscribe'" >> $GITHUB_ENV
       shell: bash
