@@ -8,4 +8,5 @@ runs:
         brew install gfortran
         brew install open-mpi
         brew install libomp
+        echo "MPI_OPTS='--oversubscribe'" >> $GITHUB_ENV
       shell: bash
