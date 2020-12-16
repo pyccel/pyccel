@@ -89,6 +89,7 @@ jobs:
       - name: Parallel tests
         run: |
           echo "$MSMPI_INC"
+          echo "$env:MSMPI_INC"
           mpiexec -n 4 python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
           # mpiexec -n 4 python -m pytest epyccel -v -m parallel -rx
         working-directory: ./tests
