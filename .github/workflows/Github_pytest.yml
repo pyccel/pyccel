@@ -86,14 +86,6 @@ jobs:
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
-      - name: Parallel tests
-        run: |
-          echo "$MSMPI_INC"
-          echo "$env:MSMPI_INC"
-          mpiexec -n 4 python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
-          # mpiexec -n 4 python -m pytest epyccel -v -m parallel -rx
-        working-directory: ./tests
-        shell: powershell
       - name: Serial C tests
         run: |
           python -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
@@ -106,6 +98,12 @@ jobs:
         run: |
           python -m pytest ndarrays/ -rx
         working-directory: ./tests
+      - name: Parallel tests
+        run: |
+          mpiexec -n 4 python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
+          # mpiexec -n 4 python -m pytest epyccel -v -m parallel -rx
+        working-directory: ./tests
+        shell: powershell
 
    MacOSX:
 
