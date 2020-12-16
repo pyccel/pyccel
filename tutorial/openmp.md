@@ -374,7 +374,7 @@ def fib(n):
   return i+j
 
 #$ omp parallel
-#$ omp omp single
+#$ omp single
 print(fib(10))
 #$ omp end single
 #$ omp end parallel
