@@ -7,5 +7,5 @@ runs:
       run: |
         brew install open-mpi
         brew install libomp
-        brew install gcc
+        brew install gfortran
       shell: bash
