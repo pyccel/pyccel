@@ -41,7 +41,6 @@ def create_shared_library(codegen,
                           libdirs,
                           includes='',
                           flags = '',
-                          extra_args='',
                           sharedlib_modname=None,
                           verbose = False):
 

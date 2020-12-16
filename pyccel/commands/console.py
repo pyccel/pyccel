@@ -250,7 +250,6 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
                        modules       = (),
                        libs          = args.libs,
                        debug         = args.debug,
-                       extra_args    = '',
                        accelerator   = accelerator,
                        folder        = args.output)
     except PyccelError:

@@ -3,6 +3,9 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+"""
+Contains the execute_pyccel function which carries out the main steps required to execute pyccel
+"""
 
 import os
 import sys
@@ -39,14 +42,12 @@ lang_ext_dict = {
 # [..]_dirname is the name of a directory
 # [..]_dirpath is the full (absolute) path of a directory
 
-# TODO: prune options
 # TODO: change name of variable 'module_name', as it could be a program
 # TODO [YG, 04.02.2020]: check if we should catch BaseException instead of Exception
 def execute_pyccel(fname, *,
                    syntax_only   = False,
                    semantic_only = False,
                    convert_only  = False,
-                   recursive     = False,
                    verbose       = False,
                    folder        = None,
                    language      = None,
@@ -58,9 +59,84 @@ def execute_pyccel(fname, *,
                    modules       = (),
                    libs          = (),
                    debug         = False,
-                   extra_args    = '',
                    accelerator   = None,
                    output_name   = None):
+    """
+    Carries out the main steps required to execute pyccel
+    - Parses the python file (syntactic stage)
+    - Annotates the abstract syntax tree (semantic stage)
+    - Generates the translated file(s) (codegen stage)
+    - Compiles the files to generate an executable and/or a shared library
+
+    Parameters
+    ----------
+    fname         : str
+                    Name of python file to be translated
+
+    syntax_only   : bool
+                    Boolean indicating whether the pipeline should stop
+                    after the syntax stage
+                    Default : False
+
+    semantic_only : bool
+                    Boolean indicating whether the pipeline should stop
+                    after the semantic stage
+                    Default : False
+
+    convert_only  : bool
+                    Boolean indicating whether the pipeline should stop
+                    after the codegen stage
+                    Default : False
+
+    verbose       : bool
+                    Boolean indicating whether debugging messages should be printed
+                    Default : False
+
+    folder        : str
+                    Path to the working directory
+                    Default : folder containing the file to be translated
+
+    language      : str
+                    The language which pyccel is translating to
+                    Default : fortran
+
+    compiler      : str
+                    The compiler used to compile the generated files
+                    Default : GNU
+
+    mpi_compiler  : str
+                    The compiler used to compile the generated files when mpi is needed.
+                    This value must be provided to compile with mpi
+                    Default : None (compile with 'compiler')
+
+    fflags        : str
+                    The flags passed to the compiler
+                    Default : provided by codegen.utilities.construct_flags
+
+    includes      : list
+                    list of include directories paths
+
+    libdirs       : list
+                    list of paths to directories containing the required libraries
+
+    modules       : list
+                    list of files which must also be compiled in order to compile this module
+
+    libs          : list
+                    list of required libraries
+
+    debug         : bool
+                    Boolean indicating whether the file should be compiled in debug mode
+                    (currently this only implies that the flag -fcheck=bounds is added)
+                    Default : False
+
+    accelerator   : str
+                    Tool used to accelerate the code (e.g. openmp openacc)
+
+    output_name   : str
+                    Name of the generated module
+                    Default : Same name as the file which was translated
+    """
 
     # Reset Errors singleton before parsing a new file
     errors = Errors()
@@ -367,7 +443,6 @@ def execute_pyccel(fname, *,
                                                        libdirs,
                                                        includes,
                                                        flags,
-                                                       extra_args,
                                                        output_name,
                                                        verbose)
         except NotImplementedError as error:

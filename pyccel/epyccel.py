@@ -60,7 +60,6 @@ def epyccel_seq(function_or_module, *,
                 libdirs      = (),
                 modules      = (),
                 libs         = (),
-                extra_args   = '',
                 folder       = None):
 
     # ... get the module source code
@@ -133,7 +132,6 @@ def epyccel_seq(function_or_module, *,
                        modules     = modules,
                        libs        = libs,
                        debug       = debug,
-                       extra_args  = extra_args,
                        accelerator = accelerator,
                        output_name = module_name)
     finally:
