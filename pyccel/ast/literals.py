@@ -40,8 +40,11 @@ class Literal(PyccelAstNode):
     def python_value(self):
         """ Get python literal represented by this instance """
 
+    def __repr__(self):
+        return repr(self.python_value)
+
 #------------------------------------------------------------------------------
-class LiteralTrue(sp_BooleanTrue, Literal):
+class LiteralTrue(Literal, sp_BooleanTrue):
     """Represents the python value True"""
     _dtype     = NativeBool()
     def __new__(cls, precision = default_precision['bool']):
@@ -54,7 +57,7 @@ class LiteralTrue(sp_BooleanTrue, Literal):
         return True
 
 #------------------------------------------------------------------------------
-class LiteralFalse(sp_BooleanFalse, Literal):
+class LiteralFalse(Literal, sp_BooleanFalse):
     """Represents the python value False"""
     _dtype     = NativeBool()
     def __new__(cls, precision = default_precision['bool']):
@@ -67,7 +70,7 @@ class LiteralFalse(sp_BooleanFalse, Literal):
         return False
 
 #------------------------------------------------------------------------------
-class LiteralInteger(Basic, Literal):
+class LiteralInteger(Literal, Basic):
     """Represents an integer literal in python"""
     _dtype     = NativeInteger()
     def __new__(cls, value, precision = default_precision['integer']):
@@ -85,7 +88,7 @@ class LiteralInteger(Basic, Literal):
         return self.p
 
 #------------------------------------------------------------------------------
-class LiteralFloat(sp_Float, Literal):
+class LiteralFloat(Literal, sp_Float):
     """Represents a float literal in python"""
     _dtype     = NativeReal()
     def __new__(cls, value, *, precision = default_precision['float']):
@@ -102,7 +105,7 @@ class LiteralFloat(sp_Float, Literal):
 
 
 #------------------------------------------------------------------------------
-class LiteralComplex(Basic, Literal):
+class LiteralComplex(Literal, Basic):
     """Represents a complex literal in python"""
     _dtype     = NativeComplex()
 
@@ -159,7 +162,7 @@ class LiteralImaginaryUnit(LiteralComplex):
         return 1j
 
 #------------------------------------------------------------------------------
-class LiteralString(Basic, Literal):
+class LiteralString(Literal, Basic):
     """Represents a string literal in python"""
     _dtype     = NativeString()
     _precision = 0
@@ -177,8 +180,11 @@ class LiteralString(Basic, Literal):
         """ Return the python string literal """
         return self._string
 
+    def __repr__(self):
+        return "'{}'".format(str(self.python_value))
+
     def __str__(self):
-        return self.arg
+        return str(self.python_value)
 
     @property
     def python_value(self):
