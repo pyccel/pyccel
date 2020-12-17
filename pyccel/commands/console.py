@@ -1,5 +1,9 @@
-# coding: utf-8
 #!/usr/bin/env python
+# coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 
 # TODO add version
 #  --version  show program's version number and exit
@@ -246,7 +250,6 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
                        modules       = (),
                        libs          = args.libs,
                        debug         = args.debug,
-                       extra_args    = '',
                        accelerator   = accelerator,
                        folder        = args.output)
     except PyccelError:

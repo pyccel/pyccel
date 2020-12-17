@@ -1,4 +1,8 @@
 # coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 
@@ -25,7 +29,7 @@ from sympy.logic.boolalg import Not
 
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
-from pyccel.ast.core import Nil
+from pyccel.ast.core import Nil, IfTernaryOperator
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import Subroutine
@@ -37,11 +41,11 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              IndexedVariable, CodeBlock,
                              IndexedElement, Slice, Dlist,
                              DottedName, AsName,
-                             If)
+                             If, PyccelArraySize, IfTernaryOperator)
 
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-from pyccel.ast.operators      import PyccelUnarySub, PyccelMod
+from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt
 from pyccel.ast.core      import FunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
@@ -923,16 +927,16 @@ class FCodePrinter(CodePrinter):
             shape = []
             for (s, i) in zip(_shape, var.indices):
                 if isinstance(i, Slice):
-                    if i.start is None and i.end is None:
+                    if i.start is None and i.stop is None:
                         shape.append(s)
                     elif i.start is None:
-                        if (isinstance(i.end, (int, LiteralInteger)) and i.end>0) or not(isinstance(i.end, (int, LiteralInteger))):
-                            shape.append(i.end)
-                    elif i.end is None:
+                        if (isinstance(i.stop, (int, LiteralInteger)) and i.stop>0) or not(isinstance(i.stop, (int, LiteralInteger))):
+                            shape.append(i.stop)
+                    elif i.stop is None:
                         if (isinstance(i.start, (int, LiteralInteger)) and i.start<s-1) or not(isinstance(i.start, (int, LiteralInteger))):
-                            shape.append(s-i.start)
+                            shape.append(PyccelMinus(s, i.start))
                     else:
-                        shape.append(i.end-i.start+1)
+                        shape.append(PyccelMinus(i.stop, PyccelAdd(i.start, LiteralInteger(1))))
 
             rank = len(shape)
 
@@ -2608,7 +2612,7 @@ class FCodePrinter(CodePrinter):
                     shape = var.shape, prec = var.precision,
                     order = var.order, rank = var.rank)[expr.indices[:-1]])
         else:
-            base = self._print(expr.base.label)
+            base_code = self._print(expr.base.label)
 
         inds = list(expr.indices)
         base_shape = Shape(expr.base)
@@ -2616,34 +2620,95 @@ class FCodePrinter(CodePrinter):
                 expr.base.internal_variable.allows_negative_indexes)
 
         for i, ind in enumerate(inds):
-            if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
-                inds[i] = PyccelMinus(base_shape[i], ind.args[0])
+            _shape = PyccelArraySize(base, i if expr.order != 'C' else len(inds) - i - 1)
+            if isinstance(ind, Slice):
+                inds[i] = self._new_slice_with_processed_arguments(ind, _shape, allow_negative_indexes)
+            elif isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
+                inds[i] = PyccelMinus(_shape, ind.args[0])
             else:
                 #indices of indexedElement of len==1 shouldn't be a Tuple
                 if isinstance(ind, Tuple) and len(ind) == 1:
                     inds[i] = ind[0]
                 if allow_negative_indexes and not isinstance(ind, LiteralInteger):
-                    inds[i] = PyccelMod(ind, base_shape[i])
+                    inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
+                            PyccelAdd(base_shape[i], ind), ind)
 
         inds = [self._print(i) for i in inds]
 
-        return "%s(%s)" % (base, ", ".join(inds))
+        return "%s(%s)" % (base_code, ", ".join(inds))
 
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
+
+    @staticmethod
+    def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
+        """ Create new slice with informations collected from old slice and decorators
+
+        Parameters
+        ----------
+            _slice : Slice
+                slice needed to collect (start, stop, step)
+            array_size : PyccelArraySize
+                call to function size()
+            allow_negative_index : Bool
+                True when the decorator allow_negative_index is present
+        Returns
+        -------
+            Slice
+        """
+        start = _slice.start
+        stop = _slice.stop
+        step = _slice.step
+
+        # negative start and end in slice
+        if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
+            start = PyccelMinus(array_size, start.args[0])
+        elif start is not None and allow_negative_index and not isinstance(start,LiteralInteger):
+            start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
+                        PyccelAdd(array_size, start), start)
+
+        if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
+            stop = PyccelMinus(array_size, stop.args[0])
+        elif stop is not None and allow_negative_index and not isinstance(stop, LiteralInteger):
+            stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
+                        PyccelAdd(array_size, stop), stop)
+
+        # negative step in slice
+        if isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
+            stop = PyccelAdd(stop, LiteralInteger(1)) if stop is not None else LiteralInteger(0)
+            start = start if start is not None else PyccelMinus(array_size, LiteralInteger(1))
+
+        # variable step in slice
+        elif step and allow_negative_index and not isinstance(step, LiteralInteger):
+            if start is None :
+                start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
+                    LiteralInteger(0), PyccelMinus(array_size , LiteralInteger(1)))
+
+            if stop is None :
+                stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
+                    PyccelMinus(array_size, LiteralInteger(1)), LiteralInteger(0))
+            else :
+                stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)),
+                    stop, PyccelAdd(stop, LiteralInteger(1)))
+
+        elif stop is not None:
+            stop = PyccelMinus(stop, LiteralInteger(1))
+
+        return Slice(start, stop, step)
 
     def _print_Slice(self, expr):
         if expr.start is None or  isinstance(expr.start, Nil):
             start = ''
         else:
             start = self._print(expr.start)
-        if (expr.end is None) or isinstance(expr.end, Nil):
-            end = ''
+        if (expr.stop is None) or isinstance(expr.stop, Nil):
+            stop = ''
         else:
-            end = PyccelMinus(expr.end, LiteralInteger(1))
-            end = self._print(end)
-        return '{0}:{1}'.format(start, end)
+            stop = self._print(expr.stop)
+        if expr.step is not None :
+            return '{0}:{1}:{2}'.format(start, stop, self._print(expr.step))
+        return '{0}:{1}'.format(start, stop)
 
 #=======================================================================================
 
