@@ -2310,21 +2310,15 @@ class SemanticParser(BasicParser):
 
         if cls_name:
             tmp_headers = self.get_header(cls_name + '.' + name)
-            for header in tmp_headers:
-                if all(header.dtypes != hd.dtypes for hd in headers):
-                    headers.append(header)
-                else:
-                    errors.report(DUPLICATED_SIGNATURE, symbol=header,
-                            severity='warning')
             args_number -= 1
         else:
             tmp_headers = self.get_header(name)
-            for header in tmp_headers:
-                if all(header.dtypes != hd.dtypes for hd in headers):
-                    headers.append(header)
-                else:
-                    errors.report(DUPLICATED_SIGNATURE, symbol=header,
-                            severity='warning')
+        for header in tmp_headers:
+            if all(header.dtypes != hd.dtypes for hd in headers):
+                headers.append(header)
+            else:
+                errors.report(DUPLICATED_SIGNATURE, symbol=header,
+                        severity='warning')
         for hd in headers:
             if (args_number != len(hd.dtypes)):
                 msg = 'The number of arguments in the function {} ({}) does not match the number\
