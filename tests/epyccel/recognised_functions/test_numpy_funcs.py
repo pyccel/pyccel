@@ -1281,6 +1281,14 @@ def test_full_basic_real(language):
     assert(f_arg_names(val)     == create_full_arg_names(val))
     assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0].item()))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="tuples not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_full_basic_bool(language):
     @types('int')
     def create_full_shape_1d(n):
@@ -1316,11 +1324,11 @@ def test_full_basic_bool(language):
 
     f_val       = epyccel(create_full_val, language = language)
     assert(f_val(val)           == create_full_val(val))
-    assert(type(f_val(val)[0])       == type(create_full_val(val)[0]))
+    assert(type(f_val(val)[0])       == type(create_full_val(val)[0].item()))
 
     f_arg_names = epyccel(create_full_arg_names, language = language)
     assert(f_arg_names(val)     == create_full_arg_names(val))
-    assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0]))
+    assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0].item()))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
