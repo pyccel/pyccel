@@ -93,6 +93,10 @@ t_slice     new_slice(int32_t start, int32_t end, int32_t step);
                 /* creating an array view */
 t_ndarray   array_slicing(t_ndarray p, ...);
 
+/* assigns */
+void        alias_assign(t_ndarray *dest, t_ndarray src);
+
+
 /* free */
 int32_t         free_array(t_ndarray dump);
 int32_t         free_pointer(t_ndarray dump);
