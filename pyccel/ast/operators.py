@@ -216,7 +216,7 @@ class PyccelUnary(PyccelUnaryOperator):
         return args
 
     def __repr__(self):
-        return '-{}'.format(repr(self.args[0]))
+        return '+{}'.format(repr(self.args[0]))
 
 #==============================================================================
 
@@ -235,7 +235,7 @@ class PyccelUnarySub(PyccelUnary):
     """
 
     def __repr__(self):
-        return '+{}'.format(repr(self.args[0]))
+        return '-{}'.format(repr(self.args[0]))
 
 #==============================================================================
 
