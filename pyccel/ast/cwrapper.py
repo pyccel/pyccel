@@ -14,7 +14,7 @@ from .datatypes import NativeInteger, NativeReal, NativeComplex
 from .datatypes import NativeBool, NativeString, NativeGeneric, NativeVoid
 
 from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress, FunctionAddress
-from .core      import AliasAssign, Assign, Return, If
+from .core      import AliasAssign, Assign, Return, If, DottedVariable
 
 from .literals  import LiteralTrue
 
@@ -302,6 +302,11 @@ numpy_get_stride = FunctionDef(name      = 'PyArray_STRIDE',
                                         Variable(dtype=NativeInteger(), name = 'idx')],
                            results   = [Variable(dtype=NativeInteger(), name = 's')])
 
+numpy_get_strides = FunctionDef(name      = 'PyArray_STRIDES',
+                           body      = [],
+                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
+                           results   = [Variable(dtype=NativeInteger(), name = 's')])
+
 numpy_check_flag = FunctionDef(name      = 'PyArray_CHKFLAGS',
                        body      = [],
                        arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True),
@@ -313,7 +318,22 @@ numpy_get_base = FunctionDef(name      = 'PyArray_BASE',
                        arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
                        results   = [Variable(dtype=PyccelPyObject(), name = 'i')])
 
+numpy_get_shape = FunctionDef(name      = 'PyArray_SHAPE',
+                       body      = [],
+                       arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
+                       results   = [Variable(dtype=PyccelPyObject(), name = 'i')])
+
 numpy_itemsize = FunctionDef(name      = 'PyArray_ITEMSIZE',
+                       body      = [],
+                       arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
+                       results   = [Variable(dtype=NativeInteger(), name = 'i')])
+
+numpy_get_size = FunctionDef(name      = 'PyArray_SIZE',
+                       body      = [],
+                       arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
+                       results   = [Variable(dtype=NativeInteger(), name = 'i')])
+
+numpy_nbytes = FunctionDef(name      = 'PyArray_NBYTES',
                        body      = [],
                        arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
                        results   = [Variable(dtype=NativeInteger(), name = 'i')])
@@ -323,26 +343,26 @@ numpy_get_type = FunctionDef(name      = 'PyArray_TYPE',
                        arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
                        results   = [Variable(dtype=NativeInteger(), name = 'i', precision = 4)])
 
-numpy_flag_own_data = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_OWNDATA')
-numpy_flag_c_contig = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_C_CONTIGUOUS')
-numpy_flag_f_contig = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_F_CONTIGUOUS')
-numpy_bool_type = Variable(dtype=NativeInteger(),  name = 'NPY_BOOL', precision = 4)
-numpy_byte_type = Variable(dtype=NativeInteger(),  name = 'NPY_BYTE', precision = 4)
-numpy_ubyte_type = Variable(dtype=NativeInteger(),  name = 'NPY_UBYTE', precision = 4)
-numpy_short_type = Variable(dtype=NativeInteger(),  name = 'NPY_SHORT', precision = 4)
-numpy_ushort_type = Variable(dtype=NativeInteger(),  name = 'NPY_USHORT', precision = 4)
-numpy_int_type = Variable(dtype=NativeInteger(),  name = 'NPY_INT32', precision = 4)
-numpy_uint_type = Variable(dtype=NativeInteger(),  name = 'NPY_UINT', precision = 4)
-numpy_long_type = Variable(dtype=NativeInteger(),  name = 'NPY_LONG', precision = 4)
-numpy_ulong_type = Variable(dtype=NativeInteger(),  name = 'NPY_ULONG', precision = 4)
-numpy_longlong_type = Variable(dtype=NativeInteger(),  name = 'NPY_INT64', precision = 4)
-numpy_ulonglong_type = Variable(dtype=NativeInteger(),  name = 'NPY_ULONGLONG', precision = 4)
-numpy_float_type = Variable(dtype=NativeInteger(),  name = 'NPY_FLOAT', precision = 4)
-numpy_double_type = Variable(dtype=NativeInteger(),  name = 'NPY_DOUBLE', precision = 4)
-numpy_longdouble_type = Variable(dtype=NativeInteger(),  name = 'NPY_LONGDOUBLE', precision = 4)
-numpy_cfloat_type = Variable(dtype=NativeInteger(),  name = 'NPY_CFLOAT', precision = 4)
-numpy_cdouble_type = Variable(dtype=NativeInteger(),  name = 'NPY_CDOUBLE', precision = 4)
-numpy_clongdouble_type = Variable(dtype=NativeInteger(),  name = 'NPY_CLONGDOUBLE', precision = 4)
+numpy_flag_own_data     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_OWNDATA')
+numpy_flag_c_contig     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_C_CONTIGUOUS')
+numpy_flag_f_contig     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_F_CONTIGUOUS')
+numpy_bool_type         = Variable(dtype=NativeInteger(),  name = 'NPY_BOOL', precision = 4)
+numpy_byte_type         = Variable(dtype=NativeInteger(),  name = 'NPY_BYTE', precision = 4)
+numpy_ubyte_type        = Variable(dtype=NativeInteger(),  name = 'NPY_UBYTE', precision = 4)
+numpy_short_type        = Variable(dtype=NativeInteger(),  name = 'NPY_SHORT', precision = 4)
+numpy_ushort_type       = Variable(dtype=NativeInteger(),  name = 'NPY_USHORT', precision = 4)
+numpy_int_type          = Variable(dtype=NativeInteger(),  name = 'NPY_INT32', precision = 4)
+numpy_uint_type         = Variable(dtype=NativeInteger(),  name = 'NPY_UINT', precision = 4)
+numpy_long_type         = Variable(dtype=NativeInteger(),  name = 'NPY_LONG', precision = 4)
+numpy_ulong_type        = Variable(dtype=NativeInteger(),  name = 'NPY_ULONG', precision = 4)
+numpy_longlong_type     = Variable(dtype=NativeInteger(),  name = 'NPY_INT64', precision = 4)
+numpy_ulonglong_type    = Variable(dtype=NativeInteger(),  name = 'NPY_ULONGLONG', precision = 4)
+numpy_float_type        = Variable(dtype=NativeInteger(),  name = 'NPY_FLOAT', precision = 4)
+numpy_double_type       = Variable(dtype=NativeInteger(),  name = 'NPY_DOUBLE', precision = 4)
+numpy_longdouble_type   = Variable(dtype=NativeInteger(),  name = 'NPY_LONGDOUBLE', precision = 4)
+numpy_cfloat_type       = Variable(dtype=NativeInteger(),  name = 'NPY_CFLOAT', precision = 4)
+numpy_cdouble_type      = Variable(dtype=NativeInteger(),  name = 'NPY_CDOUBLE', precision = 4)
+numpy_clongdouble_type  = Variable(dtype=NativeInteger(),  name = 'NPY_CLONGDOUBLE', precision = 4)
 
 numpy_num_to_type = { 0 : numpy_bool_type,
         1 : numpy_byte_type,
@@ -517,12 +537,43 @@ def pybool_to_bool(cast_function_name):
                        body      = cast_function_body,
                        results   = [cast_function_result])
 
+def pyccelPyArrayObject_to_ndarray(cast_function_name):
+    cast_function_argument = Variable(dtype=PyccelPyArrayObject(), name='o', is_pointer=True)
+    cast_function_result   = Variable(dtype=PyccelPyArrayObject(), name = 'c', rank=1)
+
+    nd              =  Variable(dtype=NativeInteger(), name='nd')
+    shape           =  Variable(dtype=NativeInteger(), name='shape')
+    raw_data        =  Variable(dtype=NativeBool(), name='raw_data')
+    strides         =  Variable(dtype=NativeInteger(), name='strides')
+    arr_type        =  Variable(dtype=NativeGeneric(), name='type')
+    type_size       =  Variable(dtype=NativeInteger(), name='type_size')
+    length          =  Variable(dtype=NativeInteger(), name='length')
+    buffer_size     =  Variable(dtype=NativeInteger(), name='buffer_size')
+    is_slice        =  Variable(dtype=NativeBool(), name='is_slice')
+
+    cast_function_body = [Assign(DottedVariable(cast_function_result, nd), FunctionCall(numpy_get_ndims, [cast_function_argument])),
+                          Assign(DottedVariable(cast_function_result, raw_data), FunctionCall(numpy_get_data, [cast_function_argument])),
+                          Assign(DottedVariable(cast_function_result, shape), FunctionCall(numpy_get_shape, [cast_function_argument])),
+                          Assign(DottedVariable(cast_function_result, strides), FunctionCall(numpy_get_strides, [cast_function_argument])),
+                          Assign(DottedVariable(cast_function_result, arr_type), FunctionCall(numpy_get_type, [cast_function_argument])),
+                          Assign(DottedVariable(cast_function_result, type_size), FunctionCall(numpy_itemsize, [cast_function_argument])),
+                          Assign(DottedVariable(cast_function_result, length), FunctionCall(numpy_get_size, [cast_function_argument])),
+                          Assign(DottedVariable(cast_function_result, buffer_size), FunctionCall(numpy_nbytes, [cast_function_argument])),
+                          Assign(DottedVariable(cast_function_result, is_slice), LiteralTrue()),
+                          Return([cast_function_result])]
+
+    return FunctionDef(name      = cast_function_name,
+                       arguments = [cast_function_argument],
+                       body      = cast_function_body,
+                       results   = [cast_function_result])
+
 cast_function_registry = {
     'pyint_to_bool' : pyint_to_bool,
     'bool_to_pyobj' : bool_to_pyobj,
     'pycomplex_to_complex' : pycomplex_to_complex,
     'complex_to_pycomplex': complex_to_pycomplex,
     'pybool_to_bool' : pybool_to_bool,
+    'pyccelPyArrayObject_to_ndarray' : pyccelPyArrayObject_to_ndarray,
 }
 
 
