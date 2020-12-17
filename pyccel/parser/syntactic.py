@@ -741,6 +741,10 @@ class SyntaxParser(BasicParser):
                     header = header.to_static()
                 if all(header.dtypes != hd.dtypes for hd in headers):
                     headers += [header]
+                else:
+                    errors.report(DUPLICATED_SIGNATURE, symbol=header,
+                        bounding_box=(stmt.lineno, stmt.col_offset),
+                        severity='warning')
 
         body = stmt.body
 

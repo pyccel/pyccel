@@ -379,6 +379,10 @@ class SemanticParser(BasicParser):
                 if all(header.dtypes != expr.dtypes for header in\
                         self.namespace.headers[expr.name]):
                     self.namespace.headers[expr.name].append(expr)
+                else:
+                    errors.report(DUPLICATED_SIGNATURE, symbol=expr,
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='warning')
             else:
                 self.namespace.headers[expr.name] = [expr]
         elif isinstance(expr, ClassHeader):
@@ -2306,12 +2310,22 @@ class SemanticParser(BasicParser):
         templates.update(expr.templates)
 
         if cls_name:
-            headers += [header for header in self.get_header(cls_name +'.'+ name)\
-                    if all(header.dtypes != hd.dtypes for hd in headers)]
+            tmp_headers = self.get_header(cls_name + '.' + name)
+            for header in tmp_headers:
+                if all(header.dtypes != hd.dtypes for hd in headers):
+                    headers.append(header)
+                else:
+                    errors.report(DUPLICATED_SIGNATURE, symbol=header,
+                            severity='warning')
             args_number -= 1
         else:
-            headers += [header for header in self.get_header(name)\
-                    if all(header.dtypes != hd.dtypes for hd in headers)]
+            tmp_headers = self.get_header(name)
+            for header in tmp_headers:
+                if all(header.dtypes != hd.dtypes for hd in headers):
+                    headers.append(header)
+                else:
+                    errors.report(DUPLICATED_SIGNATURE, symbol=header,
+                            severity='warning')
         for hd in headers:
             if (args_number != len(hd.dtypes)):
                 msg = 'The number of arguments in the function {} ({}) does not match the number\
