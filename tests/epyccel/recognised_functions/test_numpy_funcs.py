@@ -1354,14 +1354,6 @@ def test_full_order(language):
     f_shape_F  = epyccel(create_full_shape_F, language = language)
     assert(f_shape_F(size_1,size_2) == create_full_shape_F(size_1,size_2))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_full_dtype(language):
     @types('int')
     def create_full_val_int_int(val):
@@ -1555,14 +1547,6 @@ def test_empty_order(language):
     f_shape_F  = epyccel(create_empty_shape_F, language = language)
     assert(     f_shape_F(size_1,size_2) == create_empty_shape_F(size_1,size_2))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_empty_dtype(language):
     def create_empty_val_int():
         from numpy import empty
@@ -1734,14 +1718,6 @@ def test_ones_order(language):
     f_shape_F  = epyccel(create_ones_shape_F, language = language)
     assert(     f_shape_F(size_1,size_2) == create_ones_shape_F(size_1,size_2))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Array not implemented yet in c"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_ones_dtype(language):
     def create_ones_val_int():
         from numpy import ones
@@ -1924,14 +1900,6 @@ def test_zeros_order(language):
     f_shape_F  = epyccel(create_zeros_shape_F, language = language)
     assert(     f_shape_F(size_1,size_2) == create_zeros_shape_F(size_1,size_2))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_zeros_dtype(language):
     def create_zeros_val_int():
         from numpy import zeros
