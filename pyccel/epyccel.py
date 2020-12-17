@@ -1,4 +1,9 @@
 # coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+
 
 import inspect
 import importlib
@@ -55,7 +60,6 @@ def epyccel_seq(function_or_module, *,
                 libdirs      = (),
                 modules      = (),
                 libs         = (),
-                extra_args   = '',
                 folder       = None):
 
     # ... get the module source code
@@ -128,7 +132,6 @@ def epyccel_seq(function_or_module, *,
                        modules     = modules,
                        libs        = libs,
                        debug       = debug,
-                       extra_args  = extra_args,
                        accelerator = accelerator,
                        output_name = module_name)
     finally:
