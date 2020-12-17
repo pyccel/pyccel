@@ -1281,7 +1281,6 @@ def test_full_basic_real(language):
     assert(f_arg_names(val)     == create_full_arg_names(val))
     assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0].item()))
 
-@pytest.mark.xfail(reason = "f2py converts bools to int")
 def test_full_basic_bool(language):
     @types('int')
     def create_full_shape_1d(n):
