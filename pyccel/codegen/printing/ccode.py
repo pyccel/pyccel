@@ -1130,7 +1130,7 @@ class CCodePrinter(CodePrinter):
         # the below condition handles the case of reassinging a pointer to an array view.
         # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
         if isinstance(expr.lhs, Variable) and expr.lhs.is_ndarray \
-                and isinstance(expr.rhs, Variable) and expr.lhs.is_ndarray and expr.rhs.is_pointer:
+                and isinstance(expr.rhs, Variable) and expr.rhs.is_ndarray and expr.rhs.is_pointer:
             return 'alias_assign(&{}, {});'.format(lhs, rhs)
 
         return '{} = {};'.format(lhs, rhs)
