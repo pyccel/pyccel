@@ -150,6 +150,9 @@ class PyccelOperator(Expr, PyccelAstNode):
 
         return args
 
+    def __str__(self):
+        return repr(self)
+
 #==============================================================================
 
 class PyccelUnaryOperator(PyccelOperator):
@@ -208,6 +211,9 @@ class PyccelUnary(PyccelUnaryOperator):
         args = tuple(PyccelAssociativeParenthesis(a) if isinstance(a, PyccelUnary) else a for a in args)
         return args
 
+    def __repr__(self):
+        return '-{}'.format(repr(self.args[0]))
+
 #==============================================================================
 
 class PyccelUnarySub(PyccelUnary):
@@ -223,6 +229,9 @@ class PyccelUnarySub(PyccelUnary):
     arg: PyccelAstNode
         The argument passed to the operator
     """
+
+    def __repr__(self):
+        return '+{}'.format(repr(self.args[0]))
 
 #==============================================================================
 
@@ -244,6 +253,9 @@ class PyccelNot(PyccelUnaryOperator):
     _rank  = 0
     _shape = ()
     _precision = default_precision['bool']
+
+    def __repr__(self):
+        return 'not {}'.format(repr(self.args[0]))
 
 #==============================================================================
 
@@ -272,6 +284,9 @@ class PyccelInvert(PyccelUnaryOperator):
 
         self._precision = a.precision
 
+    def __repr__(self):
+        return '~{}'.format(repr(self.args[0]))
+
 #==============================================================================
 
 class PyccelAssociativeParenthesis(PyccelUnaryOperator):
@@ -286,6 +301,9 @@ class PyccelAssociativeParenthesis(PyccelUnaryOperator):
     _precedence = 18
     def _handle_precedence(self, args):
         return args
+
+    def __repr__(self):
+        return '({})'.format(repr(self.args[0]))
 
 #==============================================================================
 
@@ -430,6 +448,9 @@ class PyccelPow(PyccelArithmeticOperator):
     """
     _precedence  = 15
 
+    def __repr__(self):
+        return '{} ** {}'.format(self.args[0], self.args[1])
+
 #==============================================================================
 
 class PyccelAdd(PyccelArithmeticOperator):
@@ -464,6 +485,9 @@ class PyccelAdd(PyccelArithmeticOperator):
     def _handle_str_type(self, strs):
         self._dtype = NativeString()
 
+    def __repr__(self):
+        return '{} + {}'.format(self.args[0], self.args[1])
+
 #==============================================================================
 
 class PyccelMul(PyccelArithmeticOperator):
@@ -482,6 +506,9 @@ class PyccelMul(PyccelArithmeticOperator):
         The second argument passed to the operator
     """
     _precedence = 13
+
+    def __repr__(self):
+        return '{} * {}'.format(self.args[0], self.args[1])
 
 #==============================================================================
 
@@ -514,6 +541,12 @@ class PyccelMinus(PyccelArithmeticOperator):
         else:
             return PyccelArithmeticOperator.__new__(cls, arg1, arg2)
 
+    def __repr__(self):
+        return '{} - {}'.format(repr(self.args[0]), repr(self.args[1]))
+
+    def __str__(self):
+        return '{} - {}'.format(repr(self.args[0]), repr(self.args[1]))
+
 #==============================================================================
 
 class PyccelDiv(PyccelArithmeticOperator):
@@ -537,6 +570,9 @@ class PyccelDiv(PyccelArithmeticOperator):
         self._dtype     = NativeReal()
         self._precision = default_precision['real']
 
+    def __repr__(self):
+        return '{} / {}'.format(self.args[0], self.args[1])
+
 #==============================================================================
 
 class PyccelMod(PyccelArithmeticOperator):
@@ -556,6 +592,9 @@ class PyccelMod(PyccelArithmeticOperator):
     """
     _precedence = 13
 
+    def __repr__(self):
+        return '{} % {}'.format(self.args[0], self.args[1])
+
 #==============================================================================
 
 class PyccelFloorDiv(PyccelArithmeticOperator):
@@ -574,6 +613,9 @@ class PyccelFloorDiv(PyccelArithmeticOperator):
         The second argument passed to the operator
     """
     _precedence = 13
+
+    def __repr__(self):
+        return '{} // {}'.format(self.args[0], self.args[1])
 
 #==============================================================================
 
@@ -640,6 +682,9 @@ class PyccelRShift(PyccelBitOperator):
     """
     _precedence = 11
 
+    def __repr__(self):
+        return '{} >> {}'.format(self.args[0], self.args[1])
+
 #==============================================================================
 
 class PyccelLShift(PyccelBitOperator):
@@ -658,6 +703,9 @@ class PyccelLShift(PyccelBitOperator):
         The second argument passed to the operator
     """
     _precedence = 11
+
+    def __repr__(self):
+        return '{} << {}'.format(self.args[0], self.args[1])
 
 #==============================================================================
 
@@ -701,6 +749,9 @@ class PyccelBitXor(PyccelBitComparisonOperator):
     """
     _precedence = 9
 
+    def __repr__(self):
+        return '{} ^ {}'.format(self.args[0], self.args[1])
+
 #==============================================================================
 
 class PyccelBitOr(PyccelBitComparisonOperator):
@@ -720,6 +771,9 @@ class PyccelBitOr(PyccelBitComparisonOperator):
     """
     _precedence = 8
 
+    def __repr__(self):
+        return '{} | {}'.format(self.args[0], self.args[1])
+
 #==============================================================================
 
 class PyccelBitAnd(PyccelBitComparisonOperator):
@@ -738,6 +792,9 @@ class PyccelBitAnd(PyccelBitComparisonOperator):
         The second argument passed to the operator
     """
     _precedence = 10
+
+    def __repr__(self):
+        return '{} & {}'.format(self.args[0], self.args[1])
 
 #==============================================================================
 
@@ -776,6 +833,9 @@ class PyccelEq(PyccelComparisonOperator):
         The second argument passed to the operator
     """
 
+    def __repr__(self):
+        return '{} == {}'.format(self.args[0], self.args[1])
+
 class PyccelNe(PyccelComparisonOperator):
     """
     Class representing a call to the python inequality operator.
@@ -791,6 +851,9 @@ class PyccelNe(PyccelComparisonOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+
+    def __repr__(self):
+        return '{} != {}'.format(self.args[0], self.args[1])
 
 class PyccelLt(PyccelComparisonOperator):
     """
@@ -808,6 +871,9 @@ class PyccelLt(PyccelComparisonOperator):
         The second argument passed to the operator
     """
 
+    def __repr__(self):
+        return '{} < {}'.format(self.args[0], self.args[1])
+
 class PyccelLe(PyccelComparisonOperator):
     """
     Class representing a call to the python less or equal operator.
@@ -823,6 +889,9 @@ class PyccelLe(PyccelComparisonOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+
+    def __repr__(self):
+        return '{} <= {}'.format(self.args[0], self.args[1])
 
 class PyccelGt(PyccelComparisonOperator):
     """
@@ -840,6 +909,9 @@ class PyccelGt(PyccelComparisonOperator):
         The second argument passed to the operator
     """
 
+    def __repr__(self):
+        return '{} > {}'.format(self.args[0], self.args[1])
+
 class PyccelGe(PyccelComparisonOperator):
     """
     Class representing a call to the python greater or equal operator.
@@ -855,6 +927,9 @@ class PyccelGe(PyccelComparisonOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+
+    def __repr__(self):
+        return '{} >= {}'.format(self.args[0], self.args[1])
 
 #==============================================================================
 
@@ -902,6 +977,9 @@ class PyccelAnd(PyccelBooleanOperator):
         args = tuple(PyccelAssociativeParenthesis(a) if isinstance(a, PyccelOr) else a for a in args)
         return args
 
+    def __repr__(self):
+        return '{} and {}'.format(self.args[0], self.args[1])
+
 #==============================================================================
 
 class PyccelOr(PyccelBooleanOperator):
@@ -924,6 +1002,9 @@ class PyccelOr(PyccelBooleanOperator):
         args = PyccelBooleanOperator._handle_precedence(self, args)
         args = tuple(PyccelAssociativeParenthesis(a) if isinstance(a, PyccelAnd) else a for a in args)
         return args
+
+    def __repr__(self):
+        return '{} or {}'.format(self.args[0], self.args[1])
 
 #==============================================================================
 
@@ -954,6 +1035,9 @@ class PyccelIs(PyccelBooleanOperator):
         """ First operator argument"""
         return self._args[1]
 
+    def __repr__(self):
+        return '{} is {}'.format(self.args[0], self.args[1])
+
 #==============================================================================
 
 class PyccelIsNot(PyccelIs):
@@ -968,6 +1052,9 @@ class PyccelIsNot(PyccelIs):
     >>> PyccelIsNot(x, Nil())
     PyccelIsNot(x, None)
     """
+
+    def __repr__(self):
+        return '{} is not {}'.format(self.args[0], self.args[1])
 
 #==============================================================================
 
