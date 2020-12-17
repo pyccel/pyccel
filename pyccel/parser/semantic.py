@@ -2738,8 +2738,8 @@ class SemanticParser(BasicParser):
             elif IsClass == PyccelIsNot:
                 return LiteralTrue()
 
-        if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
-            (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
+        if (isinstance(var1.dtype, NativeBool) and
+            isinstance(var2.dtype, NativeBool)):
             return IsClass(var1, var2)
 
         lst = [NativeString(), NativeComplex(), NativeReal(), NativeInteger()]
