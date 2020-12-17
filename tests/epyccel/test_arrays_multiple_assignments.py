@@ -167,7 +167,7 @@ def test_creation_in_if_heap(language):
     assert f(c) == g(c)
 
 #==============================================================================
-def test_Reassign_to_Target(language):
+def test_Reassign_to_Target():
 
     def f():
         import numpy as np
@@ -181,7 +181,7 @@ def test_Reassign_to_Target(language):
 
     # epyccel should raise an Exception
     with pytest.raises(PyccelSemanticError):
-        epyccel(f, language=language)
+        epyccel(f)
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors() == 1
@@ -193,7 +193,8 @@ def test_Reassign_to_Target(language):
     assert error_info.message == ARRAY_ALREADY_IN_USE
 
 #==============================================================================
-def test_Assign_Between_Allocatables(language):
+
+def test_Assign_Between_Allocatables():
 
     def f():
         import numpy as np
@@ -208,7 +209,7 @@ def test_Assign_Between_Allocatables(language):
 
     # epyccel should raise an Exception
     with pytest.raises(PyccelSemanticError):
-        epyccel(f, language=language)
+        epyccel(f)
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors() == 1
@@ -233,3 +234,6 @@ if __name__ == '__main__':
         test_creation_in_loop_stack(l)
 
         test_creation_in_if_heap(l)
+
+    test_Reassign_to_Target()
+    test_Assign_Between_Allocatables()
