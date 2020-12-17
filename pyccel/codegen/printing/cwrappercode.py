@@ -83,7 +83,11 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_declare_type(self, expr):
         dtype = self._print(expr.dtype)
         prec  = expr.precision
-        dtype = self.find_in_dtype_registry(dtype, prec)
+        if expr.rank > 0 and self._target_language == 'C' and not expr.is_pointer:
+            self._additional_imports.add("ndarrays")
+            dtype = 't_ndarray'
+        else :
+            dtype = self.find_in_dtype_registry(dtype, prec)
 
         if self.stored_in_c_pointer(expr):
             return '{0} *'.format(dtype)
@@ -344,7 +348,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return body
 
-    def _body_array(self, variable, collect_var, check_type = False) :
+    def _body_array(self, variable, collect_var, cast_function=None, check_type = False) :
         """
         Responsible for collecting value and managing error and create the body
         of arguments with rank greater than 0 in format
@@ -401,8 +405,11 @@ class CWrapperCodePrinter(CCodePrinter):
                 error = PyErr_SetString('PyExc_NotImplementedError',
                         '"Argument does not have the expected ordering ({})"'.format(collect_var.order))
                 body += [(PyccelNot(check), [error, Return([Nil()])])]
-        body += [(LiteralTrue(), [Assign(VariableAddress(variable),
+        if cast_function is None:
+            body += [(LiteralTrue(), [Assign(VariableAddress(variable),
                                 self.get_collect_function_call(variable, collect_var))])]
+        else:
+            body += [(LiteralTrue(), [Assign(VariableAddress(variable), cast_function)])]
         body = [If(*body)]
 
         return body
@@ -415,7 +422,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body = []
 
         if variable.rank > 0:
-            body = self._body_array(variable, collect_var, check_type)
+            body = self._body_array(variable, collect_var, cast_function, check_type)
 
         elif variable.is_optional:
             tmp_variable = Variable(dtype=variable.dtype, name = self.get_new_name(used_names, variable.name+"_tmp"))
@@ -463,6 +470,8 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = PyccelPyArrayObject()
             collect_var = Variable(dtype= collect_type, is_pointer = True, rank = variable.rank,
                                     order= variable.order, name=self.get_new_name(used_names, variable.name+"_tmp"))
+            if self._target_language == "C":
+                cast_function = self.get_cast_function_call('pyccelPyArrayObject_to_ndarray', collect_var)
 
         elif isinstance(variable, ValuedVariable):
             collect_type = PyccelPyObject()
