@@ -739,7 +739,8 @@ class SyntaxParser(BasicParser):
                 header = hdr_parse(stmts=txt)
                 if name in self.namespace.static_functions:
                     header = header.to_static()
-                headers += [header]
+                if all(header.dtypes != hd.dtypes for hd in headers):
+                    headers += [header]
 
         body = stmt.body
 
