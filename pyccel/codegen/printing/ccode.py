@@ -694,6 +694,10 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError(expr)
         return "%s.%s[get_index(%s, %s)]" % (base_name, dtype, base_name, ", ".join(inds))
 
+    def _print_DottedVariable(self, expr):
+        """convert dotted Variable to their C equivalent"""
+        return '{}.{}'.format(self._print(expr.lhs), self._print(expr.rhs))
+
     def _print_Allocate(self, expr):
         free_code = ''
         #free the array if its already allocated and checking if its not null if the status is unknown
@@ -937,9 +941,6 @@ class CCodePrinter(CodePrinter):
         if not func.results:
             return '{}({});'.format(func.name, args)
         return '{}({})'.format(func.name, args)
-
-    def _print_DottedVariable(self, expr):
-        return '{}.{}'.format(self._print(expr.lhs), self._print(expr.rhs))
 
     def _print_Constant(self, expr):
         """ Convert a Python expression with a math constant call to C
