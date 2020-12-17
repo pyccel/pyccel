@@ -51,11 +51,9 @@ class Literal(PyccelAstNode):
         return printer.doprint(self.python_value)
 
 #------------------------------------------------------------------------------
-class LiteralTrue(Literal, sp_BooleanTrue):
+class LiteralTrue(Literal):
     """Represents the python value True"""
     _dtype     = NativeBool()
-    def __new__(cls, precision = default_precision['bool']):
-        return sp_BooleanTrue.__new__(cls)
     def __init__(self, precision = default_precision['bool']):
         Literal.__init__(self, precision)
 
@@ -64,11 +62,9 @@ class LiteralTrue(Literal, sp_BooleanTrue):
         return True
 
 #------------------------------------------------------------------------------
-class LiteralFalse(Literal, sp_BooleanFalse):
+class LiteralFalse(Literal):
     """Represents the python value False"""
     _dtype     = NativeBool()
-    def __new__(cls, precision = default_precision['bool']):
-        return sp_BooleanFalse.__new__(cls)
     def __init__(self,precision = default_precision['bool']):
         Literal.__init__(self, precision)
 
