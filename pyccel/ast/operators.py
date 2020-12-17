@@ -548,9 +548,6 @@ class PyccelMinus(PyccelArithmeticOperator):
     def __repr__(self):
         return '{} - {}'.format(repr(self.args[0]), repr(self.args[1]))
 
-    def __str__(self):
-        return '{} - {}'.format(repr(self.args[0]), repr(self.args[1]))
-
 #==============================================================================
 
 class PyccelDiv(PyccelArithmeticOperator):
