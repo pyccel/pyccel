@@ -43,6 +43,9 @@ class Literal(PyccelAstNode):
     def __repr__(self):
         return repr(self.python_value)
 
+    def _sympystr(self, printer):
+        return printer.doprint(self.python_value)
+
 #------------------------------------------------------------------------------
 class LiteralTrue(Literal, sp_BooleanTrue):
     """Represents the python value True"""
