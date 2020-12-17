@@ -21,5 +21,5 @@ def reassinging_pointers():
     from numpy import array
 
     a = array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-    b = a
-    b = a[1:] #pylint:disable=unused-variable
+    b = a #pylint:disable=unused-variable
+    b = a[1:]
