@@ -376,7 +376,9 @@ class SemanticParser(BasicParser):
         """."""
         if isinstance(expr, (FunctionHeader, MethodHeader)):
             if expr.name in self.namespace.headers:
-                self.namespace.headers[expr.name].append(expr)
+                if all(header.dtypes != expr.dtypes for header in\
+                        self.namespace.headers[expr.name]):
+                    self.namespace.headers[expr.name].append(expr)
             else:
                 self.namespace.headers[expr.name] = [expr]
         elif isinstance(expr, ClassHeader):
@@ -2292,7 +2294,7 @@ class SemanticParser(BasicParser):
         is_private      = expr.is_private
         doc_string      = self._visit(expr.doc_string) if expr.doc_string else expr.doc_string
 
-        header = expr.headers
+        headers = expr.headers
 
         not_used = [d for d in decorators if d not in def_decorators.__all__]
 
@@ -2304,12 +2306,13 @@ class SemanticParser(BasicParser):
         templates.update(expr.templates)
 
         if cls_name:
-            header += self.get_header(cls_name +'.'+ name)
+            headers += [header for header in self.get_header(cls_name +'.'+ name)\
+                    if all(header.dtypes != hd.dtypes for hd in headers)]
             args_number -= 1
         else:
-            header += self.get_header(name)
-
-        for hd in header:
+            headers += [header for header in self.get_header(name)\
+                    if all(header.dtypes != hd.dtypes for hd in headers)]
+        for hd in headers:
             if (args_number != len(hd.dtypes)):
                 msg = 'The number of arguments in the function {} ({}) does not match the number\
                         of types in decorator/header ({}).'.format(name ,args_number, len(hd.dtypes))
@@ -2319,14 +2322,14 @@ class SemanticParser(BasicParser):
                     errors.report(msg, symbol=expr.arguments, severity='fatal')
 
         interfaces = []
-        if len(header) == 0:
-            # check if a header is imported from a header file
+        if len(headers) == 0:
+            # check if a headers is imported from a headers file
             # TODO improve in the case of multiple headers ( interface )
             func       = self.get_function(name)
             if func and func.is_header:
                 interfaces = [func]
 
-        if expr.arguments and not header and not interfaces:
+        if expr.arguments and not headers and not interfaces:
 
             # TODO ERROR wrong position
 
@@ -2334,12 +2337,12 @@ class SemanticParser(BasicParser):
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='error', blocker=self.blocking)
 
-        # we construct a FunctionDef from its header
-        for hd in header:
+        # we construct a FunctionDef from its headers
+        for hd in headers:
             interfaces += hd.create_definition(templates)
 
         if not interfaces:
-            # this for the case of a function without arguments => no header
+            # this for the case of a function without arguments => no headers
             interfaces = [FunctionDef(name, [], [], [])]
 
 #        TODO move this to codegen
