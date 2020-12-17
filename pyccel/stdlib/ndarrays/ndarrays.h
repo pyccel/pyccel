@@ -26,17 +26,21 @@ typedef struct  s_slice
     int32_t step;
 }               t_slice;
 
+/*
+** Map e_types enum to numpy NPY_TYPES enum
+** ref: numpy_repo: numpy/numpy/core/include/numpy/ndarraytypes.h
+*/
 enum e_types
 {
         nd_bool,
         nd_int8,
-        nd_int16,
-        nd_int32,
-        nd_int64,
-        nd_float,
-        nd_double,
-        nd_cfloat,
-        nd_cdouble
+        nd_int16 = 3,
+        nd_int32 = 5,
+        nd_int64 = 6,
+        nd_float = 7,
+        nd_double = 9,
+        nd_cfloat = 11,
+        nd_cdouble = 13
 };
 
 typedef struct  s_ndarray
@@ -57,9 +61,9 @@ typedef struct  s_ndarray
     /* number of dimensions */
     int32_t                 nd;
     /* shape 'size of each dimension' */
-    int32_t                 *shape;
+    long int                *shape;
     /* strides 'number of bytes to skip to get the next element' */
-    int32_t                 *strides;
+    long int                *strides;
     /* type of the array elements */
     enum e_types        type;
     /* type size of the array elements */
