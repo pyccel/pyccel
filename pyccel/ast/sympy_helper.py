@@ -1,3 +1,13 @@
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+
+"""
+Module containing functions which allow us to treat expressions expressed as pyccel nodes with sympy,
+by providing translations between the sympy representation and the pyccel nodes
+"""
+
 import sympy as sp
 from sympy.core.numbers import One, NegativeOne, Zero, Half
 
