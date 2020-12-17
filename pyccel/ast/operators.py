@@ -10,7 +10,7 @@ They also have specific rules to determine the dtype, precision, rank, shape
 """
 from sympy.core.expr          import Expr
 
-from ..errors.errors import Errors
+from ..errors.errors import Errors, PyccelSemanticError
 
 from .basic     import PyccelAstNode
 
@@ -85,7 +85,7 @@ def broadcast(shape_1, shape_2):
         else:
             msg = 'operands could not be broadcast together with shapes {} {}'
             msg = msg.format(shape_1, shape_2)
-            errors.report(msg,severity='fatal')
+            raise PyccelSemanticError(msg)
     return tuple(new_shape)
 
 #==============================================================================
