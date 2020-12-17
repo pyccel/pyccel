@@ -381,7 +381,6 @@ class SemanticParser(BasicParser):
                     self.namespace.headers[expr.name].append(expr)
                 else:
                     errors.report(DUPLICATED_SIGNATURE, symbol=expr,
-                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='warning')
             else:
                 self.namespace.headers[expr.name] = [expr]
