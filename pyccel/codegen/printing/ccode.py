@@ -563,6 +563,7 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
             if expr.is_ndarray:
+                self._additional_imports.add('ndarrays')
                 return 't_ndarray '
             errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
 
@@ -592,6 +593,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_Declare(self, expr):
         declaration_type = self.get_declare_type(expr.variable)
+        if declaration_type == "t_ndarrays":
+            self._additional_imports.add('ndarrays')
         variable = self._print(expr.variable.name)
 
         return '{0}{1};'.format(declaration_type, variable)
@@ -637,6 +640,7 @@ class CCodePrinter(CodePrinter):
             return '{0}{1}({2})'.format(ret_type, name, arg_code)
 
     def _print_IndexedElement(self, expr):
+        self._additional_imports.add('ndarrays')
         if isinstance(expr.base, IndexedVariable):
             base = expr.base.internal_variable
         else:
@@ -933,6 +937,9 @@ class CCodePrinter(CodePrinter):
         if not func.results:
             return '{}({});'.format(func.name, args)
         return '{}({})'.format(func.name, args)
+
+    def _print_DottedVariable(self, expr):
+        return '{}.{}'.format(self._print(expr.lhs), self._print(expr.rhs))
 
     def _print_Constant(self, expr):
         """ Convert a Python expression with a math constant call to C
