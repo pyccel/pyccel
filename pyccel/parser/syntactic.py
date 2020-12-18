@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=R0201
-# pylint: disable=missing-function-docstring
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+
+# pylint: disable=R0201, missing-function-docstring 
 
 import os
 import re
@@ -863,24 +867,11 @@ class SyntaxParser(BasicParser):
 
     def _visit_Slice(self, stmt):
 
-        upper = self._visit(stmt.upper)
-        lower = self._visit(stmt.lower)
+        upper = self._visit(stmt.upper) if stmt.upper is not None else None
+        lower = self._visit(stmt.lower) if stmt.lower is not None else None
+        step = self._visit(stmt.step) if stmt.step is not None else None
 
-        if stmt.step is not None:
-            raise NotImplementedError("Steps in slices are not implemented")
-
-        if not isinstance(upper, Nil) and not isinstance(lower, Nil):
-
-            return Slice(lower, upper)
-        elif not isinstance(lower, Nil):
-
-            return Slice(lower, None)
-        elif not isinstance(upper, Nil):
-
-            return Slice(None, upper)
-        else:
-
-            return Slice(None, None)
+        return Slice(lower, upper, step)
 
     def _visit_Index(self, stmt):
         return self._visit(stmt.value)

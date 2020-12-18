@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=R0201
-# pylint: disable=missing-function-docstring
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+
+# pylint: disable=R0201, missing-function-docstring
 
 from collections import OrderedDict
 from itertools import chain
@@ -834,13 +838,11 @@ class SemanticParser(BasicParser):
         return repr(expr)
 
     def _visit_Slice(self, expr, **settings):
-        args = list(expr.args)
-        if args[0] is not None:
-            args[0] = self._visit(args[0], **settings)
+        start = self._visit(expr.start) if expr.start is not None else None
+        stop = self._visit(expr.stop) if expr.stop is not None else None
+        step = self._visit(expr.step) if expr.step is not None else None
 
-        if args[1] is not None:
-            args[1] = self._visit(args[1], **settings)
-        return Slice(*args)
+        return Slice(start, stop, step)
 
     def _extract_indexed_from_var(self, var, args, name):
 
@@ -864,12 +866,12 @@ class SemanticParser(BasicParser):
 
             if isinstance(arg, Slice):
                 if ((arg.start is not None and not isinstance(arg.start, LiteralInteger)) or
-                        (arg.end is not None and not isinstance(arg.end, LiteralInteger))):
+                        (arg.stop is not None and not isinstance(arg.stop, LiteralInteger))):
                     errors.report(INDEXED_TUPLE, symbol=var,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=self.blocking)
 
-                idx = slice(arg.start, arg.end)
+                idx = slice(arg.start, arg.stop)
                 selected_vars = var.get_var(idx)
                 if len(selected_vars)==1:
                     if len(args) == 1:
@@ -2425,6 +2427,9 @@ class SemanticParser(BasicParser):
                         if d_var['rank']>0:
                             d_var['cls_base'] = NumpyArrayClass
 
+                        if 'allow_negative_index' in self._namespace.decorators:
+                            if a.name in decorators['allow_negative_index']:
+                                d_var.update(allows_negative_indexes=True)
                         # this is needed for the static case
                         if isinstance(a, ValuedArgument):
 
@@ -2743,8 +2748,8 @@ class SemanticParser(BasicParser):
             elif IsClass == PyccelIsNot:
                 return LiteralTrue()
 
-        if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
-            (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
+        if (isinstance(var1.dtype, NativeBool) and
+            isinstance(var2.dtype, NativeBool)):
             return IsClass(var1, var2)
 
         lst = [NativeString(), NativeComplex(), NativeReal(), NativeInteger()]
