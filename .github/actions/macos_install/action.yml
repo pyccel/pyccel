@@ -12,6 +12,6 @@ runs:
       shell: bash
     - name: Install Valgrind
       run:
-        brew tap LouisBrunner/valgrind
-        brew install --HEAD LouisBrunner/valgrind/valgrind
+        brew tap 'LouisBrunner/valgrind'
+        brew install --HEAD 'LouisBrunner/valgrind/valgrind'
       shell: bash
