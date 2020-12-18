@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 from numpy import array
 
 def create_array():
