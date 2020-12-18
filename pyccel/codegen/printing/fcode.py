@@ -62,13 +62,14 @@ from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue
 
-from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
-
 from pyccel.ast.numpyext import NumpyEmpty
 from pyccel.ast.numpyext import NumpyMod, NumpyFloat
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import Shape
+
+from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.utilities import expand_to_loops
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -1144,14 +1145,19 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code) + '\n'
 
     def _print_CodeBlock(self, expr):
-        body = []
-        for b in expr.body:
+        body_exprs, new_vars = expand_to_loops(expr.body, language_has_vectors = True)
+        if self._current_function:
+            name = self._current_function
+            func = self.get_function(name)
+            func.local_vars.extend(new_vars)
+        body_stmts = []
+        for b in body_exprs :
             line = self._print(b)
             if (self._additional_code):
-                body.append(self._additional_code)
+                body_stmts.append(self._additional_code)
                 self._additional_code = None
-            body.append(line)
-        return ''.join(body)
+            body_stmts.append(line)
+        return ''.join(self._print(b) for b in body_stmts)
 
     # TODO the ifs as they are are, is not optimal => use elif
     def _print_SymbolicAssign(self, expr):
