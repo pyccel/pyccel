@@ -276,7 +276,7 @@ def insert_index(expr, pos, index_var, language_has_vectors):
             return expr
     elif isinstance(expr, PyccelOperator):
         cls = type(expr)
-        shapes = set([a.shape for a in expr.args])
+        shapes = set([a.base.shape if isinstance(a, IndexedElement) else a.shape for a in expr.args])
         if len(shapes)!=1 or not language_has_vectors:
             args = [insert_index(a, pos - expr.rank + a.rank, index_var, False) for a in expr.args]
             return cls(*args)
