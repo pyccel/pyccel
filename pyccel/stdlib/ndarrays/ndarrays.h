@@ -24,6 +24,7 @@
                                         bool : _array_fill_bool,\
                                         float complex : _array_fill_cfloat,\
                                         double complex : _array_fill_cdouble)(c, arr)
+
 typedef struct  s_slice
 {
     int32_t start;
@@ -66,14 +67,15 @@ typedef struct  s_ndarray
     /* strides 'number of bytes to skip to get the next element' */
     int32_t                 *strides;
     /* type of the array elements */
-    enum e_types        type;
+    enum e_types            type;
     /* type size of the array elements */
     int32_t                 type_size;
     /* number of element in the array */
     int32_t                 length;
     /* size of the array */
     int32_t                 buffer_size;
-    bool                is_slice;
+    /*  */
+    bool                    is_view;
 }               t_ndarray;
 
 /* functions prototypes */
@@ -96,8 +98,12 @@ t_slice     new_slice(int32_t start, int32_t end, int32_t step);
                 /* creating an array view */
 t_ndarray   array_slicing(t_ndarray p, ...);
 
+/* assigns */
+void        alias_assign(t_ndarray *dest, t_ndarray src);
+
 /* free */
 int32_t         free_array(t_ndarray dump);
+int32_t         free_pointer(t_ndarray dump);
 
 /* indexing */
 int32_t         get_index(t_ndarray arr, ...);

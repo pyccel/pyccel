@@ -26,7 +26,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import PyccelAstNode
 
-from pyccel.ast.core import Allocate
+from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Constant
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Variable
@@ -162,6 +162,9 @@ class SemanticParser(BasicParser):
         self._used_names = parser.used_names
         self._dummy_counter = parser._dummy_counter
 
+        # used to store the local variables of a code block needed for garbage collecting
+        self._allocs = []
+
         # we use it to detect the current method or function
 
         #
@@ -203,6 +206,7 @@ class SemanticParser(BasicParser):
 
         ast = self.ast
 
+        self._allocs.append([])
         # we add the try/except to allow the parser to find all possible errors
         PyccelAstNode.stage = 'semantic'
         ast = self._visit(ast, **settings)
@@ -238,7 +242,25 @@ class SemanticParser(BasicParser):
 
         self._semantic_done = True
 
+        # Calling the Garbage collecting,
+        # it will add the necessary Deallocate nodes
+        # to the ast
+        self._ast = ast = self.garbage_collector(ast)
+
         return ast
+
+    def garbage_collector(self, expr):
+        """
+        Search in a CodeBlock if no trailing Return Node is present add the needed frees.
+
+        Return the same CodeBlock if a trailing Return is found otherwise Return a new CodeBlock with additional Deallocate Nodes.
+        """
+        code = expr
+        if not isinstance(expr.body[-1], Return):
+            code = expr.body + [Deallocate(i) for i in self._allocs[-1]]
+            code = CodeBlock(code)
+        self._allocs.pop()
+        return code
 
     def get_variable_from_scope(self, name):
         """
@@ -1404,6 +1426,13 @@ class SemanticParser(BasicParser):
                     new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
                 # ...
 
+                # ...
+                # Add memory deallocation for array variables
+                if lhs.is_ndarray and not lhs.is_stack_array:
+                    # Create Deallocate node
+                    self._allocs[-1].append(lhs)
+                # ...
+
                 # We cannot allow the definition of a stack array in a loop
                 if lhs.is_stack_array and self._namespace.is_loop:
                     errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=name,
@@ -1431,6 +1460,24 @@ class SemanticParser(BasicParser):
                             symbol = '|{name}| <module> -> {rhs}'.format(name=name, rhs=rhs),
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
+
+                elif var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
+                    errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset),
+                                severity='error', symbol=lhs.name)
+
+                elif var.is_ndarray and var.is_target:
+                    errors.report(ARRAY_ALREADY_IN_USE,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset),
+                                severity='error', symbol=var.name)
+
+                elif var.is_ndarray and var.is_pointer:
+                    # we allow pointers to be reassigned multiple times
+                    # pointers reassigning need to call free_pointer func
+                    # to remove memory leaks
+                    new_expressions.append(Deallocate(var))
 
                 elif not is_augassign and str(dtype) != str(getattr(var, 'dtype', 'None')):
                     txt = '|{name}| {old} <-> {new}'
@@ -2274,8 +2321,10 @@ class SemanticParser(BasicParser):
         assigns = [self._visit_Assign(e) for e in assigns]
         results = [self._visit_Symbol(i, **settings) for i in return_vars]
 
-        if assigns:
-            expr  = Return(results, CodeBlock(assigns))
+        #add the Deallocate node before the Return node
+        code = assigns + [Deallocate(i) for i in self._allocs[-1]]
+        if code:
+            expr  = Return(results, CodeBlock(code))
         else:
             expr  = Return(results)
         return expr
@@ -2459,11 +2508,18 @@ class SemanticParser(BasicParser):
             func = FunctionDef(name, args, results, [])
             self.insert_function(func)
 
+            # Create a new list that store local variables for each FunctionDef to handle nested functions
+            self._allocs.append([])
+
             # we annotate the body
             body = self._visit(expr.body)
 
-            args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(str(a.name)) for a in args]
+            # Calling the Garbage collecting,
+            # it will add the necessary Deallocate nodes
+            # to the body of the function
+            body = self.garbage_collector(body)
 
+            args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(str(a.name)) for a in args]
             results = list(OrderedDict((a.name,self.get_variable(a.name)) for a in results).values())
 
             if arg and cls_name:
