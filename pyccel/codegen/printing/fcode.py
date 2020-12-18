@@ -1150,6 +1150,9 @@ class FCodePrinter(CodePrinter):
             name = self._current_function
             func = self.get_function(name)
             func.local_vars.extend(new_vars)
+        else:
+            for var in new_vars:
+                self._namespace.variables[var.name] = var
         body_stmts = []
         for b in body_exprs :
             line = self._print(b)
