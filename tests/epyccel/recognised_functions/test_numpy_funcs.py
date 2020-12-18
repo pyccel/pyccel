@@ -1361,6 +1361,14 @@ def test_full_order(language):
     f_shape_F  = epyccel(create_full_shape_F, language = language)
     assert(f_shape_F(size_1,size_2) == create_full_shape_F(size_1,size_2))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="casting to complex in not handled corectly"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_full_dtype(language):
     @types('int')
     def create_full_val_int_int(val):
