@@ -16,7 +16,7 @@ def pointer_to_pointer():
     b = a
     c = b #pylint:disable=unused-variable
 
-def reassinging_pointers():
+def reassign_pointers():
 
     from numpy import array
 
