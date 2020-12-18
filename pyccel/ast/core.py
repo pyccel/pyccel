@@ -936,7 +936,7 @@ class CodeBlock(Basic):
         for i in body:
             if isinstance(i, CodeBlock):
                 ls += i.body
-            else:
+            elif i is not None and not isinstance(i, EmptyNode):
                 ls.append(i)
 
         return Basic.__new__(cls, ls)
