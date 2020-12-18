@@ -109,7 +109,8 @@ class PyccelOperator(Expr, PyccelAstNode):
             return
         self._set_dtype()
         self._set_shape_rank()
-        self._set_order()
+        if self._rank > 1:
+            self._set_order()
 
     @property
     def precedence(self):
