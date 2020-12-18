@@ -239,14 +239,20 @@ def insert_index(expr, pos, index_var, language_has_vectors):
             return expr
         if expr.shape[pos]==1:
             index_var = LiteralInteger(0)
+        pos = expr.rank - pos - 1 # Fortran ordering
         var = IndexedVariable(expr)
         indexes = [Slice(None,None)]*pos + [index_var]+[Slice(None,None)]*(expr.rank-1-pos)
+        tmp = var[indexes]
         return var[indexes]
     elif isinstance(expr, IndexedElement):
+        pos = expr.base.rank - pos - 1
         base = expr.base
         indices = list(expr.indices)
+        shape = expr.base.shape[::-1]
+        if expr.base.order == 'c':
+            indices = indices[::-1]
         assert(isinstance(indices[pos], Slice))
-        if expr.shape[pos]==1:
+        if shape[pos]==1:
             assert(indices[pos].start is None)
             index_var = LiteralInteger(0)
         else:
