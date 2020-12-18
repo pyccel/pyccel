@@ -16,15 +16,20 @@ from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors
 
 from .core     import (AsName, Import, FunctionDef, Constant,
-                       Variable, IndexedVariable, ValuedVariable)
+                       Variable, IndexedVariable, ValuedVariable,
+                       Assign, FunctionCall, IndexedElement,
+                       Slice, For, AugAssign)
 
-from .builtins      import builtin_functions_dict, PythonMap
+from .builtins      import (builtin_functions_dict, PythonMap,
+                            PythonRange)
 from .itertoolsext  import Product
 from .mathext       import math_functions, math_constants
-from .literals      import LiteralString
+from .literals      import LiteralString, LiteralInteger
 
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
-                            numpy_random_functions, numpy_constants)
+                            numpy_random_functions, numpy_constants,
+                            NumpyNewArray)
+from .operators     import PyccelOperator, PyccelMul, PyccelAdd
 
 __all__ = (
     'build_types_decorator',
@@ -187,3 +192,176 @@ def split_positional_keyword_arguments(*args):
         kwargs[key] = value
 
     return args, kwargs
+
+#==============================================================================
+def insert_index(expr, pos, index_var, language_has_vectors):
+    """
+    Function to insert an index into an expression at a given position
+
+    Parameters
+    ==========
+    expr        : Ast Node
+                The expression to be modified
+    pos         : int
+                The index at which the expression is modified
+                (If negative then there is no index to insert)
+    index_var   : Variable
+                The variable which will be used for indexing
+    language_has_vectors : bool
+                Indicates if the language has support for vector
+                operations of the same shape
+
+    Returns
+    =======
+    expr        : Ast Node
+                Either a modified version of expr or expr itself
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.operators import PyccelAdd
+    >>> from pyccel.ast.utilities import insert_index
+    >>> a = Variable('int', 'a', shape=(4,), rank=1)
+    >>> b = Variable('int', 'b', shape=(4,), rank=1)
+    >>> c = Variable('int', 'c', shape=(4,), rank=1)
+    >>> i = Variable('int', 'i', shape=())
+    >>> d = PyccelAdd(a,b)
+    >>> expr = Assign(c,d)
+    >>> insert_index(expr, 0, i, language_has_vectors = False)
+    IndexedElement(c, i) := IndexedElement(a, i) + IndexedElement(b, i)
+    >>> insert_index(expr, 0, i, language_has_vectors = True)
+    c := a + b
+    """
+    if pos < 0:
+        return expr
+    if isinstance(expr, Variable):
+        if expr.rank==0:
+            return expr
+        if expr.shape[pos]==1:
+            index_var = LiteralInteger(0)
+        var = IndexedVariable(expr)
+        indexes = [Slice(None,None)]*pos + [index_var]+[Slice(None,None)]*(expr.rank-1-pos)
+        return var[indexes]
+    elif isinstance(expr, IndexedElement):
+        base = expr.base
+        indices = list(expr.indices)
+        assert(isinstance(indices[pos], Slice))
+        if expr.shape[pos]==1:
+            assert(indices[pos].start is None)
+            index_var = LiteralInteger(0)
+        else:
+            if indices[pos].step is not None:
+                index_var = PyccelMul(index_var, indices[pos].step)
+            if indices[pos].start is not None:
+                index_var = PyccelAdd(index_var, indices[pos].start)
+        indices[pos] = index_var
+        return base[indices]
+    elif isinstance(expr, AugAssign):
+        cls = type(expr)
+        lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
+        rhs = insert_index(expr.rhs, pos, index_var, language_has_vectors)
+
+        if rhs is not expr.rhs or not language_has_vectors:
+            return cls(lhs, expr.op, rhs, expr.status, expr.like)
+        else:
+            return expr
+    elif isinstance(expr, Assign):
+        cls = type(expr)
+        lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
+        rhs = insert_index(expr.rhs, pos, index_var, language_has_vectors)
+
+        if rhs is not expr.rhs or not language_has_vectors:
+            return cls(lhs, rhs, expr.status, expr.like)
+        else:
+            return expr
+    elif isinstance(expr, PyccelOperator):
+        cls = type(expr)
+        shapes = set([a.shape for a in expr.args])
+        if len(shapes)!=1 or not language_has_vectors:
+            args = [insert_index(a, pos - expr.rank + a.rank, index_var, False) for a in expr.args]
+            return cls(*args)
+        else:
+            return expr
+    elif isinstance(expr, For):
+        body = [insert_index(l,pos,index_var, language_has_vectors) for l in expr.body.body]
+        return For(expr.target, expr.iterable, body, expr.local_vars)
+    else:
+        raise NotImplementedError("Expansion not implemented for type : {}".format(type(expr)))
+
+
+#==============================================================================
+def expand_to_loops(block, language_has_vectors = False, index = 0):
+    """
+    Re-write a list of expressions to include explicit loops where necessary
+
+    Parameters
+    ==========
+    block      : list of Ast Nodes
+                The expressions to be modified
+    language_has_vectors : bool
+                Indicates if the language has support for vector
+                operations of the same shape
+    index       : int
+                The index from which the expression is modified
+
+    Returns
+    =======
+    expr        : list of Ast Nodes
+                The expressions with For loops inserted where necessary
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.operators import PyccelAdd
+    >>> from pyccel.ast.utilities import expand_to_loops
+    >>> a = Variable('int', 'a', shape=(4,), rank=1)
+    >>> b = Variable('int', 'b', shape=(4,), rank=1)
+    >>> c = Variable('int', 'c', shape=(4,), rank=1)
+    >>> i = Variable('int', 'i', shape=())
+    >>> d = PyccelAdd(a,b)
+    >>> expr = [Assign(c,d)]
+    >>> expand_to_loops(expr, language_has_vectors = False)
+    [For(i_0, PythonRange(0, LiteralInteger(4), LiteralInteger(1)), CodeBlock([IndexedElement(c, i_0) := PyccelAdd(IndexedElement(a, i_0), IndexedElement(b, i_0))]), [])]
+    """
+    max_rank = -1
+    current_block_length = -1
+    started_block = False
+    before_loop = []
+    loop_stmts  = []
+    after_loop  = []
+    for i, line in enumerate(block):
+        if isinstance(line, Assign) and \
+                not isinstance(line.rhs, (NumpyNewArray, FunctionCall,)):
+            lhs = line.lhs
+            rhs = line.rhs
+            if lhs.rank == max_rank and lhs.shape[index] == current_block_length:
+                loop_stmts.append(line)
+                continue
+            elif max_rank==-1 and lhs.rank > 0 and index < lhs.rank:
+                current_block_length = lhs.shape[index]
+                max_rank = lhs.rank
+                started_block = True
+                loop_stmts.append(line)
+                continue
+        if started_block:
+            after_loop = block[i:]
+            break
+        else:
+            before_loop.append(line)
+    if loop_stmts:
+        for_loop_body, new_vars = expand_to_loops(loop_stmts, language_has_vectors, index+1)
+        after_loop, new_vars2 = expand_to_loops(after_loop, language_has_vectors, index)
+        new_vars += new_vars2
+        index_var = Variable('int','i_{}'.format(index))
+
+        unpacked_for_loop_body = [insert_index(l,index,index_var, language_has_vectors) for l in for_loop_body]
+
+        if any([u is not p for u,p in zip(unpacked_for_loop_body, for_loop_body)]):
+            for_block = [For(index_var, PythonRange(0,current_block_length), unpacked_for_loop_body)]
+            new_vars += [index_var]
+        else:
+            for_block = for_loop_body
+        return before_loop + for_block + after_loop, new_vars
+    else:
+
+        return block, []
