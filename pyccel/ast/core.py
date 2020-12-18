@@ -4762,6 +4762,12 @@ class IndexedVariable(IndexedBase, PyccelAstNode):
         **kw_args
         ):
 
+        if isinstance(label, Variable):
+            dtype = label.dtype
+            shape = label.shape
+            prec  = label.precision
+            order = label.order
+            rank  = label.rank
         if dtype is None:
             raise TypeError('datatype must be provided')
         if isinstance(dtype, str):
@@ -4773,6 +4779,7 @@ class IndexedVariable(IndexedBase, PyccelAstNode):
         self._dtype      = dtype
         self._precision  = prec
         self._rank       = rank
+        self._shape      = shape
         kw_args['order'] = order
         self._kw_args    = kw_args
         self._label      = label
