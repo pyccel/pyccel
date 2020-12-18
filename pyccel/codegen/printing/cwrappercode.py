@@ -87,7 +87,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_declare_type(self, expr):
         dtype = self._print(expr.dtype)
         prec  = expr.precision
-        if expr.rank > 0 and self._target_language == 'C' and not expr.is_pointer:
+        if expr.rank > 0 and self._target_language == 'c' and not expr.is_pointer:
             self._additional_imports.add("ndarrays")
             dtype = 't_ndarray'
         else :
@@ -474,7 +474,7 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = PyccelPyArrayObject()
             collect_var = Variable(dtype= collect_type, is_pointer = True, rank = variable.rank,
                                     order= variable.order, name=self.get_new_name(used_names, variable.name+"_tmp"))
-            if self._target_language == "C":
+            if self._target_language == "c":
                 cast_function = self.get_cast_function_call('pyccelPyArrayObject_to_ndarray', collect_var)
 
         elif isinstance(variable, ValuedVariable):
