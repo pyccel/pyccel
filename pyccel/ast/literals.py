@@ -50,6 +50,15 @@ class Literal(PyccelAstNode):
     def _sympystr(self, printer):
         return printer.doprint(self.python_value)
 
+    def __eq__(self, other):
+        if isinstance(other, PyccelAstNode):
+            return isinstance(other, type(self)) and self.python_value == other.python_value
+        else:
+            return self.python_value == other
+
+    def __hash__(self):
+        return self.python_value
+
 #------------------------------------------------------------------------------
 class LiteralTrue(Literal, Basic):
     """Represents the python value True"""
