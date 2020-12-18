@@ -626,6 +626,7 @@ class Dlist(Basic, PyccelAstNode):
     def __init__(self, val, length):
         self._rank = val.rank
         self._shape = tuple(s if i!= 0 else PyccelMul(s, length) for i,s in enumerate(val.shape))
+        self._order = val.order
 
     @property
     def val(self):
@@ -2513,6 +2514,7 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
         self._rank      = rhs.rank
         self._precision = rhs.precision
         self._shape     = rhs.shape
+        self._order     = rhs.order
 
     @property
     def lhs(self):
@@ -2896,10 +2898,11 @@ class FunctionCall(Basic, PyccelAstNode):
 
         self._funcdef       = func
         self._arguments     = args
-        self._dtype         = func.results[0].dtype if len(func.results) == 1 else NativeTuple()
-        self._rank          = func.results[0].rank if len(func.results) == 1 else None
-        self._shape         = func.results[0].shape if len(func.results) == 1 else None
+        self._dtype         = func.results[0].dtype     if len(func.results) == 1 else NativeTuple()
+        self._rank          = func.results[0].rank      if len(func.results) == 1 else None
+        self._shape         = func.results[0].shape     if len(func.results) == 1 else None
         self._precision     = func.results[0].precision if len(func.results) == 1 else None
+        self._order         = func.results[0].order     if len(func.results) == 1 else None
 
     @property
     def arguments(self):
@@ -4773,6 +4776,7 @@ class IndexedVariable(IndexedBase, PyccelAstNode):
         self._dtype      = dtype
         self._precision  = prec
         self._rank       = rank
+        self._order      = order
         kw_args['order'] = order
         self._kw_args    = kw_args
         self._label      = label
@@ -4870,7 +4874,8 @@ class IndexedElement(Expr, PyccelAstNode):
         self._indices = self._args[1:]
         dtype = self.base.dtype
         shape = self.base.shape
-        rank = self.base.rank
+        rank  = self.base.rank
+        order = self.base.order
         self._precision = self.base.precision
         if isinstance(dtype, NativeInteger):
             self._dtype = NativeInteger()
@@ -5187,10 +5192,13 @@ class IfTernaryOperator(Basic, PyccelAstNode):
             errors.report('Ternary Operator results should have the same rank', severity='fatal')
         if value_false.shape != value_true.shape :
             errors.report('Ternary Operator results should have the same shape', severity='fatal')
+        if value_false.order != value_true.order :
+            errors.report('Ternary Operator results should have the same order', severity='fatal')
         self._dtype = max([value_true.dtype, value_false.dtype], key = lambda x : _tmp_list.index(x))
         self._precision = max([value_true.precision, value_false.precision])
         self._shape = value_true.shape
-        self._rank = value_true.rank
+        self._rank  = value_true.rank
+        self._order = value_true.order
 
 
     @property

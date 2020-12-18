@@ -282,6 +282,11 @@ class NumpyMatmul(Application, PyccelAstNode):
             n = 1 if b.rank < 2 else b.shape[1]
             self._shape = (m, n)
 
+        if a.order == b.order:
+            self._order = a.order
+        else:
+            self._order = 'C'
+
     @property
     def a(self):
         return self._args[0]
@@ -746,6 +751,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         self._rank       = x.rank
         self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeReal()
         self._precision  = default_precision[str_dtype(self._dtype)]
+        self._order      = x.order
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
@@ -757,6 +763,10 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         self._rank      = x1.rank   # TODO ^^
         self._dtype     = NativeReal()
         self._precision = default_precision['real']
+        if x1.order == x2.order:
+            self._order = x1.order
+        else:
+            self._order = 'C'
 
 #------------------------------------------------------------------------------
 # Math operations
