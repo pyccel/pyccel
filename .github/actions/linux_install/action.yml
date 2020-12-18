@@ -19,3 +19,7 @@ runs:
       run:
         sudo apt-get install libomp-dev
       shell: bash
+    - name: Install Valgrind
+      run:
+        sudo apt-get install valgrind
+      shell: bash

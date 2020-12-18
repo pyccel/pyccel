@@ -7,6 +7,7 @@ runs:
       run: |
         brew install open-mpi
         brew install libomp
+        brew install valgrind
         ln -s /usr/local/bin/gfortran-8 /usr/local/bin/gfortran
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
       shell: bash
