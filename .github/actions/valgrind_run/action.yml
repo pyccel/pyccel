@@ -1,0 +1,11 @@
+name: 'Pyccel valgrind script'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Test with valgrind for memory leaks
+      run: |
+        pyccel --language=c leaks_check.py
+        valgrind --leak-check=full --error-exitcode=1 ./prog_leaks_check
+      shell: bash
+      working-directory: ./tests/ndarrays
