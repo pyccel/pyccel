@@ -34,6 +34,8 @@ from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.numpyext import NumpyFull, NumpyArray
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
+from pyccel.ast.utilities import expand_to_loops
+
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -1151,13 +1153,15 @@ class CCodePrinter(CodePrinter):
                 stop=stop, step=step, body=body)
 
     def _print_CodeBlock(self, expr):
-        body = []
-        for b in expr.body :
+        body_exprs, new_vars = expand_to_loops(expr.body, language_has_vectors = False)
+        self._additional_declare.extend(new_vars)
+        body_stmts = []
+        for b in body_exprs :
             code = self._print(b)
             code = self._additional_code + code
             self._additional_code = ''
-            body.append(code)
-        return '\n'.join(self._print(b) for b in body)
+            body_stmts.append(code)
+        return '\n'.join(self._print(b) for b in body_stmts)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array
