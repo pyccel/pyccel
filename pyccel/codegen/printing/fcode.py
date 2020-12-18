@@ -1320,6 +1320,9 @@ class FCodePrinter(CodePrinter):
 
         return code
 
+#-----------------------------------------------------------------------------
+    def _print_Deallocate(self, expr):
+        return ''
 #------------------------------------------------------------------------------
 
     def _print_NativeBool(self, expr):
