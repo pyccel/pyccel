@@ -3,6 +3,10 @@ name: 'Linux installation commands'
 runs:
   using: "composite"
   steps:
+    - name: update the package list
+      run:
+        sudo apt-get update
+      shell: bash
     - name: Install fortran
       run:
         sudo apt-get install gfortran
