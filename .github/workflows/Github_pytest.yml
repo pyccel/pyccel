@@ -122,3 +122,5 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Test with pytest
         uses: ./.github/actions/pytest_run
+      - name: Test with valgrind for memory leaks
+        uses: ./.github/actions/valgrind_run

@@ -4,7 +4,7 @@ runs:
   using: "composite"
   steps:
     - name: Install fortran
-      run: 
+      run:
         sudo apt-get install gfortran
       shell: bash
     - name: Install LaPack
