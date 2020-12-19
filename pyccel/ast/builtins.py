@@ -73,7 +73,6 @@ class PythonComplexProperty(Application, PyccelAstNode):
 
     def __init__(self, arg):
         self._precision = arg.precision
-        self._order     = arg.order
 
     @property
     def internal_var(self):
@@ -130,9 +129,6 @@ class PythonBool(Expr, PyccelAstNode):
     def __new__(cls, arg):
         return Expr.__new__(cls, arg)
 
-    def __init__(self, arg):
-        self._order     = arg.order
-
     @property
     def arg(self):
         return self.args[0]
@@ -186,10 +182,8 @@ class PythonComplex(Expr, PyccelAstNode):
         return Expr.__new__(cls, arg0, arg1)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
-        if arg0.order == "F" and arg1.order == "F":
-            self._order     = "F"
-        else:
-            self._order     = "C"
+        self._is_cast = arg0.dtype is NativeComplex() and \
+                        isinstance(arg1, Literal) and arg1.python_value == 0
 
         if self._is_cast:
             self._real_part = PythonReal(arg0)
@@ -275,9 +269,6 @@ class PythonFloat(Expr, PyccelAstNode):
         else:
             return Expr.__new__(cls, arg)
 
-    def __init__(self, arg):
-        self._order     = arg.order
-
     @property
     def arg(self):
         return self._args[0]
@@ -304,9 +295,6 @@ class PythonInt(Expr, PyccelAstNode):
             return LiteralInteger(arg.p, precision = cls._precision)
         else:
             return Expr.__new__(cls, arg)
-
-    def __init__(self, arg):
-        self._order     = arg.order
 
     @property
     def arg(self):

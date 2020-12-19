@@ -5192,13 +5192,14 @@ class IfTernaryOperator(Basic, PyccelAstNode):
             errors.report('Ternary Operator results should have the same rank', severity='fatal')
         if value_false.shape != value_true.shape :
             errors.report('Ternary Operator results should have the same shape', severity='fatal')
-        if value_false.order != value_true.order :
-            errors.report('Ternary Operator results should have the same order', severity='fatal')
         self._dtype = max([value_true.dtype, value_false.dtype], key = lambda x : _tmp_list.index(x))
         self._precision = max([value_true.precision, value_false.precision])
         self._shape = value_true.shape
         self._rank  = value_true.rank
-        self._order = value_true.order
+        if self._rank > 1:
+            if value_false.order != value_true.order :
+                errors.report('Ternary Operator results should have the same order', severity='fatal')
+            self._order = value_true.order
 
 
     @property
