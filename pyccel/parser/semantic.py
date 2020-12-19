@@ -877,7 +877,7 @@ class SemanticParser(BasicParser):
 
         if isinstance(var, TupleVariable) and not var.is_homogeneous:
 
-            arg = args[-1]
+            arg = args[0]
 
             if isinstance(arg, Slice):
                 if ((arg.start is not None and not isinstance(arg.start, LiteralInteger)) or
@@ -893,13 +893,13 @@ class SemanticParser(BasicParser):
                         return selected_vars[0]
                     else:
                         var = selected_vars[0]
-                        return self._extract_indexed_from_var(var, args[:-1], name)
+                        return self._extract_indexed_from_var(var, args[1:], name)
                 elif len(selected_vars)<1:
                     return None
                 elif len(args)==1:
                     return PythonTuple(*selected_vars)
                 else:
-                    return PythonTuple(*[self._extract_indexed_from_var(var, args[:-1], name) for var in selected_vars])
+                    return PythonTuple(*[self._extract_indexed_from_var(var, args[1:], name) for var in selected_vars])
 
             elif isinstance(arg, LiteralInteger):
 
@@ -907,7 +907,7 @@ class SemanticParser(BasicParser):
                     return var[arg]
 
                 var = var[arg]
-                return self._extract_indexed_from_var(var, args[:-1], name)
+                return self._extract_indexed_from_var(var, args[1:], name)
 
             else:
                 errors.report(INDEXED_TUPLE, symbol=var,

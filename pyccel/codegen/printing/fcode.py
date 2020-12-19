@@ -2610,10 +2610,10 @@ class FCodePrinter(CodePrinter):
             if len(expr.indices)==1:
                 return self._print(base[expr.indices[0]])
             else:
-                var = base[expr.indices[-1]]
+                var = base[expr.indices[0]]
                 return self._print(IndexedVariable(var, dtype = var.dtype,
                     shape = var.shape, prec = var.precision,
-                    order = var.order, rank = var.rank)[expr.indices[:-1]])
+                    order = var.order, rank = var.rank)[expr.indices[1:]])
         else:
             base_code = self._print(expr.base.label)
 
