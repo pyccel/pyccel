@@ -1164,7 +1164,6 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelMul(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        print([type(a) for a in args])
         if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, PythonList)):
             expr_new = self._visit(Dlist(args[0], args[1]))
         elif isinstance(args[1], (TupleVariable, PythonTuple, Tuple, PythonList)):
