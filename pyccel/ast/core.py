@@ -4891,8 +4891,6 @@ class IndexedElement(Expr, PyccelAstNode):
             raise TypeError('Undefined datatype')
 
         if shape is not None:
-            if self.order == 'C':
-                shape = shape[::-1]
             new_shape = []
             for a,s in zip(args, shape):
                 if isinstance(a, Slice):

@@ -2618,6 +2618,8 @@ class FCodePrinter(CodePrinter):
             base_code = self._print(expr.base.label)
 
         inds = list(expr.indices)
+        if expr.base.order == 'C':
+            inds = inds[::-1]
         base_shape = Shape(expr.base)
         allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
                 expr.base.internal_variable.allows_negative_indexes)

@@ -873,8 +873,6 @@ class SemanticParser(BasicParser):
             else:
                 return self._visit(Indexed(var[args[0]],args[1:]))
 
-        if var.order == 'C':
-            args = args[::-1]
         args = tuple(args)
 
         if isinstance(var, TupleVariable) and not var.is_homogeneous:
