@@ -874,7 +874,13 @@ class SyntaxParser(BasicParser):
     def _visit_Attribute(self, stmt):
         val  = self._visit(stmt.value)
         attr = Symbol(stmt.attr)
-        return DottedVariable(val, attr)
+        try:
+            return DottedVariable(val, attr)
+        except TypeError:
+            errors.report(PYCCEL_RESTRICTION_TODO,
+                          symbol = stmt,
+                          bounding_box=(stmt.lineno, stmt.col_offset),
+                          severity='fatal')
 
 
     def _visit_Call(self, stmt):
