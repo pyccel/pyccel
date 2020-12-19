@@ -161,6 +161,9 @@ class NumpyArray(Application, NumpyNewArray):
         arg_shape   = numpy.asarray(arg).shape
         self._shape = process_shape(arg_shape)
         self._rank  = len(self._shape)
+        self._dtype = self._args[1]
+        self._order = self._args[2]
+        self._precision = self._args[3]
 
     def _sympystr(self, printer):
         return self.arg
@@ -168,26 +171,6 @@ class NumpyArray(Application, NumpyNewArray):
     @property
     def arg(self):
         return self._args[0]
-
-    @property
-    def dtype(self):
-        return self._args[1]
-
-    @property
-    def order(self):
-        return self._args[2]
-
-    @property
-    def precision(self):
-        return self._args[3]
-
-    @property
-    def shape(self):
-        return self._shape
-
-    @property
-    def rank(self):
-        return self._rank
 
 #==============================================================================
 class NumpySum(Function, PyccelAstNode):
@@ -281,6 +264,11 @@ class NumpyMatmul(Application, PyccelAstNode):
             m = 1 if a.rank < 2 else a.shape[0]
             n = 1 if b.rank < 2 else b.shape[1]
             self._shape = (m, n)
+
+        if a.order == b.order:
+            self._order = a.order
+        else:
+            self._order = 'C'
 
     @property
     def a(self):
@@ -541,30 +529,17 @@ class NumpyFull(Application, NumpyNewArray):
 
         return Basic.__new__(cls, shape, dtype, order, precision, fill_value)
 
+    def __init__(self, arg, dtype=None, order='C'):
+        self._shape = self._args[0]
+        self._rank  = len(self._shape)
+        self._dtype = self._args[1]
+        self._order = self._args[2]
+        self._precision = self._args[3]
+
     #--------------------------------------------------------------------------
-    @property
-    def shape(self):
-        return self._args[0]
-
-    @property
-    def dtype(self):
-        return self._args[1]
-
-    @property
-    def order(self):
-        return self._args[2]
-
-    @property
-    def precision(self):
-        return self._args[3]
-
     @property
     def fill_value(self):
         return self._args[4]
-
-    @property
-    def rank(self):
-        return len(self.shape)
 
 #==============================================================================
 class NumpyAutoFill(NumpyFull):
@@ -746,6 +721,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         self._rank       = x.rank
         self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeReal()
         self._precision  = default_precision[str_dtype(self._dtype)]
+        self._order      = x.order
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
@@ -757,6 +733,10 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         self._rank      = x1.rank   # TODO ^^
         self._dtype     = NativeReal()
         self._precision = default_precision['real']
+        if x1.order == x2.order:
+            self._order = x1.order
+        else:
+            self._order = 'C'
 
 #------------------------------------------------------------------------------
 # Math operations
