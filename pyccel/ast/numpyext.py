@@ -161,6 +161,9 @@ class NumpyArray(Application, NumpyNewArray):
         arg_shape   = numpy.asarray(arg).shape
         self._shape = process_shape(arg_shape)
         self._rank  = len(self._shape)
+        self._dtype = self._args[1]
+        self._order = self._args[2]
+        self._precision = self._args[3]
 
     def _sympystr(self, printer):
         return self.arg
@@ -168,26 +171,6 @@ class NumpyArray(Application, NumpyNewArray):
     @property
     def arg(self):
         return self._args[0]
-
-    @property
-    def dtype(self):
-        return self._args[1]
-
-    @property
-    def order(self):
-        return self._args[2]
-
-    @property
-    def precision(self):
-        return self._args[3]
-
-    @property
-    def shape(self):
-        return self._shape
-
-    @property
-    def rank(self):
-        return self._rank
 
 #==============================================================================
 class NumpySum(Function, PyccelAstNode):
@@ -546,30 +529,17 @@ class NumpyFull(Application, NumpyNewArray):
 
         return Basic.__new__(cls, shape, dtype, order, precision, fill_value)
 
+    def __init__(self, arg, dtype=None, order='C'):
+        self._shape = self._args[0]
+        self._rank  = len(self._shape)
+        self._dtype = self._args[1]
+        self._order = self._args[2]
+        self._precision = self._args[3]
+
     #--------------------------------------------------------------------------
-    @property
-    def shape(self):
-        return self._args[0]
-
-    @property
-    def dtype(self):
-        return self._args[1]
-
-    @property
-    def order(self):
-        return self._args[2]
-
-    @property
-    def precision(self):
-        return self._args[3]
-
     @property
     def fill_value(self):
         return self._args[4]
-
-    @property
-    def rank(self):
-        return len(self.shape)
 
 #==============================================================================
 class NumpyAutoFill(NumpyFull):
