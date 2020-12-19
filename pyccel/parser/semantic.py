@@ -2390,7 +2390,7 @@ class SemanticParser(BasicParser):
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='error', blocker=self.blocking)
 
-        # we construct a FunctionDef from its headers
+        # We construct a FunctionDef from each function header
         for hd in headers:
             interfaces += hd.create_definition(templates)
 
