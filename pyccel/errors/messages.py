@@ -100,6 +100,7 @@ PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS = 'Uncovered multi operator comparison s
 PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN = "The result of a list comprehension expression must be saved in a variable"
 PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE = 'Could not deduce the size of this list comprehension. If you believe this expression is simple then please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem.'
 PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS = 'Pyccel cannot handle this list comprehension. This is because there are occasions where the upper bound is smaller than the lower bound for variable {}'
+PYCCEL_LIST_TO_TUPLE = 'Lists are not supported by Pyccel. This non-homogenous list will be converted to a tuple.'
 
 # Fortran limitation
 FORTRAN_ALLOCATABLE_IN_EXPRESSION = 'An allocatable function cannot be used in an expression'
