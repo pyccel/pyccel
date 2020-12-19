@@ -2376,7 +2376,7 @@ class SemanticParser(BasicParser):
 
         interfaces = []
         if len(headers) == 0:
-            # check if a headers is imported from a headers file
+            # check if a header is imported from a header file
             # TODO improve in the case of multiple headers ( interface )
             func       = self.get_function(name)
             if func and func.is_header:
