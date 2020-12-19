@@ -1,0 +1,1 @@
+a = " ".join(["boy","girl"])
