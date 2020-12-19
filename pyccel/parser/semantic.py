@@ -402,12 +402,7 @@ class SemanticParser(BasicParser):
         """."""
         if isinstance(expr, (FunctionHeader, MethodHeader)):
             if expr.name in self.namespace.headers:
-                if all(header.dtypes != expr.dtypes for header in\
-                        self.namespace.headers[expr.name]):
-                    self.namespace.headers[expr.name].append(expr)
-                else:
-                    errors.report(DUPLICATED_SIGNATURE, symbol=expr,
-                        severity='warning')
+                self.namespace.headers[expr.name].append(expr)
             else:
                 self.namespace.headers[expr.name] = [expr]
         elif isinstance(expr, ClassHeader):
@@ -2347,8 +2342,7 @@ class SemanticParser(BasicParser):
         is_elemental    = expr.is_elemental
         is_private      = expr.is_private
         doc_string      = self._visit(expr.doc_string) if expr.doc_string else expr.doc_string
-
-        headers = expr.headers
+        headers = []
 
         not_used = [d for d in decorators if d not in def_decorators.__all__]
 
@@ -2359,11 +2353,12 @@ class SemanticParser(BasicParser):
         templates = self.get_templates()
         templates.update(expr.templates)
 
+        tmp_headers = expr.headers
         if cls_name:
-            tmp_headers = self.get_header(cls_name + '.' + name)
+            tmp_headers += self.get_header(cls_name + '.' + name)
             args_number -= 1
         else:
-            tmp_headers = self.get_header(name)
+            tmp_headers += self.get_header(name)
         for header in tmp_headers:
             if all(header.dtypes != hd.dtypes for hd in headers):
                 headers.append(header)
