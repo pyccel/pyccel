@@ -772,7 +772,6 @@ class SemanticParser(BasicParser):
         for cls in classes:
             annotation_method = '_visit_' + cls.__name__
             if hasattr(self, annotation_method):
-                print(annotation_method)
                 obj = getattr(self, annotation_method)(expr, **settings)
                 self._current_fst_node = current_fst
                 return obj
