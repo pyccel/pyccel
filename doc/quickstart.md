@@ -43,6 +43,7 @@ A language is statically-typed if the type of a variable is known at compile-
   3. To generate the C/Fortran code form your Python code, type `pyccel file_name.py` or `pyccel file_name.py --language fortran`
      to generate Fortran code, and `pyccel file_name.py --language c` to generate C code
   4. No problems ?, So you should discover `__pyccel__` the directory that contains your generated code and some other stuff.
+
 E.g (using `@types` decorator and a recursive function with a typed return):
    python code:
     file_name.py
