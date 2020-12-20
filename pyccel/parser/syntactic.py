@@ -876,6 +876,7 @@ class SyntaxParser(BasicParser):
         attr = Symbol(stmt.attr)
         return DottedVariable(val, attr)
 
+
     def _visit_Call(self, stmt):
 
         args = []
