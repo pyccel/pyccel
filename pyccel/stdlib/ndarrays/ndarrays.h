@@ -106,4 +106,8 @@ int32_t         free_array(t_ndarray dump);
 /* indexing */
 int32_t         get_index(t_ndarray arr, ...);
 
+/* data converting between numpy and ndarray */
+long int    *numpy_to_ndarray_strides(long int *np_strides, int type_size,
+            int nd);
+
 #endif

@@ -5,7 +5,7 @@
 
 #include "ndarrays.h"
 
-/* 
+/*
 ** allocation
 */
 
@@ -165,7 +165,7 @@ int32_t free_array(t_ndarray dump)
     return (1);
 }
 
-/* 
+/*
 ** slices
 */
 
@@ -226,4 +226,19 @@ int32_t get_index(t_ndarray arr, ...)
     }
     va_end(va);
     return (index);
+}
+
+/*
+** convert numpy strides to nd_arrya strdies, and return it in a new array, to
+** avoid the problem of difference implemation of strides in numpy and ndarray.
+*/
+long int    *numpy_to_ndarray_strides(long int *np_strides, int type_size, int nd)
+{
+    long int *ndarray_strides;
+
+    ndarray_strides = (long int*)malloc(sizeof(long int) * nd);
+    for (int i = 0; i < nd; i++)
+        ndarray_strides[i] = np_strides[i] / type_size;
+    return ndarray_strides;
+
 }
