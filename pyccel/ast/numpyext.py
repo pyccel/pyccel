@@ -529,7 +529,7 @@ class NumpyFull(Application, NumpyNewArray):
 
         return Basic.__new__(cls, shape, dtype, order, precision, fill_value)
 
-    def __init__(self, arg, dtype=None, order='C'):
+    def __init__(self, shape, fill_value, dtype=None, order='C'):
         self._shape = self._args[0]
         self._rank  = len(self._shape)
         self._dtype = self._args[1]
