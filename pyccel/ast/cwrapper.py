@@ -549,25 +549,35 @@ def pyccelPyArrayObject_to_ndarray(cast_function_name):
     cast_function_argument = Variable(dtype=PyccelPyArrayObject(), name='o', is_pointer=True)
     cast_function_result   = Variable(dtype=PyccelPyArrayObject(), name = 'c', rank=1)
 
-    nd              =  Variable(dtype=NativeInteger(), name='nd')
-    shape           =  Variable(dtype=NativeInteger(), name='shape')
-    raw_data        =  Variable(dtype=NativeBool(), name='raw_data')
-    strides         =  Variable(dtype=NativeInteger(), name='strides')
-    arr_type        =  Variable(dtype=NativeGeneric(), name='type')
-    type_size       =  Variable(dtype=NativeInteger(), name='type_size')
-    length          =  Variable(dtype=NativeInteger(), name='length')
-    buffer_size     =  Variable(dtype=NativeInteger(), name='buffer_size')
-    is_slice        =  Variable(dtype=NativeBool(), name='is_slice')
+    nd          = DottedVariable(cast_function_result,
+                        Variable(dtype=NativeInteger(), name='nd'))
+    raw_data    = DottedVariable(cast_function_result,
+                        Variable(dtype=NativeInteger(), name='raw_data'))
+    shape       = DottedVariable(cast_function_result,
+                        Variable(dtype=NativeInteger(), name='shape'))
+    type_size   = DottedVariable(cast_function_result,
+                        Variable(dtype=NativeInteger(), name='type_size'))
+    strides     = DottedVariable(cast_function_result,
+                        Variable(dtype=NativeInteger(), name='strides', allocatable=True))
+    arr_type    = DottedVariable(cast_function_result,
+                        Variable(dtype=NativeGeneric(), name='type'))
+    length      = DottedVariable(cast_function_result,
+                        Variable(dtype=NativeInteger(), name='length'))
+    buffer_size = DottedVariable(cast_function_result,
+                        Variable(dtype=NativeInteger(), name='buffer_size'))
+    is_slice    = DottedVariable(cast_function_result,
+                        Variable(dtype=NativeBool(), name='is_slice'))
 
-    cast_function_body = [Assign(DottedVariable(cast_function_result, nd), FunctionCall(numpy_get_ndims, [cast_function_argument])),
-                          Assign(DottedVariable(cast_function_result, raw_data), FunctionCall(numpy_get_data, [cast_function_argument])),
-                          Assign(DottedVariable(cast_function_result, shape), FunctionCall(numpy_get_shape, [cast_function_argument])),
-                          Assign(DottedVariable(cast_function_result, strides), FunctionCall(numpy_get_strides, [cast_function_argument])),
-                          Assign(DottedVariable(cast_function_result, arr_type), FunctionCall(numpy_get_type, [cast_function_argument])),
-                          Assign(DottedVariable(cast_function_result, type_size), FunctionCall(numpy_itemsize, [cast_function_argument])),
-                          Assign(DottedVariable(cast_function_result, length), FunctionCall(numpy_get_size, [cast_function_argument])),
-                          Assign(DottedVariable(cast_function_result, buffer_size), FunctionCall(numpy_nbytes, [cast_function_argument])),
-                          Assign(DottedVariable(cast_function_result, is_slice), LiteralTrue()),
+    cast_function_body = [Assign(nd, FunctionCall(numpy_get_ndims, [cast_function_argument])),
+                          Assign(raw_data, FunctionCall(numpy_get_data, [cast_function_argument])),
+                          Assign(shape, FunctionCall(numpy_get_shape, [cast_function_argument])),
+                          Assign(type_size, FunctionCall(numpy_itemsize, [cast_function_argument])),
+                          Assign(strides, FunctionCall(numpy_to_ndarray_strides,
+                                [FunctionCall(numpy_get_strides, [cast_function_argument]), type_size, nd])),
+                          Assign(arr_type, FunctionCall(numpy_get_type, [cast_function_argument])),
+                          Assign(length, FunctionCall(numpy_get_size, [cast_function_argument])),
+                          Assign(buffer_size, FunctionCall(numpy_nbytes, [cast_function_argument])),
+                          Assign(is_slice, LiteralTrue()),
                           Return([cast_function_result])]
 
     return FunctionDef(name      = cast_function_name,
@@ -595,6 +605,13 @@ PyArray_ScalarAsCtype = FunctionDef(name = 'PyArray_ScalarAsCtype',
                                     arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
                                                 Variable(dtype=NativeVoid(), name = 'c', is_pointer = True)],
                                     results = [])
+
+numpy_to_ndarray_strides = FunctionDef(name = 'numpy_to_ndarray_strides',
+                                    body = [],
+                                    arguments = [Variable(dtype=NativeInteger(), name = 'np_strides', is_pointer=True),
+                                                Variable(dtype=NativeInteger(), name = 'type_size'),
+                                                Variable(dtype=NativeInteger(), name = 'nd')],
+                                    results = [Variable(dtype=NativeInteger(), name = 'ndarray_strides', is_pointer=True)])
 
 collect_function_registry = {
     NativeInteger(): PyLong_AsLong,
