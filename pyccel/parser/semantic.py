@@ -1067,6 +1067,12 @@ class SemanticParser(BasicParser):
 
         # look for a class method
         if isinstance(expr.rhs, Application):
+            if first.cls_base is None:
+                errors.report('Class properties of object of type {} are not known'.format(first.dtype),
+                        symbol = expr,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset),
+                        severity='fatal')
             methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
             for method in methods:
                 if isinstance(method, Interface):
