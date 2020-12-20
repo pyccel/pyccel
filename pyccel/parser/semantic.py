@@ -67,7 +67,7 @@ from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric, NativeComplex
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
-from pyccel.ast.literals import LiteralInteger, LiteralFloat, Literal
+from pyccel.ast.literals import LiteralInteger, LiteralFloat
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.headers import MacroFunction, MacroVariable
@@ -1006,12 +1006,6 @@ class SemanticParser(BasicParser):
 
     def _visit_DottedVariable(self, expr, **settings):
 
-        if isinstance(expr.lhs, Literal):
-            errors.report(PYCCEL_RESTRICTION_TODO,
-                          symbol = expr,
-                          bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                          severity='fatal')
-
         var = self.check_for_variable(_get_name(expr))
         if var:
             return var
@@ -1067,7 +1061,7 @@ class SemanticParser(BasicParser):
 
         # look for a class method
         if isinstance(expr.rhs, Application):
-            if first.cls_base is None:
+            if not hasattr(first, 'cls_base') or first.cls_base is None:
                 errors.report('Class properties of object of type {} are not known'.format(first.dtype),
                         symbol = expr,
                         bounding_box=(self._current_fst_node.lineno,
