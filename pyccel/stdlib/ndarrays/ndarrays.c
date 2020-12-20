@@ -45,7 +45,7 @@ t_ndarray   array_create(int32_t nd, int32_t *shape, enum e_types type)
             arr.type_size = sizeof(double complex);
             break;
     }
-    arr.is_slice = false;
+    arr.is_view = false;
     arr.length = 1;
     arr.shape = malloc(arr.nd * sizeof(int32_t));
     for (int32_t i = 0; i < arr.nd; i++)
@@ -151,17 +151,28 @@ void   _array_fill_cdouble(double complex c, t_ndarray arr)
 ** deallocation
 */
 
-int32_t free_array(t_ndarray dump)
+int32_t free_array(t_ndarray arr)
 {
-    if (!dump.is_slice)
-    {
-        free(dump.raw_data);
-        dump.raw_data = NULL;
-    }
-    free(dump.shape);
-    dump.shape = NULL;
-    free(dump.strides);
-    dump.strides = NULL;
+    if (arr.shape == NULL)
+        return (0);
+    free(arr.raw_data);
+    arr.raw_data = NULL;
+    free(arr.shape);
+    arr.shape = NULL;
+    free(arr.strides);
+    arr.strides = NULL;
+    return (1);
+}
+
+
+int32_t free_pointer(t_ndarray arr)
+{
+    if (arr.is_view == false || arr.shape == NULL)
+        return (0);
+    free(arr.shape);
+    arr.shape = NULL;
+    free(arr.strides);
+    arr.strides = NULL;
     return (1);
 }
 
@@ -171,49 +182,69 @@ int32_t free_array(t_ndarray dump)
 
 t_slice new_slice(int32_t start, int32_t end, int32_t step)
 {
-    t_slice slice_d;
+    t_slice slice;
 
-    slice_d.start = start;
-    slice_d.end = end;
-    slice_d.step = step;
-    return (slice_d);
+    slice.start = start;
+    slice.end = end;
+    slice.step = step;
+    return (slice);
 }
 
-t_ndarray array_slicing(t_ndarray p, ...)
+t_ndarray array_slicing(t_ndarray arr, ...)
 {
-    t_ndarray slice;
+    t_ndarray view;
     va_list  va;
-    t_slice slice_data;
+    t_slice slice;
     int32_t start = 0;
 
-    slice.nd = p.nd;
-    slice.type = p.type;
-    slice.type_size = p.type_size;
-    slice.shape = malloc(sizeof(int32_t) * p.nd);
-    slice.strides = malloc(sizeof(int32_t) * p.nd);
-    memcpy(slice.strides, p.strides, sizeof(int32_t) * p.nd);
-    slice.is_slice = true;
-    va_start(va, p);
-    for (int32_t i = 0; i < p.nd ; i++)
+    view.nd = arr.nd;
+    view.type = arr.type;
+    view.type_size = arr.type_size;
+    view.shape = malloc(sizeof(int32_t) * arr.nd);
+    view.strides = malloc(sizeof(int32_t) * arr.nd);
+    memcpy(view.strides, arr.strides, sizeof(int32_t) * arr.nd);
+    view.is_view = true;
+    va_start(va, arr);
+    for (int32_t i = 0; i < arr.nd ; i++)
     {
-        slice_data = va_arg(va, t_slice);
-        slice.shape[i] = (slice_data.end - slice_data.start + (slice_data.step - 1)) / slice_data.step; // we need to round up the shape
-        start += slice_data.start * p.strides[i];
-        slice.strides[i] *= slice_data.step;
+        slice = va_arg(va, t_slice);
+        view.shape[i] = (slice.end - slice.start + (slice.step - 1)) / slice.step; // we need to round up the shape
+        start += slice.start * arr.strides[i];
+        view.strides[i] *= slice.step;
     }
     va_end(va);
-    slice.raw_data = p.raw_data + start * p.type_size;
-    slice.length = 1;
-    for (int32_t i = 0; i < slice.nd; i++)
-            slice.length *= slice.shape[i];
-    return (slice);
+    view.raw_data = arr.raw_data + start * arr.type_size;
+    view.length = 1;
+    for (int32_t i = 0; i < view.nd; i++)
+            view.length *= view.shape[i];
+    return (view);
+}
+
+/*
+** assigns
+*/
+
+void        alias_assign(t_ndarray *dest, t_ndarray src)
+{
+    /*
+    ** copy src to dest
+    ** allocate new memory for shape and strides
+    ** setting is_view to true for the garbage collector to deallocate
+    */
+
+    *dest = src;
+    dest->shape = malloc(sizeof(int32_t) * src.nd);
+    memcpy(dest->shape, src.shape, sizeof(int32_t) * src.nd);
+    dest->strides = malloc(sizeof(int32_t) * src.nd);
+    memcpy(dest->strides, src.strides, sizeof(int32_t) * src.nd);
+    dest->is_view = true;
 }
 
 /*
 ** indexing
 */
 
-int32_t get_index(t_ndarray arr, ...)
+int32_t     get_index(t_ndarray arr, ...)
 {
     va_list va;
     int32_t index;
