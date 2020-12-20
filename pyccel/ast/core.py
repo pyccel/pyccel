@@ -2478,7 +2478,7 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
 
     def __new__(cls, lhs, rhs):
 
-        if self.stage != 'syntactic':
+        if PyccelAstNode.stage != 'syntactic':
             if not isinstance(lhs, (
                 Literal,
                 Variable,
