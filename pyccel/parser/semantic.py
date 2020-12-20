@@ -1010,7 +1010,6 @@ class SemanticParser(BasicParser):
         if var:
             return var
 
-
         first = self._visit(expr.lhs)
         rhs_name = _get_name(expr.rhs)
         attr_name = []
