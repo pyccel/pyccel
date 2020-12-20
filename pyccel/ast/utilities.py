@@ -23,12 +23,12 @@ from .core     import (AsName, Import, FunctionDef, Constant,
 from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange)
 from .itertoolsext  import Product
-from .mathext       import math_functions, math_constants
+from .mathext       import math_functions, math_constants, MathFunctionBase
 from .literals      import LiteralString, LiteralInteger
 
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants,
-                            NumpyNewArray)
+                            NumpyNewArray, NumpyFunctionBase)
 from .operators     import PyccelOperator, PyccelMul, PyccelAdd
 
 __all__ = (
@@ -332,7 +332,7 @@ def expand_to_loops(block, language_has_vectors = False, index = 0):
     after_loop  = []
     for i, line in enumerate(block):
         if isinstance(line, Assign) and \
-                not isinstance(line.rhs, (NumpyNewArray, FunctionCall,)):
+                not isinstance(line.rhs, (NumpyNewArray, FunctionCall, NumpyFunctionBase, MathFunctionBase)):
             lhs = line.lhs
             rhs = line.rhs
             if lhs.rank == max_rank and lhs.shape[index] == current_block_length:
