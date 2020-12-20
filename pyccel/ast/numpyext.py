@@ -575,18 +575,17 @@ class NumpyEmpty(NumpyAutoFill):
 class NumpyZeros(NumpyAutoFill):
     """ Represents a call to numpy.zeros for code generation.
     """
-    # TODO [YG, 09.11.2020]: create LiteralInteger/LiteralFloat/LiteralComplex w/ correct precision
     @property
     def fill_value(self):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
-            value = LiteralInteger(0)
+            value = LiteralInteger(0, precision = self.precision)
         elif isinstance(dtype, NativeReal):
-            value = LiteralFloat(0)
+            value = LiteralFloat(0, precision = self.precision)
         elif isinstance(dtype, NativeComplex):
-            value = LiteralComplex(0., 0.)
+            value = LiteralComplex(0., 0., precision = self.precision)
         elif isinstance(dtype, NativeBool):
-            value = LiteralFalse()
+            value = LiteralFalse(precision = self.precision)
         else:
             raise TypeError('Unknown type')
         return value
@@ -595,18 +594,17 @@ class NumpyZeros(NumpyAutoFill):
 class NumpyOnes(NumpyAutoFill):
     """ Represents a call to numpy.ones for code generation.
     """
-    # TODO [YG, 09.11.2020]: create LiteralInteger/LiteralFloat/LiteralComplex w/ correct precision
     @property
     def fill_value(self):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
-            value = LiteralInteger(1)
+            value = LiteralInteger(1, precision = self.precision)
         elif isinstance(dtype, NativeReal):
-            value = LiteralFloat(1.)
+            value = LiteralFloat(1., precision = self.precision)
         elif isinstance(dtype, NativeComplex):
-            value = LiteralComplex(1., 0.)
+            value = LiteralComplex(1., 0., precision = self.precision)
         elif isinstance(dtype, NativeBool):
-            value = LiteralTrue()
+            value = LiteralTrue(precision = self.precision)
         else:
             raise TypeError('Unknown type')
         return value
