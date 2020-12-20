@@ -57,7 +57,7 @@ class Literal(PyccelAstNode):
             return self.python_value == other
 
     def __hash__(self):
-        return self.python_value
+        return hash(self.python_value)
 
 #------------------------------------------------------------------------------
 class LiteralTrue(Literal, Basic):
