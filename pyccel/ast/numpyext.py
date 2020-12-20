@@ -558,6 +558,10 @@ class NumpyAutoFill(NumpyFull):
         order = cls._process_order(order)
 
         return Basic.__new__(cls, shape, dtype, order, precision)
+
+    def __init__(self, shape, dtype=None, order='C'):
+        NumpyFull.__init__(self, shape, None, dtype, order)
+
 #==============================================================================
 class NumpyEmpty(NumpyAutoFill):
     """ Represents a call to numpy.empty for code generation.
