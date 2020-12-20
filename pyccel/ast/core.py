@@ -837,7 +837,8 @@ class Allocate(Basic):
         if variable.rank != len(shape):
             raise ValueError("Incompatible rank in variable allocation")
 
-        if variable.rank > 1 and variable.order != order:
+        # rank is None for lambda functions
+        if variable.rank is not None and variable.rank > 1 and variable.order != order:
             raise ValueError("Incompatible order in variable allocation")
 
         if not isinstance(status, str):
@@ -5194,7 +5195,8 @@ class IfTernaryOperator(Basic, PyccelAstNode):
         self._precision = max([value_true.precision, value_false.precision])
         self._shape = value_true.shape
         self._rank  = value_true.rank
-        if self._rank > 1:
+        # rank is None for lambda functions
+        if self._rank is not None and self._rank > 1:
             if value_false.order != value_true.order :
                 errors.report('Ternary Operator results should have the same order', severity='fatal')
             self._order = value_true.order
