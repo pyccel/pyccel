@@ -47,7 +47,7 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeGeneric, NativeTuple, default_precision, is_iterable_datatype)
 
 from .literals       import LiteralTrue, LiteralFalse, LiteralInteger
-from .literals       import LiteralImaginaryUnit, LiteralString
+from .literals       import LiteralImaginaryUnit, LiteralString, Literal
 from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
@@ -2479,6 +2479,7 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
     def __new__(cls, lhs, rhs):
 
         if not isinstance(lhs, (
+            Literal,
             Variable,
             Symbol,
             IndexedVariable,
