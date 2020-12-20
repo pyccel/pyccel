@@ -32,6 +32,7 @@ from .basic          import PyccelAstNode
 
 __all__ = (
     'NumpyArrayClass',
+    'NumpyFuncionBase',
     'NumpyAbs',
     'NumpyFloor',
     # ---
@@ -105,6 +106,7 @@ def process_dtype(dtype):
 
     return dtype, precision
 
+#==============================================================================
 class NumpyNewArray(PyccelAstNode):
 
     #--------------------------------------------------------------------------
@@ -118,6 +120,10 @@ class NumpyNewArray(PyccelAstNode):
         if order not in ('C', 'F'):
             raise ValueError('unrecognized order = {}'.format(order))
         return order
+
+#==============================================================================
+class NumpyFunctionBase(PyccelAstNode):
+    pass
 
 #==============================================================================
 # TODO [YG, 18.02.2020]: accept Numpy array argument
@@ -173,7 +179,7 @@ class NumpyArray(Application, NumpyNewArray):
         return self._args[0]
 
 #==============================================================================
-class NumpySum(Function, PyccelAstNode):
+class NumpySum(Function, NumpyFunctionBase):
     """Represents a call to  numpy.sum for code generation.
 
     arg : list , tuple , PythonTuple, Tuple, PythonList, Variable
@@ -197,7 +203,7 @@ class NumpySum(Function, PyccelAstNode):
         return self._args[0]
 
 #==============================================================================
-class NumpyProduct(Function, PyccelAstNode):
+class NumpyProduct(Function, NumpyFunctionBase):
     """Represents a call to  numpy.prod for code generation.
 
     arg : list , tuple , PythonTuple, Tuple, PythonList, Variable
@@ -221,7 +227,7 @@ class NumpyProduct(Function, PyccelAstNode):
 
 
 #==============================================================================
-class NumpyMatmul(Application, PyccelAstNode):
+class NumpyMatmul(Application, NumpyFunctionBase):
     """Represents a call to numpy.matmul for code generation.
     arg : list , tuple , PythonTuple, Tuple, PythonList, Variable
     """
@@ -659,7 +665,7 @@ class NumpyZerosLike(Application):
 
 #=======================================================================================
 
-class NumpyNorm(Function, PyccelAstNode):
+class NumpyNorm(Function, NumpyFunctionBase):
     """ Represents call to numpy.norm"""
 
     is_zero = False
@@ -711,7 +717,7 @@ class Sqrt(PyccelPow):
 # NOTE: since we are subclassing sympy.Function, we need to use a name ending
 #       with "Base", otherwise the Sympy's printer is going to skip this class.
 #==============================================================================
-class NumpyUfuncBase(Function, PyccelAstNode):
+class NumpyUfuncBase(Function, NumpyFunctionBase):
     """Base class for Numpy's universal functions."""
 
 #------------------------------------------------------------------------------
