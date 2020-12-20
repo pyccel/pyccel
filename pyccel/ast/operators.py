@@ -109,7 +109,8 @@ class PyccelOperator(Expr, PyccelAstNode):
             return
         self._set_dtype()
         self._set_shape_rank()
-        if self._rank > 1:
+        # rank is None for lambda functions
+        if self._rank is not None and self._rank > 1:
             self._set_order()
 
     @property
