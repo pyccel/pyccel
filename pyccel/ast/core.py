@@ -2478,32 +2478,33 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
 
     def __new__(cls, lhs, rhs):
 
-        if not isinstance(lhs, (
-            Literal,
-            Variable,
-            Symbol,
-            IndexedVariable,
-            IndexedElement,
-            IndexedBase,
-            Indexed,
-            Function,
-            DottedVariable,
-            )):
-            raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
-                            str(type(lhs))))
+        if self.stage != 'syntactic':
+            if not isinstance(lhs, (
+                Literal,
+                Variable,
+                Symbol,
+                IndexedVariable,
+                IndexedElement,
+                IndexedBase,
+                Indexed,
+                Function,
+                DottedVariable,
+                )):
+                raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
+                                str(type(lhs))))
 
-        if not isinstance(rhs, (
-            Variable,
-            Symbol,
-            IndexedVariable,
-            IndexedElement,
-            IndexedBase,
-            Indexed,
-            FunctionCall,
-            Function,
-            )):
-            raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
-                            str(type(rhs))))
+            if not isinstance(rhs, (
+                Variable,
+                Symbol,
+                IndexedVariable,
+                IndexedElement,
+                IndexedBase,
+                Indexed,
+                FunctionCall,
+                Function,
+                )):
+                raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
+                                str(type(rhs))))
 
         return Basic.__new__(cls, lhs, rhs)
 
