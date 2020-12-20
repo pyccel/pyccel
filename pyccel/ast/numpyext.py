@@ -123,7 +123,6 @@ class NumpyNewArray(PyccelAstNode):
 # TODO [YG, 18.02.2020]: accept Numpy array argument
 # TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
 # TODO [YG, 22.05.2020]: move dtype & prec processing to __init__
-# TODO [YG, 22.05.2020]: change properties to read _dtype, _prec, _rank, etc...
 class NumpyArray(Application, NumpyNewArray):
     """
     Represents a call to  numpy.array for code generation.
