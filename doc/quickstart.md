@@ -3,9 +3,9 @@ Welcome to
 
  ## What is Pyccel
 
-  - static compiler for Python 3, using Fortran or C as backend language.
-  - started as small open-source project in 2018 at IPP Garching.
-  - public repository is now hosted on GitHub, freely available for download.
+-   static compiler for Python 3, using Fortran or C as backend language.
+-   started as small open-source project in 2018 at IPP Garching.
+-   public repository is now hosted on GitHub, freely available for download.
 
  ## Python’s objects, variables, and garbage collection
 
