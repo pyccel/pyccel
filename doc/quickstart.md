@@ -27,6 +27,7 @@ For more details about Python object, see [this](https://docs.python.org/3/tutor
 -   is created with an assignment operation `x = expr`:
      1.   if the variable `x` already exists, the interpreter reduces the reference count of its object
      2.   a new variable `x` is created, which references the value of expr.
+
 -   can be destroyed with the command del `x`.
 
 For more details about Python variable, see [this](https://www.w3schools.com/python/python_variables.asp).
