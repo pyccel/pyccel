@@ -355,7 +355,7 @@ def expand_to_loops(block, language_has_vectors = False, index = 0):
     for i, line in enumerate(block):
         if isinstance(line, Assign) and \
                 not isinstance(line.rhs, array_creator_types) and \
-                not ( not isinstance(line, AugAssign) and (line.rhs, Variable)) and \
+                not ( not isinstance(line, AugAssign) and isinstance(line.rhs, Variable)) and \
                 not ( isinstance(line.rhs, IfTernaryOperator) and \
                 (isinstance(line.rhs.value_true, array_creator_types) or \
                 isinstance(line.rhs.value_false, array_creator_types)) ):
