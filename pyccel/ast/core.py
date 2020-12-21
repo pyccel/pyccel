@@ -52,7 +52,8 @@ from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
-from .operators import PyccelMinus, PyccelMul, PyccelDiv, PyccelOperator
+from .operators import (PyccelMinus, PyccelMul, PyccelDiv, PyccelOperator,
+                        PyccelUnarySub, PyccelAdd)
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -4894,6 +4895,11 @@ class IndexedElement(Expr, PyccelAstNode):
                     start = a.start
                     stop   = a.stop
                     stop   = s if stop is None else stop
+                    if isinstance(start, PyccelUnarySub):
+                        start = PyccelAdd(s, start)
+                    if isinstance(stop, PyccelUnarySub):
+                        stop = PyccelAdd(s, stop)
+
                     if start is None:
                         new_shape.append(stop)
                     else:
