@@ -56,14 +56,15 @@ Welcome to
    
     python code:
      file_name.py
-   ```
+     
+    ```
     from pyccel.decorators import types
 
     @types('int', results='int')
     def factorial(n):
         if n == 0: return 1
         else : return n * factorial(n - 1)
-   ```
+    ```
    C code:
     file_name.c
    
