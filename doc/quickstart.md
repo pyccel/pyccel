@@ -66,7 +66,7 @@ Welcome to
         else : return n * factorial(n - 1)
     ```
    C code:
-    file_name.c
+     file_name.c
    
     ```
     #include <test.h>
@@ -91,7 +91,7 @@ Welcome to
     /*........................................*/
     ```
    Fortran code:
-    file_name.f90
+     file_name.f90
     
     ```
     use ISO_C_BINDING
