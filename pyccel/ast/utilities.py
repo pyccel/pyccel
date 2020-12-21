@@ -15,10 +15,11 @@ import pyccel.decorators as pyccel_decorators
 from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors
 
+from .basic    import PyccelAstNode
 from .core     import (AsName, Import, FunctionDef, Constant,
                        Variable, IndexedVariable, ValuedVariable,
                        Assign, FunctionCall, IndexedElement,
-                       Slice, For, AugAssign, IfTernaryOperator)
+                       Slice, For, AugAssign, IfTernaryOperator, Nil)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange, PythonList, PythonTuple)
@@ -257,6 +258,8 @@ def insert_index(expr, pos, index_var, language_has_vectors):
                 index_var = PyccelAdd(index_var, indices[pos].start)
         indices[pos] = index_var
         return base[indices]
+    elif isinstance(expr, PyccelAstNode) and expr.rank==0:
+        return expr
     elif isinstance(expr, AugAssign):
         cls = type(expr)
         lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
@@ -292,11 +295,6 @@ def insert_index(expr, pos, index_var, language_has_vectors):
                         value_false is expr.value_false )
         if changed or not language_has_vectors:
             return IfTernaryOperator(cond, value_true, value_false)
-        else:
-            return expr
-        if len(shapes)!=1 or not language_has_vectors:
-            args = [insert_index(a, pos - expr.rank + a.rank, index_var, False) for a in expr.args]
-            return cls(*args)
         else:
             return expr
     elif isinstance(expr, For):
@@ -346,16 +344,18 @@ def expand_to_loops(block, language_has_vectors = False, index = 0):
     before_loop = []
     loop_stmts  = []
     after_loop  = []
+    array_creator_types = (NumpyNewArray, FunctionCall,
+                           NumpyFunctionBase, MathFunctionBase,
+                           PythonList, PythonTuple, Nil)
     for i, line in enumerate(block):
         if isinstance(line, Assign) and \
-                not isinstance(line.rhs, (NumpyNewArray,
-                                          FunctionCall,
-                                          NumpyFunctionBase,
-                                          MathFunctionBase,
-                                          PythonList,
-                                          PythonTuple)):
+                not isinstance(line.rhs, array_creator_types) and \
+                not ( isinstance(line.rhs, IfTernaryOperator) and \
+                (isinstance(line.rhs.value_true, array_creator_types) or \
+                isinstance(line.rhs.value_false, array_creator_types)) ):
             lhs = line.lhs
             rhs = line.rhs
+
             if lhs.rank == max_rank and lhs.shape[index] == current_block_length:
                 loop_stmts.append(line)
                 continue
