@@ -1,16 +1,17 @@
 # Pyccel
 
- ## What is Pyccel?
+ ## What is Pyccel
 
-- static compiler for Python 3, using Fortran or C as backend language.
-- started as small open-source project in 2018 at IPP Garching.
-- public repository is now hosted on GitHub, freely available for download.
+  - static compiler for Python 3, using Fortran or C as backend language.
+  - started as small open-source project in 2018 at IPP Garching.
+  - public repository is now hosted on GitHub, freely available for download.
 
 ## Python’s objects, variables, and garbage collection
 
- Python is an **interpreted** language, **dynamically typed** and **garbage-collected**.
+ Python is an **interpreter** language, **dynamically typed** and **garbage-collected**.
 
  ###### Python object:
+
 - is created by the Python interpreter when `object.__new__()` is invoked (e.g. as a result of an expression).
 - can be either mutable or immutable, but its type never changes.
 - resides in memory and has a **reference count**.
@@ -22,19 +23,19 @@ For more details about Python object, see [this](https://docs.python.org/3/tutor
  ###### Python variable:
 - is a reference to a Python object in memory.
 - is created with an assignment operation `x = expr`:
-  1. if the variable `x` already exists, the interpreted reduces the reference count of its object
+  1. if the variable `x` already exists, the interpreter reduces the reference count of its object
   2. a new variable `x` is created, which references the value of expr.
 can be destroyed with the command del `x`.
 
 For more details about Python variable, see [this](https://www.w3schools.com/python/python_variables.asp).
 
-## Static typed languages
+ ## Static typed languages
 
 A language is statically-typed if the type of a variable is known at compile-time instead of at run-time. Common examples of statically-typed languages include Java, C, C++, FORTRAN, Pascal and Scala. See [this](https://en.wikipedia.org/wiki/Type_system#:~:text=In%20programming%20languages%2C%20a%20type,%2C%20expressions%2C%20functions%20or%20modules.) and [this](https://android.jlelse.eu/magic-lies-here-statically-typed-vs-dynamically-typed-languages-d151c7f95e2b#:~:text=Static%20typed%20languages,%2C%20FORTRAN%2C%20Pascal%20and%20Scala.) for more details.
 
-## Installation (see [README](https://github.com/pyccel/pyccel/blob/master/README.rst) file)
+ ## Installation (see [README](https://github.com/pyccel/pyccel/blob/master/README.rst) file)
 
-## Command line usage
+ ## Command line usage
 - Open a terminal app, iterm or terminal for MacOs, terminal for Linux. 
 - After the installation, type `pyccel`, the usage should be shown, then all good.
 - Create a Python file that contains simple lines of code to see what will happen.
