@@ -1359,18 +1359,18 @@ class FCodePrinter(CodePrinter):
     def _print_LiteralString(self, expr):
         sp_chars = ['\a', '\b', '\f', '\r', '\t', '\v', "'", '\n']
         sub_str = ''
-        formatted_str = "''"
+        formatted_str = []
         for c in expr.arg:
             if c in sp_chars:
                 if sub_str != '':
-                    formatted_str += " // '{}'".format(sub_str)
+                    formatted_str.append("'{}'".format(sub_str))
                     sub_str = ''
-                formatted_str += ' // ACHAR({})'.format(ord(c))
+                formatted_str.append('ACHAR({})'.format(ord(c)))
             else:
                 sub_str += c
         if sub_str != '':
-            formatted_str += " // '{}'".format(sub_str)
-        return formatted_str
+            formatted_str.append("'{}'".format(sub_str))
+        return ' // '.join(formatted_str)
 
     def _print_Interface(self, expr):
         # ... we don't print 'hidden' functions
