@@ -273,12 +273,18 @@ def insert_index(expr, pos, index_var, language_has_vectors):
             return expr
     elif isinstance(expr, Assign):
         cls = type(expr)
-        lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
-        rhs = insert_index(expr.rhs, pos, index_var, language_has_vectors)
+        if expr.lhs.rank > expr.rhs.rank and pos < expr.lhs.rank - expr.rhs.rank:
+            lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
+        else:
+            lhs = expr.lhs
 
-        changed = rhs is not expr.rhs and not isinstance(rhs, (Variable, IndexedElement))
+        rhs = insert_index(expr.rhs, pos, index_var, language_has_vectors) \
+                if not isinstance(expr.rhs, (Variable, IndexedElement)) else expr.rhs
 
-        if changed or not language_has_vectors:
+        if lhs is not expr.lhs:
+            return cls(lhs, rhs, expr.status, expr.like)
+        elif rhs is not expr.rhs or not language_has_vectors:
+            lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
             return cls(lhs, rhs, expr.status, expr.like)
         else:
             return expr
@@ -386,11 +392,11 @@ def expand_to_loops(block, language_has_vectors = False, index = 0):
 
         unpacked_for_loop_body = [insert_index(l,index,index_var, language_has_vectors) for l in for_loop_body]
 
-        if any([u is not p for u,p in zip(unpacked_for_loop_body, for_loop_body)]):
+        if any([u is not p for u,p in zip(unpacked_for_loop_body, for_loop_body)]) and current_block_length != 1:
             for_block = [For(index_var, PythonRange(0,current_block_length), unpacked_for_loop_body)]
             new_vars += [index_var]
         else:
-            for_block = for_loop_body
+            for_block = unpacked_for_loop_body
         return before_loop + for_block + after_loop, new_vars
     else:
 
