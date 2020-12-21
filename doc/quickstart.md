@@ -11,7 +11,7 @@ Welcome to
 
  Python is an **interpreter** language, **dynamically typed** and **garbage-collected**.
 
- ###### Python object:
+ ### Python object
 
     - is created by the Python interpreter when `object.__new__()` is invoked (e.g. as a result of an expression).
     - can be either mutable or immutable, but its type never changes.
@@ -21,7 +21,7 @@ Welcome to
 
     For more details about Python object, see [this](https://docs.python.org/3/tutorial/classes.html).
 
- ###### Python variable:
+ ### Python variable
     - is a reference to a Python object in memory.
     - is created with an assignment operation `x = expr`:
       1. if the variable `x` already exists, the interpreter reduces the reference count of its object
