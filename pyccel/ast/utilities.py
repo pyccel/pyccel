@@ -263,10 +263,11 @@ def insert_index(expr, pos, index_var, language_has_vectors):
         return expr
     elif isinstance(expr, AugAssign):
         cls = type(expr)
-        lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
-        rhs = insert_index(expr.rhs, pos, index_var, language_has_vectors)
-
-        if rhs is not expr.rhs or not language_has_vectors:
+        shapes = [a.base.shape if isinstance(a, IndexedElement) else a.shape for a in (expr.lhs, expr.rhs) if a.shape != ()]
+        shapes = set([tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes])
+        if len(shapes)!=1 or not language_has_vectors:
+            lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
+            rhs = insert_index(expr.rhs, pos - expr.lhs.rank + expr.rhs.rank, index_var, language_has_vectors)
             return cls(lhs, expr.op, rhs, expr.status, expr.like)
         else:
             return expr
@@ -281,8 +282,8 @@ def insert_index(expr, pos, index_var, language_has_vectors):
             return expr
     elif isinstance(expr, PyccelOperator):
         cls = type(expr)
-        shapes = [a.base.shape if isinstance(a, IndexedElement) else a.shape for a in expr.args]
-        shapes = set([tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes])
+        shapes = [a.base.shape if isinstance(a, IndexedElement) else a.shape for a in expr.args if a.shape != ()]
+        shapes = set(tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes)
         if len(shapes)!=1 or not language_has_vectors:
             args = [insert_index(a, pos - expr.rank + a.rank, index_var, False) for a in expr.args]
             return cls(*args)
@@ -301,7 +302,10 @@ def insert_index(expr, pos, index_var, language_has_vectors):
             return expr
     elif isinstance(expr, For):
         body = [insert_index(l,pos,index_var, language_has_vectors) for l in expr.body.body]
-        return For(expr.target, expr.iterable, body, expr.local_vars)
+        if any(b is not ob for b,ob in zip(body, expr.body.body)):
+            return For(expr.target, expr.iterable, body, expr.local_vars)
+        else:
+            return expr
     else:
         raise NotImplementedError("Expansion not implemented for type : {}".format(type(expr)))
 
@@ -348,10 +352,11 @@ def expand_to_loops(block, language_has_vectors = False, index = 0):
     after_loop  = []
     array_creator_types = (NumpyNewArray, FunctionCall,
                            NumpyFunctionBase, MathFunctionBase,
-                           PythonList, PythonTuple, Nil, Dlist, Variable)
+                           PythonList, PythonTuple, Nil, Dlist)
     for i, line in enumerate(block):
         if isinstance(line, Assign) and \
                 not isinstance(line.rhs, array_creator_types) and \
+                not ( not isinstance(line, AugAssign) and (line.rhs, Variable)) and \
                 not ( isinstance(line.rhs, IfTernaryOperator) and \
                 (isinstance(line.rhs.value_true, array_creator_types) or \
                 isinstance(line.rhs.value_false, array_creator_types)) ):
