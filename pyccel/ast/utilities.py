@@ -243,7 +243,6 @@ def insert_index(expr, pos, index_var, language_has_vectors):
             index_var = LiteralInteger(0)
         var = IndexedVariable(expr)
         indexes = [Slice(None,None)]*pos + [index_var]+[Slice(None,None)]*(expr.rank-1-pos)
-        tmp = var[indexes]
         return var[indexes]
     elif isinstance(expr, IndexedElement):
         base = expr.base
@@ -264,7 +263,7 @@ def insert_index(expr, pos, index_var, language_has_vectors):
     elif isinstance(expr, AugAssign):
         cls = type(expr)
         shapes = [a.base.shape if isinstance(a, IndexedElement) else a.shape for a in (expr.lhs, expr.rhs) if a.shape != ()]
-        shapes = set([tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes])
+        shapes = set(tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes)
         if len(shapes)!=1 or not language_has_vectors:
             lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
             rhs = insert_index(expr.rhs, pos - expr.lhs.rank + expr.rhs.rank, index_var, language_has_vectors)
@@ -361,7 +360,6 @@ def expand_to_loops(block, language_has_vectors = False, index = 0):
                 (isinstance(line.rhs.value_true, array_creator_types) or \
                 isinstance(line.rhs.value_false, array_creator_types)) ):
             lhs = line.lhs
-            rhs = line.rhs
 
             if lhs.rank == max_rank and lhs.shape[index] == current_block_length:
                 loop_stmts.append(line)

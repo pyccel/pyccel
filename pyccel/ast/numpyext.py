@@ -32,7 +32,7 @@ from .basic          import PyccelAstNode
 
 __all__ = (
     'NumpyArrayClass',
-    'NumpyFuncionBase',
+    'NumpyFunctionBase',
     'NumpyAbs',
     'NumpyFloor',
     # ---
@@ -123,7 +123,7 @@ class NumpyNewArray(PyccelAstNode):
 
 #==============================================================================
 class NumpyFunctionBase(PyccelAstNode):
-    pass
+    """Abstract base class for the Numpy Functions"""
 
 #==============================================================================
 # TODO [YG, 18.02.2020]: accept Numpy array argument
