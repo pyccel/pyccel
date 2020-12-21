@@ -36,7 +36,6 @@ from pyccel.ast.core import Subroutine
 from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Variable,
-                             VariableAddress,
                              TupleVariable, For, Declare,
                              IndexedVariable, CodeBlock,
                              IndexedElement, Slice, Dlist,
@@ -535,9 +534,6 @@ class FCodePrinter(CodePrinter):
             return self._print_Variable(expr)
         else:
             return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
-
-    def _print_VariableAddress(self, expr):
-        return self._print(expr.variable)
 
     def _print_Constant(self, expr):
         val = LiteralFloat(expr.value)
@@ -1114,8 +1110,6 @@ class FCodePrinter(CodePrinter):
         code = ''
         lhs = expr.lhs
         rhs = expr.rhs
-        if isinstance(rhs, VariableAddress):
-            rhs = rhs.variable
 
         if isinstance(lhs, TupleVariable) and not lhs.is_homogeneous:
             if isinstance(rhs, (TupleVariable, PythonTuple)):
