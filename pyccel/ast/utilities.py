@@ -247,7 +247,8 @@ def insert_index(expr, pos, index_var, language_has_vectors):
     elif isinstance(expr, IndexedElement):
         base = expr.base
         indices = list(expr.indices)
-        assert(isinstance(indices[pos], Slice))
+        if not isinstance(indices[pos], Slice):
+            return expr
         if expr.base.shape[pos]==1:
             assert(indices[pos].start is None)
             index_var = LiteralInteger(0)
@@ -275,7 +276,9 @@ def insert_index(expr, pos, index_var, language_has_vectors):
         lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
         rhs = insert_index(expr.rhs, pos, index_var, language_has_vectors)
 
-        if rhs is not expr.rhs or not language_has_vectors:
+        changed = rhs is not expr.rhs and not isinstance(rhs, (Variable, IndexedElement))
+
+        if changed or not language_has_vectors:
             return cls(lhs, rhs, expr.status, expr.like)
         else:
             return expr
