@@ -55,6 +55,7 @@ __all__ = (
     'PyFloat_AsDouble',
     'Type_Check',
     'PyErr_SetString',
+    'C_Free',
 #------- CAST FUNCTIONS ------
     'pyint_to_bool',
     'bool_to_pyobj',
@@ -284,6 +285,15 @@ PyFloat_AsDouble = FunctionDef(name = 'PyFloat_AsDouble',
                         body = [],
                         arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
                         results   = [Variable(dtype=NativeReal(), name = 'r')])
+
+#-------------------------------------------------------------------
+#                           C functions
+#-------------------------------------------------------------------
+# call c free function for freeing allocated variables
+C_Free = FunctionDef(name      = 'free',
+                           body      = [],
+                           arguments = [Variable(dtype=NativeGeneric(), name = 'o', is_pointer=True)],
+                           results   = [])
 
 #-------------------------------------------------------------------
 #                      Numpy functions
@@ -565,8 +575,8 @@ def pyccelPyArrayObject_to_ndarray(cast_function_name):
                         Variable(dtype=NativeInteger(), name='length'))
     buffer_size = DottedVariable(cast_function_result,
                         Variable(dtype=NativeInteger(), name='buffer_size'))
-    is_slice    = DottedVariable(cast_function_result,
-                        Variable(dtype=NativeBool(), name='is_slice'))
+    is_view    = DottedVariable(cast_function_result,
+                        Variable(dtype=NativeBool(), name='is_view'))
 
     cast_function_body = [Assign(nd, FunctionCall(numpy_get_ndims, [cast_function_argument])),
                           Assign(raw_data, FunctionCall(numpy_get_data, [cast_function_argument])),
@@ -577,7 +587,7 @@ def pyccelPyArrayObject_to_ndarray(cast_function_name):
                           Assign(arr_type, FunctionCall(numpy_get_type, [cast_function_argument])),
                           Assign(length, FunctionCall(numpy_get_size, [cast_function_argument])),
                           Assign(buffer_size, FunctionCall(numpy_nbytes, [cast_function_argument])),
-                          Assign(is_slice, LiteralTrue()),
+                          Assign(is_view, LiteralTrue()),
                           Return([cast_function_result])]
 
     return FunctionDef(name      = cast_function_name,
