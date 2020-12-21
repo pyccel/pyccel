@@ -21,7 +21,7 @@ from .core     import (AsName, Import, FunctionDef, Constant,
                        Slice, For, AugAssign)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
-                            PythonRange)
+                            PythonRange, PythonList, PythonTuple)
 from .itertoolsext  import Product
 from .mathext       import math_functions, math_constants, MathFunctionBase
 from .literals      import LiteralString, LiteralInteger
@@ -332,7 +332,12 @@ def expand_to_loops(block, language_has_vectors = False, index = 0):
     after_loop  = []
     for i, line in enumerate(block):
         if isinstance(line, Assign) and \
-                not isinstance(line.rhs, (NumpyNewArray, FunctionCall, NumpyFunctionBase, MathFunctionBase)):
+                not isinstance(line.rhs, (NumpyNewArray,
+                                          FunctionCall,
+                                          NumpyFunctionBase,
+                                          MathFunctionBase,
+                                          PythonList,
+                                          PythonTuple)):
             lhs = line.lhs
             rhs = line.rhs
             if lhs.rank == max_rank and lhs.shape[index] == current_block_length:
