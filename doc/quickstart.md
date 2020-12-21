@@ -56,7 +56,7 @@ Welcome to
    
     python code:
      file_name.py
-     
+
     ```
     from pyccel.decorators import types
 
@@ -109,11 +109,11 @@ Welcome to
     integer(C_INT64_T), value :: n
 
     if (n == 0_C_INT64_T) then
-      Out_0001 = 1_C_INT64_T
-      return
+    Out_0001 = 1_C_INT64_T
+    return
     else if (.True._C_BOOL) then
-      Out_0001 = n * factorial(n - 1_C_INT64_T)
-      return
+    Out_0001 = n * factorial(n - 1_C_INT64_T)
+    return
     end if
 
     end function factorial
@@ -125,17 +125,17 @@ Welcome to
    
    file_name.py:
    
-   ```
-   from numpy import array
-   from numpy import empty
-   from numpy import ones
+    ```
+    from numpy import array
+    from numpy import empty
+    from numpy import ones
 
-   x = array([1, 2, 3])
-   y = empty((10, 10))
+    x = array([1, 2, 3])
+    y = empty((10, 10))
 
-   a = ones(3)
-   b = ones((4,3))
-   ```
+    a = ones(3)
+    b = ones((4,3))
+    ```
    file_name.c:
    
    ```
