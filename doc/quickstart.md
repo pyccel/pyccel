@@ -9,7 +9,7 @@ Welcome to
 
 ## Python’s objects, variables, and garbage collection
 
- Python is an **interpreted** language, **dynamically typed** and **garbage-collected**.
+ Python is an **interpreter** language, **dynamically typed** and **garbage-collected**.
 
  ###### Python object:
 - is created by the Python interpreter when `object.__new__()` is invoked (e.g. as a result of an expression).
@@ -25,7 +25,7 @@ For more details about Python object, see [this](https://docs.python.org/3/tutor
 - is created with an assignment operation `x = expr`:
   1. if the variable `x` already exists, the interpreted reduces the reference count of its object
   2. a new variable `x` is created, which references the value of expr.
-can be destroyed with the command del `x`.
+- can be destroyed with the command del `x`.
 
 For more details about Python variable, see [this](https://www.w3schools.com/python/python_variables.asp).
 
@@ -46,6 +46,12 @@ A language is statically-typed if the type of a variable is known at compile-
   4. No problems ?, So you should discover `__pyccel__` the directory that contains your generated code and some other stuff.
 
 E.g (using `@types` decorator and a recursive function with a typed return):
+   To specify the types of the function arguments and its return, we need to import the `@types` decorator from pyccel.decorators (as you can see in the first line) and then specify the types for each function using this format:
+   - for the decorator `@types('1stArgType', '2ndArgType', 'NthArgType', results='return_type')`
+   to declare arrays `@types('1stArgType[:]', '2ndArgType[:,:]', 'NthArgType[dimensions]', results='return_type')`, the expresion `[:]` means that the array has 1 dimension and 2 dimensions with `[:,:]` , So the number of dimensions of an array related with how many colons you put in the square brackets sparated with a comma, `arr[:,:,:]` means that the array `arr` has 3 dimensions and so on.
+   - for the function `def fun('1stArgType', '2ndArgType', 'NthArgType')`.
+   
+   In `@types` decorator, pyccel support the following data types: real,double, float, pythonfloat,float32, float64, pythoncomplex, complex, complex64, complex128, int8, int16, int32, int64, int, pythonint, integer, bool, pythonbool.
    
    python code:
     file_name.py
