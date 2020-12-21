@@ -25,7 +25,7 @@ from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange, PythonList, PythonTuple)
 from .itertoolsext  import Product
 from .mathext       import math_functions, math_constants, MathFunctionBase
-from .literals      import LiteralString, LiteralInteger
+from .literals      import LiteralString, LiteralInteger, Literal
 
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants,
@@ -280,7 +280,8 @@ def insert_index(expr, pos, index_var, language_has_vectors):
             return expr
     elif isinstance(expr, PyccelOperator):
         cls = type(expr)
-        shapes = set([a.base.shape if isinstance(a, IndexedElement) else a.shape for a in expr.args])
+        shapes = [a.base.shape if isinstance(a, IndexedElement) else a.shape for a in expr.args]
+        shapes = set([tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes])
         if len(shapes)!=1 or not language_has_vectors:
             args = [insert_index(a, pos - expr.rank + a.rank, index_var, False) for a in expr.args]
             return cls(*args)
