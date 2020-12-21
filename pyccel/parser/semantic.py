@@ -799,6 +799,11 @@ class SemanticParser(BasicParser):
 
     def _visit_PythonList(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
+        dtypes = set(i.dtype for i in ls)
+        if len(dtypes) != 1:
+            errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal')
         return PythonList(*ls, sympify=False)
 
     def _visit_ValuedArgument(self, expr, **settings):
