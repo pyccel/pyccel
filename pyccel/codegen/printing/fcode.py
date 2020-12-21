@@ -499,8 +499,7 @@ class FCodePrinter(CodePrinter):
     def _print_Tuple(self, expr):
         shape = list(reversed(asarray(expr).shape))
         if len(shape)>1:
-            arg = functools.reduce(operator.concat, expr)
-            elements = ', '.join(self._print(i) for i in arg)
+            elements = ', '.join(self._print(i) for i in expr)
             return 'reshape(['+ elements + '], '+ self._print(Tuple(*shape)) + ')'
         fs = ', '.join(self._print(f) for f in expr)
         return '[{0}]'.format(fs)
@@ -688,17 +687,8 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyArray(self, expr):
         """Fortran print."""
 
-        # Always transpose indices because Numpy initial values are given with
-        # row-major ordering, while Fortran initial values are column-major
-        shape = expr.shape[::-1]
-
         # Construct right-hand-side code
-        if expr.rank > 1:
-            arg = functools.reduce(operator.concat, expr.arg)
-            rhs_code = 'reshape({array}, {shape})'.format(
-                    array=self._print(arg), shape=self._print(Tuple(*shape)))
-        else:
-            rhs_code = self._print(expr.arg)
+        rhs_code = self._print(expr.arg)
 
         # If Numpy array is stored with column-major ordering, transpose values
         if expr.order == 'F' and expr.rank > 1:
