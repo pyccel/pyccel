@@ -18,7 +18,7 @@ from pyccel.errors.errors import Errors
 from .core     import (AsName, Import, FunctionDef, Constant,
                        Variable, IndexedVariable, ValuedVariable,
                        Assign, FunctionCall, IndexedElement,
-                       Slice, For, AugAssign)
+                       Slice, For, AugAssign, IfTernaryOperator)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange, PythonList, PythonTuple)
@@ -278,6 +278,22 @@ def insert_index(expr, pos, index_var, language_has_vectors):
     elif isinstance(expr, PyccelOperator):
         cls = type(expr)
         shapes = set([a.base.shape if isinstance(a, IndexedElement) else a.shape for a in expr.args])
+        if len(shapes)!=1 or not language_has_vectors:
+            args = [insert_index(a, pos - expr.rank + a.rank, index_var, False) for a in expr.args]
+            return cls(*args)
+        else:
+            return expr
+    elif isinstance(expr, IfTernaryOperator):
+        cond        = insert_index(expr.cond       , pos, index_var, language_has_vectors)
+        value_true  = insert_index(expr.value_true , pos, index_var, language_has_vectors)
+        value_false = insert_index(expr.value_false, pos, index_var, language_has_vectors)
+        changed = not ( cond is expr.cond and
+                        value_true is expr.value_true and
+                        value_false is expr.value_false )
+        if changed or not language_has_vectors:
+            return IfTernaryOperator(cond, value_true, value_false)
+        else:
+            return expr
         if len(shapes)!=1 or not language_has_vectors:
             args = [insert_index(a, pos - expr.rank + a.rank, index_var, False) for a in expr.args]
             return cls(*args)
