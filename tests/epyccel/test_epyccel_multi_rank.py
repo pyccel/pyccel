@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import numpy as np
-from numpy.random import rand
+from numpy.random import rand, randint
 
 from pyccel.epyccel import epyccel
 from modules        import multi_rank
@@ -82,3 +82,41 @@ def test_mul_by_vector_dim_1_F_F():
     f2(x2)
 
     assert np.array_equal( x1, x2 )
+
+def test_multi_dim_sum():
+    f1 = multi_rank.multi_dim_sum
+    f2 = epyccel( f1 )
+
+    dims = [randint(10) for _ in range(3)]
+    x1 = np.array(rand(*dims)*10, dtype=int)
+    y1 = np.copy(x1)
+    x2 = np.array(rand(*dims[1:])*10, dtype=int)
+    y2 = np.copy(x2)
+    x3 = np.array(rand(dims[2])*10, dtype=int)
+    y3 = np.copy(x3)
+    x4 = int(rand()*10)
+    y4 = x4
+
+    pyccel_result = np.empty(dims)
+    python_result = np.empty(dims)
+
+    f1(pyccel_result, x1, x2, x3, x4)
+    f1(python_result, y1, y2, y3, y4)
+
+    assert np.array_equal( pyccel_result, python_result )
+
+def test_multi_dim_sum_ones():
+    f1 = multi_rank.multi_dim_sum_ones
+    f2 = epyccel( f1 )
+
+    dims = [randint(10) for _ in range(3)]
+    x1 = np.array(rand(*dims)*10, dtype=int)
+    y1 = np.copy(x1)
+
+    pyccel_result = np.empty(dims)
+    python_result = np.empty(dims)
+
+    f1(pyccel_result, x1)
+    f1(python_result, y1)
+
+    assert np.array_equal( pyccel_result, python_result )
