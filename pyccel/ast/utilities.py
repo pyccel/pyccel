@@ -264,9 +264,9 @@ def insert_index(expr, pos, index_var, language_has_vectors):
         cls = type(expr)
         shapes = [a.base.shape if isinstance(a, IndexedElement) else a.shape for a in (expr.lhs, expr.rhs) if a.shape != ()]
         shapes = set(tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes)
-        if len(shapes)!=1 or not language_has_vectors:
+        rhs = insert_index(expr.rhs, pos - expr.lhs.rank + expr.rhs.rank, index_var, language_has_vectors)
+        if rhs is not expr.rhs or len(shapes)!=1 or not language_has_vectors:
             lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
-            rhs = insert_index(expr.rhs, pos - expr.lhs.rank + expr.rhs.rank, index_var, language_has_vectors)
             return cls(lhs, expr.op, rhs, expr.status, expr.like)
         else:
             return expr
@@ -283,8 +283,8 @@ def insert_index(expr, pos, index_var, language_has_vectors):
         cls = type(expr)
         shapes = [a.base.shape if isinstance(a, IndexedElement) else a.shape for a in expr.args if a.shape != ()]
         shapes = set(tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes)
-        if len(shapes)!=1 or not language_has_vectors:
-            args = [insert_index(a, pos - expr.rank + a.rank, index_var, False) for a in expr.args]
+        args = [insert_index(a, pos - expr.rank + a.rank, index_var, False) for a in expr.args]
+        if any(a is not na for a, na in zip(expr.args, args)) or len(shapes)!=1 or not language_has_vectors:
             return cls(*args)
         else:
             return expr
