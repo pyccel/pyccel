@@ -19,7 +19,8 @@ from .basic    import PyccelAstNode
 from .core     import (AsName, Import, FunctionDef, Constant,
                        Variable, IndexedVariable, ValuedVariable,
                        Assign, FunctionCall, IndexedElement,
-                       Slice, For, AugAssign, IfTernaryOperator, Nil)
+                       Slice, For, AugAssign, IfTernaryOperator,
+                       Nil, Dlist)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange, PythonList, PythonTuple)
@@ -347,7 +348,7 @@ def expand_to_loops(block, language_has_vectors = False, index = 0):
     after_loop  = []
     array_creator_types = (NumpyNewArray, FunctionCall,
                            NumpyFunctionBase, MathFunctionBase,
-                           PythonList, PythonTuple, Nil)
+                           PythonList, PythonTuple, Nil, Dlist, Variable)
     for i, line in enumerate(block):
         if isinstance(line, Assign) and \
                 not isinstance(line.rhs, array_creator_types) and \
