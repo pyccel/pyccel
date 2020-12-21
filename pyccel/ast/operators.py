@@ -8,6 +8,7 @@ These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the dtype, precision, rank, shape
 """
+
 from sympy.core.expr          import Expr
 
 from ..errors.errors import Errors, PyccelSemanticError
@@ -56,6 +57,8 @@ def broadcast(shape_1, shape_2):
     """ This function broadcast two shapes using numpy broadcasting rules """
     from .core      import PyccelArraySize
 
+    from pyccel.ast.sympy_helper import pyccel_to_sympy
+
     a = len(shape_1)
     b = len(shape_2)
     if a>b:
@@ -70,11 +73,11 @@ def broadcast(shape_1, shape_2):
 
     new_shape = []
     for e1,e2 in zip(new_shape_1, new_shape_2):
-        if e1 == e2:
+        if pyccel_to_sympy(e1, {}, set()) == pyccel_to_sympy(e2, {}, set()):
             new_shape.append(e1)
-        elif e1 == 1:
+        elif pyccel_to_sympy(e1, {}, set()) == 1:
             new_shape.append(e2)
-        elif e2 == 1:
+        elif pyccel_to_sympy(e2, {}, set()) == 1:
             new_shape.append(e1)
         elif isinstance(e1, PyccelArraySize) and isinstance(e2, PyccelArraySize):
             new_shape.append(e1)
