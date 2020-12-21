@@ -398,3 +398,9 @@ def test_mix_complex_array():
     f2(x2, a)
 
     assert np.array_equal(x1, x2)
+
+def test_dup_header(language):
+    f1 = epyccel(mod2.dup_header , language = language)
+    f2 = mod2.dup_header
+
+    assert f1(0) == f2(0)
