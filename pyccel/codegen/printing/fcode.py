@@ -603,7 +603,11 @@ class FCodePrinter(CodePrinter):
     def _print_PythonLen(self, expr):
         var = expr.arg
         idx = 1 if var.order == 'F' else var.rank
-        return 'size({},{})'.format(self._print(var), self._print(idx))
+        dtype = var.dtype
+        if dtype is NativeString():
+            return 'len({})'.format(self._print(var))
+        else:
+            return 'size({},{})'.format(self._print(var), self._print(idx))
 
     def _print_PythonSum(self, expr):
         args = [self._print(arg) for arg in expr.args]
