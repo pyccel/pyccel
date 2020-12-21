@@ -19,7 +19,7 @@ from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, Funct
 from pyccel.ast.core import If, Nil, Return, FunctionCall
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, IfTernaryOperator
-from pyccel.ast.core import AugAssign
+from pyccel.ast.core import AugAssign, DottedVariable
 
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelAnd, PyccelNe, PyccelOr, PyccelAssociativeParenthesis
 
@@ -29,7 +29,7 @@ from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildVal
 from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
 from pyccel.ast.cwrapper import Py_None, flags_registry
 from pyccel.ast.cwrapper import PyErr_SetString, PythonType_Check
-from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
+from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF, C_Free
 from pyccel.ast.cwrapper import PyccelPyArrayObject, NumpyType_Check
 from pyccel.ast.cwrapper import numpy_get_ndims, numpy_get_data, numpy_get_dim
 from pyccel.ast.cwrapper import numpy_get_type, numpy_dtype_registry
@@ -883,6 +883,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Call free function for python type
         wrapper_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
+        # Call free function for C type
+        wrapper_body += [FunctionCall(C_Free, [DottedVariable(i, Variable(dtype=NativeInteger(), name='strides', allocatable=True))]) for i in expr.arguments if i.allocatable]
         self._to_free_PyObject_list.clear()
         #Return
         wrapper_body.append(Return(wrapper_results))
