@@ -606,6 +606,8 @@ class FCodePrinter(CodePrinter):
         dtype = var.dtype
         if dtype is NativeString():
             return 'len({})'.format(self._print(var))
+        elif var.rank == 1:
+            return 'size({})'.format(self._print(var))
         else:
             return 'size({},{})'.format(self._print(var), self._print(idx))
 
