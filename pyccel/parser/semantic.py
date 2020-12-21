@@ -1060,6 +1060,11 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=True)
 
+        if not hasattr(first, 'cls_base') or first.cls_base is None:
+            errors.report('Attribute {} not found'.format(rhs_name),
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal', blocker=True)
+
         if first.cls_base:
             attr_name = [i.name for i in first.cls_base.attributes]
 
