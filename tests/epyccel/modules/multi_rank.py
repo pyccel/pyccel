@@ -47,3 +47,12 @@ def multi_dim_sum_ones(result, a):
     c[:,:,:] = a[0,0]
     d = a[0,0,0]
     result[:,:,:] = a + b + c + d
+
+@types('int[:,:]','int[:]')
+def multi_expression(a,b):
+    import numpy as np
+    a[:] *= b
+    a[:] *= 2
+    b[:] += 4
+    a[:] -= b
+    a += np.sum(b)
