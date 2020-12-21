@@ -208,7 +208,7 @@ t_ndarray array_slicing(t_ndarray arr, ...)
     {
         slice = va_arg(va, t_slice);
         view.shape[i] = (slice.end - slice.start + (slice.step - 1)) / slice.step; // we need to round up the shape
-        start += slice.start * arr.strides[i];
+        start += (slice.step > 0) ? slice.start * arr.strides[i] : (slice.start - 1) * arr.strides[i];
         view.strides[i] *= slice.step;
     }
     va_end(va);

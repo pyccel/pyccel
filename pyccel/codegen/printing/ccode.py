@@ -674,7 +674,7 @@ class CCodePrinter(CodePrinter):
                         inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArraySize(base, i),
                             allow_negative_indexes)
                 inds = [self._print(i) for i in inds]
-                return "array_slicing(%s, %s)" % (base_name, ", ".join(inds))
+                return "array_slicing(&%s, %s)" % (base_name, ", ".join(inds))
             inds = [self._print(i) for i in inds]
         else:
             raise NotImplementedError(expr)
