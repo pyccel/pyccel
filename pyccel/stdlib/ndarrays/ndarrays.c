@@ -174,14 +174,14 @@ t_slice new_slice(int32_t start, int32_t end, int32_t step)
     return (slice_d);
 }
 
-t_ndarray array_slicing(t_ndarray p, ...)
+t_ndarray array_slicing(t_ndarray p, int n, ...)
 {
     t_ndarray slice;
     va_list  va;
     t_slice slice_data;
     int32_t start = 0;
 
-    slice.nd = p.nd;
+    slice.nd = n;
     slice.type = p.type;
     slice.type_size = p.type_size;
     slice.shape = malloc(sizeof(int32_t) * p.nd);

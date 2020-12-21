@@ -89,7 +89,7 @@ void        _array_fill_cdouble(double complex c, t_ndarray arr);
                 /* creating a Slice object */
 t_slice     new_slice(int32_t start, int32_t end, int32_t step);
                 /* creating an array view */
-t_ndarray   array_slicing(t_ndarray p, ...);
+t_ndarray   array_slicing(t_ndarray p, int n, ...);
 
 /* free */
 int32_t         free_array(t_ndarray dump);
