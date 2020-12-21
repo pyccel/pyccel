@@ -58,147 +58,148 @@ typed languages include Java, C, C++, FORTRAN, Pascal and Scala. See [this](http
   python code:
 
   file_name.py
+  ```python
+  from pyccel.decorators import types
 
-    from pyccel.decorators import types
-
-    @types('int', results='int')
-    def factorial(n):
-        if n == 0: return 1
-        else : return n * factorial(n - 1)
+  @types('int', results='int')
+  def factorial(n):
+      if n == 0: return 1
+      else : return n * factorial(n - 1)
+   ```  
    C code:
+   
    file_name.c
    
+   ```c
+   #include <test.h>
+   #include <stdlib.h>
+   #include <stdint.h>
 
-    #include <test.h>
-    #include <stdlib.h>
-    #include <stdint.h>
-
-    /*........................................*/
-    int64_t factorial(int64_t n)
-    {
-        int64_t Out_0001;
-        if (n == 0)
-        {
-            Out_0001 = 1;
-            return Out_0001;
-        }
-        else if (1)
-        {
-            Out_0001 = n * factorial(n - 1);
-            return Out_0001;
-        }
-    }
-    /*........................................*/
+   /*........................................*/
+   int64_t factorial(int64_t n)
+   {
+       int64_t Out_0001;
+       if (n == 0)
+       {
+           Out_0001 = 1;
+           return Out_0001;
+       }
+       else if (1)
+       {
+           Out_0001 = n * factorial(n - 1);
+           return Out_0001;
+       }
+   }
+   /*........................................*/
+   ```
 
    Fortran code:
    
    file_name.f90
 
+   ```fortran
+   use ISO_C_BINDING
 
-      use ISO_C_BINDING
+   implicit none
 
-      implicit none
+   contains
 
-      contains
+   !........................................
+   recursive function factorial(n) result(Out_0001)
 
-      !........................................
-      recursive function factorial(n) result(Out_0001)
+   implicit none
 
-      implicit none
+   integer(C_INT64_T) :: Out_0001
+   integer(C_INT64_T), value :: n
 
-      integer(C_INT64_T) :: Out_0001
-      integer(C_INT64_T), value :: n
+   if (n == 0_C_INT64_T) then
+   Out_0001 = 1_C_INT64_T
+   return
+   else if (.True._C_BOOL) then
+   Out_0001 = n * factorial(n - 1_C_INT64_T)
+   return
+   end if
 
-      if (n == 0_C_INT64_T) then
-      Out_0001 = 1_C_INT64_T
-      return
-      else if (.True._C_BOOL) then
-      Out_0001 = n * factorial(n - 1_C_INT64_T)
-      return
-      end if
+   end function factorial
+   !........................................
 
-      end function factorial
-      !........................................
-
-      end module test
+   end module test
+   ```
 
    another example with Numpy arrays:
    
    file_name.py:
    
- 
-      from numpy import array
-      from numpy import empty
-      from numpy import ones
+   ```python
+   from numpy import array
+   from numpy import empty
+   from numpy import ones
 
-      x = array([1, 2, 3])
-      y = empty((10, 10))
+   x = array([1, 2, 3])
+   y = empty((10, 10))
 
-      a = ones(3)
-      b = ones((4,3))
+   a = ones(3)
+   b = ones((4,3))
+   ```
 
   file_name.c:
    
+  ```c
+  #include <stdint.h>
+  #include <stdlib.h>
+  #include <ndarrays.h>
+  int main()
+  {
+   t_ndarray x;
+   t_ndarray y;
+   t_ndarray a;
+   t_ndarray b;
 
-     #include <stdint.h>
-     #include <stdlib.h>
-     #include <ndarrays.h>
-     int main()
-     {
-         t_ndarray x;
-         t_ndarray y;
-         t_ndarray a;
-         t_ndarray b;
+   x = array_create(1, (int32_t[]){3}, nd_int64);
+   int64_t array_dummy_0001[] = {1, 2, 3};
+   memcpy(x.nd_int64, array_dummy_0001, x.buffer_size);
 
+   y = array_create(2, (int32_t[]){10, 10}, nd_double);
 
+   a = array_create(1, (int32_t[]){3}, nd_double);
+   array_fill((double)1.0, a);
 
+   b = array_create(2, (int32_t[]){4, 3}, nd_double);
+   array_fill((double)1.0, b);
 
-
-         x = array_create(1, (int32_t[]){3}, nd_int64);
-         int64_t array_dummy_0001[] = {1, 2, 3};
-         memcpy(x.nd_int64, array_dummy_0001, x.buffer_size);
-
-
-         y = array_create(2, (int32_t[]){10, 10}, nd_double);
-
-
-         a = array_create(1, (int32_t[]){3}, nd_double);
-         array_fill((double)1.0, a);
-
-
-         b = array_create(2, (int32_t[]){4, 3}, nd_double);
-         array_fill((double)1.0, b);
-
-         free_array(x);
-         free_array(y);
-         free_array(a);
-         free_array(b);
-         return 0;
-     }
+   free_array(x);
+   free_array(y);
+   free_array(a);
+   free_array(b);
+   return 0;
+  }
+  ```
 
   file_name.f90:
-   
-     program prog_test
 
-     use ISO_C_BINDING
+  ```fortran
+  program prog_test
 
-     implicit none
+  use ISO_C_BINDING
 
-     integer(C_INT64_T), allocatable :: x(:)
-     real(C_DOUBLE), allocatable :: y(:,:)
-     real(C_DOUBLE), allocatable :: a(:)
-     real(C_DOUBLE), allocatable :: b(:,:)
+  implicit none
 
-     allocate(x(0:3_C_INT64_T - 1_C_INT64_T))
-     x = [1_C_INT64_T, 2_C_INT64_T, 3_C_INT64_T]
-     allocate(y(0:10_C_INT64_T - 1_C_INT64_T, 0:10_C_INT64_T - 1_C_INT64_T))
-     allocate(a(0:3_C_INT64_T - 1_C_INT64_T))
-     a = 1.0_C_DOUBLE
-     allocate(b(0:3_C_INT64_T - 1_C_INT64_T, 0:4_C_INT64_T - 1_C_INT64_T))
-     b = 1.0_C_DOUBLE
+  integer(C_INT64_T), allocatable :: x(:)
+  real(C_DOUBLE), allocatable :: y(:,:)
+  real(C_DOUBLE), allocatable :: a(:)
+  real(C_DOUBLE), allocatable :: b(:,:)
 
-     end program prog_test
-   
+  allocate(x(0:3_C_INT64_T - 1_C_INT64_T))
+  x = [1_C_INT64_T, 2_C_INT64_T, 3_C_INT64_T]
+  allocate(y(0:10_C_INT64_T - 1_C_INT64_T, 0:10_C_INT64_T - 1_C_INT64_T))
+  allocate(a(0:3_C_INT64_T - 1_C_INT64_T))
+  a = 1.0_C_DOUBLE
+  allocate(b(0:3_C_INT64_T - 1_C_INT64_T, 0:4_C_INT64_T - 1_C_INT64_T))
+  b = 1.0_C_DOUBLE
+
+  end program prog_test
+  ```
+
 Also, we are working on supporting [openmp](https://en.wikipedia.org/wiki/OpenMP), [openmpi](https://en.wikipedia.org/wiki/Open_MPI), [lapack](https://en.wikipedia.org/wiki/LAPACK)/[blas](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms), [cuda](https://en.wikipedia.org/wiki/CUDA), [openacc](https://en.wikipedia.org/wiki/OpenACC), [task-based parallelism](https://en.wikipedia.org/wiki/Task_parallelism).
 
 Feel free to open issues for any problem you faced with pyccel, thank you.
