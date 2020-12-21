@@ -53,7 +53,7 @@ typed languages include Java, C, C++, FORTRAN, Pascal and Scala. See [this](http
     to declare arrays `@types('1stArgType[:]', '2ndArgType[:,:]', 'NthArgType[dimensions]', results='return_type')`, the expresion `[:]` means that the array has 1 dimension and 2 dimensions with `[:,:]` , So the number of dimensions of an array related with how many colons you put in the square brackets sparated with a comma, `arr[:,:,:]` means that the array `arr` has 3 dimensions and so on.
     - for the function `def fun('1stArgType', '2ndArgType', 'NthArgType')`.
    
-    In `@types` decorator, pyccel support the following data types: real,double, float, pythonfloat,float32, float64, pythoncomplex, complex, complex64, complex128, int8, int16, int32, int64, int, pythonint, integer, bool, pythonbool.
+    In `@types` decorator, pyccel support the following data types: real, double, float, pythonfloat, float32, float64, pythoncomplex, complex, complex64, complex128, int8, int16, int32, int64, int, pythonint, integer, bool, pythonbool.
    
     python code:
      file_name.py
