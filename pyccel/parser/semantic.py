@@ -2344,8 +2344,7 @@ class SemanticParser(BasicParser):
         is_elemental    = expr.is_elemental
         is_private      = expr.is_private
         doc_string      = self._visit(expr.doc_string) if expr.doc_string else expr.doc_string
-
-        header = expr.headers
+        headers = []
 
         not_used = [d for d in decorators if d not in def_decorators.__all__]
 
@@ -2356,13 +2355,19 @@ class SemanticParser(BasicParser):
         templates = self.get_templates()
         templates.update(expr.templates)
 
+        tmp_headers = expr.headers
         if cls_name:
-            header += self.get_header(cls_name +'.'+ name)
+            tmp_headers += self.get_header(cls_name + '.' + name)
             args_number -= 1
         else:
-            header += self.get_header(name)
-
-        for hd in header:
+            tmp_headers += self.get_header(name)
+        for header in tmp_headers:
+            if all(header.dtypes != hd.dtypes for hd in headers):
+                headers.append(header)
+            else:
+                errors.report(DUPLICATED_SIGNATURE, symbol=header,
+                        severity='warning')
+        for hd in headers:
             if (args_number != len(hd.dtypes)):
                 msg = 'The number of arguments in the function {} ({}) does not match the number\
                         of types in decorator/header ({}).'.format(name ,args_number, len(hd.dtypes))
@@ -2372,14 +2377,14 @@ class SemanticParser(BasicParser):
                     errors.report(msg, symbol=expr.arguments, severity='fatal')
 
         interfaces = []
-        if len(header) == 0:
+        if len(headers) == 0:
             # check if a header is imported from a header file
             # TODO improve in the case of multiple headers ( interface )
             func       = self.get_function(name)
             if func and func.is_header:
                 interfaces = [func]
 
-        if expr.arguments and not header and not interfaces:
+        if expr.arguments and not headers and not interfaces:
 
             # TODO ERROR wrong position
 
@@ -2387,12 +2392,12 @@ class SemanticParser(BasicParser):
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='error', blocker=self.blocking)
 
-        # we construct a FunctionDef from its header
-        for hd in header:
+        # We construct a FunctionDef from each function header
+        for hd in headers:
             interfaces += hd.create_definition(templates)
 
         if not interfaces:
-            # this for the case of a function without arguments => no header
+            # this for the case of a function without arguments => no headers
             interfaces = [FunctionDef(name, [], [], [])]
 
 #        TODO move this to codegen
