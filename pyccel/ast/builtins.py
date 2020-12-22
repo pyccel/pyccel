@@ -184,6 +184,7 @@ class PythonComplex(Expr, PyccelAstNode):
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
         self._is_cast = arg0.dtype is NativeComplex() and \
                         isinstance(arg1, Literal) and arg1.python_value == 0
+
         if self._is_cast:
             self._real_part = PythonReal(arg0)
             self._imag_part = PythonImag(arg0)
@@ -305,6 +306,7 @@ class PythonTuple(Expr, PyccelAstNode):
     """
     _iterable        = True
     _is_homogeneous  = False
+    _order = 'C'
 
     def __new__(cls, *args):
         return Expr.__new__(cls, *args)
@@ -400,6 +402,7 @@ class PythonLen(Function, PyccelAstNode):
 
 #==============================================================================
 class PythonList(Tuple, PyccelAstNode):
+    _order = 'C'
     """ Represent lists in the code with dynamic memory management."""
     def __init__(self, *args, **kwargs):
         if self.stage == 'syntactic':
