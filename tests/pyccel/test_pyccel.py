@@ -182,24 +182,6 @@ def compare_pyth_fort_output( p_output, f_output, dtype=float ):
             compare_pyth_fort_output_by_type(p,f,dtype)
 
 #------------------------------------------------------------------------------
-def compare_pyth_c_output( p_output, f_output, dtype=float ):
-
-    if isinstance(dtype,list):
-        for d in dtype:
-            p_output,f_output = compare_pyth_fort_output_by_type(p_output,f_output,d)
-    elif dtype is complex:
-        while len(p_output)>0 and len(f_output)>0:
-            p_output,f_output = compare_pyth_fort_output_by_type(p_output,f_output,complex)
-    elif dtype is str:
-        compare_pyth_fort_output_by_type(p_output,f_output,dtype)
-    else:
-        p_output = p_output.strip().split()
-        f_output = f_output.strip().split()
-        for p, f in zip(p_output, f_output):
-            compare_pyth_fort_output_by_type(p,f,dtype)
-    assert(p_output == f_output)
-
-#------------------------------------------------------------------------------
 def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         cwd = None, pyccel_commands = "", output_dtype = float,
         language = None):
@@ -239,10 +221,7 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
             compile_c(cwd, test_file, dependencies)
 
     lang_out = get_lang_output(get_exe(test_file))
-    if (language == 'c'):
-        compare_pyth_c_output(pyth_out, lang_out, output_dtype)
-    else:
-        compare_pyth_fort_output(pyth_out, lang_out, output_dtype)
+    compare_pyth_fort_output(pyth_out, lang_out, output_dtype)
 
 
 #==============================================================================
@@ -547,7 +526,7 @@ def test_c_arrays(language):
     pyccel_test("scripts/c_arrays.py", language=language, output_dtype=types)
 
 def test_arrays_view(language):
-    types = [int, int, int]
+    types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10
     pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
 
 def test_headers(language):
