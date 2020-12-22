@@ -649,7 +649,13 @@ class SyntaxParser(BasicParser):
         decorators = {}
 
         # add the decorator @types if the arguments are annotated
-        annotated_args = [a.annotation for a in arguments]
+        annotated_args = []
+        for a in arguments:
+            if isinstance(a, Argument):
+                annotated_args.append(a.annotation)
+            elif isinstance(a, ValuedArgument):
+                annotated_args.append(a.argument.annotation)
+
         if all(not a==Nil() for a in annotated_args):
             decorators['types'] = [Function('types')(*annotated_args)]
 
