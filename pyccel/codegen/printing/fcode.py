@@ -17,8 +17,6 @@ from collections import OrderedDict
 import functools
 import operator
 
-from numpy import asarray
-
 from sympy.core import Symbol
 from sympy.core import Tuple
 from sympy.core.function import Function, Application
@@ -497,10 +495,8 @@ class FCodePrinter(CodePrinter):
         return '!${0} {1}\n'.format(accel, txt)
 
     def _print_Tuple(self, expr):
-        size = len(expr)
         if expr[0].rank>0:
             raise NotImplementedError(' Tuple with elements of rank > 0 is not implemented')
-
         fs = ', '.join(self._print(f) for f in expr)
         return '[{0}]'.format(fs)
 
@@ -612,7 +608,7 @@ class FCodePrinter(CodePrinter):
         if dtype is NativeString():
             return 'len({})'.format(self._print(var))
         elif var.rank == 1:
-            return 'size({}, kind={})'.format(self._print(var), self._print(idx), prec)
+            return 'size({}, kind={})'.format(self._print(var), prec)
         else:
             return 'size({},{},{})'.format(self._print(var), self._print(idx), prec)
 
