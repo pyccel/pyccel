@@ -189,7 +189,7 @@ t_slice new_slice(int32_t start, int32_t end, int32_t step)
     return (slice);
 }
 
-t_ndarray array_slicing(t_ndarray p, int n, ...)
+t_ndarray array_slicing(t_ndarray arr, int n, ...)
 {
     t_ndarray view;
     va_list  va;
