@@ -27,6 +27,7 @@ runs:
         cp $Env:SystemRoot\\SysWOW64\\vcruntime140.dll .
         gendef vcruntime140.dll
         dlltool -d vcruntime140.def -l libmsvcr140.a -D vcruntime140.dll
+        echo "BLAS/LAPACK installed"
       shell: powershell
     - name: Install MS MPI runtime and SDK
       run: |
@@ -37,31 +38,36 @@ runs:
         #
         # Install MS MPI
         ./msmpisetup.exe -unattend
-        sleep 5
+        sleep 20
         msiexec /quiet /i msmpisdk.msi
+        sleep 1
+        echo "MS MPI runtime and SDK installed"
       shell: powershell
-    #- name: Setup MPI
-    #  run: |
-    #    #refreshenv
-    #    $MSMPI_INC="C:\\Program Files (x86)\\Microsoft SDKs\\Include\\"
-    #    $MSMPI_LIB64="C:\\Program Files (x86)\\Microsoft SDKs\\Lib\\x64\\"
-    #    $PATH="${Env:Path}C:\\Program Files\\Microsoft MPI\\Bin;"
-    #    [System.Environment]::SetEnvironmentVariable("Path",$PATH)
-    #    echo "Path=${PATH}" >> $GITHUB_ENV
-    #    Get-Childitem -Path "C:\\Program Files" -Recurse -ErrorAction SilentlyContinue -Include mpi.f90
-    #    Get-Childitem -Path "C:\\Program Files (x86)" -Recurse -ErrorAction SilentlyContinue -Include mpi.f90
-    #    #
-    #    # Generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html
-    #    pushd "$MSMPI_INC"
-    #    sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpi.f90
-    #    sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpif.h
-    #    gfortran -c -D_WIN64 -D INT_PTR_KIND\(\)=8 -fno-range-check mpi.f90
-    #    popd
-    #    #
-    #    # Generate static libmsmpi.a from msmpi.dll
-    #    pushd "$MSMPI_LIB64"
-    #    cp $SYSTEMROOT\\SysWOW64\\msmpi.dll .
-    #    gendef msmpi.dll
-    #    dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
-    #    popd
-    #  shell: powershell
+    - name: Setup MPI
+      run: |
+        #refreshenv
+        $MSMPI_INC="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Include\\"
+        $MSMPI_LIB64="C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Lib\\x64\\"
+        echo "C:\\Program Files\\Microsoft MPI\\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "$env:GITHUB_ENV"
+        echo "MSMPI_INC=${MSMPI_INC}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "MSMPI_LIB64=${MSMPI_LIB64}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+        # Get-Childitem -Path "C:\\Program Files" -Recurse -ErrorAction SilentlyContinue -Include mpi.f90
+        # Get-Childitem -Path "C:\\Program Files (x86)" -Recurse -ErrorAction SilentlyContinue -Include mpi.f90
+        #
+        # Generate mpi.mod for gfortran according to https://abhilashreddy.com/writing/3/mpi_instructions.html
+        pushd "$MSMPI_INC"
+        sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpi.f90
+        sed -i 's/mpifptr.h/x64\/mpifptr.h/g' mpif.h
+        gfortran -c -D_WIN64 -D INT_PTR_KIND`(`)=8 -fno-range-check mpi.f90
+        popd
+        #
+        # Generate static libmsmpi.a from msmpi.dll
+        pushd "$MSMPI_LIB64"
+        cp ${env:SYSTEMROOT}\\SysWOW64\\msmpi.dll .
+        gendef msmpi.dll
+        dlltool -d msmpi.def -l libmsmpi.a -D msmpi.dll
+        popd
+        echo "MS MPI set up for use"
+      shell: powershell

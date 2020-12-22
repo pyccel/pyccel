@@ -1,4 +1,8 @@
 # coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 
 import sys
 import subprocess
@@ -37,7 +41,6 @@ def create_shared_library(codegen,
                           libdirs,
                           includes='',
                           flags = '',
-                          extra_args='',
                           sharedlib_modname=None,
                           verbose = False):
 

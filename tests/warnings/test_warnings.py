@@ -44,7 +44,8 @@ def test_semantic_warnings(f):
 
     # reset Errors singleton
     errors = Errors()
-    assert(errors.num_messages()!=0)
+    assert(not errors.has_errors())
+    assert(errors.has_warnings())
     errors.reset()
 
 #@pytest.mark.parametrize("f", codegen_errors_args)
