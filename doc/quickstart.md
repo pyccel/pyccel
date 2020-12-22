@@ -34,7 +34,7 @@ For more details about Python object, see [this](https://docs.python.org/3/tutor
 For more details about Python variable, see [this](https://www.w3schools.com/python/python_variables.asp).
 
  ## Static typed languages
-    
+	
 A language is statically-typed if the type of a variable is known at compile-time instead of at run-time. Common examples of statically-
 typed languages include Java, C, C++, FORTRAN, Pascal and Scala. See [this](https://en.wikipedia.org/wiki/Type_system#:~:text=In%20programming%20languages%2C%20a%20type,%2C%20expressions%2C%20functions%20or%20modules.) and [this](https://android.jlelse.eu/magic-lies-here-statically-typed-vs-dynamically-typed-languages-d151c7f95e2b#:~:text=Static%20typed%20languages,%2C%20FORTRAN%2C%20Pascal%20and%20Scala.) for more details.
 
@@ -47,13 +47,13 @@ typed languages include Java, C, C++, FORTRAN, Pascal and Scala. See [this](http
 -   After the installation, type `pyccel`, the usage should be shown, then all good.
 
 -   Create a Python file that contains simple lines of code to see what will happen.
-    1.   To create the file `touch file_name.py`.
+	1.   To create the file `touch file_name.py`.
 
-    2.   Use your favorite text editor to fill the file with some lines of code or just type `echo 'print("hello, world!\n")' > file_name.py` for a quick test, `cat file_name.py` to make sure that your lines in the file.
+	2.   Use your favorite text editor to fill the file with some lines of code or just type `echo 'print("hello, world!\n")' > file_name.py` for a quick test, `cat file_name.py` to make sure that your lines in the file.
 
-    3.   To generate the C/Fortran code form your Python code, type `pyccel file_name.py` or `pyccel file_name.py --language fortran` to generate Fortran code, and `pyccel file_name.py --language c` to generate C code.
+	3.   To generate the C/Fortran code form your Python code, type `pyccel file_name.py` or `pyccel file_name.py --language fortran` to generate Fortran code, and `pyccel file_name.py --language c` to generate C code.
 
-    4.   No problems ?, So you should discover `__pyccel__` the directory that contains your generated code and some other stuff.
+	4.   No problems ?, So you should discover `__pyccel__` the directory that contains your generated code and some other stuff.
 
 E.g (using `@types` decorator and a recursive function with a typed return), To specify the types of the function arguments and its return, we need to import the `@types` decorator from pyccel.decorators (as you can see in the first line) and then specify the types for each function using this format:
 -   for the decorator `@types('1stArgType', '2ndArgType', 'NthArgType', results='return_type')` to declare arrays `@types('1stArgType[:]', '2ndArgType[:,:]', 'NthArgType[dimensions]', results='return_type')`, the expresion `[:]` means that the array has 1 dimension and 2 dimensions with `[:,:]` , So the number of dimensions of an array related with how many colons you put in the square brackets sparated with a comma, `arr[:,:,:]` means that the array `arr` has 3 dimensions and so on.
@@ -69,8 +69,8 @@ In `@types` decorator, pyccel support the following data types: real, double, fl
 
   @types('int', results='int')
   def factorial(n):
-      if n == 0: return 1
-      else : return n * factorial(n - 1)
+	  if n == 0: return 1
+	  else : return n * factorial(n - 1)
    ```  
    C code:
    
@@ -84,17 +84,17 @@ In `@types` decorator, pyccel support the following data types: real, double, fl
    /*........................................*/
    int64_t factorial(int64_t n)
    {
-       int64_t Out_0001;
-       if (n == 0)
-       {
-           Out_0001 = 1;
-           return Out_0001;
-       }
-       else if (1)
-       {
-           Out_0001 = n * factorial(n - 1);
-           return Out_0001;
-       }
+	   int64_t Out_0001;
+	   if (n == 0)
+	   {
+		   Out_0001 = 1;
+		   return Out_0001;
+	   }
+	   else if (1)
+	   {
+		   Out_0001 = n * factorial(n - 1);
+		   return Out_0001;
+	   }
    }
    /*........................................*/
    ```
@@ -103,7 +103,7 @@ In `@types` decorator, pyccel support the following data types: real, double, fl
    
    file_name.f90
 
-   ```fortran
+   ```Fortran
    use ISO_C_BINDING
 
    implicit none
@@ -183,7 +183,7 @@ In `@types` decorator, pyccel support the following data types: real, double, fl
 
   file_name.f90:
 
-  ```fortran
+  ```Fortran
   program prog_test
 
   use ISO_C_BINDING
