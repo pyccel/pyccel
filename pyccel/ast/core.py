@@ -5022,6 +5022,8 @@ class Slice(Basic, PyccelOperator):
             raise TypeError('Slice stop must be Integer or None')
         if step is not None and not (hasattr(step, 'dtype') and isinstance(step.dtype, NativeInteger)):
             raise TypeError('Slice step must be Integer or None')
+        if isinstance(step, LiteralInteger) and step.python_value == 0:
+            raise ValueError('Slice step cannot be zero')
 
     @property
     def start(self):
