@@ -699,12 +699,15 @@ class FCodePrinter(CodePrinter):
         rhs_code = self._print(expr.arg)
         # If Numpy array is stored with column-major ordering, transpose values
         # use reshape with order for rank > 2
-        if expr.order == 'F' and expr.rank > 1:
-            shape    = ', '.join(self._print(i) for i in expr.shape)
-            order    = [LiteralInteger(i) for i in range(1, expr.rank+1)]
-            order    = order[1:]+ order[:1]
-            order    = ', '.join(self._print(i) for i in order)
-            rhs_code = 'reshape({},[{}], order=[{}])'.format(rhs_code, shape, order)
+        if expr.order == 'F':
+            if expr.rank == 2:
+                rhs_code = 'transpose({})'.format(rhs_code)
+            elif expr.rank > 2:
+                shape    = ', '.join(self._print(i) for i in expr.shape)
+                order    = [LiteralInteger(i) for i in range(1, expr.rank+1)]
+                order    = order[1:]+ order[:1]
+                order    = ', '.join(self._print(i) for i in order)
+                rhs_code = 'reshape({},[{}], order=[{}])'.format(rhs_code, shape, order)
 
         return rhs_code
 
