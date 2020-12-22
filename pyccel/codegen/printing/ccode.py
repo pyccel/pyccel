@@ -702,13 +702,13 @@ class CCodePrinter(CodePrinter):
         # negative start and end in slice
         if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
             start = PyccelMinus(array_size, start.args[0])
-        elif allow_negative_index and not isinstance(start, LiteralInteger) and not isinstance(start, PyccelArraySize):
+        elif allow_negative_index and not isinstance(start, (LiteralInteger, PyccelArraySize)):
             start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
                             PyccelMinus(array_size, start), start)
 
         if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
             stop = PyccelMinus(array_size, stop.args[0])
-        elif allow_negative_index and not isinstance(stop, LiteralInteger) and not isinstance(stop, PyccelArraySize):
+        elif allow_negative_index and not isinstance(stop, (LiteralInteger, PyccelArraySize)):
             stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
                             PyccelMinus(array_size, stop), stop)
 
