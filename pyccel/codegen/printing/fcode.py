@@ -284,7 +284,7 @@ class FCodePrinter(CodePrinter):
                                             name=name)
 
         imports = ''.join(self._print(i) for i in expr.imports)
-        imports += 'use ISO_C_BINDING\n'
+        imports += 'use, intrinsic :: ISO_C_BINDING\n'
 
         decs    = ''.join(self._print(i) for i in expr.declarations)
         body    = ''
@@ -335,7 +335,7 @@ class FCodePrinter(CodePrinter):
         self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
-        imports += 'use ISO_C_BINDING\n'
+        imports += 'use, intrinsic :: ISO_C_BINDING\n'
         body    = self._print(expr.body)
 
         # Print the declarations of all variables in the namespace, which include:
@@ -1381,7 +1381,7 @@ class FCodePrinter(CodePrinter):
                 self._handle_fortran_specific_a_prioris(list(f.arguments) + list(f.results))
                 parts = self.function_signature(f, f.name)
                 parts = ["{}({}) {}\n".format(parts['sig'], parts['arg_code'], parts['func_end']),
-                        'use iso_c_binding\n',
+                        'use, intrinsic :: ISO_C_BINDING\n',
                         parts['arg_decs'],
                         'end {} {}\n'.format(parts['func_type'], f.name)]
                 funcs_sigs.append(''.join(a for a in parts))
@@ -1479,7 +1479,7 @@ class FCodePrinter(CodePrinter):
         interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         arg_code  = ', '.join(self._print(i) for i in chain( arguments, results ))
         imports   = ''.join(self._print(i) for i in expr.imports)
-        imports += 'use ISO_C_BINDING'
+        imports += 'use, intrinsic :: ISO_C_BINDING'
         prelude   = ''.join(self._print(i) for i in args_decs.values())
         body_code = self._print(expr.body)
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
