@@ -54,7 +54,7 @@ typed languages include Java, C, C++, FORTRAN, Pascal and Scalam, in the other s
     -   To generate the C/Fortran code form your Python code, type `pyccel file_name.py` or `pyccel file_name.py --language fortran` to generate Fortran code, and `pyccel file_name.py --language c` to generate C code.
     -   No problems ?, So you should discover `__pyccel__` the directory that contains your generated code and some other stuff.
 
-E.g (using `@types` decorator and a recursive function with a typed return), To specify the types of the function arguments and its return, we need to import the `@types` decorator from pyccel.decorators (as you can see in the first line) and then specify the types for each function using this format:
+E.g (using `@types` decorator and a recursive function with a typed return), To specify the types of the function arguments and its return, we need to import the `@types` decorator from pyccel.decorators (as you can see in `file_name.py` first line) and then specify the types for each function using this format:
 -   for the decorator `@types('1stArgType', '2ndArgType', 'NthArgType', results='return_type')` to declare arrays `@types('1stArgType[:]', '2ndArgType[:,:]', 'NthArgType[dimensions]', results='return_type')`, the expresion `[:]` means that the array has 1 dimension and 2 dimensions with `[:,:]` , So the number of dimensions of an array related with how many colons you put in the square brackets sparated with a comma, `arr[:,:,:]` means that the array `arr` has 3 dimensions and so on.
 -   for the function `def fun('1stArgType', '2ndArgType', 'NthArgType')`.
    
