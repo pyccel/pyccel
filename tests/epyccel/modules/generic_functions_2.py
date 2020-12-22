@@ -169,3 +169,9 @@ def mix_float_array_1(x, a):
 def mix_complex_array_1(x, a):
     x[:] *= a
 
+#$ header function dup_header(real)
+#$ header function dup_header(float64)
+@types('float64')
+@types('float64')
+def dup_header(a):
+    return a
