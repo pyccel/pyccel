@@ -602,7 +602,7 @@ class FCodePrinter(CodePrinter):
     def _print_PythonLen(self, expr):
         var = expr.arg
         idx = 1 if var.order == 'F' else var.rank
-        prec = self._print(expr.precision)
+        prec = iso_c_binding["integer"][expr.precision]
 
         dtype = var.dtype
         if dtype is NativeString():
@@ -715,7 +715,7 @@ class FCodePrinter(CodePrinter):
     # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
         init_value = self._print(expr.arg)
-        prec       = self._print(expr.precision)
+        prec = iso_c_binding["integer"][expr.precision]
         if expr.arg.order == 'C':
             index = self._print(expr.arg.rank - expr.index)
         else:
