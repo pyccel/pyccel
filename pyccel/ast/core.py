@@ -2754,16 +2754,20 @@ class Argument(Symbol, PyccelAstNode):
     n
     """
 
-    def __new__(cls, name, *, kwonly=False, **assumptions):
-        return Symbol.__new__(cls, name, **assumptions)
+    def __new__(cls, name, *, kwonly=False, annotation=None):
+        return Symbol.__new__(cls, name)
 
-    def __init__(self, name, *, kwonly=False, **assumptions):
-        self._kwonly = kwonly
+    def __init__(self, name, *, kwonly=False, annotation=None):
+        self._kwonly     = kwonly
+        self._annotation = annotation
 
     @property
     def is_kwonly(self):
         return self._kwonly
 
+    @property
+    def annotation(self):
+        return self._annotation
 
 class ValuedArgument(Basic):
 
