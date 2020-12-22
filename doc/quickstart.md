@@ -26,8 +26,8 @@ For more details about Python object, see [this](https://docs.python.org/3/tutor
 -   is a reference to a Python object in memory.
 
 -   is created with an assignment operation `x = expr`:
-    1.   if the variable `x` already exists, the interpreter reduces the reference count of its object
-    2.   a new variable `x` is created, which references the value of expr.
+    1.    if the variable `x` already exists, the interpreter reduces the reference count of its object
+    2.    a new variable `x` is created, which references the value of expr.
 
 -   can be destroyed with the command del `x`.
 
@@ -47,14 +47,14 @@ typed languages include Java, C, C++, FORTRAN, Pascal and Scala. See [this](http
 -   After the installation, type `pyccel`, the usage should be shown, then all good.
 
 -   Create a Python file that contains simple lines of code to see what will happen.
-     1.   To create the file `touch file_name.py`.
+    1.   To create the file `touch file_name.py`.
 
-     2.   Use your favorite text editor to fill the file with some lines of code or just type `echo 'print("hello, world!\n")' > file_name.py` for a quick test, `cat file_name.py` to make sure that your lines in the file.
+    2.   Use your favorite text editor to fill the file with some lines of code or just type `echo 'print("hello, world!\n")' > file_name.py` for a quick test, `cat file_name.py` to make sure that your lines in the file.
 
-     3.   To generate the C/Fortran code form your Python code, type `pyccel file_name.py` or `pyccel file_name.py --language fortran`
+    3.   To generate the C/Fortran code form your Python code, type `pyccel file_name.py` or `pyccel file_name.py --language fortran`
           to generate Fortran code, and `pyccel file_name.py --language c` to generate C code.
 
-     4.   No problems ?, So you should discover `__pyccel__` the directory that contains your generated code and some other stuff.
+    4.   No problems ?, So you should discover `__pyccel__` the directory that contains your generated code and some other stuff.
 
 E.g (using `@types` decorator and a recursive function with a typed return), To specify the types of the function arguments and its return, we need to import the `@types` decorator from pyccel.decorators (as you can see in the first line) and then specify the types for each function using this format:
 -   for the decorator `@types('1stArgType', '2ndArgType', 'NthArgType', results='return_type')` to declare arrays `@types('1stArgType[:]', '2ndArgType[:,:]', 'NthArgType[dimensions]', results='return_type')`, the expresion `[:]` means that the array has 1 dimension and 2 dimensions with `[:,:]` , So the number of dimensions of an array related with how many colons you put in the square brackets sparated with a comma, `arr[:,:,:]` means that the array `arr` has 3 dimensions and so on.
