@@ -47,7 +47,7 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeGeneric, NativeTuple, default_precision, is_iterable_datatype)
 
 from .literals       import LiteralTrue, LiteralFalse, LiteralInteger
-from .literals       import LiteralImaginaryUnit, LiteralString
+from .literals       import LiteralImaginaryUnit, LiteralString, Literal
 from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
@@ -2479,31 +2479,33 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
 
     def __new__(cls, lhs, rhs):
 
-        if not isinstance(lhs, (
-            Variable,
-            Symbol,
-            IndexedVariable,
-            IndexedElement,
-            IndexedBase,
-            Indexed,
-            Function,
-            DottedVariable,
-            )):
-            raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
-                            str(type(lhs))))
+        if PyccelAstNode.stage != 'syntactic':
+            if not isinstance(lhs, (
+                Literal,
+                Variable,
+                Symbol,
+                IndexedVariable,
+                IndexedElement,
+                IndexedBase,
+                Indexed,
+                Function,
+                DottedVariable,
+                )):
+                raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
+                                str(type(lhs))))
 
-        if not isinstance(rhs, (
-            Variable,
-            Symbol,
-            IndexedVariable,
-            IndexedElement,
-            IndexedBase,
-            Indexed,
-            FunctionCall,
-            Function,
-            )):
-            raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
-                            str(type(rhs))))
+            if not isinstance(rhs, (
+                Variable,
+                Symbol,
+                IndexedVariable,
+                IndexedElement,
+                IndexedBase,
+                Indexed,
+                FunctionCall,
+                Function,
+                )):
+                raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
+                                str(type(rhs))))
 
         return Basic.__new__(cls, lhs, rhs)
 
