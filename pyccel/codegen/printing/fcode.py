@@ -2815,7 +2815,7 @@ class FCodePrinter(CodePrinter):
         result = []
         trailing = ' &'
         for line in lines:
-            if len(line)>72 and ('"' in line[72:] or "'" in line[72:] or '!' in line[72:]):
+            if len(line)>72 and ('"' in line[72:] or "'" in line[72:] or '!' in line[:72]):
                 result.append(line)
 
             elif len(line)>72:
