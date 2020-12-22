@@ -1,5 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 
 import importlib
 from collections.abc import Iterable
@@ -43,7 +47,7 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeGeneric, NativeTuple, default_precision, is_iterable_datatype)
 
 from .literals       import LiteralTrue, LiteralFalse, LiteralInteger
-from .literals       import LiteralImaginaryUnit, LiteralString
+from .literals       import LiteralImaginaryUnit, LiteralString, Literal
 from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
@@ -885,6 +889,48 @@ class Allocate(Basic):
 
     def __hash__(self):
         return hash((id(self.variable), self.shape, self.order, self.status))
+
+#------------------------------------------------------------------------------
+class Deallocate(Basic):
+    """
+    Represents memory deallocation (usually of an array) for code generation.
+    This is relevant to low-level target languages, such as C or Fortran,
+    where the programmer must take care of heap memory deallocation.
+
+    Parameters
+    ----------
+    variable : pyccel.ast.core.Variable
+        The typed variable (usually an array) that needs memory deallocation.
+
+    Notes
+    -----
+    An object of this class is immutable, although it contains a reference to a
+    mutable Variable object.
+
+    """
+    def __new__(cls, *args, **kwargs):
+
+        return Basic.__new__(cls)
+
+    # ...
+    def __init__(self, variable):
+
+        if not isinstance(variable, Variable):
+            raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
+
+        self._variable = variable
+
+    # ...
+
+    @property
+    def variable(self):
+        return self._variable
+
+    def __eq__(self, other):
+        return (self.variable is other.variable)
+
+    def __hash__(self):
+        return hash(id(self.variable))
 
 #------------------------------------------------------------------------------
 class CodeBlock(Basic):
@@ -2441,31 +2487,33 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
 
     def __new__(cls, lhs, rhs):
 
-        if not isinstance(lhs, (
-            Variable,
-            Symbol,
-            IndexedVariable,
-            IndexedElement,
-            IndexedBase,
-            Indexed,
-            Function,
-            DottedVariable,
-            )):
-            raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
-                            str(type(lhs))))
+        if PyccelAstNode.stage != 'syntactic':
+            if not isinstance(lhs, (
+                Literal,
+                Variable,
+                Symbol,
+                IndexedVariable,
+                IndexedElement,
+                IndexedBase,
+                Indexed,
+                Function,
+                DottedVariable,
+                )):
+                raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
+                                str(type(lhs))))
 
-        if not isinstance(rhs, (
-            Variable,
-            Symbol,
-            IndexedVariable,
-            IndexedElement,
-            IndexedBase,
-            Indexed,
-            FunctionCall,
-            Function,
-            )):
-            raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
-                            str(type(rhs))))
+            if not isinstance(rhs, (
+                Variable,
+                Symbol,
+                IndexedVariable,
+                IndexedElement,
+                IndexedBase,
+                Indexed,
+                FunctionCall,
+                Function,
+                )):
+                raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
+                                str(type(rhs))))
 
         return Basic.__new__(cls, lhs, rhs)
 

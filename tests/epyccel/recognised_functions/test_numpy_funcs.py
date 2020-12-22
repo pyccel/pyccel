@@ -1281,7 +1281,14 @@ def test_full_basic_real(language):
     assert(f_arg_names(val)     == create_full_arg_names(val))
     assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0].item()))
 
-@pytest.mark.xfail(reason = "f2py converts bools to int")
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="tuples not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
 def test_full_basic_bool(language):
     @types('int')
     def create_full_shape_1d(n):
@@ -1317,11 +1324,11 @@ def test_full_basic_bool(language):
 
     f_val       = epyccel(create_full_val, language = language)
     assert(f_val(val)           == create_full_val(val))
-    assert(type(f_val(val)[0])       == type(create_full_val(val)[0]))
+    assert(type(f_val(val)[0])       == type(create_full_val(val)[0].item()))
 
     f_arg_names = epyccel(create_full_arg_names, language = language)
     assert(f_arg_names(val)     == create_full_arg_names(val))
-    assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0]))
+    assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0].item()))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -1357,7 +1364,7 @@ def test_full_order(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="casting to complex in not handled correctly"),
             pytest.mark.c]
         )
     )
@@ -1555,14 +1562,6 @@ def test_empty_order(language):
     f_shape_F  = epyccel(create_empty_shape_F, language = language)
     assert(     f_shape_F(size_1,size_2) == create_empty_shape_F(size_1,size_2))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_empty_dtype(language):
     def create_empty_val_int():
         from numpy import empty
@@ -1734,14 +1733,6 @@ def test_ones_order(language):
     f_shape_F  = epyccel(create_ones_shape_F, language = language)
     assert(     f_shape_F(size_1,size_2) == create_ones_shape_F(size_1,size_2))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Array not implemented yet in c"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_ones_dtype(language):
     def create_ones_val_int():
         from numpy import ones
@@ -1924,14 +1915,6 @@ def test_zeros_order(language):
     f_shape_F  = epyccel(create_zeros_shape_F, language = language)
     assert(     f_shape_F(size_1,size_2) == create_zeros_shape_F(size_1,size_2))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_zeros_dtype(language):
     def create_zeros_val_int():
         from numpy import zeros

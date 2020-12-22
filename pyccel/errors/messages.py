@@ -1,5 +1,12 @@
-# Constants that represent simple type checker error message, i.e. messages
-# that do not have any parameters.
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+
+
+""" Constants that represent simple type checker error message, i.e. messages
+	that do not have any parameters.
+"""
 
 NO_RETURN_VALUE_EXPECTED = 'No return value expected'
 MISSING_RETURN_STATEMENT = 'Missing return statement'
@@ -93,6 +100,7 @@ PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS = 'Uncovered multi operator comparison s
 PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN = "The result of a list comprehension expression must be saved in a variable"
 PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE = 'Could not deduce the size of this list comprehension. If you believe this expression is simple then please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem.'
 PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS = 'Pyccel cannot handle this list comprehension. This is because there are occasions where the upper bound is smaller than the lower bound for variable {}'
+PYCCEL_RESTRICTION_INHOMOG_LIST = 'Inhomogeneous lists are not supported by Pyccel. Please use a tuple'
 
 # Fortran limitation
 FORTRAN_ALLOCATABLE_IN_EXPRESSION = 'An allocatable function cannot be used in an expression'
@@ -123,6 +131,10 @@ INVALID_FILE_DIRECTORY = 'No file or directory of this name'
 INVALID_FILE_EXTENSION = 'Wrong file extension. Expecting `py` of `pyh`, but found'
 INVALID_PYTHON_SYNTAX = 'Python syntax error'
 
+# ARRAY ERRORS
+ASSIGN_ARRAYS_ONE_ANOTHER = 'Arrays which own their data cannot become views on other arrays'
+ARRAY_ALREADY_IN_USE = 'Attempt to reallocate an array which is being used by another variable'
+
 # warnings
 UNDEFINED_INIT_METHOD = 'Undefined `__init__` method'
 FOUND_SYMBOLIC_ASSIGN = 'Found symbolic assignment [Ignored]'
@@ -130,3 +142,4 @@ FOUND_IS_IN_ASSIGN = 'Found `is` statement in assignment [Ignored]'
 ARRAY_REALLOCATION = 'Array redefinition may cause memory reallocation at runtime'
 ARRAY_DEFINITION_IN_LOOP = 'Array definition in for loop may cause memory reallocation at each cycle. Consider creating the array before the loop'
 TEMPLATE_IN_UNIONTYPE = 'Cannot use templates in a union type'
+DUPLICATED_SIGNATURE = 'Same signature defined for the same function multiple times'

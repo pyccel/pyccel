@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=R0201
-# pylint: disable=missing-function-docstring
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+
+# pylint: disable=R0201, missing-function-docstring
 
 from collections import OrderedDict
 from itertools import chain
@@ -22,7 +26,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import PyccelAstNode
 
-from pyccel.ast.core import Allocate
+from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Constant
 from pyccel.ast.core import Nil
 from pyccel.ast.core import Variable
@@ -158,6 +162,9 @@ class SemanticParser(BasicParser):
         self._used_names = parser.used_names
         self._dummy_counter = parser._dummy_counter
 
+        # used to store the local variables of a code block needed for garbage collecting
+        self._allocs = []
+
         # we use it to detect the current method or function
 
         #
@@ -199,6 +206,7 @@ class SemanticParser(BasicParser):
 
         ast = self.ast
 
+        self._allocs.append([])
         # we add the try/except to allow the parser to find all possible errors
         PyccelAstNode.stage = 'semantic'
         ast = self._visit(ast, **settings)
@@ -234,7 +242,25 @@ class SemanticParser(BasicParser):
 
         self._semantic_done = True
 
+        # Calling the Garbage collecting,
+        # it will add the necessary Deallocate nodes
+        # to the ast
+        self._ast = ast = self.garbage_collector(ast)
+
         return ast
+
+    def garbage_collector(self, expr):
+        """
+        Search in a CodeBlock if no trailing Return Node is present add the needed frees.
+
+        Return the same CodeBlock if a trailing Return is found otherwise Return a new CodeBlock with additional Deallocate Nodes.
+        """
+        code = expr
+        if not isinstance(expr.body[-1], Return):
+            code = expr.body + [Deallocate(i) for i in self._allocs[-1]]
+            code = CodeBlock(code)
+        self._allocs.pop()
+        return code
 
     def get_variable_from_scope(self, name):
         """
@@ -773,6 +799,11 @@ class SemanticParser(BasicParser):
 
     def _visit_PythonList(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
+        dtypes = set(i.dtype for i in ls)
+        if len(dtypes) != 1:
+            errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal')
         return PythonList(*ls, sympify=False)
 
     def _visit_ValuedArgument(self, expr, **settings):
@@ -1029,6 +1060,11 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=True)
 
+        if not hasattr(first, 'cls_base') or first.cls_base is None:
+            errors.report('Attribute {} not found'.format(rhs_name),
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal', blocker=True)
+
         if first.cls_base:
             attr_name = [i.name for i in first.cls_base.attributes]
 
@@ -1140,6 +1176,8 @@ class SemanticParser(BasicParser):
         args = [self._visit(a, **settings) for a in expr.args]
         if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, PythonList)):
             expr_new = self._visit(Dlist(args[0], args[1]))
+        elif isinstance(args[1], (TupleVariable, PythonTuple, Tuple, PythonList)):
+            expr_new = self._visit(Dlist(args[1], args[0]))
         else:
             expr_new = self._visit_PyccelOperator(expr, **settings)
         return expr_new
@@ -1400,6 +1438,13 @@ class SemanticParser(BasicParser):
                     new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
                 # ...
 
+                # ...
+                # Add memory deallocation for array variables
+                if lhs.is_ndarray and not lhs.is_stack_array:
+                    # Create Deallocate node
+                    self._allocs[-1].append(lhs)
+                # ...
+
                 # We cannot allow the definition of a stack array in a loop
                 if lhs.is_stack_array and self._namespace.is_loop:
                     errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=name,
@@ -1427,6 +1472,24 @@ class SemanticParser(BasicParser):
                             symbol = '|{name}| <module> -> {rhs}'.format(name=name, rhs=rhs),
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
+
+                elif var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
+                    errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset),
+                                severity='error', symbol=lhs.name)
+
+                elif var.is_ndarray and var.is_target:
+                    errors.report(ARRAY_ALREADY_IN_USE,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset),
+                                severity='error', symbol=var.name)
+
+                elif var.is_ndarray and var.is_pointer:
+                    # we allow pointers to be reassigned multiple times
+                    # pointers reassigning need to call free_pointer func
+                    # to remove memory leaks
+                    new_expressions.append(Deallocate(var))
 
                 elif not is_augassign and str(dtype) != str(getattr(var, 'dtype', 'None')):
                     txt = '|{name}| {old} <-> {new}'
@@ -2270,8 +2333,10 @@ class SemanticParser(BasicParser):
         assigns = [self._visit_Assign(e) for e in assigns]
         results = [self._visit_Symbol(i, **settings) for i in return_vars]
 
-        if assigns:
-            expr  = Return(results, CodeBlock(assigns))
+        #add the Deallocate node before the Return node
+        code = assigns + [Deallocate(i) for i in self._allocs[-1]]
+        if code:
+            expr  = Return(results, CodeBlock(code))
         else:
             expr  = Return(results)
         return expr
@@ -2289,8 +2354,7 @@ class SemanticParser(BasicParser):
         is_elemental    = expr.is_elemental
         is_private      = expr.is_private
         doc_string      = self._visit(expr.doc_string) if expr.doc_string else expr.doc_string
-
-        header = expr.headers
+        headers = []
 
         not_used = [d for d in decorators if d not in def_decorators.__all__]
 
@@ -2301,13 +2365,19 @@ class SemanticParser(BasicParser):
         templates = self.get_templates()
         templates.update(expr.templates)
 
+        tmp_headers = expr.headers
         if cls_name:
-            header += self.get_header(cls_name +'.'+ name)
+            tmp_headers += self.get_header(cls_name + '.' + name)
             args_number -= 1
         else:
-            header += self.get_header(name)
-
-        for hd in header:
+            tmp_headers += self.get_header(name)
+        for header in tmp_headers:
+            if all(header.dtypes != hd.dtypes for hd in headers):
+                headers.append(header)
+            else:
+                errors.report(DUPLICATED_SIGNATURE, symbol=header,
+                        severity='warning')
+        for hd in headers:
             if (args_number != len(hd.dtypes)):
                 msg = 'The number of arguments in the function {} ({}) does not match the number\
                         of types in decorator/header ({}).'.format(name ,args_number, len(hd.dtypes))
@@ -2317,14 +2387,14 @@ class SemanticParser(BasicParser):
                     errors.report(msg, symbol=expr.arguments, severity='fatal')
 
         interfaces = []
-        if len(header) == 0:
+        if len(headers) == 0:
             # check if a header is imported from a header file
             # TODO improve in the case of multiple headers ( interface )
             func       = self.get_function(name)
             if func and func.is_header:
                 interfaces = [func]
 
-        if expr.arguments and not header and not interfaces:
+        if expr.arguments and not headers and not interfaces:
 
             # TODO ERROR wrong position
 
@@ -2332,12 +2402,12 @@ class SemanticParser(BasicParser):
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='error', blocker=self.blocking)
 
-        # we construct a FunctionDef from its header
-        for hd in header:
+        # We construct a FunctionDef from each function header
+        for hd in headers:
             interfaces += hd.create_definition(templates)
 
         if not interfaces:
-            # this for the case of a function without arguments => no header
+            # this for the case of a function without arguments => no headers
             interfaces = [FunctionDef(name, [], [], [])]
 
 #        TODO move this to codegen
@@ -2455,11 +2525,18 @@ class SemanticParser(BasicParser):
             func = FunctionDef(name, args, results, [])
             self.insert_function(func)
 
+            # Create a new list that store local variables for each FunctionDef to handle nested functions
+            self._allocs.append([])
+
             # we annotate the body
             body = self._visit(expr.body)
 
-            args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(str(a.name)) for a in args]
+            # Calling the Garbage collecting,
+            # it will add the necessary Deallocate nodes
+            # to the body of the function
+            body = self.garbage_collector(body)
 
+            args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(str(a.name)) for a in args]
             results = list(OrderedDict((a.name,self.get_variable(a.name)) for a in results).values())
 
             if arg and cls_name:
@@ -2734,8 +2811,8 @@ class SemanticParser(BasicParser):
             elif IsClass == PyccelIsNot:
                 return LiteralTrue()
 
-        if ((var1.is_Boolean or isinstance(var1.dtype, NativeBool)) and
-            (var2.is_Boolean or isinstance(var2.dtype, NativeBool))):
+        if (isinstance(var1.dtype, NativeBool) and
+            isinstance(var2.dtype, NativeBool)):
             return IsClass(var1, var2)
 
         lst = [NativeString(), NativeComplex(), NativeReal(), NativeInteger()]

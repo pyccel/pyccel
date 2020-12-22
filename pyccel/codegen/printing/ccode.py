@@ -1,14 +1,19 @@
 # coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 import functools
 import operator
 
-from sympy.core import Tuple
+from sympy.core           import Tuple
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
 from pyccel.ast.core      import Declare, IndexedVariable, Slice, ValuedVariable
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
+from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress, PyccelArraySize
 from pyccel.ast.core      import Nil, IfTernaryOperator
 from pyccel.ast.core      import Assign, datatype, Variable, Import
@@ -732,19 +737,25 @@ class CCodePrinter(CodePrinter):
         free_code = ''
         #free the array if its already allocated and checking if its not null if the status is unknown
         if  (expr.status == 'unknown'):
-            free_code = 'if (%s.raw_data != NULL)\n' % self._print(expr.variable.name)
-            free_code += '{\nfree_array(%s);\n}\n' % self._print(expr.variable.name)
+            free_code = 'if (%s.shape != NULL)\n' % self._print(expr.variable.name)
+            free_code += "{{\n{};\n}}\n".format(self._print(Deallocate(expr.variable)))
         elif  (expr.status == 'allocated'):
-            free_code += 'free_array(%s);\n' % self._print(expr.variable.name)
+            free_code += self._print(Deallocate(expr.variable))
         self._additional_imports.add('ndarrays')
         shape = expr.shape
         shape = [self._print(i) for i in shape]
         shape = ", ".join(a for a in shape)
         dtype = self._print(expr.variable.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
-        shape_Assign = "(int[]){" + shape + "}"
+        shape_dtype = self.find_in_dtype_registry('int', 4)
+        shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         alloc_code = "{} = array_create({}, {}, {});".format(expr.variable, len(expr.shape), shape_Assign, dtype)
         return '{}\n{}'.format(free_code, alloc_code)
+
+    def _print_Deallocate(self, expr):
+        if expr.variable.is_pointer:
+            return 'free_pointer({});'.format(self._print(expr.variable))
+        return 'free_array({});'.format(self._print(expr.variable))
 
     def _print_Slice(self, expr):
         start = self._print(expr.start)
@@ -942,7 +953,7 @@ class CCodePrinter(CodePrinter):
     def stored_in_c_pointer(self, a):
         if not isinstance(a, Variable):
             return False
-        return a.is_pointer or a.is_optional or any(a in b for b in self._additional_args)
+        return (a.is_pointer and not a.is_ndarray) or a.is_optional or any(a in b for b in self._additional_args)
 
     def create_tmp_var(self, match_var):
         tmp_var_name = self._parser.get_new_name('tmp')
@@ -1119,6 +1130,13 @@ class CCodePrinter(CodePrinter):
 
         lhs = self._print(lhs.name)
         rhs = self._print(rhs)
+
+        # the below condition handles the case of reassinging a pointer to an array view.
+        # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
+        if isinstance(expr.lhs, Variable) and expr.lhs.is_ndarray \
+                and isinstance(expr.rhs, Variable) and expr.rhs.is_ndarray and expr.rhs.is_pointer:
+            return 'alias_assign(&{}, {});'.format(lhs, rhs)
+
         return '{} = {};'.format(lhs, rhs)
 
     def _print_For(self, expr):

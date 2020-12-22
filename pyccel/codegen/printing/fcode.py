@@ -1,4 +1,8 @@
 # coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 # pylint: disable=R0201
 # pylint: disable=missing-function-docstring
 
@@ -601,7 +605,13 @@ class FCodePrinter(CodePrinter):
     def _print_PythonLen(self, expr):
         var = expr.arg
         idx = 1 if var.order == 'F' else var.rank
-        return 'size({},{})'.format(self._print(var), self._print(idx))
+        dtype = var.dtype
+        if dtype is NativeString():
+            return 'len({})'.format(self._print(var))
+        elif var.rank == 1:
+            return 'size({})'.format(self._print(var))
+        else:
+            return 'size({},{})'.format(self._print(var), self._print(idx))
 
     def _print_PythonSum(self, expr):
         args = [self._print(arg) for arg in expr.args]
@@ -1318,6 +1328,9 @@ class FCodePrinter(CodePrinter):
 
         return code
 
+#-----------------------------------------------------------------------------
+    def _print_Deallocate(self, expr):
+        return ''
 #------------------------------------------------------------------------------
 
     def _print_NativeBool(self, expr):
@@ -1348,18 +1361,18 @@ class FCodePrinter(CodePrinter):
     def _print_LiteralString(self, expr):
         sp_chars = ['\a', '\b', '\f', '\r', '\t', '\v', "'", '\n']
         sub_str = ''
-        formatted_str = "''"
+        formatted_str = []
         for c in expr.arg:
             if c in sp_chars:
                 if sub_str != '':
-                    formatted_str += " // '{}'".format(sub_str)
+                    formatted_str.append("'{}'".format(sub_str))
                     sub_str = ''
-                formatted_str += ' // ACHAR({})'.format(ord(c))
+                formatted_str.append('ACHAR({})'.format(ord(c)))
             else:
                 sub_str += c
         if sub_str != '':
-            formatted_str += " // '{}'".format(sub_str)
-        return formatted_str
+            formatted_str.append("'{}'".format(sub_str))
+        return ' // '.join(formatted_str)
 
     def _print_Interface(self, expr):
         # ... we don't print 'hidden' functions

@@ -1,3 +1,12 @@
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+
+"""
+Module exposing the lapack library functions to pyccel (see http://www.netlib.org/lapack/)
+"""
+
 #$ header metavar ignore_at_import=True
 
 from pyccel.stdlib.internal.lapack import dgetrf
