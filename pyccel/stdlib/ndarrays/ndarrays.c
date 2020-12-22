@@ -240,26 +240,6 @@ void        alias_assign(t_ndarray *dest, t_ndarray src)
 }
 
 /*
-** assigns
-*/
-
-void        alias_assign(t_ndarray *dest, t_ndarray src)
-{
-    /* 
-    ** copy src to dest
-    ** allocate new memory for shape and strides
-    ** setting is_view to true for the garbage collector to deallocate
-    */
-
-    *dest = src;
-    dest->shape = malloc(sizeof(int32_t) * src.nd);
-    memcpy(dest->shape, src.shape, sizeof(int32_t) * src.nd);
-    dest->strides = malloc(sizeof(int32_t) * src.nd);
-    memcpy(dest->strides, src.strides, sizeof(int32_t) * src.nd);
-    dest->is_view = true;
-}
-
-/*
 ** indexing
 */
 
