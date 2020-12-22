@@ -1364,7 +1364,7 @@ def test_full_order(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="casting to complex in not handled corectly"),
+            pytest.mark.skip(reason="casting to complex in not handled correctly"),
             pytest.mark.c]
         )
     )
