@@ -4903,6 +4903,8 @@ class IndexedElement(Expr, PyccelAstNode):
 
                     _shape = stop if start is None else PyccelMinus(stop, start)
                     if step is not None:
+                        if isinstance(step, PyccelUnarySub):
+                            step = PyccelUnarySub(step)
                         _shape = MathCeil(PyccelDiv(_shape, step))
 
                     new_shape.append(_shape)
