@@ -123,7 +123,6 @@ class NumpyNewArray(PyccelAstNode):
 # TODO [YG, 18.02.2020]: accept Numpy array argument
 # TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
 # TODO [YG, 22.05.2020]: move dtype & prec processing to __init__
-# TODO [YG, 22.05.2020]: change properties to read _dtype, _prec, _rank, etc...
 class NumpyArray(Application, NumpyNewArray):
     """
     Represents a call to  numpy.array for code generation.
@@ -161,6 +160,9 @@ class NumpyArray(Application, NumpyNewArray):
         arg_shape   = arg.shape
         self._shape = process_shape(arg_shape)
         self._rank  = len(self._shape)
+        self._dtype = self._args[1]
+        self._order = self._args[2]
+        self._precision = self._args[3]
 
     def _sympystr(self, printer):
         return self.arg
@@ -168,26 +170,6 @@ class NumpyArray(Application, NumpyNewArray):
     @property
     def arg(self):
         return self._args[0]
-
-    @property
-    def dtype(self):
-        return self._args[1]
-
-    @property
-    def order(self):
-        return self._args[2]
-
-    @property
-    def precision(self):
-        return self._args[3]
-
-    @property
-    def shape(self):
-        return self._shape
-
-    @property
-    def rank(self):
-        return self._rank
 
 #==============================================================================
 class NumpySum(Function, PyccelAstNode):
@@ -281,6 +263,11 @@ class NumpyMatmul(Application, PyccelAstNode):
             m = 1 if a.rank < 2 else a.shape[0]
             n = 1 if b.rank < 2 else b.shape[1]
             self._shape = (m, n)
+
+        if a.order == b.order:
+            self._order = a.order
+        else:
+            self._order = 'C'
 
     @property
     def a(self):
@@ -541,30 +528,17 @@ class NumpyFull(Application, NumpyNewArray):
 
         return Basic.__new__(cls, shape, dtype, order, precision, fill_value)
 
+    def __init__(self, shape, fill_value, dtype=None, order='C'):
+        self._shape = self._args[0]
+        self._rank  = len(self._shape)
+        self._dtype = self._args[1]
+        self._order = self._args[2]
+        self._precision = self._args[3]
+
     #--------------------------------------------------------------------------
-    @property
-    def shape(self):
-        return self._args[0]
-
-    @property
-    def dtype(self):
-        return self._args[1]
-
-    @property
-    def order(self):
-        return self._args[2]
-
-    @property
-    def precision(self):
-        return self._args[3]
-
     @property
     def fill_value(self):
         return self._args[4]
-
-    @property
-    def rank(self):
-        return len(self.shape)
 
 #==============================================================================
 class NumpyAutoFill(NumpyFull):
@@ -583,6 +557,10 @@ class NumpyAutoFill(NumpyFull):
         order = cls._process_order(order)
 
         return Basic.__new__(cls, shape, dtype, order, precision)
+
+    def __init__(self, shape, dtype=None, order='C'):
+        NumpyFull.__init__(self, shape, None, dtype, order)
+
 #==============================================================================
 class NumpyEmpty(NumpyAutoFill):
     """ Represents a call to numpy.empty for code generation.
@@ -596,18 +574,17 @@ class NumpyEmpty(NumpyAutoFill):
 class NumpyZeros(NumpyAutoFill):
     """ Represents a call to numpy.zeros for code generation.
     """
-    # TODO [YG, 09.11.2020]: create LiteralInteger/LiteralFloat/LiteralComplex w/ correct precision
     @property
     def fill_value(self):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
-            value = LiteralInteger(0)
+            value = LiteralInteger(0, precision = self.precision)
         elif isinstance(dtype, NativeReal):
-            value = LiteralFloat(0)
+            value = LiteralFloat(0, precision = self.precision)
         elif isinstance(dtype, NativeComplex):
-            value = LiteralComplex(0., 0.)
+            value = LiteralComplex(0., 0., precision = self.precision)
         elif isinstance(dtype, NativeBool):
-            value = LiteralFalse()
+            value = LiteralFalse(precision = self.precision)
         else:
             raise TypeError('Unknown type')
         return value
@@ -616,18 +593,17 @@ class NumpyZeros(NumpyAutoFill):
 class NumpyOnes(NumpyAutoFill):
     """ Represents a call to numpy.ones for code generation.
     """
-    # TODO [YG, 09.11.2020]: create LiteralInteger/LiteralFloat/LiteralComplex w/ correct precision
     @property
     def fill_value(self):
         dtype = self.dtype
         if isinstance(dtype, NativeInteger):
-            value = LiteralInteger(1)
+            value = LiteralInteger(1, precision = self.precision)
         elif isinstance(dtype, NativeReal):
-            value = LiteralFloat(1.)
+            value = LiteralFloat(1., precision = self.precision)
         elif isinstance(dtype, NativeComplex):
-            value = LiteralComplex(1., 0.)
+            value = LiteralComplex(1., 0., precision = self.precision)
         elif isinstance(dtype, NativeBool):
-            value = LiteralTrue()
+            value = LiteralTrue(precision = self.precision)
         else:
             raise TypeError('Unknown type')
         return value
@@ -746,6 +722,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         self._rank       = x.rank
         self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeReal()
         self._precision  = default_precision[str_dtype(self._dtype)]
+        self._order      = x.order
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
@@ -757,6 +734,10 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         self._rank      = x1.rank   # TODO ^^
         self._dtype     = NativeReal()
         self._precision = default_precision['real']
+        if x1.order == x2.order:
+            self._order = x1.order
+        else:
+            self._order = 'C'
 
 #------------------------------------------------------------------------------
 # Math operations
