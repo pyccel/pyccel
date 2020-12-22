@@ -42,13 +42,18 @@ typed languages include Java, C, C++, FORTRAN, Pascal and Scala. See [this](http
 
  ## Command line usage
 
--   Open a terminal app, iterm or terminal for MacOs, terminal for Linux. 
+-   Open a terminal app, iterm or terminal for MacOs, terminal for Linux.
+
 -   After the installation, type `pyccel`, the usage should be shown, then all good.
+
 -   Create a Python file that contains simple lines of code to see what will happen.
      1.   To create the file `touch file_name.py`.
-     2.   Use your favorite text editor to fill the file with some lines of code or just type `echo 'print("hello, world!\n")' > file_name.py`         for a quick test, `cat file_name.py` to make sure that your lines in the file.
+
+     2.   Use your favorite text editor to fill the file with some lines of code or just type `echo 'print("hello, world!\n")' > file_name.py` for a quick test, `cat file_name.py` to make sure that your lines in the file.
+
      3.   To generate the C/Fortran code form your Python code, type `pyccel file_name.py` or `pyccel file_name.py --language fortran`
-          to generate Fortran code, and `pyccel file_name.py --language c` to generate C code
+          to generate Fortran code, and `pyccel file_name.py --language c` to generate C code.
+
      4.   No problems ?, So you should discover `__pyccel__` the directory that contains your generated code and some other stuff.
 
 E.g (using `@types` decorator and a recursive function with a typed return), To specify the types of the function arguments and its return, we need to import the `@types` decorator from pyccel.decorators (as you can see in the first line) and then specify the types for each function using this format:
