@@ -1,5 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
-import numpy as np
 
 def array_int32_1d_scalar_add( x:'int32[:]', a:'int32' ):
     x[:] += a
@@ -31,4 +30,12 @@ def array_real_1d_complex_3d_expr( x:'real[:]', y:'real[:]' ):
     from numpy import full
     z = full(3,5)
     x[:] = (x // y) * x + z
+
+def fib(n: int) -> int:
+    if n<=1:
+        return 0
+    elif n==2:
+        return 1
+    else:
+        return fib(n-1) + fib(n-2)
 

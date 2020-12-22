@@ -657,6 +657,9 @@ class SyntaxParser(BasicParser):
                 annotated_args.append(a.argument.annotation)
 
         if all(not a==Nil() for a in annotated_args):
+            if stmt.returns:
+                returns = ValuedArgument(Symbol('results'),self._visit(stmt.returns))
+                annotated_args.append(returns)
             decorators['types'] = [Function('types')(*annotated_args)]
 
         for d in self._visit(stmt.decorator_list):
