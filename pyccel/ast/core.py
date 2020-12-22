@@ -4895,18 +4895,22 @@ class IndexedElement(Expr, PyccelAstNode):
             from .mathext import MathCeil
             for a,s in zip(args, shape):
                 if isinstance(a, Slice):
-                    start = a.start
-                    stop  = s if a.stop is None else a.stop
+                    start = a.start if a.start is not None else LiteralInteger(0)
+                    stop  = a.stop if a.stop is not None else s
                     step  = a.step
                     if isinstance(start, PyccelUnarySub):
                         start = PyccelAdd(s, start)
                     if isinstance(stop, PyccelUnarySub):
                         stop = PyccelAdd(s, stop)
 
-                    _shape = stop if start is None else PyccelMinus(stop, start)
+                    _shape = PyccelMinus(stop, start)
                     if step is not None:
                         if isinstance(step, PyccelUnarySub):
+                            start = s if a.start is None else start
+                            stop = LiteralInteger(0) if a.stop is None else stop
                             step = PyccelUnarySub(step)
+                            _shape = PyccelMinus(start, stop)
+
                         _shape = MathCeil(PyccelDiv(_shape, step))
 
                     new_shape.append(_shape)
