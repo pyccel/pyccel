@@ -1002,9 +1002,9 @@ def test_array_real_2d_C_div():
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_C_initialization():
+def test_array_real_2d_C_array_initialization():
 
-    f1 = arrays.array_real_2d_C_initialization
+    f1 = arrays.array_real_2d_C_array_initialization
     f2 = epyccel(f1)
 
     x1 = np.zeros((2, 3), dtype=float )
@@ -1015,6 +1015,39 @@ def test_array_real_2d_C_initialization():
 
     assert np.array_equal(x1, x2)
 
+def test_array_real_3d_C_array_initialization():
+
+    f1 = arrays.array_real_3d_C_array_initialization
+    f2 = epyccel(f1)
+
+    x  = np.random.random((3,2))
+    y  = np.random.random((3,2))
+    a  = np.array([x,y])
+
+    x1 = np.zeros_like(a)
+    x2 = np.zeros_like(a)
+
+    f1(x, y, x1)
+    f2(x, y, x2)
+
+    assert np.array_equal(x1, x2)
+
+def test_array_real_4d_C_array_initialization():
+
+    f1 = arrays.array_real_4d_C_array_initialization
+    f2 = epyccel(f1)
+
+    x  = np.random.random((3,2,4))
+    y  = np.random.random((3,2,4))
+    a  = np.array([x,y])
+
+    x1 = np.zeros_like(a)
+    x2 = np.zeros_like(a)
+
+    f1(x, y, x1)
+    f2(x, y, x2)
+
+    assert np.array_equal(x1, x2)
 #==============================================================================
 # TEST: 2D ARRAYS OF REAL WITH F ORDERING
 #==============================================================================
@@ -1131,9 +1164,9 @@ def test_array_real_2d_F_div():
 
     assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_F_initialization():
+def test_array_real_2d_F_array_initialization():
 
-    f1 = arrays.array_real_2d_F_initialization
+    f1 = arrays.array_real_2d_F_array_initialization
     f2 = epyccel(f1)
 
     x1 = np.zeros((2, 3), dtype=float, order='F')
@@ -1145,6 +1178,39 @@ def test_array_real_2d_F_initialization():
     assert np.array_equal(x1, x2)
 
 
+def test_array_real_3d_F_array_initialization():
+
+    f1 = arrays.array_real_3d_F_array_initialization
+    f2 = epyccel(f1)
+
+    x  = np.random.random((3,2)).copy(order='F')
+    y  = np.random.random((3,2)).copy(order='F')
+    a  = np.array([x,y], order='F')
+
+    x1 = np.zeros_like(a)
+    x2 = np.zeros_like(a)
+
+    f1(x, y, x1)
+    f2(x, y, x2)
+
+    assert np.array_equal(x1, x2)
+
+def test_array_real_4d_F_array_initialization():
+
+    f1 = arrays.array_real_4d_F_array_initialization
+    f2 = epyccel(f1)
+
+    x  = np.random.random((3,2,4)).copy(order='F')
+    y  = np.random.random((3,2,4)).copy(order='F')
+    a  = np.array([x,y], order='F')
+
+    x1 = np.zeros_like(a)
+    x2 = np.zeros_like(a)
+
+    f1(x, y, x1)
+    f2(x, y, x2)
+
+    assert np.array_equal(x1, x2)
 
 #==============================================================================
 # TEST: COMPLEX EXPRESSIONS IN 3D : TEST CONSTANT AND UNKNOWN SHAPES

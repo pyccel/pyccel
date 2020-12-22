@@ -344,13 +344,12 @@ class PythonTuple(Expr, PyccelAstNode):
                     raise TypeError('cannot determine the type of {}'.format(self))
 
 
-                shapes = [a.shape for a in args]
-
+                shapes     = [a.shape for a in args]
+                self._rank = max(a.rank for a in args) + 1
                 if all(sh is not None for sh in shapes):
                     self._shape = (LiteralInteger(len(args)), ) + shapes[0]
                     self._rank  = len(self._shape)
-                else:
-                    self._rank = max(a.rank for a in args) + 1
+
         else:
             self._rank      = max(a.rank for a in args) + 1
             self._dtype     = NativeGeneric()
@@ -431,13 +430,11 @@ class PythonList(Tuple, PyccelAstNode):
                 raise TypeError('cannot determine the type of {}'.format(self))
 
             shapes = [a.shape for a in args]
-
+            self._rank = max(a.rank for a in args) + 1
             if all(sh is not None for sh in shapes):
-                assert all(sh==shapes[0] for sh in shapes)
                 self._shape = (LiteralInteger(len(args)), ) + shapes[0]
                 self._rank  = len(self._shape)
-            else:
-                self._rank = max(a.rank for a in args) + 1
+
 #==============================================================================
 class PythonMap(Basic):
     """ Represents the map stmt

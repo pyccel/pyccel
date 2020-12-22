@@ -134,7 +134,7 @@ class NumpyArray(Application, NumpyNewArray):
 
     def __new__(cls, arg, dtype=None, order='C'):
 
-        if not isinstance(arg, (Tuple, PythonTuple, PythonList)):
+        if not isinstance(arg, (PythonTuple, PythonList)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
         # Verify dtype and get precision
@@ -158,7 +158,7 @@ class NumpyArray(Application, NumpyNewArray):
         return Basic.__new__(cls, arg, dtype, order, prec)
 
     def __init__(self, arg, dtype=None, order='C'):
-        arg_shape   = numpy.asarray(arg).shape
+        arg_shape   = arg.shape
         self._shape = process_shape(arg_shape)
         self._rank  = len(self._shape)
 

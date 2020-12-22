@@ -322,11 +322,23 @@ def array_real_2d_C_div( x, y ):
     x[:,:] /= y
 
 @types('real[:,:]')
-def array_real_2d_C_initialization(a):
+def array_real_2d_C_array_initialization(a):
     from numpy import array
     tmp = array([[1, 2, 3], [4, 5, 6]], dtype='float')
     a[:,:] = tmp[:,:]
 
+
+@types('real[:,:]','real[:,:]', 'real[:,:,:]')
+def array_real_3d_C_array_initialization(x, y, a):
+    from numpy import array
+    tmp      = array([x, y], dtype='float')
+    a[:,:,:] = tmp[:,:,:]
+
+@types('real[:,:,:]','real[:,:,:]', 'real[:,:,:,:]')
+def array_real_4d_C_array_initialization(x, y, a):
+    from numpy import array
+    tmp      = array([x, y], dtype='float')
+    a[:,:,:,:] = tmp[:,:,:,:]
 
 #==============================================================================
 # 2D ARRAYS OF REAL WITH F ORDERING
@@ -365,12 +377,22 @@ def array_real_2d_F_div( x, y ):
     x[:,:] /= y
 
 @types('real[:,:](order=F)')
-def array_real_2d_F_initialization(a):
+def array_real_2d_F_array_initialization(a):
     from numpy import array
     tmp = array([[1, 2, 3], [4, 5, 6]], dtype='float', order='F')
     a[:,:] = tmp[:,:]
 
+@types('real[:,:](order=F)','real[:,:](order=F)', 'real[:,:,:](order=F)')
+def array_real_3d_F_array_initialization(x, y, a):
+    from numpy import array
+    tmp      = array([x, y], dtype='float', order='F')
+    a[:,:,:] = tmp[:,:,:]
 
+@types('real[:,:,:](order=F)','real[:,:,:](order=F)', 'real[:,:,:,:](order=F)')
+def array_real_4d_F_array_initialization(x, y, a):
+    from numpy import array
+    tmp      = array([x, y], dtype='float', order='F')
+    a[:,:,:,:] = tmp[:,:,:,:]
 #==============================================================================
 # COMPLEX EXPRESSIONS IN 3D : TEST CONSTANT AND UNKNOWN SHAPES
 #==============================================================================

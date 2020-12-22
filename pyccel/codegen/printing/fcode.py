@@ -497,10 +497,10 @@ class FCodePrinter(CodePrinter):
         return '!${0} {1}\n'.format(accel, txt)
 
     def _print_Tuple(self, expr):
-        shape = list(reversed(asarray(expr).shape))
-        if len(shape)>1:
-            elements = ', '.join(self._print(i) for i in expr)
-            return 'reshape(['+ elements + '], '+ self._print(Tuple(*shape)) + ')'
+        size = len(expr)
+        if expr[0].rank>0:
+            raise NotImplementedError(' Tuple with elements of rank > 0 is not implemented')
+
         fs = ', '.join(self._print(f) for f in expr)
         return '[{0}]'.format(fs)
 
@@ -514,9 +514,13 @@ class FCodePrinter(CodePrinter):
         shape = Tuple(*reversed(expr.shape))
         if len(shape)>1:
             elements = ', '.join(self._print(i) for i in expr)
-            return 'reshape(['+ elements + '], '+ self._print(shape) + ')'
+            shape    = ', '.join(self._print(i) for i in shape)
+            return 'reshape(['+ elements + '], '+ '[' + shape + ']' + ')'
         fs = ', '.join(self._print(f) for f in expr)
         return '[{0}]'.format(fs)
+
+    def _print_PythonList(self, expr):
+        return self._print_PythonTuple(expr)
 
     def _print_TupleVariable(self, expr):
         if expr.is_homogeneous:
@@ -602,13 +606,15 @@ class FCodePrinter(CodePrinter):
     def _print_PythonLen(self, expr):
         var = expr.arg
         idx = 1 if var.order == 'F' else var.rank
+        prec = self._print(expr.precision)
+
         dtype = var.dtype
         if dtype is NativeString():
             return 'len({})'.format(self._print(var))
         elif var.rank == 1:
-            return 'size({})'.format(self._print(var))
+            return 'size({}, kind={})'.format(self._print(var), self._print(idx), prec)
         else:
-            return 'size({},{})'.format(self._print(var), self._print(idx))
+            return 'size({},{},{})'.format(self._print(var), self._print(idx), prec)
 
     def _print_PythonSum(self, expr):
         args = [self._print(arg) for arg in expr.args]
@@ -695,10 +701,14 @@ class FCodePrinter(CodePrinter):
 
         # Construct right-hand-side code
         rhs_code = self._print(expr.arg)
-
         # If Numpy array is stored with column-major ordering, transpose values
+        # use reshape with order for rank > 2
         if expr.order == 'F' and expr.rank > 1:
-            rhs_code = 'transpose({})'.format(rhs_code)
+            shape    = ', '.join(self._print(i) for i in expr.shape)
+            order    = [LiteralInteger(i) for i in range(1, expr.rank+1)]
+            order    = order[1:]+ order[:1]
+            order    = ', '.join(self._print(i) for i in order)
+            rhs_code = 'reshape({},[{}], order=[{}])'.format(rhs_code, shape, order)
 
         return rhs_code
 
@@ -709,15 +719,16 @@ class FCodePrinter(CodePrinter):
     # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
         init_value = self._print(expr.arg)
-
+        prec       = self._print(expr.precision)
         if expr.arg.order == 'C':
             index = self._print(expr.arg.rank - expr.index)
         else:
             index = self._print(expr.index + 1)
 
-        code_init = 'size({0}, {1})'.format(init_value, index)
+        if expr.arg.rank == 1:
+            return 'size({0}, kind={1})'.format(init_value, prec)
 
-        return code_init
+        return 'size({0}, {1}, {2})'.format(init_value, index, prec)
 
     def _print_PythonInt(self, expr):
         value = self._print(expr.arg)
