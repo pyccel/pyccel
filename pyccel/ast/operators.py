@@ -73,9 +73,6 @@ def broadcast(shape_1, shape_2):
     symbol_map = {}
     used_names = set()
     for e1,e2 in zip(new_shape_1, new_shape_2):
-        t1 = pyccel_to_sympy(e1, symbol_map, used_names)
-        t2 = pyccel_to_sympy(e2, symbol_map, used_names)
-        print('debug : e1 : {}, e2 : {}, e1 == e1 : {}'.format(t1, t2, t1 == t2))
         if e1 == e2:
             new_shape.append(e1)
         elif e1 == 1:
