@@ -203,7 +203,7 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     view.strides = malloc(sizeof(int32_t) * arr.nd);
     memcpy(view.strides, arr.strides, sizeof(int32_t) * arr.nd);
     view.is_view = true;
-    va_start(va, arr);
+    va_start(va, n);
     for (int32_t i = 0; i < arr.nd ; i++)
     {
         slice = va_arg(va, t_slice);
