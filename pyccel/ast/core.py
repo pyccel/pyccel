@@ -4890,6 +4890,7 @@ class IndexedElement(Expr, PyccelAstNode):
             if self.order == 'C':
                 shape = shape[::-1]
             new_shape = []
+            from .mathext import MathCeil
             for a,s in zip(args, shape):
                 if isinstance(a, Slice):
                     start = a.start
@@ -4902,7 +4903,7 @@ class IndexedElement(Expr, PyccelAstNode):
 
                     _shape = stop if start is None else PyccelMinus(stop, start)
                     if step is not None:
-                        _shape = PyccelDiv(_shape, step)
+                        _shape = MathCeil(PyccelDiv(_shape, step))
 
                     new_shape.append(_shape)
 
