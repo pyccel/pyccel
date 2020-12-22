@@ -24,6 +24,7 @@ For more details about Python object, see [this](https://docs.python.org/3/tutor
  ### Python variable
 
 -   is a reference to a Python object in memory.
+
 -   is created with an assignment operation `x = expr`:
      1.   if the variable `x` already exists, the interpreter reduces the reference count of its object
      2.   a new variable `x` is created, which references the value of expr.
