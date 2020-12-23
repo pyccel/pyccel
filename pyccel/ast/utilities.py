@@ -289,7 +289,8 @@ def compatible_operation(*args):
     # If the shapes don't match then an index must be required
     shapes = [a.shape for a in args if a.shape != ()]
     shapes = set(tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes)
-    return len(shapes) == 1
+    order  = set(a.order for a in args if a.order is not None)
+    return len(shapes) == 1 and len(order) == 1
 
 #==============================================================================
 def insert_index(expr, pos, index_var, language_has_vectors):
@@ -534,7 +535,8 @@ def insert_fors(blocks, indices, level = 0):
     if all(not isinstance(b, tuple) for b in blocks[0]):
         body = blocks[0]
     else:
-        body = [insert_fors(b, indices, level+1) for b in blocks[0]]
+        body = [insert_fors(b, indices, level+1) if isinstance(b, tuple) else [b] \
+                for b in blocks[0]]
         body = [bi for b in body for bi in b]
     if blocks[1] == 1:
         return body
