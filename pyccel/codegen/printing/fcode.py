@@ -284,7 +284,7 @@ class FCodePrinter(CodePrinter):
                                             name=name)
 
         imports = ''.join(self._print(i) for i in expr.imports)
-        imports += 'use ISO_C_BINDING\n'
+        imports += 'use, intrinsic :: ISO_C_BINDING\n'
 
         decs    = ''.join(self._print(i) for i in expr.declarations)
         body    = ''
@@ -335,7 +335,7 @@ class FCodePrinter(CodePrinter):
         self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
-        imports += 'use ISO_C_BINDING\n'
+        imports += 'use, intrinsic :: ISO_C_BINDING\n'
         body    = self._print(expr.body)
 
         # Print the declarations of all variables in the namespace, which include:
@@ -1381,7 +1381,7 @@ class FCodePrinter(CodePrinter):
                 self._handle_fortran_specific_a_prioris(list(f.arguments) + list(f.results))
                 parts = self.function_signature(f, f.name)
                 parts = ["{}({}) {}\n".format(parts['sig'], parts['arg_code'], parts['func_end']),
-                        'use iso_c_binding\n',
+                        'use, intrinsic :: ISO_C_BINDING\n',
                         parts['arg_decs'],
                         'end {} {}\n'.format(parts['func_type'], f.name)]
                 funcs_sigs.append(''.join(a for a in parts))
@@ -1479,7 +1479,7 @@ class FCodePrinter(CodePrinter):
         interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         arg_code  = ', '.join(self._print(i) for i in chain( arguments, results ))
         imports   = ''.join(self._print(i) for i in expr.imports)
-        imports += 'use ISO_C_BINDING'
+        imports += 'use, intrinsic :: ISO_C_BINDING'
         prelude   = ''.join(self._print(i) for i in args_decs.values())
         body_code = self._print(expr.body)
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
@@ -2616,14 +2616,16 @@ class FCodePrinter(CodePrinter):
             if len(expr.indices)==1:
                 return self._print(base[expr.indices[0]])
             else:
-                var = base[expr.indices[-1]]
+                var = base[expr.indices[0]]
                 return self._print(IndexedVariable(var, dtype = var.dtype,
                     shape = var.shape, prec = var.precision,
-                    order = var.order, rank = var.rank)[expr.indices[:-1]])
+                    order = var.order, rank = var.rank)[expr.indices[1:]])
         else:
             base_code = self._print(expr.base.label)
 
         inds = list(expr.indices)
+        if expr.base.order == 'C':
+            inds = inds[::-1]
         base_shape = Shape(expr.base)
         allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
                 expr.base.internal_variable.allows_negative_indexes)
