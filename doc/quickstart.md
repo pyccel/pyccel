@@ -9,7 +9,7 @@ Welcome to
 
  ## Python’s objects, variables, and garbage collection
 
- Python is an **interpreter** language, **dynamically typed** and **garbage-collected**.
+ Python is an **interpreted** language, **dynamically typed** and **garbage-collected**.
 
  ### Python object
 
