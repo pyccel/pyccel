@@ -799,12 +799,13 @@ class SemanticParser(BasicParser):
 
     def _visit_PythonList(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
-        dtypes = set(i.dtype for i in ls)
-        if len(dtypes) != 1:
+        expr = PythonList(*ls, sympify=False)
+
+        if not expr.is_homogeneous:
             errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal')
-        return PythonList(*ls, sympify=False)
+        return expr
 
     def _visit_ValuedArgument(self, expr, **settings):
         value = self._visit(expr.value, **settings)
