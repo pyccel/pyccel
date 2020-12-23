@@ -196,9 +196,6 @@ def split_positional_keyword_arguments(*args):
     return args, kwargs
 
 #==============================================================================
-def get_base_rank(expr):
-    return expr.base.rank if isinstance(expr, IndexedElement) else expr.rank
-
 def remove_1_index(expr, pos):
     if isinstance(expr, Variable):
         if expr.rank==0 or -pos>expr.rank:
@@ -309,37 +306,30 @@ def insert_index(expr, pos, index_var, language_has_vectors):
         return expr
     elif isinstance(expr, AugAssign):
         cls = type(expr)
-        shapes = [a.base.shape if isinstance(a, IndexedElement) else a.shape for a in (expr.lhs, expr.rhs) if a.shape != ()]
+        shapes = [a.shape for a in (expr.lhs, expr.rhs) if a.shape != ()]
         shapes = set(tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes)
+        lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
         rhs = insert_index(expr.rhs, pos, index_var, language_has_vectors)
-        lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors) if len(shapes)!=1 else expr.lhs
-        if lhs is not expr.lhs:
-            return cls(lhs, expr.op, rhs, expr.status, expr.like)
-        if rhs is not expr.rhs:
-            lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
+        changed = not isinstance(rhs, (Variable, IndexedElement)) and rhs is not rhs
+        print(expr, changed, type(rhs), shapes)
+        if changed or len(shapes)!=1 or not language_has_vectors:
             return cls(lhs, expr.op, rhs, expr.status, expr.like)
         else:
             return expr
     elif isinstance(expr, Assign):
         cls = type(expr)
-        if expr.lhs.rank > expr.rhs.rank:
-            lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
-        else:
-            lhs = expr.lhs
+        lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
+        rhs = insert_index(expr.rhs, pos, index_var, language_has_vectors)
 
-        rhs = insert_index(expr.rhs, pos, index_var, language_has_vectors) \
-                if not isinstance(expr.rhs, (Variable, IndexedElement)) else expr.rhs
+        var_assign = isinstance(rhs, (Variable, IndexedElement)) and expr.lhs.rank == expr.rhs.rank
 
-        if lhs is not expr.lhs:
-            return cls(lhs, rhs, expr.status, expr.like)
-        elif rhs is not expr.rhs or not language_has_vectors:
-            lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
+        if  rhs is not expr.rhs and (not var_assign or not language_has_vectors):
             return cls(lhs, rhs, expr.status, expr.like)
         else:
             return expr
     elif isinstance(expr, PyccelOperator):
         cls = type(expr)
-        shapes = [a.base.shape if isinstance(a, IndexedElement) else a.shape for a in expr.args if a.shape != ()]
+        shapes = [a.shape for a in expr.args if a.shape != ()]
         shapes = set(tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes)
         args = [insert_index(a, pos, index_var, False) for a in expr.args]
         changed = any(a is not na for a,na in zip(expr.args, args) if not isinstance(a, (Variable, IndexedElement)))
