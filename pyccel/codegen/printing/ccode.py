@@ -725,8 +725,9 @@ class CCodePrinter(CodePrinter):
 
         # variable step in slice
         elif allow_negative_index and step and not isinstance(step, LiteralInteger):
+            og_start = start
             start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, PyccelMinus(stop, LiteralInteger(1)))
-            stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, start)
+            stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, og_start)
 
         return Slice(start, stop, step)
 
