@@ -87,7 +87,7 @@ def test_multi_dim_sum():
     f1 = multi_rank.multi_dim_sum
     f2 = epyccel( f1 )
 
-    dims = [randint(10) for _ in range(3)]
+    dims = [randint(1,10) for _ in range(3)]
     x1 = np.array(rand(*dims)*10, dtype=int)
     y1 = np.copy(x1)
     x2 = np.array(rand(*dims[1:])*10, dtype=int)
@@ -109,7 +109,7 @@ def test_multi_dim_sum_ones():
     f1 = multi_rank.multi_dim_sum_ones
     f2 = epyccel( f1 )
 
-    dims = [randint(10) for _ in range(3)]
+    dims = [randint(1, 10) for _ in range(3)]
     x1 = np.array(rand(*dims)*10, dtype=int)
     y1 = np.copy(x1)
 
