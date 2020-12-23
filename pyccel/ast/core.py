@@ -1056,27 +1056,22 @@ class NativeOp(with_metaclass(Singleton, Basic)):
 
 
 class AddOp(NativeOp):
-
     _symbol = '+'
 
 
 class SubOp(NativeOp):
-
     _symbol = '-'
 
 
 class MulOp(NativeOp):
-
     _symbol = '*'
 
 
 class DivOp(NativeOp):
-
     _symbol = '/'
 
 
 class ModOp(NativeOp):
-
     _symbol = '%'
 
 
@@ -2281,7 +2276,8 @@ class Variable(Symbol, PyccelAstNode):
             elif s is None or isinstance(s,(Variable, Slice, PyccelAstNode, Function)):
                 new_shape.append(PyccelArraySize(self, i))
             else:
-                raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
+                raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel),'
+                                'Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
         return tuple(new_shape)
 
     @property
@@ -5724,7 +5720,7 @@ def process_shape(shape):
 
     new_shape = []
     for s in shape:
-        if isinstance(s,(LiteralInteger,Variable, Slice, PyccelAstNode, Function)):
+        if isinstance(s,(LiteralInteger, Variable, Slice, PyccelAstNode, Function)):
             new_shape.append(s)
         elif isinstance(s, sp_Integer):
             new_shape.append(LiteralInteger(s.p))
