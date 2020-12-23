@@ -121,8 +121,23 @@ def test_multi_dim_sum_ones():
 
     assert np.array_equal( pyccel_result, python_result )
 
-def test_mul_by_vector_C():
-    f1 = multi_rank.multi_expression
+def test_multi_expression_assign():
+    f1 = multi_rank.multi_expression_assign
+    f2 = epyccel( f1 )
+
+    x1 = np.array(rand(4,5)*10, dtype=int)
+    x2 = np.copy(x1)
+
+    y1 = np.array(rand(5)*10, dtype=int)
+    y2 = np.copy(y1)
+
+    f1(x1, y1)
+    f2(x2, y2)
+
+    assert np.array_equal( x1, x2 )
+
+def test_multi_expression_augassign():
+    f1 = multi_rank.multi_expression_augassign
     f2 = epyccel( f1 )
 
     x1 = np.array(rand(4,5)*10, dtype=int)

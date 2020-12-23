@@ -49,7 +49,16 @@ def multi_dim_sum_ones(result, a):
     result[:,:,:] = a + b + c + d
 
 @types('int[:,:]','int[:]')
-def multi_expression(a,b):
+def multi_expression_assign(a,b):
+    import numpy as np
+    a[:] = a * b
+    a[:] = a * 2
+    b[:] = b + 4
+    a[:] = a - b
+    a += np.sum(b)
+
+@types('int[:,:]','int[:]')
+def multi_expression_augassign(a,b):
     import numpy as np
     a[:] *= b
     a[:] *= 2
