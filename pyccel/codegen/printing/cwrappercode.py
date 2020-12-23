@@ -352,7 +352,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return body
 
-    def _body_array(self, variable, collect_var, cast_function=None, check_type = False) :
+    def _body_array(self, variable, collect_var, check_type = False) :
         """
         Responsible for collecting value and managing error and create the body
         of arguments with rank greater than 0 in format
@@ -409,11 +409,12 @@ class CWrapperCodePrinter(CCodePrinter):
                 error = PyErr_SetString('PyExc_NotImplementedError',
                         '"Argument does not have the expected ordering ({})"'.format(collect_var.order))
                 body += [(PyccelNot(check), [error, Return([Nil()])])]
-        if cast_function is None:
+        if self._target_language == "c":
+            cast_function = self.get_cast_function_call('pyccelPyArrayObject_to_ndarray', collect_var)
+            body += [(LiteralTrue(), [Assign(VariableAddress(variable), cast_function)])]
+        else:
             body += [(LiteralTrue(), [Assign(VariableAddress(variable),
                                 self.get_collect_function_call(variable, collect_var))])]
-        else:
-            body += [(LiteralTrue(), [Assign(VariableAddress(variable), cast_function)])]
         body = [If(*body)]
 
         return body
@@ -426,7 +427,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body = []
 
         if variable.rank > 0:
-            body = self._body_array(variable, collect_var, cast_function, check_type)
+            body = self._body_array(variable, collect_var, check_type)
 
         elif variable.is_optional:
             tmp_variable = Variable(dtype=variable.dtype, name = self.get_new_name(used_names, variable.name+"_tmp"))
@@ -474,8 +475,6 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = PyccelPyArrayObject()
             collect_var = Variable(dtype= collect_type, is_pointer = True, rank = variable.rank,
                                     order= variable.order, name=self.get_new_name(used_names, variable.name+"_tmp"))
-            if self._target_language == "c":
-                cast_function = self.get_cast_function_call('pyccelPyArrayObject_to_ndarray', collect_var)
 
         elif isinstance(variable, ValuedVariable):
             collect_type = PyccelPyObject()
@@ -884,7 +883,11 @@ class CWrapperCodePrinter(CCodePrinter):
         # Call free function for python type
         wrapper_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
         # Call free function for C type
-        wrapper_body += [FunctionCall(C_Free, [DottedVariable(i, Variable(dtype=NativeInteger(), name='strides', allocatable=True))]) for i in expr.arguments if i.allocatable]
+        if self._target_language == 'c':
+            wrapper_body += [FunctionCall(C_Free, [DottedVariable(i,
+                                          Variable(dtype=NativeInteger(),
+                                          name='strides', allocatable=True))])
+                            for i in expr.arguments if i.allocatable]
         self._to_free_PyObject_list.clear()
         #Return
         wrapper_body.append(Return(wrapper_results))
@@ -913,7 +916,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         function_defs = '\n\n'.join(self._print(f) for f in funcs)
         cast_functions = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f)
-                                        for f in self._cast_functions_dict.values())
+                                       for f in self._cast_functions_dict.values())
         method_def_func = ',\n'.join(('{{\n'
                                      '"{name}",\n'
                                      '(PyCFunction){wrapper_name},\n'
