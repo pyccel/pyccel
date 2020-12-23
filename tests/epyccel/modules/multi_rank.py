@@ -106,3 +106,12 @@ def grouped_expressions(a,b,c):
     a[:] = a + b
     a[:] = a + c
     a += np.sum(b)
+
+@types('int[:,:,:]','int[:,:]','int[:]')
+def grouped_expressions2(a,b,c):
+    import numpy as np
+    a[:] = a - c
+    a[:] = a * b
+    a[:] = a + b
+    a[:] = a + c
+    a += np.sum(b)
