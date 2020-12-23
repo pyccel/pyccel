@@ -1,7 +1,7 @@
 Welcome to Pyccel
 =================
 
-|build-status| |docs| |codacy|
+|build-status| |codacy|
 
 **Pyccel** stands for Python extension language using accelerators.
 
@@ -204,26 +204,6 @@ In order to run the unit tests and to get a coverage report, four additional Pyt
   pip3 install --user pytest
   pip3 install --user coverage
 
-
-Reading the docs
-================
-
-You can read them online at <http://pyccel.readthedocs.io/>.
-
-Alternatively, the documentation can be built automatically using Sphinx.
-First you will need to install a few additional Python packages::
-
-   pip3 install --user sphinx
-   pip3 install --user sphinxcontrib.bibtex
-   pip3 install --user git+git://github.com/saidctb/sphinx-execute-code
-
-Then build the documentation with::
-
-   cd doc
-   make html
-
-Then, direct your browser to ``_build/html/index.html``.
-
 Testing
 =======
 
@@ -231,12 +211,6 @@ To test your Pyccel installation please run the script *tests/run_tests_py3.sh* 
 
 Continuous testing runs on Travis CI: <https://travis-ci.com/github/pyccel/pyccel>
 
-Known bugs
-==========
-
-We are trying to maintain a list of *known bugs*, see `bugs/README.rst`__
-
-.. __: bugs/README.rst
 
 Contributing
 ============
@@ -247,11 +221,6 @@ TODO
     :alt: build status
     :scale: 100%
     :target: https://travis-ci.com/pyccel/pyccel
-
-.. |docs| image:: https://readthedocs.org/projects/pyccel/badge/?version=latest
-    :alt: Documentation Status
-    :scale: 100%
-    :target: http://pyccel.readthedocs.io/
 
 .. |codacy| image:: https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698
     :alt: Codacy Badge
