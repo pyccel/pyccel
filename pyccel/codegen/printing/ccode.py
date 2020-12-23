@@ -647,7 +647,6 @@ class CCodePrinter(CodePrinter):
         else:
             base = expr.base
         inds = list(expr.indices)
-        inds = inds[::-1]
         base_shape = base.shape
         allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
                 base.allows_negative_indexes)
