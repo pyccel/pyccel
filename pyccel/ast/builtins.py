@@ -422,7 +422,7 @@ class PythonList(Tuple, PyccelAstNode):
             self._dtype = NativeString()
             self._rank  = 0
             self._shape = ()
-            assert len(integers + reals + complexes) == 0
+
         else:
             if complexes:
                 self._dtype     = NativeComplex()
