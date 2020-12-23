@@ -370,7 +370,6 @@ def insert_index(expr, pos, index_var, language_has_vectors):
 
 #==============================================================================
 def collect_loops(block, indices, language_has_vectors = False, level = -1):
-    print("COLLECT_LOOPS : ",block)
     result = []
     current_level = 0
     max_level = 0
@@ -378,7 +377,6 @@ def collect_loops(block, indices, language_has_vectors = False, level = -1):
                            NumpyFunctionBase, MathFunctionBase,
                            PythonList, PythonTuple, Nil, Dlist)
     for i, line in enumerate(block):
-        print("LOOOOOOOOP : ",i, line)
         if isinstance(line, Assign) and \
                 not isinstance(line.rhs, array_creator_types) and \
                 not ( not isinstance(line, AugAssign) and isinstance(line.rhs, Variable)) and \
@@ -424,7 +422,6 @@ def collect_loops(block, indices, language_has_vectors = False, level = -1):
         else:
             result.append(line)
             current_level = 0
-    print("RESULT : ",result)
     return result, max_level
 
 def insert_fors(blocks, indices, level):
@@ -432,7 +429,11 @@ def insert_fors(blocks, indices, level):
         body = blocks[0]
     else:
         body = [insert_fors(b, indices, level+1) for b in blocks[0]]
-    return For(indices[level], PythonRange(0,blocks[1]), body)
+        body = [bi for b in body for bi in b]
+    if blocks[1] == 1:
+        return body
+    else:
+        return [For(indices[level], PythonRange(0,blocks[1]), body)]
 
 #==============================================================================
 def expand_to_loops(block, language_has_vectors = False, index = 0):
@@ -471,7 +472,8 @@ def expand_to_loops(block, language_has_vectors = False, index = 0):
     indices = []
     res, max_level = collect_loops(block, indices, language_has_vectors)
 
-    body = [insert_fors(b, indices, 0) if isinstance(b, tuple) else b for b in res]
+    body = [insert_fors(b, indices, 0) if isinstance(b, tuple) else [b] for b in res]
+    body = [bi for b in body for bi in b]
     return body, indices
     #for_loop_body, new_vars = expand_to_loops(loop_stmts, language_has_vectors, index+1)
     #after_loop, new_vars2 = expand_to_loops(after_loop, language_has_vectors, index)
