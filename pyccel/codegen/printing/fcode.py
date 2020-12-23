@@ -48,7 +48,7 @@ from pyccel.ast.core      import FunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
                                   PythonMap, PythonPrint, PythonRange,
-                                  PythonZip, PythonTuple, PythonFloat)
+                                  PythonZip, PythonFloat, PythonTuple, PythonList)
 from pyccel.ast.builtins  import PythonComplex, PythonBool
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
@@ -695,20 +695,46 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyArray(self, expr):
         """Fortran print."""
 
-        # Construct right-hand-side code
-        rhs_code = self._print(expr.arg)
         # If Numpy array is stored with column-major ordering, transpose values
         # use reshape with order for rank > 2
         if expr.order == 'F':
             if expr.rank == 2:
+                rhs_code = self._print(expr.arg)
                 rhs_code = 'transpose({})'.format(rhs_code)
             elif expr.rank > 2:
+                args     = [self._print(a) for a in expr.arg]
+                new_args = []
+                for ac, a in zip(args, expr.arg):
+                    if a.order == 'C':
+                        shape    = ', '.join(self._print(i) for i in a.shape)
+                        order    = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
+                        ac       = 'reshape({}, [{}], order=[{}])'.format(ac, shape, order)
+                    new_args.append(ac)
+
+                args     = new_args
+                rhs_code = '[' + ' ,'.join(args) + ']'
                 shape    = ', '.join(self._print(i) for i in expr.shape)
                 order    = [LiteralInteger(i) for i in range(1, expr.rank+1)]
                 order    = order[1:]+ order[:1]
                 order    = ', '.join(self._print(i) for i in order)
-                rhs_code = 'reshape({},[{}], order=[{}])'.format(rhs_code, shape, order)
+                rhs_code = 'reshape({}, [{}], order=[{}])'.format(rhs_code, shape, order)
+        elif expr.order == 'C':
+            if expr.rank > 2:
+                args     = [self._print(a) for a in expr.arg]
+                new_args = []
+                for ac, a in zip(args, expr.arg):
+                    if a.order == 'F':
+                        shape    = ', '.join(self._print(i) for i in a.shape[::-1])
+                        order    = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
+                        ac       = 'reshape({}, [{}], order=[{}])'.format(ac, shape, order)
+                    new_args.append(ac)
 
+                args     = new_args
+                rhs_code = '[' + ' ,'.join(args) + ']'
+                shape    = ', '.join(self._print(i) for i in expr.shape[::-1])
+                rhs_code = 'reshape({}, [{}])'.format(rhs_code, shape)
+            else:
+                rhs_code = self._print(expr.arg)
         return rhs_code
 
     def _print_NumpyFloor(self, expr):

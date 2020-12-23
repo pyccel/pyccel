@@ -316,7 +316,8 @@ class PythonTuple(Expr, PyccelAstNode):
             return
         is_homogeneous = all(a.dtype is not NativeGeneric() and \
                              args[0].dtype == a.dtype and \
-                             args[0].rank  == a.rank  for a in args[1:])
+                             args[0].rank  == a.rank  and \
+                             args[0].order == a.order for a in args[1:])
         self._inconsistent_shape = not all(args[0].shape==a.shape   for a in args[1:])
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
@@ -402,10 +403,16 @@ class PythonLen(Function, PyccelAstNode):
 #==============================================================================
 class PythonList(Tuple, PyccelAstNode):
     _order = 'C'
+    _is_homogeneous = True
     """ Represent lists in the code with dynamic memory management."""
     def __init__(self, *args, **kwargs):
         if self.stage == 'syntactic':
             return
+        self._is_homogeneous = all(a.dtype is not NativeGeneric() and \
+                             args[0].dtype == a.dtype and \
+                             args[0].rank  == a.rank  and \
+                             args[0].order == a.order for a in args[1:])
+
         bools     = [a for a in args if a.dtype is NativeBool()]
         integers  = [a for a in args if a.dtype is NativeInteger()]
         reals     = [a for a in args if a.dtype is NativeReal()]
@@ -429,14 +436,16 @@ class PythonList(Tuple, PyccelAstNode):
             elif bools:
                 self._dtype     = NativeBool()
                 self._precision  = max(a.precision for a in bools)
-            else:
-                raise TypeError('cannot determine the type of {}'.format(self))
 
             shapes = [a.shape for a in args]
             self._rank = max(a.rank for a in args) + 1
             if all(sh is not None for sh in shapes):
                 self._shape = (LiteralInteger(len(args)), ) + shapes[0]
                 self._rank  = len(self._shape)
+
+    @property
+    def is_homogeneous(self):
+        return self._is_homogeneous
 
 #==============================================================================
 class PythonMap(Basic):

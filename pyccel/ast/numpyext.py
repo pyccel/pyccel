@@ -136,6 +136,10 @@ class NumpyArray(Application, NumpyNewArray):
         if not isinstance(arg, (PythonTuple, PythonList)):
             raise TypeError('Uknown type of  %s.' % type(arg))
 
+        # TODO: treat inhomogenous lists and tuples when they have mixed ordering
+        if not arg.is_homogeneous:
+            raise TypeError('we only accept a homogeneous list or tuple ')
+
         # Verify dtype and get precision
         if dtype is None:
             dtype = arg.dtype

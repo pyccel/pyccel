@@ -1015,9 +1015,9 @@ def test_array_real_2d_C_array_initialization():
 
     assert np.array_equal(x1, x2)
 
-def test_array_real_3d_C_array_initialization():
+def test_array_real_3d_C_array_initialization_1():
 
-    f1 = arrays.array_real_3d_C_array_initialization
+    f1 = arrays.array_real_3d_C_array_initialization_1
     f2 = epyccel(f1)
 
     x  = np.random.random((3,2))
@@ -1029,6 +1029,19 @@ def test_array_real_3d_C_array_initialization():
 
     f1(x, y, x1)
     f2(x, y, x2)
+
+    assert np.array_equal(x1, x2)
+
+def test_array_real_3d_C_array_initialization_2():
+
+    f1 = arrays.array_real_3d_C_array_initialization_2
+    f2 = epyccel(f1)
+
+    x1 = np.zeros((2,3,4))
+    x2 = np.zeros((2,3,4))
+
+    f1(x1)
+    f2(x2)
 
     assert np.array_equal(x1, x2)
 
@@ -1178,9 +1191,9 @@ def test_array_real_2d_F_array_initialization():
     assert np.array_equal(x1, x2)
 
 
-def test_array_real_3d_F_array_initialization():
+def test_array_real_3d_F_array_initialization_1():
 
-    f1 = arrays.array_real_3d_F_array_initialization
+    f1 = arrays.array_real_3d_F_array_initialization_1
     f2 = epyccel(f1)
 
     x  = np.random.random((3,2)).copy(order='F')
@@ -1192,6 +1205,19 @@ def test_array_real_3d_F_array_initialization():
 
     f1(x, y, x1)
     f2(x, y, x2)
+
+    assert np.array_equal(x1, x2)
+
+def test_array_real_3d_F_array_initialization_2():
+
+    f1 = arrays.array_real_3d_F_array_initialization_2
+    f2 = epyccel(f1)
+
+    x1 = np.zeros((2,3,4), order='F')
+    x2 = np.zeros((2,3,4), order='F')
+
+    f1(x1)
+    f2(x2)
 
     assert np.array_equal(x1, x2)
 
@@ -1212,6 +1238,28 @@ def test_array_real_4d_F_array_initialization():
 
     assert np.array_equal(x1, x2)
 
+@pytest.mark.xfail
+def test_array_real_4d_F_array_initialization_mixed_ordering():
+
+    f1 = arrays.array_real_4d_F_array_initialization_mixed_ordering
+    f2 = epyccel(f1)
+
+    x  = np.array([[16., 17.], [18., 19.]], dtype='float', order='F')
+    a  = np.array(([[[0., 1.], [2., 3.]],
+                  [[4., 5.], [6., 7.]],
+                  [[8., 9.], [10., 11.]]],
+                  [[[12., 13.], [14., 15.]],
+                  x,
+                  [[20., 21.], [22., 23.]]]),
+                  dtype='float', order='F')
+
+    x1 = np.zeros_like(a)
+    x2 = np.zeros_like(a)
+
+    f1(x, x1)
+    f2(x, x2)
+
+    assert np.array_equal(x1, x2)
 #==============================================================================
 # TEST: COMPLEX EXPRESSIONS IN 3D : TEST CONSTANT AND UNKNOWN SHAPES
 #==============================================================================
