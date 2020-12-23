@@ -1,6 +1,38 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 from pyccel.decorators import types
 
+@types('int[:,:]','int[:,:](order=F)')
+def add_mixed_order(a,b):
+    a[:] = a + b
+
+@types('int[:,:]','int[:,:](order=F)')
+def mul_mixed_order(a,b):
+    a[:] = a * b
+
+@types('int[:,:]','int[:,:](order=F)')
+def sub_mixed_order(a,b):
+    a[:] = a - b
+
+@types('int[:,:]','int[:,:](order=F)')
+def div_mixed_order(a,b):
+    a[:] = a / b
+
+@types('int[:,:]','int[:,:](order=F)')
+def augadd_mixed_order(a,b):
+    a[:] += b
+
+@types('int[:,:]','int[:,:](order=F)')
+def augmul_mixed_order(a,b):
+    a[:] *= b
+
+@types('int[:,:]','int[:,:](order=F)')
+def augsub_mixed_order(a,b):
+    a[:] -= b
+
+@types('int[:,:]','int[:,:](order=F)')
+def augdiv_mixed_order(a,b):
+    a[:] /= b
+
 @types('int[:,:]','int[:]')
 def mul_by_vector_C(a,b):
     a[:] *= b
@@ -64,4 +96,13 @@ def multi_expression_augassign(a,b):
     a[:] *= 2
     b[:] += 4
     a[:] -= b
+    a += np.sum(b)
+
+@types('int[:,:](order=F)','int[:,:]','int[:]')
+def grouped_expressions(a,b,c):
+    import numpy as np
+    a[:] = a - c
+    a[:] = a * b
+    a[:] = a + b
+    a[:] = a + c
     a += np.sum(b)

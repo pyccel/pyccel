@@ -1,9 +1,32 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
+import pytest
 import numpy as np
 from numpy.random import rand, randint
 
 from pyccel.epyccel import epyccel
 from modules        import multi_rank
+
+@pytest.mark.parametrize('f1',[multi_rank.add_mixed_order,
+    multi_rank.mul_mixed_order,
+    multi_rank.sub_mixed_order,
+    multi_rank.div_mixed_order,
+    multi_rank.augadd_mixed_order,
+    multi_rank.augmul_mixed_order,
+    multi_rank.augsub_mixed_order,
+    multi_rank.augdiv_mixed_order])
+def test_add_mixed_order(f1):
+    f2 = epyccel( f1 )
+
+    x1 = np.array(rand(4,5)*10, dtype=int)
+    x2 = np.copy(x1)
+
+    y1 = np.array(rand(4,5)*10+1, dtype=int, order = 'F')
+    y2 = np.copy(y1)
+
+    f1(x1, y1)
+    f2(x2, y2)
+
+    assert np.array_equal( x1, x2 )
 
 def test_mul_by_vector_C():
     f1 = multi_rank.mul_by_vector_C
