@@ -196,6 +196,54 @@ def split_positional_keyword_arguments(*args):
     return args, kwargs
 
 #==============================================================================
+def get_base_rank(expr):
+    return expr.base.rank if isinstance(expr, IndexedElement) else expr.rank
+
+def remove_1_index(expr, pos):
+    if isinstance(expr, Variable):
+        if expr.rank==0 or -pos>expr.rank:
+            return expr
+        if expr.shape[pos]==1:
+            indexes = [Slice(None,None)]*(expr.rank+pos) + [LiteralInteger(0)]+[Slice(None,None)]*(-1-pos)
+            var = IndexedVariable(expr)
+            return var[indexes]
+        return expr
+    elif isinstance(expr, IndexedElement):
+        base = expr.base
+        indices = list(expr.indices)
+        if -pos>expr.base.rank or not isinstance(indices[pos], Slice):
+            return expr
+        if expr.base.shape[pos]==1:
+            assert(indices[pos].start is None)
+            indices[pos] = LiteralInteger(0)
+            return base[indices]
+        return expr
+    elif isinstance(expr, PyccelAstNode) and expr.rank==0:
+        return expr
+    elif isinstance(expr, AugAssign):
+        cls = type(expr)
+        rhs = remove_1_index(expr.rhs, pos)
+        lhs = remove_1_index(expr.lhs, pos)
+        return cls(lhs, expr.op, rhs, expr.status, expr.like)
+    elif isinstance(expr, Assign):
+        cls = type(expr)
+        rhs = remove_1_index(expr.rhs, pos)
+        lhs = remove_1_index(expr.lhs, pos)
+
+        return cls(lhs, rhs, expr.status, expr.like)
+    elif isinstance(expr, PyccelOperator):
+        cls = type(expr)
+        args = [remove_1_index(a, pos) for a in expr.args]
+        return cls(*args)
+    elif isinstance(expr, IfTernaryOperator):
+        cond        = remove_1_index(expr.cond       , pos)
+        value_true  = remove_1_index(expr.value_true , pos)
+        value_false = remove_1_index(expr.value_false, pos)
+        return IfTernaryOperator(cond, value_true, value_false)
+    else:
+        return expr
+
+#==============================================================================
 def insert_index(expr, pos, index_var, language_has_vectors):
     """
     Function to insert an index into an expression at a given position
@@ -234,20 +282,18 @@ def insert_index(expr, pos, index_var, language_has_vectors):
     >>> insert_index(expr, 0, i, language_has_vectors = True)
     c := a + b
     """
-    if pos < 0:
-        return expr
     if isinstance(expr, Variable):
-        if expr.rank==0:
+        if expr.rank==0 or -pos>expr.rank:
             return expr
         if expr.shape[pos]==1:
             index_var = LiteralInteger(0)
         var = IndexedVariable(expr)
-        indexes = [Slice(None,None)]*pos + [index_var]+[Slice(None,None)]*(expr.rank-1-pos)
+        indexes = [Slice(None,None)]*(expr.rank+pos) + [index_var]+[Slice(None,None)]*(-1-pos)
         return var[indexes]
     elif isinstance(expr, IndexedElement):
         base = expr.base
         indices = list(expr.indices)
-        if not isinstance(indices[pos], Slice):
+        if -pos>expr.base.rank or not isinstance(indices[pos], Slice):
             return expr
         if expr.base.shape[pos]==1:
             assert(indices[pos].start is None)
@@ -265,15 +311,20 @@ def insert_index(expr, pos, index_var, language_has_vectors):
         cls = type(expr)
         shapes = [a.base.shape if isinstance(a, IndexedElement) else a.shape for a in (expr.lhs, expr.rhs) if a.shape != ()]
         shapes = set(tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes)
-        rhs = insert_index(expr.rhs, pos - expr.lhs.rank + expr.rhs.rank, index_var, language_has_vectors)
-        if rhs is not expr.rhs or len(shapes)!=1 or not language_has_vectors:
+        rhs = insert_index(expr.rhs, pos, index_var, language_has_vectors)
+        lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors) if len(shapes)!=1 else expr.lhs
+        if lhs is not expr.lhs:
+            return cls(lhs, expr.op, rhs, expr.status, expr.like)
+        if rhs is not expr.rhs:
             lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
             return cls(lhs, expr.op, rhs, expr.status, expr.like)
         else:
             return expr
     elif isinstance(expr, Assign):
         cls = type(expr)
-        if expr.lhs.rank > expr.rhs.rank and pos < expr.lhs.rank - expr.rhs.rank:
+        print(expr)
+        print(expr.lhs.rank, expr.rhs.rank)
+        if expr.lhs.rank > expr.rhs.rank:
             lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
         else:
             lhs = expr.lhs
@@ -292,7 +343,7 @@ def insert_index(expr, pos, index_var, language_has_vectors):
         cls = type(expr)
         shapes = [a.base.shape if isinstance(a, IndexedElement) else a.shape for a in expr.args if a.shape != ()]
         shapes = set(tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes)
-        args = [insert_index(a, pos - expr.rank + a.rank, index_var, False) for a in expr.args]
+        args = [insert_index(a, pos, index_var, False) for a in expr.args]
         if any(a is not na for a, na in zip(expr.args, args)) or len(shapes)!=1 or not language_has_vectors:
             return cls(*args)
         else:
@@ -317,6 +368,71 @@ def insert_index(expr, pos, index_var, language_has_vectors):
     else:
         raise NotImplementedError("Expansion not implemented for type : {}".format(type(expr)))
 
+#==============================================================================
+def collect_loops(block, indices, language_has_vectors = False, level = -1):
+    print("COLLECT_LOOPS : ",block)
+    result = []
+    current_level = 0
+    max_level = 0
+    array_creator_types = (NumpyNewArray, FunctionCall,
+                           NumpyFunctionBase, MathFunctionBase,
+                           PythonList, PythonTuple, Nil, Dlist)
+    for i, line in enumerate(block):
+        print("LOOOOOOOOP : ",i, line)
+        if isinstance(line, Assign) and \
+                not isinstance(line.rhs, array_creator_types) and \
+                not ( not isinstance(line, AugAssign) and isinstance(line.rhs, Variable)) and \
+                not ( isinstance(line.rhs, IfTernaryOperator) and \
+                (isinstance(line.rhs.value_true, array_creator_types) or \
+                isinstance(line.rhs.value_false, array_creator_types)) ):
+            lhs = line.lhs
+
+            new_level = 0
+            for kk, index in enumerate(range(-lhs.rank,0)):
+                if lhs.rank+index >= len(indices):
+                    indices.append(Variable('int','i_{}'.format(kk)))
+                index_var = indices[lhs.rank+index]
+                print(line)
+                line = remove_1_index(line, index)
+                new_stmt = insert_index(line, index, index_var, language_has_vectors)
+                print(new_stmt)
+                if new_stmt is line:
+                    break
+                else:
+                    new_level += 1
+                    line = new_stmt
+            index = new_level
+            while line.lhs.rank != line.rhs.rank and index < lhs.rank:
+                line = remove_1_index(line, index)
+                index += 1
+
+            save_spot = result
+            j = 0
+            shape = lhs.shape
+            for _ in range(min(new_level,current_level)):
+                if save_spot[-1][1] == shape[j]:
+                    save_spot = save_spot[-1][0]
+                    j+=1
+                else:
+                    break
+            for k in range(j,new_level):
+                save_spot.append(([], shape[k]))
+                save_spot = save_spot[-1][0]
+            save_spot.append(line)
+            current_level = new_level
+            max_level = max(max_level, current_level)
+        else:
+            result.append(line)
+            current_level = 0
+    print("RESULT : ",result)
+    return result, max_level
+
+def insert_fors(blocks, indices, level):
+    if all(not isinstance(b, tuple) for b in blocks[0]):
+        body = blocks[0]
+    else:
+        body = [insert_fors(b, indices, level+1) for b in blocks[0]]
+    return For(indices[level], PythonRange(0,blocks[1]), body)
 
 #==============================================================================
 def expand_to_loops(block, language_has_vectors = False, index = 0):
@@ -352,52 +468,110 @@ def expand_to_loops(block, language_has_vectors = False, index = 0):
     >>> expand_to_loops(expr, language_has_vectors = False)
     [For(i_0, PythonRange(0, LiteralInteger(4), LiteralInteger(1)), CodeBlock([IndexedElement(c, i_0) := PyccelAdd(IndexedElement(a, i_0), IndexedElement(b, i_0))]), [])]
     """
-    max_rank = -1
-    current_block_length = -1
-    started_block = False
-    before_loop = []
-    loop_stmts  = []
-    after_loop  = []
-    array_creator_types = (NumpyNewArray, FunctionCall,
-                           NumpyFunctionBase, MathFunctionBase,
-                           PythonList, PythonTuple, Nil, Dlist)
-    for i, line in enumerate(block):
-        if isinstance(line, Assign) and \
-                not isinstance(line.rhs, array_creator_types) and \
-                not ( not isinstance(line, AugAssign) and isinstance(line.rhs, Variable)) and \
-                not ( isinstance(line.rhs, IfTernaryOperator) and \
-                (isinstance(line.rhs.value_true, array_creator_types) or \
-                isinstance(line.rhs.value_false, array_creator_types)) ):
-            lhs = line.lhs
+    indices = []
+    res, max_level = collect_loops(block, indices, language_has_vectors)
 
-            if lhs.rank == max_rank and lhs.shape[index] == current_block_length:
-                loop_stmts.append(line)
-                continue
-            elif max_rank==-1 and lhs.rank > 0 and index < lhs.rank:
-                current_block_length = lhs.shape[index]
-                max_rank = lhs.rank
-                started_block = True
-                loop_stmts.append(line)
-                continue
-        if started_block:
-            after_loop = block[i:]
-            break
-        else:
-            before_loop.append(line)
-    if loop_stmts:
-        for_loop_body, new_vars = expand_to_loops(loop_stmts, language_has_vectors, index+1)
-        after_loop, new_vars2 = expand_to_loops(after_loop, language_has_vectors, index)
-        new_vars += new_vars2
-        index_var = Variable('int','i_{}'.format(index))
+    body = [insert_fors(b, indices, 0) if isinstance(b, tuple) else b for b in res]
+    return body, indices
+    #for_loop_body, new_vars = expand_to_loops(loop_stmts, language_has_vectors, index+1)
+    #after_loop, new_vars2 = expand_to_loops(after_loop, language_has_vectors, index)
+    #new_vars += new_vars2
 
-        unpacked_for_loop_body = [insert_index(l,index,index_var, language_has_vectors) for l in for_loop_body]
+    #if current_block_length != 1:
+    #    for_block = [For(index_var, PythonRange(0,current_block_length), for_loop_body)]
+    #    new_vars += [index_var]
+    #else:
+    #    for_block = for_loop_body
+    #return before_loop + for_block + after_loop, new_vars
 
-        if any([u is not p for u,p in zip(unpacked_for_loop_body, for_loop_body)]) and current_block_length != 1:
-            for_block = [For(index_var, PythonRange(0,current_block_length), unpacked_for_loop_body)]
-            new_vars += [index_var]
-        else:
-            for_block = unpacked_for_loop_body
-        return before_loop + for_block + after_loop, new_vars
-    else:
+#==============================================================================
+#def expand_to_loops(block, language_has_vectors = False, index = 0):
+    """
+    Re-write a list of expressions to include explicit loops where necessary
 
-        return block, []
+    Parameters
+    ==========
+    block      : list of Ast Nodes
+                The expressions to be modified
+    language_has_vectors : bool
+                Indicates if the language has support for vector
+                operations of the same shape
+    index       : int
+                The index from which the expression is modified
+
+    Returns
+    =======
+    expr        : list of Ast Nodes
+                The expressions with For loops inserted where necessary
+    new_vars    : list of Variables
+                A list of variables created for the loops
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.operators import PyccelAdd
+    >>> from pyccel.ast.utilities import expand_to_loops
+    >>> a = Variable('int', 'a', shape=(4,), rank=1)
+    >>> b = Variable('int', 'b', shape=(4,), rank=1)
+    >>> c = Variable('int', 'c', shape=(4,), rank=1)
+    >>> i = Variable('int', 'i', shape=())
+    >>> d = PyccelAdd(a,b)
+    >>> expr = [Assign(c,d)]
+    >>> expand_to_loops(expr, language_has_vectors = False)
+    [For(i_0, PythonRange(0, LiteralInteger(4), LiteralInteger(1)), CodeBlock([IndexedElement(c, i_0) := PyccelAdd(IndexedElement(a, i_0), IndexedElement(b, i_0))]), [])]
+    """
+#    indices = []
+#    res = collect_loops(block, indices, language_has_vectors)
+#
+#
+#    max_rank = -1
+#    current_block_length = -1
+#    started_block = False
+#    before_loop = []
+#    loop_stmts  = []
+#    after_loop  = []
+#    index_var = Variable('int','i_{}'.format(index))
+#    array_creator_types = (NumpyNewArray, FunctionCall,
+#                           NumpyFunctionBase, MathFunctionBase,
+#                           PythonList, PythonTuple, Nil, Dlist)
+#    for i, line in enumerate(block):
+#        if isinstance(line, Assign) and \
+#                not isinstance(line.rhs, array_creator_types) and \
+#                not ( not isinstance(line, AugAssign) and isinstance(line.rhs, Variable)) and \
+#                not ( isinstance(line.rhs, IfTernaryOperator) and \
+#                (isinstance(line.rhs.value_true, array_creator_types) or \
+#                isinstance(line.rhs.value_false, array_creator_types)) ):
+#            lhs = line.lhs
+#
+#            if lhs.rank == max_rank and lhs.shape[index] == current_block_length:
+#                new_stmt = insert_index(line, index, index_var, language_has_vectors)
+#                if new_stmt is not line:
+#                    loop_stmts.append(new_stmt)
+#                    continue
+#            elif max_rank==-1 and lhs.rank > 0 and index < lhs.rank:
+#                new_stmt = insert_index(line, index, index_var, language_has_vectors)
+#                if new_stmt is not line:
+#                    current_block_length = lhs.shape[index]
+#                    max_rank = lhs.rank
+#                    started_block = True
+#                    loop_stmts.append(new_stmt)
+#                    continue
+#        if started_block:
+#            after_loop = block[i:]
+#            break
+#        else:
+#            before_loop.append(line)
+#    if loop_stmts:
+#        for_loop_body, new_vars = expand_to_loops(loop_stmts, language_has_vectors, index+1)
+#        after_loop, new_vars2 = expand_to_loops(after_loop, language_has_vectors, index)
+#        new_vars += new_vars2
+#
+#        if current_block_length != 1:
+#            for_block = [For(index_var, PythonRange(0,current_block_length), for_loop_body)]
+#            new_vars += [index_var]
+#        else:
+#            for_block = for_loop_body
+#        return before_loop + for_block + after_loop, new_vars
+#    else:
+#
+#        return block, []
