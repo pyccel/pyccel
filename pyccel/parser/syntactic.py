@@ -394,7 +394,7 @@ class SyntaxParser(BasicParser):
                 else:
                     arg = Argument(a.arg, kwonly=True, annotation=annotation)
 
-            arguments.append(arg)
+                arguments.append(arg)
 
         return arguments
 
