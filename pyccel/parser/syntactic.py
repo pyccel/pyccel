@@ -384,10 +384,17 @@ class SyntaxParser(BasicParser):
             valued_arguments       = [ValuedArgument(Argument(a.arg, annotation=self._visit(a.annotation)),\
                                       self._visit(d)) for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
             arguments              = positional_args + valued_arguments
+
         if stmt.kwonlyargs:
-            kwonly_arguments       = [ValuedArgument(Argument(a.arg, annotation=self._visit(a.annotation)),self._visit(d), kwonly=True) if d is not None
-                                     else Argument(a.arg, kwonly=True) for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults)]
-            arguments       += kwonly_arguments
+            for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
+                annotation = self._visit(a.annotation)
+                if d is not None:
+                    arg = Argument(a.arg, annotation=annotation)
+                    arg = ValuedArgument(arg, self._visit(d), kwonly=True)
+                else:
+                    arg = Argument(a.arg, kwonly=True, annotation=annotation)
+
+            arguments.append(arg)
 
         return arguments
 
@@ -656,7 +663,7 @@ class SyntaxParser(BasicParser):
             elif isinstance(a, ValuedArgument):
                 annotated_args.append(a.argument.annotation)
 
-        if all(not a==Nil() for a in annotated_args):
+        if all(not isinstance(a, Nil) for a in annotated_args):
             if stmt.returns:
                 returns = ValuedArgument(Symbol('results'),self._visit(stmt.returns))
                 annotated_args.append(returns)
