@@ -292,7 +292,7 @@ PyFloat_AsDouble = FunctionDef(name = 'PyFloat_AsDouble',
 # call c free function for freeing allocated variables
 C_Free = FunctionDef(name      = 'free',
                            body      = [],
-                           arguments = [Variable(dtype=NativeGeneric(), name = 'o', is_pointer=True)],
+                           arguments = [Variable(dtype=NativeVoid(), name = 'o', is_pointer=True)],
                            results   = [])
 
 #-------------------------------------------------------------------
@@ -339,7 +339,7 @@ numpy_get_base = FunctionDef(name      = 'PyArray_BASE',
 numpy_get_shape = FunctionDef(name      = 'PyArray_SHAPE',
                        body      = [],
                        arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
-                       results   = [Variable(dtype=PyccelPyObject(), name = 'i')])
+                       results   = [Variable(dtype=NativeInteger(), name = 'i', is_pointer=True)])
 
 numpy_itemsize = FunctionDef(name      = 'PyArray_ITEMSIZE',
                        body      = [],
