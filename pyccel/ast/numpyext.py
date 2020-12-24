@@ -129,7 +129,6 @@ class NumpyFunctionBase(PyccelAstNode):
 # TODO [YG, 18.02.2020]: accept Numpy array argument
 # TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
 # TODO [YG, 22.05.2020]: move dtype & prec processing to __init__
-# TODO [YG, 22.05.2020]: change properties to read _dtype, _prec, _rank, etc...
 class NumpyArray(Application, NumpyNewArray):
     """
     Represents a call to  numpy.array for code generation.
@@ -140,8 +139,12 @@ class NumpyArray(Application, NumpyNewArray):
 
     def __new__(cls, arg, dtype=None, order='C'):
 
-        if not isinstance(arg, (Tuple, PythonTuple, PythonList)):
+        if not isinstance(arg, (PythonTuple, PythonList)):
             raise TypeError('Uknown type of  %s.' % type(arg))
+
+        # TODO: treat inhomogenous lists and tuples when they have mixed ordering
+        if not arg.is_homogeneous:
+            raise TypeError('we only accept a homogeneous list or tuple ')
 
         # Verify dtype and get precision
         if dtype is None:
@@ -164,7 +167,7 @@ class NumpyArray(Application, NumpyNewArray):
         return Basic.__new__(cls, arg, dtype, order, prec)
 
     def __init__(self, arg, dtype=None, order='C'):
-        arg_shape   = numpy.asarray(arg).shape
+        arg_shape   = arg.shape
         self._shape = process_shape(arg_shape)
         self._rank  = len(self._shape)
         self._dtype = self._args[1]

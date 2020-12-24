@@ -47,7 +47,7 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeGeneric, NativeTuple, default_precision, is_iterable_datatype)
 
 from .literals       import LiteralTrue, LiteralFalse, LiteralInteger
-from .literals       import LiteralImaginaryUnit, LiteralString
+from .literals       import LiteralImaginaryUnit, LiteralString, Literal
 from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
@@ -1056,27 +1056,22 @@ class NativeOp(with_metaclass(Singleton, Basic)):
 
 
 class AddOp(NativeOp):
-
     _symbol = '+'
 
 
 class SubOp(NativeOp):
-
     _symbol = '-'
 
 
 class MulOp(NativeOp):
-
     _symbol = '*'
 
 
 class DivOp(NativeOp):
-
     _symbol = '/'
 
 
 class ModOp(NativeOp):
-
     _symbol = '%'
 
 
@@ -2281,7 +2276,8 @@ class Variable(Symbol, PyccelAstNode):
             elif s is None or isinstance(s,(Variable, Slice, PyccelAstNode, Function)):
                 new_shape.append(PyccelArraySize(self, i))
             else:
-                raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
+                raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel),'
+                                'Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
         return tuple(new_shape)
 
     @property
@@ -2480,31 +2476,33 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
 
     def __new__(cls, lhs, rhs):
 
-        if not isinstance(lhs, (
-            Variable,
-            Symbol,
-            IndexedVariable,
-            IndexedElement,
-            IndexedBase,
-            Indexed,
-            Function,
-            DottedVariable,
-            )):
-            raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
-                            str(type(lhs))))
+        if PyccelAstNode.stage != 'syntactic':
+            if not isinstance(lhs, (
+                Literal,
+                Variable,
+                Symbol,
+                IndexedVariable,
+                IndexedElement,
+                IndexedBase,
+                Indexed,
+                Function,
+                DottedVariable,
+                )):
+                raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
+                                str(type(lhs))))
 
-        if not isinstance(rhs, (
-            Variable,
-            Symbol,
-            IndexedVariable,
-            IndexedElement,
-            IndexedBase,
-            Indexed,
-            FunctionCall,
-            Function,
-            )):
-            raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
-                            str(type(rhs))))
+            if not isinstance(rhs, (
+                Variable,
+                Symbol,
+                IndexedVariable,
+                IndexedElement,
+                IndexedBase,
+                Indexed,
+                FunctionCall,
+                Function,
+                )):
+                raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
+                                str(type(rhs))))
 
         return Basic.__new__(cls, lhs, rhs)
 
@@ -5729,7 +5727,7 @@ def process_shape(shape):
 
     new_shape = []
     for s in shape:
-        if isinstance(s,(LiteralInteger,Variable, Slice, PyccelAstNode, Function)):
+        if isinstance(s,(LiteralInteger, Variable, Slice, PyccelAstNode, Function)):
             new_shape.append(s)
         elif isinstance(s, sp_Integer):
             new_shape.append(LiteralInteger(s.p))

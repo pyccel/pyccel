@@ -221,7 +221,6 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
             compile_c(cwd, test_file, dependencies)
 
     lang_out = get_lang_output(get_exe(test_file))
-
     compare_pyth_fort_output(pyth_out, lang_out, output_dtype)
 
 
@@ -525,6 +524,10 @@ def test_c_arrays(language):
             [complex] * 3 * 10 + [complex] * 5 + [float] * 10 + [float] * 6 + \
             [float] * 2 * 3 + [complex] * 3 * 10 + [float] * 2 * 3
     pyccel_test("scripts/c_arrays.py", language=language, output_dtype=types)
+
+def test_arrays_view(language):
+    types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10
+    pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
 
 def test_headers(language):
     test_file = "scripts/test_headers.py"

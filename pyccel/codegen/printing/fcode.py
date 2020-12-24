@@ -17,8 +17,6 @@ from collections import OrderedDict
 import functools
 import operator
 
-from numpy import asarray
-
 from sympy.core import Symbol
 from sympy.core import Tuple
 from sympy.core.function import Function, Application
@@ -49,7 +47,7 @@ from pyccel.ast.core      import FunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
                                   PythonMap, PythonPrint, PythonRange,
-                                  PythonZip, PythonTuple, PythonFloat)
+                                  PythonZip, PythonFloat, PythonTuple, PythonList)
 from pyccel.ast.builtins  import PythonComplex, PythonBool
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
@@ -286,7 +284,7 @@ class FCodePrinter(CodePrinter):
                                             name=name)
 
         imports = ''.join(self._print(i) for i in expr.imports)
-        imports += 'use ISO_C_BINDING\n'
+        imports += 'use, intrinsic :: ISO_C_BINDING\n'
 
         decs    = ''.join(self._print(i) for i in expr.declarations)
         body    = ''
@@ -337,7 +335,7 @@ class FCodePrinter(CodePrinter):
         self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
         name    = 'prog_{0}'.format(self._print(expr.name)).replace('.', '_')
         imports = ''.join(self._print(i) for i in expr.imports)
-        imports += 'use ISO_C_BINDING\n'
+        imports += 'use, intrinsic :: ISO_C_BINDING\n'
         body    = self._print(expr.body)
 
         # Print the declarations of all variables in the namespace, which include:
@@ -499,11 +497,8 @@ class FCodePrinter(CodePrinter):
         return '!${0} {1}\n'.format(accel, txt)
 
     def _print_Tuple(self, expr):
-        shape = list(reversed(asarray(expr).shape))
-        if len(shape)>1:
-            arg = functools.reduce(operator.concat, expr)
-            elements = ', '.join(self._print(i) for i in arg)
-            return 'reshape(['+ elements + '], '+ self._print(Tuple(*shape)) + ')'
+        if expr[0].rank>0:
+            raise NotImplementedError(' Tuple with elements of rank > 0 is not implemented')
         fs = ', '.join(self._print(f) for f in expr)
         return '[{0}]'.format(fs)
 
@@ -517,9 +512,13 @@ class FCodePrinter(CodePrinter):
         shape = Tuple(*reversed(expr.shape))
         if len(shape)>1:
             elements = ', '.join(self._print(i) for i in expr)
-            return 'reshape(['+ elements + '], '+ self._print(shape) + ')'
+            shape    = ', '.join(self._print(i) for i in shape)
+            return 'reshape(['+ elements + '], '+ '[' + shape + ']' + ')'
         fs = ', '.join(self._print(f) for f in expr)
         return '[{0}]'.format(fs)
+
+    def _print_PythonList(self, expr):
+        return self._print_PythonTuple(expr)
 
     def _print_TupleVariable(self, expr):
         if expr.is_homogeneous:
@@ -602,7 +601,15 @@ class FCodePrinter(CodePrinter):
     def _print_PythonLen(self, expr):
         var = expr.arg
         idx = 1 if var.order == 'F' else var.rank
-        return 'size({},{})'.format(self._print(var), self._print(idx))
+        prec = iso_c_binding["integer"][expr.precision]
+
+        dtype = var.dtype
+        if dtype is NativeString():
+            return 'len({})'.format(self._print(var))
+        elif var.rank == 1:
+            return 'size({}, kind={})'.format(self._print(var), prec)
+        else:
+            return 'size({},{},{})'.format(self._print(var), self._print(idx), prec)
 
     def _print_PythonSum(self, expr):
         args = [self._print(arg) for arg in expr.args]
@@ -687,22 +694,46 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyArray(self, expr):
         """Fortran print."""
 
-        # Always transpose indices because Numpy initial values are given with
-        # row-major ordering, while Fortran initial values are column-major
-        shape = expr.shape[::-1]
-
-        # Construct right-hand-side code
-        if expr.rank > 1:
-            arg = functools.reduce(operator.concat, expr.arg)
-            rhs_code = 'reshape({array}, {shape})'.format(
-                    array=self._print(arg), shape=self._print(Tuple(*shape)))
-        else:
-            rhs_code = self._print(expr.arg)
-
         # If Numpy array is stored with column-major ordering, transpose values
-        if expr.order == 'F' and expr.rank > 1:
-            rhs_code = 'transpose({})'.format(rhs_code)
+        # use reshape with order for rank > 2
+        if expr.order == 'F':
+            if expr.rank == 2:
+                rhs_code = self._print(expr.arg)
+                rhs_code = 'transpose({})'.format(rhs_code)
+            elif expr.rank > 2:
+                args     = [self._print(a) for a in expr.arg]
+                new_args = []
+                for ac, a in zip(args, expr.arg):
+                    if a.order == 'C':
+                        shape    = ', '.join(self._print(i) for i in a.shape)
+                        order    = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
+                        ac       = 'reshape({}, [{}], order=[{}])'.format(ac, shape, order)
+                    new_args.append(ac)
 
+                args     = new_args
+                rhs_code = '[' + ' ,'.join(args) + ']'
+                shape    = ', '.join(self._print(i) for i in expr.shape)
+                order    = [LiteralInteger(i) for i in range(1, expr.rank+1)]
+                order    = order[1:]+ order[:1]
+                order    = ', '.join(self._print(i) for i in order)
+                rhs_code = 'reshape({}, [{}], order=[{}])'.format(rhs_code, shape, order)
+        elif expr.order == 'C':
+            if expr.rank > 2:
+                args     = [self._print(a) for a in expr.arg]
+                new_args = []
+                for ac, a in zip(args, expr.arg):
+                    if a.order == 'F':
+                        shape    = ', '.join(self._print(i) for i in a.shape[::-1])
+                        order    = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
+                        ac       = 'reshape({}, [{}], order=[{}])'.format(ac, shape, order)
+                    new_args.append(ac)
+
+                args     = new_args
+                rhs_code = '[' + ' ,'.join(args) + ']'
+                shape    = ', '.join(self._print(i) for i in expr.shape[::-1])
+                rhs_code = 'reshape({}, [{}])'.format(rhs_code, shape)
+            else:
+                rhs_code = self._print(expr.arg)
         return rhs_code
 
     def _print_NumpyFloor(self, expr):
@@ -712,15 +743,16 @@ class FCodePrinter(CodePrinter):
     # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
         init_value = self._print(expr.arg)
-
+        prec = iso_c_binding["integer"][expr.precision]
         if expr.arg.order == 'C':
             index = self._print(expr.arg.rank - expr.index)
         else:
             index = self._print(expr.index + 1)
 
-        code_init = 'size({0}, {1})'.format(init_value, index)
+        if expr.arg.rank == 1:
+            return 'size({0}, kind={1})'.format(init_value, prec)
 
-        return code_init
+        return 'size({0}, {1}, {2})'.format(init_value, index, prec)
 
     def _print_PythonInt(self, expr):
         value = self._print(expr.arg)
@@ -1358,18 +1390,18 @@ class FCodePrinter(CodePrinter):
     def _print_LiteralString(self, expr):
         sp_chars = ['\a', '\b', '\f', '\r', '\t', '\v', "'", '\n']
         sub_str = ''
-        formatted_str = "''"
+        formatted_str = []
         for c in expr.arg:
             if c in sp_chars:
                 if sub_str != '':
-                    formatted_str += " // '{}'".format(sub_str)
+                    formatted_str.append("'{}'".format(sub_str))
                     sub_str = ''
-                formatted_str += ' // ACHAR({})'.format(ord(c))
+                formatted_str.append('ACHAR({})'.format(ord(c)))
             else:
                 sub_str += c
         if sub_str != '':
-            formatted_str += " // '{}'".format(sub_str)
-        return formatted_str
+            formatted_str.append("'{}'".format(sub_str))
+        return ' // '.join(formatted_str)
 
     def _print_Interface(self, expr):
         # ... we don't print 'hidden' functions
@@ -1380,7 +1412,7 @@ class FCodePrinter(CodePrinter):
                 self._handle_fortran_specific_a_prioris(list(f.arguments) + list(f.results))
                 parts = self.function_signature(f, f.name)
                 parts = ["{}({}) {}\n".format(parts['sig'], parts['arg_code'], parts['func_end']),
-                        'use iso_c_binding\n',
+                        'use, intrinsic :: ISO_C_BINDING\n',
                         parts['arg_decs'],
                         'end {} {}\n'.format(parts['func_type'], f.name)]
                 funcs_sigs.append(''.join(a for a in parts))
@@ -1478,7 +1510,7 @@ class FCodePrinter(CodePrinter):
         interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         arg_code  = ', '.join(self._print(i) for i in chain( arguments, results ))
         imports   = ''.join(self._print(i) for i in expr.imports)
-        imports += 'use ISO_C_BINDING'
+        imports += 'use, intrinsic :: ISO_C_BINDING'
         prelude   = ''.join(self._print(i) for i in args_decs.values())
         body_code = self._print(expr.body)
         doc_string = self._print(expr.doc_string) if expr.doc_string else ''
@@ -2819,7 +2851,7 @@ class FCodePrinter(CodePrinter):
         result = []
         trailing = ' &'
         for line in lines:
-            if len(line)>72 and('"' in line or "'" in line or '!' in line):
+            if len(line)>72 and ('"' in line[72:] or "'" in line[72:] or '!' in line[:72]):
                 result.append(line)
 
             elif len(line)>72:
