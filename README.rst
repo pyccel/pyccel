@@ -17,7 +17,7 @@ The aim of **Pyccel** is to provide a simple way to generate automatically, para
 
 - a compiler for a *Domain Specific Language* with *Python* syntax
 
-Pyccel comes with a selection of **extensions** allowing you to convert calls to some specific python packages to Fortran. The following packages will be covered (partially):
+Pyccel comes with a selection of **extensions** allowing you to convert calls to some specific python packages to Fortran/C. The following packages will be covered (partially):
 
 - numpy
 - scipy
