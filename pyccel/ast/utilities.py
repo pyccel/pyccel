@@ -21,7 +21,7 @@ from .core     import (AsName, Import, FunctionDef, Constant,
                        Variable, IndexedVariable, ValuedVariable,
                        Assign, FunctionCall, IndexedElement,
                        Slice, For, AugAssign, IfTernaryOperator,
-                       Nil, Dlist, TupleVariable)
+                       Nil, Dlist, TupleVariable, VariableAddress)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange, PythonList, PythonTuple)
@@ -297,6 +297,8 @@ def compatible_operation(*args):
 def get_variable(var):
     if isinstance(var, Variable):
         return (var,)
+    elif isinstance(var, VariableAddress):
+        return (var.variable,)
     elif isinstance(var, IndexedElement):
         return (var.base.internal_variable,)
     elif isinstance(var, TupleVariable):
