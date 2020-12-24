@@ -13,7 +13,8 @@ from numpy import pi
 
 import pyccel.decorators as pyccel_decorators
 from pyccel.symbolic import lambdify
-from pyccel.errors.errors import Errors
+from pyccel.errors.errors import Errors, PyccelCodegenError
+from pyccel.errors.messages import FORTRAN_ALLOCATABLE_IN_EXPRESSION
 
 from .basic    import PyccelAstNode
 from .core     import (AsName, Import, FunctionDef, Constant,
@@ -418,6 +419,9 @@ def insert_index(expr, pos, index_var, language_has_vectors):
         else:
             return expr
 
+    elif isinstance(expr, NumpyNewArray):
+        raise PyccelCodegenError(FORTRAN_ALLOCATABLE_IN_EXPRESSION)
+
     else:
         raise NotImplementedError("Expansion not implemented for type : {}".format(type(expr)))
 
@@ -466,6 +470,7 @@ def collect_loops(block, indices, language_has_vectors = False):
                 (isinstance(line.rhs.value_true, array_creator_types) or \
                 isinstance(line.rhs.value_false, array_creator_types)) ):
             lhs = line.lhs
+            saved_line = line
 
             # Loop over indexes, inserting until the expression can be evaluated
             # in the desired language
@@ -475,7 +480,11 @@ def collect_loops(block, indices, language_has_vectors = False):
                     indices.append(Variable('int','i_{}'.format(kk)))
                 index_var = indices[lhs.rank+index]
                 line = reduce_slice_to_index(line, index)
-                new_stmt = insert_index(line, index, index_var, language_has_vectors)
+                try:
+                    new_stmt = insert_index(line, index, index_var, language_has_vectors)
+                except PyccelCodegenError:
+                    line = saved_line
+                    break
                 if new_stmt is line:
                     break
                 else:
