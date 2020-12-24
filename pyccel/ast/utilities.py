@@ -294,7 +294,18 @@ def compatible_operation(*args):
     return len(shapes) == 1 and len(order) == 1
 
 #==============================================================================
-def insert_index(expr, pos, index_var, language_has_vectors):
+def get_variable(var):
+    if isinstance(var, Variable):
+        return (var,)
+    elif isinstance(var, IndexedElement):
+        return (var.base.internal_variable,)
+    elif isinstance(var, TupleVariable):
+        return var.get_vars()
+    else:
+        raise NotImplementedError('Strange lhs type {}'.format(str(type(var))))
+
+#==============================================================================
+def insert_index(expr, pos, index_var, used_vars, language_has_vectors):
     """
     Function to insert an index into an expression at a given position
 
@@ -357,6 +368,22 @@ def insert_index(expr, pos, index_var, language_has_vectors):
         indices[pos] = index_var
         return base[indices]
 
+    elif isinstance(expr, FunctionCall):
+        if expr.funcdef.is_elemental:
+            if not language_has_vectors:
+                args = [insert_index(a, pos, index_var, used_vars, language_has_vectors) \
+                        for a in expr.arguments]
+                return FunctionCall(expr.funcdef, args)
+            else:
+                return expr
+        else:
+            used_vars.update(get_variable(a) for a in expr.arguments)
+            return expr
+
+    elif isinstance(expr, (MathFunctionBase, NumpyFunctionBase)):
+        used_vars.update(get_variable(a) for a in expr.args)
+        return expr
+
     elif isinstance(expr, PyccelAstNode) and expr.rank==0:
         return expr
 
@@ -365,8 +392,8 @@ def insert_index(expr, pos, index_var, language_has_vectors):
 
         compatible = compatible_operation(expr.lhs, expr.rhs)
 
-        lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
-        rhs = insert_index(expr.rhs, pos, index_var, language_has_vectors)
+        lhs = insert_index(expr.lhs, pos, index_var, used_vars, language_has_vectors)
+        rhs = insert_index(expr.rhs, pos, index_var, used_vars, language_has_vectors)
 
         # Indicates whether the rhs needs an index inserting
         changed = not isinstance(rhs, (Variable, IndexedElement)) \
@@ -379,8 +406,8 @@ def insert_index(expr, pos, index_var, language_has_vectors):
 
     elif isinstance(expr, Assign):
         cls = type(expr)
-        lhs = insert_index(expr.lhs, pos, index_var, language_has_vectors)
-        rhs = insert_index(expr.rhs, pos, index_var, language_has_vectors)
+        lhs = insert_index(expr.lhs, pos, index_var, used_vars, language_has_vectors)
+        rhs = insert_index(expr.rhs, pos, index_var, used_vars, language_has_vectors)
 
         compatible = compatible_operation(expr.lhs, expr.rhs)
 
@@ -395,7 +422,7 @@ def insert_index(expr, pos, index_var, language_has_vectors):
     elif isinstance(expr, PyccelOperator):
         cls = type(expr)
 
-        args = [insert_index(a, pos, index_var, False) for a in expr.args]
+        args = [insert_index(a, pos, index_var, used_vars, language_has_vectors) for a in expr.args]
 
         compatible = compatible_operation(*expr.args)
         changed = any(a is not na for a,na in zip(expr.args, args) if not isinstance(a, (Variable, IndexedElement)))
@@ -406,9 +433,9 @@ def insert_index(expr, pos, index_var, language_has_vectors):
             return expr
 
     elif isinstance(expr, IfTernaryOperator):
-        cond        = insert_index(expr.cond       , pos, index_var, language_has_vectors)
-        value_true  = insert_index(expr.value_true , pos, index_var, language_has_vectors)
-        value_false = insert_index(expr.value_false, pos, index_var, language_has_vectors)
+        cond        = insert_index(expr.cond       , pos, index_var, used_vars, language_has_vectors)
+        value_true  = insert_index(expr.value_true , pos, index_var, used_vars, language_has_vectors)
+        value_false = insert_index(expr.value_false, pos, index_var, used_vars, language_has_vectors)
 
         changed = not ( cond is expr.cond and
                         value_true is expr.value_true and
@@ -459,18 +486,21 @@ def collect_loops(block, indices, language_has_vectors = False):
     """
     result = []
     current_level = 0
-    array_creator_types = (NumpyNewArray, FunctionCall,
+    array_creator_types = (NumpyNewArray,
                            NumpyFunctionBase, MathFunctionBase,
                            PythonList, PythonTuple, Nil, Dlist)
     for line in block:
         if isinstance(line, Assign) and \
                 not isinstance(line.rhs, array_creator_types) and \
+                not (isinstance(line.rhs, FunctionCall) and not line.rhs.funcdef.is_elemental) and \
                 not ( not isinstance(line, AugAssign) and isinstance(line.rhs, Variable)) and \
                 not ( isinstance(line.rhs, IfTernaryOperator) and \
                 (isinstance(line.rhs.value_true, array_creator_types) or \
                 isinstance(line.rhs.value_false, array_creator_types)) ):
             lhs = line.lhs
+            lhs_var = get_variable(lhs)
             saved_line = line
+            used_vars = set()
 
             # Loop over indexes, inserting until the expression can be evaluated
             # in the desired language
@@ -481,7 +511,7 @@ def collect_loops(block, indices, language_has_vectors = False):
                 index_var = indices[lhs.rank+index]
                 line = reduce_slice_to_index(line, index)
                 try:
-                    new_stmt = insert_index(line, index, index_var, language_has_vectors)
+                    new_stmt = insert_index(line, index, index_var, used_vars, language_has_vectors)
                 except PyccelCodegenError:
                     line = saved_line
                     break
@@ -505,14 +535,15 @@ def collect_loops(block, indices, language_has_vectors = False):
             for _ in range(min(new_level,current_level)):
                 # Select the existing loop if the shape matches the
                 # shape of the expression
-                if save_spot[-1][1] == shape[j]:
+                if save_spot[-1][1] == shape[j] and not any(u in save_spot[-1][2] for u in used_vars):
+                    save_spot[-1][2].update(lhs_var)
                     save_spot = save_spot[-1][0]
                     j+=1
                 else:
                     break
             for k in range(j,new_level):
                 # Create new loops until we have the neccesary depth
-                save_spot.append(([], shape[k]))
+                save_spot.append(([], shape[k], set(lhs_var)))
                 save_spot = save_spot[-1][0]
 
             # Save results
