@@ -7,7 +7,7 @@ import math
 from sympy import Function
 
 from pyccel.ast.basic     import PyccelAstNode
-from pyccel.ast.core      import Constant
+from pyccel.ast.variables import Constant
 from pyccel.ast.datatypes import (NativeInteger, NativeBool, NativeReal,
                                   default_precision)
 

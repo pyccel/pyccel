@@ -21,7 +21,7 @@ from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex
 from .datatypes import NativeBool, NativeString, NativeGeneric, NativeVoid
 
-from .core      import FunctionCall, FunctionDef, Variable, ValuedVariable, VariableAddress, FunctionAddress
+from .core      import FunctionCall, FunctionDef, FunctionAddress
 from .core      import AliasAssign, Assign, Return, If
 
 from .literals  import LiteralTrue
@@ -29,6 +29,8 @@ from .literals  import LiteralTrue
 from .numpyext  import NumpyReal, NumpyImag
 
 from .operators import PyccelEq
+
+from .variables import Variable, ValuedVariable, VariableAddress
 
 
 errors = Errors()

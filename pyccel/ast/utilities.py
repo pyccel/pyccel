@@ -15,8 +15,7 @@ import pyccel.decorators as pyccel_decorators
 from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors
 
-from .core     import (AsName, Import, FunctionDef, Constant,
-                       Variable, IndexedVariable, ValuedVariable)
+from .core     import (AsName, Import, FunctionDef)
 
 from .builtins      import builtin_functions_dict, PythonMap
 from .itertoolsext  import Product
@@ -25,6 +24,7 @@ from .literals      import LiteralString
 
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants)
+from .variables     import (Constant, Variable, IndexedVariable, ValuedVariable)
 
 __all__ = (
     'build_types_decorator',

@@ -27,11 +27,6 @@ from sympy.core import cache
 from pyccel.ast.basic import PyccelAstNode
 
 from pyccel.ast.core import Allocate, Deallocate
-from pyccel.ast.core import Constant
-from pyccel.ast.core import Nil
-from pyccel.ast.core import Variable
-from pyccel.ast.core import TupleVariable
-from pyccel.ast.core import DottedName, DottedVariable
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return
@@ -45,13 +40,18 @@ from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
 from pyccel.ast.core import EmptyNode
-from pyccel.ast.core import Slice, IndexedVariable, IndexedElement
-from pyccel.ast.core import ValuedVariable
+from pyccel.ast.variables import Constant
+from pyccel.ast.variables import Variable
+from pyccel.ast.variables import TupleVariable
+from pyccel.ast.variables import Slice, IndexedVariable, IndexedElement
+from pyccel.ast.variables import DottedName, DottedVariable
+from pyccel.ast.variables import ValuedVariable
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import With, Block
-from pyccel.ast.core import PythonList, Dlist
+from pyccel.ast.builtins import PythonList
+from pyccel.ast.core import Dlist
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
@@ -68,6 +68,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeSt
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
 from pyccel.ast.literals import LiteralInteger, LiteralFloat
+from pyccel.ast.literals import Nil
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.headers import MacroFunction, MacroVariable

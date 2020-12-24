@@ -12,13 +12,14 @@ from sympy import sympify, Tuple
 from ..errors.errors import Errors
 from ..errors.messages import TEMPLATE_IN_UNIONTYPE
 from .core import Basic
-from .core import Variable
-from .core import ValuedArgument, ValuedVariable
+from .core import ValuedArgument
 from .core import FunctionDef, Interface, FunctionAddress
-from .core import DottedName, DottedVariable
+from .core import local_sympify
 from .datatypes import datatype, DataTypeFactory, UnionType
 from .macros import Macro, MacroShape, construct_macro
-from .core import local_sympify
+from .variables import DottedName, DottedVariable
+from .variables import Variable
+from .variables import ValuedVariable
 
 __all__ = (
     'ClassHeader',

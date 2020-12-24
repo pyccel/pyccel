@@ -19,6 +19,7 @@ __all__ = (
     'LiteralComplex',
     'LiteralImaginaryUnit',
     'LiteralString',
+    'Nil',
     'get_default_literal_value'
 )
 
@@ -198,6 +199,18 @@ class LiteralString(Literal, Basic):
     @property
     def python_value(self):
         return self.arg
+
+#------------------------------------------------------------------------------
+
+class Nil(Basic):
+
+    """
+    class for None object in the code.
+    """
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return sstr('None')
 
 #------------------------------------------------------------------------------
 

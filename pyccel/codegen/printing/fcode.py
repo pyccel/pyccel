@@ -27,19 +27,18 @@ from sympy.logic.boolalg import Not
 
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
-from pyccel.ast.core import Nil, IfTernaryOperator
+from pyccel.ast.core import IfTernaryOperator
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import Subroutine
 from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.itertoolsext import Product
-from pyccel.ast.core import (Assign, AliasAssign, Variable,
-                             VariableAddress,
-                             TupleVariable, For, Declare,
-                             IndexedVariable, CodeBlock,
-                             IndexedElement, Slice, Dlist,
-                             DottedName, AsName,
-                             If, PyccelArraySize, IfTernaryOperator)
+from pyccel.ast.core import (Assign, AliasAssign, For, Declare,
+                             CodeBlock, Dlist, AsName,
+                             If, IfTernaryOperator)
+from pyccel.ast.variables import (Variable, TupleVariable,
+                             IndexedVariable, IndexedElement,
+                             Slice, DottedName, PyccelArraySize)
 
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
@@ -58,7 +57,7 @@ from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat
-from pyccel.ast.literals  import LiteralTrue
+from pyccel.ast.literals  import LiteralTrue, Nil
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
@@ -533,9 +532,6 @@ class FCodePrinter(CodePrinter):
             return self._print_Variable(expr)
         else:
             return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
-
-    def _print_VariableAddress(self, expr):
-        return self._print(expr.variable)
 
     def _print_Constant(self, expr):
         val = LiteralFloat(expr.value)
@@ -1145,8 +1141,6 @@ class FCodePrinter(CodePrinter):
         code = ''
         lhs = expr.lhs
         rhs = expr.rhs
-        if isinstance(rhs, VariableAddress):
-            rhs = rhs.variable
 
         if isinstance(lhs, TupleVariable) and not lhs.is_homogeneous:
             if isinstance(rhs, (TupleVariable, PythonTuple)):

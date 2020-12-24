@@ -12,22 +12,21 @@ from sympy.core.function import Application
 from sympy           import (Basic, Function, Tuple, Integer as sp_Integer,
                              Rational as sp_Rational, Expr)
 
-from .core           import (ClassDef, FunctionDef,
-                             PythonList, Variable, IndexedElement,
-                             Nil, process_shape, ValuedArgument, Constant)
+from .core           import (ClassDef, FunctionDef, process_shape, ValuedArgument)
 
 from .operators      import (PyccelPow, PyccelAssociativeParenthesis, broadcast)
 
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
-                             PythonComplex, PythonReal, PythonImag)
+                             PythonComplex, PythonReal, PythonImag, PythonList)
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
                              NativeReal, NativeComplex, NativeBool, str_dtype)
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
-from .literals       import LiteralTrue, LiteralFalse
+from .literals       import LiteralTrue, LiteralFalse, Nil
 from .basic          import PyccelAstNode
+from .variables      import (Variable, IndexedElement, Constant)
 
 
 __all__ = (
