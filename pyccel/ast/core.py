@@ -6,7 +6,6 @@
 #------------------------------------------------------------------------------------------#
 
 import importlib
-from collections.abc import Iterable
 from collections     import OrderedDict
 
 from pyccel.ast.datatypes  import str_dtype
@@ -30,33 +29,29 @@ from sympy.logic.boolalg      import And as sp_And, Or as sp_Or
 from sympy.logic.boolalg      import Boolean as sp_Boolean
 from sympy.tensor             import Idx, Indexed, IndexedBase
 
-from sympy.matrices.matrices            import MatrixBase
 from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
-from sympy.tensor.array.ndim_array      import NDimArray
 from sympy.utilities.iterables          import iterable
 
 
 from .basic     import Basic, PyccelAstNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonList, PythonMap,
-                        PythonRange, PythonZip, PythonTuple, PythonBool,
-                        PythonInt)
-from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
+                        PythonRange, PythonZip, PythonTuple, PythonBool)
+from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
-                        NativeGeneric, NativeTuple, default_precision, is_iterable_datatype)
+                        NativeTuple, is_iterable_datatype)
 
 from .literals       import LiteralTrue, LiteralFalse, LiteralInteger, Nil
-from .literals       import LiteralImaginaryUnit, LiteralString, Literal
+from .literals       import LiteralImaginaryUnit, LiteralString
 from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
-from .operators import PyccelMinus, PyccelMul, PyccelDiv, PyccelOperator
+from .operators import PyccelMul
 
 from .variables import DottedName, DottedVariable, IndexedElement
-from .variables import IndexedVariable, PyccelArraySize, Slice
-from .variables import TupleVariable, ValuedVariable, Variable
-from .variables import VariableAddress
+from .variables import IndexedVariable, Slice
+from .variables import ValuedVariable, Variable
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *

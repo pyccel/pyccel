@@ -5,7 +5,6 @@
 """ This module contains all literal types
 """
 from sympy               import Float as sp_Float
-from sympy.logic.boolalg import BooleanTrue as sp_BooleanTrue, BooleanFalse as sp_BooleanFalse
 
 from .basic              import PyccelAstNode, Basic
 from .datatypes          import (NativeInteger, NativeBool, NativeReal,

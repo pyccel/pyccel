@@ -17,8 +17,6 @@ from sympy import sympify
 from sympy.tensor import Indexed, IndexedBase
 from sympy.core.function import Application
 
-from pyccel.ast.datatypes import iso_c_binding
-
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
