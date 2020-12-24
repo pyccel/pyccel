@@ -21,7 +21,7 @@ from .core     import (AsName, Import, FunctionDef, Constant,
                        Variable, IndexedVariable, ValuedVariable,
                        Assign, FunctionCall, IndexedElement,
                        Slice, For, AugAssign, IfTernaryOperator,
-                       Nil, Dlist)
+                       Nil, Dlist, TupleVariable)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange, PythonList, PythonTuple)
