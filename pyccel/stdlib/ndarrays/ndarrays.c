@@ -9,7 +9,7 @@
 ** allocation
 */
 
-t_ndarray   array_create(int32_t nd, int32_t *shape, enum e_types type)
+t_ndarray   array_create(int32_t nd, int64_t *shape, enum e_types type)
 {
     t_ndarray arr;
 
@@ -47,14 +47,14 @@ t_ndarray   array_create(int32_t nd, int32_t *shape, enum e_types type)
     }
     arr.is_view = false;
     arr.length = 1;
-    arr.shape = malloc(arr.nd * sizeof(int32_t));
+    arr.shape = malloc(arr.nd * sizeof(int64_t));
     for (int32_t i = 0; i < arr.nd; i++)
     {
         arr.length *= shape[i];
         arr.shape[i] = shape[i];
     }
     arr.buffer_size = arr.length * arr.type_size;
-    arr.strides = malloc(nd * sizeof(int32_t));
+    arr.strides = malloc(nd * sizeof(int64_t));
     for (int32_t i = 0; i < arr.nd; i++)
     {
         arr.strides[i] = 1;
@@ -200,9 +200,9 @@ t_ndarray array_slicing(t_ndarray arr, ...)
     view.nd = arr.nd;
     view.type = arr.type;
     view.type_size = arr.type_size;
-    view.shape = malloc(sizeof(int32_t) * arr.nd);
-    view.strides = malloc(sizeof(int32_t) * arr.nd);
-    memcpy(view.strides, arr.strides, sizeof(int32_t) * arr.nd);
+    view.shape = malloc(sizeof(int64_t) * arr.nd);
+    view.strides = malloc(sizeof(int64_t) * arr.nd);
+    memcpy(view.strides, arr.strides, sizeof(int64_t) * arr.nd);
     view.is_view = true;
     va_start(va, arr);
     for (int32_t i = 0; i < arr.nd ; i++)
@@ -233,10 +233,10 @@ void        alias_assign(t_ndarray *dest, t_ndarray src)
     */
 
     *dest = src;
-    dest->shape = malloc(sizeof(int32_t) * src.nd);
-    memcpy(dest->shape, src.shape, sizeof(int32_t) * src.nd);
-    dest->strides = malloc(sizeof(int32_t) * src.nd);
-    memcpy(dest->strides, src.strides, sizeof(int32_t) * src.nd);
+    dest->shape = malloc(sizeof(int64_t) * src.nd);
+    memcpy(dest->shape, src.shape, sizeof(int64_t) * src.nd);
+    dest->strides = malloc(sizeof(int64_t) * src.nd);
+    memcpy(dest->strides, src.strides, sizeof(int64_t) * src.nd);
     dest->is_view = true;
 }
 
@@ -263,11 +263,11 @@ int32_t     get_index(t_ndarray arr, ...)
 ** convert numpy strides to nd_array strides, and return it in a new array, to
 ** avoid the problem of different implementations of strides in numpy and ndarray.
 */
-long int    *numpy_to_ndarray_strides(long int *np_strides, int type_size, int nd)
+int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd)
 {
-    long int *ndarray_strides;
+    int64_t *ndarray_strides;
 
-    ndarray_strides = (long int*)malloc(sizeof(long int) * nd);
+    ndarray_strides = (int64_t*)malloc(sizeof(int64_t) * nd);
     for (int i = 0; i < nd; i++)
         ndarray_strides[i] = np_strides[i] / type_size;
     return ndarray_strides;

@@ -67,9 +67,9 @@ typedef struct  s_ndarray
     /* number of dimensions */
     int32_t                 nd;
     /* shape 'size of each dimension' */
-    long int                *shape;
+    int64_t                 *shape;
     /* strides 'number of bytes to skip to get the next element' */
-    long int                *strides;
+    int64_t                 *strides;
     /* type of the array elements */
     enum e_types            type;
     /* type size of the array elements */
@@ -85,7 +85,7 @@ typedef struct  s_ndarray
 /* functions prototypes */
 
 /* allocations */
-t_ndarray   array_create(int32_t nd, int32_t *shape, enum e_types type);
+t_ndarray   array_create(int32_t nd, int64_t *shape, enum e_types type);
 void        _array_fill_int8(int8_t c, t_ndarray arr);
 void        _array_fill_int16(int16_t c, t_ndarray arr);
 void        _array_fill_int32(int32_t c, t_ndarray arr);
@@ -113,7 +113,7 @@ int32_t         free_pointer(t_ndarray dump);
 int32_t         get_index(t_ndarray arr, ...);
 
 /* data converting between numpy and ndarray */
-long int    *numpy_to_ndarray_strides(long int *np_strides, int type_size,
+int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size,
             int nd);
 
 #endif
