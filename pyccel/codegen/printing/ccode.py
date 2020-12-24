@@ -598,8 +598,6 @@ class CCodePrinter(CodePrinter):
 
     def _print_Declare(self, expr):
         declaration_type = self.get_declare_type(expr.variable)
-        if declaration_type == "t_ndarrays":
-            self._additional_imports.add('ndarrays')
         variable = self._print(expr.variable.name)
 
         return '{0}{1};'.format(declaration_type, variable)
@@ -645,7 +643,6 @@ class CCodePrinter(CodePrinter):
             return '{0}{1}({2})'.format(ret_type, name, arg_code)
 
     def _print_IndexedElement(self, expr):
-        self._additional_imports.add('ndarrays')
         if isinstance(expr.base, IndexedVariable):
             base = expr.base.internal_variable
         else:
