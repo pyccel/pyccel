@@ -209,3 +209,18 @@ def test_grouped_expressions2():
     f2(x2, y2, z2)
 
     assert np.array_equal( x1, x2 )
+
+def test_dependencies():
+    f1 = multi_rank.dependencies
+    f2 = epyccel( f1 )
+
+    x1 = np.array(rand(4,5)*10, dtype=int)
+    x2 = np.copy(x1)
+
+    y1 = np.array(rand(5)*10, dtype=int)
+    y2 = np.copy(y1)
+
+    f1(x1, y1)
+    f2(x2, y2)
+
+    assert np.array_equal( x1, x2 )

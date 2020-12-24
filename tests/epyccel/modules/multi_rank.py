@@ -115,3 +115,14 @@ def grouped_expressions2(a,b,c):
     a[:] = a + b
     a[:] = a + c
     a += np.sum(b)
+
+@types('int[:,:]','int[:]')
+def dependencies(a,b):
+    import numpy as np
+
+    c = np.zeros_like(a)
+
+    a[:] += b
+    c += b*np.sum(a)
+
+    a[:] = c[:]
