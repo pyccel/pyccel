@@ -752,7 +752,7 @@ class CCodePrinter(CodePrinter):
         shape = ", ".join(a for a in shape)
         dtype = self._print(expr.variable.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
-        shape_dtype = self.find_in_dtype_registry('int', 4)
+        shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         alloc_code = "{} = array_create({}, {}, {});".format(expr.variable, len(expr.shape), shape_Assign, dtype)
         return '{}\n{}'.format(free_code, alloc_code)
