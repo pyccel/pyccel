@@ -555,7 +555,7 @@ def pybool_to_bool(cast_function_name):
                        body      = cast_function_body,
                        results   = [cast_function_result])
 
-def pyccelPyArrayObject_to_ndarray(cast_function_name):
+def pyarray_to_ndarray(cast_function_name):
     cast_function_argument = Variable(dtype=PyccelPyArrayObject(), name='o', is_pointer=True)
     cast_function_result   = Variable(dtype=PyccelPyArrayObject(), name = 'c', rank=1)
 
@@ -601,7 +601,7 @@ cast_function_registry = {
     'pycomplex_to_complex' : pycomplex_to_complex,
     'complex_to_pycomplex': complex_to_pycomplex,
     'pybool_to_bool' : pybool_to_bool,
-    'pyccelPyArrayObject_to_ndarray' : pyccelPyArrayObject_to_ndarray,
+    'pyarray_to_ndarray' : pyarray_to_ndarray,
 }
 
 

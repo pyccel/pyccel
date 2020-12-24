@@ -410,7 +410,7 @@ class CWrapperCodePrinter(CCodePrinter):
                         '"Argument does not have the expected ordering ({})"'.format(collect_var.order))
                 body += [(PyccelNot(check), [error, Return([Nil()])])]
         if self._target_language == "c":
-            cast_function = self.get_cast_function_call('pyccelPyArrayObject_to_ndarray', collect_var)
+            cast_function = self.get_cast_function_call('pyarray_to_ndarray', collect_var)
             body += [(LiteralTrue(), [Assign(VariableAddress(variable), cast_function)])]
         else:
             body += [(LiteralTrue(), [Assign(VariableAddress(variable),
