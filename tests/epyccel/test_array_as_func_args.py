@@ -33,7 +33,7 @@ def test_array_int_1d_scalar_add(language):
         f1(x1, a, size)
         f2(x2, a, size)
 
-    assert np.array_equal( x1, x2 )
+        assert np.array_equal( x1, x2 )
 
 def test_array_real_1d_scalar_add(language):
     @types( 'float32[:]', 'float32', 'int')
@@ -53,7 +53,7 @@ def test_array_real_1d_scalar_add(language):
         f1(x1, a, size)
         f2(x2, a, size)
 
-    assert np.array_equal( x1, x2 )
+        assert np.array_equal( x1, x2 )
 
 def test_array_complex_1d_scalar_add(language):
     @types( 'complex64[:]' , 'complex64' , 'int')
@@ -73,7 +73,7 @@ def test_array_complex_1d_scalar_add(language):
         f1(x1, a, size)
         f2(x2, a, size)
 
-    assert np.array_equal( x1, x2 )
+        assert np.array_equal( x1, x2 )
 
 def test_array_int_2d_scalar_add(language):
     @types( 'int8[:,:]' , 'int8' , 'int', 'int')
@@ -97,7 +97,7 @@ def test_array_int_2d_scalar_add(language):
         f1(x1, a, d1, d2)
         f2(x2, a, d1, d2)
 
-    assert np.array_equal( x1, x2 )
+        assert np.array_equal( x1, x2 )
 
 def test_array_real_2d_scalar_add(language):
     @types( 'float32[:,:]', 'float32', 'int', 'int')
@@ -119,7 +119,7 @@ def test_array_real_2d_scalar_add(language):
         f1(x1, a, d1, d2)
         f2(x2, a, d1, d2)
 
-    assert np.array_equal( x1, x2 )
+        assert np.array_equal( x1, x2 )
 
 def test_array_complex_2d_scalar_add(language):
     @types( 'complex64[:,:]' , 'complex64' , 'int', 'int')
@@ -141,4 +141,4 @@ def test_array_complex_2d_scalar_add(language):
         f1(x1, a, d1, d2)
         f2(x2, a, d1, d2)
 
-    assert np.array_equal( x1, x2 )
+        assert np.array_equal( x1, x2 )
