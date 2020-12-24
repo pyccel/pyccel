@@ -260,8 +260,8 @@ int32_t     get_index(t_ndarray arr, ...)
 }
 
 /*
-** convert numpy strides to nd_arrya strdies, and return it in a new array, to
-** avoid the problem of difference implemation of strides in numpy and ndarray.
+** convert numpy strides to nd_array strides, and return it in a new array, to
+** avoid the problem of different implementations of strides in numpy and ndarray.
 */
 long int    *numpy_to_ndarray_strides(long int *np_strides, int type_size, int nd)
 {
