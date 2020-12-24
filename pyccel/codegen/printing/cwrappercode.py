@@ -691,7 +691,7 @@ class CWrapperCodePrinter(CCodePrinter):
             for elem in arg_type_check_list:
                 var_name = elem[0].name
                 value = elem[2] << flags
-                body.append((elem[1], [AugAssign(check_var, '+' ,value)]))
+                body.append((elem[1], [AugAssign(check_var, '+' ,LiteralInteger(value))]))
                 types.append(elem[0])
             flags -= 4
             error = ' or '.join(['{} bit {}'.format(v.precision * 8 , str_dtype(v.dtype)) if not isinstance(v.dtype, NativeBool)
