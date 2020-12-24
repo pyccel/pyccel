@@ -1,35 +1,35 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 from pyccel.decorators import types
 
-@types('int[:,:]','int[:,:](order=F)')
+@types('real[:,:]','real[:,:](order=F)')
 def add_mixed_order(a,b):
     a[:] = a + b
 
-@types('int[:,:]','int[:,:](order=F)')
+@types('real[:,:]','real[:,:](order=F)')
 def mul_mixed_order(a,b):
     a[:] = a * b
 
-@types('int[:,:]','int[:,:](order=F)')
+@types('real[:,:]','real[:,:](order=F)')
 def sub_mixed_order(a,b):
     a[:] = a - b
 
-@types('int[:,:]','int[:,:](order=F)')
+@types('real[:,:]','real[:,:](order=F)')
 def div_mixed_order(a,b):
     a[:] = a / b
 
-@types('int[:,:]','int[:,:](order=F)')
+@types('real[:,:]','real[:,:](order=F)')
 def augadd_mixed_order(a,b):
     a[:] += b
 
-@types('int[:,:]','int[:,:](order=F)')
+@types('real[:,:]','real[:,:](order=F)')
 def augmul_mixed_order(a,b):
     a[:] *= b
 
-@types('int[:,:]','int[:,:](order=F)')
+@types('real[:,:]','real[:,:](order=F)')
 def augsub_mixed_order(a,b):
     a[:] -= b
 
-@types('int[:,:]','int[:,:](order=F)')
+@types('real[:,:]','real[:,:](order=F)')
 def augdiv_mixed_order(a,b):
     a[:] /= b
 

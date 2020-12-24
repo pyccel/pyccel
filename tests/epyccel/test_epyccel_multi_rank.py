@@ -17,10 +17,10 @@ from pyccel.epyccel import epyccel
 def test_add_mixed_order(f1):
     f2 = epyccel( f1 )
 
-    x1 = np.array(rand(4,5)*10, dtype=int)
+    x1 = np.array(np.int64(rand(4,5))*100, dtype=float)
     x2 = np.copy(x1)
 
-    y1 = np.array(rand(4,5)*10+1, dtype=int, order = 'F')
+    y1 = np.array(np.int64(rand(4,5)*100)+1, dtype=float, order = 'F')
     y2 = np.copy(y1)
 
     f1(x1, y1)
@@ -120,8 +120,8 @@ def test_multi_dim_sum():
     x4 = int(rand()*10)
     y4 = x4
 
-    pyccel_result = np.empty(dims)
-    python_result = np.empty(dims)
+    pyccel_result = np.empty(dims, dtype=int)
+    python_result = np.empty(dims, dtype=int)
 
     f1(pyccel_result, x1, x2, x3, x4)
     f2(python_result, y1, y2, y3, y4)
@@ -136,8 +136,8 @@ def test_multi_dim_sum_ones():
     x1 = np.array(rand(*dims)*10, dtype=int)
     y1 = np.copy(x1)
 
-    pyccel_result = np.empty(dims)
-    python_result = np.empty(dims)
+    pyccel_result = np.empty(dims, dtype=int)
+    python_result = np.empty(dims, dtype=int)
 
     f1(pyccel_result, x1)
     f1(python_result, y1)
@@ -182,10 +182,10 @@ def test_grouped_expressions():
     x2 = np.copy(x1)
 
     y1 = np.array(rand(4,5)*10, dtype=int)
-    y2 = np.copy(x1)
+    y2 = np.copy(y1)
 
     z1 = np.array(rand(5)*10, dtype=int)
-    z2 = np.copy(y1)
+    z2 = np.copy(z1)
 
     f1(x1, y1, z1)
     f2(x2, y2, z2)
@@ -196,14 +196,14 @@ def test_grouped_expressions2():
     f1 = multi_rank.grouped_expressions2
     f2 = epyccel( f1 )
 
-    x1 = np.array(rand(3,4,5)*10, dtype=int, order='F')
+    x1 = np.array(rand(3,4,5)*10, dtype=int)
     x2 = np.copy(x1)
 
     y1 = np.array(rand(4,5)*10, dtype=int)
-    y2 = np.copy(x1)
+    y2 = np.copy(y1)
 
     z1 = np.array(rand(5)*10, dtype=int)
-    z2 = np.copy(y1)
+    z2 = np.copy(z1)
 
     f1(x1, y1, z1)
     f2(x2, y2, z2)
