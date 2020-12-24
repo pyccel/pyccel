@@ -543,7 +543,7 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
                 IndexedBase,
                 Indexed,
                 DottedVariable,
-                ):
+                )):
                 raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
                                 str(type(lhs))))
 
