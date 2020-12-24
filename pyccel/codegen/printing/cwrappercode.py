@@ -229,6 +229,8 @@ class CWrapperCodePrinter(CCodePrinter):
             the pyobject variable
         """
         if variable.rank > 0 :
+            if self._target_language == 'c':
+                return self.get_cast_function_call('pyarray_to_ndarray', collect_var)
             return FunctionCall(numpy_get_data,[collect_var])
         if isinstance(variable.dtype, NativeComplex):
             return self.get_cast_function_call('pycomplex_to_complex', collect_var)
@@ -409,12 +411,9 @@ class CWrapperCodePrinter(CCodePrinter):
                 error = PyErr_SetString('PyExc_NotImplementedError',
                         '"Argument does not have the expected ordering ({})"'.format(collect_var.order))
                 body += [(PyccelNot(check), [error, Return([Nil()])])]
-        if self._target_language == "c":
-            cast_function = self.get_cast_function_call('pyarray_to_ndarray', collect_var)
-            body += [(LiteralTrue(), [Assign(VariableAddress(variable), cast_function)])]
-        else:
-            body += [(LiteralTrue(), [Assign(VariableAddress(variable),
-                                self.get_collect_function_call(variable, collect_var))])]
+
+        body += [(LiteralTrue(), [Assign(VariableAddress(variable),
+                            self.get_collect_function_call(variable, collect_var))])]
         body = [If(*body)]
 
         return body
