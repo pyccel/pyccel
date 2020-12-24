@@ -24,8 +24,18 @@ def pointer_reassign():
     b = a[1:]
     b = c
 
+# testing garbage collecting in a Function
+
 create_array()
 array_to_pointer()
 view_assign()
 pointer_to_pointer()
 pointer_reassign()
+
+# testing garbage collecting in a Program
+
+a = array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])
+b = a
+c = a[1:]
+b = c[1:]
+b = c
