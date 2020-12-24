@@ -536,28 +536,26 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
         if PyccelAstNode.stage != 'syntactic':
             lhs_cls = lhs.__class__.__name__
             rhs_cls = rhs.__class__.__name__
-            if lhs_cls not in (
-                'Literal',
-                'Variable',
-                'IndexedVariable',
-                'IndexedElement',
-                'IndexedBase',
-                'Indexed',
-                'Function',
-                'DottedVariable',
+            if not isinstance(lhs, (
+                Variable,
+                IndexedVariable,
+                IndexedElement,
+                IndexedBase,
+                Indexed,
+                DottedVariable,
                 ):
                 raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
                                 str(type(lhs))))
 
             if rhs_cls not in (
                 'Variable',
-                'Symbol',
                 'IndexedVariable',
                 'IndexedElement',
                 'IndexedBase',
                 'Indexed',
                 'FunctionCall',
                 'Function',
+                'TupleVariable',
                 ):
                 raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
                                 str(type(rhs))))
