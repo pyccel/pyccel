@@ -799,12 +799,13 @@ class SemanticParser(BasicParser):
 
     def _visit_PythonList(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
-        dtypes = set(i.dtype for i in ls)
-        if len(dtypes) != 1:
+        expr = PythonList(*ls, sympify=False)
+
+        if not expr.is_homogeneous:
             errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal')
-        return PythonList(*ls, sympify=False)
+        return expr
 
     def _visit_ValuedArgument(self, expr, **settings):
         value = self._visit(expr.value, **settings)
@@ -878,13 +879,11 @@ class SemanticParser(BasicParser):
             else:
                 return self._visit(Indexed(var[args[0]],args[1:]))
 
-        if var.order == 'C':
-            args = args[::-1]
         args = tuple(args)
 
         if isinstance(var, TupleVariable) and not var.is_homogeneous:
 
-            arg = args[-1]
+            arg = args[0]
 
             if isinstance(arg, Slice):
                 if ((arg.start is not None and not isinstance(arg.start, LiteralInteger)) or
@@ -900,13 +899,13 @@ class SemanticParser(BasicParser):
                         return selected_vars[0]
                     else:
                         var = selected_vars[0]
-                        return self._extract_indexed_from_var(var, args[:-1], name)
+                        return self._extract_indexed_from_var(var, args[1:], name)
                 elif len(selected_vars)<1:
                     return None
                 elif len(args)==1:
                     return PythonTuple(*selected_vars)
                 else:
-                    return PythonTuple(*[self._extract_indexed_from_var(var, args[:-1], name) for var in selected_vars])
+                    return PythonTuple(*[self._extract_indexed_from_var(var, args[1:], name) for var in selected_vars])
 
             elif isinstance(arg, LiteralInteger):
 
@@ -914,7 +913,7 @@ class SemanticParser(BasicParser):
                     return var[arg]
 
                 var = var[arg]
-                return self._extract_indexed_from_var(var, args[:-1], name)
+                return self._extract_indexed_from_var(var, args[1:], name)
 
             else:
                 errors.report(INDEXED_TUPLE, symbol=var,
@@ -1059,6 +1058,11 @@ class SemanticParser(BasicParser):
                         symbol=expr,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=True)
+
+        if not hasattr(first, 'cls_base') or first.cls_base is None:
+            errors.report('Attribute {} not found'.format(rhs_name),
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal', blocker=True)
 
         if first.cls_base:
             attr_name = [i.name for i in first.cls_base.attributes]

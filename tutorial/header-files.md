@@ -76,7 +76,7 @@ from pyccel.decorators import types
 
 @types('int')
 def print_fib(x):
-    from header import fib
+    from  funcs_headers import fib
     print(fib(x))
 ```
 To compile this file we execute the following command `pyccel test_funcs.py --libs=funcs --libdir=$PWD`, this will create the shared library `test_funcs.so`
