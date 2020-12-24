@@ -2,8 +2,7 @@
 This test file is made for testing the functionality of passing numpy arrays
 in the function arguments.
 """
-
-import pytest
+# pylint: disable=missing-function-docstring
 import numpy as np
 from numpy.random import randint, uniform
 
