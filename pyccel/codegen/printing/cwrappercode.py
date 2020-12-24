@@ -637,6 +637,12 @@ class CWrapperCodePrinter(CCodePrinter):
             # Building PybuildValue and freeing the allocated variable after.
             mini_wrapper_func_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
             mini_wrapper_func_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
+            # Call free function for C type
+            if self._target_language == 'c':
+                mini_wrapper_func_body += [FunctionCall(C_Free, [DottedVariable(i,
+                                            Variable(dtype=NativeInteger(),
+                                            name='strides', allocatable=True))])
+                                for i in func.arguments if i.allocatable]
             mini_wrapper_func_body.append(Return(wrapper_results))
             self._to_free_PyObject_list.clear()
             # Building Mini wrapper function
