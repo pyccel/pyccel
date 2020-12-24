@@ -368,7 +368,8 @@ def insert_index(expr, pos, index_var, language_has_vectors):
         rhs = insert_index(expr.rhs, pos, index_var, language_has_vectors)
 
         # Indicates whether the rhs needs an index inserting
-        changed = not isinstance(rhs, (Variable, IndexedElement)) and rhs is not rhs
+        changed = not isinstance(rhs, (Variable, IndexedElement)) \
+                and expr.rhs is not rhs
 
         if changed or not compatible or not language_has_vectors:
             return cls(lhs, expr.op, rhs, expr.status, expr.like)
@@ -457,7 +458,7 @@ def collect_loops(block, indices, language_has_vectors = False):
     array_creator_types = (NumpyNewArray, FunctionCall,
                            NumpyFunctionBase, MathFunctionBase,
                            PythonList, PythonTuple, Nil, Dlist)
-    for i, line in enumerate(block):
+    for line in block:
         if isinstance(line, Assign) and \
                 not isinstance(line.rhs, array_creator_types) and \
                 not ( not isinstance(line, AugAssign) and isinstance(line.rhs, Variable)) and \

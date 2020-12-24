@@ -3,8 +3,8 @@ import pytest
 import numpy as np
 from numpy.random import rand, randint
 
-from pyccel.epyccel import epyccel
 from modules        import multi_rank
+from pyccel.epyccel import epyccel
 
 @pytest.mark.parametrize('f1',[multi_rank.add_mixed_order,
     multi_rank.mul_mixed_order,
@@ -124,7 +124,7 @@ def test_multi_dim_sum():
     python_result = np.empty(dims)
 
     f1(pyccel_result, x1, x2, x3, x4)
-    f1(python_result, y1, y2, y3, y4)
+    f2(python_result, y1, y2, y3, y4)
 
     assert np.array_equal( pyccel_result, python_result )
 
@@ -187,8 +187,8 @@ def test_grouped_expressions():
     z1 = np.array(rand(5)*10, dtype=int)
     z2 = np.copy(y1)
 
-    f1(x1, y1)
-    f2(x2, y2)
+    f1(x1, y1, z1)
+    f2(x2, y2, z2)
 
     assert np.array_equal( x1, x2 )
 
@@ -205,7 +205,7 @@ def test_grouped_expressions2():
     z1 = np.array(rand(5)*10, dtype=int)
     z2 = np.copy(y1)
 
-    f1(x1, y1)
-    f2(x2, y2)
+    f1(x1, y1, z1)
+    f2(x2, y2, z2)
 
     assert np.array_equal( x1, x2 )

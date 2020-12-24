@@ -72,9 +72,9 @@ def multi_dim_sum(result, a, b, c, d):
 @types('int[:,:,:]','int[:,:,:]')
 def multi_dim_sum_ones(result, a):
     import numpy as np
-    s1,s2,s3 = np.shape(a)
-    b = np.empty((1,s2,s3),dtype=int)
-    c = np.empty((1, 1,s3),dtype=int)
+    s = np.shape(a)
+    b = np.empty((1,s[1],s[2]),dtype=int)
+    c = np.empty((1,   1,s[2]),dtype=int)
     b[:,:,:] = a[0]
     c[:,:,:] = a[0,0]
     d = a[0,0,0]
