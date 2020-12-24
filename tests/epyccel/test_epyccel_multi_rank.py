@@ -140,7 +140,7 @@ def test_multi_dim_sum_ones():
     python_result = np.empty(dims, dtype=int)
 
     f1(pyccel_result, x1)
-    f1(python_result, y1)
+    f2(python_result, y1)
 
     assert np.array_equal( pyccel_result, python_result )
 
