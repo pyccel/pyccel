@@ -10,5 +10,3 @@ a = ones(3)
 b = ones((4,3))
 c = a+b
 d = b+a
-e = ones(3)
-e +=a
