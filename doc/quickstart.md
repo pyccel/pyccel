@@ -28,6 +28,7 @@ For more details about Python object, see [this](https://docs.python.org/3/tutor
 -   Is created with an assignment operation `x = expr`:
     -   If the variable `x` already exists, the interpreter reduces the reference count of its object
     -   Otherwise a new variable `x` is created, which references the value of expr.
+    -   The reference count increased with an assignment operator, in argument passing or appending an object to a list.
 
 -   The type of the variable can be changed at run-time, because python is a dynamically typed language.
 
