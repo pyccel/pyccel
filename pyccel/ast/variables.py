@@ -3,7 +3,7 @@ from sympy import Symbol, Tuple
 from sympy.core.function      import Function, Application
 from sympy.core.expr          import Expr, AtomicExpr
 from sympy.logic.boolalg      import Boolean as sp_Boolean
-from sympy.tensor             import IndexedBase
+from sympy.tensor             import Indexed, IndexedBase
 from sympy.matrices.matrices  import MatrixBase
 from sympy.utilities.misc     import filldedent
 from sympy.utilities.iterables          import iterable

@@ -54,7 +54,7 @@ __all__ = (
 #==============================================================================
 def broadcast(shape_1, shape_2):
     """ This function broadcast two shapes using numpy broadcasting rules """
-    from .core      import PyccelArraySize
+    from .variables      import PyccelArraySize
 
     a = len(shape_1)
     b = len(shape_2)
