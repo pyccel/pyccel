@@ -37,8 +37,7 @@ For more details about Python variables, see [this](https://www.w3schools.com/py
 
  ## Static typed languages
 	
-A language is statically-typed if the type of a variable is known at compile-time instead of at run-time. Common examples of statically-
-typed languages include Java, C, C++, FORTRAN, Pascal and Scala, on the other hand, in python the type of a variable is known at the run-time, that's why we need to collect the garbage in the generated code, and raise some warnings/errors for the conflicts that can occur between dynamically typed languages (python) and statically typed languages(C/Fortran). See [this](https://en.wikipedia.org/wiki/Type_system#:~:text=In%20programming%20languages%2C%20a%20type,%2C%20expressions%2C%20functions%20or%20modules.) and [this](https://android.jlelse.eu/magic-lies-here-statically-typed-vs-dynamically-typed-languages-d151c7f95e2b#:~:text=Static%20typed%20languages,%2C%20FORTRAN%2C%20Pascal%20and%20Scala.) for more details.
+A language is statically-typed if the type of a variable is known at compile-time instead of at the run-time. Common examples of statically-typed languages include Java, C, C++, FORTRAN, Pascal and Scala, on the other hand, in python the type of a variable is known at the run-time, that's why we need to collect the garbage in the generated code, and raise some warnings/errors for the conflicts that can occur between dynamically typed languages (python) and statically typed languages(C/Fortran). See [this](https://en.wikipedia.org/wiki/Type_system#:~:text=In%20programming%20languages%2C%20a%20type,%2C%20expressions%2C%20functions%20or%20modules.) and [this](https://android.jlelse.eu/magic-lies-here-statically-typed-vs-dynamically-typed-languages-d151c7f95e2b#:~:text=Static%20typed%20languages,%2C%20FORTRAN%2C%20Pascal%20and%20Scala.) for more details.
 
  ## Installation (see [README](https://github.com/pyccel/pyccel/blob/master/README.rst) file)
 
