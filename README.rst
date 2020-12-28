@@ -215,7 +215,7 @@ Continuous testing runs on github actions: <https://github.com/pyccel/pyccel/act
 .. |build-status| image:: https://github.com/pyccel/pyccel/actions?query=branch%3Amaster
     :alt: build status
     :scale: 100%
-    :target: https://github.com/pyccel/pyccel/
+    :target: https://github.com/pyccel/pyccel/actions?query=branch%3Amaster
 
 .. |codacy| image:: https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698
     :alt: Codacy Badge
