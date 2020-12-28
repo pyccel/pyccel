@@ -14,14 +14,14 @@
 #from sympy.utilities.iterables          import iterable
 #from sympy.tensor.array.ndim_array      import NDimArray
 
-from .basic     import Basic, PyccelAstNode
-from .datatypes import (datatype, DataType, CustomDataType,
-                        NativeInteger, NativeBool, NativeReal,
-                        NativeComplex, NativeRange, NativeString,
-                        NativeGeneric, default_precision)
-from .literals       import LiteralInteger, Nil
-from .operators import PyccelMinus
-from .property_accessors import PyccelArraySize
+#from .basic     import Basic, PyccelAstNode
+#from .datatypes import (datatype, DataType, CustomDataType,
+#                        NativeInteger, NativeBool, NativeReal,
+#                        NativeComplex, NativeRange, NativeString,
+#                        NativeGeneric, default_precision)
+#from .literals       import LiteralInteger, Nil
+#from .operators import PyccelMinus
+#from .property_accessors import PyccelArraySize
 
 from .core import (
     DottedName,
