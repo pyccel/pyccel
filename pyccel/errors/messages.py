@@ -14,9 +14,11 @@ INVALID_IMPLICIT_RETURN = 'Implicit return in function which does not return'
 INCOMPATIBLE_RETURN_VALUE_TYPE = 'Incompatible return value type'
 RETURN_VALUE_EXPECTED = 'Return value expected'
 NO_RETURN_EXPECTED = 'Return statement in function which does not return'
-RECURSIVE_RESULTS_REQUIRED = ("A results type must be provided for recursive functions with one of the following two syntaxes:\n"
-    "@types('ARG_TYPES', results='RESULT_TYPES')\n"
-    "#$ header function FUNC_NAME(ARG_TYPES) results(RESULT_TYPES)\n")
+RECURSIVE_RESULTS_REQUIRED = ("A results type must be provided for recursive functions with one of the following three syntaxes:\n"
+                              "def FUNC_NAME(arg1_name:arg1_type, ...) -> RESULT_TYPES\n"
+                              "@types('ARG_TYPES', results='RESULT_TYPES')\n"
+                              "#$ header function FUNC_NAME(ARG_TYPES) results(RESULT_TYPES)\n")
+
 INCOMPATIBLE_TYPES = 'Incompatible types'
 INCOMPATIBLE_TYPES_IN_ASSIGNMENT = 'Incompatible types in assignment'
 INCOMPATIBLE_REDEFINITION = 'Incompatible redefinition'
