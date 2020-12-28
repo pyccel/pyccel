@@ -6,9 +6,10 @@
 Module containing commonly used objects which provide access to properties
 of other objects.
 """
-from sympy.core.function      import Function
-from .basic                   import Basic, PyccelAstNode
-from .datatypes import NativeInteger, default_precision
+from sympy.core.function    import Function
+from .basic                 import Basic, PyccelAstNode
+from .datatypes             import NativeInteger, default_precision
+from .literals              import Literal
 
 class PyccelArraySize(Function, PyccelAstNode):
     """
@@ -29,7 +30,7 @@ class PyccelArraySize(Function, PyccelAstNode):
         if index >= arg.rank:
             raise TypeError('Index {} out of bounds for object {}'.format(index,arg))
         if (arg.shape is not None and arg.shape[index] is not None \
-                and not isinstance(arg.shape[index], PyccelArraySize)):
+                and isinstance(arg.shape[index], Literal)):
             raise TypeError('Shape is known for this object. Please use Shape function')
 
         return Basic.__new__(cls, arg, index)
