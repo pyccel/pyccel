@@ -41,10 +41,14 @@ class PyccelArraySize(Function, PyccelAstNode):
 
     @property
     def arg(self):
+        """ Object whose shape is calculated
+        """
         return self._args[0]
 
     @property
     def index(self):
+        """ Dimension in which the shape is calculated
+        """
         return self._args[1]
 
     def _sympystr(self, printer):
