@@ -35,7 +35,7 @@ __all__ = (
     'VariableAddress'
 )
 
-class Slice(Basic):
+class Slice(Basic, PyccelAstNode):
 
     """Represents a slice in the code.
 
