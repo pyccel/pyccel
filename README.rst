@@ -209,18 +209,13 @@ Testing
 
 To test your Pyccel installation please run the script *tests/run_tests_py3.sh* (Unix), or *tests/run_tests.bat* (Windows).
 
-Continuous testing runs on Travis CI: <https://travis-ci.com/github/pyccel/pyccel>
+Continuous testing runs on github actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Amaster>
 
 
-Contributing
-============
-
-TODO
-
-.. |build-status| image:: https://travis-ci.com/pyccel/pyccel.svg?branch=master
+.. |build-status| image:: https://github.com/pyccel/pyccel/actions?query=branch%3Amaster
     :alt: build status
     :scale: 100%
-    :target: https://travis-ci.com/pyccel/pyccel
+    :target: https://github.com/pyccel/pyccel/
 
 .. |codacy| image:: https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698
     :alt: Codacy Badge
