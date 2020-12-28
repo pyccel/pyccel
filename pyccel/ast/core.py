@@ -2851,6 +2851,12 @@ class FunctionCall(Basic, PyccelAstNode):
 
     def __init__(self, func, args, current_function=None):
 
+        if self.stage == "syntactic":
+            self._interface = None
+            self._funcdef   = func
+            self._arguments = args
+            return
+
         # ...
         if not isinstance(func, (FunctionDef, Interface)):
             raise TypeError('> expecting a FunctionDef or an Interface')
