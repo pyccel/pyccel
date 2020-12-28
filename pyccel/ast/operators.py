@@ -8,17 +8,20 @@ These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the dtype, precision, rank, shape
 """
-from sympy.core.expr          import Expr
+from sympy.core.expr        import Expr
 
-from ..errors.errors import Errors, PyccelSemanticError
+from ..errors.errors        import Errors, PyccelSemanticError
 
-from .basic     import PyccelAstNode
+from .basic                 import PyccelAstNode
 
-from .builtins import PythonInt
+from .builtins              import PythonInt
 
-from .datatypes import NativeBool, NativeInteger, NativeReal, NativeComplex, NativeString, default_precision
+from .datatypes             import (NativeBool, NativeInteger, NativeReal,
+                                    NativeComplex, NativeString, default_precision)
 
-from .literals import LiteralInteger, LiteralFloat, LiteralComplex
+from .literals              import LiteralInteger, LiteralFloat, LiteralComplex
+
+from .property_accessors    import PyccelArraySize
 
 errors = Errors()
 
@@ -54,7 +57,6 @@ __all__ = (
 #==============================================================================
 def broadcast(shape_1, shape_2):
     """ This function broadcast two shapes using numpy broadcasting rules """
-    from .variables      import PyccelArraySize
 
     a = len(shape_1)
     b = len(shape_2)
