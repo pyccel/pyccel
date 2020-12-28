@@ -75,8 +75,6 @@ def sympy_to_pyccel(expr, symbol_map):
     elif isinstance(expr, sp.Add):
         args = [sympy_to_pyccel(e, symbol_map) for e in expr.args]
         result = args[0]
-        minus_args = []
-        plus_args = []
 
         # Find positive and negative elements
         for a in args[1:]:
