@@ -16,7 +16,8 @@ from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors
 
 from .core     import (AsName, Import, FunctionDef, Constant,
-                       Variable, IndexedVariable, ValuedVariable)
+                       Variable, IndexedVariable, ValuedVariable,
+                       FunctionCall)
 
 from .builtins      import builtin_functions_dict, PythonMap
 from .itertoolsext  import Product
@@ -42,12 +43,12 @@ scipy_constants = {
 def builtin_function(expr, args=None):
     """Returns a builtin-function call applied to given arguments."""
 
-    if isinstance(expr, Application):
-        name = str(type(expr).__name__)
+    if isinstance(expr, FunctionCall):
+        name = str(expr.funcdef)
     elif isinstance(expr, str):
         name = expr
     else:
-        raise TypeError('expr must be of type str or Function')
+        raise TypeError('expr must be of type str or FunctionCall')
 
     dic = builtin_functions_dict
 
