@@ -72,7 +72,7 @@ class Slice(Basic, PyccelAstNode):
         self._stop = stop
         self._step = step
         if self.stage == 'syntactic':
-                return
+            return
         if start is not None and not (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger)):
             raise TypeError('Slice start must be Integer or None')
         if stop is not None and not (hasattr(stop, 'dtype') and isinstance(stop.dtype, NativeInteger)):
