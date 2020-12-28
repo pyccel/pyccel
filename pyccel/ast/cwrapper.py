@@ -55,7 +55,8 @@ __all__ = (
     'Py_DECREF',
     'PyLong_AsLong',
     'PyFloat_AsDouble',
-    'Type_Check',
+    'PythonType_Check',
+    'NumpyType_Check',
     'PyErr_SetString',
 #------- CAST FUNCTIONS ------
     'pyint_to_bool',
