@@ -238,8 +238,8 @@ class Variable(Symbol, PyccelAstNode):
 
         self._alloc_shape = shape
         self._dtype = dtype
-        self._shape = self.process_shape(shape)
         self._rank  = rank
+        self._shape = self.process_shape(shape)
         self._precision = precision
 
         # ------------ Variable Properties ---------------
