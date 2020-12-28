@@ -647,7 +647,6 @@ class CCodePrinter(CodePrinter):
         else:
             base = expr.base
         inds = list(expr.indices)
-        inds = inds[::-1]
         base_shape = base.shape
         allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
                 base.allows_negative_indexes)
@@ -702,13 +701,13 @@ class CCodePrinter(CodePrinter):
         # negative start and end in slice
         if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
             start = PyccelMinus(array_size, start.args[0])
-        elif allow_negative_index and not isinstance(start, LiteralInteger):
+        elif allow_negative_index and not isinstance(start, (LiteralInteger, PyccelArraySize)):
             start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
                             PyccelMinus(array_size, start), start)
 
         if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
             stop = PyccelMinus(array_size, stop.args[0])
-        elif allow_negative_index and not isinstance(stop, LiteralInteger):
+        elif allow_negative_index and not isinstance(stop, (LiteralInteger, PyccelArraySize)):
             stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
                             PyccelMinus(array_size, stop), stop)
 
@@ -720,13 +719,14 @@ class CCodePrinter(CodePrinter):
 
         # negative step in slice
         elif isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
-            start = array_size if _slice.start is None else start
+            start = PyccelMinus(array_size, LiteralInteger(1)) if _slice.start is None else start
             stop = LiteralInteger(0) if _slice.stop is None else stop
 
         # variable step in slice
         elif allow_negative_index and step and not isinstance(step, LiteralInteger):
-            start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, stop)
-            stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, start)
+            og_start = start
+            start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, PyccelMinus(stop, LiteralInteger(1)))
+            stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, og_start)
 
         return Slice(start, stop, step)
 
