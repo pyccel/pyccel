@@ -211,11 +211,10 @@ To test your Pyccel installation please run the script *tests/run_tests_py3.sh* 
 
 Continuous testing runs on github actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Amaster>
 
-
-.. |build-status| image:: https://github.com/pyccel/pyccel/actions?query=branch%3Amaster
-    :alt: build status
+.. |build status| image:: https://github.com/pyccel/pyccel/workflows/Pyccel%20tests/badge.svg
+    :alt: Codacy Badge
     :scale: 100%
-    :target: https://github.com/pyccel/pyccel/actions?query=branch%3Amaster
+    :target: https://github.com/pyccel/pyccel/actions
 
 .. |codacy| image:: https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698
     :alt: Codacy Badge
