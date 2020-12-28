@@ -13,7 +13,7 @@ exec(path.read_text())
 NAME    = 'pyccel'
 VERSION = __version__
 AUTHOR  = 'Pyccel development team'
-EMAIL   = ''
+EMAIL   = 'pyccel@googlegroups.com'
 URL     = 'https://github.com/pyccel/pyccel'
 DESCR   = 'Python extension language using accelerators.'
 KEYWORDS = ['math']
