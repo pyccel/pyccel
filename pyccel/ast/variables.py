@@ -530,126 +530,6 @@ class DottedName(Basic):
         sstr = printer.doprint
         return """.""".join(sstr(n) for n in self.name)
 
-class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
-
-    """
-    Represents a dotted variable.
-    """
-
-    def __new__(cls, lhs, rhs):
-
-        if PyccelAstNode.stage != 'syntactic':
-            lhs_cls = lhs.__class__.__name__
-            rhs_cls = rhs.__class__.__name__
-            if not isinstance(lhs, (
-                Variable,
-                IndexedVariable,
-                IndexedElement,
-                IndexedBase,
-                Indexed,
-                DottedVariable,
-                )):
-                raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
-                                str(type(lhs))))
-
-            if rhs_cls not in (
-                'Variable',
-                'IndexedVariable',
-                'IndexedElement',
-                'IndexedBase',
-                'Indexed',
-                'FunctionCall',
-                'Function',
-                'TupleVariable',
-                ):
-                raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
-                                str(type(rhs))))
-
-        return Basic.__new__(cls, lhs, rhs)
-
-    def __init__(self, lhs, rhs):
-        if self.stage == 'syntactic':
-            return
-        self._dtype     = rhs.dtype
-        self._rank      = rhs.rank
-        self._precision = rhs.precision
-        self._shape     = rhs.shape
-        self._order     = rhs.order
-
-    @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
-
-    @property
-    def allocatable(self):
-        return self._args[1].allocatable
-
-    @allocatable.setter
-    def allocatable(self, allocatable):
-        self._args[1].allocatable = allocatable
-
-    @property
-    def is_pointer(self):
-        return self._args[1].is_pointer
-
-    @is_pointer.setter
-    def is_pointer(self, is_pointer):
-        self._args[1].is_pointer = is_pointer
-
-    @property
-    def is_target(self):
-        return self._args[1].is_target
-
-    @is_target.setter
-    def is_target(self, is_target):
-        self._args[1].is_target = is_target
-
-    @property
-    def name(self):
-        if isinstance(self.lhs, DottedVariable):
-            name_0 = self.lhs.name
-        else:
-            name_0 = str(self.lhs)
-        if isinstance(self.rhs, Function):
-            name_1 = str(type(self.rhs).__name__)
-        elif isinstance(self.rhs, Symbol):
-            name_1 = self.rhs.name
-        else:
-            name_1 = str(self.rhs)
-        return name_0 + """.""" + name_1
-
-    def __str__(self):
-        return self.name
-
-    def _sympystr(self, Printer):
-        return self.name
-
-    @property
-    def cls_base(self):
-        return self._args[1].cls_base
-
-    @property
-    def names(self):
-        """Return list of names as strings."""
-
-        ls = []
-        for i in [self.lhs, self.rhs]:
-            if not isinstance(i, DottedVariable):
-                ls.append(str(i))
-            else:
-                ls += i.names
-        return ls
-
-    def _eval_subs(self, old, new):
-        return self
-
-    def inspect(self):
-        self._args[1].inspect()
-
 class ValuedVariable(Variable):
 
     """Represents a valued variable in the code.
@@ -1044,3 +924,123 @@ class VariableAddress(Basic, PyccelAstNode):
     @property
     def variable(self):
         return self._variable
+
+class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
+
+    """
+    Represents a dotted variable.
+    """
+
+    def __new__(cls, lhs, rhs):
+
+        if PyccelAstNode.stage != 'syntactic':
+            lhs_cls = lhs.__class__.__name__
+            rhs_cls = rhs.__class__.__name__
+            if not isinstance(lhs, (
+                Variable,
+                IndexedVariable,
+                IndexedElement,
+                IndexedBase,
+                Indexed,
+                DottedVariable,
+                )):
+                raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
+                                str(type(lhs))))
+
+            if rhs_cls not in (
+                'Variable',
+                'IndexedVariable',
+                'IndexedElement',
+                'IndexedBase',
+                'Indexed',
+                'FunctionCall',
+                'Function',
+                'TupleVariable',
+                ):
+                raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
+                                str(type(rhs))))
+
+        return Basic.__new__(cls, lhs, rhs)
+
+    def __init__(self, lhs, rhs):
+        if self.stage == 'syntactic':
+            return
+        self._dtype     = rhs.dtype
+        self._rank      = rhs.rank
+        self._precision = rhs.precision
+        self._shape     = rhs.shape
+        self._order     = rhs.order
+
+    @property
+    def lhs(self):
+        return self._args[0]
+
+    @property
+    def rhs(self):
+        return self._args[1]
+
+    @property
+    def allocatable(self):
+        return self._args[1].allocatable
+
+    @allocatable.setter
+    def allocatable(self, allocatable):
+        self._args[1].allocatable = allocatable
+
+    @property
+    def is_pointer(self):
+        return self._args[1].is_pointer
+
+    @is_pointer.setter
+    def is_pointer(self, is_pointer):
+        self._args[1].is_pointer = is_pointer
+
+    @property
+    def is_target(self):
+        return self._args[1].is_target
+
+    @is_target.setter
+    def is_target(self, is_target):
+        self._args[1].is_target = is_target
+
+    @property
+    def name(self):
+        if isinstance(self.lhs, DottedVariable):
+            name_0 = self.lhs.name
+        else:
+            name_0 = str(self.lhs)
+        if isinstance(self.rhs, Function):
+            name_1 = str(type(self.rhs).__name__)
+        elif isinstance(self.rhs, Symbol):
+            name_1 = self.rhs.name
+        else:
+            name_1 = str(self.rhs)
+        return name_0 + """.""" + name_1
+
+    def __str__(self):
+        return self.name
+
+    def _sympystr(self, Printer):
+        return self.name
+
+    @property
+    def cls_base(self):
+        return self._args[1].cls_base
+
+    @property
+    def names(self):
+        """Return list of names as strings."""
+
+        ls = []
+        for i in [self.lhs, self.rhs]:
+            if not isinstance(i, DottedVariable):
+                ls.append(str(i))
+            else:
+                ls += i.names
+        return ls
+
+    def _eval_subs(self, old, new):
+        return self
+
+    def inspect(self):
+        self._args[1].inspect()
