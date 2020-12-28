@@ -1,3 +1,7 @@
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
 from collections.abc import Iterable
 from sympy import Symbol, Tuple
 from sympy.core.function      import Function, Application
@@ -15,7 +19,8 @@ from .datatypes import (datatype, DataType, CustomDataType,
                         NativeComplex, NativeRange, NativeString,
                         NativeGeneric, default_precision)
 from .literals       import LiteralInteger, Nil
-from .operators import PyccelMinus, PyccelOperator
+from .operators import PyccelMinus
+from .property_accessors import PyccelArraySize
 
 __all__ = (
     'DottedName',
@@ -30,7 +35,7 @@ __all__ = (
     'VariableAddress'
 )
 
-class Slice(Basic, PyccelOperator):
+class Slice(Basic):
 
     """Represents a slice in the code.
 
@@ -1039,29 +1044,3 @@ class VariableAddress(Basic, PyccelAstNode):
     @property
     def variable(self):
         return self._variable
-
-class PyccelArraySize(Function, PyccelAstNode):
-    def __new__(cls, arg, index):
-        is_PyccelAstNode = isinstance(arg, PyccelAstNode) and \
-                (arg.shape is None or all(a.shape is None for a in arg.shape))
-        if not (is_PyccelAstNode or isinstance(arg, Variable) or hasattr(arg, '__len__')):
-            raise TypeError('Uknown type of  %s.' % type(arg))
-
-        return Basic.__new__(cls, arg, index)
-
-    def __init__(self, arg, index):
-        self._dtype = NativeInteger()
-        self._rank  = 0
-        self._shape = ()
-        self._precision = default_precision['integer']
-
-    @property
-    def arg(self):
-        return self._args[0]
-
-    @property
-    def index(self):
-        return self._args[1]
-
-    def _sympystr(self, printer):
-        return 'Shape({},{})'.format(str(self.arg), str(self.index))
