@@ -3,16 +3,16 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-from collections.abc import Iterable
-from sympy import Symbol, Tuple
-from sympy.core.function      import Function, Application
-from sympy.core.expr          import Expr, AtomicExpr
-from sympy.logic.boolalg      import Boolean as sp_Boolean
-from sympy.tensor             import Indexed, IndexedBase
-from sympy.matrices.matrices  import MatrixBase
-from sympy.utilities.misc     import filldedent
-from sympy.utilities.iterables          import iterable
-from sympy.tensor.array.ndim_array      import NDimArray
+#from collections.abc import Iterable
+#from sympy import Symbol, Tuple
+#from sympy.core.function      import Function, Application
+#from sympy.core.expr          import Expr, AtomicExpr
+#from sympy.logic.boolalg      import Boolean as sp_Boolean
+#from sympy.tensor             import Indexed, IndexedBase
+#from sympy.matrices.matrices  import MatrixBase
+#from sympy.utilities.misc     import filldedent
+#from sympy.utilities.iterables          import iterable
+#from sympy.tensor.array.ndim_array      import NDimArray
 
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType, CustomDataType,
