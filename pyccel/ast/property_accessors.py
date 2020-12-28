@@ -2,16 +2,34 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+"""
+Module containing commonly used objects which provide access to properties
+of other objects.
+"""
 from sympy.core.function      import Function
 from .basic                   import Basic, PyccelAstNode
 from .datatypes import NativeInteger, default_precision
 
 class PyccelArraySize(Function, PyccelAstNode):
+    """
+    Class representing a call to a function which would
+    return the shape of an object in a given dimension
+
+    Parameters
+    ==========
+    arg   : PyccelAstNode
+            A PyccelAstNode of unknown shape
+    index : int
+            The dimension along which the shape is
+            provided
+    """
     def __new__(cls, arg, index):
-        is_PyccelAstNode = isinstance(arg, PyccelAstNode) and \
-                (arg.shape is None or all(a.shape is None for a in arg.shape))
-        if not (is_PyccelAstNode or hasattr(arg, '__len__')):
-            raise TypeError('Uknown type of  %s.' % type(arg))
+        if not isinstance(arg, PyccelAstNode):
+            raise TypeError('Unknown type of  %s.' % type(arg))
+        if index >= arg.rank:
+            raise TypeError('Index {} out of bounds for object {}'.format(index,arg))
+        if (arg.shape is not None or arg.shape[index] is not None):
+            raise TypeError('Shape is known for this object. Please use Shape function')
 
         return Basic.__new__(cls, arg, index)
 
