@@ -13,7 +13,6 @@ import ast
 
 #==============================================================================
 
-from sympy.core.function import Function
 from sympy import Symbol
 from sympy import IndexedBase
 from sympy import Tuple
@@ -25,6 +24,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import PyccelAstNode
 
+from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import ParserResult
 from pyccel.ast.core import Nil
 from pyccel.ast.core import DottedName, DottedVariable
@@ -644,7 +644,7 @@ class SyntaxParser(BasicParser):
 
         decorators = {}
         for d in self._visit(stmt.decorator_list):
-            tmp_var = str(d) if isinstance(d, Symbol) else str(type(d))
+            tmp_var = str(d) if isinstance(d, Symbol) else str(d.funcdef)
             if tmp_var in decorators:
                 decorators[tmp_var] += [d]
             else:
@@ -716,7 +716,7 @@ class SyntaxParser(BasicParser):
 
                 cache.clear_cache()
                 results = []
-                ls = comb_types.args
+                ls = comb_types.arguments
 
                 if len(ls) > 0 and isinstance(ls[-1], ValuedArgument):
                     arg_name = ls[-1].name
@@ -895,10 +895,10 @@ class SyntaxParser(BasicParser):
             if str(f_name) == "print":
                 func = PythonPrint(PythonTuple(*args))
             else:
-                func = Function(f_name)(*args)
+                func = FunctionCall(f_name, args)
         elif isinstance(func, DottedVariable):
             f_name = func.rhs.name
-            func_attr = Function(f_name)(*args)
+            func_attr = FunctionCall(f_name, args)
             func = DottedVariable(func.lhs, func_attr)
         else:
             raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
@@ -991,7 +991,7 @@ class SyntaxParser(BasicParser):
         if name == 'sum':
             body = AugAssign(lhs, '+', body)
         else:
-            body = Function(name)(lhs, body)
+            body = FunctionCall(name, (lhs, body))
             body = Assign(lhs, body)
 
         body.set_fst(parent)
