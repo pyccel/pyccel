@@ -29,9 +29,6 @@ class PyccelArraySize(Function, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         if index >= arg.rank:
             raise TypeError('Index {} out of bounds for object {}'.format(index,arg))
-        if (arg.shape is not None and arg.shape[index] is not None \
-                and isinstance(arg.shape[index], Literal)):
-            raise TypeError('Shape is known for this object. Please use Shape function')
 
         return Basic.__new__(cls, arg, index)
 
