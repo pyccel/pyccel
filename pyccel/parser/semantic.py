@@ -120,6 +120,8 @@ def _get_name(var):
         return str(var.base)
     if isinstance(var, Application):
         return type(var).__name__
+    if isinstance(var, FunctionCall):
+        return var.funcdef
     if isinstance(var, AsName):
         return var.target
     msg = 'Name of Object : {} cannot be determined'.format(type(var).__name__)
@@ -1231,14 +1233,20 @@ class SemanticParser(BasicParser):
             expr = FunctionCall(func, args, self._current_function)
             return expr
 
-    def _visit_Application(self, expr, **settings):
-        name     = type(expr).__name__
+    def _visit_FunctionCall(self, expr, **settings):
+        name     = expr.funcdef
+
+        # Check for specialised method
+        annotation_method = '_visit_' + name
+        if hasattr(self, annotation_method):
+            return getattr(self, annotation_method)(expr, **settings)
+
         func     = self.get_function(name)
 
-        args = self._handle_function_args(expr.args, **settings)
+        args = self._handle_function_args(expr.arguments, **settings)
 
         if name == 'lambdify':
-            args = self.get_symbolic_function(str(expr.args[0]))
+            args = self.get_symbolic_function(str(expr.arguments[0]))
         F = pyccel_builtin_function(expr, args)
 
         if F is not None:
