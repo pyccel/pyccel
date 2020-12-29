@@ -8,7 +8,6 @@
 import importlib
 from collections     import OrderedDict
 
-from pyccel.ast.datatypes  import str_dtype
 from sympy import sympify
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
 from sympy import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Le as sp_Le, Gt as sp_Gt, Ge as sp_Ge
@@ -33,13 +32,16 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables          import iterable
 
 
+from pyccel.errors.errors import Errors
+from pyccel.errors.messages import *
+
 from .basic     import Basic, PyccelAstNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonList, PythonMap,
                         PythonRange, PythonZip, PythonTuple, PythonBool)
 from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
-                        NativeTuple, is_iterable_datatype)
+                        NativeTuple, is_iterable_datatype, str_dtype)
 
 from .literals       import LiteralTrue, LiteralFalse, LiteralInteger, Nil
 from .literals       import LiteralImaginaryUnit, LiteralString
@@ -52,9 +54,6 @@ from .operators import PyccelMul
 from .variable import DottedName, DottedVariable, IndexedElement
 from .variable import IndexedVariable, Slice
 from .variable import ValuedVariable, Variable
-
-from pyccel.errors.errors import Errors
-from pyccel.errors.messages import *
 
 errors = Errors()
 
@@ -1809,7 +1808,7 @@ class For(Basic):
         target,
         iter_obj,
         body,
-        local_vars = [],
+        local_vars = (),
         strict=True,
         ):
         if strict:
@@ -2023,7 +2022,7 @@ class VoidFunction(Basic):
     #this class is used in order to eliminate certain atoms
     # in an arithmitic expression so that we dont take them into
     # consideration
-    def __new__(*args):
+    def __new__(cls, *args):
         return Symbol("""x9846548484665
                       494794564465165161561""")
 
