@@ -135,6 +135,34 @@ def test_array_int32_1d_idiv():
 
     assert np.array_equal( x1, x2 )
 
+def test_array_int32_1d_add_augassign():
+
+    f1 = arrays.array_int32_1d_add_augassign
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1,2,3], dtype=np.int32 )
+    x2 = np.copy(x1)
+    a  = np.array( [1,2,3], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int32_1d_sub_augassign():
+
+    f1 = arrays.array_int32_1d_sub_augassign
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1,2,3], dtype=np.int32 )
+    x2 = np.copy(x1)
+    a  = np.array( [1,2,3], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
 #==============================================================================
 # TEST: 2D ARRAYS OF INT-32 WITH C ORDERING
 #==============================================================================
