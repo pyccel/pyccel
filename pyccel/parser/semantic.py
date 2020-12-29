@@ -1472,13 +1472,13 @@ class SemanticParser(BasicParser):
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
 
-                elif var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
+                elif not is_augassign and var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
                     errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
                                 severity='error', symbol=lhs.name)
 
-                elif var.is_ndarray and var.is_target:
+                elif not is_augassign and var.is_ndarray and var.is_target:
                     errors.report(ARRAY_ALREADY_IN_USE,
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
