@@ -57,9 +57,9 @@ A language is statically-typed if the type of a variable is known at compile-
 E.g (using `@types` decorator/python type hints and a recursive function with a typed return), To specify the types of the function arguments and its return, we need to import the `@types` decorator from pyccel.decorators (as you can see in `file_name.py` first line) and then specify the types for each function argument in `@types` using the following:
 -   The syntax for the decorator is: `@types('1stArgType', '2ndArgType', 'NthArgType', results='return_type')`, or to declare arrays: `@types('1stArgType[:]', '2ndArgType[:,:]', 'NthArgType[dimensions]', results='return_type')`, The expression `[:]` means that the array has 1 dimension. 2 dimensions would be specified with `[:,:]`. The number of dimensions of an array is equal to the number of comma-separated colons in the square brackets. So `arr[:,:,:]` means that the array `arr` has 3 dimensions and so on.
 -   In the function we just use python syntax `def fun(1stArg, 2ndArg, NthArg)`.
--   Also, You can specify the function arguments types using python type hints, `def fun(1stArg: 1stArgType, 2ndArg: 2ndArgType, NthArg: NthArgType) -> returnType`
+-   Also, You can specify the function arguments types using python type hints, `def fun(1stArg: '1stArgType', 2ndArg: '2ndArgType', NthArg: 'NthArgType') -> 'returnType'`
    
-In `@types` decorator, pyccel supports the following data types: real, double, float, pythonfloat, float32, float64, pythoncomplex, complex, complex64, complex128, int8, int16, int32, int64, int, pythonint, integer, bool, pythonbool.
+In `@types` decorator, pyccel supports the following data types: real, double, float, pythonfloat, float32, float64, pythoncomplex, complex, complex64, complex128, int8, int16, int32, int64, int, bool.
 
 For the moment, Pyccel supports `@types` decorator(recommended) and python type hints as approaches to provide type informations to the function arguments and its return type.
    
@@ -75,7 +75,7 @@ For the moment, Pyccel supports `@types` decorator(recommended) and python type 
 	  else : return n * factorial(n - 1)
    ```
   
-  Specifying the types using python test hints.
+  Specifying the types using python type hints.
   file_name.py
   ```python
   def factorial(n: int) -> int:
@@ -114,6 +114,8 @@ For the moment, Pyccel supports `@types` decorator(recommended) and python type 
    file_name.f90
 
    ```Fortran
+   module test
+
    use ISO_C_BINDING
 
    implicit none
