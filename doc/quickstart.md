@@ -61,7 +61,7 @@ E.g (using `@types` decorator/python type hints and a recursive function with a 
    
 In `@types` decorator, pyccel supports the following data types: real, double, float, pythonfloat, float32, float64, pythoncomplex, complex, complex64, complex128, int8, int16, int32, int64, int, pythonint, integer, bool, pythonbool.
 
-For the moment, Pyccel supports `@types` decorator(recommended) and python type hints (under development) as approaches to provide type informations to the function arguments and its return type.
+For the moment, Pyccel supports `@types` decorator(recommended) and python type hints as approaches to provide type informations to the function arguments and its return type.
    
   python code:
   Specifying the types using `@types` decorator.
@@ -75,7 +75,7 @@ For the moment, Pyccel supports `@types` decorator(recommended) and python type 
 	  else : return n * factorial(n - 1)
    ```
   
-  Specifying the types using python test hints (you can't generate C code from this for the moment).
+  Specifying the types using python test hints.
   file_name.py
   ```python
   def factorial(n: int) -> int:
