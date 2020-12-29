@@ -17,9 +17,9 @@ from .core import FunctionDef, Interface, FunctionAddress
 from .core import local_sympify
 from .datatypes import datatype, DataTypeFactory, UnionType
 from .macros import Macro, MacroShape, construct_macro
-from .variables import DottedName, DottedVariable
-from .variables import Variable
-from .variables import ValuedVariable
+from .variable import DottedName, DottedVariable
+from .variable import Variable
+from .variable import ValuedVariable
 
 __all__ = (
     'ClassHeader',
