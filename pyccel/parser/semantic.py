@@ -49,6 +49,7 @@ from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
+from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import With, Block
 from pyccel.ast.builtins import PythonList
 from pyccel.ast.core import Dlist
@@ -1100,8 +1101,8 @@ class SemanticParser(BasicParser):
                         func = i.decorators['numpy_wrapper']
                         return func(first, *args)
                     else:
-                        second = FunctionCall(i, args, self._current_function)
-                        return DottedVariable(first, second)
+                        return DottedFunctionCall(i, args, prefix = first,
+                                current_function = self._current_function)
 
         # look for a class attribute / property
         elif isinstance(rhs, Symbol) and first.cls_base:
@@ -1129,8 +1130,8 @@ class SemanticParser(BasicParser):
                             func = i.decorators['numpy_wrapper']
                             return func(first)
                         else:
-                            second = FunctionCall(i, [], self._current_function)
-                            return DottedVariable(first, second)
+                            return DottedFunctionCall(i, [], prefix = first,
+                                    current_function = self._current_function)
 
         # look for a macro
         else:

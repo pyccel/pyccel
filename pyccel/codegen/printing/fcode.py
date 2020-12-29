@@ -2745,7 +2745,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
-        f_name = func.name if not expr.interface else expr.interface.name
+        f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
         args = [a for a in expr.arguments if not isinstance(a, Nil)]
         results = func.results
 
@@ -2753,7 +2753,7 @@ class FCodePrinter(CodePrinter):
             args = ['{}'.format(self._print(a)) for a in args]
 
             args = ', '.join(args)
-            code = '{name}({args})'.format( name = str(f_name),
+            code = '{name}({args})'.format( name = f_name,
                                             args = args)
 
         elif len(results)>1:
@@ -2784,7 +2784,7 @@ class FCodePrinter(CodePrinter):
 
             newargs = ', '.join(args+results)
 
-            code = 'call {name}({args})\n'.format( name = str(f_name),
+            code = 'call {name}({args})\n'.format( name = f_name,
                                                  args = newargs )
         return code
 
