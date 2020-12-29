@@ -54,14 +54,17 @@ A language is statically-typed if the type of a variable is known at compile-
     -   To generate the C/Fortran code form your Python code, type `pyccel file_name.py` or `pyccel file_name.py --language fortran` to generate Fortran code, and `pyccel file_name.py --language c` to generate C code.
     -   No problems ? You should discover `__pyccel__` the directory that contains your generated code and some other stuff.
 
-E.g (using `@types` decorator and a recursive function with a typed return), To specify the types of the function arguments and its return, we need to import the `@types` decorator from pyccel.decorators (as you can see in `file_name.py` first line) and then specify the types for each function argument in `@types` using the following:
+E.g (using `@types` decorator/python type hints and a recursive function with a typed return), To specify the types of the function arguments and its return, we need to import the `@types` decorator from pyccel.decorators (as you can see in `file_name.py` first line) and then specify the types for each function argument in `@types` using the following:
 -   The syntax for the decorator is: `@types('1stArgType', '2ndArgType', 'NthArgType', results='return_type')`, or to declare arrays: `@types('1stArgType[:]', '2ndArgType[:,:]', 'NthArgType[dimensions]', results='return_type')`, The expression `[:]` means that the array has 1 dimension. 2 dimensions would be specified with `[:,:]`. The number of dimensions of an array is equal to the number of comma-separated colons in the square brackets. So `arr[:,:,:]` means that the array `arr` has 3 dimensions and so on.
--   In the function we just use python syntax `def fun('1stArg', '2ndArg', 'NthArg')`.
+-   In the function we just use python syntax `def fun(1stArg, 2ndArg, NthArg)`.
+-   Also, You can specify the function arguments types using python type hints, `def fun(1stArg: 1stArgType, 2ndArg: 2ndArgType, NthArg: NthArgType) -> returnType`
    
 In `@types` decorator, pyccel supports the following data types: real, double, float, pythonfloat, float32, float64, pythoncomplex, complex, complex64, complex128, int8, int16, int32, int64, int, pythonint, integer, bool, pythonbool.
+
+For the moment, Pyccel supports `@types` decorator(recommended) and python type hints (under development) as approaches to provide type informations to the function arguments and its return type.
    
   python code:
-
+  Specifying the types using `@types` decorator.
   file_name.py
   ```python
   from pyccel.decorators import types
@@ -70,7 +73,15 @@ In `@types` decorator, pyccel supports the following data types: real, double, f
   def factorial(n):
 	  if n == 0: return 1
 	  else : return n * factorial(n - 1)
-   ```  
+   ```
+  
+  Specifying the types using python test hints (you can't generate C code from this for the moment).
+  file_name.py
+  ```python
+  def factorial(n: int) -> int:
+	  if n == 0: return 1
+	  else : return n * factorial(n - 1)
+   ``` 
    C code:
    
    file_name.c
