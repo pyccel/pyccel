@@ -115,7 +115,7 @@ errors = Errors()
 def _get_name(var):
     """."""
 
-    if isinstance(var, (Symbol, IndexedVariable, IndexedBase, DottedVariable)):
+    if isinstance(var, (Symbol, IndexedVariable, IndexedBase, DottedName)):
         return str(var)
     if isinstance(var, (IndexedElement, Indexed)):
         return str(var.base)
@@ -1009,21 +1009,25 @@ class SemanticParser(BasicParser):
         return var
 
 
-    def _visit_DottedVariable(self, expr, **settings):
+    def _visit_DottedName(self, expr, **settings):
 
         var = self.check_for_variable(_get_name(expr))
         if var:
             return var
 
-        first = self._visit(expr.lhs)
-        rhs_name = _get_name(expr.rhs)
+        lhs = expr.name[0] if len(expr.name) == 2 \
+                else DottedName(*expr.name[:-1])
+        rhs = expr.name[-1]
+
+        first = self._visit(lhs)
+        rhs_name = _get_name(rhs)
         attr_name = []
 
         # Handle case of imported module
         if isinstance(first, dict):
 
             if rhs_name in first:
-                imp = self.get_import(_get_name(expr.lhs))
+                imp = self.get_import(_get_name(lhs))
 
                 new_name = rhs_name
                 # If pyccelized file
@@ -1038,14 +1042,14 @@ class SemanticParser(BasicParser):
                         else:
                             imp.define_target(AsName(Symbol(rhs_name), Symbol(new_name)))
 
-                if isinstance(expr.rhs, Application):
+                if isinstance(rhs, Application):
                     # If object is a function
-                    args  = self._handle_function_args(expr.rhs.args, **settings)
+                    args  = self._handle_function_args(rhs.args, **settings)
                     func  = first[rhs_name]
                     if new_name != rhs_name:
                         func  = func.clone(new_name)
                     return self._handle_function(func, args, **settings)
-                elif isinstance(expr.rhs, Constant):
+                elif isinstance(rhs, Constant):
                     var = first[rhs_name]
                     if new_name != rhs_name:
                         var.name = new_name
@@ -1055,7 +1059,7 @@ class SemanticParser(BasicParser):
                     var = first[rhs_name]
                     return var
             else:
-                errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(expr.lhs)),
+                errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(lhs)),
                         symbol=expr,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=True)
@@ -1069,7 +1073,7 @@ class SemanticParser(BasicParser):
             attr_name = [i.name for i in first.cls_base.attributes]
 
         # look for a class method
-        if isinstance(expr.rhs, Application):
+        if isinstance(rhs, Application):
             methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
             for method in methods:
                 if isinstance(method, Interface):
@@ -1082,14 +1086,14 @@ class SemanticParser(BasicParser):
             if macro is not None:
                 master = macro.master
                 name = macro.name
-                args = expr.rhs.args
-                args = [expr.lhs] + list(args)
+                args = rhs.args
+                args = [lhs] + list(args)
                 args = [self._visit(i, **settings) for i in args]
                 args = macro.apply(args)
                 return FunctionCall(master, args, self._current_function)
 
             args = [self._visit(arg, **settings) for arg in
-                    expr.rhs.args]
+                    rhs.args]
             for i in methods:
                 if str(i.name) == rhs_name:
                     if 'numpy_wrapper' in i.decorators.keys():
@@ -1100,7 +1104,7 @@ class SemanticParser(BasicParser):
                         return DottedVariable(first, second)
 
         # look for a class attribute / property
-        elif isinstance(expr.rhs, Symbol) and first.cls_base:
+        elif isinstance(rhs, Symbol) and first.cls_base:
             methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
             for method in methods:
                 if isinstance(method, Interface):
@@ -1110,16 +1114,16 @@ class SemanticParser(BasicParser):
                             self._current_fst_node.col_offset),
                         severity='fatal')
             # standard class attribute
-            if expr.rhs.name in attr_name:
+            if rhs.name in attr_name:
                 self._current_class = first.cls_base
-                second = self._visit(expr.rhs, **settings)
+                second = self._visit(rhs, **settings)
                 self._current_class = None
                 return DottedVariable(first, second)
 
             # class property?
             else:
                 for i in methods:
-                    if str(i.name) == expr.rhs.name and \
+                    if str(i.name) == rhs.name and \
                             'property' in i.decorators.keys():
                         if 'numpy_wrapper' in i.decorators.keys():
                             func = i.decorators['numpy_wrapper']
@@ -1543,10 +1547,10 @@ class SemanticParser(BasicParser):
                 # declared
                 lhs = var
 
-        elif isinstance(lhs, DottedVariable):
+        elif isinstance(lhs, DottedName):
 
             dtype = d_var.pop('datatype')
-            name = lhs.lhs.name
+            name = lhs.name[:-1]
             if self._current_function == '__init__':
 
                 cls      = self.get_variable('self')
@@ -1556,7 +1560,7 @@ class SemanticParser(BasicParser):
                 attributes = cls.attributes
                 parent     = cls.parent
                 attributes = list(attributes)
-                n_name     = str(lhs.rhs.name)
+                n_name     = str(lhs.name[-1])
 
                 # update the self variable with the new attributes
 
@@ -1578,7 +1582,7 @@ class SemanticParser(BasicParser):
                 new_cls = ClassDef(cls_name, attributes, [], parent=parent)
                 self.insert_class(new_cls, parent=True)
             else:
-                lhs = self._visit_DottedVariable(lhs, **settings)
+                lhs = self._visit(lhs, **settings)
         else:
             raise NotImplementedError("_assign_lhs_variable does not handle {}".format(str(type(lhs))))
 
@@ -1812,7 +1816,7 @@ class SemanticParser(BasicParser):
 
 
         lhs = expr.lhs
-        if isinstance(lhs, (Symbol, DottedVariable)):
+        if isinstance(lhs, (Symbol, DottedName)):
             if isinstance(d_var, list):
                 if len(d_var) == 1:
                     d_var = d_var[0]
