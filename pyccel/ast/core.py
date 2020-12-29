@@ -49,9 +49,9 @@ from .functionalexpr import FunctionalFor
 
 from .operators import PyccelMul
 
-from .variable  import DottedName, DottedVariable, IndexedElement
-from .variables import IndexedVariable, Slice
-from .variables import ValuedVariable, Variable
+from .variable import DottedName, DottedVariable, IndexedElement
+from .variable import IndexedVariable, Slice
+from .variable import ValuedVariable, Variable
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
