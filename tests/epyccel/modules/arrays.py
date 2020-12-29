@@ -47,6 +47,14 @@ def array_int32_1d_mul( x, y ):
 def array_int32_1d_idiv( x, y ):
     x[:] = x // y
 
+@types( 'int32[:]', 'int32[:]' )
+def array_int32_1d_add_augassign( x, y ):
+    x += y
+
+@types( 'int32[:]', 'int32[:]' )
+def array_int32_1d_sub_augassign( x, y ):
+    x -= y
+
 #==============================================================================
 # 2D ARRAYS OF INT-32 WITH C ORDERING
 #==============================================================================
