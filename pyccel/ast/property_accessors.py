@@ -10,7 +10,6 @@ of other objects.
 from sympy.core.function    import Function
 from .basic                 import Basic, PyccelAstNode
 from .datatypes             import NativeInteger, default_precision
-from .literals              import Literal
 
 class PyccelArraySize(Function, PyccelAstNode):
     """
