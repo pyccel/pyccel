@@ -24,7 +24,7 @@ from .literals  import LiteralInteger, LiteralFloat
 
 from .datatypes import NativeInteger
 
-from .variables import Variable, PyccelArraySize
+from .variable  import Variable, PyccelArraySize
 
 #==============================================================================
 def sympy_to_pyccel(expr, symbol_map):

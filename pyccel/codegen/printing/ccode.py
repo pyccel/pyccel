@@ -33,7 +33,7 @@ from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal, Nil
 from pyccel.ast.numpyext import NumpyFull, NumpyArray
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
-from pyccel.ast.variables import IndexedVariable, Slice, ValuedVariable
+from pyccel.ast.variable  import IndexedVariable, Slice, ValuedVariable
 from pyccel.ast.variables import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variables import DottedName
 

@@ -49,7 +49,7 @@ from .functionalexpr import FunctionalFor
 
 from .operators import PyccelMul
 
-from .variables import DottedName, DottedVariable, IndexedElement
+from .variable  import DottedName, DottedVariable, IndexedElement
 from .variables import IndexedVariable, Slice
 from .variables import ValuedVariable, Variable
 

@@ -40,12 +40,12 @@ from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
 from pyccel.ast.core import EmptyNode
-from pyccel.ast.variables import Constant
-from pyccel.ast.variables import Variable
-from pyccel.ast.variables import TupleVariable
-from pyccel.ast.variables import Slice, IndexedVariable, IndexedElement
-from pyccel.ast.variables import DottedName, DottedVariable
-from pyccel.ast.variables import ValuedVariable
+from pyccel.ast.variable import Constant
+from pyccel.ast.variable import Variable
+from pyccel.ast.variable import TupleVariable
+from pyccel.ast.variable import Slice, IndexedVariable, IndexedElement
+from pyccel.ast.variable import DottedName, DottedVariable
+from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName

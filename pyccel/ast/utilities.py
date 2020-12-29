@@ -24,7 +24,7 @@ from .literals      import LiteralString
 
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants)
-from .variables     import (Constant, Variable, IndexedVariable, ValuedVariable)
+from .variable      import (Constant, Variable, IndexedVariable, ValuedVariable)
 
 __all__ = (
     'build_types_decorator',

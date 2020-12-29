@@ -30,7 +30,7 @@ from .numpyext  import NumpyReal, NumpyImag
 
 from .operators import PyccelEq
 
-from .variables import Variable, ValuedVariable, VariableAddress
+from .variable  import Variable, ValuedVariable, VariableAddress
 
 
 errors = Errors()

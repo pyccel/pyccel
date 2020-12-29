@@ -36,7 +36,7 @@ from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, For, Declare,
                              CodeBlock, Dlist, AsName,
                              If, IfTernaryOperator)
-from pyccel.ast.variables import (Variable, TupleVariable,
+from pyccel.ast.variable  import (Variable, TupleVariable,
                              IndexedVariable, IndexedElement,
                              Slice, DottedName, PyccelArraySize)
 

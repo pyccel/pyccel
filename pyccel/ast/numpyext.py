@@ -26,7 +26,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
 from .literals       import LiteralTrue, LiteralFalse, Nil
 from .basic          import PyccelAstNode
-from .variables      import (Variable, IndexedElement, Constant)
+from .variable       import (Variable, IndexedElement, Constant)
 
 
 __all__ = (

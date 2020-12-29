@@ -12,8 +12,8 @@ from pyccel.ast.core import FunctionDef, BindCFunctionDef
 from pyccel.ast.core import Assign
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
-from pyccel.ast.variables import Variable
-from pyccel.ast.variables import IndexedVariable
+from pyccel.ast.variable import Variable
+from pyccel.ast.variable import IndexedVariable
 
 __all__ = (
    'as_static_function',

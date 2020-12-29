@@ -38,7 +38,7 @@ from pyccel.ast.cwrapper import PyArray_CheckScalar, PyArray_ScalarAsCtype
 
 from pyccel.ast.bind_c   import as_static_function_call
 
-from pyccel.ast.variables import VariableAddress, Variable, ValuedVariable
+from pyccel.ast.variable  import VariableAddress, Variable, ValuedVariable
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
