@@ -538,19 +538,6 @@ class FCodePrinter(CodePrinter):
         return self._print(val)
 
     def _print_DottedVariable(self, expr):
-        if isinstance(expr.args[1], Function):
-            func = expr.args[1].func
-            name = func.__name__
-            # ...
-            code_args = ''
-            code_args = ', '.join(self._print(i) for i in expr.args[1].args)
-            code = '{0}({1})'.format(name, code_args)
-                # ...
-                # ...
-            code = '{0}%{1}'.format(self._print(expr.args[0]), code)
-            if isinstance(func, Subroutine):
-                code = 'call {0}'.format(code)
-            return code
         return self._print(expr.args[0]) + '%' +self._print(expr.args[1])
 
     def _print_DottedName(self, expr):
