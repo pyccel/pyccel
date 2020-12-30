@@ -24,7 +24,7 @@ from .literals      import LiteralString
 
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants)
-from .variable      import (Constant, Variable, IndexedVariable, ValuedVariable)
+from .variable      import (Constant, Variable, ValuedVariable)
 
 __all__ = (
     'build_types_decorator',
@@ -147,9 +147,6 @@ def build_types_decorator(args, order=None):
     types = []
     for a in args:
         if isinstance(a, Variable):
-            dtype = a.dtype.name.lower()
-
-        elif isinstance(a, IndexedVariable):
             dtype = a.dtype.name.lower()
 
         else:

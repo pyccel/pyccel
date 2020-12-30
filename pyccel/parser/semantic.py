@@ -43,7 +43,7 @@ from pyccel.ast.core import EmptyNode
 from pyccel.ast.variable import Constant
 from pyccel.ast.variable import Variable
 from pyccel.ast.variable import TupleVariable
-from pyccel.ast.variable import Slice, IndexedVariable, IndexedElement
+from pyccel.ast.variable import Slice, IndexedElement
 from pyccel.ast.variable import DottedName, DottedVariable
 from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.core import ValuedArgument
@@ -116,7 +116,7 @@ errors = Errors()
 def _get_name(var):
     """."""
 
-    if isinstance(var, (Symbol, IndexedVariable, IndexedBase, DottedName)):
+    if isinstance(var, (Symbol, IndexedBase, DottedName)):
         return str(var)
     if isinstance(var, (IndexedElement, Indexed)):
         return str(var.base)
@@ -759,6 +759,7 @@ class SemanticParser(BasicParser):
     def _visit(self, expr, **settings):
         """Annotates the AST.
 
+        #TODO: Why is this comment here?
         IndexedVariable atoms are only used to manipulate expressions, we then,
         always have a Variable in the namespace."""
 
@@ -871,7 +872,7 @@ class SemanticParser(BasicParser):
 
     def _extract_indexed_from_var(self, var, args, name):
 
-        # case of Pyccel ast Variable, IndexedVariable
+        # case of Pyccel ast Variable
         # if not possible we use symbolic objects
 
         if not isinstance(var, (Variable, DottedVariable)):
@@ -922,26 +923,22 @@ class SemanticParser(BasicParser):
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal', blocker=self.blocking)
 
-        if hasattr(var, 'dtype'):
-            dtype = var.dtype
-            shape = var.shape
-            prec  = var.precision
-            order = var.order
-            rank  = var.rank
+        dtype = var.dtype
+        shape = var.shape
+        prec  = var.precision
+        order = var.order
+        rank  = var.rank
 
-            if isinstance(var, PythonTuple):
-                if not var.is_homogeneous:
-                    errors.report(LIST_OF_TUPLES, symbol=var,
-                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='error', blocker=self.blocking)
-                    dtype = 'int'
-                else:
-                    dtype = var.dtype
+        if isinstance(var, PythonTuple):
+            if not var.is_homogeneous:
+                errors.report(LIST_OF_TUPLES, symbol=var,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    severity='error', blocker=self.blocking)
+                dtype = 'int'
+            else:
+                dtype = var.dtype
 
-            return IndexedVariable(var, dtype=dtype,
-                   shape=shape,prec=prec,order=order,rank=rank)[args]
-        else:
-            return IndexedVariable(name, dtype=dtype)[args]
+        return var[args]
 
     def _visit_IndexedBase(self, expr, **settings):
         return self._visit(expr.label)
@@ -1355,13 +1352,13 @@ class SemanticParser(BasicParser):
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
             rhs.is_target = True
-        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.internal_variable.allocatable:
+        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.allocatable:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
 
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
-            rhs.base.internal_variable.is_target = True
+            rhs.base.is_target = True
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign, **settings):
         """
@@ -1842,13 +1839,11 @@ class SemanticParser(BasicParser):
 
                 if rhs.is_homogeneous:
                     d_var = self._infere_type(rhs[0])
-                    indexed_rhs = IndexedVariable(rhs, dtype=rhs.dtype,
-                            shape=rhs.shape,prec=rhs.precision,order=rhs.order,rank=rhs.rank)
                     new_rhs = []
                     for i,l in enumerate(lhs):
                         new_lhs.append( self._assign_lhs_variable(l, d_var.copy(),
-                            indexed_rhs[i], new_expressions, isinstance(expr, AugAssign), **settings) )
-                        new_rhs.append(indexed_rhs[i])
+                            rhs[i], new_expressions, isinstance(expr, AugAssign), **settings) )
+                        new_rhs.append(rhs[i])
                     rhs = PythonTuple(*new_rhs)
                     d_var = [d_var]
                 else:
