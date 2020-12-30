@@ -799,7 +799,13 @@ class SemanticParser(BasicParser):
 
     def _visit_PythonList(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
-        return PythonList(*ls, sympify=False)
+        expr = PythonList(*ls, sympify=False)
+
+        if not expr.is_homogeneous:
+            errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal')
+        return expr
 
     def _visit_ValuedArgument(self, expr, **settings):
         value = self._visit(expr.value, **settings)
@@ -873,13 +879,11 @@ class SemanticParser(BasicParser):
             else:
                 return self._visit(Indexed(var[args[0]],args[1:]))
 
-        if var.order == 'C':
-            args = args[::-1]
         args = tuple(args)
 
         if isinstance(var, TupleVariable) and not var.is_homogeneous:
 
-            arg = args[-1]
+            arg = args[0]
 
             if isinstance(arg, Slice):
                 if ((arg.start is not None and not isinstance(arg.start, LiteralInteger)) or
@@ -895,13 +899,13 @@ class SemanticParser(BasicParser):
                         return selected_vars[0]
                     else:
                         var = selected_vars[0]
-                        return self._extract_indexed_from_var(var, args[:-1], name)
+                        return self._extract_indexed_from_var(var, args[1:], name)
                 elif len(selected_vars)<1:
                     return None
                 elif len(args)==1:
                     return PythonTuple(*selected_vars)
                 else:
-                    return PythonTuple(*[self._extract_indexed_from_var(var, args[:-1], name) for var in selected_vars])
+                    return PythonTuple(*[self._extract_indexed_from_var(var, args[1:], name) for var in selected_vars])
 
             elif isinstance(arg, LiteralInteger):
 
@@ -909,7 +913,7 @@ class SemanticParser(BasicParser):
                     return var[arg]
 
                 var = var[arg]
-                return self._extract_indexed_from_var(var, args[:-1], name)
+                return self._extract_indexed_from_var(var, args[1:], name)
 
             else:
                 errors.report(INDEXED_TUPLE, symbol=var,
@@ -1055,6 +1059,11 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=True)
 
+        if not hasattr(first, 'cls_base') or first.cls_base is None:
+            errors.report('Attribute {} not found'.format(rhs_name),
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal', blocker=True)
+
         if first.cls_base:
             attr_name = [i.name for i in first.cls_base.attributes]
 
@@ -1166,6 +1175,8 @@ class SemanticParser(BasicParser):
         args = [self._visit(a, **settings) for a in expr.args]
         if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, PythonList)):
             expr_new = self._visit(Dlist(args[0], args[1]))
+        elif isinstance(args[1], (TupleVariable, PythonTuple, Tuple, PythonList)):
+            expr_new = self._visit(Dlist(args[1], args[0]))
         else:
             expr_new = self._visit_PyccelOperator(expr, **settings)
         return expr_new
@@ -1461,13 +1472,13 @@ class SemanticParser(BasicParser):
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
 
-                elif var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
+                elif not is_augassign and var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
                     errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
                                 severity='error', symbol=lhs.name)
 
-                elif var.is_ndarray and var.is_target:
+                elif not is_augassign and var.is_ndarray and var.is_target:
                     errors.report(ARRAY_ALREADY_IN_USE,
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
@@ -2342,8 +2353,7 @@ class SemanticParser(BasicParser):
         is_elemental    = expr.is_elemental
         is_private      = expr.is_private
         doc_string      = self._visit(expr.doc_string) if expr.doc_string else expr.doc_string
-
-        header = expr.headers
+        headers = []
 
         not_used = [d for d in decorators if d not in def_decorators.__all__]
 
@@ -2354,13 +2364,19 @@ class SemanticParser(BasicParser):
         templates = self.get_templates()
         templates.update(expr.templates)
 
+        tmp_headers = expr.headers
         if cls_name:
-            header += self.get_header(cls_name +'.'+ name)
+            tmp_headers += self.get_header(cls_name + '.' + name)
             args_number -= 1
         else:
-            header += self.get_header(name)
-
-        for hd in header:
+            tmp_headers += self.get_header(name)
+        for header in tmp_headers:
+            if all(header.dtypes != hd.dtypes for hd in headers):
+                headers.append(header)
+            else:
+                errors.report(DUPLICATED_SIGNATURE, symbol=header,
+                        severity='warning')
+        for hd in headers:
             if (args_number != len(hd.dtypes)):
                 msg = 'The number of arguments in the function {} ({}) does not match the number\
                         of types in decorator/header ({}).'.format(name ,args_number, len(hd.dtypes))
@@ -2370,14 +2386,14 @@ class SemanticParser(BasicParser):
                     errors.report(msg, symbol=expr.arguments, severity='fatal')
 
         interfaces = []
-        if len(header) == 0:
+        if len(headers) == 0:
             # check if a header is imported from a header file
             # TODO improve in the case of multiple headers ( interface )
             func       = self.get_function(name)
             if func and func.is_header:
                 interfaces = [func]
 
-        if expr.arguments and not header and not interfaces:
+        if expr.arguments and not headers and not interfaces:
 
             # TODO ERROR wrong position
 
@@ -2385,12 +2401,12 @@ class SemanticParser(BasicParser):
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='error', blocker=self.blocking)
 
-        # we construct a FunctionDef from its header
-        for hd in header:
+        # We construct a FunctionDef from each function header
+        for hd in headers:
             interfaces += hd.create_definition(templates)
 
         if not interfaces:
-            # this for the case of a function without arguments => no header
+            # this for the case of a function without arguments => no headers
             interfaces = [FunctionDef(name, [], [], [])]
 
 #        TODO move this to codegen
