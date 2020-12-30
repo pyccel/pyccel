@@ -752,7 +752,7 @@ class IndexedElement(Expr, PyccelAstNode):
                 else:
                     return base[args]
         else:
-            if not isinstance(base, Variable):
+            if not isinstance(base, (Variable, DottedVariable)):
                 raise TypeError("Indexed expects Variable as base")
         return Expr.__new__(cls, base, *args, **kw_args)
 
@@ -785,7 +785,6 @@ class IndexedElement(Expr, PyccelAstNode):
         elif not isinstance(dtype, NativeRange):
             raise TypeError('Undefined datatype')
 
-        print("Indexed : ",base,self._indices,shape,rank)
         if shape is not None:
             new_shape = []
             for a,s in zip(args, shape):
@@ -805,7 +804,6 @@ class IndexedElement(Expr, PyccelAstNode):
                 if not isinstance(args[i], Slice):
                     new_rank -= 1
             self._rank = new_rank
-        print("Indexed : ",self.shape,self.rank)
         self._order = order
 
     @property
@@ -956,3 +954,14 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
 
     def inspect(self):
         self._args[1].inspect()
+
+    def __getitem__(self, *args):
+
+        if len(args) == 1 and isinstance(args[0], (Tuple, tuple, list)):
+            args = args[0]
+
+        if self.rank != len(args):
+            raise IndexError('Rank mismatch.')
+
+        obj = IndexedElement(self, *args)
+        return obj
