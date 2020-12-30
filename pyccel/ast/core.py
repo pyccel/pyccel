@@ -2201,6 +2201,7 @@ class DottedFunctionCall(FunctionCall):
             self._interface_name = DottedName(prefix, self._interface_name)
         self._prefix = prefix
 
+    @property
     def prefix(self):
         return self._prefix
 
