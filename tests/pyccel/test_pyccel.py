@@ -605,9 +605,6 @@ def test_headers(language):
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
                                         "scripts/classes/classes_1.py",
-                                        "scripts/classes/classes_2.py",
-                                        "scripts/classes/classes_3.py",
-                                        "scripts/classes/classes_4.py",
                                         ] )
 def test_import_syntax_user( test_file ):
     pyccel_test(test_file, compile_with_pyccel = False)
