@@ -38,7 +38,7 @@ from pyccel.ast.core import (Assign, AliasAssign, For, Declare,
                              If, IfTernaryOperator)
 from pyccel.ast.variable  import (Variable, TupleVariable,
                              IndexedElement,
-                             Slice, DottedName, PyccelArraySize)
+                             DottedName, PyccelArraySize)
 
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
@@ -66,6 +66,8 @@ from pyccel.ast.numpyext import NumpyMod, NumpyFloat
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import Shape
+
+from pyccel.ast.property_accessors import Slice
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *

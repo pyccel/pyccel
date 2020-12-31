@@ -50,9 +50,9 @@ from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
 from .operators import PyccelMul
+from .property_accessors import Slice
 
 from .variable import DottedName, DottedVariable, IndexedElement
-from .variable import Slice
 from .variable import ValuedVariable, Variable
 
 errors = Errors()
