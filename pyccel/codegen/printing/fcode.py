@@ -538,7 +538,7 @@ class FCodePrinter(CodePrinter):
         return self._print(val)
 
     def _print_DottedVariable(self, expr):
-        return self._print(expr.args[0]) + '%' +self._print(expr.args[1])
+        return self._print(expr.lhs) + '%' +self._print(expr.name)
 
     def _print_DottedName(self, expr):
         return ' % '.join(self._print(n) for n in expr.name)
@@ -2460,13 +2460,13 @@ class FCodePrinter(CodePrinter):
 
     def _print_ConstructorCall(self, expr):
         func = expr.func
-        name = func.name
+        name = str(func.name)
         if name == "__init__":
             name = "create"
         name = self._print(name)
 
         code_args = ''
-        if not(expr.arguments) is None:
+        if expr.arguments is not None:
             code_args = ', '.join(self._print(i) for i in expr.arguments)
         code = '{0}({1})'.format(name, code_args)
         return self._get_statement(code)
