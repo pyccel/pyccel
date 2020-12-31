@@ -736,7 +736,7 @@ class SemanticParser(BasicParser):
             d_var['allocatable'] = False
             d_var['shape'      ] = ()
             d_var['rank'       ] = 0
-            d_var['is_target'  ] = True
+            d_var['is_target'  ] = False
 
             # set target  to True if we want the class objects to be pointers
 
