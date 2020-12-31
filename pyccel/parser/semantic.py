@@ -925,12 +925,6 @@ class SemanticParser(BasicParser):
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal', blocker=self.blocking)
 
-        dtype = var.dtype
-        shape = var.shape
-        prec  = var.precision
-        order = var.order
-        rank  = var.rank
-
         if isinstance(var, PythonTuple):
             if not var.is_homogeneous:
                 errors.report(LIST_OF_TUPLES, symbol=var,

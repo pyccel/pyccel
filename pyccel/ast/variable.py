@@ -6,10 +6,9 @@
 from collections.abc import Iterable
 import inspect
 from sympy import Symbol, Tuple
-from sympy.core.function      import Function, Application
-from sympy.core.expr          import Expr, AtomicExpr
-from sympy.logic.boolalg      import Boolean as sp_Boolean
-from sympy.tensor             import Indexed, IndexedBase
+from sympy.core.function      import Function
+from sympy.core.expr          import Expr
+from sympy.tensor             import IndexedBase
 from sympy.matrices.matrices  import MatrixBase
 from sympy.utilities.misc     import filldedent
 from sympy.utilities.iterables          import iterable
@@ -368,9 +367,9 @@ class Variable(Symbol, PyccelAstNode):
             cls = new_class
 
         args = inspect.signature(Variable.__init__)
-        new_kwargs = dict([(k,self.__dict__['_'+k]) \
+        new_kwargs = {k:self.__dict__['_'+k] \
                             for k in args.parameters.keys() \
-                            if '_'+k in self.__dict__])
+                            if '_'+k in self.__dict__}
         new_kwargs.update(kwargs)
         new_kwargs['name'] = name
 
@@ -567,7 +566,6 @@ class TupleVariable(Variable):
                 idx = idx[0]
             else:
                 sub_idx = []
-                idx = idx
 
             if isinstance(idx, LiteralInteger):
                 idx = idx.p
