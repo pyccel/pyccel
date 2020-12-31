@@ -875,7 +875,7 @@ class SemanticParser(BasicParser):
         # case of Pyccel ast Variable
         # if not possible we use symbolic objects
 
-        if not isinstance(var, (Variable, DottedVariable)):
+        if not isinstance(var, Variable):
             assert(hasattr(var,'__getitem__'))
             if len(args)==1:
                 return var[args[0]]
@@ -1116,7 +1116,7 @@ class SemanticParser(BasicParser):
                 self._current_class = first.cls_base
                 second = self._visit(rhs, **settings)
                 self._current_class = None
-                return DottedVariable(first, second)
+                return second.clone(second.name, new_class = DottedVariable, lhs = first)
 
             # class property?
             else:
@@ -1345,7 +1345,7 @@ class SemanticParser(BasicParser):
         return lhs
 
     def _ensure_target(self, rhs, d_lhs):
-        if isinstance(rhs, (Variable, DottedVariable)) and rhs.allocatable:
+        if isinstance(rhs, Variable) and rhs.allocatable:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
 
@@ -1367,7 +1367,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        lhs : Symbol (or DottedVariable of Symbols)
+        lhs : Symbol (or DottedName of Symbols)
             The representation of the lhs provided by the SyntacticParser
 
         d_var : dict
@@ -1573,7 +1573,7 @@ class SemanticParser(BasicParser):
                 self._ensure_target(rhs, d_lhs)
 
                 member = self._create_variable(n_name, dtype, rhs, d_lhs)
-                lhs    = DottedVariable(var, member)
+                lhs    = member.clone(member.name, new_class = DottedVariable, lhs = var)
 
                 # update the attributes of the class and push it to the namespace
                 attributes += [member]
@@ -1911,7 +1911,7 @@ class SemanticParser(BasicParser):
         if len(lhs) == 1:
             lhs = lhs[0]
 
-        if isinstance(lhs, (Variable, DottedVariable)):
+        if isinstance(lhs, Variable):
             is_pointer = lhs.is_pointer
         elif isinstance(lhs, IndexedElement):
             is_pointer = False
@@ -1919,8 +1919,8 @@ class SemanticParser(BasicParser):
             is_pointer = any(l.is_pointer for l in lhs)
 
         # TODO: does is_pointer refer to any/all or last variable in list (currently last)
-        is_pointer = is_pointer and isinstance(rhs, (Variable, Dlist, DottedVariable))
-        is_pointer = is_pointer or isinstance(lhs, (Variable, DottedVariable)) and lhs.is_pointer
+        is_pointer = is_pointer and isinstance(rhs, (Variable, Dlist))
+        is_pointer = is_pointer or isinstance(lhs, Variable) and lhs.is_pointer
 
         # ISSUES #177: lhs must be a pointer when rhs is allocatable array
         if not ((isinstance(lhs, PythonTuple) or (isinstance(lhs, TupleVariable) and not lhs.is_homogeneous)) \
@@ -1929,7 +1929,7 @@ class SemanticParser(BasicParser):
             rhs = [rhs]
 
         for l, r in zip(lhs,rhs):
-            is_pointer_i = l.is_pointer if isinstance(l, (Variable, DottedVariable)) else is_pointer
+            is_pointer_i = l.is_pointer if isinstance(l, Variable) else is_pointer
 
             new_expr = Assign(l, r)
 
