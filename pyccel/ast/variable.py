@@ -4,6 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 from collections.abc import Iterable
+import inspect
 from sympy import Symbol, Tuple
 from sympy.core.function      import Function, Application
 from sympy.core.expr          import Expr, AtomicExpr
@@ -183,7 +184,9 @@ class Variable(Symbol, PyccelAstNode):
     matrix.n_rows
     """
 
-    def __new__( cls, *args, **kwargs ):
+    def __new__( cls, dtype, name, **kwargs ):
+        if cls is not DottedVariable and (isinstance(name, DottedName) or '.' in name):
+            raise TypeError('DottedNames must be stored in DottedVariables')
         return Basic.__new__(cls)
 
     def __init__(
@@ -261,7 +264,7 @@ class Variable(Symbol, PyccelAstNode):
 
         if not isinstance(is_const, bool):
             raise TypeError('is_const must be a boolean.')
-        self.is_const = is_const
+        self._is_const = is_const
 
         if not isinstance(is_stack_array, bool):
             raise TypeError('is_stack_array must be a boolean.')
@@ -335,6 +338,10 @@ class Variable(Symbol, PyccelAstNode):
     @property
     def cls_base(self):
         return self._cls_base
+
+    @property
+    def is_const(self):
+        return self._is_const
 
     @property
     def is_pointer(self):
@@ -437,25 +444,20 @@ class Variable(Symbol, PyccelAstNode):
 
     def clone(self, name, new_class = None, **kwargs):
 
-        # TODO check it is up to date
-
         if (new_class is None):
             cls = self.__class__
         else:
             cls = new_class
 
-        return cls(
-            self.dtype,
-            name,
-            rank=kwargs.pop('rank',self.rank),
-            allocatable=kwargs.pop('allocatable',self.allocatable),
-            shape=kwargs.pop('shape',self.shape),
-            is_pointer=kwargs.pop('is_pointer',self.is_pointer),
-            is_target=kwargs.pop('is_target',self.is_target),
-            is_polymorphic=kwargs.pop('is_polymorphic',self.is_polymorphic),
-            is_optional=kwargs.pop('is_optional',self.is_optional),
-            cls_base=kwargs.pop('cls_base',self.cls_base),
-            )
+        args = inspect.signature(Variable.__init__)
+        new_kwargs = dict([(k,self.__dict__['_'+k]) \
+                            for k in args.parameters.keys() \
+                            if '_'+k in self.__dict__])
+        new_kwargs.update(kwargs)
+        new_kwargs['name'] = name
+
+        return cls(**new_kwargs)
+
     def rename(self, newname):
         """Change variable name."""
 
@@ -837,131 +839,16 @@ class VariableAddress(Basic, PyccelAstNode):
     def variable(self):
         return self._variable
 
-class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
+class DottedVariable(Variable):
 
     """
     Represents a dotted variable.
     """
 
-    def __new__(cls, lhs, rhs):
-
-        if PyccelAstNode.stage != 'syntactic':
-            lhs_cls = lhs.__class__.__name__
-            rhs_cls = rhs.__class__.__name__
-            if not isinstance(lhs, (
-                Variable,
-                IndexedElement,
-                IndexedBase,
-                Indexed,
-                DottedVariable,
-                )):
-                raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
-                                str(type(lhs))))
-
-            if rhs_cls not in (
-                'Variable',
-                'IndexedElement',
-                'IndexedBase',
-                'Indexed',
-                'FunctionCall',
-                'Function',
-                'TupleVariable',
-                ):
-                raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
-                                str(type(rhs))))
-
-        return Basic.__new__(cls, lhs, rhs)
-
-    def __init__(self, lhs, rhs):
-        if self.stage == 'syntactic':
-            return
-        self._dtype     = rhs.dtype
-        self._rank      = rhs.rank
-        self._precision = rhs.precision
-        self._shape     = rhs.shape
-        self._order     = rhs.order
+    def __init__(self, *args, lhs, **kwargs):
+        Variable.__init__(self, *args, **kwargs)
+        self._lhs = lhs
 
     @property
     def lhs(self):
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
-
-    @property
-    def allocatable(self):
-        return self._args[1].allocatable
-
-    @allocatable.setter
-    def allocatable(self, allocatable):
-        self._args[1].allocatable = allocatable
-
-    @property
-    def is_pointer(self):
-        return self._args[1].is_pointer
-
-    @is_pointer.setter
-    def is_pointer(self, is_pointer):
-        self._args[1].is_pointer = is_pointer
-
-    @property
-    def is_target(self):
-        return self._args[1].is_target
-
-    @is_target.setter
-    def is_target(self, is_target):
-        self._args[1].is_target = is_target
-
-    @property
-    def name(self):
-        if isinstance(self.lhs, DottedVariable):
-            name_0 = self.lhs.name
-        else:
-            name_0 = str(self.lhs)
-        if isinstance(self.rhs, Function):
-            name_1 = str(type(self.rhs).__name__)
-        elif isinstance(self.rhs, Symbol):
-            name_1 = self.rhs.name
-        else:
-            name_1 = str(self.rhs)
-        return name_0 + """.""" + name_1
-
-    def __str__(self):
-        return self.name
-
-    def _sympystr(self, Printer):
-        return self.name
-
-    @property
-    def cls_base(self):
-        return self._args[1].cls_base
-
-    @property
-    def names(self):
-        """Return list of names as strings."""
-
-        ls = []
-        for i in [self.lhs, self.rhs]:
-            if not isinstance(i, DottedVariable):
-                ls.append(str(i))
-            else:
-                ls += i.names
-        return ls
-
-    def _eval_subs(self, old, new):
-        return self
-
-    def inspect(self):
-        self._args[1].inspect()
-
-    def __getitem__(self, *args):
-
-        if len(args) == 1 and isinstance(args[0], (Tuple, tuple, list)):
-            args = args[0]
-
-        if self.rank != len(args):
-            raise IndexError('Rank mismatch.')
-
-        obj = IndexedElement(self, *args)
-        return obj
+        return self._lhs
