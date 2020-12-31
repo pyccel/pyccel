@@ -92,16 +92,18 @@ def compile_fortran(path_dir,test_file,dependencies,is_mod=False):
     assert(os.path.isfile(root+".f90"))
 
     deps = [dependencies] if isinstance(dependencies, str) else dependencies
+    if not is_mod:
+        base_dir = os.path.dirname(root)
+        base_name = os.path.basename(root)
+        prog_root = os.path.join(base_dir, "prog_"+base_name)
+        if os.path.isfile(prog_root+".f90"):
+            compile_fortran(path_dir, test_file, dependencies, is_mod = True)
+            dependencies.append(test_file)
+            root = prog_root
 
     if is_mod:
         command = [shutil.which("gfortran"), "-c", "%s.f90" % root]
     else:
-        base_dir = os.path.dirname(root)
-        base_name = os.path.basename(root)
-        prog_root = os.path.join(base_dir, "prog_"+base_name)
-        compile_fortran(path_dir, test_file, dependencies, is_mod = True)
-        dependencies.append(test_file)
-        root = prog_root
         command = [shutil.which("gfortran"), "-O3", "%s.f90" % root]
 
     for d in deps:
