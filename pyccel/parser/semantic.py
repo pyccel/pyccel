@@ -38,6 +38,7 @@ from pyccel.ast.core import Return
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ValuedFunctionAddress
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall
+from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor, ForIterator
 from pyccel.ast.core import IfTernaryOperator
@@ -1095,8 +1096,8 @@ class SemanticParser(BasicParser):
                         func = i.decorators['numpy_wrapper']
                         return func(first, *args)
                     else:
-                        second = FunctionCall(i, args, self._current_function)
-                        return DottedVariable(first, second)
+                        return DottedFunctionCall(i, args, prefix = first,
+                                    current_function = self._current_function)
 
         # look for a class attribute / property
         elif isinstance(expr.rhs, Symbol) and first.cls_base:
@@ -1124,8 +1125,8 @@ class SemanticParser(BasicParser):
                             func = i.decorators['numpy_wrapper']
                             return func(first)
                         else:
-                            second = FunctionCall(i, [], self._current_function)
-                            return DottedVariable(first, second)
+                            return DottedFunctionCall(i, [], prefix = first,
+                                    current_function = self._current_function)
 
         # look for a macro
         else:

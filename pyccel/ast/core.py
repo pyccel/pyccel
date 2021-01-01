@@ -2862,6 +2862,7 @@ class FunctionCall(Basic, PyccelAstNode):
         if isinstance(func, Interface):
             self._interface = func
             func = func.point(args)
+            self._interface_name = func.name
         else:
             self._interface = None
 
@@ -2878,6 +2879,8 @@ class FunctionCall(Basic, PyccelAstNode):
 
         # add the missing argument in the case of optional arguments
         f_args = func.arguments
+        if func.cls_name:
+            f_args = f_args[1:]
         if not len(args) == len(f_args):
             f_args_dict = OrderedDict((a.name,a) if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else (a.name, None) for a in f_args)
             keyword_args = []
@@ -2906,6 +2909,7 @@ class FunctionCall(Basic, PyccelAstNode):
         self._shape         = func.results[0].shape     if len(func.results) == 1 else None
         self._precision     = func.results[0].precision if len(func.results) == 1 else None
         self._order         = func.results[0].order     if len(func.results) == 1 else None
+        self._func_name     = func.name
 
     @property
     def arguments(self):
@@ -2918,6 +2922,27 @@ class FunctionCall(Basic, PyccelAstNode):
     @property
     def interface(self):
         return self._interface
+
+    @property
+    def func_name(self):
+        return self._func_name
+
+    @property
+    def interface_name(self):
+        return self._interface_name
+
+class DottedFunctionCall(FunctionCall):
+
+    def __init__(self, func, args, prefix, current_function=None):
+        FunctionCall.__init__(self, func, args, current_function)
+        self._func_name = DottedName(prefix, self._func_name)
+        if self._interface:
+            self._interface_name = DottedName(prefix, self._interface_name)
+        self._prefix = prefix
+
+    @property
+    def prefix(self):
+        return self._prefix
 
 class Return(Basic):
 
