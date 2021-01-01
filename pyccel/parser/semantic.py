@@ -2854,6 +2854,8 @@ class SemanticParser(BasicParser):
                     errors.report(IMPORTING_EXISTING_IDENTIFIED,
                                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                                   severity='fatal')
+            expr.ignore = True
+            _insert_obj('imports', source, expr)
 
             if expr.target:
                 for (name, atom) in imports:
@@ -2862,10 +2864,8 @@ class SemanticParser(BasicParser):
                             _insert_obj('variables', name, atom)
                         else:
                             _insert_obj('functions', name, atom)
-                        _insert_obj('imports', source, expr)
             else:
                 _insert_obj('variables', source_target, imports)
-                _insert_obj('imports', source, expr)
         else:
 
             # in some cases (blas, lapack, openmp and openacc level-0)
