@@ -91,11 +91,21 @@ def compile_fortran(path_dir,test_file,dependencies,is_mod=False):
 
     assert(os.path.isfile(root+".f90"))
 
+    deps = [dependencies] if isinstance(dependencies, str) else dependencies
+    if not is_mod:
+        base_dir = os.path.dirname(root)
+        base_name = os.path.basename(root)
+        prog_root = os.path.join(base_dir, "prog_"+base_name)
+        if os.path.isfile(prog_root+".f90"):
+            compile_fortran(path_dir, test_file, dependencies, is_mod = True)
+            dependencies.append(test_file)
+            root = prog_root
+
     if is_mod:
         command = [shutil.which("gfortran"), "-c", "%s.f90" % root]
     else:
         command = [shutil.which("gfortran"), "-O3", "%s.f90" % root]
-    deps = [dependencies] if isinstance(dependencies, str) else dependencies
+
     for d in deps:
         d = insert_pyccel_folder(d)
         command.append(d[:-3]+".o")
@@ -215,6 +225,8 @@ def pyccel_test(test_file, dependencies = None, compile_with_pyccel = True,
         compile_pyccel(cwd, test_file, pyccel_commands)
     else:
         compile_pyccel (cwd, test_file, pyccel_commands+" -t")
+        if not dependencies:
+            dependencies = []
         if language=='fortran':
             compile_fortran(cwd, test_file, dependencies)
         else:
@@ -519,16 +531,19 @@ def test_print_sp_and_end(language):
     pyccel_test("scripts/print_sp_and_end.py", language=language, output_dtype=types)
 
 
+#------------------------------------------------------------------------------
 def test_c_arrays(language):
     types = [int]*15 + [float]*5 + [int]*25 + [float]* 20 * 5 + \
             [complex] * 3 * 10 + [complex] * 5 + [float] * 10 + [float] * 6 + \
             [float] * 2 * 3 + [complex] * 3 * 10 + [float] * 2 * 3
     pyccel_test("scripts/c_arrays.py", language=language, output_dtype=types)
 
+#------------------------------------------------------------------------------
 def test_arrays_view(language):
     types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10
     pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
 
+#------------------------------------------------------------------------------
 def test_headers(language):
     test_file = "scripts/test_headers.py"
     test_file = os.path.normpath(test_file)
@@ -589,3 +604,9 @@ def test_headers(language):
         code = ("")
         f.write(code)
 
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
+                                        "scripts/classes/classes_1.py",
+                                        ] )
+def test_classes( test_file ):
+    pyccel_test(test_file, compile_with_pyccel = False)
