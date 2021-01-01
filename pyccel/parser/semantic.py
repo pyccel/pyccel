@@ -2856,7 +2856,7 @@ class SemanticParser(BasicParser):
                                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                                   severity='fatal')
             expr.ignore = True
-
+            #TODO "import numpy" should be also collected
             if expr.target:
                 for (name, atom) in imports:
                     if not name is None:
