@@ -34,8 +34,6 @@ from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.numpyext import NumpyFull, NumpyArray
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
-from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
-
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors   import Errors
