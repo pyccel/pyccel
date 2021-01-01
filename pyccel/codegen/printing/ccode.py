@@ -34,6 +34,7 @@ from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.numpyext import NumpyFull, NumpyArray
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
+from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -455,6 +456,8 @@ class CCodePrinter(CodePrinter):
         return code
 
     def _print_Import(self, expr):
+        if str(expr.source) in pyccel_builtin_import_registery:
+            return ''
         if isinstance(expr.source, DottedName):
             source = expr.source.name[-1]
         else:
