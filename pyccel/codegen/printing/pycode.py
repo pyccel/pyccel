@@ -134,6 +134,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_Import(self, expr):
         target = ', '.join([self._print(i) for i in expr.target])
+
+        if target == '' and expr.source is not None:
+            return 'import {source}'.format(source=self._print(expr.source))
         if expr.source is None:
             return 'import {target}'.format(target=target)
         else:
