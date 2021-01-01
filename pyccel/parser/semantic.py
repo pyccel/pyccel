@@ -2833,6 +2833,7 @@ class SemanticParser(BasicParser):
         #      - should not use namespace
 
         container = self.namespace.imports
+
         if isinstance(expr.source, AsName):
             source        = str(expr.source.name)
             source_target = str(expr.source.target)
@@ -2842,6 +2843,7 @@ class SemanticParser(BasicParser):
 
         if source in pyccel_builtin_import_registery:
             imports = pyccel_builtin_import(expr)
+
             def _insert_obj(location, target, obj):
                 F = self.check_for_variable(target)
 
