@@ -4032,8 +4032,9 @@ class Import(Basic):
 
         return Basic.__new__(cls, source)
 
-    def __init__(self, source, target = None):
+    def __init__(self, source, target = None, ignore_at_print = False):
         self._target = []
+        self._ignore_at_print = ignore_at_print
         if isinstance(target, (str, Symbol, DottedName, AsName)):
             self._target = [Import._format(target)]
         elif iterable(target):
@@ -4061,6 +4062,16 @@ class Import(Basic):
     @property
     def source(self):
         return self._args[0]
+
+    @property
+    def ignore(self):
+        return self._ignore_at_print
+
+    @ignore.setter
+    def ignore(self, to_ignore):
+        if not isinstance(to_ignore, bool):
+            raise TypeError('to_ignore must be a boolean.')
+        self._ignore_at_print = to_ignore
 
     def _sympystr(self, printer):
         sstr = printer.doprint
