@@ -2634,7 +2634,7 @@ class FCodePrinter(CodePrinter):
                     shape = var.shape, prec = var.precision,
                     order = var.order, rank = var.rank)[expr.indices[1:]])
         else:
-            base_code = self._print(expr.base.label)
+            base_code = self._print(base)
 
         inds = list(expr.indices)
         if expr.base.order == 'C':
