@@ -14,7 +14,7 @@ class Point(object):
         pass
 
     def translate(self, a):
-        self.x   =  self.x + a
+        self.x[:]   =  self.x + a
 
 x = np.array([0.,0.,0.])
 p = Point(x)
