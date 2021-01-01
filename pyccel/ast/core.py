@@ -2524,6 +2524,10 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
         return self._args[1]
 
     @property
+    def allows_negative_indexes(self):
+        return self._args[1].allows_negative_indexes
+
+    @property
     def allocatable(self):
         return self._args[1].allocatable
 
@@ -5768,6 +5772,7 @@ class PyccelArraySize(Function, PyccelAstNode):
                                 PythonTuple,
                                 PythonList,
                                 Variable,
+                                DottedVariable,
                                 IndexedElement,
                                 IndexedBase)):
             raise TypeError('Uknown type of  %s.' % type(arg))
