@@ -33,6 +33,7 @@ from pyccel.ast.core import Return
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ValuedFunctionAddress
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall
+from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor, ForIterator
 from pyccel.ast.core import IfTernaryOperator
@@ -1095,7 +1096,7 @@ class SemanticParser(BasicParser):
                         return func(first, *args)
                     else:
                         return DottedFunctionCall(i, args, prefix = first,
-                                current_function = self._current_function)
+                                    current_function = self._current_function)
 
         # look for a class attribute / property
         elif isinstance(rhs, Symbol) and first.cls_base:
@@ -1471,13 +1472,13 @@ class SemanticParser(BasicParser):
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             severity='fatal', blocker=False)
 
-                elif var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
+                elif not is_augassign and var.is_ndarray and isinstance(rhs, (Variable, IndexedElement)) and var.allocatable:
                     errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
                                 severity='error', symbol=lhs.name)
 
-                elif var.is_ndarray and var.is_target:
+                elif not is_augassign and var.is_ndarray and var.is_target:
                     errors.report(ARRAY_ALREADY_IN_USE,
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),

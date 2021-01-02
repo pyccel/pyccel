@@ -2193,6 +2193,28 @@ class FunctionCall(Basic, PyccelAstNode):
         return self._interface_name
 
 class DottedFunctionCall(FunctionCall):
+    """
+    Represents a function call in the code where
+    the function is defined in another object
+    (e.g. module/class)
+
+    a.f()
+
+    Parameters
+    ==========
+    func             : FunctionDef
+                       The definition of the function being called
+    args             : tuple
+                       The arguments being passed to the function
+    prefix           : PyccelAstNode
+                       The object in which the function is defined
+                       E.g. for a.f()
+                       prefix will contain a
+    current_function : str
+                        The function from which this call occurs
+                        (This is required in order to recognise
+                        recursive functions)
+    """
 
     def __init__(self, func, args, prefix, current_function=None):
         FunctionCall.__init__(self, func, args, current_function)
@@ -2203,6 +2225,8 @@ class DottedFunctionCall(FunctionCall):
 
     @property
     def prefix(self):
+        """ The object in which the function is defined
+        """
         return self._prefix
 
 class Return(Basic):
