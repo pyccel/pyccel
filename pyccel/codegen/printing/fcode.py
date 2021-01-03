@@ -27,7 +27,7 @@ from sympy.logic.boolalg import Not
 
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
-from pyccel.ast.core import Nil, IfTernaryOperator
+from pyccel.ast.core import Nil
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ErrorExit, FunctionAddress
@@ -47,7 +47,7 @@ from pyccel.ast.core      import FunctionCall, DottedFunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
                                   PythonMap, PythonPrint, PythonRange,
-                                  PythonZip, PythonFloat, PythonTuple, PythonList)
+                                  PythonZip, PythonFloat, PythonTuple)
 from pyccel.ast.builtins  import PythonComplex, PythonBool
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
