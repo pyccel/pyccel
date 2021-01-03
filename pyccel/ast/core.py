@@ -5325,7 +5325,7 @@ def get_assigned_symbols(expr):
         var = expr.lhs
         symbols = []
         if isinstance(var, DottedVariable):
-            var = expr.lhs.lhs
+            var = expr.lhs
             while isinstance(var, DottedVariable):
                 var = var.lhs
             symbols.append(var)
@@ -5700,7 +5700,6 @@ class PyccelArraySize(Function, PyccelAstNode):
                                 PythonTuple,
                                 PythonList,
                                 Variable,
-                                DottedVariable,
                                 IndexedElement,
                                 IndexedBase)):
             raise TypeError('Uknown type of  %s.' % type(arg))
