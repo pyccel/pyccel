@@ -44,7 +44,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt
-from pyccel.ast.core      import FunctionCall
+from pyccel.ast.core      import FunctionCall, DottedFunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
                                   PythonMap, PythonPrint, PythonRange,
@@ -542,7 +542,24 @@ class FCodePrinter(CodePrinter):
         return self._print(val)
 
     def _print_DottedVariable(self, expr):
-        return self._print(expr.lhs) + ' % ' +self._print(expr.name)
+        if isinstance(expr.lhs, FunctionCall):
+            base = expr.lhs.funcdef.results[0]
+            if (not self._additional_code):
+                self._additional_code = ''
+            var_name = self.parser.get_new_name()
+            var = base.clone(var_name)
+
+            if self._current_function:
+                name = self._current_function
+                func = self.get_function(name)
+                func.local_vars.append(var)
+            else:
+                self._namespace.variables[var.name] = var
+
+            self._additional_code = self._additional_code + self._print(Assign(var,expr.lhs)) + '\n'
+            return self._print(var) + '%' +self._print(expr.name)
+        else:
+            return self._print(expr.lhs) + '%' +self._print(expr.name)
 
     def _print_DottedName(self, expr):
         return ' % '.join(self._print(n) for n in expr.name)
@@ -2780,6 +2797,27 @@ class FCodePrinter(CodePrinter):
             code = 'call {name}({args})\n'.format( name = f_name,
                                                  args = newargs )
         return code
+
+#=======================================================================================
+
+    def _print_DottedFunctionCall(self, expr):
+        if isinstance(expr.prefix, FunctionCall):
+            base = expr.prefix.funcdef.results[0]
+            if (not self._additional_code):
+                self._additional_code = ''
+            var_name = self.parser.get_new_name()
+            var = base.clone(var_name)
+
+            if self._current_function:
+                name = self._current_function
+                func = self.get_function(name)
+                func.local_vars.append(var)
+            else:
+                self._namespace.variables[var.name] = var
+
+            self._additional_code = self._additional_code + self._print(Assign(var,expr.prefix)) + '\n'
+            expr = DottedFunctionCall(expr.funcdef, expr.arguments, var)
+        return self._print_FunctionCall(expr)
 
 #=======================================================================================
 
