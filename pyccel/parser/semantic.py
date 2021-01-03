@@ -1032,7 +1032,7 @@ class SemanticParser(BasicParser):
         rhs = expr.name[-1]
 
         visited_lhs = self._visit(lhs)
-        first = lhs
+        first = visited_lhs
         if isinstance(visited_lhs, FunctionCall):
             results = visited_lhs.funcdef.results
             if len(results) != 1:
