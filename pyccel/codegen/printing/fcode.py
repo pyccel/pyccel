@@ -19,7 +19,7 @@ import operator
 
 from sympy.core import Symbol
 from sympy.core import Tuple
-from sympy.core.function import Function, Application
+from sympy.core.function import Application
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
 
@@ -30,7 +30,6 @@ from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import Nil, IfTernaryOperator
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
-from pyccel.ast.core import Subroutine
 from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Variable,
