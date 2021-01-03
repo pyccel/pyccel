@@ -4025,7 +4025,7 @@ class Import(Basic):
     import foo, foo.bar.baz
     """
 
-    def __new__(cls, source, target = None):
+    def __new__(cls, source, target = None, ignore_at_print = False):
 
         if not source is None:
             source = Import._format(source)
