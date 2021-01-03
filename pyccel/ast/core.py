@@ -2225,7 +2225,7 @@ class Variable(Symbol, PyccelAstNode):
 
         if not isinstance(is_const, bool):
             raise TypeError('is_const must be a boolean.')
-        self.is_const = is_const
+        self._is_const = is_const
 
         if not isinstance(is_stack_array, bool):
             raise TypeError('is_stack_array must be a boolean.')
@@ -2301,6 +2301,10 @@ class Variable(Symbol, PyccelAstNode):
     @property
     def cls_base(self):
         return self._cls_base
+
+    @property
+    def is_const(self):
+        return self._is_const
 
     @property
     def is_pointer(self):
@@ -2402,26 +2406,36 @@ class Variable(Symbol, PyccelAstNode):
         print( '<<<')
 
     def clone(self, name, new_class = None, **kwargs):
+        """
+        Create a new Variable object of the chosen class
+        with the provided name and options
 
-        # TODO check it is up to date
+        Parameters
+        ==========
+        name      : str
+                    The name of the new Variable
+        new_class : type
+                    The class of the new Variable
+                    The default is the same class
+        kwargs    : dict
+                    Dictionary containing any keyword-value
+                    pairs which are valid constructor keywords
+        """
 
         if (new_class is None):
-            cls = eval(self.__class__.__name__)
+            cls = self.__class__
         else:
             cls = new_class
 
-        return cls(
-            self.dtype,
-            name,
-            rank=kwargs.pop('rank',self.rank),
-            allocatable=kwargs.pop('allocatable',self.allocatable),
-            shape=kwargs.pop('shape',self.shape),
-            is_pointer=kwargs.pop('is_pointer',self.is_pointer),
-            is_target=kwargs.pop('is_target',self.is_target),
-            is_polymorphic=kwargs.pop('is_polymorphic',self.is_polymorphic),
-            is_optional=kwargs.pop('is_optional',self.is_optional),
-            cls_base=kwargs.pop('cls_base',self.cls_base),
-            )
+        args = inspect.signature(Variable.__init__)
+        new_kwargs = {k:self.__dict__['_'+k] \
+                            for k in args.parameters.keys() \
+                            if '_'+k in self.__dict__}
+        new_kwargs.update(kwargs)
+        new_kwargs['name'] = name
+
+        return cls(**new_kwargs)
+
     def rename(self, newname):
         """Change variable name."""
 
