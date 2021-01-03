@@ -12,7 +12,7 @@ class A(object):
         pass
 
     def f(self):
-        return False
+        return self.x+2
 
 def get_A():
     a_cls = A(3)
