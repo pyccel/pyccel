@@ -103,7 +103,6 @@ __all__ = (
     'IfTernaryOperator',
     'Import',
     'IndexedElement',
-    'IndexedVariable',
     'Interface',
     'Load',
     'ModOp',
@@ -254,7 +253,7 @@ def allocatable_like(expr, verbose=False):
         talk more
     """
 
-    if isinstance(expr, (Variable, IndexedVariable, IndexedElement)):
+    if isinstance(expr, (Variable, IndexedElement)):
         return expr
     elif isinstance(expr, str):
         # if the rhs is a string
@@ -306,8 +305,7 @@ def allocatable_like(expr, verbose=False):
                 if verbose:
                     print('Functions not yet available')
                 return None
-            elif isinstance(a, (Variable, IndexedVariable,
-                            IndexedElement)):
+            elif isinstance(a, (Variable, IndexedElement)):
                 return a
             elif a.is_Symbol:
                 raise TypeError('Found an unknown symbol {0}'.format(str(a)))
@@ -328,7 +326,7 @@ def _atomic(e, cls=None,ignore=()):
     atoms_ = []
     if cls is None:
         cls = (Application, DottedVariable, Variable,
-               IndexedVariable,IndexedElement)
+               IndexedElement)
 
     for p in pot:
         if p in seen or isinstance(p, ignore):
@@ -765,7 +763,6 @@ class Assign(Basic):
         rhs = self.rhs
         cond = isinstance(rhs, Variable) and rhs.rank > 0
         cond = cond or isinstance(rhs, IndexedElement)
-        cond = cond or isinstance(rhs, IndexedVariable)
         cond = cond and isinstance(lhs, Symbol)
         cond = cond or isinstance(rhs, Variable) and rhs.is_pointer
         return cond
@@ -967,7 +964,7 @@ class AliasAssign(Basic):
         at this point we don't know yet all information about lhs, this is why a
         Symbol is the appropriate type.
 
-    rhs : Variable, IndexedVariable, IndexedElement
+    rhs : Variable, IndexedElement
         an assignable variable can be of any rank and any datatype, however its
         shape must be known (not None)
 
@@ -2492,7 +2489,6 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
                 Literal,
                 Variable,
                 Symbol,
-                IndexedVariable,
                 IndexedElement,
                 IndexedBase,
                 Indexed,
@@ -2505,7 +2501,6 @@ class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
             if not isinstance(rhs, (
                 Variable,
                 Symbol,
-                IndexedVariable,
                 IndexedElement,
                 IndexedBase,
                 Indexed,
@@ -2680,10 +2675,8 @@ class TupleVariable(Variable):
 
     def get_vars(self):
         if self._is_homogeneous:
-            indexed_var = IndexedVariable(self, dtype=self.dtype, shape=self.shape,
-                prec=self.precision, order=self.order, rank=self. rank)
             args = [Slice(None,None)]*(self.rank-1)
-            return [indexed_var[[i] + args] for i in range(len(self._vars))]
+            return [self[[i] + args] for i in range(len(self._vars))]
         else:
             return self._vars
 
@@ -4719,9 +4712,9 @@ class IndexedElement(Expr, PyccelAstNode):
     Examples
     --------
     >>> from sympy import symbols, Idx
-    >>> from pyccel.ast.core import IndexedVariable, IndexedElement
+    >>> from pyccel.ast.core import Variable, IndexedElement
     >>> i, j = symbols('i j', cls=Idx)
-    >>> A = IndexedVariable('A', dtype='int')
+    >>> A = Variable('A', dtype='int')
     >>> IndexedElement(A, i, j)
     IndexedElement(A, i, j)
     >>> IndexedElement(A, i, j) == A[i, j]
@@ -5102,7 +5095,7 @@ def is_simple_assign(expr):
     if not isinstance(expr, Assign):
         return False
 
-    assignable = [Variable, IndexedVariable, IndexedElement]
+    assignable = [Variable, IndexedElement]
     assignable += [sp_Integer, sp_Float]
     assignable = tuple(assignable)
     if isinstance(expr.rhs, assignable):
@@ -5294,7 +5287,7 @@ def get_iterable_ranges(it, var_name=None):
 
             args = []
             for i in [cls_base.start, cls_base.stop, cls_base.step]:
-                if isinstance(i, (Variable, IndexedVariable)):
+                if isinstance(i, Variable):
                     arg_name = _construct_arg_Range(i.name)
                     arg = i.clone(arg_name)
                 elif isinstance(i, IndexedElement):
@@ -5379,8 +5372,7 @@ def get_iterable_ranges(it, var_name=None):
                 for (a_old, a_new) in zip(args, params):
                     dtype = datatype(stmt.rhs.dtype)
                     v_old = Variable(dtype, a_old)
-                    if isinstance(a_new, (IndexedVariable,
-                                  IndexedElement, str, Variable)):
+                    if isinstance(a_new, (IndexedElement, str, Variable)):
                         v_new = Variable(dtype, a_new)
                     else:
                         v_new = a_new
@@ -5472,8 +5464,7 @@ def get_iterable_ranges(it, var_name=None):
                 for (a_old, a_new) in zip(args, params):
                     dtype = datatype(stmt.rhs.dtype)
                     v_old = Variable(dtype, a_old)
-                    if isinstance(a_new, (IndexedVariable,
-                                  IndexedElement, str, Variable)):
+                    if isinstance(a_new, (IndexedElement, str, Variable)):
                         v_new = Variable(dtype, a_new)
                     else:
                         v_new = a_new
