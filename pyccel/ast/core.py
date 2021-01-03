@@ -2674,22 +2674,39 @@ class TupleVariable(Variable):
         Variable.__init__(self, dtype, name, *args, **kwargs)
 
     def get_vars(self):
-        if self._is_homogeneous:
-            args = [Slice(None,None)]*(self.rank-1)
-            return [self[[i] + args] for i in range(len(self._vars))]
-        else:
-            return self._vars
+        return tuple(self[i] for i in range(len(self._vars)))
 
     def get_var(self, variable_idx):
+        if isinstance(variable_idx, LiteralInteger):
+            variable_idx = variable_idx.p
         return self._vars[variable_idx]
 
     def rename_var(self, variable_idx, new_name):
         self._vars[variable_idx] = self._vars[variable_idx].clone(new_name)
 
     def __getitem__(self,idx):
-        if isinstance(idx, LiteralInteger):
-            idx = idx.p
-        return self.get_var(idx)
+        if self._is_homogeneous:
+            if isinstance(idx, tuple):
+                idx = list(idx)
+            else:
+                idx = [idx]
+            idx.extend([Slice(None,None) for _ in range(self.rank-len(idx))])
+            return IndexedElement(self, *idx)
+        else:
+            if isinstance(idx, tuple):
+                sub_idx = idx[1:]
+                idx = idx[0]
+            else:
+                sub_idx = []
+
+            if isinstance(idx, LiteralInteger):
+                idx = idx.p
+            var = self.get_var(idx)
+
+            if len(sub_idx) > 0:
+                return var[sub_idx]
+            else:
+                return var
 
     def __iter__(self):
         return self._vars.__iter__()
