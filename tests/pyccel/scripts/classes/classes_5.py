@@ -15,8 +15,8 @@ class A(object):
         return False
 
 def get_A():
-    a = A(3)
-    return a
+    a_cls = A(3)
+    return a_cls
 
 b = get_A().x
 c = get_A().f()
