@@ -1336,13 +1336,13 @@ class SemanticParser(BasicParser):
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
             rhs.is_target = True
-        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.internal_variable.allocatable:
+        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.allocatable:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
 
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
-            rhs.base.internal_variable.is_target = True
+            rhs.base.is_target = True
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign, **settings):
         """
