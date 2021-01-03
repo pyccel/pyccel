@@ -2024,7 +2024,6 @@ class VoidFunction(Basic):
         return Symbol("""x9846548484665
                       494794564465165161561""")
 
-
 class Argument(Symbol, PyccelAstNode):
 
     """An abstract Argument data structure.
@@ -4371,7 +4370,7 @@ def get_assigned_symbols(expr):
         var = expr.lhs
         symbols = []
         if isinstance(var, DottedVariable):
-            var = expr.lhs.lhs
+            var = expr.lhs
             while isinstance(var, DottedVariable):
                 var = var.lhs
             symbols.append(var)
