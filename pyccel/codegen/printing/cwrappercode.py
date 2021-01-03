@@ -725,7 +725,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_IndexedElement(self, expr):
         assert(len(expr.indices)==1)
-        return '{}[{}]'.format(self._print(expr.base.internal_variable), self._print(expr.indices[0]))
+        return '{}[{}]'.format(self._print(expr.base), self._print(expr.indices[0]))
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
