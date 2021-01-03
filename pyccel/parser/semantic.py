@@ -550,18 +550,30 @@ class SemanticParser(BasicParser):
             container = container.parent_scope
         return templates
 
-    def get_class_construct(self, name):
-        """Returns the class datatype for name."""
+    def find_class_construct(self, name):
+        """Returns the class datatype for name if it exists.
+        Returns None otherwise
+        """
         container = self.namespace
         while container:
             if name in container.cls_constructs:
                 return container.cls_constructs[name]
             container = container.parent_scope
+        return None
 
-        msg = 'class construct {} not found'.format(name)
-        errors.report(msg,
-            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='fatal', blocker=self.blocking)
+    def get_class_construct(self, name):
+        """Returns the class datatype for name if it exists.
+        Raises an error otherwise
+        """
+        result = self.find_class_construct(name)
+
+        if result:
+            return result
+        else:
+            msg = 'class construct {} not found'.format(name)
+            return errors.report(msg,
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal', blocker=self.blocking)
 
 
     def set_class_construct(self, name, value):
@@ -1249,7 +1261,7 @@ class SemanticParser(BasicParser):
         if F is not None:
             return F
 
-        elif name in self._namespace.cls_constructs.keys():
+        elif self.find_class_construct(name):
 
             # TODO improve the test
             # we must not invoke the namespace like this
