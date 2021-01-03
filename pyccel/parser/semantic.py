@@ -1145,7 +1145,7 @@ class SemanticParser(BasicParser):
                 return FunctionCall(macro.master, args, self._current_function)
 
         # did something go wrong?
-        errors.report('Attribute {} not found'.format(rhs_name),
+        return errors.report('Attribute {} not found'.format(rhs_name),
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal', blocker=True)
 
