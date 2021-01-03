@@ -6,6 +6,7 @@
 #------------------------------------------------------------------------------------------#
 
 import importlib
+import inspect
 from collections.abc import Iterable
 from collections     import OrderedDict
 
