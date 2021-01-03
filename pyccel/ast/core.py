@@ -2468,6 +2468,17 @@ class Variable(Symbol, PyccelAstNode):
         #we do this inorder to infere the type of Pow expression correctly
         return self.is_real
 
+    def __getitem__(self, *args):
+
+        if len(args) == 1 and isinstance(args[0], (Tuple, tuple, list)):
+            args = args[0]
+
+        if self.rank != len(args):
+            raise IndexError('Rank mismatch.')
+
+        obj = IndexedElement(self, *args)
+        return obj
+
 class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
 
     """
@@ -4700,131 +4711,6 @@ class CommentBlock(Basic):
     def header(self, header):
         self._header = header
 
-class IndexedVariable(IndexedBase, PyccelAstNode):
-
-    """
-    Represents an indexed variable, like x in x[i], in the code.
-
-    Examples
-    --------
-    >>> from sympy import symbols, Idx
-    >>> from pyccel.ast.core import IndexedVariable
-    >>> A = IndexedVariable('A'); A
-    A
-    >>> type(A)
-    <class 'pyccel.ast.core.IndexedVariable'>
-
-    When an IndexedVariable object receives indices, it returns an array with named
-    axes, represented by an IndexedElement object:
-
-    >>> i, j = symbols('i j', integer=True)
-    >>> A[i, j, 2]
-    A[i, j, 2]
-    >>> type(A[i, j, 2])
-    <class 'pyccel.ast.core.IndexedElement'>
-
-    The IndexedVariable constructor takes an optional shape argument.  If given,
-    it overrides any shape information in the indices. (But not the index
-    ranges!)
-
-    >>> m, n, o, p = symbols('m n o p', integer=True)
-    >>> i = Idx('i', m)
-    >>> j = Idx('j', n)
-    >>> A[i, j].shape
-    (m, n)
-    >>> B = IndexedVariable('B', shape=(o, p))
-    >>> B[i, j].shape
-    (m, n)
-
-    **todo:** fix bug. the last result must be : (o,p)
-    """
-
-    def __new__(
-        cls,
-        label,
-        shape=None,
-        dtype=None,
-        prec=0,
-        order=None,
-        rank = 0,
-        **kw_args
-        ):
-
-        if isinstance(label, Application):
-            label_name = type(label)
-        else:
-            label_name = str(label)
-
-        return IndexedBase.__new__(cls, label_name, shape=shape)
-
-    def __init__(
-        self,
-        label,
-        shape=None,
-        dtype=None,
-        prec=0,
-        order=None,
-        rank = 0,
-        **kw_args
-        ):
-
-        if dtype is None:
-            raise TypeError('datatype must be provided')
-        if isinstance(dtype, str):
-            dtype = datatype(dtype)
-        elif not isinstance(dtype, DataType):
-            raise TypeError('datatype must be an instance of DataType.')
-
-
-        self._dtype      = dtype
-        self._precision  = prec
-        self._rank       = rank
-        self._order      = order
-        kw_args['order'] = order
-        self._kw_args    = kw_args
-        self._label      = label
-
-    def __getitem__(self, *args):
-
-        if len(args) == 1 and isinstance(args[0], (Tuple, tuple, list)):
-            args = args[0]
-
-        if self.shape and len(self.shape) != len(args):
-            raise IndexError('Rank mismatch.')
-
-        obj = IndexedElement(self, *args)
-        return obj
-
-    @property
-    def order(self):
-        return self.kw_args['order']
-
-    @property
-    def kw_args(self):
-        return self._kw_args
-
-    @property
-    def name(self):
-        return self._args[0]
-
-    @property
-    def internal_variable(self):
-        return self._label
-
-
-    def clone(self, name):
-        cls = eval(self.__class__.__name__)
-        # TODO what about kw_args in __new__?
-        return cls(name, shape=self.shape, dtype=self.dtype,
-                   prec=self.precision, order=self.order, rank=self.rank)
-
-    def _eval_subs(self, old, new):
-        return self
-
-    def __str__(self):
-        return str(self.name)
-
-
 class IndexedElement(Expr, PyccelAstNode):
 
     """
@@ -4851,19 +4737,8 @@ class IndexedElement(Expr, PyccelAstNode):
 
         if not args:
             raise IndexError('Indexed needs at least one index.')
-        if isinstance(base, (str, Symbol)):
-            base = IndexedBase(base)
-        elif not hasattr(base, '__getitem__') and not isinstance(base,
-                IndexedBase):
-            raise TypeError(filldedent("""
-                Indexed expects string, Symbol, or IndexedBase as base."""))
-
-        if isinstance(base, (NDimArray, Iterable, Tuple,
-                      MatrixBase)) and all([i.is_number for i in args]):
-            if len(args) == 1:
-                return base[args[0]]
-            else:
-                return base[args]
+        if not isinstance(base, (Variable, DottedVariable)):
+            raise TypeError("Indexed expects Variable as base")
         return Expr.__new__(cls, base, *args, **kw_args)
 
     def __init__(
@@ -4873,8 +4748,8 @@ class IndexedElement(Expr, PyccelAstNode):
         **kw_args
         ):
 
-        self._label = self._args[0]
-        self._indices = self._args[1:]
+        self._label = base
+        self._indices = args
         dtype = self.base.dtype
         shape = self.base.shape
         rank  = self.base.rank
@@ -4912,10 +4787,7 @@ class IndexedElement(Expr, PyccelAstNode):
                 if not isinstance(args[i], Slice):
                     new_rank -= 1
             self._rank = new_rank
-
-    @property
-    def order(self):
-        return self.base.order
+        self._order = order
 
     @property
     def base(self):
