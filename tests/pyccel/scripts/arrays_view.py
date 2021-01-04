@@ -47,6 +47,13 @@ def array_view_negative_var():
     for i in range(2):
         print(x[i])
 
+@allow_negative_index('a')
+def array_view_negative_literal():
+    a = np.array([[1, 2, 3], [4, 5, 6], [7, 9, 5]])
+    x = a[-1,1:]
+    for i in range(2):
+        print(x[i])
+
 def array_view_positive_literal():
     a = np.array([[1, 2, 3], [4, 5, 6], [7, 9, 5]])
     y = a[1:, 1:3]
@@ -61,3 +68,4 @@ array_view_negative_literal_step__3()
 array_view_negative_variable_step()
 array_view_negative_var()
 array_view_positive_literal()
+array_view_negative_literal()
