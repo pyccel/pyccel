@@ -52,7 +52,7 @@ def array_view_positive_literal():
     y = a[1:, 1:3]
     for i in range(2):
         for j in range(2):
-           print(y[i][j])
+            print(y[i][j])
 
 array_view()
 array_view_negative_literal_step()
