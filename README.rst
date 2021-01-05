@@ -34,6 +34,7 @@ Image tags match pyccel releases.
 In order to implement your pyccel accelerated code, you can use a host based volume during the pyccel container creation
 
 For example::
+
   docker pull pyccel/pyccel:v1.0.0
   docker run -it -v $PWD:/data:rwz  pyccel/pyccel:v1.0.0 bash
 
@@ -41,6 +42,7 @@ About Pyccel Container Images
 *****************************
 
 The image is :
+
 - based on ubuntu:latest
 - uses distro packaged python3, gcc, gfortran, blas and openmpi
 
