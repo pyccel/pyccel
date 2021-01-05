@@ -248,9 +248,13 @@ class PythonEnumerate(Basic):
             raise TypeError('Expecting an arg of valid type')
         return Basic.__new__(cls, arg)
 
+    def __init__(cls, arg):
+        self._element = arg
+        Basic.__init__(self, {'_element', self._element})
+
     @property
     def element(self):
-        return self._args[0]
+        return self._element
 
 #==============================================================================
 class PythonFloat(Expr, PyccelAstNode):
@@ -269,10 +273,13 @@ class PythonFloat(Expr, PyccelAstNode):
         else:
             return Expr.__new__(cls, arg)
 
+    def __init__(self, arg):
+        self._arg = arg
+        Basic.__init__(self, {'_arg', self._arg})
+
     @property
     def arg(self):
-        return self._args[0]
-
+        return self._arg
 
     def __str__(self):
         return 'LiteralFloat({0})'.format(str(self.arg))
@@ -296,9 +303,13 @@ class PythonInt(Expr, PyccelAstNode):
         else:
             return Expr.__new__(cls, arg)
 
+    def __init__(self, arg):
+        self._arg = arg
+        Basic.__init__(self, {'_arg', self._arg})
+
     @property
     def arg(self):
-        return self._args[0]
+        return self._arg
 
 #==============================================================================
 class PythonTuple(Expr, PyccelAstNode):
