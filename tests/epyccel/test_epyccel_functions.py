@@ -34,6 +34,12 @@ def test_func_no_args_2(language):
     with pytest.raises(TypeError):
         c_lose(unexpected_arg)
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python),
+    ]
+)
 def test_func_no_return_1(language):
     '''Test function with args and no return '''
     @types(int)
