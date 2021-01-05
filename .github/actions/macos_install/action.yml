@@ -10,3 +10,8 @@ runs:
         ln -s /usr/local/bin/gfortran-8 /usr/local/bin/gfortran
         echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
       shell: bash
+    - name: Install Valgrind
+      run: |
+        brew tap 'LouisBrunner/valgrind'
+        brew install --HEAD 'LouisBrunner/valgrind/valgrind'
+      shell: bash

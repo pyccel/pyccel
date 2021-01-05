@@ -19,7 +19,7 @@ import operator
 
 from sympy.core import Symbol
 from sympy.core import Tuple
-from sympy.core.function import Function, Application
+from sympy.core.function import Application
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
 
@@ -27,10 +27,9 @@ from sympy.logic.boolalg import Not
 
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
-from pyccel.ast.core import Nil, IfTernaryOperator
+from pyccel.ast.core import Nil
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
-from pyccel.ast.core import Subroutine
 from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Variable,
@@ -44,11 +43,11 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt
-from pyccel.ast.core      import FunctionCall
+from pyccel.ast.core      import FunctionCall, DottedFunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
                                   PythonMap, PythonPrint, PythonRange,
-                                  PythonZip, PythonFloat, PythonTuple, PythonList)
+                                  PythonZip, PythonFloat, PythonTuple)
 from pyccel.ast.builtins  import PythonComplex, PythonBool
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
@@ -542,20 +541,24 @@ class FCodePrinter(CodePrinter):
         return self._print(val)
 
     def _print_DottedVariable(self, expr):
-        if isinstance(expr.args[1], Function):
-            func = expr.args[1].func
-            name = func.__name__
-            # ...
-            code_args = ''
-            code_args = ', '.join(self._print(i) for i in expr.args[1].args)
-            code = '{0}({1})'.format(name, code_args)
-                # ...
-                # ...
-            code = '{0}%{1}'.format(self._print(expr.args[0]), code)
-            if isinstance(func, Subroutine):
-                code = 'call {0}'.format(code)
-            return code
-        return self._print(expr.args[0]) + '%' +self._print(expr.args[1])
+        if isinstance(expr.lhs, FunctionCall):
+            base = expr.lhs.funcdef.results[0]
+            if (not self._additional_code):
+                self._additional_code = ''
+            var_name = self.parser.get_new_name()
+            var = base.clone(var_name)
+
+            if self._current_function:
+                name = self._current_function
+                func = self.get_function(name)
+                func.local_vars.append(var)
+            else:
+                self._namespace.variables[var.name] = var
+
+            self._additional_code = self._additional_code + self._print(Assign(var,expr.lhs)) + '\n'
+            return self._print(var) + '%' +self._print(expr.name)
+        else:
+            return self._print(expr.lhs) + '%' +self._print(expr.name)
 
     def _print_DottedName(self, expr):
         return ' % '.join(self._print(n) for n in expr.name)
@@ -2479,13 +2482,13 @@ class FCodePrinter(CodePrinter):
 
     def _print_ConstructorCall(self, expr):
         func = expr.func
-        name = func.name
+        name = str(func.name)
         if name == "__init__":
             name = "create"
         name = self._print(name)
 
         code_args = ''
-        if not(expr.arguments) is None:
+        if expr.arguments is not None:
             code_args = ', '.join(self._print(i) for i in expr.arguments)
         code = '{0}({1})'.format(name, code_args)
         return self._get_statement(code)
@@ -2637,7 +2640,7 @@ class FCodePrinter(CodePrinter):
                 var = base[expr.indices[0]]
                 return self._print(var[expr.indices[1:]])
         else:
-            base_code = self._print(expr.base)
+            base_code = self._print(base)
 
         inds = list(expr.indices)
         if expr.base.order == 'C':
@@ -2740,7 +2743,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
-        f_name = func.name if not expr.interface else expr.interface.name
+        f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
         args = [a for a in expr.arguments if not isinstance(a, Nil)]
         results = func.results
 
@@ -2748,7 +2751,7 @@ class FCodePrinter(CodePrinter):
             args = ['{}'.format(self._print(a)) for a in args]
 
             args = ', '.join(args)
-            code = '{name}({args})'.format( name = str(f_name),
+            code = '{name}({args})'.format( name = f_name,
                                             args = args)
 
         elif len(results)>1:
@@ -2779,9 +2782,30 @@ class FCodePrinter(CodePrinter):
 
             newargs = ', '.join(args+results)
 
-            code = 'call {name}({args})\n'.format( name = str(f_name),
+            code = 'call {name}({args})\n'.format( name = f_name,
                                                  args = newargs )
         return code
+
+#=======================================================================================
+
+    def _print_DottedFunctionCall(self, expr):
+        if isinstance(expr.prefix, FunctionCall):
+            base = expr.prefix.funcdef.results[0]
+            if (not self._additional_code):
+                self._additional_code = ''
+            var_name = self.parser.get_new_name()
+            var = base.clone(var_name)
+
+            if self._current_function:
+                name = self._current_function
+                func = self.get_function(name)
+                func.local_vars.append(var)
+            else:
+                self._namespace.variables[var.name] = var
+
+            self._additional_code = self._additional_code + self._print(Assign(var,expr.prefix)) + '\n'
+            expr = DottedFunctionCall(expr.funcdef, expr.arguments, var)
+        return self._print_FunctionCall(expr)
 
 #=======================================================================================
 

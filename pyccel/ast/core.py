@@ -6,6 +6,7 @@
 #------------------------------------------------------------------------------------------#
 
 import importlib
+import inspect
 from collections.abc import Iterable
 from collections     import OrderedDict
 
@@ -2222,7 +2223,7 @@ class Variable(Symbol, PyccelAstNode):
 
         if not isinstance(is_const, bool):
             raise TypeError('is_const must be a boolean.')
-        self.is_const = is_const
+        self._is_const = is_const
 
         if not isinstance(is_stack_array, bool):
             raise TypeError('is_stack_array must be a boolean.')
@@ -2298,6 +2299,10 @@ class Variable(Symbol, PyccelAstNode):
     @property
     def cls_base(self):
         return self._cls_base
+
+    @property
+    def is_const(self):
+        return self._is_const
 
     @property
     def is_pointer(self):
@@ -2399,26 +2404,36 @@ class Variable(Symbol, PyccelAstNode):
         print( '<<<')
 
     def clone(self, name, new_class = None, **kwargs):
+        """
+        Create a new Variable object of the chosen class
+        with the provided name and options
 
-        # TODO check it is up to date
+        Parameters
+        ==========
+        name      : str
+                    The name of the new Variable
+        new_class : type
+                    The class of the new Variable
+                    The default is the same class
+        kwargs    : dict
+                    Dictionary containing any keyword-value
+                    pairs which are valid constructor keywords
+        """
 
         if (new_class is None):
-            cls = eval(self.__class__.__name__)
+            cls = self.__class__
         else:
             cls = new_class
 
-        return cls(
-            self.dtype,
-            name,
-            rank=kwargs.pop('rank',self.rank),
-            allocatable=kwargs.pop('allocatable',self.allocatable),
-            shape=kwargs.pop('shape',self.shape),
-            is_pointer=kwargs.pop('is_pointer',self.is_pointer),
-            is_target=kwargs.pop('is_target',self.is_target),
-            is_polymorphic=kwargs.pop('is_polymorphic',self.is_polymorphic),
-            is_optional=kwargs.pop('is_optional',self.is_optional),
-            cls_base=kwargs.pop('cls_base',self.cls_base),
-            )
+        args = inspect.signature(Variable.__init__)
+        new_kwargs = {k:self.__dict__['_'+k] \
+                            for k in args.parameters.keys() \
+                            if '_'+k in self.__dict__}
+        new_kwargs.update(kwargs)
+        new_kwargs['name'] = name
+
+        return cls(**new_kwargs)
+
     def rename(self, newname):
         """Change variable name."""
 
@@ -2476,124 +2491,18 @@ class Variable(Symbol, PyccelAstNode):
         obj = IndexedElement(self, *args)
         return obj
 
-class DottedVariable(AtomicExpr, sp_Boolean, PyccelAstNode):
+class DottedVariable(Variable):
 
     """
     Represents a dotted variable.
     """
-
-    def __new__(cls, lhs, rhs):
-
-        if PyccelAstNode.stage != 'syntactic':
-            if not isinstance(lhs, (
-                Literal,
-                Variable,
-                Symbol,
-                IndexedElement,
-                IndexedBase,
-                Indexed,
-                Function,
-                DottedVariable,
-                )):
-                raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(lhs),
-                                str(type(lhs))))
-
-            if not isinstance(rhs, (
-                Variable,
-                Symbol,
-                IndexedElement,
-                IndexedBase,
-                Indexed,
-                FunctionCall,
-                Function,
-                )):
-                raise TypeError('Expecting a Variable or a function call, got instead {0} of type {1}'.format(str(rhs),
-                                str(type(rhs))))
-
-        return Basic.__new__(cls, lhs, rhs)
-
-    def __init__(self, lhs, rhs):
-        if self.stage == 'syntactic':
-            return
-        self._dtype     = rhs.dtype
-        self._rank      = rhs.rank
-        self._precision = rhs.precision
-        self._shape     = rhs.shape
-        self._order     = rhs.order
+    def __init__(self, *args, lhs, **kwargs):
+        Variable.__init__(self, *args, **kwargs)
+        self._lhs = lhs
 
     @property
     def lhs(self):
-        return self._args[0]
-
-    @property
-    def rhs(self):
-        return self._args[1]
-
-    @property
-    def allocatable(self):
-        return self._args[1].allocatable
-
-    @allocatable.setter
-    def allocatable(self, allocatable):
-        self._args[1].allocatable = allocatable
-
-    @property
-    def is_pointer(self):
-        return self._args[1].is_pointer
-
-    @is_pointer.setter
-    def is_pointer(self, is_pointer):
-        self._args[1].is_pointer = is_pointer
-
-    @property
-    def is_target(self):
-        return self._args[1].is_target
-
-    @is_target.setter
-    def is_target(self, is_target):
-        self._args[1].is_target = is_target
-
-    @property
-    def name(self):
-        if isinstance(self.lhs, DottedVariable):
-            name_0 = self.lhs.name
-        else:
-            name_0 = str(self.lhs)
-        if isinstance(self.rhs, Function):
-            name_1 = str(type(self.rhs).__name__)
-        elif isinstance(self.rhs, Symbol):
-            name_1 = self.rhs.name
-        else:
-            name_1 = str(self.rhs)
-        return name_0 + """.""" + name_1
-
-    def __str__(self):
-        return self.name
-
-    def _sympystr(self, Printer):
-        return self.name
-
-    @property
-    def cls_base(self):
-        return self._args[1].cls_base
-
-    @property
-    def names(self):
-        """Return list of names as strings."""
-
-        ls = []
-        for i in [self.lhs, self.rhs]:
-            if not isinstance(i, DottedVariable):
-                ls.append(str(i))
-            else:
-                ls += i.names
-        return ls
-
-    def _eval_subs(self, old, new):
-        return self
-
-    def inspect(self):
-        self._args[1].inspect()
+        return self._lhs
 
 class ValuedVariable(Variable):
 
@@ -2883,6 +2792,7 @@ class FunctionCall(Basic, PyccelAstNode):
         if isinstance(func, Interface):
             self._interface = func
             func = func.point(args)
+            self._interface_name = func.name
         else:
             self._interface = None
 
@@ -2899,6 +2809,8 @@ class FunctionCall(Basic, PyccelAstNode):
 
         # add the missing argument in the case of optional arguments
         f_args = func.arguments
+        if func.cls_name:
+            f_args = f_args[1:]
         if not len(args) == len(f_args):
             f_args_dict = OrderedDict((a.name,a) if isinstance(a, (ValuedVariable, ValuedFunctionAddress)) else (a.name, None) for a in f_args)
             keyword_args = []
@@ -2927,6 +2839,7 @@ class FunctionCall(Basic, PyccelAstNode):
         self._shape         = func.results[0].shape     if len(func.results) == 1 else None
         self._precision     = func.results[0].precision if len(func.results) == 1 else None
         self._order         = func.results[0].order     if len(func.results) == 1 else None
+        self._func_name     = func.name
 
     @property
     def arguments(self):
@@ -2939,6 +2852,51 @@ class FunctionCall(Basic, PyccelAstNode):
     @property
     def interface(self):
         return self._interface
+
+    @property
+    def func_name(self):
+        return self._func_name
+
+    @property
+    def interface_name(self):
+        return self._interface_name
+
+class DottedFunctionCall(FunctionCall):
+    """
+    Represents a function call in the code where
+    the function is defined in another object
+    (e.g. module/class)
+
+    a.f()
+
+    Parameters
+    ==========
+    func             : FunctionDef
+                       The definition of the function being called
+    args             : tuple
+                       The arguments being passed to the function
+    prefix           : PyccelAstNode
+                       The object in which the function is defined
+                       E.g. for a.f()
+                       prefix will contain a
+    current_function : str
+                        The function from which this call occurs
+                        (This is required in order to recognise
+                        recursive functions)
+    """
+
+    def __init__(self, func, args, prefix, current_function=None):
+        FunctionCall.__init__(self, func, args, current_function)
+        self._func_name = DottedName(prefix, self._func_name)
+        if self._interface:
+            self._interface_name = DottedName(prefix, self._interface_name)
+        self._prefix = prefix
+
+    @property
+    def prefix(self):
+        """ The object in which the function is defined
+        """
+        return self._prefix
 
 class Return(Basic):
 
@@ -5250,7 +5208,7 @@ def get_assigned_symbols(expr):
         var = expr.lhs
         symbols = []
         if isinstance(var, DottedVariable):
-            var = expr.lhs.lhs
+            var = expr.lhs
             while isinstance(var, DottedVariable):
                 var = var.lhs
             symbols.append(var)
