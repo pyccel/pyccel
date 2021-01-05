@@ -19,7 +19,7 @@ import operator
 
 from sympy.core import Symbol
 from sympy.core import Tuple
-from sympy.core.function import Function, Application
+from sympy.core.function import Application
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
 
@@ -27,10 +27,8 @@ from sympy.logic.boolalg import Not
 
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
-from pyccel.ast.core import IfTernaryOperator
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
-from pyccel.ast.core import Subroutine
 from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, For, Declare,
@@ -43,11 +41,11 @@ from pyccel.ast.variable  import (Variable, TupleVariable,
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt
-from pyccel.ast.core      import FunctionCall
+from pyccel.ast.core      import FunctionCall, DottedFunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
                                   PythonMap, PythonPrint, PythonRange,
-                                  PythonZip, PythonFloat, PythonTuple, PythonList)
+                                  PythonZip, PythonFloat, PythonTuple)
 from pyccel.ast.builtins  import PythonComplex, PythonBool
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
@@ -2620,7 +2618,7 @@ class FCodePrinter(CodePrinter):
                 var = base[expr.indices[0]]
                 return self._print(var[expr.indices[1:]])
         else:
-            base_code = self._print(expr.base)
+            base_code = self._print(base)
 
         inds = list(expr.indices)
         if expr.base.order == 'C':
@@ -2765,6 +2763,27 @@ class FCodePrinter(CodePrinter):
             code = 'call {name}({args})\n'.format( name = f_name,
                                                  args = newargs )
         return code
+
+#=======================================================================================
+
+    def _print_DottedFunctionCall(self, expr):
+        if isinstance(expr.prefix, FunctionCall):
+            base = expr.prefix.funcdef.results[0]
+            if (not self._additional_code):
+                self._additional_code = ''
+            var_name = self.parser.get_new_name()
+            var = base.clone(var_name)
+
+            if self._current_function:
+                name = self._current_function
+                func = self.get_function(name)
+                func.local_vars.append(var)
+            else:
+                self._namespace.variables[var.name] = var
+
+            self._additional_code = self._additional_code + self._print(Assign(var,expr.prefix)) + '\n'
+            expr = DottedFunctionCall(expr.funcdef, expr.arguments, var)
+        return self._print_FunctionCall(expr)
 
 #=======================================================================================
 

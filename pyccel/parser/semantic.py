@@ -554,18 +554,30 @@ class SemanticParser(BasicParser):
             container = container.parent_scope
         return templates
 
-    def get_class_construct(self, name):
-        """Returns the class datatype for name."""
+    def find_class_construct(self, name):
+        """Returns the class datatype for name if it exists.
+        Returns None otherwise
+        """
         container = self.namespace
         while container:
             if name in container.cls_constructs:
                 return container.cls_constructs[name]
             container = container.parent_scope
+        return None
 
-        msg = 'class construct {} not found'.format(name)
-        errors.report(msg,
-            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='fatal', blocker=self.blocking)
+    def get_class_construct(self, name):
+        """Returns the class datatype for name if it exists.
+        Raises an error otherwise
+        """
+        result = self.find_class_construct(name)
+
+        if result:
+            return result
+        else:
+            msg = 'class construct {} not found'.format(name)
+            return errors.report(msg,
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal', blocker=self.blocking)
 
 
     def set_class_construct(self, name, value):
@@ -1014,7 +1026,16 @@ class SemanticParser(BasicParser):
                 else DottedName(*expr.name[:-1])
         rhs = expr.name[-1]
 
-        first = self._visit(lhs)
+        visited_lhs = self._visit(lhs)
+        first = visited_lhs
+        if isinstance(visited_lhs, FunctionCall):
+            results = visited_lhs.funcdef.results
+            if len(results) != 1:
+                errors.report("Cannot get attribute of function call with multiple returns",
+                        symbol=expr,
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='fatal', blocker=True)
+            first = results[0]
         rhs_name = _get_name(rhs)
         attr_name = []
 
@@ -1093,9 +1114,9 @@ class SemanticParser(BasicParser):
                 if str(i.name) == rhs_name:
                     if 'numpy_wrapper' in i.decorators.keys():
                         func = i.decorators['numpy_wrapper']
-                        return func(first, *args)
+                        return func(visited_lhs, *args)
                     else:
-                        return DottedFunctionCall(i, args, prefix = first,
+                        return DottedFunctionCall(i, args, prefix = visited_lhs,
                                     current_function = self._current_function)
 
         # look for a class attribute / property
@@ -1113,7 +1134,7 @@ class SemanticParser(BasicParser):
                 self._current_class = first.cls_base
                 second = self._visit(rhs, **settings)
                 self._current_class = None
-                return second.clone(second.name, new_class = DottedVariable, lhs = first)
+                return second.clone(second.name, new_class = DottedVariable, lhs = visited_lhs)
 
             # class property?
             else:
@@ -1122,9 +1143,9 @@ class SemanticParser(BasicParser):
                             'property' in i.decorators.keys():
                         if 'numpy_wrapper' in i.decorators.keys():
                             func = i.decorators['numpy_wrapper']
-                            return func(first)
+                            return func(visited_lhs)
                         else:
-                            return DottedFunctionCall(i, [], prefix = first,
+                            return DottedFunctionCall(i, [], prefix = visited_lhs,
                                     current_function = self._current_function)
 
         # look for a macro
@@ -1136,7 +1157,7 @@ class SemanticParser(BasicParser):
             if isinstance(macro, MacroVariable):
                 return macro.master
             elif isinstance(macro, MacroFunction):
-                args = macro.apply([first])
+                args = macro.apply([visited_lhs])
                 return FunctionCall(macro.master, args, self._current_function)
 
         # did something go wrong?
@@ -1244,7 +1265,7 @@ class SemanticParser(BasicParser):
         if F is not None:
             return F
 
-        elif name in self._namespace.cls_constructs.keys():
+        elif self.find_class_construct(name):
 
             # TODO improve the test
             # we must not invoke the namespace like this
