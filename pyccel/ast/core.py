@@ -5173,7 +5173,7 @@ class IfTernaryOperator(Basic, PyccelOperator):
     >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     """
-    _precedence = 16
+    _precedence = 3
     def __init__(self, cond, value_true, value_false):
         self._cond = cond
         self._value_true = value_true
