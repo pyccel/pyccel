@@ -5155,7 +5155,7 @@ class If(Basic):
         return b
 
 
-class IfTernaryOperator(Basic, PyccelAstNode):
+class IfTernaryOperator(Basic, PyccelOperator):
     """Represent a ternary conditional operator in the code, of the form (a if cond else b)
 
     Parameters
@@ -5173,11 +5173,11 @@ class IfTernaryOperator(Basic, PyccelAstNode):
     >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     """
+    _precedence = 16
     def __init__(self, cond, value_true, value_false):
         self._cond = cond
         self._value_true = value_true
         self._value_false = value_false
-
         if self.stage == 'syntactic':
             return
         if isinstance(value_true , Nil) or isinstance(value_false, Nil):
