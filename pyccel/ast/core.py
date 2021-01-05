@@ -4725,7 +4725,7 @@ class IndexedElement(Expr, PyccelAstNode):
 
         # Add empty slices to fully index the object
         if len(args) < rank:
-            args = args + tuple([Slice(None, None)]*(var.rank-len(args)))
+            args = args + tuple([Slice(None, None)]*(rank-len(args)))
 
         self._label = base
         self._indices = args
