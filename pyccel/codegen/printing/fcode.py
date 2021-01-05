@@ -538,6 +538,24 @@ class FCodePrinter(CodePrinter):
         return self._print(val)
 
     def _print_DottedVariable(self, expr):
+        if isinstance(expr.lhs, FunctionCall):
+            base = expr.lhs.funcdef.results[0]
+            if (not self._additional_code):
+                self._additional_code = ''
+            var_name = self.parser.get_new_name()
+            var = base.clone(var_name)
+
+            if self._current_function:
+                name = self._current_function
+                func = self.get_function(name)
+                func.local_vars.append(var)
+            else:
+                self._namespace.variables[var.name] = var
+
+            self._additional_code = self._additional_code + self._print(Assign(var,expr.lhs)) + '\n'
+            return self._print(var) + '%' +self._print(expr.name)
+        else:
+            return self._print(expr.lhs) + '%' +self._print(expr.name)
         return self._print(expr.lhs) + '%' +self._print(expr.name)
 
     def _print_DottedName(self, expr):
