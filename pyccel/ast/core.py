@@ -5767,3 +5767,14 @@ class PyccelArraySize(Function, PyccelAstNode):
 
     def _sympystr(self, printer):
         return 'Shape({},{})'.format(str(self.arg), str(self.index))
+
+class PyccelInternalFunction(PyccelAstNode):
+    """ Abstract class used by function calls
+    which are translated to Pyccel objects
+    """
+    def __init__(self, *args):
+        self._args   = tuple(args)
+
+    @property
+    def args(self):
+        return self._args
