@@ -15,8 +15,10 @@ from sympy.printing.pycode import _known_functions
 from sympy.printing.pycode import _known_functions_math
 from sympy.printing.pycode import _known_constants_math
 
+from pyccel.decorators import __all__ as pyccel_decorators
+
 from pyccel.ast.utilities  import build_types_decorator
-from pyccel.ast.core       import CodeBlock
+from pyccel.ast.core       import CodeBlock, Import, DottedName
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -42,6 +44,11 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         self.assert_contiguous = settings.pop('assert_contiguous', False)
         self.parser = parser
         SympyPythonCodePrinter.__init__(self, settings=settings)
+        self._additional_imports = set()
+
+    def get_additional_imports(self):
+        """return the additional imports collected in printing stage"""
+        return self._additional_imports
 
     def _print_Variable(self, expr):
         return self._print(expr.name)
@@ -83,6 +90,8 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
         if decorators:
             for n,f in decorators.items():
+                if n in pyccel_decorators:
+                    self._additional_imports.add(Import(DottedName('pyccel.decorators'), n))
                 # TODO - All decorators must be stored in a list
                 if not isinstance(f, list):
                     f = [f]
@@ -133,11 +142,11 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return 'len({})'.format(self._print(expr.arg))
 
     def _print_Import(self, expr):
-        target = ', '.join([self._print(i) for i in expr.target])
-        if expr.source is None:
-            return 'import {target}'.format(target=target)
+        source = self._print(expr.source)
+        if expr.target is None:
+            return 'import {source}'.format(source=source)
         else:
-            source = self._print(expr.source)
+            target = ', '.join([self._print(i) for i in expr.target])
             return 'from {source} import {target}'.format(source=source, target=target)
 
     def _print_CodeBlock(self, expr):
@@ -269,7 +278,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return 'print({0})'.format(fs)
 
     def _print_Module(self, expr):
-        return '\n'.join(self._print(e) for e in expr.body)
+        code = '\n'.join(self._print(e) for e in expr.body)
+        imports = '\n'.join(self._print(i) for i in self._additional_imports)
+        return '\n'.join([imports, code])
 
     def _print_PyccelPow(self, expr):
         base = self._print(expr.args[0])
