@@ -24,6 +24,27 @@ Pyccel comes with a selection of **extensions** allowing you to convert calls to
 - mpi4py
 - h5py (not available yet)
 
+Getting Started
+===============
+
+Pyccel container images are available through both Docker Hub (docker.io) and GitHub Container Registry (ghcr.io).
+
+Image tags match pyccel releases.
+
+In order to implement your pyccel accelerated code, you can use a host based volume during the pyccel container creation
+
+For example::
+  docker pull pyccel/pyccel:v1.0.0
+  docker run -it -v $PWD:/data:rwz  pyccel/pyccel:v1.0.0 bash
+
+About Pyccel Container Images
+*****************************
+
+The image is :
+- based on ubuntu:latest
+- uses distro packaged python3, gcc, gfortran, blas and openmpi
+
+
 Requirements
 ============
 
@@ -55,6 +76,8 @@ Finally, Pyccel supports distributed-memory parallel programming through the Mes
 We recommend using GFortran/Gcc and Open-MPI.
 
 Pyccel also depends on several Python3 packages, which are automatically downloaded by pip, the Python Package Installer, during the installation process. In addition to these, unit tests require the *scipy*, *mpi4py*, *pytest* and *coverage* packages, while building the documentation requires Sphinx <http://www.sphinx-doc.org/>.
+
+
 
 Linux Debian/Ubuntu/Mint
 ************************
