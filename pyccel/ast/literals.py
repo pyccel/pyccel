@@ -7,7 +7,7 @@
 from sympy               import Float as sp_Float
 from sympy.logic.boolalg import BooleanTrue as sp_BooleanTrue, BooleanFalse as sp_BooleanFalse
 
-from .basic              import PyccelAstNode, Basic
+from .basic              import PyccelAstNode
 from .datatypes          import (NativeInteger, NativeBool, NativeReal,
                                   NativeComplex, NativeString, default_precision)
 
@@ -32,9 +32,11 @@ class Literal(PyccelAstNode):
     _shape     = ()
 
     def __init__(self, precision):
+        Basic.__init__(self, {})
         if not isinstance(precision, int):
             raise TypeError("precision must be an integer")
         self._precision = precision
+
     @PyccelAstNode.precision.setter
     def precision(self, precision):
         """ Set precision for a literal class"""
@@ -51,7 +53,7 @@ class Literal(PyccelAstNode):
         return printer.doprint(self.python_value)
 
 #------------------------------------------------------------------------------
-class LiteralTrue(Literal, Basic):
+class LiteralTrue(Literal):
     """Represents the python value True"""
     _dtype     = NativeBool()
     def __new__(cls, precision = default_precision['bool']):
@@ -65,7 +67,7 @@ class LiteralTrue(Literal, Basic):
         return True
 
 #------------------------------------------------------------------------------
-class LiteralFalse(Literal, Basic):
+class LiteralFalse(Literal):
     """Represents the python value False"""
     _dtype     = NativeBool()
     def __new__(cls, precision = default_precision['bool']):
@@ -79,7 +81,7 @@ class LiteralFalse(Literal, Basic):
         return False
 
 #------------------------------------------------------------------------------
-class LiteralInteger(Literal, Basic):
+class LiteralInteger(Literal):
     """Represents an integer literal in python"""
     _dtype     = NativeInteger()
     def __new__(cls, value, precision = default_precision['integer']):
@@ -171,7 +173,7 @@ class LiteralImaginaryUnit(LiteralComplex):
         return 1j
 
 #------------------------------------------------------------------------------
-class LiteralString(Literal, Basic):
+class LiteralString(Literal):
     """Represents a string literal in python"""
     _dtype     = NativeString()
     _precision = 0
