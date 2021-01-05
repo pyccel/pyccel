@@ -31,7 +31,7 @@ Pyccel container images are available through both Docker Hub (docker.io) and Gi
 
 Image tags match pyccel releases.
 
-In order to implement your pyccel accelerated code, you can use a host based volume during the pyccel container creation
+In order to implement your pyccel accelerated code, you can use a host based volume during the pyccel container creation.
 
 For example::
 
@@ -41,10 +41,10 @@ For example::
 About Pyccel Container Images
 *****************************
 
-The image is :
+The images :
 
-- based on ubuntu:latest
-- uses distro packaged python3, gcc, gfortran, blas and openmpi
+- are based on ubuntu:latest
+- use distro packaged python3, gcc, gfortran, blas and openmpi
 
 
 Requirements
