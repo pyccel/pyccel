@@ -982,11 +982,6 @@ class SemanticParser(BasicParser):
             args = new_args
             len_args = len(args)
 
-        if var.rank>len_args:
-            # add missing dimensions
-
-            args = args + [self._visit(Slice(None, None),**settings)]*(var.rank-len(args))
-
         return self._extract_indexed_from_var(var, args, name)
 
     def _visit_Symbol(self, expr, **settings):

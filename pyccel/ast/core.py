@@ -2485,7 +2485,7 @@ class Variable(Symbol, PyccelAstNode):
         if len(args) == 1 and isinstance(args[0], (Tuple, tuple, list)):
             args = args[0]
 
-        if self.rank != len(args):
+        if self.rank < len(args):
             raise IndexError('Rank mismatch.')
 
         obj = IndexedElement(self, *args)
@@ -4716,25 +4716,21 @@ class IndexedElement(Expr, PyccelAstNode):
         **kw_args
         ):
 
+        self._dtype = base.dtype
+        self._order = base.order
+        self._precision = base.precision
+
+        shape = base.shape
+        rank  = base.rank
+
+        # Add empty slices to fully index the object
+        if len(args) < rank:
+            args = args + tuple([Slice(None, None)]*(var.rank-len(args)))
+
         self._label = base
         self._indices = args
-        dtype = self.base.dtype
-        shape = self.base.shape
-        rank  = self.base.rank
-        order = self.base.order
-        self._precision = self.base.precision
-        if isinstance(dtype, NativeInteger):
-            self._dtype = NativeInteger()
-        elif isinstance(dtype, NativeReal):
-            self._dtype = NativeReal()
-        elif isinstance(dtype, NativeComplex):
-            self._dtype = NativeComplex()
-        elif isinstance(dtype, NativeBool):
-            self._dtype = NativeBool()
-        elif isinstance(dtype, NativeString):
-            self._dtype = NativeString()
-        elif not isinstance(dtype, NativeRange):
-            raise TypeError('Undefined datatype')
+
+        # Calculate new shape
 
         if shape is not None:
             new_shape = []
@@ -4755,7 +4751,6 @@ class IndexedElement(Expr, PyccelAstNode):
                 if not isinstance(args[i], Slice):
                     new_rank -= 1
             self._rank = new_rank
-        self._order = order
 
     @property
     def base(self):
