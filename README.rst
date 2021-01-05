@@ -36,7 +36,12 @@ In order to implement your pyccel accelerated code, you can use a host based vol
 For example::
 
   docker pull pyccel/pyccel:v1.0.0
-  docker run -it -v $PWD:/data:rwz  pyccel/pyccel:v1.0.0 bash
+  docker run -it -v $PWD:/data:rw  pyccel/pyccel:v1.0.0 bash
+
+If you are using SELinux, you will need to set the right context for your host based volume.
+Alternatively you may have docker or podman set the context using -v $PWD:/data:rwz instead of -v $PWD:/data:rw .
+
+
 
 About Pyccel Container Images
 *****************************
@@ -45,7 +50,7 @@ The images :
 
 - are based on ubuntu:latest
 - use distro packaged python3, gcc, gfortran, blas and openmpi
-
+- support all pyccel releases except the legacy "0.1"
 
 Requirements
 ============
