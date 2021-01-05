@@ -372,18 +372,29 @@ class SyntaxParser(BasicParser):
         return expr
 
     def _visit_arguments(self, stmt):
-        arguments = []
+
         if stmt.vararg or stmt.kwarg:
             errors.report(VARARGS, symbol = stmt,
                     severity='fatal')
 
+        arguments       = []
         if stmt.args:
             n_expl = len(stmt.args)-len(stmt.defaults)
-            arguments += [Argument(a.arg) for a in stmt.args[:n_expl]]
-            arguments += [ValuedArgument(Argument(a.arg),self._visit(d)) for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
+            positional_args        = [Argument(a.arg, annotation=self._visit(a.annotation)) for a in stmt.args[:n_expl]]
+            valued_arguments       = [ValuedArgument(Argument(a.arg, annotation=self._visit(a.annotation)),\
+                                      self._visit(d)) for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
+            arguments              = positional_args + valued_arguments
+
         if stmt.kwonlyargs:
-            arguments += [ValuedArgument(Argument(a.arg),self._visit(d), kwonly=True) if d is not None
-                        else Argument(a.arg, kwonly=True) for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults)]
+            for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
+                annotation = self._visit(a.annotation)
+                if d is not None:
+                    arg = Argument(a.arg, annotation=annotation)
+                    arg = ValuedArgument(arg, self._visit(d), kwonly=True)
+                else:
+                    arg = Argument(a.arg, kwonly=True, annotation=annotation)
+
+                arguments.append(arg)
 
         return arguments
 
@@ -643,6 +654,21 @@ class SyntaxParser(BasicParser):
             return container
 
         decorators = {}
+
+        # add the decorator @types if the arguments are annotated
+        annotated_args = []
+        for a in arguments:
+            if isinstance(a, Argument):
+                annotated_args.append(a.annotation)
+            elif isinstance(a, ValuedArgument):
+                annotated_args.append(a.argument.annotation)
+
+        if all(not isinstance(a, Nil) for a in annotated_args):
+            if stmt.returns:
+                returns = ValuedArgument(Symbol('results'),self._visit(stmt.returns))
+                annotated_args.append(returns)
+            decorators['types'] = [Function('types')(*annotated_args)]
+
         for d in self._visit(stmt.decorator_list):
             tmp_var = str(d) if isinstance(d, Symbol) else str(d.funcdef)
             if tmp_var in decorators:
