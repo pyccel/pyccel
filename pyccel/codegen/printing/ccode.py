@@ -289,6 +289,9 @@ class CCodePrinter(CodePrinter):
     def _print_LiteralInteger(self, expr):
         return str(expr.p)
 
+    def _print_LiteralFloat(self, expr):
+        return CodePrinter._print_Float(self, expr)
+
     def _print_LiteralComplex(self, expr):
         if expr.real == LiteralFloat(0):
             return self._print(PyccelAssociativeParenthesis(PyccelMul(expr.imag, LiteralImaginaryUnit())))
