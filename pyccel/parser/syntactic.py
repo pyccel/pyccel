@@ -921,10 +921,10 @@ class SyntaxParser(BasicParser):
             if str(f_name) == "print":
                 func = PythonPrint(PythonTuple(*args))
             else:
-                func = FunctionCall(f_name)(*args)
+                func = FunctionCall(f_name, args)
         elif isinstance(func, DottedName):
             f_name = func.name[-1]
-            func_attr = FunctionCall(f_name)(*args)
+            func_attr = FunctionCall(f_name, args)
             func = DottedName(*func.name[:-1], func_attr)
         else:
             raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
