@@ -16,6 +16,9 @@ class Basic(sp_Basic):
     """Basic class for Pyccel AST."""
     _fst = None
 
+    def __new__(cls, *args, **kwargs):
+        return sp_Basic.__new__(cls, *args, *kwargs.values())
+
     def set_fst(self, fst):
         """Sets the python.ast fst."""
         self._fst = fst
@@ -24,7 +27,7 @@ class Basic(sp_Basic):
     def fst(self):
         return self._fst
 
-class PyccelAstNode:
+class PyccelAstNode(Basic):
     stage      = None
     _shape     = None
     _rank      = None

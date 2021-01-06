@@ -606,7 +606,7 @@ class AsName(Basic):
         return hash(self.target)
 
 
-class Dlist(Basic, PyccelAstNode):
+class Dlist(PyccelAstNode):
 
     """ this is equivalent to the zeros function of numpy arrays for the python list.
 
@@ -2723,7 +2723,7 @@ class ValuedArgument(Basic):
         value = sstr(self.value)
         return '{0}={1}'.format(argument, value)
 
-class VariableAddress(Basic, PyccelAstNode):
+class VariableAddress(PyccelAstNode):
 
     """Represents the address of a variable.
     E.g. In C
@@ -2746,7 +2746,7 @@ class VariableAddress(Basic, PyccelAstNode):
     def variable(self):
         return self._variable
 
-class FunctionCall(Basic, PyccelAstNode):
+class FunctionCall(PyccelAstNode):
 
     """Represents a function call in the code.
     """
@@ -4373,7 +4373,7 @@ class Random(PyccelInternalFunction):
 
 # TODO: improve with __new__ from Function and add example
 
-class SumFunction(Basic, PyccelAstNode):
+class SumFunction(PyccelAstNode):
 
     """Represents a Sympy Sum Function.
 
@@ -4887,7 +4887,7 @@ class IndexedElement(Expr, PyccelAstNode):
         return self._indices
 
 
-class Concatenate(Basic, PyccelAstNode):
+class Concatenate(PyccelAstNode):
 
     """Represents the String concatination operation.
 
@@ -4936,7 +4936,7 @@ class Concatenate(Basic, PyccelAstNode):
 
 
 
-class Slice(Basic, PyccelOperator):
+class Slice(PyccelOperator):
 
     """Represents a slice in the code.
 
@@ -5116,7 +5116,7 @@ class If(Basic):
         return b
 
 
-class IfTernaryOperator(Basic, PyccelAstNode):
+class IfTernaryOperator(PyccelAstNode):
     """Represent a ternary conditional operator in the code, of the form (a if cond else b)
 
     Parameters
