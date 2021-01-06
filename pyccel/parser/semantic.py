@@ -1626,7 +1626,7 @@ class SemanticParser(BasicParser):
         lhs = expr.lhs
 
         if isinstance(rhs, FunctionCall):
-            name = type(rhs).__name__
+            name = rhs.funcdef
             macro = self.get_macro(name)
             if macro is None:
                 rhs = self._visit(rhs, **settings)
