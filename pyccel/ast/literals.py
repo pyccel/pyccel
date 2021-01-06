@@ -223,6 +223,8 @@ class Nil(Basic):
     class for None object in the code.
     """
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return sstr('None')
+    def __str__(self):
+        """
+        return str ob and 'None' as value
+        """
+        return 'None'
