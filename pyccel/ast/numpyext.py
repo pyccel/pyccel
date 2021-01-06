@@ -633,12 +633,18 @@ class NumpyUfuncUnary(NumpyUfuncBase):
     """Numpy's universal function with one argument.
     """
     def __init__(self, x):
-        self._shape      = x.shape
-        self._rank       = x.rank
-        self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeReal()
-        self._precision  = default_precision[str_dtype(self._dtype)]
+        self._set_dtype_precision(x)
+        self._set_shape_rank(x)
         self._order      = x.order
         super().__init__(x)
+
+    def _set_shape_rank(self, x):
+        self._shape      = x.shape
+        self._rank       = x.rank
+
+    def _set_dtype_precision(self, x):
+        self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeReal()
+        self._precision  = default_precision[str_dtype(self._dtype)]
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
@@ -688,22 +694,14 @@ class NumpyArctanh(NumpyUfuncUnary) : pass
 #=======================================================================================
 
 class NumpyAbs(NumpyUfuncUnary):
-    def __init__(self, x):
-        self._shape     = x.shape
-        self._rank      = x.rank
+    def _set_dtype_precision(self, x):
         self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
         self._precision = default_precision[str_dtype(self._dtype)]
-        self._order     = x.order
-        PyccelInternalFunction.__init__(self, x)
-
 
 class NumpyFloor(NumpyUfuncUnary):
-    def __init__(self, x):
-        self._shape     = x.shape
-        self._rank      = x.rank
+    def _set_dtype_precision(self, x):
         self._dtype     = NativeReal()
         self._precision = default_precision[str_dtype(self._dtype)]
-        PyccelInternalFunction.__init__(self, x)
 
 class NumpyMod(NumpyUfuncBinary):
     def __init__(self, x1, x2):
@@ -742,20 +740,22 @@ class NumpyMod(NumpyUfuncBinary):
         PyccelInternalFunction.__init__(self, x1, x2)
 
 class NumpyMin(NumpyUfuncUnary):
-    def __init__(self, x):
+    def _set_shape_rank(self, x):
         self._shape     = ()
         self._rank      = 0
+
+    def _set_dtype_precision(self, x):
         self._dtype     = x.dtype
         self._precision = x.precision
-        PyccelInternalFunction.__init__(self, x)
 
 class NumpyMax(NumpyUfuncUnary):
-    def __init__(self, x):
+    def _set_shape_rank(self, x):
         self._shape     = ()
         self._rank      = 0
+
+    def _set_dtype_precision(self, x):
         self._dtype     = x.dtype
         self._precision = x.precision
-        PyccelInternalFunction.__init__(self, x)
 
 
 #=======================================================================================
