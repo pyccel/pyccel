@@ -667,7 +667,7 @@ class SyntaxParser(BasicParser):
             if stmt.returns:
                 returns = ValuedArgument(Symbol('results'),self._visit(stmt.returns))
                 annotated_args.append(returns)
-            decorators['types'] = [Function('types')(*annotated_args)]
+            decorators['types'] = [FunctionCall('types', annotated_args)]
 
         for d in self._visit(stmt.decorator_list):
             tmp_var = str(d) if isinstance(d, Symbol) else str(d.funcdef)
@@ -917,13 +917,13 @@ class SyntaxParser(BasicParser):
         func = self._visit(stmt.func)
 
         if isinstance(func, Symbol):
-            f_name = func.name
-            if str(f_name) == "print":
+            f_name = str(func.name)
+            if f_name == "print":
                 func = PythonPrint(PythonTuple(*args))
             else:
                 func = FunctionCall(f_name, args)
         elif isinstance(func, DottedName):
-            f_name = func.name[-1]
+            f_name = str(func.name[-1])
             func_attr = FunctionCall(f_name, args)
             func = DottedName(*func.name[:-1], func_attr)
         else:
