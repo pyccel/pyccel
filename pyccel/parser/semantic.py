@@ -1064,7 +1064,7 @@ class SemanticParser(BasicParser):
 
                 if isinstance(rhs, FunctionCall):
                     # If object is a function
-                    args  = self._handle_function_args(rhs.args, **settings)
+                    args  = self._handle_function_args(rhs.arguments, **settings)
                     func  = first[rhs_name]
                     if new_name != rhs_name:
                         func  = func.clone(new_name)
