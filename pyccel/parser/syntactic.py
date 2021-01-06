@@ -27,7 +27,7 @@ from pyccel.ast.basic import PyccelAstNode
 
 from pyccel.ast.core import ParserResult
 from pyccel.ast.core import Nil
-from pyccel.ast.core import DottedName, DottedVariable
+from pyccel.ast.core import DottedName
 from pyccel.ast.core import Assign
 from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
@@ -900,7 +900,7 @@ class SyntaxParser(BasicParser):
     def _visit_Attribute(self, stmt):
         val  = self._visit(stmt.value)
         attr = Symbol(stmt.attr)
-        return DottedVariable(val, attr)
+        return DottedName(val, attr)
 
 
     def _visit_Call(self, stmt):
@@ -922,10 +922,10 @@ class SyntaxParser(BasicParser):
                 func = PythonPrint(PythonTuple(*args))
             else:
                 func = Function(f_name)(*args)
-        elif isinstance(func, DottedVariable):
-            f_name = func.rhs.name
+        elif isinstance(func, DottedName):
+            f_name = func.name[-1]
             func_attr = Function(f_name)(*args)
-            func = DottedVariable(func.lhs, func_attr)
+            func = DottedName(*func.name[:-1], func_attr)
         else:
             raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
 
