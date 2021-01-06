@@ -1061,7 +1061,7 @@ class PyccelIsNot(PyccelIs):
     Examples
     --------
     >>> from pyccel.ast import PyccelIsNot
-    >>> from pyccel.literals import Nil
+    >>> from pyccel.ast.literals import Nil
     >>> from sympy.abc import x
     >>> PyccelIsNot(x, Nil())
     PyccelIsNot(x, None)

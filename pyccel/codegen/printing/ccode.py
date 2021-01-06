@@ -15,6 +15,7 @@ from pyccel.ast.core      import Declare, IndexedVariable, Slice, ValuedVariable
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress, PyccelArraySize
+from pyccel.ast.core      import IfTernaryOperator
 from pyccel.ast.core      import Assign, datatype, Variable, Import
 from pyccel.ast.core      import SeparatorComment, VariableAddress
 from pyccel.ast.core      import DottedName
@@ -28,7 +29,8 @@ from pyccel.ast.datatypes import default_precision, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
 
 from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
-from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal, Nil
+from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
+from pyccel.ast.literals  import Nil
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat

@@ -27,7 +27,6 @@ from sympy.logic.boolalg import Not
 
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
-
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ErrorExit, FunctionAddress
@@ -61,7 +60,8 @@ from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat
-from pyccel.ast.literals  import LiteralTrue, Nil
+from pyccel.ast.literals  import LiteralTrue
+from pyccel.ast.literals import Nil
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 

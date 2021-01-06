@@ -49,6 +49,7 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
 
 from .literals       import LiteralTrue, LiteralFalse, LiteralInteger, Nil
 from .literals       import LiteralImaginaryUnit, LiteralString, Literal
+from .literals       import Nil
 from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
@@ -2053,7 +2054,6 @@ class ConstructorCall(AtomicExpr):
             return self.func.name
         else:
             return self.func
-
 
 class Void(Basic):
 

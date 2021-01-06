@@ -223,5 +223,8 @@ class Nil(Basic):
     class for None object in the code.
     """
 
-    def __str__(self, printer):
+    def __str__(self):
+        """
+        return str ob and 'None' as value
+        """
         return 'None'

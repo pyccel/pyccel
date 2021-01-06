@@ -66,7 +66,8 @@ from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric, NativeComplex
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
-from pyccel.ast.literals import LiteralInteger, LiteralFloat, Nil
+from pyccel.ast.literals import LiteralInteger, LiteralFloat
+from pyccel.ast.literals import Nil
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.headers import MacroFunction, MacroVariable
