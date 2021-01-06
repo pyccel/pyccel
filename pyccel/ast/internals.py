@@ -26,6 +26,8 @@ class PyccelInternalFunction(PyccelAstNode):
 
     @property
     def args(self):
+        """ The arguments passed to the function
+        """
         return self._args
 
 
