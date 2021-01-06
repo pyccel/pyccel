@@ -1094,9 +1094,10 @@ class IfTernaryOperator(Basic, PyccelOperator):
     """
     _precedence = 3
     def __init__(self, cond, value_true, value_false):
-        self._cond = cond
-        self._value_true = value_true
-        self._value_false = value_false
+        PyccelOperator.__init__(self, cond, value_true, value_false)
+        self._cond = self._args[0]
+        self._value_true = self._args[1]
+        self._value_false = self._args[2]
         if self.stage == 'syntactic':
             return
         if isinstance(value_true , Nil) or isinstance(value_false, Nil):
@@ -1112,37 +1113,47 @@ class IfTernaryOperator(Basic, PyccelOperator):
             errors.report('Ternary Operator results should have the same rank', severity='fatal')
         if value_false.shape != value_true.shape :
             errors.report('Ternary Operator results should have the same shape', severity='fatal')
-        self._dtype = max([value_true.dtype, value_false.dtype], key = lambda x : _tmp_list.index(x))
-        self._precision = max([value_true.precision, value_false.precision])
-        self._shape = value_true.shape
-        self._rank  = value_true.rank
-        # rank is None for lambda functions
+
+    def _set_dtype(self):
+        """
+        Sets the dtype and precision for IfTernaryOperator
+        """
+        _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
+        self._dtype = max([self.value_true.dtype, self.value_false.dtype], key = _tmp_list.index)
+        self._precision = max([self.value_true.precision, self.value_false.precision])
+
+    def _set_shape_rank(self):
+        """
+        Sets the shape and rank and the order for IfTernaryOperator
+        """
+        self._shape = self.value_true.shape
+        self._rank  = self.value_true.rank
         if self._rank is not None and self._rank > 1:
-            if value_false.order != value_true.order :
+            if self.value_false.order != self.value_true.order :
                 errors.report('Ternary Operator results should have the same order', severity='fatal')
-            self._order = value_true.order
-
-
+            self._order = self.value_true.order
+    
     @property
     def cond(self):
         """
         The condition property for IfTernaryOperator class
         """
-        return self._cond
+        return self._args[0]
 
     @property
     def value_true(self):
         """
         The value_if_cond_true property for IfTernaryOperator class
         """
-        return self._value_true
+        return self._args[1]
 
     @property
     def value_false(self):
         """
         The value_if_cond_flase property for IfTernaryOperator class
         """
-        return self._value_false
+        return self._args[2]
+
 
 #==============================================================================
 Relational = (PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe, PyccelAnd, PyccelOr,  PyccelNot, PyccelIs, PyccelIsNot)
