@@ -38,6 +38,7 @@ from pyccel.ast.core import Return
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ValuedFunctionAddress
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall
+from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor, ForIterator
 from pyccel.ast.core import IfTernaryOperator
@@ -114,7 +115,7 @@ errors = Errors()
 def _get_name(var):
     """."""
 
-    if isinstance(var, (Symbol, IndexedVariable, IndexedBase, DottedVariable)):
+    if isinstance(var, (Symbol, IndexedVariable, IndexedBase, DottedName)):
         return str(var)
     if isinstance(var, (IndexedElement, Indexed)):
         return str(var.base)
@@ -549,18 +550,30 @@ class SemanticParser(BasicParser):
             container = container.parent_scope
         return templates
 
-    def get_class_construct(self, name):
-        """Returns the class datatype for name."""
+    def find_class_construct(self, name):
+        """Returns the class datatype for name if it exists.
+        Returns None otherwise
+        """
         container = self.namespace
         while container:
             if name in container.cls_constructs:
                 return container.cls_constructs[name]
             container = container.parent_scope
+        return None
 
-        msg = 'class construct {} not found'.format(name)
-        errors.report(msg,
-            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-            severity='fatal', blocker=self.blocking)
+    def get_class_construct(self, name):
+        """Returns the class datatype for name if it exists.
+        Raises an error otherwise
+        """
+        result = self.find_class_construct(name)
+
+        if result:
+            return result
+        else:
+            msg = 'class construct {} not found'.format(name)
+            return errors.report(msg,
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='fatal', blocker=self.blocking)
 
 
     def set_class_construct(self, name, value):
@@ -734,7 +747,7 @@ class SemanticParser(BasicParser):
             d_var['allocatable'] = False
             d_var['shape'      ] = ()
             d_var['rank'       ] = 0
-            d_var['is_target'  ] = True
+            d_var['is_target'  ] = False
 
             # set target  to True if we want the class objects to be pointers
 
@@ -872,7 +885,7 @@ class SemanticParser(BasicParser):
         # case of Pyccel ast Variable, IndexedVariable
         # if not possible we use symbolic objects
 
-        if not isinstance(var, (Variable, DottedVariable)):
+        if not isinstance(var, Variable):
             assert(hasattr(var,'__getitem__'))
             if len(args)==1:
                 return var[args[0]]
@@ -1008,21 +1021,34 @@ class SemanticParser(BasicParser):
         return var
 
 
-    def _visit_DottedVariable(self, expr, **settings):
+    def _visit_DottedName(self, expr, **settings):
 
         var = self.check_for_variable(_get_name(expr))
         if var:
             return var
 
-        first = self._visit(expr.lhs)
-        rhs_name = _get_name(expr.rhs)
+        lhs = expr.name[0] if len(expr.name) == 2 \
+                else DottedName(*expr.name[:-1])
+        rhs = expr.name[-1]
+
+        visited_lhs = self._visit(lhs)
+        first = visited_lhs
+        if isinstance(visited_lhs, FunctionCall):
+            results = visited_lhs.funcdef.results
+            if len(results) != 1:
+                errors.report("Cannot get attribute of function call with multiple returns",
+                        symbol=expr,
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='fatal', blocker=True)
+            first = results[0]
+        rhs_name = _get_name(rhs)
         attr_name = []
 
         # Handle case of imported module
         if isinstance(first, dict):
 
             if rhs_name in first:
-                imp = self.get_import(_get_name(expr.lhs))
+                imp = self.get_import(_get_name(lhs))
 
                 new_name = rhs_name
                 # If pyccelized file
@@ -1037,14 +1063,14 @@ class SemanticParser(BasicParser):
                         else:
                             imp.define_target(AsName(Symbol(rhs_name), Symbol(new_name)))
 
-                if isinstance(expr.rhs, Application):
+                if isinstance(rhs, Application):
                     # If object is a function
-                    args  = self._handle_function_args(expr.rhs.args, **settings)
+                    args  = self._handle_function_args(rhs.args, **settings)
                     func  = first[rhs_name]
                     if new_name != rhs_name:
                         func  = func.clone(new_name)
                     return self._handle_function(func, args, **settings)
-                elif isinstance(expr.rhs, Constant):
+                elif isinstance(rhs, Constant):
                     var = first[rhs_name]
                     if new_name != rhs_name:
                         var.name = new_name
@@ -1054,7 +1080,7 @@ class SemanticParser(BasicParser):
                     var = first[rhs_name]
                     return var
             else:
-                errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(expr.lhs)),
+                errors.report(UNDEFINED_IMPORT_OBJECT.format(rhs_name, str(lhs)),
                         symbol=expr,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal', blocker=True)
@@ -1068,7 +1094,7 @@ class SemanticParser(BasicParser):
             attr_name = [i.name for i in first.cls_base.attributes]
 
         # look for a class method
-        if isinstance(expr.rhs, Application):
+        if isinstance(rhs, Application):
             methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
             for method in methods:
                 if isinstance(method, Interface):
@@ -1081,25 +1107,25 @@ class SemanticParser(BasicParser):
             if macro is not None:
                 master = macro.master
                 name = macro.name
-                args = expr.rhs.args
-                args = [expr.lhs] + list(args)
+                args = rhs.args
+                args = [lhs] + list(args)
                 args = [self._visit(i, **settings) for i in args]
                 args = macro.apply(args)
                 return FunctionCall(master, args, self._current_function)
 
             args = [self._visit(arg, **settings) for arg in
-                    expr.rhs.args]
+                    rhs.args]
             for i in methods:
                 if str(i.name) == rhs_name:
                     if 'numpy_wrapper' in i.decorators.keys():
                         func = i.decorators['numpy_wrapper']
-                        return func(first, *args)
+                        return func(visited_lhs, *args)
                     else:
-                        second = FunctionCall(i, args, self._current_function)
-                        return DottedVariable(first, second)
+                        return DottedFunctionCall(i, args, prefix = visited_lhs,
+                                    current_function = self._current_function)
 
         # look for a class attribute / property
-        elif isinstance(expr.rhs, Symbol) and first.cls_base:
+        elif isinstance(rhs, Symbol) and first.cls_base:
             methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
             for method in methods:
                 if isinstance(method, Interface):
@@ -1109,23 +1135,23 @@ class SemanticParser(BasicParser):
                             self._current_fst_node.col_offset),
                         severity='fatal')
             # standard class attribute
-            if expr.rhs.name in attr_name:
+            if rhs.name in attr_name:
                 self._current_class = first.cls_base
-                second = self._visit(expr.rhs, **settings)
+                second = self._visit(rhs, **settings)
                 self._current_class = None
-                return DottedVariable(first, second)
+                return second.clone(second.name, new_class = DottedVariable, lhs = visited_lhs)
 
             # class property?
             else:
                 for i in methods:
-                    if str(i.name) == expr.rhs.name and \
+                    if str(i.name) == rhs.name and \
                             'property' in i.decorators.keys():
                         if 'numpy_wrapper' in i.decorators.keys():
                             func = i.decorators['numpy_wrapper']
-                            return func(first)
+                            return func(visited_lhs)
                         else:
-                            second = FunctionCall(i, [], self._current_function)
-                            return DottedVariable(first, second)
+                            return DottedFunctionCall(i, [], prefix = visited_lhs,
+                                    current_function = self._current_function)
 
         # look for a macro
         else:
@@ -1136,11 +1162,11 @@ class SemanticParser(BasicParser):
             if isinstance(macro, MacroVariable):
                 return macro.master
             elif isinstance(macro, MacroFunction):
-                args = macro.apply([first])
+                args = macro.apply([visited_lhs])
                 return FunctionCall(macro.master, args, self._current_function)
 
         # did something go wrong?
-        errors.report('Attribute {} not found'.format(rhs_name),
+        return errors.report('Attribute {} not found'.format(rhs_name),
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal', blocker=True)
 
@@ -1244,7 +1270,7 @@ class SemanticParser(BasicParser):
         if F is not None:
             return F
 
-        elif name in self._namespace.cls_constructs.keys():
+        elif self.find_class_construct(name):
 
             # TODO improve the test
             # we must not invoke the namespace like this
@@ -1342,7 +1368,7 @@ class SemanticParser(BasicParser):
         return lhs
 
     def _ensure_target(self, rhs, d_lhs):
-        if isinstance(rhs, (Variable, DottedVariable)) and rhs.allocatable:
+        if isinstance(rhs, Variable) and rhs.allocatable:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
 
@@ -1364,7 +1390,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        lhs : Symbol (or DottedVariable of Symbols)
+        lhs : Symbol (or DottedName of Symbols)
             The representation of the lhs provided by the SyntacticParser
 
         d_var : dict
@@ -1542,10 +1568,10 @@ class SemanticParser(BasicParser):
                 # declared
                 lhs = var
 
-        elif isinstance(lhs, DottedVariable):
+        elif isinstance(lhs, DottedName):
 
             dtype = d_var.pop('datatype')
-            name = lhs.lhs.name
+            name = lhs.name[:-1]
             if self._current_function == '__init__':
 
                 cls      = self.get_variable('self')
@@ -1555,7 +1581,7 @@ class SemanticParser(BasicParser):
                 attributes = cls.attributes
                 parent     = cls.parent
                 attributes = list(attributes)
-                n_name     = str(lhs.rhs.name)
+                n_name     = str(lhs.name[-1])
 
                 # update the self variable with the new attributes
 
@@ -1570,14 +1596,14 @@ class SemanticParser(BasicParser):
                 self._ensure_target(rhs, d_lhs)
 
                 member = self._create_variable(n_name, dtype, rhs, d_lhs)
-                lhs    = DottedVariable(var, member)
+                lhs    = member.clone(member.name, new_class = DottedVariable, lhs = var)
 
                 # update the attributes of the class and push it to the namespace
                 attributes += [member]
                 new_cls = ClassDef(cls_name, attributes, [], parent=parent)
                 self.insert_class(new_cls, parent=True)
             else:
-                lhs = self._visit_DottedVariable(lhs, **settings)
+                lhs = self._visit(lhs, **settings)
         else:
             raise NotImplementedError("_assign_lhs_variable does not handle {}".format(str(type(lhs))))
 
@@ -1638,7 +1664,7 @@ class SemanticParser(BasicParser):
             name = _get_name(var)
             macro = self.get_macro(name)
             if macro is None:
-                rhs = self._visit_DottedVariable(rhs, **settings)
+                rhs = self._visit(rhs, **settings)
             else:
                 master = macro.master
                 if isinstance(macro, MacroVariable):
@@ -1811,7 +1837,7 @@ class SemanticParser(BasicParser):
 
 
         lhs = expr.lhs
-        if isinstance(lhs, (Symbol, DottedVariable)):
+        if isinstance(lhs, (Symbol, DottedName)):
             if isinstance(d_var, list):
                 if len(d_var) == 1:
                     d_var = d_var[0]
@@ -1910,7 +1936,7 @@ class SemanticParser(BasicParser):
         if len(lhs) == 1:
             lhs = lhs[0]
 
-        if isinstance(lhs, (Variable, DottedVariable)):
+        if isinstance(lhs, Variable):
             is_pointer = lhs.is_pointer
         elif isinstance(lhs, IndexedElement):
             is_pointer = False
@@ -1918,8 +1944,8 @@ class SemanticParser(BasicParser):
             is_pointer = any(l.is_pointer for l in lhs)
 
         # TODO: does is_pointer refer to any/all or last variable in list (currently last)
-        is_pointer = is_pointer and isinstance(rhs, (Variable, Dlist, DottedVariable))
-        is_pointer = is_pointer or isinstance(lhs, (Variable, DottedVariable)) and lhs.is_pointer
+        is_pointer = is_pointer and isinstance(rhs, (Variable, Dlist))
+        is_pointer = is_pointer or isinstance(lhs, Variable) and lhs.is_pointer
 
         # ISSUES #177: lhs must be a pointer when rhs is allocatable array
         if not ((isinstance(lhs, PythonTuple) or (isinstance(lhs, TupleVariable) and not lhs.is_homogeneous)) \
@@ -1928,7 +1954,7 @@ class SemanticParser(BasicParser):
             rhs = [rhs]
 
         for l, r in zip(lhs,rhs):
-            is_pointer_i = l.is_pointer if isinstance(l, (Variable, DottedVariable)) else is_pointer
+            is_pointer_i = l.is_pointer if isinstance(l, Variable) else is_pointer
 
             new_expr = Assign(l, r)
 
