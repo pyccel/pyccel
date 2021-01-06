@@ -1859,21 +1859,37 @@ class For(Basic):
 
         return Basic.__new__(cls, target, iter_obj, body, local_vars)
 
+    def __init__(
+        self,
+        target,
+        iter_obj,
+        body,
+        local_vars = [],
+        strict=True,
+        ):
+        self._target = self._args[0]
+        self._iterable = self._args[1]
+        if strict:
+            self._body = self._args[2]
+        else:
+            self._body = body
+        self._local_vars = self._args[3]
+
     @property
     def target(self):
-        return self._args[0]
+        return self._target
 
     @property
     def iterable(self):
-        return self._args[1]
+        return self._iterable
 
     @property
     def body(self):
-        return self._args[2]
+        return self._body
 
     @property
     def local_vars(self):
-        return self._args[3]
+        return self._local_vars
 
     def insert2body(self, stmt):
         self.body.append(stmt)
