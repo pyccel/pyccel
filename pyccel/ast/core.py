@@ -46,6 +46,7 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
                         NativeGeneric, NativeTuple, default_precision, is_iterable_datatype)
+from .internals      import PyccelInternalFunction, PyccelArraySize
 
 from .literals       import LiteralTrue, LiteralFalse, LiteralInteger
 from .literals       import LiteralImaginaryUnit, LiteralString, Literal
@@ -4349,18 +4350,7 @@ class Raise(Basic):
     pass
 
 
-class PyccelInternalFunction(PyccelAstNode):
-    """ Abstract class used by function calls
-    which are translated to Pyccel objects
-    """
-    def __init__(self, *args):
-        self._args   = tuple(args)
-
-    @property
-    def args(self):
-        return self._args
-
-# TODO: improve with __new__ from Function and add example
+# TODO: add example
 
 class Random(PyccelInternalFunction):
 
@@ -5705,34 +5695,3 @@ def process_shape(shape):
             raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, PyccelAstNode, Integer(sympy), int, FunctionCall')
     return tuple(new_shape)
 
-
-class PyccelArraySize(PyccelInternalFunction):
-    def __new__(cls, arg, index):
-        if not isinstance(arg, (list,
-                                tuple,
-                                Tuple,
-                                PythonTuple,
-                                PythonList,
-                                Variable,
-                                IndexedElement,
-                                IndexedBase)):
-            raise TypeError('Uknown type of  %s.' % type(arg))
-
-        return Basic.__new__(cls, arg, index)
-
-    def __init__(self, arg, index):
-        self._dtype = NativeInteger()
-        self._rank  = 0
-        self._shape = ()
-        self._precision = default_precision['integer']
-
-    @property
-    def arg(self):
-        return self._args[0]
-
-    @property
-    def index(self):
-        return self._args[1]
-
-    def _sympystr(self, printer):
-        return 'Shape({},{})'.format(str(self.arg), str(self.index))
