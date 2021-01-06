@@ -257,7 +257,7 @@ class SemanticParser(BasicParser):
         """
         code = expr
         if not isinstance(expr.body[-1], Return):
-            code = expr.body + [Deallocate(i) for i in self._allocs[-1]]
+            code = expr.body + tuple(Deallocate(i) for i in self._allocs[-1])
             code = CodeBlock(code)
         self._allocs.pop()
         return code
