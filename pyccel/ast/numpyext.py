@@ -618,11 +618,6 @@ class NumpyNorm(PyccelInternalFunction):
     def dim(self):
         return self._args[1]
 
-#=====================================================
-class Sqrt:
-    def __new__(cls, base):
-        return PyccelPow(PyccelAssociativeParenthesis(base), LiteralFloat(0.5))
-
 #====================================================
 
 
