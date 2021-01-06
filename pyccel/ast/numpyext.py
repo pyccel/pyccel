@@ -7,12 +7,10 @@
 
 import numpy
 
-from sympy.core.function import Application
-
-from sympy           import (Basic, Function, Tuple, Integer as sp_Integer,
+from sympy           import (Tuple, Integer as sp_Integer,
                              Rational as sp_Rational, Expr)
 
-from .core           import (ClassDef, FunctionDef,
+from .core           import (ClassDef, FunctionDef, PyccelInternalFunction,
                              PythonList, Variable, IndexedElement,
                              Nil, process_shape, ValuedArgument, Constant)
 
@@ -123,7 +121,7 @@ class NumpyNewArray(PyccelAstNode):
 # TODO [YG, 18.02.2020]: accept Numpy array argument
 # TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
 # TODO [YG, 22.05.2020]: move dtype & prec processing to __init__
-class NumpyArray(Application, NumpyNewArray):
+class NumpyArray(NumpyNewArray):
     """
     Represents a call to  numpy.array for code generation.
 
@@ -131,7 +129,7 @@ class NumpyArray(Application, NumpyNewArray):
 
     """
 
-    def __new__(cls, arg, dtype=None, order='C'):
+    def __init__(self, arg, dtype=None, order='C'):
 
         if not isinstance(arg, (PythonTuple, PythonList)):
             raise TypeError('Uknown type of  %s.' % type(arg))
@@ -156,40 +154,32 @@ class NumpyArray(Application, NumpyNewArray):
         if order in ('K', 'A'):
             order = 'C'
         # ...
-
-        # Create instance, add attributes, and return it
-        return Basic.__new__(cls, arg, dtype, order, prec)
-
-    def __init__(self, arg, dtype=None, order='C'):
-        arg_shape   = arg.shape
-        self._shape = process_shape(arg_shape)
+        self._arg   = arg
+        self._shape = process_shape(arg.shape)
         self._rank  = len(self._shape)
-        self._dtype = self._args[1]
-        self._order = self._args[2]
-        self._precision = self._args[3]
+        self._dtype = dtype
+        self._order = order
+        self._precision = prec
 
     def _sympystr(self, printer):
         return self.arg
 
     @property
     def arg(self):
-        return self._args[0]
+        return self._arg
 
 #==============================================================================
-class NumpySum(Function, PyccelAstNode):
+class NumpySum(PyccelInternalFunction):
     """Represents a call to  numpy.sum for code generation.
 
     arg : list , tuple , PythonTuple, Tuple, PythonList, Variable
     """
 
-    def __new__(cls, arg):
+    def __init__(self, arg):
         if not isinstance(arg, (list, tuple, PythonTuple, Tuple, PythonList,
                             Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(arg))
-
-        return Basic.__new__(cls, arg)
-
-    def __init__(self, arg):
+        PyccelInternalFunction.__init__(self, arg)
         self._dtype = arg.dtype
         self._rank  = 0
         self._shape = ()
@@ -200,19 +190,17 @@ class NumpySum(Function, PyccelAstNode):
         return self._args[0]
 
 #==============================================================================
-class NumpyProduct(Function, PyccelAstNode):
+class NumpyProduct(PyccelInternalFunction):
     """Represents a call to  numpy.prod for code generation.
 
     arg : list , tuple , PythonTuple, Tuple, PythonList, Variable
     """
 
-    def __new__(cls, arg):
+    def __init__(self, arg):
         if not isinstance(arg, (list, tuple, PythonTuple, Tuple, PythonList,
                                 Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(arg))
-        return Basic.__new__(cls, arg)
-
-    def __init__(self, arg):
+        PyccelInternalFunction.__init__(self, arg)
         self._dtype = arg.dtype
         self._rank  = 0
         self._shape = ()
@@ -224,21 +212,19 @@ class NumpyProduct(Function, PyccelAstNode):
 
 
 #==============================================================================
-class NumpyMatmul(Application, PyccelAstNode):
+class NumpyMatmul(PyccelInternalFunction):
     """Represents a call to numpy.matmul for code generation.
     arg : list , tuple , PythonTuple, Tuple, PythonList, Variable
     """
 
-    def __new__(cls, a, b):
+    def __init__(self, a ,b):
         if not isinstance(a, (list, tuple, PythonTuple, Tuple, PythonList,
                                 Variable, Expr)):
-            raise TypeError('Uknown type of  %s.' % type(a))
+            raise TypeError('Unknown type of  %s.' % type(a))
         if not isinstance(b, (list, tuple, PythonTuple, Tuple, PythonList,
                                 Variable, Expr)):
-            raise TypeError('Uknown type of  %s.' % type(a))
-        return Basic.__new__(cls, a, b)
-
-    def __init__(self, a ,b):
+            raise TypeError('Unknown type of  %s.' % type(a))
+        PyccelInternalFunction.__init__(self, a, b)
 
         args      = (a, b)
         integers  = [e for e in args if e.dtype is NativeInteger() or a.dtype is NativeBool()]
@@ -309,77 +295,52 @@ class NumpyImag(PythonImag):
     """
 
 #==============================================================================
-class NumpyLinspace(Application, NumpyNewArray):
+class NumpyLinspace(NumpyNewArray):
 
     """
     Represents numpy.linspace.
 
     """
+    _dtype     = NativeReal()
+    _precision = default_precision['real']
+    _rank      = 1
+    _order     = 'F'
 
-    def __new__(cls, *args):
+    def __init__(self, start, stop, size):
 
 
         _valid_args = (Variable, IndexedElement, LiteralFloat,
                        sp_Integer, sp_Rational)
 
-        for arg in args:
+        for arg in (start, stop, size):
             if not isinstance(arg, _valid_args):
                 raise TypeError('Expecting valid args')
 
-        if len(args) == 3:
-            start = args[0]
-            stop = args[1]
-            size = args[2]
-
-        else:
-            raise ValueError('Range has at most 3 arguments')
-
-        index = Variable('int', 'linspace_index')
-        return Basic.__new__(cls, start, stop, size, index)
+        self._index = Variable('int', 'linspace_index')
+        self._start = start
+        self._stop  = stop
+        self._size  = size
+        self._shape = (self.size,)
 
     @property
     def start(self):
-        return self._args[0]
+        return self._start
 
     @property
     def stop(self):
-        return self._args[1]
+        return self._stop
 
     @property
     def size(self):
-        return self._args[2]
+        return self._size
 
     @property
     def index(self):
-        return self._args[3]
+        return self._index
 
     @property
     def step(self):
         return (self.stop - self.start) / (self.size - 1)
-
-
-    @property
-    def dtype(self):
-        return 'real'
-
-    @property
-    def order(self):
-        return 'F'
-
-    @property
-    def precision(self):
-        return default_precision['real']
-
-    @property
-    def shape(self):
-        return (self.size,)
-
-    @property
-    def rank(self):
-        return 1
-
-    def _eval_is_real(self):
-        return True
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -389,11 +350,11 @@ class NumpyLinspace(Application, NumpyNewArray):
         return code
 
 #==============================================================================
-class NumpyWhere(Application, NumpyNewArray):
+class NumpyWhere(PyccelInternalFunction):
     """ Represents a call to  numpy.where """
 
-    def __new__(cls, mask):
-        return Basic.__new__(cls, mask)
+    def __init__(self, mask):
+        return PyccelInternalFunction.__init__(self, mask)
 
 
     @property
@@ -406,24 +367,8 @@ class NumpyWhere(Application, NumpyNewArray):
 
         return ind
 
-    @property
-    def dtype(self):
-        return 'int'
-
-    @property
-    def rank(self):
-        return 2
-
-    @property
-    def shape(self):
-        return ()
-
-    @property
-    def order(self):
-        return 'F'
-
  #==============================================================================
-class NumpyRand(Function, NumpyNewArray):
+class NumpyRand(PyccelInternalFunction):
 
     """
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
@@ -433,6 +378,7 @@ class NumpyRand(Function, NumpyNewArray):
     _precision = default_precision['real']
 
     def __init__(self, *args):
+        PyccelInternalFunction.__init__(self)
         self._shape = args
         self._rank  = len(self.shape)
 
@@ -441,7 +387,7 @@ class NumpyRand(Function, NumpyNewArray):
         return 'C'
 
 #==============================================================================
-class NumpyRandint(Function, NumpyNewArray):
+class NumpyRandint(PyccelInternalFunction):
 
     """
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
@@ -449,11 +395,10 @@ class NumpyRandint(Function, NumpyNewArray):
     """
     _dtype = NativeInteger()
     _precision = default_precision['integer']
-
-    def __new__(cls, low, high = None, size = None):
-        return Function.__new__(cls)
+    _order = 'C'
 
     def __init__(self, low, high = None, size = None):
+        PyccelInternalFunction.__init__(self)
         if size is None:
             size = ()
         if not hasattr(size,'__iter__'):
@@ -464,10 +409,6 @@ class NumpyRandint(Function, NumpyNewArray):
         self._rand    = NumpyRand(*size)
         self._low     = low
         self._high    = high
-
-    @property
-    def order(self):
-        return 'C'
 
     @property
     def rand_expr(self):
@@ -484,7 +425,7 @@ class NumpyRandint(Function, NumpyNewArray):
         return self._low
 
 #==============================================================================
-class NumpyFull(Application, NumpyNewArray):
+class NumpyFull(PyccelInternalFunction, NumpyNewArray):
     """
     Represents a call to numpy.full for code generation.
 
@@ -505,7 +446,8 @@ class NumpyFull(Application, NumpyNewArray):
         (row- or column-wise) order in memory.
 
     """
-    def __new__(cls, shape, fill_value, dtype=None, order='C'):
+
+    def __init__(self, shape, fill_value, dtype=None, order='C'):
 
         # Convert shape to PythonTuple
         shape = process_shape(shape)
@@ -525,44 +467,32 @@ class NumpyFull(Application, NumpyNewArray):
         # TODO [YG, 09.11.2020]: treat difficult case of LiteralComplex
         from pyccel.ast.datatypes import str_dtype
         stype = str_dtype(dtype)
-        if stype != 'complex':
+        if fill_value and stype != 'complex':
             from pyccel.codegen.printing.fcode import python_builtin_datatypes
             cast_func  = python_builtin_datatypes[stype]
             fill_value = cast_func(fill_value)
-
-        return Basic.__new__(cls, shape, dtype, order, precision, fill_value)
-
-    def __init__(self, shape, fill_value, dtype=None, order='C'):
-        self._shape = self._args[0]
+        self._shape = shape
         self._rank  = len(self._shape)
-        self._dtype = self._args[1]
-        self._order = self._args[2]
-        self._precision = self._args[3]
+        self._dtype = dtype
+        self._order = order
+        self._precision = precision
+
+        PyccelInternalFunction.__init__(self, fill_value)
 
     #--------------------------------------------------------------------------
     @property
     def fill_value(self):
-        return self._args[4]
+        return self._args[0]
 
 #==============================================================================
 class NumpyAutoFill(NumpyFull):
     """ Abstract class for all classes which inherit from NumpyFull but
         the fill_value is implicitly specified
     """
-    def __new__(cls, shape, dtype='float', order='C'):
+    def __init__(self, shape, dtype='float', order='C'):
+        if (dtype is None) or isinstance(dtype, Nil):
+            raise TypeError("Data type must be provided")
 
-        # Convert shape to PythonTuple
-        shape = process_shape(shape)
-
-        # Verify dtype and get precision
-        dtype, precision = process_dtype(dtype)
-
-        # Verify array ordering
-        order = cls._process_order(order)
-
-        return Basic.__new__(cls, shape, dtype, order, precision)
-
-    def __init__(self, shape, dtype=None, order='C'):
         NumpyFull.__init__(self, shape, None, dtype, order)
 
 #==============================================================================
@@ -613,7 +543,7 @@ class NumpyOnes(NumpyAutoFill):
         return value
 
 #=======================================================================================
-class NumpyFullLike(Application):
+class NumpyFullLike:
     """ Represents a call to numpy.full_like for code generation.
     """
     def __new__(cls, a, fill_value, dtype=None, order='K', subok=True):
@@ -625,7 +555,7 @@ class NumpyFullLike(Application):
         return NumpyFull(Shape(a), fill_value, dtype, order)
 
 #=======================================================================================
-class NumpyEmptyLike(Application):
+class NumpyEmptyLike:
     """ Represents a call to numpy.empty_like for code generation.
     """
     def __new__(cls, a, dtype=None, order='K', subok=True):
@@ -637,7 +567,7 @@ class NumpyEmptyLike(Application):
         return NumpyEmpty(Shape(a), dtype, order)
 
 #=======================================================================================
-class NumpyOnesLike(Application):
+class NumpyOnesLike:
     """ Represents a call to numpy.ones_like for code generation.
     """
     def __new__(cls, a, dtype=None, order='K', subok=True):
@@ -649,7 +579,7 @@ class NumpyOnesLike(Application):
         return NumpyOnes(Shape(a), dtype, order)
 
 #=======================================================================================
-class NumpyZerosLike(Application):
+class NumpyZerosLike:
     """ Represents a call to numpy.zeros_like for code generation.
     """
     def __new__(cls, a, dtype=None, order='K', subok=True):
@@ -662,15 +592,21 @@ class NumpyZerosLike(Application):
 
 #=======================================================================================
 
-class NumpyNorm(Function, PyccelAstNode):
+class NumpyNorm(PyccelInternalFunction):
     """ Represents call to numpy.norm"""
+    _dtype = NativeReal()
 
-    is_zero = False
-
-    def __new__(cls, arg, dim=None):
+    def __init__(self, arg, dim=None):
         if isinstance(dim, ValuedArgument):
             dim = dim.value
-        return Basic.__new__(cls, arg, dim)
+        if self.dim is not None:
+            sh = list(sh)
+            del sh[self.dim]
+            self._shape = tuple(sh)
+        else:
+            self._shape = ()
+        self._rank = len(self._shape)
+        PyccelInternalFunction.__init__(self, arg, dim)
 
     @property
     def arg(self):
@@ -680,27 +616,8 @@ class NumpyNorm(Function, PyccelAstNode):
     def dim(self):
         return self._args[1]
 
-    @property
-    def dtype(self):
-        return 'real'
-
-
-    def shape(self, sh):
-        if self.dim is not None:
-            sh = list(sh)
-            del sh[self.dim]
-            return tuple(sh)
-        else:
-            return ()
-
-    @property
-    def rank(self):
-        if self.dim is not None:
-            return self.arg.rank-1
-        return 0
-
 #=====================================================
-class Sqrt(PyccelPow):
+class Sqrt:
     def __new__(cls, base):
         return PyccelPow(PyccelAssociativeParenthesis(base), LiteralFloat(0.5))
 
@@ -710,11 +627,8 @@ class Sqrt(PyccelPow):
 #==============================================================================
 # Numpy universal functions
 # https://numpy.org/doc/stable/reference/ufuncs.html#available-ufuncs
-#
-# NOTE: since we are subclassing sympy.Function, we need to use a name ending
-#       with "Base", otherwise the Sympy's printer is going to skip this class.
 #==============================================================================
-class NumpyUfuncBase(Function, PyccelAstNode):
+class NumpyUfuncBase(PyccelInternalFunction):
     """Base class for Numpy's universal functions."""
 
 #------------------------------------------------------------------------------
@@ -727,6 +641,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeReal()
         self._precision  = default_precision[str_dtype(self._dtype)]
         self._order      = x.order
+        super().__init__(x)
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
@@ -742,6 +657,7 @@ class NumpyUfuncBinary(NumpyUfuncBase):
             self._order = x1.order
         else:
             self._order = 'C'
+        super().__init__(x1, x2)
 
 #------------------------------------------------------------------------------
 # Math operations
@@ -781,6 +697,7 @@ class NumpyAbs(NumpyUfuncUnary):
         self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
         self._precision = default_precision[str_dtype(self._dtype)]
         self._order     = x.order
+        PyccelInternalFunction.__init__(self, x)
 
 
 class NumpyFloor(NumpyUfuncUnary):
@@ -789,6 +706,7 @@ class NumpyFloor(NumpyUfuncUnary):
         self._rank      = x.rank
         self._dtype     = NativeReal()
         self._precision = default_precision[str_dtype(self._dtype)]
+        PyccelInternalFunction.__init__(self, x)
 
 class NumpyMod(NumpyUfuncBinary):
     def __init__(self, x1, x2):
@@ -824,6 +742,7 @@ class NumpyMod(NumpyUfuncBinary):
             self._rank  = len(shape)
         else:
             self._rank = max(a.rank for a in args)
+        PyccelInternalFunction.__init__(self, x1, x2)
 
 class NumpyMin(NumpyUfuncUnary):
     def __init__(self, x):
@@ -831,6 +750,7 @@ class NumpyMin(NumpyUfuncUnary):
         self._rank      = 0
         self._dtype     = x.dtype
         self._precision = x.precision
+        PyccelInternalFunction.__init__(self, x)
 
 class NumpyMax(NumpyUfuncUnary):
     def __init__(self, x):
@@ -838,14 +758,13 @@ class NumpyMax(NumpyUfuncUnary):
         self._rank      = 0
         self._dtype     = x.dtype
         self._precision = x.precision
+        PyccelInternalFunction.__init__(self, x)
 
 
 #=======================================================================================
 class NumpyComplex(PythonComplex):
     """ Represents a call to numpy.complex() function.
     """
-    def __new__(cls, arg0, arg1=LiteralFloat(0)):
-        return PythonComplex.__new__(cls, arg0, arg1)
 
 class NumpyComplex64(NumpyComplex):
     _precision = dtype_registry['complex64'][1]
@@ -857,8 +776,6 @@ class NumpyComplex128(NumpyComplex):
 class NumpyFloat(PythonFloat):
     """ Represents a call to numpy.float() function.
     """
-    def __new__(cls, arg):
-        return PythonFloat.__new__(cls, arg)
 
 class NumpyFloat32(NumpyFloat):
     """ Represents a call to numpy.float32() function.
