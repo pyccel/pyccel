@@ -551,9 +551,6 @@ class DottedName(Basic):
     pyccel.stdlib.parallel
     """
 
-    def __new__(cls, *args):
-        return Basic.__new__(cls, *args)
-
     @property
     def name(self):
         return self._args
@@ -816,9 +813,6 @@ class Allocate(Basic):
     mutable Variable object.
 
     """
-    def __new__(cls, *args, **kwargs):
-
-        return Basic.__new__(cls)
 
     # ...
     def __init__(self, variable, *, shape, order, status):
@@ -899,9 +893,6 @@ class Deallocate(Basic):
     mutable Variable object.
 
     """
-    def __new__(cls, *args, **kwargs):
-
-        return Basic.__new__(cls)
 
     # ...
     def __init__(self, variable):
@@ -1419,7 +1410,7 @@ class Tensor(Basic):
 
         args = list(args) + [name]
 
-        return Basic.__new__(cls, *args)
+        return Basic.__new__(cls, *args, **kwargs)
 
     @property
     def name(self):
@@ -1605,9 +1596,6 @@ class Module(Basic):
     >>> Module('my_module', [], [incr, decr], classes = [Point])
     Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
     """
-
-    def __new__(cls, *args, **kwargs):
-        return Basic.__new__(cls)
 
     def __init__(
         self,
@@ -2145,8 +2133,8 @@ class Variable(Symbol, PyccelAstNode):
     matrix.n_rows
     """
 
-    def __new__( cls, *args, **kwargs ):
-        return Basic.__new__(cls)
+    def __new__(cls, *args, **kwargs):
+        return Basic.__new__(cls, *args, **kwargs)
 
     def __init__(
         self,
@@ -2684,8 +2672,6 @@ class ValuedArgument(Basic):
     >>> n
     n=4
     """
-    def __new__(cls, *args, **kwargs):
-        return Basic.__new__(cls)
 
     def __init__(self, expr, value, *, kwonly = False):
         if isinstance(expr, str):
@@ -2750,13 +2736,6 @@ class FunctionCall(PyccelAstNode):
 
     """Represents a function call in the code.
     """
-    def __new__(
-        cls,
-        *args,
-        **kwargs
-        ):
-        return Basic.__new__(cls)
-
 
     def __init__(self, func, args, current_function=None):
 
@@ -2984,17 +2963,6 @@ class FunctionDef(Basic):
     >>> FunctionDef('incr', args, results, body)
     FunctionDef(incr, (x, n=4), (y,), [y := 1 + x], [], [], None, False, function, [])
     """
-
-    def __new__(
-        cls,
-        name,
-        arguments,
-        results,
-        body,
-        *args,
-        **kwargs
-        ):
-        return Basic.__new__(cls)
 
     def __init__(
         self,
@@ -3371,9 +3339,6 @@ class Interface(Basic):
     >>> f = FunctionDef('F', [], [], [])
     >>> Interface('I', [f])
     """
-
-    def __new__( cls, *args, **kwargs ):
-        return Basic.__new__(cls)
 
     def __init__(
         self,
@@ -4188,9 +4153,6 @@ class FuncAddressDeclare(Basic):
     >>> y = Variable('real', 'y')
     >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
     """
-
-    def __new__( cls, *args, **kwargs ):
-        return Basic.__new__(cls)
 
     def __init__(
         self,
@@ -5586,14 +5548,6 @@ def get_iterable_ranges(it, var_name=None):
     return [PythonRange(s, e, 1) for (s, e) in zip(starts, ends)]
 
 class ParserResult(Basic):
-    def __new__(
-        cls,
-        program   = None,
-        module    = None,
-        mod_name  = None,
-        prog_name = None,
-        ):
-        return Basic.__new__(cls)
 
     def __init__(
         self,
