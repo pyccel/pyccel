@@ -23,7 +23,7 @@ from sympy import preorder_traversal
 from sympy.simplify.radsimp   import fraction
 from sympy.core.compatibility import with_metaclass
 from sympy.core.singleton     import Singleton, S
-from sympy.core.function      import Function, Application
+from sympy.core.function      import Function
 from sympy.core.function      import Derivative, UndefinedFunction as sp_UndefinedFunction
 from sympy.core.function      import _coeff_isneg
 from sympy.core.expr          import Expr, AtomicExpr
@@ -301,12 +301,8 @@ def allocatable_like(expr, verbose=False):
 
                 o = Symbol(a.func.__name__.upper())
             if not a.is_Symbol and not isinstance(a, (IndexedElement,
-                    Function)):
+                    FunctionCall)):
                 args.extend(a.args)
-            if isinstance(a, Function):
-                if verbose:
-                    print('Functions not yet available')
-                return None
             elif isinstance(a, (Variable, IndexedVariable,
                             IndexedElement)):
                 return a
@@ -328,7 +324,7 @@ def _atomic(e, cls=None,ignore=()):
     seen = []
     atoms_ = []
     if cls is None:
-        cls = (Application, DottedVariable, Variable,
+        cls = (FunctionCall, DottedVariable, Variable,
                IndexedVariable,IndexedElement)
 
     for p in pot:
@@ -352,7 +348,7 @@ def extract_subexpressions(expr):
 
       Parameters
       ----------
-      expr : Add, Mul, Pow, Application
+      expr : Add, Mul, Pow, FunctionCall
 
     """
 
@@ -377,7 +373,7 @@ def extract_subexpressions(expr):
             args = expr.args
             args = [substitute(arg) for arg in args]
             return expr.func(*args, evaluate=False)
-        elif isinstance(expr, Application):
+        elif isinstance(expr, FunctionCall):
             args = substitute(expr.args)
 
             if str(expr.func) in func_names:
@@ -2274,11 +2270,11 @@ class Variable(Symbol, PyccelAstNode):
                 new_shape.append(LiteralInteger(s.p))
             elif isinstance(s, int):
                 new_shape.append(LiteralInteger(s))
-            elif s is None or isinstance(s,(Variable, Slice, PyccelAstNode, Function)):
+            elif s is None or isinstance(s,(Variable, Slice, PyccelAstNode, FunctionCall)):
                 new_shape.append(PyccelArraySize(self, i))
             else:
                 raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel),'
-                                'Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
+                                'Variable, Slice, PyccelAstNode, Integer(sympy), int, FunctionCall')
         return tuple(new_shape)
 
     @property
@@ -3577,6 +3573,7 @@ class SympyFunction(FunctionDef):
                              self.body, cls_name=self.cls_name)
 
 
+# TODO: [EB 06.01.2021] Is this class used? What for?
 class PythonFunction(FunctionDef):
 
     """Represents a Python-Function definition."""
@@ -4352,9 +4349,20 @@ class Raise(Basic):
     pass
 
 
+class PyccelInternalFunction(PyccelAstNode):
+    """ Abstract class used by function calls
+    which are translated to Pyccel objects
+    """
+    def __init__(self, *args):
+        self._args   = tuple(args)
+
+    @property
+    def args(self):
+        return self._args
+
 # TODO: improve with __new__ from Function and add example
 
-class Random(Function, PyccelAstNode):
+class Random(PyccelInternalFunction):
 
     """
     Represents a 'random' number in the code.
@@ -4365,8 +4373,8 @@ class Random(Function, PyccelAstNode):
     def __str__(self):
         return 'random'
 
-    def __new__(cls, seed):
-        return Basic.__new__(cls, seed)
+    def __init__(self, seed):
+        PyccelInternalFunction.__init__(self, seed)
 
     @property
     def seed(self):
@@ -4713,8 +4721,8 @@ class IndexedVariable(IndexedBase, PyccelAstNode):
         **kw_args
         ):
 
-        if isinstance(label, Application):
-            label_name = type(label)
+        if isinstance(label, FunctionCall):
+            label_name = label.funcdef
         else:
             label_name = str(label)
 
@@ -5687,18 +5695,18 @@ def process_shape(shape):
 
     new_shape = []
     for s in shape:
-        if isinstance(s,(LiteralInteger, Variable, Slice, PyccelAstNode, Function)):
+        if isinstance(s,(LiteralInteger, Variable, Slice, PyccelAstNode, FunctionCall)):
             new_shape.append(s)
         elif isinstance(s, sp_Integer):
             new_shape.append(LiteralInteger(s.p))
         elif isinstance(s, int):
             new_shape.append(LiteralInteger(s))
         else:
-            raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
+            raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, PyccelAstNode, Integer(sympy), int, FunctionCall')
     return tuple(new_shape)
 
 
-class PyccelArraySize(Function, PyccelAstNode):
+class PyccelArraySize(PyccelInternalFunction):
     def __new__(cls, arg, index):
         if not isinstance(arg, (list,
                                 tuple,
@@ -5728,14 +5736,3 @@ class PyccelArraySize(Function, PyccelAstNode):
 
     def _sympystr(self, printer):
         return 'Shape({},{})'.format(str(self.arg), str(self.index))
-
-class PyccelInternalFunction(PyccelAstNode):
-    """ Abstract class used by function calls
-    which are translated to Pyccel objects
-    """
-    def __init__(self, *args):
-        self._args   = tuple(args)
-
-    @property
-    def args(self):
-        return self._args
