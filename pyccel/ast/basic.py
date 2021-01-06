@@ -4,7 +4,10 @@
 #------------------------------------------------------------------------------------------#
 
 """
-This module contains two classes. Basic that provides a python AST and PyccelAstNode which describes each PyccelAstNode
+This module contains classes from which all pyccel nodes inherit.
+They are:
+- Basic, which provides a python AST
+--PyccelAstNode which describes each PyccelAstNode
 """
 
 from sympy.core.basic import Basic as sp_Basic
