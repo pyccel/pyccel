@@ -9,7 +9,6 @@
 from collections import OrderedDict
 from itertools import chain
 
-from sympy.core.function       import Application, UndefinedFunction
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
@@ -119,8 +118,6 @@ def _get_name(var):
         return str(var)
     if isinstance(var, (IndexedElement, Indexed)):
         return str(var.base)
-    if isinstance(var, Application):
-        return type(var).__name__
     if isinstance(var, FunctionCall):
         return var.funcdef
     if isinstance(var, AsName):
@@ -1065,7 +1062,7 @@ class SemanticParser(BasicParser):
                         else:
                             imp.define_target(AsName(Symbol(rhs_name), Symbol(new_name)))
 
-                if isinstance(rhs, Application):
+                if isinstance(rhs, FunctionCall):
                     # If object is a function
                     args  = self._handle_function_args(rhs.args, **settings)
                     func  = first[rhs_name]
@@ -1096,7 +1093,7 @@ class SemanticParser(BasicParser):
             attr_name = [i.name for i in first.cls_base.attributes]
 
         # look for a class method
-        if isinstance(rhs, Application):
+        if isinstance(rhs, FunctionCall):
             methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
             for method in methods:
                 if isinstance(method, Interface):
@@ -1218,7 +1215,7 @@ class SemanticParser(BasicParser):
             errors.report(UNDEFINED_LAMBDA_VARIABLE, symbol = expr_names.difference(var_names),
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal', blocker=True)
-        funcs = expr.expr.atoms(Application)
+        funcs = expr.expr.atoms(FunctionCall)
         for func in funcs:
             name = _get_name(func)
             f = self.get_symbolic_function(name)
@@ -1629,7 +1626,7 @@ class SemanticParser(BasicParser):
         rhs = expr.rhs
         lhs = expr.lhs
 
-        if isinstance(rhs, Application):
+        if isinstance(rhs, FunctionCall):
             name = type(rhs).__name__
             macro = self.get_macro(name)
             if macro is None:
@@ -1918,18 +1915,18 @@ class SemanticParser(BasicParser):
 
         if isinstance(rhs, (PythonMap, PythonZip)):
             func  = _get_name(rhs.args[0])
-            func  = UndefinedFunction(func)
             alloc = Assign(lhs, NumpyZeros(lhs.shape, lhs.dtype))
             alloc.set_fst(fst)
             index_name = self.get_new_name(expr)
             index = Variable('int',index_name)
-            range_ = UndefinedFunction('range')(UndefinedFunction('len')(lhs))
+            range_ = FunctionCall('range', (FunctionCall('len', lhs,)),))
             name  = _get_name(lhs)
             var   = IndexedBase(name)[index]
             args  = rhs.args[1:]
             args  = [_get_name(arg) for arg in args]
             args  = [IndexedBase(arg)[index] for arg in args]
-            body  = [Assign(var, func(*args))]
+            func  = FunctionCall(func, args)
+            body  = [Assign(var, func)]
             body[0].set_fst(fst)
             body  = For(index, range_, body, strict=False)
             body  = self._visit_For(body, **settings)
@@ -2612,7 +2609,7 @@ class SemanticParser(BasicParser):
             all_assigned = [str(i) for i in all_assigned]
             assigned     = [str(i) for i in assigned]
 
-            apps = list(Tuple(*body.body).atoms(Application))
+            apps = list(Tuple(*body.body).atoms(FunctionCall))
             apps = [i for i in apps if (i.__class__.__name__
                     in self.get_parent_functions())]
 
