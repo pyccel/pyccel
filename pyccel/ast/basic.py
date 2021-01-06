@@ -7,7 +7,7 @@
 This module contains classes from which all pyccel nodes inherit.
 They are:
 - Basic, which provides a python AST
---PyccelAstNode which describes each PyccelAstNode
+- PyccelAstNode which describes each PyccelAstNode
 """
 
 from sympy.core.basic import Basic as sp_Basic
@@ -33,6 +33,8 @@ class Basic(sp_Basic):
         return self._fst
 
 class PyccelAstNode(Basic):
+    """Class from which all nodes containing objects inherit
+    """
     stage      = None
     _shape     = None
     _rank      = None
@@ -42,22 +44,31 @@ class PyccelAstNode(Basic):
 
     @property
     def shape(self):
+        """ Tuple containing the length of each dimension
+        of the object """
         return self._shape
 
     @property
     def rank(self):
+        """ Number of dimensions of the object
+        """
         return self._rank
 
     @property
     def dtype(self):
+        """ Datatype of the object """
         return self._dtype
 
     @property
     def precision(self):
+        """ Precision of the datatype of the object """
         return self._precision
 
     @property
     def order(self):
+        """ Indicates whether the data is stored in
+        row-major ('C') or column-major ('F') format.
+        This is only relevant if rank > 1 """
         return self._order
 
     def copy_attributes(self, x):
