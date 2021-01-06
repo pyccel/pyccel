@@ -1029,7 +1029,7 @@ class PyccelIs(PyccelBooleanOperator):
     Examples
     --------
     >>> from pyccel.ast import PyccelIs
-    >>> from pyccel.ast import Nil
+    >>> from pyccel.literals import Nil
     >>> from sympy.abc import x
     >>> PyccelIs(x, Nil())
     PyccelIs(x, None)
@@ -1061,7 +1061,7 @@ class PyccelIsNot(PyccelIs):
     Examples
     --------
     >>> from pyccel.ast import PyccelIsNot
-    >>> from pyccel.ast import Nil
+    >>> from pyccel.literals import Nil
     >>> from sympy.abc import x
     >>> PyccelIsNot(x, Nil())
     PyccelIsNot(x, None)
@@ -1085,7 +1085,8 @@ class IfTernaryOperator(Basic, PyccelOperator):
     Examples
     --------
     >>> from sympy import Symbol
-    >>> from pyccel.ast.core import Assign, IfTernaryOperator
+    >>> from pyccel.ast.core import Assign
+	>>>	from pyccel.ast.operators import IfTernaryOperator
     >>> n = Symbol('n')
     >>> x = 5 if n > 1 else 2
     >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
@@ -1124,14 +1125,23 @@ class IfTernaryOperator(Basic, PyccelOperator):
 
     @property
     def cond(self):
+        """
+        The condition property for IfTernaryOperator class
+        """
         return self._cond
 
     @property
     def value_true(self):
+        """
+        The value_if_cond_true property for IfTernaryOperator class
+        """
         return self._value_true
 
     @property
     def value_false(self):
+        """
+        The value_if_cond_flase property for IfTernaryOperator class
+        """
         return self._value_false
 
 #==============================================================================

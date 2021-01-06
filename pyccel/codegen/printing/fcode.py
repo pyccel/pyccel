@@ -42,7 +42,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
 
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt
+from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 from pyccel.ast.core      import FunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
@@ -57,7 +57,7 @@ from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat
-from pyccel.ast.literals  import LiteralTrue
+from pyccel.ast.literals  import LiteralTrue, Nil
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
