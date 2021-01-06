@@ -1,6 +1,7 @@
 Welcome to Pyccel
 =================
-|codacy|
+![.github/workflows/Github_pytes.yml](https://github.com/pyccel/pyccel/workflows/.github/workflows/Github_pytest.yml/badge.svg)
+ |codacy|
 
 **Pyccel** stands for Python extension language using accelerators.
 
