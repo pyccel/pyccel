@@ -1919,7 +1919,7 @@ class SemanticParser(BasicParser):
             alloc.set_fst(fst)
             index_name = self.get_new_name(expr)
             index = Variable('int',index_name)
-            range_ = FunctionCall('range', (FunctionCall('len', lhs,)),))
+            range_ = FunctionCall('range', (FunctionCall('len', lhs,),))
             name  = _get_name(lhs)
             var   = IndexedBase(name)[index]
             args  = rhs.args[1:]
