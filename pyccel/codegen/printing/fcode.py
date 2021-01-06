@@ -2823,7 +2823,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_PyccelInternalFunction(self, expr):
         if isinstance(expr, NumpyNewArray):
-            errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
+            return errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
         else:
             return self._print_not_supported(expr)

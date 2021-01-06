@@ -1314,10 +1314,9 @@ class SemanticParser(BasicParser):
             else:
                 func = self.get_function(name)
             if func is None:
-                # TODO [SH, 25.02.2020] Report error
-                errors.report(UNDEFINED_FUNCTION, symbol=name,
-                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal', blocker=self.blocking)
+                return errors.report(UNDEFINED_FUNCTION, symbol=name,
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='fatal', blocker=self.blocking)
             else:
                 return self._handle_function(func, args, **settings)
 
