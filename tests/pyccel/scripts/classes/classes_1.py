@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-class-docstring,  disable=missing-function-docstring, missing-module-docstring/
 # coding: utf-8
 
 #$ header class Point(public)
@@ -14,7 +14,7 @@ class Point(object):
         pass
 
     def translate(self, a):
-        self.x   =  self.x + a
+        self.x[:]   =  self.x + a
 
 x = np.array([0.,0.,0.])
 p = Point(x)
