@@ -2964,6 +2964,11 @@ class FunctionDef(Basic):
     FunctionDef(incr, (x, n=4), (y,), [y := 1 + x], [], [], None, False, function, [])
     """
 
+    def __new__(cls, *args, **kwargs):
+        kwargs.pop('decorators', None)
+        kwargs.pop('templates', None)
+        return super().__new__(cls, *args, **kwargs)
+
     def __init__(
         self,
         name,
@@ -5304,7 +5309,7 @@ def get_assigned_symbols(expr):
     elif isinstance(expr, FunctionCall):
         f = expr.funcdef
         symbols = []
-        for func_arg, inout in zip(expr.arguments,f.arguments_inout):
+        for func_arg, inout in zip(expr.args,f.arguments_inout):
             if inout:
                 symbols.append(func_arg)
         return symbols
