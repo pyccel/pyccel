@@ -1,8 +1,6 @@
 name: Pyccel tests
 
 on:
-  push:
-    branches: [ master ]
   pull_request:
     branches: [ master ]
 
@@ -17,38 +15,6 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.6
-      - name: Install dependencies
-        uses: ./.github/actions/linux_install
-      - name: Install python dependencies
-        uses: ./.github/actions/pip_installation
-      - name: Coverage install
-        uses: ./.github/actions/coverage_install
-      - name: Test with pytest
-        uses: ./.github/actions/pytest_run
-      - name: Collect coverage information
-        continue-on-error: True
-        uses: ./.github/actions/coverage_collection
-      - name: Run codacy-coverage-reporter
-        uses: codacy/codacy-coverage-reporter-action@master
-        continue-on-error: True
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: cobertura.xml
-
-  Linux-Master:
-
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
-    strategy:
-      matrix:
-        python-version: [3.7, 3.8, 3.9]
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install python dependencies
