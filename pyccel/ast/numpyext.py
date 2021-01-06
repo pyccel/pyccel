@@ -14,7 +14,7 @@ from sympy           import (Basic, Function, Tuple, Integer as sp_Integer,
 
 from .core           import (ClassDef, FunctionDef,
                              PythonList, Variable, IndexedElement,
-                             Nil, process_shape, ValuedArgument, Constant)
+                             process_shape, ValuedArgument, Constant)
 
 from .operators      import (PyccelPow, PyccelAssociativeParenthesis, broadcast)
 
@@ -27,6 +27,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
 from .literals       import LiteralTrue, LiteralFalse
+from .literals       import Nil
 from .basic          import PyccelAstNode
 
 
