@@ -31,6 +31,7 @@ from pyccel.ast.core import Nil
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ErrorExit, FunctionAddress
+from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              VariableAddress,
@@ -2618,10 +2619,10 @@ class FCodePrinter(CodePrinter):
             base = expr.base.internal_variable
         else:
             base = expr.base
-        if isinstance(base, Application) and not isinstance(base, PythonTuple):
+        if isinstance(base, PyccelInternalFunction) and not isinstance(base, PythonTuple):
             indexed_type = base.dtype
             if isinstance(indexed_type, PythonTuple):
-                base = self._print_Function(expr.base.base)
+                base = self._print_PyccelInternalFunction(expr.base.base)
             else:
                 if (not self._additional_code):
                     self._additional_code = ''
@@ -2820,7 +2821,7 @@ class FCodePrinter(CodePrinter):
 
 #=======================================================================================
 
-    def _print_Application(self, expr):
+    def _print_PyccelInternalFunction(self, expr):
         if isinstance(expr, NumpyNewArray):
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
