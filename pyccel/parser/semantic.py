@@ -1769,6 +1769,8 @@ class SemanticParser(BasicParser):
                 if results:
                     d_var = [self._infere_type(i, **settings)
                                  for i in results]
+                else:
+                    raise NotImplementedError("Cannot assign result of a function without a return")
 
                 # case of elemental function
                 # if the input and args of func do not have the same shape,
@@ -1778,7 +1780,7 @@ class SemanticParser(BasicParser):
                     # args
 #                   d_var = None
                     func_args = func.arguments
-                    call_args = rhs.arguments
+                    call_args = rhs.args
                     f_ranks = [x.rank for x in func_args]
                     c_ranks = [x.rank for x in call_args]
                     same_ranks = [x==y for (x,y) in zip(f_ranks, c_ranks)]
@@ -2013,10 +2015,12 @@ class SemanticParser(BasicParser):
 
         elif isinstance(iterable, PythonMap):
             indx   = self.get_new_variable()
+            PyccelAstNode.stage = 'syntactic'
             func   = iterable.args[0]
             args   = [IndexedBase(arg)[indx] for arg in iterable.args[1:]]
-            assign = Assign(iterator, func(*args))
+            assign = Assign(iterator, FunctionCall(func, args))
             assign.set_fst(expr.fst)
+            PyccelAstNode.stage = 'semantic'
             iterator = indx
             body     = [assign] + body
 
