@@ -130,6 +130,7 @@ class NumpyArray(NumpyNewArray):
     """
 
     def __init__(self, arg, dtype=None, order='C'):
+        NumpyNewArray.__init__(self)
 
         if not isinstance(arg, (PythonTuple, PythonList)):
             raise TypeError('Uknown type of  %s.' % type(arg))
@@ -652,15 +653,24 @@ class NumpyUfuncBinary(NumpyUfuncBase):
     """
     # TODO: apply Numpy's broadcasting rules to get shape/rank of output
     def __init__(self, x1, x2):
+        super().__init__(x1, x2)
+        self._set_dtype_precision(x1, x2)
+        self._set_shape_rank(x1, x2)
+        self._set_order(x1, x2)
+
+    def _set_shape_rank(self, x1, x2):
         self._shape     = x1.shape  # TODO ^^
         self._rank      = x1.rank   # TODO ^^
+
+    def _set_dtype_precision(self, x1, x2):
         self._dtype     = NativeReal()
         self._precision = default_precision['real']
+
+    def _set_order(self, x1, x2):
         if x1.order == x2.order:
             self._order = x1.order
         else:
             self._order = 'C'
-        super().__init__(x1, x2)
 
 #------------------------------------------------------------------------------
 # Math operations
@@ -704,7 +714,25 @@ class NumpyFloor(NumpyUfuncUnary):
         self._precision = default_precision[str_dtype(self._dtype)]
 
 class NumpyMod(NumpyUfuncBinary):
-    def __init__(self, x1, x2):
+
+    def _set_shape_rank(self, x1, x2):
+        shapes = [a.shape for a in args]
+
+        if all(sh is not None for sh in shapes):
+            if len(args) == 1:
+                shape = args[0].shape
+            else:
+                shape = broadcast(args[0].shape, args[1].shape)
+
+                for a in args[2:]:
+                    shape = broadcast(shape, a.shape)
+
+            self._shape = shape
+            self._rank  = len(shape)
+        else:
+            self._rank = max(a.rank for a in args)
+
+    def _set_dtype_precision(self, x1, x2):
         args      = (x1, x2)
         integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
         reals     = [a for a in args if a.dtype is NativeReal()]
@@ -721,23 +749,6 @@ class NumpyMod(NumpyUfuncBinary):
             self._precision = max(a.precision for a in integers)
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
-
-        shapes = [a.shape for a in args]
-
-        if all(sh is not None for sh in shapes):
-            if len(args) == 1:
-                shape = args[0].shape
-            else:
-                shape = broadcast(args[0].shape, args[1].shape)
-
-                for a in args[2:]:
-                    shape = broadcast(shape, a.shape)
-
-            self._shape = shape
-            self._rank  = len(shape)
-        else:
-            self._rank = max(a.rank for a in args)
-        PyccelInternalFunction.__init__(self, x1, x2)
 
 class NumpyMin(NumpyUfuncUnary):
     def _set_shape_rank(self, x):
