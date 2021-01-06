@@ -3318,9 +3318,10 @@ class FunctionDef(Basic):
     def __str__(self):
         result = 'None' if len(self.results) == 0 else \
                     ', '.join(str(r) for r in self.results)
+        args = ', '.join(str(a) for a in self.arguments)
         return '{name}({args}) -> {result}'.format(
                 name   = self.name,
-                args   = ', '.join(self.args),
+                args   = args,
                 result = result)
 
 class Interface(Basic):
