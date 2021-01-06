@@ -30,6 +30,18 @@ class PyccelInternalFunction(PyccelAstNode):
 
 
 class PyccelArraySize(PyccelInternalFunction):
+    """
+    Class representing a call to a function which would
+    return the shape of an object in a given dimension
+
+    Parameters
+    ==========
+    arg   : PyccelAstNode
+            A PyccelAstNode of unknown shape
+    index : int
+            The dimension along which the shape is
+            provided
+    """
 
     def __init__(self, arg, index):
         if not isinstance(arg, (list,
@@ -47,11 +59,15 @@ class PyccelArraySize(PyccelInternalFunction):
 
     @property
     def arg(self):
+        """ Object whose size is investigated
+        """
         return self._arg
 
     @property
     def index(self):
+        """ Dimension along which the size is calculated
+        """
         return self._index
 
-    def _sympystr(self, printer):
+    def __str__(self):
         return 'Shape({},{})'.format(str(self.arg), str(self.index))
