@@ -2802,7 +2802,7 @@ class FunctionCall(PyccelAstNode):
         self._func_name     = func.name
 
     @property
-    def arguments(self):
+    def args(self):
         return self._arguments
 
     @property

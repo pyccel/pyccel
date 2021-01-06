@@ -1064,7 +1064,7 @@ class SemanticParser(BasicParser):
 
                 if isinstance(rhs, FunctionCall):
                     # If object is a function
-                    args  = self._handle_function_args(rhs.arguments, **settings)
+                    args  = self._handle_function_args(rhs.args, **settings)
                     func  = first[rhs_name]
                     if new_name != rhs_name:
                         func  = func.clone(new_name)
@@ -1266,10 +1266,10 @@ class SemanticParser(BasicParser):
 
         func     = self.get_function(name)
 
-        args = self._handle_function_args(expr.arguments, **settings)
+        args = self._handle_function_args(expr.args, **settings)
 
         if name == 'lambdify':
-            args = self.get_symbolic_function(str(expr.arguments[0]))
+            args = self.get_symbolic_function(str(expr.args[0]))
         F = pyccel_builtin_function(expr, args)
 
         if F is not None:

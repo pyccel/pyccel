@@ -742,7 +742,7 @@ class SyntaxParser(BasicParser):
 
                 cache.clear_cache()
                 results = []
-                ls = comb_types.arguments
+                ls = comb_types.args
 
                 if len(ls) > 0 and isinstance(ls[-1], ValuedArgument):
                     arg_name = ls[-1].name

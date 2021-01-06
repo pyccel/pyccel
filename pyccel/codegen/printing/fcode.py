@@ -1270,7 +1270,7 @@ class FCodePrinter(CodePrinter):
             if isinstance(expr.lhs, (tuple, list, Tuple, PythonTuple)):
 
                 rhs_code = rhs.funcdef.name
-                args = rhs.arguments
+                args = rhs.args
                 code_args = [self._print(i) for i in args]
                 func = rhs.funcdef
                 output_names = func.results
@@ -2756,7 +2756,7 @@ class FCodePrinter(CodePrinter):
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
-        args = [a for a in expr.arguments if not isinstance(a, Nil)]
+        args = [a for a in expr.args if not isinstance(a, Nil)]
         results = func.results
 
         if len(results) == 1:
@@ -2816,7 +2816,7 @@ class FCodePrinter(CodePrinter):
                 self._namespace.variables[var.name] = var
 
             self._additional_code = self._additional_code + self._print(Assign(var,expr.prefix)) + '\n'
-            expr = DottedFunctionCall(expr.funcdef, expr.arguments, var)
+            expr = DottedFunctionCall(expr.funcdef, expr.args, var)
         return self._print_FunctionCall(expr)
 
 #=======================================================================================
