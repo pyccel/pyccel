@@ -73,7 +73,7 @@ def test_f4(language):
     # ...
     assert f(6) == f4(6)
     assert f(4) == f4(4)
-    
+
     assert fwp(6) == f4wp(6)
     assert fwp(4) == f4wp(4)
     # ...
@@ -96,7 +96,7 @@ def test_f5(language):
     assert f(6) == f5(6)
     assert f(4) == f5(4)
     assert f(5) == f5(5)
-    
+
     assert fwp(6) == f5wp(6)
     assert fwp(4) == f5wp(4)
     assert fwp(5) == f5wp(5)
@@ -121,7 +121,7 @@ def test_f6(language):
     assert f(6) == f6(6)
     assert f(4) == f6(4)
     assert f(5) == f6(5)
-    
+
     assert fwp(6) == f6wp(6)
     assert fwp(4) == f6wp(4)
     assert fwp(5) == f6wp(5)
@@ -152,7 +152,7 @@ def test_f7(language):
     # ...
     assert f(6) == f7(6)
     assert f(4) == f7(4)
-    
+
     assert fwp(6) == f7wp(6)
     assert fwp(4) == f7wp(4)
     # ...
@@ -182,7 +182,7 @@ def test_f8(language):
     # ...
     assert f(6) == f8(6)
     assert f(4) == f8(4)
-    
+
     assert fwp(6) == f8wp(6)
     assert fwp(4) == f8wp(4)
     # ...
