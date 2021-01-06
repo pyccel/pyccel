@@ -395,7 +395,7 @@ class PythonLen(PyccelInternalFunction):
     _dtype     = NativeInteger()
 
     def __init__(self, arg):
-         PyccelInternalFunction.__init__(self, arg)
+        PyccelInternalFunction.__init__(self, arg)
 
     @property
     def arg(self):
