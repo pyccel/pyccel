@@ -217,3 +217,12 @@ def get_default_literal_value(dtype):
         raise TypeError('Unknown type')
     return value
 
+class Nil(Basic):
+
+    """
+    class for None object in the code.
+    """
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        return sstr('None')
