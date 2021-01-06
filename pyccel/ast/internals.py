@@ -4,6 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 from .basic import PyccelAstNode
+from .datatypes import NativeInteger, default_precision
 
 __all__ = (
     'PyccelInternalFunction',
