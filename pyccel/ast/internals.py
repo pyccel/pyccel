@@ -18,7 +18,6 @@ class PyccelInternalFunction(PyccelAstNode):
     """
     def __init__(self, *args):
         self._args   = tuple(args)
-        PyccelAstNode.__init__(self, *args)
 
     @property
     def args(self):
