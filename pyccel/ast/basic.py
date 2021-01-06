@@ -17,7 +17,9 @@ class Basic(sp_Basic):
     _fst = None
 
     def __new__(cls, *args, **kwargs):
-        return sp_Basic.__new__(cls, *args, *kwargs.values())
+        hashable_args  = [a if not isinstance(a, list) else tuple(a) for a in args]
+        hashable_args += [a if not isinstance(a, list) else tuple(a) for a in kwargs.values()]
+        return sp_Basic.__new__(cls, *hashable_args)
 
     def set_fst(self, fst):
         """Sets the python.ast fst."""
