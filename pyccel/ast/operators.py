@@ -1132,7 +1132,7 @@ class IfTernaryOperator(Basic, PyccelOperator):
             if self.value_false.order != self.value_true.order :
                 errors.report('Ternary Operator results should have the same order', severity='fatal')
             self._order = self.value_true.order
-    
+
     @property
     def cond(self):
         """

@@ -50,7 +50,7 @@ def test_f3(language):
     # ...
     assert f(6) == f3(6)
     assert f(4) == f3(4)
-    
+
     assert fwp(6) == f3wp(6)
     assert fwp(4) == f3wp(4)
     # ...
