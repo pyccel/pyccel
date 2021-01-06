@@ -3,6 +3,10 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+"""
+File containing basic classes which are used throughout pyccel.
+To avoid circular imports this file should only import from basic and datatypes
+"""
 from .basic import PyccelAstNode
 from .datatypes import NativeInteger, default_precision
 
@@ -17,6 +21,7 @@ class PyccelInternalFunction(PyccelAstNode):
     which are translated to Pyccel objects
     """
     def __init__(self, *args):
+        PyccelAstNode.__init__(self)
         self._args   = tuple(args)
 
     @property
