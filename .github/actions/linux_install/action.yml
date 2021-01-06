@@ -3,8 +3,12 @@ name: 'Linux installation commands'
 runs:
   using: "composite"
   steps:
+    - name: update the package list
+      run:
+        sudo apt-get update
+      shell: bash
     - name: Install fortran
-      run: 
+      run:
         sudo apt-get install gfortran
       shell: bash
     - name: Install LaPack
@@ -18,4 +22,8 @@ runs:
     - name: Install OpenMP
       run:
         sudo apt-get install libomp-dev
+      shell: bash
+    - name: Install Valgrind
+      run:
+        sudo apt-get install valgrind
       shell: bash
