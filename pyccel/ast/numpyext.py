@@ -321,7 +321,7 @@ class NumpyLinspace(NumpyNewArray):
         self._stop  = stop
         self._size  = size
         self._shape = (self.size,)
-        NumpyNewArray.__init__(self, start, stop, size)
+        NumpyNewArray.__init__(self)
 
     @property
     def start(self):
@@ -479,7 +479,7 @@ class NumpyFull(PyccelInternalFunction, NumpyNewArray):
         self._precision = precision
 
         PyccelInternalFunction.__init__(self, fill_value)
-        NumpyNewArray.__init__(self, shape, fill_value, dtype, order)
+        NumpyNewArray.__init__(self)
 
     #--------------------------------------------------------------------------
     @property
