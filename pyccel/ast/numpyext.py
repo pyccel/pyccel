@@ -14,7 +14,7 @@ from .core           import (ClassDef, FunctionDef, PyccelInternalFunction,
                              PythonList, Variable, IndexedElement,
                              process_shape, ValuedArgument, Constant)
 
-from .operators      import (PyccelAssociativeParenthesis, broadcast)
+from .operators      import broadcast
 
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag)
