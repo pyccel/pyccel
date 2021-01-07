@@ -211,8 +211,8 @@ def execute_pyccel(fname, *,
             libs.append('iomp5')
 
     # ...
-    # Construct flags for the Fortran compiler
-    if fflags is None:
+    # Construct flags for the compiler (if one is required)
+    if fflags is None and compiler:
         fflags = construct_flags(f90exec,
                                  fflags=None,
                                  debug=debug,
@@ -295,6 +295,14 @@ def execute_pyccel(fname, *,
         if errors.has_errors():
             handle_error('code generation')
             raise PyccelCodegenError('Code generation failed')
+
+        if language == 'python':
+            basename = os.path.basename(fname)
+            new_location = os.path.join(folder, basename)
+            if verbose:
+                print("cp {} {}".format(fname, new_location))
+            shutil.copyfile(fname, new_location)
+            continue
 
         #------------------------------------------------------
         # TODO: collect dependencies and proceed recursively
