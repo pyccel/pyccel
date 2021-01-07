@@ -1097,19 +1097,15 @@ class IfTernaryOperator(Basic, PyccelOperator):
     def __init__(self, cond, value_true, value_false):
         super().__init__(cond, value_true, value_false)
 
-        self._cond = self._args[0]
-        self._value_true = self._args[1]
-        self._value_false = self._args[2]
         if self.stage == 'syntactic':
             return
         if isinstance(value_true , Nil) or isinstance(value_false, Nil):
             errors.report('None is not implemented for Ternary Operator', severity='fatal')
         if isinstance(value_true.dtype, NativeString) or isinstance(value_false.dtype, NativeString):
             errors.report('Strings are not supported by Ternary Operator', severity='fatal')
-        _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
-        if value_true.dtype not in _tmp_list :
+        if value_true.dtype not in self.dtype_list :
             raise NotImplementedError('cannot determine the type of {}'.format(value_true.dtype))
-        if value_false.dtype not in _tmp_list :
+        if value_false.dtype not in self.dtype_list :
             raise NotImplementedError('cannot determine the type of {}'.format(value_false.dtype))
         if value_false.rank != value_true.rank :
             errors.report('Ternary Operator results should have the same rank', severity='fatal')
@@ -1120,8 +1116,7 @@ class IfTernaryOperator(Basic, PyccelOperator):
         """
         Sets the dtype and precision for IfTernaryOperator
         """
-        _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
-        self._dtype = max([self.value_true.dtype, self.value_false.dtype], key = _tmp_list.index)
+        self._dtype = max([self.value_true.dtype, self.value_false.dtype], key = self.dtype_list.index)
         self._precision = max([self.value_true.precision, self.value_false.precision])
 
     def _set_shape_rank(self):
@@ -1155,6 +1150,13 @@ class IfTernaryOperator(Basic, PyccelOperator):
         The value_if_cond_flase property for IfTernaryOperator class
         """
         return self._args[2]
+
+    @property
+    def dtype_list(self):
+        """
+        Returns a list dtypes that could be in an IfTernaryOperator
+        """
+        return [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
 
 
 #==============================================================================
