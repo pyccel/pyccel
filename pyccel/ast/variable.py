@@ -102,8 +102,6 @@ class Variable(Symbol, PyccelAstNode):
     """
 
     def __new__( cls, dtype, name, **kwargs ):
-        if cls is not DottedVariable and (isinstance(name, DottedName) or '.' in name):
-            raise TypeError('DottedNames must be stored in DottedVariables')
         return Basic.__new__(cls)
 
     def __init__(
@@ -360,6 +358,21 @@ class Variable(Symbol, PyccelAstNode):
         print( '<<<')
 
     def clone(self, name, new_class = None, **kwargs):
+        """
+        Create a new Variable object of the chosen class
+        with the provided name and options
+
+        Parameters
+        ==========
+        name      : str
+                    The name of the new Variable
+        new_class : type
+                    The class of the new Variable
+                    The default is the same class
+        kwargs    : dict
+                    Dictionary containing any keyword-value
+                    pairs which are valid constructor keywords
+        """
 
         if (new_class is None):
             cls = self.__class__
@@ -411,7 +424,7 @@ class Variable(Symbol, PyccelAstNode):
             'cls_base':self.cls_base,
             }
 
-        out =  (lambda f,a,k: f(*a, **k), (Variable, args, kwargs))
+        out =  (apply, (Variable, args, kwargs))
         return out
 
     def _eval_subs(self, old, new):
@@ -429,13 +442,12 @@ class Variable(Symbol, PyccelAstNode):
         if self.rank != len(args):
             raise IndexError('Rank mismatch.')
 
-        obj = IndexedElement(self, *args)
-        return obj
+        return IndexedElement(self, *args)
 
 class DottedName(Basic):
 
     """
-    Represents a dotted variable.
+    Represents a dotted object.
 
     Examples
     --------
@@ -537,9 +549,6 @@ class TupleVariable(Variable):
         self._inconsistent_shape = not all(arg_vars[0].shape==a.shape   for a in arg_vars[1:])
         self._is_homogeneous = not dtype is NativeGeneric()
         Variable.__init__(self, dtype, name, *args, **kwargs)
-        #print(arg_vars)
-        #print(self._rank)
-        #print([a.rank for a in arg_vars])
 
     def get_vars(self):
         return tuple(self[i] for i in range(len(self._vars)))
@@ -554,12 +563,7 @@ class TupleVariable(Variable):
 
     def __getitem__(self, idx):
         if self._is_homogeneous:
-            if isinstance(idx, tuple):
-                idx = list(idx)
-            else:
-                idx = [idx]
-            idx.extend([Slice(None,None) for _ in range(self.rank-len(idx))])
-            return IndexedElement(self, *idx)
+            return Variable.__getitem__(self, idx)
         else:
             if isinstance(idx, tuple):
                 sub_idx = idx[1:]
@@ -655,23 +659,6 @@ class IndexedElement(Expr, PyccelAstNode):
 
         if not args:
             raise IndexError('Indexed needs at least one index.')
-        if PyccelAstNode.stage == "syntactic":
-            if isinstance(base, (str, Symbol)):
-                base = IndexedBase(base)
-            elif not hasattr(base, '__getitem__') and not isinstance(base,
-                    IndexedBase):
-                raise TypeError(filldedent("""
-                    Indexed expects string, Symbol, or IndexedBase as base."""))
-
-            if isinstance(base, (NDimArray, Iterable, Tuple,
-                          MatrixBase)) and all([i.is_number for i in args]):
-                if len(args) == 1:
-                    return base[args[0]]
-                else:
-                    return base[args]
-        else:
-            if not isinstance(base, (Variable, DottedVariable)):
-                raise TypeError("Indexed expects Variable as base")
         return Expr.__new__(cls, base, *args, **kw_args)
 
     def __init__(
@@ -681,27 +668,21 @@ class IndexedElement(Expr, PyccelAstNode):
         **kw_args
         ):
 
-        assert(len(self._args[1:]) == base.rank)
+        self._dtype = base.dtype
+        self._order = base.order
+        self._precision = base.precision
+
+        shape = base.shape
+        rank  = base.rank
+
+        # Add empty slices to fully index the object
+        if len(args) < rank:
+            args = args + tuple([Slice(None, None)]*(rank-len(args)))
 
         self._label = base
-        self._indices = self._args[1:]
-        dtype = self.base.dtype
-        shape = self.base.shape
-        rank  = self.base.rank
-        order = self.base.order
-        self._precision = self.base.precision
-        if isinstance(dtype, NativeInteger):
-            self._dtype = NativeInteger()
-        elif isinstance(dtype, NativeReal):
-            self._dtype = NativeReal()
-        elif isinstance(dtype, NativeComplex):
-            self._dtype = NativeComplex()
-        elif isinstance(dtype, NativeBool):
-            self._dtype = NativeBool()
-        elif isinstance(dtype, NativeString):
-            self._dtype = NativeString()
-        elif not isinstance(dtype, NativeRange):
-            raise TypeError('Undefined datatype')
+        self._indices = args
+
+        # Calculate new shape
 
         if shape is not None:
             new_shape = []
@@ -722,7 +703,6 @@ class IndexedElement(Expr, PyccelAstNode):
                 if not isinstance(args[i], Slice):
                     new_rank -= 1
             self._rank = new_rank
-        self._order = order
 
     @property
     def base(self):
