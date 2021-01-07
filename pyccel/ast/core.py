@@ -2474,8 +2474,7 @@ class Variable(Symbol, PyccelAstNode):
         if self.rank < len(args):
             raise IndexError('Rank mismatch.')
 
-        obj = IndexedElement(self, *args)
-        return obj
+        return IndexedElement(self, *args)
 
 class DottedVariable(Variable):
 
