@@ -1,17 +1,18 @@
-Welcome to
-# Pyccel
+# Welcome to Pyccel
 
- ## What is Pyccel
+Pyccel is a **static compiler** for Python 3, using Fortran or C as backend language, with a focus on high-performance computing (HPC) applications.
 
--   Static compiler for Python 3, using Fortran or C as backend language.
--   Started as small open-source project in 2018 at IPP Garching.
--   Public repository is now hosted on GitHub, freely available for download.
+Pyccel's main goal is to accelerate the transition from **prototype** to **production** in scientific computing, where programmers usually develop their prototype code in a user-friendly interactive language like Python, but they later need a statically compiled language like Fortran/C/C++ (as well as SIMD vectorization, parallel multi-threading, MPI parallelization, GPU offloading, etc.) in order to achieve the performance required by their final application.
 
- ## Python’s objects, variables, and garbage collection
+Pyccel generates very fast Fortran or C code which is **human-readable**, hence the expert programmer can easily profile the code on the target machine and further optimize it.
 
- Python is an **interpreted** language, **dynamically typed** and **garbage-collected**.
+## The Python 3 Language
 
- ### Python object
+In order to translate Python 3 code to efficient Fortran/C code, Pyccel makes a certain number of *assumptions*, needs *additional information* from the user, and imposes a few *restrictions* on the code.
+To understand why this is, we recall that Python 3 is an **interpreted** language, **dynamically typed** and **garbage-collected**.
+In particular, it is worth clarifying the difference between an object and a variable (or name):
+
+### Python object
 
 -   Is created by the Python interpreter when `object.__new__()` is invoked (e.g. as a result of an expression).
 -   Can be either mutable or immutable, but its type never changes.
@@ -19,30 +20,34 @@ Welcome to
 -   Is accessed through one or more Python variables.
 -   Is destroyed by the garbage collector when its reference count drops to zero.
 
-For more details about Python object, see [this](https://docs.python.org/3/tutorial/classes.html).
-
- ### Python variable
+### Python variable
 
 -   Is a reference to a Python object in memory.
-
 -   Is created with an assignment operation `x = expr`:
     -   If the variable `x` already exists, the interpreter reduces the reference count of its object
     -   Otherwise a new variable `x` is created, which references the value of expr.
     -   The variable `x` is then modified to reference the object referenced by `expr` and the reference count of this object is increased
 
--   The type of the variable can be changed at run-time, because python is a dynamically typed language.
-
+-   The type of the variable can be changed at run-time, because Python is a dynamically typed language.
 -   Can be destroyed with the command del `x`.
 
-For more details about Python variables, see [this](https://www.w3schools.com/python/python_variables.asp).
+### References
 
- ## Statically typed languages
+- https://docs.python.org/3/tutorial/classes.html#a-word-about-names-and-objects
+- https://docs.python.org/3/reference/datamodel.html#objects-values-and-types
+
+## Statically Typed Languages
 	
-A language is statically-typed if the type of a variable is known at compile-time instead of run-time. Common examples of statically-typed languages include Java, C, C++, FORTRAN, Pascal and Scala, on the other hand, in python the type of a variable is known at run-time, that's why we need to collect the garbage in the generated code, and raise some warnings/errors for the conflicts that can occur between dynamically typed languages (python) and statically typed languages(C/Fortran). See [this](https://en.wikipedia.org/wiki/Type_system#:~:text=In%20programming%20languages%2C%20a%20type,%2C%20expressions%2C%20functions%20or%20modules.) and [this](https://android.jlelse.eu/magic-lies-here-statically-typed-vs-dynamically-typed-languages-d151c7f95e2b#:~:text=Static%20typed%20languages,%2C%20FORTRAN%2C%20Pascal%20and%20Scala.) for more details.
+A language is statically-typed if the type of a variable is known at compile-time instead of run-time. Common examples of statically-typed languages include Java, C, C++, FORTRAN, Pascal and Scala, on the other hand, in python the type of a variable is known at run-time, that's why we need to collect the garbage in the generated code, and raise some warnings/errors for the conflicts that can occur between dynamically typed languages (python) and statically typed languages(C/Fortran).
+See [this](https://en.wikipedia.org/wiki/Type_system#:~:text=In%20programming%20languages%2C%20a%20type,%2C%20expressions%2C%20functions%20or%20modules.) and [this](https://android.jlelse.eu/magic-lies-here-statically-typed-vs-dynamically-typed-languages-d151c7f95e2b#:~:text=Static%20typed%20languages,%2C%20FORTRAN%2C%20Pascal%20and%20Scala.) for more details.
 
- ## Installation (see [README](https://github.com/pyccel/pyccel/blob/master/README.rst) file)
+## Installation
 
- ## Command line usage
+Pyccel's official releases can be downloaded from PyPI (the Python Package Index) using `pip`.
+To get the latest (trunk) version of Pyccel, just clone the `git` repository from GitHub and checkout the `master` branch.
+Detailed installation instructions are found in the [README](https://github.com/pyccel/pyccel/blob/master/README.rst) file.
+
+## Command Line Usage
 
 -   Open a terminal app, iterm or terminal for MacOs, terminal for Linux.
 
