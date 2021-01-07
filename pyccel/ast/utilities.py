@@ -7,8 +7,7 @@
 
 import inspect
 
-from sympy.core.function import Application
-from sympy import Not, Function
+from sympy import Not
 from numpy import pi
 
 import pyccel.decorators as pyccel_decorators
@@ -42,12 +41,12 @@ scipy_constants = {
 def builtin_function(expr, args=None):
     """Returns a builtin-function call applied to given arguments."""
 
-    if isinstance(expr, Application):
-        name = str(type(expr).__name__)
+    if isinstance(expr, FunctionCall):
+        name = str(expr.funcdef)
     elif isinstance(expr, str):
         name = expr
     else:
-        raise TypeError('expr must be of type str or Function')
+        raise TypeError('expr must be of type str or FunctionCall')
 
     dic = builtin_functions_dict
 
@@ -58,7 +57,7 @@ def builtin_function(expr, args=None):
         return Not(*args)
 
     if name == 'map':
-        func = Function(str(expr.args[0].name))
+        func = str(expr.args[0].name)
         args = [func]+list(args[1:])
         return PythonMap(*args)
 

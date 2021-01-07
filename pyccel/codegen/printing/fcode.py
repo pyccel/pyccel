@@ -19,7 +19,6 @@ import operator
 
 from sympy.core import Symbol
 from sympy.core import Tuple
-from sympy.core.function import Application
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
 
@@ -30,6 +29,7 @@ from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ErrorExit, FunctionAddress
+from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, For, Declare,
                              CodeBlock, Dlist, AsName,
@@ -1263,7 +1263,7 @@ class FCodePrinter(CodePrinter):
             if isinstance(expr.lhs, (tuple, list, Tuple, PythonTuple)):
 
                 rhs_code = rhs.funcdef.name
-                args = rhs.arguments
+                args = rhs.args
                 code_args = [self._print(i) for i in args]
                 func = rhs.funcdef
                 output_names = func.results
@@ -2609,10 +2609,10 @@ class FCodePrinter(CodePrinter):
 
     def _print_IndexedElement(self, expr):
         base = expr.base
-        if isinstance(base, Application) and not isinstance(base, PythonTuple):
+        if isinstance(base, PyccelInternalFunction) and not isinstance(base, PythonTuple):
             indexed_type = base.dtype
             if isinstance(indexed_type, PythonTuple):
-                base = self._print_Function(expr.base.base)
+                base = self._print_PyccelInternalFunction(expr.base.base)
             else:
                 if (not self._additional_code):
                     self._additional_code = ''
@@ -2741,7 +2741,7 @@ class FCodePrinter(CodePrinter):
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
-        args = [a for a in expr.arguments if not isinstance(a, Nil)]
+        args = [a for a in expr.args if not isinstance(a, Nil)]
         results = func.results
 
         if len(results) == 1:
@@ -2801,14 +2801,14 @@ class FCodePrinter(CodePrinter):
                 self._namespace.variables[var.name] = var
 
             self._additional_code = self._additional_code + self._print(Assign(var,expr.prefix)) + '\n'
-            expr = DottedFunctionCall(expr.funcdef, expr.arguments, var)
+            expr = DottedFunctionCall(expr.funcdef, expr.args, var)
         return self._print_FunctionCall(expr)
 
 #=======================================================================================
 
-    def _print_Application(self, expr):
+    def _print_PyccelInternalFunction(self, expr):
         if isinstance(expr, NumpyNewArray):
-            errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
+            return errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
         else:
             return self._print_not_supported(expr)
