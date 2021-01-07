@@ -224,7 +224,4 @@ class Nil(Basic):
     """
 
     def __str__(self):
-        """
-        return str ob and 'None' as value
-        """
         return 'None'

@@ -105,7 +105,6 @@ __all__ = (
     'IfTernaryOperator',
     'Import',
     'IndexedElement',
-    'IndexedVariable',
     'Interface',
     'Load',
     'ModOp',
@@ -255,7 +254,7 @@ def allocatable_like(expr, verbose=False):
         talk more
     """
 
-    if isinstance(expr, (Variable, IndexedVariable, IndexedElement)):
+    if isinstance(expr, (Variable, IndexedElement)):
         return expr
     elif isinstance(expr, str):
         # if the rhs is a string
@@ -307,8 +306,7 @@ def allocatable_like(expr, verbose=False):
                 if verbose:
                     print('Functions not yet available')
                 return None
-            elif isinstance(a, (Variable, IndexedVariable,
-                            IndexedElement)):
+            elif isinstance(a, (Variable, IndexedElement)):
                 return a
             elif a.is_Symbol:
                 raise TypeError('Found an unknown symbol {0}'.format(str(a)))
@@ -328,8 +326,7 @@ def _atomic(e, cls=None,ignore=()):
     seen = []
     atoms_ = []
     if cls is None:
-        cls = (Application, DottedVariable, Variable,
-               IndexedVariable,IndexedElement)
+        cls = (Application, Variable, IndexedElement)
 
     for p in pot:
         if p in seen or isinstance(p, ignore):
@@ -766,7 +763,6 @@ class Assign(Basic):
         rhs = self.rhs
         cond = isinstance(rhs, Variable) and rhs.rank > 0
         cond = cond or isinstance(rhs, IndexedElement)
-        cond = cond or isinstance(rhs, IndexedVariable)
         cond = cond and isinstance(lhs, Symbol)
         cond = cond or isinstance(rhs, Variable) and rhs.is_pointer
         return cond
@@ -968,7 +964,7 @@ class AliasAssign(Basic):
         at this point we don't know yet all information about lhs, this is why a
         Symbol is the appropriate type.
 
-    rhs : Variable, IndexedVariable, IndexedElement
+    rhs : Variable, IndexedElement
         an assignable variable can be of any rank and any datatype, however its
         shape must be known (not None)
 
@@ -2470,12 +2466,21 @@ class Variable(Symbol, PyccelAstNode):
         #we do this inorder to infere the type of Pow expression correctly
         return self.is_real
 
+    def __getitem__(self, *args):
+
+        if len(args) == 1 and isinstance(args[0], (Tuple, tuple, list)):
+            args = args[0]
+
+        if self.rank < len(args):
+            raise IndexError('Rank mismatch.')
+
+        return IndexedElement(self, *args)
+
 class DottedVariable(Variable):
 
     """
     Represents a dotted variable.
     """
-
     def __init__(self, *args, lhs, **kwargs):
         Variable.__init__(self, *args, **kwargs)
         self._lhs = lhs
@@ -2563,24 +2568,34 @@ class TupleVariable(Variable):
         Variable.__init__(self, dtype, name, *args, **kwargs)
 
     def get_vars(self):
-        if self._is_homogeneous:
-            indexed_var = IndexedVariable(self, dtype=self.dtype, shape=self.shape,
-                prec=self.precision, order=self.order, rank=self. rank)
-            args = [Slice(None,None)]*(self.rank-1)
-            return [indexed_var[[i] + args] for i in range(len(self._vars))]
-        else:
-            return self._vars
+        return tuple(self[i] for i in range(len(self._vars)))
 
     def get_var(self, variable_idx):
+        if isinstance(variable_idx, LiteralInteger):
+            variable_idx = variable_idx.p
         return self._vars[variable_idx]
 
     def rename_var(self, variable_idx, new_name):
         self._vars[variable_idx] = self._vars[variable_idx].clone(new_name)
 
     def __getitem__(self,idx):
-        if isinstance(idx, LiteralInteger):
-            idx = idx.p
-        return self.get_var(idx)
+        if self._is_homogeneous:
+            return Variable.__getitem__(self, idx)
+        else:
+            if isinstance(idx, tuple):
+                sub_idx = idx[1:]
+                idx = idx[0]
+            else:
+                sub_idx = []
+
+            if isinstance(idx, LiteralInteger):
+                idx = idx.p
+            var = self.get_var(idx)
+
+            if len(sub_idx) > 0:
+                return var[sub_idx]
+            else:
+                return var
 
     def __iter__(self):
         return self._vars.__iter__()
@@ -4644,131 +4659,6 @@ class CommentBlock(Basic):
     def header(self, header):
         self._header = header
 
-class IndexedVariable(IndexedBase, PyccelAstNode):
-
-    """
-    Represents an indexed variable, like x in x[i], in the code.
-
-    Examples
-    --------
-    >>> from sympy import symbols, Idx
-    >>> from pyccel.ast.core import IndexedVariable
-    >>> A = IndexedVariable('A'); A
-    A
-    >>> type(A)
-    <class 'pyccel.ast.core.IndexedVariable'>
-
-    When an IndexedVariable object receives indices, it returns an array with named
-    axes, represented by an IndexedElement object:
-
-    >>> i, j = symbols('i j', integer=True)
-    >>> A[i, j, 2]
-    A[i, j, 2]
-    >>> type(A[i, j, 2])
-    <class 'pyccel.ast.core.IndexedElement'>
-
-    The IndexedVariable constructor takes an optional shape argument.  If given,
-    it overrides any shape information in the indices. (But not the index
-    ranges!)
-
-    >>> m, n, o, p = symbols('m n o p', integer=True)
-    >>> i = Idx('i', m)
-    >>> j = Idx('j', n)
-    >>> A[i, j].shape
-    (m, n)
-    >>> B = IndexedVariable('B', shape=(o, p))
-    >>> B[i, j].shape
-    (m, n)
-
-    **todo:** fix bug. the last result must be : (o,p)
-    """
-
-    def __new__(
-        cls,
-        label,
-        shape=None,
-        dtype=None,
-        prec=0,
-        order=None,
-        rank = 0,
-        **kw_args
-        ):
-
-        if isinstance(label, Application):
-            label_name = type(label)
-        else:
-            label_name = str(label)
-
-        return IndexedBase.__new__(cls, label_name, shape=shape)
-
-    def __init__(
-        self,
-        label,
-        shape=None,
-        dtype=None,
-        prec=0,
-        order=None,
-        rank = 0,
-        **kw_args
-        ):
-
-        if dtype is None:
-            raise TypeError('datatype must be provided')
-        if isinstance(dtype, str):
-            dtype = datatype(dtype)
-        elif not isinstance(dtype, DataType):
-            raise TypeError('datatype must be an instance of DataType.')
-
-
-        self._dtype      = dtype
-        self._precision  = prec
-        self._rank       = rank
-        self._order      = order
-        kw_args['order'] = order
-        self._kw_args    = kw_args
-        self._label      = label
-
-    def __getitem__(self, *args):
-
-        if len(args) == 1 and isinstance(args[0], (Tuple, tuple, list)):
-            args = args[0]
-
-        if self.shape and len(self.shape) != len(args):
-            raise IndexError('Rank mismatch.')
-
-        obj = IndexedElement(self, *args)
-        return obj
-
-    @property
-    def order(self):
-        return self.kw_args['order']
-
-    @property
-    def kw_args(self):
-        return self._kw_args
-
-    @property
-    def name(self):
-        return self._args[0]
-
-    @property
-    def internal_variable(self):
-        return self._label
-
-
-    def clone(self, name):
-        cls = eval(self.__class__.__name__)
-        # TODO what about kw_args in __new__?
-        return cls(name, shape=self.shape, dtype=self.dtype,
-                   prec=self.precision, order=self.order, rank=self.rank)
-
-    def _eval_subs(self, old, new):
-        return self
-
-    def __str__(self):
-        return str(self.name)
-
-
 class IndexedElement(Expr, PyccelAstNode):
 
     """
@@ -4777,9 +4667,9 @@ class IndexedElement(Expr, PyccelAstNode):
     Examples
     --------
     >>> from sympy import symbols, Idx
-    >>> from pyccel.ast.core import IndexedVariable, IndexedElement
+    >>> from pyccel.ast.core import Variable, IndexedElement
     >>> i, j = symbols('i j', cls=Idx)
-    >>> A = IndexedVariable('A', dtype='int')
+    >>> A = Variable('A', dtype='int')
     >>> IndexedElement(A, i, j)
     IndexedElement(A, i, j)
     >>> IndexedElement(A, i, j) == A[i, j]
@@ -4795,19 +4685,8 @@ class IndexedElement(Expr, PyccelAstNode):
 
         if not args:
             raise IndexError('Indexed needs at least one index.')
-        if isinstance(base, (str, Symbol)):
-            base = IndexedBase(base)
-        elif not hasattr(base, '__getitem__') and not isinstance(base,
-                IndexedBase):
-            raise TypeError(filldedent("""
-                Indexed expects string, Symbol, or IndexedBase as base."""))
-
-        if isinstance(base, (NDimArray, Iterable, Tuple,
-                      MatrixBase)) and all([i.is_number for i in args]):
-            if len(args) == 1:
-                return base[args[0]]
-            else:
-                return base[args]
+        if not isinstance(base, Variable):
+            raise TypeError("Indexed expects Variable as base")
         return Expr.__new__(cls, base, *args, **kw_args)
 
     def __init__(
@@ -4817,25 +4696,21 @@ class IndexedElement(Expr, PyccelAstNode):
         **kw_args
         ):
 
-        self._label = self._args[0]
-        self._indices = self._args[1:]
-        dtype = self.base.dtype
-        shape = self.base.shape
-        rank  = self.base.rank
-        order = self.base.order
-        self._precision = self.base.precision
-        if isinstance(dtype, NativeInteger):
-            self._dtype = NativeInteger()
-        elif isinstance(dtype, NativeReal):
-            self._dtype = NativeReal()
-        elif isinstance(dtype, NativeComplex):
-            self._dtype = NativeComplex()
-        elif isinstance(dtype, NativeBool):
-            self._dtype = NativeBool()
-        elif isinstance(dtype, NativeString):
-            self._dtype = NativeString()
-        elif not isinstance(dtype, NativeRange):
-            raise TypeError('Undefined datatype')
+        self._dtype = base.dtype
+        self._order = base.order
+        self._precision = base.precision
+
+        shape = base.shape
+        rank  = base.rank
+
+        # Add empty slices to fully index the object
+        if len(args) < rank:
+            args = args + tuple([Slice(None, None)]*(rank-len(args)))
+
+        self._label = base
+        self._indices = args
+
+        # Calculate new shape
 
         if shape is not None:
             new_shape = []
@@ -4856,10 +4731,6 @@ class IndexedElement(Expr, PyccelAstNode):
                 if not isinstance(args[i], Slice):
                     new_rank -= 1
             self._rank = new_rank
-
-    @property
-    def order(self):
-        return self.base.order
 
     @property
     def base(self):
@@ -5111,7 +4982,7 @@ def is_simple_assign(expr):
     if not isinstance(expr, Assign):
         return False
 
-    assignable = [Variable, IndexedVariable, IndexedElement]
+    assignable = [Variable, IndexedElement]
     assignable += [sp_Integer, sp_Float]
     assignable = tuple(assignable)
     if isinstance(expr.rhs, assignable):
@@ -5303,7 +5174,7 @@ def get_iterable_ranges(it, var_name=None):
 
             args = []
             for i in [cls_base.start, cls_base.stop, cls_base.step]:
-                if isinstance(i, (Variable, IndexedVariable)):
+                if isinstance(i, Variable):
                     arg_name = _construct_arg_Range(i.name)
                     arg = i.clone(arg_name)
                 elif isinstance(i, IndexedElement):
@@ -5388,8 +5259,7 @@ def get_iterable_ranges(it, var_name=None):
                 for (a_old, a_new) in zip(args, params):
                     dtype = datatype(stmt.rhs.dtype)
                     v_old = Variable(dtype, a_old)
-                    if isinstance(a_new, (IndexedVariable,
-                                  IndexedElement, str, Variable)):
+                    if isinstance(a_new, (IndexedElement, str, Variable)):
                         v_new = Variable(dtype, a_new)
                     else:
                         v_new = a_new
@@ -5481,8 +5351,7 @@ def get_iterable_ranges(it, var_name=None):
                 for (a_old, a_new) in zip(args, params):
                     dtype = datatype(stmt.rhs.dtype)
                     v_old = Variable(dtype, a_old)
-                    if isinstance(a_new, (IndexedVariable,
-                                  IndexedElement, str, Variable)):
+                    if isinstance(a_new, (IndexedElement, str, Variable)):
                         v_new = Variable(dtype, a_new)
                     else:
                         v_new = a_new

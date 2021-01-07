@@ -11,7 +11,7 @@ import operator
 from sympy.core           import Tuple
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
-from pyccel.ast.core      import Declare, IndexedVariable, Slice, ValuedVariable
+from pyccel.ast.core      import Declare, Slice, ValuedVariable
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress, PyccelArraySize
@@ -642,14 +642,10 @@ class CCodePrinter(CodePrinter):
             return '{0}{1}({2})'.format(ret_type, name, arg_code)
 
     def _print_IndexedElement(self, expr):
-        if isinstance(expr.base, IndexedVariable):
-            base = expr.base.internal_variable
-        else:
-            base = expr.base
+        base = expr.base
         inds = list(expr.indices)
         base_shape = base.shape
-        allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
-                base.allows_negative_indexes)
+        allow_negative_indexes = base.allows_negative_indexes
         for i, ind in enumerate(inds):
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0])
@@ -1158,16 +1154,6 @@ class CCodePrinter(CodePrinter):
             self._additional_code = ''
             body.append(code)
         return '\n'.join(self._print(b) for b in body)
-
-    def _print_Indexed(self, expr):
-        # calculate index for 1d array
-        dims = expr.shape
-        elem = LiteralInteger(0)
-        offset = LiteralInteger(1)
-        for i in reversed(list(range(expr.rank))):
-            elem += expr.indices[i]*offset
-            offset *= dims[i]
-        return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
 
     def _print_Idx(self, expr):
         return self._print(expr.label)

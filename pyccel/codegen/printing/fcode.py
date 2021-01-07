@@ -34,7 +34,7 @@ from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              VariableAddress,
                              TupleVariable, For, Declare,
-                             IndexedVariable, CodeBlock,
+                             CodeBlock,
                              IndexedElement, Slice, Dlist,
                              DottedName, AsName,
                              If, PyccelArraySize)
@@ -1156,10 +1156,7 @@ class FCodePrinter(CodePrinter):
             rhs = rhs.variable
 
         if isinstance(lhs, TupleVariable) and not lhs.is_homogeneous:
-            if isinstance(rhs, (TupleVariable, PythonTuple)):
-                return self._print(CodeBlock([AliasAssign(l, rhs[i]) for i,l in enumerate(lhs)]))
-            else:
-                return self._print(CodeBlock([AliasAssign(l, IndexedVariable(rhs)[i]) for i,l in enumerate(lhs)]))
+            return self._print(CodeBlock([AliasAssign(l, r) for l,r in zip(lhs,rhs)]))
 
         if isinstance(rhs, Dlist):
             pattern = 'allocate({lhs}(0:{length}-1))\n{lhs} = {init_value}\n'
@@ -2618,10 +2615,7 @@ class FCodePrinter(CodePrinter):
         return "{0}_{1}".format(str(expr.p), iso_c_binding["integer"][expr.precision])
 
     def _print_IndexedElement(self, expr):
-        if isinstance(expr.base, IndexedVariable):
-            base = expr.base.internal_variable
-        else:
-            base = expr.base
+        base = expr.base
         if isinstance(base, Application) and not isinstance(base, PythonTuple):
             indexed_type = base.dtype
             if isinstance(indexed_type, PythonTuple):
@@ -2642,17 +2636,13 @@ class FCodePrinter(CodePrinter):
                     self._namespace.variables[var.name] = var
 
                 self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
-                return self._print(IndexedVariable(var, dtype=base.dtype,
-                   shape=base.shape,prec=base.precision,
-                   order=base.order,rank=base.rank)[expr.indices])
+                return self._print(var[expr.indices])
         elif isinstance(base, TupleVariable) and not base.is_homogeneous:
             if len(expr.indices)==1:
                 return self._print(base[expr.indices[0]])
             else:
                 var = base[expr.indices[0]]
-                return self._print(IndexedVariable(var, dtype = var.dtype,
-                    shape = var.shape, prec = var.precision,
-                    order = var.order, rank = var.rank)[expr.indices[1:]])
+                return self._print(var[expr.indices[1:]])
         else:
             base_code = self._print(base)
 
@@ -2660,8 +2650,7 @@ class FCodePrinter(CodePrinter):
         if expr.base.order == 'C':
             inds = inds[::-1]
         base_shape = Shape(expr.base)
-        allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
-                expr.base.internal_variable.allows_negative_indexes)
+        allow_negative_indexes = base.allows_negative_indexes
 
         for i, ind in enumerate(inds):
             _shape = PyccelArraySize(base, i if expr.order != 'C' else len(inds) - i - 1)
