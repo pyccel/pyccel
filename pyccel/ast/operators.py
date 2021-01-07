@@ -1093,8 +1093,8 @@ class IfTernaryOperator(Basic, PyccelOperator):
     IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     """
     _precedence = 3
-    def __init__(self, cond, value_true, value_false):
-        PyccelOperator.__init__(self, cond, value_true, value_false)
+
+    def init(self, *args):
 
         self._cond = self._args[0]
         self._value_true = self._args[1]
