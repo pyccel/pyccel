@@ -1054,7 +1054,10 @@ class SemanticParser(BasicParser):
                     args  = self._handle_function_args(rhs.args, **settings)
                     func  = first[rhs_name]
                     if new_name != rhs_name:
-                        func  = func.clone(new_name)
+                        if hasattr(func, 'clone'):
+                            func  = func.clone(new_name)
+                        else : #TODO add clone methode to numpyext and mathext ??
+                            func = func
                     return self._handle_function(func, args, **settings)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
@@ -2885,7 +2888,7 @@ class SemanticParser(BasicParser):
 
             else:
                 _insert_obj('variables', source_target, imports)
-            _insert_obj('imports', expr.source, Import(expr.source, expr.target, True))
+            _insert_obj('imports', expr.source, Import(source, expr.target, True))
 
         else:
 
