@@ -234,6 +234,10 @@ def pyccel(files=None, openmp=None, openacc=None, output_dir=None, compiler=None
 
     base_dirpath = os.getcwd()
 
+    if args.language == 'python' and args.output == '':
+        print("Cannot output python file to same folder as this would overwrite the original file. Please specify --output")
+        sys.exit(1)
+
     try:
         # TODO: prune options
         execute_pyccel(filename,
