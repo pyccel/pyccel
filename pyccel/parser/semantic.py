@@ -9,7 +9,6 @@
 from collections import OrderedDict
 from itertools import chain
 
-from sympy.core.function       import Application, UndefinedFunction
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
@@ -28,7 +27,6 @@ from pyccel.ast.basic import PyccelAstNode
 
 from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Constant
-from pyccel.ast.core import Nil
 from pyccel.ast.core import Variable
 from pyccel.ast.core import TupleVariable
 from pyccel.ast.core import DottedName, DottedVariable
@@ -46,7 +44,7 @@ from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
 from pyccel.ast.core import EmptyNode
-from pyccel.ast.core import Slice, IndexedVariable, IndexedElement
+from pyccel.ast.core import Slice, IndexedElement
 from pyccel.ast.core import ValuedVariable
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import Import
@@ -69,6 +67,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeSt
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
 from pyccel.ast.literals import LiteralInteger, LiteralFloat
+from pyccel.ast.literals import Nil
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.headers import MacroFunction, MacroVariable
@@ -115,12 +114,12 @@ errors = Errors()
 def _get_name(var):
     """."""
 
-    if isinstance(var, (Symbol, IndexedVariable, IndexedBase, DottedName)):
+    if isinstance(var, (Symbol, IndexedBase, DottedName)):
         return str(var)
     if isinstance(var, (IndexedElement, Indexed)):
         return str(var.base)
-    if isinstance(var, Application):
-        return type(var).__name__
+    if isinstance(var, FunctionCall):
+        return var.funcdef
     if isinstance(var, AsName):
         return var.target
     msg = 'Name of Object : {} cannot be determined'.format(type(var).__name__)
@@ -258,7 +257,7 @@ class SemanticParser(BasicParser):
         """
         code = expr
         if not isinstance(expr.body[-1], Return):
-            code = expr.body + [Deallocate(i) for i in self._allocs[-1]]
+            code = expr.body + tuple(Deallocate(i) for i in self._allocs[-1])
             code = CodeBlock(code)
         self._allocs.pop()
         return code
@@ -770,8 +769,12 @@ class SemanticParser(BasicParser):
     def _visit(self, expr, **settings):
         """Annotates the AST.
 
-        IndexedVariable atoms are only used to manipulate expressions, we then,
-        always have a Variable in the namespace."""
+        The annotation is done by finding the appropriate function _visit_X
+        for the object expr. X is the type of the object expr. If this function
+        does not exist then the method resolution order is used to search for
+        other compatible _visit_X functions. If none are found then an error is
+        raised
+        """
 
         # TODO - add settings to Errors
         #      - line and column
@@ -882,7 +885,7 @@ class SemanticParser(BasicParser):
 
     def _extract_indexed_from_var(self, var, args, name):
 
-        # case of Pyccel ast Variable, IndexedVariable
+        # case of Pyccel ast Variable
         # if not possible we use symbolic objects
 
         if not isinstance(var, Variable):
@@ -933,26 +936,12 @@ class SemanticParser(BasicParser):
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal', blocker=self.blocking)
 
-        if hasattr(var, 'dtype'):
-            dtype = var.dtype
-            shape = var.shape
-            prec  = var.precision
-            order = var.order
-            rank  = var.rank
+        if isinstance(var, PythonTuple) and not var.is_homogeneous:
+            errors.report(LIST_OF_TUPLES, symbol=var,
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='error', blocker=self.blocking)
 
-            if isinstance(var, PythonTuple):
-                if not var.is_homogeneous:
-                    errors.report(LIST_OF_TUPLES, symbol=var,
-                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='error', blocker=self.blocking)
-                    dtype = 'int'
-                else:
-                    dtype = var.dtype
-
-            return IndexedVariable(var, dtype=dtype,
-                   shape=shape,prec=prec,order=order,rank=rank)[args]
-        else:
-            return IndexedVariable(name, dtype=dtype)[args]
+        return var[args]
 
     def _visit_IndexedBase(self, expr, **settings):
         return self._visit(expr.label)
@@ -994,11 +983,6 @@ class SemanticParser(BasicParser):
         else:
             args = new_args
             len_args = len(args)
-
-        if var.rank>len_args:
-            # add missing dimensions
-
-            args = args + [self._visit(Slice(None, None),**settings)]*(var.rank-len(args))
 
         return self._extract_indexed_from_var(var, args, name)
 
@@ -1063,7 +1047,7 @@ class SemanticParser(BasicParser):
                         else:
                             imp.define_target(AsName(Symbol(rhs_name), Symbol(new_name)))
 
-                if isinstance(rhs, Application):
+                if isinstance(rhs, FunctionCall):
                     # If object is a function
                     args  = self._handle_function_args(rhs.args, **settings)
                     func  = first[rhs_name]
@@ -1094,7 +1078,7 @@ class SemanticParser(BasicParser):
             attr_name = [i.name for i in first.cls_base.attributes]
 
         # look for a class method
-        if isinstance(rhs, Application):
+        if isinstance(rhs, FunctionCall):
             methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
             for method in methods:
                 if isinstance(method, Interface):
@@ -1216,7 +1200,7 @@ class SemanticParser(BasicParser):
             errors.report(UNDEFINED_LAMBDA_VARIABLE, symbol = expr_names.difference(var_names),
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal', blocker=True)
-        funcs = expr.expr.atoms(Application)
+        funcs = expr.expr.atoms(FunctionCall)
         for func in funcs:
             name = _get_name(func)
             f = self.get_symbolic_function(name)
@@ -1257,8 +1241,14 @@ class SemanticParser(BasicParser):
             expr = FunctionCall(func, args, self._current_function)
             return expr
 
-    def _visit_Application(self, expr, **settings):
-        name     = type(expr).__name__
+    def _visit_FunctionCall(self, expr, **settings):
+        name     = expr.funcdef
+
+        # Check for specialised method
+        annotation_method = '_visit_' + name
+        if hasattr(self, annotation_method):
+            return getattr(self, annotation_method)(expr, **settings)
+
         func     = self.get_function(name)
 
         args = self._handle_function_args(expr.args, **settings)
@@ -1309,10 +1299,9 @@ class SemanticParser(BasicParser):
             else:
                 func = self.get_function(name)
             if func is None:
-                # TODO [SH, 25.02.2020] Report error
-                errors.report(UNDEFINED_FUNCTION, symbol=name,
-                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal', blocker=self.blocking)
+                return errors.report(UNDEFINED_FUNCTION, symbol=name,
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='fatal', blocker=self.blocking)
             else:
                 return self._handle_function(func, args, **settings)
 
@@ -1375,13 +1364,13 @@ class SemanticParser(BasicParser):
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
             rhs.is_target = True
-        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.internal_variable.allocatable:
+        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.allocatable:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
 
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
-            rhs.base.internal_variable.is_target = True
+            rhs.base.is_target = True
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign, **settings):
         """
@@ -1621,8 +1610,8 @@ class SemanticParser(BasicParser):
         rhs = expr.rhs
         lhs = expr.lhs
 
-        if isinstance(rhs, Application):
-            name = type(rhs).__name__
+        if isinstance(rhs, FunctionCall):
+            name = rhs.funcdef
             macro = self.get_macro(name)
             if macro is None:
                 rhs = self._visit(rhs, **settings)
@@ -1764,6 +1753,8 @@ class SemanticParser(BasicParser):
                 if results:
                     d_var = [self._infere_type(i, **settings)
                                  for i in results]
+                else:
+                    raise NotImplementedError("Cannot assign result of a function without a return")
 
                 # case of elemental function
                 # if the input and args of func do not have the same shape,
@@ -1773,7 +1764,7 @@ class SemanticParser(BasicParser):
                     # args
 #                   d_var = None
                     func_args = func.arguments
-                    call_args = rhs.arguments
+                    call_args = rhs.args
                     f_ranks = [x.rank for x in func_args]
                     c_ranks = [x.rank for x in call_args]
                     same_ranks = [x==y for (x,y) in zip(f_ranks, c_ranks)]
@@ -1862,13 +1853,11 @@ class SemanticParser(BasicParser):
 
                 if rhs.is_homogeneous:
                     d_var = self._infere_type(rhs[0])
-                    indexed_rhs = IndexedVariable(rhs, dtype=rhs.dtype,
-                            shape=rhs.shape,prec=rhs.precision,order=rhs.order,rank=rhs.rank)
                     new_rhs = []
                     for i,l in enumerate(lhs):
                         new_lhs.append( self._assign_lhs_variable(l, d_var.copy(),
-                            indexed_rhs[i], new_expressions, isinstance(expr, AugAssign), **settings) )
-                        new_rhs.append(indexed_rhs[i])
+                            rhs[i], new_expressions, isinstance(expr, AugAssign), **settings) )
+                        new_rhs.append(rhs[i])
                     rhs = PythonTuple(*new_rhs)
                     d_var = [d_var]
                 else:
@@ -1910,18 +1899,18 @@ class SemanticParser(BasicParser):
 
         if isinstance(rhs, (PythonMap, PythonZip)):
             func  = _get_name(rhs.args[0])
-            func  = UndefinedFunction(func)
             alloc = Assign(lhs, NumpyZeros(lhs.shape, lhs.dtype))
             alloc.set_fst(fst)
             index_name = self.get_new_name(expr)
             index = Variable('int',index_name)
-            range_ = UndefinedFunction('range')(UndefinedFunction('len')(lhs))
+            range_ = FunctionCall('range', (FunctionCall('len', lhs,),))
             name  = _get_name(lhs)
             var   = IndexedBase(name)[index]
             args  = rhs.args[1:]
             args  = [_get_name(arg) for arg in args]
             args  = [IndexedBase(arg)[index] for arg in args]
-            body  = [Assign(var, func(*args))]
+            func  = FunctionCall(func, args)
+            body  = [Assign(var, func)]
             body[0].set_fst(fst)
             body  = For(index, range_, body, strict=False)
             body  = self._visit_For(body, **settings)
@@ -2008,10 +1997,12 @@ class SemanticParser(BasicParser):
 
         elif isinstance(iterable, PythonMap):
             indx   = self.get_new_variable()
+            PyccelAstNode.stage = 'syntactic'
             func   = iterable.args[0]
             args   = [IndexedBase(arg)[indx] for arg in iterable.args[1:]]
-            assign = Assign(iterator, func(*args))
+            assign = Assign(iterator, FunctionCall(func, args))
             assign.set_fst(expr.fst)
+            PyccelAstNode.stage = 'semantic'
             iterator = indx
             body     = [assign] + body
 
@@ -2604,7 +2595,7 @@ class SemanticParser(BasicParser):
             all_assigned = [str(i) for i in all_assigned]
             assigned     = [str(i) for i in assigned]
 
-            apps = list(Tuple(*body.body).atoms(Application))
+            apps = list(Tuple(*body.body).atoms(FunctionCall))
             apps = [i for i in apps if (i.__class__.__name__
                     in self.get_parent_functions())]
 
