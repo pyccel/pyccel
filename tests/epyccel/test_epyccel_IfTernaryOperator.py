@@ -213,7 +213,7 @@ def test_f9(language):
 
     assert fwp1(6) == f9wp1(6)
     assert fwp1(4) == f9wp1(4)
-    
+
     assert fwp2(6) == f9wp2(6)
     assert fwp2(4) == f9wp2(4)
     # ...
