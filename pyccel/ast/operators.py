@@ -16,7 +16,7 @@ from .basic     import PyccelAstNode, Basic
 
 from .builtins import PythonInt
 
-from .datatypes import NativeBool, NativeInteger, NativeReal, NativeComplex, NativeString, default_precision
+from .datatypes import NativeBool, NativeInteger, NativeReal, NativeComplex, NativeString, default_precision, NativeNumeric
 
 from .literals import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 
@@ -1073,7 +1073,7 @@ class PyccelIsNot(PyccelIs):
 
 #==============================================================================
 
-class IfTernaryOperator(Basic, PyccelOperator):
+class IfTernaryOperator(PyccelOperator):
     """Represent a ternary conditional operator in the code, of the form (a if cond else b)
 
     Parameters
@@ -1093,7 +1093,6 @@ class IfTernaryOperator(Basic, PyccelOperator):
     IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     """
     _precedence = 3
-    _dtype_list = (NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString())
 
     def __init__(self, cond, value_true, value_false):
         super().__init__(cond, value_true, value_false)
@@ -1102,12 +1101,10 @@ class IfTernaryOperator(Basic, PyccelOperator):
             return
         if isinstance(value_true , Nil) or isinstance(value_false, Nil):
             errors.report('None is not implemented for Ternary Operator', severity='fatal')
-        if isinstance(value_true.dtype, NativeString) or isinstance(value_false.dtype, NativeString):
-            errors.report('Strings are not supported by Ternary Operator', severity='fatal')
-        if value_true.dtype not in self._dtype_list :
-            raise NotImplementedError('cannot determine the type of {}'.format(value_true.dtype))
-        if value_false.dtype not in self._dtype_list :
-            raise NotImplementedError('cannot determine the type of {}'.format(value_false.dtype))
+        assert value_true.dtype in NativeNumeric
+        assert value_false.dtype in NativeNumeric
+        if value_true.dtype not in NativeNumeric:
+            assert(value_true.dtype == value_false.dtype)
         if value_false.rank != value_true.rank :
             errors.report('Ternary Operator results should have the same rank', severity='fatal')
         if value_false.shape != value_true.shape :
@@ -1117,7 +1114,7 @@ class IfTernaryOperator(Basic, PyccelOperator):
         """
         Sets the dtype and precision for IfTernaryOperator
         """
-        self._dtype = max([self.value_true.dtype, self.value_false.dtype], key = self._dtype_list.index)
+        self._dtype = max([self.value_true.dtype, self.value_false.dtype], key = NativeNumeric.index)
         self._precision = max([self.value_true.precision, self.value_false.precision])
 
     def _set_shape_rank(self):

@@ -60,6 +60,7 @@ __all__ = (
     'Real',
     'String',
     'Void',
+	'NumericNumeric',
 #    '_Symbol',
     'default_precision',
     'dtype_and_precision_registry',
@@ -135,6 +136,8 @@ class NativeReal(DataType):
 
 class NativeComplex(DataType):
     _name = 'Complex'
+
+NativeNumeric = (NativeBool(), NativeInteger(), NativeReal(), NativeComplex())
 
 class NativeString(DataType):
     _name = 'String'
