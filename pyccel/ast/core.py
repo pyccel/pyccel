@@ -2582,12 +2582,7 @@ class TupleVariable(Variable):
 
     def __getitem__(self,idx):
         if self._is_homogeneous:
-            if isinstance(idx, tuple):
-                idx = list(idx)
-            else:
-                idx = [idx]
-            idx.extend([Slice(None,None) for _ in range(self.rank-len(idx))])
-            return IndexedElement(self, *idx)
+            return Variable.__getitem__(self, idx)
         else:
             if isinstance(idx, tuple):
                 sub_idx = idx[1:]
