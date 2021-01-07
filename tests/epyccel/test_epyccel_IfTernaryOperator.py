@@ -4,7 +4,7 @@ import pytest
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
-
+# pw suffix means With Parentheses
 #------------------------------------------------------------------------------
 def test_f1(language):
     @types('int')
@@ -185,5 +185,80 @@ def test_f8(language):
 
     assert fwp(6) == f8wp(6)
     assert fwp(4) == f8wp(4)
+    # ...
+#------------------------------------------------------------------------------
+
+def test_f9(language):
+    @types('int')
+    def f9(x):
+        a = 1 + 2 if x < 5 else 3
+        return a
+
+    @types('int')
+    def f9wp1(x):
+        a = 1 + (2 if x < 5 else 3)
+        return a
+
+    @types('int')
+    def f9wp2(x):
+        a = (1 + 2) if x < 5 else 3
+        return a
+
+    f = epyccel(f9, language = language)
+    fwp1 = epyccel(f9wp1, language = language)
+    fwp2 = epyccel(f9wp2, language = language)
+    # ...
+    assert f(6) == f9(6)
+    assert f(4) == f9(4)
+
+    assert fwp1(6) == f9wp1(6)
+    assert fwp1(4) == f9wp1(4)
+    
+    assert fwp2(6) == f9wp2(6)
+    assert fwp2(4) == f9wp2(4)
+    # ...
+#------------------------------------------------------------------------------
+
+def test_f10(language):
+    @types('int')
+    def f10(x):
+        a = 2 if x < 5 else 3 + 1
+        return a
+
+    @types('int')
+    def f10wp1(x):
+        a = (2 if x < 5 else 3) + 1
+        return a
+
+    @types('int')
+    def f10wp2(x):
+        a = 2 if x < 5 else (3 + 1)
+        return a
+
+    f = epyccel(f10, language = language)
+    fwp1 = epyccel(f10wp1, language = language)
+    fwp2 = epyccel(f10wp2, language = language)
+    # ...
+    assert f(6) == f10(6)
+    assert f(4) == f10(4)
+
+    assert fwp1(6) == f10wp1(6)
+    assert fwp1(4) == f10wp1(4)
+
+    assert fwp2(6) == f10wp2(6)
+    assert fwp2(4) == f10wp2(4)
+    # ...
+#------------------------------------------------------------------------------
+
+def test_f11(language):
+    @types('int')
+    def f11(x):
+        a = 2 if (x + 2)*5 < 5 else 3
+        return a
+
+    f = epyccel(f11, language = language)
+    # ...
+    assert f(6) == f11(6)
+    assert f(-4) == f11(-4)
     # ...
 #------------------------------------------------------------------------------

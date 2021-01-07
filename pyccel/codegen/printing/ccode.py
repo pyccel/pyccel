@@ -368,7 +368,7 @@ class CCodePrinter(CodePrinter):
         cond = self._print(expr.cond)
         value_true = self._print(expr.value_true)
         value_false = self._print(expr.value_false)
-        return '({cond}) ? {true} : {false}'.format(cond = cond, true =value_true, false = value_false)
+        return '{cond} ? {true} : {false}'.format(cond = cond, true =value_true, false = value_false)
 
     def _print_LiteralTrue(self, expr):
         return '1'
