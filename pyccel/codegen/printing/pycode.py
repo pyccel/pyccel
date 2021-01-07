@@ -187,20 +187,6 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         args = ','.join(self._print(i) for i in expr.elements)
         return 'product({})'.format(args)
 
-    def _print_IndexedBase(self, expr):
-        return self._print(expr.label)
-
-    def _print_Indexed(self, expr):
-        inds = list(expr.indices)
-        #indices of indexedElement of len==1 shouldn't be a Tuple
-        for i, ind in enumerate(inds):
-            if isinstance(ind, Tuple) and len(ind) == 1:
-                inds[i] = ind[0]
-
-        inds = [self._print(i) for i in inds]
-
-        return "%s[%s]" % (self._print(expr.base.label), ", ".join(inds))
-
     def _print_Zeros(self, expr):
         return 'zeros('+ self._print(expr.shape)+')'
 
