@@ -5,7 +5,7 @@
 
 import math
 
-from pyccel.ast.core      import PyccelInternalFunction
+from pyccel.ast.internals import PyccelInternalFunction
 from pyccel.ast.core      import Constant
 from pyccel.ast.datatypes import (NativeInteger, NativeBool, NativeReal,
                                   default_precision)
