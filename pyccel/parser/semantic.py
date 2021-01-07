@@ -450,7 +450,7 @@ class SemanticParser(BasicParser):
         while container:
 
             #case import x as y
-            for key, value in container.imports['imports'].items():
+            for key,_ in container.imports['imports'].items():
                 if str(key) == str(name) or (isinstance(key, AsName)
                                             and str(key.target) == str(name)):
                     imp = container.imports['imports'][key]
@@ -1056,8 +1056,7 @@ class SemanticParser(BasicParser):
                     if new_name != rhs_name:
                         if hasattr(func, 'clone'):
                             func  = func.clone(new_name)
-                        else : #TODO add clone methode to numpyext and mathext ??
-                            func = func
+                        #TODO add clone methode to numpyext and mathext ??
                     return self._handle_function(func, args, **settings)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
