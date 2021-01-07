@@ -3564,7 +3564,6 @@ class SympyFunction(FunctionDef):
                              self.body, cls_name=self.cls_name)
 
 
-# TODO: [EB 06.01.2021] Is this class used? What for?
 class PythonFunction(FunctionDef):
 
     """Represents a Python-Function definition."""
