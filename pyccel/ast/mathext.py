@@ -4,9 +4,8 @@
 #------------------------------------------------------------------------------------------#
 
 import math
-from sympy import Function
 
-from pyccel.ast.basic     import PyccelAstNode
+from pyccel.ast.core      import PyccelInternalFunction
 from pyccel.ast.core      import Constant
 from pyccel.ast.datatypes import (NativeInteger, NativeBool, NativeReal,
                                   default_precision)
@@ -85,7 +84,7 @@ math_constants = {
 #==============================================================================
 # Base classes
 #==============================================================================
-class MathFunctionBase(Function, PyccelAstNode):
+class MathFunctionBase(PyccelInternalFunction):
     """Abstract base class for the Math Functions"""
     _shape = ()
     _rank  = 0

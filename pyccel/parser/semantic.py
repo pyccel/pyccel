@@ -9,7 +9,6 @@
 from collections import OrderedDict
 from itertools import chain
 
-from sympy.core.function       import Application, UndefinedFunction
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
@@ -119,8 +118,8 @@ def _get_name(var):
         return str(var)
     if isinstance(var, (IndexedElement, Indexed)):
         return str(var.base)
-    if isinstance(var, Application):
-        return type(var).__name__
+    if isinstance(var, FunctionCall):
+        return var.funcdef
     if isinstance(var, AsName):
         return var.target
     msg = 'Name of Object : {} cannot be determined'.format(type(var).__name__)
@@ -258,7 +257,7 @@ class SemanticParser(BasicParser):
         """
         code = expr
         if not isinstance(expr.body[-1], Return):
-            code = expr.body + [Deallocate(i) for i in self._allocs[-1]]
+            code = expr.body + tuple(Deallocate(i) for i in self._allocs[-1])
             code = CodeBlock(code)
         self._allocs.pop()
         return code
@@ -1063,7 +1062,7 @@ class SemanticParser(BasicParser):
                         else:
                             imp.define_target(AsName(Symbol(rhs_name), Symbol(new_name)))
 
-                if isinstance(rhs, Application):
+                if isinstance(rhs, FunctionCall):
                     # If object is a function
                     args  = self._handle_function_args(rhs.args, **settings)
                     func  = first[rhs_name]
@@ -1094,7 +1093,7 @@ class SemanticParser(BasicParser):
             attr_name = [i.name for i in first.cls_base.attributes]
 
         # look for a class method
-        if isinstance(rhs, Application):
+        if isinstance(rhs, FunctionCall):
             methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
             for method in methods:
                 if isinstance(method, Interface):
@@ -1216,7 +1215,7 @@ class SemanticParser(BasicParser):
             errors.report(UNDEFINED_LAMBDA_VARIABLE, symbol = expr_names.difference(var_names),
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal', blocker=True)
-        funcs = expr.expr.atoms(Application)
+        funcs = expr.expr.atoms(FunctionCall)
         for func in funcs:
             name = _get_name(func)
             f = self.get_symbolic_function(name)
@@ -1257,8 +1256,14 @@ class SemanticParser(BasicParser):
             expr = FunctionCall(func, args, self._current_function)
             return expr
 
-    def _visit_Application(self, expr, **settings):
-        name     = type(expr).__name__
+    def _visit_FunctionCall(self, expr, **settings):
+        name     = expr.funcdef
+
+        # Check for specialised method
+        annotation_method = '_visit_' + name
+        if hasattr(self, annotation_method):
+            return getattr(self, annotation_method)(expr, **settings)
+
         func     = self.get_function(name)
 
         args = self._handle_function_args(expr.args, **settings)
@@ -1309,10 +1314,9 @@ class SemanticParser(BasicParser):
             else:
                 func = self.get_function(name)
             if func is None:
-                # TODO [SH, 25.02.2020] Report error
-                errors.report(UNDEFINED_FUNCTION, symbol=name,
-                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal', blocker=self.blocking)
+                return errors.report(UNDEFINED_FUNCTION, symbol=name,
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='fatal', blocker=self.blocking)
             else:
                 return self._handle_function(func, args, **settings)
 
@@ -1621,8 +1625,8 @@ class SemanticParser(BasicParser):
         rhs = expr.rhs
         lhs = expr.lhs
 
-        if isinstance(rhs, Application):
-            name = type(rhs).__name__
+        if isinstance(rhs, FunctionCall):
+            name = rhs.funcdef
             macro = self.get_macro(name)
             if macro is None:
                 rhs = self._visit(rhs, **settings)
@@ -1764,6 +1768,8 @@ class SemanticParser(BasicParser):
                 if results:
                     d_var = [self._infere_type(i, **settings)
                                  for i in results]
+                else:
+                    raise NotImplementedError("Cannot assign result of a function without a return")
 
                 # case of elemental function
                 # if the input and args of func do not have the same shape,
@@ -1773,7 +1779,7 @@ class SemanticParser(BasicParser):
                     # args
 #                   d_var = None
                     func_args = func.arguments
-                    call_args = rhs.arguments
+                    call_args = rhs.args
                     f_ranks = [x.rank for x in func_args]
                     c_ranks = [x.rank for x in call_args]
                     same_ranks = [x==y for (x,y) in zip(f_ranks, c_ranks)]
@@ -1910,18 +1916,18 @@ class SemanticParser(BasicParser):
 
         if isinstance(rhs, (PythonMap, PythonZip)):
             func  = _get_name(rhs.args[0])
-            func  = UndefinedFunction(func)
             alloc = Assign(lhs, NumpyZeros(lhs.shape, lhs.dtype))
             alloc.set_fst(fst)
             index_name = self.get_new_name(expr)
             index = Variable('int',index_name)
-            range_ = UndefinedFunction('range')(UndefinedFunction('len')(lhs))
+            range_ = FunctionCall('range', (FunctionCall('len', lhs,),))
             name  = _get_name(lhs)
             var   = IndexedBase(name)[index]
             args  = rhs.args[1:]
             args  = [_get_name(arg) for arg in args]
             args  = [IndexedBase(arg)[index] for arg in args]
-            body  = [Assign(var, func(*args))]
+            func  = FunctionCall(func, args)
+            body  = [Assign(var, func)]
             body[0].set_fst(fst)
             body  = For(index, range_, body, strict=False)
             body  = self._visit_For(body, **settings)
@@ -2008,10 +2014,12 @@ class SemanticParser(BasicParser):
 
         elif isinstance(iterable, PythonMap):
             indx   = self.get_new_variable()
+            PyccelAstNode.stage = 'syntactic'
             func   = iterable.args[0]
             args   = [IndexedBase(arg)[indx] for arg in iterable.args[1:]]
-            assign = Assign(iterator, func(*args))
+            assign = Assign(iterator, FunctionCall(func, args))
             assign.set_fst(expr.fst)
+            PyccelAstNode.stage = 'semantic'
             iterator = indx
             body     = [assign] + body
 
@@ -2604,7 +2612,7 @@ class SemanticParser(BasicParser):
             all_assigned = [str(i) for i in all_assigned]
             assigned     = [str(i) for i in assigned]
 
-            apps = list(Tuple(*body.body).atoms(Application))
+            apps = list(Tuple(*body.body).atoms(FunctionCall))
             apps = [i for i in apps if (i.__class__.__name__
                     in self.get_parent_functions())]
 

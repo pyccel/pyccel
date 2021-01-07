@@ -289,6 +289,9 @@ class CCodePrinter(CodePrinter):
     def _print_LiteralInteger(self, expr):
         return str(expr.p)
 
+    def _print_LiteralFloat(self, expr):
+        return CodePrinter._print_Float(self, expr)
+
     def _print_LiteralComplex(self, expr):
         if expr.real == LiteralFloat(0):
             return self._print(PyccelAssociativeParenthesis(PyccelMul(expr.imag, LiteralImaginaryUnit())))
@@ -965,7 +968,7 @@ class CCodePrinter(CodePrinter):
         func = expr.funcdef
          # Ensure the correct syntax is used for pointers
         args = []
-        for a, f in zip(expr.arguments, func.arguments):
+        for a, f in zip(expr.args, func.arguments):
             if isinstance(a, Variable) and self.stored_in_c_pointer(f):
                 args.append(VariableAddress(a))
             elif f.is_optional and not isinstance(a, Nil):
