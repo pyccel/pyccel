@@ -770,9 +770,12 @@ class SemanticParser(BasicParser):
     def _visit(self, expr, **settings):
         """Annotates the AST.
 
-        # TODO: Why is IndexedVariable mentioned here?
-        IndexedVariable atoms are only used to manipulate expressions, we then,
-        always have a Variable in the namespace."""
+        The annotation is done by finding the appropriate function _visit_X
+        for the object expr. X is the type of the object expr. If this function
+        does not exist then the method resolution order is used to search for
+        other compatible _visit_X functions. If none are found then an error is
+        raised
+        """
 
         # TODO - add settings to Errors
         #      - line and column
