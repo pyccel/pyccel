@@ -28,7 +28,6 @@ from pyccel.ast.basic import PyccelAstNode
 
 from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Constant
-from pyccel.ast.core import Nil
 from pyccel.ast.core import Variable
 from pyccel.ast.core import TupleVariable
 from pyccel.ast.core import DottedName, DottedVariable
@@ -69,6 +68,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeSt
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
 from pyccel.ast.literals import LiteralInteger, LiteralFloat
+from pyccel.ast.literals import Nil
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.headers import MacroFunction, MacroVariable

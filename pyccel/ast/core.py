@@ -49,6 +49,7 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
 
 from .literals       import LiteralTrue, LiteralFalse, LiteralInteger
 from .literals       import LiteralImaginaryUnit, LiteralString, Literal
+from .literals       import Nil
 from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
@@ -112,7 +113,6 @@ __all__ = (
     'MulOp',
     'NativeOp',
     'NewLine',
-    'Nil',
     'ParallelBlock',
     'ParallelRange',
     'ParserResult',
@@ -2051,19 +2051,6 @@ class ConstructorCall(AtomicExpr):
             return self.func.name
         else:
             return self.func
-
-
-
-class Nil(Basic):
-
-    """
-    class for None object in the code.
-    """
-
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return sstr('None')
-
 
 class Void(Basic):
 

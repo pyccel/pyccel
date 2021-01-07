@@ -12,11 +12,12 @@ import numpy as np
 from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
+from pyccel.ast.literals  import Nil
 
 from pyccel.ast.builtins import PythonPrint
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
-from pyccel.ast.core import If, Nil, Return, FunctionCall
+from pyccel.ast.core import If, Return, FunctionCall
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, IfTernaryOperator
 from pyccel.ast.core import AugAssign
