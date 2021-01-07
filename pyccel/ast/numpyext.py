@@ -14,7 +14,7 @@ from .core           import (ClassDef, FunctionDef, PyccelInternalFunction,
                              PythonList, Variable, IndexedElement,
                              process_shape, ValuedArgument, Constant)
 
-from .operators      import (PyccelPow, PyccelAssociativeParenthesis, broadcast)
+from .operators      import (PyccelAssociativeParenthesis, broadcast)
 
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag)
@@ -717,6 +717,7 @@ class NumpyFloor(NumpyUfuncUnary):
 class NumpyMod(NumpyUfuncBinary):
 
     def _set_shape_rank(self, x1, x2):
+        args   = (x1, x2)
         shapes = [a.shape for a in args]
 
         if all(sh is not None for sh in shapes):
