@@ -13,7 +13,6 @@ from pyccel.ast.core import Variable
 from pyccel.ast.core import Assign
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
-from pyccel.ast.core import IndexedVariable
 
 __all__ = (
    'as_static_function',
@@ -27,15 +26,6 @@ def sanitize_arguments(args):
     for a in args:
         if isinstance(a, (Variable, FunctionAddress)):
             _args.append(a)
-
-        elif isinstance( a, IndexedVariable ):
-            a_new = Variable( a.dtype, str(a.name),
-                              shape       = a.shape,
-                              rank        = a.rank,
-                              order       = a.order,
-                              precision   = a.precision)
-
-            _args.append(a_new)
 
         else:
             raise NotImplementedError('TODO for {}'.format(type(a)))

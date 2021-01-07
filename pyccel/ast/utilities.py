@@ -15,8 +15,7 @@ from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors
 
 from .core     import (AsName, Import, FunctionDef, Constant,
-                       Variable, IndexedVariable, ValuedVariable,
-                       FunctionCall)
+                       Variable, ValuedVariable, FunctionCall)
 
 from .builtins      import builtin_functions_dict, PythonMap
 from .itertoolsext  import Product
@@ -147,9 +146,6 @@ def build_types_decorator(args, order=None):
     types = []
     for a in args:
         if isinstance(a, Variable):
-            dtype = a.dtype.name.lower()
-
-        elif isinstance(a, IndexedVariable):
             dtype = a.dtype.name.lower()
 
         else:
