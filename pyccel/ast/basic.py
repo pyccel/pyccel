@@ -18,6 +18,12 @@ __all__ = ('Basic', 'PyccelAstNode')
 class Basic(sp_Basic):
     """Basic class for Pyccel AST."""
     _fst = None
+
+    def __new__(cls, *args, **kwargs):
+        hashable_args  = [a if not isinstance(a, list) else tuple(a) for a in args]
+        hashable_args += [a if not isinstance(a, list) else tuple(a) for a in kwargs.values()]
+        return sp_Basic.__new__(cls, *hashable_args)
+
     def __init__(self, children):
         self._parent = None
         self._children = children
@@ -57,11 +63,6 @@ class Basic(sp_Basic):
         """ Indicates whether the object has any children
         """
         return bool(self._children)
-
-    def __new__(cls, *args, **kwargs):
-        hashable_args  = [a if not isinstance(a, list) else tuple(a) for a in args]
-        hashable_args += [a if not isinstance(a, list) else tuple(a) for a in kwargs.values()]
-        return sp_Basic.__new__(cls, *hashable_args)
 
     def set_fst(self, fst):
         """Sets the python.ast fst."""
