@@ -774,9 +774,12 @@ class SemanticParser(BasicParser):
     def _visit(self, expr, **settings):
         """Annotates the AST.
 
-        #TODO: Why is this comment here?
-        IndexedVariable atoms are only used to manipulate expressions, we then,
-        always have a Variable in the namespace."""
+        The annotation is done by finding the appropriate function _visit_X
+        for the object expr. X is the type of the object expr. If this function
+        does not exist then the method resolution order is used to search for
+        other compatible _visit_X functions. If none are found then an error is
+        raised
+        """
 
         # TODO - add settings to Errors
         #      - line and column
@@ -938,14 +941,10 @@ class SemanticParser(BasicParser):
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal', blocker=self.blocking)
 
-        if isinstance(var, PythonTuple):
-            if not var.is_homogeneous:
-                errors.report(LIST_OF_TUPLES, symbol=var,
-                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    severity='error', blocker=self.blocking)
-                dtype = 'int'
-            else:
-                dtype = var.dtype
+        if isinstance(var, PythonTuple) and not var.is_homogeneous:
+            errors.report(LIST_OF_TUPLES, symbol=var,
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='error', blocker=self.blocking)
 
         return var[args]
 
@@ -989,11 +988,6 @@ class SemanticParser(BasicParser):
         else:
             args = new_args
             len_args = len(args)
-
-        if var.rank>len_args:
-            # add missing dimensions
-
-            args = args + [self._visit(Slice(None, None),**settings)]*(var.rank-len(args))
 
         return self._extract_indexed_from_var(var, args, name)
 

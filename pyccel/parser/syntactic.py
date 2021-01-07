@@ -62,7 +62,8 @@ from pyccel.ast.operators import PyccelIs, PyccelIsNot
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.headers  import Header, MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
-from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString, Nil
+from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
+from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 from pyccel.ast.variable  import DottedName
 

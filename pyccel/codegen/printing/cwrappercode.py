@@ -11,7 +11,8 @@ import numpy as np
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
-from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString, Nil
+from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
+from pyccel.ast.literals  import Nil
 
 from pyccel.ast.builtins import PythonPrint
 
@@ -727,7 +728,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_IndexedElement(self, expr):
         assert(len(expr.indices)==1)
-        return '{}[{}]'.format(self._print(expr.base.internal_variable), self._print(expr.indices[0]))
+        return '{}[{}]'.format(self._print(expr.base), self._print(expr.indices[0]))
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'

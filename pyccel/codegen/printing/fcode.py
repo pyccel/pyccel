@@ -55,7 +55,8 @@ from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat
-from pyccel.ast.literals  import LiteralTrue, Nil
+from pyccel.ast.literals  import LiteralTrue
+from pyccel.ast.literals  import Nil
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
@@ -1148,7 +1149,7 @@ class FCodePrinter(CodePrinter):
         rhs = expr.rhs
 
         if isinstance(lhs, TupleVariable) and not lhs.is_homogeneous:
-            return self._print(CodeBlock([AliasAssign(l, rhs[i]) for i,l in enumerate(lhs)]))
+            return self._print(CodeBlock([AliasAssign(l, r) for l,r in zip(lhs,rhs)]))
 
         if isinstance(rhs, Dlist):
             pattern = 'allocate({lhs}(0:{length}-1))\n{lhs} = {init_value}\n'
@@ -2642,7 +2643,7 @@ class FCodePrinter(CodePrinter):
         if expr.base.order == 'C':
             inds = inds[::-1]
         base_shape = Shape(expr.base)
-        allow_negative_indexes = expr.base.allows_negative_indexes
+        allow_negative_indexes = base.allows_negative_indexes
 
         for i, ind in enumerate(inds):
             _shape = PyccelArraySize(base, i if expr.order != 'C' else len(inds) - i - 1)

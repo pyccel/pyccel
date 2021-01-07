@@ -1031,7 +1031,7 @@ class PyccelIs(PyccelBooleanOperator):
     Examples
     --------
     >>> from pyccel.ast import PyccelIs
-    >>> from pyccel.ast import Nil
+    >>> from pyccel.literals import Nil
     >>> from sympy.abc import x
     >>> PyccelIs(x, Nil())
     PyccelIs(x, None)
@@ -1063,7 +1063,7 @@ class PyccelIsNot(PyccelIs):
     Examples
     --------
     >>> from pyccel.ast import PyccelIsNot
-    >>> from pyccel.ast import Nil
+    >>> from pyccel.ast.literals import Nil
     >>> from sympy.abc import x
     >>> PyccelIsNot(x, Nil())
     PyccelIsNot(x, None)

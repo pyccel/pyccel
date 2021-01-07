@@ -24,7 +24,8 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              NativeReal, NativeComplex, NativeBool, str_dtype)
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
-from .literals       import LiteralTrue, LiteralFalse, Nil
+from .literals       import LiteralTrue, LiteralFalse
+from .literals       import Nil
 from .basic          import PyccelAstNode
 from .variable       import (Variable, IndexedElement, Constant)
 

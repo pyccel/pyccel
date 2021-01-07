@@ -43,8 +43,9 @@ from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
                         NativeTuple, is_iterable_datatype, str_dtype)
 
-from .literals       import LiteralTrue, LiteralFalse, LiteralInteger, Nil
-from .literals       import LiteralImaginaryUnit, LiteralString
+from .literals       import LiteralTrue, LiteralFalse, LiteralInteger
+from .literals       import LiteralImaginaryUnit, LiteralString, Literal
+from .literals       import Nil
 from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
@@ -313,8 +314,7 @@ def _atomic(e, cls=None,ignore=()):
     seen = []
     atoms_ = []
     if cls is None:
-        cls = (Application, DottedVariable, Variable,
-               IndexedElement)
+        cls = (Application, Variable, IndexedElement)
 
     for p in pot:
         if p in seen or isinstance(p, ignore):
@@ -2010,7 +2010,6 @@ class ConstructorCall(AtomicExpr):
             return self.func.name
         else:
             return self.func
-
 
 class Void(Basic):
 
