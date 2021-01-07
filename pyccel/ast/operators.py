@@ -1095,7 +1095,7 @@ class IfTernaryOperator(Basic, PyccelOperator):
     _precedence = 3
 
     def __init__(self, cond, value_true, value_false):
-        super().__init__(self, cond, value_true, value_false)
+        super().__init__(cond, value_true, value_false)
 
         self._cond = self._args[0]
         self._value_true = self._args[1]
