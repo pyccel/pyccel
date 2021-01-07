@@ -114,7 +114,13 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return code
 
     def _print_Return(self, expr):
-        return 'return {}'.format(self._print(expr.expr))
+        code = ''
+        if expr.stmt:
+            code += self._print(expr.stmt)+'\n'
+        if expr.args:
+            ret = ','.join([self._print(i) for i in expr.expr])
+            code += 'return {}'.format(ret)
+        return code
 
     def _print_PythonTuple(self, expr):
         args = ', '.join(self._print(i) for i in expr.args)
