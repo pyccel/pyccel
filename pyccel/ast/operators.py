@@ -1093,7 +1093,7 @@ class IfTernaryOperator(Basic, PyccelOperator):
     IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     """
     _precedence = 3
-    _dtype_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
+    _dtype_list = (NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString())
 
     def __init__(self, cond, value_true, value_false):
         super().__init__(cond, value_true, value_false)
