@@ -12,7 +12,7 @@ from sympy.core.expr          import Expr
 
 from ..errors.errors import Errors, PyccelSemanticError
 
-from .basic     import PyccelAstNode, Basic
+from .basic     import PyccelAstNode
 
 from .builtins import PythonInt
 

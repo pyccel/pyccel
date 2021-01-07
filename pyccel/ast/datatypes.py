@@ -60,7 +60,7 @@ __all__ = (
     'Real',
     'String',
     'Void',
-	'NumericNumeric',
+	'NativeNumeric',
 #    '_Symbol',
     'default_precision',
     'dtype_and_precision_registry',
