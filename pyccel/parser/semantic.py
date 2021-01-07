@@ -447,13 +447,15 @@ class SemanticParser(BasicParser):
         """."""
 
         imp = None
-
         container = self.namespace
         while container:
 
-            if name in container.imports['imports']:
-                imp =  container.imports['imports'][name]
-                break
+            #case import x as y
+            for key, value in container.imports['imports'].items():
+                if str(key) == str(name) or (isinstance(key, AsName)
+                                            and str(key.target) == str(name)):
+                    imp = container.imports['imports'][key]
+
             container = container.parent_scope
 
 
@@ -2575,7 +2577,8 @@ class SemanticParser(BasicParser):
             global_vars = [v for v in self.get_variables(self.namespace.parent_scope) if v not in args + results + local_vars]
 
             # get the imports
-            imports   = self.namespace.imports['imports'].values()
+            imports   = list(self.namespace.imports['imports'].values())
+            imports += list(self.namespace.parent_scope.imports['imports'].values())
             imports   = list(set(imports))
 
             # remove the FunctionDef from the function scope
@@ -2853,7 +2856,6 @@ class SemanticParser(BasicParser):
         return IsClass(var1, var2)
 
     def _visit_Import(self, expr, **settings):
-
         # TODO - must have a dict where to store things that have been
         #        imported
         #      - should not use namespace
@@ -2882,7 +2884,6 @@ class SemanticParser(BasicParser):
                                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                                   severity='fatal')
             expr.ignore = True
-            #TODO "import numpy" should be also collected
             if expr.target:
                 for (name, atom) in imports:
                     if not name is None:
@@ -2890,10 +2891,11 @@ class SemanticParser(BasicParser):
                             _insert_obj('variables', name, atom)
                         else:
                             _insert_obj('functions', name, atom)
-                        _insert_obj('imports', expr.source, expr)
 
             else:
                 _insert_obj('variables', source_target, imports)
+            _insert_obj('imports', expr.source, Import(expr.source, expr.target, True))
+
         else:
 
             # in some cases (blas, lapack, openmp and openacc level-0)
