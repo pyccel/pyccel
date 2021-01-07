@@ -1101,6 +1101,8 @@ class IfTernaryOperator(PyccelOperator):
             return
         if isinstance(value_true , Nil) or isinstance(value_false, Nil):
             errors.report('None is not implemented for Ternary Operator', severity='fatal')
+        if isinstance(value_true , NativeString) or isinstance(value_false, NativeString):
+            errors.report('String is not implemented for Ternary Operator', severity='fatal')
         assert value_true.dtype in NativeNumeric
         assert value_false.dtype in NativeNumeric
         if value_true.dtype not in NativeNumeric:
@@ -1114,7 +1116,8 @@ class IfTernaryOperator(PyccelOperator):
         """
         Sets the dtype and precision for IfTernaryOperator
         """
-        self._dtype = max([self.value_true.dtype, self.value_false.dtype], key = NativeNumeric.index)
+        if self in NativeNumeric:
+            self._dtype = max([self.value_true.dtype, self.value_false.dtype], key = NativeNumeric.index)
         self._precision = max([self.value_true.precision, self.value_false.precision])
 
     def _set_shape_rank(self):
@@ -1126,7 +1129,6 @@ class IfTernaryOperator(PyccelOperator):
         if self._rank is not None and self._rank > 1:
             if self.value_false.order != self.value_true.order :
                 errors.report('Ternary Operator results should have the same order', severity='fatal')
-            self._order = self.value_true.order
 
     @property
     def cond(self):
