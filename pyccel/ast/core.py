@@ -326,8 +326,7 @@ def _atomic(e, cls=None,ignore=()):
     seen = []
     atoms_ = []
     if cls is None:
-        cls = (Application, DottedVariable, Variable,
-               IndexedElement)
+        cls = (Application, Variable, IndexedElement)
 
     for p in pot:
         if p in seen or isinstance(p, ignore):
@@ -4687,7 +4686,7 @@ class IndexedElement(Expr, PyccelAstNode):
 
         if not args:
             raise IndexError('Indexed needs at least one index.')
-        if not isinstance(base, (Variable, DottedVariable)):
+        if not isinstance(base, Variable):
             raise TypeError("Indexed expects Variable as base")
         return Expr.__new__(cls, base, *args, **kw_args)
 
