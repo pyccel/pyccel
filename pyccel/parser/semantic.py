@@ -2571,8 +2571,7 @@ class SemanticParser(BasicParser):
             global_vars = [v for v in self.get_variables(self.namespace.parent_scope) if v not in args + results + local_vars]
 
             # get the imports
-            imports   = list(self.namespace.imports['imports'].values())
-            imports += list(self.namespace.parent_scope.imports['imports'].values())
+            imports   = self.namespace.imports['imports'].values()
             imports   = list(set(imports))
 
             # remove the FunctionDef from the function scope
