@@ -146,9 +146,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return '.'.join(self._print(n) for n in expr.name)
 
     def _print_FunctionCall(self, expr):
-        func = self._print(expr.func)
-        args = ','.join(self._print(i) for i in expr.arguments)
-        return'{func}({args})'.format(func=func, args=args)
+        func = expr.funcdef
+        args = ','.join(self._print(i) for i in expr.args)
+        return'{func}({args})'.format(func=func.name, args=args)
 
     def _print_Len(self, expr):
         return 'len({})'.format(self._print(expr.arg))
@@ -276,9 +276,13 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return 'print({0})'.format(fs)
 
     def _print_Module(self, expr):
-        code = '\n'.join(self._print(e) for e in expr.body)
-        imports = '\n'.join(self._print(i) for i in self._additional_imports)
-        return '\n'.join([imports, code])
+        body = '\n'.join(self._print(e) for e in expr.body)
+        imports  = [*expr.imports, *self._additional_imports]
+        imports  = '\n'.join(self._print(i) for i in imports)
+        return ('{imports}\n\n'
+                '{body}').format(
+                        imports = imports,
+                        body    = body)
 
     def _print_PyccelPow(self, expr):
         base = self._print(expr.args[0])
