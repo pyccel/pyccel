@@ -451,8 +451,7 @@ class SemanticParser(BasicParser):
 
             #case import x as y
             for key,_ in container.imports['imports'].items():
-                if str(key) == str(name) or (isinstance(key, AsName)
-                                            and str(key.target) == str(name)):
+                if key == name:
                     imp = container.imports['imports'][key]
 
             container = container.parent_scope
@@ -2887,7 +2886,8 @@ class SemanticParser(BasicParser):
 
             else:
                 _insert_obj('variables', source_target, imports)
-            _insert_obj('imports', expr.source, Import(source, expr.target, True))
+            key = expr.source if isinstance(expr.source, AsName) else source
+            _insert_obj('imports', key, Import(source, expr.target, True))
 
         else:
 
