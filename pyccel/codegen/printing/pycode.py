@@ -122,6 +122,12 @@ class PythonCodePrinter(SympyPythonCodePrinter):
             code += 'return {}'.format(ret)
         return code
 
+    def _print_AsName(self, expr):
+        name = self._print(expr.name)
+        target = self._print(expr.target)
+
+        return '{name} as {target}'.format(name = name, target = target)
+
     def _print_PythonTuple(self, expr):
         args = ', '.join(self._print(i) for i in expr.args)
         return '('+args+')'
