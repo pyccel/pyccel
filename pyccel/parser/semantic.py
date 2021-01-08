@@ -443,13 +443,15 @@ class SemanticParser(BasicParser):
 
 
     def get_import(self, name):
-        """."""
+        """
+        Search for a Import object with the given name in the current namespace.
+        Return None if not found.
+        """
 
         imp = None
         container = self.namespace
         while container:
 
-            #case import x as y
             for key,_ in container.imports['imports'].items():
                 if key == name:
                     imp = container.imports['imports'][key]
