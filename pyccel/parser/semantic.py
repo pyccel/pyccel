@@ -1057,7 +1057,6 @@ class SemanticParser(BasicParser):
                     if new_name != rhs_name:
                         if hasattr(func, 'clone'):
                             func  = func.clone(new_name)
-                        #TODO add clone methode to numpyext and mathext ??
                     return self._handle_function(func, args, **settings)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
