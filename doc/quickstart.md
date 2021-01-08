@@ -6,16 +6,17 @@ Pyccel's main goal is to accelerate the transition from **prototype** to **produ
 
 Pyccel generates very fast Fortran or C code which is **human-readable**, hence the expert programmer can easily profile the code on the target machine and further optimize it.
 
-## The Python 3 Language
 
-In order to translate Python 3 code to efficient Fortran/C code, Pyccel makes a certain number of *assumptions*, needs *additional information* from the user, and imposes a few *restrictions* on the code.
-To understand why this is, we recall that Python 3 is an **interpreted** language, **dynamically typed** and **garbage-collected**.
+
+## Some Useful Background
+
+We recall that Python 3 is an **interpreted** language, **dynamically typed** and **garbage-collected**.
 In particular, it is worth clarifying the difference between an object and a variable (or name):
 
 ### Python object
 
 -   Is created by the Python interpreter when `object.__new__()` is invoked (e.g. as a result of an expression).
--   Can be either mutable or immutable, but its type never changes.
+-   Can be either **mutable** or **immutable**, but its type never changes.
 -   Resides in memory and has a **reference count**.
 -   Is accessed through one or more Python variables.
 -   Is destroyed by the garbage collector when its reference count drops to zero.
@@ -24,6 +25,7 @@ In particular, it is worth clarifying the difference between an object and a var
 
 -   Is a reference to a Python object in memory.
 -   Is created with an assignment operation `x = expr`:
+
     -   If the variable `x` already exists, the interpreter reduces the reference count of its object
     -   Otherwise a new variable `x` is created, which references the value of expr.
     -   The variable `x` is then modified to reference the object referenced by `expr` and the reference count of this object is increased
@@ -31,23 +33,86 @@ In particular, it is worth clarifying the difference between an object and a var
 -   The type of the variable can be changed at run-time, because Python is a dynamically typed language.
 -   Can be destroyed with the command del `x`.
 
-### References
+### Statically Typed Languages
+	
+A language is statically-typed if the type of a variable is known at compile-time instead of run-time.
+Common examples of statically-typed languages include Java, C, C++, FORTRAN, Pascal and Scala.
+These languages provide a set of built-in types, and provide the means for creating additional user-defined types.
+It is the programmer's responsibility to explicitly declare the type of every variable used in the code.
+
+### Further Reading
 
 - https://docs.python.org/3/tutorial/classes.html#a-word-about-names-and-objects
 - https://docs.python.org/3/reference/datamodel.html#objects-values-and-types
+- https://en.wikipedia.org/wiki/Type_system
+- https://android.jlelse.eu/magic-lies-here-statically-typed-vs-dynamically-typed-languages-d151c7f95e2b
 
-## Statically Typed Languages
-	
-A language is statically-typed if the type of a variable is known at compile-time instead of run-time. Common examples of statically-typed languages include Java, C, C++, FORTRAN, Pascal and Scala, on the other hand, in python the type of a variable is known at run-time, that's why we need to collect the garbage in the generated code, and raise some warnings/errors for the conflicts that can occur between dynamically typed languages (python) and statically typed languages(C/Fortran).
-See [this](https://en.wikipedia.org/wiki/Type_system#:~:text=In%20programming%20languages%2C%20a%20type,%2C%20expressions%2C%20functions%20or%20modules.) and [this](https://android.jlelse.eu/magic-lies-here-statically-typed-vs-dynamically-typed-languages-d151c7f95e2b#:~:text=Static%20typed%20languages,%2C%20FORTRAN%2C%20Pascal%20and%20Scala.) for more details.
 
-## Installation
+## How does Pyccel work?
+
+In order to translate Python 3 code (dynamically typed) to efficient Fortran/C code (statically typed), Pyccel makes a certain number of *assumptions*, needs *additional information* from the user, and imposes a few *restrictions* on the code.
+The fundamental rule that guides Pyccel's design is that the Python 3 code and the generated Fortran/C code should behave in the same way.
+Up to round-off errors, this means that a function must return the same output value if the input arguments are the same.
+Moreover, Pyccel raises some warnings/errors for the conflicts that can occur in some corner cases.
+
+### Type Inference
+
+Pyccel uses type inference to calculate the type of all variables through a static analysis of the Python code.
+It understands all Python literals, and computes the type of an expression that contains previously processed variables.
+For example:
+```python
+x = 3        # int
+y = x * 0.5  # float
+z = y + 1j   # complex
+```
+
+### Assumptions and Restrictions
+
+Because the type of a variable must be unique within a given **scope**, Pyccel cannot support some of the flexibility that Python provides.
+The following basic restrictions apply:
+
+1. The type of a variable cannot be changed
+2. The type of a variable cannot depend on an if condition
+
+For example:
+```python
+if condition:
+    y = 1    # int
+    z = 1.0  # float
+else:
+    y = 2    # int     : OK
+    z = 3j   # complex : Pyccel raises an error!
+```
+
+### Type Annotations
+
+When parsing a function, Pyccel needs to know the type of the input arguments in order to perform type inference, and ultimately compute the type of the output result.
+Pyccel can then perform type inference on other Python code that uses that function, because the type of its result will be already known.
+
+As described in the next section, the programmer has various ways to provide the argument type information to Pyccel.
+For example, Python-style type annotations can be used:
+```python
+def factorial(n : int):
+    r = 1
+    for i in range(1, n):
+    	r *= i
+    return r
+
+def binomial_coefficient(n : int, k : int):
+    num = factorial(n)
+    den = factorial(k) * factorial(n - k)
+    return num // den
+```
+
+## How to use Pyccel?
+
+### Installation
 
 Pyccel's official releases can be downloaded from PyPI (the Python Package Index) using `pip`.
 To get the latest (trunk) version of Pyccel, just clone the `git` repository from GitHub and checkout the `master` branch.
 Detailed installation instructions are found in the [README](https://github.com/pyccel/pyccel/blob/master/README.rst) file.
 
-## Command Line Usage
+### Command Line Usage
 
 -   Open a terminal app, iterm or terminal for MacOs, terminal for Linux.
 
