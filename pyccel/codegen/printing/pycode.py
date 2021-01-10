@@ -122,6 +122,18 @@ class PythonCodePrinter(SympyPythonCodePrinter):
             code += 'return {}'.format(ret)
         return code
 
+    def _print_Program(self, expr):
+        body  = self._print(expr.body)
+        body = self._indent_codestring(body)
+        imports  = [*expr.imports, *self._additional_imports]
+        imports  = '\n'.join(self._print(i) for i in imports)
+
+        return ('{imports}\n'
+                'if __name__ == "__main__":\n'
+                '{body}\n').format(imports=imports,
+                                    body=body)
+
+
     def _print_AsName(self, expr):
         name = self._print(expr.name)
         target = self._print(expr.target)
