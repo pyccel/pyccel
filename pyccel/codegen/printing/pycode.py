@@ -144,6 +144,11 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         args = ', '.join(self._print(i) for i in expr.args)
         return '('+args+')'
 
+    def _print_PyccelArraySize(self, expr):
+        arg = self._print(expr.arg)
+        index = self._print(expr.index)
+        return 'shape({0})[{1}]'.format(arg, index)
+
     def _print_Comment(self, expr):
         txt = self._print(expr.text)
         return '# {0} '.format(txt)
