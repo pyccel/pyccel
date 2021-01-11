@@ -11,11 +11,11 @@ import operator
 from sympy.core           import Tuple
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
-from pyccel.ast.core      import Declare, IndexedVariable, Slice, ValuedVariable
+from pyccel.ast.core      import Declare, Slice, ValuedVariable
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress, PyccelArraySize
-from pyccel.ast.core      import Nil, IfTernaryOperator
+from pyccel.ast.core      import IfTernaryOperator
 from pyccel.ast.core      import Assign, datatype, Variable, Import
 from pyccel.ast.core      import SeparatorComment, VariableAddress
 from pyccel.ast.core      import DottedName
@@ -30,6 +30,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, Nativ
 
 from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
+from pyccel.ast.literals  import Nil
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
@@ -288,6 +289,9 @@ class CCodePrinter(CodePrinter):
 
     def _print_LiteralInteger(self, expr):
         return str(expr.p)
+
+    def _print_LiteralFloat(self, expr):
+        return CodePrinter._print_Float(self, expr)
 
     def _print_LiteralComplex(self, expr):
         if expr.real == LiteralFloat(0):
@@ -642,15 +646,10 @@ class CCodePrinter(CodePrinter):
             return '{0}{1}({2})'.format(ret_type, name, arg_code)
 
     def _print_IndexedElement(self, expr):
-        if isinstance(expr.base, IndexedVariable):
-            base = expr.base.internal_variable
-        else:
-            base = expr.base
+        base = expr.base
         inds = list(expr.indices)
-        inds = inds[::-1]
         base_shape = base.shape
-        allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
-                base.allows_negative_indexes)
+        allow_negative_indexes = base.allows_negative_indexes
         for i, ind in enumerate(inds):
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0])
@@ -702,13 +701,13 @@ class CCodePrinter(CodePrinter):
         # negative start and end in slice
         if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
             start = PyccelMinus(array_size, start.args[0])
-        elif allow_negative_index and not isinstance(start, LiteralInteger):
+        elif allow_negative_index and not isinstance(start, (LiteralInteger, PyccelArraySize)):
             start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
                             PyccelMinus(array_size, start), start)
 
         if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
             stop = PyccelMinus(array_size, stop.args[0])
-        elif allow_negative_index and not isinstance(stop, LiteralInteger):
+        elif allow_negative_index and not isinstance(stop, (LiteralInteger, PyccelArraySize)):
             stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
                             PyccelMinus(array_size, stop), stop)
 
@@ -720,13 +719,14 @@ class CCodePrinter(CodePrinter):
 
         # negative step in slice
         elif isinstance(step, PyccelUnarySub) and isinstance(step.args[0], LiteralInteger):
-            start = array_size if _slice.start is None else start
+            start = PyccelMinus(array_size, LiteralInteger(1)) if _slice.start is None else start
             stop = LiteralInteger(0) if _slice.stop is None else stop
 
         # variable step in slice
         elif allow_negative_index and step and not isinstance(step, LiteralInteger):
-            start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, stop)
-            stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, start)
+            og_start = start
+            start = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), start, PyccelMinus(stop, LiteralInteger(1)))
+            stop = IfTernaryOperator(PyccelGt(step, LiteralInteger(0)), stop, og_start)
 
         return Slice(start, stop, step)
 
@@ -965,7 +965,7 @@ class CCodePrinter(CodePrinter):
         func = expr.funcdef
          # Ensure the correct syntax is used for pointers
         args = []
-        for a, f in zip(expr.arguments, func.arguments):
+        for a, f in zip(expr.args, func.arguments):
             if isinstance(a, Variable) and self.stored_in_c_pointer(f):
                 args.append(VariableAddress(a))
             elif f.is_optional and not isinstance(a, Nil):
@@ -1158,16 +1158,6 @@ class CCodePrinter(CodePrinter):
             self._additional_code = ''
             body.append(code)
         return '\n'.join(self._print(b) for b in body)
-
-    def _print_Indexed(self, expr):
-        # calculate index for 1d array
-        dims = expr.shape
-        elem = LiteralInteger(0)
-        offset = LiteralInteger(1)
-        for i in reversed(list(range(expr.rank))):
-            elem += expr.indices[i]*offset
-            offset *= dims[i]
-        return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
 
     def _print_Idx(self, expr):
         return self._print(expr.label)

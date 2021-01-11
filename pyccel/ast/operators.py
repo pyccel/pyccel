@@ -109,6 +109,9 @@ class PyccelOperator(Expr, PyccelAstNode):
             return
         self._set_dtype()
         self._set_shape_rank()
+        # rank is None for lambda functions
+        if self._rank is not None and self._rank > 1:
+            self._set_order()
 
     @property
     def precedence(self):
@@ -156,6 +159,16 @@ class PyccelOperator(Expr, PyccelAstNode):
 
     def __str__(self):
         return repr(self)
+
+    def _set_order(self):
+        """ Sets the shape and rank
+        This is chosen to match the arguments if they are in agreement.
+        Otherwise it defaults to 'C'
+        """
+        if all(a.order == self._args[0].order for a in self._args):
+            self._order = self._args[0].order
+        else:
+            self._order = 'C'
 
 #==============================================================================
 
@@ -1016,7 +1029,7 @@ class PyccelIs(PyccelBooleanOperator):
     Examples
     --------
     >>> from pyccel.ast import PyccelIs
-    >>> from pyccel.ast import Nil
+    >>> from pyccel.literals import Nil
     >>> from sympy.abc import x
     >>> PyccelIs(x, Nil())
     PyccelIs(x, None)
@@ -1048,7 +1061,7 @@ class PyccelIsNot(PyccelIs):
     Examples
     --------
     >>> from pyccel.ast import PyccelIsNot
-    >>> from pyccel.ast import Nil
+    >>> from pyccel.ast.literals import Nil
     >>> from sympy.abc import x
     >>> PyccelIsNot(x, Nil())
     PyccelIsNot(x, None)
