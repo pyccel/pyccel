@@ -24,6 +24,16 @@ Pyccel comes with a selection of **extensions** allowing you to convert calls to
 - mpi4py
 - h5py (not available yet)
 
+Pyccel Installation Methods
+***************************
+
+Pyccel can be installed / deployed in different ways:
+
+1. using Pypi
+2. using containers
+3. from source
+
+  
 Getting Started
 ===============
 
