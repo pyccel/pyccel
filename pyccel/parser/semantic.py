@@ -444,7 +444,7 @@ class SemanticParser(BasicParser):
 
     def get_import(self, name):
         """
-        Search for a Import object with the given name in the current namespace.
+        Search for an import with the given name in the current namespace.
         Return None if not found.
         """
 
