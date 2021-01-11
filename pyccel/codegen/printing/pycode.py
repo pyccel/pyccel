@@ -172,7 +172,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_Import(self, expr):
         source = self._print(expr.source)
-        if expr.target is None:
+        if not expr.target:
             return 'import {source}'.format(source=source)
         else:
             target = ', '.join([self._print(i) for i in expr.target])
