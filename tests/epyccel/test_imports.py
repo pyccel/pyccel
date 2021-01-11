@@ -18,7 +18,7 @@ def language(request):
 def test_import(language):
     @types('int[:]')
     def f1(x):
-        import numpy
+        import numpy  # pylint: disable=import-error
         s = numpy.shape(x)[0]
         return s
 
@@ -33,6 +33,7 @@ def test_import_from(language):
         s = shape(x)[0]
         return s
 
+
     f = epyccel(f2, language = language)
     x = np.ones(10, dtype=int)
     assert f(x) == f2(x)
@@ -40,7 +41,7 @@ def test_import_from(language):
 def test_import_as(language):
     @types('int[:]')
     def f3(x):
-        import numpy as np
+        import numpy as np  # pylint: disable=import-error
         s = np.shape(x)[0]
         return s
 
