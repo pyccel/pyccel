@@ -456,6 +456,8 @@ class SemanticParser(BasicParser):
                 if key == name:
                     imp = container.imports['imports'][key]
 
+            if imp:
+                break
             container = container.parent_scope
 
 
