@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 
 import pytest
-import numpy as np
+from numpy import ones
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
@@ -18,12 +18,12 @@ def language(request):
 def test_import(language):
     @types('int[:]')
     def f1(x):
-        import numpy  # pylint: disable=import-error
+        import numpy
         s = numpy.shape(x)[0]
         return s
 
     f = epyccel(f1, language = language)
-    x = np.ones(10, dtype=int)
+    x = ones(10, dtype=int)
     assert f(x) == f1(x)
 
 def test_import_from(language):
@@ -35,18 +35,18 @@ def test_import_from(language):
 
 
     f = epyccel(f2, language = language)
-    x = np.ones(10, dtype=int)
+    x = ones(10, dtype=int)
     assert f(x) == f2(x)
 
 def test_import_as(language):
     @types('int[:]')
     def f3(x):
-        import numpy as np  # pylint: disable=import-error
+        import numpy as np
         s = np.shape(x)[0]
         return s
 
     f = epyccel(f3, language = language)
-    x = np.ones(10, dtype=int)
+    x = ones(10, dtype=int)
     assert f(x) == f3(x)
 
 def test_import_collision(language):
