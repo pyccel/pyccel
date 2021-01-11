@@ -1116,8 +1116,10 @@ class IfTernaryOperator(PyccelOperator):
         """
         Sets the dtype and precision for IfTernaryOperator
         """
-        if isinstance(self, NativeString):
-            self._dtype = NativeString()
+        if isinstance(self.value_true , Nil) or isinstance(self.value_false, Nil):
+            errors.report('None is not implemented for Ternary Operator', severity='fatal')
+        if isinstance(self.value_true , NativeString) or isinstance(self.value_false, NativeString):
+            errors.report('String is not implemented for Ternary Operator', severity='fatal')
         else:
             self._dtype = max([self.value_true.dtype, self.value_false.dtype], key = NativeNumeric.index)
         self._precision = max([self.value_true.precision, self.value_false.precision])
