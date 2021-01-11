@@ -2848,6 +2848,7 @@ class SemanticParser(BasicParser):
         return IsClass(var1, var2)
 
     def _visit_Import(self, expr, **settings):
+
         # TODO - must have a dict where to store things that have been
         #        imported
         #      - should not use namespace
@@ -2863,6 +2864,7 @@ class SemanticParser(BasicParser):
 
         if source in pyccel_builtin_import_registery:
             imports = pyccel_builtin_import(expr)
+
             def _insert_obj(location, target, obj):
                 F = self.check_for_variable(target)
 
@@ -2875,7 +2877,7 @@ class SemanticParser(BasicParser):
                     errors.report(IMPORTING_EXISTING_IDENTIFIED,
                                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                                   severity='fatal')
-            expr.ignore = True
+
             if expr.target:
                 for (name, atom) in imports:
                     if not name is None:
@@ -2883,7 +2885,6 @@ class SemanticParser(BasicParser):
                             _insert_obj('variables', name, atom)
                         else:
                             _insert_obj('functions', name, atom)
-
             else:
                 _insert_obj('variables', source_target, imports)
             key = expr.source if isinstance(expr.source, AsName) else source
