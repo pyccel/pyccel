@@ -149,10 +149,11 @@ def epyccel_seq(function_or_module, *,
     package = importlib.import_module(module_name)
     sys.path.remove(epyccel_dirpath)
 
-    # Verify that we have imported the shared library, not the Python one
-    loader = getattr(package, '__loader__', None)
-    if not isinstance(loader, ExtensionFileLoader):
-        raise ImportError('Could not load shared library')
+    if language != 'python':
+        # Verify that we have imported the shared library, not the Python one
+        loader = getattr(package, '__loader__', None)
+        if not isinstance(loader, ExtensionFileLoader):
+            raise ImportError('Could not load shared library')
 
     # If Python object was function, extract it from module
     if isinstance(function_or_module, FunctionType):

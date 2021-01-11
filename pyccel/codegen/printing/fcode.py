@@ -19,7 +19,6 @@ import operator
 
 from sympy.core import Symbol
 from sympy.core import Tuple
-from sympy.core.function import Function, Application
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
 
@@ -27,16 +26,15 @@ from sympy.logic.boolalg import Not
 
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
-from pyccel.ast.core import Nil, IfTernaryOperator
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
-from pyccel.ast.core import Subroutine
 from pyccel.ast.core import ErrorExit, FunctionAddress
+from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              VariableAddress,
                              TupleVariable, For, Declare,
-                             IndexedVariable, CodeBlock,
+                             CodeBlock,
                              IndexedElement, Slice, Dlist,
                              DottedName, AsName,
                              If, PyccelArraySize, IfTernaryOperator)
@@ -44,11 +42,11 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt
-from pyccel.ast.core      import FunctionCall
+from pyccel.ast.core      import FunctionCall, DottedFunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
                                   PythonMap, PythonPrint, PythonRange,
-                                  PythonZip, PythonFloat, PythonTuple, PythonList)
+                                  PythonZip, PythonFloat, PythonTuple)
 from pyccel.ast.builtins  import PythonComplex, PythonBool
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
@@ -59,6 +57,7 @@ from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue
+from pyccel.ast.literals import Nil
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
@@ -542,20 +541,24 @@ class FCodePrinter(CodePrinter):
         return self._print(val)
 
     def _print_DottedVariable(self, expr):
-        if isinstance(expr.args[1], Function):
-            func = expr.args[1].func
-            name = func.__name__
-            # ...
-            code_args = ''
-            code_args = ', '.join(self._print(i) for i in expr.args[1].args)
-            code = '{0}({1})'.format(name, code_args)
-                # ...
-                # ...
-            code = '{0}%{1}'.format(self._print(expr.args[0]), code)
-            if isinstance(func, Subroutine):
-                code = 'call {0}'.format(code)
-            return code
-        return self._print(expr.args[0]) + '%' +self._print(expr.args[1])
+        if isinstance(expr.lhs, FunctionCall):
+            base = expr.lhs.funcdef.results[0]
+            if (not self._additional_code):
+                self._additional_code = ''
+            var_name = self.parser.get_new_name()
+            var = base.clone(var_name)
+
+            if self._current_function:
+                name = self._current_function
+                func = self.get_function(name)
+                func.local_vars.append(var)
+            else:
+                self._namespace.variables[var.name] = var
+
+            self._additional_code = self._additional_code + self._print(Assign(var,expr.lhs)) + '\n'
+            return self._print(var) + '%' +self._print(expr.name)
+        else:
+            return self._print(expr.lhs) + '%' +self._print(expr.name)
 
     def _print_DottedName(self, expr):
         return ' % '.join(self._print(n) for n in expr.name)
@@ -1149,10 +1152,7 @@ class FCodePrinter(CodePrinter):
             rhs = rhs.variable
 
         if isinstance(lhs, TupleVariable) and not lhs.is_homogeneous:
-            if isinstance(rhs, (TupleVariable, PythonTuple)):
-                return self._print(CodeBlock([AliasAssign(l, rhs[i]) for i,l in enumerate(lhs)]))
-            else:
-                return self._print(CodeBlock([AliasAssign(l, IndexedVariable(rhs)[i]) for i,l in enumerate(lhs)]))
+            return self._print(CodeBlock([AliasAssign(l, r) for l,r in zip(lhs,rhs)]))
 
         if isinstance(rhs, Dlist):
             pattern = 'allocate({lhs}(0:{length}-1))\n{lhs} = {init_value}\n'
@@ -1266,7 +1266,7 @@ class FCodePrinter(CodePrinter):
             if isinstance(expr.lhs, (tuple, list, Tuple, PythonTuple)):
 
                 rhs_code = rhs.funcdef.name
-                args = rhs.arguments
+                args = rhs.args
                 code_args = [self._print(i) for i in args]
                 func = rhs.funcdef
                 output_names = func.results
@@ -2482,13 +2482,13 @@ class FCodePrinter(CodePrinter):
 
     def _print_ConstructorCall(self, expr):
         func = expr.func
-        name = func.name
+        name = str(func.name)
         if name == "__init__":
             name = "create"
         name = self._print(name)
 
         code_args = ''
-        if not(expr.arguments) is None:
+        if expr.arguments is not None:
             code_args = ', '.join(self._print(i) for i in expr.arguments)
         code = '{0}({1})'.format(name, code_args)
         return self._get_statement(code)
@@ -2611,14 +2611,11 @@ class FCodePrinter(CodePrinter):
         return "{0}_{1}".format(str(expr.p), iso_c_binding["integer"][expr.precision])
 
     def _print_IndexedElement(self, expr):
-        if isinstance(expr.base, IndexedVariable):
-            base = expr.base.internal_variable
-        else:
-            base = expr.base
-        if isinstance(base, Application) and not isinstance(base, PythonTuple):
+        base = expr.base
+        if isinstance(base, PyccelInternalFunction) and not isinstance(base, PythonTuple):
             indexed_type = base.dtype
             if isinstance(indexed_type, PythonTuple):
-                base = self._print_Function(expr.base.base)
+                base = self._print_PyccelInternalFunction(expr.base.base)
             else:
                 if (not self._additional_code):
                     self._additional_code = ''
@@ -2635,26 +2632,21 @@ class FCodePrinter(CodePrinter):
                     self._namespace.variables[var.name] = var
 
                 self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
-                return self._print(IndexedVariable(var, dtype=base.dtype,
-                   shape=base.shape,prec=base.precision,
-                   order=base.order,rank=base.rank)[expr.indices])
+                return self._print(var[expr.indices])
         elif isinstance(base, TupleVariable) and not base.is_homogeneous:
             if len(expr.indices)==1:
                 return self._print(base[expr.indices[0]])
             else:
                 var = base[expr.indices[0]]
-                return self._print(IndexedVariable(var, dtype = var.dtype,
-                    shape = var.shape, prec = var.precision,
-                    order = var.order, rank = var.rank)[expr.indices[1:]])
+                return self._print(var[expr.indices[1:]])
         else:
-            base_code = self._print(expr.base.label)
+            base_code = self._print(base)
 
         inds = list(expr.indices)
         if expr.base.order == 'C':
             inds = inds[::-1]
         base_shape = Shape(expr.base)
-        allow_negative_indexes = (isinstance(expr.base, IndexedVariable) and \
-                expr.base.internal_variable.allows_negative_indexes)
+        allow_negative_indexes = base.allows_negative_indexes
 
         for i, ind in enumerate(inds):
             _shape = PyccelArraySize(base, i if expr.order != 'C' else len(inds) - i - 1)
@@ -2751,15 +2743,15 @@ class FCodePrinter(CodePrinter):
 
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
-        f_name = func.name if not expr.interface else expr.interface.name
-        args = [a for a in expr.arguments if not isinstance(a, Nil)]
+        f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
+        args = [a for a in expr.args if not isinstance(a, Nil)]
         results = func.results
 
         if len(results) == 1:
             args = ['{}'.format(self._print(a)) for a in args]
 
             args = ', '.join(args)
-            code = '{name}({args})'.format( name = str(f_name),
+            code = '{name}({args})'.format( name = f_name,
                                             args = args)
 
         elif len(results)>1:
@@ -2790,15 +2782,36 @@ class FCodePrinter(CodePrinter):
 
             newargs = ', '.join(args+results)
 
-            code = 'call {name}({args})\n'.format( name = str(f_name),
+            code = 'call {name}({args})\n'.format( name = f_name,
                                                  args = newargs )
         return code
 
 #=======================================================================================
 
-    def _print_Application(self, expr):
+    def _print_DottedFunctionCall(self, expr):
+        if isinstance(expr.prefix, FunctionCall):
+            base = expr.prefix.funcdef.results[0]
+            if (not self._additional_code):
+                self._additional_code = ''
+            var_name = self.parser.get_new_name()
+            var = base.clone(var_name)
+
+            if self._current_function:
+                name = self._current_function
+                func = self.get_function(name)
+                func.local_vars.append(var)
+            else:
+                self._namespace.variables[var.name] = var
+
+            self._additional_code = self._additional_code + self._print(Assign(var,expr.prefix)) + '\n'
+            expr = DottedFunctionCall(expr.funcdef, expr.args, var)
+        return self._print_FunctionCall(expr)
+
+#=======================================================================================
+
+    def _print_PyccelInternalFunction(self, expr):
         if isinstance(expr, NumpyNewArray):
-            errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
+            return errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
         else:
             return self._print_not_supported(expr)
