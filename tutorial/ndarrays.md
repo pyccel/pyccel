@@ -34,7 +34,22 @@ pyccel:
 Pyccel make a difference between ndarray that own their data and the ones they don't.
 Pyccel call it own garbage collecting when needed but has a set of rules to do so:
 
-1. you can't assign ndarrays that own their data one another.
+1. you can't reassign ndarrays with different ranks.
+      ```Python
+      import numpy as np
+
+      a = np.ones((10, 20))
+      #(some code...)
+      a = np.ones(10)
+      ```
+      *OUTPU* :
+      ```
+      ERROR at annotation (semantic) stage
+      pyccel:
+        |error [semantic]: ex.py [4]| Incompatible redefinition (|a| real(10, 20) <-> real(10,))
+      ```
+      this limitation is the way Fortran alloctables can't change the rank after declaration.
+2. you can't assign ndarrays that own their data one another.
       ```Python
       import numpy as np
 
@@ -44,10 +59,14 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
       ```
       *OUTPUT* :
       ```
+      ERROR at annotation (semantic) stage
+      pyccel:
+        |error [semantic]: ex.py [5]| Arrays which own their data cannot become views on other arrays (a)
       ```
 
    this limitation is due to the fact that the ndarray **a** will have to go from a data owner to a pointer to the **b** ndarray data.
-   *NOTE* this limitation does not include reassinging with a new data.
+
+   *NOTE*: this limitation does not include reassinging with a new data with respecting the previous rule.
     ```Python
     import numpy as np
 
@@ -77,6 +96,7 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
         return 0;
     }
     ```
+
     - in Fortran:
     ```Fortran
     program prog_ex
@@ -102,7 +122,7 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
 
     end program prog_ex
     ```
-2. you can't reassign to an ndarray that has another ndarray acessing his data.
+3. you can't reassign to an ndarray that has another ndarray acessing his data.
 
    ```Python
    import numpy as np
@@ -133,6 +153,7 @@ import numpy as np
 a = np.array([1, 3, 4, 5])
 a[0] = 0
 ```
+
 - C equivalent:
 ```C
 #include <ndarrays.h>
@@ -230,7 +251,9 @@ print(c)
 
 - C equivalent:
 ```C
-#include <stdint.h>                                                                                  #include <stdlib.h>                                                                                  #include <ndarrays.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <ndarrays.h>
 #include <stdio.h>
 int main()
 {
