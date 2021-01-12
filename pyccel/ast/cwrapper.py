@@ -563,10 +563,10 @@ def pyarray_to_ndarray(cast_function_name):
 
     nd          = DottedVariable(NativeInteger(), 'nd',
                                 lhs=cast_function_result.name)
-    raw_data    = DottedVariable(NativeInteger(), 'raw_data',
-                                lhs=cast_function_result.name)
+    raw_data    = DottedVariable(NativeGeneric(), 'raw_data',
+                                lhs=cast_function_result.name, rank=1)
     shape       = DottedVariable(NativeInteger(), 'shape',
-                                lhs=cast_function_result.name)
+                                lhs=cast_function_result.name, is_pointer=True)
     type_size   = DottedVariable(NativeInteger(), 'type_size',
                                 lhs=cast_function_result.name)
     strides     = DottedVariable(NativeInteger(), 'strides',
