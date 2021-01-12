@@ -508,6 +508,15 @@ class SemanticParser(BasicParser):
 
         return None
 
+    def insert_import(self, name, target):
+        imp = self.get_import(name)
+
+        if imp is not None:
+            imp.define_target(target)
+        else:
+            container = self.namespace.imports
+            container['imports'][name] = Import(name, target)
+
     def insert_macro(self, macro):
         """."""
 
@@ -1138,6 +1147,7 @@ class SemanticParser(BasicParser):
                             'property' in i.decorators.keys():
                         if 'numpy_wrapper' in i.decorators.keys():
                             func = i.decorators['numpy_wrapper']
+                            self.insert_import('numpy', rhs)
                             return func(visited_lhs)
                         else:
                             return DottedFunctionCall(i, [], prefix = visited_lhs,
