@@ -79,6 +79,15 @@ def broadcast(shape_1, shape_2):
             new_shape.append(e2)
         elif pyccel_to_sympy(e2, {}, set()) == 1:
             new_shape.append(e1)
+        elif pyccel_to_sympy(e1, {}, set()).is_constant() and not\
+                pyccel_to_sympy(e2, {}, set()).is_constant():
+            new_shape.append(e1)
+        elif pyccel_to_sympy(e2, {}, set()).is_constant() and not\
+                pyccel_to_sympy(e1, {}, set()).is_constant():
+            new_shape.append(e2)
+        elif not pyccel_to_sympy(e2, {}, set()).is_constant() and not\
+                pyccel_to_sympy(e1, {}, set()).is_constant():
+            new_shape.append(e1)
         elif isinstance(e1, PyccelArraySize) and isinstance(e2, PyccelArraySize):
             new_shape.append(e1)
         elif isinstance(e1, PyccelArraySize):

@@ -128,6 +128,12 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
     elif isinstance(expr, LiteralFloat):
         return sp.Float(expr)
 
+    if isinstance(expr, int):
+        return sp.Integer(expr)
+
+    elif isinstance(expr, float):
+        return sp.Float(expr)
+
     #Operators
     elif isinstance(expr, PyccelDiv):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
