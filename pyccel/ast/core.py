@@ -884,6 +884,8 @@ class Deallocate(Basic):
     variable : pyccel.ast.core.Variable
         The typed variable (usually an array) that needs memory deallocation.
 
+    free_function: bool
+        the function to use for freeing the variable [Default value: None]
     Notes
     -----
     An object of this class is immutable, although it contains a reference to a
@@ -892,18 +894,23 @@ class Deallocate(Basic):
     """
 
     # ...
-    def __init__(self, variable):
+    def __init__(self, variable, free_function=None):
 
         if not isinstance(variable, Variable):
             raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
 
         self._variable = variable
+        self._free_function = free_function
 
     # ...
 
     @property
     def variable(self):
         return self._variable
+
+    @property
+    def free_function(self):
+        return self._free_function
 
     def __eq__(self, other):
         return (self.variable is other.variable)
