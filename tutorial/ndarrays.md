@@ -59,29 +59,29 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
     |error [semantic]: ex.py [4]| Incompatible redefinition (|a| real(10, 20) <-> real(10,))
     ```
 
- This limitation is due to the way Fortran alloctable can't change the rank after declaration.
+    This limitation is due to the way Fortran alloctable can't change the rank after declaration.
 
 - Can not assign ndarrays that own their data one another.
 
-    ```Python
-    import numpy as np
+  ```Python
+  import numpy as np
 
-    a = np.array([1, 2, 3, 4, 5])
-    b = np.array([1, 2, 3])
-    a = b
-    ```
+  a = np.array([1, 2, 3, 4, 5])
+  b = np.array([1, 2, 3])
+  a = b
+  ```
 
-    *OUTPUT* :
+  *OUTPUT* :
 
-    ```Shell
-    ERROR at annotation (semantic) stage
-    pyccel:
-    |error [semantic]: ex.py [5]| Arrays which own their data cannot become views on other arrays (a)
-    ```
+  ```Shell
+  ERROR at annotation (semantic) stage
+  pyccel:
+  |error [semantic]: ex.py [5]| Arrays which own their data cannot become views on other arrays (a)
+  ```
 
-    This limitation is due to the fact that the ndarray **a** will have to go from a data owner to a pointer to the **b** ndarray data.
+  This limitation is due to the fact that the ndarray **a** will have to go from a data owner to a pointer to the **b** ndarray data.
 
-    *NOTE*: this limitation does not include reassigning using new data with respecting the previous rule.
+  *NOTE*: this limitation does not include reassigning using new data with respecting the previous rule.
   - Python example:
 
     ```Python
@@ -249,22 +249,22 @@ Some examples:
 
   - Fortran equivalent:
 
-     ```Fortran
-     program prog_ex
+    ```Fortran
+    program prog_ex
 
-     use, intrinsic :: ISO_C_BINDING
+    use, intrinsic :: ISO_C_BINDING
 
-     implicit none
+    implicit none
 
-     real(C_DOUBLE), allocatable, target :: a(:,:)
-     real(C_DOUBLE), pointer :: b(:,:)
+    real(C_DOUBLE), allocatable, target :: a(:,:)
+    real(C_DOUBLE), pointer :: b(:,:)
 
-     allocate(a(0:20_C_INT64_T - 1_C_INT64_T, 0:10_C_INT64_T - 1_C_INT64_T))
-     a = 1.0_C_DOUBLE
-     b(0:, 0:) => a(5_C_INT64_T:, 2_C_INT64_T:)
+    allocate(a(0:20_C_INT64_T - 1_C_INT64_T, 0:10_C_INT64_T - 1_C_INT64_T))
+    a = 1.0_C_DOUBLE
+    b(0:, 0:) => a(5_C_INT64_T:, 2_C_INT64_T:)
 
-     end program prog_ex
-     ```
+    end program prog_ex
+    ```
 
 - Python code:
 
