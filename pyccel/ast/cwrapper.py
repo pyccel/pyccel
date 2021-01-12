@@ -556,27 +556,29 @@ def pybool_to_bool(cast_function_name):
                        results   = [cast_function_result])
 
 def pyarray_to_ndarray(cast_function_name):
-    cast_function_argument = Variable(dtype=PyccelPyArrayObject(), name='o', is_pointer=True)
-    cast_function_result   = Variable(dtype=PyccelPyArrayObject(), name = 'c', rank=1)
+    cast_function_argument = Variable(dtype=PyccelPyArrayObject(), name='o',
+                                is_pointer=True)
+    cast_function_result   = Variable(dtype=PyccelPyArrayObject(), name = 'c',
+                                rank=1)
 
-    nd          = DottedVariable(cast_function_result,
-                        Variable(dtype=NativeInteger(), name='nd'))
-    raw_data    = DottedVariable(cast_function_result,
-                        Variable(dtype=NativeInteger(), name='raw_data'))
-    shape       = DottedVariable(cast_function_result,
-                        Variable(dtype=NativeInteger(), name='shape'))
-    type_size   = DottedVariable(cast_function_result,
-                        Variable(dtype=NativeInteger(), name='type_size'))
-    strides     = DottedVariable(cast_function_result,
-                        Variable(dtype=NativeInteger(), name='strides', allocatable=True))
-    arr_type    = DottedVariable(cast_function_result,
-                        Variable(dtype=NativeGeneric(), name='type'))
-    length      = DottedVariable(cast_function_result,
-                        Variable(dtype=NativeInteger(), name='length'))
-    buffer_size = DottedVariable(cast_function_result,
-                        Variable(dtype=NativeInteger(), name='buffer_size'))
-    is_view    = DottedVariable(cast_function_result,
-                        Variable(dtype=NativeBool(), name='is_view'))
+    nd          = DottedVariable(NativeInteger(), 'nd',
+                                lhs=cast_function_result.name)
+    raw_data    = DottedVariable(NativeInteger(), 'raw_data',
+                                lhs=cast_function_result.name)
+    shape       = DottedVariable(NativeInteger(), 'shape',
+                                lhs=cast_function_result.name)
+    type_size   = DottedVariable(NativeInteger(), 'type_size',
+                                lhs=cast_function_result.name)
+    strides     = DottedVariable(NativeInteger(), 'strides',
+                                lhs=cast_function_result.name)
+    arr_type    = DottedVariable(NativeInteger(), 'type',
+                                lhs=cast_function_result.name)
+    length      = DottedVariable(NativeInteger(), 'length',
+                                lhs=cast_function_result.name)
+    buffer_size = DottedVariable(NativeInteger(), 'buffer_size',
+                                lhs=cast_function_result.name)
+    is_view     = DottedVariable(NativeInteger(), 'is_view',
+                                lhs=cast_function_result.name)
 
     cast_function_body = [Assign(nd, FunctionCall(numpy_get_ndims, [cast_function_argument])),
                           Assign(raw_data, FunctionCall(numpy_get_data, [cast_function_argument])),
