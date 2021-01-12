@@ -1116,12 +1116,13 @@ class IfTernaryOperator(PyccelOperator):
         """
         Sets the dtype and precision for IfTernaryOperator
         """
-        if isinstance(self.value_true , Nil) or isinstance(self.value_false, Nil):
-            errors.report('None is not implemented for Ternary Operator', severity='fatal')
-        if isinstance(self.value_true , NativeString) or isinstance(self.value_false, NativeString):
-            errors.report('String is not implemented for Ternary Operator', severity='fatal')
-        else:
+        if self.value_true.dtype in NativeNumeric and self.value_false.dtype in NativeNumeric:
             self._dtype = max([self.value_true.dtype, self.value_false.dtype], key = NativeNumeric.index)
+        elif self.value_true.dtype == self.value_false.dtype:
+            self._dtype = self.value_true.dtype
+        else:
+            errors.report('Ternary Operator results should have the same data type', severity='fatal')
+
         self._precision = max([self.value_true.precision, self.value_false.precision])
 
     def _set_shape_rank(self):
