@@ -198,7 +198,7 @@ Some examples:
         }
     ```
 
-   Fortran equivalent:
+  - Fortran equivalent:
 
     ```Fortran
     program prog_ex
