@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 
 import pytest
-from numpy import ones, array_equal
+from numpy import ones
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
