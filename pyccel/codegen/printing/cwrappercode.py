@@ -12,11 +12,12 @@ import numpy as np
 from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
+from pyccel.ast.literals  import Nil
 
 from pyccel.ast.builtins import PythonPrint
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
-from pyccel.ast.core import If, Nil, Return, FunctionCall
+from pyccel.ast.core import If, Return, FunctionCall
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, IfTernaryOperator
 from pyccel.ast.core import AugAssign, DottedVariable
@@ -738,7 +739,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_IndexedElement(self, expr):
         assert(len(expr.indices)==1)
-        return '{}[{}]'.format(self._print(expr.base.internal_variable), self._print(expr.indices[0]))
+        return '{}[{}]'.format(self._print(expr.base), self._print(expr.indices[0]))
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'

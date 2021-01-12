@@ -47,6 +47,14 @@ def array_int32_1d_mul( x, y ):
 def array_int32_1d_idiv( x, y ):
     x[:] = x // y
 
+@types( 'int32[:]', 'int32[:]' )
+def array_int32_1d_add_augassign( x, y ):
+    x += y
+
+@types( 'int32[:]', 'int32[:]' )
+def array_int32_1d_sub_augassign( x, y ):
+    x -= y
+
 #==============================================================================
 # 2D ARRAYS OF INT-32 WITH C ORDERING
 #==============================================================================
@@ -322,10 +330,29 @@ def array_real_2d_C_div( x, y ):
     x[:,:] /= y
 
 @types('real[:,:]')
-def array_real_2d_C_initialization(a):
+def array_real_2d_C_array_initialization(a):
     from numpy import array
     tmp = array([[1, 2, 3], [4, 5, 6]], dtype='float')
     a[:,:] = tmp[:,:]
+
+@types('real[:,:]','real[:,:]', 'real[:,:,:]')
+def array_real_3d_C_array_initialization_1(x, y, a):
+    from numpy import array
+    tmp      = array([x, y], dtype='float')
+    a[:,:,:] = tmp[:,:,:]
+
+@types('real[:,:,:]')
+def array_real_3d_C_array_initialization_2(a):
+    from numpy import array
+    x = array([[[0., 1., 2., 3.], [4., 5., 6., 7.], [8., 9., 10., 11.]],
+              [[12., 13., 14., 15.], [16., 17., 18., 19.], [20., 21., 22., 23.]]], order='C')
+    a[:,:,:] = x[:,:,:]
+
+@types('real[:,:,:]','real[:,:,:]', 'real[:,:,:,:]')
+def array_real_4d_C_array_initialization(x, y, a):
+    from numpy import array
+    tmp      = array([x, y], dtype='float')
+    a[:,:,:,:] = tmp[:,:,:,:]
 
 
 #==============================================================================
@@ -365,11 +392,42 @@ def array_real_2d_F_div( x, y ):
     x[:,:] /= y
 
 @types('real[:,:](order=F)')
-def array_real_2d_F_initialization(a):
+def array_real_2d_F_array_initialization(a):
     from numpy import array
     tmp = array([[1, 2, 3], [4, 5, 6]], dtype='float', order='F')
     a[:,:] = tmp[:,:]
 
+@types('real[:,:](order=F)','real[:,:](order=F)', 'real[:,:,:](order=F)')
+def array_real_3d_F_array_initialization_1(x, y, a):
+    from numpy import array
+    tmp      = array([x, y], dtype='float', order='F')
+    a[:,:,:] = tmp[:,:,:]
+
+@types('real[:,:,:](order=F)')
+def array_real_3d_F_array_initialization_2(a):
+    from numpy import array
+    x = array([[[0., 1., 2., 3.], [4., 5., 6., 7.], [8., 9., 10., 11.]],
+                 [[12., 13., 14., 15.], [16., 17., 18., 19.], [20., 21., 22., 23.]]], order='F')
+    a[:,:,:] = x[:,:,:]
+
+@types('real[:,:,:](order=F)','real[:,:,:](order=F)', 'real[:,:,:,:](order=F)')
+def array_real_4d_F_array_initialization(x, y, a):
+    from numpy import array
+    tmp      = array([x, y], dtype='float', order='F')
+    a[:,:,:,:] = tmp[:,:,:,:]
+
+@types('real[:,:](order=F)', 'real[:,:,:,:](order=F)')
+def array_real_4d_F_array_initialization_mixed_ordering(x, a):
+    import numpy as np
+    tmp      = np.array(((((0., 1.), (2., 3.)),
+                          ((4., 5.), (6., 7.)),
+                          ((8., 9.), (10., 11.))),
+                          (((12., 13.), (14., 15.)),
+                          x,
+                          ((20., 21.), (22., 23.)))),
+                          dtype='float', order='F')
+
+    a[:,:,:,:] = tmp[:,:,:,:]
 
 #==============================================================================
 # COMPLEX EXPRESSIONS IN 3D : TEST CONSTANT AND UNKNOWN SHAPES

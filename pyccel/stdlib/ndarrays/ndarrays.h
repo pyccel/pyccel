@@ -78,7 +78,7 @@ typedef struct  s_ndarray
     int32_t                 length;
     /* size of the array */
     int32_t                 buffer_size;
-    /*  */
+    /* True if the array does not own the data */
     bool                    is_view;
 }               t_ndarray;
 

@@ -11,11 +11,10 @@ In this module we implement some of them in alphabetical order.
 
 """
 
-from sympy import Symbol, Function, Tuple
+from sympy import Symbol, Tuple
 from sympy import Expr, Not
 from sympy import sympify
 from sympy.tensor import Indexed, IndexedBase
-from sympy.core.function import Application
 
 from pyccel.ast.datatypes import iso_c_binding
 
@@ -23,6 +22,7 @@ from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
+from .internals import PyccelInternalFunction
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 
@@ -57,7 +57,7 @@ local_sympify = {
 }
 
 #==============================================================================
-class PythonComplexProperty(Application, PyccelAstNode):
+class PythonComplexProperty(PyccelInternalFunction):
     """Represents a call to the .real or .imag property
 
     e.g:
@@ -73,6 +73,7 @@ class PythonComplexProperty(Application, PyccelAstNode):
 
     def __init__(self, arg):
         self._precision = arg.precision
+        PyccelInternalFunction.__init__(self, arg)
 
     @property
     def internal_var(self):
@@ -184,6 +185,7 @@ class PythonComplex(Expr, PyccelAstNode):
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
         self._is_cast = arg0.dtype is NativeComplex() and \
                         isinstance(arg1, Literal) and arg1.python_value == 0
+
         if self._is_cast:
             self._real_part = PythonReal(arg0)
             self._imag_part = PythonImag(arg0)
@@ -305,6 +307,7 @@ class PythonTuple(Expr, PyccelAstNode):
     """
     _iterable        = True
     _is_homogeneous  = False
+    _order = 'C'
 
     def __new__(cls, *args):
         return Expr.__new__(cls, *args)
@@ -314,7 +317,8 @@ class PythonTuple(Expr, PyccelAstNode):
             return
         is_homogeneous = all(a.dtype is not NativeGeneric() and \
                              args[0].dtype == a.dtype and \
-                             args[0].rank  == a.rank  for a in args[1:])
+                             args[0].rank  == a.rank  and \
+                             args[0].order == a.order for a in args[1:])
         self._inconsistent_shape = not all(args[0].shape==a.shape   for a in args[1:])
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
@@ -344,13 +348,12 @@ class PythonTuple(Expr, PyccelAstNode):
                     raise TypeError('cannot determine the type of {}'.format(self))
 
 
-                shapes = [a.shape for a in args]
-
+                shapes     = [a.shape for a in args]
+                self._rank = max(a.rank for a in args) + 1
                 if all(sh is not None for sh in shapes):
                     self._shape = (LiteralInteger(len(args)), ) + shapes[0]
                     self._rank  = len(self._shape)
-                else:
-                    self._rank = max(a.rank for a in args) + 1
+
         else:
             self._rank      = max(a.rank for a in args) + 1
             self._dtype     = NativeGeneric()
@@ -380,7 +383,7 @@ class PythonTuple(Expr, PyccelAstNode):
         return self._inconsistent_shape
 
 #==============================================================================
-class PythonLen(Function, PyccelAstNode):
+class PythonLen(PyccelInternalFunction):
 
     """
     Represents a 'len' expression in the code.
@@ -391,8 +394,8 @@ class PythonLen(Function, PyccelAstNode):
     _precision = default_precision['int']
     _dtype     = NativeInteger()
 
-    def __new__(cls, arg):
-        return Basic.__new__(cls, arg)
+    def __init__(self, arg):
+        PyccelInternalFunction.__init__(self, arg)
 
     @property
     def arg(self):
@@ -400,10 +403,17 @@ class PythonLen(Function, PyccelAstNode):
 
 #==============================================================================
 class PythonList(Tuple, PyccelAstNode):
+    _order = 'C'
+    _is_homogeneous = True
     """ Represent lists in the code with dynamic memory management."""
     def __init__(self, *args, **kwargs):
         if self.stage == 'syntactic':
             return
+        self._is_homogeneous = all(a.dtype is not NativeGeneric() and \
+                             args[0].dtype == a.dtype and \
+                             args[0].rank  == a.rank  and \
+                             args[0].order == a.order for a in args[1:])
+
         bools     = [a for a in args if a.dtype is NativeBool()]
         integers  = [a for a in args if a.dtype is NativeInteger()]
         reals     = [a for a in args if a.dtype is NativeReal()]
@@ -413,7 +423,7 @@ class PythonList(Tuple, PyccelAstNode):
             self._dtype = NativeString()
             self._rank  = 0
             self._shape = ()
-            assert len(integers + reals + complexes) == 0
+
         else:
             if complexes:
                 self._dtype     = NativeComplex()
@@ -427,17 +437,17 @@ class PythonList(Tuple, PyccelAstNode):
             elif bools:
                 self._dtype     = NativeBool()
                 self._precision  = max(a.precision for a in bools)
-            else:
-                raise TypeError('cannot determine the type of {}'.format(self))
 
             shapes = [a.shape for a in args]
-
+            self._rank = max(a.rank for a in args) + 1
             if all(sh is not None for sh in shapes):
-                assert all(sh==shapes[0] for sh in shapes)
                 self._shape = (LiteralInteger(len(args)), ) + shapes[0]
                 self._rank  = len(self._shape)
-            else:
-                self._rank = max(a.rank for a in args) + 1
+
+    @property
+    def is_homogeneous(self):
+        return self._is_homogeneous
+
 #==============================================================================
 class PythonMap(Basic):
     """ Represents the map stmt
@@ -549,7 +559,7 @@ class PythonZip(Basic):
         return self._args[0]
 
 #==============================================================================
-class PythonAbs(Function, PyccelAstNode):
+class PythonAbs(PyccelInternalFunction):
     """Represents a call to  python abs for code generation.
 
     arg : Variable
@@ -560,55 +570,52 @@ class PythonAbs(Function, PyccelAstNode):
         self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
         self._precision = default_precision[str_dtype(self._dtype)]
         self._order     = x.order
+        PyccelInternalFunction.__init__(self, x)
 
     @property
     def arg(self):
         return self._args[0]
 
 #==============================================================================
-class PythonSum(Function, PyccelAstNode):
+class PythonSum(PyccelInternalFunction):
     """Represents a call to  python sum for code generation.
 
     arg : list , tuple , PythonTuple, Tuple, List, Variable
     """
 
-    def __new__(cls, arg):
+    def __init__(self, arg):
         if not isinstance(arg, (list, tuple, PythonTuple, Tuple, PythonList,
                                 Variable, Expr)): # pylint: disable=undefined-variable
-            raise TypeError('Uknown type of  %s.' % type(arg))
-
-        return Basic.__new__(cls, arg)
-
-    def __init__(self, arg):
+            raise TypeError('Unknown type of  %s.' % type(arg))
         self._dtype = arg.dtype
         self._rank  = 0
         self._shape = ()
         self._precision = default_precision[str_dtype(self._dtype)]
+        PyccelInternalFunction.__init__(self, arg)
 
     @property
     def arg(self):
         return self._args[0]
 
 #==============================================================================
-class PythonMax(Function, PyccelAstNode):
+class PythonMax(PyccelInternalFunction):
     """Represents a call to  python max for code generation.
 
     arg : list , tuple , PythonTuple, Tuple, List
     """
-    def __new__(cls, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, PythonList)):
-            raise TypeError('Uknown type of  %s.' % type(arg))
-        return Basic.__new__(cls, arg)
 
     def __init__(self, x):
+        if not isinstance(x, (list, tuple, PythonTuple, Tuple, PythonList)):
+            raise TypeError('Unknown type of  %s.' % type(x))
         self._shape     = ()
         self._rank      = 0
         self._dtype     = x.dtype
         self._precision = x.precision
+        PyccelInternalFunction.__init__(self, x)
 
 
 #==============================================================================
-class PythonMin(Function, PyccelAstNode):
+class PythonMin(PyccelInternalFunction):
     """Represents a call to  python min for code generation.
 
     arg : list , tuple , PythonTuple, Tuple, List, Variable
@@ -618,6 +625,7 @@ class PythonMin(Function, PyccelAstNode):
         self._rank      = 0
         self._dtype     = x.dtype
         self._precision = x.precision
+        PyccelInternalFunction.__init__(self, x)
 
 #==============================================================================
 python_builtin_datatypes_dict = {
