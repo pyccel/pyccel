@@ -1,6 +1,6 @@
 # The N-dimensional array (ndarray)
 
-## Description:
+## Description
 A ndarray is a fixed-size multi-dimensional container of items of the same type and size. The number of dimensions and items in an array is defined by its shape, which is a container of N non-negative integers that specify the sizes of each dimension. The type of items in the array is specified by a separate data-type object, one of which is associated with each ndarray.
 
 Different ndarrays can share the same data, so that changes made in one ndarray may be visible in another. that is, a ndarray can be a "view" to another ndarray, and the data it is referring to is taken care of by the "base" ndarray.
@@ -35,7 +35,7 @@ Pyccel makes a difference between ndarrays that own their data and the ones they
 
 Pyccel call it own garbage collecting when needed but has a set of rules to do so:
 
-1. Can not reassign ndarrays with different ranks.
+1.  Can not reassign ndarrays with different ranks.
    ```Python
    import numpy as np
 
@@ -51,7 +51,7 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
    ```
    This limitation is due to the way Fortran alloctable can't change the rank after declaration.
 
-2. Can not assign ndarrays that own their data one another.
+2.  Can not assign ndarrays that own their data one another.
    ```Python
    import numpy as np
 
@@ -69,14 +69,14 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
    This limitation is due to the fact that the ndarray **a** will have to go from a data owner to a pointer to the **b** ndarray data.
 
    *NOTE*: this limitation does not include reassigning using new data with respecting the previous rule.
-   - Python example:
+   -   Python example:
    ```Python
    import numpy as np
    a = np.ones(20)
    #(some code...)
    a = np.ones(10)
    ```
-   - C equivalent:
+   -   C equivalent:
    ```C
    #include <ndarrays.h>
    #include <stdlib.h>
@@ -96,8 +96,8 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
        return 0;
    }
    ```
-   - Fortran equivalent:
-    ```Fortran
+   -   Fortran equivalent:
+   ```Fortran
     program prog_ex
 
     use, intrinsic :: ISO_C_BINDING
@@ -121,7 +121,8 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
 
     end program prog_ex
     ```
-3. Can not reassign to a ndarray that has another pointer accessing his data.
+
+3.  Can not reassign to a ndarray that has another pointer accessing his data.
 
    ```Python
    import numpy as np
@@ -132,9 +133,9 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
    a = np.zeros(20)
    ```
    *OUTPUT* :
-    ```
-    ERROR at annotation (semantic) stage
-    pyccel:
+   ```Shell
+   ERROR at annotation (semantic) stage
+   pyccel:
      |error [semantic]: ex.py [6]| Attempt to reallocate an array which is being used by another variable (a)
     ```
     This limitation is set since we need to free the previous data when are trying to reallocate the ndarray, which in this case will cause the data where the view **b** point to became inaccessible.
@@ -145,7 +146,7 @@ the indexing and slicing in Pyccel handles only the basic indexing of [numpy arr
 
 Some examples:
 
-1. Python code:
+1.  Python code:
 ```Python
 import numpy as np
 
@@ -191,7 +192,7 @@ a(0_C_INT64_T) = 0_C_INT64_T
 end program prog_ex
 ```
 
-2. Python code:
+2.  Python code:
 ```Python
 import numpy as np
 
@@ -238,7 +239,7 @@ b(0:, 0:) => a(5_C_INT64_T:, 2_C_INT64_T:)
 end program prog_ex
 ```
 
-3. Python code:
+3.  Python code:
 ```Python
 import numpy as np
 
