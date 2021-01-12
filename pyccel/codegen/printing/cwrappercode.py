@@ -17,7 +17,7 @@ from pyccel.ast.literals  import Nil
 from pyccel.ast.builtins import PythonPrint
 
 from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
-from pyccel.ast.core import If, Return, FunctionCall
+from pyccel.ast.core import If, Return, FunctionCall, Deallocate
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import VariableAddress, Import, IfTernaryOperator
 from pyccel.ast.core import AugAssign, DottedVariable
@@ -639,9 +639,15 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_func_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
             # Call free function for C type
             if self._target_language == 'c':
-                mini_wrapper_func_body += [FunctionCall(C_Free, [DottedVariable(i,
-                                            Variable(dtype=NativeInteger(),
-                                            name='strides', allocatable=True))])
+                mini_wrapper_func_body += [Deallocate(
+                                                DottedVariable(
+                                                    lhs=i.name,
+                                                    dtype=NativeInteger(),
+                                                    name='strides',
+                                                    allocatable=True
+                                                ),
+                                                free_function="free"
+                                            )
                                 for i in func.arguments if i.allocatable]
             mini_wrapper_func_body.append(Return(wrapper_results))
             self._to_free_PyObject_list.clear()
@@ -890,9 +896,15 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
         # Call free function for C type
         if self._target_language == 'c':
-            wrapper_body += [FunctionCall(C_Free, [DottedVariable(i,
-                                          Variable(dtype=NativeInteger(),
-                                          name='strides', allocatable=True))])
+            wrapper_body += [Deallocate(
+                                DottedVariable(
+                                            NativeInteger(),
+                                                'strides',
+                                                lhs=i.name,
+                                                is_pointer=True
+                                            ),
+                                free_function="free"
+                                )
                             for i in expr.arguments if i.allocatable]
         self._to_free_PyObject_list.clear()
         #Return
