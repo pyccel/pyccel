@@ -1562,3 +1562,41 @@ def array_2d_C_slice_stride_23(a):
     b = a[::d, ::c]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
+#==============================================================================
+# ARITHMETIC OPERATIONS
+#==============================================================================
+
+def arrs_same_shape_0():
+    import numpy as np
+    a = np.zeros(10)
+    b = a[2:4]+a[4:6]
+    return np.shape(b)[0]
+
+def arrs_same_shape_1():
+    import numpy as np
+    i = 4
+    a = np.zeros(10)
+    b = a[2:i]+a[4:i + 2]
+    return np.shape(b)[0]
+
+def arrs_different_shape_0():
+    import numpy as np
+    i = 5
+    a = np.zeros(10)
+    b = a[2:4]+a[4:i]
+    return np.shape(b)[0]
+
+def arrs_uncertain_shape_0():
+    import numpy as np
+    i = 4
+    a = np.zeros(10)
+    b = a[2:i]+a[4:i + 1]
+    return np.shape(b)[0]
+
+def arrs_uncertain_shape_1():
+    import numpy as np
+    i = 4
+    j = 6
+    a = np.zeros(10)
+    b = a[2:i]+a[4:j]
+    return np.shape(b)[0]
