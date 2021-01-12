@@ -599,13 +599,16 @@ class FCodePrinter(CodePrinter):
 #
 #        return self._get_statement(code)
 
+    def print_kind(self, dtype, precision):
+        return ""+iso_c_binding[self._print(dtype)][precision]
+
     def _print_SumFunction(self, expr):
         return str(expr)
 
     def _print_PythonLen(self, expr):
         var = expr.arg
         idx = 1 if var.order == 'F' else var.rank
-        prec = iso_c_binding["integer"][expr.precision]
+        prec = self.print_kind(expr.dtype, expr.precsiion)
 
         dtype = var.dtype
         if dtype is NativeString():
@@ -742,12 +745,12 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyFloor(self, expr):
         result_code = self._print_MathFloor(expr)
-        return 'real({}, {})'.format(result_code, iso_c_binding["real"][8])
+        return 'real({}, {})'.format(result_code, self.print_kind(expr.dtype, expr.precision))
 
     # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
         init_value = self._print(expr.arg)
-        prec = iso_c_binding["integer"][expr.precision]
+        prec = self.print_kind(expr.dtype, expr.precision)
         if expr.arg.order == 'C':
             index = self._print(expr.arg.rank - expr.index)
         else:
@@ -763,12 +766,12 @@ class FCodePrinter(CodePrinter):
         if (expr.arg.dtype is NativeBool()):
             code = 'MERGE(1_8, 0_8, {})'.format(value)
         else:
-            code  = 'Int({0}, {1})'.format(value, iso_c_binding['integer'][expr.precision])
+            code  = 'Int({0}, {1})'.format(value, self.print_kind(expr.dtype, expr.precision))
         return code
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
-        return 'Real({0}, {1})'.format(value, iso_c_binding["real"][expr.precision])
+        return 'Real({0}, {1})'.format(value, self.print_kind(expr.dtype, expr.precision))
 
     def _print_MathFloor(self, expr):
         arg = expr.args[0]
@@ -789,17 +792,17 @@ class FCodePrinter(CodePrinter):
     def _print_PythonComplex(self, expr):
         if expr.is_cast:
             code = 'cmplx({0}, kind={1})'.format(expr.internal_var,
-                                iso_c_binding["complex"][expr.precision])
+                                self.print_kind(expr.dtype, expr.precision))
         else:
             real = self._print(expr.real)
             imag = self._print(expr.imag)
             code = 'cmplx({0}, {1}, {2})'.format(real, imag,
-                                iso_c_binding["complex"][expr.precision])
+                                iself.print_kind(expr.dtype, expr.precision))
         return code
 
     def _print_PythonBool(self, expr):
         if isinstance(expr.arg.dtype, NativeBool):
-            return 'logical({}, kind = {prec})'.format(self._print(expr.arg), prec = iso_c_binding["logical"][expr.precision])
+            return 'logical({}, kind = {prec})'.format(self._print(expr.arg), prec = self.print_kind(expr.dtype, expr.precision))
         else:
             return '{} /= 0'.format(self._print(expr.arg))
 
@@ -834,7 +837,7 @@ class FCodePrinter(CodePrinter):
         else:
             randreal = self._print(PyccelAdd(PyccelMul(PyccelMinus(expr.high, expr.low), NumpyRand()), expr.low))
 
-        prec_code = self._print(iso_c_binding["integer"][expr.precision])
+        prec_code = self.print_kind(expr.dtype, expr.precision)
         return 'floor({}, kind={})'.format(randreal, prec_code)
 
     def _print_NumpyFull(self, expr):
@@ -1067,7 +1070,7 @@ class FCodePrinter(CodePrinter):
                     dtype = dtype[:9] +'(len =*)'
                     #TODO improve ,this is the case of character as argument
             else:
-                dtype += '({0})'.format(str(iso_c_binding[dtype][expr.variable.precision]))
+                dtype += '({0})'.format(self.print_kind(expr_dtype, expr.variable.precision))
 
         code_value = ''
         if expr.value:
@@ -1195,7 +1198,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyReal(self, expr):
         value = self._print(expr.arg)
-        code = 'Real({0}, {1})'.format(value, iso_c_binding['real'][expr.precision])
+        code = 'Real({0}, {1})'.format(value, self.print_kind(expr.dtype, expr.precision))
         return code
 
     def _print_Assign(self, expr):
@@ -1377,10 +1380,10 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_LiteralTrue(self, expr):
-        return '.True._{}'.format(iso_c_binding["logical"][expr.precision])
+        return '.True._{}'.format(self.print_kind(expr.dtype, expr.precision))
 
     def _print_LiteralFalse(self, expr):
-        return '.False._{}'.format(iso_c_binding["logical"][expr.precision])
+        return '.False._{}'.format(self.print_kind(expr.dtype, expr.precision))
 
     def _print_LiteralString(self, expr):
         sp_chars = ['\a', '\b', '\f', '\r', '\t', '\v', "'", '\n']
@@ -2385,9 +2388,9 @@ class FCodePrinter(CodePrinter):
                 b = PythonFloat(b)
             c = self._print(b)
             adtype = bdtype
-            code = 'FLOOR({}/{},{})'.format(code, c, iso_c_binding["integer"][expr.precision])
+            code = 'FLOOR({}/{},{})'.format(code, c, self.print_kind(expr.dtype, expr.precision))
             if is_real:
-                code = 'real({}, {})'.format(code, iso_c_binding["real"][expr.precision])
+                code = 'real({}, {})'.format(code, self.print_kind(expr.dtype, expr.precision))
         return code
 
     def _print_PyccelRShift(self, expr):
@@ -2593,14 +2596,14 @@ class FCodePrinter(CodePrinter):
 
     def _print_LiteralImaginaryUnit(self, expr):
         """ purpose: print complex numbers nicely in Fortran."""
-        return "cmplx(0,1, kind = {})".format(iso_c_binding["complex"][expr.precision])
+        return "cmplx(0,1, kind = {})".format(self.print_kind(expr.dtype, expr.precision))
 
     def _print_int(self, expr):
         return str(expr)
 
     def _print_LiteralFloat(self, expr):
         printed = CodePrinter._print_Float(self, expr)
-        return "{}_{}".format(printed, iso_c_binding["real"][expr.precision])
+        return "{}_{}".format(printed, self.print_kind(expr.dtype, expr.precision))
 
     def _print_LiteralComplex(self, expr):
         real_str = self._print(expr.real)
@@ -2608,7 +2611,7 @@ class FCodePrinter(CodePrinter):
         return "({}, {})".format(real_str, imag_str)
 
     def _print_LiteralInteger(self, expr):
-        return "{0}_{1}".format(str(expr.p), iso_c_binding["integer"][expr.precision])
+        return "{0}_{1}".format(str(expr.p), self.print_kind(expr.dtype, expr.precision))
 
     def _print_IndexedElement(self, expr):
         base = expr.base
