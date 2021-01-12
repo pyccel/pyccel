@@ -6,15 +6,15 @@ A ndarray is a fixed-size multi-dimensional container of items of the same type 
 Different ndarrays can share the same data, so that changes made in one ndarray may be visible in another. that is, a ndarray can be a "view" to another ndarray, and the data it is referring to is taken care of by the "base" ndarray.
 [read more](https://numpy.org/doc/stable/reference/arrays.html)
 
-## Pyccel ndarrays:
+## Pyccel ndarrays
 Pyccel uses the same implementation as Numpy ndarrays with some rules due to the difference between the host language (Python) "dynamically typed / internal garbage collector" and the target languages such as C and Fortran which are statically typed languages and don't have a garbage collector.
 
 Below we will show some rules that Pyccel has set to handles those differences.
 
-### Dynamically and statically typed languages:
+### Dynamically and statically typed languages
 Generally a variable in Pyccel should always keep its initial type, this also transfers to using the ndarrays.
 
-#### incorrect example:
+#### incorrect example
 
 ```Python
 import numpy as np
@@ -24,81 +24,79 @@ a = np.array([1, 2, 3], dtype=float)
 a = np.array([1, 2, 3], dtype=int)
 ```
 *OUTPUT* :
-```
+```Shell
 ERROR at annotation (semantic) stage
 pyccel:
  |error [semantic]: ex.py [5]| Incompatible types in assignment (|a| real <-> int)
 ```
 
-### Memory management:
+### Memory management
 Pyccel makes a difference between ndarrays that own their data and the ones they don't.
 
 Pyccel call it own garbage collecting when needed but has a set of rules to do so:
 
 1. Can not reassign ndarrays with different ranks.
-      ```Python
-      import numpy as np
+   ```Python
+   import numpy as np
 
-      a = np.ones((10, 20))
-      #(some code...)
-      a = np.ones(10)
-      ```
-      *OUTPU* :
-      ```
-      ERROR at annotation (semantic) stage
-      pyccel:
-        |error [semantic]: ex.py [4]| Incompatible redefinition (|a| real(10, 20) <-> real(10,))
-      ```
-      This limitation is due to the way Fortran alloctable can't change the rank after declaration.
+   a = np.ones((10, 20))
+   #(some code...)
+   a = np.ones(10)
+   ```
+   *OUTPU* :
+   ```Shell
+   ERROR at annotation (semantic) stage
+   pyccel:
+   |error [semantic]: ex.py [4]| Incompatible redefinition (|a| real(10, 20) <-> real(10,))
+   ```
+   This limitation is due to the way Fortran alloctable can't change the rank after declaration.
+
 2. Can not assign ndarrays that own their data one another.
-      ```Python
-      import numpy as np
+   ```Python
+   import numpy as np
 
-      a = np.array([1, 2, 3, 4, 5])
-      b = np.array([1, 2, 3])
-      a = b
-      ```
-      *OUTPUT* :
-      ```
-      ERROR at annotation (semantic) stage
-      pyccel:
-        |error [semantic]: ex.py [5]| Arrays which own their data cannot become views on other arrays (a)
-      ```
+   a = np.array([1, 2, 3, 4, 5])
+   b = np.array([1, 2, 3])
+   a = b
+   ```
+   *OUTPUT* :
+   ```Shell
+   ERROR at annotation (semantic) stage
+   pyccel:
+   |error [semantic]: ex.py [5]| Arrays which own their data cannot become views on other arrays (a)
+   ```
 
    This limitation is due to the fact that the ndarray **a** will have to go from a data owner to a pointer to the **b** ndarray data.
 
    *NOTE*: this limitation does not include reassigning using new data with respecting the previous rule.
-    - Python example:
-    ```Python
-    import numpy as np
-
-    a = np.ones(20)
-    #(some code...)
-    a = np.ones(10)
-    ```
-    - C equivalent:
-    ```C
-    #include <ndarrays.h>
-    #include <stdlib.h>
-    int main()
-    {
-        t_ndarray a;
-
-        a = array_create(1, (int32_t[]){20}, nd_double);
-        array_fill((double)1.0, a);
-        /*(some code...)*/
-        if (a.shape != NULL)
-        {
-            free_array(a); //this line handles the redefinition of the array
-        }
-        a = array_create(1, (int32_t[]){10}, nd_double);
-        array_fill((double)1.0, a);
-        free_array(a); //garbage collection at the end of the program
-        return 0;
-    }
-    ```
-
-    - Fortran equivalent:
+   - Python example:
+   ```Python
+   import numpy as np
+   a = np.ones(20)
+   #(some code...)
+   a = np.ones(10)
+   ```
+   - C equivalent:
+   ```C
+   #include <ndarrays.h>
+   #include <stdlib.h>
+   int main()
+   {
+       t_ndarray a;
+       a = array_create(1, (int32_t[]){20}, nd_double);
+       array_fill((double)1.0, a);
+       /*(some code...)*/
+       if (a.shape != NULL)
+       {
+          free_array(a); //this line handles the redefinition of the array
+       }
+       a = array_create(1, (int32_t[]){10}, nd_double);
+       array_fill((double)1.0, a);
+       free_array(a); //garbage collection at the end of the program
+       return 0;
+   }
+   ```
+   - Fortran equivalent:
     ```Fortran
     program prog_ex
 
@@ -141,7 +139,7 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
     ```
     This limitation is set since we need to free the previous data when are trying to reallocate the ndarray, which in this case will cause the data where the view **b** point to became inaccessible.
 
-### Slicing and indexing.
+### Slicing and indexing
 
 the indexing and slicing in Pyccel handles only the basic indexing of [numpy arrays](https://numpy.org/doc/stable/user/basics.indexing.html).
 
