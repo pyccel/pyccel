@@ -13,7 +13,7 @@ from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
 from pyccel.ast.core      import Declare, Slice, ValuedVariable
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
-from pyccel.ast.core      import Deallocate
+from pyccel.ast.core      import Deallocate, DottedVariable
 from pyccel.ast.core      import FunctionAddress, PyccelArraySize
 from pyccel.ast.core      import IfTernaryOperator
 from pyccel.ast.core      import Assign, datatype, Variable, Import
@@ -682,7 +682,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_DottedVariable(self, expr):
         """convert dotted Variable to their C equivalent"""
-        return '{}.{}'.format(self._print(expr.lhs), self._print(expr.rhs))
+        return '{}.{}'.format(self._print(expr.lhs), self._print(expr.name))
 
     @staticmethod
     def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
@@ -758,6 +758,8 @@ class CCodePrinter(CodePrinter):
         return '{}\n{}'.format(free_code, alloc_code)
 
     def _print_Deallocate(self, expr):
+        if expr.free_function is not None:
+            return '{}({});'.format(expr.free_function, self._print(expr.variable))
         if expr.variable.is_pointer:
             return 'free_pointer({});'.format(self._print(expr.variable))
         return 'free_array({});'.format(self._print(expr.variable))
@@ -971,7 +973,8 @@ class CCodePrinter(CodePrinter):
          # Ensure the correct syntax is used for pointers
         args = []
         for a, f in zip(expr.args, func.arguments):
-            if isinstance(a, Variable) and self.stored_in_c_pointer(f):
+            if isinstance(a, Variable) and self.stored_in_c_pointer(f)
+                and not isinstance(a, DottedVariable):
                 args.append(VariableAddress(a))
             elif f.is_optional and not isinstance(a, Nil):
                 tmp_var = self.create_tmp_var(f)
