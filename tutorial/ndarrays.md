@@ -1,18 +1,18 @@
 # The N-dimensional array (ndarray)
 
 ## Description:
-An ndarray is a fixed-size multidimensional container of items of the same type and size. The number of dimensions and items in an array is defined by its shape, which is a container of N non-negative integers that specify the sizes of each dimension. The type of items in the array is specified by a separate data-type object , one of which is associated with each ndarray.
+A ndarray is a fixed-size multi-dimensional container of items of the same type and size. The number of dimensions and items in an array is defined by its shape, which is a container of N non-negative integers that specify the sizes of each dimension. The type of items in the array is specified by a separate data-type object, one of which is associated with each ndarray.
 
-Different ndarrays can share the same data, so that changes made in one ndarray may be visible in another. that is, an ndarray can be a "view" to another ndarray, and the data it is referring to is taken care of by the "base" ndarray.
+Different ndarrays can share the same data, so that changes made in one ndarray may be visible in another. that is, a ndarray can be a "view" to another ndarray, and the data it is referring to is taken care of by the "base" ndarray.
 [read more](https://numpy.org/doc/stable/reference/arrays.html)
 
 ## Pyccel ndarrays:
-Pyccel use the same implimentation as Numpy ndarrays with some rules due to the diferrences between the host language (Python) "dynamically typed / internal garbage collector" and the target lnguages such as C and Fortran wich they are statically typed languages and don't have a garbage collector.
+Pyccel uses the same implementation as Numpy ndarrays with some rules due to the difference between the host language (Python) "dynamically typed / internal garbage collector" and the target languages such as C and Fortran which are statically typed languages and don't have a garbage collector.
 
-below we will show some rules that Pyccel has set to handles those diferrences.
+Below we will show some rules that Pyccel has set to handles those differences.
 
 ### Dynamically and statically typed languages:
-a variable in Pyccel should always keep it initial type this also transfer to using the ndarrays.
+Generally a variable in Pyccel should always keep its initial type, this also transfers to using the ndarrays.
 
 #### incorrect example:
 
@@ -31,10 +31,11 @@ pyccel:
 ```
 
 ### Memory management:
-Pyccel make a difference between ndarray that own their data and the ones they don't.
+Pyccel makes a difference between ndarrays that own their data and the ones they don't.
+
 Pyccel call it own garbage collecting when needed but has a set of rules to do so:
 
-1. you can't reassign ndarrays with different ranks.
+1. Can not reassign ndarrays with different ranks.
       ```Python
       import numpy as np
 
@@ -48,8 +49,8 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
       pyccel:
         |error [semantic]: ex.py [4]| Incompatible redefinition (|a| real(10, 20) <-> real(10,))
       ```
-      this limitation is the way Fortran alloctables can't change the rank after declaration.
-2. you can't assign ndarrays that own their data one another.
+      This limitation is due to the way Fortran alloctable can't change the rank after declaration.
+2. Can not assign ndarrays that own their data one another.
       ```Python
       import numpy as np
 
@@ -64,9 +65,10 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
         |error [semantic]: ex.py [5]| Arrays which own their data cannot become views on other arrays (a)
       ```
 
-   this limitation is due to the fact that the ndarray **a** will have to go from a data owner to a pointer to the **b** ndarray data.
+   This limitation is due to the fact that the ndarray **a** will have to go from a data owner to a pointer to the **b** ndarray data.
 
-   *NOTE*: this limitation does not include reassinging with a new data with respecting the previous rule.
+   *NOTE*: this limitation does not include reassigning using new data with respecting the previous rule.
+    - Python example:
     ```Python
     import numpy as np
 
@@ -74,8 +76,7 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
     #(some code...)
     a = np.ones(10)
     ```
-    this will be translated to the following code:
-    - in C:
+    - C equivalent:
     ```C
     #include <ndarrays.h>
     #include <stdlib.h>
@@ -97,7 +98,7 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
     }
     ```
 
-    - in Fortran:
+    - Fortran equivalent:
     ```Fortran
     program prog_ex
 
@@ -122,7 +123,7 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
 
     end program prog_ex
     ```
-3. you can't reassign to an ndarray that has another ndarray acessing his data.
+3. Can not reassign to a ndarray that has another pointer accessing his data.
 
    ```Python
    import numpy as np
@@ -138,7 +139,7 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
     pyccel:
      |error [semantic]: ex.py [6]| Attempt to reallocate an array which is being used by another variable (a)
     ```
-    this limitations is set due to the fact that we need to free the previous data when trying to reallocate an ndarray which in this case will cause the data that the **b** view point to the becaume inacessible.
+    This limitation is set since we need to free the previous data when are trying to reallocate the ndarray, which in this case will cause the data where the view **b** point to became inaccessible.
 
 ### Slicing and indexing.
 
