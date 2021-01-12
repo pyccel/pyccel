@@ -369,7 +369,7 @@ class FCodePrinter(CodePrinter):
     def _print_Import(self, expr):
 
         source = ''
-        if str(expr.source) in pyccel_builtin_import_registery or expr.ignore:
+        if expr.ignore:
             return ''
 
         if isinstance(expr.source, DottedName):
