@@ -35,7 +35,7 @@ Pyccel makes a difference between ndarrays that own their data and the ones they
 
 Pyccel call it own garbage collecting when needed but has a set of rules to do so:
 
-1.  Can not reassign ndarrays with different ranks.
+- Can not reassign ndarrays with different ranks.
    ```Python
    import numpy as np
 
@@ -51,7 +51,7 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
    ```
    This limitation is due to the way Fortran alloctable can't change the rank after declaration.
 
-2.  Can not assign ndarrays that own their data one another.
+- Can not assign ndarrays that own their data one another.
    ```Python
    import numpy as np
 
@@ -69,14 +69,14 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
    This limitation is due to the fact that the ndarray **a** will have to go from a data owner to a pointer to the **b** ndarray data.
 
    *NOTE*: this limitation does not include reassigning using new data with respecting the previous rule.
-   -   Python example:
+   - Python example:
    ```Python
    import numpy as np
    a = np.ones(20)
    #(some code...)
    a = np.ones(10)
    ```
-   -   C equivalent:
+   - C equivalent:
    ```C
    #include <ndarrays.h>
    #include <stdlib.h>
@@ -96,7 +96,7 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
        return 0;
    }
    ```
-   -   Fortran equivalent:
+   - Fortran equivalent:
    ```Fortran
     program prog_ex
 
@@ -122,7 +122,7 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
     end program prog_ex
     ```
 
-3.  Can not reassign to a ndarray that has another pointer accessing his data.
+- Can not reassign to a ndarray that has another pointer accessing his data.
 
    ```Python
    import numpy as np
@@ -146,14 +146,13 @@ the indexing and slicing in Pyccel handles only the basic indexing of [numpy arr
 
 Some examples:
 
-1.  Python code:
+- Python code:
 ```Python
 import numpy as np
 
 a = np.array([1, 3, 4, 5])
 a[0] = 0
 ```
-
 - C equivalent:
 ```C
 #include <ndarrays.h>
@@ -174,7 +173,6 @@ int main()
     return 0;
 }
 ```
-
 - Fortran equivalent:
 ```Fortran
 program prog_ex
@@ -192,14 +190,13 @@ a(0_C_INT64_T) = 0_C_INT64_T
 end program prog_ex
 ```
 
-2.  Python code:
+- Python code:
 ```Python
 import numpy as np
 
 a = np.ones((10, 20))
 b = a[2:, :5]
 ```
-
 - C equivalent:
 ```C
 #include <stdlib.h>
@@ -220,7 +217,6 @@ int main()
     return 0;
 }
 ```
-
 - Fortran equivalent:
 ```Fortran
 program prog_ex
@@ -239,7 +235,7 @@ b(0:, 0:) => a(5_C_INT64_T:, 2_C_INT64_T:)
 end program prog_ex
 ```
 
-3.  Python code:
+- Python code:
 ```Python
 import numpy as np
 
@@ -248,7 +244,6 @@ b = a[1]
 c = b[2]
 print(c)
 ```
-
 - C equivalent:
 ```C
 #include <stdint.h>
@@ -275,7 +270,6 @@ int main()
     return 0;
 }
 ```
-
 - Fortran equivalent:
 ```Fortran
 program prog_ex
