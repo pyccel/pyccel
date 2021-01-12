@@ -43,23 +43,23 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
 
 - Can not reassign ndarrays with different ranks.
 
-    ```Python
-    import numpy as np
+  ```Python
+  import numpy as np
 
-    a = np.ones((10, 20))
-    #(some code...)
-    a = np.ones(10)
-    ```
+  a = np.ones((10, 20))
+  #(some code...)
+   a = np.ones(10)
+   ```
 
-    *OUTPU* :
+  *OUTPU* :
 
-    ```Shell
-    ERROR at annotation (semantic) stage
-    pyccel:
-    |error [semantic]: ex.py [4]| Incompatible redefinition (|a| real(10, 20) <-> real(10,))
-    ```
+  ```Shell
+  ERROR at annotation (semantic) stage
+  pyccel:
+   |error [semantic]: ex.py [4]| Incompatible redefinition (|a| real(10, 20) <-> real(10,))
+  ```
 
-    This limitation is due to the way Fortran alloctable can't change the rank after declaration.
+  This limitation is due to the way Fortran alloctable can't change the rank after declaration.
 
 - Can not assign ndarrays that own their data one another.
 
@@ -76,7 +76,7 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
   ```Shell
   ERROR at annotation (semantic) stage
   pyccel:
-  |error [semantic]: ex.py [5]| Arrays which own their data cannot become views on other arrays (a)
+   |error [semantic]: ex.py [5]| Arrays which own their data cannot become views on other arrays (a)
   ```
 
   This limitation is due to the fact that the ndarray **a** will have to go from a data owner to a pointer to the **b** ndarray data.
@@ -142,24 +142,24 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
 
 - Can not reassign to a ndarray that has another pointer accessing his data.
 
-    ```Python
-    import numpy as np
+  ```Python
+  import numpy as np
 
-    a = np.ones(10)
-    b = a[:5]
-    #(some code...)
-    a = np.zeros(20)
-    ```
+  a = np.ones(10)
+  b = a[:5]
+  #(some code...)
+  a = np.zeros(20)
+  ```
 
-    *OUTPUT* :
+  *OUTPUT* :
 
-    ```Shell
-    ERROR at annotation (semantic) stage
-    pyccel:
-      |error [semantic]: ex.py [6]| Attempt to reallocate an array which is being used by another variable (a)
-    ```
+  ```Shell
+  ERROR at annotation (semantic) stage
+  pyccel:
+    |error [semantic]: ex.py [6]| Attempt to reallocate an array which is being used by another variable (a)
+  ```
 
-    This limitation is set since we need to free the previous data when are trying to reallocate the ndarray, which in this case will cause the data where the view **b** point to became inaccessible.
+  This limitation is set since we need to free the previous data when are trying to reallocate the ndarray, which in this case will cause the data where the view **b** point to became inaccessible.
 
 ### Slicing and indexing
 
@@ -169,12 +169,12 @@ Some examples:
 
 - Python code:
 
-    ```Python
-    import numpy as np
+  ```Python
+  import numpy as np
 
-    a = np.array([1, 3, 4, 5])
-    a[0] = 0
-    ```
+  a = np.array([1, 3, 4, 5])
+  a[0] = 0
+  ```
 
   - C equivalent:
 
@@ -218,12 +218,12 @@ Some examples:
 
 - Python code:
 
-    ```Python
-    import numpy as np
+  ```Python
+  import numpy as np
 
-    a = np.ones((10, 20))
-    b = a[2:, :5]
-    ```
+  a = np.ones((10, 20))
+  b = a[2:, :5]
+  ```
 
   - C equivalent:
 
