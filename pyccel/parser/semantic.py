@@ -452,7 +452,7 @@ class SemanticParser(BasicParser):
         container = self.namespace
         while container:
 
-            for key,_ in container.imports['imports'].items():
+            for key in container.imports['imports'].keys():
                 if key == name:
                     imp = container.imports['imports'][key]
 
@@ -509,6 +509,10 @@ class SemanticParser(BasicParser):
         return None
 
     def insert_import(self, name, target):
+        """
+            Create and insert a new import in namespace if it's not defined
+            otherwise append target to existing import.
+        """
         imp = self.get_import(name)
 
         if imp is not None:
