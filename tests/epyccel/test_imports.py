@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 
 import pytest
-from numpy import ones
+from numpy import ones, array_equal
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
@@ -58,3 +58,13 @@ def test_import_collision(language):
 
     f = epyccel(f4, language = language)
     assert f(5) == f4(5)
+
+def test_import_method(language):
+    @types('int[:]')
+    def f5(x):
+        s = x.shape[0]
+        return s
+
+    f = epyccel(f5, language = language)
+    x = ones(10, dtype=int)
+    assert f(x) == f5(x)
