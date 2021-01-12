@@ -608,7 +608,7 @@ class FCodePrinter(CodePrinter):
     def _print_PythonLen(self, expr):
         var = expr.arg
         idx = 1 if var.order == 'F' else var.rank
-        prec = self.print_kind(expr.dtype, expr.precsiion)
+        prec = self.print_kind(expr.dtype, expr.precision)
 
         dtype = var.dtype
         if dtype is NativeString():
@@ -797,7 +797,7 @@ class FCodePrinter(CodePrinter):
             real = self._print(expr.real)
             imag = self._print(expr.imag)
             code = 'cmplx({0}, {1}, {2})'.format(real, imag,
-                                iself.print_kind(expr.dtype, expr.precision))
+                                self.print_kind(expr.dtype, expr.precision))
         return code
 
     def _print_PythonBool(self, expr):
