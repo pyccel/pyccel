@@ -1870,10 +1870,11 @@ class FCodePrinter(CodePrinter):
     def _print_OMP_Parallel_Construct(self, expr):
         clauses = ''
         if expr.combined:
-            for i, value in enumerate(expr.combined):
+            combined = list(expr.combined)
+            for i, value in enumerate(combined):
                 if value in omploop_dict: # pylint: disable=consider-using-get
-                    expr.combined[i] = omploop_dict[value]
-            clauses = ' ' + ' '.join(expr.combined)
+                    combined[i] = omploop_dict[value]
+            clauses = ' ' + ' '.join(combined)
         clauses += str(expr.txt)
         omp_expr = '!$omp parallel{}\n'.format(clauses)
         return omp_expr
