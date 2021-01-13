@@ -4,7 +4,7 @@ import pytest
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
-# pw suffix means With Parentheses
+# wp suffix means With Parentheses
 #------------------------------------------------------------------------------
 def test_f1(language):
     @types('int')
