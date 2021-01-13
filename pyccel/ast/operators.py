@@ -1103,7 +1103,7 @@ class IfTernaryOperator(PyccelOperator):
             errors.report('None is not implemented for Ternary Operator', severity='fatal')
         if isinstance(value_true , NativeString) or isinstance(value_false, NativeString):
             errors.report('String is not implemented for Ternary Operator', severity='fatal')
-        if value_true not in NativeNumeric and value_false not in NativeNumeric:
+        if value_true.dtype not in NativeNumeric or value_false.dtype not in NativeNumeric:
             errors.report('unkown data type in IfTernaryOperator', severity='fatal')
         if value_true.dtype not in NativeNumeric:
             assert(value_true.dtype == value_false.dtype)
