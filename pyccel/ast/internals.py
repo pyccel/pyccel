@@ -122,13 +122,13 @@ class Slice(Basic):
 
     @property
     def start(self):
-        """ Starting integer where the slicing of the object starts
+        """ Index where the slicing of the object starts
         """
         return self._start
 
     @property
     def stop(self):
-        """ Integer until which the slicing takes place
+        """ Index until which the slicing takes place
         """
         return self._stop
 
