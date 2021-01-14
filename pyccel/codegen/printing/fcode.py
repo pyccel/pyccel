@@ -558,7 +558,6 @@ class FCodePrinter(CodePrinter):
             return self._print(var) + '%' +self._print(expr.name)
         else:
             return self._print(expr.lhs) + '%' +self._print(expr.name)
-        return self._print(expr.lhs) + '%' +self._print(expr.name)
 
     def _print_DottedName(self, expr):
         return ' % '.join(self._print(n) for n in expr.name)
