@@ -4,7 +4,7 @@
 
 A ndarray is a fixed-size multi-dimensional container of items of the same type and size. The number of dimensions and items in an array is defined by its shape, which is a container of N non-negative integers that specify the sizes of each dimension. The type of items in the array is specified by a separate data-type object, one of which is associated with each ndarray.
 
-Different ndarrays can share the same data, so that changes made in one ndarray may be visible in another. that is, a ndarray can be a "view" to another ndarray, and the data it is referring to is taken care of by the "base" ndarray.
+Different ndarrays can share the same data, so that changes made in one ndarray may be visible in another. That is, a ndarray can be a "view" to another ndarray, and the data it is referring to is taken care of by the "base" ndarray.
 [read more](https://numpy.org/doc/stable/reference/arrays.html)
 
 ## Pyccel ndarrays ##
@@ -39,7 +39,7 @@ pyccel:
 
 Pyccel makes a difference between ndarrays that own their data and the ones they don't.
 
-Pyccel call it own garbage collecting when needed but has a set of rules to do so:
+Pyccel calls its own garbage collector when needed, but has a set of rules to do so:
 
 -   Can not reassign ndarrays with different ranks.
 
@@ -59,7 +59,7 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
      |error [semantic]: ex.py [4]| Incompatible redefinition (|a| real(10, 20) <-> real(10,))
     ```
 
-    This limitation is due to the way Fortran alloctable can't change the rank after declaration.
+    This limitation is due to the way Fortran allocatable can't change the rank after declaration.
 
 -   Can not assign ndarrays that own their data one another.
 
@@ -164,7 +164,7 @@ Pyccel call it own garbage collecting when needed but has a set of rules to do s
 
 ### Slicing and indexing ###
 
-the indexing and slicing in Pyccel handles only the basic indexing of [numpy arrays](https://numpy.org/doc/stable/user/basics.indexing.html).
+The indexing and slicing in Pyccel handles only the basic indexing of [numpy arrays](https://numpy.org/doc/stable/user/basics.indexing.html).
 
 Some examples:
 
