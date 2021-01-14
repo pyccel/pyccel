@@ -88,9 +88,8 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_declare_type(self, expr):
         dtype = self._print(expr.dtype)
         prec  = expr.precision
-        if expr.rank > 0 and self._target_language == 'c' and not expr.is_pointer:
-            self._additional_imports.add("ndarrays")
-            dtype = 't_ndarray'
+        if self._target_language == 'c' and dtype != "pyarrayobject":
+            return CCodePrinter.get_declare_type(self, expr)
         else :
             dtype = self.find_in_dtype_registry(dtype, prec)
 

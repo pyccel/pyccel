@@ -548,7 +548,7 @@ def pybool_to_bool(cast_function_name):
 def pyarray_to_ndarray(cast_function_name):
     cast_function_argument = Variable(dtype=PyccelPyArrayObject(), name='o',
                                 is_pointer=True)
-    cast_function_result   = Variable(dtype=PyccelPyArrayObject(), name = 'c',
+    cast_function_result   = Variable(dtype=NativeInteger(), name = 'c',
                                 rank=1)
 
     nd          = DottedVariable(NativeInteger(), 'nd',
