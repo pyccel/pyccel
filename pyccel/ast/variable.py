@@ -119,6 +119,7 @@ class Variable(Symbol, PyccelAstNode):
         is_kwonly=False,
         allows_negative_indexes=False
         ):
+        super().__init__()
 
         # ------------ PyccelAstNode Properties ---------------
         if isinstance(dtype, str) or str(dtype) == '*':
