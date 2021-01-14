@@ -1370,7 +1370,7 @@ class SemanticParser(BasicParser):
 
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
-            rhs.base.is_target = True
+            rhs.base.is_target = True if rhs.base.allocatable else False
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign, **settings):
         """
