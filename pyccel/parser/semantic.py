@@ -806,7 +806,7 @@ class SemanticParser(BasicParser):
 
     def _visit_PythonList(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
-        expr = PythonList(*ls, sympify=False)
+        expr = PythonList(*ls)
 
         if not expr.is_homogeneous:
             errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
