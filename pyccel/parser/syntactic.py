@@ -275,7 +275,7 @@ class SyntaxParser(BasicParser):
         return tuple(self._treat_iterable(stmt))
 
     def _visit_list(self, stmt):
-        return [self._treat_iterable(stmt)]
+        return list(self._treat_iterable(stmt))
 
     def _visit_alias(self, stmt):
         if not isinstance(stmt.name, str):
