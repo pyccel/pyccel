@@ -16,7 +16,7 @@ from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
 from .core      import Variable, create_incremented_string, PyccelArraySize
 from .core      import CodeBlock, Comment, For, Assign
 
-from .builtins  import PythonRange
+from .builtins  import PythonRange, PythonTuple
 
 from .mathext   import MathCeil
 
@@ -96,6 +96,11 @@ def sympy_to_pyccel(expr, symbol_map):
             return arg
         else:
             return MathCeil(arg)
+
+    elif isinstance(expr, sp.Tuple):
+        args = [sympy_to_pyccel(a, symbol_map) for a in expr]
+        return PythonTuple(*args)
+
     else:
         raise TypeError(str(type(expr)))
 
@@ -196,6 +201,10 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         lhs = pyccel_to_sympy(expr.lhs, symbol_map, used_names)
         rhs = pyccel_to_sympy(expr.rhs, symbol_map, used_names)
         return Assign(lhs, rhs)
+
+    elif isinstance(expr, PythonTuple):
+        args = [pyccel_to_sympy(a, symbol_map, used_names) for a in expr]
+        return sp.Tuple(*args)
 
     elif isinstance(expr, (sp.core.basic.Atom, sp.core.operations.AssocOp, sp.Set)):
         # Already translated
