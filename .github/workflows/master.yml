@@ -2,7 +2,6 @@ name: master_tests
 
 on:
   push:
-    branches: [ master ]
 
 jobs:
 
