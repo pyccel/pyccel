@@ -600,7 +600,7 @@ class FCodePrinter(CodePrinter):
 #        return self._get_statement(code)
 
     def print_kind(self, expr):
-        return ""+iso_c_binding[self._print(expr.dtype)][expr.precision]
+        return iso_c_binding[self._print(expr.dtype)][expr.precision]
 
     def _print_SumFunction(self, expr):
         return str(expr)
