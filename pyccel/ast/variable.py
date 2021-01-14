@@ -3,22 +3,17 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-from collections.abc import Iterable
 import inspect
 from sympy import Symbol, Tuple
 from sympy.core.function      import Function
 from sympy.core.expr          import Expr
-from sympy.tensor             import IndexedBase
-from sympy.matrices.matrices  import MatrixBase
-from sympy.utilities.misc     import filldedent
 from sympy.utilities.iterables          import iterable
-from sympy.tensor.array.ndim_array      import NDimArray
 
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType, CustomDataType,
                         NativeInteger, NativeBool, NativeReal,
-                        NativeComplex, NativeRange, NativeString,
-                        NativeGeneric, default_precision)
+                        NativeComplex, NativeGeneric,
+                        default_precision)
 from .literals       import LiteralInteger, Nil
 from .operators import PyccelMinus
 from .property_accessors import PyccelArraySize, Slice
@@ -234,14 +229,24 @@ class Variable(Symbol, PyccelAstNode):
 
     @property
     def name(self):
+        """ Name of the variable
+        """
         return self._name
 
     @property
     def alloc_shape(self):
+        """ Shape of the variable at allocation
+
+        The shape used in pyccel is usually simplified to contain
+        only Literals and PyccelArraySizes but the shape for
+        the allocation of x cannot be `Shape(x)`
+        """
         return self._alloc_shape
 
     @property
     def allocatable(self):
+        """ Indicates whether a Variable has a dynamic size
+        """
         return self._allocatable
 
     @allocatable.setter
@@ -252,14 +257,23 @@ class Variable(Symbol, PyccelAstNode):
 
     @property
     def cls_base(self):
+        """ Class from which the Variable inherits
+        """
         return self._cls_base
 
     @property
     def is_const(self):
+        """ Indicates if the Variable is constant
+        within its context
+        """
         return self._is_const
 
     @property
     def is_pointer(self):
+        """ Indicates if the Variable is a label for
+        something which points to another object.
+        In other words, the Variable does not own its data
+        """
         return self._is_pointer
 
     @is_pointer.setter
@@ -270,6 +284,9 @@ class Variable(Symbol, PyccelAstNode):
 
     @property
     def is_target(self):
+        """ Indicates if the data in this Variable is
+        shared with (pointed at by) another Variable
+        """
         return self._is_target
 
     @is_target.setter
@@ -284,14 +301,16 @@ class Variable(Symbol, PyccelAstNode):
 
     @property
     def is_optional(self):
+        """ Indicates if the Variable is optional
+        in this context
+        """
         return self._is_optional
 
     @property
-    def order(self):
-        return self._order
-
-    @property
     def is_stack_array(self):
+        """ Indicates whether an array is allocated
+        on the stack
+        """
         return self._is_stack_array
 
     @is_stack_array.setter
@@ -300,6 +319,9 @@ class Variable(Symbol, PyccelAstNode):
 
     @property
     def allows_negative_indexes(self):
+        """ Indicates whether negative values can be
+        used to index this Variable
+        """
         return self._allows_negative_indexes
 
     @allows_negative_indexes.setter
