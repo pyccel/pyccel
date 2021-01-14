@@ -449,14 +449,12 @@ class SemanticParser(BasicParser):
         """
 
         imp = None
+
         container = self.namespace
         while container:
 
-            for key in container.imports['imports'].keys():
-                if key == name:
-                    imp = container.imports['imports'][key]
-
-            if imp:
+            if name in container.imports['imports']:
+                imp =  container.imports['imports'][name]
                 break
             container = container.parent_scope
 
