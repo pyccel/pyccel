@@ -797,9 +797,6 @@ class SemanticParser(BasicParser):
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal', blocker=self.blocking)
 
-    def _visit_list(self, expr, **settings):
-        return tuple(self._visit(i, **settings) for i in expr)
-
     def _visit_tuple(self, expr, **settings):
         return tuple(self._visit(i, **settings) for i in expr)
 
