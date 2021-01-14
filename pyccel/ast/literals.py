@@ -227,12 +227,3 @@ def get_default_literal_value(dtype):
     else:
         raise TypeError('Unknown type')
     return value
-
-class Nil(Basic):
-
-    """
-    class for None object in the code.
-    """
-
-    def __str__(self):
-        return 'None'
