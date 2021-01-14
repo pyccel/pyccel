@@ -1565,8 +1565,6 @@ class FCodePrinter(CodePrinter):
                 else:
                     dec = Declare(arg.dtype, arg, intent='in')
                 args_decs[str(arg)] = dec
-        print(args_decs)
-        print([d.passed_from_dotted for d in args_decs.values()])
 
         #remove parametres intent(inout) from out_args to prevent repetition
         for i in expr.arguments:
@@ -1632,8 +1630,6 @@ class FCodePrinter(CodePrinter):
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in expr.arguments):
                 decs[str(v)] = Declare(v.dtype,v)
-        print("decs : ",decs)
-        print(expr.arguments)
         prelude += ''.join(self._print(i) for i in decs.values())
         if len(functions)>0:
             functions_code = '\n'.join(self._print(i) for  i in functions)
