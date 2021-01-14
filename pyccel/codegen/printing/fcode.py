@@ -1034,7 +1034,7 @@ class FCodePrinter(CodePrinter):
             prefix = dtype.prefix
             alias  = dtype.alias
 
-            if dtype.is_polymorphic:
+            if dtype.is_polymorphic or expr.passed_from_dotted:
                 sig = 'class'
             else:
                 sig = 'type'
@@ -1559,13 +1559,15 @@ class FCodePrinter(CodePrinter):
 
         for i,arg in enumerate(expr.arguments):
             if isinstance(arg, Variable):
-                if expr.arguments_inout[i]:
-                    dec = Declare(arg.dtype, arg, intent='inout')
-                elif str(arg) == 'self':
+                if i == 0 and expr.cls_name:
+                    dec = Declare(arg.dtype, arg, intent='inout', passed_from_dotted = True)
+                elif expr.arguments_inout[i]:
                     dec = Declare(arg.dtype, arg, intent='inout')
                 else:
                     dec = Declare(arg.dtype, arg, intent='in')
                 args_decs[str(arg)] = dec
+        print(args_decs)
+        print([d.passed_from_dotted for d in args_decs.values()])
 
         #remove parametres intent(inout) from out_args to prevent repetition
         for i in expr.arguments:
@@ -1631,6 +1633,8 @@ class FCodePrinter(CodePrinter):
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in expr.arguments):
                 decs[str(v)] = Declare(v.dtype,v)
+        print("decs : ",decs)
+        print(expr.arguments)
         prelude += ''.join(self._print(i) for i in decs.values())
         if len(functions)>0:
             functions_code = '\n'.join(self._print(i) for  i in functions)
