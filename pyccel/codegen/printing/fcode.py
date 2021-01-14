@@ -629,7 +629,7 @@ class FCodePrinter(CodePrinter):
         value = self._print(expr.internal_var)
         return 'aimag({0})'.format(value)
 
-    #========================== Numpy Elements ===============================#
+    #========================== print kind ===============================#
 
     def print_kind(self, expr):
         """
