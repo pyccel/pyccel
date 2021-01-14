@@ -671,7 +671,6 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['cls_base'      ] = expr.cls_base
             d_var['is_pointer'    ] = expr.is_pointer
-            d_var['is_polymorphic'] = expr.is_polymorphic
             d_var['is_target'     ] = expr.is_target
             d_var['order'         ] = expr.order
             d_var['precision'     ] = expr.precision
@@ -753,7 +752,6 @@ class SemanticParser(BasicParser):
 
             # set target  to True if we want the class objects to be pointers
 
-            d_var['is_polymorphic'] = False
             d_var['cls_base'      ] = cls
             return d_var
 
@@ -1821,8 +1819,6 @@ class SemanticParser(BasicParser):
 
                     # TODO if we want to use pointers then we set target to true
                     # in the ConsturcterCall
-
-                    d['is_polymorphic'] = False
 
                 if isinstance(rhs, Variable) and rhs.is_target:
                     # case of rhs is a target variable the lhs must be a pointer

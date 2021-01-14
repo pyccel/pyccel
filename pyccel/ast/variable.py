@@ -60,9 +60,6 @@ class Variable(Symbol, PyccelAstNode):
     is_target: bool
         if object is pointed to by another variable [Default value: False]
 
-    is_polymorphic: bool
-        if object can be instance of class or any inherited class [Default value: False]
-
     is_optional: bool
         if object is an optional argument of a function [Default value: False]
 
@@ -113,7 +110,6 @@ class Variable(Symbol, PyccelAstNode):
         is_pointer=False,
         is_const=False,
         is_target=False,
-        is_polymorphic=None,
         is_optional=False,
         shape=None,
         cls_base=None,
@@ -190,15 +186,6 @@ class Variable(Symbol, PyccelAstNode):
         if not isinstance(is_target, bool):
             raise TypeError('is_target must be a boolean.')
         self.is_target = is_target
-
-        if is_polymorphic is None:
-            if isinstance(dtype, CustomDataType):
-                is_polymorphic = dtype.is_polymorphic
-            else:
-                is_polymorphic = False
-        elif not isinstance(is_polymorphic, bool):
-            raise TypeError('is_polymorphic must be a boolean.')
-        self._is_polymorphic = is_polymorphic
 
         if not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
@@ -309,10 +296,6 @@ class Variable(Symbol, PyccelAstNode):
         self._is_target = is_target
 
     @property
-    def is_polymorphic(self):
-        return self._is_polymorphic
-
-    @property
     def is_optional(self):
         """ Indicates if the Variable is optional
         in this context
@@ -390,7 +373,6 @@ class Variable(Symbol, PyccelAstNode):
         print( '  cls_base       = {}'.format(self.cls_base))
         print( '  is_pointer     = {}'.format(self.is_pointer))
         print( '  is_target      = {}'.format(self.is_target))
-        print( '  is_polymorphic = {}'.format(self.is_polymorphic))
         print( '  is_optional    = {}'.format(self.is_optional))
         print( '<<<')
 
@@ -455,7 +437,6 @@ class Variable(Symbol, PyccelAstNode):
             'rank' : self.rank,
             'allocatable': self.allocatable,
             'is_pointer':self.is_pointer,
-            'is_polymorphic':self.is_polymorphic,
             'is_optional':self.is_optional,
             'shape':self.shape,
             'cls_base':self.cls_base,

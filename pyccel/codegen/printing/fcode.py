@@ -1018,7 +1018,6 @@ class FCodePrinter(CodePrinter):
         is_target = var.is_target
         is_const = var.is_const
         is_stack_array = var.is_stack_array
-        is_polymorphic = var.is_polymorphic
         is_optional = var.is_optional
         is_static = expr.static
         intent = expr.intent
@@ -1035,9 +1034,7 @@ class FCodePrinter(CodePrinter):
             prefix = dtype.prefix
             alias  = dtype.alias
 
-            if not is_polymorphic:
-                sig = 'type'
-            elif dtype.is_polymorphic:
+            if dtype.is_polymorphic:
                 sig = 'class'
             else:
                 sig = 'type'
