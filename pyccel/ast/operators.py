@@ -1117,10 +1117,8 @@ class IfTernaryOperator(PyccelOperator):
         """
         if self.value_true.dtype in NativeNumeric and self.value_false.dtype in NativeNumeric:
             self._dtype = max([self.value_true.dtype, self.value_false.dtype], key = NativeNumeric.index)
-        elif self.value_true.dtype == self.value_false.dtype:
-            self._dtype = self.value_true.dtype
         else:
-            errors.report('Ternary Operator results should have the same data type', severity='fatal')
+            self._dtype = self.value_true.dtype
 
         self._precision = max([self.value_true.precision, self.value_false.precision])
 
@@ -1151,7 +1149,7 @@ class IfTernaryOperator(PyccelOperator):
     @property
     def value_false(self):
         """
-        The value_if_cond_flase property for IfTernaryOperator class
+        The value_if_cond_false property for IfTernaryOperator class
         """
         return self._args[2]
 
