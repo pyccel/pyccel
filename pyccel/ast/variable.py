@@ -3,11 +3,14 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+""" This module contains all classes which are used to handle memory block labels at
+different stages of pyccel. Memory block labels are usually either Variables or Indexed
+variables
+"""
 import inspect
 from sympy import Symbol, Tuple
 from sympy.core.function      import Function
 from sympy.core.expr          import Expr
-from sympy.utilities.iterables          import iterable
 
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType, CustomDataType,
@@ -366,18 +369,12 @@ class Variable(Symbol, PyccelAstNode):
                           NativeReal, NativeComplex))
 
     def __str__(self):
-        if isinstance(self.name, (str, DottedName)):
-            return str(self.name)
-        elif self.name is iterable:
-            return """.""".join(str(n) for n in self.name)
+        return str(self.name)
 
     def _sympystr(self, printer):
         """ sympy equivalent of __str__"""
         sstr = printer.doprint
-        if isinstance(self.name, (str, DottedName)):
-            return '{}'.format(sstr(self.name))
-        elif self.name is iterable:
-            return """.""".join(sstr(n) for n in self.name)
+        return '{}'.format(sstr(self.name))
 
     def inspect(self):
         """inspects the variable."""
@@ -464,6 +461,7 @@ class Variable(Symbol, PyccelAstNode):
             'cls_base':self.cls_base,
             }
 
+        apply = lambda func, args, kwargs: func(*args, **kwargs)
         out =  (apply, (Variable, args, kwargs))
         return out
 
@@ -500,12 +498,16 @@ class DottedName(Basic):
 
     @property
     def name(self):
+        """ The different components of the name
+        (these were separated by dots)
+        """
         return self._args
 
     def __str__(self):
         return """.""".join(str(n) for n in self.name)
 
     def _sympystr(self, printer):
+        """ sympy equivalent of __str__"""
         sstr = printer.doprint
         return """.""".join(sstr(n) for n in self.name)
 
@@ -545,9 +547,12 @@ class ValuedVariable(Variable):
 
     @property
     def value(self):
+        """ Default value of the variable
+        """
         return self._value
 
     def _sympystr(self, printer):
+        """ sympy equivalent of __str__"""
         sstr = printer.doprint
 
         name = sstr(self.name)
@@ -588,14 +593,40 @@ class TupleVariable(Variable):
         Variable.__init__(self, dtype, name, *args, **kwargs)
 
     def get_vars(self):
+        """ Get the variables saved internally in the tuple
+        (used for inhomogeneous variables)
+        """
+        assert(self._is_homogeneous)
         return tuple(self[i] for i in range(len(self._vars)))
 
     def get_var(self, variable_idx):
+        """ Get the n-th variable saved internally in the
+        tuple (used for inhomogeneous variables)
+
+        Parameters
+        ==========
+        variable_idx : int/LiteralInteger
+                       The index of the variable which we
+                       wish to collect
+        """
+        assert(self._is_homogeneous)
         if isinstance(variable_idx, LiteralInteger):
             variable_idx = variable_idx.p
         return self._vars[variable_idx]
 
     def rename_var(self, variable_idx, new_name):
+        """ Rename the n-th variable saved internally in the
+        tuple (used for inhomogeneous variables)
+
+        Parameters
+        ==========
+        variable_idx : int/LiteralInteger
+                       The index of the variable which we
+                       wish to collect
+        new_name     : str
+                       The new name of the variable
+        """
+        assert(self._is_homogeneous)
         self._vars[variable_idx].rename(new_name)
 
     def __getitem__(self, idx):
@@ -625,10 +656,18 @@ class TupleVariable(Variable):
 
     @property
     def inconsistent_shape(self):
+        """ Indicates whether all objects in the tuple have the
+        same shape
+        """
         return self._inconsistent_shape
 
     @property
     def is_homogeneous(self):
+        """ Indicates if all objects in the tuple have the
+        same datatype
+        # TODO: Indicates if all objects in the tuple have the
+        same properties
+        """
         return self._is_homogeneous
 
     @is_homogeneous.setter
@@ -670,7 +709,7 @@ class Constant(ValuedVariable, PyccelAstNode):
 
 
 
-class IndexedElement(Expr, PyccelAstNode):
+class IndexedElement(PyccelAstNode):
 
     """
     Represents a mathematical object with indices.
@@ -743,10 +782,14 @@ class IndexedElement(Expr, PyccelAstNode):
 
     @property
     def base(self):
+        """ The object which is indexed
+        """
         return self._label
 
     @property
     def indices(self):
+        """ A tuple of indices used to index the variable
+        """
         return self._indices
 
 class VariableAddress(Basic, PyccelAstNode):
@@ -770,12 +813,22 @@ class VariableAddress(Basic, PyccelAstNode):
 
     @property
     def variable(self):
+        """ The variable whose address is of interest
+        """
         return self._variable
 
 class DottedVariable(Variable):
 
     """
-    Represents a dotted variable.
+    Represents a dotted variable. This is usually
+    a variable which is a member of a class
+
+    E.g.
+    a = AClass()
+    a.b = 3
+
+    In this case b is a DottedVariable where the lhs
+    is a
     """
 
     def __init__(self, *args, lhs, **kwargs):
@@ -784,4 +837,11 @@ class DottedVariable(Variable):
 
     @property
     def lhs(self):
+        """ The object before the final dot in the
+        dotted variable
+
+        e.g. for the DottedVariable:
+        a.b
+        The lhs is a
+        """
         return self._lhs
