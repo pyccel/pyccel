@@ -141,7 +141,7 @@ Pyccel calls its own garbage collector when needed, but has a set of rules to do
         end program prog_ex
         ```
 
--   Can not reassign to a ndarray that has another pointer accessing his data.
+-   Can not reassign to a ndarray that has another pointer accessing its data.
 
     ```Python
     import numpy as np
@@ -160,7 +160,7 @@ Pyccel calls its own garbage collector when needed, but has a set of rules to do
       |error [semantic]: ex.py [6]| Attempt to reallocate an array which is being used by another variable (a)
     ```
 
-    This limitation is set since we need to free the previous data when are trying to reallocate the ndarray, which in this case will cause the data where the view **b** point to became inaccessible.
+This limitation is set since we need to free the previous data when we reallocate the ndarray. In this case, this will cause the data pointed to by the view **b** to became inaccessible.
 
 ### Slicing and indexing ###
 
