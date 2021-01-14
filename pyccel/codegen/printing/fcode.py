@@ -31,7 +31,7 @@ from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
-from pyccel.ast.core import (Assign, AliasAssign, For, Declare,
+from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, Dlist, AsName,
                              If, IfTernaryOperator)
 from pyccel.ast.variable  import (Variable, TupleVariable,
