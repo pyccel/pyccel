@@ -17,9 +17,9 @@ from .datatypes import (datatype, DataType, CustomDataType,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeGeneric,
                         default_precision)
-from .literals       import LiteralInteger, Nil
+from .internals import PyccelArraySize, Slice
+from .literals  import LiteralInteger, Nil
 from .operators import PyccelMinus
-from .property_accessors import PyccelArraySize, Slice
 
 __all__ = (
     'DottedName',

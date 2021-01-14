@@ -42,7 +42,7 @@ from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeRange, NativeTensor, NativeString,
                         NativeTuple, is_iterable_datatype, str_dtype)
-from .internals      import PyccelInternalFunction, PyccelArraySize
+from .internals      import PyccelInternalFunction, PyccelArraySize, Slice
 
 from .literals       import LiteralTrue, LiteralFalse, LiteralInteger
 from .literals       import LiteralImaginaryUnit, LiteralString, Literal
@@ -52,7 +52,6 @@ from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
 from .operators import PyccelMul
-from .property_accessors import Slice
 
 from .variable import DottedName, DottedVariable, IndexedElement
 from .variable import ValuedVariable, Variable

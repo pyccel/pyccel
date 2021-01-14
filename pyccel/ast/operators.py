@@ -19,9 +19,9 @@ from .builtins              import PythonInt
 from .datatypes             import (NativeBool, NativeInteger, NativeReal,
                                     NativeComplex, NativeString, default_precision)
 
-from .literals              import LiteralInteger, LiteralFloat, LiteralComplex
+from .internals             import PyccelArraySize
 
-from .property_accessors    import PyccelArraySize
+from .literals              import LiteralInteger, LiteralFloat, LiteralComplex
 
 errors = Errors()
 

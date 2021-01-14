@@ -91,7 +91,7 @@ from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
 
-from pyccel.ast.property_accessors import Slice
+from pyccel.ast.internals import Slice
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 

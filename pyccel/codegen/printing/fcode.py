@@ -54,6 +54,9 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
+
+from pyccel.ast.internals import Slice
+
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue
 from pyccel.ast.literals  import Nil
@@ -65,8 +68,6 @@ from pyccel.ast.numpyext import NumpyMod, NumpyFloat
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import Shape
-
-from pyccel.ast.property_accessors import Slice
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *

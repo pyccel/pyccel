@@ -7,7 +7,7 @@
 File containing basic classes which are used throughout pyccel.
 To avoid circular imports this file should only import from basic and datatypes
 """
-from .basic import PyccelAstNode
+from .basic import Basic, PyccelAstNode
 from .datatypes import NativeInteger, default_precision
 
 __all__ = (

@@ -67,7 +67,7 @@ from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 from pyccel.ast.variable  import DottedName
 
-from pyccel.ast.property_accessors import Slice
+from pyccel.ast.internals import Slice
 
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.base import BasicParser
