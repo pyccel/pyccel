@@ -4,8 +4,6 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-from sympy import Tuple
-
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import FunctionDef, BindCFunctionDef
@@ -73,7 +71,7 @@ def as_static_function(func, name=None):
 
                 additional_args += [n_arg]
 
-            shape_new = Tuple(*additional_args, sympify=False)
+            shape_new = tuple(additional_args)
             # ...
 
             _args += additional_args

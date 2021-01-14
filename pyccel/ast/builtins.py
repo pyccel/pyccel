@@ -11,7 +11,7 @@ In this module we implement some of them in alphabetical order.
 
 """
 
-from sympy import Symbol, Tuple
+from sympy import Symbol
 from sympy import Expr, Not
 from sympy import sympify
 from sympy.tensor import Indexed, IndexedBase
@@ -402,7 +402,7 @@ class PythonLen(PyccelInternalFunction):
         return self._args[0]
 
 #==============================================================================
-class PythonList(Tuple, PyccelAstNode):
+class PythonList(PythonTuple, PyccelAstNode):
     _order = 'C'
     _is_homogeneous = True
     """ Represent lists in the code with dynamic memory management."""
@@ -507,7 +507,7 @@ class PythonRange(Basic):
 
         _valid_args = (LiteralInteger, Symbol, Indexed)
 
-        if isinstance(args, (tuple, list, Tuple)):
+        if isinstance(args, (tuple, list)):
             if len(args) == 1:
                 stop = args[0]
             elif len(args) == 2:
@@ -548,7 +548,7 @@ class PythonZip(Basic):
     """
 
     def __new__(cls, *args):
-        if not isinstance(args, (tuple, list, Tuple)):
+        if not isinstance(args, (tuple, list)):
             raise TypeError('args must be an iterable')
         elif len(args) < 2:
             raise ValueError('args must be of length > 2')
@@ -580,11 +580,11 @@ class PythonAbs(PyccelInternalFunction):
 class PythonSum(PyccelInternalFunction):
     """Represents a call to  python sum for code generation.
 
-    arg : list , tuple , PythonTuple, Tuple, List, Variable
+    arg : list , tuple , PythonTuple, List, Variable
     """
 
     def __init__(self, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, PythonList,
+        if not isinstance(arg, (list, tuple, PythonTuple, PythonList,
                                 Variable, Expr)): # pylint: disable=undefined-variable
             raise TypeError('Unknown type of  %s.' % type(arg))
         self._dtype = arg.dtype
@@ -601,11 +601,11 @@ class PythonSum(PyccelInternalFunction):
 class PythonMax(PyccelInternalFunction):
     """Represents a call to  python max for code generation.
 
-    arg : list , tuple , PythonTuple, Tuple, List
+    arg : list , tuple , PythonTuple, List
     """
 
     def __init__(self, x):
-        if not isinstance(x, (list, tuple, PythonTuple, Tuple, PythonList)):
+        if not isinstance(x, (list, tuple, PythonTuple, PythonList)):
             raise TypeError('Unknown type of  %s.' % type(x))
         self._shape     = ()
         self._rank      = 0
@@ -618,7 +618,7 @@ class PythonMax(PyccelInternalFunction):
 class PythonMin(PyccelInternalFunction):
     """Represents a call to  python min for code generation.
 
-    arg : list , tuple , PythonTuple, Tuple, List, Variable
+    arg : list , tuple , PythonTuple, List, Variable
     """
     def __init__(self, x):
         self._shape     = ()
