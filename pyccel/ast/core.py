@@ -884,7 +884,7 @@ class Deallocate(Basic):
     variable : pyccel.ast.core.Variable
         The typed variable (usually an array) that needs memory deallocation.
 
-    free_function: bool
+    free_function: str
         the function to use for freeing the variable [Default value: None]
     Notes
     -----
