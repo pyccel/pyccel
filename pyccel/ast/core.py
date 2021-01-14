@@ -3614,6 +3614,7 @@ class Declare(Basic):
         intent=None,
         value=None,
         static=False,
+        passed_from_dotted = False,
         ):
         if isinstance(dtype, str):
             dtype = datatype(dtype)
@@ -3632,6 +3633,9 @@ class Declare(Basic):
         if not isinstance(static, bool):
             raise TypeError('Expecting a boolean for static attribute')
 
+        if not isinstance(passed_from_dotted, bool):
+            raise TypeError('Expecting a boolean for passed_from_dotted attribute')
+
         return Basic.__new__(
             cls,
             dtype,
@@ -3639,6 +3643,7 @@ class Declare(Basic):
             intent,
             value,
             static,
+            passed_from_dotted
             )
 
     @property
@@ -3660,6 +3665,12 @@ class Declare(Basic):
     @property
     def static(self):
         return self._args[4]
+
+    @property
+    def passed_from_dotted(self):
+        """ Argument is the lhs of a DottedFunction
+        """
+        return self._args[5]
 
 
 class Subroutine(sp_UndefinedFunction):
