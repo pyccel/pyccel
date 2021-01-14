@@ -107,7 +107,7 @@ class Slice(Basic):
         return Basic.__new__(cls, start, stop, step)
 
     def __init__(self, start, stop, step = None):
-        Basic.__init__(self, start, stop, step)
+        Basic.__init__(self)
         self._start = start
         self._stop = stop
         self._step = step

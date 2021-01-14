@@ -792,7 +792,7 @@ class IndexedElement(PyccelAstNode):
         """
         return self._indices
 
-class VariableAddress(Basic, PyccelAstNode):
+class VariableAddress(PyccelAstNode):
 
     """Represents the address of a variable.
     E.g. In C
