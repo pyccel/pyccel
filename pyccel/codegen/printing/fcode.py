@@ -37,11 +37,13 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              CodeBlock,
                              IndexedElement, Slice, Dlist,
                              DottedName, AsName,
-                             If, PyccelArraySize, IfTernaryOperator)
+                             If, PyccelArraySize)
 
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt
+
+from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
+
 from pyccel.ast.core      import FunctionCall, DottedFunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
@@ -369,7 +371,7 @@ class FCodePrinter(CodePrinter):
     def _print_Import(self, expr):
 
         source = ''
-        if str(expr.source) in pyccel_builtin_import_registery:
+        if expr.ignore:
             return ''
 
         if isinstance(expr.source, DottedName):
