@@ -599,8 +599,6 @@ class FCodePrinter(CodePrinter):
 #
 #        return self._get_statement(code)
 
-    def print_kind(self, expr):
-        return iso_c_binding[self._print(expr.dtype)][expr.precision]
 
     def _print_SumFunction(self, expr):
         return str(expr)
@@ -630,6 +628,16 @@ class FCodePrinter(CodePrinter):
     def _print_PythonImag(self, expr):
         value = self._print(expr.internal_var)
         return 'aimag({0})'.format(value)
+
+    #========================== Numpy Elements ===============================#
+
+    def print_kind(self, expr):
+        """
+        Prints the kind(precision) of a literal value
+        """
+        return iso_c_binding[self._print(expr.dtype)][expr.precision]
+
+    #=========================================================================#
 
     #========================== Numpy Elements ===============================#
 
