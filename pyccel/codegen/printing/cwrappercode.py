@@ -30,7 +30,7 @@ from pyccel.ast.cwrapper import PyccelPyObject, PyArg_ParseTupleNode, PyBuildVal
 from pyccel.ast.cwrapper import PyArgKeywords, collect_function_registry
 from pyccel.ast.cwrapper import Py_None, flags_registry
 from pyccel.ast.cwrapper import PyErr_SetString, PythonType_Check
-from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF, C_Free
+from pyccel.ast.cwrapper import cast_function_registry, Py_DECREF
 from pyccel.ast.cwrapper import PyccelPyArrayObject, NumpyType_Check
 from pyccel.ast.cwrapper import numpy_get_ndims, numpy_get_data, numpy_get_dim
 from pyccel.ast.cwrapper import numpy_get_type, numpy_dtype_registry

@@ -55,7 +55,6 @@ __all__ = (
     'PyFloat_AsDouble',
     'Type_Check',
     'PyErr_SetString',
-    'C_Free',
 #------- CAST FUNCTIONS ------
     'pyint_to_bool',
     'bool_to_pyobj',
@@ -285,15 +284,6 @@ PyFloat_AsDouble = FunctionDef(name = 'PyFloat_AsDouble',
                         body = [],
                         arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
                         results   = [Variable(dtype=NativeReal(), name = 'r')])
-
-#-------------------------------------------------------------------
-#                           C functions
-#-------------------------------------------------------------------
-# call c free function for freeing allocated variables
-C_Free = FunctionDef(name      = 'free',
-                           body      = [],
-                           arguments = [Variable(dtype=NativeVoid(), name = 'o', is_pointer=True)],
-                           results   = [])
 
 #-------------------------------------------------------------------
 #                      Numpy functions
