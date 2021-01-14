@@ -13,9 +13,9 @@ from sympy.core.function      import Function
 from sympy.core.expr          import Expr
 
 from .basic     import Basic, PyccelAstNode
-from .datatypes import (datatype, DataType, CustomDataType, NativeRange,
-                        NativeInteger, NativeBool, NativeReal, NativeRange,
-                        NativeComplex, NativeGeneric, NativeRange,
+from .datatypes import (datatype, DataType, CustomDataType,
+                        NativeInteger, NativeBool, NativeReal,
+                        NativeComplex, NativeGeneric,
                         default_precision)
 from .internals import PyccelArraySize, Slice
 from .literals  import LiteralInteger, Nil
