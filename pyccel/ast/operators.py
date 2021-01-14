@@ -1104,7 +1104,7 @@ class IfTernaryOperator(PyccelOperator):
         if isinstance(value_true , NativeString) or isinstance(value_false, NativeString):
             errors.report('String is not implemented for Ternary Operator', severity='fatal')
         if value_true.dtype != value_false.dtype:
-            if value_true.dtype not in NativeNumeric and value_false.dtype not in NativeNumeric:
+            if value_true.dtype not in NativeNumeric or value_false.dtype not in NativeNumeric:
                 errors.report('The types are incompatible in IfTernaryOperator', severity='fatal')
         if value_false.rank != value_true.rank :
             errors.report('Ternary Operator results should have the same rank', severity='fatal')
