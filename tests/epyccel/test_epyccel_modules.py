@@ -1,11 +1,12 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import numpy as np
 from pyccel.epyccel import epyccel
+import pytest
 
-def test_module_1():
+def test_module_1(language):
     import modules.Module_1 as mod
 
-    modnew = epyccel(mod)
+    modnew = epyccel(mod, language=language)
 
     from numpy import zeros
 
@@ -22,10 +23,10 @@ def test_module_1():
     assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
     # ...
 
-def test_local_module_1():
+def test_local_module_1(language):
     import Module_1 as mod
 
-    modnew = epyccel(mod)
+    modnew = epyccel(mod, language=language)
 
     from numpy import zeros
 
@@ -42,10 +43,18 @@ def test_local_module_1():
     assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
     # ...
 
-def test_module_2():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="slicing not implemented in C language"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_module_2(language):
     import modules.Module_2 as mod
 
-    modnew = epyccel(mod)
+    modnew = epyccel(mod, language=language)
 
     # ...
     m1 = 2 ; m2 = 3
