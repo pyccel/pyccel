@@ -211,6 +211,16 @@ class Variable(Symbol, PyccelAstNode):
         self._is_kwonly      = is_kwonly
 
     def process_shape(self, shape):
+        """ Simplify the provided shape and ensure it
+        has the expected format
+
+        The provided shape is the shape used to create
+        the object. In most cases where the shape is
+        required we do not require this expression
+        (which can be quite long). This function therefore
+        replaces those expressions with calls to
+        PyccelArraySize
+        """
         if not hasattr(shape,'__iter__'):
             shape = [shape]
 
@@ -330,10 +340,17 @@ class Variable(Symbol, PyccelAstNode):
 
     @property
     def is_argument(self):
+        """ Indicates whether the Variable is
+        a function argument in this context
+        """
         return self._is_argument
 
     @property
     def is_kwonly(self):
+        """ If the Variable is an argument then this
+        indicates whether the argument is a keyword
+        only argument
+        """
         return self._is_kwonly
 
     @property
@@ -355,6 +372,7 @@ class Variable(Symbol, PyccelAstNode):
             return """.""".join(str(n) for n in self.name)
 
     def _sympystr(self, printer):
+        """ sympy equivalent of __str__"""
         sstr = printer.doprint
         if isinstance(self.name, (str, DottedName)):
             return '{}'.format(sstr(self.name))
@@ -450,11 +468,8 @@ class Variable(Symbol, PyccelAstNode):
         return out
 
     def _eval_subs(self, old, new):
+        """ Overrides sympy method to indicate an atom"""
         return self
-
-    def _eval_is_positive(self):
-        #we do this inorder to infere the type of Pow expression correctly
-        return self.is_real
 
     def __getitem__(self, *args):
 
