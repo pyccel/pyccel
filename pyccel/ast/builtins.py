@@ -14,7 +14,6 @@ In this module we implement some of them in alphabetical order.
 from sympy import Symbol, Tuple
 from sympy import Expr, Not
 from sympy import sympify
-from sympy.tensor import Indexed, IndexedBase
 
 from pyccel.ast.datatypes import iso_c_binding
 
@@ -245,7 +244,7 @@ class PythonEnumerate(Basic):
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (Symbol, Indexed, IndexedBase)):
+        if not isinstance(arg, (Symbol, IndexedElement)):
             raise TypeError('Expecting an arg of valid type')
         return Basic.__new__(cls, arg)
 
@@ -505,7 +504,7 @@ class PythonRange(Basic):
         stop = None
         step = LiteralInteger(1)
 
-        _valid_args = (LiteralInteger, Symbol, Indexed)
+        _valid_args = (LiteralInteger, Symbol, IndexedElement)
 
         if isinstance(args, (tuple, list, Tuple)):
             if len(args) == 1:
