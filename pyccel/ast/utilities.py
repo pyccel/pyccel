@@ -14,7 +14,7 @@ import pyccel.decorators as pyccel_decorators
 from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors
 
-from .core     import (AsName, Import, FunctionDef)
+from .core     import (AsName, Import, FunctionDef, FunctionCall)
 
 from .builtins      import builtin_functions_dict, PythonMap
 from .itertoolsext  import Product
