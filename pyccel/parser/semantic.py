@@ -442,7 +442,10 @@ class SemanticParser(BasicParser):
 
 
     def get_import(self, name):
-        """."""
+        """
+        Search for an import with the given name in the current namespace.
+        Return None if not found.
+        """
 
         imp = None
 
@@ -501,6 +504,19 @@ class SemanticParser(BasicParser):
             container = container.parent_scope
 
         return None
+
+    def insert_import(self, name, target):
+        """
+            Create and insert a new import in namespace if it's not defined
+            otherwise append target to existing import.
+        """
+        imp = self.get_import(name)
+
+        if imp is not None:
+            imp.define_target(target)
+        else:
+            container = self.namespace.imports
+            container['imports'][name] = Import(name, target)
 
     def insert_macro(self, macro):
         """."""
@@ -1042,7 +1058,8 @@ class SemanticParser(BasicParser):
                     args  = self._handle_function_args(rhs.args, **settings)
                     func  = first[rhs_name]
                     if new_name != rhs_name:
-                        func  = func.clone(new_name)
+                        if hasattr(func, 'clone'):
+                            func  = func.clone(new_name)
                     return self._handle_function(func, args, **settings)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
@@ -1122,6 +1139,7 @@ class SemanticParser(BasicParser):
                             'property' in i.decorators.keys():
                         if 'numpy_wrapper' in i.decorators.keys():
                             func = i.decorators['numpy_wrapper']
+                            self.insert_import('numpy', rhs)
                             return func(visited_lhs)
                         else:
                             return DottedFunctionCall(i, [], prefix = visited_lhs,
@@ -2873,6 +2891,8 @@ class SemanticParser(BasicParser):
                             _insert_obj('functions', name, atom)
             else:
                 _insert_obj('variables', source_target, imports)
+            _insert_obj('imports', source_target, Import(source, expr.target, True))
+
         else:
 
             # in some cases (blas, lapack, openmp and openacc level-0)
