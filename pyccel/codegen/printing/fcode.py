@@ -36,11 +36,13 @@ from pyccel.ast.core import (Assign, AliasAssign, Variable,
                              CodeBlock,
                              IndexedElement, Slice, Dlist,
                              DottedName, AsName,
-                             If, PyccelArraySize, IfTernaryOperator)
+                             If, PyccelArraySize)
 
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt
+
+from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
+
 from pyccel.ast.core      import FunctionCall, DottedFunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,

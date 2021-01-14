@@ -48,7 +48,7 @@ from .datatypes import (datatype, DataType, CustomDataType, NativeSymbol,
                         NativeGeneric, NativeTuple, default_precision, is_iterable_datatype)
 from .internals      import PyccelInternalFunction, PyccelArraySize
 
-from .literals       import LiteralTrue, LiteralFalse, LiteralInteger
+from .literals       import LiteralTrue, LiteralFalse, LiteralInteger, Nil
 from .literals       import LiteralImaginaryUnit, LiteralString, Literal
 from .literals       import Nil
 from .itertoolsext   import Product
@@ -4953,69 +4953,6 @@ class If(Basic):
         for i in self._args:
             b.append( i[1])
         return b
-
-
-class IfTernaryOperator(PyccelAstNode):
-    """Represent a ternary conditional operator in the code, of the form (a if cond else b)
-
-    Parameters
-    ----------
-    args :
-        args : type list
-        format : condition , value_if_true, value_if_false
-
-    Examples
-    --------
-    >>> from sympy import Symbol
-    >>> from pyccel.ast.core import Assign, IfTernaryOperator
-    >>> n = Symbol('n')
-    >>> x = 5 if n > 1 else 2
-    >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
-    IfTernaryOperator(PyccelGt(n > 1),  5,  2)
-    """
-    def __init__(self, cond, value_true, value_false):
-        self._cond = cond
-        self._value_true = value_true
-        self._value_false = value_false
-
-        if self.stage == 'syntactic':
-            return
-        if isinstance(value_true , Nil) or isinstance(value_false, Nil):
-            errors.report('None is not implemented for Ternary Operator', severity='fatal')
-        if isinstance(value_true.dtype, NativeString) or isinstance(value_false.dtype, NativeString):
-            errors.report('Strings are not supported by Ternary Operator', severity='fatal')
-        _tmp_list = [NativeBool(), NativeInteger(), NativeReal(), NativeComplex(), NativeString()]
-        if value_true.dtype not in _tmp_list :
-            raise NotImplementedError('cannot determine the type of {}'.format(value_true.dtype))
-        if value_false.dtype not in _tmp_list :
-            raise NotImplementedError('cannot determine the type of {}'.format(value_false.dtype))
-        if value_false.rank != value_true.rank :
-            errors.report('Ternary Operator results should have the same rank', severity='fatal')
-        if value_false.shape != value_true.shape :
-            errors.report('Ternary Operator results should have the same shape', severity='fatal')
-        self._dtype = max([value_true.dtype, value_false.dtype], key = lambda x : _tmp_list.index(x))
-        self._precision = max([value_true.precision, value_false.precision])
-        self._shape = value_true.shape
-        self._rank  = value_true.rank
-        # rank is None for lambda functions
-        if self._rank is not None and self._rank > 1:
-            if value_false.order != value_true.order :
-                errors.report('Ternary Operator results should have the same order', severity='fatal')
-            self._order = value_true.order
-
-
-    @property
-    def cond(self):
-        return self._cond
-
-    @property
-    def value_true(self):
-        return self._value_true
-
-    @property
-    def value_false(self):
-        return self._value_false
-
 
 class StarredArguments(Basic):
     def __new__(cls, args):

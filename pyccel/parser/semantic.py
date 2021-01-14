@@ -39,7 +39,6 @@ from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCal
 from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor, ForIterator
-from pyccel.ast.core import IfTernaryOperator
 from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
@@ -55,7 +54,7 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import _atomic
-from pyccel.ast.operators import PyccelIs, PyccelIsNot
+from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
