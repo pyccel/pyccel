@@ -872,7 +872,7 @@ class SyntaxParser(BasicParser):
         args = []
         while isinstance(ch, ast.Subscript):
             val = self._visit(ch.slice)
-            if isinstance(val, PythonTuple):
+            if isinstance(val, (PythonTuple, list)):
                 args += val
             else:
                 args.insert(0, val)
@@ -883,7 +883,7 @@ class SyntaxParser(BasicParser):
         return var
 
     def _visit_ExtSlice(self, stmt):
-        return self._visit(tuple(stmt.dims))
+        return self._visit(stmt.dims)
 
     def _visit_Slice(self, stmt):
 
