@@ -596,7 +596,7 @@ class TupleVariable(Variable):
         """ Get the variables saved internally in the tuple
         (used for inhomogeneous variables)
         """
-        assert(self._is_homogeneous)
+        assert(not self._is_homogeneous)
         return tuple(self[i] for i in range(len(self._vars)))
 
     def get_var(self, variable_idx):
@@ -609,7 +609,7 @@ class TupleVariable(Variable):
                        The index of the variable which we
                        wish to collect
         """
-        assert(self._is_homogeneous)
+        assert(not self._is_homogeneous)
         if isinstance(variable_idx, LiteralInteger):
             variable_idx = variable_idx.p
         return self._vars[variable_idx]
@@ -626,7 +626,7 @@ class TupleVariable(Variable):
         new_name     : str
                        The new name of the variable
         """
-        assert(self._is_homogeneous)
+        assert(not self._is_homogeneous)
         self._vars[variable_idx].rename(new_name)
 
     def __getitem__(self, idx):
