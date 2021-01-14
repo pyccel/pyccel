@@ -248,7 +248,7 @@ Continuous testing runs on Travis CI: <https://travis-ci.com/github/pyccel/pycce
 Pyccel Container Images
 =======================
 
-Pyccel container images are available through both Docker Hub (docker.io) and GitHub Container Registry (ghcr.io).
+Pyccel container images are available through both Docker Hub (docker.io) and the GitHub Container Registry (ghcr.io).
 
 The images:
 
