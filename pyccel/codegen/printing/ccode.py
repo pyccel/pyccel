@@ -13,7 +13,7 @@ from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
 from pyccel.ast.core      import Declare, Slice, ValuedVariable
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
-from pyccel.ast.core      import Deallocate, DottedVariable
+from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress, PyccelArraySize
 from pyccel.ast.core      import IfTernaryOperator
 from pyccel.ast.core      import Assign, datatype, Variable, Import
