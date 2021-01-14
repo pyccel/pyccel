@@ -596,7 +596,6 @@ class TupleVariable(Variable):
         """ Get the variables saved internally in the tuple
         (used for inhomogeneous variables)
         """
-        assert(not self._is_homogeneous)
         return tuple(self[i] for i in range(len(self._vars)))
 
     def get_var(self, variable_idx):
