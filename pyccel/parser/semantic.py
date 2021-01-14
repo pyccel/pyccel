@@ -2903,8 +2903,7 @@ class SemanticParser(BasicParser):
                             _insert_obj('functions', name, atom)
             else:
                 _insert_obj('variables', source_target, imports)
-            key = expr.source if isinstance(expr.source, AsName) else source
-            _insert_obj('imports', key, Import(source, expr.target, True))
+            _insert_obj('imports', source_target, Import(source, expr.target, True))
 
         else:
 
