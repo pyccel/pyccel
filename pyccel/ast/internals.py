@@ -112,7 +112,7 @@ class Slice(Basic):
         self._stop = stop
         self._step = step
         if PyccelAstNode.stage == 'syntactic':
-                return
+            return
         if start is not None and not (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger)):
             raise TypeError('Slice start must be Integer or None')
         if stop is not None and not (hasattr(stop, 'dtype') and isinstance(stop.dtype, NativeInteger)):
@@ -122,17 +122,25 @@ class Slice(Basic):
 
     @property
     def start(self):
+        """ Starting integer where the slicing of the object starts
+        """
         return self._start
 
     @property
     def stop(self):
+        """ Integer until which the slicing takes place
+        """
         return self._stop
 
     @property
     def step(self):
+        """ The difference between each index of the
+        objects in the slice
+        """
         return self._step
 
     def _sympystr(self, printer):
+        """ sympy equivalent of __str__"""
         sstr = printer.doprint
         if self.start is None:
             start = ''

@@ -743,6 +743,7 @@ class IndexedElement(PyccelAstNode):
         *args,
         **kw_args
         ):
+        super().__init__()
 
         self._dtype = base.dtype
         self._order = base.order
