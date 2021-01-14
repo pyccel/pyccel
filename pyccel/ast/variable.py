@@ -13,7 +13,7 @@ from sympy.core.function      import Function
 from sympy.core.expr          import Expr
 
 from .basic     import Basic, PyccelAstNode
-from .datatypes import (datatype, DataType, CustomDataType,
+from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeGeneric,
                         default_precision)
@@ -783,6 +783,7 @@ class VariableAddress(PyccelAstNode):
     """
 
     def __init__(self, variable):
+        super().__init__()
         if not isinstance(variable, Variable):
             raise TypeError('variable must be a variable')
         self._variable = variable
