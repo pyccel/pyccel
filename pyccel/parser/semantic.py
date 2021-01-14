@@ -27,7 +27,6 @@ from pyccel.ast.basic import PyccelAstNode
 
 from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Constant
-from pyccel.ast.core import Nil
 from pyccel.ast.core import Variable
 from pyccel.ast.core import TupleVariable
 from pyccel.ast.core import DottedName, DottedVariable
@@ -45,7 +44,7 @@ from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
 from pyccel.ast.core import EmptyNode
-from pyccel.ast.core import Slice, IndexedVariable, IndexedElement
+from pyccel.ast.core import Slice, IndexedElement
 from pyccel.ast.core import ValuedVariable
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import Import
@@ -68,6 +67,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeSt
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
 from pyccel.ast.literals import LiteralInteger, LiteralFloat
+from pyccel.ast.literals import Nil
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.headers import MacroFunction, MacroVariable
@@ -114,7 +114,7 @@ errors = Errors()
 def _get_name(var):
     """."""
 
-    if isinstance(var, (Symbol, IndexedVariable, IndexedBase, DottedName)):
+    if isinstance(var, (Symbol, IndexedBase, DottedName)):
         return str(var)
     if isinstance(var, (IndexedElement, Indexed)):
         return str(var.base)
@@ -769,8 +769,12 @@ class SemanticParser(BasicParser):
     def _visit(self, expr, **settings):
         """Annotates the AST.
 
-        IndexedVariable atoms are only used to manipulate expressions, we then,
-        always have a Variable in the namespace."""
+        The annotation is done by finding the appropriate function _visit_X
+        for the object expr. X is the type of the object expr. If this function
+        does not exist then the method resolution order is used to search for
+        other compatible _visit_X functions. If none are found then an error is
+        raised
+        """
 
         # TODO - add settings to Errors
         #      - line and column
@@ -881,7 +885,7 @@ class SemanticParser(BasicParser):
 
     def _extract_indexed_from_var(self, var, args, name):
 
-        # case of Pyccel ast Variable, IndexedVariable
+        # case of Pyccel ast Variable
         # if not possible we use symbolic objects
 
         if not isinstance(var, Variable):
@@ -932,26 +936,12 @@ class SemanticParser(BasicParser):
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal', blocker=self.blocking)
 
-        if hasattr(var, 'dtype'):
-            dtype = var.dtype
-            shape = var.shape
-            prec  = var.precision
-            order = var.order
-            rank  = var.rank
+        if isinstance(var, PythonTuple) and not var.is_homogeneous:
+            errors.report(LIST_OF_TUPLES, symbol=var,
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='error', blocker=self.blocking)
 
-            if isinstance(var, PythonTuple):
-                if not var.is_homogeneous:
-                    errors.report(LIST_OF_TUPLES, symbol=var,
-                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='error', blocker=self.blocking)
-                    dtype = 'int'
-                else:
-                    dtype = var.dtype
-
-            return IndexedVariable(var, dtype=dtype,
-                   shape=shape,prec=prec,order=order,rank=rank)[args]
-        else:
-            return IndexedVariable(name, dtype=dtype)[args]
+        return var[args]
 
     def _visit_IndexedBase(self, expr, **settings):
         return self._visit(expr.label)
@@ -993,11 +983,6 @@ class SemanticParser(BasicParser):
         else:
             args = new_args
             len_args = len(args)
-
-        if var.rank>len_args:
-            # add missing dimensions
-
-            args = args + [self._visit(Slice(None, None),**settings)]*(var.rank-len(args))
 
         return self._extract_indexed_from_var(var, args, name)
 
@@ -1379,13 +1364,13 @@ class SemanticParser(BasicParser):
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
             rhs.is_target = True
-        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.internal_variable.allocatable:
+        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.allocatable:
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
 
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
-            rhs.base.internal_variable.is_target = True
+            rhs.base.is_target = True
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign, **settings):
         """
@@ -1868,13 +1853,11 @@ class SemanticParser(BasicParser):
 
                 if rhs.is_homogeneous:
                     d_var = self._infere_type(rhs[0])
-                    indexed_rhs = IndexedVariable(rhs, dtype=rhs.dtype,
-                            shape=rhs.shape,prec=rhs.precision,order=rhs.order,rank=rhs.rank)
                     new_rhs = []
                     for i,l in enumerate(lhs):
                         new_lhs.append( self._assign_lhs_variable(l, d_var.copy(),
-                            indexed_rhs[i], new_expressions, isinstance(expr, AugAssign), **settings) )
-                        new_rhs.append(indexed_rhs[i])
+                            rhs[i], new_expressions, isinstance(expr, AugAssign), **settings) )
+                        new_rhs.append(rhs[i])
                     rhs = PythonTuple(*new_rhs)
                     d_var = [d_var]
                 else:

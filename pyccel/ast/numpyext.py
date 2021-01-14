@@ -12,9 +12,9 @@ from sympy           import (Tuple, Integer as sp_Integer,
 
 from .core           import (ClassDef, FunctionDef, PyccelInternalFunction,
                              PythonList, Variable, IndexedElement,
-                             Nil, process_shape, ValuedArgument, Constant)
+                             process_shape, ValuedArgument, Constant)
 
-from .operators      import (PyccelPow, PyccelAssociativeParenthesis, broadcast)
+from .operators      import broadcast
 
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag)
@@ -25,6 +25,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
 from .literals       import LiteralTrue, LiteralFalse
+from .literals       import Nil
 from .basic          import PyccelAstNode
 
 
@@ -716,6 +717,7 @@ class NumpyFloor(NumpyUfuncUnary):
 class NumpyMod(NumpyUfuncBinary):
 
     def _set_shape_rank(self, x1, x2):
+        args   = (x1, x2)
         shapes = [a.shape for a in args]
 
         if all(sh is not None for sh in shapes):
