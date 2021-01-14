@@ -14,7 +14,6 @@ import ast
 #==============================================================================
 
 from sympy import Symbol
-from sympy import IndexedBase
 from sympy import Tuple
 from sympy import Lambda
 from sympy import Dict
@@ -51,6 +50,7 @@ from pyccel.ast.core import With
 from pyccel.ast.core import PythonList
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
+from pyccel.ast.core import IndexedElement
 from pyccel.ast.core import _atomic
 from pyccel.ast.core import create_variable
 
@@ -880,7 +880,7 @@ class SyntaxParser(BasicParser):
             ch = ch.value
         args = tuple(args)
         var = self._visit(ch)
-        var = IndexedBase(var)[args]
+        var = IndexedElement(var, *args)
         return var
 
     def _visit_ExtSlice(self, stmt):
@@ -974,7 +974,7 @@ class SyntaxParser(BasicParser):
         index = self.get_new_variable()
 
         args = [index]
-        target = IndexedBase(lhs)[args]
+        target = IndexedElement(lhs, *args)
         target = Assign(target, result)
         assign1 = Assign(index, LiteralInteger(0))
         assign1.set_fst(stmt)

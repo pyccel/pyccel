@@ -14,7 +14,6 @@ from sympy.utilities.iterables import iterable as sympy_iterable
 from sympy import Sum as Summation
 from sympy import Symbol
 from sympy import Integer as sp_Integer
-from sympy import Indexed, IndexedBase
 from sympy import ceiling
 from sympy import oo  as INF
 from sympy import Tuple
@@ -114,9 +113,9 @@ errors = Errors()
 def _get_name(var):
     """."""
 
-    if isinstance(var, (Symbol, IndexedBase, DottedName)):
+    if isinstance(var, (Symbol, DottedName)):
         return str(var)
-    if isinstance(var, (IndexedElement, Indexed)):
+    if isinstance(var, (IndexedElement)):
         return str(var.base)
     if isinstance(var, FunctionCall):
         return var.funcdef
@@ -1905,10 +1904,10 @@ class SemanticParser(BasicParser):
             index = Variable('int',index_name)
             range_ = FunctionCall('range', (FunctionCall('len', lhs,),))
             name  = _get_name(lhs)
-            var   = IndexedBase(name)[index]
+            var   = IndexedElement(name, index)
             args  = rhs.args[1:]
             args  = [_get_name(arg) for arg in args]
-            args  = [IndexedBase(arg)[index] for arg in args]
+            args  = [IndexedElement(arg, index) for arg in args]
             func  = FunctionCall(func, args)
             body  = [Assign(var, func)]
             body[0].set_fst(fst)
@@ -1988,21 +1987,21 @@ class SemanticParser(BasicParser):
         body     = list(expr.body)
         iterator = expr.target
 
+        PyccelAstNode.stage = 'syntactic'
+
         if isinstance(iterable, Variable):
             indx   = self.get_new_variable()
-            assign = Assign(iterator, IndexedBase(iterable)[indx])
+            assign = Assign(iterator, IndexedElement(iterable, indx))
             assign.set_fst(expr.fst)
             iterator = indx
             body     = [assign] + body
 
         elif isinstance(iterable, PythonMap):
             indx   = self.get_new_variable()
-            PyccelAstNode.stage = 'syntactic'
             func   = iterable.args[0]
-            args   = [IndexedBase(arg)[indx] for arg in iterable.args[1:]]
+            args   = [IndexedElement(arg, indx) for arg in iterable.args[1:]]
             assign = Assign(iterator, FunctionCall(func, args))
             assign.set_fst(expr.fst)
-            PyccelAstNode.stage = 'semantic'
             iterator = indx
             body     = [assign] + body
 
@@ -2010,7 +2009,7 @@ class SemanticParser(BasicParser):
             args = iterable.args
             indx = self.get_new_variable()
             for i, arg in enumerate(args):
-                assign = Assign(iterator[i], IndexedBase(arg)[indx])
+                assign = Assign(iterator[i], IndexedElement(arg, indx))
                 assign.set_fst(expr.fst)
                 body = [assign] + body
             iterator = indx
@@ -2018,7 +2017,7 @@ class SemanticParser(BasicParser):
         elif isinstance(iterable, PythonEnumerate):
             indx   = iterator.args[0]
             var    = iterator.args[1]
-            assign = Assign(var, IndexedBase(iterable.args[0])[indx])
+            assign = Assign(var, IndexedElement(iterable.args[0], indx))
             assign.set_fst(expr.fst)
             iterator = indx
             body     = [assign] + body
@@ -2029,7 +2028,7 @@ class SemanticParser(BasicParser):
             for i,arg in enumerate(args):
                 if not isinstance(arg, PythonRange):
                     indx   = self.get_new_variable()
-                    assign = Assign(iterator[i], IndexedBase(arg)[indx])
+                    assign = Assign(iterator[i], IndexedElement(arg, indx))
 
                     assign.set_fst(expr.fst)
                     body        = [assign] + body
@@ -2057,6 +2056,7 @@ class SemanticParser(BasicParser):
             errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='error', blocker=self.blocking)
+        PyccelAstNode.stage = 'semantic'
 
         body = [self._visit(i, **settings) for i in body]
 
