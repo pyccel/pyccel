@@ -243,7 +243,7 @@ def DataTypeFactory(name, argnames=["_name"],
                     alias=None,
                     is_iterable=False,
                     is_with_construct=False,
-                    is_polymorphic=True):
+                    is_polymorphic=False):
     def __init__(self, **kwargs):
         for key, value in list(kwargs.items()):
             # here, the argnames variable is the one passed to the
