@@ -18,7 +18,6 @@ import functools
 import operator
 
 from sympy.core import Symbol
-from sympy.core import Tuple
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
 
@@ -429,7 +428,7 @@ class FCodePrinter(CodePrinter):
         for f in expr.expr:
             if isinstance(f, str):
                 args.append("'{}'".format(f))
-            elif isinstance(f, (Tuple, PythonTuple)):
+            elif isinstance(f, PythonTuple):
                 for i in f:
                     args.append("{}".format(self._print(i)))
             elif isinstance(f, TupleVariable) and not f.is_homogeneous:
@@ -493,9 +492,9 @@ class FCodePrinter(CodePrinter):
 
         return '!${0} {1}\n'.format(accel, txt)
 
-    def _print_Tuple(self, expr):
+    def _print_tuple(self, expr):
         if expr[0].rank>0:
-            raise NotImplementedError(' Tuple with elements of rank > 0 is not implemented')
+            raise NotImplementedError(' tuple with elements of rank > 0 is not implemented')
         fs = ', '.join(self._print(f) for f in expr)
         return '[{0}]'.format(fs)
 
@@ -506,7 +505,7 @@ class FCodePrinter(CodePrinter):
         return "abs({})".format(self._print(expr.arg))
 
     def _print_PythonTuple(self, expr):
-        shape = Tuple(*reversed(expr.shape))
+        shape = tuple(reversed(expr.shape))
         if len(shape)>1:
             elements = ', '.join(self._print(i) for i in expr)
             shape    = ', '.join(self._print(i) for i in shape)
@@ -947,7 +946,7 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(var, Variable):
             shape = var.shape
-            if not isinstance(shape,(tuple,list,Tuple)):
+            if not isinstance(shape,(tuple,list)):
                 shape = [shape]
             rank = len(shape)
             if shape is None:
@@ -1117,7 +1116,7 @@ class FCodePrinter(CodePrinter):
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             rankstr = '({0}:{1}-1)'.format(self._print(s), self._print(shape))
 
-        elif ((rank > 0) and (isinstance(shape, (PythonTuple, Tuple, tuple))) and
+        elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and
             (not(allocatable or is_pointer) or is_static or is_stack_array)):
             #TODO fix bug when we include shape of type list
 
@@ -1263,7 +1262,7 @@ class FCodePrinter(CodePrinter):
 
             # in the case of a function that returns a list,
             # we should append them to the procedure arguments
-            if isinstance(expr.lhs, (tuple, list, Tuple, PythonTuple)):
+            if isinstance(expr.lhs, (tuple, list, PythonTuple)):
 
                 rhs_code = rhs.funcdef.name
                 args = rhs.args
@@ -2296,7 +2295,7 @@ class FCodePrinter(CodePrinter):
             else:
                 lines.append("else if (%s) then\n" % self._print(c))
 
-            if isinstance(e, (list, tuple, Tuple, PythonTuple)):
+            if isinstance(e, (list, tuple, PythonTuple)):
                 lines.extend(self._print(ee) for ee in e)
             else:
                 lines.append(self._print(e))
@@ -2655,8 +2654,8 @@ class FCodePrinter(CodePrinter):
             elif isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(_shape, ind.args[0])
             else:
-                #indices of indexedElement of len==1 shouldn't be a Tuple
-                if isinstance(ind, Tuple) and len(ind) == 1:
+                #indices of indexedElement of len==1 shouldn't be a tuple
+                if isinstance(ind, tuple) and len(ind) == 1:
                     inds[i] = ind[0]
                 if allow_negative_indexes and not isinstance(ind, LiteralInteger):
                     inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
@@ -2771,8 +2770,8 @@ class FCodePrinter(CodePrinter):
 
                 out_vars.append(var)
 
-            self._additional_code = self._additional_code + self._print(Assign(Tuple(*out_vars),expr)) + '\n'
-            return self._print(Tuple(*out_vars))
+            self._additional_code = self._additional_code + self._print(Assign(tuple(out_vars),expr)) + '\n'
+            return self._print(tuple(out_vars))
         else:
             args    = ['{}'.format(self._print(a)) for a in args]
             if not func.is_header:
