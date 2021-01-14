@@ -474,7 +474,7 @@ class Variable(Symbol, PyccelAstNode):
         if len(args) == 1 and isinstance(args[0], (Tuple, tuple, list)):
             args = args[0]
 
-        if self.rank != len(args):
+        if self.rank < len(args):
             raise IndexError('Rank mismatch.')
 
         return IndexedElement(self, *args)
