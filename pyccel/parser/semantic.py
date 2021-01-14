@@ -3031,7 +3031,8 @@ class SemanticParser(BasicParser):
 
         val = expr.args[0]
         length = expr.args[1]
-        if isinstance(val, (TupleVariable, PythonTuple)):
+        if isinstance(val, (TupleVariable, PythonTuple)) and \
+                not isinstance(val, PythonList):
             if isinstance(length, LiteralInteger):
                 length = length.p
             if isinstance(val, TupleVariable):
