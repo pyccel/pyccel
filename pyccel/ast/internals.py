@@ -73,3 +73,85 @@ class PyccelArraySize(PyccelInternalFunction):
 
     def __str__(self):
         return 'Shape({},{})'.format(str(self.arg), str(self.index))
+
+class Slice(Basic):
+
+    """Represents a slice in the code.
+
+    Parameters
+    ----------
+    start : Symbol or int
+        starting index
+
+    stop : Symbol or int
+        ending index
+
+    step : Symbol or int default None
+
+    Examples
+    --------
+    >>> from sympy import symbols
+    >>> from pyccel.ast.core import Slice
+    >>> start, end, step = symbols('start, stop, step', integer=True)
+    >>> Slice(start, stop)
+    start : stop
+    >>> Slice(None, stop)
+     : stop
+    >>> Slice(start, None)
+    start :
+    >>> Slice(start, stop, step)
+    start : stop : step
+    """
+
+    def __new__(cls, start, stop, step = None):
+        return Basic.__new__(cls, start, stop, step)
+
+    def __init__(self, start, stop, step = None):
+        Basic.__init__(self, start, stop, step)
+        self._start = start
+        self._stop = stop
+        self._step = step
+        if PyccelAstNode.stage == 'syntactic':
+                return
+        if start is not None and not (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger)):
+            raise TypeError('Slice start must be Integer or None')
+        if stop is not None and not (hasattr(stop, 'dtype') and isinstance(stop.dtype, NativeInteger)):
+            raise TypeError('Slice stop must be Integer or None')
+        if step is not None and not (hasattr(step, 'dtype') and isinstance(step.dtype, NativeInteger)):
+            raise TypeError('Slice step must be Integer or None')
+
+    @property
+    def start(self):
+        return self._start
+
+    @property
+    def stop(self):
+        return self._stop
+
+    @property
+    def step(self):
+        return self._step
+
+    def _sympystr(self, printer):
+        sstr = printer.doprint
+        if self.start is None:
+            start = ''
+        else:
+            start = sstr(self.start)
+        if self.stop is None:
+            stop = ''
+        else:
+            stop = sstr(self.stop)
+        return '{0} : {1}'.format(start, stop)
+
+    def __str__(self):
+        if self.start is None:
+            start = ''
+        else:
+            start = str(self.start)
+        if self.stop is None:
+            stop = ''
+        else:
+            stop = str(self.stop)
+        return '{0} : {1}'.format(start, stop)
+
