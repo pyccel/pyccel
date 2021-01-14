@@ -458,6 +458,8 @@ class CCodePrinter(CodePrinter):
         return code
 
     def _print_Import(self, expr):
+        if expr.ignore:
+            return ''
         if isinstance(expr.source, DottedName):
             source = expr.source.name[-1]
         else:
