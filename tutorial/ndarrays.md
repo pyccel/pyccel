@@ -81,7 +81,7 @@ Pyccel calls its own garbage collector when needed, but has a set of rules to do
 
     This limitation is due to the fact that the ndarray **a** will have to go from a data owner to a pointer to the **b** ndarray data.
 
-    _NOTE_: this limitation does not include reassigning using new data with respecting the previous rule.
+    _NOTE_: this limitation is not applied to assignments which reserve a new memory block.
 
     -   Python example:
 
