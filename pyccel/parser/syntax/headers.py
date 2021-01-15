@@ -9,7 +9,6 @@ from os.path import join, dirname
 
 from sympy.core import Symbol
 from sympy import sympify
-from sympy import Tuple
 
 from textx.metamodel import metamodel_from_file
 
@@ -386,7 +385,7 @@ class MacroArg(BasicStmt):
     def expr(self):
         arg_ = self.arg
         if isinstance(arg_, MacroList):
-            return Tuple(*arg_.expr)
+            return tuple(arg_.expr)
         arg = Symbol(str(arg_))
         value = self.value
         if not(value is None):

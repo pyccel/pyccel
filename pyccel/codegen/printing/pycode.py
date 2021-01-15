@@ -8,8 +8,6 @@
 
 from itertools import chain
 
-from sympy.core import Tuple
-
 from sympy.printing.pycode import PythonCodePrinter as SympyPythonCodePrinter
 from sympy.printing.pycode import _known_functions
 from sympy.printing.pycode import _known_functions_math
@@ -61,9 +59,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_IndexedElement(self, expr):
         indices = expr.indices
-        if isinstance(indices, (tuple, list, Tuple)):
+        if isinstance(indices, (tuple, list)):
             # this a fix since when having a[i,j] the generated code is a[(i,j)]
-            if len(indices) == 1 and isinstance(indices[0], (tuple, list, Tuple)):
+            if len(indices) == 1 and isinstance(indices[0], (tuple, list)):
                 indices = indices[0]
 
             indices = [self._print(i) for i in indices]
@@ -185,7 +183,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_For(self, expr):
         iterable = self._print(expr.iterable)
         target   = expr.target
-        if not isinstance(target,(list, tuple, Tuple)):
+        if not isinstance(target,(list, tuple)):
             target = [target]
         target = ','.join(self._print(i) for i in target)
         body   = self._print(expr.body)
@@ -281,7 +279,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
             if isinstance(f, str):
                 args.append("'{}'".format(f))
 
-            elif isinstance(f, Tuple):
+            elif isinstance(f, tuple):
                 for i in f:
                     args.append("{}".format(self._print(i)))
 

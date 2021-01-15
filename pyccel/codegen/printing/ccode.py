@@ -8,7 +8,6 @@
 import functools
 import operator
 
-from sympy.core           import Tuple
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
 from pyccel.ast.core      import Declare
@@ -660,8 +659,8 @@ class CCodePrinter(CodePrinter):
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0])
             else:
-                #indices of indexedElement of len==1 shouldn't be a Tuple
-                if isinstance(ind, Tuple) and len(ind) == 1:
+                #indices of indexedElement of len==1 shouldn't be a tuple
+                if isinstance(ind, tuple) and len(ind) == 1:
                     inds[i].args = ind[0]
                 if allow_negative_indexes and \
                         not isinstance(ind, LiteralInteger) and not isinstance(ind, Slice):
