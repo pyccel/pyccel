@@ -65,9 +65,9 @@ class OpenmpStmt(BasicStmt):
             return stmt.expr
         elif isinstance(stmt, OmpTaskWaitConstruct):
             return stmt.expr
-        elif isinstance(stmt, OmpTaskConstruct):
-            return stmt.expr
         elif isinstance(stmt, OmpTaskyieldConstruct):
+            return stmt.expr
+        elif isinstance(stmt, OmpTaskConstruct):
             return stmt.expr
         elif isinstance(stmt, OmpFlushConstruct):
             return stmt.expr
@@ -893,8 +893,8 @@ omp_directives = [OmpParallelConstruct,
                   OmpSimdConstruct,
                   OmpAtomicConstruct,
                   OmpTaskWaitConstruct,
-                  OmpTaskConstruct,
                   OmpTaskyieldConstruct,
+                  OmpTaskConstruct,
                   OmpFlushConstruct]
 
 omp_clauses = [OmpCollapse,
