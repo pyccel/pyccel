@@ -263,7 +263,7 @@ int32_t     get_index(t_ndarray arr, ...)
 ** convert numpy strides to nd_array strides, and return it in a new array, to
 ** avoid the problem of different implementations of strides in numpy and ndarray.
 */
-int64_t     *numpy_to_ndarray_strides(long int *np_strides, int type_size, int nd)
+int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd)
 {
     int64_t *ndarray_strides;
 
@@ -278,13 +278,13 @@ int64_t     *numpy_to_ndarray_strides(long int *np_strides, int type_size, int n
 ** copy numpy shape to nd_array shape, and return it in a new array, to
 ** avoid the problem of plateform depending architecture
 */
-int64_t     *numpy_to_ndarray_shape(long int *np_shape, int nd)
+int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 {
     int64_t *nd_shape;
 
     nd_shape = (int64_t*)malloc(sizeof(int64_t) * nd);
     for (int i = 0; i < nd; i++)
-        nd_shape[i] = (int64_t)np_shape[i];
+        nd_shape[i] = np_shape[i];
     return nd_shape;
 
 }
