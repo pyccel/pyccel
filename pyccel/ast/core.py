@@ -4093,7 +4093,7 @@ class Load(Basic):
 
         if funcs:
             if not isinstance(funcs, (str, DottedName, list, tuple)):
-                raise TypeError('Expecting a string or DottedName')
+                raise TypeError('Expecting a string, DottedName, list or tuple')
 
             if isinstance(funcs, str):
                 funcs = [funcs]
@@ -4378,7 +4378,7 @@ class SumFunction(PyccelAstNode):
         if not isinstance(iterator, tuple):
             raise TypeError('iterator must be a tuple')
         if not len(iterator) == 3:
-            raise ValueError('iterator must be of lenght 3')
+            raise ValueError('iterator must be of length 3')
         return Basic.__new__(cls, body, iterator, stmts)
 
     @property
