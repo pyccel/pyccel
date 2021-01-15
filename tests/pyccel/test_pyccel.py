@@ -540,7 +540,8 @@ def test_c_arrays(language):
 
 #------------------------------------------------------------------------------
 def test_arrays_view(language):
-    types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10
+    types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10 + \
+            [int] * 6 + [int] * 10
     pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
