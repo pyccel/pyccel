@@ -34,20 +34,20 @@ OmpConstructOrDirective:
 ////////////////////////////////////////////////////
 //     Constructs and Directives definitions
 ////////////////////////////////////////////////////
-OmpParallelConstruct: 'parallel'      combined*=ParallelCombined? clauses*=OmpParallelClause;
-OmpLoopConstruct:     'for'           clauses*=OmpLoopClause;
-OmpTaskLoopConstruct: 'taskloop'      clauses*=OmpTaskLoopClause; // TODO: add IF and Final clauses when issue #590 is resolved.
-OmpSingleConstruct:   'single'        clauses*=OmpSingleClause;
-OmpCriticalConstruct: 'critical'      clauses*=OmpCriticalClause;
-OmpMaskedConstruct:   name='masked'   clauses*=OmpMaskedClause;
-OmpSimdConstruct:     name='simd'     clauses*=OmpSimdClause;
-OmpAtomicConstruct:   name='atomic'   clauses*=AllOmpClauses; // Not all clause were added (cant test them).
-OmpTaskConstruct:     'task'          clauses*=AllOmpClauses;
-OmpBarrierConstruct:  name='barrier';
-OmpMasterConstruct:   name='master';
-OmpTaskWaitConstruct: name='taskwait';
-OmpTaskyieldConstruct: name='taskyield';
-OmpFlushConstruct: name='flush';
+OmpParallelConstruct:   'parallel'      combined*=ParallelCombined? clauses*=OmpParallelClause;
+OmpLoopConstruct:       'for'           clauses*=OmpLoopClause;
+OmpTaskLoopConstruct:   'taskloop'      clauses*=OmpTaskLoopClause; // TODO: add IF and Final clauses when issue #590 is resolved.
+OmpSingleConstruct:     'single'        clauses*=OmpSingleClause;
+OmpCriticalConstruct:   'critical'      clauses*=OmpCriticalClause;
+OmpMaskedConstruct:     name='masked'   clauses*=OmpMaskedClause;
+OmpSimdConstruct:       name='simd'     clauses*=OmpSimdClause;
+OmpAtomicConstruct:     name='atomic'   clauses*=AllOmpClauses; // Not all clause were added (cant test them).
+OmpTaskConstruct:       'task'          clauses*=AllOmpClauses;
+OmpBarrierConstruct:    name='barrier';
+OmpMasterConstruct:     name='master';
+OmpTaskWaitConstruct:   name='taskwait';
+OmpTaskyieldConstruct:  name='taskyield';
+OmpFlushConstruct:      name='flush';
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////

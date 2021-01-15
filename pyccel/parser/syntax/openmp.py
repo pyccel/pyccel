@@ -13,7 +13,7 @@ from textx.metamodel import metamodel_from_file
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct,\
         Omp_End_Clause, OMP_Critical_Construct, OMP_Barrier_Construct, OMP_Master_Construct,\
-        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct, OMP_Atomic_Construct, OMP_TaskWait_Construct, OMP_Task_Construct
+        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct, OMP_Atomic_Construct, OMP_TaskWait_Construct, OMP_Task_Construct, OMP_Taskyield_Construct, OMP_Flush_Construct
 
 DEBUG = False
 
@@ -66,6 +66,10 @@ class OpenmpStmt(BasicStmt):
         elif isinstance(stmt, OmpTaskWaitConstruct):
             return stmt.expr
         elif isinstance(stmt, OmpTaskConstruct):
+            return stmt.expr
+        elif isinstance(stmt, OmpTaskyieldConstruct):
+            return stmt.expr
+        elif isinstance(stmt, OmpFlushConstruct):
             return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
@@ -354,8 +358,40 @@ class OmpTaskWaitConstruct(BasicStmt):
         txt = self.name
         return OMP_TaskWait_Construct(txt)
 
+class OmpTaskyieldConstruct(BasicStmt):
+    """Class representing a Taskyield stmt."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name = kwargs.pop('name')
+        super(OmpTaskyieldConstruct, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpTaskyieldConstruct: expr")
+
+        txt = self.name
+        return OMP_Taskyield_Construct(txt)
+
+class OmpFlushConstruct(BasicStmt):
+    """Class representing a Flush stmt."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name = kwargs.pop('name')
+        super(OmpFlushConstruct, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpFlushConstruct: expr")
+
+        txt = self.name
+        return OMP_Flush_Construct(txt)
+
 class OmpAtomicConstruct(BasicStmt):
-    """Class representing a ."""
+    """Class representing an Atomic stmt ."""
     def __init__(self, **kwargs):
         """
         """
@@ -857,7 +893,9 @@ omp_directives = [OmpParallelConstruct,
                   OmpSimdConstruct,
                   OmpAtomicConstruct,
                   OmpTaskWaitConstruct,
-                  OmpTaskConstruct]
+                  OmpTaskConstruct,
+                  OmpTaskyieldConstruct,
+                  OmpFlushConstruct]
 
 omp_clauses = [OmpCollapse,
                OmpCopyin,

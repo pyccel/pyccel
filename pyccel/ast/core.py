@@ -173,7 +173,9 @@ __all__ = (
     'OMP_Simd_Construct',
     'OMP_Atomic_Construct',
     'OMP_TaskWait_Construct',
-    'OMP_Task_Construct'
+    'OMP_Task_Construct',
+    'OMP_Taskyield_Construct',
+    'OMP_Flush_Construct'
 )
 
 #==============================================================================
@@ -4645,6 +4647,16 @@ class OMP_Critical_Construct(AnnotatedComment):
 
 class OMP_Barrier_Construct(AnnotatedComment):
     """ Represents an OpenMP Barrier construct. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
+
+class OMP_Taskyield_Construct(AnnotatedComment):
+    """ Represents an OpenMP Taskyield construct. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
+
+class OMP_Flush_Construct(AnnotatedComment):
+    """ Represents an OpenMP Flush construct. """
     def __new__(cls, txt):
         return AnnotatedComment.__new__(cls, 'omp', txt)
 
