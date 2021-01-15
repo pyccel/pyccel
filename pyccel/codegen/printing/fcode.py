@@ -272,7 +272,7 @@ class FCodePrinter(CodePrinter):
             if isinstance(v, TupleVariable):
                 if v.is_pointer or v.inconsistent_shape:
                     v.is_homogeneous = False
-   
+
     def print_kind(self, expr):
         """
         Prints the kind(precision) of a literal value
