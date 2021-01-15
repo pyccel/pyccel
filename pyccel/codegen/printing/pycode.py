@@ -114,11 +114,40 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return code
 
     def _print_Return(self, expr):
-        return 'return {}'.format(self._print(expr.expr))
+        code = ''
+        if expr.stmt:
+            code += self._print(expr.stmt)+'\n'
+        if expr.expr:
+            ret = ','.join([self._print(i) for i in expr.expr])
+            code += 'return {}'.format(ret)
+        return code
+
+    def _print_Program(self, expr):
+        body  = self._print(expr.body)
+        body = self._indent_codestring(body)
+        imports  = [*expr.imports, *self._additional_imports]
+        imports  = '\n'.join(self._print(i) for i in imports)
+
+        return ('{imports}\n'
+                'if __name__ == "__main__":\n'
+                '{body}\n').format(imports=imports,
+                                    body=body)
+
+
+    def _print_AsName(self, expr):
+        name = self._print(expr.name)
+        target = self._print(expr.target)
+
+        return '{name} as {target}'.format(name = name, target = target)
 
     def _print_PythonTuple(self, expr):
         args = ', '.join(self._print(i) for i in expr.args)
         return '('+args+')'
+
+    def _print_PyccelArraySize(self, expr):
+        arg = self._print(expr.arg)
+        index = self._print(expr.index)
+        return 'shape({0})[{1}]'.format(arg, index)
 
     def _print_Comment(self, expr):
         txt = self._print(expr.text)
@@ -134,16 +163,16 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return '.'.join(self._print(n) for n in expr.name)
 
     def _print_FunctionCall(self, expr):
-        func = self._print(expr.func)
-        args = ','.join(self._print(i) for i in expr.arguments)
-        return'{func}({args})'.format(func=func, args=args)
+        func = expr.funcdef
+        args = ', '.join(self._print(i) for i in expr.args)
+        return'{func}({args})'.format(func=func.name, args=args)
 
     def _print_Len(self, expr):
         return 'len({})'.format(self._print(expr.arg))
 
     def _print_Import(self, expr):
         source = self._print(expr.source)
-        if expr.target is None:
+        if not expr.target:
             return 'import {source}'.format(source=source)
         else:
             target = ', '.join([self._print(i) for i in expr.target])
@@ -264,9 +293,13 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return 'print({0})'.format(fs)
 
     def _print_Module(self, expr):
-        code = '\n'.join(self._print(e) for e in expr.body)
-        imports = '\n'.join(self._print(i) for i in self._additional_imports)
-        return '\n'.join([imports, code])
+        body = '\n'.join(self._print(e) for e in expr.body)
+        imports  = [*expr.imports, *self._additional_imports]
+        imports  = '\n'.join(self._print(i) for i in imports)
+        return ('{imports}\n\n'
+                '{body}').format(
+                        imports = imports,
+                        body    = body)
 
     def _print_PyccelPow(self, expr):
         base = self._print(expr.args[0])
