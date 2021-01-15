@@ -27,6 +27,7 @@ OmpConstructOrDirective:
   | OmpTaskWaitConstruct
   | OmpTaskConstruct
   | OmpTaskyieldConstruct
+  | OmpFlushConstruct
 ;
 ////////////////////////////////////////////////////
 
@@ -46,6 +47,7 @@ OmpBarrierConstruct:  name='barrier';
 OmpMasterConstruct:   name='master';
 OmpTaskWaitConstruct: name='taskwait';
 OmpTaskyieldConstruct: name='taskyield';
+OmpFlushConstruct: name='flush';
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
