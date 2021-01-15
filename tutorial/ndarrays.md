@@ -48,7 +48,7 @@ Pyccel calls its own garbage collector when needed, but has a set of rules to do
 
     a = np.ones((10, 20))
     #(some code...)
-     a = np.ones(10)
+    a = np.ones(10)
     ```
 
     _OUTPUT_ :
