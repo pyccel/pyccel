@@ -26,10 +26,6 @@ from sympy.core import cache
 from pyccel.ast.basic import PyccelAstNode
 
 from pyccel.ast.core import Allocate, Deallocate
-from pyccel.ast.core import Constant
-from pyccel.ast.core import Variable
-from pyccel.ast.core import TupleVariable
-from pyccel.ast.core import DottedName, DottedVariable
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return
@@ -43,13 +39,18 @@ from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
 from pyccel.ast.core import EmptyNode
-from pyccel.ast.core import Slice, IndexedElement
-from pyccel.ast.core import ValuedVariable
+from pyccel.ast.variable import Constant
+from pyccel.ast.variable import Variable
+from pyccel.ast.variable import TupleVariable
+from pyccel.ast.variable import IndexedElement
+from pyccel.ast.variable import DottedName, DottedVariable
+from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import With, Block
-from pyccel.ast.core import PythonList, Dlist
+from pyccel.ast.builtins import PythonList
+from pyccel.ast.core import Dlist
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
@@ -87,6 +88,8 @@ from pyccel.ast.numpyext import NumpyInt, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
+
+from pyccel.ast.internals import Slice
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -683,7 +686,6 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['cls_base'      ] = expr.cls_base
             d_var['is_pointer'    ] = expr.is_pointer
-            d_var['is_polymorphic'] = expr.is_polymorphic
             d_var['is_target'     ] = expr.is_target
             d_var['order'         ] = expr.order
             d_var['precision'     ] = expr.precision
@@ -765,7 +767,6 @@ class SemanticParser(BasicParser):
 
             # set target  to True if we want the class objects to be pointers
 
-            d_var['is_polymorphic'] = False
             d_var['cls_base'      ] = cls
             return d_var
 
@@ -1826,8 +1827,6 @@ class SemanticParser(BasicParser):
 
                     # TODO if we want to use pointers then we set target to true
                     # in the ConsturcterCall
-
-                    d['is_polymorphic'] = False
 
                 if isinstance(rhs, Variable) and rhs.is_target:
                     # case of rhs is a target variable the lhs must be a pointer

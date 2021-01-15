@@ -25,7 +25,6 @@ from pyccel.ast.basic import PyccelAstNode
 
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import ParserResult
-from pyccel.ast.core import DottedName
 from pyccel.ast.core import Assign
 from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
@@ -41,7 +40,6 @@ from pyccel.ast.core import Assert
 from pyccel.ast.core import PythonTuple
 from pyccel.ast.core import Comment, EmptyNode, NewLine
 from pyccel.ast.core import Break, Continue
-from pyccel.ast.core import Slice
 from pyccel.ast.core import Argument, ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
@@ -67,6 +65,9 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
+from pyccel.ast.variable  import DottedName
+
+from pyccel.ast.internals import Slice
 
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.base import BasicParser

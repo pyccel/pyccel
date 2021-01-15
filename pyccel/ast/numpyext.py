@@ -11,13 +11,12 @@ from sympy           import (Integer as sp_Integer,
                              Rational as sp_Rational, Expr)
 
 from .core           import (ClassDef, FunctionDef, PyccelInternalFunction,
-                             PythonList, Variable, IndexedElement,
-                             process_shape, ValuedArgument, Constant)
+                            process_shape, ValuedArgument)
 
 from .operators      import broadcast
 
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
-                             PythonComplex, PythonReal, PythonImag)
+                             PythonComplex, PythonReal, PythonImag, PythonList)
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
@@ -27,6 +26,7 @@ from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .basic          import PyccelAstNode
+from .variable       import (Variable, IndexedElement, Constant)
 
 
 __all__ = (
