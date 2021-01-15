@@ -60,6 +60,7 @@ __all__ = (
     'Real',
     'String',
     'Void',
+	'NativeNumeric',
 #    '_Symbol',
     'default_precision',
     'dtype_and_precision_registry',
@@ -135,6 +136,8 @@ class NativeReal(DataType):
 
 class NativeComplex(DataType):
     _name = 'Complex'
+
+NativeNumeric = (NativeBool(), NativeInteger(), NativeReal(), NativeComplex())
 
 class NativeString(DataType):
     _name = 'String'
@@ -243,7 +246,7 @@ def DataTypeFactory(name, argnames=["_name"],
                     alias=None,
                     is_iterable=False,
                     is_with_construct=False,
-                    is_polymorphic=True):
+                    is_polymorphic=False):
     def __init__(self, **kwargs):
         for key, value in list(kwargs.items()):
             # here, the argnames variable is the one passed to the

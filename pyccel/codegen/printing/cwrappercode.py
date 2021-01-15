@@ -16,13 +16,13 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.builtins import PythonPrint
 
-from pyccel.ast.core import Variable, ValuedVariable, Assign, AliasAssign, FunctionDef, FunctionAddress
+from pyccel.ast.core import Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, Return, FunctionCall, Deallocate
 from pyccel.ast.core import create_incremented_string, SeparatorComment
-from pyccel.ast.core import VariableAddress, Import, IfTernaryOperator
+from pyccel.ast.core import Import
 from pyccel.ast.core import AugAssign, DottedVariable
 
-from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelAnd, PyccelNe, PyccelOr, PyccelAssociativeParenthesis
+from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelAnd, PyccelNe, PyccelOr, PyccelAssociativeParenthesis, IfTernaryOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, str_dtype, default_precision
 
@@ -38,6 +38,8 @@ from pyccel.ast.cwrapper import numpy_check_flag, numpy_flag_c_contig, numpy_fla
 from pyccel.ast.cwrapper import PyArray_CheckScalar, PyArray_ScalarAsCtype
 
 from pyccel.ast.bind_c   import as_static_function_call
+
+from pyccel.ast.variable  import VariableAddress, Variable, ValuedVariable
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
