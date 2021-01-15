@@ -26,13 +26,14 @@ OmpConstructOrDirective:
   | OmpAtomicConstruct
   | OmpTaskWaitConstruct
   | OmpTaskConstruct
+  | OmpTaskyieldConstruct
 ;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
 //     Constructs and Directives definitions
 ////////////////////////////////////////////////////
-OmpParallelConstruct: 'parallel'  combined*=ParallelCombined? clauses*=OmpParallelClause;
+OmpParallelConstruct: 'parallel'      combined*=ParallelCombined? clauses*=OmpParallelClause;
 OmpLoopConstruct:     'for'           clauses*=OmpLoopClause;
 OmpTaskLoopConstruct: 'taskloop'      clauses*=OmpTaskLoopClause; // TODO: add IF and Final clauses when issue #590 is resolved.
 OmpSingleConstruct:   'single'        clauses*=OmpSingleClause;
@@ -44,6 +45,7 @@ OmpTaskConstruct:     'task'          clauses*=AllOmpClauses;
 OmpBarrierConstruct:  name='barrier';
 OmpMasterConstruct:   name='master';
 OmpTaskWaitConstruct: name='taskwait';
+OmpTaskyieldConstruct: name='taskyield';
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -122,7 +124,7 @@ OmpMaskedClause:
 ;
 
 OmpSimdClause:
-  OmpLinear
+    OmpLinear
   | OmpReduction
   | OmpCollapse
   | OmpLastPrivate
