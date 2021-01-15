@@ -13,7 +13,7 @@ import os
 import string
 import random
 
-from pyccel.ast.core import DottedName
+from pyccel.ast.variable       import DottedName
 from pyccel.parser.extend_tree import CommentLine
 
 pyccel_external_lib = {"mpi4py"             : "pyccel.stdlib.external.mpi4py",

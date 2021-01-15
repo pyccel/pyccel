@@ -13,7 +13,7 @@ from sympy.core.numbers import One, NegativeOne, Zero, Half
 
 from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
-from .core      import Variable, create_incremented_string, PyccelArraySize
+from .core      import create_incremented_string
 from .core      import CodeBlock, Comment, For, Assign
 
 from .builtins  import PythonRange
@@ -23,6 +23,8 @@ from .mathext   import MathCeil
 from .literals  import LiteralInteger, LiteralFloat
 
 from .datatypes import NativeInteger
+
+from .variable  import Variable, PyccelArraySize
 
 #==============================================================================
 def sympy_to_pyccel(expr, symbol_map):
@@ -73,8 +75,6 @@ def sympy_to_pyccel(expr, symbol_map):
     elif isinstance(expr, sp.Add):
         args = [sympy_to_pyccel(e, symbol_map) for e in expr.args]
         result = args[0]
-        minus_args = []
-        plus_args = []
 
         # Find positive and negative elements
         for a in args[1:]:
