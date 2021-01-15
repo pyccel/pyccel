@@ -19,8 +19,8 @@ from .datatypes import (datatype, DataType,
                         default_precision)
 from .internals import PyccelArraySize, Slice
 from .literals  import LiteralInteger, Nil
-from .operators import (PyccelMinus, PyccelMul, PyccelDiv,
-                        PyccelOperator, PyccelUnarySub, PyccelAdd)
+from .operators import (PyccelMinus, PyccelDiv,
+                        PyccelUnarySub, PyccelAdd)
 __all__ = (
     'DottedName',
     'DottedVariable',
