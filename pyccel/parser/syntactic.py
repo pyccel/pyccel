@@ -26,7 +26,6 @@ from pyccel.ast.basic import PyccelAstNode
 
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import ParserResult
-from pyccel.ast.core import DottedName
 from pyccel.ast.core import Assign
 from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
@@ -35,14 +34,13 @@ from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor
-from pyccel.ast.core import If, IfTernaryOperator
+from pyccel.ast.core import If
 from pyccel.ast.core import While
 from pyccel.ast.core import Del
 from pyccel.ast.core import Assert
 from pyccel.ast.core import PythonTuple
 from pyccel.ast.core import Comment, EmptyNode, NewLine
 from pyccel.ast.core import Break, Continue
-from pyccel.ast.core import Slice
 from pyccel.ast.core import Argument, ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
@@ -60,6 +58,7 @@ from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  Pyc
 from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
 from pyccel.ast.operators import PyccelIs, PyccelIsNot
+from pyccel.ast.operators import IfTernaryOperator
 
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.headers  import Header, MetaVariable
@@ -67,6 +66,9 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
+from pyccel.ast.variable  import DottedName
+
+from pyccel.ast.internals import Slice
 
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.base import BasicParser

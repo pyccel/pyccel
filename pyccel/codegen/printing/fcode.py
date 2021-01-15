@@ -31,17 +31,17 @@ from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
-from pyccel.ast.core import (Assign, AliasAssign, Variable,
-                             VariableAddress,
-                             TupleVariable, For, Declare,
-                             CodeBlock,
-                             IndexedElement, Slice, Dlist,
-                             DottedName, AsName,
-                             If, PyccelArraySize, IfTernaryOperator)
-
+from pyccel.ast.core import (Assign, AliasAssign, Declare,
+                             CodeBlock, Dlist, AsName,
+                             If)
+from pyccel.ast.variable  import (Variable, TupleVariable,
+                             IndexedElement,
+                             DottedName, PyccelArraySize)
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
-from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt
+
+from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
+
 from pyccel.ast.core      import FunctionCall, DottedFunctionCall
 
 from pyccel.ast.builtins  import (PythonEnumerate, PythonInt, PythonLen,
@@ -55,9 +55,12 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
+
+from pyccel.ast.internals import Slice
+
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue
-from pyccel.ast.literals import Nil
+from pyccel.ast.literals  import Nil
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
@@ -369,7 +372,7 @@ class FCodePrinter(CodePrinter):
     def _print_Import(self, expr):
 
         source = ''
-        if str(expr.source) in pyccel_builtin_import_registery:
+        if expr.ignore:
             return ''
 
         if isinstance(expr.source, DottedName):
@@ -532,9 +535,6 @@ class FCodePrinter(CodePrinter):
             return self._print_Variable(expr)
         else:
             return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
-
-    def _print_VariableAddress(self, expr):
-        return self._print(expr.variable)
 
     def _print_Constant(self, expr):
         val = LiteralFloat(expr.value)
@@ -1018,7 +1018,6 @@ class FCodePrinter(CodePrinter):
         is_target = var.is_target
         is_const = var.is_const
         is_stack_array = var.is_stack_array
-        is_polymorphic = var.is_polymorphic
         is_optional = var.is_optional
         is_static = expr.static
         intent = expr.intent
@@ -1035,9 +1034,7 @@ class FCodePrinter(CodePrinter):
             prefix = dtype.prefix
             alias  = dtype.alias
 
-            if not is_polymorphic:
-                sig = 'type'
-            elif dtype.is_polymorphic:
+            if dtype.is_polymorphic or expr.passed_from_dotted:
                 sig = 'class'
             else:
                 sig = 'type'
@@ -1148,8 +1145,6 @@ class FCodePrinter(CodePrinter):
         code = ''
         lhs = expr.lhs
         rhs = expr.rhs
-        if isinstance(rhs, VariableAddress):
-            rhs = rhs.variable
 
         if isinstance(lhs, TupleVariable) and not lhs.is_homogeneous:
             return self._print(CodeBlock([AliasAssign(l, r) for l,r in zip(lhs,rhs)]))
@@ -1564,9 +1559,9 @@ class FCodePrinter(CodePrinter):
 
         for i,arg in enumerate(expr.arguments):
             if isinstance(arg, Variable):
-                if expr.arguments_inout[i]:
-                    dec = Declare(arg.dtype, arg, intent='inout')
-                elif str(arg) == 'self':
+                if i == 0 and expr.cls_name:
+                    dec = Declare(arg.dtype, arg, intent='inout', passed_from_dotted = True)
+                elif expr.arguments_inout[i]:
                     dec = Declare(arg.dtype, arg, intent='inout')
                 else:
                     dec = Declare(arg.dtype, arg, intent='in')
