@@ -547,7 +547,7 @@ class PythonZip(Basic):
 
     def __new__(cls, *args):
         if not isinstance(args, (tuple, list)):
-            raise TypeError('args must be an iterable')
+            raise TypeError('args must be a list or tuple')
         elif len(args) < 2:
             raise ValueError('args must be of length > 2')
         return Basic.__new__(cls, *args)
