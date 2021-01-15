@@ -401,6 +401,8 @@ class PythonLen(PyccelInternalFunction):
 
 #==============================================================================
 class PythonList(PythonTuple):
+    """ Represents a call to Python's native list() function.
+    """
     _order = 'C'
     _is_homogeneous = True
     """ Represent lists in the code with dynamic memory management."""
