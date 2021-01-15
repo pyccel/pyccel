@@ -2597,6 +2597,35 @@ def test_array_2d_C_slice_stride_23():
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
+#==============================================================================
+# TEST : arithmetic operations
+#==============================================================================
+
+def test_arrs_1d_negative_index_1():
+    f1 = arrays.arrs_1d_negative_index_1
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_1d_negative_index_2():
+    f1 = arrays.arrs_1d_negative_index_2
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_1d_negative_index_negative_step():
+    f1 = arrays.arrs_1d_negative_index_negative_step
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_1d_negative_step_positive_step():
+    f1 = arrays.arrs_1d_negative_step_positive_step
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_2d_negative_index():
+    f1 = arrays.arrs_2d_negative_index
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
