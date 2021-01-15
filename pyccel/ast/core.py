@@ -2783,7 +2783,7 @@ class FunctionCall(PyccelAstNode):
             func.set_recursive()
 
         if not isinstance(args, (tuple, list)):
-            raise TypeError('> expecting an iterable')
+            raise TypeError('args must be a list or tuple')
 
         # add the missing argument in the case of optional arguments
         f_args = func.arguments
@@ -3084,7 +3084,7 @@ class FunctionDef(Basic):
 
         if arguments_inout:
             if not isinstance(arguments_inout, (list, tuple)):
-                raise TypeError('Expecting an iterable ')
+                raise TypeError('Expecting a list or tuple ')
 
             if not all([isinstance(i, bool) for i in arguments_inout]):
                 raise ValueError('Expecting booleans')
@@ -4081,7 +4081,7 @@ class Load(Basic):
         nargs=1,
         ):
         if not isinstance(module, (str, DottedName, list, tuple)):
-            raise TypeError('Expecting a string or DottedName, given {0}'.format(type(module)))
+            raise TypeError('Expecting a string, DottedName, list or tuple, given {0}'.format(type(module)))
 
         # see syntax
 
