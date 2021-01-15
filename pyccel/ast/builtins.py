@@ -302,7 +302,7 @@ class PythonInt(Expr, PyccelAstNode):
         return self._args[0]
 
 #==============================================================================
-class PythonTuple(Expr, PyccelAstNode):
+class PythonTuple(PyccelAstNode):
     """ Represents a call to Python's native tuple() function.
     """
     _iterable        = True
@@ -402,7 +402,7 @@ class PythonLen(PyccelInternalFunction):
         return self._args[0]
 
 #==============================================================================
-class PythonList(PythonTuple, PyccelAstNode):
+class PythonList(PythonTuple):
     _order = 'C'
     _is_homogeneous = True
     """ Represent lists in the code with dynamic memory management."""
