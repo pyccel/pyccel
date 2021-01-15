@@ -640,16 +640,18 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_func_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
             # Call free function for C type
             if self._target_language == 'c':
+                to_free = ["strides", "shape"]
                 mini_wrapper_func_body += [Deallocate(
-                                                DottedVariable(
+                                            DottedVariable(
+                                                NativeInteger(),
+                                                    member,
                                                     lhs=i.name,
-                                                    dtype=NativeInteger(),
-                                                    name='strides',
-                                                    allocatable=True
+                                                    is_pointer=True
                                                 ),
-                                                free_function="free"
+                                            free_function="free",
                                             )
-                                for i in func.arguments if i.allocatable]
+                                        for member in to_free for i\
+                                        in func.arguments if i.allocatable]
             mini_wrapper_func_body.append(Return(wrapper_results))
             self._to_free_PyObject_list.clear()
             # Building Mini wrapper function
@@ -897,15 +899,17 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
         # Call free function for C type
         if self._target_language == 'c':
+            to_free = ["strides", "shape"]
             wrapper_body += [Deallocate(
                                 DottedVariable(
                                             NativeInteger(),
-                                                'strides',
+                                                member,
                                                 lhs=i.name,
                                                 is_pointer=True
                                             ),
-                                free_function="free"
+                                free_function="free",
                                 )
+                            for member in to_free\
                             for i in expr.arguments if i.allocatable]
         self._to_free_PyObject_list.clear()
         #Return

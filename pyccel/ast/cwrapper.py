@@ -316,7 +316,7 @@ numpy_get_stride = FunctionDef(name      = 'PyArray_STRIDE',
 numpy_get_strides = FunctionDef(name      = 'PyArray_STRIDES',
                            body      = [],
                            arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
-                           results   = [Variable(dtype=NativeInteger(), name = 's')])
+                           results   = [Variable(dtype=NativeInteger(), name = 's', is_pointer=True)])
 
 numpy_check_flag = FunctionDef(name      = 'PyArray_CHKFLAGS',
                        body      = [],
@@ -575,7 +575,8 @@ def pyarray_to_ndarray(cast_function_name):
 
     cast_function_body = [Assign(nd, FunctionCall(numpy_get_ndims, [cast_function_argument])),
                           Assign(raw_data, FunctionCall(numpy_get_data, [cast_function_argument])),
-                          Assign(shape, FunctionCall(numpy_get_shape, [cast_function_argument])),
+                          Assign(shape, FunctionCall(numpy_to_ndarray_shape,
+                                [FunctionCall(numpy_get_shape, [cast_function_argument]), nd])),
                           Assign(type_size, FunctionCall(numpy_itemsize, [cast_function_argument])),
                           Assign(strides, FunctionCall(numpy_to_ndarray_strides,
                                 [FunctionCall(numpy_get_strides, [cast_function_argument]), type_size, nd])),
@@ -616,7 +617,13 @@ numpy_to_ndarray_strides = FunctionDef(name = 'numpy_to_ndarray_strides',
                                     arguments = [Variable(dtype=NativeInteger(), name = 'np_strides', is_pointer=True),
                                                 Variable(dtype=NativeInteger(), name = 'type_size'),
                                                 Variable(dtype=NativeInteger(), name = 'nd')],
-                                    results = [Variable(dtype=NativeInteger(), name = 'ndarray_strides', is_pointer=True)])
+                                    results = [Variable(dtype=NativeInteger(), name = 'nd_strides', is_pointer=True)])
+
+numpy_to_ndarray_shape = FunctionDef(name = 'numpy_to_ndarray_shape',
+                                    body = [],
+                                    arguments = [Variable(dtype=NativeInteger(), name = 'np_shape', is_pointer=True),
+                                                Variable(dtype=NativeInteger(), name = 'nd')],
+                                    results = [Variable(dtype=NativeInteger(), name = 'nd_strides', is_pointer=True)])
 
 collect_function_registry = {
     NativeInteger(): PyLong_AsLong,
