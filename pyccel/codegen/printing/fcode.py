@@ -269,6 +269,12 @@ class FCodePrinter(CodePrinter):
             if isinstance(v, TupleVariable):
                 if v.is_pointer or v.inconsistent_shape:
                     v.is_homogeneous = False
+   
+    def print_kind(self, expr):
+        """
+        Prints the kind(precision) of a literal value
+        """
+        return iso_c_binding[self._print(expr.dtype)][expr.precision]
 
     # ============ Elements ============ #
 
@@ -629,15 +635,7 @@ class FCodePrinter(CodePrinter):
         value = self._print(expr.internal_var)
         return 'aimag({0})'.format(value)
 
-    #========================== print kind ===============================#
 
-    def print_kind(self, expr):
-        """
-        Prints the kind(precision) of a literal value
-        """
-        return iso_c_binding[self._print(expr.dtype)][expr.precision]
-
-    #=========================================================================#
 
     #========================== Numpy Elements ===============================#
 
