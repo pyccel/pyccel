@@ -48,12 +48,15 @@ class Basic(sp_Basic):
                       The original object to be replaced
         replacement : object
                       The object which will be inserted instead
-        excluded_nodes : object
+        excluded_nodes : tuple of types
                       Types for which substitute should not be called
         """
         for n,v in self._children:
             if v is original:
-                setattr(self,n, replacement)
+                setattr(self, n, replacement)
+            elif isinstance(v, tuple):
+                for vi in v:
+                    v.substitute(original, replacement, excluded_nodes)
             elif not v.is_atomic and not isinstance(v, excluded_nodes):
                 v.substitute(original, replacement, excluded_nodes)
 
