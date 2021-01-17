@@ -55,8 +55,11 @@ class Basic(sp_Basic):
             if v is original:
                 setattr(self, n, replacement)
             elif isinstance(v, tuple):
+                if original in tuple:
+                    v = tuple(replacement if vi is original else vi for vi in v)
                 for vi in v:
                     v.substitute(original, replacement, excluded_nodes)
+                setattr(self, n, v)
             elif not v.is_atomic and not isinstance(v, excluded_nodes):
                 v.substitute(original, replacement, excluded_nodes)
 
