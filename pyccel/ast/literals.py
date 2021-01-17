@@ -5,7 +5,6 @@
 """ This module contains all literal types
 """
 from sympy               import Float as sp_Float
-from sympy.logic.boolalg import BooleanTrue as sp_BooleanTrue, BooleanFalse as sp_BooleanFalse
 
 from .basic              import PyccelAstNode
 from .datatypes          import (NativeInteger, NativeBool, NativeReal,
@@ -19,6 +18,7 @@ __all__ = (
     'LiteralComplex',
     'LiteralImaginaryUnit',
     'LiteralString',
+    'Nil',
     'get_default_literal_value'
 )
 
@@ -203,6 +203,17 @@ class LiteralString(Literal):
 
 #------------------------------------------------------------------------------
 
+class Nil(Basic):
+
+    """
+    class for None object in the code.
+    """
+
+    def __str__(self):
+        return 'None'
+
+#------------------------------------------------------------------------------
+
 def get_default_literal_value(dtype):
     """Returns the default value of a native datatype."""
     if isinstance(dtype, NativeInteger):
@@ -218,12 +229,3 @@ def get_default_literal_value(dtype):
     else:
         raise TypeError('Unknown type')
     return value
-
-class Nil(Basic):
-
-    """
-    class for None object in the code.
-    """
-
-    def __str__(self):
-        return 'None'
