@@ -199,7 +199,7 @@ math_function_to_c = {
     'MathLcm'       : 'pyc_lcm',
 }
 
-c_library_headers = [
+c_library_headers = (
     "complex",
     "ctype",
     "float",
@@ -211,7 +211,7 @@ c_library_headers = [
     "stdio",
     "stdlib",
     "tgmath",
-]
+)
 
 dtype_registry = {('real',8)    : 'double',
                   ('real',4)    : 'float',
