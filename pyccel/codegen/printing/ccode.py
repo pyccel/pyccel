@@ -200,36 +200,19 @@ math_function_to_c = {
 }
 
 c_library_headers = [
-    "assert",
     "complex",
     "ctype",
-    "errno",
-    "fenv",
     "float",
-    "inttypes",
-    "iso646",
-    "limits",
-    "locale",
     "math",
-    "setjmp",
-    "signal",
-    "stdalign",
     "stdarg",
-    "stdatomic",
     "stdbool",
     "stddef",
     "stdint",
     "stdio",
     "stdlib",
-    "stdnoreturn",
-    "string",
     "tgmath",
-    "threads",
-    "time",
-    "uchar",
-    "wchar",
-    "wctype"
 ]
+
 dtype_registry = {('real',8)    : 'double',
                   ('real',4)    : 'float',
                   ('complex',8) : 'double complex',
