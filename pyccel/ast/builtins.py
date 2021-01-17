@@ -117,7 +117,7 @@ class PythonImag(PythonComplexProperty):
 
 
 #==============================================================================
-class PythonBool(Expr, PyccelAstNode):
+class PythonBool(PyccelAstNode):
     """ Represents a call to Python's native bool() function.
     """
     _rank = 0
@@ -287,7 +287,7 @@ class PythonFloat(Expr, PyccelAstNode):
         return self.__str__()
 
 #==============================================================================
-class PythonInt(Expr, PyccelAstNode):
+class PythonInt(PyccelAstNode):
     """ Represents a call to Python's native int() function.
     """
 
@@ -368,6 +368,7 @@ class PythonTuple(PyccelAstNode):
             self._dtype     = NativeGeneric()
             self._precision = 0
             self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
+        Basic.__init__(self, {'_args', self._args})
 
     def __getitem__(self,i):
         if isinstance(i, LiteralInteger):
@@ -454,6 +455,7 @@ class PythonList(PythonTuple):
             if all(sh is not None for sh in shapes):
                 self._shape = (LiteralInteger(len(args)), ) + shapes[0]
                 self._rank  = len(self._shape)
+        Basic.__init__(self, {'_args', self._args})
 
     @property
     def is_homogeneous(self):
@@ -467,6 +469,9 @@ class PythonMap(Basic):
         if len(args)<2:
             raise TypeError('wrong number of arguments')
         return Basic.__new__(cls, *args)
+
+    def __init__(self, *args):
+        Basic.__init__(self, {'_arg', self._arg})
 
 #==============================================================================
 class PythonPrint(Basic):
@@ -490,6 +495,10 @@ class PythonPrint(Basic):
             expr = sympify(expr, locals=local_sympify)
         return Basic.__new__(cls, expr)
 
+    def __init__(self, expr):
+        self._expr = expr
+        Basic.__init__(self, {'_expr', self._expr})
+
     @property
     def expr(self):
         return self._args[0]
@@ -512,6 +521,9 @@ class PythonRange(Basic):
     """
 
     def __new__(cls, *args):
+        return Basic.__new__(cls, start, stop, step)
+
+    def __init__(self, *args):
         start = LiteralInteger(0)
         stop = None
         step = LiteralInteger(1)
@@ -534,20 +546,25 @@ class PythonRange(Basic):
             stop = args
         else:
             raise TypeError('expecting a list or valid stop')
-
-        return Basic.__new__(cls, start, stop, step)
+        self._start = start
+        self._stop  = stop
+        self._step  = step
+        return Basic.__init__(cls,
+                {'_start': self._start,
+                 '_stop', self._stop,
+                 '_step', self._step})
 
     @property
     def start(self):
-        return self._args[0]
+        return self._start
 
     @property
     def stop(self):
-        return self._args[1]
+        return self._stop
 
     @property
     def step(self):
-        return self._args[2]
+        return self._step
 
 
 #==============================================================================
@@ -564,6 +581,9 @@ class PythonZip(Basic):
         elif len(args) < 2:
             raise ValueError('args must be of length > 2')
         return Basic.__new__(cls, *args)
+
+    def __init__(self, *args):
+        Basic.__init__(self, {'_args', self._args})
 
     @property
     def element(self):

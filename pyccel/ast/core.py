@@ -540,13 +540,20 @@ class AsName(Basic):
 
         return Basic.__new__(cls, name, target)
 
+    def __init__(self, name, target):
+        self._name = name
+        self._target = target
+        Basic.__init__(self,
+                { '_name'   : self._name,
+                  '_target' : self._target})
+
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def target(self):
-        return self._args[1]
+        return self._target
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -581,14 +588,19 @@ class Dlist(PyccelAstNode):
         self._rank = val.rank
         self._shape = tuple(s if i!= 0 else PyccelMul(s, length) for i,s in enumerate(val.shape))
         self._order = val.order
+        self._val = val
+        self._length = length
+        Basic.__init__(self,
+                {'_val'    : self._val,
+                 '_length' : self._length})
 
     @property
     def val(self):
-        return self._args[0]
+        return self._val
 
     @property
     def length(self):
-        return self._args[1]
+        return self._length
 
 
 class Assign(Basic):

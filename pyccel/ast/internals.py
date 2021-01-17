@@ -21,8 +21,8 @@ class PyccelInternalFunction(PyccelAstNode):
     which are translated to Pyccel objects
     """
     def __init__(self, *args):
-        PyccelAstNode.__init__(self)
         self._args   = tuple(args)
+        PyccelAstNode.__init__(self, {'_args', self._args})
 
     @property
     def args(self):
