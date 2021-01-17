@@ -609,10 +609,6 @@ class Assign(Basic):
         a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
         the dimensions will not align.
 
-    strict: bool
-        if True, we do some verifications. In general, this can be more
-        complicated and is treated in pyccel.syntax.
-
     status: None, str
         if lhs is not allocatable, then status is None.
         otherwise, status is {'allocated', 'unallocated'}
@@ -642,41 +638,9 @@ class Assign(Basic):
         cls,
         lhs,
         rhs,
-        strict=False,
         status=None,
         like=None,
         ):
-        cls._strict = strict
-
-        if strict:
-            lhs = sympify(lhs, locals=local_sympify)
-            rhs = sympify(rhs, locals=local_sympify)
-
-            # Tuple of things that can be on the lhs of an assignment
-
-            assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed,
-                          Idx)
-
-            # if not isinstance(lhs, assignable):
-            #    raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-            # Indexed types implement shape, but don't define it until later. This
-            # causes issues in assignment validation. For now, matrices are defined
-            # as anything with a shape that is not an Indexed
-
-            lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs,
-                    Indexed)
-            rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs,
-                    Indexed)
-
-            # If lhs and rhs have same structure, then this assignment is ok
-
-            if lhs_is_mat:
-                if not rhs_is_mat:
-                    raise ValueError('Cannot assign a scalar to a matrix.')
-                elif lhs.shape != rhs.shape:
-                    raise ValueError("Dimensions of lhs and rhs don't align.")
-            elif rhs_is_mat and not lhs_is_mat:
-                raise ValueError('Cannot assign a matrix to a scalar.')
         return Basic.__new__(cls, lhs, rhs, status, like)
 
     def _sympystr(self, printer):
@@ -704,10 +668,6 @@ class Assign(Basic):
     @property
     def like(self):
         return self._args[3]
-
-    @property
-    def strict(self):
-        return self._strict
 
     @property
     def is_alias(self):
@@ -1060,10 +1020,6 @@ class AugAssign(Assign):
         a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
         the dimensions will not align.
 
-    strict: bool
-        if True, we do some verifications. In general, this can be more
-        complicated and is treated in pyccel.syntax.
-
     status: None, str
         if lhs is not allocatable, then status is None.
         otherwise, status is {'allocated', 'unallocated'}
@@ -1086,42 +1042,9 @@ class AugAssign(Assign):
         lhs,
         op,
         rhs,
-        strict=False,
         status=None,
         like=None,
         ):
-        cls._strict = strict
-        if strict:
-            lhs = sympify(lhs, locals=local_sympify)
-            rhs = sympify(rhs, locals=local_sympify)
-
-            # Tuple of things that can be on the lhs of an assignment
-
-            assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed)
-            if not isinstance(lhs, assignable):
-                raise TypeError('Cannot assign to lhs of type %s.'
-                                % type(lhs))
-
-            # Indexed types implement shape, but don't define it until later. This
-            # causes issues in assignment validation. For now, matrices are defined
-            # as anything with a shape that is not an Indexed
-
-            lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs,
-                    Indexed)
-            rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs,
-                    Indexed)
-
-            # If lhs and rhs have same structure, then this assignment is ok
-
-            if lhs_is_mat:
-                if not rhs_is_mat:
-                    raise ValueError('Cannot assign a scalar to a matrix.'
-                            )
-                elif lhs.shape != rhs.shape:
-                    raise ValueError("Dimensions of lhs and rhs don't align."
-                            )
-            elif rhs_is_mat and not lhs_is_mat:
-                raise ValueError('Cannot assign a matrix to a scalar.')
 
         if isinstance(op, str):
             op = operator(op)
@@ -1161,10 +1084,6 @@ class AugAssign(Assign):
     @property
     def like(self):
         return self._args[4]
-
-    @property
-    def strict(self):
-        return self._strict
 
 
 class While(Basic):
