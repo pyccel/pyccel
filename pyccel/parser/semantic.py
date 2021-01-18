@@ -1508,6 +1508,12 @@ class SemanticParser(BasicParser):
                             self._current_fst_node.col_offset),
                                 severity='error', symbol=var.name)
 
+                elif var.is_ndarray and var.is_pointer and isinstance(rhs, NumpyNewArray):
+                    errors.report(INVALID_POINTER_REASSIGN,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset),
+                                severity='error', symbol=var.name)
+
                 elif var.is_ndarray and var.is_pointer:
                     # we allow pointers to be reassigned multiple times
                     # pointers reassigning need to call free_pointer func
