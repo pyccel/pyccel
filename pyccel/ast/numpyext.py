@@ -134,7 +134,7 @@ class NumpyArray(NumpyNewArray):
         NumpyNewArray.__init__(self)
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
-            raise TypeError('Uknown type of  %s.' % type(arg))
+            raise TypeError('Unknown type of  %s.' % type(arg))
 
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
         if isinstance(arg, (PythonTuple, PythonList)) and not arg.is_homogeneous or \
