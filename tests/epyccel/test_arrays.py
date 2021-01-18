@@ -2626,6 +2626,11 @@ def test_arrs_uncertain_shape_1():
     f2 = epyccel(f1)
     assert f1() == f2()
 
+def test_arrs_2d_similar_shapes_0():
+    f1 = arrays.arrs_2d_similar_shapes_0
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
 def test_arrs_2d_different_shapes_0():
     f1 = arrays.arrs_2d_different_shapes_0
     f2 = epyccel(f1)

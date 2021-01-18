@@ -1601,7 +1601,7 @@ def arrs_uncertain_shape_1():
     b = a[2:i]+a[4:j]
     return np.shape(b)[0]
 
-def arrs_2d_different_shapes_0():
+def arrs_2d_similar_shapes_0():
     import numpy as np
     from numpy import shape
     dy = 4
@@ -1609,4 +1609,12 @@ def arrs_2d_different_shapes_0():
     pn = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
     x = ((dy**2 * (pn[1:shape(pn)[0]-1, 2:] + pn[1:shape(pn)[0]-1, 0:shape(pn)[1]-2]) +
         dx**2 *(pn[2:, 1:shape(pn)[1]-1] + pn[0:shape(pn)[0]-2, 1:shape(pn)[1]-1])) / (2 * (dx**2 + dy**2)))
+    return np.shape(x)[0], np.shape(x)[1]
+
+def arrs_2d_different_shapes_0():
+    import numpy as np
+    from numpy import shape
+    pn = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
+    pm = np.array([[1, 1, 1]])
+    x = pn + pm
     return np.shape(x)[0], np.shape(x)[1]
