@@ -387,7 +387,14 @@ class OmpFlushConstruct(BasicStmt):
         if DEBUG:
             print("> OmpFlushConstruct: expr")
 
+        _valid_clauses = (FlushList)
+
         txt = self.name
+        for clause in self.clauses:
+            if isinstance(clause, _valid_clauses):
+                txt = '{0}{1}'.format(txt, clause.expr)
+            else:
+                raise TypeError('Wrong clause for OmpFlushConstruct')
         return OMP_Flush_Construct(txt)
 
 class OmpAtomicConstruct(BasicStmt):
