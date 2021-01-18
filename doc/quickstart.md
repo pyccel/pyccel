@@ -6,8 +6,6 @@ Pyccel's main goal is to accelerate the transition from **prototype** to **produ
 
 Pyccel generates very fast Fortran or C code which is **human-readable**, hence the expert programmer can easily profile the code on the target machine and further optimize it.
 
-
-
 ## Some Useful Background
 
 We recall that Python 3 is an **interpreted** language, **dynamically typed** and **garbage-collected**.
@@ -24,6 +22,7 @@ In particular, it is worth clarifying the difference between an object and a var
 ### Python variable
 
 -   Is a reference to a Python object in memory.
+
 -   Is created with an assignment operation `x = expr`:
 
     -   If the variable `x` already exists, the interpreter reduces the reference count of its object
@@ -31,6 +30,7 @@ In particular, it is worth clarifying the difference between an object and a var
     -   The variable `x` is then modified to reference the object referenced by `expr` and the reference count of this object is increased
 
 -   The type of the variable can be changed at run-time, because Python is a dynamically typed language.
+
 -   Can be destroyed with the command del `x`.
 
 ### Statically Typed Languages
@@ -42,11 +42,10 @@ It is the programmer's responsibility to explicitly declare the type of every va
 
 ### Further Reading
 
-- https://docs.python.org/3/tutorial/classes.html#a-word-about-names-and-objects
-- https://docs.python.org/3/reference/datamodel.html#objects-values-and-types
-- https://en.wikipedia.org/wiki/Type_system
-- https://android.jlelse.eu/magic-lies-here-statically-typed-vs-dynamically-typed-languages-d151c7f95e2b
-
+-   https://docs.python.org/3/tutorial/classes.html#a-word-about-names-and-objects
+-   https://docs.python.org/3/reference/datamodel.html#objects-values-and-types
+-   https://en.wikipedia.org/wiki/Type_system
+-   https://android.jlelse.eu/magic-lies-here-statically-typed-vs-dynamically-typed-languages-d151c7f95e2b
 
 ## How does Pyccel work?
 
@@ -71,8 +70,8 @@ z = y + 1j   # complex
 Because the type of a variable must be unique within a given **scope**, Pyccel cannot support some of the flexibility that Python provides.
 The following basic restrictions apply:
 
-1. The type of a variable cannot be changed
-2. The type of a variable cannot depend on an if condition
+1.  The type of a variable cannot be changed
+2.  The type of a variable cannot depend on an if condition
 
 For example:
 ```python
