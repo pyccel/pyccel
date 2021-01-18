@@ -20,7 +20,7 @@ from pyccel.ast.core import Assign, AliasAssign, FunctionDef, FunctionAddress
 from pyccel.ast.core import If, Return, FunctionCall, Deallocate
 from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import Import
-from pyccel.ast.core import AugAssign, DottedVariable
+from pyccel.ast.core import AugAssign
 
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelAnd, PyccelNe, PyccelOr, PyccelAssociativeParenthesis, IfTernaryOperator
 
@@ -640,7 +640,6 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_func_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
             # Call free function for C type
             if self._target_language == 'c':
-                to_free = ["strides", "shape"]
                 mini_wrapper_func_body += [Deallocate(i) for i in func.arguments if i.allocatable]
             mini_wrapper_func_body.append(Return(wrapper_results))
             self._to_free_PyObject_list.clear()
