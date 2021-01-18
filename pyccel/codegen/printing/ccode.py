@@ -764,8 +764,6 @@ class CCodePrinter(CodePrinter):
         return '{}\n{}'.format(free_code, alloc_code)
 
     def _print_Deallocate(self, expr):
-        if expr.free_function is not None:
-            return '{}({});'.format(expr.free_function, self._print(expr.variable))
         if expr.variable.is_pointer:
             return 'free_pointer({});'.format(self._print(expr.variable))
         return 'free_array({});'.format(self._print(expr.variable))
