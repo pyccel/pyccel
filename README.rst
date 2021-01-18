@@ -1,8 +1,7 @@
 Welcome to Pyccel
 =================
 
-![Build Status](https://github.com/pyccel/pyccel/workflows/.github/workflows/Github_pytest.yml/badge.svg)
- |codacy|
+ |build-status| |codacy|
 
 **Pyccel** stands for Python extension language using accelerators.
 
@@ -248,6 +247,10 @@ For example::
 If you are using SELinux, you will need to set the right context for your host based volume.
 Alternatively you may have docker or podman set the context using -v $PWD:/data:rwz instead of -v $PWD:/data:rw .
 
+.. |build-status| image:: https://github.com/pyccel/pyccel/workflows/master_tests/badge.svg
+    :alt: build status
+    :scale: 100%
+    :target: https://github.com/pyccel/pyccel/actions?query=workflow%3Amaster_tests
 
 .. |codacy| image:: https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698
     :alt: Codacy Badge
