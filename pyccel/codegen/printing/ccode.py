@@ -8,25 +8,24 @@
 import functools
 import operator
 
-from sympy.core           import Tuple
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
-from pyccel.ast.core      import Declare, Slice, ValuedVariable
+from pyccel.ast.core      import Declare
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import Deallocate
-from pyccel.ast.core      import FunctionAddress, PyccelArraySize
-from pyccel.ast.core      import IfTernaryOperator
-from pyccel.ast.core      import Assign, datatype, Variable, Import
-from pyccel.ast.core      import SeparatorComment, VariableAddress
-from pyccel.ast.core      import DottedName
+from pyccel.ast.core      import FunctionAddress
+from pyccel.ast.core      import Assign, datatype, Import
+from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import create_incremented_string
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis
-from pyccel.ast.operators import PyccelUnarySub, PyccelLt
+from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import default_precision, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
+
+from pyccel.ast.internals import Slice
 
 from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
@@ -34,6 +33,10 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
+
+from pyccel.ast.variable import ValuedVariable
+from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
+from pyccel.ast.variable import DottedName
 
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -386,7 +389,7 @@ class CCodePrinter(CodePrinter):
         cond = self._print(expr.cond)
         value_true = self._print(expr.value_true)
         value_false = self._print(expr.value_false)
-        return '({cond}) ? {true} : {false}'.format(cond = cond, true =value_true, false = value_false)
+        return '{cond} ? {true} : {false}'.format(cond = cond, true =value_true, false = value_false)
 
     def _print_LiteralTrue(self, expr):
         return '1'
@@ -473,6 +476,8 @@ class CCodePrinter(CodePrinter):
         return code
 
     def _print_Import(self, expr):
+        if expr.ignore:
+            return ''
         if isinstance(expr.source, DottedName):
             source = expr.source.name[-1]
         else:
@@ -670,8 +675,8 @@ class CCodePrinter(CodePrinter):
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0])
             else:
-                #indices of indexedElement of len==1 shouldn't be a Tuple
-                if isinstance(ind, Tuple) and len(ind) == 1:
+                #indices of indexedElement of len==1 shouldn't be a tuple
+                if isinstance(ind, tuple) and len(ind) == 1:
                     inds[i].args = ind[0]
                 if allow_negative_indexes and \
                         not isinstance(ind, LiteralInteger) and not isinstance(ind, Slice):
@@ -688,8 +693,10 @@ class CCodePrinter(CodePrinter):
                     if isinstance(ind, Slice):
                         inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArraySize(base, i),
                             allow_negative_indexes)
+                    else:
+                        inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1)), LiteralInteger(1))
                 inds = [self._print(i) for i in inds]
-                return "array_slicing(%s, %s)" % (base_name, ", ".join(inds))
+                return "array_slicing(%s, %s, %s)" % (base_name, expr.rank, ", ".join(inds))
             inds = [self._print(i) for i in inds]
         else:
             raise NotImplementedError(expr)
