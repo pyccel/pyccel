@@ -1613,7 +1613,6 @@ def arrs_2d_similar_shapes_0():
 
 def arrs_2d_different_shapes_0():
     import numpy as np
-    from numpy import shape
     pn = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
     pm = np.array([[1, 1, 1]])
     x = pn + pm
