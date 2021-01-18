@@ -89,3 +89,4 @@ a = np.array([1,2,3])
 b = np.array(a)
 print(b[0], b[1], b[2])
 print()
+
