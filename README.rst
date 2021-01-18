@@ -25,10 +25,20 @@ Pyccel comes with a selection of **extensions** allowing you to convert calls to
 - mpi4py
 - h5py (not available yet)
 
+Pyccel Installation Methods
+***************************
+
+Pyccel can be installed on virtually any machine that provides Python 3, the pip package manager, a C/Fortran compiler, and an Internet connection.
+Some advanced features of Pyccel require additional non-Python libraries to be installed, for which we provide detailed instructions below.
+
+Alternatively, Pyccel can be deployed through a **Linux Docker image** that contains all dependencies, and which can be setup with any version of Pyccel.
+For more information, please read the section on `Pyccel container images`_.
+
+
 Requirements
 ============
 
-First of all, Pyccel requires a working Fortran/C compiler   
+First of all, Pyccel requires a working Fortran/C compiler
 
 For Fortran it supports
 
@@ -56,6 +66,8 @@ Finally, Pyccel supports distributed-memory parallel programming through the Mes
 We recommend using GFortran/Gcc and Open-MPI.
 
 Pyccel also depends on several Python3 packages, which are automatically downloaded by pip, the Python Package Installer, during the installation process. In addition to these, unit tests require the *scipy*, *mpi4py*, *pytest* and *coverage* packages, while building the documentation requires Sphinx <http://www.sphinx-doc.org/>.
+
+
 
 Linux Debian/Ubuntu/Mint
 ************************
@@ -211,6 +223,30 @@ Testing
 To test your Pyccel installation please run the script *tests/run_tests_py3.sh* (Unix), or *tests/run_tests.bat* (Windows).
 
 Continuous testing runs on github actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Amaster>
+
+
+Pyccel Container Images
+=======================
+
+Pyccel container images are available through both Docker Hub (docker.io) and the GitHub Container Registry (ghcr.io).
+
+The images:
+
+- are based on ubuntu:latest
+- use distro packaged python3, gcc, gfortran, blas and openmpi
+- support all pyccel releases except the legacy "0.1"
+
+Image tags match pyccel releases.
+
+In order to implement your pyccel accelerated code, you can use a host based volume during the pyccel container creation.
+
+For example::
+
+  docker pull pyccel/pyccel:v1.0.0
+  docker run -it -v $PWD:/data:rw  pyccel/pyccel:v1.0.0 bash
+
+If you are using SELinux, you will need to set the right context for your host based volume.
+Alternatively you may have docker or podman set the context using -v $PWD:/data:rwz instead of -v $PWD:/data:rw .
 
 
 .. |codacy| image:: https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698

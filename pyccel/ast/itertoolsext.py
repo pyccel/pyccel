@@ -5,7 +5,6 @@
 """
 This module represent a call to the itertools functions for code generation.
 """
-from sympy import Tuple
 from .basic     import Basic
 
 __all__ = (
@@ -16,11 +15,11 @@ class Product(Basic):
     """
     Represents a call to itertools.product for code generation.
 
-    arg : list ,tuple ,Tuple
+    arg : list, tuple
     """
 
     def __new__(cls, *args):
-        if not isinstance(args, (tuple, list, Tuple)):
+        if not isinstance(args, (tuple, list)):
             raise TypeError('args must be an iterable')
         elif len(args) < 2:
             return args[0]
