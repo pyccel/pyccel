@@ -13,7 +13,7 @@ from textx.metamodel import metamodel_from_file
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct,\
         Omp_End_Clause, OMP_Critical_Construct, OMP_Barrier_Construct, OMP_Master_Construct,\
-        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct, OMP_Atomic_Construct, OMP_TaskWait_Construct, OMP_Task_Construct, OMP_Taskyield_Construct, OMP_Flush_Construct
+        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct, OMP_Atomic_Construct, OMP_TaskWait_Construct, OMP_Task_Construct, OMP_Taskyield_Construct, OMP_Flush_Construct, OMP_Cancel_Construct
 
 DEBUG = False
 
@@ -70,6 +70,8 @@ class OpenmpStmt(BasicStmt):
         elif isinstance(stmt, OmpTaskConstruct):
             return stmt.expr
         elif isinstance(stmt, OmpFlushConstruct):
+            return stmt.expr
+        elif isinstance(stmt, OmpCancelConstruct):
             return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
@@ -396,6 +398,29 @@ class OmpFlushConstruct(BasicStmt):
             else:
                 raise TypeError('Wrong clause for OmpFlushConstruct')
         return OMP_Flush_Construct(txt)
+
+class OmpCancelConstruct(BasicStmt):
+    """Class representing a Cancel stmt."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name = kwargs.pop('name')
+        super(OmpCancelConstruct, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpCancelConstruct: expr")
+
+        _valid_clauses = (OmpCancelType)
+
+        txt = self.name
+        for clause in self.clauses:
+            if isinstance(clause, _valid_clauses):
+                txt = '{0} {1}'.format(txt, clause.expr)
+            else:
+                raise TypeError('Wrong clause for OmpCancelConstruct')
+        return OMP_Cancel_Construct(txt)
 
 class OmpAtomicConstruct(BasicStmt):
     """Class representing an Atomic stmt ."""
@@ -885,6 +910,22 @@ class OmpAtomicClause(BasicStmt):
 
         return '{}'.format(self.name)
 
+class OmpCancelType(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name = kwargs.pop('name')
+
+        super(OmpCancelType, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpCancelType: expr")
+
+        return '{}'.format(self.name)
+
 class AtomicMemoryClause(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
@@ -920,7 +961,8 @@ omp_directives = [OmpParallelConstruct,
                   OmpTaskWaitConstruct,
                   OmpTaskyieldConstruct,
                   OmpTaskConstruct,
-                  OmpFlushConstruct]
+                  OmpFlushConstruct,
+                  OmpCancelConstruct]
 
 omp_clauses = [OmpCollapse,
                OmpCopyin,
@@ -948,7 +990,8 @@ omp_clauses = [OmpCollapse,
                OmpAtomicClause,
                AtomicMemoryClause,
                OmpDepend,
-               FlushList]
+               FlushList,
+               OmpCancelType]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 

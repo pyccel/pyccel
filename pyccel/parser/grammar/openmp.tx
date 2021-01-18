@@ -28,6 +28,7 @@ OmpConstructOrDirective:
   | OmpTaskyieldConstruct
   | OmpTaskConstruct
   | OmpFlushConstruct
+  | OmpCancelConstruct
 ;
 ////////////////////////////////////////////////////
 
@@ -43,6 +44,7 @@ OmpMaskedConstruct:     name='masked'   clauses*=OmpMaskedClause;
 OmpSimdConstruct:       name='simd'     clauses*=OmpSimdClause;
 OmpAtomicConstruct:     name='atomic'   clauses*=AllOmpClauses; // Not all clause were added (cant test them).
 OmpTaskConstruct:       'task'          clauses*=AllOmpClauses;
+OmpCancelConstruct:     name='cancel'   clauses*=AllOmpClauses;
 OmpBarrierConstruct:    name='barrier';
 OmpMasterConstruct:     name='master';
 OmpTaskWaitConstruct:   name='taskwait';
@@ -73,6 +75,7 @@ AllOmpClauses:
   | OmpinReduction // Deprecated in OpenMP 5.0 for TaskLoop/Task Constructs
   | OmpDepend // TODO : depend-modifier, dependence-type: (source, sink)
   | FlushList
+  | OmpCancelType
 ;
 
 OmpParallelClause:
@@ -165,9 +168,11 @@ OmpNogroup: name='nogroup';
 OmpAtomicClause: name=AtomicClause;
 AtomicMemoryClause: name=AtomicMClause;
 FlushList: '(' args+=ID[','] ')';
+OmpCancelType: name=CancelType;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
+CancelType: ('parallel' | 'sections' | 'taskgroup' | 'for');
 OmpScheduleKind: ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' );
 OmpProcBindStatus: ('master' | 'close' | 'spread');
 OmpReductionOperator: ('+' | '-' | '*' | '/');
