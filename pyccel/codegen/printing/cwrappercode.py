@@ -641,17 +641,7 @@ class CWrapperCodePrinter(CCodePrinter):
             # Call free function for C type
             if self._target_language == 'c':
                 to_free = ["strides", "shape"]
-                mini_wrapper_func_body += [Deallocate(
-                                            DottedVariable(
-                                                NativeInteger(),
-                                                    member,
-                                                    lhs=i.name,
-                                                    is_pointer=True
-                                                ),
-                                            free_function="free",
-                                            )
-                                        for member in to_free for i\
-                                        in func.arguments if i.allocatable]
+                mini_wrapper_func_body += [Deallocate(i) for i in func.arguments if i.allocatable]
             mini_wrapper_func_body.append(Return(wrapper_results))
             self._to_free_PyObject_list.clear()
             # Building Mini wrapper function
@@ -798,6 +788,9 @@ class CWrapperCodePrinter(CCodePrinter):
                         '{arg_names}\n'
                         '}};\n'.format(name=expr.name, arg_names = arg_names))
 
+    def _print_Deallocate(self, expr):
+        return 'free_pointer({});'.format(self._print(expr.variable))
+
     def _print_FunctionDef(self, expr):
         # Save all used names
         used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name.name])
@@ -899,18 +892,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
         # Call free function for C type
         if self._target_language == 'c':
-            to_free = ["strides", "shape"]
-            wrapper_body += [Deallocate(
-                                DottedVariable(
-                                            NativeInteger(),
-                                                member,
-                                                lhs=i.name,
-                                                is_pointer=True
-                                            ),
-                                free_function="free",
-                                )
-                            for member in to_free\
-                            for i in expr.arguments if i.allocatable]
+            wrapper_body += [Deallocate(i) for i in expr.arguments if i.rank > 0]
         self._to_free_PyObject_list.clear()
         #Return
         wrapper_body.append(Return(wrapper_results))
