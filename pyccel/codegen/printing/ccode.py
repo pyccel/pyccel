@@ -1105,14 +1105,20 @@ class CCodePrinter(CodePrinter):
                 raise NotImplementedError(expr.lhs + "=" + expr.rhs)
             dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
             declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+            dtype = self.find_in_ndarray_type_registry(format(rhs.dtype), rhs.precision)
+
             arg = rhs.arg
             if rhs.rank > 1:
                 arg = functools.reduce(operator.concat, arg)
-            arg = ', '.join(self._print(i) for i in arg)
-            dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-            dtype = self.find_in_ndarray_type_registry(format(rhs.dtype), rhs.precision)
-            cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
-            return  '%s%s\n' % (dummy_array, cpy_data)
+            if isinstance(arg, Variable):
+                arg = self._print(arg)
+                cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);".format(lhs, arg, dtype)
+                return '%s\n' % (cpy_data)
+            else :
+                arg = ', '.join(self._print(i) for i in arg)
+                dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
+                cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
+                return  '%s%s\n' % (dummy_array, cpy_data)
 
         if isinstance(rhs, (NumpyFull)):
             code_init = ''
