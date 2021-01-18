@@ -539,6 +539,24 @@ class OmpPrivate(BasicStmt):
         args = ', '.join(str(arg) for arg in self.args)
         return 'private({})'.format(args)
 
+class FlushList(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.args = kwargs.pop('args')
+
+        super(FlushList, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> Flush: expr")
+
+        # TODO check if variable exist in namespace
+        args = ', '.join(str(arg) for arg in self.args)
+        return '({})'.format(args)
+
 class OmpCriticalName(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
@@ -922,7 +940,8 @@ omp_clauses = [OmpCollapse,
                OmpPriority,
                OmpAtomicClause,
                AtomicMemoryClause,
-               OmpDepend]
+               OmpDepend,
+               FlushList]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 
