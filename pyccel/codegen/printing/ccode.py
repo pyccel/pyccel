@@ -202,6 +202,20 @@ math_function_to_c = {
     'MathLcm'       : 'pyc_lcm',
 }
 
+c_library_headers = (
+    "complex",
+    "ctype",
+    "float",
+    "math",
+    "stdarg",
+    "stdbool",
+    "stddef",
+    "stdint",
+    "stdio",
+    "stdlib",
+    "tgmath",
+)
+
 dtype_registry = {('real',8)    : 'double',
                   ('real',4)    : 'float',
                   ('complex',8) : 'double complex',
@@ -477,8 +491,10 @@ class CCodePrinter(CodePrinter):
 
         if source is None:
             return ''
-        else:
+        if str(expr.source) in c_library_headers:
             return '#include <{0}.h>'.format(source)
+        else:
+            return '#include "{0}.h"'.format(source)
 
     def _print_LiteralString(self, expr):
         format_str = format(expr.arg)
