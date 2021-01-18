@@ -677,8 +677,10 @@ class CCodePrinter(CodePrinter):
                     if isinstance(ind, Slice):
                         inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArraySize(base, i),
                             allow_negative_indexes)
+                    else:
+                        inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1)), LiteralInteger(1))
                 inds = [self._print(i) for i in inds]
-                return "array_slicing(%s, %s)" % (base_name, ", ".join(inds))
+                return "array_slicing(%s, %s, %s)" % (base_name, expr.rank, ", ".join(inds))
             inds = [self._print(i) for i in inds]
         else:
             raise NotImplementedError(expr)
