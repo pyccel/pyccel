@@ -61,7 +61,7 @@ def array_view_positive_literal():
         for j in range(2):
             print(y[i][j])
 
-            def array_view_2():
+def array_view_2():
     a = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     b = a[1:-1]
     c = b[1:-1]
