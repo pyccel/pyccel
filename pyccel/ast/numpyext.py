@@ -139,7 +139,7 @@ class NumpyArray(NumpyNewArray):
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
         if isinstance(arg, (PythonTuple, PythonList)) and not arg.is_homogeneous or \
             isinstance(arg, Variable) and not arg.is_ndarray and not arg.is_stack_array:
-            raise TypeError('we only accept a homogeneous list or tuple ')
+            raise TypeError('we only accept a homogeneous arguments ')
 
         # Verify dtype and get precision
         if dtype is None:
