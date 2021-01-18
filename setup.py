@@ -12,9 +12,9 @@ exec(path.read_text())
 
 NAME    = 'pyccel'
 VERSION = __version__
-AUTHOR  = 'Ahmed Ratnani'
-EMAIL   = 'ahmed.ratnani@ipp.mpg.de'
-URL     = 'https://github.com/ratnania/pyccel'
+AUTHOR  = 'Pyccel development team'
+EMAIL   = 'pyccel@googlegroups.com'
+URL     = 'https://github.com/pyccel/pyccel'
 DESCR   = 'Python extension language using accelerators.'
 KEYWORDS = ['math']
 LICENSE = "LICENSE"
