@@ -2375,7 +2375,7 @@ class SemanticParser(BasicParser):
         not_used = [d for d in decorators if d not in def_decorators.__all__]
 
         if len(not_used) >= 1:
-            errors.report(UNDEFINED_DECORATORS, symbol=', '.join(not_used), severity='warning')
+            errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
         args_number = len(expr.arguments)
         templates = self.get_templates()

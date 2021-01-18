@@ -735,6 +735,7 @@ class SyntaxParser(BasicParser):
                                 severity='warning')
 
                 templates[tp_name] = hdr_parse(stmts=txt)
+                decorators['template'] = templates
 
         # extract the types to construct a header
         if 'types' in decorators:
@@ -845,7 +846,6 @@ class SyntaxParser(BasicParser):
                imports=imports,
                decorators=decorators,
                headers=headers,
-               templates=templates,
                doc_string=doc_string)
 
         func.set_fst(stmt)
