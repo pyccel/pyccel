@@ -37,7 +37,7 @@ pyccel:
 
 ### Memory management ###
 
-Pyccel makes a difference between ndarrays that own their data and the ones they don't.
+Pyccel makes a difference between ndarrays that own their data and the ones that don't.
 
 Pyccel calls its own garbage collector when needed, but has a set of rules to do so:
 
@@ -59,7 +59,7 @@ Pyccel calls its own garbage collector when needed, but has a set of rules to do
      |error [semantic]: ex.py [4]| Incompatible redefinition (|a| real(10, 20) <-> real(10,))
     ```
 
-    This limitation is due to the way Fortran allocatable can't change the rank after declaration.
+This limitation is due to the fact that the rank of Fortran allocatable objects must be specified in their declaration.
 
 -   Can not assign ndarrays that own their data one another.
 
