@@ -1566,20 +1566,20 @@ def array_2d_C_slice_stride_23(a):
 # ARITHMETIC OPERATIONS
 #==============================================================================
 
-def arrs_same_shape_0():
+def arrs_similar_shapes_0():
     import numpy as np
     a = np.zeros(10)
     b = a[2:4]+a[4:6]
     return np.shape(b)[0]
 
-def arrs_same_shape_1():
+def arrs_similar_shapes_1():
     import numpy as np
     i = 4
     a = np.zeros(10)
     b = a[2:i]+a[4:i + 2]
     return np.shape(b)[0]
 
-def arrs_different_shape_0():
+def arrs_different_shapes_0():
     import numpy as np
     i = 5
     a = np.zeros(10)
@@ -1600,3 +1600,13 @@ def arrs_uncertain_shape_1():
     a = np.zeros(10)
     b = a[2:i]+a[4:j]
     return np.shape(b)[0]
+
+def arrs_2d_different_shapes_0():
+    import numpy as np
+    from numpy import shape
+    dy = 4
+    dx = 2
+    pn = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
+    x = ((dy**2 * (pn[1:shape(pn)[0]-1, 2:] + pn[1:shape(pn)[0]-1, 0:shape(pn)[1]-2]) +
+        dx**2 *(pn[2:, 1:shape(pn)[1]-1] + pn[0:shape(pn)[0]-2, 1:shape(pn)[1]-1])) / (2 * (dx**2 + dy**2)))
+    return np.shape(x)[0], np.shape(x)[1]
