@@ -1104,12 +1104,12 @@ class CCodePrinter(CodePrinter):
             if rhs.rank == 0:
                 raise NotImplementedError(expr.lhs + "=" + expr.rhs)
             dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
-            dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+            declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
             arg = rhs.arg
             if rhs.rank > 1:
                 arg = functools.reduce(operator.concat, arg)
             arg = ', '.join(self._print(i) for i in arg)
-            dummy_array = "%s %s[] = {%s};\n" % (dtype, dummy_array_name, arg)
+            dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
             dtype = self.find_in_ndarray_type_registry(format(rhs.dtype), rhs.precision)
             cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
             return  '%s%s\n' % (dummy_array, cpy_data)
