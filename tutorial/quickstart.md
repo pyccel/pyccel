@@ -103,10 +103,10 @@ In general string type hints must be used to provide pyccel with information abo
 
 For scalar variables and arrays Pyccel supports the following data types:
 
-  - built-in datatypes: `bool`, `int`, `float`, `complex`
-  - Numpy integer types: `int8`, `int16`, `int32`, `int64`
-  - Numpy real types: `float32`, `float64`, `double`
-  - Numpy complex types: `complex64`, `complex128`
+-   built-in datatypes: `bool`, `int`, `float`, `complex`
+-   Numpy integer types: `int8`, `int16`, `int32`, `int64`
+-   Numpy real types: `float32`, `float64`, `double`
+-   Numpy complex types: `complex64`, `complex128`
 
 ## How to use Pyccel?
 
@@ -333,18 +333,16 @@ int64_t binomial_coefficient(int64_t n, int64_t k);
 
 __TODO__
 
-
 ## Other Features
 
 Also, we are working on supporting [openmp](https://en.wikipedia.org/wiki/OpenMP), [openmpi](https://en.wikipedia.org/wiki/Open_MPI), [lapack](https://en.wikipedia.org/wiki/LAPACK)/[blas](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms), [cuda](https://en.wikipedia.org/wiki/CUDA), [openacc](https://en.wikipedia.org/wiki/OpenACC), [task-based parallelism](https://en.wikipedia.org/wiki/Task_parallelism).
-
 
 ## Getting Help
 
 If you face problems with pyccel, please take the following steps:
 
-1. Consult our documention in the tutorial directory;
-2. Send an email message to pyccel@googlegroups.com;
-3. Open an issue on GitHub.
+1.  Consult our documention in the tutorial directory;
+2.  Send an email message to pyccel@googlegroups.com;
+3.  Open an issue on GitHub.
 
 Thank you!
