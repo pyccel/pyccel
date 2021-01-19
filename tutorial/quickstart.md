@@ -87,7 +87,7 @@ else:
 
 When parsing a function, Pyccel needs to know the type of the input arguments in order to perform type inference, and ultimately compute the type of the output result.
 (In the case of recursive functions, the return type should also be declared.)
-Pyccel can then perform type inference on other Python code that uses that function, because the type of its result will be already known.
+Pyccel can then perform type inference on other Python code that uses that function, because the type of its result will already be known.
 
 The programmer has various ways to provide the argument type information to Pyccel.
 We recommend using Python-style annotations, which have the syntax:
@@ -335,7 +335,7 @@ __TODO__
 
 ## Other Features
 
-Also, we are working on supporting [openmp](https://en.wikipedia.org/wiki/OpenMP), [openmpi](https://en.wikipedia.org/wiki/Open_MPI), [lapack](https://en.wikipedia.org/wiki/LAPACK)/[blas](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms), [cuda](https://en.wikipedia.org/wiki/CUDA), [openacc](https://en.wikipedia.org/wiki/OpenACC), [task-based parallelism](https://en.wikipedia.org/wiki/Task_parallelism).
+We are also working on supporting [openmp](https://en.wikipedia.org/wiki/OpenMP), [openmpi](https://en.wikipedia.org/wiki/Open_MPI), [lapack](https://en.wikipedia.org/wiki/LAPACK)/[blas](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms), [cuda](https://en.wikipedia.org/wiki/CUDA), [openacc](https://en.wikipedia.org/wiki/OpenACC), [task-based parallelism](https://en.wikipedia.org/wiki/Task_parallelism).
 
 ## Getting Help
 
