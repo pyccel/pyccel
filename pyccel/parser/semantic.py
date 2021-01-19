@@ -2378,8 +2378,12 @@ class SemanticParser(BasicParser):
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
         args_number = len(expr.arguments)
-        templates = self.get_templates()
-        templates.update(expr.templates)
+        if decorators['templates']: 
+            decorators['templates'].update(self.get_templates())
+            templates = decorators['templates']
+        else:
+            templates = self.get_templates()
+
 
         tmp_headers = expr.headers
         if cls_name:
