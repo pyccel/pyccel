@@ -584,11 +584,12 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_func_body = []
             res_args = []
             mini_wrapper_func_vars = {a.name : a for a in func.arguments}
+            local_arg_vars = [a.clone(a.name, is_pointer=True) if a.rank>0 else a for a in func.arguments]
             flags = 0
             collect_vars = {}
 
             # Loop for all args in every functions and create the corresponding condition and body
-            for p_arg, f_arg in zip(parse_args, func.arguments):
+            for p_arg, f_arg in zip(parse_args, local_arg_vars):
                 collect_vars[f_arg] = p_arg
                 body, tmp_variable = self._body_management(used_names, f_arg, p_arg, None)
                 if tmp_variable :
@@ -640,7 +641,7 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_func_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
             # Call free function for C type
             if self._target_language == 'c':
-                mini_wrapper_func_body += [Deallocate(i) for i in func.arguments if i.allocatable]
+                mini_wrapper_func_body += [Deallocate(i) for i in local_arg_vars if i.is_pointer]
             mini_wrapper_func_body.append(Return(wrapper_results))
             self._to_free_PyObject_list.clear()
             # Building Mini wrapper function
@@ -787,18 +788,18 @@ class CWrapperCodePrinter(CCodePrinter):
                         '{arg_names}\n'
                         '}};\n'.format(name=expr.name, arg_names = arg_names))
 
-    def _print_Deallocate(self, expr):
-        return 'free_pointer({});'.format(self._print(expr.variable))
-
     def _print_FunctionDef(self, expr):
         # Save all used names
         used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name.name])
+
+        # update ndarray local variables properties
+        local_arg_vars = [a.clone(a.name, is_pointer=True) if a.rank > 0 else a for a in expr.arguments]
 
         # Find a name for the wrapper function
         wrapper_name = self._get_wrapper_name(used_names, expr)
         used_names.add(wrapper_name)
         # Collect local variables
-        wrapper_vars        = {a.name : a for a in expr.arguments}
+        wrapper_vars        = {a.name : a for a in local_arg_vars}
         wrapper_vars.update({r.name : r for r in expr.results})
         python_func_args    = self.get_new_PyObject("args"  , used_names)
         python_func_kwargs  = self.get_new_PyObject("kwargs", used_names)
@@ -816,7 +817,7 @@ class CWrapperCodePrinter(CCodePrinter):
                         AliasAssign(wrapper_results[0], Nil()),
                         Return(wrapper_results)])
             return CCodePrinter._print_FunctionDef(self, wrapper_func)
-        if any(isinstance(arg, FunctionAddress) for arg in expr.arguments):
+        if any(isinstance(arg, FunctionAddress) for arg in local_arg_vars):
             wrapper_func = FunctionDef(name = wrapper_name,
                 arguments = wrapper_args,
                 results = wrapper_results,
@@ -826,7 +827,7 @@ class CWrapperCodePrinter(CCodePrinter):
             return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
         # Collect argument names for PyArgParse
-        arg_names         = [a.name for a in expr.arguments]
+        arg_names         = [a.name for a in local_arg_vars]
         keyword_list_name = self.get_new_name(used_names,'kwlist')
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
 
@@ -835,7 +836,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         parse_args = []
         collect_vars = {}
-        for arg in expr.arguments:
+        for arg in local_arg_vars:
             collect_var , cast_func = self.get_PyArgParseType(used_names, arg)
             collect_vars[arg] = collect_var
 
@@ -856,7 +857,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 wrapper_body.append(self.get_default_assign(parse_args[-1], arg))
 
         # Parse arguments
-        parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, expr.arguments, parse_args, keyword_list)
+        parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, local_arg_vars, parse_args, keyword_list)
         wrapper_body.append(If((PyccelNot(parse_node), [Return([Nil()])])))
         wrapper_body.extend(wrapper_body_translations)
 
@@ -889,9 +890,10 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Call free function for python type
         wrapper_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
+
         # Call free function for C type
         if self._target_language == 'c':
-            wrapper_body += [Deallocate(i) for i in expr.arguments if i.rank > 0]
+            wrapper_body += [Deallocate(i) for i in local_arg_vars if i.is_pointer]
         self._to_free_PyObject_list.clear()
         #Return
         wrapper_body.append(Return(wrapper_results))
