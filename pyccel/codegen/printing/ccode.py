@@ -8,7 +8,6 @@
 import functools
 import operator
 
-from sympy.core           import Tuple
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
 from pyccel.ast.core      import Declare
@@ -202,6 +201,20 @@ math_function_to_c = {
     'MathRadians'   : 'pyc_radians',
     'MathLcm'       : 'pyc_lcm',
 }
+
+c_library_headers = (
+    "complex",
+    "ctype",
+    "float",
+    "math",
+    "stdarg",
+    "stdbool",
+    "stddef",
+    "stdint",
+    "stdio",
+    "stdlib",
+    "tgmath",
+)
 
 dtype_registry = {('real',8)    : 'double',
                   ('real',4)    : 'float',
@@ -478,8 +491,10 @@ class CCodePrinter(CodePrinter):
 
         if source is None:
             return ''
-        else:
+        if str(expr.source) in c_library_headers:
             return '#include <{0}.h>'.format(source)
+        else:
+            return '#include "{0}.h"'.format(source)
 
     def _print_LiteralString(self, expr):
         format_str = format(expr.arg)
@@ -661,8 +676,8 @@ class CCodePrinter(CodePrinter):
             if isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
                 inds[i] = PyccelMinus(base_shape[i], ind.args[0])
             else:
-                #indices of indexedElement of len==1 shouldn't be a Tuple
-                if isinstance(ind, Tuple) and len(ind) == 1:
+                #indices of indexedElement of len==1 shouldn't be a tuple
+                if isinstance(ind, tuple) and len(ind) == 1:
                     inds[i].args = ind[0]
                 if allow_negative_indexes and \
                         not isinstance(ind, LiteralInteger) and not isinstance(ind, Slice):
@@ -679,8 +694,10 @@ class CCodePrinter(CodePrinter):
                     if isinstance(ind, Slice):
                         inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArraySize(base, i),
                             allow_negative_indexes)
+                    else:
+                        inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1)), LiteralInteger(1))
                 inds = [self._print(i) for i in inds]
-                return "array_slicing(%s, %s)" % (base_name, ", ".join(inds))
+                return "array_slicing(%s, %s, %s)" % (base_name, expr.rank, ", ".join(inds))
             inds = [self._print(i) for i in inds]
         else:
             raise NotImplementedError(expr)
@@ -1108,15 +1125,21 @@ class CCodePrinter(CodePrinter):
             if rhs.rank == 0:
                 raise NotImplementedError(expr.lhs + "=" + expr.rhs)
             dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
-            dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+            declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+            dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
+
             arg = rhs.arg
             if rhs.rank > 1:
                 arg = functools.reduce(operator.concat, arg)
-            arg = ', '.join(self._print(i) for i in arg)
-            dummy_array = "%s %s[] = {%s};\n" % (dtype, dummy_array_name, arg)
-            dtype = self.find_in_ndarray_type_registry(format(rhs.dtype), rhs.precision)
-            cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
-            return  '%s%s\n' % (dummy_array, cpy_data)
+            if isinstance(arg, Variable):
+                arg = self._print(arg)
+                cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);".format(lhs, arg, dtype)
+                return '%s\n' % (cpy_data)
+            else :
+                arg = ', '.join(self._print(i) for i in arg)
+                dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
+                cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
+                return  '%s%s\n' % (dummy_array, cpy_data)
 
         if isinstance(rhs, (NumpyFull)):
             code_init = ''
