@@ -276,7 +276,7 @@ int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd
 
 /*
 ** copy numpy shape to nd_array shape, and return it in a new array, to
-** avoid the problem of plateform depending architecture
+** avoid the problem of variation of system architecture
 */
 int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 {
