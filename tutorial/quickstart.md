@@ -34,8 +34,8 @@ In particular, it is worth clarifying the difference between an object and a var
 
 ### Statically Typed Languages
 	
-A language is statically-typed if the type of a variable is known at compile-time instead of run-time.
-Common examples of statically-typed languages include Java, C, C++, FORTRAN, Pascal and Scala.
+A language is statically typed if the type of a variable is known at compile-time instead of run-time.
+Common examples of statically typed languages include Java, C, C++, FORTRAN, Pascal and Scala.
 These languages provide a set of built-in types, and provide the means for creating additional user-defined types.
 It is the programmer's responsibility to explicitly declare the type of every variable used in the code.
 
@@ -97,8 +97,9 @@ or to declare Numpy arrays
 ```python
 def fun(arg1: 'type1[:]', arg2: 'type2[:,:]', ..., argN: 'typeN[dimensions]') -> 'return_type':
 ```
-The expression `[:]` means that the array has 1 dimension. 2 dimensions would be specified with `[:,:]`. The number of dimensions of an array is equal to the number of comma-separated colons in the square brackets. So `arr[:,:,:]` means that the array `arr` has 3 dimensions and so on.
-In general string type hints must be used to provide pyccel with information about the number of dimensions.
+The number of dimensions of an array is equal to the number of comma-separated colons in the square brackets.
+So `arr[:]` means that the array `arr` has 1 dimension, `arr[:,:]` means that it has 2 dimensions and so on.
+In general string type hints must be used to provide Pyccel with information about the number of dimensions.
 
 For scalar variables and arrays Pyccel supports the following data types:
 
@@ -112,7 +113,7 @@ For scalar variables and arrays Pyccel supports the following data types:
 ### Installation
 
 Pyccel's official releases can be downloaded from PyPI (the Python Package Index) using `pip`.
-To get the latest (trunk) version of Pyccel, just clone the `git` repository from GitHub and checkout the `master` branch.
+To get the latest (trunk) version of Pyccel, one can clone the `git` repository from GitHub and checkout the `master` branch.
 Detailed installation instructions are found in the [README](https://github.com/pyccel/pyccel/blob/master/README.rst) file.
 
 ### Command Line Usage
@@ -160,7 +161,8 @@ int main()
 ```
 #### Example 2: extension module
 
-If the Python file to be accelerated only contains functions and class definitions, Pyccel will treat it as a Python module instead of just a script. Accordingly, it will not generate a C program, but rather a C Python extension module which can be imported from Python.
+If the Python file to be accelerated only contains functions and class definitions, Pyccel will treat it as a Python module instead of just a script.
+Accordingly, it will not generate a program, but rather a Python C extension module which can be imported from Python.
 
 For example, we now consider the Python module `mod.py`, which reads
 ```python
@@ -179,10 +181,10 @@ We use the `pyccel` command to translate `mod.py` to the C files `mod.c` and `mo
 ```bash
 $ pyccel mod.py --language c
 ```
-By default Pyccel also compiles the C code into a C Python extension module named `mod.<TAG>.so`, which is placed in the same directory as `mod.py`.
+By default Pyccel also compiles the C code into a Python C extension module named `mod.<TAG>.so`, which is placed in the same directory as `mod.py`.
 To achieve this Pyccel generates the additional files `mod_wrapper.c` (which interacts directly with the CPython API) and `setup_mod.py` (which defines the build procedure for the extension module), as well as a `build` directory.
 
-If the command `import mod` is now given to the Python interpreter, this will import the C Python extention module `mod.<TAG>.so` instead of the pure Python module `mod.py`.
+If the command `import mod` is now given to the Python interpreter, this will import the Python C extention module `mod.<TAG>.so` instead of the pure Python module `mod.py`.
 
 These are the contents of the current directory:
 ```bash
