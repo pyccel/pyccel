@@ -21,17 +21,16 @@ In particular, it is worth clarifying the difference between an object and a var
 
 ### Python variable
 
--   Is a reference to a Python object in memory.
+-   Is a reference to a Python object in memory (which is the variable's **value**).
 
--   Is created with an assignment operation `x = expr`:
+-   Is created with an assignment operation `x = expr`, where `x` is the new variable and `expr` is any expression:
 
-    -   If the variable `x` already exists, the interpreter reduces the reference count of its object
-    -   Otherwise a new variable `x` is created, which references the value of expr.
-    -   The variable `x` is then modified to reference the object referenced by `expr` and the reference count of this object is increased
+    -   `x` will reference the **value** of `expr`, therefore increasing the object's reference count
+    -   If the variable `x` already existed, the interpreter reduces the reference count of its old value
 
--   The type of the variable can be changed at run-time, because Python is a dynamically typed language.
+-   Can be destroyed with the command `del x`, which reduces its value's reference count
 
--   Can be destroyed with the command del `x`.
+-   Since a variable can be reassigned to any object, its type could change at run-time; hence we say that Python is **dynamically typed**.
 
 ### Statically Typed Languages
 	
