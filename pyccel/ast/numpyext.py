@@ -133,12 +133,13 @@ class NumpyArray(NumpyNewArray):
     def __init__(self, arg, dtype=None, order='C'):
         NumpyNewArray.__init__(self)
 
-        if not isinstance(arg, (PythonTuple, PythonList)):
-            raise TypeError('Uknown type of  %s.' % type(arg))
+        if not isinstance(arg, (PythonTuple, PythonList, Variable)):
+            raise TypeError('Unknown type of  %s.' % type(arg))
 
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
-        if not arg.is_homogeneous:
-            raise TypeError('we only accept a homogeneous list or tuple ')
+        if isinstance(arg, (PythonTuple, PythonList)) and not arg.is_homogeneous or \
+            isinstance(arg, Variable) and not arg.is_ndarray and not arg.is_stack_array:
+            raise TypeError('we only accept homogeneous arguments')
 
         # Verify dtype and get precision
         if dtype is None:
