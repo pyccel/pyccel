@@ -331,7 +331,7 @@ int64_t binomial_coefficient(int64_t n, int64_t k);
 
 ### Interactive Usage with `epyccel`
 
-__TODO__
+**TODO**
 
 ## Other Features
 
