@@ -1,4 +1,4 @@
-# Welcome to Pyccel
+# Pyccel's Quickstart Guide
 
 Pyccel is a **static compiler** for Python 3, using Fortran or C as backend language, with a focus on high-performance computing (HPC) applications.
 
@@ -154,40 +154,65 @@ int main()
     return 0;
 }
 ```
-#### Example 2: test module
+#### Example 2: extension module
 
-E.g (using `@types` decorator/python type hints and a recursive function with a typed return), To specify the types of the function arguments and its return, we need to import the `@types` decorator from pyccel.decorators (as you can see in `file_name.py` first line) and then specify the types for each function argument in `@types` using the following:
--   The syntax for the decorator is: `@types('1stArgType', '2ndArgType', 'NthArgType', results='return_type')`, or to declare arrays: `@types('1stArgType[:]', '2ndArgType[:,:]', 'NthArgType[dimensions]', results='return_type')`, The expression `[:]` means that the array has 1 dimension. 2 dimensions would be specified with `[:,:]`. The number of dimensions of an array is equal to the number of comma-separated colons in the square brackets. So `arr[:,:,:]` means that the array `arr` has 3 dimensions and so on.
--   In the function we just use python syntax `def fun(1stArg, 2ndArg, NthArg)`.
--   Also, You can specify the function arguments types using python type hints, `def fun(1stArg: '1stArgType', 2ndArg: '2ndArgType', NthArg: 'NthArgType') -> 'returnType'`, For arrays the syntax is the same as for the decorator and string type hints must be used to provide pyccel with information about the number of dimensions.
-   
-In `@types` decorator, pyccel supports the following data types: real, double, float, float32, float64, complex, complex64, complex128, int8, int16, int32, int64, int, bool.
+If the Python file to be accelerated only contains functions and class definitions, Pyccel will treat it as a Python module instead of just a script. Accordingly, it will not generate a C program, but rather a C Python extension module which can be imported from Python.
 
-For the moment, Pyccel supports `@types` decorator(recommended) and python type hints as approaches to provide type informations to the function arguments and its return type.
-   
-  python code:
-  Specifying the types using `@types` decorator.
-  file_name.py
-  ```python
-  from pyccel.decorators import types
+For example, we now use the `pyccel` command to translate the Python module `mod.py` to the C files `mod.c` and `mod.h`, which are placed in the new `__pyccel__` directory.
+By default Pyccel also compiles the C code into a C Python extension module named `mod.<TAG>.so`, which is placed in the same directory as `mod.py`:
+```bash
+$ pyccel mod.py --language c
+$ tree
+.
+├── mod.cpython-36m-x86_64-linux-gnu.so
+├── mod.py
+└── __pyccel__
+    ├── build
+    │   ├── lib.linux-x86_64-3.6
+    │   └── temp.linux-x86_64-3.6
+    │       └── mod_wrapper.o
+    ├── mod.c
+    ├── mod.h
+    ├── mod.o
+    ├── mod_wrapper.c
+    └── setup_mod.py
 
-  @types('int', results='int')
-  def factorial(n):
-	  if n == 0: return 1
-	  else : return n * factorial(n - 1)
-   ```
-  
-  Specifying the types using python type hints.
-  file_name.py
+4 directories, 10 files
+
+```
+If the command `import mod` is now given to the Python interpreter, this will import the C Python extention module `mod.<TAG>.so` instead of the pure Python module `mod.py`. 
+
+In order to translate the Python module to C, the user must specify the types of all functions' arguments (and in the case of recursive functions, the return type should also be declared).
+We recommend using Python-style annotations, which have the syntax:
+```python
+def fun(arg1: 'type1', arg2: 'type2', ..., argN: 'typeN') -> 'return_type':
+    ...
+    return x
+```
+or to declare Numpy arrays
+```python
+def fun(arg1: 'type1[:]', arg2: 'type2[:,:]', ..., argN: 'typeN[dimensions]') -> 'return_type':
+    ...
+    return x
+```
+The expression `[:]` means that the array has 1 dimension. 2 dimensions would be specified with `[:,:]`. The number of dimensions of an array is equal to the number of comma-separated colons in the square brackets. So `arr[:,:,:]` means that the array `arr` has 3 dimensions and so on.
+In general string type hints must be used to provide pyccel with information about the number of dimensions.
+
+For scalar variables and arrays Pyccel supports the following data types:
+
+  - built-in datatypes: `bool`, `int`, `float`, `complex`
+  - Numpy integer types: `int8`, `int16`, `int32`, `int64`
+  - Numpy real types: `float32`, `float64`, `double`
+  - Numpy complex types: `complex64`, `complex128`
+
+If the Python file `mod.py` contains
   ```python
   def factorial(n: int) -> int:
 	  if n == 0: return 1
 	  else : return n * factorial(n - 1)
    ``` 
-   C code:
-   
-   file_name.c
-   
+
+The resulting C file `mod.c` reads
    ```c
    #include <test.h>
    #include <stdlib.h>
