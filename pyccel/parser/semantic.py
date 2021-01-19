@@ -2373,7 +2373,7 @@ class SemanticParser(BasicParser):
         headers = []
 
         not_used = [d for d in decorators if d not in def_decorators.__all__]
-
+        not_used.remove('templates') #templates not a decorator
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 

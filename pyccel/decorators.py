@@ -16,7 +16,6 @@ __all__ = (
     'bypass',
     'types',
     'template',
-    'templates', #not a decorator
     'pure',
     'private',
     'elemental',
@@ -97,6 +96,3 @@ def allow_negative_index(f,*args):
     def identity(f):
         return f
     return identity
-
-def templates():
-    pass
