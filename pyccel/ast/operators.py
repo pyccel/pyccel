@@ -75,8 +75,10 @@ def broadcast(shape_1, shape_2):
 
     new_shape = []
     for e1,e2 in zip(new_shape_1, new_shape_2):
-        sy_e1 = pyccel_to_sympy(e1, {}, set())
-        sy_e2 = pyccel_to_sympy(e2, {}, set())
+        used_names = set()
+        symbol_map = {}
+        sy_e1 = pyccel_to_sympy(e1, symbol_map, used_names)
+        sy_e2 = pyccel_to_sympy(e2, symbol_map, used_names)
         if sy_e1 == sy_e2:
             new_shape.append(e1)
         elif sy_e1 == 1:
@@ -87,7 +89,8 @@ def broadcast(shape_1, shape_2):
             new_shape.append(e1)
         elif sy_e2.is_constant() and not sy_e1.is_constant():
             new_shape.append(e2)
-        elif not sy_e2.is_constant() and not sy_e1.is_constant():
+        elif not sy_e2.is_constant() and not sy_e1.is_constant()\
+                and not (sy_e1 - sy_e2).is_constant():
             new_shape.append(e1)
         elif isinstance(e1, PyccelArraySize) and isinstance(e2, PyccelArraySize):
             new_shape.append(e1)
