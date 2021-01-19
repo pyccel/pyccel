@@ -15,7 +15,6 @@ import ast
 
 from sympy import Symbol
 from sympy import IndexedBase
-from sympy import Tuple
 from sympy import Lambda
 from sympy import Dict
 from sympy.core import cache
@@ -26,7 +25,6 @@ from pyccel.ast.basic import PyccelAstNode
 
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import ParserResult
-from pyccel.ast.core import DottedName
 from pyccel.ast.core import Assign
 from pyccel.ast.core import AugAssign
 from pyccel.ast.core import Return
@@ -35,14 +33,13 @@ from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor
-from pyccel.ast.core import If, IfTernaryOperator
+from pyccel.ast.core import If
 from pyccel.ast.core import While
 from pyccel.ast.core import Del
 from pyccel.ast.core import Assert
 from pyccel.ast.core import PythonTuple
 from pyccel.ast.core import Comment, EmptyNode, NewLine
 from pyccel.ast.core import Break, Continue
-from pyccel.ast.core import Slice
 from pyccel.ast.core import Argument, ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
@@ -60,6 +57,7 @@ from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  Pyc
 from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
 from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
 from pyccel.ast.operators import PyccelIs, PyccelIsNot
+from pyccel.ast.operators import IfTernaryOperator
 
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.headers  import Header, MetaVariable
@@ -67,6 +65,9 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
+from pyccel.ast.variable  import DottedName
+
+from pyccel.ast.internals import Slice
 
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.base import BasicParser
@@ -159,7 +160,7 @@ class SyntaxParser(BasicParser):
         return ast
 
     def _treat_iterable(self, stmt):
-        return [self._visit(i) for i in stmt]
+        return (self._visit(i) for i in stmt)
 
     def _visit(self, stmt):
         """Creates AST from FST."""
@@ -270,13 +271,13 @@ class SyntaxParser(BasicParser):
         return PythonTuple(*self._treat_iterable(stmt.elts))
 
     def _visit_List(self, stmt):
-        return PythonList(*self._treat_iterable(stmt.elts), sympify=False)
+        return PythonList(*self._treat_iterable(stmt.elts))
 
     def _visit_tuple(self, stmt):
-        return Tuple(*self._treat_iterable(stmt), sympify=False)
+        return tuple(self._treat_iterable(stmt))
 
     def _visit_list(self, stmt):
-        return self._treat_iterable(stmt)
+        return list(self._treat_iterable(stmt))
 
     def _visit_alias(self, stmt):
         if not isinstance(stmt.name, str):
@@ -873,7 +874,7 @@ class SyntaxParser(BasicParser):
         args = []
         while isinstance(ch, ast.Subscript):
             val = self._visit(ch.slice)
-            if isinstance(val, (Tuple, PythonTuple)):
+            if isinstance(val, (PythonTuple, list)):
                 args += val
             else:
                 args.insert(0, val)
@@ -884,7 +885,7 @@ class SyntaxParser(BasicParser):
         return var
 
     def _visit_ExtSlice(self, stmt):
-        return self._visit(tuple(stmt.dims))
+        return self._visit(stmt.dims)
 
     def _visit_Slice(self, stmt):
 
@@ -1051,10 +1052,10 @@ class SyntaxParser(BasicParser):
         orelse = self._visit(stmt.orelse)
         if len(orelse)==1 and isinstance(orelse[0],If):
             orelse = orelse[0]._args
-            return If(Tuple(test, body, sympify=False), *orelse)
+            return If((test, body), *orelse)
         else:
-            orelse = Tuple(LiteralTrue(), orelse, sympify=False)
-            return If(Tuple(test, body, sympify=False), orelse)
+            orelse = (LiteralTrue(), orelse)
+            return If((test, body), orelse)
 
     def _visit_IfExp(self, stmt):
 
