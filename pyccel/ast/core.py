@@ -11,7 +11,7 @@ from collections     import OrderedDict
 from sympy import sympify
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
 from sympy import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Le as sp_Le, Gt as sp_Gt, Ge as sp_Ge
-from sympy import Integral, Symbol, Tuple
+from sympy import Integral, Symbol
 from sympy import Lambda
 from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float, Rational as sp_Rational
@@ -168,7 +168,6 @@ local_sympify = {
 #      - add examples
 #      - Function case
 #      - AnnotatedComment case
-#      - use Tuple after checking the object is iterable:'funcs=Tuple(*funcs)'
 #      - add a new Idx that uses Variable instead of Symbol
 
 #==============================================================================
@@ -186,7 +185,7 @@ def subs(expr, new_elements):
 
     if len(list(new_elements)) == 0:
         return expr
-    if isinstance(expr, (list, tuple, Tuple)):
+    if isinstance(expr, (list, tuple)):
         return [subs(i, new_elements) for i in expr]
 
     elif isinstance(expr, While):
@@ -388,7 +387,7 @@ def extract_subexpressions(expr):
 
             return PythonList(*args, sympify=False)
 
-        elif isinstance(expr, (Tuple, tuple, list)):
+        elif isinstance(expr, (tuple, list)):
             args = []
 
             for i in expr:
@@ -413,7 +412,7 @@ def extract_subexpressions(expr):
 #        if isinstance(stmt, Variable):
 #            if not isinstance(stmt.name, DottedName):
 #                variables[stmt.name] = stmt
-#        elif isinstance(stmt, (tuple, Tuple, list)):
+#        elif isinstance(stmt, (tuple, list)):
 #            for i in stmt:
 #                collect(i)
 #        if isinstance(stmt, For):
@@ -1600,7 +1599,7 @@ class Module(Basic):
         for i in classes:
             imports += i.imports
         imports = set(imports)  # for unicity
-        imports = Tuple(*imports, sympify=False)
+        imports = tuple(imports)
 
         self._name = name
         self._variables = variables
@@ -1731,7 +1730,7 @@ class Program(Basic):
             raise TypeError('imports must be an iterable')
 
         imports = set(imports)  # for unicity
-        imports = Tuple(*imports, sympify=False)
+        imports = tuple(imports)
 
         return Basic.__new__(
             cls,
@@ -2134,8 +2133,8 @@ class FunctionCall(PyccelAstNode):
         if str(current_function) == str(name):
             func.set_recursive()
 
-        if not isinstance(args, (tuple, list, Tuple)):
-            raise TypeError('> expecting an iterable')
+        if not isinstance(args, (tuple, list)):
+            raise TypeError('args must be a list or tuple')
 
         # add the missing argument in the case of optional arguments
         f_args = func.arguments
@@ -2387,7 +2386,7 @@ class FunctionDef(Basic):
 #        if not all(isinstance(a, Argument) for a in arguments):
 #            raise TypeError("All arguments must be of type Argument")
 
-        arguments = Tuple(*arguments, sympify=False)
+        arguments = tuple(arguments)
 
         # body
 
@@ -2396,12 +2395,12 @@ class FunctionDef(Basic):
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable or a CodeBlock')
 
-#        body = Tuple(*(i for i in body))
+#        body = tuple(i for i in body)
         # results
 
         if not iterable(results):
             raise TypeError('results must be an iterable')
-        results = Tuple(*results, sympify=False)
+        results = tuple(results)
 
         # if method
 
@@ -2435,8 +2434,8 @@ class FunctionDef(Basic):
             raise TypeError('Expecting a boolean for header')
 
         if arguments_inout:
-            if not isinstance(arguments_inout, (list, tuple, Tuple)):
-                raise TypeError('Expecting an iterable ')
+            if not isinstance(arguments_inout, (list, tuple)):
+                raise TypeError('Expecting a list or tuple ')
 
             if not all([isinstance(i, bool) for i in arguments_inout]):
                 raise ValueError('Expecting booleans')
@@ -3111,7 +3110,7 @@ class ClassDef(Basic):
 
         if not iterable(attributes):
             raise TypeError('attributes must be an iterable')
-        attributes = Tuple(*attributes, sympify=False)
+        attributes = tuple(attributes)
 
         # methods
 
@@ -3139,7 +3138,7 @@ class ClassDef(Basic):
             imports += list(i.imports)
 
         imports = set(imports)  # for unicity
-        imports = Tuple(*imports, sympify=False)
+        imports = tuple(imports)
 
         # ...
         # look if the class has the method __del__
@@ -3167,7 +3166,7 @@ class ClassDef(Basic):
          #  methods = list(methods) + [free]
          # TODO move this somewhere else
 
-        methods = Tuple(*methods, sympify=False)
+        methods = tuple(methods)
 
         # ...
 
@@ -3308,7 +3307,7 @@ class Import(Basic):
 
     Parameters
     ----------
-    target : str, list, tuple, Tuple
+    target : str, list, tuple
         targets to import
 
     Examples
@@ -3422,7 +3421,7 @@ class Load(Basic):
     module: str, DottedName
         name of the module to load.
 
-    funcs: str, list, tuple, Tuple
+    funcs: str, list, tuple
         a string representing the function to load, or a list of strings.
 
     as_lambda: bool
@@ -3443,27 +3442,25 @@ class Load(Basic):
         as_lambda=False,
         nargs=1,
         ):
-        if not isinstance(module, (str, DottedName, list, tuple,
-                          Tuple)):
-            raise TypeError('Expecting a string or DottedName, given {0}'.format(type(module)))
+        if not isinstance(module, (str, DottedName, list, tuple)):
+            raise TypeError('Expecting a string, DottedName, list or tuple, given {0}'.format(type(module)))
 
         # see syntax
 
         if isinstance(module, str):
             module = module.replace('__', """.""")
 
-        if isinstance(module, (list, tuple, Tuple)):
+        if isinstance(module, (list, tuple)):
             module = DottedName(*module)
 
         if funcs:
-            if not isinstance(funcs, (str, DottedName, list, tuple,
-                              Tuple)):
-                raise TypeError('Expecting a string or DottedName')
+            if not isinstance(funcs, (str, DottedName, list, tuple)):
+                raise TypeError('Expecting a string, DottedName, list or tuple')
 
             if isinstance(funcs, str):
                 funcs = [funcs]
-            elif not isinstance(funcs, (list, tuple, Tuple)):
-                raise TypeError('Expecting a string, list, tuple, Tuple')
+            elif not isinstance(funcs, (list, tuple)):
+                raise TypeError('Expecting a string, list, tuple')
 
         if not isinstance(as_lambda, (LiteralTrue, LiteralFalse, bool)):
             raise TypeError('Expecting a boolean, given {0}'.format(as_lambda))
@@ -3751,10 +3748,10 @@ class SumFunction(PyccelAstNode):
         iterator,
         stmts=None,
         ):
-        if not isinstance(iterator, (tuple, Tuple)):
+        if not isinstance(iterator, tuple):
             raise TypeError('iterator must be a tuple')
         if not len(iterator) == 3:
-            raise ValueError('iterator must be of lenght 3')
+            raise ValueError('iterator must be of length 3')
         return Basic.__new__(cls, body, iterator, stmts)
 
     @property
@@ -3826,7 +3823,7 @@ class Del(Basic):
         # TODO: check that the variable is allocatable
 
         if not iterable(expr):
-            expr = Tuple(expr, sympify=False)
+            expr = tuple([expr])
         return Basic.__new__(cls, expr)
 
     @property
@@ -4150,7 +4147,7 @@ class If(Basic):
             cond = ce[0]
             if PyccelAstNode.stage == 'semantic' and cond.dtype is not NativeBool():
                 cond = PythonBool(cond)
-            if isinstance(ce[1], (list, Tuple, tuple)):
+            if isinstance(ce[1], (list, tuple)):
                 body = CodeBlock(ce[1])
             elif isinstance(ce[1], CodeBlock):
                 body = ce[1]
@@ -4259,7 +4256,7 @@ def get_initial_value(expr, var):
     elif isinstance(expr, ConstructorCall):
 
         return get_initial_value(expr.func, var)
-    elif isinstance(expr, (list, tuple, Tuple)):
+    elif isinstance(expr, (list, tuple)):
 
         for i in expr:
             value = get_initial_value(i, var)

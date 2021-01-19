@@ -123,7 +123,7 @@ def lambdify(expr, args):
     return func
 
 def set_fst(expr, fst):
-    if isinstance(expr, (tuple,list,Tuple)):
+    if isinstance(expr, (tuple,list)):
         for i in expr:set_fst(i, fst)
     elif isinstance(expr, For):
         set_fst(expr.body, fst)

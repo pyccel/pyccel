@@ -163,6 +163,27 @@ def test_array_int32_1d_sub_augassign():
 
     assert np.array_equal( x1, x2 )
 
+def test_array_int_1d_initialization_1():
+
+    f1 = arrays.array_int_1d_initialization_1
+    f2 = epyccel( f1 )
+
+    assert np.array_equal(f1(), f2())
+
+def test_array_int_1d_initialization_2():
+
+    f1 = arrays.array_int_1d_initialization_2
+    f2 = epyccel( f1 )
+
+    assert np.array_equal(f1(), f2())
+
+def test_array_int_1d_initialization_3():
+
+    f1 = arrays.array_int_1d_initialization_3
+    f2 = epyccel( f1 )
+
+    assert np.array_equal(f1(), f2())
+
 #==============================================================================
 # TEST: 2D ARRAYS OF INT-32 WITH C ORDERING
 #==============================================================================

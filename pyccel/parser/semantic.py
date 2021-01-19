@@ -9,6 +9,7 @@
 from collections import OrderedDict
 from itertools import chain
 
+from sympy import Tuple
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
@@ -17,7 +18,6 @@ from sympy import Integer as sp_Integer
 from sympy import Indexed, IndexedBase
 from sympy import ceiling
 from sympy import oo  as INF
-from sympy import Tuple
 from sympy import Lambda
 from sympy.core import cache
 
@@ -813,25 +813,16 @@ class SemanticParser(BasicParser):
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal', blocker=self.blocking)
 
-    def _visit_list(self, expr, **settings):
-        ls = [self._visit(i, **settings) for i in expr]
-        return Tuple(*ls, sympify=False)
-
     def _visit_tuple(self, expr, **settings):
-        ls = tuple(self._visit(i, **settings) for i in expr)
-        return ls
+        return tuple(self._visit(i, **settings) for i in expr)
 
     def _visit_PythonTuple(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
         return PythonTuple(*ls)
 
-    def _visit_Tuple(self, expr, **settings):
-        ls = [self._visit(i, **settings) for i in expr]
-        return Tuple(*ls, sympify=False)
-
     def _visit_PythonList(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
-        expr = PythonList(*ls, sympify=False)
+        expr = PythonList(*ls)
 
         if not expr.is_homogeneous:
             errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
@@ -995,7 +986,7 @@ class SemanticParser(BasicParser):
                         ls.append(args[j])
                 new_expr_args.append(ls)
 
-            return Tuple(*[self._visit(Indexed(name,*a)) for a in new_expr_args])
+            return tuple(self._visit(Indexed(name,*a)) for a in new_expr_args)
         else:
             args = new_args
             len_args = len(args)
@@ -1191,7 +1182,7 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelAdd(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, PythonList)):
+        if isinstance(args[0], (TupleVariable, PythonTuple, PythonList)):
             get_vars = lambda a: a.get_vars() if isinstance(a, TupleVariable) else a.args
             tuple_args = [ai for a in args for ai in get_vars(a)]
             expr_new = PythonTuple(*tuple_args)
@@ -1201,9 +1192,9 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelMul(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, PythonList)):
+        if isinstance(args[0], (TupleVariable, PythonTuple, PythonList)):
             expr_new = self._visit(Dlist(args[0], args[1]))
-        elif isinstance(args[1], (TupleVariable, PythonTuple, Tuple, PythonList)):
+        elif isinstance(args[1], (TupleVariable, PythonTuple, PythonList)):
             expr_new = self._visit(Dlist(args[1], args[0]))
         else:
             expr_new = self._visit_PyccelOperator(expr, **settings)
@@ -1513,6 +1504,12 @@ class SemanticParser(BasicParser):
 
                 elif not is_augassign and var.is_ndarray and var.is_target:
                     errors.report(ARRAY_ALREADY_IN_USE,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset),
+                                severity='error', symbol=var.name)
+
+                elif var.is_ndarray and var.is_pointer and isinstance(rhs, NumpyNewArray):
+                    errors.report(INVALID_POINTER_REASSIGN,
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
                                 severity='error', symbol=var.name)
@@ -3058,7 +3055,8 @@ class SemanticParser(BasicParser):
 
         val = expr.args[0]
         length = expr.args[1]
-        if isinstance(val, (TupleVariable, PythonTuple)):
+        if isinstance(val, (TupleVariable, PythonTuple)) and \
+                not isinstance(val, PythonList):
             if isinstance(length, LiteralInteger):
                 length = length.p
             if isinstance(val, TupleVariable):
