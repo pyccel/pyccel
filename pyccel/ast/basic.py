@@ -23,10 +23,10 @@ class Basic(sp_Basic):
         hashable_args  = [a if not isinstance(a, list) else tuple(a) for a in args]
         return sp_Basic.__new__(cls, *hashable_args)
 
-    def __init__(self, children):
+    def __init__(self):
         self._parent = None
-        self._children = children
-        for c in children.values():
+        for c_name in self._children:
+            c = getattr(self, c_name)
             c.parent = self
 
     def has_parent_of_type(self, search_type):
@@ -51,7 +51,8 @@ class Basic(sp_Basic):
         excluded_nodes : object
                       Types for which substitute should not be called
         """
-        for n,v in self._children:
+        for n in self._children:
+            v = getattr(self, n)
             if v is original:
                 setattr(self,n, replacement)
             elif not v.is_atomic and not isinstance(v, excluded_nodes):
