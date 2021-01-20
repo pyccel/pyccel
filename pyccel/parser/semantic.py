@@ -1919,7 +1919,7 @@ class SemanticParser(BasicParser):
             func  = FunctionCall(func, args)
             body  = [Assign(var, func)]
             body[0].set_fst(fst)
-            body  = For(index, range_, body, strict=False)
+            body  = For(index, range_, body)
             body  = self._visit_For(body, **settings)
             body  = [alloc , body]
             return CodeBlock(body)
@@ -2449,7 +2449,7 @@ class SemanticParser(BasicParser):
 #            args[index_arg] = vec_arg[index]
 #            body_vec        = Assign(args[index_arg], Function(name)(*args))
 #            body_vec.set_fst(expr.fst)
-#            body_vec   = [For(index, range_, [body_vec], strict=False)]
+#            body_vec   = [For(index, range_, [body_vec])]
 #            header_vec = header.vectorize(index_arg)
 #            vec_func   = expr.vectorize(body_vec, header_vec)
 

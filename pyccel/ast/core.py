@@ -1716,11 +1716,7 @@ class For(Basic):
         iter_obj,
         body,
         local_vars = (),
-        strict=True,
         ):
-        if strict:
-            target = sympify(target, locals=local_sympify)
-
         if PyccelAstNode.stage == "semantic":
             cond_iter = iterable(iter_obj)
             cond_iter = cond_iter or isinstance(iter_obj, (PythonRange, Product,
@@ -1745,7 +1741,6 @@ class For(Basic):
         iter_obj,
         body,
         local_vars = [],
-        strict=True,
         ):
         self._target = self._args[0]
         self._iterable = self._args[1]
@@ -1812,12 +1807,11 @@ class ForIterator(For):
         target,
         iterable,
         body,
-        strict=True,
         ):
 
         if isinstance(iterable, Symbol):
             iterable = PythonRange(PythonLen(iterable))
-        return For.__new__(cls, target, iterable, body, strict)
+        return For.__new__(cls, target, iterable, body)
 
     # TODO uncomment later when we intriduce iterators
     # @property
