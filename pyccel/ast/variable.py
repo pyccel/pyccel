@@ -618,8 +618,6 @@ class TupleVariable(Variable):
             else:
                 sub_idx = []
 
-            if isinstance(idx, LiteralInteger):
-                idx = idx.p
             var = self.get_var(idx)
 
             if len(sub_idx) > 0:
