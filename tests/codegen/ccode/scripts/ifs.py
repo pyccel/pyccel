@@ -7,7 +7,6 @@ z = 3
 if 1<0:
     x=4
 
-z = 3
 if z < 4:
     pass
 
