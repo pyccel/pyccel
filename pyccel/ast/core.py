@@ -851,17 +851,20 @@ class CodeBlock(Basic):
         return Basic.__new__(cls, ls)
 
     def __init__(self, body):
-        if len(self._args)>0 and isinstance(self._args[-1], (Assign, AugAssign)):
-            self.set_fst(self._args[-1].fst)
+        self._body = self._args[0]
+        if len(self._body)>0 and isinstance(self._body[-1], (Assign, AugAssign)):
+            self.set_fst(self._body[-1].fst)
 
     @property
     def body(self):
-        return self._args[0]
+        return self._body
 
     @property
     def lhs(self):
         return self.body[-1].lhs
 
+    def insert2body(self, obj):
+        self._body = tuple(self.body + (obj,))
 
 class AliasAssign(Basic):
 
@@ -1728,11 +1731,10 @@ class For(Basic):
             if not cond_iter:
                 raise TypeError('iter_obj must be an iterable')
 
-            if iterable(body):
-                body = CodeBlock((sympify(i, locals=local_sympify) for i in
-                             body))
-            elif not isinstance(body,CodeBlock):
-                raise TypeError('body must be an iterable or a Codeblock')
+        if iterable(body):
+            body = CodeBlock(body)
+        elif not isinstance(body,CodeBlock):
+            raise TypeError('body must be an iterable or a Codeblock')
 
         return Basic.__new__(cls, target, iter_obj, body, local_vars)
 
@@ -1746,10 +1748,7 @@ class For(Basic):
         ):
         self._target = self._args[0]
         self._iterable = self._args[1]
-        if strict:
-            self._body = self._args[2]
-        else:
-            self._body = body
+        self._body = self._args[2]
         self._local_vars = self._args[3]
 
     @property
@@ -1769,7 +1768,7 @@ class For(Basic):
         return self._local_vars
 
     def insert2body(self, stmt):
-        self.body.append(stmt)
+        self.body.insert2body(stmt)
 
 
 

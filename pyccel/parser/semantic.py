@@ -1987,12 +1987,11 @@ class SemanticParser(BasicParser):
 
     def _visit_For(self, expr, **settings):
 
-
         self.create_new_loop_scope()
 
         # treatment of the index/indices
         iterable = self._visit(expr.iterable, **settings)
-        body     = list(expr.body)
+        body     = list(expr.body.body)
         iterator = expr.target
 
         if isinstance(iterable, Variable):
@@ -2188,7 +2187,7 @@ class SemanticParser(BasicParser):
             if (step != 1):
                 size = ceiling(size)
 
-            body = body.body[0]
+            body = body.body.body[0]
             dims.append((size, step, start, stop))
 
         # we now calculate the size of the array which will be allocated
