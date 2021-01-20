@@ -11,6 +11,7 @@ import operator
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
 from pyccel.ast.core      import Declare
+from pyccel.ast.core      import CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
@@ -1031,6 +1032,11 @@ class CCodePrinter(CodePrinter):
 
     def _print_Return(self, expr):
         code = ''
+        if isinstance(expr.stmt, CodeBlock):
+            for b in expr.stmt.body:
+                if isinstance(b, Assign):
+                    return 'return {0};'.format(self._print(b.rhs))
+
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
         if expr.stmt:
             code += self._print(expr.stmt)+'\n'
