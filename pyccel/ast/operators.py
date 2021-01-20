@@ -92,12 +92,6 @@ def broadcast(shape_1, shape_2):
         elif not sy_e2.is_constant() and not sy_e1.is_constant()\
                 and not (sy_e1 - sy_e2).is_constant():
             new_shape.append(e1)
-        elif isinstance(e1, PyccelArraySize) and isinstance(e2, PyccelArraySize):
-            new_shape.append(e1)
-        elif isinstance(e1, PyccelArraySize):
-            new_shape.append(e2)
-        elif isinstance(e2, PyccelArraySize):
-            new_shape.append(e1)
         else:
             msg = 'operands could not be broadcast together with shapes {} {}'
             msg = msg.format(shape_1, shape_2)
