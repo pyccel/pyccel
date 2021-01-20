@@ -55,6 +55,24 @@ def array_int32_1d_add_augassign( x, y ):
 def array_int32_1d_sub_augassign( x, y ):
     x -= y
 
+def array_int_1d_initialization_1():
+    import numpy as np
+    a = np.array([1, 2, 4, 8, 16])
+    b = np.array(a)
+    return np.sum(b), b[0], b[-1]
+
+def array_int_1d_initialization_2():
+    import numpy as np
+    a = [1, 2, 4, 8, 16]
+    b = np.array(a)
+    return np.sum(b), b[0], b[-1]
+
+def array_int_1d_initialization_3():
+    import numpy as np
+    a = (1, 2, 4, 8, 16)
+    b = np.array(a)
+    return np.sum(b), b[0], b[-1]
+
 #==============================================================================
 # 2D ARRAYS OF INT-32 WITH C ORDERING
 #==============================================================================
