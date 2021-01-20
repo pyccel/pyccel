@@ -68,3 +68,6 @@ helloworld()
 print(z1)
 print(z2)
 
+def pass_fun():
+    pass
+
