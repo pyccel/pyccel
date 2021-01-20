@@ -343,7 +343,7 @@ class CCodePrinter(CodePrinter):
                 #'{classes}\n\n'
                 '{funcs}\n\n'
                 #'{interfaces}\n\n'
-                '#endif // {name}_H').format(
+                '#endif // {name}_H\n').format(
                         name    = name.upper(),
                         imports = imports,
                         funcs   = funcs)
@@ -355,7 +355,7 @@ class CCodePrinter(CodePrinter):
         imports = [Import(expr.name), *map(Import, self._additional_imports)]
         imports = '\n'.join(self._print(i) for i in imports)
         return ('{imports}\n\n'
-                '{body}').format(
+                '{body}\n').format(
                         imports = imports,
                         body    = body)
 
