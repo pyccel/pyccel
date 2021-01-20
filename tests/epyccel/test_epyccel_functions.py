@@ -367,6 +367,14 @@ def test_decorator_f22(language):
     f = epyccel(f22, language=language)
     assert f(complex(1, 2.2)) == f22(complex(1, 2.2))
 
+def test_pass(language):
+    @types('int')
+    def f22(a):
+        pass
+        return a
+    f = epyccel(f22, language=language)
+    assert f(3) == f22(3)
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
