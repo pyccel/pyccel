@@ -1586,13 +1586,6 @@ def arrs_different_shapes_0():
     b = a[2:4]+a[4:i]
     return np.shape(b)[0]
 
-def arrs_uncertain_shape_0():
-    import numpy as np
-    i = 4
-    a = np.zeros(10)
-    b = a[2:i]+a[4:i + 1]
-    return np.shape(b)[0]
-
 def arrs_uncertain_shape_1():
     import numpy as np
     i = 4
