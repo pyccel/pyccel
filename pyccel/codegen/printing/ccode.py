@@ -1133,7 +1133,13 @@ class CCodePrinter(CodePrinter):
             else :
                 arg = ', '.join(self._print(i) for i in arg)
                 dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-                cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
+                if expr.lhs.is_stack_array:
+                    print('stack')
+                    cpy_data = '{} = (t_ndarray){{.{}={},\n .shape={},\n .strides={},\n .nd={},\n .type={},\n .is_view={}}};\n'.format(lhs, dtype, dummy_array_name, '(int32_t[]){10}', '(int32_t[15]){0}', len(expr.lhs.shape), dtype, 'false')
+                    cpy_data += 'stack_array_init(&{});\n'.format(lhs)
+                    self._additional_imports.add("ndarrays")
+                else:
+                    cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
                 return  '%s%s\n' % (dummy_array, cpy_data)
 
         if isinstance(rhs, (NumpyFull)):

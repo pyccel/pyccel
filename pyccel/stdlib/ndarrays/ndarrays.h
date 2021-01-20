@@ -82,6 +82,7 @@ typedef struct  s_ndarray
 
 /* allocations */
 t_ndarray   array_create(int32_t nd, int32_t *shape, enum e_types type);
+void        stack_array_init(t_ndarray *arr);
 void        _array_fill_int8(int8_t c, t_ndarray arr);
 void        _array_fill_int16(int16_t c, t_ndarray arr);
 void        _array_fill_int32(int32_t c, t_ndarray arr);
