@@ -1721,6 +1721,7 @@ class For(Basic):
         if strict:
             target = sympify(target, locals=local_sympify)
 
+        if PyccelAstNode.stage == "semantic":
             cond_iter = iterable(iter_obj)
             cond_iter = cond_iter or isinstance(iter_obj, (PythonRange, Product,
                     PythonEnumerate, PythonZip, PythonMap))
