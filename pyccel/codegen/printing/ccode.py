@@ -1040,6 +1040,9 @@ class CCodePrinter(CodePrinter):
             code += 'return 0;'
         return code
 
+    def _print_Pass(self, expr):
+        return ''
+
     def _print_Nil(self, expr):
         return 'NULL'
 
