@@ -197,3 +197,10 @@ def none_is_none():
 
 def none_isnot_none():
     return None is not None
+
+@types('int')
+def pass_if(x):
+    if x > 0:
+      pass
+    x = x + 1
+    return x
