@@ -216,8 +216,8 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     int32_t j = arr.nd - view.nd;
     if (j)
     {
-        int32_t *tmp_strides = malloc(sizeof(int32_t) * view.nd);
-        int32_t *tmp_shape = malloc(sizeof(int32_t) * view.nd);
+        int64_t *tmp_strides = malloc(sizeof(int32_t) * view.nd);
+        int64_t *tmp_shape = malloc(sizeof(int32_t) * view.nd);
         for (int32_t i = 0; i < view.nd; i++)
         {
             tmp_strides[i] = view.strides[j];
