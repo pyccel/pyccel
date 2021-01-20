@@ -422,6 +422,33 @@ class OmpCancelConstruct(BasicStmt):
                 raise TypeError('Wrong clause for OmpCancelConstruct')
         return OMP_Cancel_Construct(txt)
 
+class OmpTargetConstruct(BasicStmt):
+    """Class representing a Target stmt."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name = kwargs.pop('name')
+        super(OmpTargetConstruct, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpTargetConstruct: expr")
+
+        _valid_clauses = (OmpPrivate,\
+                          OmpLastPrivate, \
+                          OmpinReduction, \
+                          OmpDepend, \
+                          )
+
+        txt = self.name
+        for clause in self.clauses:
+            if isinstance(clause, _valid_clauses):
+                txt = '{0} {1}'.format(txt, clause.expr)
+            else:
+                raise TypeError('Wrong clause for OmpCancelConstruct')
+        return OMP_Cancel_Construct(txt)
+
 class OmpAtomicConstruct(BasicStmt):
     """Class representing an Atomic stmt ."""
     def __init__(self, **kwargs):

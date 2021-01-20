@@ -29,6 +29,7 @@ OmpConstructOrDirective:
   | OmpTaskConstruct
   | OmpFlushConstruct
   | OmpCancelConstruct
+  | OmpTargetConstruct
 ;
 ////////////////////////////////////////////////////
 
@@ -45,6 +46,7 @@ OmpSimdConstruct:       name='simd'     clauses*=OmpSimdClause;
 OmpAtomicConstruct:     name='atomic'   clauses*=AllOmpClauses; // Not all clause were added (cant test them).
 OmpTaskConstruct:       'task'          clauses*=AllOmpClauses;
 OmpCancelConstruct:     name='cancel'   clauses*=AllOmpClauses;
+OmpTargetConstruct:     name='target'   clauses*=AllOmpClauses;
 OmpBarrierConstruct:    name='barrier';
 OmpMasterConstruct:     name='master';
 OmpTaskWaitConstruct:   name='taskwait';
@@ -76,6 +78,8 @@ AllOmpClauses:
   | OmpDepend // TODO : depend-modifier, dependence-type: (source, sink)
   | FlushList
   | OmpCancelType
+  | OmpLastPrivate
+  | OmpMap
 ;
 
 OmpParallelClause:
@@ -146,6 +150,7 @@ OmpNumTasks: 'num_tasks' '(' tasks=TaskIndex ')';
 OmpGrainSize: 'grainsize' '(' tasks=TaskIndex ')';
 OmpDefault: 'default' '(' status=OmpDefaultStatus ')';
 OmpProcBind: 'proc_bind' '(' status=OmpProcBindStatus ')';
+OmpMap: 'map' '(' args+=ID[','] ')';
 OmpPrivate: 'private' '(' args+=ID[','] ')';
 OmpShared: 'shared' '(' args+=ID[','] ')';
 OmpFirstPrivate: 'firstprivate' '(' args+=ID[','] ')';
