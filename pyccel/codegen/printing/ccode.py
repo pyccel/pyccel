@@ -343,7 +343,7 @@ class CCodePrinter(CodePrinter):
                 #'{classes}\n\n'
                 '{funcs}\n\n'
                 #'{interfaces}\n\n'
-                '#endif // {name}_H').format(
+                '#endif // {name}_H\n').format(
                         name    = name.upper(),
                         imports = imports,
                         funcs   = funcs)
@@ -355,7 +355,7 @@ class CCodePrinter(CodePrinter):
         imports = [Import(expr.name), *map(Import, self._additional_imports)]
         imports = '\n'.join(self._print(i) for i in imports)
         return ('{imports}\n\n'
-                '{body}').format(
+                '{body}\n').format(
                         imports = imports,
                         body    = body)
 
@@ -593,6 +593,7 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
             if expr.is_ndarray:
+                self._additional_imports.add('ndarrays')
                 return 't_ndarray '
             errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
 
@@ -702,6 +703,10 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError(expr)
         return "%s.%s[get_index(%s, %s)]" % (base_name, dtype, base_name, ", ".join(inds))
 
+    def _print_DottedVariable(self, expr):
+        """convert dotted Variable to their C equivalent"""
+        return '{}.{}'.format(self._print(expr.lhs), self._print(expr.name))
+
     @staticmethod
     def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
         """ Create new slice with informations collected from old slice and decorators
@@ -770,7 +775,7 @@ class CCodePrinter(CodePrinter):
         shape = ", ".join(a for a in shape)
         dtype = self._print(expr.variable.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
-        shape_dtype = self.find_in_dtype_registry('int', 4)
+        shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         alloc_code = "{} = array_create({}, {}, {});".format(expr.variable, len(expr.shape), shape_Assign, dtype)
         return '{}\n{}'.format(free_code, alloc_code)
