@@ -201,6 +201,6 @@ def none_isnot_none():
 @types('int')
 def pass_if(x):
     if x > 0:
-      pass
+        pass
     x = x + 1
     return x
