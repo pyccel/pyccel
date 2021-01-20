@@ -6,3 +6,4 @@ from pyccel.decorators import types
 def f(k):
     a = np.ones(k)
     c = a[1:] + a[2:]
+    return c[0]
