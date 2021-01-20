@@ -202,6 +202,20 @@ math_function_to_c = {
     'MathLcm'       : 'pyc_lcm',
 }
 
+c_library_headers = (
+    "complex",
+    "ctype",
+    "float",
+    "math",
+    "stdarg",
+    "stdbool",
+    "stddef",
+    "stdint",
+    "stdio",
+    "stdlib",
+    "tgmath",
+)
+
 dtype_registry = {('real',8)    : 'double',
                   ('real',4)    : 'float',
                   ('complex',8) : 'double complex',
@@ -329,7 +343,7 @@ class CCodePrinter(CodePrinter):
                 #'{classes}\n\n'
                 '{funcs}\n\n'
                 #'{interfaces}\n\n'
-                '#endif // {name}_H').format(
+                '#endif // {name}_H\n').format(
                         name    = name.upper(),
                         imports = imports,
                         funcs   = funcs)
@@ -341,7 +355,7 @@ class CCodePrinter(CodePrinter):
         imports = [Import(expr.name), *map(Import, self._additional_imports)]
         imports = '\n'.join(self._print(i) for i in imports)
         return ('{imports}\n\n'
-                '{body}').format(
+                '{body}\n').format(
                         imports = imports,
                         body    = body)
 
@@ -477,8 +491,10 @@ class CCodePrinter(CodePrinter):
 
         if source is None:
             return ''
-        else:
+        if str(expr.source) in c_library_headers:
             return '#include <{0}.h>'.format(source)
+        else:
+            return '#include "{0}.h"'.format(source)
 
     def _print_LiteralString(self, expr):
         format_str = format(expr.arg)
@@ -577,6 +593,7 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
             if expr.is_ndarray:
+                self._additional_imports.add('ndarrays')
                 return 't_ndarray '
             errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
 
@@ -677,12 +694,18 @@ class CCodePrinter(CodePrinter):
                     if isinstance(ind, Slice):
                         inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArraySize(base, i),
                             allow_negative_indexes)
+                    else:
+                        inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1)), LiteralInteger(1))
                 inds = [self._print(i) for i in inds]
-                return "array_slicing(%s, %s)" % (base_name, ", ".join(inds))
+                return "array_slicing(%s, %s, %s)" % (base_name, expr.rank, ", ".join(inds))
             inds = [self._print(i) for i in inds]
         else:
             raise NotImplementedError(expr)
         return "%s.%s[get_index(%s, %s)]" % (base_name, dtype, base_name, ", ".join(inds))
+
+    def _print_DottedVariable(self, expr):
+        """convert dotted Variable to their C equivalent"""
+        return '{}.{}'.format(self._print(expr.lhs), self._print(expr.name))
 
     @staticmethod
     def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
@@ -752,7 +775,7 @@ class CCodePrinter(CodePrinter):
         shape = ", ".join(a for a in shape)
         dtype = self._print(expr.variable.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
-        shape_dtype = self.find_in_dtype_registry('int', 4)
+        shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         alloc_code = "{} = array_create({}, {}, {});".format(expr.variable, len(expr.shape), shape_Assign, dtype)
         return '{}\n{}'.format(free_code, alloc_code)
@@ -1102,15 +1125,21 @@ class CCodePrinter(CodePrinter):
             if rhs.rank == 0:
                 raise NotImplementedError(expr.lhs + "=" + expr.rhs)
             dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
-            dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+            declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+            dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
+
             arg = rhs.arg
             if rhs.rank > 1:
                 arg = functools.reduce(operator.concat, arg)
-            arg = ', '.join(self._print(i) for i in arg)
-            dummy_array = "%s %s[] = {%s};\n" % (dtype, dummy_array_name, arg)
-            dtype = self.find_in_ndarray_type_registry(format(rhs.dtype), rhs.precision)
-            cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
-            return  '%s%s\n' % (dummy_array, cpy_data)
+            if isinstance(arg, Variable):
+                arg = self._print(arg)
+                cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);".format(lhs, arg, dtype)
+                return '%s\n' % (cpy_data)
+            else :
+                arg = ', '.join(self._print(i) for i in arg)
+                dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
+                cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
+                return  '%s%s\n' % (dummy_array, cpy_data)
 
         if isinstance(rhs, (NumpyFull)):
             code_init = ''
