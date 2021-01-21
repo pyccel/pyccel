@@ -1139,8 +1139,14 @@ class CCodePrinter(CodePrinter):
                 arg = ', '.join(self._print(i) for i in arg)
                 dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
                 if expr.lhs.is_stack_array:
-                    print('stack')
-                    cpy_data = '{} = (t_ndarray){{.{}={},\n .shape={},\n .strides={},\n .nd={},\n .type={},\n .is_view={}}};\n'.format(lhs, dtype, dummy_array_name, '(int32_t[]){10}', '(int32_t[15]){0}', len(expr.lhs.shape), dtype, 'false')
+                    shape = expr.lhs.shape
+                    shape = [self._print(i) for i in shape]
+                    shape = ", ".join(a for a in shape)
+                    shape_dtype = self.find_in_dtype_registry('int', 4)
+
+                    shape_init = "({}[]){{{}}}".format(shape_dtype, shape)
+                    strides_init = "({}[{}]){{0}}".format(shape_dtype, len(expr.lhs.shape))
+                    cpy_data = '{0} = (t_ndarray){{.{1}={2},\n .shape={3},\n .strides={4},\n .nd={5},\n .type={6},\n .is_view={7}}};\n'.format(lhs, dtype, dummy_array_name, shape_init, strides_init, len(expr.lhs.shape), dtype, 'false')
                     cpy_data += 'stack_array_init(&{});\n'.format(lhs)
                     self._additional_imports.add("ndarrays")
                 else:
