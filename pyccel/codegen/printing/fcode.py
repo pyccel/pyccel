@@ -1660,7 +1660,7 @@ class FCodePrinter(CodePrinter):
         return '\n'.join(a for a in parts if a)
 
     def _print_Pass(self, expr):
-        return ''
+        return '! pass'
 
     def _print_Nil(self, expr):
         return ''
