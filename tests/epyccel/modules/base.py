@@ -204,3 +204,12 @@ def pass_if(x):
         pass
     x = x + 1
     return x
+
+@types('real')
+def pass2_if(b):
+    c = 1
+    if b:
+        pass
+    else:
+        c = 2
+    return c
