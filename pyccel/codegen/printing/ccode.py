@@ -1044,7 +1044,7 @@ class CCodePrinter(CodePrinter):
         return code
 
     def _print_Pass(self, expr):
-        return ''
+        return '// pass'
 
     def _print_Nil(self, expr):
         return 'NULL'
