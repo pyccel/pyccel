@@ -11,7 +11,6 @@ import operator
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
 from pyccel.ast.core      import Declare
-from pyccel.ast.core      import CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
@@ -28,7 +27,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, Nativ
 
 from pyccel.ast.internals import Slice
 
-from pyccel.ast.literals  import LiteralTrue, LiteralFalse,LiteralImaginaryUnit, LiteralFloat, LiteralComplex
+from pyccel.ast.literals  import LiteralTrue,LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil
 
