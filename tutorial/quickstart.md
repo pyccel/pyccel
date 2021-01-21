@@ -257,79 +257,123 @@ int64_t binomial_coefficient(int64_t n, int64_t k);
 #endif // MOD_Hy
 ```
 
-#### Example 3: Numpy arrays
-   
-   file_name.py:
-   
-   ```python
-   from numpy import array
-   from numpy import empty
-   from numpy import ones
+#### Example 3: matrix-matrix multiplication with OpenMP
 
-   x = array([1, 2, 3])
-   y = empty((10, 10))
+Let's now see a more complicated example, where the Python module `mod.py` contains a function that performs the matrix-matrix multiplication between two arrays `a` and `b`, and writes the result into the array `c`:
 
-   a = ones(3)
-   b = ones((4,3))
-   ```
+-   The three function's arguments are 2D Numpy arrays of double-precision floating point numbers
+-   Matrices `a` and `c` use C ordering (row-major), matrix `b` uses Fortran ordering (column-major)
+-   Since matrix `c` is modified by the function, it has `intent(inout)` in Fortran
+-   Comments starting with `#$ omp` are translated to OpenMP pragmas
 
-  file_name.c:
-   
-  ```c
-  #include <stdint.h>
-  #include <stdlib.h>
-  #include <ndarrays.h>
-  int main()
-  {
-   t_ndarray x;
-   t_ndarray y;
-   t_ndarray a;
-   t_ndarray b;
+```python
+def matmul(a: 'float[:,:](order=C)',
+           b: 'float[:,:](order=F)',
+           c: 'float[:,:](order=C)'):
 
-   x = array_create(1, (int32_t[]){3}, nd_int64);
-   int64_t array_dummy_0001[] = {1, 2, 3};
-   memcpy(x.nd_int64, array_dummy_0001, x.buffer_size);
+    m, p = a.shape
+    q, n = b.shape
+    r, s = c.shape
 
-   y = array_create(2, (int32_t[]){10, 10}, nd_double);
+    if p != q or m != r or n != s:
+        return -1
 
-   a = array_create(1, (int32_t[]){3}, nd_double);
-   array_fill((double)1.0, a);
+#$ omp parallel
+#$ omp for schedule(runtime)
+    for i in range(m):
+        for j in range(n):
+            c[i, j] = 0.0
+            for k in range(p):
+                c[i, j] += a[i, k] * b[k, j]
+#$ omp end parallel
 
-   b = array_create(2, (int32_t[]){4, 3}, nd_double);
-   array_fill((double)1.0, b);
+    return 0
+```
+We now translate this file to Fortran, and compile it to a Python C extension module, using the command
+```bash
+$ pyccel mod.py --language fortran
+```
+The flag `--language fortran` may be omitted, as Pyccel uses Fortran as the default backend language.
+These are the contents of the current directory:
+```bash
+$ tree .
+.
+├── mod.cpython-36m-x86_64-linux-gnu.so
+├── mod.py
+└── __pyccel__
+    ├── bind_c_mod.f90
+    ├── bind_c_mod.o
+    ├── build
+    │   ├── lib.linux-x86_64-3.6
+    │   └── temp.linux-x86_64-3.6
+    │       └── mod_wrapper.o
+    ├── mod.f90
+    ├── mod.mod
+    ├── mod.o
+    ├── mod_wrapper.c
+    └── setup_mod.py
 
-   free_array(x);
-   free_array(y);
-   free_array(a);
-   free_array(b);
-   return 0;
-  }
-  ```
+4 directories, 10 files
+```
 
-  file_name.f90:
+And this is the Fortran file `mod.f90`:
+```fortran
+module mod
 
-  ```Fortran
-  program prog_test
+use, intrinsic :: ISO_C_BINDING
 
-  use ISO_C_BINDING
+implicit none
+
+contains
+
+!........................................
+function matmul(a, b, c) result(Out_0001)
 
   implicit none
 
-  integer(C_INT64_T), allocatable :: x(:)
-  real(C_DOUBLE), allocatable :: y(:,:)
-  real(C_DOUBLE), allocatable :: a(:)
-  real(C_DOUBLE), allocatable :: b(:,:)
+  integer(C_INT64_T) :: Out_0001
+  real(C_DOUBLE), intent(in) :: a(0:,0:)
+  real(C_DOUBLE), intent(in) :: b(0:,0:)
+  real(C_DOUBLE), intent(inout) :: c(0:,0:)
+  integer(C_INT64_T) :: m
+  integer(C_INT64_T) :: p
+  integer(C_INT64_T) :: q
+  integer(C_INT64_T) :: n
+  integer(C_INT64_T) :: r
+  integer(C_INT64_T) :: s
+  integer(C_INT64_T) :: i
+  integer(C_INT64_T) :: j
+  integer(C_INT64_T) :: k
 
-  allocate(x(0:3_C_INT64_T - 1_C_INT64_T))
-  x = [1_C_INT64_T, 2_C_INT64_T, 3_C_INT64_T]
-  allocate(y(0:10_C_INT64_T - 1_C_INT64_T, 0:10_C_INT64_T - 1_C_INT64_T))
-  allocate(a(0:3_C_INT64_T - 1_C_INT64_T))
-  a = 1.0_C_DOUBLE
-  allocate(b(0:3_C_INT64_T - 1_C_INT64_T, 0:4_C_INT64_T - 1_C_INT64_T))
-  b = 1.0_C_DOUBLE
+  m = size(a, 2, C_INT64_T)
+  p = size(a, 1, C_INT64_T)
+  q = size(b, 1, C_INT64_T)
+  n = size(b, 2, C_INT64_T)
+  r = size(c, 2, C_INT64_T)
+  s = size(c, 1, C_INT64_T)
+  if (p /= q .or. m /= r .or. n /= s) then
+    Out_0001 = -1_C_INT64_T
+    return
+  end if
+  !$omp parallel
+  !$omp do schedule(runtime)
+  do i = 0_C_INT64_T, m-1_C_INT64_T, 1_C_INT64_T
+    do j = 0_C_INT64_T, n-1_C_INT64_T, 1_C_INT64_T
+      c(j, i) = 0.0_C_DOUBLE
+      do k = 0_C_INT64_T, p-1_C_INT64_T, 1_C_INT64_T
+        c(j, i) = c(j, i) + a(k, i) * b(k, j)
+      end do
+    end do
+  end do
+  !$omp end parallel
+  Out_0001 = 0_C_INT64_T
+  return
 
-  end program prog_test
-  ```
+end function matmul
+!........................................
+
+end module mod
+```
 
 ### Interactive Usage with `epyccel`
 
