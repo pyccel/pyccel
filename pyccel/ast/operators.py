@@ -59,13 +59,15 @@ __all__ = (
 def broadcast(shape_1, shape_2):
     """ This function broadcast two shapes using numpy broadcasting rules """
 
+    from pyccel.ast.sympy_helper import pyccel_to_sympy
+
     a = len(shape_1)
     b = len(shape_2)
     if a>b:
-        new_shape_2 = (1,)*(a-b) + tuple(shape_2)
+        new_shape_2 = (LiteralInteger(1),)*(a-b) + tuple(shape_2)
         new_shape_1 = shape_1
     elif b>a:
-        new_shape_1 = (1,)*(b-a) + tuple(shape_1)
+        new_shape_1 = (LiteralInteger(1),)*(b-a) + tuple(shape_1)
         new_shape_2 = shape_2
     else:
         new_shape_2 = shape_2
@@ -73,17 +75,22 @@ def broadcast(shape_1, shape_2):
 
     new_shape = []
     for e1,e2 in zip(new_shape_1, new_shape_2):
-        if e1 == e2:
+        used_names = set()
+        symbol_map = {}
+        sy_e1 = pyccel_to_sympy(e1, symbol_map, used_names)
+        sy_e2 = pyccel_to_sympy(e2, symbol_map, used_names)
+        if sy_e1 == sy_e2:
             new_shape.append(e1)
-        elif e1 == 1:
+        elif sy_e1 == 1:
             new_shape.append(e2)
-        elif e2 == 1:
+        elif sy_e2 == 1:
             new_shape.append(e1)
-        elif isinstance(e1, PyccelArraySize) and isinstance(e2, PyccelArraySize):
+        elif sy_e1.is_constant() and not sy_e2.is_constant():
             new_shape.append(e1)
-        elif isinstance(e1, PyccelArraySize):
+        elif sy_e2.is_constant() and not sy_e1.is_constant():
             new_shape.append(e2)
-        elif isinstance(e2, PyccelArraySize):
+        elif not sy_e2.is_constant() and not sy_e1.is_constant()\
+                and not (sy_e1 - sy_e2).is_constant():
             new_shape.append(e1)
         else:
             msg = 'operands could not be broadcast together with shapes {} {}'

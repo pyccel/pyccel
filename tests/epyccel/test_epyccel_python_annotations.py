@@ -131,8 +131,8 @@ def test_array_real_1d_complex_3d_expr():
 
     assert np.array_equal( x1, x2 )
 
-def test_fib():
+def test_fib(language):
     f1 = python_annotations.fib
-    f2 = epyccel(f1)
+    f2 = epyccel(f1, language=language)
     assert f1(10) == f2(10)
 
