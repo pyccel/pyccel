@@ -27,7 +27,7 @@ class Basic(sp_Basic):
         self._parent = None
         for c_name in self._children:
             c = getattr(self, c_name)
-            c.parent = self
+            c.set_parent( self ) # TODO: write set_parent. Handled differently for e.g. Variable which exists in multiple places
 
     def has_parent_of_type(self, search_type):
         if isinstance(self._parent, search_type):
