@@ -28,7 +28,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, Nativ
 
 from pyccel.ast.internals import Slice
 
-from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
+from pyccel.ast.literals  import LiteralTrue, LiteralFalse,LiteralImaginaryUnit, LiteralFloat, LiteralComplex
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil
 
@@ -1031,20 +1031,16 @@ class CCodePrinter(CodePrinter):
         return self._print(val)
 
     def _print_Return(self, expr):
-        code = ''
-        if isinstance(expr.stmt, CodeBlock):
-            for b in expr.stmt.body:
-                if isinstance(b, Assign):
-                    return 'return {0};'.format(self._print(b.rhs))
-
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
-        if expr.stmt:
-            code += self._print(expr.stmt)+'\n'
+        if len(args) > 1:
+            if expr.stmt:
+                return self._print(expr.stmt)+'\n'+'return 0;'
+            return 'return 0;'
         if len(args) == 1:
-            code +='return {0};'.format(self._print(args[0]))
-        elif len(args) > 1:
-            code += 'return 0;'
-        return code
+            if expr.stmt:
+                return 'return {0};'.format(self._print(expr.stmt.body[0].rhs))
+            return 'return {0};'.format(self._print(args[0]))
+        return ''
 
     def _print_Nil(self, expr):
         return 'NULL'
