@@ -7,7 +7,7 @@
 
 import numpy
 
-from sympy           import (Tuple, Integer as sp_Integer,
+from sympy           import (Integer as sp_Integer,
                              Rational as sp_Rational, Expr)
 
 from .core           import (ClassDef, FunctionDef, PyccelInternalFunction,
@@ -126,19 +126,20 @@ class NumpyArray(NumpyNewArray):
     """
     Represents a call to  numpy.array for code generation.
 
-    arg : list ,tuple ,Tuple, PythonList
+    arg : list, tuple, PythonList
 
     """
 
     def __init__(self, arg, dtype=None, order='C'):
         NumpyNewArray.__init__(self)
 
-        if not isinstance(arg, (PythonTuple, PythonList)):
-            raise TypeError('Uknown type of  %s.' % type(arg))
+        if not isinstance(arg, (PythonTuple, PythonList, Variable)):
+            raise TypeError('Unknown type of  %s.' % type(arg))
 
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
-        if not arg.is_homogeneous:
-            raise TypeError('we only accept a homogeneous list or tuple ')
+        if isinstance(arg, (PythonTuple, PythonList)) and not arg.is_homogeneous or \
+            isinstance(arg, Variable) and not arg.is_ndarray and not arg.is_stack_array:
+            raise TypeError('we only accept homogeneous arguments')
 
         # Verify dtype and get precision
         if dtype is None:
@@ -174,11 +175,11 @@ class NumpyArray(NumpyNewArray):
 class NumpySum(PyccelInternalFunction):
     """Represents a call to  numpy.sum for code generation.
 
-    arg : list , tuple , PythonTuple, Tuple, PythonList, Variable
+    arg : list , tuple , PythonTuple, PythonList, Variable
     """
 
     def __init__(self, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, PythonList,
+        if not isinstance(arg, (list, tuple, PythonTuple, PythonList,
                             Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(arg))
         PyccelInternalFunction.__init__(self, arg)
@@ -195,11 +196,11 @@ class NumpySum(PyccelInternalFunction):
 class NumpyProduct(PyccelInternalFunction):
     """Represents a call to  numpy.prod for code generation.
 
-    arg : list , tuple , PythonTuple, Tuple, PythonList, Variable
+    arg : list , tuple , PythonTuple, PythonList, Variable
     """
 
     def __init__(self, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, Tuple, PythonList,
+        if not isinstance(arg, (list, tuple, PythonTuple, PythonList,
                                 Variable, Expr)):
             raise TypeError('Uknown type of  %s.' % type(arg))
         PyccelInternalFunction.__init__(self, arg)
@@ -216,14 +217,14 @@ class NumpyProduct(PyccelInternalFunction):
 #==============================================================================
 class NumpyMatmul(PyccelInternalFunction):
     """Represents a call to numpy.matmul for code generation.
-    arg : list , tuple , PythonTuple, Tuple, PythonList, Variable
+    arg : list , tuple , PythonTuple, PythonList, Variable
     """
 
     def __init__(self, a ,b):
-        if not isinstance(a, (list, tuple, PythonTuple, Tuple, PythonList,
+        if not isinstance(a, (list, tuple, PythonTuple, PythonList,
                                 Variable, Expr)):
             raise TypeError('Unknown type of  %s.' % type(a))
-        if not isinstance(b, (list, tuple, PythonTuple, Tuple, PythonList,
+        if not isinstance(b, (list, tuple, PythonTuple, PythonList,
                                 Variable, Expr)):
             raise TypeError('Unknown type of  %s.' % type(a))
         PyccelInternalFunction.__init__(self, a, b)

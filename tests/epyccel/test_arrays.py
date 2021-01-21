@@ -163,6 +163,27 @@ def test_array_int32_1d_sub_augassign():
 
     assert np.array_equal( x1, x2 )
 
+def test_array_int_1d_initialization_1():
+
+    f1 = arrays.array_int_1d_initialization_1
+    f2 = epyccel( f1 )
+
+    assert np.array_equal(f1(), f2())
+
+def test_array_int_1d_initialization_2():
+
+    f1 = arrays.array_int_1d_initialization_2
+    f2 = epyccel( f1 )
+
+    assert np.array_equal(f1(), f2())
+
+def test_array_int_1d_initialization_3():
+
+    f1 = arrays.array_int_1d_initialization_3
+    f2 = epyccel( f1 )
+
+    assert np.array_equal(f1(), f2())
+
 #==============================================================================
 # TEST: 2D ARRAYS OF INT-32 WITH C ORDERING
 #==============================================================================
@@ -2601,6 +2622,36 @@ def test_array_2d_C_slice_stride_23():
 # TEST : arithmetic operations
 #==============================================================================
 
+def test_arrs_similar_shapes_0():
+    f1 = arrays.arrs_similar_shapes_0
+    f2 = epyccel(f1)
+    assert f1() == f2()
+
+def test_arrs_similar_shapes_1():
+    f1 = arrays.arrs_similar_shapes_1
+    f2 = epyccel(f1)
+    assert f1() == f2()
+
+def test_arrs_different_shapes_0():
+    f1 = arrays.arrs_different_shapes_0
+    f2 = epyccel(f1)
+    assert f1() == f2()
+
+def test_arrs_uncertain_shape_1():
+    f1 = arrays.arrs_uncertain_shape_1
+    f2 = epyccel(f1)
+    assert f1() == f2()
+
+def test_arrs_2d_similar_shapes_0():
+    f1 = arrays.arrs_2d_similar_shapes_0
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_2d_different_shapes_0():
+    f1 = arrays.arrs_2d_different_shapes_0
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
 def test_arrs_1d_negative_index_1():
     f1 = arrays.arrs_1d_negative_index_1
     f2 = epyccel(f1)
@@ -2625,7 +2676,6 @@ def test_arrs_2d_negative_index():
     f1 = arrays.arrs_2d_negative_index
     f2 = epyccel(f1)
     assert np.array_equal(f1(), f2())
-
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================

@@ -55,6 +55,24 @@ def array_int32_1d_add_augassign( x, y ):
 def array_int32_1d_sub_augassign( x, y ):
     x -= y
 
+def array_int_1d_initialization_1():
+    import numpy as np
+    a = np.array([1, 2, 4, 8, 16])
+    b = np.array(a)
+    return np.sum(b), b[0], b[-1]
+
+def array_int_1d_initialization_2():
+    import numpy as np
+    a = [1, 2, 4, 8, 16]
+    b = np.array(a)
+    return np.sum(b), b[0], b[-1]
+
+def array_int_1d_initialization_3():
+    import numpy as np
+    a = (1, 2, 4, 8, 16)
+    b = np.array(a)
+    return np.sum(b), b[0], b[-1]
+
 #==============================================================================
 # 2D ARRAYS OF INT-32 WITH C ORDERING
 #==============================================================================
@@ -1566,6 +1584,50 @@ def array_2d_C_slice_stride_23(a):
 # ARITHMETIC OPERATIONS
 #==============================================================================
 
+def arrs_similar_shapes_0():
+    import numpy as np
+    a = np.zeros(10)
+    b = a[2:4]+a[4:6]
+    return np.shape(b)[0]
+
+def arrs_similar_shapes_1():
+    import numpy as np
+    i = 4
+    a = np.zeros(10)
+    b = a[2:i]+a[4:i + 2]
+    return np.shape(b)[0]
+
+def arrs_different_shapes_0():
+    import numpy as np
+    i = 5
+    a = np.zeros(10)
+    b = a[2:4]+a[4:i]
+    return np.shape(b)[0]
+
+def arrs_uncertain_shape_1():
+    import numpy as np
+    i = 4
+    j = 6
+    a = np.zeros(10)
+    b = a[2:i]+a[4:j]
+    return np.shape(b)[0]
+
+def arrs_2d_similar_shapes_0():
+    import numpy as np
+    from numpy import shape
+    dy = 4
+    dx = 2
+    pn = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
+    x = ((dy**2 * (pn[1:shape(pn)[0]-1, 2:] + pn[1:shape(pn)[0]-1, 0:shape(pn)[1]-2]) +
+        dx**2 *(pn[2:, 1:shape(pn)[1]-1] + pn[0:shape(pn)[0]-2, 1:shape(pn)[1]-1])) / (2 * (dx**2 + dy**2)))
+    return np.shape(x)[0], np.shape(x)[1]
+
+def arrs_2d_different_shapes_0():
+    import numpy as np
+    pn = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
+    pm = np.array([[1, 1, 1]])
+    x = pn + pm
+    return np.shape(x)[0], np.shape(x)[1]
 def arrs_1d_negative_index_1():
     import numpy as np
     a = np.zeros(10)
@@ -1595,4 +1657,3 @@ def arrs_2d_negative_index():
     a = np.ones((10, 10))
     b = a[1:-1, :-1] + a[2:, -9:]
     return np.shape(b)[0], np.shape(b)[1], np.sum(b)
-
