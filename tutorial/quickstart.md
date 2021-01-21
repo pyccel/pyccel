@@ -332,7 +332,68 @@ int64_t binomial_coefficient(int64_t n, int64_t k);
 
 ### Interactive Usage with `epyccel`
 
-**TODO**
+In addition to the `pyccel` command, the Pyccel library provides the `epyccel` Python function, whose name stands for "embedded Pyccel": given a pure Python function `f` with type annotations, `epyccel` returns a "pyccelized" function `f_fast` that can be used in the same Python session.
+For example:
+```python
+from pyccel.epyccel import epyccel
+from mod import f
+
+f_fast = epyccel(f)
+```
+In practice `epyccel` copies the contents of `f` into a temporary python file in the `__epyccel__` directory, then it calls the `pyccel` command to generate a Python C extension module that contains a single pyccelized function, and finally it imports this function and returns it to the caller.
+
+#### Example 4: quicksort algorithm
+
+Let's assume that we have a `quicksort` function in a pure Python module `mod.py`:
+```python
+def quicksort(a: 'float[:]', lo: int, hi: int):
+    i = lo
+    j = hi
+    while i < hi:
+        pivot = a[(lo + hi) // 2]
+        while i <= j :
+            while a[i] < pivot:
+                i += 1
+            while a[j] > pivot:
+                j -= 1
+            if i <= j:
+                tmp  = a[i]
+                a[i] = a[j]
+                a[j] = tmp
+                i += 1
+                j -= 1
+        if lo < j:
+            quicksort(a, lo, j)
+        lo = i
+        j = hi
+```
+We now import this function from an interactive IPython terminal and pyccelize it with the `epyccel` command.
+We then use the two functions (original and pyccelized) to sort a random array of 100 elements.
+Finally we compare the timings obtained on an Intel Core 3 architecture.
+```
+In [1]: from numpy.random import random
+
+In [2]: from mod import quicksort
+
+In [3]: from pyccel.epyccel import epyccel
+
+In [4]: quicksort_fast = epyccel(quicksort)
+
+In [5]: x = random(100)
+
+In [6]: %timeit y = x.copy()
+435 ns ± 4.75 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+
+In [7]: %timeit y = x.copy(); quicksort(y, 0, 99)
+280 µs ± 1.5 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+
+In [8]: %timeit y = x.copy(); quicksort_fast(y, 0, 99)
+1.76 µs ± 10 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+
+In [9]: (280 - 0.435) / (1.76 - 0.435)
+Out[9]: 210.99245283018868
+```
+After subtracting the amount of time required to create an array copy from the given times, we can conclude that the pyccelized function is approximately 210 times faster than the original Python function.
 
 ## Other Features
 
