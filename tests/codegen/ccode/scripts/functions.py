@@ -1,6 +1,20 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 # pylint: disable=unused-variable
 
+
+#$ header function fib(int) results(int)
+def fib(n):
+    if n < 2:
+        return n
+    i = fib(n-1)
+    j = fib(n-2)
+    return i + j
+
+#$ header function recu_func(int) results(int)
+def recu_func(x):
+    if x > 0:
+        x = x - 1
+
 def helloworld():
     print('hello world')
 
