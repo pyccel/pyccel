@@ -374,8 +374,6 @@ class CCodePrinter(CodePrinter):
         lines = []
         for i, (c, e) in enumerate(expr.args):
             var = self._print(e)
-            if (var == ''):
-                break
             if i == 0:
                 lines.append("if (%s)\n{" % self._print(c))
             elif i == len(expr.args) - 1 and c is LiteralTrue():
