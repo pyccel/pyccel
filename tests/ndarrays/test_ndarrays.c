@@ -149,7 +149,7 @@ int32_t test_indexing_int64(void)
                 1, 0, 0, 1, 200, 33, 5, 57,
                 62, 70, 103, 141, 122, 26, 36, 82,
                 8, 10, 4115, 22, 1, 11, 1, 19};
-    int32_t m_1_shape[] = {5, 8};
+    int64_t m_1_shape[] = {5, 8};
     t_ndarray x;
     int32_t index;
     int32_t c_index;
@@ -178,7 +178,7 @@ int32_t test_indexing_int32(void)
                 1, 0, 0, 1, 200, 33, 5, 57,
                 62, 70, 103, 141, 122, 26, 36, 82,
                 8, 10, 4115, 22, 1, 11, 1, 19};
-    int32_t m_1_shape[] = {5, 8};
+    int64_t m_1_shape[] = {5, 8};
     t_ndarray x;
     int32_t index;
     int32_t c_index;
@@ -207,7 +207,7 @@ int32_t test_indexing_int16(void)
                 1, 0, 0, 1, 200, 33, 5, 57,
                 62, 70, 103, 141, 122, 26, 36, 82,
                 8, 10, 4115, 22, 1, 11, 1, 19};
-    int32_t m_1_shape[] = {5, 8};
+    int64_t m_1_shape[] = {5, 8};
     t_ndarray x;
     int32_t index;
     int32_t c_index;
@@ -236,7 +236,7 @@ int32_t test_indexing_int8(void)
                 1, 0, 0, 1, 200, 33, 5, 57,
                 62, 70, 103, 141, 122, 26, 36, 82,
                 8, 10, 251, 22, 1, 11, 1, 19};
-    int32_t m_1_shape[] = {5, 8};
+    int64_t m_1_shape[] = {5, 8};
     t_ndarray x;
     int32_t index;
     int32_t c_index;
@@ -265,7 +265,7 @@ int32_t test_indexing_double(void)
                     1.02, 0.25, 0.00005, 1, 200, 33, 5, 57,
                     62, 70, 103.009, 141, 122, 26.50, 36.334, 82,
                     8.44002, 10.056, 4115, 22.1, 1.1102, 011.25, 1.01110005, 19};
-    int32_t m_1_shape[] = {5, 8};
+    int64_t m_1_shape[] = {5, 8};
     t_ndarray x;
     int32_t index;
     int32_t c_index;
@@ -294,7 +294,7 @@ int32_t test_indexing_cdouble(void)
                             0.02827254+0.00432899*I,  0.06873651+0.24810741*I,
                             0.94040543+0.43508215*I,  0.58532094+0.67890618*I,
                             0.68742283+0.64951155*I,  0.15372315+0.89699101*I};
-    int32_t m_1_shape[] = {5, 2};
+    int64_t m_1_shape[] = {5, 2};
     t_ndarray x;
     int32_t index;
     int32_t c_index;
@@ -323,7 +323,7 @@ int32_t test_indexing_cfloat(void)
                             0.02827254+0.00432899*I,  0.06873651+0.24810741*I,
                             0.94040543+0.43508215*I,  0.58532094+0.67890618*I,
                             0.68742283+0.64951155*I,  0.15372315+0.89699101*I};
-    int32_t m_1_shape[] = {5, 2};
+    int64_t m_1_shape[] = {5, 2};
     t_ndarray x;
     int32_t index;
     int32_t c_index;
@@ -345,7 +345,7 @@ int32_t test_indexing_cfloat(void)
     return (0);
 }
 
-/* 
+/*
 **  slicing tests
 */
 
@@ -359,7 +359,7 @@ int32_t test_slicing_int64(void)
                 70, 103, 141, 122, 26,
                 36, 82, 8, 10, 4115,
                 22, 1, 11, 1, 19};
-    int32_t m_1_shape[] = {8, 5};
+    int64_t m_1_shape[] = {8, 5};
     t_ndarray x;
     t_ndarray xview;
     int32_t c_index;
@@ -368,7 +368,7 @@ int32_t test_slicing_int64(void)
 
     x = array_create(2, m_1_shape, nd_int64);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
@@ -400,7 +400,7 @@ int32_t test_slicing_int32(void)
                 70, 103, 141, 122, 26,
                 36, 82, 8, 10, 4115,
                 22, 1, 11, 1, 19};
-    int32_t m_1_shape[] = {8, 5};
+    int64_t m_1_shape[] = {8, 5};
     t_ndarray x;
     t_ndarray xview;
     int32_t c_index;
@@ -409,7 +409,7 @@ int32_t test_slicing_int32(void)
 
     x = array_create(2, m_1_shape, nd_int32);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
@@ -440,7 +440,7 @@ int32_t test_slicing_int16(void)
                 70, 103, 141, 122, 26,
                 36, 82, 8, 10, 4115,
                 22, 1, 11, 1, 19};
-    int32_t m_1_shape[] = {8, 5};
+    int64_t m_1_shape[] = {8, 5};
     t_ndarray x;
     t_ndarray xview;
     int32_t c_index;
@@ -449,7 +449,7 @@ int32_t test_slicing_int16(void)
 
     x = array_create(2, m_1_shape, nd_int16);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
@@ -481,7 +481,7 @@ int32_t test_slicing_int8(void)
                 70, 103, 141, 122, 26,
                 36, 82, 8, 10, 251,
                 22, 1, 11, 1, 19};
-    int32_t m_1_shape[] = {8, 5};
+    int64_t m_1_shape[] = {8, 5};
     t_ndarray x;
     t_ndarray xview;
     int32_t c_index;
@@ -490,7 +490,7 @@ int32_t test_slicing_int8(void)
 
     x = array_create(2, m_1_shape, nd_int8);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
@@ -522,7 +522,7 @@ int32_t test_slicing_double(void)
                     103.009, 141, 122, 26.50, 36.334,
                     82, 8.44002, 10.056, 4115, 22.1,
                     1.1102, 011.25, 1.01110005, 19, 70};
-    int32_t m_1_shape[] = {8, 5};
+    int64_t m_1_shape[] = {8, 5};
     t_ndarray x;
     t_ndarray xview;
     int32_t c_index;
@@ -531,7 +531,7 @@ int32_t test_slicing_double(void)
 
     x = array_create(2, m_1_shape, nd_double);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
@@ -559,7 +559,7 @@ int32_t test_slicing_cdouble(void)
                     0.37 + 0.588*I,  0.92+0.57*I, 0.93+0.30*I,  0.54+0.09*I, 0.02+0.01*I,
                     0.03+0.24*I, 0.94+0.43*I,  0.58+0.67*I, 0.68+0.64*I,  0.15+0.89*I
                     };
-    int32_t m_1_shape[] = {2, 5};
+    int64_t m_1_shape[] = {2, 5};
     t_ndarray x;
     t_ndarray xview;
     int32_t c_index;
@@ -568,7 +568,7 @@ int32_t test_slicing_cdouble(void)
 
     x = array_create(2, m_1_shape, nd_cdouble);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
     c_index = 5;
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
@@ -594,7 +594,7 @@ int32_t test_slicing_cdouble(void)
 
 int32_t test_array_fill_int64(void)
 {
-    int32_t m_1_shape[] = {5, 2};
+    int64_t m_1_shape[] = {5, 2};
     t_ndarray x;
     int32_t index;
     int32_t c_index;
@@ -618,7 +618,7 @@ int32_t test_array_fill_int64(void)
 
 int32_t test_array_fill_int32(void)
 {
-    int32_t m_1_shape[] = {5, 2};
+    int64_t m_1_shape[] = {5, 2};
     t_ndarray x;
     int32_t index;
     int32_t c_index;
@@ -642,7 +642,7 @@ int32_t test_array_fill_int32(void)
 
 int32_t test_array_fill_int16(void)
 {
-    int32_t m_1_shape[] = {5, 2};
+    int64_t m_1_shape[] = {5, 2};
     t_ndarray x;
     int32_t index;
     int32_t c_index;
@@ -666,7 +666,7 @@ int32_t test_array_fill_int16(void)
 
 int32_t test_array_fill_int8(void)
 {
-    int32_t m_1_shape[] = {5, 2};
+    int64_t m_1_shape[] = {5, 2};
     t_ndarray x;
     int32_t index;
     int32_t c_index;
@@ -690,7 +690,7 @@ int32_t test_array_fill_int8(void)
 
 int32_t test_array_fill_double(void)
 {
-    int32_t m_1_shape[] = {5, 2};
+    int64_t m_1_shape[] = {5, 2};
     t_ndarray x;
     int32_t index;
     int32_t c_index;
@@ -714,7 +714,7 @@ int32_t test_array_fill_double(void)
 
 int32_t test_array_fill_cdouble(void)
 {
-    int32_t m_1_shape[] = {5, 2};
+    int64_t m_1_shape[] = {5, 2};
     t_ndarray x;
     int32_t index;
     int32_t c_index;
@@ -740,7 +740,7 @@ int32_t test_array_fill_cdouble(void)
 
 int32_t test_array_zeros_double(void)
 {
-    int32_t m_1_shape[] = {5, 2};
+    int64_t m_1_shape[] = {5, 2};
     t_ndarray x;
     int32_t index;
     int32_t c_index;
@@ -764,7 +764,7 @@ int32_t test_array_zeros_double(void)
 
 int32_t test_array_zeros_int32(void)
 {
-    int32_t m_1_shape[] = {5, 2};
+    int64_t m_1_shape[] = {5, 2};
     t_ndarray x;
     int32_t index;
     int32_t c_index;
@@ -788,7 +788,7 @@ int32_t test_array_zeros_int32(void)
 
 int32_t test_array_zeros_cdouble(void)
 {
-    int32_t m_1_shape[] = {5, 2};
+    int64_t m_1_shape[] = {5, 2};
     t_ndarray x;
     int32_t index;
     int32_t c_index;

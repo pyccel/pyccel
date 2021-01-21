@@ -82,3 +82,11 @@ for i in range(2):
     for j in range(3):
         print(azl[i][j])
     print()
+
+# ------------------------------ Array init ----------------------------------
+
+a = np.array([1,2,3])
+b = np.array(a)
+print(b[0], b[1], b[2])
+print()
+

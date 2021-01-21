@@ -9,6 +9,7 @@
 from collections import OrderedDict
 from itertools import chain
 
+from sympy import Tuple
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
@@ -17,7 +18,6 @@ from sympy import Integer as sp_Integer
 from sympy import Indexed, IndexedBase
 from sympy import ceiling
 from sympy import oo  as INF
-from sympy import Tuple
 from sympy import Lambda
 from sympy.core import cache
 
@@ -26,10 +26,6 @@ from sympy.core import cache
 from pyccel.ast.basic import PyccelAstNode
 
 from pyccel.ast.core import Allocate, Deallocate
-from pyccel.ast.core import Constant
-from pyccel.ast.core import Variable
-from pyccel.ast.core import TupleVariable
-from pyccel.ast.core import DottedName, DottedVariable
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return
@@ -39,23 +35,27 @@ from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCal
 from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor, ForIterator
-from pyccel.ast.core import IfTernaryOperator
 from pyccel.ast.core import While
 from pyccel.ast.core import SymbolicPrint
 from pyccel.ast.core import Del
 from pyccel.ast.core import EmptyNode
-from pyccel.ast.core import Slice, IndexedElement
-from pyccel.ast.core import ValuedVariable
+from pyccel.ast.variable import Constant
+from pyccel.ast.variable import Variable
+from pyccel.ast.variable import TupleVariable
+from pyccel.ast.variable import IndexedElement
+from pyccel.ast.variable import DottedName, DottedVariable
+from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import With, Block
-from pyccel.ast.core import PythonList, Dlist
+from pyccel.ast.builtins import PythonList
+from pyccel.ast.core import Dlist
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import _atomic
-from pyccel.ast.operators import PyccelIs, PyccelIsNot
+from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
@@ -88,6 +88,8 @@ from pyccel.ast.numpyext import NumpyInt, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
+
+from pyccel.ast.internals import Slice
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -443,7 +445,10 @@ class SemanticParser(BasicParser):
 
 
     def get_import(self, name):
-        """."""
+        """
+        Search for an import with the given name in the current namespace.
+        Return None if not found.
+        """
 
         imp = None
 
@@ -502,6 +507,19 @@ class SemanticParser(BasicParser):
             container = container.parent_scope
 
         return None
+
+    def insert_import(self, name, target):
+        """
+            Create and insert a new import in namespace if it's not defined
+            otherwise append target to existing import.
+        """
+        imp = self.get_import(name)
+
+        if imp is not None:
+            imp.define_target(target)
+        else:
+            container = self.namespace.imports
+            container['imports'][name] = Import(name, target)
 
     def insert_macro(self, macro):
         """."""
@@ -668,7 +686,6 @@ class SemanticParser(BasicParser):
             d_var['rank'          ] = expr.rank
             d_var['cls_base'      ] = expr.cls_base
             d_var['is_pointer'    ] = expr.is_pointer
-            d_var['is_polymorphic'] = expr.is_polymorphic
             d_var['is_target'     ] = expr.is_target
             d_var['order'         ] = expr.order
             d_var['precision'     ] = expr.precision
@@ -750,7 +767,6 @@ class SemanticParser(BasicParser):
 
             # set target  to True if we want the class objects to be pointers
 
-            d_var['is_polymorphic'] = False
             d_var['cls_base'      ] = cls
             return d_var
 
@@ -797,25 +813,16 @@ class SemanticParser(BasicParser):
             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
             severity='fatal', blocker=self.blocking)
 
-    def _visit_list(self, expr, **settings):
-        ls = [self._visit(i, **settings) for i in expr]
-        return Tuple(*ls, sympify=False)
-
     def _visit_tuple(self, expr, **settings):
-        ls = tuple(self._visit(i, **settings) for i in expr)
-        return ls
+        return tuple(self._visit(i, **settings) for i in expr)
 
     def _visit_PythonTuple(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
         return PythonTuple(*ls)
 
-    def _visit_Tuple(self, expr, **settings):
-        ls = [self._visit(i, **settings) for i in expr]
-        return Tuple(*ls, sympify=False)
-
     def _visit_PythonList(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr]
-        expr = PythonList(*ls, sympify=False)
+        expr = PythonList(*ls)
 
         if not expr.is_homogeneous:
             errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
@@ -979,7 +986,7 @@ class SemanticParser(BasicParser):
                         ls.append(args[j])
                 new_expr_args.append(ls)
 
-            return Tuple(*[self._visit(Indexed(name,*a)) for a in new_expr_args])
+            return tuple(self._visit(Indexed(name,*a)) for a in new_expr_args)
         else:
             args = new_args
             len_args = len(args)
@@ -1052,7 +1059,8 @@ class SemanticParser(BasicParser):
                     args  = self._handle_function_args(rhs.args, **settings)
                     func  = first[rhs_name]
                     if new_name != rhs_name:
-                        func  = func.clone(new_name)
+                        if hasattr(func, 'clone'):
+                            func  = func.clone(new_name)
                     return self._handle_function(func, args, **settings)
                 elif isinstance(rhs, Constant):
                     var = first[rhs_name]
@@ -1132,6 +1140,7 @@ class SemanticParser(BasicParser):
                             'property' in i.decorators.keys():
                         if 'numpy_wrapper' in i.decorators.keys():
                             func = i.decorators['numpy_wrapper']
+                            self.insert_import('numpy', rhs)
                             return func(visited_lhs)
                         else:
                             return DottedFunctionCall(i, [], prefix = visited_lhs,
@@ -1173,7 +1182,7 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelAdd(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, PythonList)):
+        if isinstance(args[0], (TupleVariable, PythonTuple, PythonList)):
             get_vars = lambda a: a.get_vars() if isinstance(a, TupleVariable) else a.args
             tuple_args = [ai for a in args for ai in get_vars(a)]
             expr_new = PythonTuple(*tuple_args)
@@ -1183,9 +1192,9 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelMul(self, expr, **settings):
         args = [self._visit(a, **settings) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, Tuple, PythonList)):
+        if isinstance(args[0], (TupleVariable, PythonTuple, PythonList)):
             expr_new = self._visit(Dlist(args[0], args[1]))
-        elif isinstance(args[1], (TupleVariable, PythonTuple, Tuple, PythonList)):
+        elif isinstance(args[1], (TupleVariable, PythonTuple, PythonList)):
             expr_new = self._visit(Dlist(args[1], args[0]))
         else:
             expr_new = self._visit_PyccelOperator(expr, **settings)
@@ -1364,13 +1373,13 @@ class SemanticParser(BasicParser):
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
             rhs.is_target = True
-        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and rhs.base.allocatable:
+        if isinstance(rhs, IndexedElement) and rhs.rank > 0 and (rhs.base.allocatable or rhs.base.is_pointer):
             d_lhs['allocatable'] = False
             d_lhs['is_pointer' ] = True
 
             # TODO uncomment this line, to make rhs target for
             #      lists/tuples.
-            rhs.base.is_target = True
+            rhs.base.is_target = not rhs.base.is_pointer
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign, **settings):
         """
@@ -1495,6 +1504,12 @@ class SemanticParser(BasicParser):
 
                 elif not is_augassign and var.is_ndarray and var.is_target:
                     errors.report(ARRAY_ALREADY_IN_USE,
+                        bounding_box=(self._current_fst_node.lineno,
+                            self._current_fst_node.col_offset),
+                                severity='error', symbol=var.name)
+
+                elif var.is_ndarray and var.is_pointer and isinstance(rhs, NumpyNewArray):
+                    errors.report(INVALID_POINTER_REASSIGN,
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
                                 severity='error', symbol=var.name)
@@ -1818,8 +1833,6 @@ class SemanticParser(BasicParser):
 
                     # TODO if we want to use pointers then we set target to true
                     # in the ConsturcterCall
-
-                    d['is_polymorphic'] = False
 
                 if isinstance(rhs, Variable) and rhs.is_target:
                     # case of rhs is a target variable the lhs must be a pointer
@@ -2883,6 +2896,8 @@ class SemanticParser(BasicParser):
                             _insert_obj('functions', name, atom)
             else:
                 _insert_obj('variables', source_target, imports)
+            _insert_obj('imports', source_target, Import(source, expr.target, True))
+
         else:
 
             # in some cases (blas, lapack, openmp and openacc level-0)
@@ -3040,7 +3055,8 @@ class SemanticParser(BasicParser):
 
         val = expr.args[0]
         length = expr.args[1]
-        if isinstance(val, (TupleVariable, PythonTuple)):
+        if isinstance(val, (TupleVariable, PythonTuple)) and \
+                not isinstance(val, PythonList):
             if isinstance(length, LiteralInteger):
                 length = length.p
             if isinstance(val, TupleVariable):
