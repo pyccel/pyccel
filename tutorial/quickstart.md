@@ -388,7 +388,10 @@ from mod import f
 
 f_fast = epyccel(f)
 ```
-In practice `epyccel` copies the contents of `f` into a temporary python file in the `__epyccel__` directory, then it calls the `pyccel` command to generate a Python C extension module that contains a single pyccelized function, and finally it imports this function and returns it to the caller.
+In practice `epyccel` copies the contents of `f` into a temporary python file in the `__epyccel__` directory.
+As a result it is important that all imports are written inside the function when using `epyccel`.
+Once the file has been copied, `epyccel` calls the `pyccel` command to generate a Python C extension module that contains a single pyccelized function.
+Then finally, it imports this function and returns it to the caller.
 
 #### Example 4: quicksort algorithm
 
