@@ -1657,3 +1657,4 @@ def arrs_2d_negative_index():
     a = np.ones((10, 10))
     b = a[1:-1, :-1] + a[2:, -9:]
     return np.shape(b)[0], np.shape(b)[1], np.sum(b)
+
