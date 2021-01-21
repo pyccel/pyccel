@@ -2618,6 +2618,40 @@ def test_array_2d_C_slice_stride_23():
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
 
+#==============================================================================
+# TEST : arithmetic operations
+#==============================================================================
+
+def test_arrs_similar_shapes_0():
+    f1 = arrays.arrs_similar_shapes_0
+    f2 = epyccel(f1)
+    assert f1() == f2()
+
+def test_arrs_similar_shapes_1():
+    f1 = arrays.arrs_similar_shapes_1
+    f2 = epyccel(f1)
+    assert f1() == f2()
+
+def test_arrs_different_shapes_0():
+    f1 = arrays.arrs_different_shapes_0
+    f2 = epyccel(f1)
+    assert f1() == f2()
+
+def test_arrs_uncertain_shape_1():
+    f1 = arrays.arrs_uncertain_shape_1
+    f2 = epyccel(f1)
+    assert f1() == f2()
+
+def test_arrs_2d_similar_shapes_0():
+    f1 = arrays.arrs_2d_similar_shapes_0
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_2d_different_shapes_0():
+    f1 = arrays.arrs_2d_different_shapes_0
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
