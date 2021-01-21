@@ -46,7 +46,7 @@ It is the programmer's responsibility to explicitly declare the type of every va
 -   https://en.wikipedia.org/wiki/Type_system
 -   https://android.jlelse.eu/magic-lies-here-statically-typed-vs-dynamically-typed-languages-d151c7f95e2b
 
-## How does Pyccel work?
+## How Pyccel works
 
 In order to translate Python 3 code (dynamically typed) to efficient Fortran/C code (statically typed), Pyccel makes a certain number of *assumptions*, needs *additional information* from the user, and imposes a few *restrictions* on the code.
 The fundamental rule that guides Pyccel's design is that the Python 3 code and the generated Fortran/C code should behave in the same way.
@@ -108,7 +108,7 @@ For scalar variables and arrays Pyccel supports the following data types:
 -   Numpy real types: `float32`, `float64`, `double`
 -   Numpy complex types: `complex64`, `complex128`
 
-## How to use Pyccel?
+## How to use Pyccel
 
 ### Installation
 
