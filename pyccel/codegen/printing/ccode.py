@@ -27,7 +27,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, Nativ
 
 from pyccel.ast.internals import Slice
 
-from pyccel.ast.literals  import LiteralTrue,LiteralImaginaryUnit, LiteralFloat
+from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil
 
