@@ -37,6 +37,19 @@ class Basic(sp_Basic):
         else:
             return False
 
+    def contains_type(self, search_type):
+        for n,v in self._children:
+            if isinstance(v, search_type):
+                return True
+            elif isinstance(v, tuple):
+                if any(isinstance(vi, search_type) or \
+                        vi.contains_type(search_type) \
+                        for vi in v):
+                    return True
+            elif v.contains_type(search_type):
+                return True
+        return False
+
     def substitute(self, original, replacement, excluded_nodes = ()):
         """
         Substitute object original for object replacement in the code.
@@ -60,7 +73,7 @@ class Basic(sp_Basic):
                 for vi in v:
                     v.substitute(original, replacement, excluded_nodes)
                 setattr(self, n, v)
-            elif not v.is_atomic and not isinstance(v, excluded_nodes):
+            elif not isinstance(v, excluded_nodes):
                 v.substitute(original, replacement, excluded_nodes)
 
     @property
