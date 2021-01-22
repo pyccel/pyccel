@@ -519,7 +519,7 @@ class SemanticParser(BasicParser):
             imp.define_target(target)
         else:
             container = self.namespace.imports
-            container['imports'][name] = Import(name, target)
+            container['imports'][name] = Import(name, target, True)
 
     def insert_macro(self, macro):
         """."""
