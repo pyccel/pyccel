@@ -1142,7 +1142,7 @@ class CCodePrinter(CodePrinter):
                     shape = expr.lhs.shape
                     shape = [self._print(i) for i in shape]
                     shape = ", ".join(a for a in shape)
-                    shape_dtype = self.find_in_dtype_registry('int', 4)
+                    shape_dtype = self.find_in_dtype_registry('int', 8)
 
                     shape_init = "({}[]){{{}}}".format(shape_dtype, shape)
                     strides_init = "({}[{}]){{0}}".format(shape_dtype, len(expr.lhs.shape))
