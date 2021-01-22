@@ -96,6 +96,9 @@ class LiteralInteger(Literal, Basic):
     def python_value(self):
         return self.p
 
+    def __index__(self):
+        return self.python_value
+
 #------------------------------------------------------------------------------
 class LiteralFloat(Literal, sp_Float):
     """Represents a float literal in python"""
