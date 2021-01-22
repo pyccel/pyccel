@@ -421,15 +421,12 @@ def quicksort(a: 'float[:]', lo: int, hi: int):
 We now import this function from an interactive IPython terminal and pyccelize it with the `epyccel` command.
 We then use the two functions (original and pyccelized) to sort a random array of 100 elements.
 Finally we compare the timings obtained on an Intel Core 3 architecture.
-```
+```bash
 In [1]: from numpy.random import random
-
 In [2]: from mod import quicksort
-
 In [3]: from pyccel.epyccel import epyccel
 
 In [4]: quicksort_fast = epyccel(quicksort)
-
 In [5]: x = random(100)
 
 In [6]: %timeit y = x.copy()
