@@ -1628,3 +1628,33 @@ def arrs_2d_different_shapes_0():
     pm = np.array([[1, 1, 1]])
     x = pn + pm
     return np.shape(x)[0], np.shape(x)[1]
+def arrs_1d_negative_index_1():
+    import numpy as np
+    a = np.zeros(10)
+    b = a[:-1]+a[-9:]
+    return np.shape(b)[0], np.sum(b)
+
+def arrs_1d_negative_index_2():
+    import numpy as np
+    a = np.ones(10)
+    b = a[1:-1] + a[2:]
+    return np.shape(b)[0], np.sum(b)
+
+def arrs_1d_negative_index_negative_step():
+    import numpy as np
+    a = np.ones(10)
+    b = a[-1:1:-2] + a[:2:-2]
+    return np.shape(b)[0], np.sum(b)
+
+def arrs_1d_negative_step_positive_step():
+    import numpy as np
+    a = np.ones(10)
+    b = a[1:-1: 3] + a[2::3]
+    return np.shape(b)[0], np.sum(b)
+
+def arrs_2d_negative_index():
+    import numpy as np
+    a = np.ones((10, 10))
+    b = a[1:-1, :-1] + a[2:, -9:]
+    return np.shape(b)[0], np.shape(b)[1], np.sum(b)
+
