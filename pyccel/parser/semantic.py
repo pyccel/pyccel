@@ -899,7 +899,7 @@ class SemanticParser(BasicParser):
             if len(args)==1:
                 return var[args[0]]
             else:
-                return self._visit(Indexed(var[args[0]],args[1:]))
+                return self._visit(var[args[0]][args[1:]])
 
         args = tuple(args)
 
@@ -949,10 +949,7 @@ class SemanticParser(BasicParser):
 
         return var[args]
 
-    def _visit_IndexedBase(self, expr, **settings):
-        return self._visit(expr.label)
-
-    def _visit_Indexed(self, expr, **settings):
+    def _visit_IndexedElement(self, expr, **settings):
         name = str(expr.base)
         var = self._visit(expr.base)
 
@@ -964,7 +961,7 @@ class SemanticParser(BasicParser):
 
         if (len(new_args)==1 and isinstance(new_args[0],(TupleVariable, PythonTuple))):
             len_args = len(new_args[0])
-            args = [self._visit(Indexed(args[0],i)) for i in range(len_args)]
+            args = [self._visit(args[0][i]) for i in range(len_args)]
         elif any(isinstance(arg,(TupleVariable, PythonTuple)) for arg in new_args):
             n_exprs = None
             for a in new_args:
@@ -977,15 +974,13 @@ class SemanticParser(BasicParser):
             for i in range(n_exprs):
                 ls = []
                 for j,a in enumerate(new_args):
-                    if isinstance(a,TupleVariable):
-                        ls.append(Indexed(args[j],i))
-                    elif hasattr(a,'__getitem__'):
+                    if hasattr(a,'__getitem__'):
                         ls.append(args[j][i])
                     else:
                         ls.append(args[j])
                 new_expr_args.append(ls)
 
-            return tuple(self._visit(Indexed(name,*a)) for a in new_expr_args)
+            return tuple(self._visit(name[a]) for a in new_expr_args)
         else:
             args = new_args
             len_args = len(args)
@@ -1894,10 +1889,9 @@ class SemanticParser(BasicParser):
                 new_lhs = []
                 new_rhs = []
 
-                for i,l in enumerate(lhs):
-                    rhs_i = self._visit(Indexed(rhs,i))
-                    new_lhs.append( self._assign_lhs_variable(l, self._infere_type(rhs_i), rhs_i, new_expressions, isinstance(expr, AugAssign), **settings) )
-                    new_rhs.append(rhs_i)
+                for l, r in zip(lhs, rhs):
+                    new_lhs.append( self._assign_lhs_variable(l, self._infere_type(r), r, new_expressions, isinstance(expr, AugAssign), **settings) )
+                    new_rhs.append(r)
 
                 lhs = PythonTuple(*new_lhs)
                 rhs = new_rhs
@@ -2281,8 +2275,7 @@ class SemanticParser(BasicParser):
         # TODO [YG, 30.10.2020]:
         #  - Check if we should allow the possibility that is_stack_array=True
         # ...
-        # expr.lhs is a sympy.Indexed
-        lhs_symbol = expr.lhs.base.label
+        lhs_symbol = expr.lhs.base
         ne = []
         lhs = self._assign_lhs_variable(lhs_symbol, d_var, rhs=expr, new_expressions=ne, is_augassign=False, **settings)
         lhs_alloc = ne[0]
@@ -2448,7 +2441,7 @@ class SemanticParser(BasicParser):
 #            args      = [str(i.name) for i in expr.arguments]
 #            index_arg = args.index(arg)
 #            arg       = Symbol(arg)
-#            vec_arg   = IndexedBase(arg)
+#            vec_arg   = arg
 #            index     = self.get_new_variable()
 #            range_    = Function('range')(Function('len')(arg))
 #            args      = symbols(args)
@@ -3069,7 +3062,7 @@ class SemanticParser(BasicParser):
         var = self._visit(name)
         assert(var.rank==1)
         size = var.shape[0]
-        return StarredArguments([self._visit(Indexed(name,i)) for i in range(size)])
+        return StarredArguments([self._visit(name[i]) for i in range(size)])
 
 #==============================================================================
 
