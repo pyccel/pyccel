@@ -241,6 +241,7 @@ class PythonEnumerate(Basic):
     Represents the enumerate stmt
 
     """
+    _children = ('element_',)
 
     def __new__(cls, arg):
         if not isinstance(arg, (Symbol, Indexed, IndexedBase)):
@@ -249,7 +250,7 @@ class PythonEnumerate(Basic):
 
     def __init__(cls, arg):
         self._element = arg
-        Basic.__init__(self, {'_element', self._element})
+        Basic.__init__(self)
 
     @property
     def element(self):
