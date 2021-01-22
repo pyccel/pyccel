@@ -242,6 +242,7 @@ class PythonEnumerate(Basic):
     """
 
     def __new__(cls, arg):
+        from .variable  import IndexedElement
         if not isinstance(arg, (Symbol, IndexedElement)):
             raise TypeError('Expecting an arg of valid type')
         return Basic.__new__(cls, arg)
@@ -502,6 +503,7 @@ class PythonRange(Basic):
         stop = None
         step = LiteralInteger(1)
 
+        from .variable  import IndexedElement
         _valid_args = (LiteralInteger, Symbol, IndexedElement)
 
         if isinstance(args, (tuple, list)):
