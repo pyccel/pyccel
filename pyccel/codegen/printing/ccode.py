@@ -10,7 +10,7 @@ import operator
 
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
-from pyccel.ast.core      import Declare, Return
+from pyccel.ast.core      import Declare
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
@@ -20,7 +20,7 @@ from pyccel.ast.core      import create_incremented_string
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis
-from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator, PyccelOperator
+from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import default_precision, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
@@ -951,7 +951,7 @@ class CCodePrinter(CodePrinter):
             self._additional_args.append(expr.results)
         body  = self._print(expr.body)
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
-        if len(expr.results) <= 1 :
+        if len(expr.results) == 1 :
             if isinstance(expr.results[0], Variable):
                 if expr.results[0] not in self._unnecessary_declaration:
                     print(type(expr.results[0]))
