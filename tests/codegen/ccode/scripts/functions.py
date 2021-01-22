@@ -14,6 +14,7 @@ def fib(n):
 def recu_func(x):
     if x > 0:
         x = x - 1
+    return x
 
 def helloworld():
     print('hello world')
