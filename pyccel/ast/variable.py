@@ -591,8 +591,6 @@ class TupleVariable(Variable):
                        wish to collect
         """
         assert(not self._is_homogeneous)
-        if isinstance(variable_idx, LiteralInteger):
-            variable_idx = variable_idx.p
         return self._vars[variable_idx]
 
     def rename_var(self, variable_idx, new_name):
@@ -620,8 +618,6 @@ class TupleVariable(Variable):
             else:
                 sub_idx = []
 
-            if isinstance(idx, LiteralInteger):
-                idx = idx.p
             var = self.get_var(idx)
 
             if len(sub_idx) > 0:
