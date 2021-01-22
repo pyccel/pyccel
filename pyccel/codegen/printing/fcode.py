@@ -1207,7 +1207,6 @@ class FCodePrinter(CodePrinter):
             return '\n'.join(self._print_Assign(
                         Assign(lhs,
                                 rhs,
-                                strict=expr.strict,
                                 status=expr.status,
                                 like=expr.like,
                                 )
@@ -1756,7 +1755,6 @@ class FCodePrinter(CodePrinter):
         lhs    = expr.lhs
         op     = expr.op
         rhs    = expr.rhs
-        strict = expr.strict
         status = expr.status
         like   = expr.like
 
@@ -1772,7 +1770,7 @@ class FCodePrinter(CodePrinter):
         else:
             raise ValueError('Unrecognized operation', op)
 
-        stmt = Assign(lhs, rhs, strict=strict, status=status, like=like)
+        stmt = Assign(lhs, rhs, status=status, like=like)
         return self._print_Assign(stmt)
 
     def _print_PythonRange(self, expr):
