@@ -3058,11 +3058,10 @@ class SemanticParser(BasicParser):
         return Dlist(val, length)
 
     def _visit_StarredArguments(self, expr, **settings):
-        name = expr.args_var
-        var = self._visit(name)
+        var = self._visit(expr.args_var)
         assert(var.rank==1)
         size = var.shape[0]
-        return StarredArguments([self._visit(name[i]) for i in range(size)])
+        return StarredArguments([var[i] for i in range(size)])
 
 #==============================================================================
 
