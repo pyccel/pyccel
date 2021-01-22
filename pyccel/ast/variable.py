@@ -19,8 +19,8 @@ from .datatypes import (datatype, DataType,
                         default_precision)
 from .internals import PyccelArraySize, Slice
 from .literals  import LiteralInteger, Nil
-from .operators import PyccelMinus
-
+from .operators import (PyccelMinus, PyccelDiv,
+                        PyccelUnarySub, PyccelAdd)
 __all__ = (
     'DottedName',
     'DottedVariable',
@@ -740,15 +740,26 @@ class IndexedElement(PyccelAstNode):
 
         if shape is not None:
             new_shape = []
+            from .mathext import MathCeil
             for a,s in zip(args, shape):
                 if isinstance(a, Slice):
                     start = a.start
-                    stop   = a.stop
-                    stop   = s if stop is None else stop
-                    if start is None:
-                        new_shape.append(stop)
-                    else:
-                        new_shape.append(PyccelMinus(stop, start))
+                    stop  = a.stop if a.stop is not None else s
+                    step  = a.step
+                    if isinstance(start, PyccelUnarySub):
+                        start = PyccelAdd(s, start)
+                    if isinstance(stop, PyccelUnarySub):
+                        stop = PyccelAdd(s, stop)
+
+                    _shape = stop if start is None else PyccelMinus(stop, start)
+                    if step is not None:
+                        if isinstance(step, PyccelUnarySub):
+                            start = s if a.start is None else start
+                            _shape = start if a.stop is None else PyccelMinus(start, stop)
+                            step = PyccelUnarySub(step)
+
+                        _shape = MathCeil(PyccelDiv(_shape, step))
+                    new_shape.append(_shape)
             self._shape = tuple(new_shape)
             self._rank  = len(new_shape)
         else:
