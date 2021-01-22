@@ -3069,8 +3069,6 @@ class SemanticParser(BasicParser):
         var = self._visit(name)
         assert(var.rank==1)
         size = var.shape[0]
-        if isinstance(size, LiteralInteger):
-            size = size.p
         return StarredArguments([self._visit(Indexed(name,i)) for i in range(size)])
 
 #==============================================================================
