@@ -10,7 +10,7 @@ import operator
 
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
-from pyccel.ast.core      import Declare
+from pyccel.ast.core      import Declare, Return
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
@@ -20,7 +20,7 @@ from pyccel.ast.core      import create_incremented_string
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis
-from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
+from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator, PyccelOperator
 
 from pyccel.ast.datatypes import default_precision, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
@@ -268,6 +268,7 @@ class CCodePrinter(CodePrinter):
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
+        self._unecessary_declaration = []
         self._additional_args = []
         self._temporary_args = []
 
@@ -951,7 +952,12 @@ class CCodePrinter(CodePrinter):
         body  = self._print(expr.body)
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
-            decs += [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.results]
+            if isinstance(expr.results[0], Variable):
+                if expr.results[0] not in self._unecessary_declaration:
+                    print(type(expr.results[0]))
+                    decs += [Declare(expr.results[0].dtype, expr.results[0])]
+            elif isinstance(expr.results[0], FunctionAddress):
+                decs += [FuncAddressDeclare(expr.results[0])]
         decs += [Declare(i.dtype, i) for i in self._additional_declare]
         decs  = '\n'.join(self._print(i) for i in decs)
         self._additional_declare.clear()
@@ -1037,6 +1043,7 @@ class CCodePrinter(CodePrinter):
             return 'return 0;'
         if len(args) == 1:
             if expr.stmt:
+                self._unecessary_declaration.append(expr.stmt.body[0].lhs)
                 return 'return {0};'.format(self._print(expr.stmt.body[0].rhs))
             return 'return {0};'.format(self._print(args[0]))
         return ''
