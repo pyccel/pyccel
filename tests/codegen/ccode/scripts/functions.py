@@ -1,12 +1,20 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 # pylint: disable=unused-variable
 
-#$ header function incr_(int)
-def incr_(x):
-    #$ header function decr_(int)
-    def decr_(y):
-        y = y-1
-    x = x + 1
+
+#$ header function fib(int) results(int)
+def fib(n):
+    if n < 2:
+        return n
+    i = fib(n-1)
+    j = fib(n-2)
+    return i + j
+
+#$ header function recu_func(int) results(int)
+def recu_func(x):
+    if x > 0:
+        x = x - 1
+    return x
 
 def helloworld():
     print('hello world')
@@ -19,29 +27,6 @@ def incr(x):
 def decr(x):
     y = x - 1
     return y
-
-# TODO [YG, 30.01.2020] function behavior in Python not correct:
-#      must change to x += 1
-#
-#$ header function incr_array(int [:])
-def incr_array(x):
-    x = x + 1
-
-y_=[1,2,3]
-
-# #$ header function decr_array([int]) results([int])
-# def decr_array(x):
-#     y_[1] = 6
-#     z = y_
-#     t = y_+x
-#     return t
-
-# TODO [YG, 30.01.2020] function behavior in Python not correct:
-#      must change to x -= 1
-#
-#$ header function decr_array(int [:])
-def decr_array(x):
-    x = x - 1
 
 #$ header function f1(int, int, int) results(int)
 def f1(x, n=2, m=3):
