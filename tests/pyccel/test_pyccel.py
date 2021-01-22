@@ -535,12 +535,13 @@ def test_print_sp_and_end(language):
 def test_c_arrays(language):
     types = [int]*15 + [float]*5 + [int]*25 + [float]* 20 * 5 + \
             [complex] * 3 * 10 + [complex] * 5 + [float] * 10 + [float] * 6 + \
-            [float] * 2 * 3 + [complex] * 3 * 10 + [float] * 2 * 3
+            [float] * 2 * 3 + [complex] * 3 * 10 + [float] * 2 * 3 + [int] * 3
     pyccel_test("scripts/c_arrays.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
 def test_arrays_view(language):
-    types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10
+    types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10 + \
+            [int] * 6 + [int] * 10
     pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------

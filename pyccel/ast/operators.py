@@ -8,17 +8,21 @@ These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the dtype, precision, rank, shape
 """
-from sympy.core.expr          import Expr
+from sympy.core.expr        import Expr
 
-from ..errors.errors import Errors, PyccelSemanticError
+from ..errors.errors        import Errors, PyccelSemanticError
 
-from .basic     import PyccelAstNode
+from .basic                 import PyccelAstNode
 
-from .builtins import PythonInt
+from .builtins              import PythonInt
 
-from .datatypes import NativeBool, NativeInteger, NativeReal, NativeComplex, NativeString, default_precision
+from .datatypes             import (NativeBool, NativeInteger, NativeReal,
+                                    NativeComplex, NativeString, default_precision,
+                                    NativeNumeric)
 
-from .literals import LiteralInteger, LiteralFloat, LiteralComplex
+from .internals             import PyccelArraySize
+
+from .literals              import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 
 errors = Errors()
 
@@ -54,15 +58,16 @@ __all__ = (
 #==============================================================================
 def broadcast(shape_1, shape_2):
     """ This function broadcast two shapes using numpy broadcasting rules """
-    from .core      import PyccelArraySize
+
+    from pyccel.ast.sympy_helper import pyccel_to_sympy
 
     a = len(shape_1)
     b = len(shape_2)
     if a>b:
-        new_shape_2 = (1,)*(a-b) + tuple(shape_2)
+        new_shape_2 = (LiteralInteger(1),)*(a-b) + tuple(shape_2)
         new_shape_1 = shape_1
     elif b>a:
-        new_shape_1 = (1,)*(b-a) + tuple(shape_1)
+        new_shape_1 = (LiteralInteger(1),)*(b-a) + tuple(shape_1)
         new_shape_2 = shape_2
     else:
         new_shape_2 = shape_2
@@ -70,17 +75,22 @@ def broadcast(shape_1, shape_2):
 
     new_shape = []
     for e1,e2 in zip(new_shape_1, new_shape_2):
-        if e1 == e2:
+        used_names = set()
+        symbol_map = {}
+        sy_e1 = pyccel_to_sympy(e1, symbol_map, used_names)
+        sy_e2 = pyccel_to_sympy(e2, symbol_map, used_names)
+        if sy_e1 == sy_e2:
             new_shape.append(e1)
-        elif e1 == 1:
+        elif sy_e1 == 1:
             new_shape.append(e2)
-        elif e2 == 1:
+        elif sy_e2 == 1:
             new_shape.append(e1)
-        elif isinstance(e1, PyccelArraySize) and isinstance(e2, PyccelArraySize):
+        elif sy_e1.is_constant() and not sy_e2.is_constant():
             new_shape.append(e1)
-        elif isinstance(e1, PyccelArraySize):
+        elif sy_e2.is_constant() and not sy_e1.is_constant():
             new_shape.append(e2)
-        elif isinstance(e2, PyccelArraySize):
+        elif not sy_e2.is_constant() and not sy_e1.is_constant()\
+                and not (sy_e1 - sy_e2).is_constant():
             new_shape.append(e1)
         else:
             msg = 'operands could not be broadcast together with shapes {} {}'
@@ -1070,7 +1080,91 @@ class PyccelIsNot(PyccelIs):
     def __repr__(self):
         return '{} is not {}'.format(self.args[0], self.args[1])
 
+
 #==============================================================================
 
+class IfTernaryOperator(PyccelOperator):
+    """Represent a ternary conditional operator in the code, of the form (a if cond else b)
+
+    Parameters
+    ----------
+    args :
+        args : type list
+        format : condition , value_if_true, value_if_false
+
+    Examples
+    --------
+    >>> from sympy import Symbol
+    >>> from pyccel.ast.core import Assign
+	>>>	from pyccel.ast.operators import IfTernaryOperator
+    >>> n = Symbol('n')
+    >>> x = 5 if n > 1 else 2
+    >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
+    IfTernaryOperator(PyccelGt(n > 1),  5,  2)
+    """
+    _precedence = 3
+
+    def __init__(self, cond, value_true, value_false):
+        super().__init__(cond, value_true, value_false)
+
+        if self.stage == 'syntactic':
+            return
+        if isinstance(value_true , Nil) or isinstance(value_false, Nil):
+            errors.report('None is not implemented for Ternary Operator', severity='fatal')
+        if isinstance(value_true , NativeString) or isinstance(value_false, NativeString):
+            errors.report('String is not implemented for Ternary Operator', severity='fatal')
+        if value_true.dtype != value_false.dtype:
+            if value_true.dtype not in NativeNumeric or value_false.dtype not in NativeNumeric:
+                errors.report('The types are incompatible in IfTernaryOperator', severity='fatal')
+        if value_false.rank != value_true.rank :
+            errors.report('Ternary Operator results should have the same rank', severity='fatal')
+        if value_false.shape != value_true.shape :
+            errors.report('Ternary Operator results should have the same shape', severity='fatal')
+
+    def _set_dtype(self):
+        """
+        Sets the dtype and precision for IfTernaryOperator
+        """
+        if self.value_true.dtype in NativeNumeric and self.value_false.dtype in NativeNumeric:
+            self._dtype = max([self.value_true.dtype, self.value_false.dtype], key = NativeNumeric.index)
+        else:
+            self._dtype = self.value_true.dtype
+
+        self._precision = max([self.value_true.precision, self.value_false.precision])
+
+    def _set_shape_rank(self):
+        """
+        Sets the shape and rank and the order for IfTernaryOperator
+        """
+        self._shape = self.value_true.shape
+        self._rank  = self.value_true.rank
+        if self._rank is not None and self._rank > 1:
+            if self.value_false.order != self.value_true.order :
+                errors.report('Ternary Operator results should have the same order', severity='fatal')
+
+    @property
+    def cond(self):
+        """
+        The condition property for IfTernaryOperator class
+        """
+        return self._args[0]
+
+    @property
+    def value_true(self):
+        """
+        The value_if_cond_true property for IfTernaryOperator class
+        """
+        return self._args[1]
+
+    @property
+    def value_false(self):
+        """
+        The value_if_cond_false property for IfTernaryOperator class
+        """
+        return self._args[2]
+
+
+
+#==============================================================================
 Relational = (PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe, PyccelAnd, PyccelOr,  PyccelNot, PyccelIs, PyccelIsNot)
 

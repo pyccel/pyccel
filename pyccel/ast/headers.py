@@ -7,18 +7,19 @@
 
 from sympy.utilities.iterables import iterable
 from sympy.core import Symbol
-from sympy import sympify, Tuple
+from sympy import sympify
 
 from ..errors.errors import Errors
 from ..errors.messages import TEMPLATE_IN_UNIONTYPE
 from .core import Basic
-from .core import Variable
-from .core import ValuedArgument, ValuedVariable
+from .core import ValuedArgument
 from .core import FunctionDef, Interface, FunctionAddress
-from .core import DottedName, DottedVariable
+from .core import local_sympify
 from .datatypes import datatype, DataTypeFactory, UnionType
 from .macros import Macro, MacroShape, construct_macro
-from .core import local_sympify
+from .variable import DottedName, DottedVariable
+from .variable import Variable
+from .variable import ValuedVariable
 
 __all__ = (
     'ClassHeader',
@@ -632,10 +633,10 @@ class MacroFunction(Header):
                     raise ValueError('variable not allowed after an optional argument')
 
             for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
-                if not isinstance(arg, Tuple):
+                if not isinstance(arg, tuple):
                     d_arguments[arg.name] = val
                 else:
-                    if not isinstance(val, (list, Tuple,tuple)):
+                    if not isinstance(val, (list, tuple)):
                         val = [val]
                     #TODO improve add more checks and generalize
                     if len(val)>len(arg):
@@ -643,9 +644,9 @@ class MacroFunction(Header):
                     elif len(val)<len(arg):
                         for val_ in arg[len(val):]:
                             if isinstance(val_, ValuedVariable):
-                                val +=Tuple(val_.value,)
+                                val +=tuple(val_.value,)
                             else:
-                                val +=Tuple(val_)
+                                val +=tuple(val_)
 
                     for arg_,val_ in zip(arg,val):
                         d_arguments[arg_.name] = val_

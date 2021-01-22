@@ -69,7 +69,7 @@ def cse(expr):
             var = Symbol(name)
             stmt = Assign(var, Function('empty')(size[0]))
             allocate.append(stmt)
-            stmts[i] = For(ind[0], Function('range')(size[0]), [stmts[i]], strict=False)
+            stmts[i] = For(ind[0], Function('range')(size[0]), [stmts[i]])
     lhs = create_variable(expr)
     stmts[-1] = Assign(lhs, stmts[-1])
     imports = [Import('empty', 'numpy')]
@@ -87,7 +87,7 @@ def pyccel_sum(expr):
     index = expr.args[1]
     target = Function('range')(index[1], index[2])
     body = AugAssign(lhs, '+', expr.args[0])
-    stmt = For(index[0], target, [body], strict=False)
+    stmt = For(index[0], target, [body])
     stmt = FunctionalSum([stmt], expr.args[0], lhs)
 
     return stmt
@@ -123,7 +123,7 @@ def lambdify(expr, args):
     return func
 
 def set_fst(expr, fst):
-    if isinstance(expr, (tuple,list,Tuple)):
+    if isinstance(expr, (tuple,list)):
         for i in expr:set_fst(i, fst)
     elif isinstance(expr, For):
         set_fst(expr.body, fst)

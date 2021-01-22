@@ -9,7 +9,6 @@ from os.path import join, dirname
 
 from sympy.core import Symbol
 from sympy import sympify
-from sympy import Tuple
 
 from textx.metamodel import metamodel_from_file
 
@@ -18,7 +17,7 @@ from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader, Vari
 from pyccel.ast.headers   import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.core      import ValuedArgument
-from pyccel.ast.core      import DottedName
+from pyccel.ast.variable  import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
 from pyccel.ast.literals  import LiteralString
 from pyccel.errors.errors import Errors
@@ -386,7 +385,7 @@ class MacroArg(BasicStmt):
     def expr(self):
         arg_ = self.arg
         if isinstance(arg_, MacroList):
-            return Tuple(*arg_.expr)
+            return tuple(arg_.expr)
         arg = Symbol(str(arg_))
         value = self.value
         if not(value is None):

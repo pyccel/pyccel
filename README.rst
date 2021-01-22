@@ -1,7 +1,7 @@
 Welcome to Pyccel
 =================
 
-|build-status| |docs| |codacy|
+ |build-status| |codacy|
 
 **Pyccel** stands for Python extension language using accelerators.
 
@@ -17,17 +17,29 @@ The aim of **Pyccel** is to provide a simple way to generate automatically, para
 
 - a compiler for a *Domain Specific Language* with *Python* syntax
 
-Pyccel comes with a selection of **extensions** allowing you to convert calls to some specific python packages to Fortran. The following packages will be covered (partially):
+Pyccel comes with a selection of **extensions** allowing you to convert calls to some specific python packages to Fortran/C. The following packages will be covered (partially):
 
 - numpy
 - scipy
 - mpi4py
 - h5py (not available yet)
 
+If you are eager to try Pyccel out, we recommend reading our `quick-start guide <https://github.com/pyccel/pyccel/blob/master/tutorial/quickstart.md>`_!
+
+Pyccel Installation Methods
+***************************
+
+Pyccel can be installed on virtually any machine that provides Python 3, the pip package manager, a C/Fortran compiler, and an Internet connection.
+Some advanced features of Pyccel require additional non-Python libraries to be installed, for which we provide detailed instructions below.
+
+Alternatively, Pyccel can be deployed through a **Linux Docker image** that contains all dependencies, and which can be setup with any version of Pyccel.
+For more information, please read the section on `Pyccel container images`_.
+
+
 Requirements
 ============
 
-First of all, Pyccel requires a working Fortran/C compiler   
+First of all, Pyccel requires a working Fortran/C compiler
 
 For Fortran it supports
 
@@ -55,6 +67,8 @@ Finally, Pyccel supports distributed-memory parallel programming through the Mes
 We recommend using GFortran/Gcc and Open-MPI.
 
 Pyccel also depends on several Python3 packages, which are automatically downloaded by pip, the Python Package Installer, during the installation process. In addition to these, unit tests require the *scipy*, *mpi4py*, *pytest* and *coverage* packages, while building the documentation requires Sphinx <http://www.sphinx-doc.org/>.
+
+
 
 Linux Debian/Ubuntu/Mint
 ************************
@@ -204,54 +218,41 @@ In order to run the unit tests and to get a coverage report, four additional Pyt
   pip3 install --user pytest
   pip3 install --user coverage
 
-
-Reading the docs
-================
-
-You can read them online at <http://pyccel.readthedocs.io/>.
-
-Alternatively, the documentation can be built automatically using Sphinx.
-First you will need to install a few additional Python packages::
-
-   pip3 install --user sphinx
-   pip3 install --user sphinxcontrib.bibtex
-   pip3 install --user git+git://github.com/saidctb/sphinx-execute-code
-
-Then build the documentation with::
-
-   cd doc
-   make html
-
-Then, direct your browser to ``_build/html/index.html``.
-
 Testing
 =======
 
 To test your Pyccel installation please run the script *tests/run_tests_py3.sh* (Unix), or *tests/run_tests.bat* (Windows).
 
-Continuous testing runs on Travis CI: <https://travis-ci.com/github/pyccel/pyccel>
+Continuous testing runs on github actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Amaster>
 
-Known bugs
-==========
 
-We are trying to maintain a list of *known bugs*, see `bugs/README.rst`__
+Pyccel Container Images
+=======================
 
-.. __: bugs/README.rst
+Pyccel container images are available through both Docker Hub (docker.io) and the GitHub Container Registry (ghcr.io).
 
-Contributing
-============
+The images:
 
-TODO
+- are based on ubuntu:latest
+- use distro packaged python3, gcc, gfortran, blas and openmpi
+- support all pyccel releases except the legacy "0.1"
 
-.. |build-status| image:: https://travis-ci.com/pyccel/pyccel.svg?branch=master
+Image tags match pyccel releases.
+
+In order to implement your pyccel accelerated code, you can use a host based volume during the pyccel container creation.
+
+For example::
+
+  docker pull pyccel/pyccel:v1.0.0
+  docker run -it -v $PWD:/data:rw  pyccel/pyccel:v1.0.0 bash
+
+If you are using SELinux, you will need to set the right context for your host based volume.
+Alternatively you may have docker or podman set the context using -v $PWD:/data:rwz instead of -v $PWD:/data:rw .
+
+.. |build-status| image:: https://github.com/pyccel/pyccel/workflows/master_tests/badge.svg
     :alt: build status
     :scale: 100%
-    :target: https://travis-ci.com/pyccel/pyccel
-
-.. |docs| image:: https://readthedocs.org/projects/pyccel/badge/?version=latest
-    :alt: Documentation Status
-    :scale: 100%
-    :target: http://pyccel.readthedocs.io/
+    :target: https://github.com/pyccel/pyccel/actions?query=workflow%3Amaster_tests
 
 .. |codacy| image:: https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698
     :alt: Codacy Badge
