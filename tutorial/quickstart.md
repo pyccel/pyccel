@@ -7,7 +7,7 @@ Programmers usually develop their prototype code in a user-friendly interactive 
 In most cases this is written in a statically compiled language like Fortran/C/C++, and it uses SIMD vectorization, parallel multi-threading, MPI parallelization, GPU offloading, etc.
 
 We believe that this expensive process can be avoided, or at least drastically reduced, by using Pyccel to accelerate the most computationally intensive parts of the Python prototype.
-Not only the Pyccel-generated Fortran or C code is very fast, but it is **human-readable**; hence the expert programmer can easily profile the code on the target machine and further optimize it.
+Not only is the Pyccel-generated Fortran or C code very fast, but it is **human-readable**; hence the expert programmer can easily profile the code on the target machine and further optimize it.
 
 ## Some Useful Background
 
