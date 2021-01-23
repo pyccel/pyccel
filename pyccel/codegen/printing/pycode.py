@@ -85,11 +85,11 @@ class PythonCodePrinter(SympyPythonCodePrinter):
                 '\n{imports}\n{body}\n').format(name=name, args=args,imports=imports, body=body)
         decorators = expr.decorators
         if decorators:
-            try:
-                #Eliminate templates dic to avoid conflicst in the printing
+            if decorators['template']:
+                #Eliminate templates_dict to avoid conflicts in the printing
                 expr.decorators['template'] = expr.decorators['template']['template_list']
-            except:
-                pass
+            else:
+                expr.decorators.pop('template')
             for n,f in decorators.items():
                 if n in pyccel_decorators:
                     self._additional_imports.add(Import(DottedName('pyccel.decorators'), n))
