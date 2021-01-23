@@ -957,7 +957,6 @@ class CCodePrinter(CodePrinter):
         if len(expr.results) == 1 :
             if isinstance(expr.results[0], Variable):
                 if expr.results[0] not in self._unnecessary_declaration:
-                    print(type(expr.results[0]))
                     decs += [Declare(expr.results[0].dtype, expr.results[0])]
             elif isinstance(expr.results[0], FunctionAddress):
                 decs += [FuncAddressDeclare(expr.results[0])]
