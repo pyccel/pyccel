@@ -2386,18 +2386,16 @@ class SemanticParser(BasicParser):
         headers = []
 
         not_used = [d for d in decorators if d not in def_decorators.__all__]
-        not_used.remove('templates') #templates is not a decorator
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
         args_number = len(expr.arguments)
-        if decorators['templates']:
-            templates = self.get_templates()
-            templates.update(decorators['templates'])
-            decorators['templates'] = templates
-            templates = decorators['templates']
-        else:
-            templates = self.get_templates()
+        templates = self.get_templates()
+        try:
+            templates.update(decorators['template']['templates_dict'])
+        except:
+            pass
+            
 
         tmp_headers = expr.headers
         if cls_name:

@@ -736,7 +736,10 @@ class SyntaxParser(BasicParser):
                                 severity='warning')
 
                 templates[tp_name] = hdr_parse(stmts=txt)
-                decorators['templates'] = templates
+                template = {}
+                template['templates_dict'] = templates
+                template['template_list'] = decorators['template']
+                decorators['template'] = template
 
         # extract the types to construct a header
         if 'types' in decorators:

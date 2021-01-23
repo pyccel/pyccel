@@ -2459,7 +2459,10 @@ class FunctionDef(Basic):
         self._imports         = imports
         self._decorators      = decorators
         self._headers         = headers
-        self._templates       = decorators.setdefault('templates', None)
+        try:
+            self._templates       = decorators['template']['templates_dict'].setdefault('templates_dict', None)
+        except:
+            self._templates = None
         self._is_recursive    = is_recursive
         self._is_pure         = is_pure
         self._is_elemental    = is_elemental
