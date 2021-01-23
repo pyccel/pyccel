@@ -2492,3 +2492,942 @@ def test_max_property(language):
     f1 = epyccel(max_call, language = language)
     x = randint(99,size=10)
     assert(f1(x) == max_call(x))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+
+def test_full_like_basic_int(language):
+    @types('int[:]', 'int')
+    def create_full_like_shape_1d(arr, n):
+        from numpy import full_like, shape
+        a = full_like(arr, n, int, 'F')
+        s = shape(a)
+        return len(s),s[0]
+    @types('int[:]', 'int')
+    def create_full_like_shape_2d(arr, n):
+        from numpy import full_like, shape
+        a = full_like(arr, n, int , 'F')
+        s = shape(a)
+        return len(s),s[0], s[1]
+    @types('int[:]', 'int')
+    def create_full_like_val(arr, val):
+        from numpy import full_like
+        a = full_like(arr, val, int, 'F')
+        return a[0],a[1],a[2]
+    @types('int[:]', 'int')
+    def create_full_like_arg_names(arr, val):
+        from numpy import full_like
+        a = full_like(arr, val, int, 'F', shape = (2,3))
+        return a[0,0],a[0,1],a[0,2],a[1,0],a[1,1],a[1,2]
+
+    size = randint(10)
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+
+    f_shape_1d  = epyccel(create_full_like_shape_1d, language = language)
+    assert(f_shape_1d(arr, size) == create_full_like_shape_1d(arr, size))
+
+    f_shape_2d  = epyccel(create_full_like_shape_2d, language = language)
+    assert(f_shape_2d(arr, size) == create_full_like_shape_2d(arr, size))
+
+    f_val       = epyccel(create_full_like_val, language = language)
+    assert(f_val(arr, size)      == create_full_like_val(arr, size))
+    assert(type(f_val(arr, size)[0])       == type(create_full_like_val(arr, size)[0].item()))
+
+    f_arg_names = epyccel(create_full_like_arg_names, language = language)
+    assert(f_arg_names(arr, size) == create_full_like_arg_names(arr, size))
+    assert(type(f_arg_names(arr, size)[0]) == type(create_full_like_arg_names(arr, size)[0].item()))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_full_like_basic_real(language):
+    @types('int[:]', 'real')
+    def create_full_like_shape_1d(arr, n):
+        from numpy import full_like, shape, real
+        a = full_like(arr, n, real, 'F')
+        s = shape(a)
+        return len(s),s[0]
+    @types('int[:]', 'real')
+    def create_full_like_shape_2d(arr, n):
+        from numpy import full_like, shape, real
+        a = full_like(arr, n, real, 'F')
+        s = shape(a)
+        return len(s),s[0], s[1]
+    @types('real[:]', 'real')
+    def create_full_like_val(arr, val):
+        from numpy import full_like,real
+        a = full_like(arr, val, real, 'F')
+        return a[0],a[1],a[2]
+    @types('real[:]', 'real')
+    def create_full_like_arg_names(arr, val):
+        from numpy import full_like, real
+        a = full_like(arr, val, real, shape = (2,3))
+        return a[0,0],a[0,1],a[0,2],a[1,0],a[1,1],a[1,2]
+
+    size = randint(10)
+    val  = rand()*5
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+
+    f_shape_1d  = epyccel(create_full_like_shape_1d, language = language)
+    assert(f_shape_1d(arr, size)     == create_full_like_shape_1d(arr, size))
+
+    f_shape_2d  = epyccel(create_full_like_shape_2d, language = language)
+    assert(f_shape_2d(arr, size)     == create_full_like_shape_2d(arr, size))
+
+    f_val       = epyccel(create_full_like_val, language = language)
+    assert(f_val(arr, val)           == create_full_like_val(arr, val))
+    assert(type(f_val(arr, val)[0])       == type(create_full_like_val(arr, val)[0].item()))
+
+    f_arg_names = epyccel(create_full_like_arg_names, language = language)
+    assert(f_arg_names(arr, val)     == create_full_like_arg_names(arr, val))
+    assert(type(f_arg_names(arr ,val)[0]) == type(create_full_like_arg_names(arr, val)[0].item()))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="tuples not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_full_like_basic_bool(language):
+    @types('int[:]', 'int')
+    def create_full_like_shape_1d(arr, n):
+        from numpy import full_like, shape
+        a = full_like(arr, n, int, 'F')
+        s = shape(a)
+        return len(s),s[0]
+    @types('int[:]', 'int')
+    def create_full_like_shape_2d(arr, n):
+        from numpy import full_like, shape
+        a = full_like(arr, n, int, 'F')
+        s = shape(a)
+        return len(s),s[0], s[1]
+    @types('int[:]', 'bool')
+    def create_full_like_val(arr ,val):
+        from numpy import full_like
+        a = full_like(arr , 3, val, 'F')
+        return a[0],a[1],a[2]
+    @types('int[:]', 'bool')
+    def create_full_like_arg_names(arr ,val):
+        from numpy import full_like
+        a = full_like(arr ,fill_value = val, dtype=val, shape = (2,3))
+        return a[0,0],a[0,1],a[0,2],a[1,0],a[1,1],a[1,2]
+
+    size = randint(10)
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+    val  = bool(randint(2))
+
+    f_shape_1d  = epyccel(create_full_like_shape_1d, language = language)
+    assert(f_shape_1d(arr , size)     == create_full_like_shape_1d(arr ,size))
+
+    f_shape_2d  = epyccel(create_full_like_shape_2d, language = language)
+    assert(f_shape_2d(arr ,size)     == create_full_like_shape_2d(arr ,size))
+
+    f_val       = epyccel(create_full_like_val, language = language)
+    assert(f_val(arr ,val)           == create_full_like_val(arr ,val))
+    assert(type(f_val(arr ,val)[0])       == type(create_full_like_val(arr ,val)[0].item()))
+
+    f_arg_names = epyccel(create_full_like_arg_names, language = language)
+    assert(f_arg_names(arr ,val)     == create_full_like_arg_names(arr ,val))
+    assert(type(f_arg_names(arr ,val)[0]) == type(create_full_like_arg_names(arr ,val)[0].item()))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_full_like_order(language):
+    @types('int','int')
+    def create_full_like_shape_C(arr ,n,m):
+        from numpy import full_like, shape
+        a = full_like(arr ,(n,m),4, order = 'C')
+        s = shape(a)
+        return len(s),s[0], s[1]
+    @types('int','int')
+    def create_full_like_shape_F(arr ,n,m):
+        from numpy import full_like, shape
+        a = full_like(arr ,(n,m),4, order = 'F')
+        s = shape(a)
+        return len(s),s[0], s[1]
+
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+    size_1 = randint(10)
+    size_2 = randint(10)
+
+    f_shape_C  = epyccel(create_full_like_shape_C, language = language)
+    assert(f_shape_C(arr ,size_1,size_2) == create_full_like_shape_C(arr ,size_1,size_2))
+
+    f_shape_F  = epyccel(create_full_like_shape_F, language = language)
+    assert(f_shape_F(arr ,size_1,size_2) == create_full_like_shape_F(arr ,size_1,size_2))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="casting to complex in not handled correctly"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_full_like_dtype(language):
+    @types('int[:]', 'int')
+    def create_full_like_val_int_int(arr ,val):
+        from numpy import full_like
+        a = full_like(arr ,3,val,int)
+        return a[0]
+    @types('int[:]', 'int')
+    def create_full_like_val_int_float(arr ,val):
+        from numpy import full_like
+        a = full_like(arr ,3,val,float)
+        return a[0]
+    @types('int[:]', 'int')
+    def create_full_like_val_int_complex(arr ,val):
+        from numpy import full_like
+        a = full_like(arr ,3,val,complex)
+        return a[0]
+    @types('real[:]', 'real')
+    def create_full_like_val_real_int32(arr ,val):
+        from numpy import full_like, int32
+        a = full_like(arr,val,int32)
+        return a[0]
+    @types('real[:]', 'real')
+    def create_full_like_val_real_float32(arr ,val):
+        from numpy import full_like, float32
+        a = full_like(arr,val,float32)
+        return a[0]
+    @types('real[:]', 'real')
+    def create_full_like_val_real_float64(arr ,val):
+        from numpy import full_like, float64
+        a = full_like(arr,val,float64)
+        return a[0]
+    @types('real[:]', 'real')
+    def create_full_like_val_real_complex64(arr ,val):
+        from numpy import full_like, complex64
+        a = full_like(arr,val,complex64)
+        return a[0]
+    @types('real[:]', 'real')
+    def create_full_like_val_real_complex128(arr ,val):
+        from numpy import full_like, complex128
+        a = full_like(arr,val,complex128)
+        return a[0]
+
+    val_int   = randint(100)
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+    val_float = rand()*100
+
+    f_int_int   = epyccel(create_full_like_val_int_int, language = language)
+    assert(     f_int_int(arr ,val_int)        ==      create_full_like_val_int_int(arr ,val_int))
+    assert(type(f_int_int(arr ,val_int))       == type(create_full_like_val_int_int(arr ,val_int).item()))
+
+    f_int_float = epyccel(create_full_like_val_int_float, language = language)
+    assert(isclose(     f_int_float(arr ,val_int)     ,      create_full_like_val_int_float(arr ,val_int), rtol=RTOL, atol=ATOL))
+    assert(type(f_int_float(arr ,val_int))     == type(create_full_like_val_int_float(arr ,val_int).item()))
+
+    f_int_complex = epyccel(create_full_like_val_int_complex, language = language)
+    assert(isclose(     f_int_complex(arr ,val_int)     ,      create_full_like_val_int_complex(arr ,val_int), rtol=RTOL, atol=ATOL))
+    assert(type(f_int_complex(arr ,val_int))     == type(create_full_like_val_int_complex(arr ,val_int).item()))
+
+    f_real_int32   = epyccel(create_full_like_val_real_int32, language = language)
+    assert(     f_real_int32(arr ,val_float)        ==      create_full_like_val_real_int32(arr ,val_float))
+    assert(type(f_real_int32(arr ,val_float))       == type(create_full_like_val_real_int32(arr ,val_float).item()))
+
+    f_real_float32   = epyccel(create_full_like_val_real_float32, language = language)
+    assert(isclose(     f_real_float32(arr ,val_float)       ,      create_full_like_val_real_float32(arr ,val_float), rtol=RTOL, atol=ATOL))
+    assert(type(f_real_float32(arr ,val_float))       == type(create_full_like_val_real_float32(arr ,val_float).item()))
+
+    f_real_float64   = epyccel(create_full_like_val_real_float64, language = language)
+    assert(isclose(     f_real_float64(arr ,val_float)       ,      create_full_like_val_real_float64(arr ,val_float), rtol=RTOL, atol=ATOL))
+    assert(type(f_real_float64(arr ,val_float))       == type(create_full_like_val_real_float64(arr ,val_float).item()))
+
+    f_real_complex64   = epyccel(create_full_like_val_real_complex64, language = language)
+    assert(isclose(     f_real_complex64(arr ,val_float)       ,      create_full_like_val_real_complex64(arr ,val_float), rtol=RTOL, atol=ATOL))
+    assert(type(f_real_complex64(arr ,val_float))       == type(create_full_like_val_real_complex64(arr ,val_float).item()))
+
+    f_real_complex128   = epyccel(create_full_like_val_real_complex128, language = language)
+    assert(isclose(     f_real_complex128(arr ,val_float)       ,      create_full_like_val_real_complex128(arr ,val_float), rtol=RTOL, atol=ATOL))
+    assert(type(f_real_complex128(arr ,val_float))       == type(create_full_like_val_real_complex128(arr ,val_float).item()))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_full_like_combined_args(language):
+    @types('int[:]')
+    def create_full_like_1_shape(arr):
+        from numpy import full_like, shape
+        a = full_like(arr, 5,int,'F')
+        s = shape(a)
+        return len(s),s[0],s[1]
+    @types('int[:]')
+    def create_full_like_1_val(arr):
+        from numpy import full_like
+        a = full_like(arr, 4.0, int,'F', (2,1))
+        return a[0,0]
+    @types('int[:]')
+    def create_full_like_2_shape(arr):
+        from numpy import full_like, shape
+        a = full_like(arr,shape=(4,2),dtype=float,fill_value=1)
+        s = shape(a)
+        return len(s),s[0],s[1]
+    @types('int[:]')
+    def create_full_like_2_val(arr):
+        from numpy import full_like
+        a = full_like(arr,shape=(4,2),dtype=float,fill_value=1)
+        return a[0,0]
+    @types('int[:]')
+    def create_full_like_3_shape(arr):
+        from numpy import full_like, shape
+        a = full_like(arr,order = 'F', shape = (4,2),dtype=complex,fill_value=1)
+        s = shape(a)
+        return len(s),s[0],s[1]
+    @types('int[:]')
+    def create_full_like_3_val(arr):
+        from numpy import full_like
+        a = full_like(arr,order = 'F', shape = (4,2),dtype=complex,fill_value=1)
+        return a[0,0]
+
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+
+    f1_shape = epyccel(create_full_like_1_shape, language = language)
+    f1_val   = epyccel(create_full_like_1_val, language = language)
+    assert(f1_shape(arr) == create_full_like_1_shape(arr))
+    assert(f1_val(arr)   == create_full_like_1_val(arr)  )
+    assert(type(f1_val(arr))  == type(create_full_like_1_val(arr).item()))
+
+    f2_shape = epyccel(create_full_like_2_shape, language = language)
+    f2_val   = epyccel(create_full_like_2_val, language = language)
+    assert(f2_shape(arr) == create_full_like_2_shape(arr)    )
+    assert(isclose(f2_val(arr)  , create_full_like_2_val(arr)      , rtol=RTOL, atol=ATOL))
+    assert(type(f2_val(arr))  == type(create_full_like_2_val(arr).item()))
+
+    f3_shape = epyccel(create_full_like_3_shape, language = language)
+    f3_val   = epyccel(create_full_like_3_val, language = language)
+    assert(             f3_shape(arr) ==    create_full_like_3_shape(arr)      )
+    assert(isclose(     f3_val(arr)  ,      create_full_like_3_val(arr)        , rtol=RTOL, atol=ATOL))
+    assert(type(f3_val(arr))  == type(create_full_like_3_val(arr).item()))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_empty_like_basic(language):
+    @types('int[:]', 'int')
+    def create_empty_like_shape_1d(arr, n):
+        from numpy import empty_like, shape
+        a = empty_like(arr, n, int)
+        s = shape(a)
+        return len(s),s[0]
+    @types('int[:]', 'int')
+    def create_empty_like_shape_2d(arr, n):
+        from numpy import empty_like, shape
+        a = empty_like(arr, n, int)
+        s = shape(a)
+        return len(s),s[0], s[1]
+
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+    size = randint(10)
+
+    f_shape_1d  = epyccel(create_empty_like_shape_1d, language = language)
+    assert(     f_shape_1d(arr, size)      ==      create_empty_like_shape_1d(arr, size))
+
+    f_shape_2d  = epyccel(create_empty_like_shape_2d, language = language)
+    assert(     f_shape_2d(arr, size)      ==      create_empty_like_shape_2d(arr, size))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_empty_like_order(language):
+    @types('int[:]', 'int','int')
+    def create_empty_like_shape_C(arr, n,m):
+        from numpy import empty_like, shape
+        a = empty_like(arr, int, shape=(n,m), order = 'C')
+        s = shape(a)
+        return len(s),s[0], s[1]
+    @types('int[:]', 'int', 'int')
+    def create_empty_like_shape_F(arr, n,m):
+        from numpy import empty_like, shape
+        a = empty_like(arr, int, shape=(n,m), order = 'F')
+        s = shape(a)
+        return len(s),s[0], s[1]
+
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+    size_1 = randint(10)
+    size_2 = randint(10)
+
+    f_shape_C  = epyccel(create_empty_like_shape_C, language = language)
+    assert(     f_shape_C(arr, size_1,size_2) == create_empty_like_shape_C(arr, size_1,size_2))
+
+    f_shape_F  = epyccel(create_empty_like_shape_F, language = language)
+    assert(     f_shape_F(arr, size_1,size_2) == create_empty_like_shape_F(arr, size_1,size_2))
+
+def test_empty_like_dtype(language):
+    @types('int[:]')
+    def create_empty_like_val_int(arr):
+        from numpy import empty_like
+        a = empty_like(arr, int, shape=3)
+        return a[0]
+    @types('int[:]')
+    def create_empty_like_val_float(arr):
+        from numpy import empty_like
+        a = empty_like(arr, shape=3, dtype=float)
+        return a[0]
+    @types('int[:]')
+    def create_empty_like_val_complex(arr):
+        from numpy import empty_like
+        a = empty_like(arr, shape=3, dtype=complex)
+        return a[0]
+    @types('real[:]')
+    def create_empty_like_val_int32(arr):
+        from numpy import empty_like, int32
+        a = empty_like(arr, shape=3,dtype=int32)
+        return a[0]
+    @types('real[:]')
+    def create_empty_like_val_float32(arr):
+        from numpy import empty_like, float32
+        a = empty_like(arr, shape=3, dtype=float32)
+        return a[0]
+    @types('real[:]')
+    def create_empty_like_val_float64(arr):
+        from numpy import empty_like, float64
+        a = empty_like(arr, shape=3, dtype=float64)
+        return a[0]
+    @types('real[:]')
+    def create_empty_like_val_complex64(arr):
+        from numpy import empty_like, complex64
+        a = empty_like(arr, shape=3, dtype=complex64)
+        return a[0]
+    @types('real[:]')
+    def create_empty_like_val_complex128(arr):
+        from numpy import empty_like, complex128
+        a = empty_like(arr, shape=3, dtype=complex128)
+        return a[0]
+
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+
+    f_int_int   = epyccel(create_empty_like_val_int, language = language)
+    assert(type(f_int_int(arr))         == type(create_empty_like_val_int(arr).item()))
+
+    f_int_float = epyccel(create_empty_like_val_float, language = language)
+    assert(type(f_int_float(arr))       == type(create_empty_like_val_float(arr).item()))
+
+    f_int_complex = epyccel(create_empty_like_val_complex, language = language)
+    assert(type(f_int_complex(arr))     == type(create_empty_like_val_complex(arr).item()))
+
+    f_real_int32   = epyccel(create_empty_like_val_int32, language = language)
+    assert(type(f_real_int32(arr))      == type(create_empty_like_val_int32(arr).item()))
+
+    f_real_float32   = epyccel(create_empty_like_val_float32, language = language)
+    assert(type(f_real_float32(arr))    == type(create_empty_like_val_float32(arr).item()))
+
+    f_real_float64   = epyccel(create_empty_like_val_float64, language = language)
+    assert(type(f_real_float64(arr))    == type(create_empty_like_val_float64(arr).item()))
+
+    f_real_complex64   = epyccel(create_empty_like_val_complex64, language = language)
+    assert(type(f_real_complex64(arr))  == type(create_empty_like_val_complex64(arr).item()))
+
+    f_real_complex128   = epyccel(create_empty_like_val_complex128, language = language)
+    assert(type(f_real_complex128(arr)) == type(create_empty_like_val_complex128(arr).item()))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_empty_like_combined_args(language):
+    @types('int[:]')
+    def create_empty_like_1_shape(arr):
+        from numpy import empty_like, shape
+        a = empty_like(arr, shape=(2,1),dtype=int,order='F')
+        s = shape(a)
+        return len(s),s[0],s[1]
+    @types('int[:]')
+    def create_empty_like_1_val(arr):
+        from numpy import empty_like
+        a = empty_like(arr, shape=(2,1),dtype=int,order='F')
+        return a[0,0]
+    @types('int[:]')
+    def create_empty_like_2_shape(arr):
+        from numpy import empty_like, shape
+        a = empty_like(arr, shape=(4,2),dtype=float)
+        s = shape(a)
+        return len(s),s[0],s[1]
+    @types('int[:]')
+    def create_empty_like_2_val():
+        from numpy import empty_like
+        a = empty_like(arr, shape=(4,2), dtype=float)
+        return a[0,0]
+    @types('int[:]')
+    def create_empty_like_3_shape(arr):
+        from numpy import empty_like, shape
+        a = empty_like(arr, order = 'F', shape = (4,2),dtype=complex)
+        s = shape(a)
+        return len(s),s[0],s[1]
+    @types('int[:]')
+    def create_empty_like_3_val(arr):
+        from numpy import empty_like
+        a = empty_like(arr, order = 'F', shape = (4,2),dtype=complex)
+        return a[0,0]
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+
+    f1_shape = epyccel(create_empty_like_1_shape, language = language)
+    f1_val   = epyccel(create_empty_like_1_val, language = language)
+    assert(     f1_shape(arr) ==      create_empty_like_1_shape(arr)      )
+    assert(type(f1_val(arr))  == type(create_empty_like_1_val(arr).item()))
+
+    f2_shape = epyccel(create_empty_like_2_shape, language = language)
+    f2_val   = epyccel(create_empty_like_2_val, language = language)
+    assert(all(isclose(     f2_shape(arr),      create_empty_like_2_shape(arr)      )))
+    assert(type(f2_val(arr))  == type(create_empty_like_2_val(arr).item()))
+
+    f3_shape = epyccel(create_empty_like_3_shape, language = language)
+    f3_val   = epyccel(create_empty_like_3_val, language = language)
+    assert(all(isclose(     f3_shape(arr),      create_empty_like_3_shape(arr)      )))
+    assert(type(f3_val(arr))  == type(create_empty_like_3_val(arr).item()))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_ones_like_basic(language):
+    @types('int[:]', 'int')
+    def create_ones_like_shape_1d(arr, n):
+        from numpy import ones_like, shape
+        a = ones_like(arr, shape=n)
+        s = shape(a)
+        return len(s),s[0]
+    @types('int[:]', 'int')
+    def create_ones_like_shape_2d(arr, n):
+        from numpy import ones_like, shape
+        a = ones_like(arr, shape=(n,n))
+        s = shape(a)
+        return len(s),s[0], s[1]
+
+    size = randint(10)
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+
+    f_shape_1d  = epyccel(create_ones_like_shape_1d, language = language)
+    assert(     f_shape_1d(arr, size)      ==      create_ones_like_shape_1d(arr, size))
+
+    f_shape_2d  = epyccel(create_ones_like_shape_2d, language = language)
+    assert(     f_shape_2d(arr, size)      ==      create_ones_like_shape_2d(arr, size))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_ones_like_order(language):
+    @types('int[:]', 'int','int')
+    def create_ones_like_shape_C(arr, n,m):
+        from numpy import ones_like, shape
+        a = ones_like(arr, shape=(n,m), order = 'C')
+        s = shape(a)
+        return len(s),s[0], s[1]
+    @types('int[:]', 'int','int')
+    def create_ones_like_shape_F(arr, n,m):
+        from numpy import ones_like, shape
+        a = ones_like(arr, shape=(n,m), order = 'F')
+        s = shape(a)
+        return len(s),s[0], s[1]
+
+    size_1 = randint(10)
+    size_2 = randint(10)
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+
+    f_shape_C  = epyccel(create_ones_like_shape_C, language = language)
+    assert(     f_shape_C(arr, size_1,size_2) == create_ones_like_shape_C(arr, size_1,size_2))
+
+    f_shape_F  = epyccel(create_ones_like_shape_F, language = language)
+    assert(     f_shape_F(arr, size_1,size_2) == create_ones_like_shape_F(arr, size_1,size_2))
+
+def test_ones_like_dtype(language):
+    @types('int[:]')
+    def create_ones_like_val_int(arr):
+        from numpy import ones_like
+        a = ones_like(arr, int, shape=3)
+        return a[0]
+    @types('int[:]')
+    def create_ones_like_val_float(arr):
+        from numpy import ones_like
+        a = ones_like(arr,float,shape=3)
+        return a[0]
+    @types('int[:]')
+    def create_ones_like_val_complex(arr):
+        from numpy import ones_like
+        a = ones_like(arr, complex, shape=3)
+        return a[0]
+    @types('real[:]')
+    def create_ones_like_val_int32(arr):
+        from numpy import ones_like, int32
+        a = ones_like(arr,int32,shape=3)
+        return a[0]
+    @types('real[:]')
+    def create_ones_like_val_float32(arr):
+        from numpy import ones_like, float32
+        a = ones_like(arr, float32, shape=3)
+        return a[0]
+    @types('real[:]')
+    def create_ones_like_val_float64():
+        from numpy import ones_like, float64
+        a = ones_like(arr, float64, shape=3)
+        return a[0]
+    @types('real[:]')
+    def create_ones_like_val_complex64(arr):
+        from numpy import ones_like, complex64
+        a = ones_like(arr, complex64, shape=3)
+        return a[0]
+    @types('real[:]')
+    def create_ones_like_val_complex128(arr):
+        from numpy import ones_like, complex128
+        a = ones_like(arr ,complex128, shape=3)
+        return a[0]
+
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+
+    f_int_int   = epyccel(create_ones_like_val_int, language = language)
+    assert(     f_int_int(arr)          ==      create_ones_like_val_int(arr))
+    assert(type(f_int_int(arr))         == type(create_ones_like_val_int(arr).item()))
+
+    f_int_float = epyccel(create_ones_like_val_float, language = language)
+    assert(isclose(     f_int_float(arr)       ,      create_ones_like_val_float(arr), rtol=RTOL, atol=ATOL))
+    assert(type(f_int_float(arr))       == type(create_ones_like_val_float(arr).item()))
+
+    f_int_complex = epyccel(create_ones_like_val_complex, language = language)
+    assert(isclose(     f_int_complex(arr)     ,      create_ones_like_val_complex(arr), rtol=RTOL, atol=ATOL))
+    assert(type(f_int_complex(arr))     == type(create_ones_like_val_complex(arr).item()))
+
+    f_real_int32   = epyccel(create_ones_like_val_int32, language = language)
+    assert(     f_real_int32(arr)       ==      create_ones_like_val_int32(arr))
+    assert(type(f_real_int32(arr))      == type(create_ones_like_val_int32(arr).item()))
+
+    f_real_float32   = epyccel(create_ones_like_val_float32, language = language)
+    assert(isclose(     f_real_float32(arr)    ,      create_ones_like_val_float32(arr), rtol=RTOL, atol=ATOL))
+    assert(type(f_real_float32(arr))    == type(create_ones_like_val_float32(arr).item()))
+
+    f_real_float64   = epyccel(create_ones_like_val_float64, language = language)
+    assert(isclose(     f_real_float64(arr)    ,      create_ones_like_val_float64(arr), rtol=RTOL, atol=ATOL))
+    assert(type(f_real_float64(arr))    == type(create_ones_like_val_float64(arr).item()))
+
+    f_real_complex64   = epyccel(create_ones_like_val_complex64, language = language)
+    assert(isclose(     f_real_complex64(arr)  ,      create_ones_like_val_complex64(arr), rtol=RTOL, atol=ATOL))
+    assert(type(f_real_complex64(arr))  == type(create_ones_like_val_complex64(arr).item(arr)))
+
+    f_real_complex128   = epyccel(create_ones_like_val_complex128, language = language)
+    assert(isclose(     f_real_complex128(arr) ,      create_ones_like_val_complex128(arr), rtol=RTOL, atol=ATOL))
+    assert(type(f_real_complex128(arr)) == type(create_ones_like_val_complex128(arr).item()))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_ones_like_combined_args(language):
+    @types('int[:]')
+    def create_ones_like_1_shape(arr):
+        from numpy import ones_like, shape
+        a = ones_like(arr, int,'F', shape=(2,1))
+        s = shape(a)
+        return len(s),s[0],s[1]
+    @types('int[:]')
+    def create_ones_like_1_val(arr):
+        from numpy import ones_like
+        a = ones_like(arr,int,'F', shape=(2,1))
+        return a[0,0]
+    @types('int[:]')
+    def create_ones_like_2_shape(arr):
+        from numpy import ones_like, shape
+        a = ones_like(arr, shape=(4,2),dtype=float)
+        s = shape(a)
+        return len(s),s[0],s[1]
+    @types('int[:]')
+    def create_ones_like_2_val(arr):
+        from numpy import ones_like
+        a = ones_like(arr, shape=(4,2),dtype=float)
+        return a[0,0]
+    @types('int[:]')
+    def create_ones_like_3_shape(arr):
+        from numpy import ones_like, shape
+        a = ones_like(arr, order = 'F', shape = (4,2),dtype=complex)
+        s = shape(a)
+        return len(s),s[0],s[1]
+    @types('int[:]')
+    def create_ones_like_3_val(arr):
+        from numpy import ones_like
+        a = ones_like(arr, order = 'F', shape = (4,2),dtype=complex)
+        return a[0,0]
+
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+    f1_shape = epyccel(create_ones_like_1_shape, language = language)
+    f1_val   = epyccel(create_ones_like_1_val, language = language)
+    assert(     f1_shape(arr) ==      create_ones_like_1_shape(arr)      )
+    assert(     f1_val(arr)   ==      create_ones_like_1_val(arr)        )
+    assert(type(f1_val(arr))  == type(create_ones_like_1_val(arr).item()))
+
+    f2_shape = epyccel(create_ones_like_2_shape, language = language)
+    f2_val   = epyccel(create_ones_like_2_val, language = language)
+    assert(     f2_shape(arr) ==      create_ones_like_2_shape(arr)      )
+    assert(isclose(     f2_val(arr)  ,      create_ones_like_2_val(arr)        , rtol=RTOL, atol=ATOL))
+    assert(type(f2_val(arr))  == type(create_ones_like_2_val(arr).item(arr)))
+
+    f3_shape = epyccel(create_ones_like_3_shape, language = language)
+    f3_val   = epyccel(create_ones_like_3_val, language = language)
+    assert(     f3_shape(arr) ==      create_ones_like_3_shape(arr)      )
+    assert(isclose(     f3_val(arr)  ,      create_ones_like_3_val(arr)        , rtol=RTOL, atol=ATOL))
+    assert(type(f3_val(arr))  == type(create_ones_like_3_val(arr).item(arr)))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_zeros_like_basic(language):
+    @types('int[:]', 'int')
+    def create_zeros_like_shape_1d(arr, n):
+        from numpy import zeros_like, shape
+        a = zeros_like(arr, int, shape=n)
+        s = shape(a)
+        return len(s),s[0]
+    @types('int[:]', 'int')
+    def create_zeros_like_shape_2d(arr, n):
+        from numpy import zeros_like, shape
+        a = zeros_like(arr, int, shape=(n,n))
+        s = shape(a)
+        return len(s),s[0], s[1]
+
+    size = randint(10)
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+
+    f_shape_1d  = epyccel(create_zeros_like_shape_1d, language = language)
+    assert(     f_shape_1d(arr, size)      ==      create_zeros_like_shape_1d(arr, size))
+
+    f_shape_2d  = epyccel(create_zeros_like_shape_2d, language = language)
+    assert(     f_shape_2d(arr, size)      ==      create_zeros_like_shape_2d(arr, size))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_zeros_like_order(language):
+    @types('int[:]','int','int')
+    def create_zeros_like_shape_C(arr, n,m):
+        from numpy import zeros_like, shape
+        a = zeros_like(arr, shape=(n,m), order = 'C')
+        s = shape(a)
+        return len(s),s[0], s[1]
+    @types('int[:]', 'int','int')
+    def create_zeros_like_shape_F(arr, n,m):
+        from numpy import zeros_like, shape
+        a = zeros_like(arr, shape=(n,m), order = 'F')
+        s = shape(a)
+        return len(s),s[0], s[1]
+
+    size_1 = randint(10)
+    size_2 = randint(10)
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+
+    f_shape_C  = epyccel(create_zeros_like_shape_C, language = language)
+    assert(     f_shape_C(arr, size_1,size_2) == create_zeros_like_shape_C(arr, size_1,size_2))
+
+    f_shape_F  = epyccel(create_zeros_like_shape_F, language = language)
+    assert(     f_shape_F(arr, size_1,size_2) == create_zeros_like_shape_F(arr, size_1,size_2))
+
+def test_zeros_like_dtype(language):
+    @types('int[:]')
+    def create_zeros_like_val_int(arr):
+        from numpy import zeros_like
+        a = zeros_like(arr, int, shape=3)
+        return a[0]
+    @types('int[:]')
+    def create_zeros_like_val_float(arr):
+        from numpy import zeros_like
+        a = zeros_like(arr, float, shape=3)
+        return a[0]
+    @types('int[:]')
+    def create_zeros_like_val_complex(arr):
+        from numpy import zeros_like
+        a = zeros_like(arr, complex, shape=3)
+        return a[0]
+    @types('real[:]')
+    def create_zeros_like_val_int32(arr):
+        from numpy import zeros_like, int32
+        a = zeros_like(arr, int32, shape=3)
+        return a[0]
+    @types('real[:]')
+    def create_zeros_like_val_float32(arr):
+        from numpy import zeros_like, float32
+        a = zeros_like(arr, float32, shape=3)
+        return a[0]
+    @types('real[:]')
+    def create_zeros_like_val_float64(arr):
+        from numpy import zeros_like, float64
+        a = zeros_like(arr, float64, shape=3)
+        return a[0]
+    @types('real[:]')
+    def create_zeros_like_val_complex64(arr):
+        from numpy import zeros_like, complex64
+        a = zeros_like(arr, complex64, shape=3)
+        return a[0]
+    @types('real[:]')
+    def create_zeros_like_val_complex128(arr):
+        from numpy import zeros_like, complex128
+        a = zeros_like(arr, complex128, shape=3)
+        return a[0]
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+    f_int_int   = epyccel(create_zeros_like_val_int, language = language)
+    assert(     f_int_int(arr)          ==      create_zeros_like_val_int(arr))
+    assert(type(f_int_int(arr))         == type(create_zeros_like_val_int(arr).item()))
+
+    f_int_float = epyccel(create_zeros_like_val_float, language = language)
+    assert(isclose(     f_int_float(arr)       ,      create_zeros_like_val_float(arr), rtol=RTOL, atol=ATOL))
+    assert(type(f_int_float(arr))       == type(create_zeros_like_val_float(arr).item(arr)))
+
+    f_int_complex = epyccel(create_zeros_like_val_complex, language = language)
+    assert(isclose(     f_int_complex(arr)     ,      create_zeros_like_val_complex(arr), rtol=RTOL, atol=ATOL))
+    assert(type(f_int_complex(arr))     == type(create_zeros_like_val_complex(arr).item()))
+
+    f_real_int32   = epyccel(create_zeros_like_val_int32, language = language)
+    assert(     f_real_int32(arr)       ==      create_zeros_like_val_int32(arr))
+    assert(type(f_real_int32(arr))      == type(create_zeros_like_val_int32(arr).item()))
+
+    f_real_float32   = epyccel(create_zeros_like_val_float32, language = language)
+    assert(isclose(     f_real_float32(arr)    ,      create_zeros_like_val_float32(arr), rtol=RTOL, atol=ATOL))
+    assert(type(f_real_float32(ar))    == type(create_zeros_like_val_float32(arr).item()))
+
+    f_real_float64   = epyccel(create_zeros_like_val_float64, language = language)
+    assert(isclose(     f_real_float64(arr)    ,      create_zeros_like_val_float64(arr), rtol=RTOL, atol=ATOL))
+    assert(type(f_real_float64(arr))    == type(create_zeros_like_val_float64(arr).item()))
+
+    f_real_complex64   = epyccel(create_zeros_like_val_complex64, language = language)
+    assert(isclose(     f_real_complex64(arr)  ,      create_zeros_like_val_complex64(arr), rtol=RTOL, atol=ATOL))
+    assert(type(f_real_complex64(arr))  == type(create_zeros_like_val_complex64(arr).item()))
+
+    f_real_complex128   = epyccel(create_zeros_like_val_complex128, language = language)
+    assert(isclose(     f_real_complex128(arr) ,      create_zeros_like_val_complex128(arr), rtol=RTOL, atol=ATOL))
+    assert(type(f_real_complex128(arr)) == type(create_zeros_like_val_complex128(arr).item()))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_zeros_like_combined_args(language):
+    @types('int[:]')
+    def create_zeros_like_1_shape(arr):
+        from numpy import zeros_like, shape
+        a = zeros_like(arr,int,'F', shape=(2,1))
+        s = shape(a)
+        return len(s),s[0],s[1]
+    @types('int[:]')
+    def create_zeros_like_1_val(arr):
+        from numpy import zeros_like
+        a = zeros_like(arr, int,'F', shape=(2,1))
+        return a[0,0]
+    @types('int[:]')
+    def create_zeros_like_2_shape(arr):
+        from numpy import zeros_like, shape
+        a = zeros_like(arr, dtype=float, shape=(4, 2))
+        s = shape(a)
+        return len(s),s[0],s[1]
+    @types('int[:]')
+    def create_zeros_like_2_val(arr):
+        from numpy import zeros_like
+        a = zeros_like(arr, dtype=float, shape=(4,2))
+        return a[0,0]
+    @types('int[:]')
+    def create_zeros_like_3_shape(arr):
+        from numpy import zeros_like, shape
+        a = zeros_like(arr, order = 'F', shape = (4,2),dtype=complex)
+        s = shape(a)
+        return len(s),s[0],s[1]
+    @types('int[:]')
+    def create_zeros_like_3_val(arr):
+        from numpy import zeros_like
+        a = zeros_like(arr, order = 'F', shape = (4,2),dtype=complex)
+        return a[0,0]
+    from numpy import array
+    arr = array([5, 1, 8, 0, 9])
+    f1_shape = epyccel(create_zeros_like_1_shape, language = language)
+    f1_val   = epyccel(create_zeros_like_1_val, language = language)
+    assert(     f1_shape(arr) ==      create_zeros_like_1_shape(arr)      )
+    assert(     f1_val(arr)   ==      create_zeros_like_1_val(arr)        )
+    assert(type(f1_val(arr))  == type(create_zeros_like_1_val(arr).item()))
+
+    f2_shape = epyccel(create_zeros_like_2_shape, language = language)
+    f2_val   = epyccel(create_zeros_like_2_val, language = language)
+    assert(     f2_shape(arr) ==      create_zeros_like_2_shape(arr)      )
+    assert(isclose(     f2_val(arr)  ,      create_zeros_like_2_val(arr)        , rtol=RTOL, atol=ATOL))
+    assert(type(f2_val(arr))  == type(create_zeros_like_2_val(arr).item()))
+
+    f3_shape = epyccel(create_zeros_like_3_shape, language = language)
+    f3_val   = epyccel(create_zeros_like_3_val, language = language)
+    assert(     f3_shape(arr) ==      create_zeros_like_3_shape(arr)      )
+    assert(isclose(     f3_val(arr)  ,      create_zeros_like_3_val(arr)        , rtol=RTOL, atol=ATOL))
+    assert(type(f3_val(arr))  == type(create_zeros_like_3_val(arr).item()))
+
