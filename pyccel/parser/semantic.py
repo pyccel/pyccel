@@ -519,7 +519,7 @@ class SemanticParser(BasicParser):
             imp.define_target(target)
         else:
             container = self.namespace.imports
-            container['imports'][name] = Import(name, target)
+            container['imports'][name] = Import(name, target, True)
 
     def insert_macro(self, macro):
         """."""
@@ -1925,7 +1925,7 @@ class SemanticParser(BasicParser):
             func  = FunctionCall(func, args)
             body  = [Assign(var, func)]
             body[0].set_fst(fst)
-            body  = For(index, range_, body, strict=False)
+            body  = For(index, range_, body)
             body  = self._visit_For(body, **settings)
             body  = [alloc , body]
             return CodeBlock(body)
@@ -1993,12 +1993,11 @@ class SemanticParser(BasicParser):
 
     def _visit_For(self, expr, **settings):
 
-
         self.create_new_loop_scope()
 
         # treatment of the index/indices
         iterable = self._visit(expr.iterable, **settings)
-        body     = list(expr.body)
+        body     = list(expr.body.body)
         iterator = expr.target
 
         if isinstance(iterable, Variable):
@@ -2194,7 +2193,7 @@ class SemanticParser(BasicParser):
             if (step != 1):
                 size = ceiling(size)
 
-            body = body.body[0]
+            body = body.body.body[0]
             dims.append((size, step, start, stop))
 
         # we now calculate the size of the array which will be allocated
@@ -2456,7 +2455,7 @@ class SemanticParser(BasicParser):
 #            args[index_arg] = vec_arg[index]
 #            body_vec        = Assign(args[index_arg], Function(name)(*args))
 #            body_vec.set_fst(expr.fst)
-#            body_vec   = [For(index, range_, [body_vec], strict=False)]
+#            body_vec   = [For(index, range_, [body_vec])]
 #            header_vec = header.vectorize(index_arg)
 #            vec_func   = expr.vectorize(body_vec, header_vec)
 
@@ -3070,8 +3069,6 @@ class SemanticParser(BasicParser):
         var = self._visit(name)
         assert(var.rank==1)
         size = var.shape[0]
-        if isinstance(size, LiteralInteger):
-            size = size.p
         return StarredArguments([self._visit(Indexed(name,i)) for i in range(size)])
 
 #==============================================================================

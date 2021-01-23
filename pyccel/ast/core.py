@@ -20,7 +20,6 @@ from sympy import preorder_traversal
 from sympy.simplify.radsimp   import fraction
 from sympy.core.compatibility import with_metaclass
 from sympy.core.singleton     import Singleton, S
-from sympy.core.function      import Function
 from sympy.core.function      import Derivative, UndefinedFunction as sp_UndefinedFunction
 from sympy.core.function      import _coeff_isneg
 from sympy.core.expr          import Expr, AtomicExpr
@@ -609,10 +608,6 @@ class Assign(Basic):
         a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
         the dimensions will not align.
 
-    strict: bool
-        if True, we do some verifications. In general, this can be more
-        complicated and is treated in pyccel.syntax.
-
     status: None, str
         if lhs is not allocatable, then status is None.
         otherwise, status is {'allocated', 'unallocated'}
@@ -642,41 +637,9 @@ class Assign(Basic):
         cls,
         lhs,
         rhs,
-        strict=False,
         status=None,
         like=None,
         ):
-        cls._strict = strict
-
-        if strict:
-            lhs = sympify(lhs, locals=local_sympify)
-            rhs = sympify(rhs, locals=local_sympify)
-
-            # Tuple of things that can be on the lhs of an assignment
-
-            assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed,
-                          Idx)
-
-            # if not isinstance(lhs, assignable):
-            #    raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
-            # Indexed types implement shape, but don't define it until later. This
-            # causes issues in assignment validation. For now, matrices are defined
-            # as anything with a shape that is not an Indexed
-
-            lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs,
-                    Indexed)
-            rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs,
-                    Indexed)
-
-            # If lhs and rhs have same structure, then this assignment is ok
-
-            if lhs_is_mat:
-                if not rhs_is_mat:
-                    raise ValueError('Cannot assign a scalar to a matrix.')
-                elif lhs.shape != rhs.shape:
-                    raise ValueError("Dimensions of lhs and rhs don't align.")
-            elif rhs_is_mat and not lhs_is_mat:
-                raise ValueError('Cannot assign a matrix to a scalar.')
         return Basic.__new__(cls, lhs, rhs, status, like)
 
     def _sympystr(self, printer):
@@ -704,10 +667,6 @@ class Assign(Basic):
     @property
     def like(self):
         return self._args[3]
-
-    @property
-    def strict(self):
-        return self._strict
 
     @property
     def is_alias(self):
@@ -891,17 +850,20 @@ class CodeBlock(Basic):
         return Basic.__new__(cls, ls)
 
     def __init__(self, body):
-        if len(self._args)>0 and isinstance(self._args[-1], (Assign, AugAssign)):
-            self.set_fst(self._args[-1].fst)
+        self._body = self._args[0]
+        if len(self._body)>0 and isinstance(self._body[-1], (Assign, AugAssign)):
+            self.set_fst(self._body[-1].fst)
 
     @property
     def body(self):
-        return self._args[0]
+        return self._body
 
     @property
     def lhs(self):
         return self.body[-1].lhs
 
+    def insert2body(self, obj):
+        self._body = tuple(self.body + (obj,))
 
 class AliasAssign(Basic):
 
@@ -1060,10 +1022,6 @@ class AugAssign(Assign):
         a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
         the dimensions will not align.
 
-    strict: bool
-        if True, we do some verifications. In general, this can be more
-        complicated and is treated in pyccel.syntax.
-
     status: None, str
         if lhs is not allocatable, then status is None.
         otherwise, status is {'allocated', 'unallocated'}
@@ -1086,42 +1044,9 @@ class AugAssign(Assign):
         lhs,
         op,
         rhs,
-        strict=False,
         status=None,
         like=None,
         ):
-        cls._strict = strict
-        if strict:
-            lhs = sympify(lhs, locals=local_sympify)
-            rhs = sympify(rhs, locals=local_sympify)
-
-            # Tuple of things that can be on the lhs of an assignment
-
-            assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed)
-            if not isinstance(lhs, assignable):
-                raise TypeError('Cannot assign to lhs of type %s.'
-                                % type(lhs))
-
-            # Indexed types implement shape, but don't define it until later. This
-            # causes issues in assignment validation. For now, matrices are defined
-            # as anything with a shape that is not an Indexed
-
-            lhs_is_mat = hasattr(lhs, 'shape') and not isinstance(lhs,
-                    Indexed)
-            rhs_is_mat = hasattr(rhs, 'shape') and not isinstance(rhs,
-                    Indexed)
-
-            # If lhs and rhs have same structure, then this assignment is ok
-
-            if lhs_is_mat:
-                if not rhs_is_mat:
-                    raise ValueError('Cannot assign a scalar to a matrix.'
-                            )
-                elif lhs.shape != rhs.shape:
-                    raise ValueError("Dimensions of lhs and rhs don't align."
-                            )
-            elif rhs_is_mat and not lhs_is_mat:
-                raise ValueError('Cannot assign a matrix to a scalar.')
 
         if isinstance(op, str):
             op = operator(op)
@@ -1161,10 +1086,6 @@ class AugAssign(Assign):
     @property
     def like(self):
         return self._args[4]
-
-    @property
-    def strict(self):
-        return self._strict
 
 
 class While(Basic):
@@ -1794,11 +1715,8 @@ class For(Basic):
         iter_obj,
         body,
         local_vars = (),
-        strict=True,
         ):
-        if strict:
-            target = sympify(target, locals=local_sympify)
-
+        if PyccelAstNode.stage == "semantic":
             cond_iter = iterable(iter_obj)
             cond_iter = cond_iter or isinstance(iter_obj, (PythonRange, Product,
                     PythonEnumerate, PythonZip, PythonMap))
@@ -1809,11 +1727,10 @@ class For(Basic):
             if not cond_iter:
                 raise TypeError('iter_obj must be an iterable')
 
-            if iterable(body):
-                body = CodeBlock((sympify(i, locals=local_sympify) for i in
-                             body))
-            elif not isinstance(body,CodeBlock):
-                raise TypeError('body must be an iterable or a Codeblock')
+        if iterable(body):
+            body = CodeBlock(body)
+        elif not isinstance(body,CodeBlock):
+            raise TypeError('body must be an iterable or a Codeblock')
 
         return Basic.__new__(cls, target, iter_obj, body, local_vars)
 
@@ -1823,14 +1740,10 @@ class For(Basic):
         iter_obj,
         body,
         local_vars = [],
-        strict=True,
         ):
         self._target = self._args[0]
         self._iterable = self._args[1]
-        if strict:
-            self._body = self._args[2]
-        else:
-            self._body = body
+        self._body = self._args[2]
         self._local_vars = self._args[3]
 
     @property
@@ -1850,7 +1763,7 @@ class For(Basic):
         return self._local_vars
 
     def insert2body(self, stmt):
-        self.body.append(stmt)
+        self.body.insert2body(stmt)
 
 
 
@@ -1893,12 +1806,11 @@ class ForIterator(For):
         target,
         iterable,
         body,
-        strict=True,
         ):
 
         if isinstance(iterable, Symbol):
             iterable = PythonRange(PythonLen(iterable))
-        return For.__new__(cls, target, iterable, body, strict)
+        return For.__new__(cls, target, iterable, body)
 
     # TODO uncomment later when we intriduce iterators
     # @property
