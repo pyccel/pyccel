@@ -531,20 +531,20 @@ class AsName(Basic):
     >>> from pyccel.ast.core import AsName
     >>> AsName('old', 'new')
     old as new
+
+    Parameters
+    ==========
+    name   : str
+             original name of variable or function
+    target : str
+             name of variable or function in this context
     """
-
-    def __new__(cls, name, target):
-
-        # TODO check
-
-        return Basic.__new__(cls, name, target)
+    _children = ()
 
     def __init__(self, name, target):
         self._name = name
         self._target = target
-        Basic.__init__(self,
-                { '_name'   : self._name,
-                  '_target' : self._target})
+        Basic.__init__(self)
 
     @property
     def name(self):
@@ -579,9 +579,7 @@ class Dlist(PyccelAstNode):
 
     shape : the shape of the array
     """
-
-    def __new__(cls, val, length):
-        return Basic.__new__(cls, val, length)
+    _children = ('_val', '_length')
 
     def __init__(self, val, length):
         self._rank = val.rank
@@ -589,9 +587,7 @@ class Dlist(PyccelAstNode):
         self._order = val.order
         self._val = val
         self._length = length
-        Basic.__init__(self,
-                {'_val'    : self._val,
-                 '_length' : self._length})
+        Basic.__init__(self)
 
     @property
     def val(self):
@@ -644,15 +640,20 @@ class Assign(Basic):
     A[0, 1] := x
 
     """
+    _children = ('_lhs', '_rhs')
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         lhs,
         rhs,
         status=None,
         like=None,
         ):
-        return Basic.__new__(cls, lhs, rhs, status, like)
+        self._lhs = lhs
+        self._rhs = rhs
+        self._status = status
+        self._like = like
+        super().__init__()
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -660,11 +661,11 @@ class Assign(Basic):
 
     @property
     def lhs(self):
-        return self._args[0]
+        return self._lhs
 
     @property
     def rhs(self):
-        return self._args[1]
+        return self._rhs
 
     # TODO : remove
 
@@ -674,11 +675,11 @@ class Assign(Basic):
 
     @property
     def status(self):
-        return self._args[2]
+        return self._status
 
     @property
     def like(self):
-        return self._args[3]
+        return self._like
 
     @property
     def is_alias(self):
@@ -742,6 +743,7 @@ class Allocate(Basic):
     mutable Variable object.
 
     """
+    _children = ('_variable',)
 
     # ...
     def __init__(self, variable, *, shape, order, status):
@@ -772,6 +774,7 @@ class Allocate(Basic):
         self._shape    = shape
         self._order    = order
         self._status   = status
+        super().__init__()
     # ...
 
     @property
@@ -822,6 +825,7 @@ class Deallocate(Basic):
     mutable Variable object.
 
     """
+    _children = ('_variable',)
 
     # ...
     def __init__(self, variable):
@@ -830,6 +834,7 @@ class Deallocate(Basic):
             raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
 
         self._variable = variable
+        super().__init__()
 
     # ...
 
@@ -849,22 +854,25 @@ class CodeBlock(Basic):
     """Represents a list of stmt for code generation.
        we use it when a single statement in python
        produce multiple statement in the targeted language
-    """
 
-    def __new__(cls, body):
+       Parameters
+       ==========
+       body : iterable
+    """
+    _children = ('_body',)
+
+
+    def __init__(self, body):
         ls = []
         for i in body:
             if isinstance(i, CodeBlock):
                 ls += i.body
             else:
                 ls.append(i)
-
-        return Basic.__new__(cls, ls)
-
-    def __init__(self, body):
-        self._body = self._args[0]
+        self._body = ls
         if len(self._body)>0 and isinstance(self._body[-1], (Assign, AugAssign)):
             self.set_fst(self._body[-1].fst)
+        super().__init__()
 
     @property
     def body(self):
@@ -903,8 +911,9 @@ class AliasAssign(Basic):
     >>> AliasAssign(y, x)
 
     """
+    _children = ('_lhs','_rhs')
 
-    def __new__(cls, lhs, rhs):
+    def __init__(self, lhs, rhs):
         if PyccelAstNode.stage == 'semantic':
             if not lhs.is_pointer:
                 raise TypeError('lhs must be a pointer')
@@ -912,7 +921,9 @@ class AliasAssign(Basic):
             if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_pointer:
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
 
-        return Basic.__new__(cls, lhs, rhs)
+        self._lhs = lhs
+        self._rhs = rhs
+        super().__init__()
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -920,11 +931,11 @@ class AliasAssign(Basic):
 
     @property
     def lhs(self):
-        return self._args[0]
+        return self._lhs
 
     @property
     def rhs(self):
-        return self._args[1]
+        return self._rhs
 
 
 class SymbolicAssign(Basic):
@@ -948,9 +959,12 @@ class SymbolicAssign(Basic):
     >>> SymbolicAssign(y, r)
 
     """
+    _children = ('_lhs', '_rhs')
 
-    def __new__(cls, lhs, rhs):
-        return Basic.__new__(cls, lhs, rhs)
+    def __init__(self, lhs, rhs):
+        self._lhs = lhs
+        self._rhs = rhs
+        super().__init__()
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -958,11 +972,11 @@ class SymbolicAssign(Basic):
 
     @property
     def lhs(self):
-        return self._args[0]
+        return self._lhs
 
     @property
     def rhs(self):
-        return self._args[1]
+        return self._rhs
 
 
 # The following are defined to be sympy approved nodes. If there is something
@@ -1051,8 +1065,8 @@ class AugAssign(Assign):
     s += 1 + 2*t
     """
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         lhs,
         op,
         rhs,
@@ -1065,14 +1079,9 @@ class AugAssign(Assign):
         elif op not in list(op_registry.values()):
             raise TypeError('Unrecognized Operator')
 
-        return Basic.__new__(
-            cls,
-            lhs,
-            op,
-            rhs,
-            status,
-            like,
-            )
+        self._op = op
+
+        super().__init__()
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -1080,24 +1089,8 @@ class AugAssign(Assign):
                 sstr(self.rhs))
 
     @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
     def op(self):
-        return self._args[1]
-
-    @property
-    def rhs(self):
-        return self._args[2]
-
-    @property
-    def status(self):
-        return self._args[3]
-
-    @property
-    def like(self):
-        return self._args[4]
+        return self._op
 
 
 class While(Basic):
@@ -1123,8 +1116,9 @@ class While(Basic):
     >>> While((n>1), [Assign(n,n-1)])
     While(n > 1, (n := n - 1,))
     """
+    _children = ('_body','_test','_local_vars')
 
-    def __new__(cls, test, body, local_vars=[]):
+    def __init__(self, test, body, local_vars=[]):
         test = sympify(test, locals=local_sympify)
 
         if PyccelAstNode.stage == 'semantic':
@@ -1135,19 +1129,23 @@ class While(Basic):
             body = CodeBlock((sympify(i, locals=local_sympify) for i in body))
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable or a CodeBlock')
-        return Basic.__new__(cls, test, body, local_vars)
+
+        self._test = test
+        self._body = body
+        self._local_vars = local_vars
+        super().__init__()
 
     @property
     def test(self):
-        return self._args[0]
+        return self._test
 
     @property
     def body(self):
-        return self._args[1]
+        return self._body
 
     @property
     def local_vars(self):
-        return self._args[2]
+        return self._local_vars
 
 
 class With(Basic):
@@ -3102,7 +3100,7 @@ class ClassDef(Basic):
         self._superclass  = superclass
         self._interfaces = interfaces
 
-        return super().__init__()
+        super().__init__()
 
     @property
     def name(self):
