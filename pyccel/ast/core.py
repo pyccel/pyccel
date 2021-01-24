@@ -1007,7 +1007,7 @@ class SymbolicAssign(Basic):
 # smaller that could be used, that would be preferable. We only use them as
 # tokens.
 
-class NativeOp(with_metaclass(Singleton, Basic)):
+class NativeOp(with_metaclass(Singleton)):
 
     """Base type for native operands."""
 
@@ -3080,8 +3080,8 @@ class ClassDef(Basic):
     imports: list, tuple
         list of needed imports
 
-    parent : str
-        parent's class name
+    superclass : str
+        superclass's class name
 
     Examples
     --------
@@ -3101,14 +3101,14 @@ class ClassDef(Basic):
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         name,
         attributes=[],
         methods=[],
         options=['public'],
         imports=[],
-        parent=[],
+        superclass=[],
         interfaces=[],
         ):
 
@@ -3140,8 +3140,8 @@ class ClassDef(Basic):
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
 
-        if not iterable(parent):
-            raise TypeError('parent must be iterable')
+        if not iterable(superclass):
+            raise TypeError('superclass must be iterable')
 
         if not iterable(interfaces):
             raise TypeError('interfaces must be iterable')
@@ -3182,45 +3182,43 @@ class ClassDef(Basic):
         methods = tuple(methods)
 
         # ...
+        self._name = name
+        self._attributes = attributes
+        self._methods = methods
+        self._options = options
+        self._imports = imports
+        self._superclass  = superclass
+        self._interfaces = interfaces
 
-        return Basic.__new__(
-            cls,
-            name,
-            attributes,
-            methods,
-            options,
-            imports,
-            parent,
-            interfaces,
-            )
+        return super().__init__()
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def attributes(self):
-        return self._args[1]
+        return self._attributes
 
     @property
     def methods(self):
-        return self._args[2]
+        return self._methods
 
     @property
     def options(self):
-        return self._args[3]
+        return self._options
 
     @property
     def imports(self):
-        return self._args[4]
+        return self._imports
 
     @property
     def parent(self):
-        return self._args[5]
+        return self._superclass
 
     @property
     def interfaces(self):
-        return self._args[6]
+        return self._interfaces
 
     @property
     def methods_as_dict(self):
