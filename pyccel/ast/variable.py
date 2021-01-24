@@ -95,6 +95,7 @@ class Variable(Symbol, PyccelAstNode):
     >>> Variable('int', DottedName('matrix', 'n_rows'))
     matrix.n_rows
     """
+    _children = ()
 
     def __new__( cls, dtype, name, **kwargs ):
         return Basic.__new__(cls)
@@ -474,6 +475,7 @@ class DottedName(Basic):
     >>> DottedName('pyccel', 'stdlib', 'parallel')
     pyccel.stdlib.parallel
     """
+    _children = ()
 
     def __new__(cls, *args):
         return Basic.__new__(cls, *args)
@@ -679,7 +681,7 @@ class TupleVariable(Variable):
         for var in self._vars:
             var.is_target = is_target
 
-class Constant(ValuedVariable, PyccelAstNode):
+class Constant(ValuedVariable):
 
     """
 
@@ -706,6 +708,7 @@ class IndexedElement(PyccelAstNode):
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
+    _children = ('_label', '_indices')
 
     def __new__(
         cls,
@@ -781,6 +784,7 @@ class VariableAddress(PyccelAstNode):
     VariableAddress(Variable('int','a'))                     is  &a
     VariableAddress(Variable('int','a', is_pointer=True))    is   a
     """
+    _children = ('_variable',)
 
     def __init__(self, variable):
         super().__init__()
