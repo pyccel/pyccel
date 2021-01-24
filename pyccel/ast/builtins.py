@@ -124,13 +124,14 @@ class PythonBool(PyccelAstNode):
     _shape = ()
     _precision = default_precision['bool']
     _dtype = NativeBool()
+    _children = ('_arg',)
 
-    def __new__(cls, arg):
-        return Expr.__new__(cls, arg)
+    def __init__(self, arg):
+        self._arg = arg
 
     @property
     def arg(self):
-        return self.args[0]
+        return self._arg
 
     def __str__(self):
         return 'Bool({})'.format(str(self.arg))
@@ -139,7 +140,7 @@ class PythonBool(PyccelAstNode):
         return self.__str__()
 
 #==============================================================================
-class PythonComplex(Expr, PyccelAstNode):
+class PythonComplex(PyccelAstNode):
     """ Represents a call to Python's native complex() function.
     """
 
@@ -147,6 +148,7 @@ class PythonComplex(Expr, PyccelAstNode):
     _shape = ()
     _precision = default_precision['complex']
     _dtype = NativeComplex()
+    _children = ('_real_part', '_imag_part', '_internal_var')
 
     def __new__(cls, arg0, arg1=LiteralFloat(0)):
 
@@ -178,7 +180,7 @@ class PythonComplex(Expr, PyccelAstNode):
         if arg0.dtype is NativeComplex() and arg1.dtype is NativeComplex():
             # both args are complex
             return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit()))
-        return Expr.__new__(cls, arg0, arg1)
+        return super().__new__(arg0, arg1)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
         self._is_cast = arg0.dtype is NativeComplex() and \
@@ -191,6 +193,7 @@ class PythonComplex(Expr, PyccelAstNode):
 
         else:
             from .operators import PyccelAdd, PyccelMinus, PyccelUnarySub
+            self._internal_var = None
 
             if arg0.dtype is NativeComplex() and \
                     not (isinstance(arg1, Literal) and arg1.python_value == 0):
@@ -257,13 +260,14 @@ class PythonEnumerate(Basic):
         return self._element
 
 #==============================================================================
-class PythonFloat(Expr, PyccelAstNode):
+class PythonFloat(PyccelAstNode):
     """ Represents a call to Python's native float() function.
     """
     _rank = 0
     _shape = ()
     _precision = default_precision['real']
     _dtype = NativeReal()
+    _children = ('_arg',)
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralFloat):
@@ -271,11 +275,11 @@ class PythonFloat(Expr, PyccelAstNode):
         elif isinstance(arg, LiteralInteger):
             return LiteralFloat(arg.p, precision = cls._precision)
         else:
-            return Expr.__new__(cls, arg)
+            return super().__new__(arg)
 
     def __init__(self, arg):
         self._arg = arg
-        Basic.__init__(self, {'_arg', self._arg})
+        super().__init__()
 
     @property
     def arg(self):
@@ -296,16 +300,17 @@ class PythonInt(PyccelAstNode):
     _shape     = ()
     _precision = default_precision['integer']
     _dtype     = NativeInteger()
+    _children  = ('_arg',)
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralInteger):
             return LiteralInteger(arg.p, precision = cls._precision)
         else:
-            return Expr.__new__(cls, arg)
+            return super().__new__(arg)
 
     def __init__(self, arg):
         self._arg = arg
-        Basic.__init__(self, {'_arg', self._arg})
+        super().__init__()
 
     @property
     def arg(self):
@@ -318,6 +323,7 @@ class PythonTuple(PyccelAstNode):
     _iterable        = True
     _is_homogeneous  = False
     _order = 'C'
+    _children = ('_args',)
 
     def __new__(cls, *args):
         return Expr.__new__(cls, *args)
@@ -369,7 +375,7 @@ class PythonTuple(PyccelAstNode):
             self._dtype     = NativeGeneric()
             self._precision = 0
             self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
-        Basic.__init__(self, {'_args', self._args})
+        Basic.__init__(self)
 
     def __getitem__(self,i):
         if isinstance(i, LiteralInteger):
@@ -418,7 +424,7 @@ class PythonList(PythonTuple):
     """
     _order = 'C'
     _is_homogeneous = True
-    """ Represent lists in the code with dynamic memory management."""
+    _children = ('_args',)
     def __init__(self, *args, **kwargs):
         if self.stage == 'syntactic':
             return
@@ -456,7 +462,7 @@ class PythonList(PythonTuple):
             if all(sh is not None for sh in shapes):
                 self._shape = (LiteralInteger(len(args)), ) + shapes[0]
                 self._rank  = len(self._shape)
-        Basic.__init__(self, {'_args', self._args})
+        Basic.__init__(self)
 
     @property
     def is_homogeneous(self):
@@ -466,13 +472,14 @@ class PythonList(PythonTuple):
 class PythonMap(Basic):
     """ Represents the map stmt
     """
+    _children = ('_args',)
     def __new__(cls, *args):
         if len(args)<2:
             raise TypeError('wrong number of arguments')
         return Basic.__new__(cls, *args)
 
     def __init__(self, *args):
-        Basic.__init__(self, {'_arg', self._arg})
+        Basic.__init__(self)
 
 #==============================================================================
 class PythonPrint(Basic):
@@ -490,6 +497,7 @@ class PythonPrint(Basic):
     >>> Print(('results', n,m))
     Print((results, n, m))
     """
+    _children = ('_expr',)
 
     def __new__(cls, expr):
         if not isinstance(expr, list):
@@ -498,7 +506,7 @@ class PythonPrint(Basic):
 
     def __init__(self, expr):
         self._expr = expr
-        Basic.__init__(self, {'_expr', self._expr})
+        Basic.__init__(self)
 
     @property
     def expr(self):
@@ -520,9 +528,10 @@ class PythonRange(Basic):
     >>> Range(s, e, 1)
     Range(0, n, 1)
     """
+    _children = ('_start', '_stop', '_step')
 
     def __new__(cls, *args):
-        return Basic.__new__(cls, start, stop, step)
+        return super().__new__(start, stop, step)
 
     def __init__(self, *args):
         start = LiteralInteger(0)
@@ -550,10 +559,7 @@ class PythonRange(Basic):
         self._start = start
         self._stop  = stop
         self._step  = step
-        return Basic.__init__(cls,
-                {'_start': self._start,
-                 '_stop', self._stop,
-                 '_step', self._step})
+        return super().__init__()
 
     @property
     def start(self):
@@ -575,6 +581,7 @@ class PythonZip(Basic):
     Represents a zip stmt.
 
     """
+    _children = ('_args',)
 
     def __new__(cls, *args):
         if not isinstance(args, (tuple, list)):
@@ -584,7 +591,7 @@ class PythonZip(Basic):
         return Basic.__new__(cls, *args)
 
     def __init__(self, *args):
-        Basic.__init__(self, {'_args', self._args})
+        Basic.__init__(self)
 
     @property
     def element(self):
