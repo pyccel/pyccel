@@ -268,7 +268,7 @@ class CCodePrinter(CodePrinter):
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
-        self._unnecessary_declaration = []
+        self._unused_variable = []
         self._additional_args = []
         self._temporary_args = []
 
@@ -955,7 +955,7 @@ class CCodePrinter(CodePrinter):
         body  = self._print(expr.body)
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) == 1 :
-            if isinstance(expr.results[0], Variable) and expr.results[0] not in self._unnecessary_declaration:
+            if isinstance(expr.results[0], Variable) and expr.results[0] != self._unused_variable:
                 decs += [Declare(expr.results[0].dtype, expr.results[0])]
             elif isinstance(expr.results[0], FunctionAddress):
                 decs += [FuncAddressDeclare(expr.results[0])]
@@ -1044,7 +1044,7 @@ class CCodePrinter(CodePrinter):
             return 'return 0;'
         if len(args) == 1:
             if expr.stmt:
-                self._unnecessary_declaration.append(expr.stmt.body[0].lhs)
+                self._unused_variable = expr.stmt.body[0].lhs
                 return 'return {0};'.format(self._print(expr.stmt.body[0].rhs))
             return 'return {0};'.format(self._print(args[0]))
         return ''
