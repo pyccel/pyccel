@@ -2991,7 +2991,7 @@ class SemanticParser(BasicParser):
                    severity='fatal', blocker=self.blocking)
 
         body = self._visit(expr.body, **settings)
-        return With(domaine, body, None).block
+        return With(domaine, body).block
 
 
 

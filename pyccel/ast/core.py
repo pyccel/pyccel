@@ -1174,7 +1174,6 @@ class With(Basic):
         cls,
         test,
         body,
-        settings,
         ):
         test = sympify(test, locals=local_sympify)
 
@@ -1183,7 +1182,7 @@ class With(Basic):
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable')
 
-        return Basic.__new__(cls, test, body, settings)
+        return Basic.__new__(cls, test, body)
 
     @property
     def test(self):
@@ -1192,10 +1191,6 @@ class With(Basic):
     @property
     def body(self):
         return self._args[1]
-
-    @property
-    def settings(self):
-        return self._args[2]
 
     @property
     def block(self):

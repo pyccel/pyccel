@@ -1173,8 +1173,7 @@ class SyntaxParser(BasicParser):
         if len(domain) == 1:
             domain = domain[0]
         body = self._visit(stmt.body)
-        settings = None
-        return With(domain, body, settings)
+        return With(domain, body)
 
     def _visit_Try(self, stmt):
         # this is a blocking error, since we don't want to convert the try body
