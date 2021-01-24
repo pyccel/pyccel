@@ -528,10 +528,7 @@ class PythonRange(Basic):
     """
     _children = ('_start', '_stop', '_step')
 
-    def __new__(cls, *args):
-        return super().__new__(start, stop, step)
-
-    def __init__(self, *args):
+    def __init__(self, start, stop, step):
         start = LiteralInteger(0)
         stop = None
         step = LiteralInteger(1)

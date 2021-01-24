@@ -1167,11 +1167,12 @@ class With(Basic):
     --------
 
     """
+    _children = ('_test','_body')
 
     # TODO check prelude and epilog
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         test,
         body,
         ):
@@ -1182,15 +1183,17 @@ class With(Basic):
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable')
 
-        return Basic.__new__(cls, test, body)
+        self._test = test
+        self._body = body
+        super().__init__()
 
     @property
     def test(self):
-        return self._args[0]
+        return self._test
 
     @property
     def body(self):
-        return self._args[1]
+        return self._body
 
     @property
     def block(self):
@@ -1226,17 +1229,8 @@ class Tile(PythonRange):
     Tile(0, n, 1)
     """
 
-    def __new__(cls, start, stop):
-        step = 1
-        return PythonRange.__new__(cls, start, stop, step)
-
-    @property
-    def start(self):
-        return self._args[0]
-
-    @property
-    def stop(self):
-        return self._args[1]
+    def __init__(self, start, stop):
+        super().__init__(self, start, stop, 1)
 
     @property
     def size(self):
@@ -1257,6 +1251,7 @@ class ParallelRange(PythonRange):
 
 
 # TODO: implement it as an extension of sympy Tensor?
+# TODO: What is this class for?
 
 class Tensor(Basic):
 
@@ -1340,9 +1335,10 @@ class Block(Basic):
     >>> Block([n, x], [Assign(x,2.*n + 1.), Assign(n, n + 1)])
     Block([n, x], [x := 1.0 + 2.0*n, n := 1 + n])
     """
+    _children = ('_variables','_body')
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         name,
         variables,
         body):
@@ -1357,25 +1353,28 @@ class Block(Basic):
             body = CodeBlock(body)
         elif not isinstance(body, CodeBlock):
             raise TypeError('body must be an iterable or a CodeBlock')
-        return Basic.__new__(cls, name, variables, body)
+        self._name = name
+        self._variables = variables
+        self._body = body
+        super().__init__()
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def variables(self):
-        return self._args[1]
+        return self._variables
 
     @property
     def body(self):
-        return self._args[2]
+        return self._body
 
     @property
     def declarations(self):
         return [Declare(i.dtype, i) for i in self.variables]
 
-
+#TODO: What is this for?
 class ParallelBlock(Block):
 
     """
@@ -1480,6 +1479,7 @@ class Module(Basic):
     >>> Module('my_module', [], [incr, decr], classes = [Point])
     Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
     """
+    _children = ('_variables','_funcs','_interfaces','_classes','_imports')
 
     def __init__(
         self,
@@ -1533,6 +1533,7 @@ class Module(Basic):
         self._interfaces = interfaces
         self._classes = classes
         self._imports = imports
+        super().__init__()
 
     @property
     def name(self):
@@ -1599,6 +1600,7 @@ class ModuleHeader(Basic):
     >>> ModuleHeader(mod)
     Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
     """
+    _children = ('_module',)
 
     def __init__(self, module):
         if not isinstance(module, Module):
@@ -1629,9 +1631,10 @@ class Program(Basic):
         list of needed imports
 
     """
+    _children = ('_variables', '_body', '_imports')
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         name,
         variables,
         body,
@@ -1658,29 +1661,28 @@ class Program(Basic):
         imports = set(imports)  # for unicity
         imports = tuple(imports)
 
-        return Basic.__new__(
-            cls,
-            name,
-            variables,
-            body,
-            imports,
-            )
+        self._name = name
+        self._variables = variables
+        self._body = body
+        self._imports = imports
+
+        super().__init__()
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def variables(self):
-        return self._args[1]
+        return self._variables
 
     @property
     def body(self):
-        return self._args[2]
+        return self._body
 
     @property
     def imports(self):
-        return self._args[3]
+        return self._imports
 
     @property
     def declarations(self):
@@ -1713,9 +1715,10 @@ class For(Basic):
     >>> For(i, (b,e,s), [Assign(x,x-1), Assign(A[0, 1], x)])
     For(i, Range(b, e, s), (x := x - 1, A[0, 1] := x))
     """
+    _children = ('_target','_iterable','_body','_local_vars')
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         target,
         iter_obj,
         body,
@@ -1737,19 +1740,11 @@ class For(Basic):
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable or a Codeblock')
 
-        return Basic.__new__(cls, target, iter_obj, body, local_vars)
-
-    def __init__(
-        self,
-        target,
-        iter_obj,
-        body,
-        local_vars = [],
-        ):
-        self._target = self._args[0]
-        self._iterable = self._args[1]
-        self._body = self._args[2]
-        self._local_vars = self._args[3]
+        self._target = target
+        self._iterable = iter_obj
+        self._body = body
+        self._local_vars = local_vars
+        super().__init__()
 
     @property
     def target(self):
@@ -1775,7 +1770,7 @@ class For(Basic):
 class DoConcurrent(For):
     pass
 
-
+#TODO: Is this needed?
 class ForAll(Basic):
     """ class that represents the forall statement in fortran"""
     def __new__(cls, iter_obj, target, mask, body):
@@ -1806,7 +1801,7 @@ class ForIterator(For):
 
     """Class that describes iterable classes defined by the user."""
 
-    def __new__(
+    def __init__(
         cls,
         target,
         iterable,
@@ -1815,7 +1810,7 @@ class ForIterator(For):
 
         if isinstance(iterable, Symbol):
             iterable = PythonRange(PythonLen(iterable))
-        return For.__new__(cls, target, iterable, body)
+        super().__init__(cls, target, iterable, body)
 
     # TODO uncomment later when we intriduce iterators
     # @property
@@ -1931,10 +1926,12 @@ class ConstructorCall(AtomicExpr):
         else:
             return self.func
 
+#TODO: Is this needed?
 class Void(Basic):
 
     pass
 
+#TODO: Is this needed?
 class VoidFunction(Basic):
     #this class is used in order to eliminate certain atoms
     # in an arithmitic expression so that we dont take them into
@@ -1943,7 +1940,7 @@ class VoidFunction(Basic):
         return Symbol("""x9846548484665
                       494794564465165161561""")
 
-class Argument(Symbol, PyccelAstNode):
+class Argument(PyccelAstNode):
 
     """An abstract Argument data structure.
 
@@ -1954,13 +1951,13 @@ class Argument(Symbol, PyccelAstNode):
     >>> n
     n
     """
-
-    def __new__(cls, name, *, kwonly=False, annotation=None):
-        return Symbol.__new__(cls, name)
+    _children = ()
 
     def __init__(self, name, *, kwonly=False, annotation=None):
+        self._name       = name
         self._kwonly     = kwonly
         self._annotation = annotation
+        super().__init__()
 
     @property
     def is_kwonly(self):
@@ -1981,6 +1978,7 @@ class ValuedArgument(Basic):
     >>> n
     n=4
     """
+    _children = ()
 
     def __init__(self, expr, value, *, kwonly = False):
         if isinstance(expr, str):
@@ -2022,6 +2020,7 @@ class FunctionCall(PyccelAstNode):
 
     """Represents a function call in the code.
     """
+    _children = ('_arguments','_funcdef','_interface')
 
     def __init__(self, func, args, current_function=None):
 
@@ -2130,13 +2129,14 @@ class DottedFunctionCall(FunctionCall):
                         (This is required in order to recognise
                         recursive functions)
     """
+    _children = (*FunctionCall._children, '_prefix')
 
     def __init__(self, func, args, prefix, current_function=None):
+        self._prefix = prefix
         FunctionCall.__init__(self, func, args, current_function)
         self._func_name = DottedName(prefix, self._func_name)
         if self._interface:
             self._interface_name = DottedName(prefix, self._interface_name)
-        self._prefix = prefix
 
     @property
     def prefix(self):
@@ -2155,21 +2155,25 @@ class Return(Basic):
 
     stmts :represent assign stmts in the case of expression return
     """
+    _children = ('_expr', '_stmt')
 
-    def __new__(cls, expr, stmt=None):
+    def __init__(self, expr, stmt=None):
 
         if stmt and not isinstance(stmt, (Assign, CodeBlock)):
             raise TypeError('stmt should only be of type Assign')
 
-        return Basic.__new__(cls, expr, stmt)
+        self._expr = expr
+        self._stmt = stmt
+
+        super().__init__()
 
     @property
     def expr(self):
-        return self._args[0]
+        return self._expr
 
     @property
     def stmt(self):
-        return self._args[1]
+        return self._stmt
 
     def __getnewargs__(self):
         """used for Pickling self."""
