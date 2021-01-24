@@ -114,7 +114,7 @@ dtype_and_precision_registry = { 'real':('real',default_precision['float']),
                                  'pythonbool' :('bool',default_precision['bool'])}
 
 
-class DataType(with_metaclass(Singleton, Basic)):
+class DataType(with_metaclass(Singleton)):
     """Base class representing native datatypes"""
     _name = '__UNDEFINED__'
 
