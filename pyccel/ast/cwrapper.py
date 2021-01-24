@@ -22,7 +22,7 @@ from .datatypes import NativeInteger, NativeReal, NativeComplex
 from .datatypes import NativeBool, NativeString, NativeGeneric, NativeVoid
 
 from .core      import FunctionCall, FunctionDef, FunctionAddress
-from .core      import AliasAssign, Assign, Return, If
+from .core      import AliasAssign, Assign, Return, If, DottedVariable
 
 from .literals  import LiteralTrue
 
@@ -313,6 +313,11 @@ numpy_get_stride = FunctionDef(name      = 'PyArray_STRIDE',
                                         Variable(dtype=NativeInteger(), name = 'idx')],
                            results   = [Variable(dtype=NativeInteger(), name = 's')])
 
+numpy_get_strides = FunctionDef(name      = 'PyArray_STRIDES',
+                           body      = [],
+                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
+                           results   = [Variable(dtype=NativeInteger(), name = 's', is_pointer=True)])
+
 numpy_check_flag = FunctionDef(name      = 'PyArray_CHKFLAGS',
                        body      = [],
                        arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True),
@@ -324,7 +329,22 @@ numpy_get_base = FunctionDef(name      = 'PyArray_BASE',
                        arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
                        results   = [Variable(dtype=PyccelPyObject(), name = 'i')])
 
+numpy_get_shape = FunctionDef(name      = 'PyArray_SHAPE',
+                       body      = [],
+                       arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
+                       results   = [Variable(dtype=NativeInteger(), name = 'i', is_pointer=True)])
+
 numpy_itemsize = FunctionDef(name      = 'PyArray_ITEMSIZE',
+                       body      = [],
+                       arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
+                       results   = [Variable(dtype=NativeInteger(), name = 'i')])
+
+numpy_get_size = FunctionDef(name      = 'PyArray_SIZE',
+                       body      = [],
+                       arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
+                       results   = [Variable(dtype=NativeInteger(), name = 'i')])
+
+numpy_nbytes = FunctionDef(name      = 'PyArray_NBYTES',
                        body      = [],
                        arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
                        results   = [Variable(dtype=NativeInteger(), name = 'i')])
@@ -334,26 +354,26 @@ numpy_get_type = FunctionDef(name      = 'PyArray_TYPE',
                        arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
                        results   = [Variable(dtype=NativeInteger(), name = 'i', precision = 4)])
 
-numpy_flag_own_data = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_OWNDATA')
-numpy_flag_c_contig = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_C_CONTIGUOUS')
-numpy_flag_f_contig = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_F_CONTIGUOUS')
-numpy_bool_type = Variable(dtype=NativeInteger(),  name = 'NPY_BOOL', precision = 4)
-numpy_byte_type = Variable(dtype=NativeInteger(),  name = 'NPY_BYTE', precision = 4)
-numpy_ubyte_type = Variable(dtype=NativeInteger(),  name = 'NPY_UBYTE', precision = 4)
-numpy_short_type = Variable(dtype=NativeInteger(),  name = 'NPY_SHORT', precision = 4)
-numpy_ushort_type = Variable(dtype=NativeInteger(),  name = 'NPY_USHORT', precision = 4)
-numpy_int_type = Variable(dtype=NativeInteger(),  name = 'NPY_INT32', precision = 4)
-numpy_uint_type = Variable(dtype=NativeInteger(),  name = 'NPY_UINT', precision = 4)
-numpy_long_type = Variable(dtype=NativeInteger(),  name = 'NPY_LONG', precision = 4)
-numpy_ulong_type = Variable(dtype=NativeInteger(),  name = 'NPY_ULONG', precision = 4)
-numpy_longlong_type = Variable(dtype=NativeInteger(),  name = 'NPY_INT64', precision = 4)
-numpy_ulonglong_type = Variable(dtype=NativeInteger(),  name = 'NPY_ULONGLONG', precision = 4)
-numpy_float_type = Variable(dtype=NativeInteger(),  name = 'NPY_FLOAT', precision = 4)
-numpy_double_type = Variable(dtype=NativeInteger(),  name = 'NPY_DOUBLE', precision = 4)
-numpy_longdouble_type = Variable(dtype=NativeInteger(),  name = 'NPY_LONGDOUBLE', precision = 4)
-numpy_cfloat_type = Variable(dtype=NativeInteger(),  name = 'NPY_CFLOAT', precision = 4)
-numpy_cdouble_type = Variable(dtype=NativeInteger(),  name = 'NPY_CDOUBLE', precision = 4)
-numpy_clongdouble_type = Variable(dtype=NativeInteger(),  name = 'NPY_CLONGDOUBLE', precision = 4)
+numpy_flag_own_data     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_OWNDATA')
+numpy_flag_c_contig     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_C_CONTIGUOUS')
+numpy_flag_f_contig     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_F_CONTIGUOUS')
+numpy_bool_type         = Variable(dtype=NativeInteger(),  name = 'NPY_BOOL', precision = 4)
+numpy_byte_type         = Variable(dtype=NativeInteger(),  name = 'NPY_BYTE', precision = 4)
+numpy_ubyte_type        = Variable(dtype=NativeInteger(),  name = 'NPY_UBYTE', precision = 4)
+numpy_short_type        = Variable(dtype=NativeInteger(),  name = 'NPY_SHORT', precision = 4)
+numpy_ushort_type       = Variable(dtype=NativeInteger(),  name = 'NPY_USHORT', precision = 4)
+numpy_int_type          = Variable(dtype=NativeInteger(),  name = 'NPY_INT32', precision = 4)
+numpy_uint_type         = Variable(dtype=NativeInteger(),  name = 'NPY_UINT', precision = 4)
+numpy_long_type         = Variable(dtype=NativeInteger(),  name = 'NPY_LONG', precision = 4)
+numpy_ulong_type        = Variable(dtype=NativeInteger(),  name = 'NPY_ULONG', precision = 4)
+numpy_longlong_type     = Variable(dtype=NativeInteger(),  name = 'NPY_INT64', precision = 4)
+numpy_ulonglong_type    = Variable(dtype=NativeInteger(),  name = 'NPY_ULONGLONG', precision = 4)
+numpy_float_type        = Variable(dtype=NativeInteger(),  name = 'NPY_FLOAT', precision = 4)
+numpy_double_type       = Variable(dtype=NativeInteger(),  name = 'NPY_DOUBLE', precision = 4)
+numpy_longdouble_type   = Variable(dtype=NativeInteger(),  name = 'NPY_LONGDOUBLE', precision = 4)
+numpy_cfloat_type       = Variable(dtype=NativeInteger(),  name = 'NPY_CFLOAT', precision = 4)
+numpy_cdouble_type      = Variable(dtype=NativeInteger(),  name = 'NPY_CDOUBLE', precision = 4)
+numpy_clongdouble_type  = Variable(dtype=NativeInteger(),  name = 'NPY_CLONGDOUBLE', precision = 4)
 
 numpy_num_to_type = { 0 : numpy_bool_type,
         1 : numpy_byte_type,
@@ -528,12 +548,65 @@ def pybool_to_bool(cast_function_name):
                        body      = cast_function_body,
                        results   = [cast_function_result])
 
+def pyarray_to_ndarray(cast_function_name):
+    """
+    A Cast function that convert numpy array variable into ndarray variable,
+    by copying its information and data to a new variable of type ndarray struct
+    and return this variable to be used inside c code.
+
+    Parameters:
+    ----------
+    cast_function_name : str
+        The cast function name
+    Returns
+    -------
+    FunctionDef : the cast function definition
+    """
+    Gen = NativeGeneric()
+    Pyc = PyccelPyArrayObject()
+    Int = NativeInteger()
+
+    # arg: cast function argument (pyccel array object aka: numpy array object)
+    arg = Variable(dtype=Pyc, name = 'o', is_pointer=True)
+
+    # res: cast function result variable (ndarray struct - struct)
+    # for more info about ndarray struct check pyccel/stdlib/ndarrays/ndarray.h
+    res = Variable(dtype=Int, name = 'c', rank=1)
+
+    nd          = DottedVariable(Int,          'nd', lhs=res.name)
+    raw_data    = DottedVariable(Gen,    'raw_data', lhs=res.name, rank=1)
+    shape       = DottedVariable(Int,       'shape', lhs=res.name, is_pointer=True)
+    type_size   = DottedVariable(Int,   'type_size', lhs=res.name)
+    strides     = DottedVariable(Int,     'strides', lhs=res.name)
+    arr_type    = DottedVariable(Int,        'type', lhs=res.name)
+    length      = DottedVariable(Int,      'length', lhs=res.name)
+    buffer_size = DottedVariable(Int, 'buffer_size', lhs=res.name)
+    is_view     = DottedVariable(Int,     'is_view', lhs=res.name)
+
+    # construction of the cast function body
+    body = [Assign(nd,          FunctionCall(numpy_get_ndims, [arg])),
+            Assign(raw_data,    FunctionCall(numpy_get_data,  [arg])),
+            Assign(type_size,   FunctionCall(numpy_itemsize,  [arg])),
+            Assign(arr_type,    FunctionCall(numpy_get_type,  [arg])),
+            Assign(length,      FunctionCall(numpy_get_size,  [arg])),
+            Assign(buffer_size, FunctionCall(numpy_nbytes,    [arg])),
+            Assign(shape,       FunctionCall(numpy_to_ndarray_shape,   [FunctionCall(numpy_get_shape,   [arg]), nd])),
+            Assign(strides,     FunctionCall(numpy_to_ndarray_strides, [FunctionCall(numpy_get_strides, [arg]), type_size, nd])),
+            Assign(is_view,     LiteralTrue()),
+            Return([res])]
+
+    return FunctionDef(name      = cast_function_name,
+                       arguments = [arg],
+                       body      = body,
+                       results   = [res])
+
 cast_function_registry = {
     'pyint_to_bool' : pyint_to_bool,
     'bool_to_pyobj' : bool_to_pyobj,
     'pycomplex_to_complex' : pycomplex_to_complex,
     'complex_to_pycomplex': complex_to_pycomplex,
     'pybool_to_bool' : pybool_to_bool,
+    'pyarray_to_ndarray' : pyarray_to_ndarray,
 }
 
 
@@ -547,6 +620,23 @@ PyArray_ScalarAsCtype = FunctionDef(name = 'PyArray_ScalarAsCtype',
                                     arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
                                                 Variable(dtype=NativeVoid(), name = 'c', is_pointer = True)],
                                     results = [])
+
+# construct the call of the function numpy_to_ndarray_strides
+# (the function definition is available at pyccel/stdlib/ndarrays/ndarrays.c)
+numpy_to_ndarray_strides = FunctionDef(name = 'numpy_to_ndarray_strides',
+                                    body = [],
+                                    arguments = [Variable(dtype=NativeInteger(), name = 'np_strides', is_pointer=True),
+                                                Variable(dtype=NativeInteger(), name = 'type_size'),
+                                                Variable(dtype=NativeInteger(), name = 'nd')],
+                                    results = [Variable(dtype=NativeInteger(), name = 'nd_strides', is_pointer=True)])
+
+# construct the call of the function numpy_to_ndarray_shape
+# (the function definition is available at pyccel/stdlib/ndarrays/ndarrays.c)
+numpy_to_ndarray_shape = FunctionDef(name = 'numpy_to_ndarray_shape',
+                                    body = [],
+                                    arguments = [Variable(dtype=NativeInteger(), name = 'np_shape', is_pointer=True),
+                                                Variable(dtype=NativeInteger(), name = 'nd')],
+                                    results = [Variable(dtype=NativeInteger(), name = 'nd_strides', is_pointer=True)])
 
 collect_function_registry = {
     NativeInteger(): PyLong_AsLong,

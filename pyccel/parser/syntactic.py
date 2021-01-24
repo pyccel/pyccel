@@ -943,7 +943,7 @@ class SyntaxParser(BasicParser):
         iterator = self._visit(stmt.target)
         iterable = self._visit(stmt.iter)
         body = self._visit(stmt.body)
-        expr = For(iterator, iterable, body, strict=False)
+        expr = For(iterator, iterable, body)
         expr.set_fst(stmt)
         return expr
 
@@ -951,7 +951,7 @@ class SyntaxParser(BasicParser):
 
         iterator = self._visit(stmt.target)
         iterable = self._visit(stmt.iter)
-        expr = For(iterator, iterable, [], strict=False)
+        expr = For(iterator, iterable, [])
         expr.set_fst(stmt)
         return expr
 

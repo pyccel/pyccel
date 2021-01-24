@@ -378,8 +378,6 @@ class PythonTuple(PyccelAstNode):
         Basic.__init__(self)
 
     def __getitem__(self,i):
-        if isinstance(i, LiteralInteger):
-            i = i.p
         return self._args[i]
 
     def __add__(self,other):
