@@ -1075,7 +1075,7 @@ class CCodePrinter(CodePrinter):
         else:
             args = expr.args
         code = ' / '.join(self._print(a) for a in args)
-        return "floor({})".format(code)
+        return "(int64_t)floor({})".format(code)
 
     def _print_PyccelRShift(self, expr):
         return ' >> '.join(self._print(a) for a in expr.args)
