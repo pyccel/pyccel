@@ -21,9 +21,9 @@ from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
 from .internals import PyccelInternalFunction
-from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
+from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
-from .operators import PyccelAnd, PyccelMul
+from .operators import PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub
 
 __all__ = (
@@ -128,7 +128,10 @@ class PythonBool(Expr, PyccelAstNode):
     _dtype = NativeBool()
 
     def __new__(cls, arg):
-        return Expr.__new__(cls, arg)
+        if getattr(arg, 'is_optional', None):
+            return PyccelAnd(PyccelIsNot(arg, Nil()), Expr.__new__(cls, arg))
+        else:
+            return Expr.__new__(cls, arg)
 
     @property
     def arg(self):
