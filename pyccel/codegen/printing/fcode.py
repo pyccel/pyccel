@@ -1934,6 +1934,11 @@ class FCodePrinter(CodePrinter):
         omp_expr = '!$omp {}\n'.format(omp_expr)
         return omp_expr
 
+    def _print_OMP_Target_Construct(self, expr):
+        omp_expr = str(expr.txt)
+        omp_expr = '!$omp {}\n'.format(omp_expr)
+        return omp_expr
+
     def _print_Omp_End_Clause(self, expr):
         omp_expr = str(expr.txt)
         omp_expr = omp_expr.replace("for", "do")

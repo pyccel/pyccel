@@ -13,7 +13,7 @@ from textx.metamodel import metamodel_from_file
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct,\
         Omp_End_Clause, OMP_Critical_Construct, OMP_Barrier_Construct, OMP_Master_Construct,\
-        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct, OMP_Atomic_Construct, OMP_TaskWait_Construct, OMP_Task_Construct, OMP_Taskyield_Construct, OMP_Flush_Construct, OMP_Cancel_Construct
+        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct, OMP_Atomic_Construct, OMP_TaskWait_Construct, OMP_Task_Construct, OMP_Taskyield_Construct, OMP_Flush_Construct, OMP_Cancel_Construct, OMP_Target_Construct
 
 DEBUG = False
 
@@ -72,6 +72,8 @@ class OpenmpStmt(BasicStmt):
         elif isinstance(stmt, OmpFlushConstruct):
             return stmt.expr
         elif isinstance(stmt, OmpCancelConstruct):
+            return stmt.expr
+        elif isinstance(stmt, OmpTargetConstruct):
             return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
@@ -439,7 +441,7 @@ class OmpTargetConstruct(BasicStmt):
                           OmpLastPrivate, \
                           OmpinReduction, \
                           OmpDepend, \
-                          )
+                          OmpMap)
 
         txt = self.name
         for clause in self.clauses:
@@ -447,7 +449,7 @@ class OmpTargetConstruct(BasicStmt):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpCancelConstruct')
-        return OMP_Cancel_Construct(txt)
+        return OMP_Target_Construct(txt)
 
 class OmpAtomicConstruct(BasicStmt):
     """Class representing an Atomic stmt ."""
@@ -745,6 +747,25 @@ class OmpDepend(BasicStmt):
         args = ', '.join(str(arg) for arg in self.args)
         return 'depend({0}: {1})'.format(dtype, args)
 
+class OmpMap(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.mtype   = kwargs.pop('mtype')
+        self.args = kwargs.pop('args')
+
+        super(OmpMap, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpMap: expr")
+
+        mtype   = self.mtype
+        args = ', '.join(str(arg) for arg in self.args)
+        return 'map({0} {1})'.format(mtype, args)
+
 class OmpinReduction(BasicStmt):
     """Class representing a ."""
     def __init__(self, **kwargs):
@@ -989,7 +1010,8 @@ omp_directives = [OmpParallelConstruct,
                   OmpTaskyieldConstruct,
                   OmpTaskConstruct,
                   OmpFlushConstruct,
-                  OmpCancelConstruct]
+                  OmpCancelConstruct,
+                  OmpTargetConstruct]
 
 omp_clauses = [OmpCollapse,
                OmpCopyin,
@@ -1018,7 +1040,8 @@ omp_clauses = [OmpCollapse,
                AtomicMemoryClause,
                OmpDepend,
                FlushList,
-               OmpCancelType]
+               OmpCancelType,
+               OmpMap]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 

@@ -150,7 +150,7 @@ OmpNumTasks: 'num_tasks' '(' tasks=TaskIndex ')';
 OmpGrainSize: 'grainsize' '(' tasks=TaskIndex ')';
 OmpDefault: 'default' '(' status=OmpDefaultStatus ')';
 OmpProcBind: 'proc_bind' '(' status=OmpProcBindStatus ')';
-OmpMap: 'map' '(' args+=ID[','] ')';
+OmpMap: 'map' '(' mtype=OmpMapType? args+=ID[','] ')';
 OmpPrivate: 'private' '(' args+=ID[','] ')';
 OmpShared: 'shared' '(' args+=ID[','] ')';
 OmpFirstPrivate: 'firstprivate' '(' args+=ID[','] ')';
@@ -183,7 +183,8 @@ OmpProcBindStatus: ('master' | 'close' | 'spread');
 OmpReductionOperator: ('+' | '-' | '*' | '/');
 OmpDependenceType: ('in' | 'out' | 'inout' | 'mutexinoutset' | 'depobj');
 OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
-OpenmpConstructs: ('simd' | 'masked' | 'master' | 'single' | 'parallel' | 'for' | 'critical' ('(' ID  ')')? | 'task');
+OmpMapType: ('always' | 'close' | ('mapper' '(' ID ')') ',')? ('to' | 'from' | 'tofrom' | 'alloc' | 'release' | 'delete') ':';
+OpenmpConstructs: ('simd' | 'masked' | 'master' | 'single' | 'parallel' | 'for' | 'critical' ('(' ID  ')')? | 'task' | 'target');
 
 AtomicClause: ('write' | 'read' | 'update' | 'capture' | 'compare' | 'weak');
 AtomicMClause: ('seq_cst' | 'acq_rel' | 'release' | 'acquire' | 'relaxed');

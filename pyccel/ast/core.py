@@ -162,7 +162,8 @@ __all__ = (
     'OMP_Task_Construct',
     'OMP_Taskyield_Construct',
     'OMP_Flush_Construct',
-    'OMP_Cancel_Construct'
+    'OMP_Cancel_Construct',
+    'OMP_Target_Construct'
 )
 
 #==============================================================================
@@ -3965,6 +3966,11 @@ class OMP_Simd_Construct(AnnotatedComment):
 
 class OMP_Cancel_Construct(AnnotatedComment):
     """ Represents OpenMP Cancel construct. """
+    def __new__(cls, txt):
+        return AnnotatedComment.__new__(cls, 'omp', txt)
+
+class OMP_Target_Construct(AnnotatedComment):
+    """ Represents OpenMP Target construct. """
     def __new__(cls, txt):
         return AnnotatedComment.__new__(cls, 'omp', txt)
 
