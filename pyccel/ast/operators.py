@@ -52,7 +52,11 @@ __all__ = (
     'PyccelInvert',
     'PyccelAssociativeParenthesis',
     'PyccelUnary',
-    'Relational'
+    'PyccelUnarySub',
+    'Relational',
+    'PyccelIs',
+    'PyccelIsNot',
+    'IfTernaryOperator'
 )
 
 #==============================================================================
