@@ -13,7 +13,7 @@ from sympy           import (Integer as sp_Integer,
 from .core           import (ClassDef, FunctionDef, PyccelInternalFunction,
                             process_shape, ValuedArgument)
 
-from .operators      import broadcast
+from .operators      import broadcast, PyccelMinus, PyccelDiv
 
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList)
@@ -184,24 +184,46 @@ class NumpyArange(NumpyNewArray):
         dtype : Datatype
     """
 
-    def __init__(self, *args, dtype = None):
+    def __init__(self, start, stop = None, step = None, dtype = None):
         from .mathext import MathCeil
         NumpyNewArray.__init__(self)
 
+        if stop is None:
+            self._start = LiteralInteger(0)
+            self._stop = start
+        else:
+            self._start = start
+            self._stop = stop
+        self._step = step if step is not None else LiteralInteger(1)
+
+        self._arg = [self._start, self._stop, self._step]
+
         if dtype is None:
-            self._dtype = max([i.dtype for i in args], key = NativeNumeric.index)
-            self._precision = max([i.precision for i in args])
+            self._dtype = max([i.dtype for i in self._arg], key = NativeNumeric.index)
+            self._precision = max([i.precision for i in self._arg])
         else:
             self._dtype, self._precision = process_dtype(dtype)
 
         self._rank = 1
-        self._arg = args
         self._order = 'C'
-        self._shape = (LiteralInteger(10), ) #temporary
+        self._shape = (MathCeil(PyccelDiv(PyccelMinus(self._stop, self._start), self._step)))
+        self._shape = process_shape(self._shape)
 
     @property
     def arg(self):
         return self._arg
+
+    @property
+    def start(self):
+        return self._start
+
+    @property
+    def stop(self):
+        return self._stop
+
+    @property
+    def step(self):
+        return self._step
 
 
 #==============================================================================
