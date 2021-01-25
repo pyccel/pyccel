@@ -23,7 +23,7 @@ from .datatypes import (NativeInteger, NativeBool, NativeReal,
 from .internals import PyccelInternalFunction
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
-from .operators import PyccelAnd, PyccelMul, PyccelIsNot
+from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub
 
 __all__ = (
