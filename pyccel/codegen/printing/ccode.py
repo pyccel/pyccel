@@ -1044,7 +1044,7 @@ class CCodePrinter(CodePrinter):
             return 'return 0;'
         if len(args) == 1:
             if expr.stmt:
-                self._unused_variable = expr.stmt.body[0].rhs
+                self._unused_variable = expr.stmt.body[0].lhs
                 return 'return {0};'.format(self._print(expr.stmt.body[0].rhs))
             return 'return {0};'.format(self._print(args[0]))
         return ''
