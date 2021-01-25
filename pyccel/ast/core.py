@@ -2448,10 +2448,9 @@ class FunctionDef(Basic):
                 if not isinstance(i, FunctionDef):
                     raise TypeError('Expecting a FunctionDef')
 
-        try:
-            templates = decorators['template']['templates_dict'].setdefault('templates_dict', None)
-        except:
-            templates = None
+        templates = decorators.setdefault('template', None)
+        if templates:
+            templates = decorators['template'].setdefault('templates_dict', None) 
 
         self._name            = name
         self._arguments       = arguments
