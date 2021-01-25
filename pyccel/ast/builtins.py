@@ -23,6 +23,8 @@ from .datatypes import (NativeInteger, NativeBool, NativeReal,
 from .internals import PyccelInternalFunction
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
+from .operators import PyccelAnd, PyccelMul
+from .operators import PyccelMinus, PyccelUnarySub
 
 __all__ = (
     'PythonReal',
@@ -173,7 +175,6 @@ class PythonComplex(Expr, PyccelAstNode):
 
         # Split arguments depending on their type to ensure that the arguments are
         # either a complex and LiteralFloat(0) or 2 floats
-        from .operators import PyccelAdd, PyccelMul
 
         if arg0.dtype is NativeComplex() and arg1.dtype is NativeComplex():
             # both args are complex
@@ -190,7 +191,6 @@ class PythonComplex(Expr, PyccelAstNode):
             self._internal_var = arg0
 
         else:
-            from .operators import PyccelAdd, PyccelMinus, PyccelUnarySub
 
             if arg0.dtype is NativeComplex() and \
                     not (isinstance(arg1, Literal) and arg1.python_value == 0):
