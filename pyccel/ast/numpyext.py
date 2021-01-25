@@ -20,7 +20,8 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
-                             NativeReal, NativeComplex, NativeBool, str_dtype)
+                             NativeReal, NativeComplex, NativeBool, str_dtype,
+                             NativeNumeric)
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
 from .literals       import LiteralTrue, LiteralFalse
@@ -170,6 +171,38 @@ class NumpyArray(NumpyNewArray):
     @property
     def arg(self):
         return self._arg
+
+#==============================================================================
+class NumpyArange(NumpyNewArray):
+    """
+    Represents a call to  numpy.arange for code generation.
+
+    arg :
+        stop : Number
+        start : Number default 0
+        step : Number default 1
+        dtype : Datatype
+    """
+
+    def __init__(self, *args, dtype = None):
+        from .mathext import MathCeil
+        NumpyNewArray.__init__(self)
+
+        if dtype is None:
+            self._dtype = max([i.dtype for i in args], key = NativeNumeric.index)
+            self._precision = max([i.precision for i in args])
+        else:
+            self._dtype, self._precision = process_dtype(dtype)
+
+        self._rank = 1
+        self._arg = args
+        self._order = 'C'
+        self._shape = (LiteralInteger(10), ) #temporary
+
+    @property
+    def arg(self):
+        return self._arg
+
 
 #==============================================================================
 class NumpySum(PyccelInternalFunction):
@@ -847,6 +880,7 @@ numpy_functions = {
     'zeros_like': NumpyZerosLike,
     'ones_like' : NumpyOnesLike,
     'array'     : NumpyArray,
+    'arange'    : NumpyArange,
     # ...
     'shape'     : Shape,
     'norm'      : NumpyNorm,
