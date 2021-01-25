@@ -14,7 +14,6 @@ In this module we implement some of them in alphabetical order.
 from sympy import Symbol
 from sympy import Expr, Not
 from sympy import sympify
-from sympy.tensor import Indexed, IndexedBase
 
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
@@ -246,7 +245,8 @@ class PythonEnumerate(Basic):
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (Symbol, Indexed, IndexedBase)):
+        if PyccelAstNode.stage != "syntactic" and \
+                not isinstance(arg, PyccelAstNode):
             raise TypeError('Expecting an arg of valid type')
         return Basic.__new__(cls, arg)
 
@@ -506,8 +506,6 @@ class PythonRange(Basic):
         stop = None
         step = LiteralInteger(1)
 
-        _valid_args = (LiteralInteger, Symbol, Indexed)
-
         if isinstance(args, (tuple, list)):
             if len(args) == 1:
                 stop = args[0]
@@ -520,9 +518,9 @@ class PythonRange(Basic):
                 step = args[2]
             else:
                 raise ValueError('Range has at most 3 arguments')
-        elif isinstance(args, _valid_args):
+        elif isinstance(args, PyccelAstNode):
             stop = args
-        else:
+        elif PyccelAstNode.stage != "syntactic":
             raise TypeError('expecting a list or valid stop')
 
         return Basic.__new__(cls, start, stop, step)
