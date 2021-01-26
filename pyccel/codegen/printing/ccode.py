@@ -36,7 +36,7 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
 from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
-from pyccel.ast.variable import DottedName, DottedVariable, IndexedElement
+from pyccel.ast.variable import DottedName
 
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
