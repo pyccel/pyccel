@@ -1596,7 +1596,7 @@ class SemanticParser(BasicParser):
 
                 # update the attributes of the class and push it to the namespace
                 attributes += [member]
-                new_cls = ClassDef(cls_name, attributes, [], parent=parent)
+                new_cls = ClassDef(cls_name, attributes, [], superclass=parent)
                 self.insert_class(new_cls, parent=True)
             else:
                 lhs = self._visit(lhs, **settings)
@@ -2673,7 +2673,7 @@ class SemanticParser(BasicParser):
                 # update the class methods
 
                 self.insert_class(ClassDef(cls_name, cls.attributes,
-                methods, parent=cls.parent))
+                        methods, superclass=cls.parent))
 
             funcs += [func]
 
@@ -2746,7 +2746,7 @@ class SemanticParser(BasicParser):
         interfaces = []
 
         # remove quotes for str representation
-        cls = ClassDef(name, [], [], parent=parent)
+        cls = ClassDef(name, [], [], superclass=parent)
         self.insert_class(cls)
         const = None
 
@@ -2789,7 +2789,7 @@ class SemanticParser(BasicParser):
                 interfaces += [i]
 
         cls = ClassDef(name, attributes, methods,
-              interfaces=interfaces, parent=parent)
+              interfaces=interfaces, superclass=parent)
         self.insert_class(cls)
 
         return EmptyNode()

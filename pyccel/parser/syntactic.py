@@ -861,7 +861,7 @@ class SyntaxParser(BasicParser):
         attributes = methods[0].arguments
         parent = [self._visit(i) for i in stmt.bases]
         expr = ClassDef(name=name, attributes=attributes,
-                        methods=methods, parent=parent)
+                        methods=methods, superclass=parent)
 
         # we set the fst to keep track of needed information for errors
 

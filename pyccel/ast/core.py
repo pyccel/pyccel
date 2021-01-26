@@ -2656,7 +2656,7 @@ class ClassDef(Basic):
         methods=(),
         options=('public',),
         imports=(),
-        parent=(),
+        superclass=(),
         interfaces=(),
         ):
 
