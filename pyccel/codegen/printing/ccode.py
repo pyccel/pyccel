@@ -14,7 +14,7 @@ from pyccel.ast.core      import Declare
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
-from pyccel.ast.core      import Assign, datatype, Import
+from pyccel.ast.core      import Assign, datatype, Import, For, AugAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import create_incremented_string
 
@@ -31,12 +31,12 @@ from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil
 
-from pyccel.ast.numpyext import NumpyFull, NumpyArray
+from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
 from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
-from pyccel.ast.variable import DottedName
+from pyccel.ast.variable import DottedName, DottedVariable, IndexedElement
 
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -1153,6 +1153,31 @@ class CCodePrinter(CodePrinter):
             else:
                 return ''
             return '{}\n'.format(code_init)
+
+        if isinstance(rhs, NumpyArange):
+            start = self._print(rhs.start)
+            stop  = self._print(rhs.stop)
+            step  = self._print(rhs.step)
+
+            target = Variable(rhs.dtype, name =  self._parser.get_new_name('s'))
+            index = ValuedVariable(NativeInteger(), name = self._parser.get_new_name('i'), value=0)
+
+            self._additional_declare += [index, target]
+            self._additional_code += self._print(Assign(index, index.value)) + '\n'
+
+            dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
+            code = 'for({target} = {start}; {target} {op} {stop}; {target} += {step})'
+            code += '\n{{\n{lhs}.{dtype}[{index}] = {target};\n'
+            code += self._print(AugAssign(index, '+', LiteralInteger(1))) + '\n}}'
+            code = code.format(target = self._print(target),
+                               start = start,
+                               stop = stop,
+                               op = '<' if not isinstance(rhs.step, PyccelUnarySub) else '>',
+                               step = step,
+                               index = self._print(index),
+                               lhs = lhs,
+                               dtype = dtype)
+            return code
 
         rhs = self._print(rhs)
         return '{} = {};'.format(lhs, rhs)
