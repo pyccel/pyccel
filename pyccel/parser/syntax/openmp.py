@@ -13,7 +13,7 @@ from textx.metamodel import metamodel_from_file
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct,\
         Omp_End_Clause, OMP_Critical_Construct, OMP_Barrier_Construct, OMP_Master_Construct,\
-        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct, OMP_Atomic_Construct, OMP_TaskWait_Construct, OMP_Task_Construct, OMP_Taskyield_Construct, OMP_Flush_Construct, OMP_Cancel_Construct, OMP_Target_Construct
+        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct, OMP_Atomic_Construct, OMP_TaskWait_Construct, OMP_Task_Construct, OMP_Taskyield_Construct, OMP_Flush_Construct, OMP_Cancel_Construct, OMP_Target_Construct, OMP_Teams_Construct
 
 DEBUG = False
 
@@ -74,6 +74,8 @@ class OpenmpStmt(BasicStmt):
         elif isinstance(stmt, OmpCancelConstruct):
             return stmt.expr
         elif isinstance(stmt, OmpTargetConstruct):
+            return stmt.expr
+        elif isinstance(stmt, OmpTeamsConstruct):
             return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
@@ -451,13 +453,42 @@ class OmpTargetConstruct(BasicStmt):
                 raise TypeError('Wrong clause for OmpCancelConstruct')
         return OMP_Target_Construct(txt)
 
+class OmpTeamsConstruct(BasicStmt):
+    """Class representing a Teams stmt ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.name     = kwargs.pop('name')
+        self.clauses  = kwargs.pop('clauses')
+
+        super(OmpTeamsConstruct, self).__init__(**kwargs)
+    
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpTeamsConstruct: expr")
+
+        _valid_clauses = (OmpPrivate,\
+                          OmpLastPrivate, \
+                          OmpShared, \
+                          OmpReduction, \
+                          )
+
+        txt = self.name
+        for clause in self.clauses:
+            if isinstance(clause, _valid_clauses):
+                txt = '{0} {1}'.format(txt, clause.expr)
+            else:
+                raise TypeError('Wrong clause for OmpTeamsConstruct')
+        return OMP_Teams_Construct(txt)
+
 class OmpAtomicConstruct(BasicStmt):
     """Class representing an Atomic stmt ."""
     def __init__(self, **kwargs):
         """
         """
-        self.name   = kwargs.pop('name')
-        self.clauses = kwargs.pop('clauses')
+        self.name     = kwargs.pop('name')
+        self.clauses  = kwargs.pop('clauses')
 
         super(OmpAtomicConstruct, self).__init__(**kwargs)
 
@@ -513,6 +544,24 @@ class OmpNumThread(BasicStmt):
 
         thread = self.thread
         return 'num_threads({})'.format(thread)
+
+class OmpNumTeams(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.teams = kwargs.pop('teams')
+
+        super(OmpNumTeams, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        # TODO check if variable exist in namespace
+        if DEBUG:
+            print("> OmpNumTeams: expr")
+
+        thread = self.thread
+        return 'num_teams({})'.format(thread)
 
 class OmpNumTasks(BasicStmt):
     """Class representing a ."""
@@ -1011,7 +1060,8 @@ omp_directives = [OmpParallelConstruct,
                   OmpTaskConstruct,
                   OmpFlushConstruct,
                   OmpCancelConstruct,
-                  OmpTargetConstruct]
+                  OmpTargetConstruct,
+                  OmpTeamsConstruct]
 
 omp_clauses = [OmpCollapse,
                OmpCopyin,
@@ -1041,7 +1091,8 @@ omp_clauses = [OmpCollapse,
                OmpDepend,
                FlushList,
                OmpCancelType,
-               OmpMap]
+               OmpMap,
+               OmpNumTeams]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 

@@ -30,6 +30,7 @@ OmpConstructOrDirective:
   | OmpFlushConstruct
   | OmpCancelConstruct
   | OmpTargetConstruct
+  | OmpTeamsConstruct
 ;
 ////////////////////////////////////////////////////
 
@@ -47,6 +48,7 @@ OmpAtomicConstruct:     name='atomic'   clauses*=AllOmpClauses; // Not all claus
 OmpTaskConstruct:       'task'          clauses*=AllOmpClauses;
 OmpCancelConstruct:     name='cancel'   clauses*=AllOmpClauses;
 OmpTargetConstruct:     name='target'   clauses*=AllOmpClauses;
+OmpTeamsConstruct:      name='teams'    clauses*=AllOmpClauses;
 OmpBarrierConstruct:    name='barrier';
 OmpMasterConstruct:     name='master';
 OmpTaskWaitConstruct:   name='taskwait';
@@ -74,12 +76,14 @@ AllOmpClauses:
   | OmpFirstPrivate
   | OmpUntied
   | OmpMergeable
+  | OmpReduction
   | OmpinReduction // Deprecated in OpenMP 5.0 for TaskLoop/Task Constructs
   | OmpDepend // TODO : depend-modifier, dependence-type: (source, sink)
   | FlushList
   | OmpCancelType
   | OmpLastPrivate
   | OmpMap
+  | OmpNumTeams
 ;
 
 OmpParallelClause:
@@ -146,11 +150,12 @@ OmpSimdClause:
 //              Clauses definitions
 ////////////////////////////////////////////////////
 OmpNumThread: 'num_threads' '(' thread=ThreadIndex ')';
+OmpNumTeams: 'num_teams' '(' teams=TeamIndex ')';
 OmpNumTasks: 'num_tasks' '(' tasks=TaskIndex ')';
 OmpGrainSize: 'grainsize' '(' tasks=TaskIndex ')';
 OmpDefault: 'default' '(' status=OmpDefaultStatus ')';
 OmpProcBind: 'proc_bind' '(' status=OmpProcBindStatus ')';
-OmpMap: 'map' '(' mtype=OmpMapType? args+=ID[','] ')';
+OmpMap: 'map' '(' mtype=OmpMapType? args+=ID[','] ')'; // TODO NH : Array and shaping
 OmpPrivate: 'private' '(' args+=ID[','] ')';
 OmpShared: 'shared' '(' args+=ID[','] ')';
 OmpFirstPrivate: 'firstprivate' '(' args+=ID[','] ')';
@@ -184,11 +189,12 @@ OmpReductionOperator: ('+' | '-' | '*' | '/');
 OmpDependenceType: ('in' | 'out' | 'inout' | 'mutexinoutset' | 'depobj');
 OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
 OmpMapType: ('always' | 'close' | ('mapper' '(' ID ')') ',')? ('to' | 'from' | 'tofrom' | 'alloc' | 'release' | 'delete') ':';
-OpenmpConstructs: ('simd' | 'masked' | 'master' | 'single' | 'parallel' | 'for' | 'critical' ('(' ID  ')')? | 'task' | 'target');
+OpenmpConstructs: ('simd' | 'masked' | 'master' | 'single' | 'parallel' | 'for' | 'critical' ('(' ID  ')')? | 'task' | 'target' | 'teams');
 
 AtomicClause: ('write' | 'read' | 'update' | 'capture' | 'compare' | 'weak');
 AtomicMClause: ('seq_cst' | 'acq_rel' | 'release' | 'acquire' | 'relaxed');
 ThreadIndex: (ID | INT);
 TaskIndex: (ID | INT);
+TeamIndex: (ID | INT);
 NotaStmt: /.*$/;
 ////////////////////////////////////////////////////
