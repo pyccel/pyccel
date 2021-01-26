@@ -24,7 +24,7 @@ from sympy.core.function      import _coeff_isneg
 from sympy.core.expr          import Expr, AtomicExpr
 from sympy.logic.boolalg      import And as sp_And, Or as sp_Or
 from sympy.logic.boolalg      import Boolean as sp_Boolean
-from sympy.tensor             import Idx, Indexed, IndexedBase
+from sympy.tensor             import Idx
 
 from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables          import iterable
@@ -319,7 +319,7 @@ def extract_subexpressions(expr):
              sp_Or, sp_Eq, sp_Ne, sp_Lt, sp_Gt,
              sp_Le, sp_Ge)
 
-    id_cls = (Symbol, Indexed, IndexedBase,
+    id_cls = (Symbol, IndexedElement,
               DottedVariable, sp_Float, sp_Integer,
               sp_Rational, LiteralImaginaryUnit,sp_Boolean,
               LiteralTrue, LiteralFalse, LiteralString,
@@ -575,16 +575,19 @@ class Assign(Basic):
     Parameters
     ----------
     lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
+        In the syntactic stage:
+           Object representing the lhs of the expression. These should be
+           singular objects, such as one would use in writing code. Notable types
+           include Symbol, and IndexedElement. Types that
+           subclass these types are also supported.
+        In the semantic stage:
+           Variable or IndexedElement
 
     rhs : Expr
-        Sympy object representing the rhs of the expression. This can be any
-        type, provided its shape corresponds to that of the lhs. For example,
-        a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
-        the dimensions will not align.
+        In the syntactic stage:
+          Object representing the rhs of the expression
+        In the semantic stage :
+          PyccelAstNode with the same shape as the lhs
 
     status: None, str
         if lhs is not allocatable, then status is None.
@@ -986,19 +989,22 @@ class AugAssign(Assign):
     Parameters
     ----------
     lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
+        In the syntactic stage:
+           Object representing the lhs of the expression. These should be
+           singular objects, such as one would use in writing code. Notable types
+           include Symbol, and IndexedElement. Types that
+           subclass these types are also supported.
+        In the semantic stage:
+           Variable or IndexedElement
 
-    op : NativeOp
+    op : str
         Operator (+, -, /, \*, %).
 
     rhs : Expr
-        Sympy object representing the rhs of the expression. This can be any
-        type, provided its shape corresponds to that of the lhs. For example,
-        a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
-        the dimensions will not align.
+        In the syntactic stage:
+          Object representing the rhs of the expression
+        In the semantic stage :
+          PyccelAstNode with the same shape as the lhs
 
     status: None, str
         if lhs is not allocatable, then status is None.

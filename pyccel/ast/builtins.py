@@ -14,15 +14,16 @@ In this module we implement some of them in alphabetical order.
 from sympy import Symbol
 from sympy import Expr, Not
 from sympy import sympify
-from sympy.tensor import Indexed, IndexedBase
 
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
 from .internals import PyccelInternalFunction
-from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
+from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
+from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
+from .operators import PyccelMinus, PyccelUnarySub
 
 __all__ = (
     'PythonReal',
@@ -126,7 +127,10 @@ class PythonBool(Expr, PyccelAstNode):
     _dtype = NativeBool()
 
     def __new__(cls, arg):
-        return Expr.__new__(cls, arg)
+        if getattr(arg, 'is_optional', None):
+            return PyccelAnd(PyccelIsNot(arg, Nil()), Expr.__new__(cls, arg))
+        else:
+            return Expr.__new__(cls, arg)
 
     @property
     def arg(self):
@@ -173,7 +177,6 @@ class PythonComplex(Expr, PyccelAstNode):
 
         # Split arguments depending on their type to ensure that the arguments are
         # either a complex and LiteralFloat(0) or 2 floats
-        from .operators import PyccelAdd, PyccelMul
 
         if arg0.dtype is NativeComplex() and arg1.dtype is NativeComplex():
             # both args are complex
@@ -190,7 +193,6 @@ class PythonComplex(Expr, PyccelAstNode):
             self._internal_var = arg0
 
         else:
-            from .operators import PyccelAdd, PyccelMinus, PyccelUnarySub
 
             if arg0.dtype is NativeComplex() and \
                     not (isinstance(arg1, Literal) and arg1.python_value == 0):
@@ -243,7 +245,8 @@ class PythonEnumerate(Basic):
     """
 
     def __new__(cls, arg):
-        if not isinstance(arg, (Symbol, Indexed, IndexedBase)):
+        if PyccelAstNode.stage != "syntactic" and \
+                not isinstance(arg, PyccelAstNode):
             raise TypeError('Expecting an arg of valid type')
         return Basic.__new__(cls, arg)
 
@@ -503,8 +506,6 @@ class PythonRange(Basic):
         stop = None
         step = LiteralInteger(1)
 
-        _valid_args = (LiteralInteger, Symbol, Indexed)
-
         if isinstance(args, (tuple, list)):
             if len(args) == 1:
                 stop = args[0]
@@ -517,9 +518,9 @@ class PythonRange(Basic):
                 step = args[2]
             else:
                 raise ValueError('Range has at most 3 arguments')
-        elif isinstance(args, _valid_args):
+        elif isinstance(args, PyccelAstNode):
             stop = args
-        else:
+        elif PyccelAstNode.stage != "syntactic":
             raise TypeError('expecting a list or valid stop')
 
         return Basic.__new__(cls, start, stop, step)
