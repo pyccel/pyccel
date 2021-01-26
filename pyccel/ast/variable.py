@@ -83,6 +83,8 @@ class Variable(Symbol, PyccelAstNode):
 
     is_const: bool
         if object is a const argument of a function [Default value: False]
+    is_temp: bool
+        if object is created by the Pyccel [Default value: False]
 
     Examples
     --------
@@ -117,6 +119,7 @@ class Variable(Symbol, PyccelAstNode):
         precision=0,
         is_argument=False,
         is_kwonly=False,
+		is_temp = False,
         allows_negative_indexes=False
         ):
         super().__init__()
@@ -200,6 +203,7 @@ class Variable(Symbol, PyccelAstNode):
         self._order          = order
         self._is_argument    = is_argument
         self._is_kwonly      = is_kwonly
+        self._is_temp        = is_temp
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
@@ -309,6 +313,23 @@ class Variable(Symbol, PyccelAstNode):
         on the stack
         """
         return self._is_stack_array
+
+    @property
+    def is_temp(self):
+        """
+        Indicates whether the variables is created
+        by Pyccel or not.
+        if False the variable is created by the user else it is created by the user
+        """
+        return self._is_temp
+
+    @is_temp.setter
+    def is_temp(self, is_temp):
+        """
+        Sets is_temp attribute
+        """
+        self._is_temp = is_temp
+
 
     @is_stack_array.setter
     def is_stack_array(self, is_stack_array):
