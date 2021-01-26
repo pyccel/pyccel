@@ -3259,7 +3259,7 @@ class Comment(Basic):
 
     def __init__(self, text):
         self._text = text
-        Basic.__init__()
+        super().__init__()
 
     @property
     def text(self):
@@ -3477,7 +3477,7 @@ class If(Basic):
 class StarredArguments(Basic):
     def __init__(self, args):
         self._starred_obj = args
-        Basic.__init__()
+        super().__init__()
 
     @property
     def args_var(self):
