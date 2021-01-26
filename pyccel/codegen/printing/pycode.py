@@ -114,11 +114,11 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_Return(self, expr):
         code = ''
         if expr.stmt:
-            code += self._print(expr.stmt)+'\n'
+            code = ','.join([self._print(b.rhs) for b in expr.stmt.body])
+            return 'return ' + code
         if expr.expr:
             ret = ','.join([self._print(i) for i in expr.expr])
-            code += 'return {}'.format(ret)
-        return code
+            return 'return {}'.format(ret)
 
     def _print_Program(self, expr):
         body  = self._print(expr.body)
