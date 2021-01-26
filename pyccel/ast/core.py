@@ -2253,6 +2253,16 @@ class FunctionDef(Basic):
     >>> FunctionDef('incr', args, results, body)
     FunctionDef(incr, (x, n=4), (y,), [y := 1 + x], [], [], None, False, function, [])
     """
+    _children = ('_arguments',
+                 '_results',
+                 '_body',
+                 '_local_vars',
+                 '_global_vars',
+                 '_imports',
+                 '_decorators',
+                 '_functions',
+                 '_interfaces'
+                 )
 
     def __new__(cls, *args, **kwargs):
         kwargs.pop('decorators', None)
@@ -2534,7 +2544,8 @@ class FunctionDef(Basic):
             new name for the FunctionDef
         """
         args, kwargs = self.__getnewargs__()
-        new_func = FunctionDef(*args, **kwargs)
+        cls = type(self)
+        new_func = cls(*args, **kwargs)
         new_func.rename(newname)
         return new_func
 
@@ -2635,6 +2646,7 @@ class Interface(Basic):
     >>> f = FunctionDef('F', [], [], [])
     >>> Interface('I', [f])
     """
+    _children = ('_functions',)
 
     def __init__(
         self,
@@ -2803,6 +2815,7 @@ class ValuedFunctionAddress(FunctionAddress):
     >>> f = FunctionDef('f', [], [], [])
     >>> n  = ValuedFunctionAddress('g', [x], [y], [], value=f)
     """
+    _children = (*FunctionAddress._children, '_value')
 
     def __new__(cls, *args, **kwargs):
         kwargs.pop('value', Nil())
@@ -2820,39 +2833,11 @@ class SympyFunction(FunctionDef):
 
     """Represents a function definition."""
 
-    def rename(self, newname):
-        """
-        Rename the SympyFunction name by creating a new SympyFunction with
-        newname.
-
-        Parameters
-        ----------
-        newname: str
-            new name for the SympyFunction
-        """
-
-        return SympyFunction(newname, self.arguments, self.results,
-                             self.body, cls_name=self.cls_name)
-
 
 # TODO: [EB 06.01.2021] Is this class used? What for?
 class PythonFunction(FunctionDef):
 
     """Represents a Python-Function definition."""
-
-    def rename(self, newname):
-        """
-        Rename the PythonFunction name by creating a new PythonFunction with
-        newname.
-
-        Parameters
-        ----------
-        newname: str
-            new name for the PythonFunction
-        """
-
-        return PythonFunction(newname, self.arguments, self.results,
-                              self.body, cls_name=self.cls_name)
 
 
 class BindCFunctionDef(FunctionDef):
@@ -2870,6 +2855,7 @@ class BindCFunctionDef(FunctionDef):
     original_function : FunctionDef
         The function from which the c-compatible version was created
     """
+    _children = (*FunctionDef._children, '_original_function')
     def __new__(cls, *args, original_function, **kwargs):
         return FunctionDef.__new__(cls, *args, **kwargs)
 
@@ -2885,7 +2871,7 @@ class BindCFunctionDef(FunctionDef):
     def original_function(self):
         return self._original_function
 
-
+#TODO: [EB 26.01.2021] This class is unused. Is it needed?
 class GetDefaultFunctionArg(Basic):
 
     """Creates a FunctionDef for handling optional arguments in the code.
@@ -3009,6 +2995,14 @@ class ClassDef(Basic):
     >>> ClassDef('Point', attributes, methods)
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
+    _children = ('_attributes', '_methods', '_imports', '_interfaces')
+        self._name = name
+        self._attributes = attributes
+        self._methods = methods
+        self._options = options
+        self._imports = imports
+        self._superclass  = superclass
+        self._interfaces = interfaces
 
     def __init__(
         self,
@@ -3244,6 +3238,7 @@ class Import(Basic):
     >>> Import(['foo', abc])
     import foo, foo.bar.baz
     """
+    _children = ()
 
     def __new__(cls, source, target = None, ignore_at_print = False):
 
@@ -3314,6 +3309,7 @@ class Import(Basic):
                 return t
         return None
 
+#TODO: [EB 26.01.2021] Is this class needed? It is unused
 class TupleImport(Basic):
 
     def __new__(cls, *args):
@@ -3330,7 +3326,7 @@ class TupleImport(Basic):
         sstr = printer.doprint
         return '\n'.join(sstr(n) for n in self.imports)
 
-
+#TODO : [EB 26.01.2021] Unused class is this needed?
 class Load(Basic):
 
     """Similar to 'importlib' in python. In addition, we can also provide the
@@ -3456,6 +3452,7 @@ class FuncAddressDeclare(Basic):
     >>> y = Variable('real', 'y')
     >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
     """
+    _children = ('_variable', '_value')
 
     def __init__(
         self,
@@ -3534,9 +3531,10 @@ class Declare(Basic):
     >>> Declare('real', Variable('real', 'x'), intent='out')
     Declare(NativeReal(), (x,), out)
     """
+    _children = ('_variable', '_value')
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         dtype,
         variable,
         intent=None,
@@ -3564,70 +3562,61 @@ class Declare(Basic):
         if not isinstance(passed_from_dotted, bool):
             raise TypeError('Expecting a boolean for passed_from_dotted attribute')
 
-        return Basic.__new__(
-            cls,
-            dtype,
-            variable,
-            intent,
-            value,
-            static,
-            passed_from_dotted
-            )
+        self._dtype = dtype
+        self._variable = variable
+        self._intent = intent
+        self._value = value
+        self._static = static
+        self._passed_from_dotted = passed_from_dotted
+        super().__init__()
 
     @property
     def dtype(self):
-        return self._args[0]
+        return self._dtype
 
     @property
     def variable(self):
-        return self._args[1]
+        return self._variable
 
     @property
     def intent(self):
-        return self._args[2]
+        return self._intent
 
     @property
     def value(self):
-        return self._args[3]
+        return self._value
 
     @property
     def static(self):
-        return self._args[4]
+        return self._static
 
     @property
     def passed_from_dotted(self):
         """ Argument is the lhs of a DottedFunction
         """
-        return self._args[5]
-
-
-class Subroutine(sp_UndefinedFunction):
-    pass
+        return self._passed_from_dotted
 
 
 class Break(Basic):
 
     """Represents a break in the code."""
-
-    pass
+    _children = ()
 
 
 class Continue(Basic):
 
     """Represents a continue in the code."""
-
-    pass
+    _children = ()
 
 
 class Raise(Basic):
 
     """Represents a raise in the code."""
-
-    pass
+    _children = ()
 
 
 # TODO: add example
-
+#TODO: [EB 26.01.2021] Unused class. Is this needed as well as NumpyRand?
 class Random(PyccelInternalFunction):
 
     """
@@ -3648,7 +3637,7 @@ class Random(PyccelInternalFunction):
 
 
 # TODO: improve with __new__ from Function and add example
-
+# TODO: [EB 26.01.2021] Is this unused class needed?
 class SumFunction(PyccelAstNode):
 
     """Represents a Sympy Sum Function.
@@ -3704,8 +3693,9 @@ class SymbolicPrint(Basic):
     >>> Print(('results', n,m))
     Print((results, n, m))
     """
+    _children = ('_expr',)
 
-    def __new__(cls, expr):
+    def __init__(self, expr):
         if not iterable(expr):
             raise TypeError('Expecting an iterable')
 
@@ -3714,11 +3704,13 @@ class SymbolicPrint(Basic):
                               SympyFunction)):
                 raise TypeError('Expecting Lambda, SymbolicAssign, SympyFunction for {}'.format(i))
 
-        return Basic.__new__(cls, expr)
+        self._expr = expr
+
+        super().__init__()
 
     @property
     def expr(self):
-        return self._args[0]
+        return self._expr
 
 
 class Del(Basic):
@@ -3737,18 +3729,21 @@ class Del(Basic):
     >>> Del([x])
     Del([x])
     """
+    _children = ('_variables',)
 
-    def __new__(cls, expr):
+    def __init__(self, expr):
 
         # TODO: check that the variable is allocatable
 
         if not iterable(expr):
             expr = tuple([expr])
-        return Basic.__new__(cls, expr)
+
+        self._variables = expr
+        super().__init__()
 
     @property
     def variables(self):
-        return self._args[0]
+        return self._variables
 
 
 class EmptyNode(Basic):
@@ -3770,14 +3765,12 @@ class EmptyNode(Basic):
     >>> EmptyNode()
 
     """
-
-    def __new__(cls):
-        return Basic.__new__(cls)
+    _children = ()
 
     def _sympystr(self, printer):
         return ''
 
-
+#TODO: [EB 26.01.2021] Is this class needed? It is used but I cannot find any instances
 class NewLine(Basic):
 
     """Represents a NewLine in the code.
@@ -3793,9 +3786,7 @@ class NewLine(Basic):
     >>> NewLine()
 
     """
-
-    def __new__(cls):
-        return Basic.__new__(cls)
+    _children = ()
 
     def _sympystr(self, printer):
         return '\n'
@@ -3816,13 +3807,15 @@ class Comment(Basic):
     >>> Comment('this is a comment')
     # this is a comment
     """
+    _children = ()
 
-    def __new__(cls, text):
-        return Basic.__new__(cls, text)
+    def __init__(cls, text):
+        self._text = text
+        Basic.__init__()
 
     @property
     def text(self):
-        return self._args[0]
+        return self._text
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -3845,9 +3838,9 @@ class SeparatorComment(Comment):
     # ........................................
     """
 
-    def __new__(cls, n):
+    def __init__(self, n):
         text = """.""" * n
-        return Comment.__new__(cls, text)
+        super().__init__(self, text)
 
 class AnnotatedComment(Basic):
 
@@ -3867,17 +3860,20 @@ class AnnotatedComment(Basic):
     >>> AnnotatedComment('omp', 'parallel')
     AnnotatedComment(omp, parallel)
     """
+    _children = ()
 
-    def __new__(cls, accel, txt):
-        return Basic.__new__(cls, accel, txt)
+    def __init__(cls, accel, txt):
+        self._accel = accel
+        self._txt = txt
+        super().__init__()
 
     @property
     def accel(self):
-        return self._args[0]
+        return self._accel
 
     @property
     def txt(self):
-        return self._args[1]
+        return self._txt
 
     def __getnewargs__(self):
         """used for Pickling self."""
@@ -3914,16 +3910,18 @@ class CommentBlock(Basic):
     txt : str
 
     """
-    def __new__(cls, txt, header = 'CommentBlock'):
+    _children = ()
+
+    def __init__(self, txt, header = 'CommentBlock'):
         if not isinstance(txt, str):
             raise TypeError('txt must be of type str')
         txt = txt.replace('"','')
         txts = txt.split('\n')
 
-        return Basic.__new__(cls, txts)
-
-    def __init__(self, txt, header = 'CommentBlock'):
         self._header = header
+        self._comments = txts
+
+        super().__init__()
 
     @property
     def comments(self):
@@ -3937,7 +3935,7 @@ class CommentBlock(Basic):
     def header(self, header):
         self._header = header
 
-
+#TODO: [EB 26.01.2021] Is this unused function needed?
 class Concatenate(PyccelAstNode):
 
     """Represents the String concatination operation.
@@ -3997,19 +3995,21 @@ class Assert(Basic):
     Examples
     --------
     """
+    _children = ('_test',)
     #TODO add type check in the semantic stage
-    def __new__(cls, test):
+    def __init__(self, test):
         #if not isinstance(test, (bool, Relational, sp_Boolean)):
         #    raise TypeError('test %s is of type %s, but must be a Relational, Boolean, or a built-in bool.'
         #                     % (test, type(test)))
 
-        return Basic.__new__(cls, test)
+        self._test = test
+        super().__init__()
 
     @property
     def test(self):
-        return self._args[0]
+        return self._test
 
-
+#TODO: [EB 26.01.2021] Do we need this unused class?
 class Eval(Basic):
 
     """Basic class for eval instruction."""
@@ -4020,10 +4020,10 @@ class Eval(Basic):
 class Pass(Basic):
 
     """Basic class for pass instruction."""
+    _children = ()
 
-    pass
 
-
+#TODO: [EB 26.01.2021] Do we need this unused class?
 class Exit(Basic):
 
     """Basic class for exists."""
@@ -4031,6 +4031,7 @@ class Exit(Basic):
     pass
 
 
+#TODO: [EB 26.01.2021] Do we need this unused class?
 class ErrorExit(Exit):
 
     """Exist with error."""
@@ -4085,12 +4086,13 @@ class If(Basic):
         return b
 
 class StarredArguments(Basic):
-    def __new__(cls, args):
-        return Basic.__new__(cls, args)
+    def __init__(self, args):
+        self._starred_obj = args
+        Basic.__init__()
 
     @property
     def args_var(self):
-        return self._args[0]
+        return self._starred_obj
 
 
 def is_simple_assign(expr):
@@ -4490,6 +4492,7 @@ def get_iterable_ranges(it, var_name=None):
     return [PythonRange(s, e, 1) for (s, e) in zip(starts, ends)]
 
 class ParserResult(Basic):
+    _children = ('_program','_module')
 
     def __init__(
         self,
@@ -4519,6 +4522,7 @@ class ParserResult(Basic):
         self._module    = module
         self._prog_name = prog_name
         self._mod_name  = mod_name
+        super().__init__()
 
 
     @property
