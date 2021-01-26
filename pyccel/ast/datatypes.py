@@ -154,9 +154,6 @@ class NativeTuple(DataType):
 class NativeRange(DataType):
     _name = 'Range'
 
-class NativeParallelRange(NativeRange):
-    _name = 'ParallelRange'
-
 class NativeSymbol(DataType):
     _name = 'Symbol'
 
