@@ -39,7 +39,7 @@ OmpConstructOrDirective:
 ////////////////////////////////////////////////////
 OmpParallelConstruct:   'parallel'      combined*=ParallelCombined? clauses*=OmpParallelClause;
 OmpLoopConstruct:       'for'           clauses*=OmpLoopClause;
-OmpTaskLoopConstruct:   'taskloop'      clauses*=OmpTaskLoopClause; // TODO: add IF and Final clauses when issue #590 is resolved.
+OmpTaskLoopConstruct:   name='taskloop'      clauses*=OmpTaskLoopClause; // TODO: add IF and Final clauses when issue #590 is resolved.
 OmpSingleConstruct:     'single'        clauses*=OmpSingleClause;
 OmpCriticalConstruct:   'critical'      clauses*=OmpCriticalClause;
 OmpMaskedConstruct:     name='masked'   clauses*=OmpMaskedClause;

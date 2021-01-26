@@ -11,7 +11,7 @@ from os.path import join, dirname
 from textx.metamodel import metamodel_from_file
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.core import OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct,\
+from pyccel.ast.core import OmpAnnotatedComment, OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct,\
         Omp_End_Clause, OMP_Critical_Construct, OMP_Barrier_Construct, OMP_Master_Construct,\
         OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct, OMP_Atomic_Construct, OMP_TaskWait_Construct, OMP_Task_Construct, OMP_Taskyield_Construct, OMP_Flush_Construct, OMP_Cancel_Construct, OMP_Target_Construct, OMP_Teams_Construct
 
@@ -151,6 +151,7 @@ class OmpTaskLoopConstruct(BasicStmt):
         """
         """
         self.clauses = kwargs.pop('clauses')
+        self.name = kwargs.pop('name')
 
         super(OmpTaskLoopConstruct, self).__init__(**kwargs)
 
@@ -173,14 +174,14 @@ class OmpTaskLoopConstruct(BasicStmt):
                          OmpNogroup, \
                          OmpPriority)
 
-        txt = ''
+        txt = self.name
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpTaskLoopConstruct. Given : ', \
                                 type(clause))
-        return OMP_TaskLoop_Construct(txt)
+        return OmpAnnotatedComment(txt)
 
 class OmpTaskConstruct(BasicStmt):
     """Class representing a Task Construct """
@@ -346,7 +347,7 @@ class OmpBarrierConstruct(BasicStmt):
             print("> OmpBarrierConstruct: expr")
 
         txt = self.name
-        return OMP_Barrier_Construct(txt)
+        return OmpAnnotatedComment(txt)
 
 class OmpTaskWaitConstruct(BasicStmt):
     """Class representing a TaskWait stmt."""
@@ -362,7 +363,7 @@ class OmpTaskWaitConstruct(BasicStmt):
             print("> OmpTaskWaitConstruct: expr")
 
         txt = self.name
-        return OMP_TaskWait_Construct(txt)
+        return OmpAnnotatedComment(txt)
 
 class OmpTaskyieldConstruct(BasicStmt):
     """Class representing a Taskyield stmt."""
@@ -401,7 +402,7 @@ class OmpFlushConstruct(BasicStmt):
                 txt = '{0}{1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpFlushConstruct')
-        return OMP_Flush_Construct(txt)
+        return OmpAnnotatedComment(txt)
 
 class OmpCancelConstruct(BasicStmt):
     """Class representing a Cancel stmt."""
@@ -507,7 +508,7 @@ class OmpAtomicConstruct(BasicStmt):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpAtomicConstruct')
-        return OMP_Atomic_Construct(txt)
+        return OmpAnnotatedComment(txt)
 
 class OmpEndClause(BasicStmt):
     """Class representing a ."""

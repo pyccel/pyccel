@@ -3895,6 +3895,36 @@ class AnnotatedComment(Basic):
         args = (self.accel, self.txt)
         return args
 
+class OmpAnnotatedComment(Basic):
+
+    """Represents an OpenMP Annotated Comment in the code.
+
+    Parameters
+    ----------
+
+    txt: str
+        statement to print
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import AnnotatedComment
+    >>> AnnotatedComment('omp', 'parallel')
+    AnnotatedComment(omp, parallel)
+    """
+
+    def __new__(cls, txt):
+        return Basic.__new__(cls, txt)
+
+    @property
+    def txt(self):
+        return self._args[0]
+
+    def __getnewargs__(self):
+        """used for Pickling self."""
+
+        args = (self.txt)
+        return args
+
 class OMP_For_Loop(AnnotatedComment):
     """ Represents an OpenMP Loop construct. """
     def __new__(cls, txt):

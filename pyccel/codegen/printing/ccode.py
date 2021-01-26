@@ -1335,10 +1335,6 @@ class CCodePrinter(CodePrinter):
             omp_expr += '\n{'
         return omp_expr
 
-    def _print_OMP_TaskLoop_Construct(self, expr):
-        omp_expr   = str(expr.txt)
-        return '#pragma omp taskloop {}'.format(omp_expr)
-
     def _print_OMP_Single_Construct(self, expr):
         omp_expr   = str(expr.txt)
         return '#pragma omp {}\n{{'.format(omp_expr)
@@ -1346,11 +1342,6 @@ class CCodePrinter(CodePrinter):
     def _print_OMP_Critical_Construct(self, expr):
         omp_expr = str(expr.txt)
         omp_expr = '#pragma omp {}\n{{'.format(omp_expr)
-        return omp_expr
-
-    def _print_OMP_Barrier_Construct(self, expr):
-        omp_expr = str(expr.txt)
-        omp_expr = '#pragma omp {}'.format(omp_expr)
         return omp_expr
 
     def _print_OMP_Master_Construct(self, expr):
@@ -1363,26 +1354,11 @@ class CCodePrinter(CodePrinter):
         omp_expr = '#pragma omp {}\n{{'.format(omp_expr)
         return omp_expr
 
-    def _print_OMP_Atomic_Construct(self, expr):
-        omp_expr = str(expr.txt)
-        omp_expr = '#pragma omp {}'.format(omp_expr)
-        return omp_expr
-    
     def _print_OMP_Task_Construct(self, expr):
         omp_expr = str(expr.txt)
         omp_expr = '#pragma omp {}\n{{'.format(omp_expr)
         return omp_expr
 
-    def _print_OMP_TaskWait_Construct(self, expr):
-        omp_expr = str(expr.txt)
-        omp_expr = '#pragma omp {}'.format(omp_expr)
-        return omp_expr
-    
-    def _print_OMP_Flush_Construct(self, expr):
-        omp_expr = str(expr.txt)
-        omp_expr = '#pragma omp {}'.format(omp_expr)
-        return omp_expr
-    
     def _print_OMP_Taskyield_Construct(self, expr):
         omp_expr = str(expr.txt)
         omp_expr = '#pragma omp {}'.format(omp_expr)
@@ -1396,6 +1372,11 @@ class CCodePrinter(CodePrinter):
     def _print_OMP_Target_Construct(self, expr):
         omp_expr = str(expr.txt)
         omp_expr = '#pragma omp {}\n{{'.format(omp_expr)
+        return omp_expr
+
+    def _print_OmpAnnotatedComment(self, expr):
+        omp_expr = str(expr.txt)
+        omp_expr = '#pragma omp {}'.format(omp_expr)
         return omp_expr
 
     def _print_Omp_End_Clause(self, expr):
