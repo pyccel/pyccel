@@ -1070,12 +1070,19 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelFloorDiv(self, expr):
         self._additional_imports.add("math")
+        # the result type of the floor division is dependent on the arguments
+        # type, if all arguments are integers the result is integer otherwise
+        # the result type is float
+        need_to_cast = True
         if all(a.dtype is NativeInteger() for a in expr.args):
             args = [PythonFloat(a) for a in expr.args]
         else:
             args = expr.args
+            need_to_cast = True
         code = ' / '.join(self._print(a) for a in args)
-        return "(int64_t)floor({})".format(code)
+        if (need_to_cast):
+            return "(int64_t)floor({})".format(code)
+        return "floor({})".format(code)
 
     def _print_PyccelRShift(self, expr):
         return ' >> '.join(self._print(a) for a in expr.args)
