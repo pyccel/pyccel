@@ -24,9 +24,7 @@ from sympy.core.function      import _coeff_isneg
 from sympy.core.expr          import Expr, AtomicExpr
 from sympy.logic.boolalg      import And as sp_And, Or as sp_Or
 from sympy.logic.boolalg      import Boolean as sp_Boolean
-from sympy.tensor             import Idx
 
-from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables          import iterable
 
 
@@ -39,7 +37,7 @@ from .builtins  import (PythonEnumerate, PythonLen, PythonList, PythonMap,
 from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeBool, NativeRange,
                         NativeTuple, is_iterable_datatype, str_dtype)
-from .internals      import PyccelArraySize, Slice
+from .internals      import Slice
 
 from .literals       import LiteralTrue, LiteralFalse, LiteralInteger, Nil
 from .literals       import LiteralImaginaryUnit, LiteralString
@@ -47,7 +45,7 @@ from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
-from .operators import PyccelMul, IfTernaryOperator
+from .operators import PyccelMul, IfTernaryOperator, Relational
 
 from .variable import DottedName, DottedVariable, IndexedElement
 from .variable import ValuedVariable, Variable
