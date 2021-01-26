@@ -2698,7 +2698,7 @@ class ClassDef(Basic):
         name,
         attributes=(),
         methods=(),
-        options=('public'),
+        options=('public',),
         imports=(),
         parent=(),
         interfaces=(),
