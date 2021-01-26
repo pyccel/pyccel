@@ -260,7 +260,7 @@ void        alias_assign(t_ndarray *dest, t_ndarray src)
 ** indexing
 */
 
-int32_t     get_index(t_ndarray arr, ...)
+int64_t     get_index(t_ndarray arr, ...)
 {
     va_list va;
     int32_t index;
