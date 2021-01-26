@@ -31,7 +31,6 @@ __all__ = (
     'NativeInteger',
     'NativeTuple',
 #    'NativeNil',
-#    'NativeParallelRange',
     'NativeRange',
     'NativeReal',
     'NativeString',
