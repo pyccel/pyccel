@@ -374,8 +374,6 @@ class CCodePrinter(CodePrinter):
         lines = []
         for i, (c, e) in enumerate(expr.args):
             var = self._print(e)
-            if (var == ''):
-                break
             if i == 0:
                 lines.append("if (%s)\n{" % self._print(c))
             elif i == len(expr.args) - 1 and c is LiteralTrue():
@@ -1044,6 +1042,9 @@ class CCodePrinter(CodePrinter):
         elif len(args) > 1:
             code += 'return 0;'
         return code
+
+    def _print_Pass(self, expr):
+        return '// pass'
 
     def _print_Nil(self, expr):
         return 'NULL'
