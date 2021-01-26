@@ -4,7 +4,6 @@
 #------------------------------------------------------------------------------------------#
 from sympy import cse as sympy_cse
 from sympy import Sum
-from sympy import IndexedBase, Indexed
 from sympy import Symbol
 from sympy import Tuple, Lambda
 
@@ -32,7 +31,7 @@ def cse(expr):
     (vars_old, stmts) = map(list, zip(*ls))
     vars_new = []
     free_gl = expr.free_symbols
-    free_gl.update(expr.atoms(IndexedBase))
+    #free_gl.update(expr.atoms(IndexedBase)) #What should this be instead?
     free_gl.update(vars_old)
     stmts.append(expr)
 
@@ -42,7 +41,7 @@ def cse(expr):
         free = list(free)
         var = create_variable(stmts[i])
         if len(free) > 0:
-            var = IndexedBase(var)[free]
+            var = var[free]
         vars_new.append(var)
     for i in range(len(stmts) - 1):
         stmts[i + 1] = stmts[i + 1].replace(vars_old[i],
@@ -53,7 +52,7 @@ def cse(expr):
     for i in range(len(stmts) - 1):
         stmts[i] = Assign(vars_new[i], stmts[i])
         stmts[i] = pyccel_sum(stmts[i])
-        if isinstance(vars_new[i], Indexed):
+        if isinstance(vars_new[i], IndexedElement):
             ind = vars_new[i].indices
             tp = list(stmts[i + 1].atoms(Tuple))
             size = None
@@ -69,7 +68,7 @@ def cse(expr):
             var = Symbol(name)
             stmt = Assign(var, Function('empty')(size[0]))
             allocate.append(stmt)
-            stmts[i] = For(ind[0], Function('range')(size[0]), [stmts[i]], strict=False)
+            stmts[i] = For(ind[0], Function('range')(size[0]), [stmts[i]])
     lhs = create_variable(expr)
     stmts[-1] = Assign(lhs, stmts[-1])
     imports = [Import('empty', 'numpy')]
@@ -87,7 +86,7 @@ def pyccel_sum(expr):
     index = expr.args[1]
     target = Function('range')(index[1], index[2])
     body = AugAssign(lhs, '+', expr.args[0])
-    stmt = For(index[0], target, [body], strict=False)
+    stmt = For(index[0], target, [body])
     stmt = FunctionalSum([stmt], expr.args[0], lhs)
 
     return stmt

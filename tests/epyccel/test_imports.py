@@ -8,7 +8,10 @@ from pyccel.decorators import types
 
 #------------------------------------------------------------------------------
 @pytest.fixture(params=[
-    pytest.param('python', marks = pytest.mark.python)]
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python),
+    ]
 )
 def language(request):
     return request.param
@@ -49,6 +52,10 @@ def test_import_as(language):
     x = ones(10, dtype=int)
     assert f(x) == f3(x)
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("python", marks = pytest.mark.python),
+    ]
+)
 def test_import_collision(language):
     @types('int')
     def f4(x):
