@@ -1094,7 +1094,7 @@ class While(Basic):
     While(n > 1, (n := n - 1,))
     """
 
-    def __new__(cls, test, body, local_vars=[]):
+    def __new__(cls, test, body, local_vars=()):
         test = sympify(test, locals=local_sympify)
 
         if PyccelAstNode.stage == 'semantic':
@@ -1300,9 +1300,9 @@ class Module(Basic):
         name,
         variables,
         funcs,
-        interfaces=[],
-        classes=[],
-        imports=[],
+        interfaces=(),
+        classes=(),
+        imports=(),
         ):
         if not isinstance(name, str):
             raise TypeError('name must be a string')
@@ -1449,7 +1449,7 @@ class Program(Basic):
         name,
         variables,
         body,
-        imports=[],
+        imports=(),
         ):
 
         if not isinstance(name, str):
@@ -1558,7 +1558,7 @@ class For(Basic):
         target,
         iter_obj,
         body,
-        local_vars = [],
+        local_vars = (),
         ):
         self._target = self._args[0]
         self._iterable = self._args[1]
@@ -2031,22 +2031,22 @@ class FunctionDef(Basic):
         arguments,
         results,
         body,
-        local_vars=[],
-        global_vars=[],
+        local_vars=(),
+        global_vars=(),
         cls_name=None,
         is_static=False,
-        imports=[],
+        imports=(),
         decorators={},
-        headers=[],
+        headers=(),
         templates={},
         is_recursive=False,
         is_pure=False,
         is_elemental=False,
         is_private=False,
         is_header=False,
-        arguments_inout=[],
-        functions=[],
-        interfaces=[],
+        arguments_inout=(),
+        functions=(),
+        interfaces=(),
         doc_string=None):
 
         if isinstance(name, str):
@@ -2696,12 +2696,12 @@ class ClassDef(Basic):
     def __new__(
         cls,
         name,
-        attributes=[],
-        methods=[],
-        options=['public'],
-        imports=[],
-        parent=[],
-        interfaces=[],
+        attributes=(),
+        methods=(),
+        options=('public'),
+        imports=(),
+        parent=(),
+        interfaces=(),
         ):
 
         # name
