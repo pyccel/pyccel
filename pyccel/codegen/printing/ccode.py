@@ -768,9 +768,7 @@ class CCodePrinter(CodePrinter):
         elif  (expr.status == 'allocated'):
             free_code += self._print(Deallocate(expr.variable))
         self._additional_imports.add('ndarrays')
-        shape = expr.shape
-        shape = [self._print(i) for i in shape]
-        shape = ", ".join(a for a in shape)
+        shape = ", ".join(self._print(i) for i in expr.shape)
         dtype = self._print(expr.variable.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
         shape_dtype = self.find_in_dtype_registry('int', 8)
@@ -1170,9 +1168,7 @@ class CCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
-        shape = lhs.shape
-        shape = [self._print(i) for i in shape]
-        shape = ", ".join(a for a in shape)
+        shape = ", ".join(self._print(i) for i in lhs.shape)
         declare_dtype = self.find_in_dtype_registry('int', 8)
 
         shape_init = "({declare_dtype}[]){{{shape}}}".format(declare_dtype=declare_dtype, shape=shape)
