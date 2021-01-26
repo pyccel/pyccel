@@ -52,7 +52,7 @@ from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatyp
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
 from pyccel.ast.datatypes import iso_c_binding
-from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
+from pyccel.ast.datatypes import NativeRange, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice
@@ -993,7 +993,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.dtype, NativeSymbol):
             return ''
 
-        if isinstance(expr.dtype, (NativeRange, NativeTensor)):
+        if isinstance(expr.dtype, NativeRange):
             return ''
 
         # meta-variables

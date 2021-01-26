@@ -39,7 +39,7 @@ from .builtins  import (PythonEnumerate, PythonLen, PythonList, PythonMap,
                         PythonRange, PythonZip, PythonTuple, PythonBool)
 from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeInteger, NativeBool, NativeReal,
-                        NativeComplex, NativeRange, NativeTensor, NativeString,
+                        NativeComplex, NativeRange, NativeString,
                         NativeTuple, is_iterable_datatype, str_dtype)
 from .internals      import PyccelInternalFunction, PyccelArraySize, Slice
 
@@ -1654,11 +1654,6 @@ class ForIterator(For):
         if isinstance(it, Variable):
             if isinstance(it.dtype, NativeRange):
                 return 1
-            if isinstance(it.dtype, NativeTensor):
-
-                # TODO must be computed
-
-                return 2
 
             cls_base = it.cls_base
             if not cls_base:
