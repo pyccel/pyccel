@@ -1743,7 +1743,7 @@ class ValuedArgument(Basic):
 
         # TODO should we turn back to Argument
 
-        if not isinstance(expr, Symbol):
+        if not isinstance(expr, (Symbol, Argument)):
             raise TypeError('Expecting an argument')
 
         self._expr   = expr
