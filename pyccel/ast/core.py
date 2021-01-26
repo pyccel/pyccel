@@ -1188,38 +1188,6 @@ class With(Basic):
         body +=  end.body.body
         return Block('with', [], body)
 
-class Tile(PythonRange):
-
-    """
-    Representes a tile.
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable
-    >>> from pyccel.ast.core import Tile
-    >>> from sympy import Symbol
-    >>> s = Variable('int', 's')
-    >>> e = Symbol('e')
-    >>> Tile(s, e, 1)
-    Tile(0, n, 1)
-    """
-
-    def __new__(cls, start, stop):
-        step = 1
-        return PythonRange.__new__(cls, start, stop, step)
-
-    @property
-    def start(self):
-        return self._args[0]
-
-    @property
-    def stop(self):
-        return self._args[1]
-
-    @property
-    def size(self):
-        return self.stop - self.start
-
 
 # TODO add a name to a block?
 
