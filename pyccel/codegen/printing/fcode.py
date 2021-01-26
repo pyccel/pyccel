@@ -1236,6 +1236,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, NumpyArange):
             start = self._print(rhs.start)
             step = self._print(rhs.step)
+            shape = PyccelMinus(rhs.shape[0], LiteralInteger(1))
             target = Variable(NativeInteger(), name =  self.parser.get_new_name('i'))
             if self._current_function:
                 name = self._current_function
@@ -1243,11 +1244,13 @@ class FCodePrinter(CodePrinter):
                 func.local_vars.append(target)
             else:
                 self._namespace.variables[target.name] = target
-            code = '[({start} + {step} * {target}, {target} = 0, {shape}, 1)]'
-            code = code.format(start = start,
+            code = '[({start} + {step} * {target}, {target} = {0}, {shape}, {1})]'
+            code = code.format(self._print(LiteralInteger(0)),
+                               self._print(LiteralInteger(1)),
+                               start = start,
                                step = step,
                                target = self._print(target),
-                               shape = self._print(rhs.shape[0]))
+                               shape = self._print(shape))
             return '{0} = {1}\n'.format(lhs_code, code)
 
         if isinstance(rhs, NumpyMod):
