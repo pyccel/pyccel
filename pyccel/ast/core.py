@@ -2919,14 +2919,12 @@ class Import(Basic):
     import foo, foo.bar.baz
     """
 
-    def __new__(cls, source, target = None, ignore_at_print = False):
+    def __init__(self, source, target = None, ignore_at_print = False):
 
         if not source is None:
             source = Import._format(source)
 
-        return Basic.__new__(cls, source)
-
-    def __init__(self, source, target = None, ignore_at_print = False):
+        self._source = source
         self._target = []
         self._ignore_at_print = ignore_at_print
         if isinstance(target, (str, Symbol, DottedName, AsName)):
@@ -2934,6 +2932,7 @@ class Import(Basic):
         elif iterable(target):
             for i in target:
                 self._target.append(Import._format(i))
+        super().__init__()
 
     @staticmethod
     def _format(i):
@@ -2955,7 +2954,7 @@ class Import(Basic):
 
     @property
     def source(self):
-        return self._args[0]
+        return self._source
 
     @property
     def ignore(self):
@@ -3402,7 +3401,7 @@ class CommentBlock(Basic):
 
     @property
     def comments(self):
-        return self._args[0]
+        return self._comments
 
     @property
     def header(self):
@@ -3476,7 +3475,7 @@ class If(Basic):
 
     # TODO add type check in the semantic stage
 
-    def __new__(cls, *args):
+    def __init__(cls, *args):
 
         newargs = []
         for ce in args:
@@ -3491,12 +3490,18 @@ class If(Basic):
                 raise TypeError('body is not iterable or CodeBlock')
             newargs.append((cond,body))
 
-        return Basic.__new__(cls, *newargs)
+        self._blocks = newargs
+
+        super().__init__()
+
+    @property
+    def blocks(self):
+        return self._blocks
 
     @property
     def bodies(self):
         b = []
-        for i in self._args:
+        for i in self._blocks:
             b.append( i[1])
         return b
 
