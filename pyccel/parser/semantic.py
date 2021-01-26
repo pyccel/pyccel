@@ -2300,7 +2300,7 @@ class SemanticParser(BasicParser):
         return While(test, body, local_vars)
 
     def _visit_If(self, expr, **settings):
-        args = [self._visit(i, **settings) for i in expr.args]
+        args = [self._visit(i, **settings) for i in expr.blocks]
         return expr.func(*args)
 
     def _visit_IfTernaryOperator(self, expr, **settings):

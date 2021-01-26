@@ -3459,7 +3459,7 @@ class If(Basic):
                 raise TypeError('body is not iterable or CodeBlock')
             newargs.append((cond,body))
 
-        self._blocks = newargs
+        self._blocks = tuple(newargs)
 
         super().__init__()
 
