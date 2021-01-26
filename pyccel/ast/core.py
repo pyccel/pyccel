@@ -841,7 +841,7 @@ class CodeBlock(Basic):
                 ls += i.body
             else:
                 ls.append(i)
-        self._body = ls
+        self._body = tuple(ls)
         if len(self._body)>0 and isinstance(self._body[-1], (Assign, AugAssign)):
             self.set_fst(self._body[-1].fst)
         super().__init__()
@@ -1587,7 +1587,7 @@ class ForIterator(For):
     """Class that describes iterable classes defined by the user."""
 
     def __init__(
-        cls,
+        self,
         target,
         iterable,
         body,
@@ -1595,7 +1595,7 @@ class ForIterator(For):
 
         if isinstance(iterable, Symbol):
             iterable = PythonRange(PythonLen(iterable))
-        super().__init__(cls, target, iterable, body)
+        super().__init__(target, iterable, body)
 
     # TODO uncomment later when we intriduce iterators
     # @property
@@ -1712,6 +1712,10 @@ class Argument(PyccelAstNode):
         self._kwonly     = kwonly
         self._annotation = annotation
         super().__init__()
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def is_kwonly(self):
@@ -3253,7 +3257,7 @@ class Comment(Basic):
     # this is a comment
     """
 
-    def __init__(cls, text):
+    def __init__(self, text):
         self._text = text
         Basic.__init__()
 
@@ -3284,7 +3288,7 @@ class SeparatorComment(Comment):
 
     def __init__(self, n):
         text = """.""" * n
-        super().__init__(self, text)
+        super().__init__(text)
 
 class AnnotatedComment(Basic):
 
@@ -3440,7 +3444,7 @@ class If(Basic):
 
     # TODO add type check in the semantic stage
 
-    def __init__(cls, *args):
+    def __init__(self, *args):
 
         newargs = []
         for ce in args:
