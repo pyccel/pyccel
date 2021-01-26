@@ -51,7 +51,7 @@ from pyccel.ast.core import IndexedElement
 from pyccel.ast.core import _atomic
 from pyccel.ast.core import create_variable
 
-from pyccel.ast.operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
+from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
