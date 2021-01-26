@@ -1076,9 +1076,9 @@ class CCodePrinter(CodePrinter):
         need_to_cast = True
         if all(a.dtype is NativeInteger() for a in expr.args):
             args = [PythonFloat(a) for a in expr.args]
+            need_to_cast = True
         else:
             args = expr.args
-            need_to_cast = True
         code = ' / '.join(self._print(a) for a in args)
         if (need_to_cast):
             return "(int64_t)floor({})".format(code)
