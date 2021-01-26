@@ -1636,7 +1636,7 @@ class ForIterator(For):
     def ranges(self):
         return get_iterable_ranges(self.iterable)
 
-class ConstructorCall(AtomicExpr):
+class ConstructorCall(Basic):
 
     """
     It  serves as a constructor for undefined function classes.
