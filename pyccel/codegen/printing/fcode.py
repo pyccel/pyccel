@@ -483,9 +483,6 @@ class FCodePrinter(CodePrinter):
     def _print_EmptyNode(self, expr):
         return ''
 
-    def _print_NewLine(self, expr):
-        return '\n'
-
     def _print_AnnotatedComment(self, expr):
         accel = self._print(expr.accel)
         txt   = str(expr.txt)

@@ -98,7 +98,6 @@ __all__ = (
     'ModuleHeader',
     'MulOp',
     'NativeOp',
-    'NewLine',
     'ParserResult',
     'Pass',
     'Program',
@@ -3320,29 +3319,6 @@ class EmptyNode(Basic):
 
     def _sympystr(self, printer):
         return ''
-
-
-class NewLine(Basic):
-
-    """Represents a NewLine in the code.
-
-    Parameters
-    ----------
-    text : str
-       the comment line
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import NewLine
-    >>> NewLine()
-
-    """
-
-    def __new__(cls):
-        return Basic.__new__(cls)
-
-    def _sympystr(self, printer):
-        return '\n'
 
 
 class Comment(Basic):

@@ -845,8 +845,6 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_EmptyNode(self, expr, **settings):
         return expr
-    def _visit_NewLine(self, expr, **settings):
-        return expr
     def _visit_Break(self, expr, **settings):
         return expr
     def _visit_Continue(self, expr, **settings):
