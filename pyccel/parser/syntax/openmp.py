@@ -472,6 +472,7 @@ class OmpTeamsConstruct(BasicStmt):
                           OmpLastPrivate, \
                           OmpShared, \
                           OmpReduction, \
+                          OmpNumTeams, \
                           )
 
         txt = self.name
@@ -562,6 +563,24 @@ class OmpNumTeams(BasicStmt):
 
         thread = self.thread
         return 'num_teams({})'.format(thread)
+
+class OmpThreadLimit(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.limit = kwargs.pop('limit')
+
+        super(OmpThreadLimit, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        # TODO check if variable exist in namespace
+        if DEBUG:
+            print("> OmpThreadLimit: expr")
+
+        limit = self.limit
+        return 'thread_limit({})'.format(limit)
 
 class OmpNumTasks(BasicStmt):
     """Class representing a ."""
@@ -1092,7 +1111,8 @@ omp_clauses = [OmpCollapse,
                FlushList,
                OmpCancelType,
                OmpMap,
-               OmpNumTeams]
+               OmpNumTeams,
+               OmpThreadLimit]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 

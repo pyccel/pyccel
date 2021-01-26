@@ -84,6 +84,7 @@ AllOmpClauses:
   | OmpLastPrivate
   | OmpMap
   | OmpNumTeams
+  | OmpThreadLimit
 ;
 
 OmpParallelClause:
@@ -152,6 +153,7 @@ OmpSimdClause:
 OmpNumThread: 'num_threads' '(' thread=ThreadIndex ')';
 OmpNumTeams: 'num_teams' '(' teams=TeamIndex ')';
 OmpNumTasks: 'num_tasks' '(' tasks=TaskIndex ')';
+OmpThreadLimit: 'thread_limit' '(' limit=ThreadIndex ')';
 OmpGrainSize: 'grainsize' '(' tasks=TaskIndex ')';
 OmpDefault: 'default' '(' status=OmpDefaultStatus ')';
 OmpProcBind: 'proc_bind' '(' status=OmpProcBindStatus ')';
