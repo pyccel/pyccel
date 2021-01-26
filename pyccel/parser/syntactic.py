@@ -38,7 +38,7 @@ from pyccel.ast.core import While
 from pyccel.ast.core import Del
 from pyccel.ast.core import Assert
 from pyccel.ast.core import PythonTuple
-from pyccel.ast.core import Comment, EmptyNode, NewLine
+from pyccel.ast.core import Comment, EmptyNode
 from pyccel.ast.core import Break, Continue
 from pyccel.ast.core import Argument, ValuedArgument
 from pyccel.ast.core import Import
@@ -222,7 +222,7 @@ class SyntaxParser(BasicParser):
                 n_empty_lines = 0
                 current_file = start
                 current_file.append(v)
-            elif isinstance(v, (NewLine, EmptyNode)):
+            elif isinstance(v, EmptyNode):
                 # EmptyNodes are defined in the same block as the previous line
                 current_file.append(v)
                 n_empty_lines += 1

@@ -1318,9 +1318,6 @@ class CCodePrinter(CodePrinter):
     def _print_EmptyNode(self, expr):
         return ''
 
-    def _print_NewLine(self, expr):
-        return '\n'
-
     #=================== OMP ==================
     def _print_OMP_For_Loop(self, expr):
         omp_expr   = str(expr.txt)
