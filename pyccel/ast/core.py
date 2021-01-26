@@ -531,21 +531,27 @@ class AsName(Basic):
     >>> from pyccel.ast.core import AsName
     >>> AsName('old', 'new')
     old as new
+
+    Parameters
+    ==========
+    name   : str
+             original name of variable or function
+    target : str
+             name of variable or function in this context
     """
 
-    def __new__(cls, name, target):
-
-        # TODO check
-
-        return Basic.__new__(cls, name, target)
+    def __init__(self, name, target):
+        self._name = name
+        self._target = target
+        Basic.__init__(self)
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def target(self):
-        return self._args[1]
+        return self._target
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -573,21 +579,21 @@ class Dlist(PyccelAstNode):
     shape : the shape of the array
     """
 
-    def __new__(cls, val, length):
-        return Basic.__new__(cls, val, length)
-
     def __init__(self, val, length):
         self._rank = val.rank
         self._shape = tuple(s if i!= 0 else PyccelMul(s, length) for i,s in enumerate(val.shape))
         self._order = val.order
+        self._val = val
+        self._length = length
+        Basic.__init__(self)
 
     @property
     def val(self):
-        return self._args[0]
+        return self._val
 
     @property
     def length(self):
-        return self._args[1]
+        return self._length
 
 
 class Assign(Basic):
@@ -633,14 +639,18 @@ class Assign(Basic):
 
     """
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         lhs,
         rhs,
         status=None,
         like=None,
         ):
-        return Basic.__new__(cls, lhs, rhs, status, like)
+        self._lhs = lhs
+        self._rhs = rhs
+        self._status = status
+        self._like = like
+        super().__init__()
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -648,11 +658,11 @@ class Assign(Basic):
 
     @property
     def lhs(self):
-        return self._args[0]
+        return self._lhs
 
     @property
     def rhs(self):
-        return self._args[1]
+        return self._rhs
 
     # TODO : remove
 
@@ -662,11 +672,11 @@ class Assign(Basic):
 
     @property
     def status(self):
-        return self._args[2]
+        return self._status
 
     @property
     def like(self):
-        return self._args[3]
+        return self._like
 
     @property
     def is_alias(self):
@@ -760,6 +770,7 @@ class Allocate(Basic):
         self._shape    = shape
         self._order    = order
         self._status   = status
+        super().__init__()
     # ...
 
     @property
@@ -818,6 +829,7 @@ class Deallocate(Basic):
             raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
 
         self._variable = variable
+        super().__init__()
 
     # ...
 
@@ -837,22 +849,23 @@ class CodeBlock(Basic):
     """Represents a list of stmt for code generation.
        we use it when a single statement in python
        produce multiple statement in the targeted language
+
+       Parameters
+       ==========
+       body : iterable
     """
 
-    def __new__(cls, body):
+    def __init__(self, body):
         ls = []
         for i in body:
             if isinstance(i, CodeBlock):
                 ls += i.body
             else:
                 ls.append(i)
-
-        return Basic.__new__(cls, ls)
-
-    def __init__(self, body):
-        self._body = self._args[0]
+        self._body = ls
         if len(self._body)>0 and isinstance(self._body[-1], (Assign, AugAssign)):
             self.set_fst(self._body[-1].fst)
+        super().__init__()
 
     @property
     def body(self):
@@ -892,7 +905,7 @@ class AliasAssign(Basic):
 
     """
 
-    def __new__(cls, lhs, rhs):
+    def __init__(self, lhs, rhs):
         if PyccelAstNode.stage == 'semantic':
             if not lhs.is_pointer:
                 raise TypeError('lhs must be a pointer')
@@ -900,7 +913,9 @@ class AliasAssign(Basic):
             if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_pointer:
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
 
-        return Basic.__new__(cls, lhs, rhs)
+        self._lhs = lhs
+        self._rhs = rhs
+        super().__init__()
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -908,11 +923,11 @@ class AliasAssign(Basic):
 
     @property
     def lhs(self):
-        return self._args[0]
+        return self._lhs
 
     @property
     def rhs(self):
-        return self._args[1]
+        return self._rhs
 
 
 class SymbolicAssign(Basic):
@@ -937,8 +952,10 @@ class SymbolicAssign(Basic):
 
     """
 
-    def __new__(cls, lhs, rhs):
-        return Basic.__new__(cls, lhs, rhs)
+    def __init__(self, lhs, rhs):
+        self._lhs = lhs
+        self._rhs = rhs
+        super().__init__()
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -946,11 +963,11 @@ class SymbolicAssign(Basic):
 
     @property
     def lhs(self):
-        return self._args[0]
+        return self._lhs
 
     @property
     def rhs(self):
-        return self._args[1]
+        return self._rhs
 
 
 # The following are defined to be sympy approved nodes. If there is something
@@ -1039,8 +1056,8 @@ class AugAssign(Assign):
     s += 1 + 2*t
     """
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         lhs,
         op,
         rhs,
@@ -1053,14 +1070,9 @@ class AugAssign(Assign):
         elif op not in list(op_registry.values()):
             raise TypeError('Unrecognized Operator')
 
-        return Basic.__new__(
-            cls,
-            lhs,
-            op,
-            rhs,
-            status,
-            like,
-            )
+        self._op = op
+
+        super().__init__(lhs, rhs, status, like)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -1068,24 +1080,8 @@ class AugAssign(Assign):
                 sstr(self.rhs))
 
     @property
-    def lhs(self):
-        return self._args[0]
-
-    @property
     def op(self):
-        return self._args[1]
-
-    @property
-    def rhs(self):
-        return self._args[2]
-
-    @property
-    def status(self):
-        return self._args[3]
-
-    @property
-    def like(self):
-        return self._args[4]
+        return self._op
 
 
 class While(Basic):
@@ -1112,7 +1108,7 @@ class While(Basic):
     While(n > 1, (n := n - 1,))
     """
 
-    def __new__(cls, test, body, local_vars=[]):
+    def __init__(self, test, body, local_vars=[]):
         test = sympify(test, locals=local_sympify)
 
         if PyccelAstNode.stage == 'semantic':
@@ -1123,19 +1119,23 @@ class While(Basic):
             body = CodeBlock((sympify(i, locals=local_sympify) for i in body))
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable or a CodeBlock')
-        return Basic.__new__(cls, test, body, local_vars)
+
+        self._test = test
+        self._body = body
+        self._local_vars = local_vars
+        super().__init__()
 
     @property
     def test(self):
-        return self._args[0]
+        return self._test
 
     @property
     def body(self):
-        return self._args[1]
+        return self._body
 
     @property
     def local_vars(self):
-        return self._args[2]
+        return self._local_vars
 
 
 class With(Basic):
@@ -1160,11 +1160,10 @@ class With(Basic):
 
     # TODO check prelude and epilog
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         test,
         body,
-        settings,
         ):
         test = sympify(test, locals=local_sympify)
 
@@ -1173,19 +1172,17 @@ class With(Basic):
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable')
 
-        return Basic.__new__(cls, test, body, settings)
+        self._test = test
+        self._body = body
+        super().__init__()
 
     @property
     def test(self):
-        return self._args[0]
+        return self._test
 
     @property
     def body(self):
-        return self._args[1]
-
-    @property
-    def settings(self):
-        return self._args[2]
+        return self._body
 
     @property
     def block(self):
@@ -1221,17 +1218,8 @@ class Tile(PythonRange):
     Tile(0, n, 1)
     """
 
-    def __new__(cls, start, stop):
-        step = 1
-        return PythonRange.__new__(cls, start, stop, step)
-
-    @property
-    def start(self):
-        return self._args[0]
-
-    @property
-    def stop(self):
-        return self._args[1]
+    def __init__(self, start, stop):
+        super().__init__(self, start, stop, 1)
 
     @property
     def size(self):
@@ -1336,8 +1324,8 @@ class Block(Basic):
     Block([n, x], [x := 1.0 + 2.0*n, n := 1 + n])
     """
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         name,
         variables,
         body):
@@ -1352,19 +1340,22 @@ class Block(Basic):
             body = CodeBlock(body)
         elif not isinstance(body, CodeBlock):
             raise TypeError('body must be an iterable or a CodeBlock')
-        return Basic.__new__(cls, name, variables, body)
+        self._name = name
+        self._variables = variables
+        self._body = body
+        super().__init__()
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def variables(self):
-        return self._args[1]
+        return self._variables
 
     @property
     def body(self):
-        return self._args[2]
+        return self._body
 
     @property
     def declarations(self):
@@ -1528,6 +1519,7 @@ class Module(Basic):
         self._interfaces = interfaces
         self._classes = classes
         self._imports = imports
+        super().__init__()
 
     @property
     def name(self):
@@ -1625,8 +1617,8 @@ class Program(Basic):
 
     """
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         name,
         variables,
         body,
@@ -1653,29 +1645,28 @@ class Program(Basic):
         imports = set(imports)  # for unicity
         imports = tuple(imports)
 
-        return Basic.__new__(
-            cls,
-            name,
-            variables,
-            body,
-            imports,
-            )
+        self._name = name
+        self._variables = variables
+        self._body = body
+        self._imports = imports
+
+        super().__init__()
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def variables(self):
-        return self._args[1]
+        return self._variables
 
     @property
     def body(self):
-        return self._args[2]
+        return self._body
 
     @property
     def imports(self):
-        return self._args[3]
+        return self._imports
 
     @property
     def declarations(self):
@@ -1709,8 +1700,8 @@ class For(Basic):
     For(i, Range(b, e, s), (x := x - 1, A[0, 1] := x))
     """
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         target,
         iter_obj,
         body,
@@ -1732,19 +1723,11 @@ class For(Basic):
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable or a Codeblock')
 
-        return Basic.__new__(cls, target, iter_obj, body, local_vars)
-
-    def __init__(
-        self,
-        target,
-        iter_obj,
-        body,
-        local_vars = [],
-        ):
-        self._target = self._args[0]
-        self._iterable = self._args[1]
-        self._body = self._args[2]
-        self._local_vars = self._args[3]
+        self._target = target
+        self._iterable = iter_obj
+        self._body = body
+        self._local_vars = local_vars
+        super().__init__()
 
     @property
     def target(self):
@@ -1801,7 +1784,7 @@ class ForIterator(For):
 
     """Class that describes iterable classes defined by the user."""
 
-    def __new__(
+    def __init__(
         cls,
         target,
         iterable,
@@ -1810,7 +1793,7 @@ class ForIterator(For):
 
         if isinstance(iterable, Symbol):
             iterable = PythonRange(PythonLen(iterable))
-        return For.__new__(cls, target, iterable, body)
+        super().__init__(cls, target, iterable, body)
 
     # TODO uncomment later when we intriduce iterators
     # @property
@@ -1938,7 +1921,7 @@ class VoidFunction(Basic):
         return Symbol("""x9846548484665
                       494794564465165161561""")
 
-class Argument(Symbol, PyccelAstNode):
+class Argument(PyccelAstNode):
 
     """An abstract Argument data structure.
 
@@ -1950,12 +1933,11 @@ class Argument(Symbol, PyccelAstNode):
     n
     """
 
-    def __new__(cls, name, *, kwonly=False, annotation=None):
-        return Symbol.__new__(cls, name)
-
     def __init__(self, name, *, kwonly=False, annotation=None):
+        self._name       = name
         self._kwonly     = kwonly
         self._annotation = annotation
+        super().__init__()
 
     @property
     def is_kwonly(self):
@@ -2127,11 +2109,11 @@ class DottedFunctionCall(FunctionCall):
     """
 
     def __init__(self, func, args, prefix, current_function=None):
+        self._prefix = prefix
         FunctionCall.__init__(self, func, args, current_function)
         self._func_name = DottedName(prefix, self._func_name)
         if self._interface:
             self._interface_name = DottedName(prefix, self._interface_name)
-        self._prefix = prefix
 
     @property
     def prefix(self):
@@ -2151,20 +2133,23 @@ class Return(Basic):
     stmts :represent assign stmts in the case of expression return
     """
 
-    def __new__(cls, expr, stmt=None):
+    def __init__(self, expr, stmt=None):
 
         if stmt and not isinstance(stmt, (Assign, CodeBlock)):
             raise TypeError('stmt should only be of type Assign')
 
-        return Basic.__new__(cls, expr, stmt)
+        self._expr = expr
+        self._stmt = stmt
+
+        super().__init__()
 
     @property
     def expr(self):
-        return self._args[0]
+        return self._expr
 
     @property
     def stmt(self):
-        return self._args[1]
+        return self._stmt
 
     def __getnewargs__(self):
         """used for Pickling self."""
@@ -2525,7 +2510,8 @@ class FunctionDef(Basic):
             new name for the FunctionDef
         """
         args, kwargs = self.__getnewargs__()
-        new_func = FunctionDef(*args, **kwargs)
+        cls = type(self)
+        new_func = cls(*args, **kwargs)
         new_func.rename(newname)
         return new_func
 
@@ -2811,38 +2797,10 @@ class SympyFunction(FunctionDef):
 
     """Represents a function definition."""
 
-    def rename(self, newname):
-        """
-        Rename the SympyFunction name by creating a new SympyFunction with
-        newname.
-
-        Parameters
-        ----------
-        newname: str
-            new name for the SympyFunction
-        """
-
-        return SympyFunction(newname, self.arguments, self.results,
-                             self.body, cls_name=self.cls_name)
-
 
 class PythonFunction(FunctionDef):
 
     """Represents a Python-Function definition."""
-
-    def rename(self, newname):
-        """
-        Rename the PythonFunction name by creating a new PythonFunction with
-        newname.
-
-        Parameters
-        ----------
-        newname: str
-            new name for the PythonFunction
-        """
-
-        return PythonFunction(newname, self.arguments, self.results,
-                              self.body, cls_name=self.cls_name)
 
 
 class BindCFunctionDef(FunctionDef):
@@ -2979,8 +2937,8 @@ class ClassDef(Basic):
     imports: list, tuple
         list of needed imports
 
-    parent : str
-        parent's class name
+    superclass : str
+        superclass's class name
 
     Examples
     --------
@@ -3000,14 +2958,14 @@ class ClassDef(Basic):
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         name,
         attributes=[],
         methods=[],
         options=['public'],
         imports=[],
-        parent=[],
+        superclass=[],
         interfaces=[],
         ):
 
@@ -3039,8 +2997,8 @@ class ClassDef(Basic):
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
 
-        if not iterable(parent):
-            raise TypeError('parent must be iterable')
+        if not iterable(superclass):
+            raise TypeError('superclass must be iterable')
 
         if not iterable(interfaces):
             raise TypeError('interfaces must be iterable')
@@ -3081,45 +3039,43 @@ class ClassDef(Basic):
         methods = tuple(methods)
 
         # ...
+        self._name = name
+        self._attributes = attributes
+        self._methods = methods
+        self._options = options
+        self._imports = imports
+        self._superclass  = superclass
+        self._interfaces = interfaces
 
-        return Basic.__new__(
-            cls,
-            name,
-            attributes,
-            methods,
-            options,
-            imports,
-            parent,
-            interfaces,
-            )
+        super().__init__()
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def attributes(self):
-        return self._args[1]
+        return self._attributes
 
     @property
     def methods(self):
-        return self._args[2]
+        return self._methods
 
     @property
     def options(self):
-        return self._args[3]
+        return self._options
 
     @property
     def imports(self):
-        return self._args[4]
+        return self._imports
 
     @property
     def parent(self):
-        return self._args[5]
+        return self._superclass
 
     @property
     def interfaces(self):
-        return self._args[6]
+        return self._interfaces
 
     @property
     def methods_as_dict(self):
@@ -3527,8 +3483,8 @@ class Declare(Basic):
     Declare(NativeReal(), (x,), out)
     """
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         dtype,
         variable,
         intent=None,
@@ -3556,45 +3512,39 @@ class Declare(Basic):
         if not isinstance(passed_from_dotted, bool):
             raise TypeError('Expecting a boolean for passed_from_dotted attribute')
 
-        return Basic.__new__(
-            cls,
-            dtype,
-            variable,
-            intent,
-            value,
-            static,
-            passed_from_dotted
-            )
+        self._dtype = dtype
+        self._variable = variable
+        self._intent = intent
+        self._value = value
+        self._static = static
+        self._passed_from_dotted = passed_from_dotted
+        super().__init__()
 
     @property
     def dtype(self):
-        return self._args[0]
+        return self._dtype
 
     @property
     def variable(self):
-        return self._args[1]
+        return self._variable
 
     @property
     def intent(self):
-        return self._args[2]
+        return self._intent
 
     @property
     def value(self):
-        return self._args[3]
+        return self._value
 
     @property
     def static(self):
-        return self._args[4]
+        return self._static
 
     @property
     def passed_from_dotted(self):
         """ Argument is the lhs of a DottedFunction
         """
-        return self._args[5]
-
-
-class Subroutine(sp_UndefinedFunction):
-    pass
+        return self._passed_from_dotted
 
 
 class Break(Basic):
@@ -3697,7 +3647,7 @@ class SymbolicPrint(Basic):
     Print((results, n, m))
     """
 
-    def __new__(cls, expr):
+    def __init__(self, expr):
         if not iterable(expr):
             raise TypeError('Expecting an iterable')
 
@@ -3706,11 +3656,13 @@ class SymbolicPrint(Basic):
                               SympyFunction)):
                 raise TypeError('Expecting Lambda, SymbolicAssign, SympyFunction for {}'.format(i))
 
-        return Basic.__new__(cls, expr)
+        self._expr = expr
+
+        super().__init__()
 
     @property
     def expr(self):
-        return self._args[0]
+        return self._expr
 
 
 class Del(Basic):
@@ -3730,17 +3682,19 @@ class Del(Basic):
     Del([x])
     """
 
-    def __new__(cls, expr):
+    def __init__(self, expr):
 
         # TODO: check that the variable is allocatable
 
         if not iterable(expr):
             expr = tuple([expr])
-        return Basic.__new__(cls, expr)
+
+        self._variables = expr
+        super().__init__()
 
     @property
     def variables(self):
-        return self._args[0]
+        return self._variables
 
 
 class EmptyNode(Basic):
@@ -3763,8 +3717,8 @@ class EmptyNode(Basic):
 
     """
 
-    def __new__(cls):
-        return Basic.__new__(cls)
+    def __init__(self):
+        super().__init__()
 
     def _sympystr(self, printer):
         return ''
@@ -3786,8 +3740,8 @@ class NewLine(Basic):
 
     """
 
-    def __new__(cls):
-        return Basic.__new__(cls)
+    def __init__(self):
+        super().__init__(self)
 
     def _sympystr(self, printer):
         return '\n'
@@ -3809,12 +3763,13 @@ class Comment(Basic):
     # this is a comment
     """
 
-    def __new__(cls, text):
-        return Basic.__new__(cls, text)
+    def __init__(cls, text):
+        self._text = text
+        Basic.__init__()
 
     @property
     def text(self):
-        return self._args[0]
+        return self._text
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -3837,9 +3792,9 @@ class SeparatorComment(Comment):
     # ........................................
     """
 
-    def __new__(cls, n):
+    def __init__(self, n):
         text = """.""" * n
-        return Comment.__new__(cls, text)
+        super().__init__(self, text)
 
 class AnnotatedComment(Basic):
 
@@ -3860,16 +3815,18 @@ class AnnotatedComment(Basic):
     AnnotatedComment(omp, parallel)
     """
 
-    def __new__(cls, accel, txt):
-        return Basic.__new__(cls, accel, txt)
+    def __init__(cls, accel, txt):
+        self._accel = accel
+        self._txt = txt
+        super().__init__()
 
     @property
     def accel(self):
-        return self._args[0]
+        return self._accel
 
     @property
     def txt(self):
-        return self._args[1]
+        return self._txt
 
     def __getnewargs__(self):
         """used for Pickling self."""
@@ -3906,16 +3863,16 @@ class CommentBlock(Basic):
     txt : str
 
     """
-    def __new__(cls, txt, header = 'CommentBlock'):
+    def __init__(self, txt, header = 'CommentBlock'):
         if not isinstance(txt, str):
             raise TypeError('txt must be of type str')
         txt = txt.replace('"','')
         txts = txt.split('\n')
 
-        return Basic.__new__(cls, txts)
-
-    def __init__(self, txt, header = 'CommentBlock'):
         self._header = header
+        self._comments = txts
+
+        super().__init__()
 
     @property
     def comments(self):
@@ -3990,16 +3947,17 @@ class Assert(Basic):
     --------
     """
     #TODO add type check in the semantic stage
-    def __new__(cls, test):
+    def __init__(self, test):
         #if not isinstance(test, (bool, Relational, sp_Boolean)):
         #    raise TypeError('test %s is of type %s, but must be a Relational, Boolean, or a built-in bool.'
         #                     % (test, type(test)))
 
-        return Basic.__new__(cls, test)
+        self._test = test
+        super().__init__()
 
     @property
     def test(self):
-        return self._args[0]
+        return self._test
 
 
 class Eval(Basic):
@@ -4077,12 +4035,13 @@ class If(Basic):
         return b
 
 class StarredArguments(Basic):
-    def __new__(cls, args):
-        return Basic.__new__(cls, args)
+    def __init__(self, args):
+        self._starred_obj = args
+        Basic.__init__()
 
     @property
     def args_var(self):
-        return self._args[0]
+        return self._starred_obj
 
 
 def is_simple_assign(expr):
@@ -4511,6 +4470,7 @@ class ParserResult(Basic):
         self._module    = module
         self._prog_name = prog_name
         self._mod_name  = mod_name
+        super().__init__()
 
 
     @property
