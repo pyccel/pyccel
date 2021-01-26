@@ -1153,7 +1153,7 @@ class CCodePrinter(CodePrinter):
             if expr.lhs.is_stack_array:
                 declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
                 lenght = '*'.join(self._print(i) for i in expr.lhs.shape)
-                buffer_array = "({}[{}]){{}}".format(declare_dtype, lenght)
+                buffer_array = "({declare_dtype}[{lenght}]){{}}".format(declare_dtype = declare_dtype, lenght=lenght)
                 code_init += self._init_stack_array(expr, buffer_array)
             if rhs.fill_value is not None:
                 if isinstance(rhs.fill_value, Literal):
@@ -1173,12 +1173,12 @@ class CCodePrinter(CodePrinter):
         shape = lhs.shape
         shape = [self._print(i) for i in shape]
         shape = ", ".join(a for a in shape)
-        shape_dtype = self.find_in_dtype_registry('int', 8)
+        declare_dtype = self.find_in_dtype_registry('int', 8)
 
-        shape_init = "({}[]){{{}}}".format(shape_dtype, shape)
-        strides_init = "({}[{}]){{0}}".format(shape_dtype, len(lhs.shape))
+        shape_init = "({declare_dtype}[]){{{shape}}}".format(declare_dtype=declare_dtype, shape=shape)
+        strides_init = "({declare_dtype}[{lenght}]){{0}}".format(declare_dtype=declare_dtype, lenght=len(lhs.shape))
         if isinstance(buffer_array, Variable):
-            buffer_array = "{}.{}".format(self._print(buffer_array), dtype)
+            buffer_array = "{0}.{1}".format(self._print(buffer_array), dtype)
         cpy_data = '{0} = (t_ndarray){{.{1}={2},\n .shape={3},\n .strides={4},\n '
         cpy_data += '.nd={5},\n .type={1},\n .is_view={6}}};\n'
         cpy_data = cpy_data.format(self._print(lhs), dtype, buffer_array,
