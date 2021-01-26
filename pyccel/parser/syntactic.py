@@ -1051,7 +1051,7 @@ class SyntaxParser(BasicParser):
         body = self._visit(stmt.body)
         orelse = self._visit(stmt.orelse)
         if len(orelse)==1 and isinstance(orelse[0],If):
-            orelse = orelse[0]._args
+            orelse = orelse[0].blocks
             return If((test, body), *orelse)
         else:
             orelse = (LiteralTrue(), orelse)
