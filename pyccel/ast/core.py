@@ -39,16 +39,15 @@ from .builtins  import (PythonEnumerate, PythonLen, PythonList, PythonMap,
 from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeBool, NativeRange,
                         NativeTuple, is_iterable_datatype, str_dtype)
-from .internals      import PyccelInternalFunction, PyccelArraySize, Slice
+from .internals      import PyccelArraySize, Slice
 
 from .literals       import LiteralTrue, LiteralFalse, LiteralInteger, Nil
-from .literals       import LiteralImaginaryUnit, LiteralString, Literal
-from .literals       import Nil
+from .literals       import LiteralImaginaryUnit, LiteralString
 from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
-from .operators import PyccelMul
+from .operators import PyccelMul, IfTernaryOperator
 
 from .variable import DottedName, DottedVariable, IndexedElement
 from .variable import ValuedVariable, Variable
@@ -88,7 +87,6 @@ __all__ = (
     'FunctionCall',
     'FunctionDef',
     'If',
-    'IfTernaryOperator',
     'Import',
     'Interface',
     'ModOp',
@@ -107,7 +105,6 @@ __all__ = (
     'SymbolicAssign',
     'SymbolicPrint',
     'SympyFunction',
-    'Tile',
     'ValuedArgument',
     'While',
     'With',
