@@ -1133,40 +1133,56 @@ class CCodePrinter(CodePrinter):
                 arg = functools.reduce(operator.concat, arg)
             if isinstance(arg, Variable):
                 arg = self._print(arg)
-                cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);".format(lhs, arg, dtype)
+                if expr.lhs.is_stack_array:
+                    cpy_data = self._init_stack_array(expr, rhs.arg)
+                else:
+                    cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);".format(lhs, arg, dtype)
                 return '%s\n' % (cpy_data)
             else :
                 arg = ', '.join(self._print(i) for i in arg)
                 dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
                 if expr.lhs.is_stack_array:
-                    shape = expr.lhs.shape
-                    shape = [self._print(i) for i in shape]
-                    shape = ", ".join(a for a in shape)
-                    shape_dtype = self.find_in_dtype_registry('int', 8)
-
-                    shape_init = "({}[]){{{}}}".format(shape_dtype, shape)
-                    strides_init = "({}[{}]){{0}}".format(shape_dtype, len(expr.lhs.shape))
-                    cpy_data = '{0} = (t_ndarray){{.{1}={2},\n .shape={3},\n .strides={4},\n .nd={5},\n .type={6},\n .is_view={7}}};\n'.format(lhs, dtype, dummy_array_name, shape_init, strides_init, len(expr.lhs.shape), dtype, 'false')
-                    cpy_data += 'stack_array_init(&{});\n'.format(lhs)
-                    self._additional_imports.add("ndarrays")
+                    cpy_data = self._init_stack_array(expr, dummy_array_name)
                 else:
                     cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
                 return  '%s%s\n' % (dummy_array, cpy_data)
 
         if isinstance(rhs, (NumpyFull)):
             code_init = ''
+            if expr.lhs.is_stack_array:
+                declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+                lenght = [self._print(i) for i in expr.lhs.shape]
+                lenght = '*'.join(lenght)
+                buffer_array = "({}[{}]){{}}".format(declare_dtype, lenght)
+                code_init += self._init_stack_array(expr, buffer_array)
             if rhs.fill_value is not None:
                 if isinstance(rhs.fill_value, Literal):
                     dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-                    code_init = 'array_fill(({0}){1}, {2});'.format(dtype, self._print(rhs.fill_value), lhs)
+                    code_init += 'array_fill(({0}){1}, {2});\n'.format(dtype, self._print(rhs.fill_value), lhs)
                 else:
-                    code_init = 'array_fill({0}, {1});'.format(self._print(rhs.fill_value), lhs)
-            else:
-                return ''
-            return '{}\n'.format(code_init)
+                    code_init += 'array_fill({0}, {1});\n'.format(self._print(rhs.fill_value), lhs)
+            return '{}'.format(code_init)
 
         rhs = self._print(rhs)
         return '{} = {};'.format(lhs, rhs)
+
+    def _init_stack_array(self, expr, buffer_array, empty=False):
+        lhs = expr.lhs
+        rhs = expr.rhs
+        dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
+        shape = lhs.shape
+        shape = [self._print(i) for i in shape]
+        shape = ", ".join(a for a in shape)
+        shape_dtype = self.find_in_dtype_registry('int', 8)
+
+        shape_init = "({}[]){{{}}}".format(shape_dtype, shape)
+        strides_init = "({}[{}]){{0}}".format(shape_dtype, len(lhs.shape))
+        if isinstance(buffer_array, Variable):
+            buffer_array = "{}.{}".format(self._print(buffer_array), dtype)
+        cpy_data = '{0} = (t_ndarray){{.{1}={2},\n .shape={3},\n .strides={4},\n .nd={5},\n .type={6},\n .is_view={7}}};\n'.format(self._print(lhs), dtype, buffer_array, shape_init, strides_init, len(lhs.shape), dtype, 'false')
+        cpy_data += 'stack_array_init(&{});\n'.format(self._print(lhs))
+        self._additional_imports.add("ndarrays")
+        return cpy_data
 
     def _print_AliasAssign(self, expr):
         lhs = expr.lhs
