@@ -16,7 +16,7 @@ from sympy.printing.pycode import _known_constants_math
 from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.utilities  import build_types_decorator
-from pyccel.ast.core       import CodeBlock, Import, DottedName
+from pyccel.ast.core       import CodeBlock, Import, DottedName, Assign
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -113,9 +113,11 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_Return(self, expr):
         code = ''
-        if expr.stmt:
+        if isinstance(expr.stmt, CodeBlock):
             code = ','.join([self._print(b.rhs) for b in expr.stmt.body])
             return 'return ' + code
+        if isinstance(expr.stmt, Assign):
+            return 'return ' + self._print(expr.rhs)
         if expr.expr:
             ret = ','.join([self._print(i) for i in expr.expr])
             return 'return {}'.format(ret)
