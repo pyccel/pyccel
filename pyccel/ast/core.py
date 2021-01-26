@@ -1679,25 +1679,14 @@ class ConstructorCall(AtomicExpr):
 
     # TODO improve
 
-    def __new__(
-        cls,
-        func,
-        arguments,
-        cls_variable=None,
-        ):
-        if not isinstance(func, (FunctionDef, Interface, str)):
-            raise TypeError('Expecting func to be a FunctionDef or str')
-
-        f_name = func.name
-
-        return Basic.__new__(cls, f_name)
-
     def __init__(
         self,
         func,
         arguments,
         cls_variable=None,
         ):
+        if not isinstance(func, (FunctionDef, Interface, str)):
+            raise TypeError('Expecting func to be a FunctionDef or str')
 
         self._cls_variable = cls_variable
         self._func = func
@@ -3340,7 +3329,7 @@ class AnnotatedComment(Basic):
     AnnotatedComment(omp, parallel)
     """
 
-    def __init__(cls, accel, txt):
+    def __init__(self, accel, txt):
         self._accel = accel
         self._txt = txt
         super().__init__()
@@ -3361,23 +3350,23 @@ class AnnotatedComment(Basic):
 
 class OMP_For_Loop(AnnotatedComment):
     """ Represents an OpenMP Loop construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
+    def __init__(self, txt):
+        AnnotatedComment.__init__(self, 'omp', txt)
 
 class OMP_Parallel_Construct(AnnotatedComment):
     """ Represents an OpenMP Parallel construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
+    def __init__(self, txt):
+        AnnotatedComment.__init__(self, 'omp', txt)
 
 class OMP_Single_Construct(AnnotatedComment):
     """ Represents an OpenMP Single construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
+    def __init__(self, txt):
+        AnnotatedComment.__init__(self, 'omp', txt)
 
 class Omp_End_Clause(AnnotatedComment):
     """ Represents the End of an OpenMP block. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
+    def __init__(self, txt):
+        AnnotatedComment.__init__(self, 'omp', txt)
 
 class CommentBlock(Basic):
 
