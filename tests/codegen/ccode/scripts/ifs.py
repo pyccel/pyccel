@@ -7,6 +7,9 @@ z = 3
 if 1<0:
     x=4
 
+if z < 4:
+    pass
+
 if (x==2 or y==1) and z>3 :
     x = 3
     y = 4

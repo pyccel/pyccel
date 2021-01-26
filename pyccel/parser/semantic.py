@@ -15,7 +15,6 @@ from sympy.utilities.iterables import iterable as sympy_iterable
 from sympy import Sum as Summation
 from sympy import Symbol
 from sympy import Integer as sp_Integer
-from sympy import Indexed, IndexedBase
 from sympy import ceiling
 from sympy import oo  as INF
 from sympy import Lambda
@@ -116,9 +115,9 @@ errors = Errors()
 def _get_name(var):
     """."""
 
-    if isinstance(var, (Symbol, IndexedBase, DottedName)):
+    if isinstance(var, (Symbol, DottedName)):
         return str(var)
-    if isinstance(var, (IndexedElement, Indexed)):
+    if isinstance(var, (IndexedElement)):
         return str(var.base)
     if isinstance(var, FunctionCall):
         return var.funcdef
@@ -519,7 +518,7 @@ class SemanticParser(BasicParser):
             imp.define_target(target)
         else:
             container = self.namespace.imports
-            container['imports'][name] = Import(name, target)
+            container['imports'][name] = Import(name, target, True)
 
     def insert_macro(self, macro):
         """."""
@@ -902,7 +901,7 @@ class SemanticParser(BasicParser):
             if len(args)==1:
                 return var[args[0]]
             else:
-                return self._visit(Indexed(var[args[0]],args[1:]))
+                return self._visit(var[args[0]][args[1:]])
 
         args = tuple(args)
 
@@ -952,10 +951,7 @@ class SemanticParser(BasicParser):
 
         return var[args]
 
-    def _visit_IndexedBase(self, expr, **settings):
-        return self._visit(expr.label)
-
-    def _visit_Indexed(self, expr, **settings):
+    def _visit_IndexedElement(self, expr, **settings):
         name = str(expr.base)
         var = self._visit(expr.base)
 
@@ -967,7 +963,7 @@ class SemanticParser(BasicParser):
 
         if (len(new_args)==1 and isinstance(new_args[0],(TupleVariable, PythonTuple))):
             len_args = len(new_args[0])
-            args = [self._visit(Indexed(args[0],i)) for i in range(len_args)]
+            args = [new_args[0][i] for i in range(len_args)]
         elif any(isinstance(arg,(TupleVariable, PythonTuple)) for arg in new_args):
             n_exprs = None
             for a in new_args:
@@ -980,15 +976,13 @@ class SemanticParser(BasicParser):
             for i in range(n_exprs):
                 ls = []
                 for j,a in enumerate(new_args):
-                    if isinstance(a,TupleVariable):
-                        ls.append(Indexed(args[j],i))
-                    elif hasattr(a,'__getitem__'):
+                    if hasattr(a,'__getitem__'):
                         ls.append(args[j][i])
                     else:
                         ls.append(args[j])
                 new_expr_args.append(ls)
 
-            return tuple(self._visit(Indexed(name,*a)) for a in new_expr_args)
+            return tuple(var[a] for a in new_expr_args)
         else:
             args = new_args
             len_args = len(args)
@@ -1897,10 +1891,9 @@ class SemanticParser(BasicParser):
                 new_lhs = []
                 new_rhs = []
 
-                for i,l in enumerate(lhs):
-                    rhs_i = self._visit(Indexed(rhs,i))
-                    new_lhs.append( self._assign_lhs_variable(l, self._infere_type(rhs_i), rhs_i, new_expressions, isinstance(expr, AugAssign), **settings) )
-                    new_rhs.append(rhs_i)
+                for l, r in zip(lhs, rhs):
+                    new_lhs.append( self._assign_lhs_variable(l, self._infere_type(r), r, new_expressions, isinstance(expr, AugAssign), **settings) )
+                    new_rhs.append(r)
 
                 lhs = PythonTuple(*new_lhs)
                 rhs = new_rhs
@@ -1920,10 +1913,10 @@ class SemanticParser(BasicParser):
             index = Variable('int',index_name)
             range_ = FunctionCall('range', (FunctionCall('len', lhs,),))
             name  = _get_name(lhs)
-            var   = IndexedBase(name)[index]
+            var   = IndexedElement(name, index)
             args  = rhs.args[1:]
             args  = [_get_name(arg) for arg in args]
-            args  = [IndexedBase(arg)[index] for arg in args]
+            args  = [IndexedElement(arg, index) for arg in args]
             func  = FunctionCall(func, args)
             body  = [Assign(var, func)]
             body[0].set_fst(fst)
@@ -2002,21 +1995,21 @@ class SemanticParser(BasicParser):
         body     = list(expr.body.body)
         iterator = expr.target
 
+        PyccelAstNode.stage = 'syntactic'
+
         if isinstance(iterable, Variable):
             indx   = self.get_new_variable()
-            assign = Assign(iterator, IndexedBase(iterable)[indx])
+            assign = Assign(iterator, IndexedElement(iterable, indx))
             assign.set_fst(expr.fst)
             iterator = indx
             body     = [assign] + body
 
         elif isinstance(iterable, PythonMap):
             indx   = self.get_new_variable()
-            PyccelAstNode.stage = 'syntactic'
             func   = iterable.args[0]
-            args   = [IndexedBase(arg)[indx] for arg in iterable.args[1:]]
+            args   = [IndexedElement(arg, indx) for arg in iterable.args[1:]]
             assign = Assign(iterator, FunctionCall(func, args))
             assign.set_fst(expr.fst)
-            PyccelAstNode.stage = 'semantic'
             iterator = indx
             body     = [assign] + body
 
@@ -2024,7 +2017,7 @@ class SemanticParser(BasicParser):
             args = iterable.args
             indx = self.get_new_variable()
             for i, arg in enumerate(args):
-                assign = Assign(iterator[i], IndexedBase(arg)[indx])
+                assign = Assign(iterator[i], IndexedElement(arg, indx))
                 assign.set_fst(expr.fst)
                 body = [assign] + body
             iterator = indx
@@ -2032,7 +2025,7 @@ class SemanticParser(BasicParser):
         elif isinstance(iterable, PythonEnumerate):
             indx   = iterator.args[0]
             var    = iterator.args[1]
-            assign = Assign(var, IndexedBase(iterable.args[0])[indx])
+            assign = Assign(var, IndexedElement(iterable.args[0], indx))
             assign.set_fst(expr.fst)
             iterator = indx
             body     = [assign] + body
@@ -2043,7 +2036,7 @@ class SemanticParser(BasicParser):
             for i,arg in enumerate(args):
                 if not isinstance(arg, PythonRange):
                     indx   = self.get_new_variable()
-                    assign = Assign(iterator[i], IndexedBase(arg)[indx])
+                    assign = Assign(iterator[i], IndexedElement(arg, indx))
 
                     assign.set_fst(expr.fst)
                     body        = [assign] + body
@@ -2071,6 +2064,7 @@ class SemanticParser(BasicParser):
             errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='error', blocker=self.blocking)
+        PyccelAstNode.stage = 'semantic'
 
         body = [self._visit(i, **settings) for i in body]
 
@@ -2283,8 +2277,7 @@ class SemanticParser(BasicParser):
         # TODO [YG, 30.10.2020]:
         #  - Check if we should allow the possibility that is_stack_array=True
         # ...
-        # expr.lhs is a sympy.Indexed
-        lhs_symbol = expr.lhs.base.label
+        lhs_symbol = expr.lhs.base
         ne = []
         lhs = self._assign_lhs_variable(lhs_symbol, d_var, rhs=expr, new_expressions=ne, is_augassign=False, **settings)
         lhs_alloc = ne[0]
@@ -2450,7 +2443,7 @@ class SemanticParser(BasicParser):
 #            args      = [str(i.name) for i in expr.arguments]
 #            index_arg = args.index(arg)
 #            arg       = Symbol(arg)
-#            vec_arg   = IndexedBase(arg)
+#            vec_arg   = arg
 #            index     = self.get_new_variable()
 #            range_    = Function('range')(Function('len')(arg))
 #            args      = symbols(args)
@@ -3067,11 +3060,10 @@ class SemanticParser(BasicParser):
         return Dlist(val, length)
 
     def _visit_StarredArguments(self, expr, **settings):
-        name = expr.args_var
-        var = self._visit(name)
+        var = self._visit(expr.args_var)
         assert(var.rank==1)
         size = var.shape[0]
-        return StarredArguments([self._visit(Indexed(name,i)) for i in range(size)])
+        return StarredArguments([var[i] for i in range(size)])
 
 #==============================================================================
 
