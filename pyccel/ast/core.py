@@ -519,7 +519,7 @@ class AsName(Basic):
     def __init__(self, name, target):
         self._name = name
         self._target = target
-        Basic.__init__(self)
+        super().__init__()
 
     @property
     def name(self):
@@ -561,7 +561,7 @@ class Dlist(PyccelAstNode):
         self._order = val.order
         self._val = val
         self._length = length
-        Basic.__init__(self)
+        super().__init__()
 
     @property
     def val(self):
