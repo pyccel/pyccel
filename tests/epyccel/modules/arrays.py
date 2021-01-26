@@ -560,7 +560,6 @@ def array_real_2d_sum_stack_array():
     from numpy import zeros
     a = zeros((10, 10))
     s = 0.
-    d = 0.
     for i in range(10):
         for j in range(10):
             s += a[i][j]
@@ -571,7 +570,6 @@ def array_real_2d_div_stack_array():
     from numpy import full
     a = full((10, 10), 2)
     s = 1.
-    d = 1.
     for i in range(10):
         for j in range(10):
             s /= a[i][j]
