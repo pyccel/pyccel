@@ -1073,13 +1073,8 @@ class CCodePrinter(CodePrinter):
         # the result type of the floor division is dependent on the arguments
         # type, if all arguments are integers the result is integer otherwise
         # the result type is float
-        need_to_cast = True
-        if all(a.dtype is NativeInteger() for a in expr.args):
-            args = [PythonFloat(a) for a in expr.args]
-            need_to_cast = True
-        else:
-            args = expr.args
-        code = ' / '.join(self._print(a) for a in args)
+        need_to_cast = all(a.dtype is NativeInteger() for a in expr.args)
+        code = ' / '.join(self._print(a if a.dtype is NativeReal() else PythonFloat(a)) for a in expr.args)
         if (need_to_cast):
             return "(int64_t)floor({})".format(code)
         return "floor({})".format(code)
