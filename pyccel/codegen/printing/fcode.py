@@ -63,7 +63,7 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
-from pyccel.ast.numpyext import NumpyEmpty
+from pyccel.ast.numpyext import NumpyEmpty, NumpyArange
 from pyccel.ast.numpyext import NumpyMod, NumpyFloat
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
@@ -1232,6 +1232,23 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(rhs, NumpyEmpty):
             return ''
+
+        if isinstance(rhs, NumpyArange):
+            start = self._print(rhs.start)
+            step = self._print(rhs.step)
+            target = Variable(NativeInteger(), name =  self.parser.get_new_name('i'))
+            if self._current_function:
+                name = self._current_function
+                func = self.get_function(name)
+                func.local_vars.append(target)
+            else:
+                self._namespace.variables[target.name] = target
+            code = '[({start} + {step} * {target}, {target} = 0, {shape}, 1)]'
+            code = code.format(start = start,
+                               step = step,
+                               target = self._print(target),
+                               shape = self._print(rhs.shape[0]))
+            return '{0} = {1}\n'.format(lhs_code, code)
 
         if isinstance(rhs, NumpyMod):
             lhs = self._print(expr.lhs)
