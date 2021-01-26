@@ -269,7 +269,7 @@ int32_t     get_index(t_ndarray arr, ...)
     index = 0;
     for (int32_t i = 0; i < arr.nd; i++)
     {
-        index += va_arg(va, int32_t) * arr.strides[i];
+        index += va_arg(va, int64_t) * arr.strides[i];
     }
     va_end(va);
     return (index);
