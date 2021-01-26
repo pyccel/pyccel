@@ -3489,6 +3489,14 @@ class Pass(Basic):
 
     pass
 
+class Exit(Basic):
+
+    """Basic class for exits."""
+
+class ErrorExit(Exit):
+
+    """Exit with error."""
+
 
 class If(Basic):
 
