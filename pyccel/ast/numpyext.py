@@ -10,8 +10,10 @@ import numpy
 from sympy           import (Integer as sp_Integer,
                              Rational as sp_Rational, Expr)
 
-from .core           import (ClassDef, FunctionDef, PyccelInternalFunction,
+from .core           import (ClassDef, FunctionDef,
                             process_shape, ValuedArgument)
+
+from .internals      import PyccelInternalFunction
 
 from .operators      import broadcast
 
