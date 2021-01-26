@@ -1768,11 +1768,6 @@ class FCodePrinter(CodePrinter):
         step  = self._print(expr.step)
         return '{0}, {1}, {2}'.format(start, stop, step)
 
-    def _print_Tile(self, expr):
-        start = self._print(expr.start)
-        stop  = self._print(expr.stop)
-        return '{0}, {1}'.format(start, stop)
-
     def _print_FunctionalFor(self, expr):
         loops = ''.join(self._print(i) for i in expr.loops)
         return loops

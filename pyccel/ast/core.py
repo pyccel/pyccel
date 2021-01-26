@@ -5,7 +5,6 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-import importlib
 from collections     import OrderedDict
 
 from sympy import sympify
@@ -20,14 +19,12 @@ from sympy import preorder_traversal
 from sympy.simplify.radsimp   import fraction
 from sympy.core.compatibility import with_metaclass
 from sympy.core.singleton     import Singleton, S
-from sympy.core.function      import Derivative, UndefinedFunction as sp_UndefinedFunction
+from sympy.core.function      import Derivative
 from sympy.core.function      import _coeff_isneg
 from sympy.core.expr          import Expr, AtomicExpr
 from sympy.logic.boolalg      import And as sp_And, Or as sp_Or
 from sympy.logic.boolalg      import Boolean as sp_Boolean
-from sympy.tensor             import Idx, Indexed, IndexedBase
 
-from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
 from sympy.utilities.iterables          import iterable
 
 
@@ -38,19 +35,17 @@ from .basic     import Basic, PyccelAstNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonList, PythonMap,
                         PythonRange, PythonZip, PythonTuple, PythonBool)
 from .datatypes import (datatype, DataType, NativeSymbol,
-                        NativeInteger, NativeBool, NativeReal,
-                        NativeComplex, NativeRange, NativeString,
+                        NativeBool, NativeRange,
                         NativeTuple, is_iterable_datatype, str_dtype)
-from .internals      import PyccelInternalFunction, PyccelArraySize, Slice
+from .internals      import Slice
 
 from .literals       import LiteralTrue, LiteralFalse, LiteralInteger, Nil
-from .literals       import LiteralImaginaryUnit, LiteralString, Literal
-from .literals       import Nil
+from .literals       import LiteralImaginaryUnit, LiteralString
 from .itertoolsext   import Product
 from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
-from .operators import PyccelMul
+from .operators import PyccelMul, IfTernaryOperator, Relational
 
 from .variable import DottedName, DottedVariable, IndexedElement
 from .variable import ValuedVariable, Variable
@@ -90,7 +85,6 @@ __all__ = (
     'FunctionCall',
     'FunctionDef',
     'If',
-    'IfTernaryOperator',
     'Import',
     'Interface',
     'ModOp',
@@ -109,7 +103,6 @@ __all__ = (
     'SymbolicAssign',
     'SymbolicPrint',
     'SympyFunction',
-    'Tile',
     'ValuedArgument',
     'While',
     'With',
@@ -324,7 +317,7 @@ def extract_subexpressions(expr):
              sp_Or, sp_Eq, sp_Ne, sp_Lt, sp_Gt,
              sp_Le, sp_Ge)
 
-    id_cls = (Symbol, Indexed, IndexedBase,
+    id_cls = (Symbol, IndexedElement,
               DottedVariable, sp_Float, sp_Integer,
               sp_Rational, LiteralImaginaryUnit,sp_Boolean,
               LiteralTrue, LiteralFalse, LiteralString,
@@ -586,16 +579,19 @@ class Assign(Basic):
     Parameters
     ----------
     lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
+        In the syntactic stage:
+           Object representing the lhs of the expression. These should be
+           singular objects, such as one would use in writing code. Notable types
+           include Symbol, and IndexedElement. Types that
+           subclass these types are also supported.
+        In the semantic stage:
+           Variable or IndexedElement
 
     rhs : Expr
-        Sympy object representing the rhs of the expression. This can be any
-        type, provided its shape corresponds to that of the lhs. For example,
-        a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
-        the dimensions will not align.
+        In the syntactic stage:
+          Object representing the rhs of the expression
+        In the semantic stage :
+          PyccelAstNode with the same shape as the lhs
 
     status: None, str
         if lhs is not allocatable, then status is None.
@@ -1008,19 +1004,22 @@ class AugAssign(Assign):
     Parameters
     ----------
     lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
-        singular objects, such as one would use in writing code. Notable types
-        include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
-        subclass these types are also supported.
+        In the syntactic stage:
+           Object representing the lhs of the expression. These should be
+           singular objects, such as one would use in writing code. Notable types
+           include Symbol, and IndexedElement. Types that
+           subclass these types are also supported.
+        In the semantic stage:
+           Variable or IndexedElement
 
-    op : NativeOp
+    op : str
         Operator (+, -, /, \*, %).
 
     rhs : Expr
-        Sympy object representing the rhs of the expression. This can be any
-        type, provided its shape corresponds to that of the lhs. For example,
-        a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
-        the dimensions will not align.
+        In the syntactic stage:
+          Object representing the rhs of the expression
+        In the semantic stage :
+          PyccelAstNode with the same shape as the lhs
 
     status: None, str
         if lhs is not allocatable, then status is None.
@@ -1091,7 +1090,7 @@ class While(Basic):
     While(n > 1, (n := n - 1,))
     """
 
-    def __init__(self, test, body, local_vars=[]):
+    def __init__(self, test, body, local_vars=()):
         test = sympify(test, locals=local_sympify)
 
         if PyccelAstNode.stage == 'semantic':
@@ -1184,29 +1183,6 @@ class With(Basic):
         body += self.body.body
         body +=  end.body.body
         return Block('with', [], body)
-
-class Tile(PythonRange):
-
-    """
-    Representes a tile.
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable
-    >>> from pyccel.ast.core import Tile
-    >>> from sympy import Symbol
-    >>> s = Variable('int', 's')
-    >>> e = Symbol('e')
-    >>> Tile(s, e, 1)
-    Tile(0, n, 1)
-    """
-
-    def __init__(self, start, stop):
-        super().__init__(self, start, stop, 1)
-
-    @property
-    def size(self):
-        return self.stop - self.start
 
 
 # TODO add a name to a block?
@@ -1324,9 +1300,9 @@ class Module(Basic):
         name,
         variables,
         funcs,
-        interfaces=[],
-        classes=[],
-        imports=[],
+        interfaces=(),
+        classes=(),
+        imports=(),
         ):
         if not isinstance(name, str):
             raise TypeError('name must be a string')
@@ -1474,7 +1450,7 @@ class Program(Basic):
         name,
         variables,
         body,
-        imports=[],
+        imports=(),
         ):
 
         if not isinstance(name, str):
@@ -2038,22 +2014,22 @@ class FunctionDef(Basic):
         arguments,
         results,
         body,
-        local_vars=[],
-        global_vars=[],
+        local_vars=(),
+        global_vars=(),
         cls_name=None,
         is_static=False,
-        imports=[],
+        imports=(),
         decorators={},
-        headers=[],
+        headers=(),
         templates={},
         is_recursive=False,
         is_pure=False,
         is_elemental=False,
         is_private=False,
         is_header=False,
-        arguments_inout=[],
-        functions=[],
-        interfaces=[],
+        arguments_inout=(),
+        functions=(),
+        interfaces=(),
         doc_string=None):
 
         if isinstance(name, str):
@@ -2676,12 +2652,12 @@ class ClassDef(Basic):
     def __init__(
         self,
         name,
-        attributes=[],
-        methods=[],
-        options=['public'],
-        imports=[],
-        superclass=[],
-        interfaces=[],
+        attributes=(),
+        methods=(),
+        options=('public'),
+        imports=(),
+        parent=(),
+        interfaces=(),
         ):
 
         # name

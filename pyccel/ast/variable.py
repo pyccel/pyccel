@@ -722,6 +722,12 @@ class IndexedElement(PyccelAstNode):
         ):
         super().__init__()
 
+        self._label = base
+
+        if PyccelAstNode.stage == 'syntactic':
+            self._indices = args
+            return
+
         self._dtype = base.dtype
         self._order = base.order
         self._precision = base.precision
@@ -733,7 +739,6 @@ class IndexedElement(PyccelAstNode):
         if len(args) < rank:
             args = args + tuple([Slice(None, None)]*(rank-len(args)))
 
-        self._label = base
         self._indices = args
 
         # Calculate new shape

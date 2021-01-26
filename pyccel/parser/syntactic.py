@@ -14,7 +14,6 @@ import ast
 #==============================================================================
 
 from sympy import Symbol
-from sympy import IndexedBase
 from sympy import Lambda
 from sympy import Dict
 from sympy.core import cache
@@ -48,10 +47,11 @@ from pyccel.ast.core import With
 from pyccel.ast.core import PythonList
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
+from pyccel.ast.core import IndexedElement
 from pyccel.ast.core import _atomic
 from pyccel.ast.core import create_variable
 
-from pyccel.ast.operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
+from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
@@ -881,7 +881,7 @@ class SyntaxParser(BasicParser):
             ch = ch.value
         args = tuple(args)
         var = self._visit(ch)
-        var = IndexedBase(var)[args]
+        var = IndexedElement(var, *args)
         return var
 
     def _visit_ExtSlice(self, stmt):
@@ -975,7 +975,7 @@ class SyntaxParser(BasicParser):
         index = self.get_new_variable()
 
         args = [index]
-        target = IndexedBase(lhs)[args]
+        target = IndexedElement(lhs, *args)
         target = Assign(target, result)
         assign1 = Assign(index, LiteralInteger(0))
         assign1.set_fst(stmt)
