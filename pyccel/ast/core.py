@@ -5,7 +5,6 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-import importlib
 from collections     import OrderedDict
 
 from sympy import sympify
@@ -20,7 +19,7 @@ from sympy import preorder_traversal
 from sympy.simplify.radsimp   import fraction
 from sympy.core.compatibility import with_metaclass
 from sympy.core.singleton     import Singleton, S
-from sympy.core.function      import Derivative, UndefinedFunction as sp_UndefinedFunction
+from sympy.core.function      import Derivative
 from sympy.core.function      import _coeff_isneg
 from sympy.core.expr          import Expr, AtomicExpr
 from sympy.logic.boolalg      import And as sp_And, Or as sp_Or
@@ -38,8 +37,7 @@ from .basic     import Basic, PyccelAstNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonList, PythonMap,
                         PythonRange, PythonZip, PythonTuple, PythonBool)
 from .datatypes import (datatype, DataType, NativeSymbol,
-                        NativeInteger, NativeBool, NativeReal,
-                        NativeComplex, NativeRange, NativeString,
+                        NativeBool, NativeRange,
                         NativeTuple, is_iterable_datatype, str_dtype)
 from .internals      import PyccelInternalFunction, PyccelArraySize, Slice
 
