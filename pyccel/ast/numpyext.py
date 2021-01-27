@@ -30,6 +30,7 @@ from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .basic          import PyccelAstNode
 from .variable       import (Variable, IndexedElement, Constant)
+from .mathext        import MathCeil
 
 
 __all__ = (
@@ -196,7 +197,6 @@ class NumpyArange(NumpyNewArray):
     """
 
     def __init__(self, start, stop = None, step = None, dtype = None):
-        from .mathext import MathCeil
         NumpyNewArray.__init__(self)
 
         if stop is None:
