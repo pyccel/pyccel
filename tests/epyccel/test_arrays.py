@@ -2680,13 +2680,6 @@ def test_arrs_2d_negative_index():
 #==============================================================================
 # TEST : arithmetic operations
 #==============================================================================
-@pytest.fixture(params=[
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-    ]
-)
-def language(request):
-    return request.param
 
 def test_numpy_arange_one_arg(language):
     f1 = arrays.arr_arange_1
