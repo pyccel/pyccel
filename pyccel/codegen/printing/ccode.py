@@ -1043,7 +1043,10 @@ class CCodePrinter(CodePrinter):
             return 'return 0;'
         if len(args) == 1:
             if isinstance(expr.stmt, CodeBlock):
-                return 'return {0};'.format(self._print(expr.stmt.body[-1].rhs))
+                for a in expr.stmt.body:
+                    if isinstance(a, Assign):
+                        b = a
+                return 'return {0};'.format(self._print(b.rhs))
             return 'return {0};'.format(self._print(args[0]))
         return ''
 
