@@ -1118,51 +1118,57 @@ class CCodePrinter(CodePrinter):
         if isinstance(expr.rhs, FunctionCall) and isinstance(expr.rhs.dtype, NativeTuple):
             self._temporary_args = [VariableAddress(a) for a in expr.lhs]
             return '{};'.format(self._print(expr.rhs))
+        if isinstance(expr.rhs, (NumpyArray)):
+            return '{}'.format(self.print_NumpyArray(expr))
+        if isinstance(expr.rhs, (NumpyFull)):
+            return '{}'.format(self.print_NumpyFull(expr))
         lhs = self._print(expr.lhs)
-        rhs = expr.rhs
-        if isinstance(rhs, (NumpyArray)):
-            if rhs.rank == 0:
-                raise NotImplementedError(expr.lhs + "=" + expr.rhs)
-            dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
-            declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-            dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
-
-            arg = rhs.arg
-            if rhs.rank > 1:
-                arg = functools.reduce(operator.concat, arg)
-            if isinstance(arg, Variable):
-                arg = self._print(arg)
-                if expr.lhs.is_stack_array:
-                    cpy_data = self._init_stack_array(expr, rhs.arg)
-                else:
-                    cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);".format(lhs, arg, dtype)
-                return '%s\n' % (cpy_data)
-            else :
-                arg = ', '.join(self._print(i) for i in arg)
-                dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-                if expr.lhs.is_stack_array:
-                    cpy_data = self._init_stack_array(expr, dummy_array_name)
-                else:
-                    cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
-                return  '%s%s\n' % (dummy_array, cpy_data)
-
-        if isinstance(rhs, (NumpyFull)):
-            code_init = ''
-            if expr.lhs.is_stack_array:
-                declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-                lenght = '*'.join(self._print(i) for i in expr.lhs.shape)
-                buffer_array = "({declare_dtype}[{lenght}]){{}}".format(declare_dtype = declare_dtype, lenght=lenght)
-                code_init += self._init_stack_array(expr, buffer_array)
-            if rhs.fill_value is not None:
-                if isinstance(rhs.fill_value, Literal):
-                    dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-                    code_init += 'array_fill(({0}){1}, {2});\n'.format(dtype, self._print(rhs.fill_value), lhs)
-                else:
-                    code_init += 'array_fill({0}, {1});\n'.format(self._print(rhs.fill_value), lhs)
-            return '{}'.format(code_init)
-
-        rhs = self._print(rhs)
+        rhs = self._print(expr.rhs)
         return '{} = {};'.format(lhs, rhs)
+
+    def print_NumpyArray(self, expr):
+        rhs = expr.rhs
+        lhs = expr.lhs
+        if rhs.rank == 0:
+            raise NotImplementedError(lhs + "=" + rhs)
+        dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
+        declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+        dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
+        arg = rhs.arg
+        if rhs.rank > 1:
+            arg = functools.reduce(operator.concat, arg)
+        if isinstance(arg, Variable):
+            arg = self._print(arg)
+            if expr.lhs.is_stack_array:
+                cpy_data = self._init_stack_array(expr, rhs.arg)
+            else:
+                cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);".format(lhs, arg, dtype)
+            return '%s\n' % (cpy_data)
+        else :
+            arg = ', '.join(self._print(i) for i in arg)
+            dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
+            if expr.lhs.is_stack_array:
+                cpy_data = self._init_stack_array(expr, dummy_array_name)
+            else:
+                cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(self._print(lhs), dummy_array_name, dtype)
+            return  '%s%s\n' % (dummy_array, cpy_data)
+
+    def print_NumpyFull(self, expr):
+        rhs = expr.rhs
+        lhs = expr.lhs
+        code_init = ''
+        if lhs.is_stack_array:
+            declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+            lenght = '*'.join(self._print(i) for i in lhs.shape)
+            buffer_array = "({declare_dtype}[{lenght}]){{}}".format(declare_dtype = declare_dtype, lenght=lenght)
+            code_init += self._init_stack_array(expr, buffer_array)
+        if rhs.fill_value is not None:
+            if isinstance(rhs.fill_value, Literal):
+                dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+                code_init += 'array_fill(({0}){1}, {2});\n'.format(dtype, self._print(rhs.fill_value), self._print(lhs))
+            else:
+                code_init += 'array_fill({0}, {1});\n'.format(self._print(rhs.fill_value), self._print(lhs))
+        return '{}'.format(code_init)
 
     def _init_stack_array(self, expr, buffer_array, empty=False):
         lhs = expr.lhs
