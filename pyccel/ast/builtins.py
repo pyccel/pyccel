@@ -642,6 +642,7 @@ class Lambda(Basic):
             raise TypeError("Lambda arguments must be a tuple or list")
         self._variables = tuple(variables)
         self._expr = expr
+        super().__init__()
 
     @property
     def variables(self):
