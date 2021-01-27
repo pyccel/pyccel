@@ -17,7 +17,6 @@ from sympy import Symbol
 from sympy import Integer as sp_Integer
 from sympy import ceiling
 from sympy import oo  as INF
-from sympy import Lambda
 from sympy.core import cache
 
 #==============================================================================
@@ -27,7 +26,7 @@ from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import AugAssign, CodeBlock
-from pyccel.ast.core import Return
+from pyccel.ast.core import Return, Argument
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ValuedFunctionAddress
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall
@@ -80,7 +79,7 @@ from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
 from pyccel.ast.builtins import python_builtin_datatype
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
-                                 PythonMap, PythonTuple)
+                                 PythonMap, PythonTuple, Lambda)
 
 from pyccel.ast.numpyext import NumpyZeros
 from pyccel.ast.numpyext import NumpyInt, NumpyInt32, NumpyInt64
@@ -1195,10 +1194,11 @@ class SemanticParser(BasicParser):
     def _visit_Lambda(self, expr, **settings):
 
 
-        expr_names = set(map(str, expr.expr.atoms(Symbol)))
+        expr_names = set(map(str, expr.expr.atoms(Symbol, Argument)))
         var_names = map(str, expr.variables)
-        if len(expr_names.difference(var_names)) > 0:
-            errors.report(UNDEFINED_LAMBDA_VARIABLE, symbol = expr_names.difference(var_names),
+        missing_vars = expr_names.difference(var_names)
+        if len(missing_vars) > 0:
+            errors.report(UNDEFINED_LAMBDA_VARIABLE, symbol = missing_vars,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal', blocker=True)
         funcs = expr.expr.atoms(FunctionCall)
@@ -1830,7 +1830,6 @@ class SemanticParser(BasicParser):
                     # case of rhs is a target variable the lhs must be a pointer
                     d['is_target' ] = False
                     d['is_pointer'] = True
-
 
         lhs = expr.lhs
         if isinstance(lhs, (Symbol, DottedName)):
