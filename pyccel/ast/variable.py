@@ -19,8 +19,8 @@ from .datatypes import (datatype, DataType,
                         default_precision)
 from .internals import PyccelArraySize, Slice
 from .literals  import LiteralInteger, Nil
-from .operators import PyccelMinus
-
+from .operators import (PyccelMinus, PyccelDiv,
+                        PyccelUnarySub, PyccelAdd)
 __all__ = (
     'DottedName',
     'DottedVariable',
@@ -591,8 +591,6 @@ class TupleVariable(Variable):
                        wish to collect
         """
         assert(not self._is_homogeneous)
-        if isinstance(variable_idx, LiteralInteger):
-            variable_idx = variable_idx.p
         return self._vars[variable_idx]
 
     def rename_var(self, variable_idx, new_name):
@@ -620,8 +618,6 @@ class TupleVariable(Variable):
             else:
                 sub_idx = []
 
-            if isinstance(idx, LiteralInteger):
-                idx = idx.p
             var = self.get_var(idx)
 
             if len(sub_idx) > 0:
@@ -726,6 +722,12 @@ class IndexedElement(PyccelAstNode):
         ):
         super().__init__()
 
+        self._label = base
+
+        if PyccelAstNode.stage == 'syntactic':
+            self._indices = args
+            return
+
         self._dtype = base.dtype
         self._order = base.order
         self._precision = base.precision
@@ -737,22 +739,32 @@ class IndexedElement(PyccelAstNode):
         if len(args) < rank:
             args = args + tuple([Slice(None, None)]*(rank-len(args)))
 
-        self._label = base
         self._indices = args
 
         # Calculate new shape
 
         if shape is not None:
             new_shape = []
+            from .mathext import MathCeil
             for a,s in zip(args, shape):
                 if isinstance(a, Slice):
                     start = a.start
-                    stop   = a.stop
-                    stop   = s if stop is None else stop
-                    if start is None:
-                        new_shape.append(stop)
-                    else:
-                        new_shape.append(PyccelMinus(stop, start))
+                    stop  = a.stop if a.stop is not None else s
+                    step  = a.step
+                    if isinstance(start, PyccelUnarySub):
+                        start = PyccelAdd(s, start)
+                    if isinstance(stop, PyccelUnarySub):
+                        stop = PyccelAdd(s, stop)
+
+                    _shape = stop if start is None else PyccelMinus(stop, start)
+                    if step is not None:
+                        if isinstance(step, PyccelUnarySub):
+                            start = s if a.start is None else start
+                            _shape = start if a.stop is None else PyccelMinus(start, stop)
+                            step = PyccelUnarySub(step)
+
+                        _shape = MathCeil(PyccelDiv(_shape, step))
+                    new_shape.append(_shape)
             self._shape = tuple(new_shape)
             self._rank  = len(new_shape)
         else:

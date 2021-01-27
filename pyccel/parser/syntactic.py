@@ -14,7 +14,6 @@ import ast
 #==============================================================================
 
 from sympy import Symbol
-from sympy import IndexedBase
 from sympy import Lambda
 from sympy import Dict
 from sympy.core import cache
@@ -38,7 +37,7 @@ from pyccel.ast.core import While
 from pyccel.ast.core import Del
 from pyccel.ast.core import Assert
 from pyccel.ast.core import PythonTuple
-from pyccel.ast.core import Comment, EmptyNode, NewLine
+from pyccel.ast.core import Comment, EmptyNode
 from pyccel.ast.core import Break, Continue
 from pyccel.ast.core import Argument, ValuedArgument
 from pyccel.ast.core import Import
@@ -48,10 +47,11 @@ from pyccel.ast.core import With
 from pyccel.ast.core import PythonList
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
+from pyccel.ast.core import IndexedElement
 from pyccel.ast.core import _atomic
 from pyccel.ast.core import create_variable
 
-from pyccel.ast.operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
+from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
@@ -222,7 +222,7 @@ class SyntaxParser(BasicParser):
                 n_empty_lines = 0
                 current_file = start
                 current_file.append(v)
-            elif isinstance(v, (NewLine, EmptyNode)):
+            elif isinstance(v, EmptyNode):
                 # EmptyNodes are defined in the same block as the previous line
                 current_file.append(v)
                 n_empty_lines += 1
@@ -887,7 +887,7 @@ class SyntaxParser(BasicParser):
             ch = ch.value
         args = tuple(args)
         var = self._visit(ch)
-        var = IndexedBase(var)[args]
+        var = IndexedElement(var, *args)
         return var
 
     def _visit_ExtSlice(self, stmt):
@@ -949,7 +949,7 @@ class SyntaxParser(BasicParser):
         iterator = self._visit(stmt.target)
         iterable = self._visit(stmt.iter)
         body = self._visit(stmt.body)
-        expr = For(iterator, iterable, body, strict=False)
+        expr = For(iterator, iterable, body)
         expr.set_fst(stmt)
         return expr
 
@@ -957,7 +957,7 @@ class SyntaxParser(BasicParser):
 
         iterator = self._visit(stmt.target)
         iterable = self._visit(stmt.iter)
-        expr = For(iterator, iterable, [], strict=False)
+        expr = For(iterator, iterable, [])
         expr.set_fst(stmt)
         return expr
 
@@ -981,7 +981,7 @@ class SyntaxParser(BasicParser):
         index = self.get_new_variable()
 
         args = [index]
-        target = IndexedBase(lhs)[args]
+        target = IndexedElement(lhs, *args)
         target = Assign(target, result)
         assign1 = Assign(index, LiteralInteger(0))
         assign1.set_fst(stmt)

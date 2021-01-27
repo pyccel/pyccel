@@ -197,3 +197,25 @@ def none_is_none():
 
 def none_isnot_none():
     return None is not None
+
+@types('int')
+def pass_if(x):
+    if x > 0:
+        pass
+    x = x + 1
+    return x
+
+@types('real')
+def pass2_if(b):
+    c = 1
+    if b:
+        pass
+    else:
+        c = 2
+    return c
+
+def use_optional(a : int = None):
+    b = 3
+    if a:
+        b += a
+    return b

@@ -157,9 +157,6 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_EmptyNode(self, expr):
         return ''
 
-    def _print_NewLine(self, expr):
-        return '\n'
-
     def _print_DottedName(self, expr):
         return '.'.join(self._print(n) for n in expr.name)
 
