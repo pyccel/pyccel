@@ -288,6 +288,32 @@ class CCodePrinter(CodePrinter):
         rows, cols = mat.shape
         return ((i, j) for i in range(rows) for j in range(cols))
 
+    #========================== Numpy Elements ===============================#
+    def print_NumpyArange(self, expr, lhs):
+        start  = self._print(expr.start)
+        stop   = self._print(expr.stop)
+        step   = self._print(expr.step)
+        dtype  = self.find_in_ndarray_type_registry(self._print(expr.dtype), expr.precision)
+
+        target = Variable(expr.dtype, name =  self._parser.get_new_name('s'))
+        index  = ValuedVariable(NativeInteger(), name = self._parser.get_new_name('i'), value=0)
+
+        self._additional_declare += [index, target]
+        self._additional_code += self._print(Assign(index, index.value)) + '\n'
+
+        code = 'for({target} = {start}; {target} {op} {stop}; {target} += {step})'
+        code += '\n{{\n{lhs}.{dtype}[{index}] = {target};\n'
+        code += self._print(AugAssign(index, '+', LiteralInteger(1))) + '\n}}'
+        code = code.format(target = self._print(target),
+                            start = start,
+                            stop  = stop,
+                            op    = '<' if not isinstance(expr.step, PyccelUnarySub) else '>',
+                            step  = step,
+                            index = self._print(index),
+                            lhs   = lhs,
+                            dtype = dtype)
+        return code
+
     # ============ Elements ============ #
 
     def _print_PythonFloat(self, expr):
@@ -1155,29 +1181,7 @@ class CCodePrinter(CodePrinter):
             return '{}\n'.format(code_init)
 
         if isinstance(rhs, NumpyArange):
-            start = self._print(rhs.start)
-            stop  = self._print(rhs.stop)
-            step  = self._print(rhs.step)
-
-            target = Variable(rhs.dtype, name =  self._parser.get_new_name('s'))
-            index = ValuedVariable(NativeInteger(), name = self._parser.get_new_name('i'), value=0)
-
-            self._additional_declare += [index, target]
-            self._additional_code += self._print(Assign(index, index.value)) + '\n'
-
-            dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
-            code = 'for({target} = {start}; {target} {op} {stop}; {target} += {step})'
-            code += '\n{{\n{lhs}.{dtype}[{index}] = {target};\n'
-            code += self._print(AugAssign(index, '+', LiteralInteger(1))) + '\n}}'
-            code = code.format(target = self._print(target),
-                               start = start,
-                               stop = stop,
-                               op = '<' if not isinstance(rhs.step, PyccelUnarySub) else '>',
-                               step = step,
-                               index = self._print(index),
-                               lhs = lhs,
-                               dtype = dtype)
-            return code
+            return self.print_NumpyArange(rhs, lhs)
 
         rhs = self._print(rhs)
         return '{} = {};'.format(lhs, rhs)
