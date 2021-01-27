@@ -296,10 +296,10 @@ class CCodePrinter(CodePrinter):
         dtype  = self.find_in_ndarray_type_registry(self._print(expr.dtype), expr.precision)
 
         target = Variable(expr.dtype, name =  self._parser.get_new_name('s'))
-        index  = ValuedVariable(NativeInteger(), name = self._parser.get_new_name('i'), value=0)
+        index  = Variable(NativeInteger(), name = self._parser.get_new_name('i'))
 
         self._additional_declare += [index, target]
-        self._additional_code += self._print(Assign(index, index.value)) + '\n'
+        self._additional_code += self._print(Assign(index, LiteralInteger(0))) + '\n'
 
         code = 'for({target} = {start}; {target} {op} {stop}; {target} += {step})'
         code += '\n{{\n{lhs}.{dtype}[{index}] = {target};\n'
