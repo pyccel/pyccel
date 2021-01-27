@@ -736,7 +736,6 @@ class SyntaxParser(BasicParser):
                                 bounding_box = (stmt.lineno, stmt.col_offset),
                                 severity='warning')
                 templates[tp_name] = hdr_parse(stmts=txt)
-                print(templates)
                 template['templates_dict'] = templates
                 template['template_list'] = decorators['template']
                 decorators['template'] = template
