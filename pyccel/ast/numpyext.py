@@ -180,11 +180,19 @@ class NumpyArange(NumpyNewArray):
     """
     Represents a call to  numpy.arange for code generation.
 
-    arg :
+    Parameters
+    ----------
         stop : Number
-        start : Number default 0
+            End of interval.
+
+        start : Number
+            Start of interval, default value 0
+
         step : Number default 1
+            Spacing between values, default value 1
+
         dtype : Datatype
+            The type of the output array
     """
 
     def __init__(self, start, stop = None, step = None, dtype = None):
@@ -208,7 +216,6 @@ class NumpyArange(NumpyNewArray):
             self._dtype, self._precision = process_dtype(dtype)
 
         self._rank = 1
-        self._order = 'C'
         self._shape = (MathCeil(PyccelDiv(PyccelMinus(self._stop, self._start), self._step)))
         self._shape = process_shape(self._shape)
 
