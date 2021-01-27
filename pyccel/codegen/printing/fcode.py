@@ -63,7 +63,7 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
-from pyccel.ast.numpyext import NumpyEmpty, NumpyArange
+from pyccel.ast.numpyext import NumpyEmpty
 from pyccel.ast.numpyext import NumpyMod, NumpyFloat
 from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
