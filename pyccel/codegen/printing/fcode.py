@@ -52,7 +52,7 @@ from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatyp
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
 from pyccel.ast.datatypes import iso_c_binding
-from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
+from pyccel.ast.datatypes import NativeRange, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice
@@ -428,10 +428,6 @@ class FCodePrinter(CodePrinter):
         code = code.replace("'", '')
         return self._get_statement(code) + '\n'
 
-    def _print_TupleImport(self, expr):
-        code = '\n'.join(self._print(i) for i in expr.imports)
-        return self._get_statement(code) + '\n'
-
     def _print_PythonPrint(self, expr):
         args = []
         for f in expr.expr:
@@ -482,9 +478,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_EmptyNode(self, expr):
         return ''
-
-    def _print_NewLine(self, expr):
-        return '\n'
 
     def _print_AnnotatedComment(self, expr):
         accel = self._print(expr.accel)
@@ -567,10 +560,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_DottedName(self, expr):
         return ' % '.join(self._print(n) for n in expr.name)
-
-    def _print_Concatenate(self, expr):
-        code = ', '.join(self._print(a) for a in expr.args)
-        return '[' + code + ']'
 
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
@@ -1027,7 +1016,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.dtype, NativeSymbol):
             return ''
 
-        if isinstance(expr.dtype, (NativeRange, NativeTensor)):
+        if isinstance(expr.dtype, NativeRange):
             return ''
 
         # meta-variables
@@ -1237,7 +1226,7 @@ class FCodePrinter(CodePrinter):
 
         lhs_code = self._print(expr.lhs)
         rhs = expr.rhs
-        # we don't print Range, Tensor
+        # we don't print Range
         # TODO treat the case of iterable classes
         if isinstance(rhs, NINF):
             rhs_code = '-Huge({0})'.format(lhs_code)
@@ -1801,25 +1790,6 @@ class FCodePrinter(CodePrinter):
         stop  = self._print(expr.stop) + '-' + self._print(LiteralInteger(1))
         step  = self._print(expr.step)
         return '{0}, {1}, {2}'.format(start, stop, step)
-
-    def _print_Tile(self, expr):
-        start = self._print(expr.start)
-        stop  = self._print(expr.stop)
-        return '{0}, {1}'.format(start, stop)
-
-
-    def _print_ForAll(self, expr):
-
-        start = self._print(expr.iter.start)
-        end   = self._print(expr.iter.stop)
-        body  = ''.join(self._print(i) for i in expr.body)
-        mask  = self._print(expr.mask)
-        ind   = self._print(expr.target)
-
-        code = 'forall({ind} = {start}:{end}, {mask})\n'
-        code = code.format(ind=ind,start=start,end=end,mask=mask)
-        code = code + body + 'end forall\n'
-        return code
 
     def _print_FunctionalFor(self, expr):
         loops = ''.join(self._print(i) for i in expr.loops)

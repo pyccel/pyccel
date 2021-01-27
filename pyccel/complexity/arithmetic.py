@@ -30,7 +30,7 @@ f =  n**2*(2*ADD + DIV + 2*MUL + 2*POW)
 from sympy import count_ops as sympy_count_ops
 from sympy import Tuple
 
-from pyccel.ast.core     import For, Assign, NewLine, CodeBlock, Comment
+from pyccel.ast.core     import For, Assign, CodeBlock, Comment
 from pyccel.ast.numpyext import NumpyZeros, NumpyOnes
 from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.complexity.basic import Complexity
@@ -66,7 +66,7 @@ def count_ops(expr, visual=None):
         return sum(count_ops(i, visual) for i in expr)
     elif isinstance(expr, CodeBlock):
         return sum(count_ops(i, visual) for i in expr.body)
-    elif isinstance(expr, (NumpyZeros, NumpyOnes,NewLine, Comment)):
+    elif isinstance(expr, (NumpyZeros, NumpyOnes, Comment)):
         return 0
     else:
         raise NotImplementedError('TODO count_ops for {}'.format(type(expr)))
