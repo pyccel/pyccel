@@ -82,7 +82,8 @@ __all__ = (
     'Shape',
     'NumpyWhere',
     'NumpyZeros',
-    'NumpyZerosLike'
+    'NumpyZerosLike',
+    'NumpyArange'
 )
 
 #==============================================================================
