@@ -5,9 +5,10 @@
 from sympy import cse as sympy_cse
 from sympy import Sum
 from sympy import Symbol
-from sympy import Tuple, Lambda
+from sympy import Tuple
 
 from sympy.core.function  import Function
+from pyccel.ast.builtins import Lambda
 from pyccel.ast.core import Import
 from pyccel.ast.core import Return, FunctionDef
 from pyccel.ast.core import Assign, create_variable
