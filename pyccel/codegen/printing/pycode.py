@@ -116,8 +116,6 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         if isinstance(expr.stmt, CodeBlock):
             code = ','.join([self._print(b.rhs) for b in expr.stmt.body])
             return 'return ' + code
-        if isinstance(expr.stmt, Assign):
-            return 'return ' + self._print(expr.rhs)
         if expr.expr:
             ret = ','.join([self._print(i) for i in expr.expr])
             return 'return {}'.format(ret)
