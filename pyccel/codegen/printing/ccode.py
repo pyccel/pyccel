@@ -1043,12 +1043,9 @@ class CCodePrinter(CodePrinter):
             return 'return 0;'
         if len(args) == 1:
             if isinstance(expr.stmt, CodeBlock):
-                for a in expr.stmt.body:
-                    if isinstance(a, Assign):
-                        b = a
-                if isinstance(b.rhs, IndexedElement) and not b.lhs.is_temp:
-                    return '{0}\nreturn {1};'.format(self._print(expr.stmt), self._print(b.lhs))
-                return 'return {0};'.format(self._print(b.rhs))
+                if  isinstance(expr.stmt.body[-1], Deallocate):
+                    return '{0}\nreturn {1};'.format(self._print(expr.stmt), self._print(expr.stmt.body[-2].lhs))
+                return 'return {0};'.format(self._print(expr.stmt.body[0].rhs))
             return 'return {0};'.format(self._print(args[0]))
         return ''
 
