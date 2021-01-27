@@ -627,6 +627,28 @@ class PythonMin(PyccelInternalFunction):
         PyccelInternalFunction.__init__(self, x)
 
 #==============================================================================
+class Lambda(Basic):
+    def __init__(self, variables, expr):
+        self._variables = variables
+        self._expr = expr
+
+    @property
+    def variables(self):
+        return self._variables
+
+    @property
+    def expr(self):
+        return self._expr
+
+    def __call__(self, *args):
+        assert(len(args) == len(self.variables))
+        return self.expr.subs(self.variables, args)
+
+    def __str__(self):
+        return "{args} -> {expr}".format(args=self.variables,
+                expr = self.expr)
+
+#==============================================================================
 python_builtin_datatypes_dict = {
     'bool'   : PythonBool,
     'float'  : PythonFloat,
