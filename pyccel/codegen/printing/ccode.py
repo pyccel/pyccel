@@ -1119,9 +1119,9 @@ class CCodePrinter(CodePrinter):
             self._temporary_args = [VariableAddress(a) for a in expr.lhs]
             return '{};'.format(self._print(expr.rhs))
         if isinstance(expr.rhs, (NumpyArray)):
-            return '{}'.format(self.print_NumpyArray(expr))
+            return self.print_NumpyArray(expr)
         if isinstance(expr.rhs, (NumpyFull)):
-            return '{}'.format(self.print_NumpyFull(expr))
+            return self.print_NumpyFull(expr)
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         return '{} = {};'.format(lhs, rhs)
