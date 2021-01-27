@@ -2678,7 +2678,7 @@ def test_arrs_2d_negative_index():
     assert np.array_equal(f1(), f2())
 
 #==============================================================================
-# TEST : arithmetic operations
+# TEST : NUMPY ARANGE
 #==============================================================================
 
 def test_numpy_arange_one_arg(language):

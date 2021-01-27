@@ -767,11 +767,11 @@ class FCodePrinter(CodePrinter):
 
         code = '[({start} + {step} * {target}, {target} = {0}, {shape}, {1})]'
         code = code.format(self._print(LiteralInteger(0)),
-                            self._print(LiteralInteger(1)),
-                            start = start,
-                            step = step,
-                            target = self._print(target),
-                            shape = self._print(shape))
+                           self._print(LiteralInteger(1)),
+                           start  = start,
+                           step   = step,
+                           target = self._print(target),
+                           shape  = self._print(shape))
 
         return code
 
