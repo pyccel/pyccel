@@ -379,7 +379,7 @@ class OmpTaskyieldConstruct(BasicStmt):
             print("> OmpTaskyieldConstruct: expr")
 
         txt = self.name
-        return OMP_Taskyield_Construct(txt)
+        return OmpAnnotatedComment(txt)
 
 class OmpFlushConstruct(BasicStmt):
     """Class representing a Flush stmt."""
