@@ -1171,7 +1171,20 @@ class CCodePrinter(CodePrinter):
                 code_init += 'array_fill({0}, {1});\n'.format(self._print(rhs.fill_value), self._print(lhs))
         return '{}'.format(code_init)
 
-    def _init_stack_array(self, expr, buffer_array, empty=False):
+    def _init_stack_array(self, expr, buffer_array):
+        """ return a string that have handle the assign of a stack ndarray
+
+        Parameters
+        ----------
+            expr : Assign Node
+                Used to get the lhs and rhs of the Assign expression
+            buffer_array : String
+                The data buffer
+        Returns
+        -------
+            Str
+        """
+
         lhs = expr.lhs
         rhs = expr.rhs
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
