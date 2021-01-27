@@ -1136,6 +1136,7 @@ class CCodePrinter(CodePrinter):
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg
         if rhs.rank > 1:
+            # flattening the args to use them in C initialization.
             arg = functools.reduce(operator.concat, arg)
         if isinstance(arg, Variable):
             arg = self._print(arg)
