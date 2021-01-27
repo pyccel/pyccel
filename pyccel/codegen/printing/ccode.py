@@ -1130,7 +1130,7 @@ class CCodePrinter(CodePrinter):
         rhs = expr.rhs
         lhs = expr.lhs
         if rhs.rank == 0:
-            raise NotImplementedError(lhs + "=" + rhs)
+            raise NotImplementedError(str(expr))
         dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
