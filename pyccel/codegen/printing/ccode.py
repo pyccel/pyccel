@@ -1046,7 +1046,7 @@ class CCodePrinter(CodePrinter):
                 for a in expr.stmt.body:
                     if isinstance(a, Assign):
                         b = a
-                if isinstance(b.rhs, IndexedElement):
+                if isinstance(b.rhs, IndexedElement) and not b.lhs.is_temp:
                     return '{0}\nreturn {1};'.format(self._print(expr.stmt), self._print(b.lhs))
                 return 'return {0};'.format(self._print(b.rhs))
             return 'return {0};'.format(self._print(args[0]))

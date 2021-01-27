@@ -2351,7 +2351,10 @@ class SemanticParser(BasicParser):
                 a = Assign(v,r)
                 a.set_fst(expr.fst)
                 a = self._visit_Assign(a)
-                if not isinstance(a.rhs, IndexedElement):
+                if isinstance(a.rhs, IndexedElement):
+                    if a.rhs.base not in self._allocs[-1]:
+                        a.lhs.is_temp = True
+                else:
                     a.lhs.is_temp = True
                 assigns.append(a)
 
