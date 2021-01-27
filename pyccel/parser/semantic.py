@@ -2351,7 +2351,8 @@ class SemanticParser(BasicParser):
                 a = Assign(v,r)
                 a.set_fst(expr.fst)
                 a = self._visit_Assign(a)
-                a.lhs.is_temp = True
+                if not isinstance(a.rhs, IndexedElement):
+                    a.lhs.is_temp = True
                 assigns.append(a)
 
         results = [self._visit_Symbol(i, **settings) for i in return_vars]

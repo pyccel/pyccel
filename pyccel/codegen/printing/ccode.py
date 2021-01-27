@@ -36,7 +36,7 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
 from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
-from pyccel.ast.variable import DottedName
+from pyccel.ast.variable import DottedName, IndexedElement
 
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -1046,6 +1046,8 @@ class CCodePrinter(CodePrinter):
                 for a in expr.stmt.body:
                     if isinstance(a, Assign):
                         b = a
+                if isinstance(b.rhs, IndexedElement):
+                    return '{0}\nreturn {1};'.format(self._print(expr.stmt), self._print(b.lhs))
                 return 'return {0};'.format(self._print(b.rhs))
             return 'return {0};'.format(self._print(args[0]))
         return ''

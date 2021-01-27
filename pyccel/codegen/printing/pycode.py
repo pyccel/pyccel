@@ -16,7 +16,7 @@ from sympy.printing.pycode import _known_constants_math
 from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.utilities  import build_types_decorator
-from pyccel.ast.core       import CodeBlock, Import, DottedName, Assign
+from pyccel.ast.core       import CodeBlock, Import, DottedName
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
