@@ -1640,6 +1640,20 @@ def arrs_1d_negative_index_2():
     b = a[1:-1] + a[2:]
     return np.shape(b)[0], np.sum(b)
 
+def arrs_1d_int32_index():
+    import numpy as np
+    i = np.int32(1)
+    a = np.ones(10)
+    b = a[i] + a[i + 2]
+    return b
+
+def arrs_1d_int64_index():
+    import numpy as np
+    i = np.int64(1)
+    a = np.ones(10)
+    b = a[i] + a[i + 2]
+    return b
+
 def arrs_1d_negative_index_negative_step():
     import numpy as np
     a = np.ones(10)

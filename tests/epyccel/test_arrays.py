@@ -2662,6 +2662,16 @@ def test_arrs_1d_negative_index_2():
     f2 = epyccel(f1)
     assert np.array_equal(f1(), f2())
 
+def test_arrs_1d_int32_index(language):
+    f1 = arrays.arrs_1d_int32_index
+    f2 = epyccel(f1, language=language)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_1d_int64_index(language):
+    f1 = arrays.arrs_1d_int64_index
+    f2 = epyccel(f1, language=language)
+    assert np.array_equal(f1(), f2())
+
 def test_arrs_1d_negative_index_negative_step():
     f1 = arrays.arrs_1d_negative_index_negative_step
     f2 = epyccel(f1)
