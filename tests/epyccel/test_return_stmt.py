@@ -66,3 +66,16 @@ def test_multi_return_vars_expr(language):
         return (a-b), (a+b)
     epyc_multi_return_vars_expr = epyccel(multi_return_vars_expr, language=language, fflags="-Werror -Wunused-variable")
     assert (epyc_multi_return_vars_expr(7, 2) == multi_return_vars_expr(7, 2))
+
+def test_scalare_multi_return_stmts(language):
+    @types('int')
+    def scalare_multi_return_stmts(a):
+        a = 7
+        if a:
+            return 1
+        else:
+            return 2
+        a = 4
+        return a
+    epyc_scalare_multi_return_stmts = epyccel(scalare_multi_return_stmts, language=language, fflags="-Werror -Wunused-variable")
+    assert (epyc_scalare_multi_return_stmts(7) == scalare_multi_return_stmts(7))

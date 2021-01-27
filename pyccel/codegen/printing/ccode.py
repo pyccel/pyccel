@@ -14,7 +14,7 @@ from pyccel.ast.core      import Declare
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
-from pyccel.ast.core      import Assign, datatype, Import
+from pyccel.ast.core      import Assign, datatype, Import, CodeBlock
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import create_incremented_string
 
@@ -1042,8 +1042,10 @@ class CCodePrinter(CodePrinter):
                 return self._print(expr.stmt)+'\n'+'return 0;'
             return 'return 0;'
         if len(args) == 1:
-            if expr.stmt:
+            if isinstance(expr.stmt, CodeBlock):
                 return 'return {0};'.format(self._print(expr.stmt.body[0].rhs))
+            if isinstance(expr.stmt, Assign):
+                return 'return {0};'.format(self._print(expr.stmt[0].rhs))
             return 'return {0};'.format(self._print(args[0]))
         return ''
 
