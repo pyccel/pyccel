@@ -11,7 +11,6 @@ from sympy import sympify
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
 from sympy import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Le as sp_Le, Gt as sp_Gt, Ge as sp_Ge
 from sympy import Integral, Symbol
-from sympy import Lambda
 from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float, Rational as sp_Rational
 from sympy import preorder_traversal
@@ -33,7 +32,7 @@ from pyccel.errors.messages import RECURSIVE_RESULTS_REQUIRED
 
 from .basic     import Basic, PyccelAstNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonList, PythonMap,
-                        PythonRange, PythonZip, PythonTuple, PythonBool)
+                        PythonRange, PythonZip, PythonTuple, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeBool, NativeRange,
                         NativeTuple, is_iterable_datatype, str_dtype)
@@ -1725,6 +1724,9 @@ class Argument(PyccelAstNode):
     def annotation(self):
         return self._annotation
 
+    def __str__(self):
+        return str(self.name)
+
 class ValuedArgument(Basic):
 
     """Represents a valued argument in the code.
@@ -1784,6 +1786,7 @@ class FunctionCall(PyccelAstNode):
             self._interface = None
             self._funcdef   = func
             self._arguments = args
+            self._func_name = func
             return
 
         # ...
@@ -1861,6 +1864,9 @@ class FunctionCall(PyccelAstNode):
     @property
     def interface_name(self):
         return self._interface_name
+
+    def __repr__(self):
+        return '{}({})'.format(self.func_name, ', '.join(str(a) for a in self.args))
 
 class DottedFunctionCall(FunctionCall):
     """
