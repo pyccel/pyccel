@@ -15,7 +15,7 @@ from .core           import (ClassDef, FunctionDef,
 
 from .internals      import PyccelInternalFunction
 
-from .operators      import broadcast, PyccelMinus, PyccelAdd
+from .operators      import broadcast, PyccelMinus, PyccelDiv
 
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList)
