@@ -183,17 +183,18 @@ class NumpyArange(NumpyNewArray):
 
     Parameters
     ----------
-        stop : Number
-            End of interval.
+    start : Numeric
+        Start of interval, default value 0
 
-        start : Number
-            Start of interval, default value 0
+    stop : Numeric
+        End of interval
 
-        step : Number default 1
-            Spacing between values, default value 1
+    step : Numeric
+        Spacing between values, default value 1
 
-        dtype : Datatype
-            The type of the output array
+    dtype : Datatype
+        The type of the output array, if dtype is not given,
+        infer the data type from the other input arguments.
     """
 
     def __init__(self, start, stop = None, step = None, dtype = None):
