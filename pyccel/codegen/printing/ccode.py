@@ -731,7 +731,7 @@ class CCodePrinter(CodePrinter):
         """ add cast to an expresion
         parameters
         ----------
-            expr : 
+            expr :
                 the expression to be casted
             dtype : Datatype
                 base type of the cast

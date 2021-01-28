@@ -944,7 +944,7 @@ class SemanticParser(BasicParser):
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='error', blocker=self.blocking)
 
-        for arg in var[args]._indices:
+        for arg in var[args].indices:
             if not isinstance(arg, (Slice, LiteralInteger)) and not \
                 (isinstance(arg, Variable) and isinstance(arg.dtype, (NativeBool, NativeInteger))):
                 errors.report(INVALID_INDICES, symbol=var[args],
