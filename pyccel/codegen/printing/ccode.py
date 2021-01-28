@@ -14,7 +14,7 @@ from pyccel.ast.core      import Declare
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
-from pyccel.ast.core      import Assign, datatype, Import
+from pyccel.ast.core      import Assign, datatype, Import, AugAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import create_incremented_string
 
@@ -31,7 +31,7 @@ from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil
 
-from pyccel.ast.numpyext import NumpyFull, NumpyArray
+from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
 from pyccel.ast.variable import ValuedVariable
@@ -287,6 +287,32 @@ class CCodePrinter(CodePrinter):
     def _traverse_matrix_indices(self, mat):
         rows, cols = mat.shape
         return ((i, j) for i in range(rows) for j in range(cols))
+
+    #========================== Numpy Elements ===============================#
+    def print_NumpyArange(self, expr, lhs):
+        start  = self._print(expr.start)
+        stop   = self._print(expr.stop)
+        step   = self._print(expr.step)
+        dtype  = self.find_in_ndarray_type_registry(self._print(expr.dtype), expr.precision)
+
+        target = Variable(expr.dtype, name =  self._parser.get_new_name('s'))
+        index  = Variable(NativeInteger(), name = self._parser.get_new_name('i'))
+
+        self._additional_declare += [index, target]
+        self._additional_code += self._print(Assign(index, LiteralInteger(0))) + '\n'
+
+        code = 'for({target} = {start}; {target} {op} {stop}; {target} += {step})'
+        code += '\n{{\n{lhs}.{dtype}[{index}] = {target};\n'
+        code += self._print(AugAssign(index, '+', LiteralInteger(1))) + '\n}}'
+        code = code.format(target = self._print(target),
+                            start = start,
+                            stop  = stop,
+                            op    = '<' if not isinstance(expr.step, PyccelUnarySub) else '>',
+                            step  = step,
+                            index = self._print(index),
+                            lhs   = lhs,
+                            dtype = dtype)
+        return code
 
     # ============ Elements ============ #
 
@@ -1153,6 +1179,9 @@ class CCodePrinter(CodePrinter):
             else:
                 return ''
             return '{}\n'.format(code_init)
+
+        if isinstance(rhs, NumpyArange):
+            return self.print_NumpyArange(rhs, lhs)
 
         rhs = self._print(rhs)
         return '{} = {};'.format(lhs, rhs)

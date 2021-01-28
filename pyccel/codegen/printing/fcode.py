@@ -741,6 +741,29 @@ class FCodePrinter(CodePrinter):
         result_code = self._print_MathFloor(expr)
         return 'real({}, {})'.format(result_code, self.print_kind(expr))
 
+    def _print_NumpyArange(self, expr):
+        start  = self._print(expr.start)
+        step   = self._print(expr.step)
+        shape  = PyccelMinus(expr.shape[0], LiteralInteger(1))
+        index  = Variable(NativeInteger(), name =  self.parser.get_new_name('i'))
+
+        if self._current_function:
+            name = self._current_function
+            func = self.get_function(name)
+            func.local_vars.append(index)
+        else:
+            self._namespace.variables[index.name] = index
+
+        code = '[({start} + {step} * {index}, {index} = {0}, {shape}, {1})]'
+        code = code.format(self._print(LiteralInteger(0)),
+                           self._print(LiteralInteger(1)),
+                           start  = start,
+                           step   = step,
+                           index  = self._print(index),
+                           shape  = self._print(shape))
+
+        return code
+
     # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
         init_value = self._print(expr.arg)
