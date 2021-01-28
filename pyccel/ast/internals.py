@@ -20,6 +20,7 @@ class PyccelInternalFunction(PyccelAstNode):
     """ Abstract class used by function calls
     which are translated to Pyccel objects
     """
+    _children = ('_args',)
     def __init__(self, *args):
         self._args   = tuple(args)
         PyccelAstNode.__init__(self, {'_args', self._args})
@@ -31,7 +32,7 @@ class PyccelInternalFunction(PyccelAstNode):
         return self._args
 
 
-class PyccelArraySize(PyccelInternalFunction):
+class PyccelArraySize(PyccelAstNode):
     """
     Class representing a call to a function which would
     return the shape of an object in a given dimension
@@ -44,6 +45,7 @@ class PyccelArraySize(PyccelInternalFunction):
             The dimension along which the shape is
             provided
     """
+    _children = ('_arg', '_index')
 
     def __init__(self, arg, index):
         if not isinstance(arg, (list,
@@ -51,13 +53,13 @@ class PyccelArraySize(PyccelInternalFunction):
                                 PyccelAstNode)):
             raise TypeError('Unknown type of  %s.' % type(arg))
 
-        PyccelInternalFunction.__init__(self, arg, index)
         self._arg   = arg
         self._index = index
         self._dtype = NativeInteger()
         self._rank  = 0
         self._shape = ()
         self._precision = default_precision['integer']
+        super().__init__()
 
     @property
     def arg(self):
