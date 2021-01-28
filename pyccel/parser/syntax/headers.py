@@ -7,7 +7,6 @@
 """
 from os.path import join, dirname
 
-from sympy.core import Symbol
 from sympy import sympify
 
 from textx.metamodel import metamodel_from_file
@@ -20,6 +19,7 @@ from pyccel.ast.core      import ValuedArgument
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
 from pyccel.ast.literals  import LiteralString
+from pyccel.ast.internals import Symbol
 from pyccel.errors.errors import Errors
 
 DEBUG = False
