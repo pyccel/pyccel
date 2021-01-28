@@ -10,7 +10,7 @@ from collections     import OrderedDict
 from sympy import sympify
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
 from sympy import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Le as sp_Le, Gt as sp_Gt, Ge as sp_Ge
-from sympy import Integral, Symbol
+from sympy import Integral
 from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float, Rational as sp_Rational
 from sympy import preorder_traversal
@@ -36,7 +36,7 @@ from .builtins  import (PythonEnumerate, PythonLen, PythonList, PythonMap,
 from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeBool, NativeRange,
                         NativeTuple, is_iterable_datatype, str_dtype)
-from .internals      import Slice
+from .internals      import Slice, Symbol
 
 from .literals       import LiteralTrue, LiteralFalse, LiteralInteger, Nil
 from .literals       import LiteralImaginaryUnit, LiteralString
@@ -484,8 +484,8 @@ def create_variable(forbidden_names, prefix = None, counter = 1):
 
       Returns
       ----------
-      name            : sympy.Symbol
-                        A sympy Symbol with the incremented string name
+      name            : Symbol
+                        A Symbol with the incremented string name
       counter         : int
                         The expected value of the next name
 
@@ -601,7 +601,8 @@ class Assign(Basic):
 
     Examples
     --------
-    >>> from sympy import symbols, MatrixSymbol, Matrix
+    >>> from sympy import MatrixSymbol, Matrix
+    >>> from pyccel.ast.internals import symbols
     >>> from pyccel.ast.core import Assign
     >>> x, y, z = symbols('x, y, z')
     >>> Assign(x, y)
@@ -873,7 +874,7 @@ class AliasAssign(Basic):
 
     Examples
     --------
-    >>> from sympy import Symbol
+    >>> from pyccel.ast.internals import Symbol
     >>> from pyccel.ast.core import AliasAssign
     >>> from pyccel.ast.core import Variable
     >>> n = Variable('int', 'n')
@@ -921,7 +922,7 @@ class SymbolicAssign(Basic):
 
     Examples
     --------
-    >>> from sympy import Symbol
+    >>> from pyccel.ast.internals import Symbol
     >>> from pyccel.ast.core import SymbolicAssign
     >>> from pyccel.ast.core import Range
     >>> r = Range(0, 3)
@@ -1082,7 +1083,7 @@ class While(Basic):
 
     Examples
     --------
-    >>> from sympy import Symbol
+    >>> from pyccel.ast.internals import Symbol
     >>> from pyccel.ast.core import Assign, While
     >>> n = Symbol('n')
     >>> While((n>1), [Assign(n,n-1)])
@@ -1519,8 +1520,9 @@ class For(Basic):
 
     Examples
     --------
-    >>> from sympy import symbols, MatrixSymbol
+    >>> from sympy import MatrixSymbol
     >>> from pyccel.ast.core import Assign, For
+    >>> from pyccel.ast.internals import symbols
     >>> i,b,e,s,x = symbols('i,b,e,s,x')
     >>> A = MatrixSymbol('A', 1, 3)
     >>> For(i, (b,e,s), [Assign(x,x-1), Assign(A[0, 1], x)])
@@ -3163,7 +3165,7 @@ class SymbolicPrint(Basic):
 
     Examples
     --------
-    >>> from sympy import symbols
+    >>> from pyccel.ast.internals import symbols
     >>> from pyccel.ast.core import Print
     >>> n,m = symbols('n,m')
     >>> Print(('results', n,m))
@@ -3441,7 +3443,7 @@ class If(Basic):
 
     Examples
     --------
-    >>> from sympy import Symbol
+    >>> from pyccel.ast.internals import Symbol
     >>> from pyccel.ast.core import Assign, If
     >>> n = Symbol('n')
     >>> If(((n>1), [Assign(n,n-1)]), (True, [Assign(n,n+1)]))
@@ -3599,7 +3601,7 @@ def get_initial_value(expr, var):
 # ... TODO treat other statements
 
 def get_assigned_symbols(expr):
-    """Returns all assigned symbols (as sympy Symbol) in the AST.
+    """Returns all assigned symbols in the AST.
 
     Parameters
     ----------
