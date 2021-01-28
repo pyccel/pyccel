@@ -1665,6 +1665,7 @@ class ConstructorCall(Basic):
         a list of arguments.
 
     """
+    _children = ('_func', '_arguments')
 
     is_commutative = True
 
@@ -1804,8 +1805,9 @@ class FunctionCall(PyccelAstNode):
         if self.stage == "syntactic":
             self._interface = None
             self._funcdef   = func
-            self._arguments = args
+            self._arguments = tuple(args)
             self._func_name = func
+            super().__init__()
             return
 
         # ...
@@ -1863,6 +1865,7 @@ class FunctionCall(PyccelAstNode):
         self._precision     = func.results[0].precision if len(func.results) == 1 else None
         self._order         = func.results[0].order     if len(func.results) == 1 else None
         self._func_name     = func.name
+        super().__init__()
 
     @property
     def args(self):
@@ -2039,7 +2042,6 @@ class FunctionDef(Basic):
                  '_local_vars',
                  '_global_vars',
                  '_imports',
-                 '_decorators',
                  '_functions',
                  '_interfaces'
                  )
@@ -2181,6 +2183,7 @@ class FunctionDef(Basic):
         self._functions       = functions
         self._interfaces      = interfaces
         self._doc_string      = doc_string
+        super().__init__()
 
     @property
     def name(self):
@@ -2694,13 +2697,6 @@ class ClassDef(Basic):
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
     _children = ('_attributes', '_methods', '_imports', '_interfaces')
-        self._name = name
-        self._attributes = attributes
-        self._methods = methods
-        self._options = options
-        self._imports = imports
-        self._superclass  = superclass
-        self._interfaces = interfaces
 
     def __init__(
         self,
@@ -3499,6 +3495,7 @@ class If(Basic):
     >>> If(((n>1), [Assign(n,n-1)]), (True, [Assign(n,n+1)]))
     If(((n>1), [Assign(n,n-1)]), (True, [Assign(n,n+1)]))
     """
+    _children = ('_blocks',)
 
     # TODO add type check in the semantic stage
 
@@ -3518,6 +3515,8 @@ class If(Basic):
             newargs.append((cond,body))
 
         self._blocks = tuple(newargs)
+        #self._tests  = tuple(i[0] for i in self._blocks)
+        #self._bodies = tuple(i[1] for i in self._blocks)
 
         super().__init__()
 
@@ -3533,6 +3532,7 @@ class If(Basic):
         return b
 
 class StarredArguments(Basic):
+    _children = ('_starred_obj',)
     def __init__(self, args):
         self._starred_obj = args
         super().__init__()
