@@ -14,7 +14,7 @@ from pyccel.ast.core      import Declare
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
-from pyccel.ast.core      import Assign, datatype, Import
+from pyccel.ast.core      import Assign, datatype, Import, AugAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import create_incremented_string
 
@@ -31,7 +31,7 @@ from pyccel.ast.literals  import LiteralTrue, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
 from pyccel.ast.literals  import Nil
 
-from pyccel.ast.numpyext import NumpyFull, NumpyArray
+from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
 from pyccel.ast.variable import ValuedVariable
@@ -288,6 +288,32 @@ class CCodePrinter(CodePrinter):
         rows, cols = mat.shape
         return ((i, j) for i in range(rows) for j in range(cols))
 
+    #========================== Numpy Elements ===============================#
+    def print_NumpyArange(self, expr, lhs):
+        start  = self._print(expr.start)
+        stop   = self._print(expr.stop)
+        step   = self._print(expr.step)
+        dtype  = self.find_in_ndarray_type_registry(self._print(expr.dtype), expr.precision)
+
+        target = Variable(expr.dtype, name =  self._parser.get_new_name('s'))
+        index  = Variable(NativeInteger(), name = self._parser.get_new_name('i'))
+
+        self._additional_declare += [index, target]
+        self._additional_code += self._print(Assign(index, LiteralInteger(0))) + '\n'
+
+        code = 'for({target} = {start}; {target} {op} {stop}; {target} += {step})'
+        code += '\n{{\n{lhs}.{dtype}[{index}] = {target};\n'
+        code += self._print(AugAssign(index, '+', LiteralInteger(1))) + '\n}}'
+        code = code.format(target = self._print(target),
+                            start = start,
+                            stop  = stop,
+                            op    = '<' if not isinstance(expr.step, PyccelUnarySub) else '>',
+                            step  = step,
+                            index = self._print(index),
+                            lhs   = lhs,
+                            dtype = dtype)
+        return code
+
     # ============ Elements ============ #
 
     def _print_PythonFloat(self, expr):
@@ -372,11 +398,11 @@ class CCodePrinter(CodePrinter):
 
     def _print_If(self, expr):
         lines = []
-        for i, (c, e) in enumerate(expr.args):
+        for i, (c, e) in enumerate(expr.blocks):
             var = self._print(e)
             if i == 0:
                 lines.append("if (%s)\n{" % self._print(c))
-            elif i == len(expr.args) - 1 and c is LiteralTrue():
+            elif i == len(expr.blocks) - 1 and c is LiteralTrue():
                 lines.append("else\n{")
             else:
                 lines.append("else if (%s)\n{" % self._print(c))
@@ -1122,6 +1148,8 @@ class CCodePrinter(CodePrinter):
             return self.copy_NumpyArray_Data(expr)
         if isinstance(expr.rhs, (NumpyFull)):
             return self.arrayFill(expr)
+        if isinstance(rhs, NumpyArange):
+            return self.print_NumpyArange(rhs, lhs)
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         return '{} = {};'.format(lhs, rhs)

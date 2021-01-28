@@ -2708,6 +2708,41 @@ def test_arrs_2d_negative_index():
     f1 = arrays.arrs_2d_negative_index
     f2 = epyccel(f1)
     assert np.array_equal(f1(), f2())
+
+#==============================================================================
+# TEST : NUMPY ARANGE
+#==============================================================================
+
+def test_numpy_arange_one_arg(language):
+    f1 = arrays.arr_arange_1
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(), f2())
+
+def test_numpy_arange_two_arg(language):
+    f1 = arrays.arr_arange_2
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(), f2())
+
+def test_numpy_arange_full_arg(language):
+    f1 = arrays.arr_arange_3
+    f2 = epyccel(f1, language = language)
+    np.testing.assert_array_almost_equal(f1(), f2(), decimal=9)
+
+def test_numpy_arange_with_dtype(language):
+    f1 = arrays.arr_arange_4
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(), f2())
+
+def test_numpy_arange_negative_step(language):
+    f1 = arrays.arr_arange_5
+    f2 = epyccel(f1, language = language)
+    np.testing.assert_array_almost_equal(f1(), f2(), decimal = 9)
+
+def test_numpy_arange_negative_step_2(language):
+    f1 = arrays.arr_arange_6
+    f2 = epyccel(f1, language = language)
+    np.testing.assert_array_almost_equal(f1(), f2(), decimal = 9)
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
