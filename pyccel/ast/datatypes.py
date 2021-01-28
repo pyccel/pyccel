@@ -31,12 +31,10 @@ __all__ = (
     'NativeInteger',
     'NativeTuple',
 #    'NativeNil',
-#    'NativeParallelRange',
     'NativeRange',
     'NativeReal',
     'NativeString',
     'NativeSymbol',
-    'NativeTensor',
     'NativeVoid',
     'UnionType',
     'VariableType',
@@ -154,12 +152,6 @@ class NativeTuple(DataType):
 
 class NativeRange(DataType):
     _name = 'Range'
-
-class NativeTensor(DataType):
-    _name = 'Tensor'
-
-class NativeParallelRange(NativeRange):
-    _name = 'ParallelRange'
 
 class NativeSymbol(DataType):
     _name = 'Symbol'
@@ -279,7 +271,7 @@ def is_iterable_datatype(dtype):
     """Returns True if dtype is an iterable class."""
     if is_pyccel_datatype(dtype):
         return dtype.is_iterable
-    elif isinstance(dtype, (NativeRange, NativeTensor)):
+    elif isinstance(dtype, NativeRange):
         return True
     else:
         return False

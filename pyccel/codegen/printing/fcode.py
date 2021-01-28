@@ -52,7 +52,7 @@ from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatyp
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
 from pyccel.ast.datatypes import iso_c_binding
-from pyccel.ast.datatypes import NativeRange, NativeTensor, NativeTuple
+from pyccel.ast.datatypes import NativeRange, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice
@@ -428,10 +428,6 @@ class FCodePrinter(CodePrinter):
         code = code.replace("'", '')
         return self._get_statement(code) + '\n'
 
-    def _print_TupleImport(self, expr):
-        code = '\n'.join(self._print(i) for i in expr.imports)
-        return self._get_statement(code) + '\n'
-
     def _print_PythonPrint(self, expr):
         args = []
         for f in expr.expr:
@@ -482,9 +478,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_EmptyNode(self, expr):
         return ''
-
-    def _print_NewLine(self, expr):
-        return '\n'
 
     def _print_AnnotatedComment(self, expr):
         accel = self._print(expr.accel)
@@ -567,10 +560,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_DottedName(self, expr):
         return ' % '.join(self._print(n) for n in expr.name)
-
-    def _print_Concatenate(self, expr):
-        code = ', '.join(self._print(a) for a in expr.args)
-        return '[' + code + ']'
 
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
@@ -751,6 +740,29 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyFloor(self, expr):
         result_code = self._print_MathFloor(expr)
         return 'real({}, {})'.format(result_code, self.print_kind(expr))
+
+    def _print_NumpyArange(self, expr):
+        start  = self._print(expr.start)
+        step   = self._print(expr.step)
+        shape  = PyccelMinus(expr.shape[0], LiteralInteger(1))
+        index  = Variable(NativeInteger(), name =  self.parser.get_new_name('i'))
+
+        if self._current_function:
+            name = self._current_function
+            func = self.get_function(name)
+            func.local_vars.append(index)
+        else:
+            self._namespace.variables[index.name] = index
+
+        code = '[({start} + {step} * {index}, {index} = {0}, {shape}, {1})]'
+        code = code.format(self._print(LiteralInteger(0)),
+                           self._print(LiteralInteger(1)),
+                           start  = start,
+                           step   = step,
+                           index  = self._print(index),
+                           shape  = self._print(shape))
+
+        return code
 
     # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
@@ -1004,7 +1016,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.dtype, NativeSymbol):
             return ''
 
-        if isinstance(expr.dtype, (NativeRange, NativeTensor)):
+        if isinstance(expr.dtype, NativeRange):
             return ''
 
         # meta-variables
@@ -1214,7 +1226,7 @@ class FCodePrinter(CodePrinter):
 
         lhs_code = self._print(expr.lhs)
         rhs = expr.rhs
-        # we don't print Range, Tensor
+        # we don't print Range
         # TODO treat the case of iterable classes
         if isinstance(rhs, NINF):
             rhs_code = '-Huge({0})'.format(lhs_code)
@@ -1779,25 +1791,6 @@ class FCodePrinter(CodePrinter):
         step  = self._print(expr.step)
         return '{0}, {1}, {2}'.format(start, stop, step)
 
-    def _print_Tile(self, expr):
-        start = self._print(expr.start)
-        stop  = self._print(expr.stop)
-        return '{0}, {1}'.format(start, stop)
-
-
-    def _print_ForAll(self, expr):
-
-        start = self._print(expr.iter.start)
-        end   = self._print(expr.iter.stop)
-        body  = ''.join(self._print(i) for i in expr.body)
-        mask  = self._print(expr.mask)
-        ind   = self._print(expr.target)
-
-        code = 'forall({ind} = {start}:{end}, {mask})\n'
-        code = code.format(ind=ind,start=start,end=end,mask=mask)
-        code = code + body + 'end forall\n'
-        return code
-
     def _print_FunctionalFor(self, expr):
         loops = ''.join(self._print(i) for i in expr.loops)
         return loops
@@ -2285,14 +2278,14 @@ class FCodePrinter(CodePrinter):
 
         lines = []
 
-        for i, (c, e) in enumerate(expr.args):
+        for i, (c, e) in enumerate(expr.blocks):
 
             if (not e) or (isinstance(e, CodeBlock) and not e.body):
                 continue
 
             if i == 0:
                 lines.append("if (%s) then\n" % self._print(c))
-            elif i == len(expr.args) - 1 and c is LiteralTrue():
+            elif i == len(expr.blocks) - 1 and c is LiteralTrue():
                 lines.append("else\n")
             else:
                 lines.append("else if (%s) then\n" % self._print(c))
