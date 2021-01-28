@@ -120,7 +120,6 @@ class Variable(Symbol, PyccelAstNode):
         is_kwonly=False,
         allows_negative_indexes=False
         ):
-        super().__init__()
 
         # ------------ PyccelAstNode Properties ---------------
         if isinstance(dtype, str) or str(dtype) == '*':
@@ -201,6 +200,7 @@ class Variable(Symbol, PyccelAstNode):
         self._order          = order
         self._is_argument    = is_argument
         self._is_kwonly      = is_kwonly
+        super().__init__()
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
@@ -223,7 +223,7 @@ class Variable(Symbol, PyccelAstNode):
             elif isinstance(s, int):
                 new_shape.append(LiteralInteger(s))
             elif s is None or isinstance(s,(Variable, Slice, PyccelAstNode, Function)):
-                new_shape.append(PyccelArraySize(self, i))
+                new_shape.append(PyccelArraySize(self, LiteralInteger(i)))
             else:
                 raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel),'
                                 'Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
@@ -723,12 +723,12 @@ class IndexedElement(PyccelAstNode):
         *args,
         **kw_args
         ):
-        super().__init__()
 
         self._label = base
 
         if PyccelAstNode.stage == 'syntactic':
             self._indices = args
+            super().__init__()
             return
 
         self._dtype = base.dtype
@@ -776,6 +776,7 @@ class IndexedElement(PyccelAstNode):
                 if not isinstance(args[i], Slice):
                     new_rank -= 1
             self._rank = new_rank
+        super().__init__()
 
     @property
     def base(self):
@@ -799,7 +800,6 @@ class VariableAddress(PyccelAstNode):
     _children = ('_variable',)
 
     def __init__(self, variable):
-        super().__init__()
         if not isinstance(variable, Variable):
             raise TypeError('variable must be a variable')
         self._variable = variable
@@ -809,6 +809,7 @@ class VariableAddress(PyccelAstNode):
         self._dtype     = variable.dtype
         self._precision = variable.precision
         self._order     = variable.order
+        super().__init__()
 
     @property
     def variable(self):
