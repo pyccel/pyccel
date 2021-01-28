@@ -2137,7 +2137,7 @@ class FunctionDef(Basic):
 
         templates = decorators.setdefault('template', None)
         if templates:
-            templates = decorators['template'].setdefault('templates_dict', None)
+            templates = templates.setdefault('templates_dict', None)
 
         self._name            = name
         self._arguments       = arguments
