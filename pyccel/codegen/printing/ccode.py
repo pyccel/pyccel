@@ -1185,7 +1185,7 @@ class CCodePrinter(CodePrinter):
         code_init = ''
         if lhs.is_stack_array:
             declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-            lenght = '*'.join(self._print(i) for i in lhs.shape)
+            length = '*'.join(self._print(i) for i in lhs.shape)
             buffer_array = "({declare_dtype}[{length}]){{}}".format(declare_dtype = declare_dtype, length=length)
             code_init += self._init_stack_array(expr, buffer_array)
         if rhs.fill_value is not None:
