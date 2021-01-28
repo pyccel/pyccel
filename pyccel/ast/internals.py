@@ -192,10 +192,11 @@ class Symbol(Basic):
     def __repr__(self):
         return self._name
 
-def symbols(*names):
+def symbols(names):
     """
         #TODO
     """
+    names = names.split(',')
     symbols = [Symbol(name) for name in names]
     return tuple(symbols)
 
