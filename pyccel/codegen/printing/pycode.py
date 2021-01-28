@@ -154,9 +154,6 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_EmptyNode(self, expr):
         return ''
 
-    def _print_NewLine(self, expr):
-        return '\n'
-
     def _print_DottedName(self, expr):
         return '.'.join(self._print(n) for n in expr.name)
 
@@ -244,7 +241,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_If(self, expr):
         lines = []
-        for i, (c, e) in enumerate(expr.args):
+        for i, (c, e) in enumerate(expr.blocks):
             if i == 0:
                 lines.append("if (%s):" % self._print(c))
 

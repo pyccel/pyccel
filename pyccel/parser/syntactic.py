@@ -14,7 +14,6 @@ import ast
 #==============================================================================
 
 from sympy import Symbol
-from sympy import Lambda
 from sympy import Dict
 from sympy.core import cache
 
@@ -37,7 +36,7 @@ from pyccel.ast.core import While
 from pyccel.ast.core import Del
 from pyccel.ast.core import Assert
 from pyccel.ast.core import PythonTuple
-from pyccel.ast.core import Comment, EmptyNode, NewLine
+from pyccel.ast.core import Comment, EmptyNode
 from pyccel.ast.core import Break, Continue
 from pyccel.ast.core import Argument, ValuedArgument
 from pyccel.ast.core import Import
@@ -51,7 +50,7 @@ from pyccel.ast.core import IndexedElement
 from pyccel.ast.core import _atomic
 from pyccel.ast.core import create_variable
 
-from pyccel.ast.operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
+from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
 from pyccel.ast.operators import PyccelAnd, PyccelOr,  PyccelNot, PyccelMinus
@@ -59,7 +58,7 @@ from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
 from pyccel.ast.operators import PyccelIs, PyccelIsNot
 from pyccel.ast.operators import IfTernaryOperator
 
-from pyccel.ast.builtins import PythonPrint
+from pyccel.ast.builtins import PythonPrint, Lambda
 from pyccel.ast.headers  import Header, MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
@@ -222,7 +221,7 @@ class SyntaxParser(BasicParser):
                 n_empty_lines = 0
                 current_file = start
                 current_file.append(v)
-            elif isinstance(v, (NewLine, EmptyNode)):
+            elif isinstance(v, EmptyNode):
                 # EmptyNodes are defined in the same block as the previous line
                 current_file.append(v)
                 n_empty_lines += 1
@@ -861,7 +860,7 @@ class SyntaxParser(BasicParser):
         attributes = methods[0].arguments
         parent = [self._visit(i) for i in stmt.bases]
         expr = ClassDef(name=name, attributes=attributes,
-                        methods=methods, parent=parent)
+                        methods=methods, superclass=parent)
 
         # we set the fst to keep track of needed information for errors
 
@@ -1051,7 +1050,7 @@ class SyntaxParser(BasicParser):
         body = self._visit(stmt.body)
         orelse = self._visit(stmt.orelse)
         if len(orelse)==1 and isinstance(orelse[0],If):
-            orelse = orelse[0]._args
+            orelse = orelse[0].blocks
             return If((test, body), *orelse)
         else:
             orelse = (LiteralTrue(), orelse)
@@ -1173,8 +1172,7 @@ class SyntaxParser(BasicParser):
         if len(domain) == 1:
             domain = domain[0]
         body = self._visit(stmt.body)
-        settings = None
-        return With(domain, body, settings)
+        return With(domain, body)
 
     def _visit_Try(self, stmt):
         # this is a blocking error, since we don't want to convert the try body

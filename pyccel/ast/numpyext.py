@@ -10,23 +10,27 @@ import numpy
 from sympy           import (Integer as sp_Integer,
                              Rational as sp_Rational, Expr)
 
-from .core           import (ClassDef, FunctionDef, PyccelInternalFunction,
+from .core           import (ClassDef, FunctionDef,
                             process_shape, ValuedArgument)
 
-from .operators      import broadcast
+from .internals      import PyccelInternalFunction
+
+from .operators      import broadcast, PyccelMinus, PyccelDiv
 
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList)
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
-                             NativeReal, NativeComplex, NativeBool, str_dtype)
+                             NativeReal, NativeComplex, NativeBool, str_dtype,
+                             NativeNumeric)
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .basic          import PyccelAstNode
 from .variable       import (Variable, IndexedElement, Constant)
+from .mathext        import MathCeil
 
 
 __all__ = (
@@ -81,7 +85,8 @@ __all__ = (
     'Shape',
     'NumpyWhere',
     'NumpyZeros',
-    'NumpyZerosLike'
+    'NumpyZerosLike',
+    'NumpyArange'
 )
 
 #==============================================================================
@@ -170,6 +175,67 @@ class NumpyArray(NumpyNewArray):
     @property
     def arg(self):
         return self._arg
+
+#==============================================================================
+class NumpyArange(NumpyNewArray):
+    """
+    Represents a call to  numpy.arange for code generation.
+
+    Parameters
+    ----------
+    start : Numeric
+        Start of interval, default value 0
+
+    stop : Numeric
+        End of interval
+
+    step : Numeric
+        Spacing between values, default value 1
+
+    dtype : Datatype
+        The type of the output array, if dtype is not given,
+        infer the data type from the other input arguments.
+    """
+
+    def __init__(self, start, stop = None, step = None, dtype = None):
+        NumpyNewArray.__init__(self)
+
+        if stop is None:
+            self._start = LiteralInteger(0)
+            self._stop = start
+        else:
+            self._start = start
+            self._stop = stop
+        self._step = step if step is not None else LiteralInteger(1)
+
+        self._arg = [self._start, self._stop, self._step]
+
+        if dtype is None:
+            self._dtype = max([i.dtype for i in self._arg], key = NativeNumeric.index)
+            self._precision = max([i.precision for i in self._arg])
+        else:
+            self._dtype, self._precision = process_dtype(dtype)
+
+        self._rank = 1
+        self._shape = (MathCeil(PyccelDiv(PyccelMinus(self._stop, self._start), self._step)))
+        self._shape = process_shape(self._shape)
+
+    @property
+    def arg(self):
+        return self._arg
+
+    @property
+    def start(self):
+        return self._start
+
+    @property
+    def stop(self):
+        return self._stop
+
+    @property
+    def step(self):
+        return self._step
+
 
 #==============================================================================
 class NumpySum(PyccelInternalFunction):
@@ -847,6 +913,7 @@ numpy_functions = {
     'zeros_like': NumpyZerosLike,
     'ones_like' : NumpyOnesLike,
     'array'     : NumpyArray,
+    'arange'    : NumpyArange,
     # ...
     'shape'     : Shape,
     'norm'      : NumpyNorm,
