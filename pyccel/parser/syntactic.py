@@ -14,7 +14,6 @@ import ast
 #==============================================================================
 
 from sympy import Symbol
-from sympy import Lambda
 from sympy import Dict
 from sympy.core import cache
 
@@ -59,7 +58,7 @@ from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
 from pyccel.ast.operators import PyccelIs, PyccelIsNot
 from pyccel.ast.operators import IfTernaryOperator
 
-from pyccel.ast.builtins import PythonPrint
+from pyccel.ast.builtins import PythonPrint, Lambda
 from pyccel.ast.headers  import Header, MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
@@ -863,7 +862,7 @@ class SyntaxParser(BasicParser):
         attributes = methods[0].arguments
         parent = [self._visit(i) for i in stmt.bases]
         expr = ClassDef(name=name, attributes=attributes,
-                        methods=methods, parent=parent)
+                        methods=methods, superclass=parent)
 
         # we set the fst to keep track of needed information for errors
 
@@ -1053,7 +1052,7 @@ class SyntaxParser(BasicParser):
         body = self._visit(stmt.body)
         orelse = self._visit(stmt.orelse)
         if len(orelse)==1 and isinstance(orelse[0],If):
-            orelse = orelse[0]._args
+            orelse = orelse[0].blocks
             return If((test, body), *orelse)
         else:
             orelse = (LiteralTrue(), orelse)
@@ -1175,8 +1174,7 @@ class SyntaxParser(BasicParser):
         if len(domain) == 1:
             domain = domain[0]
         body = self._visit(stmt.body)
-        settings = None
-        return With(domain, body, settings)
+        return With(domain, body)
 
     def _visit_Try(self, stmt):
         # this is a blocking error, since we don't want to convert the try body

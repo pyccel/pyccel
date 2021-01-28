@@ -244,7 +244,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_If(self, expr):
         lines = []
-        for i, (c, e) in enumerate(expr.args):
+        for i, (c, e) in enumerate(expr.blocks):
             if i == 0:
                 lines.append("if (%s):" % self._print(c))
 
