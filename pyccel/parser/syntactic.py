@@ -630,7 +630,7 @@ class SyntaxParser(BasicParser):
         local_vars   = []
         global_vars  = []
         headers      = []
-        templates    = {}
+        tmp_templates    = {}
         template    = {}
         is_pure      = False
         is_elemental = False
@@ -730,15 +730,15 @@ class SyntaxParser(BasicParser):
 
                 txt  = '#$ header template ' + str(tp_name)
                 txt += '(' + '|'.join(types) + ')'
-                if tp_name in templates:
+                if tp_name in tmp_templates:
                     msg = 'The template "{}" is duplicated'.format(tp_name)
                     errors.report(msg,
                                 bounding_box = (stmt.lineno, stmt.col_offset),
                                 severity='warning')
-                templates[tp_name] = hdr_parse(stmts=txt)
-                template['templates_dict'] = templates
-                template['template_list'] = decorators['template']
-                decorators['template'] = template
+                tmp_templates[tp_name] = hdr_parse(stmts=txt)
+                template['templates_dict'] = tmp_templates
+            template['template_list'] = decorators['template']
+            decorators['template'] = template
 
         if not template:
             decorators['template'] = None
