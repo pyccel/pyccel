@@ -452,7 +452,7 @@ class BasicParser(object):
 
           Returns
           -------
-          variable : sympy.Symbol
+          variable : Symbol
         """
         if prefix is not None:
             var,_ = create_variable(self._used_names, prefix)
