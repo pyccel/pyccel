@@ -1102,7 +1102,8 @@ class CCodePrinter(CodePrinter):
         need_to_cast = all(a.dtype is NativeInteger() for a in expr.args)
         code = ' / '.join(self._print(a if a.dtype is NativeReal() else PythonFloat(a)) for a in expr.args)
         if (need_to_cast):
-            return "(int64_t)floor({})".format(code)
+            cast_type = self.find_in_dtype_registry('int', default_precision['int'])
+            return "({})floor({})".format(cast_type, code)
         return "floor({})".format(code)
 
     def _print_PyccelRShift(self, expr):
