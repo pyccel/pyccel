@@ -13,7 +13,6 @@ from sympy import Tuple
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
-from sympy import Symbol
 from sympy import Integer as sp_Integer
 from sympy import ceiling
 from sympy import oo  as INF
@@ -87,7 +86,7 @@ from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
 
-from pyccel.ast.internals import Slice
+from pyccel.ast.internals import Slice, Symbol
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
