@@ -1493,7 +1493,7 @@ class FCodePrinter(CodePrinter):
                 intent='inout'
             else:
                 intent='in'
-
+            print('>>' ,arg, results, arg in results)
             if arg in results:
                 results.remove(i)
 
