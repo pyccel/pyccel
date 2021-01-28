@@ -903,19 +903,6 @@ class CCodePrinter(CodePrinter):
             return '({0}){1}({2})'.format(cast_type, func_name, code_args)
         return '{0}({1})'.format(func_name, code_args)
 
-    def _print_MathCeil(self, expr):
-        """Convert a Python expression with a math ceil function call to C
-        function call"""
-        # add necessary include
-        self._additional_imports.add('math')
-        arg = expr.args[0]
-        if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
-        else:
-            code_arg = self._print(arg)
-        cast_type = self.find_in_dtype_registry('int', default_precision['int'])
-        return "({})ceil({})".format(cast_type, code_arg)
-
     def _print_MathIsfinite(self, expr):
         """Convert a Python expression with a math isfinite function call to C
         function call"""
