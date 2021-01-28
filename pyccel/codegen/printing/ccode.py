@@ -1144,14 +1144,14 @@ class CCodePrinter(CodePrinter):
         if isinstance(expr.rhs, FunctionCall) and isinstance(expr.rhs.dtype, NativeTuple):
             self._temporary_args = [VariableAddress(a) for a in expr.lhs]
             return '{};'.format(self._print(expr.rhs))
+        if isinstance(expr.rhs, (NumpyArray)):
+            return self.copy_NumpyArray_Data(expr)
+        if isinstance(expr.rhs, (NumpyFull)):
+            return self.arrayFill(expr)
+        if isinstance(expr.rhs, NumpyArange):
+            return self.print_NumpyArange(expr.rhs, expr.lhs)
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
-        if isinstance(rhs, (NumpyArray)):
-            return self.copy_NumpyArray_Data(expr)
-        if isinstance(rhs, (NumpyFull)):
-            return self.arrayFill(expr)
-        if isinstance(rhs, NumpyArange):
-            return self.print_NumpyArange(rhs, lhs)
         return '{} = {};'.format(lhs, rhs)
 
     def copy_NumpyArray_Data(self, expr):
