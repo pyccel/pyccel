@@ -12,8 +12,8 @@ from textx.metamodel import metamodel_from_file
 
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import OmpAnnotatedComment, OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct,\
-        Omp_End_Clause, OMP_Critical_Construct, OMP_Barrier_Construct, OMP_Master_Construct,\
-        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Simd_Construct, OMP_Atomic_Construct, OMP_TaskWait_Construct, OMP_Task_Construct, OMP_Taskyield_Construct, OMP_Flush_Construct, OMP_Cancel_Construct, OMP_Target_Construct, OMP_Teams_Construct
+        Omp_End_Clause, OMP_Critical_Construct, OMP_Master_Construct,\
+        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Task_Construct, OMP_Cancel_Construct, OMP_Target_Construct, OMP_Teams_Construct
 
 DEBUG = False
 
@@ -474,7 +474,7 @@ class OmpTeamsConstruct(BasicStmt):
                           OmpShared, \
                           OmpReduction, \
                           OmpNumTeams, \
-                          )
+                          OmpThreadLimit)
 
         txt = self.name
         for clause in self.clauses:

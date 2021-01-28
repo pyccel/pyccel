@@ -3913,9 +3913,9 @@ class OmpAnnotatedComment(Basic):
 
     Examples
     --------
-    >>> from pyccel.ast.core import AnnotatedComment
-    >>> AnnotatedComment('omp', 'parallel')
-    AnnotatedComment(omp, parallel)
+    >>> from pyccel.ast.core import OmpAnnotatedComment
+    >>> OmpAnnotatedComment('parallel')
+    OmpAnnotatedComment(omp, parallel)
     """
 
     def __new__(cls, txt):
@@ -3968,11 +3968,6 @@ class OMP_Critical_Construct(AnnotatedComment):
 
 class OMP_Barrier_Construct(AnnotatedComment):
     """ Represents an OpenMP Barrier construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
-
-class OMP_Taskyield_Construct(AnnotatedComment):
-    """ Represents an OpenMP Taskyield construct. """
     def __new__(cls, txt):
         return AnnotatedComment.__new__(cls, 'omp', txt)
 
