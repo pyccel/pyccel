@@ -38,6 +38,7 @@ errors = Errors()
 
 #==============================================================================
 class Header(Basic):
+    _children = ()
     pass
 
 #==============================================================================
@@ -222,7 +223,7 @@ class FunctionHeader(Header):
     """
 
     # TODO dtypes should be a dictionary (useful in syntax)
-    def __new__(cls, name, dtypes,
+    def __init__(self, name, dtypes,
                 results=None,
                 is_static=False):
         name = str(name)
@@ -236,23 +237,28 @@ class FunctionHeader(Header):
         if not isinstance(is_static, bool):
             raise TypeError('is_static must be a boolean')
 
-        return Basic.__new__(cls, name, dtypes, results, is_static)
+        self._name = name
+        self._dtypes = dtypes
+        self._results = results
+        self._is_static = is_static
+
+        super().__init__()
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def dtypes(self):
-        return self._args[1]
+        return self._dtypes
 
     @property
     def results(self):
-        return self._args[2]
+        return self._results
 
     @property
     def is_static(self):
-        return self._args[3]
+        return self._is_static
 
     def create_definition(self, templates = ()):
         """Returns a FunctionDef with empy body."""
@@ -550,6 +556,7 @@ class ClassHeader(Header):
 #==============================================================================
 # TODO must extend Header rather than Basic
 class InterfaceHeader(Basic):
+    _children = ()
 
     def __new__(cls, name, funcs):
         if not isinstance(name,str):
