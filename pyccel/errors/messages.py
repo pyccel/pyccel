@@ -137,6 +137,7 @@ INVALID_PYTHON_SYNTAX = 'Python syntax error'
 ASSIGN_ARRAYS_ONE_ANOTHER = 'Arrays which own their data cannot become views on other arrays'
 ARRAY_ALREADY_IN_USE = 'Attempt to reallocate an array which is being used by another variable'
 INVALID_POINTER_REASSIGN = 'Attempt to give data ownership to a pointer'
+INVALID_INDICES = 'only integers, slices (`:`) , booleans are valid indices'
 
 # warnings
 UNDEFINED_INIT_METHOD = 'Undefined `__init__` method'

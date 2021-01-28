@@ -728,7 +728,22 @@ class CCodePrinter(CodePrinter):
         return "%s.%s[get_index(%s, %s)]" % (base_name, dtype, base_name, ", ".join(inds))
 
     def _cast_to(self, expr, dtype, precision):
-        if (expr.dtype == dtype and expr.precision != precision):
+        """ add cast to an expresion
+        parameters
+        ----------
+            expr : 
+                the expression to be casted
+            dtype : Datatype
+                base type of the cast
+            precision : integer
+                precision of the base type of the cast
+
+        Return
+        ------
+            String
+                Return string that contains the expression casted to the desired type
+        """
+        if (expr.dtype != dtype and expr.precision != precision):
             cast=self.find_in_dtype_registry(self._print(expr.dtype), precision)
             expr = self._print(expr)
             return '({cast}){expr}'.format(cast=cast, expr=expr)
