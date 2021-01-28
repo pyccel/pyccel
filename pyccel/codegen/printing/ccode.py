@@ -1036,19 +1036,24 @@ class CCodePrinter(CodePrinter):
         return self._print(val)
 
     def _print_Return(self, expr):
+        deallocations = []
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
         if len(args) > 1:
             if expr.stmt:
                 return self._print(expr.stmt)+'\n'+'return 0;'
             return 'return 0;'
         if len(args) == 1:
+            print(expr.stmt)
             if isinstance(expr.stmt, CodeBlock):
+                for d in expr.stmt.body:
+                    if isinstance(d, Deallocate):
+                        deallocations.append(d)
                 for a in expr.stmt.body:
                     if isinstance(a, Assign):
                         b = a
                 if isinstance(b.rhs, IndexedElement) and not b.lhs.is_temp:
-                    return '{0}\nreturn {1};'.format(self._print(expr.stmt), self._print(b.lhs))
-                return 'return {0};'.format(self._print(b.rhs))
+                    return '{0}\nreturn {1};'.format(''.join(self._print(i) for i in deallocations),self._print(b.lhs))
+                return '{0}\nreturn {1};'.format(''.join('\n'+self._print(i) for i in deallocations),self._print(b.rhs))
             return 'return {0};'.format(self._print(args[0]))
         return ''
 
