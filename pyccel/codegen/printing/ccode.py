@@ -743,7 +743,7 @@ class CCodePrinter(CodePrinter):
             String
                 Return string that contains the expression casted to the desired type
         """
-        if (expr.dtype != dtype and expr.precision != precision):
+        if (expr.dtype != dtype or expr.precision != precision):
             cast=self.find_in_dtype_registry(self._print(expr.dtype), precision)
             expr = self._print(expr)
             return '({cast}){expr}'.format(cast=cast, expr=expr)
