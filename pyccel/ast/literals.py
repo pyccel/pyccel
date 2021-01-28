@@ -174,10 +174,10 @@ class LiteralString(Literal):
     _dtype     = NativeString()
     _precision = 0
     def __new__(cls, arg):
-        return super().__new__(arg)
+        return super().__new__(cls, arg)
 
     def __init__(self, arg):
-        super().__init__()
+        super().__init__(self._precision)
         if not isinstance(arg, str):
             raise TypeError('arg must be of type str')
         self._string = arg
