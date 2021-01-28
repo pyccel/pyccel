@@ -1672,3 +1672,36 @@ def arrs_2d_negative_index():
     b = a[1:-1, :-1] + a[2:, -9:]
     return np.shape(b)[0], np.shape(b)[1], np.sum(b)
 
+#==============================================================================
+# NUMPY ARANGE
+#==============================================================================
+
+def arr_arange_1():
+    import numpy as np
+    a = np.arange(6)
+    return np.shape(a)[0], a[0], a[-1]
+
+def arr_arange_2():
+    import numpy as np
+    a = np.arange(1, 7)
+    return np.shape(a)[0], a[0], a[-1]
+
+def arr_arange_3():
+    import numpy as np
+    a = np.arange(0, 10, 0.3)
+    return np.shape(a)[0], a[0], a[-1]
+
+def arr_arange_4():
+    import numpy as np
+    a = np.arange(1, 28, 3, dtype=np.float)
+    return np.shape(a)[0], a[0], a[-1]
+
+def arr_arange_5():
+    import numpy as np
+    a = np.arange(20, 2.2, -2)
+    return np.shape(a)[0], a[0], a[-1]
+
+def arr_arange_6():
+    import numpy as np
+    a = np.arange(20, 1, -1.1)
+    return np.shape(a)[0], a[0], a[-1]

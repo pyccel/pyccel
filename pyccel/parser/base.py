@@ -16,11 +16,14 @@ import re
 #==============================================================================
 from pyccel.version import __version__
 
+from pyccel.ast.builtins import Lambda
+
 from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
 from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import Import, AsName
 from pyccel.ast.core import create_incremented_string, create_variable
+
 from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
 
 from pyccel.parser.utilities import is_valid_filename_pyh, is_valid_filename_py
@@ -33,8 +36,6 @@ from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
 
 #==============================================================================
-
-from sympy import Lambda
 
 errors = Errors()
 #==============================================================================
