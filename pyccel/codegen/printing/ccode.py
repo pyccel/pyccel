@@ -1119,15 +1119,15 @@ class CCodePrinter(CodePrinter):
             self._temporary_args = [VariableAddress(a) for a in expr.lhs]
             return '{};'.format(self._print(expr.rhs))
         if isinstance(expr.rhs, (NumpyArray)):
-            return self.print_NumpyArray(expr)
+            return self.copy_NumpyArray_Data(expr)
         if isinstance(expr.rhs, (NumpyFull)):
-            return self.print_NumpyFull(expr)
+            return self.arrayFill(expr)
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         return '{} = {};'.format(lhs, rhs)
 
     def copy_NumpyArray_Data(self, expr):
-        """ print the Assignement of a NdArray
+        """ print the assignment of a NdArray
 
         parameters
         ----------
@@ -1136,8 +1136,8 @@ class CCodePrinter(CodePrinter):
         Return
         ------
             String
-                Return a str that contain the declaration of a dummy data_buffer and
-                       a call to memcpy to copy it to NdArray struct
+                Return a str that contains the declaration of a dummy data_buffer
+                       and a call to an operator which copies it to an NdArray struct
                 if the ndarray is a stack_array the str will contain the initialization
         """
         rhs = expr.rhs
@@ -1168,7 +1168,7 @@ class CCodePrinter(CodePrinter):
             return  '%s%s\n' % (dummy_array, cpy_data)
 
     def arrayFill(self, expr):
-        """ print the Assignement of a NdArray
+        """ print the assignment of a NdArray
 
         parameters
         ----------
@@ -1177,7 +1177,7 @@ class CCodePrinter(CodePrinter):
         Return
         ------
             String
-                Return a str that contain a call to the C function array_fill,
+                Return a str that contains a call to the C function array_fill,
                 if the ndarray is a stack_array the str will contain the initialization
         """
         rhs = expr.rhs
@@ -1197,7 +1197,7 @@ class CCodePrinter(CodePrinter):
         return '{}'.format(code_init)
 
     def _init_stack_array(self, expr, buffer_array):
-        """ return a string that have handle the assign of a stack ndarray
+        """ return a string which handles the assignment of a stack ndarray
 
         Parameters
         ----------
@@ -1207,7 +1207,7 @@ class CCodePrinter(CodePrinter):
                 The data buffer
         Returns
         -------
-            Returns a string that contain the initialization of a stack_array
+            Returns a string that contains the initialization of a stack_array
         """
 
         lhs = expr.lhs
