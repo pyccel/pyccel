@@ -163,3 +163,40 @@ class Slice(Basic):
             stop = str(self.stop)
         return '{0} : {1}'.format(start, stop)
 
+class Symbol(Basic):
+    """
+        #TODO
+    """
+    is_Symbol = True
+
+    def __init__(self, name):
+        if not isinstance(name, str):
+            raise TypeError('Symbol name should be a string, not '+ str(type(name)))
+        self._name = name
+        super().__init__()
+
+    @property
+    def name(self):
+        return self._name
+
+    def __eq__(self, other):
+        if isinstance(other, Symbol):
+            return other.name is self._name
+        return False
+
+    def __hash__(self):
+        return hash(self._name)
+
+    def __str__(self):
+        return self._name
+
+    def __repr__(self):
+        return self._name
+
+def symbols(*names):
+    """
+        #TODO
+    """
+    symbols = [Symbol(name) for name in names]
+    return tuple(symbols)
+
