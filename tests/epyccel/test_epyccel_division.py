@@ -137,7 +137,9 @@ def test_call_fdiv_i_i(language):
     def fdiv_i_i(x, y):
         return x // y
 
-    f = epyccel(fdiv_i_i, language=language)
+    fflags = "-Werror -Wconversion"
+
+    f = epyccel(fdiv_i_i, language=language, fflags=fflags)
     x = randint(1e9)
     y = randint(low=1, high= 1e3)
 
@@ -152,7 +154,9 @@ def test_call_fdiv_i_i_i(language):
     def fdiv_i_i_i(x, y, z):
         return x // y // z
 
-    f = epyccel(fdiv_i_i_i, language=language)
+    fflags = "-Werror -Wconversion"
+
+    f = epyccel(fdiv_i_i_i, language=language, fflags=fflags)
     x = randint(1e9)
     y = randint(low=1, high= 1e3)
     z = randint(low=1, high= 1e2)
@@ -168,7 +172,9 @@ def test_call_fdiv_i_r(language):
     def fdiv_i_r(x, y):
         return x // y
 
-    f = epyccel(fdiv_i_r, language=language)
+    fflags = "-Werror -Wconversion"
+
+    f = epyccel(fdiv_i_r, language=language, fflags=fflags)
     x = randint(1e9)
     y = uniform(low=1, high= 1e3)
     assert (f(x, y) == fdiv_i_r(x, y))
@@ -182,7 +188,9 @@ def test_call_fdiv_r_i(language):
     def fdiv_r_i(x, y):
         return x // y
 
-    f = epyccel(fdiv_r_i, language=language)
+    fflags = "-Werror -Wconversion"
+
+    f = epyccel(fdiv_r_i, language=language, fflags=fflags)
     x = uniform(high=1e9)
     y = randint(low=1, high= 1e3)
     assert (f(x, y) == fdiv_r_i(x, y))
@@ -196,7 +204,9 @@ def test_call_fdiv_r_r(language):
     def fdiv_r_r(x, y):
         return x // y
 
-    f = epyccel(fdiv_r_r, language=language)
+    fflags = "-Werror -Wconversion"
+
+    f = epyccel(fdiv_r_r, language=language, fflags=fflags)
     x = uniform(high=1e9)
     y = uniform(low=1e-14, high= 1e3)
     assert (f(x, y) == fdiv_r_r(x, y))
