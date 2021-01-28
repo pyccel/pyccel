@@ -1127,6 +1127,18 @@ class CCodePrinter(CodePrinter):
         return '{} = {};'.format(lhs, rhs)
 
     def print_NumpyArray(self, expr):
+        """ print the Assignement of a NdArray
+
+        parameters
+        ----------
+            expr : PyccelAstNode
+                The Assign Node used to get the lhs and rhs
+        Return
+        ------
+            String
+                Return a str that contain the declaration of a dummy data_buffer and
+                       a call to memcpy to copy it to NdArray struct
+        """
         rhs = expr.rhs
         lhs = expr.lhs
         if rhs.rank == 0:
@@ -1155,6 +1167,18 @@ class CCodePrinter(CodePrinter):
             return  '%s%s\n' % (dummy_array, cpy_data)
 
     def print_NumpyFull(self, expr):
+        """ print the Assignement of a NdArray
+
+        parameters
+        ----------
+            expr : PyccelAstNode
+                The Assign Node used to get the lhs and rhs
+        Return
+        ------
+            String
+                Return a str that contain the declaration of a dummy data_buffer and
+                       a call to memcpy to copy it to NdArray struct
+        """
         rhs = expr.rhs
         lhs = expr.lhs
         code_init = ''
@@ -1176,8 +1200,8 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-            expr : Assign Node
-                Used to get the lhs and rhs of the Assign expression
+            expr : PyccelAstNode
+                The Assign Node used to get the lhs and rhs
             buffer_array : String
                 The data buffer
         Returns
