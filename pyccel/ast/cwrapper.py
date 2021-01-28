@@ -105,6 +105,7 @@ class PyArgKeywords(Basic):
     def __init__(self, name, arg_names):
         self._name = name
         self._arg_names = arg_names
+        super().__init__()
 
     @property
     def name(self):
@@ -156,7 +157,6 @@ class PyArg_ParseTupleNode(Basic):
                         c_func_args, parse_args,
                         arg_names,
                         is_interface=False):
-        Basic.__init__(self)
         if not isinstance(python_func_args, Variable):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
@@ -198,6 +198,7 @@ class PyArg_ParseTupleNode(Basic):
         self._pykwarg    = python_func_kwargs
         self._parse_args = parse_args
         self._arg_names  = arg_names
+        super().__init__()
 
     def get_pytype(self, c_arg, parse_arg):
         if isinstance(c_arg, FunctionAddress) or (self._is_interface and c_arg.rank == 0):
