@@ -2160,7 +2160,7 @@ class Return(Basic):
     def __new__(cls, expr, stmt=None):
 
         if stmt and not isinstance(stmt, CodeBlock):
-            raise TypeError('stmt should only be of type Assign')
+            raise TypeError('stmt should only be of type CodeBlock')
 
         return Basic.__new__(cls, expr, stmt)
 
