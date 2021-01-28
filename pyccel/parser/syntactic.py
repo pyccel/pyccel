@@ -630,7 +630,6 @@ class SyntaxParser(BasicParser):
         local_vars   = []
         global_vars  = []
         headers      = []
-        tmp_templates    = {}
         template    = {}
         is_pure      = False
         is_elemental = False
@@ -687,7 +686,7 @@ class SyntaxParser(BasicParser):
 
         if 'allow_negative_index' in decorators:
             decorators['allow_negative_index'] = tuple(str(b) for a in decorators['allow_negative_index'] for b in a.args)
-
+        template['template_dict'] = {}
         # extract the templates
         if 'template' in decorators:
             for comb_types in decorators['template']:
@@ -730,19 +729,17 @@ class SyntaxParser(BasicParser):
 
                 txt  = '#$ header template ' + str(tp_name)
                 txt += '(' + '|'.join(types) + ')'
-                if tp_name in tmp_templates:
+                if tp_name in template['template_dict']:
                     msg = 'The template "{}" is duplicated'.format(tp_name)
                     errors.report(msg,
                                 bounding_box = (stmt.lineno, stmt.col_offset),
                                 severity='warning')
-                tmp_templates[tp_name] = hdr_parse(stmts=txt)
-                template['templates_dict'] = tmp_templates
-            template['template_list'] = decorators['template']
+                template['template_dict'][tp_name] = hdr_parse(stmts=txt)
+            template['decorator_list'] = decorators['template']
             decorators['template'] = template
 
-        if not template:
+        if not template['template_dict']:
             decorators['template'] = None
-
         # extract the types to construct a header
         if 'types' in decorators:
             for comb_types in decorators['types']:

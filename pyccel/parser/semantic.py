@@ -2382,7 +2382,7 @@ class SemanticParser(BasicParser):
         args_number = len(expr.arguments)
         templates = self.get_templates()
         if decorators['template']:
-            templates.update(decorators['template']['templates_dict'])
+            templates.update(decorators['template']['template_dict'])
 
         tmp_headers = expr.headers
         if cls_name:
