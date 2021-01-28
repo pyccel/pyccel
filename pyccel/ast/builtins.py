@@ -135,6 +135,7 @@ class PythonBool(PyccelAstNode):
 
     def __init__(self, arg):
         self._arg = arg
+        super().__init__()
 
     @property
     def arg(self):
@@ -312,7 +313,7 @@ class PythonInt(PyccelAstNode):
         if isinstance(arg, LiteralInteger):
             return LiteralInteger(arg.p, precision = cls._precision)
         else:
-            return super().__new__(arg)
+            return super().__new__(cls, arg)
 
     def __init__(self, arg):
         self._arg = arg
@@ -534,7 +535,7 @@ class PythonRange(Basic):
     """
     _children = ('_start', '_stop', '_step')
 
-    def __init__(self, start, stop, step):
+    def __init__(self, *args):
         start = LiteralInteger(0)
         stop = None
         step = LiteralInteger(1)
@@ -555,6 +556,7 @@ class PythonRange(Basic):
             stop = args
         elif PyccelAstNode.stage != "syntactic":
             raise TypeError('expecting a list or valid stop')
+
         self._start = start
         self._stop  = stop
         self._step  = step
@@ -676,6 +678,7 @@ class Lambda(Basic):
     expr      : Expr
                 The expression carried out when the lambda function is called
     """
+    _children = ('_variables', '_expr')
     def __init__(self, variables, expr):
         if not isinstance(variables, (list, tuple)):
             raise TypeError("Lambda arguments must be a tuple or list")
