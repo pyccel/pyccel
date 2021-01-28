@@ -107,17 +107,20 @@ class PyccelOperator(Expr, PyccelAstNode):
     args: tuple
         The arguments passed to the operator
     """
+    _children = ('_args',)
 
     def __init__(self, *args):
         self._args = tuple(self._handle_precedence(args))
 
         if self.stage == 'syntactic':
+            super().__init__()
             return
         self._set_dtype()
         self._set_shape_rank()
         # rank is None for lambda functions
         if self._rank is not None and self._rank > 1:
             self._set_order()
+        super().__init__()
 
     @property
     def precedence(self):
