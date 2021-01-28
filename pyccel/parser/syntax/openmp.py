@@ -13,7 +13,7 @@ from textx.metamodel import metamodel_from_file
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import OmpAnnotatedComment, OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct,\
         Omp_End_Clause, OMP_Critical_Construct, OMP_Master_Construct,\
-        OMP_Masked_Construct, OMP_TaskLoop_Construct, OMP_Task_Construct, OMP_Cancel_Construct, OMP_Target_Construct, OMP_Teams_Construct
+        OMP_Masked_Construct, OMP_Task_Construct, OMP_Cancel_Construct, OMP_Target_Construct, OMP_Teams_Construct
 
 DEBUG = False
 
@@ -110,7 +110,7 @@ class OmpParallelConstruct(BasicStmt):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpParallelConstruct')
-
+        
         return OMP_Parallel_Construct(txt, self.combined)
 
 class OmpLoopConstruct(BasicStmt):

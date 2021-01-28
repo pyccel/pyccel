@@ -3317,7 +3317,7 @@ class AnnotatedComment(Basic):
     Parameters
     ----------
     accel : str
-       accelerator id. One among {'omp', 'acc'}
+       accelerator id. One among {'acc'}
 
     txt: str
         statement to print
@@ -3329,10 +3329,9 @@ class AnnotatedComment(Basic):
     AnnotatedComment(omp, parallel)
     """
 
-    def __init__(self, accel, txt, combined=None):
+    def __init__(self, accel, txt):
         self._accel = accel
         self._txt = txt
-        self._combined = combined
         super().__init__()
 
     @property
@@ -3343,14 +3342,10 @@ class AnnotatedComment(Basic):
     def txt(self):
         return self._txt
 
-    @property
-    def combined(self):
-        return self._combined
-
     def __getnewargs__(self):
         """used for Pickling self."""
 
-        args = (self.accel, self.txt, self.combined)
+        args = (self.accel, self.txt)
         return args
 
 class OmpAnnotatedComment(Basic):
@@ -3363,6 +3358,9 @@ class OmpAnnotatedComment(Basic):
     txt: str
         statement to print
 
+    combined: List
+        constructs to be combined with the current construct
+
     Examples
     --------
     >>> from pyccel.ast.core import OmpAnnotatedComment
@@ -3370,103 +3368,84 @@ class OmpAnnotatedComment(Basic):
     OmpAnnotatedComment(omp, parallel)
     """
 
-    def __new__(cls, txt):
-        return Basic.__new__(cls, txt)
+    def __init__(self, txt, combined=None):
+        self._txt = txt
+        self._combined = combined
+        super().__init__()
 
     @property
     def txt(self):
-        return self._args[0]
+        return self._txt
+
+    @property
+    def combined(self):
+        return self._combined
 
     def __getnewargs__(self):
         """used for Pickling self."""
 
-        args = (self.txt)
+        args = (self.txt, self.combined)
         return args
 
-class OMP_For_Loop(AnnotatedComment):
+class OMP_For_Loop(OmpAnnotatedComment):
     """ Represents an OpenMP Loop construct. """
     def __init__(self, txt):
-        AnnotatedComment.__init__(self, 'omp', txt)
+        OmpAnnotatedComment.__init__(self, txt)
 
-class OMP_Parallel_Construct(AnnotatedComment):
+class OMP_Parallel_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Parallel construct. """
     def __init__(cls, txt, combined=None):
-        return AnnotatedComment.__init__(cls, 'omp', txt, combined)
+        OmpAnnotatedComment.__init__(cls, txt, combined)
 
-class OMP_TaskLoop_Construct(AnnotatedComment):
-    """ Represents an OpenMP TaskLoop construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
-
-class OMP_Task_Construct(AnnotatedComment):
+class OMP_Task_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Task construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
+    def __init__(cls, txt):
+        OmpAnnotatedComment.__init__(cls, txt)
 
-class OMP_Single_Construct(AnnotatedComment):
+class OMP_Single_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Single construct. """
     def __init__(self, txt):
-        AnnotatedComment.__init__(self, 'omp', txt)
+        OmpAnnotatedComment.__init__(self, txt)
 
-class OMP_TaskWait_Construct(AnnotatedComment):
-    """ Represents an OpenMP TaskWait construct."""
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
-
-class OMP_Critical_Construct(AnnotatedComment):
+class OMP_Critical_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Critical construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
+    def __init__(cls, txt):
+        OmpAnnotatedComment.__init__(cls, txt)
 
-class OMP_Barrier_Construct(AnnotatedComment):
-    """ Represents an OpenMP Barrier construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
-
-class OMP_Flush_Construct(AnnotatedComment):
-    """ Represents an OpenMP Flush construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
-
-class OMP_Atomic_Construct(AnnotatedComment):
-    """ Represents OpenMP Atomic construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
-
-class OMP_Master_Construct(AnnotatedComment):
+class OMP_Master_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Master construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
+    def __init__(cls, txt):
+        OmpAnnotatedComment.__init__(cls, txt)
 
-class OMP_Masked_Construct(AnnotatedComment):
+class OMP_Masked_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Masked construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
+    def __init__(cls, txt):
+        OmpAnnotatedComment.__init__(cls, txt)
 
-class OMP_Simd_Construct(AnnotatedComment):
+class OMP_Simd_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Simd construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
+    def __init__(cls, txt):
+        OmpAnnotatedComment.__init__(cls, txt)
 
-class OMP_Cancel_Construct(AnnotatedComment):
+class OMP_Cancel_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Cancel construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
+    def __init__(cls, txt):
+        OmpAnnotatedComment.__init__(cls, txt)
 
-class OMP_Target_Construct(AnnotatedComment):
+class OMP_Target_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Target construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
+    def __init__(cls, txt):
+        OmpAnnotatedComment.__init__(cls, txt)
 
-class OMP_Teams_Construct(AnnotatedComment):
+class OMP_Teams_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Target construct. """
-    def __new__(cls, txt):
-        return AnnotatedComment.__new__(cls, 'omp', txt)
+    def __init__(cls, txt):
+        OmpAnnotatedComment.__init__(cls, txt)
 
-class Omp_End_Clause(AnnotatedComment):
+class Omp_End_Clause(OmpAnnotatedComment):
     """ Represents the End of an OpenMP block. """
     def __init__(self, txt):
-        AnnotatedComment.__init__(self, 'omp', txt)
+        OmpAnnotatedComment.__init__(self, txt)
 
 class CommentBlock(Basic):
 
