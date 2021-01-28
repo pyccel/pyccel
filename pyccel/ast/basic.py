@@ -24,10 +24,18 @@ class Basic(sp_Basic):
         return sp_Basic.__new__(cls, *hashable_args)
 
     def __init__(self):
-        self._parent = None
+        self._parent = []
         for c_name in self._children:
             c = getattr(self, c_name)
-            c.set_parent( self ) # TODO: write set_parent. Handled differently for e.g. Variable which exists in multiple places
+            if isinstance(c, tuple):
+                for ci in c:
+                    if isinstance(ci, tuple): # TODO: Fix if to avoid multi-layers
+                        for cii in ci:
+                            cii.parent = self
+                    else:
+                        ci.parent = self
+            elif hasattr(c, 'parent'): # TODO: Necessary while Symbol is sympy
+                c.parent = self # TODO: write set_parent. Handled differently for e.g. Variable which exists in multiple places
 
     def has_parent_of_type(self, search_type):
         if isinstance(self._parent, search_type):
@@ -93,11 +101,14 @@ class Basic(sp_Basic):
 
     @property
     def parent(self):
-        return self._parent
+        if self._parent:
+            return self._parent[-1]
+        else:
+            return None
 
     @parent.setter
     def parent(self, parent):
-        self._parent = parent
+        self._parent.append(parent)
 
 class PyccelAstNode(Basic):
     """Class from which all nodes containing objects inherit
