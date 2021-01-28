@@ -1126,7 +1126,7 @@ class CCodePrinter(CodePrinter):
         rhs = self._print(expr.rhs)
         return '{} = {};'.format(lhs, rhs)
 
-    def print_NumpyArray(self, expr):
+    def copy_NumpyArray_Data(self, expr):
         """ print the Assignement of a NdArray
 
         parameters
@@ -1167,7 +1167,7 @@ class CCodePrinter(CodePrinter):
                 cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(self._print(lhs), dummy_array_name, dtype)
             return  '%s%s\n' % (dummy_array, cpy_data)
 
-    def print_NumpyFull(self, expr):
+    def arrayFill(self, expr):
         """ print the Assignement of a NdArray
 
         parameters
