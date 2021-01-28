@@ -881,7 +881,7 @@ class IfTernaryOperator(PyccelOperator):
 
     Examples
     --------
-    >>> from sympy import Symbol
+    >>> from pyccel.ast.internals import Symbol
     >>> from pyccel.ast.core import Assign
 	>>>	from pyccel.ast.operators import IfTernaryOperator
     >>> n = Symbol('n')
