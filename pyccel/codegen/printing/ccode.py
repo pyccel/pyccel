@@ -1138,6 +1138,7 @@ class CCodePrinter(CodePrinter):
             String
                 Return a str that contain the declaration of a dummy data_buffer and
                        a call to memcpy to copy it to NdArray struct
+                if the ndarray is a stack_array the str will contain the initialization
         """
         rhs = expr.rhs
         lhs = expr.lhs
@@ -1176,8 +1177,8 @@ class CCodePrinter(CodePrinter):
         Return
         ------
             String
-                Return a str that contain the declaration of a dummy data_buffer and
-                       a call to memcpy to copy it to NdArray struct
+                Return a str that contain a call to the C function array_fill,
+                if the ndarray is a stack_array the str will contain the initialization
         """
         rhs = expr.rhs
         lhs = expr.lhs
@@ -1206,7 +1207,7 @@ class CCodePrinter(CodePrinter):
                 The data buffer
         Returns
         -------
-            Str
+            Returns a string that contain the initialization of a stack_array
         """
 
         lhs = expr.lhs
