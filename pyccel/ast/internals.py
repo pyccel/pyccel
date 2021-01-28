@@ -90,8 +90,7 @@ class Slice(Basic):
 
     Examples
     --------
-    >>> from sympy import symbols
-    >>> from pyccel.ast.core import Slice
+    >>> from pyccel.ast.internals import Slice, symbols
     >>> start, end, step = symbols('start, stop, step', integer=True)
     >>> Slice(start, stop)
     start : stop
