@@ -8,7 +8,7 @@ different stages of pyccel. Memory block labels are usually either Variables or 
 variables
 """
 import inspect
-from sympy import Symbol, Tuple
+from sympy import Tuple
 from sympy.core.function      import Function
 from sympy.core.expr          import Expr
 
@@ -31,7 +31,7 @@ __all__ = (
     'VariableAddress'
 )
 
-class Variable(Symbol, PyccelAstNode):
+class Variable(PyccelAstNode):
 
     """Represents a typed variable.
 
@@ -693,8 +693,9 @@ class IndexedElement(PyccelAstNode):
 
     Examples
     --------
-    >>> from sympy import symbols, Idx
+    >>> from sympy import Idx
     >>> from pyccel.ast.core import Variable, IndexedElement
+    >>> from pyccel.ast.internals import symbols
     >>> i, j = symbols('i j', cls=Idx)
     >>> A = Variable('A', dtype='int')
     >>> IndexedElement(A, i, j)
