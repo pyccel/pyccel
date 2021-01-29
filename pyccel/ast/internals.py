@@ -185,6 +185,8 @@ class Symbol(Basic):
 
     @property
     def name(self):
+        """Name of the symbol
+        """
         return self._name
 
     def __eq__(self, other):
