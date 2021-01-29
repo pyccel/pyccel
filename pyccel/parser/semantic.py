@@ -54,7 +54,7 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import _atomic
-from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelOperator
+from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
@@ -88,7 +88,7 @@ from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
 
-from pyccel.ast.internals import Slice, PyccelArraySize
+from pyccel.ast.internals import Slice
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 

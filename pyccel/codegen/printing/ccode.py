@@ -20,7 +20,7 @@ from pyccel.ast.core      import create_incremented_string
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis
-from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator, PyccelOperator
+from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import default_precision, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
@@ -36,7 +36,7 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
 from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
-from pyccel.ast.variable import DottedName, IndexedElement
+from pyccel.ast.variable import DottedName
 
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
