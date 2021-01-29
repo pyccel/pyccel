@@ -171,8 +171,8 @@ def test_call_fdiv_i_i_32(language):
     fflags = "-Werror -Wconversion"
 
     f = epyccel(fdiv_i_i, language=language, fflags=fflags)
-    x = randint(1e8, dtype='int32')
-    y = randint(low=1, high= 1e4, dtype='int32')
+    x = randint(1e4, dtype='int32')
+    y = randint(low=1, high= 1e2, dtype='int32')
 
     assert (f(x, y) == fdiv_i_i(x, y))
     assert (f(-x, y) == fdiv_i_i(-x, y))
@@ -188,8 +188,8 @@ def test_call_fdiv_i_i_64(language):
     fflags = "-Werror -Wconversion"
 
     f = epyccel(fdiv_i_i, language=language, fflags=fflags)
-    x = randint(1e8, dtype='int64')
-    y = randint(low=1, high= 1e4, dtype='int64')
+    x = randint(1e4, dtype='int64')
+    y = randint(low=1, high= 1e2, dtype='int64')
 
     assert (f(x, y) == fdiv_i_i(x, y))
     assert (f(-x, y) == fdiv_i_i(-x, y))
