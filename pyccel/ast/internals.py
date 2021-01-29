@@ -178,6 +178,19 @@ class Symbol(Basic):
     def name(self):
         return self._name
 
+    def __eq__(self, other):
+        if self is other:
+            return True
+        if type(self) is type(other):
+            try :
+                self._name == other.name
+            except:
+                return False
+        return False
+
+    def __hash__(self):
+        return hash(self._name)
+
     def __str__(self):
         return self._name
 
