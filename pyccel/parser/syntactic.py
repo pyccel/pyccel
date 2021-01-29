@@ -733,7 +733,9 @@ class SyntaxParser(BasicParser):
                     errors.report(msg,
                                 bounding_box = (stmt.lineno, stmt.col_offset),
                                 severity='warning')
+                # make templates decorator dict accessible form decorators dict
                 template['template_dict'][tp_name] = hdr_parse(stmts=txt)
+            # make template decorator list accessible form decorators dict
             template['decorator_list'] = decorators['template']
             decorators['template'] = template
 
