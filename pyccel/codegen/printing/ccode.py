@@ -728,7 +728,7 @@ class CCodePrinter(CodePrinter):
         return "%s.%s[get_index(%s, %s)]" % (base_name, dtype, base_name, ", ".join(inds))
 
     def _cast_to(self, expr, dtype, precision):
-        """ add cast to an expresion
+        """ add cast to an expresion when needed
         parameters
         ----------
             expr :
