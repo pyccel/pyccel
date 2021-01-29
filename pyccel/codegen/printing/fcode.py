@@ -17,6 +17,7 @@ from collections import OrderedDict
 import functools
 import operator
 
+from sympy.core import Symbol
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
 
@@ -54,7 +55,7 @@ from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 
-from pyccel.ast.internals import Slice, Symbol
+from pyccel.ast.internals import Slice
 
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue
@@ -1493,7 +1494,7 @@ class FCodePrinter(CodePrinter):
                 intent='inout'
             else:
                 intent='in'
-            print('>>' ,arg, results, arg in results)
+
             if arg in results:
                 results.remove(i)
 
