@@ -1058,11 +1058,11 @@ class CCodePrinter(CodePrinter):
                 if isinstance(b.rhs, PyccelOperator):
                     args = []
                     args = ConvertPyccelOperatorArgsToList(b.rhs, args)
-                    c = None
-                    for u in args:
-                        if isinstance(u, IndexedElement):
-                            c = u
-                        if isinstance(c, IndexedElement):
+                    is_IndElm = None
+                    for arg in args:
+                        if isinstance(arg, IndexedElement):
+                            is_IndElm = arg
+                        if isinstance(is_IndElm, IndexedElement):
                             return '{0}\nreturn {1};'.format(self._print(expr.stmt),self._print(b.lhs))
                 if deallocations:
                     return '{0}\nreturn {1};'.format('\n'.join(self._print(i) for i in deallocations),self._print(b.rhs))

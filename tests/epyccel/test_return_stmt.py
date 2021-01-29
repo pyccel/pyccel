@@ -115,10 +115,22 @@ def test_expr_arrs_elements(language):
     epyc_expr_arrs_elements = epyccel(expr_arrs_elements, language=language, fflags="-Werror -Wunused-variable")
     assert (epyc_expr_arrs_elements(7) == expr_arrs_elements(7))
 
-def test_return_shape(language):
-    def return_shape(i : int):
+def test_complex_expr(language):
+    def complex_expr(i : int):
         import numpy as np
         a = np.ones(i)
-        return a.shape[0]
-    epyc_return_shape = epyccel(return_shape, language=language, fflags="-Werror -Wunused-variable")
-    assert (epyc_return_shape(7) == return_shape(7))
+        return ((4 + 5)/(6 - 3) * a[0])%(9 - a[1])
+    epyc_complex_expr = epyccel(complex_expr, language=language, fflags="-Werror -Wunused-variable")
+    assert (epyc_complex_expr(7) == complex_expr(7))
+
+def test_multi_allocs(language):
+    def multi_allocs(i :int):
+        import numpy as np
+        a = np.ones(i)
+        b = np.ones(i)
+        c = np.ones(i)
+        d = np.ones(i)
+        e = np.ones(i)
+        return ((4 + 5)/(d[0] + e[2]) * c[0])%(b[2] + a[1]) - 4
+    epyc_multi_allocs = epyccel(multi_allocs, language=language, fflags="-Werror -Wunused-variable")
+    assert (epyc_multi_allocs(7) == multi_allocs(7))
