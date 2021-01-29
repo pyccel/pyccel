@@ -132,22 +132,70 @@ def test_call_div_c_r(language):
 
 # -------------------- floor division ---------------------- #
 
-def test_call_fdiv_i_i(language):
-    @types(int, int)
+def test_call_fdiv_i_i_8(language):
+    @types('int8', 'int8')
     def fdiv_i_i(x, y):
         return x // y
 
     fflags = "-Werror -Wconversion"
 
     f = epyccel(fdiv_i_i, language=language, fflags=fflags)
-    x = randint(1e9)
-    y = randint(low=1, high= 1e3)
+    x = randint(120, dtype='int8')
+    y = randint(low=1, high= 100, dtype='int8')
+
+    assert (f(x, y) == fdiv_i_i(x, y))
+    assert isinstance(f(x, y), type(fdiv_i_i(x, y).item()))
+
+def test_call_fdiv_i_i_16(language):
+    @types('int16', 'int16')
+    def fdiv_i_i(x, y):
+        return x // y
+
+    fflags = "-Werror -Wconversion"
+
+    f = epyccel(fdiv_i_i, language=language, fflags=fflags)
+    x = randint(32000, dtype='int16')
+    y = randint(low=1, high= 30000, dtype='int16')
 
     assert (f(x, y) == fdiv_i_i(x, y))
     assert (f(-x, y) == fdiv_i_i(-x, y))
     assert (f(x, -y) == fdiv_i_i(x, -y))
     assert (f(-x, -y) == fdiv_i_i(-x, -y))
-    assert isinstance(f(x, y), type(fdiv_i_i(x, y)))
+    assert isinstance(f(x, y), type(fdiv_i_i(x, y).item()))
+
+def test_call_fdiv_i_i_32(language):
+    @types('int32', 'int32')
+    def fdiv_i_i(x, y):
+        return x // y
+
+    fflags = "-Werror -Wconversion"
+
+    f = epyccel(fdiv_i_i, language=language, fflags=fflags)
+    x = randint(1e9, dtype='int32')
+    y = randint(low=1, high= 1e3, dtype='int32')
+
+    assert (f(x, y) == fdiv_i_i(x, y))
+    assert (f(-x, y) == fdiv_i_i(-x, y))
+    assert (f(x, -y) == fdiv_i_i(x, -y))
+    assert (f(-x, -y) == fdiv_i_i(-x, -y))
+    assert isinstance(f(x, y), type(fdiv_i_i(x, y).item()))
+
+def test_call_fdiv_i_i_64(language):
+    @types('int64', 'int64')
+    def fdiv_i_i(x, y):
+        return x // y
+
+    fflags = "-Werror -Wconversion"
+
+    f = epyccel(fdiv_i_i, language=language, fflags=fflags)
+    x = randint(1e16, dtype='int64')
+    y = randint(low=1, high= 1e12, dtype='int64')
+
+    assert (f(x, y) == fdiv_i_i(x, y))
+    assert (f(-x, y) == fdiv_i_i(-x, y))
+    assert (f(x, -y) == fdiv_i_i(x, -y))
+    assert (f(-x, -y) == fdiv_i_i(-x, -y))
+    assert isinstance(f(x, y), type(fdiv_i_i(x, y).item()))
 
 def test_call_fdiv_i_i_i(language):
     @types(int, int, int)
