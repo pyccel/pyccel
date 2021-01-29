@@ -2382,7 +2382,6 @@ class SemanticParser(BasicParser):
         templates = self.get_templates()
         if decorators['template']:
             # Load templates dict from decorators dict
-            print(decorators['template']['template_dict'])
             templates.update(decorators['template']['template_dict'])
 
         tmp_headers = expr.headers

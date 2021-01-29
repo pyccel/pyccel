@@ -86,7 +86,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         decorators = expr.decorators
         if decorators:
             if decorators['template']:
-                # Eliminate template_dict because its useless in the printing
+                # Eliminate template_dict because it is useless in the printing
                 expr.decorators['template'] = expr.decorators['template']['decorator_list']
             else:
                 expr.decorators.pop('template')
