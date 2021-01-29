@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, disable=unused-variable, missing-module-docstring/
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 
@@ -79,3 +79,46 @@ def test_scalare_multi_return_stmts(language):
         return a
     epyc_scalare_multi_return_stmts = epyccel(scalare_multi_return_stmts, language=language, fflags="-Werror -Wunused-variable")
     assert (epyc_scalare_multi_return_stmts(7) == scalare_multi_return_stmts(7))
+
+def test_create_arr(language):
+    def create_arr(i : int):
+        import numpy as np
+        a = np.ones(i)
+        return True
+    epyc_create_arr = epyccel(create_arr, language=language, fflags="-Werror -Wunused-variable")
+    assert (epyc_create_arr(7) == create_arr(7))
+
+def test_return_arr_element(language):
+    def return_arr_element(i : int):
+        import numpy as np
+        a = np.ones(i)
+        return a[0]
+    epyc_return_arr_element = epyccel(return_arr_element, language=language, fflags="-Werror -Wunused-variable")
+    assert (epyc_return_arr_element(7) == return_arr_element(7))
+
+def test_create_multi_arrs(language):
+    def create_multi_arrs(i : int):
+        import numpy as np
+        a = np.ones(i)
+        b = np.zeros(i)
+        c = np.zeros(i)
+        return True
+    epyc_create_multi_arrs = epyccel(create_multi_arrs, language=language, fflags="-Werror -Wunused-variable")
+    assert (epyc_create_multi_arrs(7) == create_multi_arrs(7))
+
+def test_expr_arrs_elements(language):
+    def expr_arrs_elements(i : int):
+        import numpy as np
+        a = np.ones(i)
+        b = np.zeros(i)
+        return a[i - 1]+b[i - 1]
+    epyc_expr_arrs_elements = epyccel(expr_arrs_elements, language=language, fflags="-Werror -Wunused-variable")
+    assert (epyc_expr_arrs_elements(7) == expr_arrs_elements(7))
+
+def test_return_shape(language):
+    def return_shape(i : int):
+        import numpy as np
+        a = np.ones(i)
+        return a.shape[0]
+    epyc_return_shape = epyccel(return_shape, language=language, fflags="-Werror -Wunused-variable")
+    assert (epyc_return_shape(7) == return_shape(7))

@@ -950,6 +950,14 @@ class IfTernaryOperator(PyccelOperator):
         """
         return self._args[2]
 
+# PyccelOperator Utility
+
+def ConvertPyccelOperatorArgsToList(expr, args):
+    if isinstance(expr, PyccelOperator):
+        for i in expr.args:
+            ConvertPyccelOperatorArgsToList(i, args)
+        return args
+    args.append(expr)
 
 
 #==============================================================================

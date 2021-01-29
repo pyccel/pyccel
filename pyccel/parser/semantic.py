@@ -54,7 +54,7 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import _atomic
-from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
+from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelOperator, ConvertPyccelOperatorArgsToList
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
@@ -88,7 +88,7 @@ from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
 
-from pyccel.ast.internals import Slice
+from pyccel.ast.internals import Slice, PyccelArraySize
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -2343,7 +2343,6 @@ class SemanticParser(BasicParser):
         f_name      = self._current_function
         if isinstance(f_name, DottedName):
             f_name = f_name.name[-1]
-
         return_vars = self.get_function(f_name).results
         assigns     = []
         for v,r in zip(return_vars, results):
@@ -2351,11 +2350,20 @@ class SemanticParser(BasicParser):
                 a = Assign(v,r)
                 a.set_fst(expr.fst)
                 a = self._visit_Assign(a)
-                if isinstance(a.rhs, IndexedElement):
+                if isinstance(a.rhs, PyccelOperator):
+                    args = []
+                    args = ConvertPyccelOperatorArgsToList(a.rhs, args)
+                    c = None
+                    for b in args:
+                        if isinstance(b, IndexedElement):
+                            c = b
+                    if not isinstance(c, IndexedElement):
+                        a.lhs.is_temp = True
+                elif isinstance(a.rhs, IndexedElement):
                     if a.rhs.base not in self._allocs[-1]:
                         a.lhs.is_temp = True
-                else:
-                    a.lhs.is_temp = True
+                elif not isinstance(a.rhs, PyccelArraySize):
+                     a.lhs.is_temp = True
                 assigns.append(a)
 
         results = [self._visit_Symbol(i, **settings) for i in return_vars]
