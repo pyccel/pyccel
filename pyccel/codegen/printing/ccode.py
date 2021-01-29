@@ -899,7 +899,7 @@ class CCodePrinter(CodePrinter):
                 args.append(self._print(arg))
         code_args = ', '.join(args)
         if expr.dtype == NativeInteger():
-            cast_type = self.find_in_dtype_registry('int', default_precision['int'])
+            cast_type = self.find_in_dtype_registry('int', expr.precision)
             return '({0}){1}({2})'.format(cast_type, func_name, code_args)
         return '{0}({1})'.format(func_name, code_args)
 
@@ -1092,7 +1092,7 @@ class CCodePrinter(CodePrinter):
         need_to_cast = all(a.dtype is NativeInteger() for a in expr.args)
         code = ' / '.join(self._print(a if a.dtype is NativeReal() else PythonFloat(a)) for a in expr.args)
         if (need_to_cast):
-            cast_type = self.find_in_dtype_registry('int', default_precision['int'])
+            cast_type = self.find_in_dtype_registry('int', expr.precision)
             return "({})floor({})".format(cast_type, code)
         return "floor({})".format(code)
 
