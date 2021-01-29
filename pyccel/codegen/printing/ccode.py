@@ -13,6 +13,7 @@ from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 from pyccel.ast.core      import Declare
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import Deallocate
+from pyccel.ast.core      import CodeBlock
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, datatype, Import, AugAssign
 from pyccel.ast.core      import SeparatorComment
