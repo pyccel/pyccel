@@ -627,6 +627,47 @@ class PythonMin(PyccelInternalFunction):
         PyccelInternalFunction.__init__(self, x)
 
 #==============================================================================
+class Lambda(Basic):
+    """Represents a call to python lambda for temporary functions
+
+    Parameters
+    ==========
+    variables : tuple of symbols
+                The arguments to the lambda expression
+    expr      : Expr
+                The expression carried out when the lambda function is called
+    """
+    def __init__(self, variables, expr):
+        if not isinstance(variables, (list, tuple)):
+            raise TypeError("Lambda arguments must be a tuple or list")
+        self._variables = tuple(variables)
+        self._expr = expr
+        super().__init__()
+
+    @property
+    def variables(self):
+        """ The arguments to the lambda function
+        """
+        return self._variables
+
+    @property
+    def expr(self):
+        """ The expression carried out when the lambda function is called
+        """
+        return self._expr
+
+    def __call__(self, *args):
+        """ Returns the expression with the arguments replaced with
+        the calling arguments
+        """
+        assert(len(args) == len(self.variables))
+        return self.expr.subs(self.variables, args)
+
+    def __str__(self):
+        return "{args} -> {expr}".format(args=self.variables,
+                expr = self.expr)
+
+#==============================================================================
 python_builtin_datatypes_dict = {
     'bool'   : PythonBool,
     'float'  : PythonFloat,
