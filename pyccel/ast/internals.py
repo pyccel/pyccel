@@ -164,10 +164,19 @@ class Slice(Basic):
 
 class Symbol(Basic):
     """
-        #TODO
-    """
-    is_Symbol = True
+    Represent variable with undefined type
 
+    Parameters
+    ----------
+    name : String
+        name of the symbol
+
+    Examples
+    --------
+    >>> from pyccel.ast.internals import Symbol
+    >>> x = Symbol('x')
+    x
+    """
     def __init__(self, name):
         if not isinstance(name, str):
             raise TypeError('Symbol name should be a string, not '+ str(type(name)))
@@ -199,9 +208,28 @@ class Symbol(Basic):
 
 def symbols(names):
     """
-        #TODO
+    Transform strings into instances of Symbol class.
+
+    function returns a sequence of symbols with names taken
+    from argument, which can be a comma delimited
+    string
+
+    Parameters
+    ----------
+    name : String
+        comma delimited string
+
+    Return
+    ----------
+    Tuple :
+        tuple of instances of Symbol
+    Examples
+    --------
+    >>> from pyccel.ast.internals import symbols
+    >>> x, y, z = symbols('x,y,z')
+    (x, y, z)
     """
     names = names.split(',')
-    symbols = [Symbol(name) for name in names]
+    symbols = [Symbol(name.strip()) for name in names]
     return tuple(symbols)
 
