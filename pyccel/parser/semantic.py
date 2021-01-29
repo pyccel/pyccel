@@ -2381,7 +2381,7 @@ class SemanticParser(BasicParser):
         args_number = len(expr.arguments)
         templates = self.get_templates()
         if decorators['template']:
-            # load templates dict from decorators dict
+            # Load templates dict from decorators dict
             print(decorators['template']['template_dict'])
             templates.update(decorators['template']['template_dict'])
 
