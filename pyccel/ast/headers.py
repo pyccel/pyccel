@@ -3,7 +3,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# TODO must use Header.__new__ rather than Basic.__new__
+# TODO must use Header.__init__ rather than Basic.__init__
 
 from sympy.utilities.iterables import iterable
 from sympy.core import Symbol
@@ -44,21 +44,23 @@ class Header(Basic):
 class MetaVariable(Header):
     """Represents the MetaVariable."""
 
-    def __new__(cls, name, value):
+    def __init__(self, name, value):
         if not isinstance(name, str):
             raise TypeError('name must be of type str')
 
         # TODO check value
+        self._name  = name
+        self._value = value
 
-        return Basic.__new__(cls, name, value)
+        super().__init__()
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def value(self):
-        return self._args[1]
+        return self._value
 
     def __reduce_ex__(self, i):
         """ Used by pickle to create an object of this class.
@@ -95,20 +97,22 @@ class VariableHeader(Header):
 
     """
 
-    # TODO dtypes should be a dictionary (useful in syntax)
-    def __new__(cls, name, dtypes):
+    def __init__(self, name, dtypes):
         if not(isinstance(dtypes, dict)):
             raise TypeError("Expecting dtypes to be a dict.")
 
-        return Basic.__new__(cls, name, dtypes)
+        self._name   = name
+        self._dtypes = dtypes
+
+        super().__init__()
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def dtypes(self):
-        return self._args[1]
+        return self._dtypes
 
     def __reduce_ex__(self, i):
         """ Used by pickle to create an object of this class.
@@ -153,7 +157,7 @@ class Template(Header):
     """
 
     def __new__(cls, *args, **kwargs):
-        return Basic.__new__(cls)
+        return Basic.__init__(cls)
 
     def __init__(self, name, dtypes):
         Header.__init__(self)
@@ -222,7 +226,7 @@ class FunctionHeader(Header):
     """
 
     # TODO dtypes should be a dictionary (useful in syntax)
-    def __new__(cls, name, dtypes,
+    def __init__(self, name, dtypes,
                 results=None,
                 is_static=False):
         name = str(name)
@@ -236,23 +240,27 @@ class FunctionHeader(Header):
         if not isinstance(is_static, bool):
             raise TypeError('is_static must be a boolean')
 
-        return Basic.__new__(cls, name, dtypes, results, is_static)
+        self._name      = name
+        self._dtypes    = dtypes
+        self._results   = results
+        self._is_static = is_static
+        super().__init__()
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def dtypes(self):
-        return self._args[1]
+        return self._dtypes
 
     @property
     def results(self):
-        return self._args[2]
+        return self._results
 
     @property
     def is_static(self):
-        return self._args[3]
+        return self._is_static
 
     def create_definition(self, templates = ()):
         """Returns a FunctionDef with empy body."""
@@ -448,9 +456,10 @@ class MethodHeader(FunctionHeader):
     'point.rotate'
     """
 
-    def __new__(cls, name, dtypes, results=None, is_static=False):
+    def __init__(self, name, dtypes, results=None, is_static=False):
         if not isinstance(name, (list, tuple)):
             raise TypeError("Expecting a list/tuple of strings.")
+        name      = '.'.join(str(n) for n in name)
 
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
@@ -467,27 +476,23 @@ class MethodHeader(FunctionHeader):
         if not isinstance(is_static, bool):
             raise TypeError('is_static must be a boolean')
 
-        return Basic.__new__(cls, name, dtypes, results, is_static)
+        super().__init__(name, dtypes, results, is_static)
 
     @property
     def name(self):
-        _name = self._args[0]
-        if isinstance(_name, str):
-            return _name
-        else:
-            return '.'.join(str(n) for n in _name)
+        return self._name
 
     @property
     def dtypes(self):
-        return self._args[1]
+        return self._dtypes
 
     @property
     def results(self):
-        return self._args[2]
+        return self._results
 
     @property
     def is_static(self):
-        return self._args[3]
+        return self._is_static
 
 
     def __reduce_ex__(self, i):
@@ -510,7 +515,7 @@ class MethodHeader(FunctionHeader):
            and its arguments
            """
 
-        args = (self.name,
+        args = (self.name.split('.'),
             self.dtypes,
             self.results,
             self.is_static,)
@@ -533,45 +538,49 @@ class ClassHeader(Header):
     ClassHeader(Matrix, (abstract, public))
     """
 
-    def __new__(cls, name, options):
+    def __init__(self, name, options):
         if not(iterable(options)):
             raise TypeError("Expecting options to be iterable.")
 
-        return Basic.__new__(cls, name, options)
+        self._name    = name
+        self._options = options
+
+        super().__init__()
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def options(self):
-        return self._args[1]
+        return self._options
 
 #==============================================================================
-# TODO must extend Header rather than Basic
-class InterfaceHeader(Basic):
+class InterfaceHeader(Header):
 
-    def __new__(cls, name, funcs):
+    def __init__(self, name, funcs):
         if not isinstance(name,str):
             raise TypeError('name should of type str')
         if not all([isinstance(i, str) for i in funcs]):
             raise TypeError('functions name must be of type str')
-        return Basic.__new__(cls, name, funcs)
+        self._name  = name
+        self._funcs = funcs
+        super().__init__()
 
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def funcs(self):
-        return self._args[1]
+        return self._funcs
 
 #==============================================================================
 class MacroFunction(Header):
     """."""
 
-    def __new__(cls, name, args, master, master_args, results=None):
+    def __init__(self, name, args, master, master_args, results=None):
         if not isinstance(name, (str, Symbol)):
             raise TypeError('name must be of type str or Symbol')
 
@@ -582,27 +591,32 @@ class MacroFunction(Header):
         if not(results is None):
             results = [sympify(a, locals=local_sympify) for a in results]
 
-        return Basic.__new__(cls, name, args, master, master_args, results)
+        self._name             = name
+        self._arguments        = args
+        self._master           = master
+        self._master_arguments = master_args
+        self._results          = results
+        super().__init__()
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def arguments(self):
-        return self._args[1]
+        return self._arguments
 
     @property
     def master(self):
-        return self._args[2]
+        return self._master
 
     @property
     def master_arguments(self):
-        return self._args[3]
+        return self._master_arguments
 
     @property
     def results(self):
-        return self._args[4]
+        return self._results
 
     # TODO: must be moved to annotation, once we add AliasVariables
     #       this is needed if we have to create a pointer or allocate a new
@@ -716,7 +730,7 @@ class MacroFunction(Header):
 class MacroVariable(Header):
     """."""
 
-    def __new__(cls, name,  master):
+    def __init__(self, name,  master):
         if not isinstance(name, (str, Symbol, DottedName)):
             raise TypeError('name must be of type str or DottedName')
 
@@ -724,14 +738,16 @@ class MacroVariable(Header):
         if not isinstance(master, (str, Variable, DottedVariable)):
             raise ValueError('Expecting a master name of Variable')
 
+        self._name   = name
+        self._master = master
 
-        return Basic.__new__(cls, name, master)
+        super().__init__()
 
 
     @property
     def name(self):
-        return self._args[0]
+        return self._name
 
     @property
     def master(self):
-        return self._args[1]
+        return self._master
