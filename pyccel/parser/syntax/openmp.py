@@ -13,7 +13,7 @@ from textx.metamodel import metamodel_from_file
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import OmpAnnotatedComment, OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct,\
         Omp_End_Clause, OMP_Critical_Construct, OMP_Master_Construct,\
-        OMP_Masked_Construct, OMP_Task_Construct, OMP_Cancel_Construct, OMP_Target_Construct, OMP_Teams_Construct
+        OMP_Masked_Construct, OMP_Task_Construct, OMP_Cancel_Construct, OMP_Target_Construct, OMP_Teams_Construct, OMP_Sections_Construct, OMP_Section_Construct
 
 DEBUG = False
 
@@ -77,6 +77,12 @@ class OpenmpStmt(BasicStmt):
             return stmt.expr
         elif isinstance(stmt, OmpTeamsConstruct):
             return stmt.expr
+        elif isinstance(stmt, OmpDistributeConstruct):
+            return stmt.expr
+        elif isinstance(stmt, OmpSectionConstruct):
+            return stmt.expr
+        elif isinstance(stmt, OmpSectionsConstruct):
+            return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
 
@@ -85,7 +91,7 @@ class OmpParallelConstruct(BasicStmt):
     def __init__(self, **kwargs):
         """
         """
-        self.clauses = kwargs.pop('clauses')
+        self.clauses  = kwargs.pop('clauses')
         self.combined = kwargs.pop('combined')
 
         super(OmpParallelConstruct, self).__init__(**kwargs)
@@ -188,7 +194,8 @@ class OmpTaskConstruct(BasicStmt):
     def __init__(self, **kwargs):
         """
         """
-        self.clauses = kwargs.pop('clauses')
+        self.clauses  = kwargs.pop('clauses')
+        self.name     = kwargs.pop('name')
 
         super(OmpTaskConstruct, self).__init__(**kwargs)
 
@@ -207,7 +214,7 @@ class OmpTaskConstruct(BasicStmt):
                           OmpinReduction, \
                           OmpDepend)
         
-        txt = 'task'
+        txt = self.name
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
@@ -222,6 +229,7 @@ class OmpSingleConstruct(BasicStmt):
         """
         """
         self.clauses = kwargs.pop('clauses')
+        self.name    = kwargs.pop('name')
 
         super(OmpSingleConstruct, self).__init__(**kwargs)
 
@@ -233,7 +241,7 @@ class OmpSingleConstruct(BasicStmt):
         _valid_clauses = (OmpPrivate, \
                          OmpFirstPrivate)
 
-        txt = 'single'
+        txt = self.name
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
@@ -248,6 +256,7 @@ class OmpCriticalConstruct(BasicStmt):
         """
         """
         self.clauses = kwargs.pop('clauses')
+        self.name    = kwargs.pop('name')
 
         super(OmpCriticalConstruct, self).__init__(**kwargs)
 
@@ -258,7 +267,7 @@ class OmpCriticalConstruct(BasicStmt):
 
         _valid_clauses = (OmpCriticalName)
 
-        txt = 'critical'
+        txt = self.name
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
@@ -281,9 +290,9 @@ class OmpSimdConstruct(BasicStmt):
             print("> OmpSimdConstruct: expr")
 
         _valid_clauses = (OmpLinear, \
-                         OmpReduction, \
-                         OmpCollapse, \
-                         OmpLastPrivate)
+                          OmpReduction, \
+                          OmpCollapse, \
+                          OmpLastPrivate)
 
         txt = self.name
         for clause in self.clauses:
@@ -332,6 +341,75 @@ class OmpMaskedConstruct(BasicStmt):
                 raise TypeError('Wrong clause for OmpMaskedConstruct')
 
         return OMP_Masked_Construct(txt)
+
+class OmpSectionsConstruct(BasicStmt):
+    """Class representing a Sections stmt."""
+    def __init__(self, **kwargs):
+        self.name = kwargs.pop('name')
+        self.clauses = kwargs.pop('clauses')
+
+        super(OmpSectionsConstruct, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpSectionsConstruct: expr")
+
+        _valid_clauses = (OmpPrivate, \
+                          OmpFirstPrivate, \
+                          OmpLastPrivate, \
+                          OmpReduction)
+
+        txt = self.name
+        for clause in self.clauses:
+            if isinstance(clause, _valid_clauses):
+                txt = '{0} {1}'.format(txt, clause.expr)
+            else:
+                raise TypeError('Wrong clause for OmpSectionsConstruct')
+
+        return OMP_Sections_Construct(txt)
+
+class OmpSectionConstruct(BasicStmt):
+    """Class representing a Section stmt."""
+    def __init__(self, **kwargs):
+        self.name = kwargs.pop('name')
+
+        super(OmpSectionConstruct, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpSectionConstruct: expr")
+
+        txt = self.name  
+        return OMP_Section_Construct(txt)
+
+class OmpDistributeConstruct(BasicStmt):
+    """Class representing a Barrier stmt."""
+    def __init__(self, **kwargs):
+        self.name = kwargs.pop('name')
+        self.clauses = kwargs.pop('clauses')
+        
+        super(OmpDistributeConstruct, self).__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpDistributeConstruct: expr")
+
+        _valid_clauses = (OmpPrivate, \
+                          OmpFirstPrivate, \
+                          OmpLastPrivate, \
+                          OmpCollapse)
+
+        txt = self.name
+        for clause in self.clauses:
+            if isinstance(clause, _valid_clauses):
+                txt = '{0} {1}'.format(txt, clause.expr)
+            else:
+                raise TypeError('Wrong clause for OmpDistributeConstruct')
+        
+        return OmpAnnotatedComment(txt)
 
 class OmpBarrierConstruct(BasicStmt):
     """Class representing a Barrier stmt."""
@@ -562,8 +640,8 @@ class OmpNumTeams(BasicStmt):
         if DEBUG:
             print("> OmpNumTeams: expr")
 
-        thread = self.thread
-        return 'num_teams({})'.format(thread)
+        teams = self.teams
+        return 'num_teams({})'.format(teams)
 
 class OmpThreadLimit(BasicStmt):
     """Class representing a ."""
@@ -1081,7 +1159,10 @@ omp_directives = [OmpParallelConstruct,
                   OmpFlushConstruct,
                   OmpCancelConstruct,
                   OmpTargetConstruct,
-                  OmpTeamsConstruct]
+                  OmpTeamsConstruct,
+                  OmpDistributeConstruct,
+                  OmpSectionsConstruct,
+                  OmpSectionConstruct]
 
 omp_clauses = [OmpCollapse,
                OmpCopyin,

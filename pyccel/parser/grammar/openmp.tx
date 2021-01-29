@@ -31,29 +31,35 @@ OmpConstructOrDirective:
   | OmpCancelConstruct
   | OmpTargetConstruct
   | OmpTeamsConstruct
+  | OmpDistributeConstruct
+  | OmpSectionConstruct
+  | OmpSectionsConstruct
 ;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
 //     Constructs and Directives definitions
 ////////////////////////////////////////////////////
-OmpParallelConstruct:   'parallel'      combined*=ParallelCombined? clauses*=OmpParallelClause;
-OmpLoopConstruct:       'for'           clauses*=OmpLoopClause;
-OmpTaskLoopConstruct:   name='taskloop'      clauses*=OmpTaskLoopClause; // TODO: add IF and Final clauses when issue #590 is resolved.
-OmpSingleConstruct:     'single'        clauses*=OmpSingleClause;
-OmpCriticalConstruct:   'critical'      clauses*=OmpCriticalClause;
-OmpMaskedConstruct:     name='masked'   clauses*=OmpMaskedClause;
-OmpSimdConstruct:       name='simd'     clauses*=OmpSimdClause;
-OmpAtomicConstruct:     name='atomic'   clauses*=AllOmpClauses; // Not all clause were added (cant test them).
-OmpTaskConstruct:       'task'          clauses*=AllOmpClauses;
-OmpCancelConstruct:     name='cancel'   clauses*=AllOmpClauses;
-OmpTargetConstruct:     name='target'   clauses*=AllOmpClauses;
-OmpTeamsConstruct:      name='teams'    clauses*=AllOmpClauses;
+OmpParallelConstruct:   'parallel'        combined*=ParallelCombined? clauses*=OmpParallelClause;
+OmpLoopConstruct:       'for'             clauses*=OmpLoopClause;
+OmpTaskLoopConstruct:   name='taskloop'   clauses*=OmpTaskLoopClause;
+OmpSingleConstruct:     name='single'     clauses*=OmpSingleClause;
+OmpCriticalConstruct:   name='critical'   clauses*=OmpCriticalClause;
+OmpMaskedConstruct:     name='masked'     clauses*=OmpMaskedClause;
+OmpSimdConstruct:       name='simd'       clauses*=OmpSimdClause;
+OmpAtomicConstruct:     name='atomic'     clauses*=AllOmpClauses; // Not all clause were added (cant test them).
+OmpTaskConstruct:       name='task'       clauses*=AllOmpClauses;
+OmpCancelConstruct:     name='cancel'     clauses*=AllOmpClauses;
+OmpTargetConstruct:     name='target'     clauses*=AllOmpClauses;
+OmpTeamsConstruct:      name='teams'      clauses*=AllOmpClauses;
+OmpDistributeConstruct: name='distribute' clauses*=AllOmpClauses;
+OmpSectionsConstruct:   name='sections'   clauses*=AllOmpClauses;
+OmpSectionConstruct:    name='section';
 OmpBarrierConstruct:    name='barrier';
 OmpMasterConstruct:     name='master';
 OmpTaskWaitConstruct:   name='taskwait';
 OmpTaskyieldConstruct:  name='taskyield';
-OmpFlushConstruct:      name='flush'    clauses*=AllOmpClauses;
+OmpFlushConstruct:      name='flush'      clauses*=AllOmpClauses;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -190,8 +196,8 @@ OmpProcBindStatus: ('master' | 'close' | 'spread');
 OmpReductionOperator: ('+' | '-' | '*' | '/');
 OmpDependenceType: ('in' | 'out' | 'inout' | 'mutexinoutset' | 'depobj');
 OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
-OmpMapType: ('always' | 'close' | ('mapper' '(' ID ')') ',')? ('to' | 'from' | 'tofrom' | 'alloc' | 'release' | 'delete') ':';
-OpenmpConstructs: ('simd' | 'masked' | 'master' | 'single' | 'parallel' | 'for' | 'critical' ('(' ID  ')')? | 'task' | 'target' | 'teams');
+OmpMapType: (('always' | 'close' | ('mapper' '(' ID ')') ',')? ('tofrom' | 'from' | 'to' | 'alloc' | 'release' | 'delete')) ':';
+OpenmpConstructs: ('simd' | 'masked' | 'master' | 'single' | 'parallel' | 'for' | 'critical' ('(' ID  ')')? | 'task' | 'target' | 'teams' | 'sections' | 'section');
 
 AtomicClause: ('write' | 'read' | 'update' | 'capture' | 'compare' | 'weak');
 AtomicMClause: ('seq_cst' | 'acq_rel' | 'release' | 'acquire' | 'relaxed');

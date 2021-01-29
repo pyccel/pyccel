@@ -1913,6 +1913,16 @@ class FCodePrinter(CodePrinter):
         omp_expr = '!$omp {}\n'.format(omp_expr)
         return omp_expr
 
+    def _print_OMP_Sections_Construct(self, expr):
+        omp_expr = str(expr.txt)
+        omp_expr = '!$omp {}\n'.format(omp_expr)
+        return omp_expr
+    
+    def _print_OMP_Section_Construct(self, expr):
+        omp_expr = str(expr.txt)
+        omp_expr = '!$omp {}\n'.format(omp_expr)
+        return omp_expr
+
     def _print_OmpAnnotatedComment(self, expr):
         omp_expr = str(expr.txt)
         omp_expr = '!$omp {}\n'.format(omp_expr)

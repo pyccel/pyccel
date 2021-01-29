@@ -1393,10 +1393,20 @@ class CCodePrinter(CodePrinter):
 
     def _print_OMP_Cancel_Construct(self, expr):
         omp_expr = str(expr.txt)
-        omp_expr = '#pragma omp omp {}\n'.format(omp_expr)
+        omp_expr = '#pragma omp {}\n'.format(omp_expr)
         return omp_expr
 
     def _print_OMP_Teams_Construct(self, expr):
+        omp_expr = str(expr.txt)
+        omp_expr = '#pragma omp {}\n{{'.format(omp_expr)
+        return omp_expr
+
+    def _print_OMP_Sections_Construct(self, expr):
+        omp_expr = str(expr.txt)
+        omp_expr = '#pragma omp {}\n{{'.format(omp_expr)
+        return omp_expr
+
+    def _print_OMP_Section_Construct(self, expr):
         omp_expr = str(expr.txt)
         omp_expr = '#pragma omp {}\n{{'.format(omp_expr)
         return omp_expr

@@ -503,14 +503,16 @@ The ``` #$ omp distribute ``` directive specifies that the iterations of one or 
 from numpy import zeros
 from pyccel.stdlib.internal.openmp import omp_get_team_num
 n = 8
+threadlimit = 4
 a = zeros(n, dtype=int)
-#$ omp target map(to: n) map(tofrom: a)
-#$ omp teams num_teams(2) thread_limit(n/2)
+#$ omp target
+#$ omp teams num_teams(2) thread_limit(threadlimit)
 #$ omp distribute
 for i in range(0, n):
-  a[i] = omp_get_team_num()
+  a[i]    = omp_get_team_num()
 #$ omp end teams
 #$ omp end target
+
 for i in range(0, n):
   print("Team num :", a[i])
 ```

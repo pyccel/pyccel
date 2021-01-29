@@ -3442,6 +3442,16 @@ class OMP_Teams_Construct(OmpAnnotatedComment):
     def __init__(cls, txt):
         OmpAnnotatedComment.__init__(cls, txt)
 
+class OMP_Sections_Construct(OmpAnnotatedComment):
+    """ Represents OpenMP Sections construct. """
+    def __init__(cls, txt):
+        OmpAnnotatedComment.__init__(cls, txt)
+
+class OMP_Section_Construct(OmpAnnotatedComment):
+    """ Represent OpenMP Section construct. """
+    def __init__(cls, txt):
+        OmpAnnotatedComment.__init__(cls, txt)
+
 class Omp_End_Clause(OmpAnnotatedComment):
     """ Represents the End of an OpenMP block. """
     def __init__(self, txt):
