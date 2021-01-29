@@ -54,7 +54,7 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.core import _atomic
-from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelOperator, ConvertPyccelOperatorArgsToList
+from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelOperator
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
@@ -2350,20 +2350,7 @@ class SemanticParser(BasicParser):
                 assign = Assign(v,r)
                 assign.set_fst(expr.fst)
                 assign = self._visit_Assign(assign)
-                if isinstance(assign.rhs, PyccelOperator):
-                    args = []
-                    args = ConvertPyccelOperatorArgsToList(assign.rhs, args)
-                    is_IndElm = None
-                    for arg in args:
-                        if isinstance(arg, IndexedElement):
-                            is_IndElm = arg
-                    if not isinstance(is_IndElm, IndexedElement):
-                        assign.lhs.is_temp = True
-                elif isinstance(assign.rhs, IndexedElement):
-                    if assign.rhs.base not in self._allocs[-1]:
-                        assign.lhs.is_temp = True
-                elif not isinstance(assign.rhs, PyccelArraySize):
-                     assign.lhs.is_temp = True
+                assign.lhs.is_temp = True
                 assigns.append(assign)
 
         results = [self._visit_Symbol(i, **settings) for i in return_vars]

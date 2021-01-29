@@ -21,7 +21,6 @@ from pyccel.ast.core      import create_incremented_string
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator, PyccelOperator
-from pyccel.ast.operators import ConvertPyccelOperatorArgsToList
 
 from pyccel.ast.datatypes import default_precision, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
@@ -1037,7 +1036,6 @@ class CCodePrinter(CodePrinter):
         return self._print(val)
 
     def _print_Return(self, expr):
-        deallocations = []
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
         if len(args) > 1:
             if expr.stmt:
@@ -1045,27 +1043,9 @@ class CCodePrinter(CodePrinter):
             return 'return 0;'
         if len(args) == 1:
             if isinstance(expr.stmt, CodeBlock):
-                for d in expr.stmt.body:
-                    if isinstance(d, Deallocate):
-                        deallocations.append(d)
                 for a in expr.stmt.body:
                     if isinstance(a, Assign):
                         b = a
-                if isinstance(b.rhs, IndexedElement) and not b.lhs.is_temp:
-                    return '{0}\nreturn {1};'.format(self._print(expr.stmt),self._print(b.lhs))
-                if isinstance(b.rhs, PyccelArraySize):
-                    return '{0}\nreturn {1};'.format(self._print(expr.stmt),self._print(b.rhs))
-                if isinstance(b.rhs, PyccelOperator):
-                    args = []
-                    args = ConvertPyccelOperatorArgsToList(b.rhs, args)
-                    is_IndElm = None
-                    for arg in args:
-                        if isinstance(arg, IndexedElement):
-                            is_IndElm = arg
-                        if isinstance(is_IndElm, IndexedElement):
-                            return '{0}\nreturn {1};'.format(self._print(expr.stmt),self._print(b.lhs))
-                if deallocations:
-                    return '{0}\nreturn {1};'.format('\n'.join(self._print(i) for i in deallocations),self._print(b.rhs))
                 return 'return {0};'.format(self._print(b.rhs))
             return 'return {0};'.format(self._print(args[0]))
         return ''
