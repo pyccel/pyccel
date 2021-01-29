@@ -180,23 +180,6 @@ def test_call_fdiv_i_i_32(language):
     assert (f(-x, -y) == fdiv_i_i(-x, -y))
     assert isinstance(f(x, y), type(fdiv_i_i(x, y).item()))
 
-def test_call_fdiv_i_i_64(language):
-    @types('int64', 'int64')
-    def fdiv_i_i(x, y):
-        return x // y
-
-    fflags = "-Werror -Wconversion"
-
-    f = epyccel(fdiv_i_i, language=language, fflags=fflags)
-    x = 9
-    y = 3
-
-    assert (f(x, y) == fdiv_i_i(x, y))
-    assert (f(-x, y) == fdiv_i_i(-x, y))
-    assert (f(x, -y) == fdiv_i_i(x, -y))
-    assert (f(-x, -y) == fdiv_i_i(-x, -y))
-    assert isinstance(f(x, y), type(fdiv_i_i(x, y).item()))
-
 def test_call_fdiv_i_i_i(language):
     @types(int, int, int)
     def fdiv_i_i_i(x, y, z):
