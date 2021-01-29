@@ -219,7 +219,7 @@ class FunctionHeader(Header):
     Examples
     --------
 
-    >>> from pyccel.ast.core import FunctionHeader
+    >>> from pyccel.ast.headers import FunctionHeader
     >>> FunctionHeader('f', ['double'])
     FunctionHeader(f, [(NativeDouble(), [])])
     """
@@ -447,7 +447,7 @@ class MethodHeader(FunctionHeader):
 
     Examples
 
-    >>> from pyccel.ast.core import MethodHeader
+    >>> from pyccel.ast.headers import MethodHeader
     >>> m = MethodHeader(('point', 'rotate'), ['double'])
     >>> m
     MethodHeader((point, rotate), [(NativeDouble(), [])], [])
@@ -515,7 +515,7 @@ class ClassHeader(Header):
 
     Examples
 
-    >>> from pyccel.ast.core import ClassHeader
+    >>> from pyccel.ast.headers import ClassHeader
     >>> ClassHeader('Matrix', ('abstract', 'public'))
     ClassHeader(Matrix, (abstract, public))
     """
@@ -539,6 +539,26 @@ class ClassHeader(Header):
 
 #==============================================================================
 class InterfaceHeader(Header):
+    """Represents an interface header in the code.
+
+    Parameters
+    ----------
+    name: str
+        the name used to call the functions
+
+    funcs: tuple/list of str
+        a list containing the names of the functions available via this
+        interface
+
+    Examples
+    --------
+    >>> from pyccel.ast.headers import InterfaceHeader
+    >>> m = InterfaceHeader('axpy',('daxpy', 'saxpy'))
+    >>> m
+    InterfaceHeader('axpy',('daxpy', 'saxpy'))
+    >>> m.name
+    'axpy'
+    """
 
     def __init__(self, name, funcs):
         if not isinstance(name,str):
