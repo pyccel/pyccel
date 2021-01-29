@@ -17,7 +17,7 @@ from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeGeneric,
                         default_precision)
-from .internals import PyccelArraySize, Slice
+from .internals import PyccelArraySize, Slice, Symbol
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv,
                         PyccelUnarySub, PyccelAdd)
@@ -31,7 +31,7 @@ __all__ = (
     'VariableAddress'
 )
 
-class Variable(PyccelAstNode):
+class Variable(Symbol, PyccelAstNode):
 
     """Represents a typed variable.
 
@@ -354,15 +354,6 @@ class Variable(PyccelAstNode):
 
     def __str__(self):
         return str(self.name)
-
-    def __eq__(self, other):
-        try:
-            return other.name is self.name
-        except:
-            return False
-
-    def __hash__(self):
-        return hash(self.name)
 
     def _sympystr(self, printer):
         """ sympy equivalent of __str__"""
@@ -702,9 +693,8 @@ class IndexedElement(PyccelAstNode):
 
     Examples
     --------
-    >>> from sympy import Idx
+    >>> from sympy import symbols, Idx
     >>> from pyccel.ast.core import Variable, IndexedElement
-    >>> from pyccel.ast.internals import symbols
     >>> i, j = symbols('i j', cls=Idx)
     >>> A = Variable('A', dtype='int')
     >>> IndexedElement(A, i, j)
