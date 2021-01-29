@@ -106,7 +106,6 @@ __all__ = (
     'While',
     'With',
     '_atomic',
-#    'allocatable_like',
     'create_variable',
     'create_incremented_string',
     'extract_subexpressions',
@@ -200,78 +199,6 @@ def subs(expr, new_elements):
 
     else:
         return expr
-
-
-def allocatable_like(expr, verbose=False):
-    """
-    finds attributes of an expression
-
-    Parameters
-    ----------
-    expr: Expr
-        a pyccel expression
-
-    verbose: bool
-        talk more
-    """
-
-    if isinstance(expr, (Variable, IndexedElement)):
-        return expr
-    elif isinstance(expr, str):
-        # if the rhs is a string
-        return expr
-    elif isinstance(expr, Expr):
-        args = [expr]
-        while args:
-            a = args.pop()
-            # XXX: This is a hack to support non-Basic args
-            if isinstance(a, str):
-                continue
-
-            if a.is_Mul:
-                if _coeff_isneg(a):
-                    if a.args[0] is S.NegativeOne:
-                        a = a.as_two_terms()[1]
-                    else:
-                        a = -a
-                (n, d) = fraction(a)
-                if n.is_Integer:
-                    args.append(d)
-                    continue  # won't be -Mul but could be Add
-                elif d is not S.One:
-                    if not d.is_Integer:
-                        args.append(d)
-                    args.append(n)
-                    continue  # could be -Mul
-            elif a.is_Add:
-                aargs = list(a.args)
-                negs = 0
-                for ai in aargs:
-                    if _coeff_isneg(ai):
-                        negs += 1
-                        args.append(-ai)
-                    else:
-                        args.append(ai)
-                continue
-            if a.is_Pow and a.exp is S.NegativeOne:
-                args.append(a.base)  # won't be -Mul but could be Add
-                continue
-            if a.is_Mul or a.is_Pow or a.is_Function or \
-                    isinstance(a, (Derivative, Integral)):
-
-                o = Symbol(a.func.__name__.upper())
-            if not a.is_Symbol and not isinstance(a, (IndexedElement,
-                    FunctionCall)):
-                args.extend(a.args)
-
-            if isinstance(a, (Variable, IndexedElement)):
-                return a
-            elif a.is_Symbol:
-                raise TypeError('Found an unknown symbol {0}'.format(str(a)))
-    else:
-        raise TypeError('Unexpected type {0}'.format(type(expr)))
-
-
 
 def _atomic(e, cls=None,ignore=()):
 
