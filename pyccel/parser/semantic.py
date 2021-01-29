@@ -2133,7 +2133,7 @@ class SemanticParser(BasicParser):
         indices = expr.indices
         dims    = []
         body    = expr.loops[1]
-        #TODO shouldn't be a better way than this ?
+        #TODO remove the line below after adding equivalent of atoms to Basic issue #694
         indices = [sp_Symbol(i.name) for i in indices]
         idx_subs = dict()
 
