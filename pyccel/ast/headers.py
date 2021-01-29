@@ -157,7 +157,7 @@ class Template(Header):
     """
 
     def __new__(cls, *args, **kwargs):
-        return Basic.__init__(cls)
+        return super().__new__(cls)
 
     def __init__(self, name, dtypes):
         Header.__init__(self)
@@ -477,23 +477,6 @@ class MethodHeader(FunctionHeader):
             raise TypeError('is_static must be a boolean')
 
         super().__init__(name, dtypes, results, is_static)
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def dtypes(self):
-        return self._dtypes
-
-    @property
-    def results(self):
-        return self._results
-
-    @property
-    def is_static(self):
-        return self._is_static
-
 
     def __reduce_ex__(self, i):
 
