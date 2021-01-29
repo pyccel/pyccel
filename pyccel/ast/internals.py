@@ -183,13 +183,13 @@ class Symbol(Basic):
             return True
         if type(self) is type(other):
             try :
-                self._name == other.name
+                return self._name == other.name
             except:
                 return False
         return False
 
     def __hash__(self):
-        return hash(self._name)
+        return hash(type(self).__name__ + self._name)
 
     def __str__(self):
         return self._name
