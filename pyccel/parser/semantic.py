@@ -1575,7 +1575,7 @@ class SemanticParser(BasicParser):
                 cls      = self.get_class(cls_name)
 
                 attributes = cls.attributes
-                parent     = cls.parent
+                parent     = cls.superclass
                 attributes = list(attributes)
                 n_name     = str(lhs.name[-1])
 
@@ -2672,7 +2672,7 @@ class SemanticParser(BasicParser):
                 # update the class methods
 
                 self.insert_class(ClassDef(cls_name, cls.attributes,
-                        methods, superclass=cls.parent))
+                        methods, superclass=cls.superclass))
 
             funcs += [func]
 
@@ -2741,7 +2741,7 @@ class SemanticParser(BasicParser):
         name = str(expr.name)
         name = name.replace("'", '')
         methods = list(expr.methods)
-        parent = expr.parent
+        parent = expr.superclass
         interfaces = []
 
         # remove quotes for str representation

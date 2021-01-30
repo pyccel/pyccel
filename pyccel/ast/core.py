@@ -2740,7 +2740,7 @@ class ClassDef(Basic):
         return self._imports
 
     @property
-    def parent(self):
+    def superclass(self):
         return self._superclass
 
     @property
