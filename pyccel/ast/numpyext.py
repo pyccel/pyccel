@@ -210,8 +210,8 @@ class NumpyArange(NumpyNewArray):
         self._step = step if step is not None else LiteralInteger(1)
 
         if dtype is None:
-            self._dtype = max([i.dtype for i in self._arg], key = NativeNumeric.index)
-            self._precision = max([i.precision for i in self._arg])
+            self._dtype = max([i.dtype for i in self.arg], key = NativeNumeric.index)
+            self._precision = max([i.precision for i in self.arg])
         else:
             self._dtype, self._precision = process_dtype(dtype)
 
