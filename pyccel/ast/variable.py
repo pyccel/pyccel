@@ -8,7 +8,7 @@ different stages of pyccel. Memory block labels are usually either Variables or 
 variables
 """
 import inspect
-from sympy import Symbol, Tuple
+from sympy import Tuple
 from sympy.core.function      import Function
 from sympy.core.expr          import Expr
 
@@ -17,7 +17,7 @@ from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeGeneric,
                         default_precision)
-from .internals import PyccelArraySize, Slice
+from .internals import PyccelArraySize, Slice, Symbol
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv,
                         PyccelUnarySub, PyccelAdd)
@@ -200,7 +200,7 @@ class Variable(Symbol, PyccelAstNode):
         self._order          = order
         self._is_argument    = is_argument
         self._is_kwonly      = is_kwonly
-        super().__init__()
+        super().__init__(name)
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
@@ -228,12 +228,6 @@ class Variable(Symbol, PyccelAstNode):
                 raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel),'
                                 'Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
         return tuple(new_shape)
-
-    @property
-    def name(self):
-        """ Name of the variable
-        """
-        return self._name
 
     @property
     def alloc_shape(self):

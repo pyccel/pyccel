@@ -4,7 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-# pylint: disable=R0201, missing-function-docstring 
+# pylint: disable=R0201, missing-function-docstring
 
 import os
 import re
@@ -13,7 +13,6 @@ import ast
 
 #==============================================================================
 
-from sympy import Symbol
 from sympy import Dict
 from sympy.core import cache
 
@@ -66,7 +65,7 @@ from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 from pyccel.ast.variable  import DottedName
 
-from pyccel.ast.internals import Slice
+from pyccel.ast.internals import Slice, Symbol
 
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.base import BasicParser

@@ -6,7 +6,6 @@
 # TODO must use Header.__new__ rather than Basic.__new__
 
 from sympy.utilities.iterables import iterable
-from sympy.core import Symbol
 from sympy import sympify
 
 from ..errors.errors import Errors
@@ -20,6 +19,7 @@ from .macros import Macro, MacroShape, construct_macro
 from .variable import DottedName, DottedVariable
 from .variable import Variable
 from .variable import ValuedVariable
+from .internals import Symbol
 
 __all__ = (
     'ClassHeader',

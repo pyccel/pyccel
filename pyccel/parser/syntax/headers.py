@@ -7,8 +7,8 @@
 """
 from os.path import join, dirname
 
-from sympy.core import Symbol
 from sympy import sympify
+from sympy import Symbol as sp_Symbol
 
 from textx.metamodel import metamodel_from_file
 
@@ -20,6 +20,7 @@ from pyccel.ast.core      import ValuedArgument
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
 from pyccel.ast.literals  import LiteralString
+from pyccel.ast.internals import Symbol
 from pyccel.errors.errors import Errors
 
 DEBUG = False
@@ -392,7 +393,7 @@ class MacroArg(BasicStmt):
             if isinstance(value, (MacroStmt,StringStmt)):
                 value = value.expr
             else:
-                value = sympify(str(value),locals={'N':Symbol('N'),'S':Symbol('S')})
+                value = sympify(str(value),locals={'N':sp_Symbol('N'),'S':sp_Symbol('S')})
             return ValuedArgument(arg, value)
         return arg
 

@@ -8,11 +8,11 @@
 
 
 from sympy.core.basic import Basic
-from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
 from sympy.printing.str import StrPrinter
 
-from pyccel.ast.core import Assign
+from pyccel.ast.core      import Assign
+from pyccel.ast.internals import Symbol
 
 from pyccel.errors.errors     import Errors
 from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO

@@ -92,8 +92,7 @@ class Slice(Basic):
 
     Examples
     --------
-    >>> from sympy import symbols
-    >>> from pyccel.ast.core import Slice
+    >>> from pyccel.ast.internals import Slice, symbols
     >>> start, end, step = symbols('start, stop, step', integer=True)
     >>> Slice(start, stop)
     start : stop
@@ -164,4 +163,74 @@ class Slice(Basic):
         else:
             stop = str(self.stop)
         return '{0} : {1}'.format(start, stop)
+
+class Symbol(Basic):
+    """
+    Represent variable with undefined type
+
+    Parameters
+    ----------
+    name : String
+        name of the symbol
+
+    Examples
+    --------
+    >>> from pyccel.ast.internals import Symbol
+    >>> x = Symbol('x')
+    x
+    """
+    _children = ()
+    def __init__(self, name):
+        if not isinstance(name, str):
+            raise TypeError('Symbol name should be a string, not '+ str(type(name)))
+        self._name = name
+        super().__init__()
+
+    @property
+    def name(self):
+        """Name of the symbol
+        """
+        return self._name
+
+    def __eq__(self, other):
+        if type(self) is type(other):
+            return self._name == other.name
+        else:
+            return False
+
+    def __hash__(self):
+        return hash(type(self).__name__ + self._name)
+
+    def __str__(self):
+        return self._name
+
+    def __repr__(self):
+        return self._name
+
+def symbols(names):
+    """
+    Transform strings into instances of Symbol class.
+
+    function returns a sequence of symbols with names taken
+    from argument, which can be a comma delimited
+    string
+
+    Parameters
+    ----------
+    name : String
+        comma delimited string
+
+    Return
+    ----------
+    Tuple :
+        tuple of instances of Symbol
+    Examples
+    --------
+    >>> from pyccel.ast.internals import symbols
+    >>> x, y, z = symbols('x,y,z')
+    (x, y, z)
+    """
+    names = names.split(',')
+    symbols = [Symbol(name.strip()) for name in names]
+    return tuple(symbols)
 

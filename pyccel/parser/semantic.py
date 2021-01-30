@@ -13,7 +13,7 @@ from sympy import Tuple
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
-from sympy import Symbol
+from sympy import Symbol as sp_Symbol
 from sympy import Integer as sp_Integer
 from sympy import ceiling
 from sympy import oo  as INF
@@ -87,7 +87,7 @@ from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
 
-from pyccel.ast.internals import Slice
+from pyccel.ast.internals import Slice, Symbol
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -2133,7 +2133,8 @@ class SemanticParser(BasicParser):
         indices = expr.indices
         dims    = []
         body    = expr.loops[1]
-
+        #TODO remove the line below after adding equivalent of atoms to Basic issue #694
+        indices = [sp_Symbol(i.name) for i in indices]
         idx_subs = dict()
 
         # The symbols created to represent unknown valued objects are temporary
@@ -2176,7 +2177,6 @@ class SemanticParser(BasicParser):
                               bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                               severity='fatal')
             self.insert_variable(var)
-
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
             start = pyccel_to_sympy(start, idx_subs, tmp_used_names)
             stop  = pyccel_to_sympy(stop , idx_subs, tmp_used_names)
@@ -2206,8 +2206,8 @@ class SemanticParser(BasicParser):
             # lower bound as this leads to too little memory being allocated
             min_size = size
             # Collect all uses of other indices
-            start_idx = [-1] + [indices.index(a) for a in start.atoms(Symbol) if a in indices]
-            stop_idx  = [-1] + [indices.index(a) for a in  stop.atoms(Symbol) if a in indices]
+            start_idx = [-1] + [indices.index(a) for a in start.atoms(sp_Symbol) if a in indices]
+            stop_idx  = [-1] + [indices.index(a) for a in  stop.atoms(sp_Symbol) if a in indices]
             start_idx.sort()
             stop_idx.sort()
 

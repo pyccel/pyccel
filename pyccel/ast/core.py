@@ -10,7 +10,7 @@ from collections     import OrderedDict
 from sympy import sympify
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
 from sympy import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Le as sp_Le, Gt as sp_Gt, Ge as sp_Ge
-from sympy import Integral, Symbol
+from sympy import Integral
 from sympy import Integer as sp_Integer
 from sympy import Float as sp_Float, Rational as sp_Rational
 from sympy import preorder_traversal
@@ -36,7 +36,7 @@ from .builtins  import (PythonEnumerate, PythonLen, PythonList, PythonMap,
 from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeBool, NativeRange,
                         NativeTuple, is_iterable_datatype, str_dtype)
-from .internals      import Slice
+from .internals      import Slice, Symbol
 
 from .literals       import LiteralTrue, LiteralFalse, LiteralInteger, Nil
 from .literals       import LiteralImaginaryUnit, LiteralString
@@ -106,7 +106,6 @@ __all__ = (
     'While',
     'With',
     '_atomic',
-#    'allocatable_like',
     'create_variable',
     'create_incremented_string',
     'extract_subexpressions',
@@ -200,78 +199,6 @@ def subs(expr, new_elements):
 
     else:
         return expr
-
-
-def allocatable_like(expr, verbose=False):
-    """
-    finds attributes of an expression
-
-    Parameters
-    ----------
-    expr: Expr
-        a pyccel expression
-
-    verbose: bool
-        talk more
-    """
-
-    if isinstance(expr, (Variable, IndexedElement)):
-        return expr
-    elif isinstance(expr, str):
-        # if the rhs is a string
-        return expr
-    elif isinstance(expr, Expr):
-        args = [expr]
-        while args:
-            a = args.pop()
-            # XXX: This is a hack to support non-Basic args
-            if isinstance(a, str):
-                continue
-
-            if a.is_Mul:
-                if _coeff_isneg(a):
-                    if a.args[0] is S.NegativeOne:
-                        a = a.as_two_terms()[1]
-                    else:
-                        a = -a
-                (n, d) = fraction(a)
-                if n.is_Integer:
-                    args.append(d)
-                    continue  # won't be -Mul but could be Add
-                elif d is not S.One:
-                    if not d.is_Integer:
-                        args.append(d)
-                    args.append(n)
-                    continue  # could be -Mul
-            elif a.is_Add:
-                aargs = list(a.args)
-                negs = 0
-                for ai in aargs:
-                    if _coeff_isneg(ai):
-                        negs += 1
-                        args.append(-ai)
-                    else:
-                        args.append(ai)
-                continue
-            if a.is_Pow and a.exp is S.NegativeOne:
-                args.append(a.base)  # won't be -Mul but could be Add
-                continue
-            if a.is_Mul or a.is_Pow or a.is_Function or \
-                    isinstance(a, (Derivative, Integral)):
-
-                o = Symbol(a.func.__name__.upper())
-            if not a.is_Symbol and not isinstance(a, (IndexedElement,
-                    FunctionCall)):
-                args.extend(a.args)
-
-            if isinstance(a, (Variable, IndexedElement)):
-                return a
-            elif a.is_Symbol:
-                raise TypeError('Found an unknown symbol {0}'.format(str(a)))
-    else:
-        raise TypeError('Unexpected type {0}'.format(type(expr)))
-
-
 
 def _atomic(e, cls=None,ignore=()):
 
@@ -484,8 +411,8 @@ def create_variable(forbidden_names, prefix = None, counter = 1):
 
       Returns
       ----------
-      name            : sympy.Symbol
-                        A sympy Symbol with the incremented string name
+      name            : Symbol
+                        A Symbol with the incremented string name
       counter         : int
                         The expected value of the next name
 
@@ -603,7 +530,8 @@ class Assign(Basic):
 
     Examples
     --------
-    >>> from sympy import symbols, MatrixSymbol, Matrix
+    >>> from sympy import MatrixSymbol, Matrix
+    >>> from pyccel.ast.internals import symbols
     >>> from pyccel.ast.core import Assign
     >>> x, y, z = symbols('x, y, z')
     >>> Assign(x, y)
@@ -880,7 +808,7 @@ class AliasAssign(Basic):
 
     Examples
     --------
-    >>> from sympy import Symbol
+    >>> from pyccel.ast.internals import Symbol
     >>> from pyccel.ast.core import AliasAssign
     >>> from pyccel.ast.core import Variable
     >>> n = Variable('int', 'n')
@@ -929,7 +857,7 @@ class SymbolicAssign(Basic):
 
     Examples
     --------
-    >>> from sympy import Symbol
+    >>> from pyccel.ast.internals import Symbol
     >>> from pyccel.ast.core import SymbolicAssign
     >>> from pyccel.ast.core import Range
     >>> r = Range(0, 3)
@@ -1091,7 +1019,7 @@ class While(Basic):
 
     Examples
     --------
-    >>> from sympy import Symbol
+    >>> from pyccel.ast.internals import Symbol
     >>> from pyccel.ast.core import Assign, While
     >>> n = Symbol('n')
     >>> While((n>1), [Assign(n,n-1)])
@@ -1534,8 +1462,9 @@ class For(Basic):
 
     Examples
     --------
-    >>> from sympy import symbols, MatrixSymbol
+    >>> from sympy import MatrixSymbol
     >>> from pyccel.ast.core import Assign, For
+    >>> from pyccel.ast.internals import symbols
     >>> i,b,e,s,x = symbols('i,b,e,s,x')
     >>> A = MatrixSymbol('A', 1, 3)
     >>> For(i, (b,e,s), [Assign(x,x-1), Assign(A[0, 1], x)])
@@ -3202,7 +3131,7 @@ class SymbolicPrint(Basic):
 
     Examples
     --------
-    >>> from sympy import symbols
+    >>> from pyccel.ast.internals import symbols
     >>> from pyccel.ast.core import Print
     >>> n,m = symbols('n,m')
     >>> Print(('results', n,m))
@@ -3489,7 +3418,7 @@ class If(Basic):
 
     Examples
     --------
-    >>> from sympy import Symbol
+    >>> from pyccel.ast.internals import Symbol
     >>> from pyccel.ast.core import Assign, If
     >>> n = Symbol('n')
     >>> If(((n>1), [Assign(n,n-1)]), (True, [Assign(n,n+1)]))
@@ -3651,7 +3580,7 @@ def get_initial_value(expr, var):
 # ... TODO treat other statements
 
 def get_assigned_symbols(expr):
-    """Returns all assigned symbols (as sympy Symbol) in the AST.
+    """Returns all assigned symbols in the AST.
 
     Parameters
     ----------

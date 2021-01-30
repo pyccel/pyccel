@@ -26,8 +26,8 @@ __all__ = (
 def lambdify(f):
 
     args = f.__code__.co_varnames
-    from sympy import symbols
-    args = symbols(args)
+    from pyccel.ast.internals import Symbol
+    args = Symbol(args)
     expr = f(*args)
     def wrapper(*vals):
         return  expr.subs(zip(args,vals)).doit()
