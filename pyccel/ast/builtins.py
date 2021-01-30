@@ -251,7 +251,7 @@ class PythonEnumerate(Basic):
     Represents the enumerate stmt
 
     """
-    _children = ('element_',)
+    _children = ('_element',)
 
     def __new__(cls, arg):
         if PyccelAstNode.stage != "syntactic" and \
