@@ -52,6 +52,8 @@ class PyccelArraySize(PyccelAstNode):
                                 tuple,
                                 PyccelAstNode)):
             raise TypeError('Unknown type of  %s.' % type(arg))
+        if not isinstance(index, PyccelAstNode):
+            raise TypeError('Unknown type of  %s.' % type(arg))
 
         self._arg   = arg
         self._index = index
