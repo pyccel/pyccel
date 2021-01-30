@@ -223,13 +223,15 @@ dtype_registry = {'bool': Bool,
 
 
 class UnionType(Basic):
+    _children = ()
 
-    def __new__(cls, args):
-        return Basic.__new__(cls, args)
+    def __init__(self, args):
+        self._args = args
+        super().__init__()
 
     @property
     def args(self):
-        return self._args[0]
+        return self._args
 
 
 def DataTypeFactory(name, argnames=["_name"],
