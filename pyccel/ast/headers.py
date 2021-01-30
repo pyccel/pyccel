@@ -560,7 +560,6 @@ class InterfaceHeader(Header):
     >>> m.name
     'axpy'
     """
-    _children = ()
 
     def __init__(self, name, funcs):
         if not isinstance(name,str):
