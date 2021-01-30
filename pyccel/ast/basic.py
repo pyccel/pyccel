@@ -38,14 +38,40 @@ class Basic(sp_Basic):
                 c.parent = self # TODO: write set_parent. Handled differently for e.g. Variable which exists in multiple places
 
     def has_parent_of_type(self, search_type):
-        if isinstance(self._parent, search_type):
-            return True
-        elif self._parent:
-            return self.parent.has_parent_of_type(search_type)
-        else:
+        """ Find out if any of the parents are instances
+        of the provided class
+
+        Parameters
+        ----------
+        search_type : ClassType or tuple of ClassTypes
+                      The types which we are looking for
+
+        Results
+        -------
+        Boolean : True if one of the parents is an instance of
+                  the class in the argument
+        """
+        if len(self._parent) == 0:
             return False
+        else:
+            return any(isinstance(p, search_type) or \
+                    p.has_parent_of_type(search_type) \
+                    for p in self._parent)
 
     def contains_type(self, search_type):
+        """ Find out if there is an object of the requested type
+        in the current object
+
+        Parameters
+        ----------
+        search_type : ClassType or tuple of ClassTypes
+                      The types which we are looking for
+
+        Results
+        -------
+        Boolean : True if the object contains an object of the
+                  requested type
+        """
         for n in self._children:
             v = getattr(self, n)
             if isinstance(v, search_type):
@@ -61,7 +87,7 @@ class Basic(sp_Basic):
 
     def substitute(self, original, replacement, excluded_nodes = ()):
         """
-        Substitute object original for object replacement in the code.
+        Substitute object 'original' for object 'replacement' in the code.
         Any types in excluded_nodes will not be visited
 
         Parameters
@@ -102,6 +128,8 @@ class Basic(sp_Basic):
 
     @property
     def parent(self):
+        """ Get the current parent of the object
+        """
         if self._parent:
             return self._parent[-1]
         else:
