@@ -46,7 +46,8 @@ class Basic(sp_Basic):
             return False
 
     def contains_type(self, search_type):
-        for n,v in self._children:
+        for n in self._children:
+            v = getattr(self, n)
             if isinstance(v, search_type):
                 return True
             elif isinstance(v, tuple):
@@ -77,7 +78,7 @@ class Basic(sp_Basic):
             if v is original:
                 setattr(self, n, replacement)
             elif isinstance(v, tuple):
-                if original in tuple:
+                if original in v:
                     v = tuple(replacement if vi is original else vi for vi in v)
                 for vi in v:
                     v.substitute(original, replacement, excluded_nodes)
