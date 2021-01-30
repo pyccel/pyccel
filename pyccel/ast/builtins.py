@@ -259,9 +259,9 @@ class PythonEnumerate(Basic):
             raise TypeError('Expecting an arg of valid type')
         return Basic.__new__(cls, arg)
 
-    def __init__(cls, arg):
+    def __init__(self, arg):
         self._element = arg
-        Basic.__init__(self)
+        super().__init__()
 
     @property
     def element(self):
@@ -564,7 +564,7 @@ class PythonRange(Basic):
         self._start = start
         self._stop  = stop
         self._step  = step
-        return super().__init__()
+        super().__init__()
 
     @property
     def start(self):
