@@ -12,6 +12,8 @@ from sympy import Tuple
 from sympy.core.function      import Function
 from sympy.core.expr          import Expr
 
+from pyccel.errors.errors import Errors
+
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeReal,
@@ -21,6 +23,9 @@ from .internals import PyccelArraySize, Slice, Symbol
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv,
                         PyccelUnarySub, PyccelAdd)
+
+errors = Errors()
+
 __all__ = (
     'DottedName',
     'DottedVariable',
