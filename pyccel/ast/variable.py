@@ -737,7 +737,11 @@ class IndexedElement(PyccelAstNode):
         if len(args) < rank:
             args = args + tuple([Slice(None, None)]*(rank-len(args)))
 
-        self._indices = args
+        if any(not isinstance(a, (int, PyccelAstNode, Slice)) for a in args):
+            errors.report("Index is not of valid type",
+                    symbol = args, severity = 'fatal')
+
+        self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in args)
 
         # Calculate new shape
 
