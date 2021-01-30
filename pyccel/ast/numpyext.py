@@ -564,7 +564,7 @@ class NumpyAutoFill(NumpyFull):
         if (dtype is None) or isinstance(dtype, Nil):
             raise TypeError("Data type must be provided")
 
-        NumpyFull.__init__(self, shape, None, dtype, order)
+        NumpyFull.__init__(self, shape, Nil(), dtype, order)
 
 #==============================================================================
 class NumpyEmpty(NumpyAutoFill):

@@ -1699,6 +1699,7 @@ class ValuedArgument(Basic):
         self._expr   = expr
         self._value  = value
         self._kwonly = kwonly
+        super().__init__()
 
     @property
     def argument(self):
