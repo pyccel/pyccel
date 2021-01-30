@@ -5,10 +5,11 @@
 #------------------------------------------------------------------------------------------#
 """
 File containing basic classes which are used throughout pyccel.
-To avoid circular imports this file should only import from basic and datatypes
+To avoid circular imports this file should only import from basic, datatypes, and literals
 """
-from .basic import Basic, PyccelAstNode
+from .basic     import Basic, PyccelAstNode
 from .datatypes import NativeInteger, default_precision
+from .literals  import LiteralInteger
 
 __all__ = (
     'PyccelInternalFunction',
@@ -52,7 +53,9 @@ class PyccelArraySize(PyccelAstNode):
                                 tuple,
                                 PyccelAstNode)):
             raise TypeError('Unknown type of  %s.' % type(arg))
-        if not isinstance(index, PyccelAstNode):
+        if isinstance(index, int):
+            index = LiteralInteger(index)
+        elif not isinstance(index, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(index))
 
         self._arg   = arg
