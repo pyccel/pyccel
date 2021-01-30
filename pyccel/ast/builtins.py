@@ -128,7 +128,9 @@ class PythonBool(PyccelAstNode):
 
     def __new__(cls, arg):
         if getattr(arg, 'is_optional', None):
-            return PyccelAnd(PyccelIsNot(arg, Nil()), super().__new__(cls, arg))
+            bool_expr = super().__new__(cls, arg)
+            bool_expr.__init__(arg)
+            return PyccelAnd(PyccelIsNot(arg, Nil()), bool_expr)
         else:
             return super().__new__(cls, arg)
 
