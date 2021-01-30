@@ -41,7 +41,7 @@ class Basic(sp_Basic):
         if isinstance(self._parent, search_type):
             return True
         elif self._parent:
-            return self._parent.has_parent_of_type(search_type)
+            return self.parent.has_parent_of_type(search_type)
         else:
             return False
 
