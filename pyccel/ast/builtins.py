@@ -186,7 +186,7 @@ class PythonComplex(PyccelAstNode):
         if arg0.dtype is NativeComplex() and arg1.dtype is NativeComplex():
             # both args are complex
             return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit()))
-        return super().__new__(arg0, arg1)
+        return super().__new__(cls, arg0, arg1)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
         self._is_cast = arg0.dtype is NativeComplex() and \
@@ -281,7 +281,7 @@ class PythonFloat(PyccelAstNode):
         elif isinstance(arg, LiteralInteger):
             return LiteralFloat(arg.p, precision = cls._precision)
         else:
-            return super().__new__(arg)
+            return super().__new__(cls, arg)
 
     def __init__(self, arg):
         self._arg = arg
@@ -335,7 +335,9 @@ class PythonTuple(PyccelAstNode):
         return Expr.__new__(cls, *args)
 
     def __init__(self, *args):
+        self._args = args
         if self.stage == 'syntactic' or len(args) == 0:
+            super().__init__()
             return
         is_homogeneous = all(a.dtype is not NativeGeneric() and \
                              args[0].dtype == a.dtype and \
@@ -381,7 +383,7 @@ class PythonTuple(PyccelAstNode):
             self._dtype     = NativeGeneric()
             self._precision = 0
             self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
-        Basic.__init__(self)
+        super().__init__()
 
     def __getitem__(self,i):
         return self._args[i]
@@ -431,6 +433,7 @@ class PythonList(PythonTuple):
     _children = ('_args',)
     def __init__(self, *args, **kwargs):
         if self.stage == 'syntactic':
+            super().__init__(*args)
             return
         self._is_homogeneous = all(a.dtype is not NativeGeneric() and \
                              args[0].dtype == a.dtype and \
@@ -466,7 +469,7 @@ class PythonList(PythonTuple):
             if all(sh is not None for sh in shapes):
                 self._shape = (LiteralInteger(len(args)), ) + shapes[0]
                 self._rank  = len(self._shape)
-        Basic.__init__(self)
+        super().__init__(*args)
 
     @property
     def is_homogeneous(self):

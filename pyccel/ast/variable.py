@@ -471,15 +471,16 @@ class DottedName(Basic):
     """
     _children = ()
 
-    def __new__(cls, *args):
-        return Basic.__new__(cls, *args)
+    def __init__(self, *args):
+        self._name = args
+        super().__init__()
 
     @property
     def name(self):
         """ The different components of the name
         (these were separated by dots)
         """
-        return self._args
+        return self._name
 
     def __str__(self):
         return """.""".join(str(n) for n in self.name)

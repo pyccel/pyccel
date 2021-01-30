@@ -134,9 +134,9 @@ class NumpyArray(NumpyNewArray):
     arg : list, tuple, PythonList
 
     """
+    _children = ('_arg',)
 
     def __init__(self, arg, dtype=None, order='C'):
-        NumpyNewArray.__init__(self)
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
@@ -168,6 +168,7 @@ class NumpyArray(NumpyNewArray):
         self._dtype = dtype
         self._order = order
         self._precision = prec
+        super().__init__()
 
     def _sympystr(self, printer):
         return self.arg
@@ -196,9 +197,9 @@ class NumpyArange(NumpyNewArray):
         The type of the output array, if dtype is not given,
         infer the data type from the other input arguments.
     """
+    _children = ('_start','_step','_stop')
 
     def __init__(self, start, stop = None, step = None, dtype = None):
-        NumpyNewArray.__init__(self)
 
         if stop is None:
             self._start = LiteralInteger(0)
@@ -207,8 +208,6 @@ class NumpyArange(NumpyNewArray):
             self._start = start
             self._stop = stop
         self._step = step if step is not None else LiteralInteger(1)
-
-        self._arg = [self._start, self._stop, self._step]
 
         if dtype is None:
             self._dtype = max([i.dtype for i in self._arg], key = NativeNumeric.index)
@@ -219,10 +218,11 @@ class NumpyArange(NumpyNewArray):
         self._rank = 1
         self._shape = (MathCeil(PyccelDiv(PyccelMinus(self._stop, self._start), self._step)))
         self._shape = process_shape(self._shape)
+        super().__init__()
 
     @property
     def arg(self):
-        return self._arg
+        return (self._start, self._stop, self._step)
 
     @property
     def start(self):

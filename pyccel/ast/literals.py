@@ -119,7 +119,7 @@ class LiteralComplex(Literal):
 
     def __new__(cls, real, imag, precision = default_precision['complex']):
         if cls is LiteralImaginaryUnit:
-            return super().__new__(real, imag)
+            return super().__new__(cls, real, imag)
         real_part = cls._collect_python_val(real)
         imag_part = cls._collect_python_val(imag)
         if real_part == 0 and imag_part == 1:

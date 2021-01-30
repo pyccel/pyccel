@@ -23,7 +23,7 @@ class PyccelInternalFunction(PyccelAstNode):
     _children = ('_args',)
     def __init__(self, *args):
         self._args   = tuple(args)
-        PyccelAstNode.__init__(self, {'_args', self._args})
+        super().__init__()
 
     @property
     def args(self):
@@ -103,15 +103,13 @@ class Slice(Basic):
     >>> Slice(start, stop, step)
     start : stop : step
     """
-
-    def __new__(cls, start, stop, step = None):
-        return Basic.__new__(cls, start, stop, step)
+    _children = ('_start','_stop','_step')
 
     def __init__(self, start, stop, step = None):
-        Basic.__init__(self)
         self._start = start
         self._stop = stop
         self._step = step
+        super().__init__()
         if PyccelAstNode.stage == 'syntactic':
             return
         if start is not None and not (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger)):
