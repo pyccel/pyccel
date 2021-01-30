@@ -768,9 +768,11 @@ class FCodePrinter(CodePrinter):
         init_value = self._print(expr.arg)
         prec = self.print_kind(expr)
         if expr.arg.order == 'C':
-            index = self._print(expr.arg.rank - expr.index)
+            index = PyccelMinus(LiteralInteger(expr.arg.rank), expr.index)
+            index = self._print(index)
         else:
-            index = self._print(expr.index + 1)
+            index = PyccelAdd(expr.index, LiteralInteger(1))
+            index = self._print(index)
 
         if expr.arg.rank == 1:
             return 'size({0}, kind={1})'.format(init_value, prec)
@@ -2642,7 +2644,7 @@ class FCodePrinter(CodePrinter):
         allow_negative_indexes = base.allows_negative_indexes
 
         for i, ind in enumerate(inds):
-            _shape = PyccelArraySize(base, i if expr.order != 'C' else len(inds) - i - 1)
+            _shape = PyccelArraySize(base, LiteralInteger(i if expr.order != 'C' else len(inds) - i - 1))
             if isinstance(ind, Slice):
                 inds[i] = self._new_slice_with_processed_arguments(ind, _shape, allow_negative_indexes)
             elif isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
