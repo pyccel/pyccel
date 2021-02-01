@@ -3248,8 +3248,6 @@ def test_zeros_like_order(language):
 
     size_1 = randint(10)
     size_2 = randint(10)
-    from numpy import array
-    arr = array([5, 1, 8, 0, 9])
 
     f_shape_C  = epyccel(create_zeros_like_shape_C, language = language)
     assert(     f_shape_C(size_1,size_2) == create_zeros_like_shape_C(size_1,size_2))
