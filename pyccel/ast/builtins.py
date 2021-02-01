@@ -11,9 +11,6 @@ In this module we implement some of them in alphabetical order.
 
 """
 
-from sympy import Expr, Not
-from sympy import sympify
-
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
@@ -22,7 +19,7 @@ from .internals import PyccelInternalFunction, Symbol
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
-from .operators import PyccelMinus, PyccelUnarySub
+from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
 
 __all__ = (
     'PythonReal',
@@ -334,9 +331,6 @@ class PythonTuple(PyccelAstNode):
     _order = 'C'
     _children = ('_args',)
 
-    def __new__(cls, *args):
-        return Expr.__new__(cls, *args)
-
     def __init__(self, *args):
         self._args = args
         super().__init__()
@@ -470,11 +464,6 @@ class PythonPrint(Basic):
     """
     _children = ('_expr',)
 
-    def __new__(cls, expr):
-        if not isinstance(expr, list):
-            expr = sympify(expr, locals=local_sympify)
-        return super().__new__(cls, expr)
-
     def __init__(self, expr):
         self._expr = expr
         super().__init__()
@@ -591,8 +580,7 @@ class PythonSum(PyccelInternalFunction):
     """
 
     def __init__(self, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, PythonList,
-                                Variable, Expr)): # pylint: disable=undefined-variable
+        if not isinstance(arg, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         self._dtype = arg.dtype
         self._rank  = 0
@@ -642,7 +630,7 @@ class Lambda(Basic):
     ==========
     variables : tuple of symbols
                 The arguments to the lambda expression
-    expr      : Expr
+    expr      : PyccelAstNode
                 The expression carried out when the lambda function is called
     """
     _children = ('_variables', '_expr')
