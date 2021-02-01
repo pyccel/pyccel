@@ -318,7 +318,7 @@ def omp_tasks(x):
     @types('int', results='int')
     def fib(n):
         if n < 2:
-          return n
+            return n
         #$ omp task shared(i) firstprivate(n)
         i = fib(n-1)
         #$ omp end task
