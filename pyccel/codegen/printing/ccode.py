@@ -893,25 +893,15 @@ class CCodePrinter(CodePrinter):
                 self._additional_imports.add('math')
         args = []
         for arg in expr.args:
-            if arg.dtype != expr.dtype:
-                cast_func = python_builtin_datatypes[str_dtype(expr.dtype)]
-                args.append(self._print(cast_func(arg)))
+            if arg.dtype != NativeReal() and not func_name.startswith("pyc"):
+                args.append(self._print(PythonFloat(arg)))
             else:
                 args.append(self._print(arg))
         code_args = ', '.join(args)
+        if expr.dtype == NativeInteger():
+            cast_type = self.find_in_dtype_registry('int', expr.precision)
+            return '({0}){1}({2})'.format(cast_type, func_name, code_args)
         return '{0}({1})'.format(func_name, code_args)
-
-    def _print_MathCeil(self, expr):
-        """Convert a Python expression with a math ceil function call to C
-        function call"""
-        # add necessary include
-        self._additional_imports.add('math')
-        arg = expr.args[0]
-        if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
-        else:
-            code_arg = self._print(arg)
-        return "ceil({})".format(code_arg)
 
     def _print_MathIsfinite(self, expr):
         """Convert a Python expression with a math isfinite function call to C
@@ -1096,11 +1086,14 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelFloorDiv(self, expr):
         self._additional_imports.add("math")
-        if all(a.dtype is NativeInteger() for a in expr.args):
-            args = [PythonFloat(a) for a in expr.args]
-        else:
-            args = expr.args
-        code = ' / '.join(self._print(a) for a in args)
+        # the result type of the floor division is dependent on the arguments
+        # type, if all arguments are integers the result is integer otherwise
+        # the result type is float
+        need_to_cast = all(a.dtype is NativeInteger() for a in expr.args)
+        code = ' / '.join(self._print(a if a.dtype is NativeReal() else PythonFloat(a)) for a in expr.args)
+        if (need_to_cast):
+            cast_type = self.find_in_dtype_registry('int', expr.precision)
+            return "({})floor({})".format(cast_type, code)
         return "floor({})".format(code)
 
     def _print_PyccelRShift(self, expr):
