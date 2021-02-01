@@ -429,8 +429,6 @@ class PythonList(PythonTuple):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
-        if not self.is_homogeneous:
-            raise NotImplementedError("Non-homogeneous lists are not handled by pyccel")
 
 #==============================================================================
 class PythonMap(Basic):
