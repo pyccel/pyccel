@@ -83,7 +83,7 @@ class LiteralInteger(Literal):
     _dtype     = NativeInteger()
 
     def __init__(self, value, precision = default_precision['integer']):
-        Literal.__init__(self, precision)
+        super().__init__(precision)
         if not isinstance(value, int):
             raise TypeError("A LiteralInteger can only be created with an integer")
         self.p = value
@@ -128,7 +128,7 @@ class LiteralComplex(Literal):
             return super().__new__(cls, real, imag)
 
     def __init__(self, real, imag, precision = default_precision['complex']):
-        Literal.__init__(self, precision)
+        super().__init__(precision)
         self._real_part = LiteralFloat(self._collect_python_val(real))
         self._imag_part = LiteralFloat(self._collect_python_val(imag))
 
@@ -159,10 +159,10 @@ class LiteralComplex(Literal):
 class LiteralImaginaryUnit(LiteralComplex):
     """Represents the python value j"""
     def __new__(cls):
-        return LiteralComplex.__new__(cls, 0, 1)
+        return super().__new__(cls, 0, 1)
 
     def __init__(self, real=0, imag=1, precision = default_precision['complex']):
-        LiteralComplex.__init__(self, 0, 1)
+        super().__init__(0, 1)
 
     @property
     def python_value(self):
