@@ -2687,7 +2687,7 @@ def test_full_like_order(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="casting to complex in not handled correctly"),
+            pytest.mark.skip(reason="casting to complex is not handled correctly"),
             pytest.mark.c]
         )
     )
