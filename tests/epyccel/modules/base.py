@@ -213,3 +213,9 @@ def pass2_if(b):
     else:
         c = 2
     return c
+
+def use_optional(a : int = None):
+    b = 3
+    if a:
+        b += a
+    return b

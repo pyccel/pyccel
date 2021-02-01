@@ -83,10 +83,13 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         imports = self._indent_codestring(imports)
         code = ('def {name}({args}):\n'
                 '\n{imports}\n{body}\n').format(name=name, args=args,imports=imports, body=body)
-
         decorators = expr.decorators
-
         if decorators:
+            if decorators['template']:
+                # Eliminate template_dict because it is useless in the printing
+                expr.decorators['template'] = expr.decorators['template']['decorator_list']
+            else:
+                expr.decorators.pop('template')
             for n,f in decorators.items():
                 if n in pyccel_decorators:
                     self._additional_imports.add(Import(DottedName('pyccel.decorators'), n))
@@ -153,9 +156,6 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_EmptyNode(self, expr):
         return ''
-
-    def _print_NewLine(self, expr):
-        return '\n'
 
     def _print_DottedName(self, expr):
         return '.'.join(self._print(n) for n in expr.name)
@@ -244,7 +244,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_If(self, expr):
         lines = []
-        for i, (c, e) in enumerate(expr.args):
+        for i, (c, e) in enumerate(expr.blocks):
             if i == 0:
                 lines.append("if (%s):" % self._print(c))
 
