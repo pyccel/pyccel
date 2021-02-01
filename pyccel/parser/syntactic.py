@@ -628,7 +628,7 @@ class SyntaxParser(BasicParser):
         local_vars   = []
         global_vars  = []
         headers      = []
-        templates    = {}
+        template    = {}
         is_pure      = False
         is_elemental = False
         is_private   = False
@@ -684,7 +684,7 @@ class SyntaxParser(BasicParser):
 
         if 'allow_negative_index' in decorators:
             decorators['allow_negative_index'] = tuple(str(b) for a in decorators['allow_negative_index'] for b in a.args)
-
+        template['template_dict'] = {}
         # extract the templates
         if 'template' in decorators:
             for comb_types in decorators['template']:
@@ -727,14 +727,19 @@ class SyntaxParser(BasicParser):
 
                 txt  = '#$ header template ' + str(tp_name)
                 txt += '(' + '|'.join(types) + ')'
-                if tp_name in templates:
+                if tp_name in template['template_dict']:
                     msg = 'The template "{}" is duplicated'.format(tp_name)
                     errors.report(msg,
                                 bounding_box = (stmt.lineno, stmt.col_offset),
                                 severity='warning')
+                # Make templates decorator dict accessible from decorators dict
+                template['template_dict'][tp_name] = hdr_parse(stmts=txt)
+            # Make template decorator list accessible from decorators dict
+            template['decorator_list'] = decorators['template']
+            decorators['template'] = template
 
-                templates[tp_name] = hdr_parse(stmts=txt)
-
+        if not template['template_dict']:
+            decorators['template'] = None
         # extract the types to construct a header
         if 'types' in decorators:
             for comb_types in decorators['types']:
@@ -844,7 +849,6 @@ class SyntaxParser(BasicParser):
                imports=imports,
                decorators=decorators,
                headers=headers,
-               templates=templates,
                doc_string=doc_string)
 
         func.set_fst(stmt)
