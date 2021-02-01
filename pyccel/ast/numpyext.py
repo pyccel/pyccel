@@ -247,8 +247,8 @@ class NumpySum(PyccelInternalFunction):
     def __init__(self, arg):
         if not isinstance(arg, (list, tuple, PythonTuple, PythonList,
                             Variable, Expr)):
-            raise TypeError('Uknown type of  %s.' % type(arg))
-        PyccelInternalFunction.__init__(self, arg)
+            raise TypeError('Unknown type of  %s.' % type(arg))
+        super().__init__(arg)
         self._dtype = arg.dtype
         self._rank  = 0
         self._shape = ()
@@ -268,8 +268,8 @@ class NumpyProduct(PyccelInternalFunction):
     def __init__(self, arg):
         if not isinstance(arg, (list, tuple, PythonTuple, PythonList,
                                 Variable, Expr)):
-            raise TypeError('Uknown type of  %s.' % type(arg))
-        PyccelInternalFunction.__init__(self, arg)
+            raise TypeError('Unknown type of  %s.' % type(arg))
+        super().__init__(arg)
         self._dtype = arg.dtype
         self._rank  = 0
         self._shape = ()
@@ -293,7 +293,7 @@ class NumpyMatmul(PyccelInternalFunction):
         if not isinstance(b, (list, tuple, PythonTuple, PythonList,
                                 Variable, Expr)):
             raise TypeError('Unknown type of  %s.' % type(a))
-        PyccelInternalFunction.__init__(self, a, b)
+        super().__init__(a, b)
 
         args      = (a, b)
         integers  = [e for e in args if e.dtype is NativeInteger() or a.dtype is NativeBool()]
@@ -390,7 +390,7 @@ class NumpyLinspace(NumpyNewArray):
         self._stop  = stop
         self._size  = size
         self._shape = (self.size,)
-        NumpyNewArray.__init__(self)
+        super().__init__()
 
     @property
     def start(self):
@@ -424,7 +424,7 @@ class NumpyWhere(PyccelInternalFunction):
     """ Represents a call to  numpy.where """
 
     def __init__(self, mask):
-        PyccelInternalFunction.__init__(self, mask)
+        super().__init__(mask)
 
 
     @property
@@ -448,7 +448,7 @@ class NumpyRand(PyccelInternalFunction):
     _precision = default_precision['real']
 
     def __init__(self, *args):
-        PyccelInternalFunction.__init__(self)
+        super().__init__(*args)
         self._shape = args
         self._rank  = len(self.shape)
 
@@ -466,9 +466,10 @@ class NumpyRandint(PyccelInternalFunction):
     _dtype = NativeInteger()
     _precision = default_precision['integer']
     _order = 'C'
+    _children = ('_low', '_high')
 
     def __init__(self, low, high = None, size = None):
-        PyccelInternalFunction.__init__(self)
+        super().__init__()
         if size is None:
             size = ()
         if not hasattr(size,'__iter__'):
@@ -564,7 +565,7 @@ class NumpyAutoFill(NumpyFull):
         if (dtype is None) or isinstance(dtype, Nil):
             raise TypeError("Data type must be provided")
 
-        NumpyFull.__init__(self, shape, Nil(), dtype, order)
+        super().__init__(shape, Nil(), dtype, order)
 
 #==============================================================================
 class NumpyEmpty(NumpyAutoFill):
@@ -677,7 +678,7 @@ class NumpyNorm(PyccelInternalFunction):
         else:
             self._shape = ()
         self._rank = len(self._shape)
-        PyccelInternalFunction.__init__(self, arg, dim)
+        super().__init__(arg, dim)
 
     @property
     def arg(self):
