@@ -74,8 +74,8 @@ class Basic(sp_Basic):
                     p.has_parent_of_type(search_type) \
                     for p in self._parent)
 
-    def contains_type(self, search_type):
-        """ Find out if there is an object of the requested type
+    def children_of_type(self, search_type):
+        """ Returns all objects of the requested type
         in the current object
 
         Parameters
@@ -85,21 +85,30 @@ class Basic(sp_Basic):
 
         Results
         -------
-        Boolean : True if the object contains an object of the
-                  requested type
+        list : List containing all objects of the
+               requested type which exist in self
         """
+        print(self)
+        results = []
         for n in self._children:
             v = getattr(self, n)
+            print("child : ",type(v))
             if isinstance(v, search_type):
-                return True
-            elif isinstance(v, tuple):
-                if any(isinstance(vi, search_type) or \
-                        vi.contains_type(search_type) \
-                        for vi in v):
-                    return True
-            elif v.contains_type(search_type):
-                return True
-        return False
+                results.append(v)
+
+            if isinstance(v, tuple):
+                for vi in v:
+                    print("child : ",type(vi))
+                    if isinstance(v, search_type):
+                        results.append(v)
+
+                    if isinstance(vi, tuple):
+                        print("mmmmmhhhhh")
+                    elif vi is not None:
+                        results.extend(vi.children_of_type(search_type))
+            elif v is not None:
+                results.extend(v.children_of_type(search_type))
+        return results
 
     def substitute(self, original, replacement, excluded_nodes = ()):
         """
