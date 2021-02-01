@@ -278,8 +278,8 @@ def test_omp_range_sum_critical(language):
     from random import randint
 
     for i in range(0, 4):
-      x = randint(10, 1000)
-      assert f1(x) == openmp.omp_range_sum_critical(x)
+        x = randint(10, 1000)
+        assert f1(x) == openmp.omp_range_sum_critical(x)
 
 
 @pytest.mark.parametrize( 'language', [
@@ -307,11 +307,11 @@ def test_omp_taskloop(language):
     from random import randint
 
     for i in range(0, 4):
-      x = randint(1, 4)
-      result = 0
-      for j in range(0, x * 10):
-        result = result + 1
-      assert result == f1(x)
+        x = randint(1, 4)
+        result = 0
+        for j in range(0, x * 10):
+            result = result + 1
+        assert result == f1(x)
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -325,5 +325,5 @@ def test_omp_tasks(language):
     from random import randint
 
     for i in range(0, 4):
-      x = randint(10, 20)
-      assert openmp.omp_tasks(x) == f1(x)
+        x = randint(10, 20)
+        assert openmp.omp_tasks(x) == f1(x)
