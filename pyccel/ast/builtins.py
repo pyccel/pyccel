@@ -435,7 +435,7 @@ class PythonList(PythonTuple):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
-        if self.is_homogeneous:
+        if not self.is_homogeneous:
             raise NotImplementedError("Non-homogeneous lists are not handled by pyccel")
 
 #==============================================================================
