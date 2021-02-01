@@ -469,7 +469,6 @@ class NumpyRandint(PyccelInternalFunction):
     _children = ('_low', '_high')
 
     def __init__(self, low, high = None, size = None):
-        super().__init__()
         if size is None:
             size = ()
         if not hasattr(size,'__iter__'):
@@ -480,6 +479,7 @@ class NumpyRandint(PyccelInternalFunction):
         self._rand    = NumpyRand(*size)
         self._low     = low
         self._high    = high
+        super().__init__()
 
     @property
     def rand_expr(self):
