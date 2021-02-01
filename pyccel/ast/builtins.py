@@ -432,50 +432,11 @@ class PythonList(PythonTuple):
     """
     _order = 'C'
     _is_homogeneous = True
-    _children = ('_args',)
+
     def __init__(self, *args, **kwargs):
-        if self.stage == 'syntactic':
-            super().__init__(*args)
-            return
-        self._is_homogeneous = all(a.dtype is not NativeGeneric() and \
-                             args[0].dtype == a.dtype and \
-                             args[0].rank  == a.rank  and \
-                             args[0].order == a.order for a in args[1:])
-
-        bools     = [a for a in args if a.dtype is NativeBool()]
-        integers  = [a for a in args if a.dtype is NativeInteger()]
-        reals     = [a for a in args if a.dtype is NativeReal()]
-        complexes = [a for a in args if a.dtype is NativeComplex()]
-        strs      = [a for a in args if a.dtype is NativeString()]
-        if strs:
-            self._dtype = NativeString()
-            self._rank  = 0
-            self._shape = ()
-
-        else:
-            if complexes:
-                self._dtype     = NativeComplex()
-                self._precision = max(a.precision for a in complexes)
-            elif reals:
-                self._dtype     = NativeReal()
-                self._precision = max(a.precision for a in reals)
-            elif integers:
-                self._dtype     = NativeInteger()
-                self._precision = max(a.precision for a in integers)
-            elif bools:
-                self._dtype     = NativeBool()
-                self._precision  = max(a.precision for a in bools)
-
-            shapes = [a.shape for a in args]
-            self._rank = max(a.rank for a in args) + 1
-            if all(sh is not None for sh in shapes):
-                self._shape = (LiteralInteger(len(args)), ) + shapes[0]
-                self._rank  = len(self._shape)
         super().__init__(*args)
-
-    @property
-    def is_homogeneous(self):
-        return self._is_homogeneous
+        if self.is_homogeneous:
+            raise NotImplementedError("Non-homogeneous lists are not handled by pyccel")
 
 #==============================================================================
 class PythonMap(Basic):
