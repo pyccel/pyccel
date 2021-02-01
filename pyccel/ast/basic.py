@@ -48,7 +48,7 @@ class Basic(sp_Basic):
                     if isinstance(ci, tuple): # TODO: Fix if to avoid multi-layers
                         for cii in ci:
                             cii.parent = self
-                    else:
+                    elif ci:
                         ci.parent = self
             elif c:
                 c.parent = self
