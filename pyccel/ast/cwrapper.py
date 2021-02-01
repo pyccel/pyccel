@@ -245,6 +245,7 @@ class PyBuildValueNode(Basic):
         self._result_args = result_args
         for i in result_args:
             self._flags += pytype_parse_registry[(i.dtype, i.precision)]
+        super().__init__()
 
     @property
     def flags(self):

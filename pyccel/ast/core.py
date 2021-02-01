@@ -2375,6 +2375,7 @@ class Interface(Basic):
         self._name = name
         self._functions = functions
         self._is_argument = is_argument
+        super().__init__()
 
     @property
     def name(self):
