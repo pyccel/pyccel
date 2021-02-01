@@ -722,7 +722,7 @@ class CCodePrinter(CodePrinter):
                         inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1)), LiteralInteger(1))
                 inds = [self._print(i) for i in inds]
                 return "array_slicing(%s, %s, %s)" % (base_name, expr.rank, ", ".join(inds))
-            inds = [self._cast_to(i, NativeInteger(), 8) for i in inds]
+            inds = [self._cast_to(i, NativeInteger(), 8).format(self._print(i)) for i in inds]
         else:
             raise NotImplementedError(expr)
         return "%s.%s[get_index(%s, %s)]" % (base_name, dtype, base_name, ", ".join(inds))
@@ -731,9 +731,9 @@ class CCodePrinter(CodePrinter):
         """ add cast to an expresion when needed
         parameters
         ----------
-            expr :
+            expr      : PyccelAstNode
                 the expression to be casted
-            dtype : Datatype
+            dtype     : Datatype
                 base type of the cast
             precision : integer
                 precision of the base type of the cast
@@ -744,10 +744,9 @@ class CCodePrinter(CodePrinter):
                 Return string that contains the expression casted to the desired type
         """
         if (expr.dtype != dtype or expr.precision != precision):
-            cast=self.find_in_dtype_registry(self._print(expr.dtype), precision)
-            expr = self._print(expr)
-            return '({cast}){expr}'.format(cast=cast, expr=expr)
-        return self._print(expr)
+            cast=self.find_in_dtype_registry(self._print(dtype), precision)
+            return '({}){{}}'.format(cast)
+        return '{}'
     def _print_DottedVariable(self, expr):
         """convert dotted Variable to their C equivalent"""
         return '{}.{}'.format(self._print(expr.lhs), self._print(expr.name))
