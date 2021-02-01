@@ -261,16 +261,16 @@ def convert_to_literal(value, dtype = None, precision = None):
         precision = default_precision[str(dtype)]
 
     if isinstance(dtype, NativeInteger):
-        value = LiteralInteger(value, precision)
+        value = LiteralInteger(value, precision = precision)
     elif isinstance(dtype, NativeReal):
-        value = LiteralFloat(value, precision)
+        value = LiteralFloat(value, precision = precision)
     elif isinstance(dtype, NativeComplex):
-        value = LiteralComplex(value.real, value.imag, precision)
+        value = LiteralComplex(value.real, value.imag, precision = precision)
     elif isinstance(dtype, NativeBool):
         if value:
-            value = LiteralTrue(precision)
+            value = LiteralTrue(precision = precision)
         else:
-            value = LiteralFalse(precision)
+            value = LiteralFalse(precision = precision)
     elif isinstance(dtype, NativeString):
         value = LiteralString(value)
     else:
