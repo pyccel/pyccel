@@ -668,6 +668,8 @@ class Constant(ValuedVariable):
     --------
 
     """
+    # The value of a constant is not a translated object
+    _children = ()
 
 
 
