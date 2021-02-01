@@ -28,16 +28,17 @@ __all__ = (
 class Macro(AtomicExpr, PyccelAstNode):
     """."""
     _name = '__UNDEFINED__'
+    _children = ()
 
-    def __new__(cls, argument):
+    def __init__(self, argument):
         # TODO add verification
 
-        argument = sympify(argument, locals=local_sympify)
-        return Basic.__new__(cls, argument)
+        self._argument = argument
+        super().__init__()
 
     @property
     def argument(self):
-        return self._args[0]
+        return self._argument
 
     @property
     def name(self):
@@ -52,11 +53,9 @@ class MacroShape(Macro):
     _dtype     = NativeInteger()
     _precision = default_precision['integer']
 
-    def __new__(cls, argument, index=None):
-        return Macro.__new__(cls, argument)
-
     def __init__(self, argument, index=None):
         self._index = index
+        super().__init__(argument)
 
     @property
     def index(self):
@@ -79,9 +78,6 @@ class MacroType(Macro):
     _shape     = ()
     _precision = 0
 
-    def __new__(cls, argument):
-        return Macro.__new__(cls, argument)
-
     def _sympystr(self, printer):
         sstr = printer.doprint
         return 'MacroType({})'.format(sstr(self.argument))
@@ -94,9 +90,6 @@ class MacroCount(Macro):
     _shape     = ()
     _dtype     = NativeInteger()
     _precision = default_precision['integer']
-
-    def __new__(cls, argument):
-        return Macro.__new__(cls, argument)
 
     def _sympystr(self, printer):
         sstr = printer.doprint
