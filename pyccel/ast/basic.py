@@ -31,12 +31,11 @@ class Basic(sp_Basic):
                 for ci in c:
                     if isinstance(ci, tuple): # TODO: Fix if to avoid multi-layers
                         for cii in ci:
-                            if hasattr(c, 'parent') and c.parent:
-                                cii.parent = self
-                    elif hasattr(c, 'parent') and c.parent:
+                            cii.parent = self
+                    else:
                         ci.parent = self
-            elif hasattr(c, 'parent') and c.parent: # TODO: Necessary while Symbol is sympy
-                c.parent = self # TODO: write set_parent. Handled differently for e.g. Variable which exists in multiple places
+            elif c:
+                c.parent = self
 
     def has_parent_of_type(self, search_type):
         """ Find out if any of the parents are instances
