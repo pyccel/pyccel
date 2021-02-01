@@ -59,7 +59,7 @@ def count_ops(expr, visual=None):
         rhs = pyccel_to_sympy(expr.rhs, symbol_map, used_names)
         return sympy_count_ops(rhs, visual)
     elif isinstance(expr, For):
-        a = expr.iterable.size
+        a = pyccel_to_sympy(expr.iterable, symbol_map, used_names).size
         ops = sum(count_ops(i, visual) for i in expr.body.body)
         return a*ops
     elif isinstance(expr, CodeBlock):
