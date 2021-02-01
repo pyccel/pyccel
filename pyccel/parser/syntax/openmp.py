@@ -116,7 +116,7 @@ class OmpParallelConstruct(BasicStmt):
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
-              raise TypeError('Wrong clause for OmpParallelConstruct')
+                raise TypeError('Wrong clause for OmpParallelConstruct')
 
         return OMP_Parallel_Construct(txt, self.combined)
 
@@ -214,7 +214,7 @@ class OmpTaskConstruct(BasicStmt):
                           OmpMergeable, \
                           OmpinReduction, \
                           OmpDepend)
-        
+ 
         txt = self.name
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
@@ -302,7 +302,7 @@ class OmpSimdConstruct(BasicStmt):
             else:
                 raise TypeError('Wrong clause for OmpSimdConstruct')
 
-        return OMP_Simd_Construct(txt)
+        return OmpAnnotatedComment(txt)
 
 class OmpMasterConstruct(BasicStmt):
     """Class representing the master construct."""
@@ -382,7 +382,7 @@ class OmpSectionConstruct(BasicStmt):
         if DEBUG:
             print("> OmpSectionConstruct: expr")
 
-        txt = self.name  
+        txt = self.name
         return OMP_Section_Construct(txt)
 
 class OmpDistributeConstruct(BasicStmt):
@@ -465,7 +465,8 @@ class OmpFlushConstruct(BasicStmt):
     def __init__(self, **kwargs):
         """
         """
-        self.name = kwargs.pop('name')
+        self.clauses  = kwargs.pop('clauses')
+        self.name     = kwargs.pop('name')
         super().__init__(**kwargs)
 
     @property
