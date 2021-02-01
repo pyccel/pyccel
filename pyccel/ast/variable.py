@@ -508,7 +508,10 @@ class ValuedVariable(Variable):
     >>> n
     n := 4
     """
-    _children = ('_value',)
+    #TODO: Can this have children?
+    # We have a problem when we do `dtype=float` as `float`
+    # becomes a class, not a Pyccel object
+    #_children = ('_value',)
 
     def __init__(self, *args, **kwargs):
 
