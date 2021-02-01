@@ -1361,6 +1361,7 @@ class ModuleHeader(Basic):
             raise TypeError('module must be a Module')
 
         self._module = module
+        super().__init__()
 
     @property
     def module(self):
@@ -1612,6 +1613,7 @@ class ConstructorCall(Basic):
         self._cls_variable = cls_variable
         self._func = func
         self._arguments = arguments
+        super().__init__()
 
     def _sympystr(self, printer):
         sstr = printer.doprint
@@ -1847,7 +1849,7 @@ class DottedFunctionCall(FunctionCall):
 
     def __init__(self, func, args, prefix, current_function=None):
         self._prefix = prefix
-        FunctionCall.__init__(self, func, args, current_function)
+        super().__init__(func, args, current_function)
         self._func_name = DottedName(prefix, self._func_name)
         if self._interface:
             self._interface_name = DottedName(prefix, self._interface_name)
@@ -2471,7 +2473,7 @@ class FunctionAddress(FunctionDef):
         is_argument=False,
         **kwargs
         ):
-        FunctionDef.__init__(self, name, arguments, results, body, **kwargs)
+        super().__init__(self, name, arguments, results, body, **kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
 
@@ -2485,7 +2487,6 @@ class FunctionAddress(FunctionDef):
             raise TypeError('is_optional must be a boolean.')
 
         self._is_optional   = is_optional
-        self._name          = name
         self._is_pointer    = is_pointer
         self._is_kwonly     = is_kwonly
         self._is_argument   = is_argument
@@ -2530,11 +2531,11 @@ class ValuedFunctionAddress(FunctionAddress):
 
     def __new__(cls, *args, **kwargs):
         kwargs.pop('value', Nil())
-        return FunctionAddress.__new__(cls, *args, **kwargs)
+        return super().__new__(cls, *args, **kwargs)
 
     def __init__(self, *args, **kwargs):
         self._value = kwargs.pop('value', Nil())
-        FunctionAddress.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def value(self):
@@ -2545,7 +2546,7 @@ class SympyFunction(FunctionDef):
     """Represents a function definition."""
 
 
-# TODO: [EB 06.01.2021] Is this class used? What for?
+# TODO: [EB 06.01.2021] Is this class used? What for? See issue #668
 class PythonFunction(FunctionDef):
 
     """Represents a Python-Function definition."""
@@ -2568,11 +2569,11 @@ class BindCFunctionDef(FunctionDef):
     """
     _children = (*FunctionDef._children, '_original_function')
     def __new__(cls, *args, original_function, **kwargs):
-        return FunctionDef.__new__(cls, *args, **kwargs)
+        return super().__new__(cls, *args, **kwargs)
 
     def __init__(self, *args, original_function, **kwargs):
         self._original_function = original_function
-        FunctionDef.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def name(self):
@@ -2979,6 +2980,7 @@ class FuncAddressDeclare(Basic):
         self._intent    = intent
         self._value     = value
         self._static    = static
+        super().__init__()
 
     @property
     def results(self):
@@ -3210,9 +3212,6 @@ class EmptyNode(Basic):
     """
     _children = ()
 
-    def __init__(self):
-        super().__init__()
-
     def _sympystr(self, printer):
         return ''
 
@@ -3309,22 +3308,22 @@ class AnnotatedComment(Basic):
 class OMP_For_Loop(AnnotatedComment):
     """ Represents an OpenMP Loop construct. """
     def __init__(self, txt):
-        AnnotatedComment.__init__(self, 'omp', txt)
+        super().__init__('omp', txt)
 
 class OMP_Parallel_Construct(AnnotatedComment):
     """ Represents an OpenMP Parallel construct. """
     def __init__(self, txt):
-        AnnotatedComment.__init__(self, 'omp', txt)
+        super().__init__('omp', txt)
 
 class OMP_Single_Construct(AnnotatedComment):
     """ Represents an OpenMP Single construct. """
     def __init__(self, txt):
-        AnnotatedComment.__init__(self, 'omp', txt)
+        super().__init__('omp', txt)
 
 class Omp_End_Clause(AnnotatedComment):
     """ Represents the End of an OpenMP block. """
     def __init__(self, txt):
-        AnnotatedComment.__init__(self, 'omp', txt)
+        super().__init__('omp', txt)
 
 class CommentBlock(Basic):
 
