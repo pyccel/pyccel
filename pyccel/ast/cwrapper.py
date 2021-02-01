@@ -578,15 +578,15 @@ def pyarray_to_ndarray(cast_function_name):
     # for more info about ndarray struct check pyccel/stdlib/ndarrays/ndarray.h
     res = Variable(dtype=Int, name = 'c', rank=1)
 
-    nd          = DottedVariable(Int,          'nd', lhs=res.name)
-    raw_data    = DottedVariable(Gen,    'raw_data', lhs=res.name, rank=1)
-    shape       = DottedVariable(Int,       'shape', lhs=res.name, is_pointer=True)
-    type_size   = DottedVariable(Int,   'type_size', lhs=res.name)
-    strides     = DottedVariable(Int,     'strides', lhs=res.name)
-    arr_type    = DottedVariable(Int,        'type', lhs=res.name)
-    length      = DottedVariable(Int,      'length', lhs=res.name)
-    buffer_size = DottedVariable(Int, 'buffer_size', lhs=res.name)
-    is_view     = DottedVariable(Int,     'is_view', lhs=res.name)
+    nd          = DottedVariable(Int,          'nd', lhs=res)
+    raw_data    = DottedVariable(Gen,    'raw_data', lhs=res, rank=1)
+    shape       = DottedVariable(Int,       'shape', lhs=res, is_pointer=True)
+    type_size   = DottedVariable(Int,   'type_size', lhs=res)
+    strides     = DottedVariable(Int,     'strides', lhs=res)
+    arr_type    = DottedVariable(Int,        'type', lhs=res)
+    length      = DottedVariable(Int,      'length', lhs=res)
+    buffer_size = DottedVariable(Int, 'buffer_size', lhs=res)
+    is_view     = DottedVariable(Int,     'is_view', lhs=res)
 
     # construction of the cast function body
     body = [Assign(nd,          FunctionCall(numpy_get_ndims, [arg])),
