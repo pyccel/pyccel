@@ -33,7 +33,7 @@ class OpenmpStmt(BasicStmt):
         """
         self.stmt = kwargs.pop('stmt')
 
-        super(OpenmpStmt, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -94,7 +94,7 @@ class OmpParallelConstruct(BasicStmt):
         self.clauses  = kwargs.pop('clauses')
         self.combined = kwargs.pop('combined')
 
-        super(OmpParallelConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -111,12 +111,13 @@ class OmpParallelConstruct(BasicStmt):
                          OmpProcBind)
 
         txt = ''
+        print(self.combined)
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
-                raise TypeError('Wrong clause for OmpParallelConstruct')
-        
+              raise TypeError('Wrong clause for OmpParallelConstruct')
+
         return OMP_Parallel_Construct(txt, self.combined)
 
 class OmpLoopConstruct(BasicStmt):
@@ -126,7 +127,7 @@ class OmpLoopConstruct(BasicStmt):
         """
         self.clauses = kwargs.pop('clauses')
 
-        super(OmpLoopConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -144,7 +145,7 @@ class OmpLoopConstruct(BasicStmt):
 
         txt = ''
         for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
+            if isinstance(clause, _valid_loop_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpLoopConstruct. Given : ', \
@@ -159,7 +160,7 @@ class OmpTaskLoopConstruct(BasicStmt):
         self.clauses = kwargs.pop('clauses')
         self.name = kwargs.pop('name')
 
-        super(OmpTaskLoopConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -197,7 +198,7 @@ class OmpTaskConstruct(BasicStmt):
         self.clauses  = kwargs.pop('clauses')
         self.name     = kwargs.pop('name')
 
-        super(OmpTaskConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -231,7 +232,7 @@ class OmpSingleConstruct(BasicStmt):
         self.clauses = kwargs.pop('clauses')
         self.name    = kwargs.pop('name')
 
-        super(OmpSingleConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -258,7 +259,7 @@ class OmpCriticalConstruct(BasicStmt):
         self.clauses = kwargs.pop('clauses')
         self.name    = kwargs.pop('name')
 
-        super(OmpCriticalConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -272,7 +273,7 @@ class OmpCriticalConstruct(BasicStmt):
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
-              raise TypeError('Wrong clause for OmpCriticalConstruct')
+                raise TypeError('Wrong clause for OmpCriticalConstruct')
 
         return OMP_Critical_Construct(txt)
 
@@ -282,7 +283,7 @@ class OmpSimdConstruct(BasicStmt):
         self.name = kwargs.pop('name')
         self.clauses = kwargs.pop('clauses')
 
-        super(OmpSimdConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -299,7 +300,7 @@ class OmpSimdConstruct(BasicStmt):
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
-              raise TypeError('Wrong clause for OmpSimdConstruct')
+                raise TypeError('Wrong clause for OmpSimdConstruct')
 
         return OMP_Simd_Construct(txt)
 
@@ -307,7 +308,7 @@ class OmpMasterConstruct(BasicStmt):
     """Class representing the master construct."""
     def __init__(self, **kwargs):
         self.name = kwargs.pop('name')
-        super(OmpMasterConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -324,7 +325,7 @@ class OmpMaskedConstruct(BasicStmt):
         self.name = kwargs.pop('name')
         self.clauses = kwargs.pop('clauses')
 
-        super(OmpMaskedConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -348,7 +349,7 @@ class OmpSectionsConstruct(BasicStmt):
         self.name = kwargs.pop('name')
         self.clauses = kwargs.pop('clauses')
 
-        super(OmpSectionsConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -374,7 +375,7 @@ class OmpSectionConstruct(BasicStmt):
     def __init__(self, **kwargs):
         self.name = kwargs.pop('name')
 
-        super(OmpSectionConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -390,7 +391,7 @@ class OmpDistributeConstruct(BasicStmt):
         self.name = kwargs.pop('name')
         self.clauses = kwargs.pop('clauses')
         
-        super(OmpDistributeConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -417,7 +418,7 @@ class OmpBarrierConstruct(BasicStmt):
         """
         """
         self.name = kwargs.pop('name')
-        super(OmpBarrierConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -433,7 +434,7 @@ class OmpTaskWaitConstruct(BasicStmt):
         """
         """
         self.name = kwargs.pop('name')
-        super(OmpTaskWaitConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -449,7 +450,7 @@ class OmpTaskyieldConstruct(BasicStmt):
         """
         """
         self.name = kwargs.pop('name')
-        super(OmpTaskyieldConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -465,7 +466,7 @@ class OmpFlushConstruct(BasicStmt):
         """
         """
         self.name = kwargs.pop('name')
-        super(OmpFlushConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -488,7 +489,7 @@ class OmpCancelConstruct(BasicStmt):
         """
         """
         self.name = kwargs.pop('name')
-        super(OmpCancelConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -511,7 +512,7 @@ class OmpTargetConstruct(BasicStmt):
         """
         """
         self.name = kwargs.pop('name')
-        super(OmpTargetConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -540,7 +541,7 @@ class OmpTeamsConstruct(BasicStmt):
         self.name     = kwargs.pop('name')
         self.clauses  = kwargs.pop('clauses')
 
-        super(OmpTeamsConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
     
     @property
     def expr(self):
@@ -570,7 +571,7 @@ class OmpAtomicConstruct(BasicStmt):
         self.name     = kwargs.pop('name')
         self.clauses  = kwargs.pop('clauses')
 
-        super(OmpAtomicConstruct, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -597,7 +598,7 @@ class OmpEndClause(BasicStmt):
         self.simd      = kwargs.pop('simd', '')
         self.nowait    = kwargs.pop('nowait', '')
 
-        super(OmpEndClause, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -614,7 +615,7 @@ class OmpNumThread(BasicStmt):
         """
         self.thread = kwargs.pop('thread')
 
-        super(OmpNumThread, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -632,7 +633,7 @@ class OmpNumTeams(BasicStmt):
         """
         self.teams = kwargs.pop('teams')
 
-        super(OmpNumTeams, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -650,7 +651,7 @@ class OmpThreadLimit(BasicStmt):
         """
         self.limit = kwargs.pop('limit')
 
-        super(OmpThreadLimit, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -668,7 +669,7 @@ class OmpNumTasks(BasicStmt):
         """
         self.tasks = kwargs.pop('tasks')
 
-        super(OmpNumTasks, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -686,7 +687,7 @@ class OmpGrainSize(BasicStmt):
         """
         self.size = kwargs.pop('tasks')
 
-        super(OmpGrainSize, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -704,7 +705,7 @@ class OmpDefault(BasicStmt):
         """
         self.status = kwargs.pop('status')
 
-        super(OmpDefault, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -720,7 +721,7 @@ class OmpProcBind(BasicStmt):
         """
         self.status = kwargs.pop('status')
 
-        super(OmpProcBind, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -736,7 +737,7 @@ class OmpPrivate(BasicStmt):
         """
         self.args = kwargs.pop('args')
 
-        super(OmpPrivate, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -754,7 +755,7 @@ class FlushList(BasicStmt):
         """
         self.args = kwargs.pop('args')
 
-        super(FlushList, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -772,7 +773,7 @@ class OmpCriticalName(BasicStmt):
         """
         self.args = kwargs.pop('args')
 
-        super(OmpCriticalName, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -790,7 +791,7 @@ class OmpShared(BasicStmt):
         """
         self.args = kwargs.pop('args')
 
-        super(OmpShared, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -808,7 +809,7 @@ class OmpFirstPrivate(BasicStmt):
         """
         self.args = kwargs.pop('args')
 
-        super(OmpFirstPrivate, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -826,7 +827,7 @@ class OmpLastPrivate(BasicStmt):
         """
         self.args = kwargs.pop('args')
 
-        super(OmpLastPrivate, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -844,14 +845,13 @@ class OmpCopyin(BasicStmt):
         """
         self.args = kwargs.pop('args')
 
-        super(OmpCopyin, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
             print("> OmpCopyin: expr")
 
-        # TODO check if variable exist in namespace
         args = ', '.join(str(arg) for arg in self.args)
         return 'copyin({})'.format(args)
 
@@ -863,14 +863,13 @@ class OmpReduction(BasicStmt):
         self.op   = kwargs.pop('op')
         self.args = kwargs.pop('args')
 
-        super(OmpReduction, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
         if DEBUG:
             print("> OmpReduction: expr")
 
-        # TODO check if variable exist in namespace
         op   = self.op
         args = ', '.join(str(arg) for arg in self.args)
         return 'reduction({0}: {1})'.format(op, args)
@@ -883,7 +882,7 @@ class OmpDepend(BasicStmt):
         self.dtype   = kwargs.pop('dtype')
         self.args = kwargs.pop('args')
 
-        super(OmpDepend, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -902,7 +901,7 @@ class OmpMap(BasicStmt):
         self.mtype   = kwargs.pop('mtype')
         self.args = kwargs.pop('args')
 
-        super(OmpMap, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -922,7 +921,7 @@ class OmpinReduction(BasicStmt):
         self.op     = kwargs.pop('op')
         self.args   = kwargs.pop('args')
 
-        super(OmpinReduction, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -942,7 +941,7 @@ class OmpCollapse(BasicStmt):
         """
         self.n = kwargs.pop('n')
 
-        super(OmpCollapse, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -958,7 +957,7 @@ class OmpOrdered(BasicStmt):
         """
         self.n = kwargs.pop('n', None)
 
-        super(OmpOrdered, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -978,7 +977,7 @@ class OmpLinear(BasicStmt):
         self.val  = kwargs.pop('val')
         self.step = kwargs.pop('step')
 
-        super(OmpLinear, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -995,7 +994,7 @@ class OmpSchedule(BasicStmt):
         self.kind       = kwargs.pop('kind')
         self.chunk_size = kwargs.pop('chunk_size', None)
 
-        super(OmpSchedule, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -1015,7 +1014,7 @@ class OmpFilter(BasicStmt):
         self.name = kwargs.pop('name')
         self.n = kwargs.pop('n')
 
-        super(OmpFilter, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -1031,7 +1030,7 @@ class OmpUntied(BasicStmt):
         """
         self.name = kwargs.pop('name')
 
-        super(OmpUntied, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -1047,7 +1046,7 @@ class OmpMergeable(BasicStmt):
         """
         self.name = kwargs.pop('name')
 
-        super(OmpMergeable, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -1063,7 +1062,7 @@ class OmpNogroup(BasicStmt):
         """
         self.name = kwargs.pop('name')
 
-        super(OmpNogroup, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -1080,7 +1079,7 @@ class OmpPriority(BasicStmt):
         self.name = kwargs.pop('name')
         self.n = kwargs.pop('n')
 
-        super(OmpPriority, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -1096,7 +1095,7 @@ class OmpAtomicClause(BasicStmt):
         """
         self.name = kwargs.pop('name')
 
-        super(OmpAtomicClause, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -1112,7 +1111,7 @@ class OmpCancelType(BasicStmt):
         """
         self.name = kwargs.pop('name')
 
-        super(OmpCancelType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -1128,7 +1127,7 @@ class AtomicMemoryClause(BasicStmt):
         """
         self.name = kwargs.pop('name')
 
-        super(AtomicMemoryClause, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -1142,6 +1141,16 @@ class AtomicMemoryClause(BasicStmt):
 #################################################
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
+
+_valid_loop_clauses = (OmpPrivate, \
+                 OmpFirstPrivate, \
+                 OmpLastPrivate, \
+                 OmpReduction, \
+                 OmpSchedule, \
+                 OmpCollapse, \
+                 OmpLinear, \
+                 OmpOrdered)
+
 omp_directives = [OmpParallelConstruct,
                   OmpLoopConstruct,
                   OmpSingleConstruct,
