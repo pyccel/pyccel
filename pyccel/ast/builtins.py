@@ -71,7 +71,7 @@ class PythonComplexProperty(PyccelInternalFunction):
 
     def __init__(self, arg):
         self._precision = arg.precision
-        PyccelInternalFunction.__init__(self, arg)
+        super().__init__(arg)
 
     @property
     def internal_var(self):
@@ -96,7 +96,7 @@ class PythonReal(PythonComplexProperty):
         if arg.dtype is not NativeComplex():
             return arg
         else:
-            return PythonComplexProperty.__new__(cls, arg)
+            return super().__new__(cls, arg)
 
 #==============================================================================
 class PythonImag(PythonComplexProperty):
@@ -113,7 +113,7 @@ class PythonImag(PythonComplexProperty):
         if arg.dtype is not NativeComplex():
             return get_default_literal_value(arg.dtype)
         else:
-            return PythonComplexProperty.__new__(cls, arg)
+            return super().__new__(cls, arg)
 
 
 #==============================================================================
@@ -258,7 +258,7 @@ class PythonEnumerate(Basic):
         if PyccelAstNode.stage != "syntactic" and \
                 not isinstance(arg, PyccelAstNode):
             raise TypeError('Expecting an arg of valid type')
-        return Basic.__new__(cls, arg)
+        return super().__new__(cls, arg)
 
     def __init__(self, arg):
         self._element = arg
@@ -339,8 +339,8 @@ class PythonTuple(PyccelAstNode):
 
     def __init__(self, *args):
         self._args = args
+        super().__init__()
         if self.stage == 'syntactic' or len(args) == 0:
-            super().__init__()
             return
         is_homogeneous = all(a.dtype is not NativeGeneric() and \
                              args[0].dtype == a.dtype and \
@@ -386,7 +386,6 @@ class PythonTuple(PyccelAstNode):
             self._dtype     = NativeGeneric()
             self._precision = 0
             self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
-        super().__init__()
 
     def __getitem__(self,i):
         return self._args[i]
@@ -421,7 +420,7 @@ class PythonLen(PyccelInternalFunction):
     _dtype     = NativeInteger()
 
     def __init__(self, arg):
-        PyccelInternalFunction.__init__(self, arg)
+        super().__init__(self, arg)
 
     @property
     def arg(self):
@@ -486,10 +485,11 @@ class PythonMap(Basic):
     def __new__(cls, *args):
         if len(args)<2:
             raise TypeError('wrong number of arguments')
-        return Basic.__new__(cls, *args)
+        return super().__new__(cls, *args)
 
     def __init__(self, *args):
-        Basic.__init__(self)
+        self._args = args
+        super().__init__()
 
 #==============================================================================
 class PythonPrint(Basic):
@@ -512,11 +512,11 @@ class PythonPrint(Basic):
     def __new__(cls, expr):
         if not isinstance(expr, list):
             expr = sympify(expr, locals=local_sympify)
-        return Basic.__new__(cls, expr)
+        return super().__new__(cls, expr)
 
     def __init__(self, expr):
         self._expr = expr
-        Basic.__init__(self)
+        super().__init__()
 
     @property
     def expr(self):
@@ -594,10 +594,11 @@ class PythonZip(Basic):
             raise TypeError('args must be a list or tuple')
         elif len(args) < 2:
             raise ValueError('args must be of length > 2')
-        return Basic.__new__(cls, *args)
+        return super().__new__(cls, *args)
 
     def __init__(self, *args):
-        Basic.__init__(self)
+        self._args = args
+        super().__init__()
 
     @property
     def element(self):
@@ -615,7 +616,7 @@ class PythonAbs(PyccelInternalFunction):
         self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
         self._precision = default_precision[str_dtype(self._dtype)]
         self._order     = x.order
-        PyccelInternalFunction.__init__(self, x)
+        super().__init__(x)
 
     @property
     def arg(self):
@@ -636,7 +637,7 @@ class PythonSum(PyccelInternalFunction):
         self._rank  = 0
         self._shape = ()
         self._precision = default_precision[str_dtype(self._dtype)]
-        PyccelInternalFunction.__init__(self, arg)
+        super().__init__(arg)
 
     @property
     def arg(self):
@@ -656,7 +657,7 @@ class PythonMax(PyccelInternalFunction):
         self._rank      = 0
         self._dtype     = x.dtype
         self._precision = x.precision
-        PyccelInternalFunction.__init__(self, x)
+        super().__init__(x)
 
 
 #==============================================================================
@@ -670,7 +671,7 @@ class PythonMin(PyccelInternalFunction):
         self._rank      = 0
         self._dtype     = x.dtype
         self._precision = x.precision
-        PyccelInternalFunction.__init__(self, x)
+        super().__init__(x)
 
 #==============================================================================
 class Lambda(Basic):
