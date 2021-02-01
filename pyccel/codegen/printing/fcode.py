@@ -1886,7 +1886,7 @@ class FCodePrinter(CodePrinter):
         omp_expr = str(expr.txt)
         omp_expr = '!$omp {}\n'.format(omp_expr)
         return omp_expr
-    
+
     def _print_OMP_Master_Construct(self, expr):
         omp_expr = str(expr.txt)
         omp_expr = '!$omp {}\n'.format(omp_expr)
@@ -1896,7 +1896,7 @@ class FCodePrinter(CodePrinter):
         omp_expr = str(expr.txt)
         omp_expr = '!$omp {}\n'.format(omp_expr)
         return omp_expr
-    
+
     def _print_OMP_Cancel_Construct(self, expr):
         omp_expr = str(expr.txt)
         omp_expr = omp_expr.replace("for", "do")
@@ -1917,7 +1917,7 @@ class FCodePrinter(CodePrinter):
         omp_expr = str(expr.txt)
         omp_expr = '!$omp {}\n'.format(omp_expr)
         return omp_expr
-    
+
     def _print_OMP_Section_Construct(self, expr):
         omp_expr = str(expr.txt)
         omp_expr = '!$omp {}\n'.format(omp_expr)

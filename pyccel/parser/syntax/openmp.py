@@ -409,7 +409,7 @@ class OmpDistributeConstruct(BasicStmt):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpDistributeConstruct')
-        
+
         return OmpAnnotatedComment(txt)
 
 class OmpBarrierConstruct(BasicStmt):

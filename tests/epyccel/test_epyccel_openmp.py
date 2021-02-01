@@ -275,10 +275,10 @@ def test_omp_arraysum_combined(language):
 
 def test_omp_range_sum_critical(language):
     f1 = epyccel(openmp.omp_range_sum_critical, accelerator='openmp', language=language)
-    from random import randint
+    from numpy import random
 
     for i in range(0, 4):
-        x = randint(10, 1000)
+        x = random.randint(10, 1000)
         assert f1(x) == openmp.omp_range_sum_critical(x)
 
 
@@ -304,10 +304,10 @@ def test_omp_master(language):
 
 def test_omp_taskloop(language):
     f1 = epyccel(openmp.omp_taskloop, accelerator='openmp', language=language)
-    from random import randint
+    from numpy import random
 
     for _ in range(0, 4):
-        x = randint(1, 4)
+        x = random.randint(1, 4)
         result = 0
         for _ in range(0, x * 10):
             result = result + 1
