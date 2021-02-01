@@ -14,6 +14,10 @@ from sympy.core.basic import Basic as sp_Basic
 
 __all__ = ('Basic', 'PyccelAstNode')
 
+dict_keys   = {}.keys().__class__
+dict_values = {}.values().__class__
+iterable_types = (list, tuple, dict_keys, dict_values)
+
 #==============================================================================
 class Basic(sp_Basic):
     """Basic class for Pyccel AST."""
@@ -32,7 +36,7 @@ class Basic(sp_Basic):
                 # Convert basic types to literal types
                 c = convert_to_literal(c)
                 setattr(self, c_name, c)
-            elif isinstance(c, (tuple, list)):
+            elif isinstance(c, iterable_types):
                 c = tuple(ci if not isinstance(ci, (int, float, complex, str, bool)) \
                         else convert_to_literal(ci) for ci in c)
                 setattr(self, c_name, c)
