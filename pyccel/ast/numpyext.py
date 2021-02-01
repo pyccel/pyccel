@@ -629,7 +629,7 @@ class NumpyFullLike:
 class NumpyEmptyLike:
     """ Represents a call to numpy.empty_like for code generation.
     """
-    def __new__(cls, a, dtype=None, order='K', subok=True,shape=None):
+    def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
         dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
