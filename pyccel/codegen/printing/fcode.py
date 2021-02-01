@@ -1876,7 +1876,7 @@ class FCodePrinter(CodePrinter):
     def _print_OMP_For_Loop(self, expr):
         omp_expr   = str(expr.txt)
         return '!$omp do{}\n'.format(omp_expr)
- 
+
     def _print_OMP_Single_Construct(self, expr):
         omp_expr   = str(expr.txt)
         omp_expr = '!$omp {}\n'.format(omp_expr)

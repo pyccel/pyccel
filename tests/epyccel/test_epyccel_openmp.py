@@ -309,7 +309,7 @@ def test_omp_taskloop(language):
     for _ in range(0, 4):
         x = randint(1, 4)
         result = 0
-        for j in range(0, x * 10):
+        for _ in range(0, x * 10):
             result = result + 1
         assert result == f1(x)
 
@@ -322,8 +322,8 @@ def test_omp_taskloop(language):
 )
 def test_omp_tasks(language):
     f1 = epyccel(openmp.omp_tasks, accelerator='openmp', language=language)
-    from random import randint
+    from numpy import random
 
     for _ in range(0, 4):
-        x = randint(10, 20)
+        x = random.randint(10, 20)
         assert openmp.omp_tasks(x) == f1(x)
