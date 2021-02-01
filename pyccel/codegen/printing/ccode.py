@@ -843,11 +843,11 @@ class CCodePrinter(CodePrinter):
         return "%s.%s[get_index(%s, %s)]" % (base_name, dtype, base_name, ", ".join(inds))
 
     def _cast_to(self, expr, dtype, precision):
-        """ add cast to an expresion when needed
+        """ add cast to an expression when needed
         parameters
         ----------
             expr      : PyccelAstNode
-                the expression to be casted
+                the expression to be cast
             dtype     : Datatype
                 base type of the cast
             precision : integer
