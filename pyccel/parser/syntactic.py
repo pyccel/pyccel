@@ -290,21 +290,8 @@ class SyntaxParser(BasicParser):
             return old
 
     def _visit_Dict(self, stmt):
-
-        d = {}
-        for key, value in zip(stmt.keys, stmt.values):
-
-            key = self._visit(key)
-            value = self._visit(value)
-
-            # sympy does not allow keys to be strings
-
-            if isinstance(key, LiteralString):
-                errors.report(SYMPY_RESTRICTION_DICT_KEYS,
-                              severity='error')
-
-            d[key] = value
-        return Dict(d)
+        errors.report(PYCCEL_RESTRICTION_TODO,
+                symbol=stmt, severity='fatal')
 
     def _visit_NoneType(self, stmt):
         return Nil()
