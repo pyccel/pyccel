@@ -548,7 +548,7 @@ class FCodePrinter(CodePrinter):
             if self._current_function:
                 name = self._current_function
                 func = self.get_function(name)
-                func.local_vars.append(var)
+                func.add_local_var(var)
             else:
                 self._namespace.variables[var.name] = var
 
@@ -839,7 +839,7 @@ class FCodePrinter(CodePrinter):
         if self._current_function:
             name = self._current_function
             func = self.get_function(name)
-            func.local_vars.append(var)
+            func.add_local_var(var)
         else:
             self._namespace.variables[var.name] = var
 
@@ -2622,7 +2622,7 @@ class FCodePrinter(CodePrinter):
                 if self._current_function:
                     name = self._current_function
                     func = self.get_function(name)
-                    func.local_vars.append(var)
+                    func.add_local_var(var)
                 else:
                     self._namespace.variables[var.name] = var
 
@@ -2760,7 +2760,7 @@ class FCodePrinter(CodePrinter):
                 if self._current_function:
                     name = self._current_function
                     func = self.get_function(name)
-                    func.local_vars.append(var)
+                    func.add_local_var(var)
                 else:
                     self._namespace.variables[var.name] = var
 
@@ -2794,7 +2794,7 @@ class FCodePrinter(CodePrinter):
             if self._current_function:
                 name = self._current_function
                 func = self.get_function(name)
-                func.local_vars.append(var)
+                func.add_local_var(var)
             else:
                 self._namespace.variables[var.name] = var
 
