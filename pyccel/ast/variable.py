@@ -102,9 +102,6 @@ class Variable(Symbol, PyccelAstNode):
     """
     _children = ()
 
-    def __new__( cls, dtype, name, **kwargs ):
-        return Basic.__new__(cls)
-
     def __init__(
         self,
         dtype,
@@ -125,9 +122,7 @@ class Variable(Symbol, PyccelAstNode):
         is_kwonly=False,
         allows_negative_indexes=False
         ):
-        # super init can be called first as it has no children
-        # This is necessary as a PyccelAstNode is created in this __init__
-        super().__init__(name)
+        Symbol.__init__(self, name)
 
         # ------------ PyccelAstNode Properties ---------------
         if isinstance(dtype, str) or str(dtype) == '*':
@@ -208,6 +203,7 @@ class Variable(Symbol, PyccelAstNode):
         self._order          = order
         self._is_argument    = is_argument
         self._is_kwonly      = is_kwonly
+        PyccelAstNode.__init__(self)
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
@@ -515,21 +511,13 @@ class ValuedVariable(Variable):
     >>> n
     n := 4
     """
-
-    def __new__(cls, *args, **kwargs):
-
-        # we remove value from kwargs,
-        # since it is not a valid argument for Variable
-
-        kwargs.pop('value', Nil())
-
-        return Variable.__new__(cls, *args, **kwargs)
+    _children = ('_value',)
 
     def __init__(self, *args, **kwargs):
 
         # if value is not given, we set it to Nil
         self._value = kwargs.pop('value', Nil())
-        Variable.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def value(self):
@@ -563,20 +551,13 @@ class TupleVariable(Variable):
     >>> n
     n
     """
-
-    def __new__(cls, arg_vars, dtype, name, *args, **kwargs):
-
-        # if value is not given, we set it to Nil
-        # we also remove value from kwargs,
-        # since it is not a valid argument for Variable
-
-        return Variable.__new__(cls, dtype, name, *args, **kwargs)
+    _children = ('_vars',)
 
     def __init__(self, arg_vars, dtype, name, *args, **kwargs):
         self._vars = tuple(arg_vars)
         self._inconsistent_shape = not all(arg_vars[0].shape==a.shape   for a in arg_vars[1:])
         self._is_homogeneous = not dtype is NativeGeneric()
-        Variable.__init__(self, dtype, name, *args, **kwargs)
+        super().__init__(dtype, name, *args, **kwargs)
 
     def get_vars(self):
         """ Get the variables saved internally in the tuple
@@ -708,8 +689,8 @@ class IndexedElement(PyccelAstNode):
     """
     _children = ('_label', '_indices')
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         base,
         *args,
         **kw_args
@@ -717,14 +698,6 @@ class IndexedElement(PyccelAstNode):
 
         if not args:
             raise IndexError('Indexed needs at least one index.')
-        return Expr.__new__(cls, base, *args, **kw_args)
-
-    def __init__(
-        self,
-        base,
-        *args,
-        **kw_args
-        ):
 
         self._label = base
 
@@ -749,6 +722,7 @@ class IndexedElement(PyccelAstNode):
                     symbol = args, severity = 'fatal')
 
         self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in args)
+        super().__init__()
 
         # Calculate new shape
 
@@ -782,7 +756,6 @@ class IndexedElement(PyccelAstNode):
                 if not isinstance(args[i], Slice):
                     new_rank -= 1
             self._rank = new_rank
-        super().__init__()
 
     @property
     def base(self):
@@ -836,10 +809,11 @@ class DottedVariable(Variable):
     In this case b is a DottedVariable where the lhs
     is a
     """
+    _children = ('_lhs',)
 
     def __init__(self, *args, lhs, **kwargs):
-        Variable.__init__(self, *args, **kwargs)
         self._lhs = lhs
+        super().__init__(*args, **kwargs)
 
     @property
     def lhs(self):
