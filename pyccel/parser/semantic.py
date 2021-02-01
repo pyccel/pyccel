@@ -119,7 +119,7 @@ def _get_name(var):
     if isinstance(var, (IndexedElement)):
         return str(var.base)
     if isinstance(var, FunctionCall):
-        return var.funcdef
+        return str(var.funcdef)
     if isinstance(var, AsName):
         return var.target
     msg = 'Name of Object : {} cannot be determined'.format(type(var).__name__)
