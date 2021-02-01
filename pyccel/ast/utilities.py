@@ -7,7 +7,6 @@
 
 import inspect
 
-from sympy import Not
 from numpy import pi
 
 import pyccel.decorators as pyccel_decorators
@@ -23,6 +22,7 @@ from .literals      import LiteralString
 
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants)
+from .operators     import PyccelNot
 from .variable      import (Constant, Variable, ValuedVariable)
 
 __all__ = (
@@ -54,7 +54,7 @@ def builtin_function(expr, args=None):
         return dic[name](*args)
 
     if name == 'Not':
-        return Not(*args)
+        return PyccelNot(*args)
 
     if name == 'map':
         func = str(expr.args[0].name)
