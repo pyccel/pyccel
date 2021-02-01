@@ -1618,7 +1618,7 @@ class SemanticParser(BasicParser):
         lhs = expr.lhs
 
         if isinstance(rhs, FunctionCall):
-            name = rhs.funcdef
+            name = str(rhs.funcdef)
             macro = self.get_macro(name)
             if macro is None:
                 rhs = self._visit(rhs, **settings)
@@ -1666,7 +1666,6 @@ class SemanticParser(BasicParser):
                 if isinstance(macro, MacroVariable):
                     rhs = master
                 else:
-
                     # If macro is function, create left-hand side variable
                     if isinstance(master, FunctionDef) and master.results:
                         d_var = self._infere_type(master.results[0], **settings)
