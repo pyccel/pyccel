@@ -40,13 +40,13 @@ OmpConstructOrDirective:
 ////////////////////////////////////////////////////
 //     Constructs and Directives definitions
 ////////////////////////////////////////////////////
-OmpParallelConstruct:   'parallel'        combined*=ParallelCombined? clauses*=OmpParallelClause;
-OmpLoopConstruct:       'for'             clauses*=OmpLoopClause;
-OmpTaskLoopConstruct:   name='taskloop'   clauses*=OmpTaskLoopClause;
-OmpSingleConstruct:     name='single'     clauses*=OmpSingleClause;
-OmpCriticalConstruct:   name='critical'   clauses*=OmpCriticalClause;
-OmpMaskedConstruct:     name='masked'     clauses*=OmpMaskedClause;
-OmpSimdConstruct:       name='simd'       clauses*=OmpSimdClause;
+OmpParallelConstruct:   'parallel'        combined*=ParallelCombined? clauses*=AllOmpClauses;
+OmpLoopConstruct:       'for'             clauses*=AllOmpClauses;
+OmpTaskLoopConstruct:   name='taskloop'   clauses*=AllOmpClauses;
+OmpSingleConstruct:     name='single'     clauses*=AllOmpClauses;
+OmpCriticalConstruct:   name='critical'   clauses*=AllOmpClauses;
+OmpMaskedConstruct:     name='masked'     clauses*=AllOmpClauses;
+OmpSimdConstruct:       name='simd'       clauses*=AllOmpClauses;
 OmpAtomicConstruct:     name='atomic'     clauses*=AllOmpClauses; // Not all clause were added (cant test them).
 OmpTaskConstruct:       name='task'       clauses*=AllOmpClauses;
 OmpCancelConstruct:     name='cancel'     clauses*=AllOmpClauses;
@@ -54,12 +54,12 @@ OmpTargetConstruct:     name='target'     clauses*=AllOmpClauses;
 OmpTeamsConstruct:      name='teams'      clauses*=AllOmpClauses;
 OmpDistributeConstruct: name='distribute' clauses*=AllOmpClauses;
 OmpSectionsConstruct:   name='sections'   clauses*=AllOmpClauses;
+OmpFlushConstruct:      name='flush'      clauses*=AllOmpClauses;
 OmpSectionConstruct:    name='section';
 OmpBarrierConstruct:    name='barrier';
 OmpMasterConstruct:     name='master';
 OmpTaskWaitConstruct:   name='taskwait';
 OmpTaskyieldConstruct:  name='taskyield';
-OmpFlushConstruct:      name='flush'      clauses*=AllOmpClauses;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -91,64 +91,19 @@ AllOmpClauses:
   | OmpMap
   | OmpNumTeams
   | OmpThreadLimit
-;
-
-OmpParallelClause:
-    OmpNumThread
-  | OmpDefault
-  | OmpPrivate
-  | OmpShared
-  | OmpFirstPrivate
-  | OmpCopyin
-  | OmpReduction
-  | OmpProcBind
-;
-
-OmpLoopClause:
-    OmpPrivate
-  | OmpFirstPrivate
-  | OmpLastPrivate
   | OmpLinear
-  | OmpReduction
-  | OmpSchedule
   | OmpCollapse
-  | OmpOrdered
-;
-
-OmpTaskLoopClause:
-    OmpShared
-  | OmpPrivate
-  | OmpFirstPrivate
-  | OmpLastPrivate
-  | OmpReduction
-  | OmpinReduction // Deprecated in OpenMP 5.0 for TaskLoop Construct
+  | OmpFilter
+  | OmpNumThread
+  | OmpCopyin
+  | OmpProcBind
+  | OmpCriticalName
   | OmpNumTasks
   | OmpGrainSize
-  | OmpCollapse
-  | OmpUntied
-  | OmpMergeable
   | OmpNogroup
   | OmpPriority
-;
-
-OmpSingleClause:
-    OmpPrivate
-  | OmpFirstPrivate
-;
-
-OmpCriticalClause:
-    OmpCriticalName
-;
-
-OmpMaskedClause:
-    OmpFilter
-;
-
-OmpSimdClause:
-    OmpLinear
-  | OmpReduction
-  | OmpCollapse
-  | OmpLastPrivate
+  | OmpSchedule
+  | OmpOrdered
 ;
 
 ////////////////////////////////////////////////////
