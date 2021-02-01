@@ -390,7 +390,7 @@ class OmpDistributeConstruct(BasicStmt):
     def __init__(self, **kwargs):
         self.name = kwargs.pop('name')
         self.clauses = kwargs.pop('clauses')
-        
+ 
         super().__init__(**kwargs)
 
     @property
@@ -513,7 +513,8 @@ class OmpTargetConstruct(BasicStmt):
     def __init__(self, **kwargs):
         """
         """
-        self.name = kwargs.pop('name')
+        self.clauses  = kwargs.pop('clauses')
+        self.name     = kwargs.pop('name')
         super().__init__(**kwargs)
 
     @property
