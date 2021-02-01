@@ -88,22 +88,20 @@ class Basic(sp_Basic):
         list : List containing all objects of the
                requested type which exist in self
         """
-        print(self)
         results = []
         for n in self._children:
             v = getattr(self, n)
-            print("child : ",type(v))
             if isinstance(v, search_type):
                 results.append(v)
 
             if isinstance(v, tuple):
                 for vi in v:
-                    print("child : ",type(vi))
                     if isinstance(v, search_type):
                         results.append(v)
 
                     if isinstance(vi, tuple):
-                        print("mmmmmhhhhh")
+                        #TODO: Disallow
+                        pass
                     elif vi is not None:
                         results.extend(vi.children_of_type(search_type))
             elif v is not None:
