@@ -214,7 +214,7 @@ class OmpTaskConstruct(BasicStmt):
                           OmpMergeable, \
                           OmpinReduction, \
                           OmpDepend)
- 
+
         txt = self.name
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
@@ -489,6 +489,7 @@ class OmpCancelConstruct(BasicStmt):
     def __init__(self, **kwargs):
         """
         """
+        self.clauses  = kwargs.pop('clauses')
         self.name = kwargs.pop('name')
         super().__init__(**kwargs)
 
@@ -918,7 +919,7 @@ class OmpinReduction(BasicStmt):
     def __init__(self, **kwargs):
         """
         """
-        self.ctype  = kwargs.pop('ctype') 
+        self.ctype  = kwargs.pop('ctype')
         self.op     = kwargs.pop('op')
         self.args   = kwargs.pop('args')
 
