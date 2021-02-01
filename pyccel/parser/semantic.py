@@ -2204,8 +2204,8 @@ class SemanticParser(BasicParser):
             # lower bound as this leads to too little memory being allocated
             min_size = size
             # Collect all uses of other indices
-            start_idx = [-1] + [indices.index(a) for a in start.atoms(sp_Symbol) if a in indices]
-            stop_idx  = [-1] + [indices.index(a) for a in  stop.atoms(sp_Symbol) if a in indices]
+            start_idx = [-1] + [sp_indices.index(a) for a in start.atoms(sp_Symbol) if a in sp_indices]
+            stop_idx  = [-1] + [sp_indices.index(a) for a in  stop.atoms(sp_Symbol) if a in sp_indices]
             start_idx.sort()
             stop_idx.sort()
 
