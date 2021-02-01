@@ -219,6 +219,7 @@ class PythonComplex(PyccelAstNode):
             else:
                 self._real_part = arg0
                 self._imag_part = arg1
+        super().__init__()
 
     @property
     def is_cast(self):
