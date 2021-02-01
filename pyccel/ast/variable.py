@@ -125,6 +125,9 @@ class Variable(Symbol, PyccelAstNode):
         is_kwonly=False,
         allows_negative_indexes=False
         ):
+        # super init can be called first as it has no children
+        # This is necessary as a PyccelAstNode is created in this __init__
+        super().__init__(name)
 
         # ------------ PyccelAstNode Properties ---------------
         if isinstance(dtype, str) or str(dtype) == '*':
@@ -205,7 +208,6 @@ class Variable(Symbol, PyccelAstNode):
         self._order          = order
         self._is_argument    = is_argument
         self._is_kwonly      = is_kwonly
-        super().__init__(name)
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
