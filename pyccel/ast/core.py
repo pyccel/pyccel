@@ -3422,11 +3422,6 @@ class OMP_Masked_Construct(OmpAnnotatedComment):
     def __init__(cls, txt):
         OmpAnnotatedComment.__init__(cls, txt)
 
-class OMP_Simd_Construct(OmpAnnotatedComment):
-    """ Represents OpenMP Simd construct. """
-    def __init__(cls, txt):
-        OmpAnnotatedComment.__init__(cls, txt)
-
 class OMP_Cancel_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Cancel construct. """
     def __init__(cls, txt):
