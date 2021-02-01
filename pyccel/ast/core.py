@@ -2272,6 +2272,16 @@ class FunctionDef(Basic):
 
         self._name = newname
 
+    def add_local_var(self, var):
+        """
+        Add a new variable to the local variables tuple
+
+        Parameters
+        ----------
+        var : Variable
+              The new local variable
+        """
+        self._local_vars = self._local_vars + (var,)
 
     def __getnewargs__(self):
         """

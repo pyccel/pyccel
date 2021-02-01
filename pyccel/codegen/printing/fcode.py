@@ -749,7 +749,7 @@ class FCodePrinter(CodePrinter):
         if self._current_function:
             name = self._current_function
             func = self.get_function(name)
-            func.local_vars.append(index)
+            func.add_local_var(index)
         else:
             self._namespace.variables[index.name] = index
 
