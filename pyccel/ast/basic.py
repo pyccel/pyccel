@@ -32,10 +32,12 @@ class Basic(sp_Basic):
                 # Convert basic types to literal types
                 c = convert_to_literal(c)
                 setattr(self, c_name, c)
-            elif hasattr(c, '__iter__'):
+            elif isinstance(c, (tuple, list)):
                 c = tuple(ci if not isinstance(ci, (int, float, complex, str, bool)) \
                         else convert_to_literal(ci) for ci in c)
                 setattr(self, c_name, c)
+            elif not isinstance(c, Basic) and c is not None:
+                raise TypeError("Basic child must be a Basic or a tuple not {}".format(type(c)))
 
             if isinstance(c, tuple):
                 for ci in c:
