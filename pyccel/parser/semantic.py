@@ -1243,7 +1243,7 @@ class SemanticParser(BasicParser):
             return expr
 
     def _visit_FunctionCall(self, expr, **settings):
-        name     = expr.funcdef
+        name     = str(expr.funcdef)
 
         # Check for specialised method
         annotation_method = '_visit_' + name

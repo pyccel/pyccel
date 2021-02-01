@@ -916,14 +916,12 @@ class SyntaxParser(BasicParser):
         func = self._visit(stmt.func)
 
         if isinstance(func, Symbol):
-            f_name = str(func.name)
-            if f_name == "print":
+            if str(func) == "print":
                 func = PythonPrint(PythonTuple(*args))
             else:
-                func = FunctionCall(f_name, args)
+                func = FunctionCall(func, args)
         elif isinstance(func, DottedName):
-            f_name = str(func.name[-1])
-            func_attr = FunctionCall(f_name, args)
+            func_attr = FunctionCall(func.name[-1], args)
             func = DottedName(*func.name[:-1], func_attr)
         else:
             raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
