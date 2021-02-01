@@ -27,28 +27,14 @@ class Basic(sp_Basic):
         self._parent = []
         for c_name in self._children:
             c = getattr(self, c_name)
-            # Convert basic types to literal types
-            # TODO: Use literal creation function (see issue #564)
-            if isinstance(c, int):
-                from pyccel.ast.literals import LiteralInteger
-                c = LiteralInteger(c)
+            from pyccel.ast.literals import convert_to_literal
+            if isinstance(c, (int, float, complex, str, bool)):
+                # Convert basic types to literal types
+                c = convert_to_literal(c)
                 setattr(self, c_name, c)
-            elif isinstance(c, float):
-                from pyccel.ast.literals import LiteralFloat
-                c = LiteralFloat(c)
-                setattr(self, c_name, c)
-            elif isinstance(c, str):
-                from pyccel.ast.literals import LiteralString
-                c = LiteralString(c)
-                setattr(self, c_name, c)
-            elif c is True:
-                c = LiteralTrue()
-                setattr(self, c_name, c)
-            elif c is False:
-                c = LiteralFalse()
-                setattr(self, c_name, c)
-            elif hasattr(c, '__iter__') and not isinstance(c, tuple):
-                c = tuple(c)
+            elif hasattr(c, '__iter__'):
+                c = tuple(ci if not isinstance(ci, (int, float, complex, str, bool)) \
+                        else convert_to_literal(ci) for ci in c)
                 setattr(self, c_name, c)
 
             if isinstance(c, tuple):
