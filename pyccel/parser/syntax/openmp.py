@@ -545,7 +545,7 @@ class OmpTeamsConstruct(BasicStmt):
         self.clauses  = kwargs.pop('clauses')
 
         super().__init__(**kwargs)
-    
+
     @property
     def expr(self):
         if DEBUG:

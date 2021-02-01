@@ -277,7 +277,7 @@ def test_omp_range_sum_critical(language):
     f1 = epyccel(openmp.omp_range_sum_critical, accelerator='openmp', language=language)
     from numpy import random
 
-    for i in range(0, 4):
+    for _ in range(0, 4):
         x = random.randint(10, 1000)
         assert f1(x) == openmp.omp_range_sum_critical(x)
 
