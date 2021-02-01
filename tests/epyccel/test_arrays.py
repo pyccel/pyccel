@@ -1447,32 +1447,64 @@ def test_array_real_2d_F_complex_3d_expr():
 # TEST: 1D Stack ARRAYS OF REAL
 #==============================================================================
 
-def test_array_real_sum_stack_array():
+def test_array_real_sum_stack_array(language):
 
     f1 = arrays.array_real_1d_sum_stack_array
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1 , language=language)
     x1 = f1()
     x2 = f2()
     assert np.equal( x1, x2 )
 
-def test_array_real_div_stack_array():
+def test_array_real_div_stack_array(language):
 
     f1 = arrays.array_real_1d_div_stack_array
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1 , language=language)
     x1 = f1()
     x2 = f2()
     assert np.equal( x1, x2 )
 
-def test_multiple_stack_array_1():
+def test_multiple_stack_array_1(language):
 
     f1 = arrays.multiple_stack_array_1
-    f2 = epyccel(f1)
+    f2 = epyccel(f1, language=language)
     assert np.equal(f1(), f2())
 
-def test_multiple_stack_array_2():
+def test_multiple_stack_array_2(language):
 
     f1 = arrays.multiple_stack_array_2
-    f2 = epyccel(f1)
+    f2 = epyccel(f1, language=language)
+    assert np.equal(f1(), f2())
+
+#==============================================================================
+# TEST: 2D Stack ARRAYS OF REAL
+#==============================================================================
+
+def test_array_real_sum_2d_stack_array(language):
+
+    f1 = arrays.array_real_2d_sum_stack_array
+    f2 = epyccel( f1 , language=language)
+    x1 = f1()
+    x2 = f2()
+    assert np.equal( x1, x2 )
+
+def test_array_real_div_2d_stack_array(language):
+
+    f1 = arrays.array_real_2d_div_stack_array
+    f2 = epyccel( f1 , language=language)
+    x1 = f1()
+    x2 = f2()
+    assert np.equal( x1, x2 )
+
+def test_multiple_2d_stack_array_1(language):
+
+    f1 = arrays.multiple_2d_stack_array_1
+    f2 = epyccel(f1, language=language)
+    assert np.equal(f1(), f2())
+
+def test_multiple_2d_stack_array_2(language):
+
+    f1 = arrays.multiple_2d_stack_array_2
+    f2 = epyccel(f1, language=language)
     assert np.equal(f1(), f2())
 
 #==============================================================================

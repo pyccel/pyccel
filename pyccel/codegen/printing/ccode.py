@@ -289,7 +289,122 @@ class CCodePrinter(CodePrinter):
         return ((i, j) for i in range(rows) for j in range(cols))
 
     #========================== Numpy Elements ===============================#
-    def print_NumpyArange(self, expr, lhs):
+    def copy_NumpyArray_Data(self, expr):
+        """ print the assignment of a NdArray
+
+        parameters
+        ----------
+            expr : PyccelAstNode
+                The Assign Node used to get the lhs and rhs
+        Return
+        ------
+            String
+                Return a str that contains the declaration of a dummy data_buffer
+                       and a call to an operator which copies it to an NdArray struct
+                if the ndarray is a stack_array the str will contain the initialization
+        """
+        rhs = expr.rhs
+        lhs = expr.lhs
+        if rhs.rank == 0:
+            raise NotImplementedError(str(expr))
+        dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
+        declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+        dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
+        arg = rhs.arg
+        if rhs.rank > 1:
+            # flattening the args to use them in C initialization.
+            arg = functools.reduce(operator.concat, arg)
+        if isinstance(arg, Variable):
+            arg = self._print(arg)
+            if expr.lhs.is_stack_array:
+                cpy_data = self._init_stack_array(expr, rhs.arg)
+            else:
+                cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);".format(lhs, arg, dtype)
+            return '%s\n' % (cpy_data)
+        else :
+            arg = ', '.join(self._print(i) for i in arg)
+            dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
+            if expr.lhs.is_stack_array:
+                cpy_data = self._init_stack_array(expr, dummy_array_name)
+            else:
+                cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(self._print(lhs), dummy_array_name, dtype)
+            return  '%s%s\n' % (dummy_array, cpy_data)
+
+    def arrayFill(self, expr):
+        """ print the assignment of a NdArray
+
+        parameters
+        ----------
+            expr : PyccelAstNode
+                The Assign Node used to get the lhs and rhs
+        Return
+        ------
+            String
+                Return a str that contains a call to the C function array_fill,
+                if the ndarray is a stack_array the str will contain the initialization
+        """
+        rhs = expr.rhs
+        lhs = expr.lhs
+        code_init = ''
+        if lhs.is_stack_array:
+            declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+            length = '*'.join(self._print(i) for i in lhs.shape)
+            buffer_array = "({declare_dtype}[{length}]){{}}".format(declare_dtype = declare_dtype, length=length)
+            code_init += self._init_stack_array(expr, buffer_array)
+        if rhs.fill_value is not None:
+            if isinstance(rhs.fill_value, Literal):
+                dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+                code_init += 'array_fill(({0}){1}, {2});\n'.format(dtype, self._print(rhs.fill_value), self._print(lhs))
+            else:
+                code_init += 'array_fill({0}, {1});\n'.format(self._print(rhs.fill_value), self._print(lhs))
+        return '{}'.format(code_init)
+
+    def _init_stack_array(self, expr, buffer_array):
+        """ return a string which handles the assignment of a stack ndarray
+
+        Parameters
+        ----------
+            expr : PyccelAstNode
+                The Assign Node used to get the lhs and rhs
+            buffer_array : String
+                The data buffer
+        Returns
+        -------
+            Returns a string that contains the initialization of a stack_array
+        """
+
+        lhs = expr.lhs
+        rhs = expr.rhs
+        dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
+        shape = ", ".join(self._print(i) for i in lhs.shape)
+        declare_dtype = self.find_in_dtype_registry('int', 8)
+
+        shape_init = "({declare_dtype}[]){{{shape}}}".format(declare_dtype=declare_dtype, shape=shape)
+        strides_init = "({declare_dtype}[{length}]){{0}}".format(declare_dtype=declare_dtype, length=len(lhs.shape))
+        if isinstance(buffer_array, Variable):
+            buffer_array = "{0}.{1}".format(self._print(buffer_array), dtype)
+        cpy_data = '{0} = (t_ndarray){{.{1}={2},\n .shape={3},\n .strides={4},\n '
+        cpy_data += '.nd={5},\n .type={1},\n .is_view={6}}};\n'
+        cpy_data = cpy_data.format(self._print(lhs), dtype, buffer_array,
+                    shape_init, strides_init, len(lhs.shape), 'false')
+        cpy_data += 'stack_array_init(&{});\n'.format(self._print(lhs))
+        self._additional_imports.add("ndarrays")
+        return cpy_data
+
+    def fill_NumpyArange(self, expr, lhs):
+        """ print the assignment of a NumpyArange
+        parameters
+        ----------
+            expr : NumpyArange
+                The node holding NumpyArange
+            lhs : Variable
+                 The left hand of Assign
+        Return
+        ------
+            String
+                Return string that contains the Assign code and the For loop
+                responsible for filling the array values
+        """
         start  = self._print(expr.start)
         stop   = self._print(expr.stop)
         step   = self._print(expr.step)
@@ -814,9 +929,7 @@ class CCodePrinter(CodePrinter):
         elif  (expr.status == 'allocated'):
             free_code += self._print(Deallocate(expr.variable))
         self._additional_imports.add('ndarrays')
-        shape = expr.shape
-        shape = [self._print(i) for i in shape]
-        shape = ", ".join(a for a in shape)
+        shape = ", ".join(self._print(i) for i in expr.shape)
         dtype = self._print(expr.variable.dtype)
         dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
         shape_dtype = self.find_in_dtype_registry('int', 8)
@@ -913,25 +1026,15 @@ class CCodePrinter(CodePrinter):
                 self._additional_imports.add('math')
         args = []
         for arg in expr.args:
-            if arg.dtype != expr.dtype:
-                cast_func = python_builtin_datatypes[str_dtype(expr.dtype)]
-                args.append(self._print(cast_func(arg)))
+            if arg.dtype != NativeReal() and not func_name.startswith("pyc"):
+                args.append(self._print(PythonFloat(arg)))
             else:
                 args.append(self._print(arg))
         code_args = ', '.join(args)
+        if expr.dtype == NativeInteger():
+            cast_type = self.find_in_dtype_registry('int', expr.precision)
+            return '({0}){1}({2})'.format(cast_type, func_name, code_args)
         return '{0}({1})'.format(func_name, code_args)
-
-    def _print_MathCeil(self, expr):
-        """Convert a Python expression with a math ceil function call to C
-        function call"""
-        # add necessary include
-        self._additional_imports.add('math')
-        arg = expr.args[0]
-        if arg.dtype is NativeInteger():
-            code_arg = self._print(PythonFloat(arg))
-        else:
-            code_arg = self._print(arg)
-        return "ceil({})".format(code_arg)
 
     def _print_MathIsfinite(self, expr):
         """Convert a Python expression with a math isfinite function call to C
@@ -1116,11 +1219,14 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelFloorDiv(self, expr):
         self._additional_imports.add("math")
-        if all(a.dtype is NativeInteger() for a in expr.args):
-            args = [PythonFloat(a) for a in expr.args]
-        else:
-            args = expr.args
-        code = ' / '.join(self._print(a) for a in args)
+        # the result type of the floor division is dependent on the arguments
+        # type, if all arguments are integers the result is integer otherwise
+        # the result type is float
+        need_to_cast = all(a.dtype is NativeInteger() for a in expr.args)
+        code = ' / '.join(self._print(a if a.dtype is NativeReal() else PythonFloat(a)) for a in expr.args)
+        if (need_to_cast):
+            cast_type = self.find_in_dtype_registry('int', expr.precision)
+            return "({})floor({})".format(cast_type, code)
         return "floor({})".format(code)
 
     def _print_PyccelRShift(self, expr):
@@ -1166,44 +1272,14 @@ class CCodePrinter(CodePrinter):
         if isinstance(expr.rhs, FunctionCall) and isinstance(expr.rhs.dtype, NativeTuple):
             self._temporary_args = [VariableAddress(a) for a in expr.lhs]
             return '{};'.format(self._print(expr.rhs))
+        if isinstance(expr.rhs, (NumpyArray)):
+            return self.copy_NumpyArray_Data(expr)
+        if isinstance(expr.rhs, (NumpyFull)):
+            return self.arrayFill(expr)
+        if isinstance(expr.rhs, NumpyArange):
+            return self.fill_NumpyArange(expr.rhs, expr.lhs)
         lhs = self._print(expr.lhs)
-        rhs = expr.rhs
-        if isinstance(rhs, (NumpyArray)):
-            if rhs.rank == 0:
-                raise NotImplementedError(expr.lhs + "=" + expr.rhs)
-            dummy_array_name, _ = create_incremented_string(self._parser.used_names, prefix = 'array_dummy')
-            declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-            dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
-
-            arg = rhs.arg
-            if rhs.rank > 1:
-                arg = functools.reduce(operator.concat, arg)
-            if isinstance(arg, Variable):
-                arg = self._print(arg)
-                cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);".format(lhs, arg, dtype)
-                return '%s\n' % (cpy_data)
-            else :
-                arg = ', '.join(self._print(i) for i in arg)
-                dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-                cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);".format(lhs, dummy_array_name, dtype)
-                return  '%s%s\n' % (dummy_array, cpy_data)
-
-        if isinstance(rhs, (NumpyFull)):
-            code_init = ''
-            if rhs.fill_value is not None:
-                if isinstance(rhs.fill_value, Literal):
-                    dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-                    code_init = 'array_fill(({0}){1}, {2});'.format(dtype, self._print(rhs.fill_value), lhs)
-                else:
-                    code_init = 'array_fill({0}, {1});'.format(self._print(rhs.fill_value), lhs)
-            else:
-                return ''
-            return '{}\n'.format(code_init)
-
-        if isinstance(rhs, NumpyArange):
-            return self.print_NumpyArange(rhs, lhs)
-
-        rhs = self._print(rhs)
+        rhs = self._print(expr.rhs)
         return '{} = {};'.format(lhs, rhs)
 
     def _print_AliasAssign(self, expr):
