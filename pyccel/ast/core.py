@@ -1960,7 +1960,6 @@ class FunctionDef(Basic):
         imports=(),
         decorators={},
         headers=(),
-        templates={},
         is_recursive=False,
         is_pure=False,
         is_elemental=False,
@@ -2069,7 +2068,6 @@ class FunctionDef(Basic):
         self._imports         = imports
         self._decorators      = decorators
         self._headers         = headers
-        self._templates       = templates
         self._is_recursive    = is_recursive
         self._is_pure         = is_pure
         self._is_elemental    = is_elemental
@@ -2261,7 +2259,6 @@ class FunctionDef(Basic):
         'imports':self._imports,
         'decorators':self._decorators,
         'headers':self._headers,
-        'templates':self._templates,
         'is_recursive':self._is_recursive,
         'is_pure':self._is_pure,
         'is_elemental':self._is_elemental,
