@@ -701,5 +701,5 @@ builtin_functions_dict = {
     'len'      : PythonLen,
     'max'      : PythonMax,
     'min'      : PythonMin,
-    'not'      : Not,   # TODO [YG, 20.05.2020]: do not use Sympy's Not
+    'not'      : PyccelNot,
 }
