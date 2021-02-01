@@ -902,7 +902,7 @@ class CWrapperCodePrinter(CCodePrinter):
             arguments = wrapper_args,
             results = wrapper_results,
             body = wrapper_body,
-            local_vars = wrapper_vars.values())
+            local_vars = tuple(wrapper_vars.values()))
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
