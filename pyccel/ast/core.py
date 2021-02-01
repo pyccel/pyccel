@@ -2473,7 +2473,7 @@ class FunctionAddress(FunctionDef):
         is_argument=False,
         **kwargs
         ):
-        super().__init__(self, name, arguments, results, body, **kwargs)
+        super().__init__(name, arguments, results, body, **kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
 
