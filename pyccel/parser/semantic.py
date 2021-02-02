@@ -2615,7 +2615,7 @@ class SemanticParser(BasicParser):
                     d_apps[a].append(f)
 
             for i, a in enumerate(args):
-                if str(a) in chain(results_names, assigned, ['self']):
+                if a.name in chain(results_names, assigned, ['self']):
                     args_inout[i] = True
 
                 if d_apps[a] and not( args_inout[i] ):
