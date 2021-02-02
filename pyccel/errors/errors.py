@@ -248,7 +248,7 @@ class Errors:
                 if sys.version_info < (3, 9):
                     symbol = ast.dump(fst)
                 else:
-                    symbol = ast.unparse(fst) # pylint : disable=no-member
+                    symbol = ast.unparse(fst) # pylint: disable=no-member
             elif isinstance(symbol, Basic):
                 fst = symbol.fst
 
