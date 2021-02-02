@@ -304,7 +304,7 @@ class SemanticParser(BasicParser):
 
         if self.current_class:
             for i in self._current_class.attributes:
-                if str(i.name) == name:
+                if i.name == name:
                     var = i
                     return var
 
