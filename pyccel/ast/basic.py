@@ -56,8 +56,7 @@ class Basic(sp_Basic):
 
     def has_parent_of_type(self, search_type):
         """ Find out if any of the parents are instances
-        of the provided object. This function is designed
-        to operate on objects with one parent
+        of the provided object.
 
         Parameters
         ----------
@@ -162,6 +161,19 @@ class Basic(sp_Basic):
             return self._fst[0]
         else:
             return None
+
+    def get_direct_parents(self, condition):
+        """ For an object with multiple parents
+        Get the objects which satisfy a given
+        condition
+
+        Parameters
+        ----------
+        condition : lambda
+                    The condition which the parent
+                    must satisfy to be returned
+        """
+        return [p for p in self._parent if condition(p)]
 
     @property
     def parent(self):

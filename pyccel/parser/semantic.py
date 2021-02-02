@@ -22,6 +22,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic, PyccelAstNode
 
+from pyccel.ast.core import If
 from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import AugAssign, CodeBlock
@@ -1552,12 +1553,14 @@ class SemanticParser(BasicParser):
                                     self._current_fst_node.col_offset))
 
                         else:
-                            # TODO [YG, 04.11.2020] If we could be sure that the
-                            # array was not created in an if-then-else block, we
-                            # would use status='allocated' instead.
+                            previous_allocations = var.get_direct_parents(lambda p: isinstance(p, Allocate))
+                            if previous_allocations[-1].has_parent_of_type(If):
+                                status='unknown'
+                            else:
+                                status='allocated'
                             new_expressions.append(Allocate(var,
                                 shape=d_var['shape'], order=d_var['order'],
-                                status='unknown'))
+                                status=status))
 
                             errors.report(ARRAY_REALLOCATION, symbol=name,
                                 severity='warning', blocker=False,
