@@ -920,11 +920,10 @@ class SyntaxParser(BasicParser):
         func = self._visit(stmt.func)
 
         if isinstance(func, Symbol):
-            f_name = str(func.name)
-            if f_name == "print":
+            if func == "print":
                 func = PythonPrint(PythonTuple(*args))
             else:
-                func = FunctionCall(f_name, args)
+                func = FunctionCall(func.name, args)
         elif isinstance(func, DottedName):
             f_name = str(func.name[-1])
             func_attr = FunctionCall(f_name, args)
