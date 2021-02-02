@@ -555,6 +555,15 @@ class NumpyRandint(PyccelInternalFunction):
 
 #==============================================================================
 def process_stype(stype, precision):
+    """
+    returns a cast function from
+    PrecisionToDtype_int, PrecisionToDtype_float, PrecisionToDtype_complex, python_builtin_datatypes
+    by ginving it:
+    stype:
+        supported data type name.
+    precision:
+        describs the precision of stype, to make the returned function more specific.
+    """
     if stype == 'integer':
         return PrecisionToDtype_int[precision]
     if stype == 'real':
@@ -562,7 +571,9 @@ def process_stype(stype, precision):
     if stype == 'complex':
         return PrecisionToDtype_complex[precision]
     if stype == 'bool':
+        from pyccel.codegen.printing.fcode import python_builtin_datatypes
         return python_builtin_datatypes['bool']
+    return None
 
 class NumpyFull(PyccelInternalFunction, NumpyNewArray):
     """
@@ -605,10 +616,11 @@ class NumpyFull(PyccelInternalFunction, NumpyNewArray):
         # Cast fill_value to correct type
         from pyccel.ast.datatypes import str_dtype
         stype = str_dtype(dtype)
-        from pyccel.codegen.printing.fcode import python_builtin_datatypes
-        cast_func  = python_builtin_datatypes[stype]
-        cast_func = process_stype(stype, precision)
-        fill_value = cast_func(fill_value)
+        if fill_value:
+            from pyccel.codegen.printing.fcode import python_builtin_datatypes
+            cast_func  = python_builtin_datatypes[stype]
+            cast_func = process_stype(stype, precision)
+            fill_value = cast_func(fill_value)
         self._shape = shape
         self._rank  = len(self._shape)
         self._dtype = dtype
