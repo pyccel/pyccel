@@ -2518,7 +2518,7 @@ class SemanticParser(BasicParser):
                             if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
 
-                            a_new = ValuedVariable(dtype, str(a.name),
+                            a_new = ValuedVariable(dtype, a.name,
                                         value=a.value, **d_var)
                         else:
                             a_new = Variable(dtype, a.name, **d_var)
