@@ -1133,7 +1133,7 @@ class SemanticParser(BasicParser):
             # class property?
             else:
                 for i in methods:
-                    if str(i.name) == rhs.name and \
+                    if i.name == rhs.name and \
                             'property' in i.decorators.keys():
                         if 'numpy_wrapper' in i.decorators.keys():
                             func = i.decorators['numpy_wrapper']
