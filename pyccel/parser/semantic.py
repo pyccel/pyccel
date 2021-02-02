@@ -2312,7 +2312,7 @@ class SemanticParser(BasicParser):
 
     def _visit_If(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.blocks]
-        return expr.func(*args)
+        return If(*args)
 
     def _visit_IfTernaryOperator(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.args]
