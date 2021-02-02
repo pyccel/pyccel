@@ -11,7 +11,7 @@ This module contains all classes and functions used for handling macros.
 from sympy.core.expr import AtomicExpr
 from sympy import sympify
 
-from .basic          import PyccelAstNode
+from .basic          import Basic, PyccelAstNode
 from .core           import local_sympify
 from .datatypes      import default_precision
 from .datatypes      import NativeInteger, NativeGeneric
