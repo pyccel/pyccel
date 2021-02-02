@@ -2530,7 +2530,7 @@ class SemanticParser(BasicParser):
                     if isinstance(a_new, FunctionAddress):
                         self.insert_function(a_new)
                     else:
-                        self.insert_variable(a_new, name=str(a_new.name))
+                        self.insert_variable(a_new, name=a_new.name)
             results = expr.results
             if header_results:
                 new_results = []
