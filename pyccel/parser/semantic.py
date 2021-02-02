@@ -2597,7 +2597,7 @@ class SemanticParser(BasicParser):
             # ... computing inout arguments
             args_inout = [False] * len(args)
 
-            results_names = [str(i) for i in results]
+            results_names = [i.name for i in results]
 
             all_assigned = get_assigned_symbols(body)
             assigned     = [a for a in all_assigned if a.rank > 0]
