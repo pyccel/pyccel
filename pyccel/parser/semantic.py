@@ -22,7 +22,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic, PyccelAstNode
 
-from pyccel.ast.core import If
+from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
 from pyccel.ast.core import AugAssign, CodeBlock
@@ -2302,9 +2302,14 @@ class SemanticParser(BasicParser):
 
         return While(test, body, local_vars)
 
+    def _visit_IfSection(self, expr, **settings):
+        cond = self._visit(expr.condition)
+        body = self._visit(expr.body)
+        return IfSection(cond, body)
+
     def _visit_If(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.blocks]
-        return expr.func(*args)
+        return If(*args)
 
     def _visit_IfTernaryOperator(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.args]
