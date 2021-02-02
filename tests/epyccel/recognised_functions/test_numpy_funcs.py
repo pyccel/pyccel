@@ -10,10 +10,6 @@ from pyccel.epyccel import epyccel
 min_float = sys.float_info.min  # Minimum positive float
 
 # Functions still to be tested:
-#    full_like
-#    empty_like
-#    zeros_like
-#    ones_like
 #    array
 #    # ...
 #    norm
@@ -1364,7 +1360,7 @@ def test_full_order(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="casting to complex in not handled correctly"),
+            pytest.mark.skip(reason="casting to complex in not handled correctly, see https://github.com/pyccel/pyccel/issues/723"),
             pytest.mark.c]
         )
     )
@@ -2687,7 +2683,7 @@ def test_full_like_order(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="casting to complex is not handled correctly"),
+            pytest.mark.skip(reason="casting to complex is not handled correctly, , see https://github.com/pyccel/pyccel/issues/723"),
             pytest.mark.c]
         )
     )
