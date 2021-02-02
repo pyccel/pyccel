@@ -2861,8 +2861,8 @@ class SemanticParser(BasicParser):
         container = self.namespace.imports
 
         if isinstance(expr.source, AsName):
-            source        = str(expr.source.name)
-            source_target = str(expr.source.target)
+            source        = expr.source.name
+            source_target = expr.source.target
         else:
             source        = str(expr.source)
             source_target = source
