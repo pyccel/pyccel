@@ -725,7 +725,7 @@ class SyntaxParser(BasicParser):
 
                 types = fill_types(ls)
 
-                txt  = '#$ header template ' + str(tp_name)
+                txt  = '#$ header template ' + tp_name
                 txt += '(' + '|'.join(types) + ')'
                 if tp_name in template['template_dict']:
                     msg = 'The template "{}" is duplicated'.format(tp_name)
