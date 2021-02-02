@@ -190,13 +190,15 @@ class Symbol(Basic):
         return self._name
 
     def __eq__(self, other):
-        if type(self) is type(other):
+        if isinstance(other, str):
+            return self._name == other
+        elif type(self) is type(other):
             return self._name == other.name
         else:
             return False
 
     def __hash__(self):
-        return hash(type(self).__name__ + self._name)
+        return hash(self._name)
 
     def __str__(self):
         return self._name
