@@ -386,7 +386,7 @@ class SemanticParser(BasicParser):
         """."""
 
         if isinstance(cls, ClassDef):
-            name = str(cls.name)
+            name = cls.name
             container = self.namespace
             if parent:
                 container = container.parent_scope
