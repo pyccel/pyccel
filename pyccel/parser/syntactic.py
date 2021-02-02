@@ -441,7 +441,7 @@ class SyntaxParser(BasicParser):
         return Symbol(stmt.id)
 
     def _treat_import_source(self, source, level):
-        source = '.'*level + str(source)
+        source = '.'*level + source
         if source.count('.') == 0:
             source = Symbol(source)
         else:
