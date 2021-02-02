@@ -55,7 +55,7 @@ class Basic(sp_Basic):
             elif c:
                 c.parent = self
 
-    def has_parent_of_type(self, search_type):
+    def get_parent_of_type(self, search_type):
         """ Find out if any of the parents are instances
         of the provided object.
 
@@ -69,12 +69,13 @@ class Basic(sp_Basic):
         Boolean : True if one of the parents is an instance of
                   the class in the argument
         """
+        results = []
         if len(self._parent) == 0:
-            return False
+            return []
         else:
-            return any(isinstance(p, search_type) or \
-                    p.has_parent_of_type(search_type) \
-                    for p in self._parent)
+            results  = [p for p in self._parent if isinstance(p, search_type)]
+            results += [r for p in self._parent for r in p.get_parent_of_type(search_type)]
+            return results
 
     def children_of_type(self, search_type):
         """ Returns all objects of the requested type
