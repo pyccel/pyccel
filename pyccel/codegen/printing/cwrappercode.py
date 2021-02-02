@@ -344,7 +344,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body : list
             A list of statements
         """
-        body = [(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
+        body = [IfSection(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
                 [Assign(variable, variable.value)])]
         if check_type : # Type check
             check = PyccelNot(PyccelOr(NumpyType_Check(variable, collect_var)
@@ -391,19 +391,19 @@ class CWrapperCodePrinter(CCodePrinter):
         #check optional :
         if variable.is_optional :
             check = PyccelNot(VariableAddress(collect_var))
-            body += [(check, [Assign(VariableAddress(variable), Nil())])]
+            body += [IfSection(check, [Assign(VariableAddress(variable), Nil())])]
 
         #rank check :
         check = PyccelNe(FunctionCall(numpy_get_ndims,[collect_var]), LiteralInteger(collect_var.rank))
         error = PyErr_SetString('PyExc_TypeError', '"{} must have rank {}"'.format(collect_var, str(collect_var.rank)))
-        body  += [(check, [error, Return([Nil()])])]
+        body  += [IfSection(check, [error, Return([Nil()])])]
         if check_type : #Type check
             numpy_dtype = self.find_in_numpy_dtype_registry(variable)
             arg_dtype   = self.find_in_dtype_registry(self._print(variable.dtype), variable.precision)
             check = PyccelNe(FunctionCall(numpy_get_type, [collect_var]), numpy_dtype)
             info_dump = PythonPrint([FunctionCall(numpy_get_type, [collect_var]), numpy_dtype])
             error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, arg_dtype))
-            body += [(check, [info_dump, error, Return([Nil()])])]
+            body += [IfSection(check, [info_dump, error, Return([Nil()])])]
 
         if collect_var.rank > 1 and self._target_language == 'fortran' :#Order check
             if collect_var.order == 'F':
@@ -656,7 +656,7 @@ class CWrapperCodePrinter(CCodePrinter):
             funcs_def.append(mini_wrapper_func_def)
 
             # append check condition to the functioncall
-            body_tmp.append((PyccelEq(check_var, LiteralInteger(flags)), [AliasAssign(wrapper_results[0],
+            body_tmp.append(IfSection(PyccelEq(check_var, LiteralInteger(flags)), [AliasAssign(wrapper_results[0],
                     FunctionCall(mini_wrapper_func_def, parse_args))]))
 
         # Errors / Types management
