@@ -37,19 +37,20 @@ class Basic(sp_Basic):
                 # Convert basic types to literal types
                 c = convert_to_literal(c)
                 setattr(self, c_name, c)
+
             elif isinstance(c, iterable_types):
+                if any(isinstance(ci, iterable_types) for ci in c):
+                    raise TypeError("Basic child cannot be a tuple of tuples")
                 c = tuple(ci if not isinstance(ci, (int, float, complex, str, bool)) \
                         else convert_to_literal(ci) for ci in c)
                 setattr(self, c_name, c)
+
             elif not isinstance(c, Basic) and c is not None:
                 raise TypeError("Basic child must be a Basic or a tuple not {}".format(type(c)))
 
             if isinstance(c, tuple):
                 for ci in c:
-                    if isinstance(ci, tuple): # TODO: Fix if to avoid multi-layers
-                        for cii in ci:
-                            cii.parent = self
-                    elif ci:
+                    if ci:
                         ci.parent = self
             elif c:
                 c.parent = self
@@ -97,16 +98,15 @@ class Basic(sp_Basic):
 
             if isinstance(v, tuple):
                 for vi in v:
-                    if isinstance(v, search_type):
-                        results.append(v)
+                    if isinstance(vi, search_type):
+                        results.append(vi)
 
-                    if isinstance(vi, tuple):
-                        #TODO: Disallow
-                        pass
-                    elif vi is not None:
+                    if vi is not None:
                         results.extend(vi.children_of_type(search_type))
+
             elif v is not None:
                 results.extend(v.children_of_type(search_type))
+
         return results
 
     def substitute(self, original, replacement, excluded_nodes = ()):
@@ -131,7 +131,7 @@ class Basic(sp_Basic):
                 if original in v:
                     v = tuple(replacement if vi is original else vi for vi in v)
                 for vi in v:
-                    v.substitute(original, replacement, excluded_nodes)
+                    vi.substitute(original, replacement, excluded_nodes)
                 setattr(self, n, v)
             elif not isinstance(v, excluded_nodes):
                 v.substitute(original, replacement, excluded_nodes)
