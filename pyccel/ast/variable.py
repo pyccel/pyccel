@@ -119,7 +119,6 @@ class Variable(Symbol, PyccelAstNode):
         is_kwonly=False,
         allows_negative_indexes=False
         ):
-        super().__init__(name)
 
         # ------------ PyccelAstNode Properties ---------------
         if isinstance(dtype, str) or str(dtype) == '*':
@@ -166,7 +165,6 @@ class Variable(Symbol, PyccelAstNode):
 
         if not isinstance(name, (str, DottedName)):
             raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
-        self._name = name
 
         if not isinstance(allocatable, bool):
             raise TypeError('allocatable must be a boolean.')
@@ -200,6 +198,7 @@ class Variable(Symbol, PyccelAstNode):
         self._order          = order
         self._is_argument    = is_argument
         self._is_kwonly      = is_kwonly
+        super().__init__(name)
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
@@ -345,9 +344,6 @@ class Variable(Symbol, PyccelAstNode):
             return False
         return isinstance(self.dtype, (NativeInteger, NativeBool,
                           NativeReal, NativeComplex))
-
-    def __str__(self):
-        return str(self.name)
 
     def _sympystr(self, printer):
         """ sympy equivalent of __str__"""
