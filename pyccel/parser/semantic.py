@@ -2539,7 +2539,7 @@ class SemanticParser(BasicParser):
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
                     a_new = Variable(dtype, a.name, **d_var)
-                    self.insert_variable(a_new, name=str(a_new.name))
+                    self.insert_variable(a_new, name=a_new.name)
                     new_results.append(a_new)
 
                 results = new_results
