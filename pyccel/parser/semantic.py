@@ -944,6 +944,12 @@ class SemanticParser(BasicParser):
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='error', blocker=self.blocking)
 
+        for arg in var[args].indices:
+            if not isinstance(arg, Slice) and not \
+                (hasattr(arg, 'dtype') and isinstance(arg.dtype, NativeInteger)):
+                errors.report(INVALID_INDICES, symbol=var[args],
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                severity='error', blocker=self.blocking)
         return var[args]
 
     def _visit_IndexedElement(self, expr, **settings):
