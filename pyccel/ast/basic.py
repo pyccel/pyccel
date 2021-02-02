@@ -9,7 +9,7 @@ They are:
 - Basic, which provides a python AST
 - PyccelAstNode which describes each PyccelAstNode
 """
-
+import ast
 from sympy.core.basic import Basic as sp_Basic
 
 __all__ = ('Basic', 'PyccelAstNode')
@@ -29,6 +29,7 @@ class Basic(sp_Basic):
 
     def __init__(self):
         self._parent = []
+        self._fst = []
         for c_name in self._children:
             c = getattr(self, c_name)
             from pyccel.ast.literals import convert_to_literal
@@ -55,7 +56,8 @@ class Basic(sp_Basic):
 
     def has_parent_of_type(self, search_type):
         """ Find out if any of the parents are instances
-        of the provided class
+        of the provided object. This function is designed
+        to operate on objects with one parent
 
         Parameters
         ----------
@@ -143,11 +145,23 @@ class Basic(sp_Basic):
 
     def set_fst(self, fst):
         """Sets the python.ast fst."""
-        self._fst = fst
+        if not isinstance(fst, ast.AST):
+            raise TypeError("Fst must be an AST object, not {}".format(type(fst)))
+        assert(isinstance(fst, ast.AST))
+
+        if not hasattr(fst, 'lineno'):
+            # Handle module object
+            fst.lineno     = 1
+            fst.col_offset = 1
+
+        self._fst.append(fst)
 
     @property
     def fst(self):
-        return self._fst
+        if len(self._fst) == 1:
+            return self._fst[0]
+        else:
+            return None
 
     @property
     def parent(self):

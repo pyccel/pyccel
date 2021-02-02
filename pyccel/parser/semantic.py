@@ -20,7 +20,7 @@ from sympy.core import cache
 
 #==============================================================================
 
-from pyccel.ast.basic import PyccelAstNode
+from pyccel.ast.basic import Basic, PyccelAstNode
 
 from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
@@ -802,6 +802,8 @@ class SemanticParser(BasicParser):
             annotation_method = '_visit_' + cls.__name__
             if hasattr(self, annotation_method):
                 obj = getattr(self, annotation_method)(expr, **settings)
+                if isinstance(obj, Basic) and self._current_fst_node:
+                    obj.set_fst(self._current_fst_node)
                 self._current_fst_node = current_fst
                 return obj
 
@@ -1616,8 +1618,6 @@ class SemanticParser(BasicParser):
         new_expressions = []
         fst = expr.fst
         assert(fst)
-        if fst:
-            self._current_fst_node = fst
 
         rhs = expr.rhs
         lhs = expr.lhs
@@ -1977,12 +1977,10 @@ class SemanticParser(BasicParser):
             new_expressions.append(new_expr)
         if (len(new_expressions)==1):
             new_expressions = new_expressions[0]
-            new_expressions.set_fst(fst)
 
             return new_expressions
         else:
             result = CodeBlock(new_expressions)
-            result.set_fst(fst)
             return result
 
     def _visit_For(self, expr, **settings):

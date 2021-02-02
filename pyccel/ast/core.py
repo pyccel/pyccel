@@ -772,8 +772,6 @@ class CodeBlock(Basic):
             else:
                 ls.append(i)
         self._body = tuple(ls)
-        if len(self._body)>0 and isinstance(self._body[-1], (Assign, AugAssign)):
-            self.set_fst(self._body[-1].fst)
         super().__init__()
 
     @property

@@ -13,11 +13,11 @@ import ast
 
 #==============================================================================
 
-from sympy.core import cache # Is this still needed?
+from sympy.core import cache
 
 #==============================================================================
 
-from pyccel.ast.basic import PyccelAstNode
+from pyccel.ast.basic import Basic, PyccelAstNode
 
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import ParserResult
@@ -171,6 +171,8 @@ class SyntaxParser(BasicParser):
         if hasattr(self, syntax_method):
             self._scope.append(stmt)
             result = getattr(self, syntax_method)(stmt)
+            if isinstance(result, Basic) and isinstance(stmt, ast.AST):
+                result.set_fst(stmt)
             self._scope.pop()
             return result
 
@@ -256,9 +258,6 @@ class SyntaxParser(BasicParser):
                             module    = mod_code,
                             prog_name = prog_name,
                             mod_name  = current_mod_name)
-        code.set_fst(stmt)
-        code._fst.lineno=1
-        code._fst.col_offset=1
         return code
 
     def _visit_Expr(self, stmt):
@@ -330,7 +329,6 @@ class SyntaxParser(BasicParser):
 
         # we set the fst to keep track of needed information for errors
 
-        expr.set_fst(stmt)
         return expr
 
     def _visit_AugAssign(self, stmt):
@@ -353,7 +351,6 @@ class SyntaxParser(BasicParser):
 
         # we set the fst to keep track of needed information for errors
 
-        expr.set_fst(stmt)
         return expr
 
     def _visit_arguments(self, stmt):
@@ -452,7 +449,6 @@ class SyntaxParser(BasicParser):
             return expr[0]
         else:
             expr = CodeBlock(expr)
-            expr.set_fst(stmt)
             return expr
 
     def _visit_ImportFrom(self, stmt):
@@ -470,7 +466,6 @@ class SyntaxParser(BasicParser):
             targets.append(s)
 
         expr = Import(source, targets)
-        expr.set_fst(stmt)
         self.insert_import(expr)
         return expr
 
@@ -596,7 +591,6 @@ class SyntaxParser(BasicParser):
         if not isinstance(results, (list, PythonTuple, PythonList)):
             results = [results]
         expr = Return(results)
-        expr.set_fst(stmt)
         return expr
 
     def _visit_Pass(self, stmt):
@@ -837,7 +831,6 @@ class SyntaxParser(BasicParser):
                headers=headers,
                doc_string=doc_string)
 
-        func.set_fst(stmt)
         return func
 
     def _visit_ClassDef(self, stmt):
@@ -853,7 +846,6 @@ class SyntaxParser(BasicParser):
 
         # we set the fst to keep track of needed information for errors
 
-        expr.set_fst(stmt)
         return expr
 
     def _visit_Subscript(self, stmt):
@@ -930,7 +922,6 @@ class SyntaxParser(BasicParser):
         iterable = self._visit(stmt.iter)
         body = self._visit(stmt.body)
         expr = For(iterator, iterable, body)
-        expr.set_fst(stmt)
         return expr
 
     def _visit_comprehension(self, stmt):
@@ -938,7 +929,6 @@ class SyntaxParser(BasicParser):
         iterator = self._visit(stmt.target)
         iterable = self._visit(stmt.iter)
         expr = For(iterator, iterable, [])
-        expr.set_fst(stmt)
         return expr
 
     def _visit_ListComp(self, stmt):
@@ -1028,7 +1018,6 @@ class SyntaxParser(BasicParser):
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
 
-        expr.set_fst(stmt)
         return expr
 
     def _visit_If(self, stmt):
@@ -1049,7 +1038,6 @@ class SyntaxParser(BasicParser):
         first = self._visit(stmt.body)
         second = self._visit(stmt.orelse)
         expr = IfTernaryOperator(test1, first, second)
-        expr.set_fst(stmt)
         return expr
 
     def _visit_While(self, stmt):
@@ -1119,8 +1107,6 @@ class SyntaxParser(BasicParser):
 
                     self._metavars[str(expr.name)] = str(expr.value)
                     expr = EmptyNode()
-                else:
-                    expr.set_fst(stmt)
 
                 return expr
             else:
