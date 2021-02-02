@@ -412,10 +412,10 @@ class SemanticParser(BasicParser):
 
             iterable = 'iterable' in expr.options
             with_construct = 'with' in expr.options
-            dtype = DataTypeFactory(str(expr.name), '_name',
+            dtype = DataTypeFactory(expr.name, '_name',
                                     is_iterable=iterable,
                                     is_with_construct=with_construct)
-            self.set_class_construct(str(expr.name), dtype)
+            self.set_class_construct(expr.name, dtype)
         else:
             msg = 'header of type{0} is not supported'
             msg = msg.format(str(type(expr)))
