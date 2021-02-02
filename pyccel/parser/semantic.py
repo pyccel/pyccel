@@ -1554,7 +1554,7 @@ class SemanticParser(BasicParser):
 
                         else:
                             previous_allocations = var.get_direct_parents(lambda p: isinstance(p, Allocate))
-                            if previous_allocations[-1].has_parent_of_type(If):
+                            if previous_allocations[-1].has_parent_of_type((If, For, While)):
                                 status='unknown'
                             else:
                                 status='allocated'
