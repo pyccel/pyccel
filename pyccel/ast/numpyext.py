@@ -89,6 +89,74 @@ __all__ = (
     'NumpyArange'
 )
 
+#=======================================================================================
+class NumpyComplex(PythonComplex):
+    """ Represents a call to numpy.complex() function.
+    """
+
+class NumpyComplex64(NumpyComplex):
+    _precision = dtype_registry['complex64'][1]
+
+class NumpyComplex128(NumpyComplex):
+    _precision = dtype_registry['complex128'][1]
+
+#=======================================================================================
+class NumpyFloat(PythonFloat):
+    """ Represents a call to numpy.float() function.
+    """
+
+class NumpyFloat32(NumpyFloat):
+    """ Represents a call to numpy.float32() function.
+    """
+    _precision = dtype_registry['float32'][1]
+
+class NumpyFloat64(NumpyFloat):
+    """ Represents a call to numpy.float64() function.
+    """
+    _precision = dtype_registry['float64'][1]
+
+#=======================================================================================
+# TODO [YG, 13.03.2020]: handle case where base != 10
+class NumpyInt(PythonInt):
+    """ Represents a call to numpy.int() function.
+    """
+    def __new__(cls, arg=None, base=10):
+        return PythonInt.__new__(cls, arg)
+
+class NumpyInt32(NumpyInt):
+    """ Represents a call to numpy.int32() function.
+    """
+    _precision = dtype_registry['int32'][1]
+
+class NumpyInt64(NumpyInt):
+    """ Represents a call to numpy.int64() function.
+    """
+    _precision = dtype_registry['int64'][1]
+
+#==============================================================================
+class NumpyReal(PythonReal):
+    """Represents a call to  numpy.real for code generation.
+
+    > a = 1+2j
+    > np.real(a)
+    1.0
+    """
+
+PrecisionToDtype_int = {
+    4 : NumpyInt32,
+    8 : PythonInt,
+}
+
+PrecisionToDtype_float = {
+    4 : NumpyFloat32,
+    8 : PythonFloat,
+}
+
+PrecisionToDtype_complex = {
+    4 : NumpyComplex64,
+    8 : PythonComplex,
+    16 : NumpyComplex128,
+}
 #==============================================================================
 numpy_constants = {
     'pi': Constant('real', 'pi', value=numpy.pi),
@@ -346,15 +414,6 @@ def Shape(arg):
         return PythonTuple(*arg.shape)
 
 #==============================================================================
-class NumpyReal(PythonReal):
-    """Represents a call to  numpy.real for code generation.
-
-    > a = 1+2j
-    > np.real(a)
-    1.0
-    """
-
-#==============================================================================
 class NumpyImag(PythonImag):
     """Represents a call to  numpy.real for code generation.
 
@@ -495,6 +554,16 @@ class NumpyRandint(PyccelInternalFunction):
         return self._low
 
 #==============================================================================
+def process_stype(stype, precision):
+    if stype == 'integer':
+        return PrecisionToDtype_int[precision]
+    if stype == 'real':
+        return PrecisionToDtype_float[precision]
+    if stype == 'complex':
+        return PrecisionToDtype_complex[precision]
+    if stype == 'bool':
+        return python_builtin_datatypes['bool']
+
 class NumpyFull(PyccelInternalFunction, NumpyNewArray):
     """
     Represents a call to numpy.full for code generation.
@@ -534,13 +603,12 @@ class NumpyFull(PyccelInternalFunction, NumpyNewArray):
         order = NumpyNewArray._process_order(order)
 
         # Cast fill_value to correct type
-        # TODO [YG, 09.11.2020]: treat difficult case of LiteralComplex
         from pyccel.ast.datatypes import str_dtype
         stype = str_dtype(dtype)
-        if fill_value and stype != 'complex':
-            from pyccel.codegen.printing.fcode import python_builtin_datatypes
-            cast_func  = python_builtin_datatypes[stype]
-            fill_value = cast_func(fill_value)
+        from pyccel.codegen.printing.fcode import python_builtin_datatypes
+        cast_func  = python_builtin_datatypes[stype]
+        cast_func = process_stype(stype, precision)
+        fill_value = cast_func(fill_value)
         self._shape = shape
         self._rank  = len(self._shape)
         self._dtype = dtype
@@ -839,49 +907,6 @@ class NumpyMax(NumpyUfuncUnary):
 
 
 #=======================================================================================
-class NumpyComplex(PythonComplex):
-    """ Represents a call to numpy.complex() function.
-    """
-
-class NumpyComplex64(NumpyComplex):
-    _precision = dtype_registry['complex64'][1]
-
-class NumpyComplex128(NumpyComplex):
-    _precision = dtype_registry['complex128'][1]
-
-#=======================================================================================
-class NumpyFloat(PythonFloat):
-    """ Represents a call to numpy.float() function.
-    """
-
-class NumpyFloat32(NumpyFloat):
-    """ Represents a call to numpy.float32() function.
-    """
-    _precision = dtype_registry['float32'][1]
-
-class NumpyFloat64(NumpyFloat):
-    """ Represents a call to numpy.float64() function.
-    """
-    _precision = dtype_registry['float64'][1]
-
-#=======================================================================================
-# TODO [YG, 13.03.2020]: handle case where base != 10
-class NumpyInt(PythonInt):
-    """ Represents a call to numpy.int() function.
-    """
-    def __new__(cls, arg=None, base=10):
-        return PythonInt.__new__(cls, arg)
-
-class NumpyInt32(NumpyInt):
-    """ Represents a call to numpy.int32() function.
-    """
-    _precision = dtype_registry['int32'][1]
-
-class NumpyInt64(NumpyInt):
-    """ Represents a call to numpy.int64() function.
-    """
-    _precision = dtype_registry['int64'][1]
-
 
 
 NumpyArrayClass = ClassDef('numpy.ndarray',
