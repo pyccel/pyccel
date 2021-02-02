@@ -111,7 +111,14 @@ class OmpParallelConstruct(BasicStmt):
                          OmpProcBind)
 
         txt = ''
-        print(self.combined)
+        if ('simd' in self.combined) and ('for' not in self.combined):
+            raise TypeError('Wrong combination of SIMD and Prallel construct')
+        if 'sections' in self.combined:
+            _valid_clauses = _valid_clauses + _valid_sections_clauses
+        if 'for' in self.combined:
+            _valid_clauses = _valid_clauses + _valid_loop_clauses
+            if 'simd' in self.combined:
+                _valid_clauses = _valid_clauses + _valid_simd_clauses
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
@@ -133,15 +140,6 @@ class OmpLoopConstruct(BasicStmt):
     def expr(self):
         if DEBUG:
             print("> OmpLoopConstruct: expr")
-
-        _valid_clauses = (OmpPrivate, \
-                         OmpFirstPrivate, \
-                         OmpLastPrivate, \
-                         OmpReduction, \
-                         OmpSchedule, \
-                         OmpCollapse, \
-                         OmpLinear, \
-                         OmpOrdered)
 
         txt = ''
         for clause in self.clauses:
@@ -290,14 +288,9 @@ class OmpSimdConstruct(BasicStmt):
         if DEBUG:
             print("> OmpSimdConstruct: expr")
 
-        _valid_clauses = (OmpLinear, \
-                          OmpReduction, \
-                          OmpCollapse, \
-                          OmpLastPrivate)
-
         txt = self.name
         for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
+            if isinstance(clause, _valid_simd_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpSimdConstruct')
@@ -356,14 +349,9 @@ class OmpSectionsConstruct(BasicStmt):
         if DEBUG:
             print("> OmpSectionsConstruct: expr")
 
-        _valid_clauses = (OmpPrivate, \
-                          OmpFirstPrivate, \
-                          OmpLastPrivate, \
-                          OmpReduction)
-
         txt = self.name
         for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
+            if isinstance(clause, _valid_sections_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpSectionsConstruct')
@@ -1144,6 +1132,16 @@ class AtomicMemoryClause(BasicStmt):
 #################################################
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
+
+_valid_sections_clauses = (OmpPrivate, \
+                  OmpFirstPrivate, \
+                  OmpLastPrivate, \
+                  OmpReduction)
+
+_valid_simd_clauses = (OmpLinear, \
+                  OmpReduction, \
+                  OmpCollapse, \
+                  OmpLastPrivate)
 
 _valid_loop_clauses = (OmpPrivate, \
                  OmpFirstPrivate, \
