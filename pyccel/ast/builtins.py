@@ -251,13 +251,10 @@ class PythonEnumerate(Basic):
     """
     _children = ('_element',)
 
-    def __new__(cls, arg):
+    def __init__(self, arg):
         if PyccelAstNode.stage != "syntactic" and \
                 not isinstance(arg, PyccelAstNode):
             raise TypeError('Expecting an arg of valid type')
-        return super().__new__(cls, arg)
-
-    def __init__(self, arg):
         self._element = arg
         super().__init__()
 
@@ -426,7 +423,7 @@ class PythonList(PythonTuple):
     """
     _order = 'C'
     _is_homogeneous = True
-
+    """ Represent lists in the code with dynamic memory management."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
 
@@ -435,12 +432,10 @@ class PythonMap(Basic):
     """ Represents the map stmt
     """
     _children = ('_args',)
-    def __new__(cls, *args):
-        if len(args)<2:
-            raise TypeError('wrong number of arguments')
-        return super().__new__(cls, *args)
 
     def __init__(self, *args):
+        if len(args)<2:
+            raise TypeError('wrong number of arguments')
         self._args = args
         super().__init__()
 
@@ -468,7 +463,7 @@ class PythonPrint(Basic):
 
     @property
     def expr(self):
-        return self._args[0]
+        return self._expr
 
 #==============================================================================
 class PythonRange(Basic):
@@ -537,14 +532,11 @@ class PythonZip(Basic):
     """
     _children = ('_args',)
 
-    def __new__(cls, *args):
+    def __init__(self, *args):
         if not isinstance(args, (tuple, list)):
             raise TypeError('args must be a list or tuple')
         elif len(args) < 2:
             raise ValueError('args must be of length > 2')
-        return super().__new__(cls, *args)
-
-    def __init__(self, *args):
         self._args = args
         super().__init__()
 

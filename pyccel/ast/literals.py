@@ -173,8 +173,6 @@ class LiteralString(Literal):
     """Represents a string literal in python"""
     _dtype     = NativeString()
     _precision = 0
-    def __new__(cls, arg):
-        return super().__new__(cls, arg)
 
     def __init__(self, arg):
         super().__init__(self._precision)
