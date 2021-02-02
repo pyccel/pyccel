@@ -1284,7 +1284,7 @@ def test_full_basic_real(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
