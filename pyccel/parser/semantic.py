@@ -377,7 +377,7 @@ class SemanticParser(BasicParser):
             raise TypeError('variable must be of type Variable')
 
         if name is None:
-            name = str(var.name)
+            name = var.name
 
         self.namespace.variables[name] = var
 
