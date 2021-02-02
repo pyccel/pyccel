@@ -97,6 +97,9 @@ class Variable(Symbol, PyccelAstNode):
     matrix.n_rows
     """
 
+    def __new__( cls, *args, **kwargs ):
+        return PyccelAstNode.__new__(cls, *args, **kwargs)
+
     def __init__(
         self,
         dtype,
@@ -117,7 +120,7 @@ class Variable(Symbol, PyccelAstNode):
         is_kwonly=False,
         allows_negative_indexes=False
         ):
-        Symbol.__init__(self, name)
+        Symbol.__init__(self)
 
         # ------------ PyccelAstNode Properties ---------------
         if isinstance(dtype, str) or str(dtype) == '*':
