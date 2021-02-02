@@ -433,12 +433,12 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
-        type_name = self.find_in_dtype_registry('real', default_precision['real'])
+        type_name = self.find_in_dtype_registry('real', expr.precision)
         return '({0})({1})'.format(type_name, value)
 
     def _print_PythonInt(self, expr):
         value = self._print(expr.arg)
-        type_name = self.find_in_dtype_registry('int', default_precision['int'])
+        type_name = self.find_in_dtype_registry('int', expr.precision)
         return '({0})({1})'.format(type_name, value)
 
     def _print_PythonBool(self, expr):
