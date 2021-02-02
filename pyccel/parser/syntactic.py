@@ -13,8 +13,7 @@ import ast
 
 #==============================================================================
 
-from sympy import Dict
-from sympy.core import cache
+from sympy.core import cache # Is this still needed?
 
 #==============================================================================
 

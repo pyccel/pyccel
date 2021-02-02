@@ -9,7 +9,6 @@
 from collections import OrderedDict
 from itertools import chain
 
-from sympy import Tuple
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
