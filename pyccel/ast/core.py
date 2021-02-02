@@ -3479,10 +3479,8 @@ class If(Basic):
 
     Parameters
     ----------
-    args :
-        every argument is a tuple and
-        is defined as (cond, expr) where expr is a valid ast element
-        and cond is a boolean test.
+    args : IfSection
+           All arguments are sections of the complete If block
 
     Examples
     --------
