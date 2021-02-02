@@ -1554,18 +1554,21 @@ class SemanticParser(BasicParser):
 
                         else:
                             previous_allocations = var.get_direct_parents(lambda p: isinstance(p, Allocate))
-                            if previous_allocations[-1].has_parent_of_type((If, For, While)):
+                            if previous_allocations[-1].get_parent_of_type((If, For, While)):
                                 status='unknown'
+                            elif previous_allocations[-1].get_parent_of_type(IfSection):
+                                status = previous_allocations[-1].status
                             else:
                                 status='allocated'
                             new_expressions.append(Allocate(var,
                                 shape=d_var['shape'], order=d_var['order'],
                                 status=status))
 
-                            errors.report(ARRAY_REALLOCATION, symbol=name,
-                                severity='warning', blocker=False,
-                                bounding_box=(self._current_fst_node.lineno,
-                                    self._current_fst_node.col_offset))
+                            if status != 'unallocated':
+                                errors.report(ARRAY_REALLOCATION, symbol=name,
+                                    severity='warning', blocker=False,
+                                    bounding_box=(self._current_fst_node.lineno,
+                                        self._current_fst_node.col_offset))
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.
