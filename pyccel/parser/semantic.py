@@ -528,7 +528,7 @@ class SemanticParser(BasicParser):
             name = macro.name
             if isinstance(macro.name, DottedName):
                 name = name.name[-1]
-            container[str(name)] = macro
+            container[name] = macro
         else:
             raise TypeError('Expected a macro')
 
