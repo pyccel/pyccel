@@ -163,8 +163,8 @@ class Slice(Basic):
         return '{0} : {1}'.format(start, stop)
 
 class Symbol(Basic):
-    """
-    Represent variable with undefined type
+    """Symbolic placeholder for a Python variable, which has a name but no type yet.
+    This is very generic, and it can also represent a function or a module.
 
     Parameters
     ----------
