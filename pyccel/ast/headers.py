@@ -228,7 +228,7 @@ class FunctionHeader(Header):
     def __init__(self, name, dtypes,
                 results=None,
                 is_static=False):
-        name = str(name)
+
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
 
@@ -266,7 +266,7 @@ class FunctionHeader(Header):
         # TODO factorize what can be factorized
         from itertools import product
 
-        name = str(self.name)
+        name = self.name
 
         body      = []
         cls_name  = None

@@ -472,7 +472,7 @@ class BasicParser(object):
             self.insert_python_function(func)
         elif isinstance(func, (FunctionDef, Interface, FunctionAddress)):
             container = self.namespace.functions
-            container[str(func.name)] = func
+            container[func.name] = func
         else:
             raise TypeError('Expected a Function definition')
 
@@ -481,10 +481,10 @@ class BasicParser(object):
 
         container = self.namespace.symbolic_functions
         if isinstance(func, SympyFunction):
-            container[str(func.name)] = func
+            container[func.name] = func
         elif isinstance(func, SymbolicAssign) and isinstance(func.rhs,
                 Lambda):
-            container[str(func.lhs)] = func.rhs
+            container[func.lhs] = func.rhs
         else:
             raise TypeError('Expected a symbolic_function')
 
@@ -494,7 +494,7 @@ class BasicParser(object):
         container = self.namespace.python_functions
 
         if isinstance(func, PythonFunction):
-            container[str(func.name)] = func
+            container[func.name] = func
         else:
             raise TypeError('Expected a python_function')
 
@@ -511,7 +511,7 @@ class BasicParser(object):
         if len(expr.target) == 0:
             if isinstance(expr.source, AsName):
                 name   = expr.source
-                source = str(expr.source.name)
+                source = expr.source.name
             else:
                 name   = str(expr.source)
                 source = name
@@ -522,7 +522,7 @@ class BasicParser(object):
             source = str(expr.source)
             if source not in pyccel_builtin_import_registery:
                 for t in expr.target:
-                    name = [str(t)]
+                    name = [t]
                     if not source in container.keys():
                         container[source] = []
                     container[source] += name

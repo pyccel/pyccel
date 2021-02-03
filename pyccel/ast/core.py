@@ -261,7 +261,7 @@ def extract_subexpressions(expr):
         elif isinstance(expr, FunctionCall):
             args = substitute(expr.args)
 
-            if str(expr.func) in func_names:
+            if expr.func.name in func_names:
                 var = create_variable(expr)
                 expr = expr.func(*args, evaluate=False)
                 expr = Assign(var, expr)
@@ -1732,8 +1732,7 @@ class FunctionCall(PyccelAstNode):
         # ...
         if isinstance(current_function, DottedName):
             current_function = current_function.name[-1]
-
-        if str(current_function) == str(name):
+        if current_function == name:
             func.set_recursive()
 
         if not isinstance(args, (tuple, list)):
@@ -1760,7 +1759,7 @@ class FunctionCall(PyccelAstNode):
 
         args = [FunctionAddress(a.name, a.arguments, a.results, []) if isinstance(a, FunctionDef) else a for a in args]
 
-        if str(current_function) == str(func.name):
+        if current_function == func.name:
             if len(func.results)>0 and not isinstance(func.results[0], PyccelAstNode):
                 errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
 
@@ -2710,7 +2709,7 @@ class ClassDef(Basic):
 
         d_methods = {}
         for i in self.methods:
-            d_methods[str(i.name)] = i
+            d_methods[i.name] = i
         return d_methods
 
     @property
@@ -2720,7 +2719,7 @@ class ClassDef(Basic):
 
         d_attributes = {}
         for i in self.attributes:
-            d_attributes[str(i.name)] = i
+            d_attributes[i.name] = i
         return d_attributes
 
     # TODO add other attributes?
@@ -2733,20 +2732,20 @@ class ClassDef(Basic):
             raise TypeError('Expecting attribute to be a string')
 
         if isinstance(O, Variable):
-            cls_name = str(O.name)
+            cls_name = O.name
         else:
             cls_name = str(O)
 
         attributes = {}
         for i in self.attributes:
-            attributes[str(i.name)] = i
+            attributes[i.name] = i
 
         if not attr in attributes:
             raise ValueError('{0} is not an attribute of {1}'.format(attr,
                              str(self)))
 
         var = attributes[attr]
-        name = DottedName(cls_name, str(var.name))
+        name = DottedName(cls_name, var.name)
         return Variable(
             var.dtype,
             name,
@@ -2881,9 +2880,9 @@ class Import(Basic):
 
     def find_module_target(self, new_target):
         for t in self._target:
-            if isinstance(t, AsName) and new_target == str(t.name):
+            if isinstance(t, AsName) and new_target == t.name:
                 return t.target
-            elif new_target == str(t):
+            elif new_target == t:
                 return t
         return None
 

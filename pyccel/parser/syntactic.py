@@ -441,7 +441,7 @@ class SyntaxParser(BasicParser):
         return Symbol(stmt.id)
 
     def _treat_import_source(self, source, level):
-        source = '.'*level + str(source)
+        source = '.'*level + source
         if source.count('.') == 0:
             source = Symbol(source)
         else:
@@ -669,7 +669,7 @@ class SyntaxParser(BasicParser):
             decorators['types'] = [FunctionCall('types', annotated_args)]
 
         for d in self._visit(stmt.decorator_list):
-            tmp_var = str(d) if isinstance(d, Symbol) else str(d.funcdef)
+            tmp_var = d.name if isinstance(d, Symbol) else d.funcdef
             if tmp_var in decorators:
                 decorators[tmp_var] += [d]
             else:
@@ -725,7 +725,7 @@ class SyntaxParser(BasicParser):
 
                 types = fill_types(ls)
 
-                txt  = '#$ header template ' + str(tp_name)
+                txt  = '#$ header template ' + tp_name
                 txt += '(' + '|'.join(types) + ')'
                 if tp_name in template['template_dict']:
                     msg = 'The template "{}" is duplicated'.format(tp_name)
@@ -920,11 +920,10 @@ class SyntaxParser(BasicParser):
         func = self._visit(stmt.func)
 
         if isinstance(func, Symbol):
-            f_name = str(func.name)
-            if f_name == "print":
+            if func == "print":
                 func = PythonPrint(PythonTuple(*args))
             else:
-                func = FunctionCall(f_name, args)
+                func = FunctionCall(func.name, args)
         elif isinstance(func, DottedName):
             f_name = str(func.name[-1])
             func_attr = FunctionCall(f_name, args)

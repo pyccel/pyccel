@@ -304,7 +304,7 @@ class SemanticParser(BasicParser):
 
         if self.current_class:
             for i in self._current_class.attributes:
-                if str(i.name) == name:
+                if i.name == name:
                     var = i
                     return var
 
@@ -377,7 +377,7 @@ class SemanticParser(BasicParser):
             raise TypeError('variable must be of type Variable')
 
         if name is None:
-            name = str(var.name)
+            name = var.name
 
         self.namespace.variables[name] = var
 
@@ -386,7 +386,7 @@ class SemanticParser(BasicParser):
         """."""
 
         if isinstance(cls, ClassDef):
-            name = str(cls.name)
+            name = cls.name
             container = self.namespace
             if parent:
                 container = container.parent_scope
@@ -412,10 +412,10 @@ class SemanticParser(BasicParser):
 
             iterable = 'iterable' in expr.options
             with_construct = 'with' in expr.options
-            dtype = DataTypeFactory(str(expr.name), '_name',
+            dtype = DataTypeFactory(expr.name, '_name',
                                     is_iterable=iterable,
                                     is_with_construct=with_construct)
-            self.set_class_construct(str(expr.name), dtype)
+            self.set_class_construct(expr.name, dtype)
         else:
             msg = 'header of type{0} is not supported'
             msg = msg.format(str(type(expr)))
@@ -528,7 +528,7 @@ class SemanticParser(BasicParser):
             name = macro.name
             if isinstance(macro.name, DottedName):
                 name = name.name[-1]
-            container[str(name)] = macro
+            container[name] = macro
         else:
             raise TypeError('Expected a macro')
 
@@ -1133,7 +1133,7 @@ class SemanticParser(BasicParser):
             # class property?
             else:
                 for i in methods:
-                    if str(i.name) == rhs.name and \
+                    if i.name == rhs.name and \
                             'property' in i.decorators.keys():
                         if 'numpy_wrapper' in i.decorators.keys():
                             func = i.decorators['numpy_wrapper']
@@ -2518,7 +2518,7 @@ class SemanticParser(BasicParser):
                             if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
 
-                            a_new = ValuedVariable(dtype, str(a.name),
+                            a_new = ValuedVariable(dtype, a.name,
                                         value=a.value, **d_var)
                         else:
                             a_new = Variable(dtype, a.name, **d_var)
@@ -2530,7 +2530,7 @@ class SemanticParser(BasicParser):
                     if isinstance(a_new, FunctionAddress):
                         self.insert_function(a_new)
                     else:
-                        self.insert_variable(a_new, name=str(a_new.name))
+                        self.insert_variable(a_new, name=a_new.name)
             results = expr.results
             if header_results:
                 new_results = []
@@ -2539,7 +2539,7 @@ class SemanticParser(BasicParser):
                     d_var = self._infere_type(ah, **settings)
                     dtype = d_var.pop('datatype')
                     a_new = Variable(dtype, a.name, **d_var)
-                    self.insert_variable(a_new, name=str(a_new.name))
+                    self.insert_variable(a_new, name=a_new.name)
                     new_results.append(a_new)
 
                 results = new_results
@@ -2561,7 +2561,7 @@ class SemanticParser(BasicParser):
             # to the body of the function
             body = self.garbage_collector(body)
 
-            args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(str(a.name)) for a in args]
+            args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(a.name) for a in args]
             results = list(OrderedDict((a.name,self.get_variable(a.name)) for a in results).values())
 
             if arg and cls_name:
@@ -2597,12 +2597,12 @@ class SemanticParser(BasicParser):
             # ... computing inout arguments
             args_inout = [False] * len(args)
 
-            results_names = [str(i) for i in results]
+            results_names = [i for i in results]
 
             all_assigned = get_assigned_symbols(body)
             assigned     = [a for a in all_assigned if a.rank > 0]
-            all_assigned = [str(i) for i in all_assigned]
-            assigned     = [str(i) for i in assigned]
+            all_assigned = [i for i in all_assigned]
+            assigned     = [i for i in assigned]
 
             apps = list(Tuple(*body.body).atoms(FunctionCall))
             apps = [i for i in apps if (i.__class__.__name__
@@ -2615,7 +2615,7 @@ class SemanticParser(BasicParser):
                     d_apps[a].append(f)
 
             for i, a in enumerate(args):
-                if str(a) in chain(results_names, assigned, ['self']):
+                if a in chain(results_names, assigned, ['self']):
                     args_inout[i] = True
 
                 if d_apps[a] and not( args_inout[i] ):
@@ -2634,7 +2634,7 @@ class SemanticParser(BasicParser):
 
                         i_fa += 1
                 if isinstance(a, Variable):
-                    if a.is_const and (args_inout[i] or (str(a) in all_assigned)):
+                    if a.is_const and (args_inout[i] or (a in all_assigned)):
                         msg = "Cannot modify 'const' argument ({})".format(a)
                         errors.report(msg, bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
@@ -2861,8 +2861,8 @@ class SemanticParser(BasicParser):
         container = self.namespace.imports
 
         if isinstance(expr.source, AsName):
-            source        = str(expr.source.name)
-            source_target = str(expr.source.target)
+            source        = expr.source.name
+            source_target = expr.source.target
         else:
             source        = str(expr.source)
             source_target = source

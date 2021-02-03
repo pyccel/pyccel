@@ -411,11 +411,11 @@ class FCodePrinter(CodePrinter):
 
             elif isinstance(i, str):
                 line = '{prefix} {target}'.format(prefix=prefix,
-                                                  target=str(i))
+                                                  target=i)
 
             elif isinstance(i, Symbol):
                 line = '{prefix} {target}'.format(prefix=prefix,
-                                                  target=str(i.name))
+                                                  target=i.name)
 
             else:
                 raise TypeError('Expecting str, Symbol, DottedName or AsName, '
@@ -1020,7 +1020,7 @@ class FCodePrinter(CodePrinter):
 
         # meta-variables
         if (isinstance(expr.variable, Variable) and
-              str(expr.variable.name).startswith('__')):
+            expr.variable.name.startswith('__')):
             return ''
         # ...
 
@@ -1498,11 +1498,11 @@ class FCodePrinter(CodePrinter):
                 results.remove(i)
 
             dec = Declare(arg.dtype, arg, intent=intent , static=True)
-            args_decs[str(arg.name)] = dec
+            args_decs[arg.name] = dec
 
         for result in results:
             dec = Declare(result.dtype, result, intent='out', static=True)
-            args_decs[str(result)] = dec
+            args_decs[result] = dec
 
         if len(results) != 1:
             func_type = 'subroutine'
@@ -1512,7 +1512,7 @@ class FCodePrinter(CodePrinter):
             result = results.pop()
             func_end = 'result({0})'.format(result.name)
             dec = Declare(result.dtype, result, static=True)
-            args_decs[str(result.name)] = dec
+            args_decs[result.name] = dec
         # ...
 
         interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
@@ -1559,7 +1559,7 @@ class FCodePrinter(CodePrinter):
                     dec = Declare(result.dtype, result, intent='inout')
                 else:
                     dec = Declare(result.dtype, result, intent='out')
-                args_decs[str(result)] = dec
+                args_decs[result] = dec
 
             functions = expr.functions
 
@@ -1583,7 +1583,7 @@ class FCodePrinter(CodePrinter):
                     dec = Declare(arg.dtype, arg, intent='inout')
                 else:
                     dec = Declare(arg.dtype, arg, intent='in')
-                args_decs[str(arg)] = dec
+                args_decs[arg] = dec
 
         #remove parametres intent(inout) from out_args to prevent repetition
         for i in expr.arguments:
@@ -1643,12 +1643,12 @@ class FCodePrinter(CodePrinter):
 
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
-            decs[str(i)] = dec
+            decs[i] = dec
 
         vars_to_print = self.parser.get_variables(self._namespace)
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in expr.arguments):
-                decs[str(v)] = Declare(v.dtype,v)
+                decs[v] = Declare(v.dtype,v)
         prelude += ''.join(self._print(i) for i in decs.values())
         if len(functions)>0:
             functions_code = '\n'.join(self._print(i) for  i in functions)
