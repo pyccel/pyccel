@@ -3473,70 +3473,69 @@ def test_numpy_int(language):
 
     @types('bool')
     def test_bool_int(a):
-        from numpy import int
-        b = int(a)
+        import numpy as np
+        b = np.int(a)
         return b
 
     @types('int')
     def test_int_int(a):
-        from numpy import int
-        b = int(a)
+        import numpy as np
+        b = np.int(a)
         return b
 
     @types('int8')
     def test_int8_int(a):
-        from numpy import int
-        b = int(a)
+        import numpy as np
+        b = np.int(a)
         return b
 
     @types('int16')
     def test_int16_int(a):
-        from numpy import int
-        b = int(a)
+        import numpy as np
+        b = np.int(a)
         return b
 
     @types('int32')
     def test_int32_int(a):
-        from numpy import int
-        b = int(a)
+        import numpy as np
+        b = np.int(a)
         return b
 
     @types('int64')
     def test_int64_int(a):
-        from numpy import int
-        b = int(a)
+        import numpy as np
+        b = np.int(a)
         return b
 
     @types('float')
     def test_float_int(a):
-        from numpy import int
-        b = int(a)
+        import numpy as np
+        b = np.int(a)
         return b
 
     @types('float32')
     def test_float32_int(a):
-        from numpy import int
-        b = int(a)
+        import numpy as np
+        b = np.int(a)
         return b
 
     @types('float64')
     def test_float64_int(a):
-        from numpy import int
-        b = int(a)
+        import numpy as np
+        b = np.int(a)
         return b
 
-    from numpy import (bool, int, float, complex, int8, int16, int32,
-                      int64, float32, float64, complex64, complex128)
+    import numpy as np
 
-    bl = bool(randint(1e6))
+    bl = np.bool(randint(1e6))
     integer = randint(1e6)
-    integer8 = int8(randint(1e6))
-    integer16 = int16(randint(1e6))
-    integer32 = int32(randint(1e6))
-    integer64 = int64(randint(1e6))
-    fl = float(randint(1e6))
-    fl32 = float32(randint(1e6))
-    fl64 = float64(randint(1e6))
+    integer8 = np.int8(randint(1e6))
+    integer16 = np.int16(randint(1e6))
+    integer32 = np.int32(randint(1e6))
+    integer64 = np.int64(randint(1e6))
+    fl = np.float(randint(1e6))
+    fl32 = np.float32(randint(1e6))
+    fl64 = np.float64(randint(1e6))
 
     f_bl = epyccel(test_bool_int, language=language)
 
@@ -3566,70 +3565,69 @@ def test_numpy_float(language):
 
     @types('bool')
     def test_bool_float(a):
-        from numpy import float
-        b = float(a)
+        import numpy as np
+        b = np.float(a)
         return b
 
     @types('int')
     def test_int_float(a):
-        from numpy import float
-        b = float(a)
+        import numpy as np
+        b = np.float(a)
         return b
 
     @types('int8')
     def test_int8_float(a):
-        from numpy import float
-        b = float(a)
+        import numpy as np
+        b = np.float(a)
         return b
 
     @types('int16')
     def test_int16_float(a):
-        from numpy import float
-        b = float(a)
+        import numpy as np
+        b = np.float(a)
         return b
 
     @types('int32')
     def test_int32_float(a):
-        from numpy import float
-        b = float(a)
+        import numpy as np
+        b = np.float(a)
         return b
 
     @types('int64')
     def test_int64_float(a):
-        from numpy import float
-        b = float(a)
+        import numpy as np
+        b = np.float(a)
         return b
 
     @types('float')
     def test_float_float(a):
-        from numpy import float
-        b = float(a)
+        import numpy as np
+        b = np.float(a)
         return b
 
     @types('float32')
     def test_float32_float(a):
-        from numpy import float
-        b = float(a)
+        import numpy as np
+        b = np.float(a)
         return b
 
     @types('float64')
     def test_float64_float(a):
-        from numpy import float
-        b = float(a)
+        import numpy as np
+        b = np.float(a)
         return b
 
-    from numpy import (bool, int, float, complex, int8, int16, int32,
-                      int64, float32, float64, complex64, complex128)
+    import numpy as np
 
-    bl = bool(randint(1e6))
+    bl = np.bool(randint(1e6))
     integer = randint(1e6)
-    integer8 = int8(randint(1e6))
-    integer16 = int16(randint(1e6))
-    integer32 = int32(randint(1e6))
-    integer64 = int64(randint(1e6))
-    fl = float(randint(1e6))
-    fl32 = float32(randint(1e6))
-    fl64 = float64(randint(1e6))
+    integer8 = np.int8(randint(1e6))
+    integer16 = np.int16(randint(1e6))
+    integer32 = np.int32(randint(1e6))
+    integer64 = np.int64(randint(1e6))
+    fl = np.float(randint(1e6))
+    fl32 = np.float32(randint(1e6))
+    fl64 = np.float64(randint(1e6))
 
     # gfortran complain about boolean to numeric convertions, given that boolean type in Fortran
     # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
