@@ -630,7 +630,7 @@ class CCodePrinter(CodePrinter):
 
         if source is None:
             return ''
-        if str(expr.source) in c_library_headers:
+        if expr.source in c_library_headers:
             return '#include <{0}.h>'.format(source)
         else:
             return '#include "{0}.h"'.format(source)
