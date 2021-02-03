@@ -1643,7 +1643,7 @@ class FCodePrinter(CodePrinter):
 
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
-            decs[str(i)] = dec
+            decs[i] = dec
 
         vars_to_print = self.parser.get_variables(self._namespace)
         for v in vars_to_print:
