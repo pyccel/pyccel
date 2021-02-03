@@ -1498,11 +1498,11 @@ class FCodePrinter(CodePrinter):
                 results.remove(i)
 
             dec = Declare(arg.dtype, arg, intent=intent , static=True)
-            args_decs[str(arg.name)] = dec
+            args_decs[arg.name] = dec
 
         for result in results:
             dec = Declare(result.dtype, result, intent='out', static=True)
-            args_decs[str(result)] = dec
+            args_decs[result] = dec
 
         if len(results) != 1:
             func_type = 'subroutine'
@@ -1512,7 +1512,7 @@ class FCodePrinter(CodePrinter):
             result = results.pop()
             func_end = 'result({0})'.format(result.name)
             dec = Declare(result.dtype, result, static=True)
-            args_decs[str(result.name)] = dec
+            args_decs[result.name] = dec
         # ...
 
         interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
