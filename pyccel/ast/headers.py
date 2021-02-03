@@ -228,7 +228,7 @@ class FunctionHeader(Header):
     def __init__(self, name, dtypes,
                 results=None,
                 is_static=False):
-        name = str(name)
+
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
 
