@@ -21,7 +21,7 @@ class PyccelInternalFunction(PyccelAstNode):
     """ Abstract class used by function calls
     which are translated to Pyccel objects
     """
-    _children = ('_args',)
+    _attribute_nodes = ('_args',)
     def __init__(self, *args):
         self._args   = tuple(args)
         super().__init__()
@@ -46,7 +46,7 @@ class PyccelArraySize(PyccelAstNode):
             The dimension along which the shape is
             provided
     """
-    _children = ('_arg', '_index')
+    _attribute_nodes = ('_arg', '_index')
 
     def __init__(self, arg, index):
         if not isinstance(arg, (list,
@@ -108,7 +108,7 @@ class Slice(Basic):
     >>> Slice(start, stop, step)
     start : stop : step
     """
-    _children = ('_start','_stop','_step')
+    _attribute_nodes = ('_start','_stop','_step')
 
     def __init__(self, start, stop, step = None):
         self._start = start
@@ -182,7 +182,7 @@ class Symbol(Basic):
     >>> x = Symbol('x')
     x
     """
-    _children = ()
+    _attribute_nodes = ()
     def __init__(self, name):
         if not isinstance(name, str):
             raise TypeError('Symbol name should be a string, not '+ str(type(name)))

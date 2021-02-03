@@ -121,7 +121,7 @@ class PythonBool(PyccelAstNode):
     _shape = ()
     _precision = default_precision['bool']
     _dtype = NativeBool()
-    _children = ('_arg',)
+    _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
         if getattr(arg, 'is_optional', None):
@@ -154,7 +154,7 @@ class PythonComplex(PyccelAstNode):
     _shape = ()
     _precision = default_precision['complex']
     _dtype = NativeComplex()
-    _children = ('_real_part', '_imag_part', '_internal_var')
+    _attribute_nodes = ('_real_part', '_imag_part', '_internal_var')
 
     def __new__(cls, arg0, arg1=LiteralFloat(0)):
 
@@ -249,7 +249,7 @@ class PythonEnumerate(Basic):
     Represents the enumerate stmt
 
     """
-    _children = ('_element',)
+    _attribute_nodes = ('_element',)
 
     def __init__(self, arg):
         if PyccelAstNode.stage != "syntactic" and \
@@ -270,7 +270,7 @@ class PythonFloat(PyccelAstNode):
     _shape = ()
     _precision = default_precision['real']
     _dtype = NativeReal()
-    _children = ('_arg',)
+    _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralFloat):
@@ -303,7 +303,7 @@ class PythonInt(PyccelAstNode):
     _shape     = ()
     _precision = default_precision['integer']
     _dtype     = NativeInteger()
-    _children  = ('_arg',)
+    _attribute_nodes  = ('_arg',)
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralInteger):
@@ -326,7 +326,7 @@ class PythonTuple(PyccelAstNode):
     _iterable        = True
     _is_homogeneous  = False
     _order = 'C'
-    _children = ('_args',)
+    _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
         self._args = args
@@ -431,7 +431,7 @@ class PythonList(PythonTuple):
 class PythonMap(Basic):
     """ Represents the map stmt
     """
-    _children = ('_args',)
+    _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
         if len(args)<2:
@@ -455,7 +455,7 @@ class PythonPrint(Basic):
     >>> Print(('results', n,m))
     Print((results, n, m))
     """
-    _children = ('_expr',)
+    _attribute_nodes = ('_expr',)
 
     def __init__(self, expr):
         self._expr = expr
@@ -481,7 +481,7 @@ class PythonRange(Basic):
     >>> Range(s, e, 1)
     Range(0, n, 1)
     """
-    _children = ('_start', '_stop', '_step')
+    _attribute_nodes = ('_start', '_stop', '_step')
 
     def __init__(self, *args):
         start = LiteralInteger(0)
@@ -530,7 +530,7 @@ class PythonZip(Basic):
     Represents a zip stmt.
 
     """
-    _children = ('_args',)
+    _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
         if not isinstance(args, (tuple, list)):
@@ -623,7 +623,7 @@ class Lambda(Basic):
     expr      : PyccelAstNode
                 The expression carried out when the lambda function is called
     """
-    _children = ('_variables', '_expr')
+    _attribute_nodes = ('_variables', '_expr')
     def __init__(self, variables, expr):
         if not isinstance(variables, (list, tuple)):
             raise TypeError("Lambda arguments must be a tuple or list")

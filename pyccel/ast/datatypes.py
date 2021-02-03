@@ -223,7 +223,7 @@ dtype_registry = {'bool': Bool,
 
 
 class UnionType(Basic):
-    _children = ()
+    _attribute_nodes = ()
 
     def __init__(self, args):
         self._args = args

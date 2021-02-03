@@ -30,7 +30,7 @@ class Basic(sp_Basic):
     def __init__(self):
         self._parent = []
         self._fst = []
-        for c_name in self._children:
+        for c_name in self._attribute_nodes:
             c = getattr(self, c_name)
             from pyccel.ast.literals import convert_to_literal
             if isinstance(c, (int, float, complex, str, bool)):
@@ -92,7 +92,7 @@ class Basic(sp_Basic):
                requested type which exist in self
         """
         results = []
-        for n in self._children:
+        for n in self._attribute_nodes:
             v = getattr(self, n)
             if isinstance(v, search_type):
                 results.append(v)
@@ -124,7 +124,7 @@ class Basic(sp_Basic):
         excluded_nodes : tuple of types
                       Types for which substitute should not be called
         """
-        for n in self._children:
+        for n in self._attribute_nodes:
             v = getattr(self, n)
             if v is original:
                 setattr(self, n, replacement)
@@ -141,7 +141,7 @@ class Basic(sp_Basic):
     def is_atomic(self):
         """ Indicates whether the object has any children
         """
-        return bool(self._children)
+        return bool(self._attribute_nodes)
 
     def set_fst(self, fst):
         """Sets the python.ast fst."""

@@ -30,7 +30,7 @@ class Literal(PyccelAstNode):
     """
     _rank      = 0
     _shape     = ()
-    _children  = ()
+    _attribute_nodes  = ()
 
     def __init__(self, precision):
         super().__init__()
@@ -202,7 +202,7 @@ class Nil(Basic):
     """
     class for None object in the code.
     """
-    _children = ()
+    _attribute_nodes = ()
 
     def __str__(self):
         return 'None'

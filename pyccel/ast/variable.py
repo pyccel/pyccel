@@ -97,7 +97,7 @@ class Variable(Symbol, PyccelAstNode):
     >>> Variable('int', DottedName('matrix', 'n_rows'))
     matrix.n_rows
     """
-    _children = ()
+    _attribute_nodes = ()
 
     def __init__(
         self,
@@ -469,7 +469,7 @@ class DottedName(Basic):
     >>> DottedName('pyccel', 'stdlib', 'parallel')
     pyccel.stdlib.parallel
     """
-    _children = ()
+    _attribute_nodes = ()
 
     def __init__(self, *args):
         self._name = args
@@ -511,7 +511,7 @@ class ValuedVariable(Variable):
     #TODO: Can this have children?
     # We have a problem when we do `dtype=float` as `float`
     # becomes a class, not a Pyccel object
-    #_children = ('_value',)
+    #_attribute_nodes = ('_value',)
 
     def __init__(self, *args, **kwargs):
 
@@ -551,7 +551,7 @@ class TupleVariable(Variable):
     >>> n
     n
     """
-    _children = ('_vars',)
+    _attribute_nodes = ('_vars',)
 
     def __init__(self, arg_vars, dtype, name, *args, **kwargs):
         self._vars = tuple(arg_vars)
@@ -669,7 +669,7 @@ class Constant(ValuedVariable):
 
     """
     # The value of a constant is not a translated object
-    _children = ()
+    _attribute_nodes = ()
 
 
 
@@ -689,7 +689,7 @@ class IndexedElement(PyccelAstNode):
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
-    _children = ('_label', '_indices')
+    _attribute_nodes = ('_label', '_indices')
 
     def __init__(
         self,
@@ -778,7 +778,7 @@ class VariableAddress(PyccelAstNode):
     VariableAddress(Variable('int','a'))                     is  &a
     VariableAddress(Variable('int','a', is_pointer=True))    is   a
     """
-    _children = ('_variable',)
+    _attribute_nodes = ('_variable',)
 
     def __init__(self, variable):
         if not isinstance(variable, Variable):
@@ -811,7 +811,7 @@ class DottedVariable(Variable):
     In this case b is a DottedVariable where the lhs
     is a
     """
-    _children = ('_lhs',)
+    _attribute_nodes = ('_lhs',)
 
     def __init__(self, *args, lhs, **kwargs):
         self._lhs = lhs

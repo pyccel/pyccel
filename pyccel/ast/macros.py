@@ -28,7 +28,7 @@ __all__ = (
 class Macro(AtomicExpr, PyccelAstNode):
     """."""
     _name = '__UNDEFINED__'
-    _children = ()
+    _attribute_nodes = ()
 
     def __init__(self, argument):
         # TODO add verification

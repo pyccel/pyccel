@@ -105,7 +105,7 @@ class PyccelOperator(Expr, PyccelAstNode):
     args: tuple
         The arguments passed to the operator
     """
-    _children = ('_args',)
+    _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
         self._args = tuple(self._handle_precedence(args))

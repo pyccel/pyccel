@@ -21,7 +21,7 @@ __all__ = (
 class FunctionalFor(Basic):
 
     """."""
-    _children = ('_loops','_expr', '_lhs', '_indices', '_index')
+    _attribute_nodes = ('_loops','_expr', '_lhs', '_indices', '_index')
 
     def __init__(
         self,
@@ -60,23 +60,23 @@ class FunctionalFor(Basic):
 
 #==============================================================================
 class GeneratorComprehension(AtomicExpr, Basic):
-    _children = ()
+    _attribute_nodes = ()
 
 #==============================================================================
 class FunctionalSum(GeneratorComprehension, FunctionalFor):
-    _children = FunctionalFor._children
+    _attribute_nodes = FunctionalFor._attribute_nodes
     name = 'sum'
 
 #==============================================================================
 class FunctionalMax(GeneratorComprehension, FunctionalFor):
-    _children = FunctionalFor._children
+    _attribute_nodes = FunctionalFor._attribute_nodes
     name = 'max'
 #==============================================================================
 
 class FunctionalMin(GeneratorComprehension, FunctionalFor):
-    _children = FunctionalFor._children
+    _attribute_nodes = FunctionalFor._attribute_nodes
     name = 'min'
 
 #==============================================================================
 class FunctionalMap(GeneratorComprehension, FunctionalFor):
-    _children = FunctionalFor._children
+    _attribute_nodes = FunctionalFor._attribute_nodes
