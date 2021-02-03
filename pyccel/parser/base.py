@@ -481,7 +481,7 @@ class BasicParser(object):
 
         container = self.namespace.symbolic_functions
         if isinstance(func, SympyFunction):
-            container[str(func.name)] = func
+            container[func.name] = func
         elif isinstance(func, SymbolicAssign) and isinstance(func.rhs,
                 Lambda):
             container[str(func.lhs)] = func.rhs
