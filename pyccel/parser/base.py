@@ -522,7 +522,7 @@ class BasicParser(object):
             source = str(expr.source)
             if source not in pyccel_builtin_import_registery:
                 for t in expr.target:
-                    name = [str(t)]
+                    name = [t]
                     if not source in container.keys():
                         container[source] = []
                     container[source] += name
