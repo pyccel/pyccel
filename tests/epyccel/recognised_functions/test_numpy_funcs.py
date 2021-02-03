@@ -10,10 +10,6 @@ from pyccel.epyccel import epyccel
 min_float = sys.float_info.min  # Minimum positive float
 
 # Functions still to be tested:
-#    full_like
-#    empty_like
-#    zeros_like
-#    ones_like
 #    array
 #    # ...
 #    norm
@@ -990,7 +986,7 @@ def test_floor_phrase(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1021,7 +1017,7 @@ def test_shape_indexed(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1050,7 +1046,7 @@ def test_shape_property(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1090,7 +1086,7 @@ def test_shape_tuple_output(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1122,7 +1118,7 @@ def test_shape_real(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1155,7 +1151,7 @@ def test_shape_int(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1187,7 +1183,7 @@ def test_shape_bool(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1235,7 +1231,7 @@ def test_full_basic_int(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1284,7 +1280,7 @@ def test_full_basic_real(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="tuples not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1333,7 +1329,7 @@ def test_full_basic_bool(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1364,7 +1360,7 @@ def test_full_order(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="casting to complex in not handled correctly"),
+            pytest.mark.skip(reason="casting to complex in not handled correctly, see https://github.com/pyccel/pyccel/issues/723"),
             pytest.mark.c]
         )
     )
@@ -1449,7 +1445,7 @@ def test_full_dtype(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1504,7 +1500,7 @@ def test_full_combined_args(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1534,7 +1530,7 @@ def test_empty_basic(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1623,7 +1619,7 @@ def test_empty_dtype(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1675,7 +1671,7 @@ def test_empty_combined_args(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1705,7 +1701,7 @@ def test_ones_basic(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1802,7 +1798,7 @@ def test_ones_dtype(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1857,7 +1853,7 @@ def test_ones_combined_args(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1887,7 +1883,7 @@ def test_zeros_basic(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -1984,7 +1980,7 @@ def test_zeros_dtype(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2039,7 +2035,7 @@ def test_zeros_combined_args(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2077,7 +2073,7 @@ def test_array(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2097,7 +2093,7 @@ def test_rand_basic(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2163,7 +2159,7 @@ def test_rand_args(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2277,7 +2273,7 @@ def test_randint_expr(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2295,7 +2291,7 @@ def test_sum_int(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2313,7 +2309,7 @@ def test_sum_real(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2333,7 +2329,7 @@ def test_sum_phrase(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2350,7 +2346,7 @@ def test_sum_property(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2368,7 +2364,7 @@ def test_min_int(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2386,7 +2382,7 @@ def test_min_real(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2406,7 +2402,7 @@ def test_min_phrase(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2423,7 +2419,7 @@ def test_min_property(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2441,7 +2437,7 @@ def test_max_int(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2459,7 +2455,7 @@ def test_max_real(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2479,7 +2475,7 @@ def test_max_phrase(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2496,7 +2492,7 @@ def test_max_property(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2505,25 +2501,29 @@ def test_max_property(language):
 def test_full_like_basic_int(language):
     @types('int')
     def create_full_like_shape_1d(n):
-        from numpy import full_like, shape
-        a = full_like([5, 1, 8, 0, 9], n, int, 'F')
+        from numpy import full_like, shape, array
+        arr = array([5, 1, 8, 0, 9])
+        a = full_like(arr, n, int, 'F')
         s = shape(a)
         return len(s),s[0]
     @types('int')
     def create_full_like_shape_2d(n):
-        from numpy import full_like, shape
-        a = full_like([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]], n, int , 'F')
+        from numpy import full_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = full_like(arr, n, int , 'F')
         s = shape(a)
         return len(s),s[0], s[1]
     @types('int')
     def create_full_like_val(val):
-        from numpy import full_like
-        a = full_like([5, 1, 8, 0, 9], val, int, 'F')
+        from numpy import full_like, array
+        arr = array([5, 1, 8, 0, 9])
+        a = full_like(arr, val, int, 'F')
         return a[0],a[1],a[2]
     @types('int')
     def create_full_like_arg_names(val):
-        from numpy import full_like
-        a = full_like([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]], val, int, 'F')
+        from numpy import full_like, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = full_like(arr, val, int, 'F', shape = (2,3))
         return a[0,0],a[0,1],a[0,2],a[1,0],a[1,1],a[1,2]
 
     size = randint(10)
@@ -2545,7 +2545,7 @@ def test_full_like_basic_int(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2553,25 +2553,29 @@ def test_full_like_basic_int(language):
 def test_full_like_basic_real(language):
     @types('real')
     def create_full_like_shape_1d(n):
-        from numpy import full_like, shape
-        a = full_like([5, 1, 8, 0, 9], n, float, 'F')
+        from numpy import full_like, shape, array
+        arr = array([5, 1, 8, 0, 9])
+        a = full_like(arr, n, float, 'F')
         s = shape(a)
         return len(s),s[0]
     @types('real')
     def create_full_like_shape_2d(n):
-        from numpy import full_like, shape
-        a = full_like([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]], n, float, 'F')
+        from numpy import full_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = full_like(arr, n, float, 'F')
         s = shape(a)
         return len(s),s[0], s[1]
     @types('real')
     def create_full_like_val(val):
-        from numpy import full_like
-        a = full_like([5, 1, 8, 0, 9], val, float, 'F')
+        from numpy import full_like, array
+        arr = array([5, 1, 8, 0, 9])
+        a = full_like(arr, val, float, 'F')
         return a[0],a[1],a[2]
     @types('real')
     def create_full_like_arg_names(val):
-        from numpy import full_like
-        a = full_like([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]], val, float, 'F')
+        from numpy import full_like, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = full_like(arr, val, float, 'F', shape = (2,3))
         return a[0,0],a[0,1],a[0,2],a[1,0],a[1,1],a[1,2]
 
     size = randint(10)
@@ -2594,7 +2598,7 @@ def test_full_like_basic_real(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="tuples not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented"),
             pytest.mark.c]
         )
     )
@@ -2602,25 +2606,29 @@ def test_full_like_basic_real(language):
 def test_full_like_basic_bool(language):
     @types('int')
     def create_full_like_shape_1d(n):
-        from numpy import full_like, shape
-        a = full_like([5,4,6,2], n, int, 'F')
+        from numpy import full_like, shape, array
+        arr = array([5, 1, 8, 0, 9])
+        a = full_like(arr, n, int, 'F')
         s = shape(a)
         return len(s),s[0]
     @types('int')
     def create_full_like_shape_2d(n):
-        from numpy import full_like, shape
-        a = full_like([[4,5,3,2],[7,4,2,1]], n, int, 'F')
+        from numpy import full_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = full_like(arr, n, int, 'F')
         s = shape(a)
         return len(s),s[0], s[1]
     @types('bool')
     def create_full_like_val(val):
-        from numpy import full_like
-        a = full_like([4,5,6,7] , 3, bool, 'F')
+        from numpy import full_like, array
+        arr = array([5, 1, 8, 0, 9])
+        a = full_like(arr , 3, bool, 'F')
         return a[0],a[1],a[2]
     @types('bool')
     def create_full_like_arg_names(val):
-        from numpy import full_like
-        a = full_like([[4,3,6,6],[4,5,6,6]] ,fill_value = val, dtype=bool)
+        from numpy import full_like, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = full_like(arr ,fill_value = val, dtype=bool, shape = (2,3))
         return a[0,0],a[0,1],a[0,2],a[1,0],a[1,1],a[1,2]
 
     size = randint(10)
@@ -2643,7 +2651,7 @@ def test_full_like_basic_bool(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2651,14 +2659,16 @@ def test_full_like_basic_bool(language):
 def test_full_like_order(language):
     @types('int')
     def create_full_like_shape_C(n):
-        from numpy import full_like, shape
-        a = full_like([[6,4,5,1,3],[6,4,5,1,3]] ,4, order = 'C')
+        from numpy import full_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = full_like(arr,4, order = 'C')
         s = shape(a)
         return len(s),s[0], s[1]
     @types('int')
     def create_full_like_shape_F(n):
-        from numpy import full_like, shape
-        a = full_like([[4,5,3,1,2],[6,4,5,1,3]],4, order = 'F')
+        from numpy import full_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = full_like(arr,4, order = 'F')
         s = shape(a)
         return len(s),s[0], s[1]
 
@@ -2673,7 +2683,7 @@ def test_full_like_order(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="casting to complex in not handled correctly"),
+            pytest.mark.skip(reason="casting to complex is not handled correctly, , see https://github.com/pyccel/pyccel/issues/723"),
             pytest.mark.c]
         )
     )
@@ -2681,43 +2691,51 @@ def test_full_like_order(language):
 def test_full_like_dtype(language):
     @types('int')
     def create_full_like_val_int_int(val):
-        from numpy import full_like
-        a = full_like([5, 1, 8, 0, 9],val,int)
+        from numpy import full_like, array
+        arr = array([5, 1, 8, 0, 9])
+        a = full_like(arr,val,int)
         return a[0]
     @types('int')
     def create_full_like_val_int_float(val):
-        from numpy import full_like
-        a = full_like([5, 1, 8, 0, 9],val,float)
+        from numpy import full_like, array
+        arr = array([5, 1, 8, 0, 9])
+        a = full_like(arr,val,float)
         return a[0]
     @types('int')
     def create_full_like_val_int_complex(val):
-        from numpy import full_like
-        a = full_like([5, 1, 8, 0, 9],val,complex)
+        from numpy import full_like, array
+        arr = array([5, 1, 8, 0, 9])
+        a = full_like(arr,val,complex)
         return a[0]
     @types('real')
     def create_full_like_val_real_int32(val):
-        from numpy import full_like, int32
-        a = full_like([5, 1, 8, 0, 9],val,int32)
+        from numpy import full_like, int32, array
+        arr = array([5, 1, 8, 0, 9])
+        a = full_like(arr,val,int32)
         return a[0]
     @types('real')
     def create_full_like_val_real_float32(val):
-        from numpy import full_like, float32
-        a = full_like([5, 1, 8, 0, 9],val,float32)
+        from numpy import full_like, float32, array
+        arr = array([5, 1, 8, 0, 9])
+        a = full_like(arr,val,float32)
         return a[0]
     @types('real')
     def create_full_like_val_real_float64(val):
-        from numpy import full_like, float64
-        a = full_like([5, 1, 8, 0, 9],val,float64)
+        from numpy import full_like, float64, array
+        arr = array([5, 1, 8, 0, 9])
+        a = full_like(arr,val,float64)
         return a[0]
     @types('real')
     def create_full_like_val_real_complex64(val):
-        from numpy import full_like, complex64
-        a = full_like([5, 1, 8, 0, 9],val,complex64)
+        from numpy import full_like, complex64, array
+        arr = array([5, 1, 8, 0, 9])
+        a = full_like(arr,val,complex64)
         return a[0]
     @types('real')
     def create_full_like_val_real_complex128(val):
-        from numpy import full_like, complex128
-        a = full_like([5, 1, 8, 0, 9],val,complex128)
+        from numpy import full_like, complex128, array
+        arr = array([5, 1, 8, 0, 9])
+        a = full_like(arr,val,complex128)
         return a[0]
 
     val_int   = randint(100)
@@ -2758,38 +2776,44 @@ def test_full_like_dtype(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
 )
 def test_full_like_combined_args(language):
     def create_full_like_1_shape():
-        from numpy import full_like, shape
-        a = full_like([[5, 1, 8, 0, 9],[5, 1, 8, 0, 9]],5,int,'F')
+        from numpy import full_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = full_like(arr,5,int,'F')
         s = shape(a)
         return len(s),s[0],s[1]
     def create_full_like_1_val():
-        from numpy import full_like
-        a = full_like([[5, 1, 8, 0, 9],[5, 1, 8, 0, 9]], 4.0, int,'F')
+        from numpy import full_like, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = full_like(arr, 4.0, int,'F')
         return a[0,0]
     def create_full_like_2_shape():
-        from numpy import full_like, shape
-        a = full_like([[5, 1, 8, 0, 9],[5, 1, 8, 0, 9]],dtype=float,fill_value=1)
+        from numpy import full_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = full_like(arr,dtype=float,fill_value=1)
         s = shape(a)
         return len(s),s[0],s[1]
     def create_full_like_2_val():
-        from numpy import full_like
-        a = full_like([[5, 1, 8, 0, 9],[5, 1, 8, 0, 9]],dtype=float,fill_value=1)
+        from numpy import full_like, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = full_like(arr,dtype=float,fill_value=1)
         return a[0,0]
     def create_full_like_3_shape():
-        from numpy import full_like, shape
-        a = full_like([[5, 1, 8, 0, 9],[5, 1, 8, 0, 9]],order = 'F',dtype=complex,fill_value=1)
+        from numpy import full_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = full_like(arr,order = 'F', shape = (4,2),dtype=complex,fill_value=1)
         s = shape(a)
         return len(s),s[0],s[1]
     def create_full_like_3_val():
-        from numpy import full_like
-        a = full_like([[5, 1, 8, 0, 9],[5, 1, 8, 0, 9]],order = 'F',dtype=complex,fill_value=1)
+        from numpy import full_like, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = full_like(arr,order = 'F', shape = (4,2),dtype=complex,fill_value=1)
         return a[0,0]
 
 
@@ -2814,7 +2838,7 @@ def test_full_like_combined_args(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2822,14 +2846,16 @@ def test_full_like_combined_args(language):
 def test_empty_like_basic(language):
     @types('int')
     def create_empty_like_shape_1d(n):
-        from numpy import empty_like, shape
-        a = empty_like([5, 1, 8, 0, 9],int)
+        from numpy import empty_like, shape, array
+        arr = array([5, 1, 8, 0, 9])
+        a = empty_like(arr,int)
         s = shape(a)
         return len(s),s[0]
     @types('int')
     def create_empty_like_shape_2d(n):
-        from numpy import empty_like, shape
-        a = empty_like([[5, 1, 8, 0, 9],[5, 1, 8, 0, 9]],int)
+        from numpy import empty_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = empty_like(arr,int)
         s = shape(a)
         return len(s),s[0], s[1]
 
@@ -2844,7 +2870,7 @@ def test_empty_like_basic(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2852,14 +2878,16 @@ def test_empty_like_basic(language):
 def test_empty_like_order(language):
     @types('int','int')
     def create_empty_like_shape_C(n,m):
-        from numpy import empty_like, shape
-        a = empty_like([[5,3,1,5],[5,3,1,5]],int, order = 'C')
+        from numpy import empty_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = empty_like(arr, int, order = 'C')
         s = shape(a)
         return len(s),s[0], s[1]
     @types('int', 'int')
     def create_empty_like_shape_F(n,m):
-        from numpy import empty_like, shape
-        a = empty_like([[5,3,1,5],[5,3,1,5]],int, order = 'F')
+        from numpy import empty_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = empty_like(arr, int, order = 'F')
         s = shape(a)
         return len(s),s[0], s[1]
 
@@ -2875,43 +2903,51 @@ def test_empty_like_order(language):
 def test_empty_like_dtype(language):
 
     def create_empty_like_val_int():
-        from numpy import empty_like
-        a = empty_like([5,3,1,5], int)
+        from numpy import empty_like, array
+        arr = array([5, 1, 8, 0, 9])
+        a = empty_like(arr, int)
         return a[0]
 
     def create_empty_like_val_float():
-        from numpy import empty_like
-        a = empty_like([5,3,1,5],dtype=float)
+        from numpy import empty_like, array
+        arr = array([5, 1, 8, 0, 9])
+        a = empty_like(arr, dtype=float)
         return a[0]
 
     def create_empty_like_val_complex():
-        from numpy import empty_like
-        a = empty_like([5,3,1,5],dtype=complex)
+        from numpy import empty_like, array
+        arr = array([5, 1, 8, 0, 9])
+        a = empty_like(arr, dtype=complex)
         return a[0]
 
     def create_empty_like_val_int32():
-        from numpy import empty_like, int32
-        a = empty_like([5,3,1,5],dtype=int32)
+        from numpy import empty_like, int32, array
+        arr = array([5, 1, 8, 0, 9])
+        a = empty_like(arr, dtype=int32)
         return a[0]
 
     def create_empty_like_val_float32():
-        from numpy import empty_like, float32
-        a = empty_like([5,3,1,5], dtype=float32)
+        from numpy import empty_like, float32, array
+        arr = array([5, 1, 8, 0, 9])
+        a = empty_like(arr, dtype=float32)
         return a[0]
 
     def create_empty_like_val_float64():
-        from numpy import empty_like, float64
-        a = empty_like([5,3,1,5],dtype=float64)
+        from numpy import empty_like, float64, array
+        arr = array([5, 1, 8, 0, 9])
+        a = empty_like(arr,dtype=float64)
         return a[0]
 
     def create_empty_like_val_complex64():
-        from numpy import empty_like, complex64
-        a = empty_like([5,3,1,5],dtype=complex64)
+        from numpy import empty_like, complex64, array
+        arr = array([5, 1, 8, 0, 9])
+        a = empty_like(arr,dtype=complex64)
         return a[0]
 
     def create_empty_like_val_complex128():
-        from numpy import empty_like, complex128
-        a = empty_like([5,3,1,5],dtype=complex128)
+        from numpy import empty_like, complex128, array
+        arr = array([5, 1, 8, 0, 9])
+        a = empty_like(arr,dtype=complex128)
         return a[0]
 
 
@@ -2942,7 +2978,7 @@ def test_empty_like_dtype(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -2950,36 +2986,42 @@ def test_empty_like_dtype(language):
 def test_empty_like_combined_args(language):
 
     def create_empty_like_1_shape():
-        from numpy import empty_like, shape
-        a = empty_like([[4,6,2,6],[4,6,2,6]],dtype=int,order='F')
+        from numpy import empty_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = empty_like(arr,dtype=int,order='F')
         s = shape(a)
         return len(s),s[0],s[1]
 
     def create_empty_like_1_val():
-        from numpy import empty_like
-        a = empty_like([[4,6,2,6],[5,4,2,3]], dtype=int,order='F')
+        from numpy import empty_like, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = empty_like(arr, dtype=int,order='F')
         return a[0,0]
 
     def create_empty_like_2_shape():
-        from numpy import empty_like, shape
-        a = empty_like([[4,6,2,6],[5,4,2,3]], dtype=float)
+        from numpy import empty_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = empty_like(arr, dtype=float)
         s = shape(a)
         return len(s),s[0],s[1]
 
     def create_empty_like_2_val():
-        from numpy import empty_like
-        a = empty_like([[4,6,2,6],[5,4,2,3]], dtype=float)
+        from numpy import empty_like, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = empty_like(arr, dtype=float)
         return a[0,0]
 
     def create_empty_like_3_shape():
-        from numpy import empty_like, shape
-        a = empty_like([[4,6,2,6],[5,4,2,3]], order = 'F',dtype=complex)
+        from numpy import empty_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = empty_like(arr,shape = (4,2), order = 'F',dtype=complex)
         s = shape(a)
         return len(s),s[0],s[1]
 
     def create_empty_like_3_val():
-        from numpy import empty_like
-        a = empty_like([[4,6,2,6],[5,4,2,3]], order = 'F',dtype=complex)
+        from numpy import empty_like, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = empty_like(arr, shape = (4,2),order = 'F',dtype=complex)
         return a[0,0]
 
     f1_shape = epyccel(create_empty_like_1_shape, language = language)
@@ -3000,7 +3042,7 @@ def test_empty_like_combined_args(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -3008,14 +3050,16 @@ def test_empty_like_combined_args(language):
 def test_ones_like_basic(language):
     @types('int')
     def create_ones_like_shape_1d(n):
-        from numpy import ones_like, shape
-        a = ones_like([6,3,2,1])
+        from numpy import ones_like, shape, array
+        arr = array([5, 1, 8, 0, 9])
+        a = ones_like(arr)
         s = shape(a)
         return len(s),s[0]
     @types('int')
     def create_ones_like_shape_2d(n):
-        from numpy import ones_like, shape
-        a = ones_like([[6,3,2,1],[6,3,2,1]])
+        from numpy import ones_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = ones_like(arr)
         s = shape(a)
         return len(s),s[0], s[1]
 
@@ -3030,7 +3074,7 @@ def test_ones_like_basic(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -3038,14 +3082,16 @@ def test_ones_like_basic(language):
 def test_ones_like_order(language):
     @types('int','int')
     def create_ones_like_shape_C(n,m):
-        from numpy import ones_like, shape
-        a = ones_like([[4,5,2,6],[3,5,6,6]], order = 'C')
+        from numpy import ones_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = ones_like(arr, order = 'C')
         s = shape(a)
         return len(s),s[0], s[1]
     @types('int','int')
     def create_ones_like_shape_F(n,m):
-        from numpy import ones_like, shape
-        a = ones_like([[4,5,2,6],[3,5,6,6]], order = 'F')
+        from numpy import ones_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = ones_like(arr, order = 'F')
         s = shape(a)
         return len(s),s[0], s[1]
 
@@ -3061,43 +3107,51 @@ def test_ones_like_order(language):
 def test_ones_like_dtype(language):
 
     def create_ones_like_val_int():
-        from numpy import ones_like
-        a = ones_like([4,6,2,6], int)
+        from numpy import ones_like, array
+        arr = array([5, 1, 8, 0, 9])
+        a = ones_like(arr, int)
         return a[0]
 
     def create_ones_like_val_float():
-        from numpy import ones_like
-        a = ones_like([4,6,2,6],float)
+        from numpy import ones_like, array
+        arr = array([5, 1, 8, 0, 9])
+        a = ones_like(arr,float)
         return a[0]
 
     def create_ones_like_val_complex():
-        from numpy import ones_like
-        a = ones_like([4,6,2,6], complex)
+        from numpy import ones_like, array
+        arr = array([5, 1, 8, 0, 9])
+        a = ones_like(arr, complex)
         return a[0]
 
     def create_ones_like_val_int32():
-        from numpy import ones_like, int32
-        a = ones_like([4,6,2,6],int32)
+        from numpy import ones_like, int32, array
+        arr = array([5, 1, 8, 0, 9])
+        a = ones_like(arr,int32)
         return a[0]
 
     def create_ones_like_val_float32():
-        from numpy import ones_like, float32
-        a = ones_like([4,6,2,6], float32)
+        from numpy import ones_like, float32, array
+        arr = array([5, 1, 8, 0, 9])
+        a = ones_like(arr, float32)
         return a[0]
 
     def create_ones_like_val_float64():
-        from numpy import ones_like, float64
-        a = ones_like([4,6,2,6], float64)
+        from numpy import ones_like, float64, array
+        arr = array([5, 1, 8, 0, 9])
+        a = ones_like(arr, float64)
         return a[0]
 
     def create_ones_like_val_complex64():
-        from numpy import ones_like, complex64
-        a = ones_like([4,6,2,6], complex64)
+        from numpy import ones_like, complex64, array
+        arr = array([5, 1, 8, 0, 9])
+        a = ones_like(arr, complex64)
         return a[0]
 
     def create_ones_like_val_complex128():
-        from numpy import ones_like, complex128
-        a = ones_like([4,6,2,6], complex128)
+        from numpy import ones_like, complex128, array
+        arr = array([5, 1, 8, 0, 9])
+        a = ones_like(arr, complex128)
         return a[0]
 
 
@@ -3136,7 +3190,7 @@ def test_ones_like_dtype(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -3144,36 +3198,42 @@ def test_ones_like_dtype(language):
 def test_ones_like_combined_args(language):
 
     def create_ones_like_1_shape():
-        from numpy import ones_like, shape
-        a = ones_like([[4,2,6,7],[2,5,1,8]],int,'F')
+        from numpy import ones_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = ones_like(arr,int,'F')
         s = shape(a)
         return len(s),s[0],s[1]
 
     def create_ones_like_1_val():
-        from numpy import ones_like
-        a = ones_like([[4,2,6,7],[2,5,1,8]],int,'F')
+        from numpy import ones_like, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = ones_like(arr,int,'F')
         return a[0,0]
 
     def create_ones_like_2_shape():
-        from numpy import ones_like, shape
-        a = ones_like([[4,2,6,7],[2,5,1,8]],dtype=float)
+        from numpy import ones_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = ones_like(arr,dtype=float)
         s = shape(a)
         return len(s),s[0],s[1]
 
     def create_ones_like_2_val():
-        from numpy import ones_like
-        a = ones_like([[4,2,6,7],[2,5,1,8]],dtype=float)
+        from numpy import ones_like, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = ones_like(arr,dtype=float)
         return a[0,0]
 
     def create_ones_like_3_shape():
-        from numpy import ones_like, shape
-        a = ones_like([[4,2,6,7],[2,5,1,8]],order = 'F',dtype=complex)
+        from numpy import ones_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = ones_like(arr,shape = (4,2),order = 'F',dtype=complex)
         s = shape(a)
         return len(s),s[0],s[1]
 
     def create_ones_like_3_val():
-        from numpy import ones_like
-        a = ones_like([[4,2,6,7],[2,5,1,8]],order = 'F',dtype=complex)
+        from numpy import ones_like, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = ones_like(arr,shape = (4,2),order = 'F',dtype=complex)
         return a[0,0]
 
     f1_shape = epyccel(create_ones_like_1_shape, language = language)
@@ -3197,7 +3257,7 @@ def test_ones_like_combined_args(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -3205,14 +3265,16 @@ def test_ones_like_combined_args(language):
 def test_zeros_like_basic(language):
     @types('int')
     def create_zeros_like_shape_1d(n):
-        from numpy import zeros_like, shape
-        a = zeros_like([4,3,6,2], int)
+        from numpy import zeros_like, shape, array
+        arr = array([5, 1, 8, 0, 9])
+        a = zeros_like(arr, int)
         s = shape(a)
         return len(s),s[0]
     @types('int')
     def create_zeros_like_shape_2d(n):
-        from numpy import zeros_like, shape
-        a = zeros_like([[4,3,6,2],[5,2,1,5]],int)
+        from numpy import zeros_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = zeros_like(arr,int)
         s = shape(a)
         return len(s),s[0], s[1]
 
@@ -3227,7 +3289,7 @@ def test_zeros_like_basic(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -3235,21 +3297,21 @@ def test_zeros_like_basic(language):
 def test_zeros_like_order(language):
     @types('int','int')
     def create_zeros_like_shape_C(n,m):
-        from numpy import zeros_like, shape
-        a = zeros_like([[4,2,5,1],[3,5,6,7]], order = 'C')
+        from numpy import zeros_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = zeros_like(arr, order = 'C')
         s = shape(a)
         return len(s),s[0], s[1]
     @types('int','int')
     def create_zeros_like_shape_F(n,m):
-        from numpy import zeros_like, shape
-        a = zeros_like([[4,2,5,1],[3,5,6,7]], order = 'F')
+        from numpy import zeros_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = zeros_like(arr, order = 'F')
         s = shape(a)
         return len(s),s[0], s[1]
 
     size_1 = randint(10)
     size_2 = randint(10)
-    from numpy import array
-    arr = array([5, 1, 8, 0, 9])
 
     f_shape_C  = epyccel(create_zeros_like_shape_C, language = language)
     assert(     f_shape_C(size_1,size_2) == create_zeros_like_shape_C(size_1,size_2))
@@ -3260,43 +3322,51 @@ def test_zeros_like_order(language):
 def test_zeros_like_dtype(language):
 
     def create_zeros_like_val_int():
-        from numpy import zeros_like
-        a = zeros_like([4,5,2,6],int)
+        from numpy import zeros_like, array
+        arr = array([5, 1, 8, 0, 9])
+        a = zeros_like(arr,int)
         return a[0]
 
     def create_zeros_like_val_float():
-        from numpy import zeros_like
-        a = zeros_like([4,5,2,6],float)
+        from numpy import zeros_like, array
+        arr = array([5, 1, 8, 0, 9])
+        a = zeros_like(arr,float)
         return a[0]
 
     def create_zeros_like_val_complex():
-        from numpy import zeros_like
-        a = zeros_like([4,5,2,6],complex)
+        from numpy import zeros_like, array
+        arr = array([5, 1, 8, 0, 9])
+        a = zeros_like(arr,complex)
         return a[0]
 
     def create_zeros_like_val_int32():
-        from numpy import zeros_like, int32
-        a = zeros_like([4,5,2,6],int32)
+        from numpy import zeros_like, int32, array
+        arr = array([5, 1, 8, 0, 9])
+        a = zeros_like(arr,int32)
         return a[0]
 
     def create_zeros_like_val_float32():
-        from numpy import zeros_like, float32
-        a = zeros_like([4,5,2,6],float32)
+        from numpy import zeros_like, float32, array
+        arr = array([5, 1, 8, 0, 9])
+        a = zeros_like(arr,float32)
         return a[0]
 
     def create_zeros_like_val_float64():
-        from numpy import zeros_like, float64
-        a = zeros_like([4,5,2,6],float64)
+        from numpy import zeros_like, float64, array
+        arr = array([5, 1, 8, 0, 9])
+        a = zeros_like(arr,float64)
         return a[0]
 
     def create_zeros_like_val_complex64():
-        from numpy import zeros_like, complex64
-        a = zeros_like([4,5,2,6],complex64)
+        from numpy import zeros_like, complex64, array
+        arr = array([5, 1, 8, 0, 9])
+        a = zeros_like(arr,complex64)
         return a[0]
 
     def create_zeros_like_val_complex128():
-        from numpy import zeros_like, complex128
-        a = zeros_like([4,5,2,6],complex128)
+        from numpy import zeros_like, complex128, array
+        arr = array([5, 1, 8, 0, 9])
+        a = zeros_like(arr,complex128)
         return a[0]
 
     f_int_int   = epyccel(create_zeros_like_val_int, language = language)
@@ -3334,7 +3404,7 @@ def test_zeros_like_dtype(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="arrays not implemented"),
+            pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
         )
     )
@@ -3342,39 +3412,44 @@ def test_zeros_like_dtype(language):
 def test_zeros_like_combined_args(language):
 
     def create_zeros_like_1_shape():
-        from numpy import zeros_like, shape
-        a = zeros_like([[5,4,2,6],[5,6,7,3]],int,'F')
+        from numpy import zeros_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = zeros_like(arr,int,'F')
         s = shape(a)
         return len(s),s[0],s[1]
 
     def create_zeros_like_1_val():
-        from numpy import zeros_like
-        a = zeros_like([[5,4,2,6],[5,6,7,3]], int,'F')
+        from numpy import zeros_like, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = zeros_like(arr, int,'F')
         return a[0,0]
 
     def create_zeros_like_2_shape():
-        from numpy import zeros_like, shape
-        a = zeros_like([[5,4,2,6],[5,6,7,3]], dtype=float)
+        from numpy import zeros_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = zeros_like(arr, dtype=float)
         s = shape(a)
         return len(s),s[0],s[1]
 
     def create_zeros_like_2_val():
-        from numpy import zeros_like
-        a = zeros_like([[5,4,2,6],[5,6,7,3]], dtype=float)
+        from numpy import zeros_like, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = zeros_like(arr, dtype=float)
         return a[0,0]
 
     def create_zeros_like_3_shape():
-        from numpy import zeros_like, shape
-        a = zeros_like([[5,4,2,6],[5,6,7,3]], order = 'F',dtype=complex)
+        from numpy import zeros_like, shape, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = zeros_like(arr, shape = (4,2), order = 'F',dtype=complex)
         s = shape(a)
         return len(s),s[0],s[1]
 
     def create_zeros_like_3_val():
-        from numpy import zeros_like
-        a = zeros_like([[5,4,2,6],[5,6,7,3]], order = 'F',dtype=complex)
+        from numpy import zeros_like, array
+        arr = array([[5, 1, 8, 0, 9], [5, 1, 8, 0, 9]])
+        a = zeros_like(arr, shape = (4,2), order = 'F',dtype=complex)
         return a[0,0]
-    from numpy import array
-    arr = array([5, 1, 8, 0, 9])
+
     f1_shape = epyccel(create_zeros_like_1_shape, language = language)
     f1_val   = epyccel(create_zeros_like_1_val, language = language)
     assert(     f1_shape() ==      create_zeros_like_1_shape()      )
@@ -3392,4 +3467,3 @@ def test_zeros_like_combined_args(language):
     assert(     f3_shape() ==      create_zeros_like_3_shape()      )
     assert(isclose(     f3_val()  ,      create_zeros_like_3_val()        , rtol=RTOL, atol=ATOL))
     assert(type(f3_val())  == type(create_zeros_like_3_val().item()))
-
