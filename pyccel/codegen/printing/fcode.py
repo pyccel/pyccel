@@ -2318,9 +2318,6 @@ class FCodePrinter(CodePrinter):
         value_false = self._print(value_false)
         return 'merge({true}, {false}, {cond})'.format(cond = cond, true = value_true, false = value_false)
 
-    def _print_MatrixElement(self, expr):
-        return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
-
     def _print_PyccelPow(self, expr):
         base = expr.args[0]
         e    = expr.args[1]
