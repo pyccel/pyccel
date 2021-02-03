@@ -146,10 +146,10 @@ class NumpyReal(PythonReal):
 PrecisionToDtype = {
     'Int' : {
         4 : NumpyInt32,
-        8 : PythonInt},
+        8 : NumpyInt64},
     'Real' : {
         4 : NumpyFloat32,
-        8 : PythonFloat},
+        8 : NumpyFloat64},
     'Complex' : {
         4 : NumpyComplex64,
         8 : PythonComplex,
