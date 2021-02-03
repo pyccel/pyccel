@@ -494,7 +494,7 @@ class BasicParser(object):
         container = self.namespace.python_functions
 
         if isinstance(func, PythonFunction):
-            container[str(func.name)] = func
+            container[func.name] = func
         else:
             raise TypeError('Expected a python_function')
 
