@@ -1444,13 +1444,13 @@ class For(Basic):
 
     Examples
     --------
-    >>> from sympy import MatrixSymbol
+    >>> from pyccel.ast.variable import Variable
     >>> from pyccel.ast.core import Assign, For
     >>> from pyccel.ast.internals import symbols
     >>> i,b,e,s,x = symbols('i,b,e,s,x')
-    >>> A = MatrixSymbol('A', 1, 3)
-    >>> For(i, (b,e,s), [Assign(x,x-1), Assign(A[0, 1], x)])
-    For(i, Range(b, e, s), (x := x - 1, A[0, 1] := x))
+    >>> A = Variable('int', 'A', rank = 2)
+    >>> For(i, (b,e,s), [Assign(x, i), Assign(A[0, 1], x)])
+    For(i, (b, e, s), (x := i, IndexedElement(A, 0, 1) := x))
     """
 
     def __init__(
