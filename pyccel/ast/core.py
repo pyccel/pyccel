@@ -527,21 +527,19 @@ class Assign(Basic):
 
     Examples
     --------
-    >>> from sympy import MatrixSymbol, Matrix
     >>> from pyccel.ast.internals import symbols
+    >>> from pyccel.ast.variable import Variable
     >>> from pyccel.ast.core import Assign
     >>> x, y, z = symbols('x, y, z')
     >>> Assign(x, y)
     x := y
     >>> Assign(x, 0)
     x := 0
-    >>> A = MatrixSymbol('A', 1, 3)
-    >>> mat = Matrix([x, y, z]).T
-    >>> Assign(A, mat)
-    A := Matrix([[x, y, z]])
-    >>> Assign(A[0, 1], x)
-    A[0, 1] := x
-
+    >>> A = Variable('int', 'A', rank = 2)
+    >>> Assign(x, A)
+    x := A
+    >>> Assign(A[0,1], x)
+    IndexedElement(A, 0, 1) := x
     """
 
     def __init__(
