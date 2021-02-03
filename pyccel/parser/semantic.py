@@ -2597,12 +2597,8 @@ class SemanticParser(BasicParser):
             # ... computing inout arguments
             args_inout = [False] * len(args)
 
-            results_names = [i for i in results]
-
             all_assigned = get_assigned_symbols(body)
             assigned     = [a for a in all_assigned if a.rank > 0]
-            all_assigned = [i for i in all_assigned]
-            assigned     = [i for i in assigned]
 
             apps = list(Tuple(*body.body).atoms(FunctionCall))
             apps = [i for i in apps if (i.__class__.__name__
@@ -2615,7 +2611,7 @@ class SemanticParser(BasicParser):
                     d_apps[a].append(f)
 
             for i, a in enumerate(args):
-                if a in chain(results_names, assigned, ['self']):
+                if a in chain(results, assigned, ['self']):
                     args_inout[i] = True
 
                 if d_apps[a] and not( args_inout[i] ):
