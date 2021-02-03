@@ -421,7 +421,7 @@ class PythonList(PythonTuple):
     _order = 'C'
     _is_homogeneous = True
     """ Represent lists in the code with dynamic memory management."""
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args):
         super().__init__(*args)
 
 #==============================================================================
