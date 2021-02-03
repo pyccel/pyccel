@@ -2732,7 +2732,7 @@ class ClassDef(Basic):
             raise TypeError('Expecting attribute to be a string')
 
         if isinstance(O, Variable):
-            cls_name = str(O.name)
+            cls_name = O.name
         else:
             cls_name = str(O)
 
