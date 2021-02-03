@@ -411,7 +411,7 @@ class FCodePrinter(CodePrinter):
 
             elif isinstance(i, str):
                 line = '{prefix} {target}'.format(prefix=prefix,
-                                                  target=str(i))
+                                                  target=i)
 
             elif isinstance(i, Symbol):
                 line = '{prefix} {target}'.format(prefix=prefix,
