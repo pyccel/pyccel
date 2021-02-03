@@ -476,14 +476,15 @@ class PythonRange(Basic):
 
     def __init__(self, *args):
         # Define default values
-        self._start = LiteralInteger(0)
-        self._step  = LiteralInteger(1)
 
         if len(args) == 1:
+            self._start = LiteralInteger(0)
             self._stop = args[0]
+            self._step  = LiteralInteger(1)
         elif len(args) == 2:
             self._start = args[0]
             self._stop = args[1]
+            self._step  = LiteralInteger(1)
         elif len(args) == 3:
             self._start = args[0]
             self._stop = args[1]
