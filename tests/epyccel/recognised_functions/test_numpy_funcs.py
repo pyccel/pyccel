@@ -34,8 +34,8 @@ min_float = sys.float_info.min  # Minimum positive float
 #    cross
 #    # ---
 
-# # Relative and absolute tolerances for array comparisons in the form
-# # numpy.isclose(a, b, rtol, atol). Windows has larger round-off errors.
+# Relative and absolute tolerances for array comparisons in the form
+# numpy.isclose(a, b, rtol, atol). Windows has larger round-off errors.
 if sys.platform == 'win32':
     RTOL = 1e-13
     ATOL = 1e-14
@@ -3467,3 +3467,192 @@ def test_zeros_like_combined_args(language):
     assert(     f3_shape() ==      create_zeros_like_3_shape()      )
     assert(isclose(     f3_val()  ,      create_zeros_like_3_val()        , rtol=RTOL, atol=ATOL))
     assert(type(f3_val())  == type(create_zeros_like_3_val().item()))
+
+
+def test_numpy_int(language):
+
+    @types('bool')
+    def test_bool_int(a):
+        from numpy import int
+        b = int(a)
+        return b
+
+    @types('int')
+    def test_int_int(a):
+        from numpy import int
+        b = int(a)
+        return b
+
+    @types('int8')
+    def test_int8_int(a):
+        from numpy import int
+        b = int(a)
+        return b
+
+    @types('int16')
+    def test_int16_int(a):
+        from numpy import int
+        b = int(a)
+        return b
+
+    @types('int32')
+    def test_int32_int(a):
+        from numpy import int
+        b = int(a)
+        return b
+
+    @types('int64')
+    def test_int64_int(a):
+        from numpy import int
+        b = int(a)
+        return b
+
+    @types('float')
+    def test_float_int(a):
+        from numpy import int
+        b = int(a)
+        return b
+
+    @types('float32')
+    def test_float32_int(a):
+        from numpy import int
+        b = int(a)
+        return b
+
+    @types('float64')
+    def test_float64_int(a):
+        from numpy import int
+        b = int(a)
+        return b
+
+    from numpy import (bool, int, float, complex, int8, int16, int32,
+                      int64, float32, float64, complex64, complex128)
+
+    bl = bool(randint(1e6))
+    integer = randint(1e6)
+    integer8 = int8(randint(1e6))
+    integer16 = int16(randint(1e6))
+    integer32 = int32(randint(1e6))
+    integer64 = int64(randint(1e6))
+    fl = float(randint(1e6))
+    fl32 = float32(randint(1e6))
+    fl64 = float64(randint(1e6))
+
+    f_bl = epyccel(test_bool_int, language=language)
+
+    assert (f_bl(bl) == test_bool_int(bl))
+
+    f_integer = epyccel(test_int_int, language=language)
+    f_integer8 = epyccel(test_int8_int, language=language)
+    f_integer16 = epyccel(test_int16_int, language=language)
+    f_integer32 = epyccel(test_int32_int, language=language)
+    f_integer64 = epyccel(test_int64_int, language=language)
+
+    assert (f_integer(integer) == test_int_int(integer))
+    assert (f_integer8(integer8) == test_int8_int(integer8))
+    assert (f_integer16(integer16) == test_int16_int(integer16))
+    assert (f_integer32(integer32) == test_int32_int(integer32))
+    assert (f_integer64(integer64) == test_int64_int(integer64))
+
+    f_fl = epyccel(test_float_int, language=language)
+    f_fl32 = epyccel(test_float32_int, language=language)
+    f_fl64 = epyccel(test_float64_int, language=language)
+
+    assert (f_fl(fl) == test_float_int(fl))
+    assert (f_fl32(fl32) == test_float32_int(fl32))
+    assert (f_fl64(fl64) == test_float64_int(fl64))
+
+def test_numpy_float(language):
+
+    @types('bool')
+    def test_bool_float(a):
+        from numpy import float
+        b = float(a)
+        return b
+
+    @types('int')
+    def test_int_float(a):
+        from numpy import float
+        b = float(a)
+        return b
+
+    @types('int8')
+    def test_int8_float(a):
+        from numpy import float
+        b = float(a)
+        return b
+
+    @types('int16')
+    def test_int16_float(a):
+        from numpy import float
+        b = float(a)
+        return b
+
+    @types('int32')
+    def test_int32_float(a):
+        from numpy import float
+        b = float(a)
+        return b
+
+    @types('int64')
+    def test_int64_float(a):
+        from numpy import float
+        b = float(a)
+        return b
+
+    @types('float')
+    def test_float_float(a):
+        from numpy import float
+        b = float(a)
+        return b
+
+    @types('float32')
+    def test_float32_float(a):
+        from numpy import float
+        b = float(a)
+        return b
+
+    @types('float64')
+    def test_float64_float(a):
+        from numpy import float
+        b = float(a)
+        return b
+
+    from numpy import (bool, int, float, complex, int8, int16, int32,
+                      int64, float32, float64, complex64, complex128)
+
+    bl = bool(randint(1e6))
+    integer = randint(1e6)
+    integer8 = int8(randint(1e6))
+    integer16 = int16(randint(1e6))
+    integer32 = int32(randint(1e6))
+    integer64 = int64(randint(1e6))
+    fl = float(randint(1e6))
+    fl32 = float32(randint(1e6))
+    fl64 = float64(randint(1e6))
+
+    if (language == 'c'):
+        f_bl = epyccel(test_bool_float, language=language)
+        assert (f_bl(bl) == test_bool_float(bl))
+
+    f_integer = epyccel(test_int_float, language=language)
+    f_integer8 = epyccel(test_int8_float, language=language)
+    f_integer16 = epyccel(test_int16_float, language=language)
+    f_integer32 = epyccel(test_int32_float, language=language)
+    f_integer64 = epyccel(test_int64_float, language=language)
+
+    assert (f_integer(integer) == test_int_float(integer))
+    assert (f_integer8(integer8) == test_int8_float(integer8))
+    assert (f_integer16(integer16) == test_int16_float(integer16))
+    assert (f_integer32(integer32) == test_int32_float(integer32))
+    assert (f_integer64(integer64) == test_int64_float(integer64))
+
+    f_fl = epyccel(test_float_float, language=language)
+    f_fl32 = epyccel(test_float32_float, language=language)
+    f_fl64 = epyccel(test_float64_float, language=language)
+
+    assert (f_fl(fl) == test_float_float(fl))
+    assert (f_fl32(fl32) == test_float32_float(fl32))
+    assert (f_fl64(fl64) == test_float64_float(fl64))
+
+
