@@ -2738,7 +2738,7 @@ class ClassDef(Basic):
 
         attributes = {}
         for i in self.attributes:
-            attributes[str(i.name)] = i
+            attributes[i.name] = i
 
         if not attr in attributes:
             raise ValueError('{0} is not an attribute of {1}'.format(attr,
