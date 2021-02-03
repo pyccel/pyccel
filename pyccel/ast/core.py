@@ -2709,7 +2709,7 @@ class ClassDef(Basic):
 
         d_methods = {}
         for i in self.methods:
-            d_methods[str(i.name)] = i
+            d_methods[i.name] = i
         return d_methods
 
     @property
