@@ -484,7 +484,7 @@ class BasicParser(object):
             container[func.name] = func
         elif isinstance(func, SymbolicAssign) and isinstance(func.rhs,
                 Lambda):
-            container[str(func.lhs)] = func.rhs
+            container[func.lhs] = func.rhs
         else:
             raise TypeError('Expected a symbolic_function')
 
