@@ -106,7 +106,7 @@ def builtin_import(expr):
         raise TypeError('Expecting an Import expression')
 
     if isinstance(expr.source, AsName):
-        source = str(expr.source.name)
+        source = expr.source.name
     else:
         source = str(expr.source)
 
