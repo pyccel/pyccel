@@ -1553,10 +1553,10 @@ class SemanticParser(BasicParser):
                                     self._current_fst_node.col_offset))
 
                         else:
-                            previous_allocations = var.get_direct_parents(lambda p: isinstance(p, Allocate))
-                            if previous_allocations[-1].get_parent_of_type((If, For, While)):
+                            previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
+                            if previous_allocations[-1].get_user_nodes_of_type((If, For, While)):
                                 status='unknown'
-                            elif previous_allocations[-1].get_parent_of_type(IfSection):
+                            elif previous_allocations[-1].get_user_nodes_of_type(IfSection):
                                 status = previous_allocations[-1].status
                             else:
                                 status='allocated'
@@ -2610,7 +2610,7 @@ class SemanticParser(BasicParser):
             all_assigned = [str(i) for i in all_assigned]
             assigned     = [str(i) for i in assigned]
 
-            apps = list(body.children_of_type(FunctionCall))
+            apps = list(body.attribute_nodes_of_type(FunctionCall))
             apps = [i for i in apps if (i.__class__.__name__
                     in self.get_parent_functions())]
 

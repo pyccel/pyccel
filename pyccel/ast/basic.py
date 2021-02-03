@@ -28,7 +28,7 @@ class Basic(sp_Basic):
         return sp_Basic.__new__(cls, *hashable_args)
 
     def __init__(self):
-        self._parent = []
+        self._user_nodes = []
         self._fst = []
         for c_name in self._attribute_nodes:
             c = getattr(self, c_name)
@@ -51,12 +51,12 @@ class Basic(sp_Basic):
             if isinstance(c, tuple):
                 for ci in c:
                     if ci:
-                        ci.parent = self
+                        ci.user_nodes = self
             elif c:
-                c.parent = self
+                c.user_nodes = self
 
-    def get_parent_of_type(self, search_type):
-        """ Find out if any of the parents are instances
+    def get_user_nodes_of_type(self, search_type):
+        """ Find out if any of the user nodes are instances
         of the provided object.
 
         Parameters
@@ -66,18 +66,18 @@ class Basic(sp_Basic):
 
         Results
         -------
-        Boolean : True if one of the parents is an instance of
+        Boolean : True if one of the user nodes is an instance of
                   the class in the argument
         """
         results = []
-        if len(self._parent) == 0:
+        if len(self._user_nodes) == 0:
             return []
         else:
-            results  = [p for p in self._parent if isinstance(p, search_type)]
-            results += [r for p in self._parent for r in p.get_parent_of_type(search_type)]
+            results  = [p for p in self._user_nodes if isinstance(p, search_type)]
+            results += [r for p in self._user_nodes for r in p.get_user_nodes_of_type(search_type)]
             return results
 
-    def children_of_type(self, search_type):
+    def attribute_nodes_of_type(self, search_type):
         """ Returns all objects of the requested type
         in the current object
 
@@ -103,10 +103,10 @@ class Basic(sp_Basic):
                         results.append(vi)
 
                     if vi is not None:
-                        results.extend(vi.children_of_type(search_type))
+                        results.extend(vi.attribute_nodes_of_type(search_type))
 
             elif v is not None:
-                results.extend(v.children_of_type(search_type))
+                results.extend(v.attribute_nodes_of_type(search_type))
 
         return results
 
@@ -139,7 +139,7 @@ class Basic(sp_Basic):
 
     @property
     def is_atomic(self):
-        """ Indicates whether the object has any children
+        """ Indicates whether the object has any attribute nodes
         """
         return bool(self._attribute_nodes)
 
@@ -163,31 +163,31 @@ class Basic(sp_Basic):
         else:
             return None
 
-    def get_direct_parents(self, condition):
-        """ For an object with multiple parents
+    def get_direct_user_nodes(self, condition):
+        """ For an object with multiple user nodes
         Get the objects which satisfy a given
         condition
 
         Parameters
         ----------
         condition : lambda
-                    The condition which the parent
+                    The condition which the user nodes
                     must satisfy to be returned
         """
-        return [p for p in self._parent if condition(p)]
+        return [p for p in self._user_nodes if condition(p)]
 
     @property
-    def parent(self):
-        """ Get the current parent of the object
+    def user_nodes(self):
+        """ Get the current user_nodes of the object
         """
-        if self._parent:
-            return self._parent[-1]
+        if self._user_nodes:
+            return self._user_nodes[-1]
         else:
             return None
 
-    @parent.setter
-    def parent(self, parent):
-        self._parent.append(parent)
+    @user_nodes.setter
+    def user_nodes(self, user_nodes):
+        self._user_nodes.append(user_nodes)
 
 class PyccelAstNode(Basic):
     """Class from which all nodes containing objects inherit
