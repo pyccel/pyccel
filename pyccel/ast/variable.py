@@ -15,7 +15,7 @@ from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeGeneric,
                         default_precision)
-from .internals import PyccelArraySize, Slice, Symbol
+from .internals import PyccelArraySize, Slice
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv,
                         PyccelUnarySub, PyccelAdd)
@@ -30,7 +30,7 @@ __all__ = (
     'VariableAddress'
 )
 
-class Variable(Symbol, PyccelAstNode):
+class Variable(PyccelAstNode):
 
     """Represents a typed variable.
 
@@ -118,8 +118,6 @@ class Variable(Symbol, PyccelAstNode):
         is_kwonly=False,
         allows_negative_indexes=False
         ):
-
-        Symbol.__init__(self)
 
         # ------------ PyccelAstNode Properties ---------------
         if isinstance(dtype, str) or str(dtype) == '*':
