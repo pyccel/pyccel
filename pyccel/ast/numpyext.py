@@ -143,7 +143,7 @@ class NumpyReal(PythonReal):
     """
 
 #==============================================================================
-PrecisionToDtype = {
+DtypePrecisionToCastFunction = {
     'Int' : {
         4 : NumpyInt32,
         8 : NumpyInt64},
@@ -596,7 +596,7 @@ class NumpyFull(PyccelInternalFunction, NumpyNewArray):
 
         # Cast fill_value to correct type
         if fill_value:
-            cast_func = PrecisionToDtype[dtype.name][precision]
+            cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
             fill_value = cast_func(fill_value)
         self._shape = shape
         self._rank  = len(self._shape)
