@@ -352,6 +352,9 @@ class Variable(PyccelAstNode):
         return isinstance(self.dtype, (NativeInteger, NativeBool,
                           NativeReal, NativeComplex))
 
+    def __str__(self):
+        return str(self.name)
+
     def _sympystr(self, printer):
         """ sympy equivalent of __str__"""
         sstr = printer.doprint
