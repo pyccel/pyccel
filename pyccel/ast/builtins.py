@@ -475,25 +475,22 @@ class PythonRange(Basic):
     """
 
     def __init__(self, *args):
-        start = LiteralInteger(0)
-        stop = None
-        step = LiteralInteger(1)
+        # Define default values
+        self._start = LiteralInteger(0)
+        self._step  = LiteralInteger(1)
 
         if len(args) == 1:
-            stop = args[0]
+            self._stop = args[0]
         elif len(args) == 2:
-            start = args[0]
-            stop = args[1]
+            self._start = args[0]
+            self._stop = args[1]
         elif len(args) == 3:
-            start = args[0]
-            stop = args[1]
-            step = args[2]
+            self._start = args[0]
+            self._stop = args[1]
+            self._step = args[2]
         else:
             raise ValueError('Range has at most 3 arguments')
 
-        self._start = start
-        self._stop  = stop
-        self._step  = step
         super().__init__()
 
     @property
