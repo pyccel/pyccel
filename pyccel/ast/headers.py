@@ -266,7 +266,7 @@ class FunctionHeader(Header):
         # TODO factorize what can be factorized
         from itertools import product
 
-        name = str(self.name)
+        name = self.name
 
         body      = []
         cls_name  = None
