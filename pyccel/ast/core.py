@@ -2880,9 +2880,9 @@ class Import(Basic):
 
     def find_module_target(self, new_target):
         for t in self._target:
-            if isinstance(t, AsName) and new_target == str(t.name):
+            if isinstance(t, AsName) and new_target == t.name:
                 return t.target
-            elif new_target == str(t):
+            elif new_target == t:
                 return t
         return None
 
