@@ -164,6 +164,7 @@ class Variable(PyccelAstNode):
 
         if not isinstance(name, (str, DottedName)):
             raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
+        self._name = name
 
         if not isinstance(allocatable, bool):
             raise TypeError('allocatable must be a boolean.')
@@ -226,6 +227,12 @@ class Variable(PyccelAstNode):
                 raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel),'
                                 'Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
         return tuple(new_shape)
+
+    @property
+    def name(self):
+        """ Name of the variable
+        """
+        return self._name
 
     @property
     def alloc_shape(self):
