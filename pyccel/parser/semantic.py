@@ -2603,8 +2603,11 @@ class SemanticParser(BasicParser):
             # ... computing inout arguments
             args_inout = [False] * len(args)
 
+            results_names = [i.name for i in results]
+
             all_assigned = get_assigned_symbols(body)
-            assigned     = [a for a in all_assigned if a.rank > 0]
+            assigned     = [a.name for a in all_assigned if a.rank > 0]
+            all_assigned = [i.name for i in all_assigned]
 
             apps = list(Tuple(*body.body).atoms(FunctionCall))
             apps = [i for i in apps if (i.__class__.__name__
@@ -2617,7 +2620,7 @@ class SemanticParser(BasicParser):
                     d_apps[a].append(f)
 
             for i, a in enumerate(args):
-                if a in chain(results, assigned, ['self']):
+                if a.name in chain(results_names, assigned, ['self']):
                     args_inout[i] = True
 
                 if d_apps[a] and not( args_inout[i] ):
@@ -2636,7 +2639,7 @@ class SemanticParser(BasicParser):
 
                         i_fa += 1
                 if isinstance(a, Variable):
-                    if a.is_const and (args_inout[i] or (a in all_assigned)):
+                    if a.is_const and (args_inout[i] or (a.name in all_assigned)):
                         msg = "Cannot modify 'const' argument ({})".format(a)
                         errors.report(msg, bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
