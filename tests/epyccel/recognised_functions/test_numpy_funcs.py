@@ -3631,6 +3631,8 @@ def test_numpy_float(language):
     fl32 = float32(randint(1e6))
     fl64 = float64(randint(1e6))
 
+    # gfortran complain about boolean to numeric convertions, given that boolean type in Fortran
+    # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
     if (language == 'c'):
         f_bl = epyccel(test_bool_float, language=language)
         assert (f_bl(bl) == test_bool_float(bl))
