@@ -144,38 +144,19 @@ class NumpyReal(PythonReal):
 
 #==============================================================================
 PrecisionToDtype = {
-    'int' : {
+    'Int' : {
         4 : NumpyInt32,
         8 : PythonInt},
-    'float' : {
+    'Real' : {
         4 : NumpyFloat32,
         8 : PythonFloat},
-    'complex' : {
+    'Complex' : {
         4 : NumpyComplex64,
         8 : PythonComplex,
-        16 : NumpyComplex128,}
+        16 : NumpyComplex128,},
+    'Bool':  {
+        4 : PythonBool}
 }
-
-def process_stype(stype, precision):
-    """
-    returns a cast function from
-    PrecisionToDtype_int, PrecisionToDtype_float, PrecisionToDtype_complex, python_builtin_datatypes
-    by ginving it:
-    stype:
-        supported data type name.
-    precision:
-        describs the precision of stype, to make the returned function more specific.
-    """
-    if stype == 'integer':
-        return PrecisionToDtype['int'][precision]
-    if stype == 'real':
-        return PrecisionToDtype['float'][precision]
-    if stype == 'complex':
-        return PrecisionToDtype['complex'][precision]
-    if stype == 'bool':
-        from pyccel.codegen.printing.fcode import python_builtin_datatypes
-        return python_builtin_datatypes['bool']
-    return None
 
 #==============================================================================
 numpy_constants = {
@@ -614,12 +595,8 @@ class NumpyFull(PyccelInternalFunction, NumpyNewArray):
         order = NumpyNewArray._process_order(order)
 
         # Cast fill_value to correct type
-        from pyccel.ast.datatypes import str_dtype
-        stype = str_dtype(dtype)
         if fill_value:
-            from pyccel.codegen.printing.fcode import python_builtin_datatypes
-            cast_func  = python_builtin_datatypes[stype]
-            cast_func = process_stype(stype, precision)
+            cast_func = PrecisionToDtype[dtype.name][precision]
             fill_value = cast_func(fill_value)
         self._shape = shape
         self._rank  = len(self._shape)
