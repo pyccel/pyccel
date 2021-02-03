@@ -2719,7 +2719,7 @@ class ClassDef(Basic):
 
         d_attributes = {}
         for i in self.attributes:
-            d_attributes[str(i.name)] = i
+            d_attributes[i.name] = i
         return d_attributes
 
     # TODO add other attributes?
