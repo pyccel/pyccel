@@ -482,22 +482,17 @@ class PythonRange(Basic):
         stop = None
         step = LiteralInteger(1)
 
-        if isinstance(args, (tuple, list)):
-            if len(args) == 1:
-                stop = args[0]
-            elif len(args) == 2:
-                start = args[0]
-                stop = args[1]
-            elif len(args) == 3:
-                start = args[0]
-                stop = args[1]
-                step = args[2]
-            else:
-                raise ValueError('Range has at most 3 arguments')
-        elif isinstance(args, PyccelAstNode):
-            stop = args
-        elif PyccelAstNode.stage != "syntactic":
-            raise TypeError('expecting a list or valid stop')
+        if len(args) == 1:
+            stop = args[0]
+        elif len(args) == 2:
+            start = args[0]
+            stop = args[1]
+        elif len(args) == 3:
+            start = args[0]
+            stop = args[1]
+            step = args[2]
+        else:
+            raise ValueError('Range has at most 3 arguments')
 
         self._start = start
         self._stop  = stop
