@@ -261,7 +261,7 @@ def extract_subexpressions(expr):
         elif isinstance(expr, FunctionCall):
             args = substitute(expr.args)
 
-            if str(expr.func) in func_names:
+            if expr.func.name in func_names:
                 var = create_variable(expr)
                 expr = expr.func(*args, evaluate=False)
                 expr = Assign(var, expr)
