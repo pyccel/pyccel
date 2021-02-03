@@ -1732,8 +1732,7 @@ class FunctionCall(PyccelAstNode):
         # ...
         if isinstance(current_function, DottedName):
             current_function = current_function.name[-1]
-
-        if str(current_function) == str(name):
+        if current_function == name:
             func.set_recursive()
 
         if not isinstance(args, (tuple, list)):
@@ -1760,7 +1759,7 @@ class FunctionCall(PyccelAstNode):
 
         args = [FunctionAddress(a.name, a.arguments, a.results, []) if isinstance(a, FunctionDef) else a for a in args]
 
-        if str(current_function) == str(func.name):
+        if current_function == func.name:
             if len(func.results)>0 and not isinstance(func.results[0], PyccelAstNode):
                 errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
 
