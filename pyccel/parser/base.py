@@ -472,7 +472,7 @@ class BasicParser(object):
             self.insert_python_function(func)
         elif isinstance(func, (FunctionDef, Interface, FunctionAddress)):
             container = self.namespace.functions
-            container[str(func.name)] = func
+            container[func.name] = func
         else:
             raise TypeError('Expected a Function definition')
 
