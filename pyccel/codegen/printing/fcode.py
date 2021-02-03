@@ -1559,7 +1559,7 @@ class FCodePrinter(CodePrinter):
                     dec = Declare(result.dtype, result, intent='inout')
                 else:
                     dec = Declare(result.dtype, result, intent='out')
-                args_decs[str(result)] = dec
+                args_decs[result] = dec
 
             functions = expr.functions
 
