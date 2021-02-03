@@ -32,6 +32,7 @@ class Literal(PyccelAstNode):
     _shape     = ()
 
     def __init__(self, precision):
+        super().__init__()
         if not isinstance(precision, int):
             raise TypeError("precision must be an integer")
         self._precision = precision
@@ -51,43 +52,36 @@ class Literal(PyccelAstNode):
         return printer.doprint(self.python_value)
 
 #------------------------------------------------------------------------------
-class LiteralTrue(Literal, Basic):
+class LiteralTrue(Literal):
     """Represents the python value True"""
     _dtype     = NativeBool()
-    def __new__(cls, precision = default_precision['bool']):
-        return Basic.__new__(cls, precision)
 
     def __init__(self, precision = default_precision['bool']):
-        Literal.__init__(self, precision)
+        super().__init__(precision)
 
     @property
     def python_value(self):
         return True
 
 #------------------------------------------------------------------------------
-class LiteralFalse(Literal, Basic):
+class LiteralFalse(Literal):
     """Represents the python value False"""
     _dtype     = NativeBool()
-    def __new__(cls, precision = default_precision['bool']):
-        return Basic.__new__(cls, precision)
 
     def __init__(self,precision = default_precision['bool']):
-        Literal.__init__(self, precision)
+        super().__init__(precision)
 
     @property
     def python_value(self):
         return False
 
 #------------------------------------------------------------------------------
-class LiteralInteger(Literal, Basic):
+class LiteralInteger(Literal):
     """Represents an integer literal in python"""
     _dtype     = NativeInteger()
-    def __new__(cls, value, precision = default_precision['integer']):
-        return Basic.__new__(cls, value)
 
     def __init__(self, value, precision = default_precision['integer']):
-        Basic.__init__(self)
-        Literal.__init__(self, precision)
+        super().__init__(precision)
         if not isinstance(value, int):
             raise TypeError("A LiteralInteger can only be created with an integer")
         self.p = value
@@ -117,23 +111,22 @@ class LiteralFloat(Literal, sp_Float):
 
 
 #------------------------------------------------------------------------------
-class LiteralComplex(Literal, Basic):
+class LiteralComplex(Literal):
     """Represents a complex literal in python"""
     _dtype     = NativeComplex()
 
     def __new__(cls, real, imag, precision = default_precision['complex']):
         if cls is LiteralImaginaryUnit:
-            return Basic.__new__(cls, real, imag)
+            return super().__new__(cls, real, imag)
         real_part = cls._collect_python_val(real)
         imag_part = cls._collect_python_val(imag)
         if real_part == 0 and imag_part == 1:
             return LiteralImaginaryUnit()
         else:
-            return Basic.__new__(cls, real, imag)
+            return super().__new__(cls, real, imag)
 
     def __init__(self, real, imag, precision = default_precision['complex']):
-        Basic.__init__(self)
-        Literal.__init__(self, precision)
+        super().__init__(precision)
         self._real_part = LiteralFloat(self._collect_python_val(real))
         self._imag_part = LiteralFloat(self._collect_python_val(imag))
 
@@ -164,25 +157,22 @@ class LiteralComplex(Literal, Basic):
 class LiteralImaginaryUnit(LiteralComplex):
     """Represents the python value j"""
     def __new__(cls):
-        return LiteralComplex.__new__(cls, 0, 1)
+        return super().__new__(cls, 0, 1)
 
     def __init__(self, real=0, imag=1, precision = default_precision['complex']):
-        LiteralComplex.__init__(self, 0, 1)
+        super().__init__(0, 1)
 
     @property
     def python_value(self):
         return 1j
 
 #------------------------------------------------------------------------------
-class LiteralString(Literal, Basic):
+class LiteralString(Literal):
     """Represents a string literal in python"""
     _dtype     = NativeString()
     _precision = 0
-    def __new__(cls, arg):
-        return Basic.__new__(cls, arg)
-
     def __init__(self, arg):
-        Basic.__init__(self)
+        super().__init__(self._precision)
         if not isinstance(arg, str):
             raise TypeError('arg must be of type str')
         self._string = arg
