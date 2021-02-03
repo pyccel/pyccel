@@ -1518,7 +1518,7 @@ class ForIterator(For):
         body,
         ):
 
-        if isinstance(iterable, Symbol):
+        if isinstance(iterable, Variable):
             iterable = PythonRange(PythonLen(iterable))
         super().__init__(target, iterable, body)
 
