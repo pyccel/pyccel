@@ -697,49 +697,52 @@ class NumpyOnes(NumpyAutoFill):
 class NumpyFullLike:
     """ Represents a call to numpy.full_like for code generation.
     """
-    def __new__(cls, a, fill_value, dtype=None, order='K', subok=True):
+    def __new__(cls, a, fill_value, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
         dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
-
-        return NumpyFull(Shape(a), fill_value, dtype, order)
+        shape = Shape(a) if shape is None else shape
+        return NumpyFull(shape, fill_value, dtype, order)
 
 #=======================================================================================
 class NumpyEmptyLike:
     """ Represents a call to numpy.empty_like for code generation.
     """
-    def __new__(cls, a, dtype=None, order='K', subok=True):
+    def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
         dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
+        shape = Shape(a) if shape is None else shape
 
-        return NumpyEmpty(Shape(a), dtype, order)
+        return NumpyEmpty(shape, dtype, order)
 
 #=======================================================================================
 class NumpyOnesLike:
     """ Represents a call to numpy.ones_like for code generation.
     """
-    def __new__(cls, a, dtype=None, order='K', subok=True):
+    def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
         dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
+        shape = Shape(a) if shape is None else shape
 
-        return NumpyOnes(Shape(a), dtype, order)
+        return NumpyOnes(shape, dtype, order)
 
 #=======================================================================================
 class NumpyZerosLike:
     """ Represents a call to numpy.zeros_like for code generation.
     """
-    def __new__(cls, a, dtype=None, order='K', subok=True):
+    def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
         dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
+        shape = Shape(a) if shape is None else shape
 
-        return NumpyZeros(Shape(a), dtype, order)
+        return NumpyZeros(shape, dtype, order)
 
 #=======================================================================================
 
