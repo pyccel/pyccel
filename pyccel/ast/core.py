@@ -2745,7 +2745,7 @@ class ClassDef(Basic):
                              str(self)))
 
         var = attributes[attr]
-        name = DottedName(cls_name, str(var.name))
+        name = DottedName(cls_name, var.name)
         return Variable(
             var.dtype,
             name,
