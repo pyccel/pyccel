@@ -205,7 +205,6 @@ class NumpyArray(NumpyNewArray):
     """
 
     def __init__(self, arg, dtype=None, order='C'):
-        NumpyNewArray.__init__(self)
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
@@ -237,6 +236,7 @@ class NumpyArray(NumpyNewArray):
         self._dtype = dtype
         self._order = order
         self._precision = prec
+        super().__init__()
 
     def _sympystr(self, printer):
         return self.arg
@@ -267,7 +267,6 @@ class NumpyArange(NumpyNewArray):
     """
 
     def __init__(self, start, stop = None, step = None, dtype = None):
-        NumpyNewArray.__init__(self)
 
         if stop is None:
             self._start = LiteralInteger(0)
@@ -277,21 +276,20 @@ class NumpyArange(NumpyNewArray):
             self._stop = stop
         self._step = step if step is not None else LiteralInteger(1)
 
-        self._arg = [self._start, self._stop, self._step]
-
         if dtype is None:
-            self._dtype = max([i.dtype for i in self._arg], key = NativeNumeric.index)
-            self._precision = max([i.precision for i in self._arg])
+            self._dtype = max([i.dtype for i in self.arg], key = NativeNumeric.index)
+            self._precision = max([i.precision for i in self.arg])
         else:
             self._dtype, self._precision = process_dtype(dtype)
 
         self._rank = 1
         self._shape = (MathCeil(PyccelDiv(PyccelMinus(self._stop, self._start), self._step)))
         self._shape = process_shape(self._shape)
+        super().__init__()
 
     @property
     def arg(self):
-        return self._arg
+        return (self._start, self._stop, self._step)
 
     @property
     def start(self):
@@ -316,8 +314,8 @@ class NumpySum(PyccelInternalFunction):
     def __init__(self, arg):
         if not isinstance(arg, (list, tuple, PythonTuple, PythonList,
                             Variable, Expr)):
-            raise TypeError('Uknown type of  %s.' % type(arg))
-        PyccelInternalFunction.__init__(self, arg)
+            raise TypeError('Unknown type of  %s.' % type(arg))
+        super().__init__(arg)
         self._dtype = arg.dtype
         self._rank  = 0
         self._shape = ()
@@ -337,8 +335,8 @@ class NumpyProduct(PyccelInternalFunction):
     def __init__(self, arg):
         if not isinstance(arg, (list, tuple, PythonTuple, PythonList,
                                 Variable, Expr)):
-            raise TypeError('Uknown type of  %s.' % type(arg))
-        PyccelInternalFunction.__init__(self, arg)
+            raise TypeError('Unknown type of  %s.' % type(arg))
+        super().__init__(arg)
         self._dtype = arg.dtype
         self._rank  = 0
         self._shape = ()
@@ -362,7 +360,7 @@ class NumpyMatmul(PyccelInternalFunction):
         if not isinstance(b, (list, tuple, PythonTuple, PythonList,
                                 Variable, Expr)):
             raise TypeError('Unknown type of  %s.' % type(a))
-        PyccelInternalFunction.__init__(self, a, b)
+        super().__init__(a, b)
 
         args      = (a, b)
         integers  = [e for e in args if e.dtype is NativeInteger() or a.dtype is NativeBool()]
@@ -450,7 +448,7 @@ class NumpyLinspace(NumpyNewArray):
         self._stop  = stop
         self._size  = size
         self._shape = (self.size,)
-        NumpyNewArray.__init__(self)
+        super().__init__()
 
     @property
     def start(self):
@@ -484,7 +482,7 @@ class NumpyWhere(PyccelInternalFunction):
     """ Represents a call to  numpy.where """
 
     def __init__(self, mask):
-        PyccelInternalFunction.__init__(self, mask)
+        super().__init__(mask)
 
 
     @property
@@ -508,7 +506,7 @@ class NumpyRand(PyccelInternalFunction):
     _precision = default_precision['real']
 
     def __init__(self, *args):
-        PyccelInternalFunction.__init__(self)
+        super().__init__(*args)
         self._shape = args
         self._rank  = len(self.shape)
 
@@ -528,7 +526,6 @@ class NumpyRandint(PyccelInternalFunction):
     _order = 'C'
 
     def __init__(self, low, high = None, size = None):
-        PyccelInternalFunction.__init__(self)
         if size is None:
             size = ()
         if not hasattr(size,'__iter__'):
@@ -539,6 +536,7 @@ class NumpyRandint(PyccelInternalFunction):
         self._rand    = NumpyRand(*size)
         self._low     = low
         self._high    = high
+        super().__init__()
 
     @property
     def rand_expr(self):
@@ -621,7 +619,7 @@ class NumpyAutoFill(NumpyFull):
         if (dtype is None) or isinstance(dtype, Nil):
             raise TypeError("Data type must be provided")
 
-        NumpyFull.__init__(self, shape, None, dtype, order)
+        super().__init__(shape, Nil(), dtype, order)
 
 #==============================================================================
 class NumpyEmpty(NumpyAutoFill):
@@ -737,7 +735,7 @@ class NumpyNorm(PyccelInternalFunction):
         else:
             self._shape = ()
         self._rank = len(self._shape)
-        PyccelInternalFunction.__init__(self, arg, dim)
+        super().__init__(arg, dim)
 
     @property
     def arg(self):
