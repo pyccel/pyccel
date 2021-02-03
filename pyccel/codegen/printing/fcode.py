@@ -1562,7 +1562,7 @@ class FCodePrinter(CodePrinter):
                     dec = Declare(result.dtype, result, intent='inout')
                 else:
                     dec = Declare(result.dtype, result, intent='out')
-                args_decs[result] = dec
+                args_decs[result.name] = dec
 
             functions = expr.functions
 
@@ -1586,7 +1586,7 @@ class FCodePrinter(CodePrinter):
                     dec = Declare(arg.dtype, arg, intent='inout')
                 else:
                     dec = Declare(arg.dtype, arg, intent='in')
-                args_decs[arg] = dec
+                args_decs[arg.name] = dec
 
         #remove parametres intent(inout) from out_args to prevent repetition
         for i in expr.arguments:
@@ -1646,7 +1646,7 @@ class FCodePrinter(CodePrinter):
 
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
-            decs[i] = dec
+            decs[i.name] = dec
 
         vars_to_print = self.parser.get_variables(self._namespace)
         for v in vars_to_print:
