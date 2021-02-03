@@ -30,7 +30,7 @@ from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import PythonFunction, SympyFunction
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor
-from pyccel.ast.core import If
+from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import While
 from pyccel.ast.core import Del
 from pyccel.ast.core import Assert
@@ -1053,10 +1053,10 @@ class SyntaxParser(BasicParser):
         orelse = self._visit(stmt.orelse)
         if len(orelse)==1 and isinstance(orelse[0],If):
             orelse = orelse[0].blocks
-            return If((test, body), *orelse)
+            return If(IfSection(test, body), *orelse)
         else:
-            orelse = (LiteralTrue(), orelse)
-            return If((test, body), orelse)
+            orelse = IfSection(LiteralTrue(), orelse)
+            return If(IfSection(test, body), orelse)
 
     def _visit_IfExp(self, stmt):
 

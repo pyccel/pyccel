@@ -3351,6 +3351,54 @@ class ErrorExit(Exit):
 
     """Exit with error."""
 
+class IfSection(Basic):
+    """Represents a condition and associated code block
+    in an if statement in the code.
+
+    Parameters
+    ----------
+    cond : PyccelAstNode
+           A boolean expression indicating whether or not the block
+           should be executed
+    body : CodeBlock
+           The code to be executed in the condition is satisfied
+
+    Examples
+    --------
+    >>> from pyccel.ast.internals import Symbol
+    >>> from pyccel.ast.core import Assign, IfSection, CodeBlock
+    >>> n = Symbol('n')
+    >>> IfSection((n>1), CodeBlock([Assign(n,n-1)]))
+    IfSection((n>1), CodeBlock([Assign(n,n-1)]))
+    """
+    _children = ('_condition','_block')
+
+    def __init__(self, cond, body):
+
+        if PyccelAstNode.stage == 'semantic' and cond.dtype is not NativeBool():
+            cond = PythonBool(cond)
+        if isinstance(body, (list, tuple)):
+            body = CodeBlock(body)
+        elif isinstance(body, CodeBlock):
+            body = body
+        else:
+            raise TypeError('body is not iterable or CodeBlock')
+
+        self._condition = cond
+        self._block     = body
+
+        super().__init__()
+
+    @property
+    def condition(self):
+        return self._condition
+
+    @property
+    def body(self):
+        return self._block
+
+    def __iter__(self):
+        return iter((self.condition, self.body))
 
 class If(Basic):
 
@@ -3358,38 +3406,28 @@ class If(Basic):
 
     Parameters
     ----------
-    args :
-        every argument is a tuple and
-        is defined as (cond, expr) where expr is a valid ast element
-        and cond is a boolean test.
+    args : IfSection
+           All arguments are sections of the complete If block
 
     Examples
     --------
     >>> from pyccel.ast.internals import Symbol
     >>> from pyccel.ast.core import Assign, If
     >>> n = Symbol('n')
-    >>> If(((n>1), [Assign(n,n-1)]), (True, [Assign(n,n+1)]))
-    If(((n>1), [Assign(n,n-1)]), (True, [Assign(n,n+1)]))
+    >>> i1 = IfSection((n>1), [Assign(n,n-1)])
+    >>> i2 = IfSection(True, [Assign(n,n+1)])
+    >>> If(i1, i2)
+    If(IfSection((n>1), [Assign(n,n-1)]), IfSection(True, [Assign(n,n+1)]))
     """
 
     # TODO add type check in the semantic stage
 
     def __init__(self, *args):
 
-        newargs = []
-        for ce in args:
-            cond = ce[0]
-            if PyccelAstNode.stage == 'semantic' and cond.dtype is not NativeBool():
-                cond = PythonBool(cond)
-            if isinstance(ce[1], (list, tuple)):
-                body = CodeBlock(ce[1])
-            elif isinstance(ce[1], CodeBlock):
-                body = ce[1]
-            else:
-                raise TypeError('body is not iterable or CodeBlock')
-            newargs.append((cond,body))
+        if not all(isinstance(a, IfSection) for a in args):
+            raise TypeError("An If must be composed of IfSections")
 
-        self._blocks = tuple(newargs)
+        self._blocks = args
 
         super().__init__()
 
@@ -3399,10 +3437,7 @@ class If(Basic):
 
     @property
     def bodies(self):
-        b = []
-        for i in self._blocks:
-            b.append( i[1])
-        return b
+        return [b.body for b in self._blocks]
 
 class StarredArguments(Basic):
     def __init__(self, args):
