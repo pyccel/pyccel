@@ -142,21 +142,41 @@ class NumpyReal(PythonReal):
     1.0
     """
 
-PrecisionToDtype_int = {
-    4 : NumpyInt32,
-    8 : PythonInt,
+#==============================================================================
+PrecisionToDtype = {
+    'int' : {
+        4 : NumpyInt32,
+        8 : PythonInt},
+    'float' : {
+        4 : NumpyFloat32,
+        8 : PythonFloat},
+    'complex' : {
+        4 : NumpyComplex64,
+        8 : PythonComplex,
+        16 : NumpyComplex128,}
 }
 
-PrecisionToDtype_float = {
-    4 : NumpyFloat32,
-    8 : PythonFloat,
-}
+def process_stype(stype, precision):
+    """
+    returns a cast function from
+    PrecisionToDtype_int, PrecisionToDtype_float, PrecisionToDtype_complex, python_builtin_datatypes
+    by ginving it:
+    stype:
+        supported data type name.
+    precision:
+        describs the precision of stype, to make the returned function more specific.
+    """
+    if stype == 'integer':
+        return PrecisionToDtype['int'][precision]
+    if stype == 'real':
+        return PrecisionToDtype['float'][precision]
+    if stype == 'complex':
+        return PrecisionToDtype['complex'][precision]
+    if stype == 'bool':
+        from pyccel.codegen.printing.fcode import python_builtin_datatypes
+        return python_builtin_datatypes['bool']
+    return None
 
-PrecisionToDtype_complex = {
-    4 : NumpyComplex64,
-    8 : PythonComplex,
-    16 : NumpyComplex128,
-}
 #==============================================================================
 numpy_constants = {
     'pi': Constant('real', 'pi', value=numpy.pi),
@@ -554,26 +574,6 @@ class NumpyRandint(PyccelInternalFunction):
         return self._low
 
 #==============================================================================
-def process_stype(stype, precision):
-    """
-    returns a cast function from
-    PrecisionToDtype_int, PrecisionToDtype_float, PrecisionToDtype_complex, python_builtin_datatypes
-    by ginving it:
-    stype:
-        supported data type name.
-    precision:
-        describs the precision of stype, to make the returned function more specific.
-    """
-    if stype == 'integer':
-        return PrecisionToDtype_int[precision]
-    if stype == 'real':
-        return PrecisionToDtype_float[precision]
-    if stype == 'complex':
-        return PrecisionToDtype_complex[precision]
-    if stype == 'bool':
-        from pyccel.codegen.printing.fcode import python_builtin_datatypes
-        return python_builtin_datatypes['bool']
-    return None
 
 class NumpyFull(PyccelInternalFunction, NumpyNewArray):
     """
