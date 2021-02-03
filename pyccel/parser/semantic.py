@@ -2140,8 +2140,8 @@ class SemanticParser(BasicParser):
         indices = expr.indices
         dims    = []
         body    = expr.loops[1]
-        #TODO remove the line below after adding equivalent of atoms to Basic issue #694
-        indices = [sp_Symbol(i.name) for i in indices]
+
+        sp_indices  = [sp_Symbol(i.name) for i in indices]
         idx_subs = dict()
 
         # The symbols created to represent unknown valued objects are temporary
@@ -2213,8 +2213,8 @@ class SemanticParser(BasicParser):
             # lower bound as this leads to too little memory being allocated
             min_size = size
             # Collect all uses of other indices
-            start_idx = [-1] + [indices.index(a) for a in start.atoms(sp_Symbol) if a in indices]
-            stop_idx  = [-1] + [indices.index(a) for a in  stop.atoms(sp_Symbol) if a in indices]
+            start_idx = [-1] + [sp_indices.index(a) for a in start.atoms(sp_Symbol) if a in sp_indices]
+            stop_idx  = [-1] + [sp_indices.index(a) for a in  stop.atoms(sp_Symbol) if a in sp_indices]
             start_idx.sort()
             stop_idx.sort()
 
@@ -2223,11 +2223,11 @@ class SemanticParser(BasicParser):
                 # Use the maximum value of the start
                 if start_idx[-1] > stop_idx[-1]:
                     s = start_idx.pop()
-                    min_size = min_size.subs(indices[s], dims[s][3])
+                    min_size = min_size.subs(sp_indices[s], dims[s][3])
                 # and the minimum value of the stop
                 else:
                     s = stop_idx.pop()
-                    min_size = min_size.subs(indices[s], dims[s][2])
+                    min_size = min_size.subs(sp_indices[s], dims[s][2])
 
             # While the min_size is not a known integer, assume that the bounds are positive
             j = 0
@@ -2241,8 +2241,8 @@ class SemanticParser(BasicParser):
                           severity='error')
 
             # sympy is necessary to carry out the summation
-            dim   = dim.subs(indices[i], start+step*indices[i])
-            dim   = Summation(dim, (indices[i], 0, size-1))
+            dim   = dim.subs(sp_indices[i], start+step*sp_indices[i])
+            dim   = Summation(dim, (sp_indices[i], 0, size-1))
             dim   = dim.doit()
 
         try:
