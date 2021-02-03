@@ -92,7 +92,7 @@ def collect_relevant_imports(func_dictionary, targets):
             import_name = target.name
             code_name = target.target
         else:
-            import_name = str(target)
+            import_name = target
             code_name = import_name
 
         if import_name in func_dictionary.keys():
