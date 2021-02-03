@@ -3469,6 +3469,16 @@ def test_zeros_like_combined_args(language):
     assert(type(f3_val())  == type(create_zeros_like_3_val().item()))
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
+            pytest.mark.c]
+        )
+    )
+)
+
 def test_numpy_int(language):
 
     @types('bool')
@@ -3561,6 +3571,16 @@ def test_numpy_int(language):
     assert (f_fl32(fl32) == test_float32_int(fl32))
     assert (f_fl64(fl64) == test_float64_int(fl64))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
+            pytest.mark.c]
+        )
+    )
+)
+
 def test_numpy_float(language):
 
     @types('bool')
@@ -3629,7 +3649,7 @@ def test_numpy_float(language):
     fl32 = np.float32(randint(1e6))
     fl64 = np.float64(randint(1e6))
 
-    # gfortran complain about boolean to numeric convertions, given that boolean type in Fortran
+    # gfortran complains about boolean to numeric convertions, given that boolean type in Fortran
     # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
     if (language == 'c'):
         f_bl = epyccel(test_bool_float, language=language)
