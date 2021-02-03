@@ -1020,7 +1020,7 @@ class FCodePrinter(CodePrinter):
 
         # meta-variables
         if (isinstance(expr.variable, Variable) and
-              str(expr.variable.name).startswith('__')):
+            expr.variable.name.startswith('__')):
             return ''
         # ...
 
