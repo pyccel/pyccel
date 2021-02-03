@@ -1583,7 +1583,7 @@ class FCodePrinter(CodePrinter):
                     dec = Declare(arg.dtype, arg, intent='inout')
                 else:
                     dec = Declare(arg.dtype, arg, intent='in')
-                args_decs[str(arg)] = dec
+                args_decs[arg] = dec
 
         #remove parametres intent(inout) from out_args to prevent repetition
         for i in expr.arguments:
