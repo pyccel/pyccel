@@ -767,10 +767,13 @@ class FCodePrinter(CodePrinter):
     def _print_PyccelArraySize(self, expr):
         init_value = self._print(expr.arg)
         prec = self.print_kind(expr)
+
         if expr.arg.order == 'C':
-            index = self._print(expr.arg.rank - expr.index)
+            index = PyccelMinus(LiteralInteger(expr.arg.rank), expr.index)
+            index = self._print(index)
         else:
-            index = self._print(expr.index + 1)
+            index = PyccelAdd(expr.index, LiteralInteger(1))
+            index = self._print(index)
 
         if expr.arg.rank == 1:
             return 'size({0}, kind={1})'.format(init_value, prec)
