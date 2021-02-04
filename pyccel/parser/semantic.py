@@ -1413,7 +1413,7 @@ class SemanticParser(BasicParser):
 
         if isinstance(lhs, Symbol):
 
-            name = lhs.name
+            name = lhs
             dtype = d_var.pop('datatype')
 
             d_lhs = d_var.copy()
