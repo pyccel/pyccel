@@ -1666,12 +1666,13 @@ class ValuedArgument(Basic):
     """
 
     def __init__(self, expr, value, *, kwonly = False):
-        if isinstance(expr, str):
-            expr = Symbol(expr)
-
         # TODO should we turn back to Argument
 
-        if not isinstance(expr, (Symbol, Argument)):
+        if isinstance(expr, Argument):
+            self._name = expr.name
+        elif isinstance(expr, (str, Symbol)):
+            self._name = expr
+        else:
             raise TypeError('Expecting an argument')
 
         self._expr   = expr
@@ -1688,7 +1689,7 @@ class ValuedArgument(Basic):
 
     @property
     def name(self):
-        return self.argument.name
+        return self._name
 
     @property
     def is_kwonly(self):
