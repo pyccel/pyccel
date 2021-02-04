@@ -833,4 +833,4 @@ class DottedVariable(Variable):
         return False
 
     def __hash__(self):
-        return hash(type(self).__name__+ self.name + str(self.lhs))
+        return hash(type(self).__name__+ self.name) + hash(self.lhs)
