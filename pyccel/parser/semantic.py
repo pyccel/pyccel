@@ -2515,7 +2515,7 @@ class SemanticParser(BasicParser):
                             d_var['cls_base'] = NumpyArrayClass
 
                         if 'allow_negative_index' in self._namespace.decorators:
-                            if a in decorators['allow_negative_index']:
+                            if a.name in decorators['allow_negative_index']:
                                 d_var.update(allows_negative_indexes=True)
                         # this is needed for the static case
                         if isinstance(a, ValuedArgument):
@@ -2524,10 +2524,10 @@ class SemanticParser(BasicParser):
                             if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
 
-                            a_new = ValuedVariable(dtype, a,
+                            a_new = ValuedVariable(dtype, a.name,
                                         value=a.value, **d_var)
                         else:
-                            a_new = Variable(dtype, a, **d_var)
+                            a_new = Variable(dtype, a.name, **d_var)
 
                     if additional_args:
                         args += additional_args
