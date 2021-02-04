@@ -2045,7 +2045,7 @@ class SemanticParser(BasicParser):
                     iterator[i] = indx
 
         if isinstance(iterator, Symbol):
-            name   = iterator.name
+            name   = iterator
             var    = self.check_for_variable(name)
             target = var
             if var is None:
