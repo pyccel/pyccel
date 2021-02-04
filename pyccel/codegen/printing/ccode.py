@@ -1431,10 +1431,10 @@ class CCodePrinter(CodePrinter):
     def _print_OMP_Parallel_Construct(self, expr):
         clauses = ''
         if expr.combined:
-            clauses = ' ' + ' '.join(expr.combined)
+            clauses = ' ' + expr.combined
         clauses += str(expr.txt)
         omp_expr   = '#pragma omp parallel{}'.format(clauses)
-        if 'for' not in expr.combined:
+        if (expr.combined and "for" not in expr.combined) or expr.combined is None:
             omp_expr += '\n{'
         return omp_expr
 

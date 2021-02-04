@@ -40,7 +40,7 @@ OmpConstructOrDirective:
 ////////////////////////////////////////////////////
 //     Constructs and Directives definitions
 ////////////////////////////////////////////////////
-OmpParallelConstruct:   'parallel'        combined*=ParallelCombined? clauses*=AllOmpClauses;
+OmpParallelConstruct:   'parallel'        combined=ParallelCombined? clauses*=AllOmpClauses;
 OmpLoopConstruct:       'for'             clauses*=AllOmpClauses;
 OmpTaskLoopConstruct:   name='taskloop'   clauses*=AllOmpClauses;
 OmpSingleConstruct:     name='single'     clauses*=AllOmpClauses;
@@ -65,7 +65,18 @@ OmpTaskyieldConstruct:  name='taskyield';
 ////////////////////////////////////////////////////
 //         Combined Constructs
 ////////////////////////////////////////////////////
-ParallelCombined: ('for' | 'simd' | 'sections' | 'masked' | 'taskloop');
+
+ParallelCombined: OmpForSimd | OmpMaskedTaskloop | ('sections');
+
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//         Combined Constructs
+////////////////////////////////////////////////////
+
+OmpForSimd: fname='for' sname='simd'?;
+OmpMaskedTaskloop: mname='masked' (tname='taskloop' sname='simd'?)?;
+
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -140,7 +151,7 @@ OmpMergeable: name='mergeable';
 OmpNogroup: name='nogroup';
 OmpAtomicClause: name=AtomicClause;
 AtomicMemoryClause: name=AtomicMClause;
-FlushList: '(' args+=ID[','] ')';
+FlushList: name='flush' '(' args+=ID[','] ')';
 OmpCancelType: name=CancelType;
 ////////////////////////////////////////////////////
 

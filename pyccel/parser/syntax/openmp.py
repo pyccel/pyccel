@@ -111,21 +111,26 @@ class OmpParallelConstruct(BasicStmt):
                          OmpProcBind)
 
         txt = ''
-        if ('simd' in self.combined) and ('for' not in self.combined):
-            raise TypeError('Wrong combination of SIMD and Prallel construct')
-        if 'sections' in self.combined:
-            _valid_clauses = _valid_clauses + _valid_sections_clauses
-        if 'for' in self.combined:
+        combined = None
+        if isinstance(self.combined, OmpForSimd):
             _valid_clauses = _valid_clauses + _valid_loop_clauses
-            if 'simd' in self.combined:
+            if 'simd' in self.combined.expr:
                 _valid_clauses = _valid_clauses + _valid_simd_clauses
+            combined = self.combined.expr
+        if isinstance(self.combined, OmpMaskedTaskloop):
+            _valid_clauses = _valid_clauses + (OmpFilter,)
+            if 'simd' in self.combined.expr:
+                _valid_clauses = _valid_clauses + _valid_simd_clauses
+            if 'taskloop' in self.combined.expr:
+                _valid_clauses = _valid_clauses + _valid_taskloop_clauses
+            combined = self.combined.expr
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpParallelConstruct')
 
-        return OMP_Parallel_Construct(txt, self.combined)
+        return OMP_Parallel_Construct(txt, combined)
 
 class OmpLoopConstruct(BasicStmt):
     """Class representing a ."""
@@ -164,20 +169,8 @@ class OmpTaskLoopConstruct(BasicStmt):
     def expr(self):
         if DEBUG:
             print("> OmpTaskLoopConstruct: expr")
-
-        _valid_clauses = (OmpShared, \
-                         OmpPrivate, \
-                         OmpFirstPrivate, \
-                         OmpLastPrivate, \
-                         OmpReduction, \
-                         OmpinReduction, \
-                         OmpNumTasks, \
-                         OmpGrainSize, \
-                         OmpCollapse, \
-                         OmpUntied, \
-                         OmpMergeable, \
-                         OmpNogroup, \
-                         OmpPriority)
+        
+        _valid_clauses = _valid_taskloop_clauses + (OmpinReduction,)
 
         txt = self.name
         for clause in self.clauses:
@@ -744,6 +737,7 @@ class FlushList(BasicStmt):
     def __init__(self, **kwargs):
         """
         """
+        self.name = kwargs.pop('name')
         self.args = kwargs.pop('args')
 
         super().__init__(**kwargs)
@@ -755,7 +749,7 @@ class FlushList(BasicStmt):
 
         # TODO check if variable exist in namespace
         args = ', '.join(str(arg) for arg in self.args)
-        return '({})'.format(args)
+        return '{}({})'.format(self.name, args)
 
 class OmpCriticalName(BasicStmt):
     """Class representing a ."""
@@ -1127,6 +1121,49 @@ class AtomicMemoryClause(BasicStmt):
 
         return '{}'.format(self.name)
 
+class OmpForSimd(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.fname = kwargs.pop('fname')
+        self.sname = kwargs.pop('sname')
+
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> Combined For Simd: expr")
+
+        txt = self.fname
+        if self.sname:
+            txt = txt + ' ' + self.sname
+        return '{}'.format(txt)
+
+class OmpMaskedTaskloop(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.mname = kwargs.pop('mname')
+        self.tname = kwargs.pop('tname')
+        self.sname = kwargs.pop('sname')
+
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> Combined Masked Taskloop: expr")
+
+        txt = self.mname
+        if self.tname:
+            txt = txt + ' ' + self.tname
+            if self.sname:
+                txt = txt + ' ' + self.sname
+        return '{}'.format(txt)
+
 #################################################
 
 #################################################
@@ -1134,23 +1171,37 @@ class AtomicMemoryClause(BasicStmt):
 # lists.
 
 _valid_sections_clauses = (OmpPrivate, \
-                  OmpFirstPrivate, \
-                  OmpLastPrivate, \
-                  OmpReduction)
+                           OmpFirstPrivate, \
+                           OmpLastPrivate, \
+                           OmpReduction)
 
 _valid_simd_clauses = (OmpLinear, \
-                  OmpReduction, \
-                  OmpCollapse, \
-                  OmpLastPrivate)
+                       OmpReduction, \
+                       OmpCollapse, \
+                       OmpLastPrivate)
+
+_valid_taskloop_clauses = (OmpShared, \
+                           OmpPrivate, \
+                           OmpFirstPrivate, \
+                           OmpLastPrivate, \
+                           OmpReduction, \
+                           OmpinReduction, \
+                           OmpNumTasks, \
+                           OmpGrainSize, \
+                           OmpCollapse, \
+                           OmpUntied, \
+                           OmpMergeable, \
+                           OmpNogroup, \
+                           OmpPriority)
 
 _valid_loop_clauses = (OmpPrivate, \
-                 OmpFirstPrivate, \
-                 OmpLastPrivate, \
-                 OmpReduction, \
-                 OmpSchedule, \
-                 OmpCollapse, \
-                 OmpLinear, \
-                 OmpOrdered)
+                       OmpFirstPrivate, \
+                       OmpLastPrivate, \
+                       OmpReduction, \
+                       OmpSchedule, \
+                       OmpCollapse, \
+                       OmpLinear, \
+                       OmpOrdered)
 
 omp_directives = [OmpParallelConstruct,
                   OmpLoopConstruct,
@@ -1204,7 +1255,9 @@ omp_clauses = [OmpCollapse,
                OmpCancelType,
                OmpMap,
                OmpNumTeams,
-               OmpThreadLimit]
+               OmpThreadLimit,
+               OmpForSimd,
+               OmpMaskedTaskloop]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 
