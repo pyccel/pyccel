@@ -149,11 +149,11 @@ class CWrapperCodePrinter(CCodePrinter):
             for a in function.arguments:
                 if isinstance(a, Variable) and a.rank>0:
                     # Add shape arguments for static function
-                    for i in range(collect_dict[a.name].rank):
+                    for i in range(collect_dict[a].rank):
                         var = Variable(dtype=NativeInteger() ,name = self.get_new_name(used_names, a.name + "_dim"))
-                        body = FunctionCall(numpy_get_dim, [collect_dict[a.name], i])
+                        body = FunctionCall(numpy_get_dim, [collect_dict[a], i])
                         if a.is_optional:
-                            body = IfTernaryOperator(VariableAddress(collect_dict[a.name]), body , LiteralInteger(0))
+                            body = IfTernaryOperator(VariableAddress(collect_dict[a]), body , LiteralInteger(0))
                         body = Assign(var, body)
                         additional_body.append(body)
                         static_args.append(var)
@@ -590,7 +590,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # Loop for all args in every functions and create the corresponding condition and body
             for p_arg, f_arg in zip(parse_args, local_arg_vars):
-                collect_vars[f_arg.name] = p_arg
+                collect_vars[f_arg] = p_arg
                 body, tmp_variable = self._body_management(used_names, f_arg, p_arg, None)
                 if tmp_variable :
                     mini_wrapper_func_vars[tmp_variable.name] = tmp_variable
@@ -838,7 +838,7 @@ class CWrapperCodePrinter(CCodePrinter):
         collect_vars = {}
         for arg in local_arg_vars:
             collect_var , cast_func = self.get_PyArgParseType(used_names, arg)
-            collect_vars[arg.name] = collect_var
+            collect_vars[arg] = collect_var
 
             body, tmp_variable = self._body_management(used_names, arg, collect_var, cast_func, True)
             if tmp_variable :
