@@ -352,7 +352,7 @@ class Variable(PyccelAstNode):
         return str(self.name)
 
     def __eq__(self, other):
-        if isinstance(other, Variable):
+        if type(self) is type(other):
             return self._name == other.name
         return False
 
