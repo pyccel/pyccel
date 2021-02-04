@@ -922,7 +922,7 @@ class SyntaxParser(BasicParser):
             if func == "print":
                 func = PythonPrint(PythonTuple(*args))
             else:
-                func = FunctionCall(func.name, args)
+                func = FunctionCall(func, args)
         elif isinstance(func, DottedName):
             f_name = str(func.name[-1])
             func_attr = FunctionCall(f_name, args)
