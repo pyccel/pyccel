@@ -4412,55 +4412,67 @@ def test_numpy_complex128(language):
 def test_numpy_real_scalar(language):
 
     @types('bool')
-    def test_bool_real(a):
+    def test_bool(a):
         import numpy as np
         b = np.real(a)
         return b
 
     @types('int')
-    def test_int_real(a):
+    def test_int(a):
         import numpy as np
         b = np.real(a)
         return b
 
     @types('int8')
-    def test_int8_real(a):
+    def test_int8(a):
         import numpy as np
         b = np.real(a)
         return b
 
     @types('int16')
-    def test_int16_real(a):
+    def test_int16(a):
         import numpy as np
         b = np.real(a)
         return b
 
     @types('int32')
-    def test_int32_real(a):
+    def test_int32(a):
         import numpy as np
         b = np.real(a)
         return b
 
     @types('int64')
-    def test_int64_real(a):
+    def test_int64(a):
         import numpy as np
         b = np.real(a)
         return b
 
     @types('float')
-    def test_float_real(a):
+    def test_float(a):
         import numpy as np
         b = np.real(a)
         return b
 
     @types('float32')
-    def test_float32_real(a):
+    def test_float32(a):
         import numpy as np
         b = np.real(a)
         return b
 
     @types('float64')
-    def test_float64_real(a):
+    def test_float64(a):
+        import numpy as np
+        b = np.real(a)
+        return b
+
+    @types('complex64')
+    def test_complex64(a):
+        import numpy as np
+        b = np.real(a)
+        return b
+
+    @types('complex128')
+    def test_complex128(a):
         import numpy as np
         b = np.real(a)
         return b
@@ -4480,114 +4492,31 @@ def test_numpy_real_scalar(language):
     # gfortran complains about boolean to numeric convertions, given that boolean type in Fortran
     # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
     if (language == 'c'):
-        f_bl = epyccel(test_bool_real, language=language)
-        assert (f_bl(bl) == test_bool_real(bl))
+        f_bl = epyccel(test_bool, language=language)
+        assert (f_bl(bl) == test_bool(bl))
 
-    f_integer = epyccel(test_int_real, language=language)
-    f_integer8 = epyccel(test_int8_real, language=language)
-    f_integer16 = epyccel(test_int16_real, language=language)
-    f_integer32 = epyccel(test_int32_real, language=language)
-    f_integer64 = epyccel(test_int64_real, language=language)
+    f_integer = epyccel(test_int, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
+    f_integer32 = epyccel(test_int32, language=language)
+    f_integer64 = epyccel(test_int64, language=language)
 
-    assert (f_integer(integer) == test_int_real(integer))
-    assert (f_integer8(integer8) == test_int8_real(integer8))
-    assert (f_integer16(integer16) == test_int16_real(integer16))
-    assert (f_integer32(integer32) == test_int32_real(integer32))
-    assert (f_integer64(integer64) == test_int64_real(integer64))
+    assert (f_integer(integer) == test_int(integer))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer32(integer32) == test_int32(integer32))
+    assert (f_integer64(integer64) == test_int64(integer64))
 
-    f_fl = epyccel(test_float_real, language=language)
-    f_fl32 = epyccel(test_float32_real, language=language)
-    f_fl64 = epyccel(test_float64_real, language=language)
+    f_fl = epyccel(test_float, language=language)
+    f_fl32 = epyccel(test_float32, language=language)
+    f_fl64 = epyccel(test_float64, language=language)
 
-    assert (f_fl(fl) == test_float_real(fl))
-    assert (f_fl32(fl32) == test_float32_real(fl32))
-    assert (f_fl64(fl64) == test_float64_real(fl64))
+    assert (f_fl(fl) == test_float(fl))
+    assert (f_fl32(fl32) == test_float32(fl32))
+    assert (f_fl64(fl64) == test_float64(fl64))
 
+    f_complex64 = epyccel(test_complex64, language=language)
+    f_complex128 = epyccel(test_complex128, language=language)
 
-
-def test_numpy_real_array(language):
-
-    def test_bool_real(a):
-        import numpy as np
-        arr = np.array([4,3,2,1], )
-        b = np.real(a)
-        s = np.Shape(b)
-        return len(s), s[0], b[0]
-
-    def test_int_real(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    def test_int8_real(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    def test_int16_real(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    def test_int32_real(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    def test_int64_real(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    def test_float_real(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    def test_float32_real(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    def test_float64_real(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    import numpy as np
-
-    bl = np.bool(randint(1e6))
-    integer = randint(1e6)
-    integer8 = np.int8(randint(1e6))
-    integer16 = np.int16(randint(1e6))
-    integer32 = np.int32(randint(1e6))
-    integer64 = np.int64(randint(1e6))
-    fl = np.float(randint(1e6))
-    fl32 = np.float32(randint(1e6))
-    fl64 = np.float64(randint(1e6))
-
-    # gfortran complains about boolean to numeric convertions, given that boolean type in Fortran
-    # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
-    if (language == 'c'):
-        f_bl = epyccel(test_bool_real, language=language)
-        assert (f_bl(bl) == test_bool_real(bl))
-
-    f_integer = epyccel(test_int_real, language=language)
-    f_integer8 = epyccel(test_int8_real, language=language)
-    f_integer16 = epyccel(test_int16_real, language=language)
-    f_integer32 = epyccel(test_int32_real, language=language)
-    f_integer64 = epyccel(test_int64_real, language=language)
-
-    assert (f_integer(integer) == test_int_real(integer))
-    assert (f_integer8(integer8) == test_int8_real(integer8))
-    assert (f_integer16(integer16) == test_int16_real(integer16))
-    assert (f_integer32(integer32) == test_int32_real(integer32))
-    assert (f_integer64(integer64) == test_int64_real(integer64))
-
-    f_fl = epyccel(test_float_real, language=language)
-    f_fl32 = epyccel(test_float32_real, language=language)
-    f_fl64 = epyccel(test_float64_real, language=language)
-
-    assert (f_fl(fl) == test_float_real(fl))
-    assert (f_fl32(fl32) == test_float32_real(fl32))
-    assert (f_fl64(fl64) == test_float64_real(fl64))
+    assert (f_complex64(1+5j) == test_complex64(1+5j))
+    assert (f_complex128(1+5j) == test_complex128(1+5j))
