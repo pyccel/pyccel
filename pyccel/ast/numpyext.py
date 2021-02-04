@@ -675,7 +675,7 @@ class NumpyFullLike:
     def __new__(cls, a, fill_value, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        dtype = a.dtype if not dtype else dtype
+        dtype = dtype or a.dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
         return NumpyFull(shape, fill_value, dtype, order)
@@ -687,7 +687,7 @@ class NumpyEmptyLike:
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        dtype = a.dtype if not dtype else dtype
+        dtype = dtype or a.dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
 
@@ -700,7 +700,7 @@ class NumpyOnesLike:
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        dtype = a.dtype if not dtype else dtype
+        dtype = dtype or a.dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
 
@@ -713,7 +713,7 @@ class NumpyZerosLike:
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        dtype = a.dtype if not dtype else dtype
+        dtype = dtype or a.dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
 
