@@ -168,7 +168,7 @@ class Slice(Basic):
             stop = str(self.stop)
         return '{0} : {1}'.format(start, stop)
 
-class Symbol(Basic):
+class Symbol(str):
     """Symbolic placeholder for a Python variable, which has a name but no type yet.
     This is very generic, and it can also represent a function or a module.
 
@@ -183,29 +183,7 @@ class Symbol(Basic):
     >>> x = Symbol('x')
     x
     """
-    def __init__(self, name):
-        if not isinstance(name, str):
-            raise TypeError('Symbol name should be a string, not '+ str(type(name)))
-        self._name = name
-        super().__init__()
-
-    @property
-    def name(self):
-        """Name of the symbol
-        """
-        return self._name
-
-    def __eq__(self, other):
-        return self._name == other
-
-    def __hash__(self):
-        return hash(self._name)
-
-    def __str__(self):
-        return self._name
-
-    def __repr__(self):
-        return self._name
+    pass
 
 def symbols(names):
     """
