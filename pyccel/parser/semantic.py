@@ -2497,7 +2497,7 @@ class SemanticParser(BasicParser):
                         if isinstance(a, ValuedArgument):
 
                             # optional argument only if the value is None
-                            if not a.value:
+                            if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
 
                             a_new = ValuedFunctionAddress(a.name, ah.arguments, ah.results, [],
@@ -2521,7 +2521,7 @@ class SemanticParser(BasicParser):
                         if isinstance(a, ValuedArgument):
 
                             # optional argument only if the value is None
-                            if not a.value:
+                            if isinstance(a.value, Nil):
                                 d_var['is_optional'] = True
 
                             a_new = ValuedVariable(dtype, str(a.name),
@@ -2820,16 +2820,16 @@ class SemanticParser(BasicParser):
         var1 = self._visit(expr.lhs)
         var2 = self._visit(expr.rhs)
 
-        if (var1 is var2) or (not var2 and not var1):
+        if (var1 is var2) or (isinstance(var2, Nil) and isinstance(var1, Nil)):
             if IsClass == PyccelIsNot:
                 return LiteralFalse()
             elif IsClass == PyccelIs:
                 return LiteralTrue()
 
-        if not var1:
+        if isinstance(var1, Nil):
             var1, var2 = var2, var1
 
-        if not var2:
+        if isinstance(var2, Nil):
             if not var1.is_optional:
                 errors.report(PYCCEL_RESTRICTION_OPTIONAL_NONE,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),

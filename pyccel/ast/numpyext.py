@@ -115,7 +115,7 @@ class NumpyNewArray(PyccelAstNode):
     @staticmethod
     def _process_order(order):
 
-        if (order is None) or not order:
+        if not order:
             return None
 
         order = str(order).strip('\'"')
@@ -522,7 +522,7 @@ class NumpyFull(PyccelInternalFunction, NumpyNewArray):
 
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
-        if (dtype is None) or not dtype:
+        if not dtype:
             dtype = fill_value.dtype
 
         # Verify dtype and get precision
@@ -559,7 +559,7 @@ class NumpyAutoFill(NumpyFull):
         the fill_value is implicitly specified
     """
     def __init__(self, shape, dtype='float', order='C'):
-        if (dtype is None) or not dtype:
+        if not dtype:
             raise TypeError("Data type must be provided")
 
         super().__init__(shape, Nil(), dtype, order)
@@ -618,7 +618,7 @@ class NumpyFullLike:
     def __new__(cls, a, fill_value, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        dtype = a.dtype if (dtype is None) or not dtype else dtype
+        dtype = a.dtype if not dtype else dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
         return NumpyFull(shape, fill_value, dtype, order)
@@ -630,7 +630,7 @@ class NumpyEmptyLike:
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        dtype = a.dtype if (dtype is None) or not dtype else dtype
+        dtype = a.dtype if not dtype else dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
 
@@ -643,7 +643,7 @@ class NumpyOnesLike:
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        dtype = a.dtype if (dtype is None) or not dtype else dtype
+        dtype = a.dtype if not dtype else dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
 
@@ -656,7 +656,7 @@ class NumpyZerosLike:
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        dtype = a.dtype if (dtype is None) or not dtype else dtype
+        dtype = a.dtype if not dtype else dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
 
