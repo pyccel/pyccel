@@ -1125,7 +1125,7 @@ class SemanticParser(BasicParser):
                             self._current_fst_node.col_offset),
                         severity='fatal')
             # standard class attribute
-            if rhs.name in attr_name:
+            if rhs in attr_name:
                 self._current_class = first.cls_base
                 second = self._visit(rhs, **settings)
                 self._current_class = None
@@ -1134,7 +1134,7 @@ class SemanticParser(BasicParser):
             # class property?
             else:
                 for i in methods:
-                    if i.name == rhs.name and \
+                    if i.name == rhs and \
                             'property' in i.decorators.keys():
                         if 'numpy_wrapper' in i.decorators.keys():
                             func = i.decorators['numpy_wrapper']
