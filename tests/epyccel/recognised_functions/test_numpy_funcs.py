@@ -13,10 +13,8 @@ min_float = sys.float_info.min  # Minimum positive float
 #    array
 #    # ...
 #    norm
-#    int
 #    real
 #    imag
-#    float
 #    double
 #    mod
 #    float32
@@ -3674,5 +3672,109 @@ def test_numpy_float(language):
     assert (f_fl(fl) == test_float_float(fl))
     assert (f_fl32(fl32) == test_float32_float(fl32))
     assert (f_fl64(fl64) == test_float64_float(fl64))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran,
+            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722")]),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
+            pytest.mark.c]
+        )
+    )
+)
+
+def test_numpy_double(language):
+
+    @types('bool')
+    def test_bool_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    @types('int')
+    def test_int_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    @types('int8')
+    def test_int8_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    @types('int16')
+    def test_int16_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    @types('int32')
+    def test_int32_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    @types('int64')
+    def test_int64_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    @types('float')
+    def test_float_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    @types('float32')
+    def test_float32_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    @types('float64')
+    def test_float64_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    import numpy as np
+
+    bl = np.bool(randint(1e6))
+    integer = randint(1e6)
+    integer8 = np.int8(randint(1e6))
+    integer16 = np.int16(randint(1e6))
+    integer32 = np.int32(randint(1e6))
+    integer64 = np.int64(randint(1e6))
+    fl = np.float(randint(1e6))
+    fl32 = np.float32(randint(1e6))
+    fl64 = np.float64(randint(1e6))
+
+    # gfortran complains about boolean to numeric convertions, given that boolean type in Fortran
+    # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
+    if (language == 'c'):
+        f_bl = epyccel(test_bool_double, language=language)
+        assert (f_bl(bl) == test_bool_double(bl))
+
+    f_integer = epyccel(test_int_double, language=language)
+    f_integer8 = epyccel(test_int8_double, language=language)
+    f_integer16 = epyccel(test_int16_double, language=language)
+    f_integer32 = epyccel(test_int32_double, language=language)
+    f_integer64 = epyccel(test_int64_double, language=language)
+
+    assert (f_integer(integer) == test_int_double(integer))
+    assert (f_integer8(integer8) == test_int8_double(integer8))
+    assert (f_integer16(integer16) == test_int16_double(integer16))
+    assert (f_integer32(integer32) == test_int32_double(integer32))
+    assert (f_integer64(integer64) == test_int64_double(integer64))
+
+    f_fl = epyccel(test_float_double, language=language)
+    f_fl32 = epyccel(test_float32_double, language=language)
+    f_fl64 = epyccel(test_float64_double, language=language)
+
+    assert (f_fl(fl) == test_float_double(fl))
+    assert (f_fl32(fl32) == test_float32_double(fl32))
+    assert (f_fl64(fl64) == test_float64_double(fl64))
 
 
