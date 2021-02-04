@@ -64,7 +64,9 @@ z2 = f2(1, m=0)
 
 helloworld()
 
-# TODO add messages. for the moment there's a bug in Print
 print(z1)
 print(z2)
+
+def pass_fun():
+    pass
 

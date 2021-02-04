@@ -52,10 +52,10 @@ def test_double_loop(language):
     f2 = epyccel( f1, language = language )
     assert f1( 2 ) == f2( 2 )
 
-def test_double_loop_on_2d_array_C():
+def test_double_loop_on_2d_array_C(language):
 
     f1 = loops.double_loop_on_2d_array_C
-    f2 = epyccel( f1 )
+    f2 = epyccel(f1, language = language)
 
     x = np.zeros( (11,4), dtype=int )
     y = np.ones ( (11,4), dtype=int )
@@ -64,10 +64,10 @@ def test_double_loop_on_2d_array_C():
     f2( y )
     assert np.array_equal( x, y )
 
-def test_double_loop_on_2d_array_F():
+def test_double_loop_on_2d_array_F(language):
 
     f1 = loops.double_loop_on_2d_array_F
-    f2 = epyccel( f1 )
+    f2 = epyccel(f1, language=language)
 
     x = np.zeros( (11,4), dtype=int, order='F' )
     y = np.ones ( (11,4), dtype=int, order='F' )
@@ -76,10 +76,19 @@ def test_double_loop_on_2d_array_F():
     f2( y )
     assert np.array_equal( x, y )
 
-def test_product_loop_on_2d_array_C():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="product iterable is not implemented yet\
+                in C language"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_product_loop_on_2d_array_C(language):
 
     f1 = loops.product_loop_on_2d_array_C
-    f2 = epyccel( f1 )
+    f2 = epyccel(f1, language=language)
 
     x = np.zeros( (11,4), dtype=int )
     y = np.ones ( (11,4), dtype=int )
@@ -88,10 +97,19 @@ def test_product_loop_on_2d_array_C():
     f2( y )
     assert np.array_equal( x, y )
 
-def test_product_loop_on_2d_array_F():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="product iterable is not implemented yet\
+                in C language"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_product_loop_on_2d_array_F(language):
 
     f1 = loops.product_loop_on_2d_array_F
-    f2 = epyccel( f1 )
+    f2 = epyccel(f1, language=language)
 
     x = np.zeros( (11,4), dtype=int, order='F' )
     y = np.ones ( (11,4), dtype=int, order='F' )
@@ -100,19 +118,37 @@ def test_product_loop_on_2d_array_F():
     f2( y )
     assert np.array_equal( x, y )
 
-def test_map_on_1d_array():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="python Map iterable is not implemented\
+                yet in C language"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_map_on_1d_array(language):
 
     f1 = loops.map_on_1d_array
-    f2 = epyccel( f1 )
+    f2 = epyccel(f1, language=language)
 
     z = np.arange( 7 )
 
     assert np.array_equal( f1(z), f2(z) )
 
-def test_enumerate_on_1d_array():
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Enumerate iterable is not implemented yet\
+                in C language"),
+            pytest.mark.c]
+        )
+    )
+)
+def test_enumerate_on_1d_array(language):
 
     f1 = loops.enumerate_on_1d_array
-    f2 = epyccel( f1 )
+    f2 = epyccel(f1, language=language)
 
     z = np.arange( 7 )
 
@@ -133,10 +169,10 @@ def test_zip_prod(lang):
 
     assert np.array_equal( f1(10), f2(10) )
 
-def test_loop_on_real_array():
+def test_loop_on_real_array(language):
 
     f1 = loops.product_loop_on_real_array
-    f2 = epyccel( f1 )
+    f2 = epyccel(f1, language=language)
 
     z1 = np.ones(11)
     out1 = np.empty_like(z1)

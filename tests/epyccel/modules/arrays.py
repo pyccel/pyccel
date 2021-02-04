@@ -47,6 +47,32 @@ def array_int32_1d_mul( x, y ):
 def array_int32_1d_idiv( x, y ):
     x[:] = x // y
 
+@types( 'int32[:]', 'int32[:]' )
+def array_int32_1d_add_augassign( x, y ):
+    x += y
+
+@types( 'int32[:]', 'int32[:]' )
+def array_int32_1d_sub_augassign( x, y ):
+    x -= y
+
+def array_int_1d_initialization_1():
+    import numpy as np
+    a = np.array([1, 2, 4, 8, 16])
+    b = np.array(a)
+    return np.sum(b), b[0], b[-1]
+
+def array_int_1d_initialization_2():
+    import numpy as np
+    a = [1, 2, 4, 8, 16]
+    b = np.array(a)
+    return np.sum(b), b[0], b[-1]
+
+def array_int_1d_initialization_3():
+    import numpy as np
+    a = (1, 2, 4, 8, 16)
+    b = np.array(a)
+    return np.sum(b), b[0], b[-1]
+
 #==============================================================================
 # 2D ARRAYS OF INT-32 WITH C ORDERING
 #==============================================================================
@@ -523,6 +549,56 @@ def multiple_stack_array_2():
     s = 0.0
     for i in range(5):
         s = s + b[i] - a[i] / c[i]
+    return s
+
+#==============================================================================
+# 2D STACK ARRAYS OF REAL
+#==============================================================================
+
+@stack_array('a')
+def array_real_2d_sum_stack_array():
+    from numpy import zeros
+    a = zeros((10, 10))
+    s = 0.
+    for i in range(10):
+        for j in range(10):
+            s += a[i][j]
+    return s
+
+@stack_array('a')
+def array_real_2d_div_stack_array():
+    from numpy import full
+    a = full((10, 10), 2)
+    s = 1.
+    for i in range(10):
+        for j in range(10):
+            s /= a[i][j]
+    return s
+
+@stack_array('a')
+@stack_array('b')
+def multiple_2d_stack_array_1():
+    from numpy import ones, array
+    a = ones((2, 5))
+    b = array([[1, 3, 5, 7, 9], [11, 13, 17, 19, 23]])
+    s = 0.0
+    j = 0
+    for i in range(2):
+        for j in range(5):
+            s += a[i][j] / b[i][j]
+    return s
+
+@stack_array('a')
+@stack_array('b', 'c')
+def multiple_2d_stack_array_2():
+    from numpy import ones, array
+    a = ones(5)
+    b = array([[2, 4, 6, 8, 10], [1, 3, 5, 7, 9]])
+    c = array([[1, 3, 5, 7, 9], [2, 4, 6, 8, 10]])
+    s = 0.0
+    for i in range(2):
+        for j in range(5):
+            s = s + b[i][j] - a[j] / c[i][j]
     return s
 
 #==============================================================================
@@ -1554,3 +1630,128 @@ def array_2d_C_slice_stride_23(a):
     b = a[::d, ::c]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
+#==============================================================================
+# ARITHMETIC OPERATIONS
+#==============================================================================
+
+def arrs_similar_shapes_0():
+    import numpy as np
+    a = np.zeros(10)
+    b = a[2:4]+a[4:6]
+    return np.shape(b)[0]
+
+def arrs_similar_shapes_1():
+    import numpy as np
+    i = 4
+    a = np.zeros(10)
+    b = a[2:i]+a[4:i + 2]
+    return np.shape(b)[0]
+
+def arrs_different_shapes_0():
+    import numpy as np
+    i = 5
+    a = np.zeros(10)
+    b = a[2:4]+a[4:i]
+    return np.shape(b)[0]
+
+def arrs_uncertain_shape_1():
+    import numpy as np
+    i = 4
+    j = 6
+    a = np.zeros(10)
+    b = a[2:i]+a[4:j]
+    return np.shape(b)[0]
+
+def arrs_2d_similar_shapes_0():
+    import numpy as np
+    from numpy import shape
+    dy = 4
+    dx = 2
+    pn = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
+    x = ((dy**2 * (pn[1:shape(pn)[0]-1, 2:] + pn[1:shape(pn)[0]-1, 0:shape(pn)[1]-2]) +
+        dx**2 *(pn[2:, 1:shape(pn)[1]-1] + pn[0:shape(pn)[0]-2, 1:shape(pn)[1]-1])) / (2 * (dx**2 + dy**2)))
+    return np.shape(x)[0], np.shape(x)[1]
+
+def arrs_2d_different_shapes_0():
+    import numpy as np
+    pn = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
+    pm = np.array([[1, 1, 1]])
+    x = pn + pm
+    return np.shape(x)[0], np.shape(x)[1]
+def arrs_1d_negative_index_1():
+    import numpy as np
+    a = np.zeros(10)
+    b = a[:-1]+a[-9:]
+    return np.shape(b)[0], np.sum(b)
+
+def arrs_1d_negative_index_2():
+    import numpy as np
+    a = np.ones(10)
+    b = a[1:-1] + a[2:]
+    return np.shape(b)[0], np.sum(b)
+
+def arrs_1d_int32_index():
+    import numpy as np
+    i = np.int32(1)
+    a = np.ones(10)
+    b = a[i] + a[i + 2]
+    return b
+
+def arrs_1d_int64_index():
+    import numpy as np
+    i = np.int64(1)
+    a = np.ones(10)
+    b = a[i] + a[i + 2]
+    return b
+
+def arrs_1d_negative_index_negative_step():
+    import numpy as np
+    a = np.ones(10)
+    b = a[-1:1:-2] + a[:2:-2]
+    return np.shape(b)[0], np.sum(b)
+
+def arrs_1d_negative_step_positive_step():
+    import numpy as np
+    a = np.ones(10)
+    b = a[1:-1: 3] + a[2::3]
+    return np.shape(b)[0], np.sum(b)
+
+def arrs_2d_negative_index():
+    import numpy as np
+    a = np.ones((10, 10))
+    b = a[1:-1, :-1] + a[2:, -9:]
+    return np.shape(b)[0], np.shape(b)[1], np.sum(b)
+
+#==============================================================================
+# NUMPY ARANGE
+#==============================================================================
+
+def arr_arange_1():
+    import numpy as np
+    a = np.arange(6)
+    return np.shape(a)[0], a[0], a[-1]
+
+def arr_arange_2():
+    import numpy as np
+    a = np.arange(1, 7)
+    return np.shape(a)[0], a[0], a[-1]
+
+def arr_arange_3():
+    import numpy as np
+    a = np.arange(0, 10, 0.3)
+    return np.shape(a)[0], a[0], a[-1]
+
+def arr_arange_4():
+    import numpy as np
+    a = np.arange(1, 28, 3, dtype=np.float)
+    return np.shape(a)[0], a[0], a[-1]
+
+def arr_arange_5():
+    import numpy as np
+    a = np.arange(20, 2.2, -2)
+    return np.shape(a)[0], a[0], a[-1]
+
+def arr_arange_6():
+    import numpy as np
+    a = np.arange(20, 1, -1.1)
+    return np.shape(a)[0], a[0], a[-1]

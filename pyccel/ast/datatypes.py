@@ -31,12 +31,10 @@ __all__ = (
     'NativeInteger',
     'NativeTuple',
 #    'NativeNil',
-#    'NativeParallelRange',
     'NativeRange',
     'NativeReal',
     'NativeString',
     'NativeSymbol',
-    'NativeTensor',
     'NativeVoid',
     'UnionType',
     'VariableType',
@@ -60,6 +58,7 @@ __all__ = (
     'Real',
     'String',
     'Void',
+	'NativeNumeric',
 #    '_Symbol',
     'default_precision',
     'dtype_and_precision_registry',
@@ -113,7 +112,7 @@ dtype_and_precision_registry = { 'real':('real',default_precision['float']),
                                  'pythonbool' :('bool',default_precision['bool'])}
 
 
-class DataType(with_metaclass(Singleton, Basic)):
+class DataType(with_metaclass(Singleton)):
     """Base class representing native datatypes"""
     _name = '__UNDEFINED__'
 
@@ -136,6 +135,8 @@ class NativeReal(DataType):
 class NativeComplex(DataType):
     _name = 'Complex'
 
+NativeNumeric = (NativeBool(), NativeInteger(), NativeReal(), NativeComplex())
+
 class NativeString(DataType):
     _name = 'String'
 
@@ -151,12 +152,6 @@ class NativeTuple(DataType):
 
 class NativeRange(DataType):
     _name = 'Range'
-
-class NativeTensor(DataType):
-    _name = 'Tensor'
-
-class NativeParallelRange(NativeRange):
-    _name = 'ParallelRange'
 
 class NativeSymbol(DataType):
     _name = 'Symbol'
@@ -229,12 +224,13 @@ dtype_registry = {'bool': Bool,
 
 class UnionType(Basic):
 
-    def __new__(cls, args):
-        return Basic.__new__(cls, args)
+    def __init__(self, args):
+        self._args = args
+        super().__init__()
 
     @property
     def args(self):
-        return self._args[0]
+        return self._args
 
 
 def DataTypeFactory(name, argnames=["_name"],
@@ -243,7 +239,7 @@ def DataTypeFactory(name, argnames=["_name"],
                     alias=None,
                     is_iterable=False,
                     is_with_construct=False,
-                    is_polymorphic=True):
+                    is_polymorphic=False):
     def __init__(self, **kwargs):
         for key, value in list(kwargs.items()):
             # here, the argnames variable is the one passed to the
@@ -276,7 +272,7 @@ def is_iterable_datatype(dtype):
     """Returns True if dtype is an iterable class."""
     if is_pyccel_datatype(dtype):
         return dtype.is_iterable
-    elif isinstance(dtype, (NativeRange, NativeTensor)):
+    elif isinstance(dtype, NativeRange):
         return True
     else:
         return False

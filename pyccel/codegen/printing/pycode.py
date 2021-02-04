@@ -8,15 +8,15 @@
 
 from itertools import chain
 
-from sympy.core import Tuple
-
 from sympy.printing.pycode import PythonCodePrinter as SympyPythonCodePrinter
 from sympy.printing.pycode import _known_functions
 from sympy.printing.pycode import _known_functions_math
 from sympy.printing.pycode import _known_constants_math
 
+from pyccel.decorators import __all__ as pyccel_decorators
+
 from pyccel.ast.utilities  import build_types_decorator
-from pyccel.ast.core       import CodeBlock
+from pyccel.ast.core       import CodeBlock, Import, DottedName
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -42,6 +42,11 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         self.assert_contiguous = settings.pop('assert_contiguous', False)
         self.parser = parser
         SympyPythonCodePrinter.__init__(self, settings=settings)
+        self._additional_imports = set()
+
+    def get_additional_imports(self):
+        """return the additional imports collected in printing stage"""
+        return self._additional_imports
 
     def _print_Variable(self, expr):
         return self._print(expr.name)
@@ -54,9 +59,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_IndexedElement(self, expr):
         indices = expr.indices
-        if isinstance(indices, (tuple, list, Tuple)):
+        if isinstance(indices, (tuple, list)):
             # this a fix since when having a[i,j] the generated code is a[(i,j)]
-            if len(indices) == 1 and isinstance(indices[0], (tuple, list, Tuple)):
+            if len(indices) == 1 and isinstance(indices[0], (tuple, list)):
                 indices = indices[0]
 
             indices = [self._print(i) for i in indices]
@@ -78,11 +83,16 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         imports = self._indent_codestring(imports)
         code = ('def {name}({args}):\n'
                 '\n{imports}\n{body}\n').format(name=name, args=args,imports=imports, body=body)
-
         decorators = expr.decorators
-
         if decorators:
+            if decorators['template']:
+                # Eliminate template_dict because it is useless in the printing
+                expr.decorators['template'] = expr.decorators['template']['decorator_list']
+            else:
+                expr.decorators.pop('template')
             for n,f in decorators.items():
+                if n in pyccel_decorators:
+                    self._additional_imports.add(Import(DottedName('pyccel.decorators'), n))
                 # TODO - All decorators must be stored in a list
                 if not isinstance(f, list):
                     f = [f]
@@ -105,11 +115,40 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return code
 
     def _print_Return(self, expr):
-        return 'return {}'.format(self._print(expr.expr))
+        code = ''
+        if expr.stmt:
+            code += self._print(expr.stmt)+'\n'
+        if expr.expr:
+            ret = ','.join([self._print(i) for i in expr.expr])
+            code += 'return {}'.format(ret)
+        return code
+
+    def _print_Program(self, expr):
+        body  = self._print(expr.body)
+        body = self._indent_codestring(body)
+        imports  = [*expr.imports, *self._additional_imports]
+        imports  = '\n'.join(self._print(i) for i in imports)
+
+        return ('{imports}\n'
+                'if __name__ == "__main__":\n'
+                '{body}\n').format(imports=imports,
+                                    body=body)
+
+
+    def _print_AsName(self, expr):
+        name = self._print(expr.name)
+        target = self._print(expr.target)
+
+        return '{name} as {target}'.format(name = name, target = target)
 
     def _print_PythonTuple(self, expr):
         args = ', '.join(self._print(i) for i in expr.args)
         return '('+args+')'
+
+    def _print_PyccelArraySize(self, expr):
+        arg = self._print(expr.arg)
+        index = self._print(expr.index)
+        return 'shape({0})[{1}]'.format(arg, index)
 
     def _print_Comment(self, expr):
         txt = self._print(expr.text)
@@ -118,26 +157,23 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_EmptyNode(self, expr):
         return ''
 
-    def _print_NewLine(self, expr):
-        return '\n'
-
     def _print_DottedName(self, expr):
         return '.'.join(self._print(n) for n in expr.name)
 
     def _print_FunctionCall(self, expr):
-        func = self._print(expr.func)
-        args = ','.join(self._print(i) for i in expr.arguments)
-        return'{func}({args})'.format(func=func, args=args)
+        func = expr.funcdef
+        args = ', '.join(self._print(i) for i in expr.args)
+        return'{func}({args})'.format(func=func.name, args=args)
 
     def _print_Len(self, expr):
         return 'len({})'.format(self._print(expr.arg))
 
     def _print_Import(self, expr):
-        target = ', '.join([self._print(i) for i in expr.target])
-        if expr.source is None:
-            return 'import {target}'.format(target=target)
+        source = self._print(expr.source)
+        if not expr.target:
+            return 'import {source}'.format(source=source)
         else:
-            source = self._print(expr.source)
+            target = ', '.join([self._print(i) for i in expr.target])
             return 'from {source} import {target}'.format(source=source, target=target)
 
     def _print_CodeBlock(self, expr):
@@ -147,7 +183,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_For(self, expr):
         iterable = self._print(expr.iterable)
         target   = expr.target
-        if not isinstance(target,(list, tuple, Tuple)):
+        if not isinstance(target,(list, tuple)):
             target = [target]
         target = ','.join(self._print(i) for i in target)
         body   = self._print(expr.body)
@@ -177,20 +213,6 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_Product(self, expr):
         args = ','.join(self._print(i) for i in expr.elements)
         return 'product({})'.format(args)
-
-    def _print_IndexedBase(self, expr):
-        return self._print(expr.label)
-
-    def _print_Indexed(self, expr):
-        inds = list(expr.indices)
-        #indices of indexedElement of len==1 shouldn't be a Tuple
-        for i, ind in enumerate(inds):
-            if isinstance(ind, Tuple) and len(ind) == 1:
-                inds[i] = ind[0]
-
-        inds = [self._print(i) for i in inds]
-
-        return "%s[%s]" % (self._print(expr.base.label), ", ".join(inds))
 
     def _print_Zeros(self, expr):
         return 'zeros('+ self._print(expr.shape)+')'
@@ -222,7 +244,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_If(self, expr):
         lines = []
-        for i, (c, e) in enumerate(expr.args):
+        for i, (c, e) in enumerate(expr.blocks):
             if i == 0:
                 lines.append("if (%s):" % self._print(c))
 
@@ -257,7 +279,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
             if isinstance(f, str):
                 args.append("'{}'".format(f))
 
-            elif isinstance(f, Tuple):
+            elif isinstance(f, tuple):
                 for i in f:
                     args.append("{}".format(self._print(i)))
 
@@ -269,7 +291,13 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return 'print({0})'.format(fs)
 
     def _print_Module(self, expr):
-        return '\n'.join(self._print(e) for e in expr.body)
+        body = '\n'.join(self._print(e) for e in expr.body)
+        imports  = [*expr.imports, *self._additional_imports]
+        imports  = '\n'.join(self._print(i) for i in imports)
+        return ('{imports}\n\n'
+                '{body}').format(
+                        imports = imports,
+                        body    = body)
 
     def _print_PyccelPow(self, expr):
         base = self._print(expr.args[0])

@@ -135,6 +135,55 @@ def test_array_int32_1d_idiv():
 
     assert np.array_equal( x1, x2 )
 
+def test_array_int32_1d_add_augassign():
+
+    f1 = arrays.array_int32_1d_add_augassign
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1,2,3], dtype=np.int32 )
+    x2 = np.copy(x1)
+    a  = np.array( [1,2,3], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int32_1d_sub_augassign():
+
+    f1 = arrays.array_int32_1d_sub_augassign
+    f2 = epyccel( f1 )
+
+    x1 = np.array( [1,2,3], dtype=np.int32 )
+    x2 = np.copy(x1)
+    a  = np.array( [1,2,3], dtype=np.int32 )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int_1d_initialization_1():
+
+    f1 = arrays.array_int_1d_initialization_1
+    f2 = epyccel( f1 )
+
+    assert np.array_equal(f1(), f2())
+
+def test_array_int_1d_initialization_2():
+
+    f1 = arrays.array_int_1d_initialization_2
+    f2 = epyccel( f1 )
+
+    assert np.array_equal(f1(), f2())
+
+def test_array_int_1d_initialization_3():
+
+    f1 = arrays.array_int_1d_initialization_3
+    f2 = epyccel( f1 )
+
+    assert np.array_equal(f1(), f2())
+
 #==============================================================================
 # TEST: 2D ARRAYS OF INT-32 WITH C ORDERING
 #==============================================================================
@@ -1398,32 +1447,64 @@ def test_array_real_2d_F_complex_3d_expr():
 # TEST: 1D Stack ARRAYS OF REAL
 #==============================================================================
 
-def test_array_real_sum_stack_array():
+def test_array_real_sum_stack_array(language):
 
     f1 = arrays.array_real_1d_sum_stack_array
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1 , language=language)
     x1 = f1()
     x2 = f2()
     assert np.equal( x1, x2 )
 
-def test_array_real_div_stack_array():
+def test_array_real_div_stack_array(language):
 
     f1 = arrays.array_real_1d_div_stack_array
-    f2 = epyccel( f1 )
+    f2 = epyccel( f1 , language=language)
     x1 = f1()
     x2 = f2()
     assert np.equal( x1, x2 )
 
-def test_multiple_stack_array_1():
+def test_multiple_stack_array_1(language):
 
     f1 = arrays.multiple_stack_array_1
-    f2 = epyccel(f1)
+    f2 = epyccel(f1, language=language)
     assert np.equal(f1(), f2())
 
-def test_multiple_stack_array_2():
+def test_multiple_stack_array_2(language):
 
     f1 = arrays.multiple_stack_array_2
-    f2 = epyccel(f1)
+    f2 = epyccel(f1, language=language)
+    assert np.equal(f1(), f2())
+
+#==============================================================================
+# TEST: 2D Stack ARRAYS OF REAL
+#==============================================================================
+
+def test_array_real_sum_2d_stack_array(language):
+
+    f1 = arrays.array_real_2d_sum_stack_array
+    f2 = epyccel( f1 , language=language)
+    x1 = f1()
+    x2 = f2()
+    assert np.equal( x1, x2 )
+
+def test_array_real_div_2d_stack_array(language):
+
+    f1 = arrays.array_real_2d_div_stack_array
+    f2 = epyccel( f1 , language=language)
+    x1 = f1()
+    x2 = f2()
+    assert np.equal( x1, x2 )
+
+def test_multiple_2d_stack_array_1(language):
+
+    f1 = arrays.multiple_2d_stack_array_1
+    f2 = epyccel(f1, language=language)
+    assert np.equal(f1(), f2())
+
+def test_multiple_2d_stack_array_2(language):
+
+    f1 = arrays.multiple_2d_stack_array_2
+    f2 = epyccel(f1, language=language)
     assert np.equal(f1(), f2())
 
 #==============================================================================
@@ -2568,6 +2649,109 @@ def test_array_2d_C_slice_stride_23():
     f1 = arrays.array_2d_C_slice_stride_23
     f2 = epyccel(f1)
     assert np.array_equal(f1(a), f2(a))
+
+#==============================================================================
+# TEST : arithmetic operations
+#==============================================================================
+
+def test_arrs_similar_shapes_0():
+    f1 = arrays.arrs_similar_shapes_0
+    f2 = epyccel(f1)
+    assert f1() == f2()
+
+def test_arrs_similar_shapes_1():
+    f1 = arrays.arrs_similar_shapes_1
+    f2 = epyccel(f1)
+    assert f1() == f2()
+
+def test_arrs_different_shapes_0():
+    f1 = arrays.arrs_different_shapes_0
+    f2 = epyccel(f1)
+    assert f1() == f2()
+
+def test_arrs_uncertain_shape_1():
+    f1 = arrays.arrs_uncertain_shape_1
+    f2 = epyccel(f1)
+    assert f1() == f2()
+
+def test_arrs_2d_similar_shapes_0():
+    f1 = arrays.arrs_2d_similar_shapes_0
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_2d_different_shapes_0():
+    f1 = arrays.arrs_2d_different_shapes_0
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_1d_negative_index_1():
+    f1 = arrays.arrs_1d_negative_index_1
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_1d_negative_index_2():
+    f1 = arrays.arrs_1d_negative_index_2
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_1d_int32_index(language):
+    f1 = arrays.arrs_1d_int32_index
+    f2 = epyccel(f1, language=language)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_1d_int64_index(language):
+    f1 = arrays.arrs_1d_int64_index
+    f2 = epyccel(f1, language=language)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_1d_negative_index_negative_step():
+    f1 = arrays.arrs_1d_negative_index_negative_step
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_1d_negative_step_positive_step():
+    f1 = arrays.arrs_1d_negative_step_positive_step
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+def test_arrs_2d_negative_index():
+    f1 = arrays.arrs_2d_negative_index
+    f2 = epyccel(f1)
+    assert np.array_equal(f1(), f2())
+
+#==============================================================================
+# TEST : NUMPY ARANGE
+#==============================================================================
+
+def test_numpy_arange_one_arg(language):
+    f1 = arrays.arr_arange_1
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(), f2())
+
+def test_numpy_arange_two_arg(language):
+    f1 = arrays.arr_arange_2
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(), f2())
+
+def test_numpy_arange_full_arg(language):
+    f1 = arrays.arr_arange_3
+    f2 = epyccel(f1, language = language)
+    np.testing.assert_array_almost_equal(f1(), f2(), decimal=9)
+
+def test_numpy_arange_with_dtype(language):
+    f1 = arrays.arr_arange_4
+    f2 = epyccel(f1, language = language)
+    assert np.array_equal(f1(), f2())
+
+def test_numpy_arange_negative_step(language):
+    f1 = arrays.arr_arange_5
+    f2 = epyccel(f1, language = language)
+    np.testing.assert_array_almost_equal(f1(), f2(), decimal = 9)
+
+def test_numpy_arange_negative_step_2(language):
+    f1 = arrays.arr_arange_6
+    f2 = epyccel(f1, language = language)
+    np.testing.assert_array_almost_equal(f1(), f2(), decimal = 9)
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS

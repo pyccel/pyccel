@@ -14,9 +14,11 @@ INVALID_IMPLICIT_RETURN = 'Implicit return in function which does not return'
 INCOMPATIBLE_RETURN_VALUE_TYPE = 'Incompatible return value type'
 RETURN_VALUE_EXPECTED = 'Return value expected'
 NO_RETURN_EXPECTED = 'Return statement in function which does not return'
-RECURSIVE_RESULTS_REQUIRED = ("A results type must be provided for recursive functions with one of the following two syntaxes:\n"
-    "@types('ARG_TYPES', results='RESULT_TYPES')\n"
-    "#$ header function FUNC_NAME(ARG_TYPES) results(RESULT_TYPES)\n")
+RECURSIVE_RESULTS_REQUIRED = ("A results type must be provided for recursive functions with one of the following three syntaxes:\n"
+                              "def FUNC_NAME(arg1_name:arg1_type, ...) -> RESULT_TYPES\n"
+                              "@types('ARG_TYPES', results='RESULT_TYPES')\n"
+                              "#$ header function FUNC_NAME(ARG_TYPES) results(RESULT_TYPES)\n")
+
 INCOMPATIBLE_TYPES = 'Incompatible types'
 INCOMPATIBLE_TYPES_IN_ASSIGNMENT = 'Incompatible types in assignment'
 INCOMPATIBLE_REDEFINITION = 'Incompatible redefinition'
@@ -70,7 +72,7 @@ WRONG_NUMBER_OUTPUT_ARGS = 'Number of output arguments does not match number of 
 INDEXED_TUPLE = 'Tuples must be indexed with constant integers for the type inference to work'
 LIST_OF_TUPLES = 'Cannot create list of non-homogeneous tuples'
 
-UNDEFINED_DECORATORS = 'Decorator(s) not used'
+UNUSED_DECORATORS = 'Decorator(s) not used'
 
 UNDEFINED_LAMBDA_VARIABLE = 'Unknown variable(s) in lambda function'
 UNDEFINED_LAMBDA_FUNCTION = 'Unknown function in lambda function'
@@ -134,6 +136,8 @@ INVALID_PYTHON_SYNTAX = 'Python syntax error'
 # ARRAY ERRORS
 ASSIGN_ARRAYS_ONE_ANOTHER = 'Arrays which own their data cannot become views on other arrays'
 ARRAY_ALREADY_IN_USE = 'Attempt to reallocate an array which is being used by another variable'
+INVALID_POINTER_REASSIGN = 'Attempt to give data ownership to a pointer'
+INVALID_INDICES = 'only integers and slices (`:`) are valid indices'
 
 # warnings
 UNDEFINED_INIT_METHOD = 'Undefined `__init__` method'

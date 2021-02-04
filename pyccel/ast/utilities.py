@@ -7,8 +7,7 @@
 
 import inspect
 
-from sympy.core.function import Application
-from sympy import Not, Function
+from sympy import Not
 from numpy import pi
 
 import pyccel.decorators as pyccel_decorators
@@ -16,23 +15,18 @@ from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors, PyccelCodegenError
 from pyccel.errors.messages import FORTRAN_ALLOCATABLE_IN_EXPRESSION
 
-from .basic    import PyccelAstNode
-from .core     import (AsName, Import, FunctionDef, Constant,
-                       Variable, IndexedVariable, ValuedVariable,
-                       Assign, FunctionCall, IndexedElement,
-                       Slice, For, AugAssign, IfTernaryOperator,
-                       Nil, Dlist, TupleVariable, VariableAddress)
+from .core     import (AsName, Import, FunctionDef, FunctionCall)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange, PythonList, PythonTuple)
+from .internals     import PyccelInternalFunction
 from .itertoolsext  import Product
 from .mathext       import math_functions, math_constants, MathFunctionBase
 from .literals      import LiteralString, LiteralInteger, Literal
 
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
-                            numpy_random_functions, numpy_constants,
-                            NumpyNewArray, NumpyFunctionBase)
-from .operators     import PyccelOperator, PyccelMul, PyccelAdd
+                            numpy_random_functions, numpy_constants)
+from .variable      import (Constant, Variable, ValuedVariable)
 
 __all__ = (
     'build_types_decorator',
@@ -50,12 +44,12 @@ scipy_constants = {
 def builtin_function(expr, args=None):
     """Returns a builtin-function call applied to given arguments."""
 
-    if isinstance(expr, Application):
-        name = str(type(expr).__name__)
+    if isinstance(expr, FunctionCall):
+        name = str(expr.funcdef)
     elif isinstance(expr, str):
         name = expr
     else:
-        raise TypeError('expr must be of type str or Function')
+        raise TypeError('expr must be of type str or FunctionCall')
 
     dic = builtin_functions_dict
 
@@ -66,7 +60,7 @@ def builtin_function(expr, args=None):
         return Not(*args)
 
     if name == 'map':
-        func = Function(str(expr.args[0].name))
+        func = str(expr.args[0].name)
         args = [func]+list(args[1:])
         return PythonMap(*args)
 
@@ -155,9 +149,6 @@ def build_types_decorator(args, order=None):
     types = []
     for a in args:
         if isinstance(a, Variable):
-            dtype = a.dtype.name.lower()
-
-        elif isinstance(a, IndexedVariable):
             dtype = a.dtype.name.lower()
 
         else:
