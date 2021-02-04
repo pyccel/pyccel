@@ -1505,7 +1505,7 @@ class FCodePrinter(CodePrinter):
 
         for result in results:
             dec = Declare(result.dtype, result, intent='out', static=True)
-            args_decs[result.name] = dec
+            args_decs[result] = dec
 
         if len(results) != 1:
             func_type = 'subroutine'
