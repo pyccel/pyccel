@@ -1497,9 +1497,6 @@ class FCodePrinter(CodePrinter):
             else:
                 intent='in'
 
-            if arg in results:
-                results.remove(i)
-
             dec = Declare(arg.dtype, arg, intent=intent , static=True)
             args_decs[arg] = dec
 
