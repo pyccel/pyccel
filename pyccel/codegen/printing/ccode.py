@@ -1424,6 +1424,9 @@ class CCodePrinter(CodePrinter):
 
         return '/*' + comments + '*/'
 
+    def _print_Symbol(self, expr):
+        return expr
+
     def _print_CommentBlock(self, expr):
         txts = expr.comments
         header = expr.header
