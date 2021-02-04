@@ -827,7 +827,7 @@ class SyntaxParser(BasicParser):
                                                               prefix = 'Out',
                                                               counter = result_counter)
                 results.append(result_name)
-            elif isinstance(i[0], Symbol) and any(i[0].name==x.name for x in arguments):
+            elif isinstance(i[0], Symbol) and any(i[0]==x.name for x in arguments):
                 result_name, result_counter = create_variable(self._used_names,
                                                               prefix = 'Out',
                                                               counter = result_counter)
