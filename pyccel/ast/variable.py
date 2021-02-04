@@ -198,8 +198,7 @@ class Variable(PyccelAstNode):
         self._order          = order
         self._is_argument    = is_argument
         self._is_kwonly      = is_kwonly
-
-        PyccelAstNode.__init__(self)
+        super().__init__()
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
