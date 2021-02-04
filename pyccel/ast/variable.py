@@ -357,7 +357,7 @@ class Variable(PyccelAstNode):
         return False
 
     def __hash__(self):
-        return hash(type(self).__name__+ self._name)
+        return hash((type(self).__name__, self._name))
 
     def _sympystr(self, printer):
         """ sympy equivalent of __str__"""
@@ -833,4 +833,4 @@ class DottedVariable(Variable):
         return False
 
     def __hash__(self):
-        return hash(type(self).__name__+ self.name) + hash(self.lhs)
+        return hash((type(self).__name__, self.name, self.lhs))
