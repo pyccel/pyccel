@@ -278,6 +278,8 @@ class FCodePrinter(CodePrinter):
         return iso_c_binding[self._print(expr.dtype)][expr.precision]
 
     # ============ Elements ============ #
+    def _print_Symbol(self, expr):
+        return expr
 
     def _print_Module(self, expr):
         self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
