@@ -1575,7 +1575,7 @@ class FCodePrinter(CodePrinter):
             func_end = 'result({0})'.format(result.name)
 
             dec = Declare(result.dtype, result)
-            args_decs[str(result)] = dec
+            args_decs[result] = dec
         # ...
 
         for i,arg in enumerate(expr.arguments):
