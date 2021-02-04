@@ -3556,7 +3556,7 @@ def get_initial_value(expr, var):
     def is_None(expr):
         """Returns True if expr is None or Nil()."""
 
-        return not expr or expr is None
+        return isinstance(expr, Nil) or expr is None
 
     # ...
 
