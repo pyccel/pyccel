@@ -351,6 +351,14 @@ class Variable(PyccelAstNode):
     def __str__(self):
         return str(self.name)
 
+    def __eq__(self, other):
+        if isinstance(other, Variable):
+            return self._name == other.name
+        return False
+
+    def __hash__(self):
+        return hash(type(self).__name__+ self._name)
+
     def _sympystr(self, printer):
         """ sympy equivalent of __str__"""
         sstr = printer.doprint
