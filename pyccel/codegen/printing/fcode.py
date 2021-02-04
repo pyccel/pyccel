@@ -1501,7 +1501,7 @@ class FCodePrinter(CodePrinter):
                 results.remove(i)
 
             dec = Declare(arg.dtype, arg, intent=intent , static=True)
-            args_decs[arg.name] = dec
+            args_decs[arg] = dec
 
         for result in results:
             dec = Declare(result.dtype, result, intent='out', static=True)
@@ -1515,7 +1515,7 @@ class FCodePrinter(CodePrinter):
             result = results.pop()
             func_end = 'result({0})'.format(result.name)
             dec = Declare(result.dtype, result, static=True)
-            args_decs[result.name] = dec
+            args_decs[result] = dec
         # ...
 
         interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
