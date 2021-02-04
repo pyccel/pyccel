@@ -825,3 +825,9 @@ class DottedVariable(Variable):
         The lhs is a
         """
         return self._lhs
+
+    def __eq__(self, other):
+        if type(self) == type(other):
+            return self.name == other.name and self.lhs == other.lhs
+
+        return False
