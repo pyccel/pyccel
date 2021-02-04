@@ -2356,7 +2356,7 @@ class SemanticParser(BasicParser):
         return_vars = self.get_function(f_name).results
         assigns     = []
         for v,r in zip(return_vars, results):
-            if not (isinstance(r, Symbol) and name == name):
+            if not (isinstance(r, Symbol) and r == v):
                 assigns.append(Assign(v,r))
                 assigns[-1].set_fst(expr.fst)
 
