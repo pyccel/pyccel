@@ -33,7 +33,7 @@ class PyccelInternalFunction(PyccelAstNode):
         return self._args
 
 
-class PyccelArraySize(PyccelAstNode):
+class PyccelArraySize(PyccelInternalFunction):
     """
     Class representing a call to a function which would
     return the shape of an object in a given dimension

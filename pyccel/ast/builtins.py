@@ -423,9 +423,6 @@ class PythonList(PythonTuple):
     """
     _order = 'C'
     _is_homogeneous = True
-    """ Represent lists in the code with dynamic memory management."""
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args)
 
 #==============================================================================
 class PythonMap(Basic):
@@ -484,30 +481,24 @@ class PythonRange(Basic):
     _attribute_nodes = ('_start', '_stop', '_step')
 
     def __init__(self, *args):
-        start = LiteralInteger(0)
-        stop = None
-        step = LiteralInteger(1)
+        # Define default values
+        n = len(args)
 
-        if isinstance(args, (tuple, list)):
-            if len(args) == 1:
-                stop = args[0]
-            elif len(args) == 2:
-                start = args[0]
-                stop = args[1]
-            elif len(args) == 3:
-                start = args[0]
-                stop = args[1]
-                step = args[2]
-            else:
-                raise ValueError('Range has at most 3 arguments')
-        elif isinstance(args, PyccelAstNode):
-            stop = args
-        elif PyccelAstNode.stage != "syntactic":
-            raise TypeError('expecting a list or valid stop')
+        if n == 1:
+            self._start = LiteralInteger(0)
+            self._stop  = args[0]
+            self._step  = LiteralInteger(1)
+        elif n == 2:
+            self._start = args[0]
+            self._stop  = args[1]
+            self._step  = LiteralInteger(1)
+        elif n == 3:
+            self._start = args[0]
+            self._stop  = args[1]
+            self._step  = args[2]
+        else:
+            raise ValueError('Range has at most 3 arguments')
 
-        self._start = start
-        self._stop  = stop
-        self._step  = step
         super().__init__()
 
     @property

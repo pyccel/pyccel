@@ -767,6 +767,7 @@ class FCodePrinter(CodePrinter):
     def _print_PyccelArraySize(self, expr):
         init_value = self._print(expr.arg)
         prec = self.print_kind(expr)
+
         if expr.arg.order == 'C':
             index = PyccelMinus(LiteralInteger(expr.arg.rank), expr.index)
             index = self._print(index)
