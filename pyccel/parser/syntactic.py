@@ -639,7 +639,6 @@ class SyntaxParser(BasicParser):
             container = []
             for arg in ls:
                 if isinstance(arg, Symbol):
-                    arg = arg.name
                     container.append(arg)
                 elif isinstance(arg, LiteralString):
                     arg = str(arg)
