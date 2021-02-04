@@ -415,7 +415,7 @@ class FCodePrinter(CodePrinter):
 
             elif isinstance(i, Symbol):
                 line = '{prefix} {target}'.format(prefix=prefix,
-                                                  target=i.name)
+                                                  target=i)
 
             else:
                 raise TypeError('Expecting str, Symbol, DottedName or AsName, '
