@@ -831,3 +831,6 @@ class DottedVariable(Variable):
             return self.name == other.name and self.lhs == other.lhs
 
         return False
+
+    def __hash__(self):
+        return hash(type(self).__name__+ self.name)
