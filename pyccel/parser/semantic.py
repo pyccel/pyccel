@@ -1744,7 +1744,7 @@ class SemanticParser(BasicParser):
             stmt  = stmts[-1]
             lhs   = expr.lhs
             if isinstance(lhs, Symbol):
-                name = lhs.name
+                name = lhs
                 if self.check_for_variable(name) is None:
                     d_var = self._infere_type(stmt, **settings)
                     dtype = d_var.pop('datatype')
