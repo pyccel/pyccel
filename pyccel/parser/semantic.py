@@ -992,7 +992,7 @@ class SemanticParser(BasicParser):
         return self._extract_indexed_from_var(var, args, name)
 
     def _visit_Symbol(self, expr, **settings):
-        name = expr.name
+        name = expr
         var = self.check_for_variable(name)
 
         if var is None:
