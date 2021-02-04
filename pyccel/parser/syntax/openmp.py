@@ -169,7 +169,7 @@ class OmpTaskLoopConstruct(BasicStmt):
     def expr(self):
         if DEBUG:
             print("> OmpTaskLoopConstruct: expr")
-        
+
         _valid_clauses = _valid_taskloop_clauses + (OmpinReduction,)
 
         txt = self.name
