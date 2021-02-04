@@ -3470,8 +3470,8 @@ def test_zeros_like_combined_args(language):
 
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
+        pytest.param("fortran", marks = [pytest.mark.fortran,
+            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722")]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
             pytest.mark.c]
@@ -3572,8 +3572,8 @@ def test_numpy_int(language):
     assert (f_fl64(fl64) == test_float64_int(fl64))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
+        pytest.param("fortran", marks = [pytest.mark.fortran,
+            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722")]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
             pytest.mark.c]
