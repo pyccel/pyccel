@@ -700,8 +700,8 @@ class MacroFunction(Header):
         for i,arg in enumerate(self.master_arguments):
 
             if isinstance(arg, Symbol):
-                if arg.name in argument_keys:
-                    new = d_arguments[arg.name]
+                if arg in argument_keys:
+                    new = d_arguments[arg]
                     if isinstance(new, Symbol) and new.name in result_keys:
                         new = d_results[new.name]
 
