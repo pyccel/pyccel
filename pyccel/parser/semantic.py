@@ -2141,7 +2141,7 @@ class SemanticParser(BasicParser):
         dims    = []
         body    = expr.loops[1]
 
-        sp_indices  = [sp_Symbol(i.name) for i in indices]
+        sp_indices  = [sp_Symbol(i) for i in indices]
         idx_subs = dict()
 
         # The symbols created to represent unknown valued objects are temporary
@@ -2356,7 +2356,7 @@ class SemanticParser(BasicParser):
         return_vars = self.get_function(f_name).results
         assigns     = []
         for v,r in zip(return_vars, results):
-            if not (isinstance(r, Symbol) and r.name == v.name):
+            if not (isinstance(r, Symbol) and name == name):
                 assigns.append(Assign(v,r))
                 assigns[-1].set_fst(expr.fst)
 
