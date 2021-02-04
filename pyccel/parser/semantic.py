@@ -2568,7 +2568,7 @@ class SemanticParser(BasicParser):
             body = self.garbage_collector(body)
 
             args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(a.name) for a in args]
-            results = list(OrderedDict((a.name,self.get_variable(a.name)) for a in results).values())
+            results = list(OrderedDict((a ,self.get_variable(a)) for a in results).values())
 
             if arg and cls_name:
                 dt       = self.get_class_construct(cls_name)()
