@@ -571,7 +571,7 @@ class CWrapperCodePrinter(CCodePrinter):
         default_value = {} # dict to collect all initialisation needed in the wrapper
         check_var = Variable(dtype = NativeInteger(), name = self.get_new_name(used_names , "check"))
         wrapper_vars[check_var.name] = check_var
-        types_dict = OrderedDict((a.name, set()) for a in funcs[0].arguments) #dict to collect each variable possible type and the corresponding flags
+        types_dict = OrderedDict((a, set()) for a in funcs[0].arguments) #dict to collect each variable possible type and the corresponding flags
         # collect parse arg
         parse_args = [Variable(dtype= PyccelPyArrayObject(), is_pointer = True, rank = a.rank,
                             order= a.order,
@@ -609,7 +609,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
                 flag_value = flags_registry[(f_arg.dtype, f_arg.precision)]
                 flags = (flags << 4) + flag_value  # shift by 4 to the left
-                types_dict[f_arg.name].add((f_arg, check, flag_value)) # collect variable type for each arguments
+                types_dict[f_arg].add((f_arg, check, flag_value)) # collect variable type for each arguments
                 mini_wrapper_func_body += body
 
             # create the corresponding function call
