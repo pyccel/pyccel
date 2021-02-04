@@ -827,7 +827,7 @@ class DottedVariable(Variable):
         return self._lhs
 
     def __eq__(self, other):
-        if type(self) == type(other):
+        if isinstance(other, DottedVariable):
             return self.name == other.name and self.lhs == other.lhs
 
         return False
