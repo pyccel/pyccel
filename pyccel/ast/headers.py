@@ -702,11 +702,11 @@ class MacroFunction(Header):
             if isinstance(arg, Symbol):
                 if arg in argument_keys:
                     new = d_arguments[arg]
-                    if isinstance(new, Symbol) and new.name in result_keys:
-                        new = d_results[new.name]
+                    if isinstance(new, Symbol) and new in result_keys:
+                        new = d_results[new]
 
-                elif arg.name in result_keys:
-                    new = d_results[arg.name]
+                elif arg in result_keys:
+                    new = d_results[arg]
                 else:
                     new = arg
                #TODO uncomment later
