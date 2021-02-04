@@ -896,7 +896,7 @@ class IfTernaryOperator(PyccelOperator):
 
         if self.stage == 'syntactic':
             return
-        if isinstance(value_true , Nil) or isinstance(value_false, Nil):
+        if not value_true or not value_false:
             errors.report('None is not implemented for Ternary Operator', severity='fatal')
         if isinstance(value_true , NativeString) or isinstance(value_false, NativeString):
             errors.report('String is not implemented for Ternary Operator', severity='fatal')

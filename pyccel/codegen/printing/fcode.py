@@ -2252,7 +2252,7 @@ class FCodePrinter(CodePrinter):
         a = expr.args[0]
         b = expr.args[1]
 
-        if isinstance(expr.rhs, Nil):
+        if not expr.rhs:
             return '.not. present({})'.format(lhs)
 
         if (a.dtype is NativeBool() and b.dtype is NativeBool()):
@@ -2267,7 +2267,7 @@ class FCodePrinter(CodePrinter):
         a = expr.args[0]
         b = expr.args[1]
 
-        if isinstance(expr.rhs, Nil):
+        if not expr.rhs:
             return 'present({})'.format(lhs)
 
         if a.dtype is NativeBool() and b.dtype is NativeBool():
@@ -2724,11 +2724,11 @@ class FCodePrinter(CodePrinter):
         return Slice(start, stop, step)
 
     def _print_Slice(self, expr):
-        if expr.start is None or  isinstance(expr.start, Nil):
+        if expr.start is None or not expr.start:
             start = ''
         else:
             start = self._print(expr.start)
-        if (expr.stop is None) or isinstance(expr.stop, Nil):
+        if (expr.stop is None) or expr.stop:
             stop = ''
         else:
             stop = self._print(expr.stop)
@@ -2741,7 +2741,7 @@ class FCodePrinter(CodePrinter):
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
-        args = [a for a in expr.args if not isinstance(a, Nil)]
+        args = [a for a in expr.args if a]
         results = func.results
 
         if len(results) == 1:

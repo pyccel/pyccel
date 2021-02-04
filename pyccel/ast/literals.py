@@ -199,6 +199,8 @@ class Nil(Basic):
     """
     class for None object in the code.
     """
+    def __bool__(self):
+        return False
 
     def __str__(self):
         return 'None'
