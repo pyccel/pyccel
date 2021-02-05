@@ -484,7 +484,7 @@ class DottedName(Basic):
     """
 
     def __init__(self, *args):
-        if any(arg.strip() == '' for arg in args):
+        if any(arg == '' for arg in args):
             raise ValueError("DottedName elements can't be empty")
 
         self._name = args
