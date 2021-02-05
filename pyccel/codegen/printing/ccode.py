@@ -788,6 +788,21 @@ class CCodePrinter(CodePrinter):
         return 'string'
 
     def function_signature(self, expr, print_arg_names = True):
+        """Extract from function definition all the information
+        (name, input, output) needed to create the signature
+
+        parameters
+        ----------
+            expr      : FunctionDef
+                the function defintion
+
+            print_arg_names : Bool
+
+        Return
+        ------
+            String
+                Signature of the function
+        """
         args = list(expr.arguments)
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
