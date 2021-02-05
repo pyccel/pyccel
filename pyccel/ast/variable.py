@@ -152,15 +152,15 @@ class Variable(PyccelAstNode):
 
         # ------------ Variable Properties ---------------
         # if class attribute
-        if name.strip() == '':
-            raise ValueError("Variable name can't be empty")
-
         if isinstance(name, str):
             name = name.split(""".""")
             if len(name) == 1:
                 name = name[0]
             else:
                 name = DottedName(*name)
+
+        if name == '':
+            raise ValueError("Variable name can't be empty")
 
         if not isinstance(name, (str, DottedName)):
             raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
@@ -484,8 +484,6 @@ class DottedName(Basic):
     """
 
     def __init__(self, *args):
-        if any(arg == '' for arg in args):
-            raise ValueError("DottedName elements can't be empty")
 
         self._name = args
         super().__init__()
