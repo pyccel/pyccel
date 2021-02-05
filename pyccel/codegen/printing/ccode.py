@@ -787,7 +787,7 @@ class CCodePrinter(CodePrinter):
     def _print_NativeString(self, expr):
         return 'string'
 
-    def function_signature(self, expr):
+    def function_signature(self, expr, print_arg_names = True):
         args = list(expr.arguments)
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
@@ -800,9 +800,9 @@ class CCodePrinter(CodePrinter):
         if not args:
             arg_code = 'void'
         else:
-            arg_code = ', '.join('{}'.format(self.function_signature(i))
+            arg_code = ', '.join('{}'.format(self.function_signature(i, False))
                         if isinstance(i, FunctionAddress) else '{0}{1}'.format(self.get_declare_type(i), i.name)
-                        for i in args)
+                        if print_arg_names else '{}'.format(self.get_declare_type(i)) for i in args)
         if isinstance(expr, FunctionAddress):
             return '{}(*{})({})'.format(ret_type, name, arg_code)
         else:
