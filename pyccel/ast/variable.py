@@ -420,7 +420,6 @@ class Variable(PyccelAstNode):
         """
         # The name is part of the hash so it must never change
         raise RuntimeError('Cannot modify hash definition')
-        self._name = newname
 
     def __reduce_ex__(self, i):
         """ Used by pickle to create an object of this class.
