@@ -416,8 +416,10 @@ class Variable(PyccelAstNode):
         return cls(**new_kwargs)
 
     def rename(self, newname):
-        """Change variable name."""
-
+        """ Forbidden method for renaming the variable
+        """
+        # The name is part of the hash so it must never change
+        raise RuntimeError('Cannot modify hash definition')
         self._name = newname
 
     def __reduce_ex__(self, i):
