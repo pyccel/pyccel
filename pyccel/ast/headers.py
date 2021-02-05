@@ -271,6 +271,7 @@ class FunctionHeader(Header):
         body      = []
         cls_name  = None
         is_static = self.is_static
+        used_names = set(name)
         imports   = []
         funcs = []
         dtypes = []
@@ -344,12 +345,12 @@ class FunctionHeader(Header):
                     results = []
                     _count = 0
                     for dc in d['decs']:
-                        _name, _count = create_incremented_string(set(), 'in_', _count)
+                        _name, _count = create_incremented_string(used_names, 'in_', _count)
                         var = build_argument(_name, dc)
                         decs.append(var)
                     _count = 0
                     for dc in d['results']:
-                        _name, _count = create_incremented_string(set(), 'out_', _count)
+                        _name, _count = create_incremented_string(used_names, 'out_', _count)
                         var = build_argument(_name, dc)
                         results.append(var)
                     arg_name = 'arg_{0}'.format(str(i))
