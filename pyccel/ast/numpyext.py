@@ -142,6 +142,7 @@ class NumpyReal(PythonReal):
     1.0
     """
     def __init__(self, arg):
+        super().__init__(arg)
         self._precision = arg.precision
         self._shape = process_shape(self.internal_var.shape)
         self._rank  = len(self._shape)
