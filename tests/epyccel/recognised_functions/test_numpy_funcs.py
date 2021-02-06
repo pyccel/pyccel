@@ -3727,77 +3727,77 @@ def test_numpy_real_array_like_2d(language):
         arr = array([[4,5,6,2,1],[4,5,6,2,1]], bool)
         a = real(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
     def test_int():
         from numpy import real, shape, array, int
         arr = array([[4,5,6,2,1],[4,5,6,2,1]], int)
         a = real(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
     def test_int8():
         from numpy import real, shape, array, int8
         arr = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
         a = real(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
     def test_int16():
         from numpy import real, shape, array, int16
         arr = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
         a = real(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
     def test_int32():
         from numpy import real, shape, array, int32
         arr = array([[4,5,6,2,1],[4,5,6,2,1]], int32)
         a = real(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
     def test_int64():
         from numpy import real, shape, array, int64
         arr = array([[4,5,6,2,1],[4,5,6,2,1]], int64)
         a = real(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
     def test_float():
         from numpy import real, shape, array, float
         arr = array([[4,5,6,2,1],[4,5,6,2,1]], float)
         a = real(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
     def test_float32():
         from numpy import real, shape, array, float32
         arr = array([[4,5,6,2,1],[4,5,6,2,1]], float32)
         a = real(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
     def test_float64():
         from numpy import real, shape, array, float64
         arr = array([[4,5,6,2,1],[4,5,6,2,1]], float64)
         a = real(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
     def test_complex64():
         from numpy import real, shape, array, complex64
         arr = array([[4,5,6,2,1],[4,5,6,2,1]], complex64)
         a = real(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1]
 
     def test_complex128():
         from numpy import real, shape, array, complex128
         arr = array([[4,5,6,2,1],[4,5,6,2,1]], complex128)
         a = real(arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), s[0], s[1]
 
     # gfortran complains about boolean to numeric convertions, given that boolean type in Fortran
     # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
@@ -3807,15 +3807,15 @@ def test_numpy_real_array_like_2d(language):
 
     f_integer = epyccel(test_int, language=language)
     # int8 and int16 numpy data types not recognised by Pyccel.
-    #f_integer8 = epyccel(test_int8, language=language)
-    #f_integer16 = epyccel(test_int16, language=language)
+    # f_integer8 = epyccel(test_int8, language=language)
+    # f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer() == test_int())
     # int8 and int16 numpy data types not recognised by Pyccel.
-    #assert (f_integer8() == test_int8())
-    #assert (f_integer16() == test_int16())
+    # assert (f_integer8() == test_int8())
+    # assert (f_integer16() == test_int16())
     assert (f_integer32() == test_int32())
     assert (f_integer64() == test_int64())
 
