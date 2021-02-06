@@ -1212,7 +1212,7 @@ class FCodePrinter(CodePrinter):
         return self._print_Comment(stmt)
 
     def _print_NumpyReal(self, expr):
-        value = self._print(expr.arg)
+        value = self._print(expr.internal_var)
         code = 'Real({0}, {1})'.format(value, self.print_kind(expr))
         return code
 
