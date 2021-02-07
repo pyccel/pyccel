@@ -2781,7 +2781,7 @@ class SemanticParser(BasicParser):
         ms = []
         for i in methods:
             self._visit_FunctionDef(i, **settings)
-            m_name = str(i.name).replace("'", '')
+            m_name = i.name.replace("'", '')
             m = self.namespace.functions.pop(m_name)
             ms.append(m)
 
