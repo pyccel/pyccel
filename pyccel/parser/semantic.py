@@ -2166,7 +2166,7 @@ class SemanticParser(BasicParser):
                     dvar['shape'] = (dvar['shape'])[1:]
                 if dvar['rank'] == 0:
                     dvar['allocatable'] = dvar['is_pointer'] = False
-                var  = Variable(dtype, var.name, **dvar)
+                var  = Variable(dtype, var, **dvar)
                 stop = a.element.shape[0]
             elif isinstance(a, Variable):
                 dvar  = self._infere_type(a, **settings)
@@ -2177,7 +2177,7 @@ class SemanticParser(BasicParser):
                 if dvar['rank'] == 0:
                     dvar['allocatable'] = dvar['is_pointer'] = False
 
-                var  = Variable(dtype, var.name, **dvar)
+                var  = Variable(dtype, var, **dvar)
                 stop = a.shape[0]
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO,
