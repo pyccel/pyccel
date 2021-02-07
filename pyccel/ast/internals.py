@@ -81,6 +81,10 @@ class PyccelArraySize(PyccelInternalFunction):
     def __str__(self):
         return 'Shape({},{})'.format(str(self.arg), str(self.index))
 
+    def __eq__(self, other):
+        if isinstance(other, PyccelArraySize):
+            return self.arg == other.arg and self.index == other.index
+
 class Slice(Basic):
 
     """Represents a slice in the code.
