@@ -1433,7 +1433,7 @@ class SemanticParser(BasicParser):
                             d_lhs.update(is_stack_array=True,
                                     allocatable=False, is_pointer=False)
                     if 'allow_negative_index' in decorators:
-                        if lhs.name in decorators['allow_negative_index']:
+                        if lhs in decorators['allow_negative_index']:
                             d_lhs.update(allows_negative_indexes=True)
 
                 # Create new variable
@@ -2917,8 +2917,8 @@ class SemanticParser(BasicParser):
 
             p       = self.d_parsers[source_target]
             if expr.target:
-                targets = [i.target if isinstance(i,AsName) else i.name for i in expr.target]
-                names = [i.name for i in expr.target]
+                targets = [i.target if isinstance(i,AsName) else i for i in expr.target]
+                names = [i.name if isinstance(i,AsName) else i for i in expr.target]
                 for entry in ['variables', 'classes', 'functions']:
                     d_son = getattr(p.namespace, entry)
                     for t,n in zip(targets,names):
