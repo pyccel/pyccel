@@ -210,6 +210,11 @@ class Nil(Basic):
     def __bool__(self):
         return False
 
+    def __eq__(self, other):
+        #TODO [EB 7.2.2021] Make Nil singleton. See https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python method 3
+        #                   Blocked by issue 662
+        return isinstance(other, Nil)
+
 #------------------------------------------------------------------------------
 
 def get_default_literal_value(dtype):
