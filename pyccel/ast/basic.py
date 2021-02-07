@@ -109,7 +109,7 @@ class Basic(sp_Basic):
                     elif vi is not None and not isinstance(vi, excluded_nodes):
                         results.extend(vi.get_attribute_nodes(search_type))
 
-            elif v is not None and not isinstance(vi, excluded_nodes):
+            elif v is not None and not isinstance(v, excluded_nodes):
                 results.extend(v.get_attribute_nodes(search_type))
 
         return results
