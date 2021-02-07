@@ -2763,7 +2763,7 @@ class SemanticParser(BasicParser):
         const = None
 
         for (i, method) in enumerate(methods):
-            m_name = str(method.name).replace("'", '')
+            m_name = method.name.replace("'", '')
 
             if m_name == '__init__':
                 self._visit_FunctionDef(method, **settings)
