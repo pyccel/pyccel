@@ -77,7 +77,7 @@ class Basic(sp_Basic):
             results += [r for p in self._user_nodes for r in p.get_user_nodes_of_type(search_type)]
             return results
 
-    def attribute_nodes_of_type(self, search_type):
+    def get_attribute_nodes(self, search_type):
         """ Returns all objects of the requested type
         in the current object
 
@@ -103,10 +103,10 @@ class Basic(sp_Basic):
                         results.append(vi)
 
                     if vi is not None:
-                        results.extend(vi.attribute_nodes_of_type(search_type))
+                        results.extend(vi.get_attribute_nodes(search_type))
 
             elif v is not None:
-                results.extend(v.attribute_nodes_of_type(search_type))
+                results.extend(v.get_attribute_nodes(search_type))
 
         return results
 
