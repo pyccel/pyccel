@@ -207,6 +207,9 @@ class Nil(Basic):
     def __str__(self):
         return 'None'
 
+    def __bool__(self):
+        return False
+
 #------------------------------------------------------------------------------
 
 def get_default_literal_value(dtype):

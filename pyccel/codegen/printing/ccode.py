@@ -433,12 +433,12 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
-        type_name = self.find_in_dtype_registry('real', default_precision['real'])
+        type_name = self.find_in_dtype_registry('real', expr.precision)
         return '({0})({1})'.format(type_name, value)
 
     def _print_PythonInt(self, expr):
         value = self._print(expr.arg)
-        type_name = self.find_in_dtype_registry('int', default_precision['int'])
+        type_name = self.find_in_dtype_registry('int', expr.precision)
         return '({0})({1})'.format(type_name, value)
 
     def _print_PythonBool(self, expr):
@@ -461,10 +461,12 @@ class CCodePrinter(CodePrinter):
     def _print_PythonComplex(self, expr):
         self._additional_imports.add("complex")
         if expr.is_cast:
-            return self._print(expr.internal_var)
+            value = self._print(expr.internal_var)
         else:
-            return self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
+            value = self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
                             PyccelMul(expr.imag, LiteralImaginaryUnit()))))
+        type_name = self.find_in_dtype_registry('complex', expr.precision)
+        return '({0})({1})'.format(type_name, value)
 
     def _print_LiteralImaginaryUnit(self, expr):
         return '_Complex_I'
