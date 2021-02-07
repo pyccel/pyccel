@@ -57,7 +57,7 @@ def builtin_function(expr, args=None):
         return Not(*args)
 
     if name == 'map':
-        func = str(expr.args[0])
+        func = expr.args[0]
         args = [func]+list(args[1:])
         return PythonMap(*args)
 
