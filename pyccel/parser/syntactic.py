@@ -45,7 +45,6 @@ from pyccel.ast.core import PythonList
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import IndexedElement
-from pyccel.ast.core import _atomic
 from pyccel.ast.core import create_variable
 
 from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
@@ -798,7 +797,9 @@ class SyntaxParser(BasicParser):
         if 'private' in decorators.keys():
             is_private = True
 
-        returns = [i.expr for i in _atomic(body, cls=Return)]
+        body = CodeBlock(body)
+
+        returns = [i.expr for i in body.get_attribute_nodes(Return)]
         assert all(len(i) == len(returns[0]) for i in returns)
         results = []
         result_counter = 1

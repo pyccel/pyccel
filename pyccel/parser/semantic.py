@@ -52,7 +52,6 @@ from pyccel.ast.core import Dlist
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
-from pyccel.ast.core import _atomic
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
 from pyccel.ast.itertoolsext import Product
 
@@ -1722,7 +1721,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(rhs, Block):
             #case of inline
-            results = _atomic(rhs.body,Return)
+            results = rhs.get_attribute_nodes(rhs.body,Return)
             sub = list(zip(results,[EmptyNode()]*len(results)))
             body = rhs.body
             body = subs(body,sub)

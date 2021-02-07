@@ -101,7 +101,6 @@ __all__ = (
     'ValuedArgument',
     'While',
     'With',
-    '_atomic',
     'create_variable',
     'create_incremented_string',
     'extract_subexpressions',
@@ -195,31 +194,6 @@ def subs(expr, new_elements):
 
     else:
         return expr
-
-def _atomic(e, cls=None,ignore=()):
-
-    """Return atom-like quantities as far as substitution is
-    concerned: Functions and DottedVarviables, Variables. we don't
-    return atoms that are inside such quantities too
-    """
-
-    pot = preorder_traversal(e)
-    seen = []
-    atoms_ = []
-    if cls is None:
-        cls = (Application, Variable, IndexedElement)
-
-    for p in pot:
-        if p in seen or isinstance(p, ignore):
-            pot.skip()
-            continue
-        seen.append(p)
-        if isinstance(p, cls):
-            pot.skip()
-            atoms_.append(p)
-
-    return atoms_
-
 
 
 def extract_subexpressions(expr):
