@@ -4651,6 +4651,8 @@ def test_numpy_imag_scalar(language):
     )
 )
 
+# Not all the arguments supported
+
 def test_numpy_mod_scalar(language):
 
     @types('int')
@@ -4959,6 +4961,246 @@ def test_numpy_mod_array_like_2d(language):
         x1 = array([[4,5,6,2,1],[4,5,6,2,1]], complex128)
         x2 = array([[4,5,6,2,1],[4,5,6,2,1]], complex128)
         a = mod(x1, x2)
+        s = shape(a)
+        return len(s), s[0], s[1]
+
+    f_integer = epyccel(test_int, language=language)
+    # int8 and int16 numpy data types not recognised by Pyccel.
+    # f_integer8 = epyccel(test_int8, language=language)
+    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer32 = epyccel(test_int32, language=language)
+    f_integer64 = epyccel(test_int64, language=language)
+
+    assert (f_integer() == test_int())
+    # int8 and int16 numpy data types not recognised by Pyccel.
+    # assert (f_integer8() == test_int8())
+    # assert (f_integer16() == test_int16())
+    assert (f_integer32() == test_int32())
+    assert (f_integer64() == test_int64())
+
+    f_fl = epyccel(test_float, language=language)
+    f_fl32 = epyccel(test_float32, language=language)
+    f_fl64 = epyccel(test_float64, language=language)
+
+    assert (f_fl() == test_float())
+    assert (f_fl32() == test_float32())
+    assert (f_fl64() == test_float64())
+
+    f_complex64 = epyccel(test_complex64, language=language)
+    f_complex128 = epyccel(test_complex128, language=language)
+
+    assert (f_complex64() == test_complex64())
+    assert (f_complex128() == test_complex128())
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran,
+            pytest.mark.skip(reason="Pyccel raises 'ValueError: Incompatible rank in variable allocation'")]),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Matmul function not supported in C"),
+            pytest.mark.c]
+        )
+    )
+)
+
+def test_numpy_matmul_array_like_1d(language):
+
+    def test_int():
+        from numpy import matmul, shape, array, int
+        x1 = array([4,5,6,2,1], int)
+        x2 = array([4,5,6,2,1], int)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], a[0]
+
+    def test_int8():
+        from numpy import matmul, shape, array, int8
+        x1 = array([4,5,6,2,1], int8)
+        x2 = array([4,5,6,2,1], int8)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], a[0]
+
+    def test_int16():
+        from numpy import matmul, shape, array, int16
+        x1 = array([4,5,6,2,1], int16)
+        x2 = array([4,5,6,2,1], int16)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], a[0]
+
+    def test_int32():
+        from numpy import matmul, shape, array, int32
+        x1 = array([4,5,6,2,1], int32)
+        x2 = array([4,5,6,2,1], int32)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], a[0]
+
+    def test_int64():
+        from numpy import matmul, shape, array, int64
+        x1 = array([4,5,6,2,1], int64)
+        x2 = array([4,5,6,2,1], int64)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], a[0]
+
+    def test_float():
+        from numpy import matmul, shape, array, float
+        x1 = array([4,5,6,2,1], float)
+        x2 = array([4,5,6,2,1], float)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], a[0]
+
+    def test_float32():
+        from numpy import matmul, shape, array, float32
+        x1 = array([4,5,6,2,1], float32)
+        x2 = array([4,5,6,2,1], float32)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], a[0]
+
+    def test_float64():
+        from numpy import matmul, shape, array, float64
+        x1 = array([4,5,6,2,1], float64)
+        x2 = array([4,5,6,2,1], float64)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], a[0]
+
+    def test_complex64():
+        from numpy import matmul, shape, array, complex64
+        x1 = array([4,5,6,2,1], complex64)
+        x2 = array([4,5,6,2,1], complex64)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], a[0]
+
+    def test_complex128():
+        from numpy import matmul, shape, array, complex128
+        x1 = array([4,5,6,2,1], complex128)
+        x2 = array([4,5,6,2,1], complex128)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], a[0]
+
+    f_integer = epyccel(test_int, language=language)
+    # int8 and int16 numpy data types not recognised by Pyccel.
+    #f_integer8 = epyccel(test_int8, language=language)
+    #f_integer16 = epyccel(test_int16, language=language)
+    f_integer32 = epyccel(test_int32, language=language)
+    f_integer64 = epyccel(test_int64, language=language)
+
+    assert (f_integer() == test_int())
+    # int8 and int16 numpy data types not recognised by Pyccel.
+    #assert (f_integer8() == test_int8())
+    #assert (f_integer16() == test_int16())
+    assert (f_integer32() == test_int32())
+    assert (f_integer64() == test_int64())
+
+    f_fl = epyccel(test_float, language=language)
+    f_fl32 = epyccel(test_float32, language=language)
+    f_fl64 = epyccel(test_float64, language=language)
+
+    assert (f_fl() == test_float())
+    assert (f_fl32() == test_float32())
+    assert (f_fl64() == test_float64())
+
+    f_complex64 = epyccel(test_complex64, language=language)
+    f_complex128 = epyccel(test_complex128, language=language)
+
+    assert (f_complex64() == test_complex64())
+    assert (f_complex128() == test_complex128())
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran,
+            pytest.mark.skip(reason="Complex not supported")]),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Matmul function not supported in C"),
+            pytest.mark.c]
+        )
+    )
+)
+
+def test_numpy_matmul_array_like_2x2d(language):
+
+    def test_int():
+        from numpy import matmul, shape, array, int
+        x1 = array([[4,5],[2,1]], int)
+        x2 = array([[4,5],[2,1]], int)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
+
+    def test_int8():
+        from numpy import matmul, shape, array, int8
+        x1 = array([[4,5],[2,1]], int8)
+        x2 = array([[4,5],[2,1]], int8)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
+
+    def test_int16():
+        from numpy import matmul, shape, array, int16
+        x1 = array([[4,5],[2,1]], int16)
+        x2 = array([[4,5],[2,1]], int16)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
+
+    def test_int32():
+        from numpy import matmul, shape, array, int32
+        x1 = array([[4,5],[2,1]], int32)
+        x2 = array([[4,5],[2,1]], int32)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
+
+    def test_int64():
+        from numpy import matmul, shape, array, int64
+        x1 = array([[4,5],[2,1]], int64)
+        x2 = array([[4,5],[2,1]], int64)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
+
+    def test_float():
+        from numpy import matmul, shape, array, float
+        x1 = array([[4,5],[2,1]], float)
+        x2 = array([[4,5],[2,1]], float)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
+
+    def test_float32():
+        from numpy import matmul, shape, array, float32
+        x1 = array([[4,5],[2,1]], float32)
+        x2 = array([[4,5],[2,1]], float32)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
+
+    def test_float64():
+        from numpy import matmul, shape, array, float64
+        x1 = array([[4,5],[2,1]], float64)
+        x2 = array([[4,5],[2,1]], float64)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
+
+    def test_complex64():
+        from numpy import matmul, shape, array, complex64
+        x1 = array([[4,5],[2,1]], complex64)
+        x2 = array([[4,5],[2,1]], complex64)
+        a = matmul(x1, x2)
+        s = shape(a)
+        return len(s), s[0], s[1]
+
+    def test_complex128():
+        from numpy import matmul, shape, array, complex128
+        x1 = array([[4,5],[2,1]], complex128)
+        x2 = array([[4,5],[2,1]], complex128)
+        a = matmul(x1, x2)
         s = shape(a)
         return len(s), s[0], s[1]
 
