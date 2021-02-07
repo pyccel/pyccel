@@ -1131,7 +1131,7 @@ class OmpForSimd(BasicStmt):
         """
         """
         self.fname = kwargs.pop('fname')
-        self.sname = kwargs.pop('sname')
+        self.sname = kwargs.pop('sname', None)
 
         super().__init__(**kwargs)
 
@@ -1151,8 +1151,8 @@ class OmpMaskedTaskloop(BasicStmt):
         """
         """
         self.mname = kwargs.pop('mname')
-        self.tname = kwargs.pop('tname')
-        self.sname = kwargs.pop('sname')
+        self.tname = kwargs.pop('tname', None)
+        self.sname = kwargs.pop('sname', None)
 
         super().__init__(**kwargs)
 
