@@ -8,6 +8,7 @@
 from collections     import OrderedDict
 
 from sympy import sympify
+from sympy import Symbol as sp_Symbol
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
 from sympy import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Le as sp_Le, Gt as sp_Gt, Ge as sp_Ge
 from sympy import Integer as sp_Integer
@@ -128,11 +129,11 @@ __all__ = (
 
 #==============================================================================
 local_sympify = {
-    'N'    : Symbol('N'),
-    'S'    : Symbol('S'),
-    'zeros': Symbol('zeros'),
-    'ones' : Symbol('ones'),
-    'Point': Symbol('Point')
+    'N'    : sp_Symbol('N'),
+    'S'    : sp_Symbol('S'),
+    'zeros': sp_Symbol('zeros'),
+    'ones' : sp_Symbol('ones'),
+    'Point': sp_Symbol('Point')
 }
 
 # TODO - add EmptyStmt => empty lines
