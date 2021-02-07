@@ -993,6 +993,8 @@ class SemanticParser(BasicParser):
 
     def _visit_Symbol(self, expr, **settings):
         name = expr
+        if isinstance(name, sp_Symbol):
+            name = name.name
         var = self.check_for_variable(name)
 
         if var is None:
@@ -2297,9 +2299,7 @@ class SemanticParser(BasicParser):
     def _visit_While(self, expr, **settings):
 
         self.create_new_loop_scope()
-        if isinstance(expr.test, sp_Symbol): # Is there another solution to this ?
-            test = Symbol(expr.test.name)
-        test = self._visit(test, **settings)
+        test = self._visit(expr.test, **settings)
         body = self._visit(expr.body, **settings)
         local_vars = list(self.namespace.variables.values())
         self.exit_loop_scope()
