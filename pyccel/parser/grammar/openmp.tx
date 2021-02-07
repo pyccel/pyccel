@@ -66,7 +66,7 @@ OmpTaskyieldConstruct:  name='taskyield';
 //         Combined Constructs
 ////////////////////////////////////////////////////
 
-ParallelCombined: OmpForSimd | OmpMaskedTaskloop | ('sections');
+ParallelCombined: OmpForSimd | OmpMaskedTaskloop | OmpPSections;
 
 ////////////////////////////////////////////////////
 
@@ -76,6 +76,7 @@ ParallelCombined: OmpForSimd | OmpMaskedTaskloop | ('sections');
 
 OmpForSimd: fname='for' sname='simd'?;
 OmpMaskedTaskloop: mname='masked' (tname='taskloop' sname='simd'?)?;
+OmpPSections: sname='sections';
 
 ////////////////////////////////////////////////////
 
@@ -142,7 +143,7 @@ OmpCollapse: 'collapse' '(' n=INT ')';
 OmpLinear: 'linear' '(' val=ID ':' step=INT ')';
 OmpOrdered: 'ordered' ('(' n=INT ')')?;
 OmpSchedule: 'schedule' '(' kind=OmpScheduleKind (',' chunk_size=INT)? ')';
-OmpEndClause: 'end' construct=OpenmpConstructs (simd='simd')? (nowait='nowait')?;
+OmpEndClause: 'end' construct*=OpenmpConstructs (simd='simd')? (nowait='nowait')?;
 OmpCriticalName: '(' args=ID ')';
 OmpFilter: name='filter' '(' n=INT ')';
 OmpPriority: name='priority' '(' n=INT ')';

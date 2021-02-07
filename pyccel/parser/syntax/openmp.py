@@ -124,6 +124,9 @@ class OmpParallelConstruct(BasicStmt):
             if 'taskloop' in self.combined.expr:
                 _valid_clauses = _valid_clauses + _valid_taskloop_clauses
             combined = self.combined.expr
+        if isinstance(self.combined, OmpPSections):
+            _valid_clauses = _valid_clauses + _valid_sections_clauses
+            combined = self.combined.expr
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
@@ -589,7 +592,8 @@ class OmpEndClause(BasicStmt):
         if DEBUG:
             print("> OmpEndClause: expr")
 
-        txt = 'end {0} {1} {2}'.format(self.construct, self.simd, self.nowait)
+        construct = ' '.join(self.construct)
+        txt = 'end {0} {1} {2}'.format(construct, self.simd, self.nowait)
         return Omp_End_Clause(txt)
 
 class OmpNumThread(BasicStmt):
@@ -1164,6 +1168,23 @@ class OmpMaskedTaskloop(BasicStmt):
                 txt = txt + ' ' + self.sname
         return '{}'.format(txt)
 
+class OmpPSections(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.sname = kwargs.pop('sname')
+
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> Combined Sections: expr")
+
+        txt = self.sname
+        return txt
+
 #################################################
 
 #################################################
@@ -1257,7 +1278,8 @@ omp_clauses = [OmpCollapse,
                OmpNumTeams,
                OmpThreadLimit,
                OmpForSimd,
-               OmpMaskedTaskloop]
+               OmpMaskedTaskloop,
+               OmpPSections]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 
