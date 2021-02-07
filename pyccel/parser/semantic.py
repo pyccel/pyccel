@@ -2361,7 +2361,7 @@ class SemanticParser(BasicParser):
                 assigns[-1].set_fst(expr.fst)
 
         assigns = [self._visit_Assign(e) for e in assigns]
-        results = [self._visit_Symbol(i, **settings) for i in return_vars]
+        results = [self._visit(i, **settings) for i in return_vars]
 
         #add the Deallocate node before the Return node
         code = assigns + [Deallocate(i) for i in self._allocs[-1]]
