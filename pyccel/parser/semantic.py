@@ -1499,7 +1499,7 @@ class SemanticParser(BasicParser):
                     errors.report(ASSIGN_ARRAYS_ONE_ANOTHER,
                         bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
-                                severity='error', symbol=lhs.name)
+                                severity='error', symbol=lhs)
 
                 elif not is_augassign and var.is_ndarray and var.is_target:
                     errors.report(ARRAY_ALREADY_IN_USE,
