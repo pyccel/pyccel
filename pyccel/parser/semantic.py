@@ -2751,7 +2751,7 @@ class SemanticParser(BasicParser):
         # TODO - improve the use and def of interfaces
         #      - wouldn't be better if it is done inside ClassDef?
 
-        name = str(expr.name)
+        name = expr.name
         name = name.replace("'", '')
         methods = list(expr.methods)
         parent = expr.parent
