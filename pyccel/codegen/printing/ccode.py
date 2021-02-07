@@ -1456,8 +1456,11 @@ class CCodePrinter(CodePrinter):
             clauses = ' ' + expr.combined
         clauses += str(expr.txt)
         omp_expr   = '#pragma omp parallel{}'.format(clauses)
-        if (expr.combined and "for" not in expr.combined) or expr.combined is None:
+        if expr.combined is None:
             omp_expr += '\n{'
+        elif (expr.combined and "for" not in expr.combined):
+            if "masked taskloop" not in expr.combined:
+                omp_expr += '\n{'
         return omp_expr
 
     def _print_OMP_Single_Construct(self, expr):
