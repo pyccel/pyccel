@@ -2197,7 +2197,7 @@ class SemanticParser(BasicParser):
         # we now calculate the size of the array which will be allocated
 
         for idx in indices:
-            var = self.get_variable(idx.name)
+            var = self.get_variable(idx)
             idx_subs[idx] = var
 
 
