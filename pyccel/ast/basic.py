@@ -193,6 +193,10 @@ class Basic(sp_Basic):
     def user_nodes(self, user_nodes):
         self._user_nodes.append(user_nodes)
 
+    def __eq__(self, other):
+        #TODO: Remove with sympy inheritance
+        return id(self) == id(other)
+
 class PyccelAstNode(Basic):
     """Class from which all nodes containing objects inherit
     """
