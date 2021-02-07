@@ -55,7 +55,7 @@ class Basic(sp_Basic):
             elif c:
                 c.user_nodes = self
 
-    def get_user_nodes(self, search_type):
+    def get_user_nodes(self, search_type, excluded_nodes = ()):
         """ Find out if any of the user nodes are instances
         of the provided object.
 
@@ -63,22 +63,23 @@ class Basic(sp_Basic):
         ----------
         search_type : ClassType or tuple of ClassTypes
                       The types which we are looking for
+        excluded_nodes : tuple of types
+                      Types for which get_user_nodes should not be called
 
         Results
         -------
         Boolean : True if one of the user nodes is an instance of
                   the class in the argument
         """
-        results = []
         if len(self._user_nodes) == 0:
             return []
         else:
             results  = [p for p in self._user_nodes if isinstance(p, search_type)]
-            results += [r for p in self._user_nodes if not isinstance(p, search_type) \
+            results += [r for p in self._user_nodes if not isinstance(p, (search_type, *excluded_nodes)) \
                     for r in p.get_user_nodes(search_type)]
             return results
 
-    def get_attribute_nodes(self, search_type):
+    def get_attribute_nodes(self, search_type, excluded_nodes = ()):
         """ Returns all objects of the requested type
         in the current object
 
@@ -86,6 +87,8 @@ class Basic(sp_Basic):
         ----------
         search_type : ClassType or tuple of ClassTypes
                       The types which we are looking for
+        excluded_nodes : tuple of types
+                      Types for which get_attribute_nodes should not be called
 
         Results
         -------
@@ -103,10 +106,10 @@ class Basic(sp_Basic):
                     if isinstance(vi, search_type):
                         results.append(vi)
 
-                    if vi is not None:
+                    elif vi is not None and not isinstance(vi, excluded_nodes):
                         results.extend(vi.get_attribute_nodes(search_type))
 
-            elif v is not None:
+            elif v is not None and not isinstance(vi, excluded_nodes):
                 results.extend(v.get_attribute_nodes(search_type))
 
         return results
