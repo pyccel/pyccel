@@ -2154,7 +2154,7 @@ class SemanticParser(BasicParser):
             var   = body.target
             a     = self._visit(body.iterable, **settings)
             if isinstance(a, PythonRange):
-                var   = Variable('int', var.name)
+                var   = Variable('int', var)
                 stop  = a.stop
                 start = a.start
                 step  = a.step
