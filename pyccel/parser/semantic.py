@@ -1554,9 +1554,9 @@ class SemanticParser(BasicParser):
 
                         else:
                             previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
-                            if previous_allocations[-1].get_user_nodes_of_type((If, For, While)):
+                            if previous_allocations[-1].get_user_nodes((If, For, While)):
                                 status='unknown'
-                            elif previous_allocations[-1].get_user_nodes_of_type(IfSection):
+                            elif previous_allocations[-1].get_user_nodes(IfSection):
                                 status = previous_allocations[-1].status
                             else:
                                 status='allocated'

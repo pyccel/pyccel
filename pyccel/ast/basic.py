@@ -55,7 +55,7 @@ class Basic(sp_Basic):
             elif c:
                 c.user_nodes = self
 
-    def get_user_nodes_of_type(self, search_type):
+    def get_user_nodes(self, search_type):
         """ Find out if any of the user nodes are instances
         of the provided object.
 
@@ -74,7 +74,8 @@ class Basic(sp_Basic):
             return []
         else:
             results  = [p for p in self._user_nodes if isinstance(p, search_type)]
-            results += [r for p in self._user_nodes for r in p.get_user_nodes_of_type(search_type)]
+            results += [r for p in self._user_nodes if not isinstance(p, search_type) \
+                    for r in p.get_user_nodes(search_type)]
             return results
 
     def get_attribute_nodes(self, search_type):
