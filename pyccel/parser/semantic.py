@@ -2374,7 +2374,7 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionDef(self, expr, **settings):
 
-        name            = str(expr.name)
+        name            = expr.name
         name            = name.replace("'", '')
         cls_name        = expr.cls_name
         decorators      = expr.decorators
