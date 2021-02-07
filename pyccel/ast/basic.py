@@ -197,6 +197,10 @@ class Basic(sp_Basic):
         #TODO: Remove with sympy inheritance
         return id(self) == id(other)
 
+    def __hash__(self):
+        #TODO: Remove with sympy inheritance
+        return id(self)
+
 class PyccelAstNode(Basic):
     """Class from which all nodes containing objects inherit
     """
