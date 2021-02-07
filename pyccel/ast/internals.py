@@ -84,6 +84,8 @@ class PyccelArraySize(PyccelInternalFunction):
     def __eq__(self, other):
         if isinstance(other, PyccelArraySize):
             return self.arg == other.arg and self.index == other.index
+        else:
+            return False
 
 class Slice(Basic):
 
