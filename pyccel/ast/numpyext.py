@@ -7,8 +7,7 @@
 
 import numpy
 
-from sympy           import (Integer as sp_Integer,
-                             Rational as sp_Rational, Expr)
+from sympy           import Expr
 
 from .core           import (ClassDef, FunctionDef,
                             process_shape, ValuedArgument)
@@ -437,7 +436,7 @@ class NumpyLinspace(NumpyNewArray):
 
 
         _valid_args = (Variable, IndexedElement, LiteralFloat,
-                       sp_Integer, sp_Rational)
+                       LiteralInteger)
 
         for arg in (start, stop, size):
             if not isinstance(arg, _valid_args):
