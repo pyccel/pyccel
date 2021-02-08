@@ -103,12 +103,10 @@ __all__ = (
 #    'allocatable_like',
     'create_variable',
     'create_incremented_string',
-#    'float2int',
     'get_assigned_symbols',
     'get_initial_value',
     'get_iterable_ranges',
     'inline',
-    'int2float',
 #    'operator',
 #    'op_registry',
     'process_shape',
@@ -318,13 +316,6 @@ def inline(func, args):
     body = func.body
     body = subs(body, zip(func.arguments, args))
     return Block(str(func.name), local_vars, body)
-
-
-def int2float(expr):
-    return expr
-
-def float2int(expr):
-    return expr
 
 def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
     """This function takes a prefix and a counter and uses them to construct
