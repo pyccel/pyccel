@@ -109,7 +109,6 @@ __all__ = (
     'get_iterable_ranges',
     'inline',
     'int2float',
-#    'is_simple_assign',
 #    'operator',
 #    'op_registry',
     'process_shape',
@@ -3424,19 +3423,6 @@ class StarredArguments(Basic):
     @property
     def args_var(self):
         return self._starred_obj
-
-
-def is_simple_assign(expr):
-    if not isinstance(expr, Assign):
-        return False
-
-    assignable = [Variable, IndexedElement]
-    assignable += [sp_Integer, sp_Float]
-    assignable = tuple(assignable)
-    if isinstance(expr.rhs, assignable):
-        return True
-    else:
-        return False
 
 
 # ...
