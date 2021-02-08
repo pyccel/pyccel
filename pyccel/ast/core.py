@@ -108,7 +108,6 @@ __all__ = (
 #    'allocatable_like',
     'create_variable',
     'create_incremented_string',
-    'extract_subexpressions',
 #    'float2int',
     'get_assigned_symbols',
     'get_initial_value',
@@ -287,85 +286,6 @@ def _atomic(e, cls=None,ignore=()):
             atoms_.append(p)
 
     return atoms_
-
-
-
-def extract_subexpressions(expr):
-    """this function takes an expression and returns a list
-      of statements if this expression contains sub expressions that need
-      to be evaluated outside of the expression
-
-
-      Parameters
-      ----------
-      expr : Add, Mul, Pow, FunctionCall
-
-    """
-
-    stmts = []
-    cls   = (sp_Add, sp_Mul, sp_Pow, sp_And,
-             sp_Or, sp_Eq, sp_Ne, sp_Lt, sp_Gt,
-             sp_Le, sp_Ge)
-
-    id_cls = (Symbol, IndexedElement,
-              DottedVariable, sp_Float, sp_Integer,
-              sp_Rational, LiteralImaginaryUnit,sp_Boolean,
-              LiteralTrue, LiteralFalse, LiteralString,
-              ValuedArgument, Nil, PythonList, PythonTuple,
-              StarredArguments)
-
-    func_names = ('diag', 'empty', 'zip', 'enumerate')
-    #TODO put only imported functions
-    def substitute(expr):
-        if isinstance(expr, id_cls):
-            return expr
-        if isinstance(expr, cls):
-            args = expr.args
-            args = [substitute(arg) for arg in args]
-            return expr.func(*args, evaluate=False)
-        elif isinstance(expr, FunctionCall):
-            args = substitute(expr.args)
-
-            if str(expr.func) in func_names:
-                var = create_variable(expr)
-                expr = expr.func(*args, evaluate=False)
-                expr = Assign(var, expr)
-                stmts.append(expr)
-
-                return var
-            else:
-                expr = expr.func(*args, evaluate=False)
-                return expr
-        elif isinstance(expr, GC):
-            stmts.append(expr)
-            return expr.lhs
-        elif isinstance(expr,IfTernaryOperator):
-            var = create_variable(expr)
-            new = Assign(var, expr)
-            new.set_fst(expr.fst)
-            stmts.append(new)
-            return var
-        elif isinstance(expr, PythonList):
-            args = []
-            for i in expr:
-                args.append(substitute(i))
-
-            return PythonList(*args)
-
-        elif isinstance(expr, (tuple, list)):
-            args = []
-
-            for i in expr:
-                args.append(substitute(i))
-            return args
-
-        else:
-            raise TypeError('statement {} not supported yet'.format(type(expr)))
-
-
-    new_expr  = substitute(expr)
-    return stmts, new_expr
-
 
 
 #def collect_vars(ast):
