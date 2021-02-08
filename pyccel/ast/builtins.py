@@ -44,11 +44,11 @@ __all__ = (
 #==============================================================================
 # TODO [YG, 06.03.2020]: avoid core duplication between builtins and core
 local_sympify = {
-    'N'    : Symbol('N'),
-    'S'    : Symbol('S'),
-    'zeros': Symbol('zeros'),
-    'ones' : Symbol('ones'),
-    'Point': Symbol('Point')
+    'N'    : PyccelSymbol('N'),
+    'S'    : PyccelSymbol('S'),
+    'zeros': PyccelSymbol('zeros'),
+    'ones' : PyccelSymbol('ones'),
+    'Point': PyccelSymbol('Point')
 }
 
 #==============================================================================
