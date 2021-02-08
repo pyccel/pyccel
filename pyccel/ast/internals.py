@@ -183,7 +183,6 @@ class PyccelSymbol(str):
     >>> x = PyccelSymbol('x')
     x
     """
-    pass
 
 def symbols(names):
     """

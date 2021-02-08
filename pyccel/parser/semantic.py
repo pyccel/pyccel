@@ -991,8 +991,7 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelSymbol(self, expr, **settings):
         name = expr
-        if isinstance(name, sp_Symbol):
-            name = name.name
+
         var = self.check_for_variable(name)
 
         if var is None:
