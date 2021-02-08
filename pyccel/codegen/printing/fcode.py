@@ -1893,8 +1893,11 @@ class FCodePrinter(CodePrinter):
         return omp_expr
 
     def _print_OMP_Masked_Construct(self, expr):
-        omp_expr = str(expr.txt)
-        omp_expr = '!$omp {}\n'.format(omp_expr)
+        clauses = ''
+        if expr.combined:
+            clauses = ' ' + expr.combined
+        clauses += str(expr.txt)
+        omp_expr = '!$omp masked{}\n'.format(clauses)
         return omp_expr
 
     def _print_OMP_Cancel_Construct(self, expr):

@@ -45,7 +45,7 @@ OmpLoopConstruct:       'for'             clauses*=AllOmpClauses;
 OmpTaskLoopConstruct:   name='taskloop'   clauses*=AllOmpClauses;
 OmpSingleConstruct:     name='single'     clauses*=AllOmpClauses;
 OmpCriticalConstruct:   name='critical'   clauses*=AllOmpClauses;
-OmpMaskedConstruct:     name='masked'     clauses*=AllOmpClauses;
+OmpMaskedConstruct:     name='masked'     combined=MaskedCombined? clauses*=AllOmpClauses;
 OmpSimdConstruct:       name='simd'       clauses*=AllOmpClauses;
 OmpAtomicConstruct:     name='atomic'     clauses*=AllOmpClauses; // Not all clause were added (cant test them).
 OmpTaskConstruct:       name='task'       clauses*=AllOmpClauses;
@@ -67,7 +67,7 @@ OmpTaskyieldConstruct:  name='taskyield';
 ////////////////////////////////////////////////////
 
 ParallelCombined: OmpForSimd | OmpMaskedTaskloop | OmpPSections;
-
+MaskedCombined: OmpTaskloopSimd;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -77,6 +77,7 @@ ParallelCombined: OmpForSimd | OmpMaskedTaskloop | OmpPSections;
 OmpForSimd: fname='for' sname='simd'?;
 OmpMaskedTaskloop: mname='masked' (tname='taskloop' sname='simd'?)?;
 OmpPSections: sname='sections';
+OmpTaskloopSimd: tname='taskloop' sname='simd'?;
 
 ////////////////////////////////////////////////////
 

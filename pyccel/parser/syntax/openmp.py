@@ -311,9 +311,9 @@ class OmpMasterConstruct(BasicStmt):
 class OmpMaskedConstruct(BasicStmt):
     """Class representing the Masked construct."""
     def __init__(self, **kwargs):
-        self.name = kwargs.pop('name')
-        self.clauses = kwargs.pop('clauses')
-
+        self.name     = kwargs.pop('name')
+        self.combined = kwargs.pop('combined', None)
+        self.clauses  = kwargs.pop('clauses')
         super().__init__(**kwargs)
 
     @property
@@ -321,16 +321,22 @@ class OmpMaskedConstruct(BasicStmt):
         if DEBUG:
             print("> OmpMaskedConstruct: expr")
 
-        _valid_clauses = (OmpFilter)
-
-        txt = self.name
+        _valid_clauses = (OmpFilter,)
+        
+        combined = None
+        if isinstance(self.combined, OmpTaskloopSimd):
+            combined = self.combined.expr
+            if 'simd' in self.combined.expr:
+                _valid_clauses = _valid_clauses + _valid_simd_clauses
+            _valid_clauses = _valid_clauses + _valid_taskloop_clauses
+        txt = ''
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpMaskedConstruct')
-
-        return OMP_Masked_Construct(txt)
+        
+        return OMP_Masked_Construct(txt, combined)
 
 class OmpSectionsConstruct(BasicStmt):
     """Class representing a Sections stmt."""
@@ -1185,6 +1191,26 @@ class OmpPSections(BasicStmt):
         txt = self.sname
         return txt
 
+class OmpTaskloopSimd(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.tname = kwargs.pop('tname')
+        self.sname = kwargs.pop('sname', None)
+
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> Combined Taskloop Simd: expr")
+
+        txt = self.tname
+        if self.sname:
+            txt += ' ' + self.sname
+        return txt
+
 #################################################
 
 #################################################
@@ -1279,7 +1305,8 @@ omp_clauses = [OmpCollapse,
                OmpThreadLimit,
                OmpForSimd,
                OmpMaskedTaskloop,
-               OmpPSections]
+               OmpPSections,
+               OmpTaskloopSimd]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 
