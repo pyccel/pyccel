@@ -1567,7 +1567,7 @@ class ValuedArgument(Basic):
         else:
             raise TypeError('Expecting an argument')
 
-        if isinstance(value, (bool, int, float, complex, str)):
+        if isinstance(value, (bool, int, float, complex, str)) and not isinstance(value, PyccelSymbol):
             value = convert_to_literal(value)
         elif not isinstance(value, (Basic, PyccelSymbol)):
             raise TypeError("Expecting a pyccel object not {}".format(type(value)))
