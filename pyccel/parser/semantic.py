@@ -97,8 +97,6 @@ from pyccel.errors.errors import PyccelSemanticError
 
 # TODO - remove import * and only import what we need
 #      - use OrderedDict whenever it is possible
-# TODO move or delete extract_subexpressions when we introduce
-#   Functional programming
 from pyccel.errors.messages import *
 
 from pyccel.parser.base      import BasicParser, Scope
@@ -1162,10 +1160,6 @@ class SemanticParser(BasicParser):
             severity='fatal', blocker=True)
 
     def _visit_PyccelOperator(self, expr, **settings):
-        #stmts, expr = extract_subexpressions(expr)
-        #stmts = []
-        #if stmts:
-        #    stmts = [self._visit(i, **settings) for i in stmts]
         args     = [self._visit(a, **settings) for a in expr.args]
         try:
             expr_new = expr.func(*args)

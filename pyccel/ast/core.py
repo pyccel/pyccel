@@ -7,12 +7,7 @@
 
 from collections     import OrderedDict
 
-from sympy import sympify
-from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
-from sympy import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Le as sp_Le, Gt as sp_Gt, Ge as sp_Ge
 from sympy import Integral, Symbol
-from sympy import Integer as sp_Integer
-from sympy import Float as sp_Float, Rational as sp_Rational
 from sympy import preorder_traversal
 
 from sympy.simplify.radsimp   import fraction
@@ -20,9 +15,8 @@ from sympy.core.compatibility import with_metaclass
 from sympy.core.singleton     import Singleton, S
 from sympy.core.function      import Derivative
 from sympy.core.function      import _coeff_isneg
-from sympy.core.expr          import Expr, AtomicExpr
-from sympy.logic.boolalg      import And as sp_And, Or as sp_Or
-from sympy.logic.boolalg      import Boolean as sp_Boolean
+from sympy.core.expr          import Expr
+from sympy.logic.boolalg      import And as sp_And
 
 from sympy.utilities.iterables          import iterable
 
@@ -31,20 +25,18 @@ from pyccel.errors.errors import Errors
 from pyccel.errors.messages import RECURSIVE_RESULTS_REQUIRED
 
 from .basic     import Basic, PyccelAstNode
-from .builtins  import (PythonEnumerate, PythonLen, PythonList, PythonMap,
-                        PythonRange, PythonZip, PythonTuple, PythonBool, Lambda)
+from .builtins  import (PythonEnumerate, PythonLen, PythonMap,
+                        PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeBool, NativeRange,
                         NativeTuple, is_iterable_datatype, str_dtype)
 from .internals      import Slice
 
-from .literals       import LiteralTrue, LiteralFalse, LiteralInteger, Nil
-from .literals       import LiteralImaginaryUnit, LiteralString
+from .literals       import LiteralInteger, Nil, convert_to_literal
 from .itertoolsext   import Product
-from .functionalexpr import GeneratorComprehension as GC
 from .functionalexpr import FunctionalFor
 
-from .operators import PyccelMul, IfTernaryOperator, Relational
+from .operators import PyccelMul, Relational
 
 from .variable import DottedName, DottedVariable, IndexedElement
 from .variable import ValuedVariable, Variable
@@ -109,15 +101,10 @@ __all__ = (
 #    'allocatable_like',
     'create_variable',
     'create_incremented_string',
-    'extract_subexpressions',
-#    'float2int',
     'get_assigned_symbols',
     'get_initial_value',
     'get_iterable_ranges',
     'inline',
-    'int2float',
-#    'is_simple_assign',
-    'local_sympify',
 #    'operator',
 #    'op_registry',
     'process_shape',
@@ -129,13 +116,6 @@ __all__ = (
 )
 
 #==============================================================================
-local_sympify = {
-    'N'    : Symbol('N'),
-    'S'    : Symbol('S'),
-    'zeros': Symbol('zeros'),
-    'ones' : Symbol('ones'),
-    'Point': Symbol('Point')
-}
 
 # TODO - add EmptyStmt => empty lines
 #      - update code examples
@@ -150,7 +130,7 @@ def apply(func, args, kwargs):return func(*args, **kwargs)
 #==============================================================================
 def subs(expr, new_elements):
     """
-    Substitutes old for new in an expression after sympifying args.
+    Substitutes old for new in an expression.
 
     Parameters
     ----------
@@ -298,85 +278,6 @@ def _atomic(e, cls=None,ignore=()):
     return atoms_
 
 
-
-def extract_subexpressions(expr):
-    """this function takes an expression and returns a list
-      of statements if this expression contains sub expressions that need
-      to be evaluated outside of the expression
-
-
-      Parameters
-      ----------
-      expr : Add, Mul, Pow, FunctionCall
-
-    """
-
-    stmts = []
-    cls   = (sp_Add, sp_Mul, sp_Pow, sp_And,
-             sp_Or, sp_Eq, sp_Ne, sp_Lt, sp_Gt,
-             sp_Le, sp_Ge)
-
-    id_cls = (Symbol, IndexedElement,
-              DottedVariable, sp_Float, sp_Integer,
-              sp_Rational, LiteralImaginaryUnit,sp_Boolean,
-              LiteralTrue, LiteralFalse, LiteralString,
-              ValuedArgument, Nil, PythonList, PythonTuple,
-              StarredArguments)
-
-    func_names = ('diag', 'empty', 'zip', 'enumerate')
-    #TODO put only imported functions
-    def substitute(expr):
-        if isinstance(expr, id_cls):
-            return expr
-        if isinstance(expr, cls):
-            args = expr.args
-            args = [substitute(arg) for arg in args]
-            return expr.func(*args, evaluate=False)
-        elif isinstance(expr, FunctionCall):
-            args = substitute(expr.args)
-
-            if str(expr.func) in func_names:
-                var = create_variable(expr)
-                expr = expr.func(*args, evaluate=False)
-                expr = Assign(var, expr)
-                stmts.append(expr)
-
-                return var
-            else:
-                expr = expr.func(*args, evaluate=False)
-                return expr
-        elif isinstance(expr, GC):
-            stmts.append(expr)
-            return expr.lhs
-        elif isinstance(expr,IfTernaryOperator):
-            var = create_variable(expr)
-            new = Assign(var, expr)
-            new.set_fst(expr.fst)
-            stmts.append(new)
-            return var
-        elif isinstance(expr, PythonList):
-            args = []
-            for i in expr:
-                args.append(substitute(i))
-
-            return PythonList(*args, sympify=False)
-
-        elif isinstance(expr, (tuple, list)):
-            args = []
-
-            for i in expr:
-                args.append(substitute(i))
-            return args
-
-        else:
-            raise TypeError('statement {} not supported yet'.format(type(expr)))
-
-
-    new_expr  = substitute(expr)
-    return stmts, new_expr
-
-
-
 #def collect_vars(ast):
 #    """ collect variables in order to be declared"""
 #    #TODO use the namespace to get the declared variables
@@ -413,13 +314,6 @@ def inline(func, args):
     body = func.body
     body = subs(body, zip(func.arguments, args))
     return Block(str(func.name), local_vars, body)
-
-
-def int2float(expr):
-    return expr
-
-def float2int(expr):
-    return expr
 
 def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
     """This function takes a prefix and a counter and uses them to construct
@@ -1090,14 +984,13 @@ class While(Basic):
     """
 
     def __init__(self, test, body, local_vars=()):
-        test = sympify(test, locals=local_sympify)
 
         if PyccelAstNode.stage == 'semantic':
             if test.dtype is not NativeBool():
                 test = PythonBool(test)
 
         if iterable(body):
-            body = CodeBlock((sympify(i, locals=local_sympify) for i in body))
+            body = CodeBlock(body)
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable or a CodeBlock')
 
@@ -1146,10 +1039,9 @@ class With(Basic):
         test,
         body,
         ):
-        test = sympify(test, locals=local_sympify)
 
         if iterable(body):
-            body = CodeBlock((sympify(i, locals=local_sympify) for i in body))
+            body = CodeBlock(body)
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable')
 
@@ -1747,6 +1639,14 @@ class ValuedArgument(Basic):
 
         if not isinstance(expr, (Symbol, Argument)):
             raise TypeError('Expecting an argument')
+
+        if isinstance(value, (bool, int, float, complex, str)):
+            value = convert_to_literal(value)
+        elif not isinstance(value, (Basic, Symbol)):
+            raise TypeError("Expecting a pyccel object not {}".format(type(value)))
+
+        if not isinstance(kwonly, bool):
+            raise TypeError("kwonly must be a bool")
 
         self._expr   = expr
         self._value  = value
@@ -3522,19 +3422,6 @@ class StarredArguments(Basic):
         return self._starred_obj
 
 
-def is_simple_assign(expr):
-    if not isinstance(expr, Assign):
-        return False
-
-    assignable = [Variable, IndexedElement]
-    assignable += [sp_Integer, sp_Float]
-    assignable = tuple(assignable)
-    if isinstance(expr.rhs, assignable):
-        return True
-    else:
-        return False
-
-
 # ...
 
 # ...
@@ -3998,11 +3885,9 @@ def process_shape(shape):
     for s in shape:
         if isinstance(s,(LiteralInteger, Variable, Slice, PyccelAstNode, FunctionCall)):
             new_shape.append(s)
-        elif isinstance(s, sp_Integer):
-            new_shape.append(LiteralInteger(s.p))
         elif isinstance(s, int):
             new_shape.append(LiteralInteger(s))
         else:
-            raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel), Variable, Slice, PyccelAstNode, Integer(sympy), int, FunctionCall')
+            raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger, Variable, Slice, PyccelAstNode, int, FunctionCall')
     return tuple(new_shape)
 

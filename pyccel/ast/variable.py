@@ -226,8 +226,8 @@ class Variable(Symbol, PyccelAstNode):
             elif s is None or isinstance(s, PyccelAstNode):
                 new_shape.append(PyccelArraySize(self, LiteralInteger(i)))
             else:
-                raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: Integer(pyccel),'
-                                'Variable, Slice, PyccelAstNode, Integer(sympy), int, Function')
+                raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger,'
+                                'Variable, Slice, PyccelAstNode, int, Function')
         return tuple(new_shape)
 
     @property

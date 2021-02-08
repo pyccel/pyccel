@@ -44,16 +44,6 @@ __all__ = (
 )
 
 #==============================================================================
-# TODO [YG, 06.03.2020]: avoid core duplication between builtins and core
-local_sympify = {
-    'N'    : Symbol('N'),
-    'S'    : Symbol('S'),
-    'zeros': Symbol('zeros'),
-    'ones' : Symbol('ones'),
-    'Point': Symbol('Point')
-}
-
-#==============================================================================
 class PythonComplexProperty(PyccelInternalFunction):
     """Represents a call to the .real or .imag property
 
