@@ -92,7 +92,9 @@ class PythonReal(PythonComplexProperty):
     arg : Variable, Literal
     """
     def __new__(cls, arg):
-        if arg.dtype is not NativeComplex():
+        if isinstance(arg.dtype, NativeBool):
+            return PythonInt(arg)
+        elif arg.dtype is not NativeComplex():
             return arg
         else:
             return super().__new__(cls, arg)

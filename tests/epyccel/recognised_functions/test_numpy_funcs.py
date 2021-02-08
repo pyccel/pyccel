@@ -3549,6 +3549,9 @@ def test_numpy_real_scalar(language):
     f_bl = epyccel(test_bool, language=language)
     assert (f_bl(True) == test_bool(True))
     assert (f_bl(False) == test_bool(False))
+    # ensuring that we calculate the result type correctly for numpy bloo convertions.
+    assert (type(f_bl(False)) == type(test_bool(False)))
+    assert (type(f_bl(True)) == type(test_bool(True)))
 
     f_integer = epyccel(test_int, language=language)
     # int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722
@@ -3558,6 +3561,8 @@ def test_numpy_real_scalar(language):
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer(integer) == test_int(integer))
+    # ensuring that we calculate the result type correctly for numpy int convertions.
+    assert (type(f_integer(integer)) == type(test_int(integer)))
     # int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722
     assert (f_integer8(integer8) == test_int8(integer8))
     assert (f_integer16(integer16) == test_int16(integer16))
@@ -3603,19 +3608,19 @@ def test_numpy_real_array_like_1d(language):
         s = shape(a)
         return len(s), s[0], a[0]
 
-    def test_int8():
-        from numpy import real, shape, array, int8
-        arr = array([4,5,6,2,1], int8)
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+    # def test_int8():
+    #     from numpy import real, shape, array, int8
+    #     arr = array([4,5,6,2,1], int8)
+    #     a = real(arr)
+    #     s = shape(a)
+    #     return len(s), s[0], a[0]
 
-    def test_int16():
-        from numpy import real, shape, array, int16
-        arr = array([4,5,6,2,1], int16)
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+    # def test_int16():
+    #     from numpy import real, shape, array, int16
+    #     arr = array([4,5,6,2,1], int16)
+    #     a = real(arr)
+    #     s = shape(a)
+    #     return len(s), s[0], a[0]
 
     def test_int32():
         from numpy import real, shape, array, int32
@@ -3722,19 +3727,19 @@ def test_numpy_real_array_like_2d(language):
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_int8():
-        from numpy import real, shape, array, int8
-        arr = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
+    # def test_int8():
+    #     from numpy import real, shape, array, int8
+    #     arr = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
+    #     a = real(arr)
+    #     s = shape(a)
+    #     return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_int16():
-        from numpy import real, shape, array, int16
-        arr = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
+    # def test_int16():
+    #     from numpy import real, shape, array, int16
+    #     arr = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
+    #     a = real(arr)
+    #     s = shape(a)
+    #     return len(s), s[0], s[1], a[0,1], a[1,0]
 
     def test_int32():
         from numpy import real, shape, array, int32
