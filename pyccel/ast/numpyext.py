@@ -89,6 +89,75 @@ __all__ = (
     'NumpyArange'
 )
 
+#=======================================================================================
+class NumpyComplex(PythonComplex):
+    """ Represents a call to numpy.complex() function.
+    """
+
+class NumpyComplex64(NumpyComplex):
+    _precision = dtype_registry['complex64'][1]
+
+class NumpyComplex128(NumpyComplex):
+    _precision = dtype_registry['complex128'][1]
+
+#=======================================================================================
+class NumpyFloat(PythonFloat):
+    """ Represents a call to numpy.float() function.
+    """
+
+class NumpyFloat32(NumpyFloat):
+    """ Represents a call to numpy.float32() function.
+    """
+    _precision = dtype_registry['float32'][1]
+
+class NumpyFloat64(NumpyFloat):
+    """ Represents a call to numpy.float64() function.
+    """
+    _precision = dtype_registry['float64'][1]
+
+#=======================================================================================
+# TODO [YG, 13.03.2020]: handle case where base != 10
+class NumpyInt(PythonInt):
+    """ Represents a call to numpy.int() function.
+    """
+    def __new__(cls, arg=None, base=10):
+        return PythonInt.__new__(cls, arg)
+
+class NumpyInt32(NumpyInt):
+    """ Represents a call to numpy.int32() function.
+    """
+    _precision = dtype_registry['int32'][1]
+
+class NumpyInt64(NumpyInt):
+    """ Represents a call to numpy.int64() function.
+    """
+    _precision = dtype_registry['int64'][1]
+
+#==============================================================================
+class NumpyReal(PythonReal):
+    """Represents a call to  numpy.real for code generation.
+
+    > a = 1+2j
+    > np.real(a)
+    1.0
+    """
+
+#==============================================================================
+DtypePrecisionToCastFunction = {
+    'Int' : {
+        4 : NumpyInt32,
+        8 : NumpyInt64},
+    'Real' : {
+        4 : NumpyFloat32,
+        8 : NumpyFloat64},
+    'Complex' : {
+        4 : NumpyComplex64,
+        8 : PythonComplex,
+        16 : NumpyComplex128,},
+    'Bool':  {
+        4 : PythonBool}
+}
+
 #==============================================================================
 numpy_constants = {
     'pi': Constant('real', 'pi', value=numpy.pi),
@@ -115,7 +184,7 @@ class NumpyNewArray(PyccelAstNode):
     @staticmethod
     def _process_order(order):
 
-        if (order is None) or isinstance(order, Nil):
+        if not order:
             return None
 
         order = str(order).strip('\'"')
@@ -344,15 +413,6 @@ def Shape(arg):
         return PythonTuple(*arg.shape)
 
 #==============================================================================
-class NumpyReal(PythonReal):
-    """Represents a call to  numpy.real for code generation.
-
-    > a = 1+2j
-    > np.real(a)
-    1.0
-    """
-
-#==============================================================================
 class NumpyImag(PythonImag):
     """Represents a call to  numpy.real for code generation.
 
@@ -493,6 +553,7 @@ class NumpyRandint(PyccelInternalFunction):
         return self._low
 
 #==============================================================================
+
 class NumpyFull(PyccelInternalFunction, NumpyNewArray):
     """
     Represents a call to numpy.full for code generation.
@@ -522,7 +583,7 @@ class NumpyFull(PyccelInternalFunction, NumpyNewArray):
 
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
-        if (dtype is None) or isinstance(dtype, Nil):
+        if not dtype:
             dtype = fill_value.dtype
 
         # Verify dtype and get precision
@@ -532,12 +593,8 @@ class NumpyFull(PyccelInternalFunction, NumpyNewArray):
         order = NumpyNewArray._process_order(order)
 
         # Cast fill_value to correct type
-        # TODO [YG, 09.11.2020]: treat difficult case of LiteralComplex
-        from pyccel.ast.datatypes import str_dtype
-        stype = str_dtype(dtype)
-        if fill_value and stype != 'complex':
-            from pyccel.codegen.printing.fcode import python_builtin_datatypes
-            cast_func  = python_builtin_datatypes[stype]
+        if fill_value and not isinstance(fill_value, Nil):
+            cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
             fill_value = cast_func(fill_value)
         self._shape = shape
         self._rank  = len(self._shape)
@@ -559,7 +616,7 @@ class NumpyAutoFill(NumpyFull):
         the fill_value is implicitly specified
     """
     def __init__(self, shape, dtype='float', order='C'):
-        if (dtype is None) or isinstance(dtype, Nil):
+        if not dtype:
             raise TypeError("Data type must be provided")
 
         super().__init__(shape, Nil(), dtype, order)
@@ -618,7 +675,7 @@ class NumpyFullLike:
     def __new__(cls, a, fill_value, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
+        dtype = dtype or a.dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
         return NumpyFull(shape, fill_value, dtype, order)
@@ -630,7 +687,7 @@ class NumpyEmptyLike:
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
+        dtype = dtype or a.dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
 
@@ -643,7 +700,7 @@ class NumpyOnesLike:
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
+        dtype = dtype or a.dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
 
@@ -656,7 +713,7 @@ class NumpyZerosLike:
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
-        dtype = a.dtype if (dtype is None) or isinstance(dtype, Nil) else dtype
+        dtype = dtype or a.dtype
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = Shape(a) if shape is None else shape
 
@@ -840,49 +897,6 @@ class NumpyMax(NumpyUfuncUnary):
 
 
 #=======================================================================================
-class NumpyComplex(PythonComplex):
-    """ Represents a call to numpy.complex() function.
-    """
-
-class NumpyComplex64(NumpyComplex):
-    _precision = dtype_registry['complex64'][1]
-
-class NumpyComplex128(NumpyComplex):
-    _precision = dtype_registry['complex128'][1]
-
-#=======================================================================================
-class NumpyFloat(PythonFloat):
-    """ Represents a call to numpy.float() function.
-    """
-
-class NumpyFloat32(NumpyFloat):
-    """ Represents a call to numpy.float32() function.
-    """
-    _precision = dtype_registry['float32'][1]
-
-class NumpyFloat64(NumpyFloat):
-    """ Represents a call to numpy.float64() function.
-    """
-    _precision = dtype_registry['float64'][1]
-
-#=======================================================================================
-# TODO [YG, 13.03.2020]: handle case where base != 10
-class NumpyInt(PythonInt):
-    """ Represents a call to numpy.int() function.
-    """
-    def __new__(cls, arg=None, base=10):
-        return PythonInt.__new__(cls, arg)
-
-class NumpyInt32(NumpyInt):
-    """ Represents a call to numpy.int32() function.
-    """
-    _precision = dtype_registry['int32'][1]
-
-class NumpyInt64(NumpyInt):
-    """ Represents a call to numpy.int64() function.
-    """
-    _precision = dtype_registry['int64'][1]
-
 
 
 NumpyArrayClass = ClassDef('numpy.ndarray',
