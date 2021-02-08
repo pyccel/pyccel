@@ -159,6 +159,9 @@ class Variable(PyccelAstNode):
             else:
                 name = DottedName(*name)
 
+        if name == '':
+            raise ValueError("Variable name can't be empty")
+
         if not isinstance(name, (str, DottedName)):
             raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
         self._name = name
@@ -413,9 +416,10 @@ class Variable(PyccelAstNode):
         return cls(**new_kwargs)
 
     def rename(self, newname):
-        """Change variable name."""
-
-        self._name = newname
+        """ Forbidden method for renaming the variable
+        """
+        # The name is part of the hash so it must never change
+        raise RuntimeError('Cannot modify hash definition')
 
     def __reduce_ex__(self, i):
         """ Used by pickle to create an object of this class.
@@ -480,6 +484,7 @@ class DottedName(Basic):
     """
 
     def __init__(self, *args):
+
         self._name = args
         super().__init__()
 

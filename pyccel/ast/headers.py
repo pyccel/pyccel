@@ -12,7 +12,7 @@ from ..errors.messages import TEMPLATE_IN_UNIONTYPE
 from .core import Basic
 from .core import ValuedArgument
 from .core import FunctionDef, Interface, FunctionAddress
-from .core import local_sympify
+from .core import local_sympify, create_incremented_string
 from .datatypes import datatype, DataTypeFactory, UnionType
 from .macros import Macro, MacroShape, construct_macro
 from .variable import DottedName, DottedVariable
@@ -271,6 +271,7 @@ class FunctionHeader(Header):
         body      = []
         cls_name  = None
         is_static = self.is_static
+        used_names = set(name)
         imports   = []
         funcs = []
         dtypes = []
@@ -342,11 +343,15 @@ class FunctionHeader(Header):
                 if (d['is_func']):
                     decs = []
                     results = []
+                    _count = 0
                     for dc in d['decs']:
-                        var = build_argument('', dc)
+                        _name, _count = create_incremented_string(used_names, 'in_', _count)
+                        var = build_argument(_name, dc)
                         decs.append(var)
+                    _count = 0
                     for dc in d['results']:
-                        var = build_argument('', dc)
+                        _name, _count = create_incremented_string(used_names, 'out_', _count)
+                        var = build_argument(_name, dc)
                         results.append(var)
                     arg_name = 'arg_{0}'.format(str(i))
                     arg = FunctionAddress(arg_name, decs, results, [])

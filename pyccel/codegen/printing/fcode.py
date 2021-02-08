@@ -1544,13 +1544,6 @@ class FCodePrinter(CodePrinter):
         out_args = []
         args_decs = OrderedDict()
 
-        for j, i in enumerate(expr.results):
-            if not i.name:
-                i.rename('out_{}'.format(j))
-        for j, i in enumerate(expr.arguments):
-            if not i.name:
-                i.rename('in_{}'.format(j))
-
         func_end  = ''
         rec = 'recursive' if expr.is_recursive else ''
         if len(expr.results) != 1:
