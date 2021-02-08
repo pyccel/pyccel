@@ -7,7 +7,7 @@
 """
 This module contains all classes and functions used for handling macros.
 """
-
+from sympy import Symbol
 from sympy.core.expr import AtomicExpr
 
 from .basic          import PyccelAstNode
@@ -28,7 +28,8 @@ class Macro(AtomicExpr, PyccelAstNode):
     _name = '__UNDEFINED__'
 
     def __init__(self, argument):
-        # TODO add verification
+        if not isinstance(argument, Symbol):
+            raise TypeError("Argument must be a symbol not {}".format(type(argument)))
 
         self._argument = argument
         super().__init__()
