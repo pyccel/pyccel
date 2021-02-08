@@ -34,7 +34,6 @@ from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import While
 from pyccel.ast.core import Del
 from pyccel.ast.core import Assert
-from pyccel.ast.core import PythonTuple
 from pyccel.ast.core import Comment, EmptyNode
 from pyccel.ast.core import Break, Continue
 from pyccel.ast.core import Argument, ValuedArgument
@@ -42,7 +41,6 @@ from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import CommentBlock
 from pyccel.ast.core import With
-from pyccel.ast.core import PythonList
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import IndexedElement
@@ -57,6 +55,7 @@ from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
 from pyccel.ast.operators import PyccelIs, PyccelIsNot
 from pyccel.ast.operators import IfTernaryOperator
 
+from pyccel.ast.builtins import PythonTuple, PythonList
 from pyccel.ast.builtins import PythonPrint, Lambda
 from pyccel.ast.headers  import Header, MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex

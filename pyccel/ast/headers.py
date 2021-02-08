@@ -5,14 +5,13 @@
 #------------------------------------------------------------------------------------------#
 
 from sympy.utilities.iterables import iterable
-from sympy import sympify
 
 from ..errors.errors import Errors
 from ..errors.messages import TEMPLATE_IN_UNIONTYPE
 from .core import Basic
 from .core import ValuedArgument
 from .core import FunctionDef, Interface, FunctionAddress
-from .core import local_sympify, create_incremented_string
+from .core import create_incremented_string
 from .datatypes import datatype, DataTypeFactory, UnionType
 from .macros import Macro, MacroShape, construct_macro
 from .variable import DottedName, DottedVariable
@@ -594,9 +593,6 @@ class MacroFunction(Header):
         # master can be a string or FunctionDef
         if not isinstance(master, (str, FunctionDef, Interface)):
             raise ValueError('Expecting a master name of FunctionDef')
-
-        if not(results is None):
-            results = [sympify(a, locals=local_sympify) for a in results]
 
         self._name             = name
         self._arguments        = args

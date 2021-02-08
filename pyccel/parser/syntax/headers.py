@@ -7,9 +7,6 @@
 """
 from os.path import join, dirname
 
-from sympy import sympify
-from sympy import Symbol as sp_Symbol
-
 from textx.metamodel import metamodel_from_file
 
 from pyccel.parser.syntax.basic import BasicStmt
@@ -392,8 +389,6 @@ class MacroArg(BasicStmt):
         if not(value is None):
             if isinstance(value, (MacroStmt,StringStmt)):
                 value = value.expr
-            else:
-                value = sympify(str(value),locals={'N':sp_Symbol('N'),'S':sp_Symbol('S')})
             return ValuedArgument(arg, value)
         return arg
 
@@ -413,7 +408,7 @@ class MacroStmt(BasicStmt):
     @property
     def expr(self):
         name = str(self.macro)
-        arg  = str(self.arg)
+        arg  = Symbol(str(self.arg))
         parameter = self.parameter
         return construct_macro(name, arg, parameter=parameter)
 
@@ -452,6 +447,8 @@ class FunctionMacroStmt(BasicStmt):
 
         self.dotted_name = tuple(kwargs.pop('dotted_name'))
         self.results = kwargs.pop('results',None)
+        if self.results:
+            self.results = [Symbol(r) for r in self.results]
         self.args = kwargs.pop('args')
         self.master_name = tuple(kwargs.pop('master_name'))
         self.master_args = kwargs.pop('master_args')

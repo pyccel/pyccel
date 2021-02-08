@@ -54,8 +54,6 @@ class CodePrinter(StrPrinter):
 
         if assign_to:
             expr = Assign(assign_to, expr)
-        else:
-            expr = _sympify(expr)
 
         # Do the actual printing
         lines = self._print(expr).splitlines(True)
