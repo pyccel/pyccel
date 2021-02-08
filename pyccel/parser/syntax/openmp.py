@@ -322,7 +322,7 @@ class OmpMaskedConstruct(BasicStmt):
             print("> OmpMaskedConstruct: expr")
 
         _valid_clauses = (OmpFilter,)
-        
+ 
         combined = None
         if isinstance(self.combined, OmpTaskloopSimd):
             combined = self.combined.expr
