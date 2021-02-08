@@ -2561,7 +2561,7 @@ class SemanticParser(BasicParser):
             # to the body of the function
             body = self.garbage_collector(body)
 
-            args    = [self.get_variable(a.name) if isinstance(a, Variable) else self.get_function(str(a.name)) for a in args]
+            args    = list(args)
             results = [self._visit(a) for a in results]
 
             if arg and cls_name:
