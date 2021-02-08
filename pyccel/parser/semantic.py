@@ -88,7 +88,7 @@ from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
 
-from pyccel.ast.internals import Slice, Symbol
+from pyccel.ast.internals import Slice, PyccelSymbol
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
@@ -115,7 +115,7 @@ errors = Errors()
 def _get_name(var):
     """."""
 
-    if isinstance(var, (Symbol, DottedName)):
+    if isinstance(var, (PyccelSymbol, DottedName)):
         return str(var)
     if isinstance(var, (IndexedElement)):
         return str(var.base)
@@ -991,7 +991,7 @@ class SemanticParser(BasicParser):
 
         return self._extract_indexed_from_var(var, args, name)
 
-    def _visit_Symbol(self, expr, **settings):
+    def _visit_PyccelSymbol(self, expr, **settings):
         name = expr
         if isinstance(name, sp_Symbol):
             name = name.name
@@ -1050,9 +1050,9 @@ class SemanticParser(BasicParser):
 
                         # Save the import target that has been used
                         if new_name == rhs_name:
-                            imp.define_target(Symbol(rhs_name))
+                            imp.define_target(PyccelSymbol(rhs_name))
                         else:
-                            imp.define_target(AsName(Symbol(rhs_name), Symbol(new_name)))
+                            imp.define_target(AsName(PyccelSymbol(rhs_name), PyccelSymbol(new_name)))
 
                 if isinstance(rhs, FunctionCall):
                     # If object is a function
@@ -1117,7 +1117,7 @@ class SemanticParser(BasicParser):
                                     current_function = self._current_function)
 
         # look for a class attribute / property
-        elif isinstance(rhs, Symbol) and first.cls_base:
+        elif isinstance(rhs, PyccelSymbol) and first.cls_base:
             methods = list(first.cls_base.methods) + list(first.cls_base.interfaces)
             for method in methods:
                 if isinstance(method, Interface):
@@ -1203,7 +1203,7 @@ class SemanticParser(BasicParser):
     def _visit_Lambda(self, expr, **settings):
 
 
-        expr_names = set(map(str, expr.expr.atoms(Symbol, Argument)))
+        expr_names = set(map(str, expr.expr.atoms(PyccelSymbol, Argument)))
         var_names = map(str, expr.variables)
         missing_vars = expr_names.difference(var_names)
         if len(missing_vars) > 0:
@@ -1389,7 +1389,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        lhs : Symbol (or DottedName of Symbols)
+        lhs : PyccelSymbol (or DottedName of PyccelSymbols)
             The representation of the lhs provided by the SyntacticParser
 
         d_var : dict
@@ -1413,7 +1413,7 @@ class SemanticParser(BasicParser):
             Provided to all _visit_ClassName functions
         """
 
-        if isinstance(lhs, Symbol):
+        if isinstance(lhs, PyccelSymbol):
 
             name = lhs
             dtype = d_var.pop('datatype')
@@ -1745,7 +1745,7 @@ class SemanticParser(BasicParser):
             stmts = rhs.body
             stmt  = stmts[-1]
             lhs   = expr.lhs
-            if isinstance(lhs, Symbol):
+            if isinstance(lhs, PyccelSymbol):
                 name = lhs
                 if self.check_for_variable(name) is None:
                     d_var = self._infere_type(stmt, **settings)
@@ -1841,7 +1841,7 @@ class SemanticParser(BasicParser):
                     d['is_pointer'] = True
 
         lhs = expr.lhs
-        if isinstance(lhs, (Symbol, DottedName)):
+        if isinstance(lhs, (PyccelSymbol, DottedName)):
             if isinstance(d_var, list):
                 if len(d_var) == 1:
                     d_var = d_var[0]
@@ -2046,7 +2046,7 @@ class SemanticParser(BasicParser):
                     body        = [assign] + body
                     iterator[i] = indx
 
-        if isinstance(iterator, Symbol):
+        if isinstance(iterator, PyccelSymbol):
             name   = iterator
             var    = self.check_for_variable(name)
             target = var
@@ -2357,7 +2357,7 @@ class SemanticParser(BasicParser):
         return_vars = self.get_function(f_name).results
         assigns     = []
         for v,r in zip(return_vars, results):
-            if not (isinstance(r, Symbol) and r == v):
+            if not (isinstance(r, PyccelSymbol) and r == v):
                 a = Assign(v, r)
                 a.set_fst(expr.fst)
                 assigns.append(a)

@@ -86,13 +86,13 @@ class Slice(Basic):
 
     Parameters
     ----------
-    start : Symbol or int
+    start : PyccelSymbol or int
         starting index
 
-    stop : Symbol or int
+    stop : PyccelSymbol or int
         ending index
 
-    step : Symbol or int default None
+    step : PyccelSymbol or int default None
 
     Examples
     --------
@@ -168,7 +168,7 @@ class Slice(Basic):
             stop = str(self.stop)
         return '{0} : {1}'.format(start, stop)
 
-class Symbol(str):
+class PyccelSymbol(str):
     """Symbolic placeholder for a Python variable, which has a name but no type yet.
     This is very generic, and it can also represent a function or a module.
 
@@ -179,15 +179,15 @@ class Symbol(str):
 
     Examples
     --------
-    >>> from pyccel.ast.internals import Symbol
-    >>> x = Symbol('x')
+    >>> from pyccel.ast.internals import PyccelSymbol
+    >>> x = PyccelSymbol('x')
     x
     """
     pass
 
 def symbols(names):
     """
-    Transform strings into instances of Symbol class.
+    Transform strings into instances of PyccelSymbol class.
 
     function returns a sequence of symbols with names taken
     from argument, which can be a comma delimited
@@ -201,7 +201,7 @@ def symbols(names):
     Return
     ----------
     Tuple :
-        tuple of instances of Symbol
+        tuple of instances of PyccelSymbol
     Examples
     --------
     >>> from pyccel.ast.internals import symbols
@@ -209,6 +209,6 @@ def symbols(names):
     (x, y, z)
     """
     names = names.split(',')
-    symbols = [Symbol(name.strip()) for name in names]
+    symbols = [PyccelSymbol(name.strip()) for name in names]
     return tuple(symbols)
 

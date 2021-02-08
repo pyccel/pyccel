@@ -1439,7 +1439,7 @@ class CCodePrinter(CodePrinter):
 
         return '/*' + comments + '*/'
 
-    def _print_Symbol(self, expr):
+    def _print_PyccelSymbol(self, expr):
         return expr
 
     def _print_CommentBlock(self, expr):

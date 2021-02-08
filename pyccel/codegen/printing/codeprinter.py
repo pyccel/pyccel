@@ -12,7 +12,7 @@ from sympy.core.sympify import _sympify
 from sympy.printing.str import StrPrinter
 
 from pyccel.ast.core      import Assign
-from pyccel.ast.internals import Symbol
+from pyccel.ast.internals import PyccelSymbol
 
 from pyccel.errors.errors     import Errors
 from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
@@ -41,13 +41,13 @@ class CodePrinter(StrPrinter):
         expr : Expression
             The expression to be printed.
 
-        assign_to : Symbol, MatrixSymbol, or string (optional)
+        assign_to : PyccelSymbol, MatrixSymbol, or string (optional)
             If provided, the printed code will set the expression to a
             variable with name ``assign_to``.
         """
 
         if isinstance(assign_to, str):
-            assign_to = Symbol(assign_to)
+            assign_to = PyccelSymbol(assign_to)
         elif not isinstance(assign_to, (Basic, type(None))):
             raise TypeError("{0} cannot assign to object of type {1}".format(
                     type(self).__name__, type(assign_to)))

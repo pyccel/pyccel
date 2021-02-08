@@ -65,7 +65,7 @@ from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 from pyccel.ast.variable  import DottedName
 
-from pyccel.ast.internals import Slice, Symbol
+from pyccel.ast.internals import Slice, PyccelSymbol
 
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.base import BasicParser
@@ -438,12 +438,12 @@ class SyntaxParser(BasicParser):
 
 
     def _visit_Name(self, stmt):
-        return Symbol(stmt.id)
+        return PyccelSymbol(stmt.id)
 
     def _treat_import_source(self, source, level):
         source = '.'*level + source
         if source.count('.') == 0:
-            source = Symbol(source)
+            source = PyccelSymbol(source)
         else:
             source = DottedName(*source.split('.'))
 
@@ -638,7 +638,7 @@ class SyntaxParser(BasicParser):
         def fill_types(ls):
             container = []
             for arg in ls:
-                if isinstance(arg, Symbol):
+                if isinstance(arg, PyccelSymbol):
                     container.append(arg)
                 elif isinstance(arg, LiteralString):
                     arg = str(arg)
@@ -663,12 +663,12 @@ class SyntaxParser(BasicParser):
 
         if all(not isinstance(a, Nil) for a in annotated_args):
             if stmt.returns:
-                returns = ValuedArgument(Symbol('results'),self._visit(stmt.returns))
+                returns = ValuedArgument(PyccelSymbol('results'),self._visit(stmt.returns))
                 annotated_args.append(returns)
             decorators['types'] = [FunctionCall('types', annotated_args)]
 
         for d in self._visit(stmt.decorator_list):
-            tmp_var = d if isinstance(d, Symbol) else d.funcdef
+            tmp_var = d if isinstance(d, PyccelSymbol) else d.funcdef
             if tmp_var in decorators:
                 decorators[tmp_var] += [d]
             else:
@@ -822,12 +822,12 @@ class SyntaxParser(BasicParser):
         results = []
         result_counter = 1
         for i in zip(*returns):
-            if not all(i[0]==j for j in i) or not isinstance(i[0], Symbol):
+            if not all(i[0]==j for j in i) or not isinstance(i[0], PyccelSymbol):
                 result_name, result_counter = create_variable(self._used_names,
                                                               prefix = 'Out',
                                                               counter = result_counter)
                 results.append(result_name)
-            elif isinstance(i[0], Symbol) and any(i[0]==x.name for x in arguments):
+            elif isinstance(i[0], PyccelSymbol) and any(i[0]==x.name for x in arguments):
                 result_name, result_counter = create_variable(self._used_names,
                                                               prefix = 'Out',
                                                               counter = result_counter)
@@ -901,7 +901,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Attribute(self, stmt):
         val  = self._visit(stmt.value)
-        attr = Symbol(stmt.attr)
+        attr = PyccelSymbol(stmt.attr)
         return DottedName(val, attr)
 
 
@@ -918,7 +918,7 @@ class SyntaxParser(BasicParser):
 
         func = self._visit(stmt.func)
 
-        if isinstance(func, Symbol):
+        if isinstance(func, PyccelSymbol):
             if func == "print":
                 func = PythonPrint(PythonTuple(*args))
             else:

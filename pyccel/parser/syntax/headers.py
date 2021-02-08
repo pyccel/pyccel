@@ -20,7 +20,7 @@ from pyccel.ast.core      import ValuedArgument
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
 from pyccel.ast.literals  import LiteralString
-from pyccel.ast.internals import Symbol
+from pyccel.ast.internals import PyccelSymbol
 from pyccel.errors.errors import Errors
 
 DEBUG = False
@@ -387,7 +387,7 @@ class MacroArg(BasicStmt):
         arg_ = self.arg
         if isinstance(arg_, MacroList):
             return tuple(arg_.expr)
-        arg = Symbol(str(arg_))
+        arg = PyccelSymbol(str(arg_))
         value = self.value
         if not(value is None):
             if isinstance(value, (MacroStmt,StringStmt)):
@@ -484,7 +484,7 @@ class FunctionMacroStmt(BasicStmt):
             if isinstance(i, MacroStmt):
                 master_args.append(i.expr)
             else:
-                master_args.append(Symbol(str(i)))
+                master_args.append(PyccelSymbol(str(i)))
 
 
         results = self.results

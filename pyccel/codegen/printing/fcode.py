@@ -54,7 +54,7 @@ from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 
-from pyccel.ast.internals import Slice, Symbol
+from pyccel.ast.internals import Slice, PyccelSymbol
 
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue
@@ -278,7 +278,7 @@ class FCodePrinter(CodePrinter):
         return iso_c_binding[self._print(expr.dtype)][expr.precision]
 
     # ============ Elements ============ #
-    def _print_Symbol(self, expr):
+    def _print_PyccelSymbol(self, expr):
         return expr
 
     def _print_Module(self, expr):
@@ -415,12 +415,12 @@ class FCodePrinter(CodePrinter):
                 line = '{prefix} {target}'.format(prefix=prefix,
                                                   target=i)
 
-            elif isinstance(i, Symbol):
+            elif isinstance(i, PyccelSymbol):
                 line = '{prefix} {target}'.format(prefix=prefix,
                                                   target=i)
 
             else:
-                raise TypeError('Expecting str, Symbol, DottedName or AsName, '
+                raise TypeError('Expecting str, PyccelSymbol, DottedName or AsName, '
                                 'given {}'.format(type(i)))
 
             code = (code + '\n' + line) if code else line

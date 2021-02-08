@@ -15,7 +15,7 @@ from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
-from .internals import PyccelInternalFunction, Symbol
+from .internals import PyccelInternalFunction, PyccelSymbol
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
@@ -465,9 +465,9 @@ class PythonRange(Basic):
 
     >>> from pyccel.ast.core import Variable
     >>> from pyccel.ast.core import Range
-    >>> from pyccel.ast.internals import Symbol
+    >>> from pyccel.ast.internals import PyccelSymbol
     >>> s = Variable('int', 's')
-    >>> e = Symbol('e')
+    >>> e = PyccelSymbol('e')
     >>> Range(s, e, 1)
     Range(0, n, 1)
     """

@@ -13,7 +13,7 @@ from pyccel.ast.core import Return, FunctionDef
 from pyccel.ast.core import Assign, create_variable
 from pyccel.ast.core import AugAssign
 from pyccel.ast.core import For
-from pyccel.ast.internals      import Symbol
+from pyccel.ast.internals      import PyccelSymbol
 from pyccel.ast.functionalexpr import GeneratorComprehension as GC
 from pyccel.ast.functionalexpr import FunctionalSum
 
@@ -66,7 +66,7 @@ def cse(expr):
             if not all(size):
                 raise ValueError('Unable to find range of index')
             name = str(vars_new[i].base)
-            var = Symbol(name)
+            var = PyccelSymbol(name)
             stmt = Assign(var, Function('empty')(size[0]))
             allocate.append(stmt)
             stmts[i] = For(ind[0], Function('range')(size[0]), [stmts[i]])

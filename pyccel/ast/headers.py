@@ -18,7 +18,7 @@ from .macros import Macro, MacroShape, construct_macro
 from .variable import DottedName, DottedVariable
 from .variable import Variable
 from .variable import ValuedVariable
-from .internals import Symbol
+from .internals import PyccelSymbol
 
 __all__ = (
     'ClassHeader',
@@ -588,8 +588,8 @@ class MacroFunction(Header):
     """."""
 
     def __init__(self, name, args, master, master_args, results=None):
-        if not isinstance(name, (str, Symbol)):
-            raise TypeError('name must be of type str or Symbol')
+        if not isinstance(name, (str, PyccelSymbol)):
+            raise TypeError('name must be of type str or PyccelSymbol')
 
         # master can be a string or FunctionDef
         if not isinstance(master, (str, FunctionDef, Interface)):
@@ -704,10 +704,10 @@ class MacroFunction(Header):
         result_keys = d_results.keys()
         for i,arg in enumerate(self.master_arguments):
 
-            if isinstance(arg, Symbol):
+            if isinstance(arg, PyccelSymbol):
                 if arg in argument_keys:
                     new = d_arguments[arg]
-                    if isinstance(new, Symbol) and new in result_keys:
+                    if isinstance(new, PyccelSymbol) and new in result_keys:
                         new = d_results[new]
 
                 elif arg in result_keys:
@@ -719,7 +719,7 @@ class MacroFunction(Header):
             elif isinstance(arg, Macro):
                 if arg.argument.name in argument_keys:
                     new = d_arguments[arg.argument.name]
-                    if isinstance(new, Symbol) and new in result_keys:
+                    if isinstance(new, PyccelSymbol) and new in result_keys:
                         new = d_results[new]
                 elif arg.argument.name in result_keys:
                     new = d_results[arg.argument.name]
@@ -738,7 +738,7 @@ class MacroVariable(Header):
     """."""
 
     def __init__(self, name,  master):
-        if not isinstance(name, (str, Symbol, DottedName)):
+        if not isinstance(name, (str, PyccelSymbol, DottedName)):
             raise TypeError('name must be of type str or DottedName')
 
 

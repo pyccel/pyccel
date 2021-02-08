@@ -881,10 +881,10 @@ class IfTernaryOperator(PyccelOperator):
 
     Examples
     --------
-    >>> from pyccel.ast.internals import Symbol
+    >>> from pyccel.ast.internals import PyccelSymbol
     >>> from pyccel.ast.core import Assign
 	>>>	from pyccel.ast.operators import IfTernaryOperator
-    >>> n = Symbol('n')
+    >>> n = PyccelSymbol('n')
     >>> x = 5 if n > 1 else 2
     >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     IfTernaryOperator(PyccelGt(n > 1),  5,  2)

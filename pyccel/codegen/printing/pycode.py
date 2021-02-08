@@ -368,7 +368,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         a = self._print(expr.args[0])
         return 'not {}'.format(a)
 
-    def _print_Symbol(self, expr):
+    def _print_PyccelSymbol(self, expr):
         return expr
 
 #==============================================================================

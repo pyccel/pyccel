@@ -442,7 +442,7 @@ class BasicParser(object):
 
     def get_new_variable(self, prefix = None):
         """
-        Creates a new Symbol using the prefix provided. If this prefix is None,
+        Creates a new PyccelSymbol using the prefix provided. If this prefix is None,
         then the standard prefix is used, and the dummy counter is used and updated
         to facilitate finding the next value of this common case
 
@@ -452,7 +452,7 @@ class BasicParser(object):
 
           Returns
           -------
-          variable : Symbol
+          variable : PyccelSymbol
         """
         if prefix is not None:
             var,_ = create_variable(self._used_names, prefix)
