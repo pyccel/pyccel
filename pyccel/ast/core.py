@@ -1569,7 +1569,7 @@ class ValuedArgument(Basic):
 
         if isinstance(value, (bool, int, float, complex, str)):
             value = convert_to_literal(value)
-        elif not isinstance(value, (Basic, Symbol)):
+        elif not isinstance(value, (Basic, PyccelSymbol)):
             raise TypeError("Expecting a pyccel object not {}".format(type(value)))
 
         if not isinstance(kwonly, bool):
