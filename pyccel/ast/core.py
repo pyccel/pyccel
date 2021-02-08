@@ -8,8 +8,6 @@
 from collections     import OrderedDict
 
 from sympy import Integral, Symbol
-from sympy import Integer as sp_Integer
-from sympy import Float as sp_Float
 from sympy import preorder_traversal
 
 from sympy.simplify.radsimp   import fraction
@@ -3879,8 +3877,6 @@ def process_shape(shape):
     for s in shape:
         if isinstance(s,(LiteralInteger, Variable, Slice, PyccelAstNode, FunctionCall)):
             new_shape.append(s)
-        elif isinstance(s, sp_Integer):
-            new_shape.append(LiteralInteger(s.p))
         elif isinstance(s, int):
             new_shape.append(LiteralInteger(s))
         else:
