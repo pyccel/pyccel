@@ -8,7 +8,6 @@
 
 
 from sympy.core.basic import Basic
-from sympy.core.sympify import _sympify
 from sympy.printing.str import StrPrinter
 
 from pyccel.ast.core      import Assign
