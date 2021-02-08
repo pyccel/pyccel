@@ -32,7 +32,7 @@ from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeTuple, is_iterable_datatype, str_dtype)
 from .internals      import Slice
 
-from .literals       import LiteralInteger, Nil
+from .literals       import LiteralInteger, Nil, convert_to_literal
 from .itertoolsext   import Product
 from .functionalexpr import FunctionalFor
 
@@ -1639,6 +1639,14 @@ class ValuedArgument(Basic):
 
         if not isinstance(expr, (Symbol, Argument)):
             raise TypeError('Expecting an argument')
+
+        if isinstance(value, (bool, int, float, complex, str)):
+            value = convert_to_literal(value)
+        elif not isinstance(value, PyccelAstNode):
+            raise TypeError("Expecting a pyccel object")
+
+        if not isinstance(kwonly, bool):
+            raise TypeError("kwonly must be a bool")
 
         self._expr   = expr
         self._value  = value
