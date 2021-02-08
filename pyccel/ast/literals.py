@@ -238,6 +238,12 @@ def convert_to_literal(value, dtype = None, precision = None):
     precision : int
                 The precision of the value in the generated code
                 Default : python precision (see default_precision)
+
+    Returns
+    -------
+    literal_val : Literal
+                  The python value 'value' expressed as a literal
+                  with the specified dtype and precision
     """
     if dtype is None:
         if isinstance(value, int):
@@ -257,19 +263,19 @@ def convert_to_literal(value, dtype = None, precision = None):
         precision = default_precision[str(dtype)]
 
     if isinstance(dtype, NativeInteger):
-        value = LiteralInteger(value, precision)
+        literal_val = LiteralInteger(value, precision)
     elif isinstance(dtype, NativeReal):
-        value = LiteralFloat(value, precision)
+        literal_val = LiteralFloat(value, precision)
     elif isinstance(dtype, NativeComplex):
-        value = LiteralComplex(value.real, value.imag, precision)
+        literal_val = LiteralComplex(value.real, value.imag, precision)
     elif isinstance(dtype, NativeBool):
         if value:
-            value = LiteralTrue(precision)
+            literal_val = LiteralTrue(precision)
         else:
-            value = LiteralFalse(precision)
+            literal_val = LiteralFalse(precision)
     elif isinstance(dtype, NativeString):
-        value = LiteralString(value)
+        literal_val = LiteralString(value)
     else:
         raise TypeError('Unknown type')
 
-    return value
+    return literal_val
