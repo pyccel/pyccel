@@ -1792,9 +1792,6 @@ class FunctionCall(PyccelAstNode):
     def interface_name(self):
         return self._interface_name
 
-    def __str__(self):
-        return '{}({})'.format(self.func_name, ', '.join(str(a) for a in self.args))
-
     def __repr__(self):
         return '{}({})'.format(self.func_name, ', '.join(str(a) for a in self.args))
 
