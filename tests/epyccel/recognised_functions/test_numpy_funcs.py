@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, redefined-builtin, unused-variable, missing-module-docstring, unidiomatic-typecheck/
+# pylint: disable=missing-function-docstring, missing-module-docstring, unidiomatic-typecheck/
 import sys
 import pytest
 from numpy.random import rand, randint, uniform
@@ -3536,9 +3536,8 @@ def test_numpy_real_scalar(language):
 
     import numpy as np
 
-    bl = np.bool(randint(1e6))
     integer = randint(1e6)
-    integer8 = np.int8(randint(1e6))
+    integer8 = np.int8(randint(0, 127))
     integer16 = np.int16(randint(1e6))
     integer32 = np.int32(randint(1e6))
     integer64 = np.int64(randint(1e6))
@@ -3546,22 +3545,21 @@ def test_numpy_real_scalar(language):
     fl32 = np.float32(randint(1e6))
     fl64 = np.float64(randint(1e6))
 
-    # gfortran complains about boolean to numeric convertions, given that boolean type in Fortran
-    # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
-    if (language == 'c'):
-        f_bl = epyccel(test_bool, language=language)
-        assert (f_bl(bl) == test_bool(bl))
+    f_bl = epyccel(test_bool, language=language)
+    f_bl = epyccel(test_bool, language=language)
+    assert (f_bl(True) == test_bool(True))
+    assert (f_bl(False) == test_bool(False))
 
     f_integer = epyccel(test_int, language=language)
     # int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722
-    #f_integer8 = epyccel(test_int8, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
     f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer(integer) == test_int(integer))
     # int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722
-    #assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer8(integer8) == test_int8(integer8))
     assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer32(integer32) == test_int32(integer32))
     assert (f_integer64(integer64) == test_int64(integer64))
@@ -3668,11 +3666,8 @@ def test_numpy_real_array_like_1d(language):
         s = shape(a)
         return len(s), s[0], a[0]
 
-    # gfortran complains about boolean to numeric convertions, given that boolean type in Fortran
-    # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
-    if (language == 'c'):
-        f_bl = epyccel(test_bool, language=language)
-        assert (f_bl() == test_bool())
+    f_bl = epyccel(test_bool, language=language)
+    assert (f_bl() == test_bool())
 
     f_integer = epyccel(test_int, language=language)
     # int8 and int16 numpy data types not recognised by Pyccel.
@@ -3790,11 +3785,8 @@ def test_numpy_real_array_like_2d(language):
         s = shape(a)
         return len(s), s[0], s[1]
 
-    # gfortran complains about boolean to numeric convertions, given that boolean type in Fortran
-    # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
-    if (language == 'c'):
-        f_bl = epyccel(test_bool, language=language)
-        assert (f_bl() == test_bool())
+    f_bl = epyccel(test_bool, language=language)
+    assert (f_bl() == test_bool())
 
     f_integer = epyccel(test_int, language=language)
     # int8 and int16 numpy data types not recognised by Pyccel.
