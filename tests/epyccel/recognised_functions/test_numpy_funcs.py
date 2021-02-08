@@ -3466,17 +3466,6 @@ def test_zeros_like_combined_args(language):
     assert(isclose(     f3_val()  ,      create_zeros_like_3_val()        , rtol=RTOL, atol=ATOL))
     assert(type(f3_val())  == type(create_zeros_like_3_val().item()))
 
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
-            pytest.mark.c]
-        )
-    )
-)
-
 def test_numpy_real_scalar(language):
 
     @types('bool')
@@ -3564,13 +3553,15 @@ def test_numpy_real_scalar(language):
         assert (f_bl(bl) == test_bool(bl))
 
     f_integer = epyccel(test_int, language=language)
-    f_integer8 = epyccel(test_int8, language=language)
+    # int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722
+    #f_integer8 = epyccel(test_int8, language=language)
     f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer(integer) == test_int(integer))
-    assert (f_integer8(integer8) == test_int8(integer8))
+    # int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722
+    #assert (f_integer8(integer8) == test_int8(integer8))
     assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer32(integer32) == test_int32(integer32))
     assert (f_integer64(integer64) == test_int64(integer64))
