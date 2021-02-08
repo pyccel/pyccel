@@ -7,12 +7,12 @@
 """
 This module contains all classes and functions used for handling macros.
 """
-from sympy import Symbol
 from sympy.core.expr import AtomicExpr
 
 from .basic          import PyccelAstNode
 from .datatypes      import default_precision
 from .datatypes      import NativeInteger, NativeGeneric
+from .internals      import PyccelSymbol
 
 __all__ = (
     'Macro',
