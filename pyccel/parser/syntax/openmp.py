@@ -322,7 +322,7 @@ class OmpMaskedConstruct(BasicStmt):
             print("> OmpMaskedConstruct: expr")
 
         _valid_clauses = (OmpFilter,)
- 
+
         combined = None
         if isinstance(self.combined, OmpTaskloopSimd):
             combined = self.combined.expr
@@ -335,7 +335,7 @@ class OmpMaskedConstruct(BasicStmt):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpMaskedConstruct')
-        
+
         return OMP_Masked_Construct(txt, combined)
 
 class OmpSectionsConstruct(BasicStmt):
