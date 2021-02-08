@@ -991,10 +991,14 @@ class SemanticParser(BasicParser):
 
         return self._extract_indexed_from_var(var, args, name)
 
+    def _visit_Symbol(self, expr, **settings):
+        # While and With class are using sympy.sympify
+        name = PyccelSymbol(expr.name)
+        return self._visit(name)
+
     def _visit_PyccelSymbol(self, expr, **settings):
         name = expr
-        if isinstance(name, sp_Symbol):
-            name = name.name
+
         var = self.check_for_variable(name)
 
         if var is None:
