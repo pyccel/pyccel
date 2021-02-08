@@ -2509,6 +2509,7 @@ class SemanticParser(BasicParser):
                             d_var['cls_base'] = NumpyArrayClass
 
                         if 'allow_negative_index' in self._namespace.decorators:
+                            print(type(a))
                             if a.name in decorators['allow_negative_index']:
                                 d_var.update(allows_negative_indexes=True)
                         # this is needed for the static case
