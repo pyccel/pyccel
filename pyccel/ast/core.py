@@ -7,7 +7,6 @@
 
 from collections     import OrderedDict
 
-from sympy import sympify
 from sympy import Add as sp_Add, Mul as sp_Mul, Pow as sp_Pow
 from sympy import Eq as sp_Eq, Ne as sp_Ne, Lt as sp_Lt, Le as sp_Le, Gt as sp_Gt, Ge as sp_Ge
 from sympy import Integral, Symbol
@@ -117,7 +116,6 @@ __all__ = (
     'inline',
     'int2float',
 #    'is_simple_assign',
-    'local_sympify',
 #    'operator',
 #    'op_registry',
     'process_shape',
@@ -129,13 +127,6 @@ __all__ = (
 )
 
 #==============================================================================
-local_sympify = {
-    'N'    : Symbol('N'),
-    'S'    : Symbol('S'),
-    'zeros': Symbol('zeros'),
-    'ones' : Symbol('ones'),
-    'Point': Symbol('Point')
-}
 
 # TODO - add EmptyStmt => empty lines
 #      - update code examples
@@ -150,7 +141,7 @@ def apply(func, args, kwargs):return func(*args, **kwargs)
 #==============================================================================
 def subs(expr, new_elements):
     """
-    Substitutes old for new in an expression after sympifying args.
+    Substitutes old for new in an expression.
 
     Parameters
     ----------
@@ -359,7 +350,7 @@ def extract_subexpressions(expr):
             for i in expr:
                 args.append(substitute(i))
 
-            return PythonList(*args, sympify=False)
+            return PythonList(*args)
 
         elif isinstance(expr, (tuple, list)):
             args = []
@@ -1090,14 +1081,13 @@ class While(Basic):
     """
 
     def __init__(self, test, body, local_vars=()):
-        test = sympify(test, locals=local_sympify)
 
         if PyccelAstNode.stage == 'semantic':
             if test.dtype is not NativeBool():
                 test = PythonBool(test)
 
         if iterable(body):
-            body = CodeBlock((sympify(i, locals=local_sympify) for i in body))
+            body = CodeBlock(body)
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable or a CodeBlock')
 
@@ -1146,10 +1136,9 @@ class With(Basic):
         test,
         body,
         ):
-        test = sympify(test, locals=local_sympify)
 
         if iterable(body):
-            body = CodeBlock((sympify(i, locals=local_sympify) for i in body))
+            body = CodeBlock(body)
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable')
 

@@ -8,7 +8,6 @@
 from os.path import join, dirname
 
 from sympy.core import Symbol
-from sympy import sympify
 
 from textx.metamodel import metamodel_from_file
 
@@ -391,8 +390,6 @@ class MacroArg(BasicStmt):
         if not(value is None):
             if isinstance(value, (MacroStmt,StringStmt)):
                 value = value.expr
-            else:
-                value = sympify(str(value),locals={'N':Symbol('N'),'S':Symbol('S')})
             return ValuedArgument(arg, value)
         return arg
 
