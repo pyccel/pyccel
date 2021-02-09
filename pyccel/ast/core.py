@@ -1870,8 +1870,8 @@ class FunctionDef(Basic):
             name_ = []
             for i in name:
                 if isinstance(i, str):
-                    name = name + PyccelSymbol(i)
-                elif not isinstance(i, PyccelSymbol):
+                    name_.append(PyccelSymbol(i))
+                else
                     raise TypeError('Function name must be PyccelSymbol or string'
                                     )
             name = tuple(name_)
