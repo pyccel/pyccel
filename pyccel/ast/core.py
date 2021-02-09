@@ -1559,7 +1559,7 @@ class ValuedArgument(Basic):
 
         if isinstance(expr, Argument):
             self._name = expr.name
-        elif isinstance(expr, (str, PyccelSymbol)):
+        elif isinstance(expr, str):
             self._name = expr
         else:
             raise TypeError('Expecting an argument')
