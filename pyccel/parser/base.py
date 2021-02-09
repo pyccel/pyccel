@@ -521,11 +521,9 @@ class BasicParser(object):
         else:
             source = str(expr.source)
             if source not in pyccel_builtin_import_registery:
-                for t in expr.target:
-                    name = [t]
-                    if not source in container.keys():
-                        container[source] = []
-                    container[source] += name
+                if not source in container.keys():
+                    container[source] = []
+                container[source] += expr.target
 
     def dump(self, filename=None):
         """
