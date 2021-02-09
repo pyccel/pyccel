@@ -587,7 +587,7 @@ class MacroFunction(Header):
     """."""
 
     def __init__(self, name, args, master, master_args, results=None):
-        if not isinstance(name, (str, PyccelSymbol)):
+        if not isinstance(name, str):
             raise TypeError('name must be of type str or PyccelSymbol')
 
         # master can be a string or FunctionDef
