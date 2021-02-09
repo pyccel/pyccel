@@ -143,6 +143,8 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
     def _print_PythonTuple(self, expr):
         args = ', '.join(self._print(i) for i in expr.args)
+        if len(args) == 1:
+            args += ','
         return '('+args+')'
 
     def _print_PyccelArraySize(self, expr):
@@ -214,11 +216,23 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         args = ','.join(self._print(i) for i in expr.elements)
         return 'product({})'.format(args)
 
-    def _print_Zeros(self, expr):
+    def _print_Allocate(self, expr):
+        return ''
+
+    def _print_Deallocate(self, expr):
+        return ''
+
+    def _print_NumpyZeros(self, expr):
         return 'zeros('+ self._print(expr.shape)+')'
 
-    def _print_ZerosLike(self, expr):
+    def _print_NumpyZerosLike(self, expr):
         return 'zeros_like('+ self._print(expr.rhs)+')'
+
+    def _print_NumpyOnes(self, expr):
+        return 'ones('+ self._print(expr.shape)+')'
+
+    def _print_NumpyOnesLike(self, expr):
+        return 'ones_like('+ self._print(expr.rhs)+')'
 
     def _print_Max(self, expr):
         args = ', '.join(self._print(e) for e in expr.args)
@@ -261,8 +275,8 @@ class PythonCodePrinter(SympyPythonCodePrinter):
                 lines.append(self._print(e))
         return "\n".join(lines)
 
-    def _print_LiteralString(self, expr):
-        return '"{}"'.format(self._print(expr.arg))
+    def _print_Literal(self, expr):
+        return repr(expr.python_value)
 
     def _print_Shape(self, expr):
         arg = self._print(expr.arg)
@@ -272,6 +286,12 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         else:
             index = self._print(expr.index)
             return '{0}.shape[{1}]'.format(arg, index)
+
+    def _print_PythonRange(self, expr):
+        return 'range({start}, {stop}, {step})'.format(
+                start = self._print(expr.start),
+                stop  = self._print(expr.stop ),
+                step  = self._print(expr.step ))
 
     def _print_Print(self, expr):
         args = []
@@ -291,7 +311,16 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return 'print({0})'.format(fs)
 
     def _print_Module(self, expr):
-        body = '\n'.join(self._print(e) for e in expr.body)
+        # Print interface functions (one function with multiple decorators describes the problem)
+        interfaces = [i.functions[0] for i in expr.interfaces]
+        for f,i in zip(interfaces, expr.interfaces):
+            f.rename(i.name)
+        interfaces = '\n'.join(self._print(i) for i in interfaces)
+        # Collect functions which are not in an interface
+        funcs = [f for f in expr.funcs if not any(f in i.functions for i in expr.interfaces)]
+        funcs = '\n'.join(self._print(f) for f in funcs)
+        classes = '\n'.join(self._print(c) for c in expr.classes)
+        body = '\n'.join((interfaces, funcs, classes))
         imports  = [*expr.imports, *self._additional_imports]
         imports  = '\n'.join(self._print(i) for i in imports)
         return ('{imports}\n\n'
