@@ -33,8 +33,9 @@ internal_libs = {
 
 # map language to its file extension
 lang_ext_dict = {
-    "c" : ".c",
-    "fortran": ".f90",
+    "c"         : ".c",
+    "fortran"   : ".f90",
+    "ccuda"     : ".cu",
 }
 
 #==============================================================================
@@ -195,6 +196,8 @@ def execute_pyccel(fname, *,
             compiler = 'gfortran'
         elif language == 'c':
             compiler = 'gcc'
+        elif language == "ccuda":
+            compiler = "nvcc"
 
     f90exec = mpi_compiler if mpi_compiler else compiler
 
@@ -220,7 +223,8 @@ def execute_pyccel(fname, *,
                                  includes=())
 
     # Build position-independent code, suited for use in shared library
-    fflags = ' {} -fPIC '.format(fflags)
+    if language != "ccuda":
+        fflags = ' {} -fPIC '.format(fflags)
     # ...
 
     # Parse Python file
