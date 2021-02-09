@@ -791,17 +791,17 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-            expr            : FunctionDef
-                the function defintion
+        expr            : FunctionDef
+            the function defintion
 
-            print_arg_names : Bool
-                default value True and False when we don't need to print
-                arguments names
+        print_arg_names : Bool
+            default value True and False when we don't need to print
+            arguments names
 
         Return
         ------
-            String
-                Signature of the function
+        String
+            Signature of the function
         """
         args = list(expr.arguments)
         if len(expr.results) == 1:
