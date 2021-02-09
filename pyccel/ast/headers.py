@@ -344,12 +344,12 @@ class FunctionHeader(Header):
                     results = []
                     _count = 0
                     for dc in d['decs']:
-                        _name, _count = create_incremented_string(used_names, 'in_', _count)
+                        _name, _count = create_incremented_string(used_names, 'in', _count)
                         var = build_argument(_name, dc)
                         decs.append(var)
                     _count = 0
                     for dc in d['results']:
-                        _name, _count = create_incremented_string(used_names, 'out_', _count)
+                        _name, _count = create_incremented_string(used_names, 'out', _count)
                         var = build_argument(_name, dc)
                         results.append(var)
                     arg_name = 'arg_{0}'.format(str(i))
