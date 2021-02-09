@@ -52,7 +52,7 @@ from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import NativeRange, NativeTuple
 from pyccel.ast.datatypes import CustomDataType
 
-from pyccel.ast.internals import Slice, PyccelSymbol
+from pyccel.ast.internals import Slice
 
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue
