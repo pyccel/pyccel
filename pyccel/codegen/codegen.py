@@ -7,6 +7,7 @@
 
 from pyccel.codegen.printing.fcode  import FCodePrinter
 from pyccel.codegen.printing.ccode  import CCodePrinter
+from pyccel.codegen.printing.cudaccode  import CCudaCodePrinter
 from pyccel.codegen.printing.pycode import PythonCodePrinter
 
 from pyccel.ast.core      import FunctionDef, Module, Program, Interface, ModuleHeader
@@ -14,12 +15,13 @@ from pyccel.ast.core      import EmptyNode, Comment, CommentBlock
 from pyccel.ast.headers   import Header
 from pyccel.errors.errors import Errors
 
-_extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
-_header_extension_registry = {'fortran': None, 'c':'h',  'python':None}
+_extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py', 'ccuda':'cu'}
+_header_extension_registry = {'fortran': None, 'c':'h',  'python':None, 'ccuda':'h'}
 printer_registry    = {
                         'fortran':FCodePrinter,
                         'c':CCodePrinter,
-                        'python':PythonCodePrinter
+                        'python':PythonCodePrinter,
+                        'ccuda': CCudaCodePrinter
                       }
 
 
@@ -164,7 +166,7 @@ class Codegen(object):
         language = settings.pop('language', 'fortran')
 
         # Set language
-        if not language in ['fortran', 'c', 'python']:
+        if not language in ['fortran', 'c', 'python', 'ccuda']:
             raise ValueError('{} language is not available'.format(language))
         self._language = language
 
