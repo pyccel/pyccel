@@ -17,6 +17,7 @@ from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.utilities  import build_types_decorator
 from pyccel.ast.core       import CodeBlock, Import, DottedName
+from pyccel.ast.literals   import LiteralTrue
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -147,6 +148,25 @@ class PythonCodePrinter(SympyPythonCodePrinter):
             args += ','
         return '('+args+')'
 
+    def _print_PythonList(self, expr):
+        args = ', '.join(self._print(i) for i in expr.args)
+        return '['+args+']'
+
+    def _print_PythonBool(self, expr):
+        return 'bool({})'.format(self._print(expr.arg))
+
+    def _print_PythonInt(self, expr):
+        return 'int({})'.format(self._print(expr.arg))
+
+    def _print_PythonFloat(self, expr):
+        return 'float({})'.format(self._print(expr.arg))
+
+    def _print_PythonRange(self, expr):
+        return 'range({start}, {stop}, {step})'.format(
+                start = self._print(expr.start),
+                stop  = self._print(expr.stop ),
+                step  = self._print(expr.step ))
+
     def _print_PyccelArraySize(self, expr):
         arg = self._print(expr.arg)
         index = self._print(expr.index)
@@ -179,8 +199,11 @@ class PythonCodePrinter(SympyPythonCodePrinter):
             return 'from {source} import {target}'.format(source=source, target=target)
 
     def _print_CodeBlock(self, expr):
-        code = '\n'.join(self._print(c) for c in expr.body)
-        return code
+        if len(expr.body)==0:
+            return 'pass'
+        else:
+            code = '\n'.join(self._print(c) for c in expr.body)
+            return code
 
     def _print_For(self, expr):
         iterable = self._print(expr.iterable)
@@ -256,17 +279,22 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         rhs = self._print(expr.rhs)
         return'{0} is {1}'.format(lhs,rhs)
 
+    def _print_PyccelIsNot(self, expr):
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        return'{0} is not {1}'.format(lhs,rhs)
+
     def _print_If(self, expr):
         lines = []
         for i, (c, e) in enumerate(expr.blocks):
             if i == 0:
-                lines.append("if (%s):" % self._print(c))
+                lines.append("if %s:" % self._print(c))
 
-            elif i == len(expr.args) - 1 and c is True:
+            elif i == len(expr.args) - 1 and isinstance(c, LiteralTrue):
                 lines.append("else:")
 
             else:
-                lines.append("elif (%s):" % self._print(c))
+                lines.append("elif %s:" % self._print(c))
 
             if isinstance(e, CodeBlock):
                 body = self._indent_codestring(self._print(e))
@@ -278,6 +306,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
     def _print_Literal(self, expr):
         return repr(expr.python_value)
 
+    def _print_LiteralFloat(self, expr):
+        return repr(expr.python_value)
+
     def _print_Shape(self, expr):
         arg = self._print(expr.arg)
         if expr.index is None:
@@ -286,12 +317,6 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         else:
             index = self._print(expr.index)
             return '{0}.shape[{1}]'.format(arg, index)
-
-    def _print_PythonRange(self, expr):
-        return 'range({start}, {stop}, {step})'.format(
-                start = self._print(expr.start),
-                stop  = self._print(expr.stop ),
-                step  = self._print(expr.step ))
 
     def _print_Print(self, expr):
         args = []
