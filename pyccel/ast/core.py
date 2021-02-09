@@ -9,11 +9,8 @@ from collections     import OrderedDict
 
 from sympy import preorder_traversal
 
-from sympy.simplify.radsimp   import fraction
 from sympy.core.compatibility import with_metaclass
-from sympy.core.singleton     import Singleton, S
-from sympy.core.function      import Derivative
-from sympy.core.function      import _coeff_isneg
+from sympy.core.singleton     import Singleton
 from sympy.core.expr          import Expr
 from sympy.logic.boolalg      import And as sp_And
 

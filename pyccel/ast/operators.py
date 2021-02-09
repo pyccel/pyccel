@@ -18,8 +18,6 @@ from .datatypes             import (NativeBool, NativeInteger, NativeReal,
                                     NativeComplex, NativeString, default_precision,
                                     NativeNumeric)
 
-from .internals             import PyccelArraySize
-
 from .literals              import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 
 errors = Errors()
