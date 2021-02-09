@@ -651,7 +651,7 @@ class MacroFunction(Header):
 
             for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
                 if not isinstance(arg, tuple):
-                    d_arguments[arg.name] = val
+                    d_arguments[arg] = val
                 else:
                     if not isinstance(val, (list, tuple)):
                         val = [val]
@@ -713,12 +713,12 @@ class MacroFunction(Header):
                #TODO uncomment later
                #     raise ValueError('Unknown variable name')
             elif isinstance(arg, Macro):
-                if arg.argument.name in argument_keys:
-                    new = d_arguments[arg.argument.name]
+                if arg.argument in argument_keys:
+                    new = d_arguments[arg.argument]
                     if isinstance(new, PyccelSymbol) and new in result_keys:
                         new = d_results[new]
-                elif arg.argument.name in result_keys:
-                    new = d_results[arg.argument.name]
+                elif arg.argument in result_keys:
+                    new = d_results[arg.argument]
                 else:
                     raise ValueError('Unkonwn variable name')
 
