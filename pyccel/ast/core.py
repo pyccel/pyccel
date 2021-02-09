@@ -350,7 +350,7 @@ class AsName(Basic):
         return '{0} as {1}'.format(sstr(self.name), sstr(self.target))
 
     def __eq__(self, string):
-        if isinstance(string, (str, PyccelSymbol)):
+        if isinstance(string, str):
             return string == self.target
         else:
             return self is string
