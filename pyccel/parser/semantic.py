@@ -2049,8 +2049,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(iterator, list):
             target = []
-            for i in iterator:
-                name = i
+            for name in iterator:
                 var  = Variable('int', name, rank=0)
                 self.insert_variable(var)
                 target.append(var)
