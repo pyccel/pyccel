@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring, unidiomatic-typecheck/
+# pylint: disable=missing-function-docstring, redefined-builtin, missing-module-docstring, unidiomatic-typecheck/
 import sys
 import pytest
 from numpy.random import rand, randint, uniform
