@@ -720,7 +720,7 @@ class MacroFunction(Header):
                 elif arg.argument in result_keys:
                     new = d_results[arg.argument]
                 else:
-                    raise ValueError('Unkonwn variable name')
+                    raise ValueError('Unknown variable name')
 
                 new = construct_macro(arg.name, new)
                 if isinstance(arg, MacroShape):
