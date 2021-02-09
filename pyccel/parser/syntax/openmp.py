@@ -101,14 +101,7 @@ class OmpParallelConstruct(BasicStmt):
         if DEBUG:
             print("> OmpParallelConstruct: expr")
 
-        _valid_clauses = (OmpNumThread, \
-                         OmpDefault, \
-                         OmpPrivate, \
-                         OmpShared, \
-                         OmpFirstPrivate, \
-                         OmpCopyin, \
-                         OmpReduction, \
-                         OmpProcBind)
+        _valid_clauses = _valid_parallel_clauses
 
         txt = ''
         combined = None
@@ -388,14 +381,9 @@ class OmpDistributeConstruct(BasicStmt):
         if DEBUG:
             print("> OmpDistributeConstruct: expr")
 
-        _valid_clauses = (OmpPrivate, \
-                          OmpFirstPrivate, \
-                          OmpLastPrivate, \
-                          OmpCollapse)
-
         txt = self.name
         for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
+            if isinstance(clause, _valid_Distribute_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpDistributeConstruct')
@@ -533,6 +521,7 @@ class OmpTeamsConstruct(BasicStmt):
         """
         self.name     = kwargs.pop('name')
         self.clauses  = kwargs.pop('clauses')
+        self.combined = kwargs.pop('combined', None)
 
         super().__init__(**kwargs)
 
@@ -548,13 +537,22 @@ class OmpTeamsConstruct(BasicStmt):
                           OmpNumTeams, \
                           OmpThreadLimit)
 
-        txt = self.name
+        combined = None
+        if isinstance(self.combined, OmpDistributeCombined):
+            combined = self.combined.expr
+            _valid_clauses = _valid_clauses + _valid_Distribute_clauses
+            if 'simd' in self.combined.expr:
+                _valid_clauses = _valid_clauses + _valid_simd_clauses
+            if 'parallel' in self.combined.expr:
+                _valid_clauses = _valid_clauses + _valid_parallel_clauses
+                _valid_clauses = _valid_clauses + _valid_loop_clauses
+        txt = ''
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpTeamsConstruct')
-        return OMP_Teams_Construct(txt)
+        return OMP_Teams_Construct(txt, combined)
 
 class OmpAtomicConstruct(BasicStmt):
     """Class representing an Atomic stmt ."""
@@ -1211,6 +1209,35 @@ class OmpTaskloopSimd(BasicStmt):
             txt += ' ' + self.sname
         return txt
 
+class OmpDistributeCombined(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.dname  = kwargs.pop('dname')
+        self.sname  = kwargs.pop('sname', None)
+        self.pname  = kwargs.pop('pname', None)
+        self.fname  = kwargs.pop('fname', None)
+        self.ssname = kwargs.pop('ssname', None)
+
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> Combined Teams Distribute")
+
+        txt = self.dname
+        if self.sname:
+            txt += ' ' + self.sname
+        elif self.pname:
+            txt += ' ' + self.pname
+            txt += ' ' + self.fname
+            if self.ssname:
+                txt += ' ' + self.ssname
+
+        return txt
+
 #################################################
 
 #################################################
@@ -1221,6 +1248,11 @@ _valid_sections_clauses = (OmpPrivate, \
                            OmpFirstPrivate, \
                            OmpLastPrivate, \
                            OmpReduction)
+
+_valid_Distribute_clauses = (OmpPrivate, \
+                             OmpFirstPrivate, \
+                             OmpLastPrivate, \
+                             OmpCollapse)
 
 _valid_simd_clauses = (OmpLinear, \
                        OmpReduction, \
@@ -1250,6 +1282,15 @@ _valid_loop_clauses = (OmpPrivate, \
                        OmpLinear, \
                        OmpOrdered)
 
+_valid_parallel_clauses = (OmpNumThread, \
+                           OmpDefault, \
+                           OmpPrivate, \
+                           OmpShared, \
+                           OmpFirstPrivate, \
+                           OmpCopyin, \
+                           OmpReduction, \
+                           OmpProcBind)
+
 omp_directives = [OmpParallelConstruct,
                   OmpLoopConstruct,
                   OmpSingleConstruct,
@@ -1266,7 +1307,7 @@ omp_directives = [OmpParallelConstruct,
                   OmpTaskConstruct,
                   OmpFlushConstruct,
                   OmpCancelConstruct,
-                  OmpTargetConstruct,
+                 OmpTargetConstruct,
                   OmpTeamsConstruct,
                   OmpDistributeConstruct,
                   OmpSectionsConstruct,
@@ -1306,7 +1347,8 @@ omp_clauses = [OmpCollapse,
                OmpForSimd,
                OmpMaskedTaskloop,
                OmpPSections,
-               OmpTaskloopSimd]
+               OmpTaskloopSimd,
+               OmpDistributeCombined]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 

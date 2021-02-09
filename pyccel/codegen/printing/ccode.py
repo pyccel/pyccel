@@ -1505,8 +1505,13 @@ class CCodePrinter(CodePrinter):
         return omp_expr
 
     def _print_OMP_Teams_Construct(self, expr):
-        omp_expr = str(expr.txt)
-        omp_expr = '#pragma omp {}\n{{'.format(omp_expr)
+        clauses = ''
+        if expr.combined:
+            clauses = ' ' + expr.combined
+        clauses += str(expr.txt)
+        omp_expr = '#pragma omp teams{}'.format(clauses)
+        if expr.combined is None:
+            omp_expr += '\n{'
         return omp_expr
 
     def _print_OMP_Sections_Construct(self, expr):
