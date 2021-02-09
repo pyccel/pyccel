@@ -795,6 +795,8 @@ class CCodePrinter(CodePrinter):
                 the function defintion
 
             print_arg_names : Bool
+                default value True and False when we don't need to print
+                arguments names
 
         Return
         ------
