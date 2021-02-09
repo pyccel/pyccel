@@ -408,7 +408,7 @@ class MacroStmt(BasicStmt):
     @property
     def expr(self):
         name = str(self.macro)
-        arg  = PyccelSymbol(str(self.arg))
+        arg  = PyccelSymbol(self.arg)
         parameter = self.parameter
         return construct_macro(name, arg, parameter=parameter)
 
