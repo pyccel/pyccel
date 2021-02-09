@@ -413,10 +413,6 @@ class FCodePrinter(CodePrinter):
                 line = '{prefix} {target}'.format(prefix=prefix,
                                                   target=i)
 
-            elif isinstance(i, PyccelSymbol):
-                line = '{prefix} {target}'.format(prefix=prefix,
-                                                  target=i)
-
             else:
                 raise TypeError('Expecting str, PyccelSymbol, DottedName or AsName, '
                                 'given {}'.format(type(i)))
