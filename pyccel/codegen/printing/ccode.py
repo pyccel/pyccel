@@ -814,8 +814,9 @@ class CCodePrinter(CodePrinter):
             arg_code = 'void'
         else:
             arg_code = ', '.join('{}'.format(self.function_signature(i, False))
-                        if isinstance(i, FunctionAddress) else '{0}{1}'.format(self.get_declare_type(i), i.name)
-                        if print_arg_names else '{}'.format(self.get_declare_type(i)) for i in args)
+                        if isinstance(i, FunctionAddress)
+                        else '{0}'.format(self.get_declare_type(i)) + i.name if print_arg_names else ''
+                        for i in args)
         if isinstance(expr, FunctionAddress):
             return '{}(*{})({})'.format(ret_type, name, arg_code)
         else:
