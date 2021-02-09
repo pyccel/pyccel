@@ -2493,7 +2493,7 @@ class ClassDef(Basic):
 
         if isinstance(name, str):
             name = PyccelSymbol(name)
-        elif not isinstance(name, PyccelSymbol):
+        else:
             raise TypeError('Function name must be PyccelSymbol or string')
 
         # attributes
