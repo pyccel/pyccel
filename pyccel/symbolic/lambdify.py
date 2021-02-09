@@ -65,8 +65,7 @@ def cse(expr):
                         break
             if not all(size):
                 raise ValueError('Unable to find range of index')
-            name = str(vars_new[i].base)
-            var = PyccelSymbol(name)
+            var = PyccelSymbol(vars_new[i].base)
             stmt = Assign(var, Function('empty')(size[0]))
             allocate.append(stmt)
             stmts[i] = For(ind[0], Function('range')(size[0]), [stmts[i]])
