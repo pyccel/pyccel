@@ -789,9 +789,9 @@ class CCodePrinter(CodePrinter):
         """Extract from function definition all the information
         (name, input, output) needed to create the signature
 
-        parameters
+        Parameters
         ----------
-            expr      : FunctionDef
+            expr            : FunctionDef
                 the function defintion
 
             print_arg_names : Bool
