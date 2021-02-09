@@ -681,7 +681,7 @@ class MacroFunction(Header):
             for i, arg in d_arguments.items():
                 if isinstance(arg, Macro):
                     d_arguments[i] = construct_macro(arg.name,
-                                      d_arguments[arg.argument.name])
+                                      d_arguments[arg.argument])
                     if isinstance(arg, MacroShape):
                         d_arguments[i]._index = arg.index
 
