@@ -481,7 +481,7 @@ class FunctionMacroStmt(BasicStmt):
             if isinstance(i, MacroStmt):
                 master_args.append(i.expr)
             else:
-                master_args.append(PyccelSymbol(str(i)))
+                master_args.append(PyccelSymbol(i))
 
 
         results = self.results
