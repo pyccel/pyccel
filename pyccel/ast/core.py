@@ -2721,7 +2721,7 @@ class Import(Basic):
         self._source = source
         self._target = []
         self._ignore_at_print = ignore_at_print
-        if isinstance(target, (str, PyccelSymbol, DottedName, AsName)):
+        if isinstance(target, (str, DottedName, AsName)):
             self._target = [Import._format(target)]
         elif iterable(target):
             for i in target:
