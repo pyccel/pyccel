@@ -690,7 +690,7 @@ class MacroFunction(Header):
         if not(results is None) and not(self.results is None):
             for (r_macro, r) in zip(self.results, results):
                 # TODO improve name for other Nodes
-                d_results[r_macro.name] = r
+                d_results[r_macro] = r
         # ...
 
         # ... initialize new args with None
