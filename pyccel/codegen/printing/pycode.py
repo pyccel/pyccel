@@ -152,6 +152,9 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         args = ', '.join(self._print(i) for i in expr.args)
         return '['+args+']'
 
+    def _print_PythonLen(self, expr):
+        return 'len({})'.format(self._print(expr.arg))
+
     def _print_PythonBool(self, expr):
         return 'bool({})'.format(self._print(expr.arg))
 
@@ -246,16 +249,22 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return ''
 
     def _print_NumpyZeros(self, expr):
-        return 'zeros('+ self._print(expr.shape)+')'
+        return "zeros({shape}, dtype={dtype}, order='{order}')".format(
+                shape = self._print(expr.shape),
+                dtype = self._print(expr.dtype),
+                order = expr.order)
 
-    def _print_NumpyZerosLike(self, expr):
-        return 'zeros_like('+ self._print(expr.rhs)+')'
+    def _print_NumpyArray(self, expr):
+        return "array({arg}, dtype={dtype}, order='{order}')".format(
+                arg   = self._print(expr.arg),
+                dtype = self._print(expr.dtype),
+                order = expr.order)
 
     def _print_NumpyOnes(self, expr):
-        return 'ones('+ self._print(expr.shape)+')'
-
-    def _print_NumpyOnesLike(self, expr):
-        return 'ones_like('+ self._print(expr.rhs)+')'
+        return "ones({shape}, dtype={dtype}, order='{order}')".format(
+                shape = self._print(expr.shape),
+                dtype = self._print(expr.dtype),
+                order = expr.order)
 
     def _print_Max(self, expr):
         args = ', '.join(self._print(e) for e in expr.args)
@@ -302,6 +311,17 @@ class PythonCodePrinter(SympyPythonCodePrinter):
             else:
                 lines.append(self._print(e))
         return "\n".join(lines)
+
+    def _print_While(self, expr):
+        test = self._print(expr.test)
+        body = self._indent_codestring(self._print(expr.body))
+        return 'while {}:\n{}'.format(test, body)
+
+    def _print_Continue(self, expr):
+        return 'continue'
+
+    def _print_Break(self, expr):
+        return 'break'
 
     def _print_Literal(self, expr):
         return repr(expr.python_value)
