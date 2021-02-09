@@ -1055,6 +1055,8 @@ class SyntaxParser(BasicParser):
         if len(orelse)==1 and isinstance(orelse[0],If):
             orelse = orelse[0].blocks
             return If(IfSection(test, body), *orelse)
+        elif len(orelse)==0:
+            return If(IfSection(test, body))
         else:
             orelse = IfSection(LiteralTrue(), orelse)
             return If(IfSection(test, body), orelse)

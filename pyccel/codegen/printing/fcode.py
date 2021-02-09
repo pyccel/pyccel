@@ -2281,9 +2281,6 @@ class FCodePrinter(CodePrinter):
 
         for i, (c, e) in enumerate(expr.blocks):
 
-            if (not e) or (isinstance(e, CodeBlock) and not e.body):
-                continue
-
             if i == 0:
                 lines.append("if (%s) then\n" % self._print(c))
             elif i == len(expr.blocks) - 1 and c is LiteralTrue():
