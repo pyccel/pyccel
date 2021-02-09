@@ -820,19 +820,21 @@ class SyntaxParser(BasicParser):
         assert all(len(i) == len(returns[0]) for i in returns)
         results = []
         result_counter = 1
-        for i in zip(*returns):
-            if not all(i[0]==j for j in i) or not isinstance(i[0], PyccelSymbol):
-                result_name, result_counter = create_variable(self._used_names,
-                                                              prefix = 'Out',
-                                                              counter = result_counter)
-                results.append(result_name)
-            elif isinstance(i[0], PyccelSymbol) and any(i[0]==x.name for x in arguments):
-                result_name, result_counter = create_variable(self._used_names,
-                                                              prefix = 'Out',
-                                                              counter = result_counter)
-                results.append(result_name)
+
+        for r in zip(*returns):
+            r0 = r[0]
+
+            pyccel_symbol  = isinstance(r0, PyccelSymbol)
+            same_results   = all(r0 == ri for ri in r)
+            name_available = all(r0 != a.name for a in arguments)
+
+            if pyccel_symbol and same_results and name_available:
+                result_name = r0
             else:
-                results.append(i[0])
+                result_name, result_counter = create_variable(self._used_names, \
+                            prefix = 'Out', counter = result_counter)
+
+            results.append(result_name)
 
         func = FunctionDef(
                name,
