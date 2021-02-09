@@ -734,7 +734,7 @@ class MacroVariable(Header):
     """."""
 
     def __init__(self, name,  master):
-        if not isinstance(name, (str, PyccelSymbol, DottedName)):
+        if not isinstance(name, (str, DottedName)):
             raise TypeError('name must be of type str or DottedName')
 
 
