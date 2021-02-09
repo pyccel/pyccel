@@ -30,7 +30,7 @@ class Macro(AtomicExpr, PyccelAstNode):
 
     def __init__(self, argument):
         if not isinstance(argument, (PyccelSymbol, Variable)):
-            raise TypeError("Argument must be a symbol not {}".format(type(argument)))
+            raise TypeError("Argument must be a Pyccelsymbol or a Variable not {}".format(type(argument)))
 
         self._argument = argument
         super().__init__()
