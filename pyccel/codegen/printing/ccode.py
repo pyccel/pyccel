@@ -815,7 +815,7 @@ class CCodePrinter(CodePrinter):
         else:
             arg_code = ', '.join('{}'.format(self.function_signature(i, False))
                         if isinstance(i, FunctionAddress)
-                        else ('{0}'.format(self.get_declare_type(i)) + i.name if print_arg_names else '')
+                        else ('{0}'.format(self.get_declare_type(i)) + (i.name if print_arg_names else ''))
                         for i in args)
         if isinstance(expr, FunctionAddress):
             return '{}(*{})({})'.format(ret_type, name, arg_code)
