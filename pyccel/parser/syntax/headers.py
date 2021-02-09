@@ -384,7 +384,7 @@ class MacroArg(BasicStmt):
         arg_ = self.arg
         if isinstance(arg_, MacroList):
             return tuple(arg_.expr)
-        arg = PyccelSymbol(str(arg_))
+        arg = PyccelSymbol(arg_)
         value = self.value
         if not(value is None):
             if isinstance(value, (MacroStmt,StringStmt)):
