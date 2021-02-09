@@ -13,6 +13,7 @@ from .basic          import PyccelAstNode
 from .datatypes      import default_precision
 from .datatypes      import NativeInteger, NativeGeneric
 from .internals      import PyccelSymbol
+from .variable       import Variable
 
 __all__ = (
     'Macro',
@@ -28,7 +29,7 @@ class Macro(AtomicExpr, PyccelAstNode):
     _name = '__UNDEFINED__'
 
     def __init__(self, argument):
-        if not isinstance(argument, PyccelSymbol):
+        if not isinstance(argument, (PyccelSymbol, Variable)):
             raise TypeError("Argument must be a symbol not {}".format(type(argument)))
 
         self._argument = argument
