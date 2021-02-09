@@ -21,8 +21,6 @@ from sympy.core import Symbol
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
 
-from sympy.logic.boolalg import Not
-
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
 from pyccel.ast.core import SeparatorComment, Comment
@@ -32,12 +30,12 @@ from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, Dlist, AsName,
-                             If)
+                             If, IfSection)
 from pyccel.ast.variable  import (Variable, TupleVariable,
                              IndexedElement,
                              DottedName, PyccelArraySize)
 
-from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
+from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus, PyccelNot
 
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
@@ -2295,7 +2293,7 @@ class FCodePrinter(CodePrinter):
         DEBUG = True
 
         err = ErrorExit()
-        args = [(Not(expr.test), [PythonPrint(["'Assert Failed'"]), err])]
+        args = [IfSection(PyccelNot(expr.test), [PythonPrint(["'Assert Failed'"]), err])]
 
         if DEBUG:
             args.append((True, PythonPrint(["'PASSED'"])))

@@ -7,12 +7,10 @@
 """
 This module contains all classes and functions used for handling macros.
 """
-
+from sympy import Symbol
 from sympy.core.expr import AtomicExpr
-from sympy import sympify
 
 from .basic          import PyccelAstNode
-from .core           import local_sympify
 from .datatypes      import default_precision
 from .datatypes      import NativeInteger, NativeGeneric
 
@@ -30,7 +28,8 @@ class Macro(AtomicExpr, PyccelAstNode):
     _name = '__UNDEFINED__'
 
     def __init__(self, argument):
-        # TODO add verification
+        if not isinstance(argument, Symbol):
+            raise TypeError("Argument must be a symbol not {}".format(type(argument)))
 
         self._argument = argument
         super().__init__()
@@ -104,7 +103,6 @@ def construct_macro(name, argument, parameter=None):
     if not isinstance(name, str):
         raise TypeError('name must be of type str')
 
-    argument = sympify(argument, locals=local_sympify)
     if name == 'shape':
         return MacroShape(argument, index=parameter)
     elif name == 'dtype':
