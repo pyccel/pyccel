@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, redefined-builtin,missing-module-docstring, unidiomatic-typecheck/
+# pylint: disable=missing-function-docstring, missing-module-docstring, unidiomatic-typecheck/
 import sys
 import pytest
 from numpy.random import rand, randint, uniform
@@ -3549,39 +3549,83 @@ def test_numpy_real_scalar(language):
     f_bl = epyccel(test_bool, language=language)
     assert (f_bl(True) == test_bool(True))
     assert (f_bl(False) == test_bool(False))
+
     # ensuring that we calculate the result type correctly for numpy bloo convertions.
     assert (type(f_bl(False)) == type(test_bool(False)))
     assert (type(f_bl(True)) == type(test_bool(True)))
 
     f_integer = epyccel(test_int, language=language)
-    # int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722
     f_integer8 = epyccel(test_int8, language=language)
     f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    assert (f_integer(integer) == test_int(integer))
-    # ensuring that we calculate the result type correctly for numpy int convertions.
-    assert (type(f_integer(integer)) == type(test_int(integer)))
-    # int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722
-    assert (f_integer8(integer8) == test_int8(integer8))
-    assert (f_integer16(integer16) == test_int16(integer16))
-    assert (f_integer32(integer32) == test_int32(integer32))
-    assert (f_integer64(integer64) == test_int64(integer64))
+    f_integer_output = f_integer(integer)
+    test_int_output  = test_int(integer)
+
+    assert f_integer_output == test_int_output
+    assert type(f_integer_output) == type(test_int_output)
+
+    f_integer8_output = f_integer8(integer8)
+    test_int8_output = test_int8(integer8)
+
+    assert f_integer8_output == test_int8_output
+    assert type(f_integer8_output) == type(test_int8_output.item())
+
+    f_integer16_output = f_integer16(integer16)
+    test_int16_output = test_int16(integer16)
+
+    assert f_integer16_output == test_int16_output
+    assert type(f_integer16_output) == type(test_int16_output.item())
+
+    f_integer32_output = f_integer32(integer32)
+    test_int32_output = test_int32(integer32)
+
+    assert f_integer32_output == test_int32_output
+    assert type(f_integer32_output) == type(test_int32_output.item())
+
+    f_integer64_output = f_integer64(integer64)
+    test_int64_output = test_int64(integer64)
+
+    assert f_integer64_output == test_int64_output
+    assert type(f_integer64_output) == type(test_int64_output.item())
 
     f_fl = epyccel(test_float, language=language)
     f_fl32 = epyccel(test_float32, language=language)
     f_fl64 = epyccel(test_float64, language=language)
 
-    assert (f_fl(fl) == test_float(fl))
-    assert (f_fl32(fl32) == test_float32(fl32))
-    assert (f_fl64(fl64) == test_float64(fl64))
+    f_fl_output = f_fl(fl)
+    test_float_output = test_float(fl)
+
+    assert f_fl_output == test_float_output
+    assert type(f_fl_output) == type(test_float_output)
+
+    f_fl32_output = f_fl32(fl32)
+    test_float32_output = test_float32(fl32)
+
+    assert f_fl32_output == test_float32_output
+    assert type(f_fl32_output) == type(test_float32_output.item())
+
+    f_fl64_output = f_fl64(fl64)
+    test_float64_output = test_float64(fl64)
+
+    assert f_fl64_output == test_float64_output
+    assert type(f_fl64_output) == type(test_float64_output.item())
 
     f_complex64 = epyccel(test_complex64, language=language)
     f_complex128 = epyccel(test_complex128, language=language)
 
-    assert (f_complex64(1+5j) == test_complex64(1+5j))
-    assert (f_complex128(1+5j) == test_complex128(1+5j))
+    f_complex64_output = f_complex64(1+5j)
+    test_complex64_output = test_complex64(1+5j)
+
+    assert f_complex64_output == test_complex64_output
+    assert (type(f_complex64_output) == type(test_complex64_output))
+
+    f_complex128_output = f_complex128(1+5j)
+    test_complex128_output = test_complex128(1+5j)
+
+    assert f_complex128_output == test_complex128_output
+    assert (type(f_complex64_output) == type(test_complex64_output))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -3595,19 +3639,20 @@ def test_numpy_real_scalar(language):
 def test_numpy_real_array_like_1d(language):
 
     def test_bool():
-        from numpy import real, shape, array, bool
+        from numpy import real, shape, array
         arr = array([4,5,6,2,1], bool)
         a = real(arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
     def test_int():
-        from numpy import real, shape, array, int
-        arr = array([4,5,6,2,1], int)
+        from numpy import real, shape, array, int as NumpyInt
+        arr = array([4,5,6,2,1], NumpyInt)
         a = real(arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
+    # should be uncommented after resolving #733
     # def test_int8():
     #     from numpy import real, shape, array, int8
     #     arr = array([4,5,6,2,1], int8)
@@ -3675,6 +3720,8 @@ def test_numpy_real_array_like_1d(language):
     assert (f_bl() == test_bool())
 
     f_integer = epyccel(test_int, language=language)
+
+    # should be uncommented after resolving #733
     # int8 and int16 numpy data types not recognised by Pyccel.
     #f_integer8 = epyccel(test_int8, language=language)
     #f_integer16 = epyccel(test_int16, language=language)
@@ -3682,6 +3729,8 @@ def test_numpy_real_array_like_1d(language):
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer() == test_int())
+
+    # should be uncommented after resolving #733
     # int8 and int16 numpy data types not recognised by Pyccel.
     #assert (f_integer8() == test_int8())
     #assert (f_integer16() == test_int16())
@@ -3714,19 +3763,20 @@ def test_numpy_real_array_like_1d(language):
 def test_numpy_real_array_like_2d(language):
 
     def test_bool():
-        from numpy import real, shape, array, bool
+        from numpy import real, shape, array
         arr = array([[4,5,6,2,1],[4,5,6,2,1]], bool)
         a = real(arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
     def test_int():
-        from numpy import real, shape, array, int
-        arr = array([[4,5,6,2,1],[4,5,6,2,1]], int)
+        from numpy import real, shape, array, int as NumpyInt
+        arr = array([[4,5,6,2,1],[4,5,6,2,1]], NumpyInt)
         a = real(arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
+    # should be uncommented after resolving #733
     # def test_int8():
     #     from numpy import real, shape, array, int8
     #     arr = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
@@ -3794,6 +3844,8 @@ def test_numpy_real_array_like_2d(language):
     assert (f_bl() == test_bool())
 
     f_integer = epyccel(test_int, language=language)
+
+    # should be uncommented after resolving #733
     # int8 and int16 numpy data types not recognised by Pyccel.
     # f_integer8 = epyccel(test_int8, language=language)
     # f_integer16 = epyccel(test_int16, language=language)
@@ -3801,6 +3853,8 @@ def test_numpy_real_array_like_2d(language):
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer() == test_int())
+
+    # should be uncommented after resolving #733
     # int8 and int16 numpy data types not recognised by Pyccel.
     # assert (f_integer8() == test_int8())
     # assert (f_integer16() == test_int16())
