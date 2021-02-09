@@ -121,22 +121,38 @@ class Basic(sp_Basic):
 
         Parameters
         ==========
-        original    : object
+        original    : object or tuple of objects
                       The original object to be replaced
-        replacement : object
+        replacement : object or tuple of objects
                       The object which will be inserted instead
         excluded_nodes : tuple of types
                       Types for which substitute should not be called
         """
+        if isinstance(original, tuple):
+            assert(isinstance(replacement, tuple))
+            assert(len(original) == len(replacement))
+        else:
+            original = (original,)
+            substitute = (substitute,)
+
         for n in self._attribute_nodes:
             v = getattr(self, n)
-            if v is original:
-                setattr(self, n, replacement)
+            if v in original:
+                idx = original.index(v)
+                v._remove_user_node(self)
+                setattr(self, n, replacement[idx])
+                replacement[idx].user_nodes = self
             elif isinstance(v, tuple):
-                if original in v:
-                    v = tuple(replacement if vi is original else vi for vi in v)
+                new_v = []
                 for vi in v:
-                    vi.substitute(original, replacement, excluded_nodes)
+                    if vi in original:
+                        idx = original.index(v)
+                        vi._remove_user_node(self)
+                        new_v.append(replacement[idx])
+                        replacement[idx].user_nodes = self
+                    else:
+                        new_v.append(vi)
+                        vi.substitute(original, replacement, excluded_nodes)
                 setattr(self, n, v)
             elif not isinstance(v, excluded_nodes):
                 v.substitute(original, replacement, excluded_nodes)
@@ -192,6 +208,9 @@ class Basic(sp_Basic):
     @user_nodes.setter
     def user_nodes(self, user_nodes):
         self._user_nodes.append(user_nodes)
+
+    def _remove_user_node(self, user_node):
+        self._user_nodes.remove(user_node)
 
     def __eq__(self, other):
         #TODO: Remove with sympy inheritance
