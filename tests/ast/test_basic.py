@@ -141,3 +141,28 @@ def test_substitute():
     atts = set(fst.get_attribute_nodes(Variable))
     assert(new_var in atts)
     assert(set(new_var.get_user_nodes(Basic)) == set(old_parents))
+
+def test_substitute_exclude():
+    filename = os.path.join(path_dir, "math.py")
+
+    interesting_var = Variable('int', 'a')
+    new_var = Variable('int', 'Z')
+
+    fst = get_functions(filename)[0]
+    atts = set(fst.get_attribute_nodes(Variable))
+    atts = [v for v in atts  if v == interesting_var]
+
+    a_var = atts[0]
+    old_parents = set(a_var.get_user_nodes(Basic))
+    assert(len(a_var.get_user_nodes(Basic))>0)
+
+    fst.substitute(a_var, new_var, excluded_nodes=(Return))
+
+    assert(len(a_var.get_user_nodes(Basic))==1)
+
+    atts = set(fst.get_attribute_nodes(Variable))
+    assert(new_var in atts)
+
+    new_parents = set(new_var.get_user_nodes(Basic))
+    assert(len(new_parents.difference(old_parents))==0)
+    assert(len(old_parents.difference(new_parents))==1)
