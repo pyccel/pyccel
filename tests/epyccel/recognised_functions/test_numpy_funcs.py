@@ -3808,7 +3808,7 @@ def test_numpy_real_array_like_2d(language):
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
     def test_float():
-        from numpy import real, shape, array, float
+        from numpy import real, shape, array
         arr = array([[4,5,6,2,1],[4,5,6,2,1]], float)
         a = real(arr)
         s = shape(a)
