@@ -18,7 +18,6 @@ def get_functions(filename):
 
     # Assert syntactic success
     assert(not errors.has_errors())
-    print(ast, type(ast))
 
     settings = {}
     ast = pyccel.annotate(**settings)
