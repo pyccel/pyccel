@@ -2158,6 +2158,7 @@ class FunctionDef(Basic):
         var : Variable
               The new local variable
         """
+        var.set_current_user_node(self)
         self._local_vars = self._local_vars + (var,)
 
     def __getnewargs__(self):
