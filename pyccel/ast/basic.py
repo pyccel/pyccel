@@ -82,7 +82,7 @@ class Basic(sp_Basic):
                             ci.invalidate_node()
             elif c and not isinstance(c, PyccelSymbol):
                 c.remove_user_node(self)
-                if not c.is_unused:
+                if c.is_unused:
                     c.invalidate_node()
 
     def get_user_nodes(self, search_type, excluded_nodes = ()):
