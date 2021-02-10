@@ -139,7 +139,7 @@ class Basic(sp_Basic):
             v = getattr(self, n)
             if v in original:
                 idx = original.index(v)
-                v._remove_user_node(self)
+                v.remove_user_node(self)
                 setattr(self, n, replacement[idx])
                 replacement[idx].user_nodes = self
             elif isinstance(v, tuple):
@@ -147,7 +147,7 @@ class Basic(sp_Basic):
                 for vi in v:
                     if vi in original:
                         idx = original.index(v)
-                        vi._remove_user_node(self)
+                        vi.remove_user_node(self)
                         new_v.append(replacement[idx])
                         replacement[idx].user_nodes = self
                     else:
@@ -209,7 +209,7 @@ class Basic(sp_Basic):
     def user_nodes(self, user_nodes):
         self._user_nodes.append(user_nodes)
 
-    def _remove_user_node(self, user_node):
+    def remove_user_node(self, user_node):
         self._user_nodes.remove(user_node)
 
     def __eq__(self, other):
