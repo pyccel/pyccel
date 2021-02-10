@@ -35,6 +35,7 @@ class Basic(sp_Basic):
             from pyccel.ast.internals import PyccelSymbol
             from pyccel.ast.literals import convert_to_literal
             if isinstance(c, PyccelSymbol):
+                # Anti-pattern
                 # PyccelSymbol is not a Basic so it must be handled separately
                 continue
             elif isinstance(c, (int, float, complex, str, bool)):
@@ -219,6 +220,15 @@ class Basic(sp_Basic):
         self._user_nodes.append(user_nodes)
 
     def remove_user_node(self, user_node):
+        """ Indicate that the current node is no longer used
+        by the user_node. This function is usually called by
+        the substitute method
+
+        Parameters
+        ----------
+        user_node : Basic
+                    Node which previously used the current node
+        """
         self._user_nodes.remove(user_node)
 
     def __eq__(self, other):
