@@ -56,10 +56,10 @@ class Basic(sp_Basic):
 
             if isinstance(c, tuple):
                 for ci in c:
-                    if ci:
-                        ci.current_user_node = self
+                    if ci and not isinstance(ci, PyccelSymbol):
+                        ci.set_current_user_node(self)
             elif c:
-                c.current_user_node = self
+                c.set_current_user_node(self)
 
     def get_user_nodes(self, search_type, excluded_nodes = ()):
         """ Returns all objects of the requested type
@@ -162,7 +162,7 @@ class Basic(sp_Basic):
                 idx = original.index(v)
                 v.remove_user_node(self)
                 setattr(self, n, replacement[idx])
-                replacement[idx].current_user_node = self
+                replacement[idx].set_current_user_node(self)
             elif isinstance(v, tuple):
                 new_v = []
                 for vi in v:
@@ -171,7 +171,7 @@ class Basic(sp_Basic):
                         idx = original.index(vi)
                         vi.remove_user_node(self)
                         new_vi = replacement[idx]
-                        replacement[idx].current_user_node = self
+                        replacement[idx].set_current_user_node(self)
                     elif not isinstance(vi, excluded_nodes):
                         vi.substitute(original, replacement, excluded_nodes)
                     new_v.append(new_vi)
@@ -217,8 +217,7 @@ class Basic(sp_Basic):
         """
         return [p for p in self._user_nodes if condition(p)]
 
-    @current_user_node.setter
-    def current_user_node(self, user_nodes):
+    def set_current_user_node(self, user_nodes):
         self._user_nodes.append(user_nodes)
 
     def remove_user_node(self, user_node):
