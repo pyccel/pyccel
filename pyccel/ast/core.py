@@ -616,7 +616,10 @@ class Deallocate(Basic):
         return self._variable
 
     def __eq__(self, other):
-        return (self.variable is other.variable)
+        if isinstance(other, Deallocate):
+            return (self.variable is other.variable)
+        else:
+            return False
 
     def __hash__(self):
         return hash(id(self.variable))
