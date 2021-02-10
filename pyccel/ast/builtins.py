@@ -141,6 +141,8 @@ class PythonComplex(PyccelAstNode):
     """ Represents a call to Python's native complex() function.
     """
 
+    _rank = 0
+    _shape = ()
     _precision = default_precision['complex']
     _dtype = NativeComplex()
 
@@ -176,7 +178,6 @@ class PythonComplex(PyccelAstNode):
         return super().__new__(cls, arg0, arg1)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
-        self._shape = arg0.shape if arg0.shape > arg1.shape else arg1.shape
         self._is_cast = arg0.dtype is NativeComplex() and \
                         isinstance(arg1, Literal) and arg1.python_value == 0
 
