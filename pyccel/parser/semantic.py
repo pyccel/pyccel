@@ -2180,8 +2180,11 @@ class SemanticParser(BasicParser):
                               bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                               severity='fatal')
             self.insert_variable(var)
+            step.invalidate_node()
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
+            start.invalidate_node()
             start = pyccel_to_sympy(start, idx_subs, tmp_used_names)
+            stop.invalidate_node()
             stop  = pyccel_to_sympy(stop , idx_subs, tmp_used_names)
             size = (stop - start) / step
             if (step != 1):
@@ -2284,6 +2287,8 @@ class SemanticParser(BasicParser):
             errors.report(LIST_OF_TUPLES, symbol=expr,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='error', blocker=self.blocking)
+
+        target.invalidate_node()
 
         loops = [self._visit(i, **settings) for i in expr.loops]
         index = self._visit(index, **settings)
