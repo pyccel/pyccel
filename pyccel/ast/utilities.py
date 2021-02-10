@@ -53,9 +53,7 @@ def builtin_function(expr, args=None):
         return dic[name](*args)
 
     if name == 'map':
-        func = expr.args[0]
-        args = [func]+list(args[1:])
-        return PythonMap(*args)
+        return PythonMap(expr.args[0], *args[1:])
 
     if name == 'lambdify':
         return lambdify(expr, args)
