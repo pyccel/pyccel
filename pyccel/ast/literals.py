@@ -222,3 +222,60 @@ def get_default_literal_value(dtype):
     else:
         raise TypeError('Unknown type')
     return value
+
+#------------------------------------------------------------------------------
+
+def convert_to_literal(value, dtype = None, precision = None):
+    """ Convert a python value to a pyccel Literal
+
+    Parameters
+    ----------
+    value     : int/float/complex/bool/str
+                The python value
+    dtype     : DataType
+                The datatype of the python value
+                Default : Matches type of 'value'
+    precision : int
+                The precision of the value in the generated code
+                Default : python precision (see default_precision)
+
+    Returns
+    -------
+    literal_val : Literal
+                  The python value 'value' expressed as a literal
+                  with the specified dtype and precision
+    """
+    if dtype is None:
+        if isinstance(value, int):
+            dtype = NativeInteger()
+        elif isinstance(value, float):
+            dtype = NativeReal()
+        elif isinstance(value, complex):
+            dtype = NativeComplex()
+        elif isinstance(value, bool):
+            dtype = NativeBool()
+        elif isinstance(value, str):
+            dtype = NativeString()
+        else:
+            raise TypeError('Unknown type')
+
+    if precision is None and dtype is not NativeString():
+        precision = default_precision[str(dtype)]
+
+    if isinstance(dtype, NativeInteger):
+        literal_val = LiteralInteger(value, precision)
+    elif isinstance(dtype, NativeReal):
+        literal_val = LiteralFloat(value, precision)
+    elif isinstance(dtype, NativeComplex):
+        literal_val = LiteralComplex(value.real, value.imag, precision)
+    elif isinstance(dtype, NativeBool):
+        if value:
+            literal_val = LiteralTrue(precision)
+        else:
+            literal_val = LiteralFalse(precision)
+    elif isinstance(dtype, NativeString):
+        literal_val = LiteralString(value)
+    else:
+        raise TypeError('Unknown type')
+
+    return literal_val

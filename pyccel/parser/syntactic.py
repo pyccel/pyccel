@@ -4,7 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-# pylint: disable=R0201, missing-function-docstring 
+# pylint: disable=R0201, missing-function-docstring
 
 import os
 import re
@@ -13,7 +13,6 @@ import ast
 
 #==============================================================================
 
-from sympy import Symbol
 from sympy import Dict
 from sympy.core import cache
 
@@ -35,7 +34,6 @@ from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import While
 from pyccel.ast.core import Del
 from pyccel.ast.core import Assert
-from pyccel.ast.core import PythonTuple
 from pyccel.ast.core import Comment, EmptyNode
 from pyccel.ast.core import Break, Continue
 from pyccel.ast.core import Argument, ValuedArgument
@@ -43,7 +41,6 @@ from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import CommentBlock
 from pyccel.ast.core import With
-from pyccel.ast.core import PythonList
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import IndexedElement
@@ -58,6 +55,7 @@ from pyccel.ast.operators import PyccelUnary, PyccelUnarySub
 from pyccel.ast.operators import PyccelIs, PyccelIsNot
 from pyccel.ast.operators import IfTernaryOperator
 
+from pyccel.ast.builtins import PythonTuple, PythonList
 from pyccel.ast.builtins import PythonPrint, Lambda
 from pyccel.ast.headers  import Header, MetaVariable
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
@@ -66,7 +64,7 @@ from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin
 from pyccel.ast.variable  import DottedName
 
-from pyccel.ast.internals import Slice
+from pyccel.ast.internals import Slice, PyccelSymbol
 
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.base import BasicParser
@@ -439,12 +437,12 @@ class SyntaxParser(BasicParser):
 
 
     def _visit_Name(self, stmt):
-        return Symbol(stmt.id)
+        return PyccelSymbol(stmt.id)
 
     def _treat_import_source(self, source, level):
-        source = '.'*level + str(source)
+        source = '.'*level + source
         if source.count('.') == 0:
-            source = Symbol(source)
+            source = PyccelSymbol(source)
         else:
             source = DottedName(*source.split('.'))
 
@@ -639,8 +637,7 @@ class SyntaxParser(BasicParser):
         def fill_types(ls):
             container = []
             for arg in ls:
-                if isinstance(arg, Symbol):
-                    arg = arg.name
+                if isinstance(arg, PyccelSymbol):
                     container.append(arg)
                 elif isinstance(arg, LiteralString):
                     arg = str(arg)
@@ -665,12 +662,12 @@ class SyntaxParser(BasicParser):
 
         if all(not isinstance(a, Nil) for a in annotated_args):
             if stmt.returns:
-                returns = ValuedArgument(Symbol('results'),self._visit(stmt.returns))
+                returns = ValuedArgument(PyccelSymbol('results'),self._visit(stmt.returns))
                 annotated_args.append(returns)
             decorators['types'] = [FunctionCall('types', annotated_args)]
 
         for d in self._visit(stmt.decorator_list):
-            tmp_var = str(d) if isinstance(d, Symbol) else str(d.funcdef)
+            tmp_var = d if isinstance(d, PyccelSymbol) else d.funcdef
             if tmp_var in decorators:
                 decorators[tmp_var] += [d]
             else:
@@ -726,7 +723,7 @@ class SyntaxParser(BasicParser):
 
                 types = fill_types(ls)
 
-                txt  = '#$ header template ' + str(tp_name)
+                txt  = '#$ header template ' + tp_name
                 txt += '(' + '|'.join(types) + ')'
                 if tp_name in template['template_dict']:
                     msg = 'The template "{}" is duplicated'.format(tp_name)
@@ -823,19 +820,21 @@ class SyntaxParser(BasicParser):
         assert all(len(i) == len(returns[0]) for i in returns)
         results = []
         result_counter = 1
-        for i in zip(*returns):
-            if not all(i[0]==j for j in i) or not isinstance(i[0], Symbol):
-                result_name, result_counter = create_variable(self._used_names,
-                                                              prefix = 'Out',
-                                                              counter = result_counter)
-                results.append(result_name)
-            elif isinstance(i[0], Symbol) and any(i[0].name==x.name for x in arguments):
-                result_name, result_counter = create_variable(self._used_names,
-                                                              prefix = 'Out',
-                                                              counter = result_counter)
-                results.append(result_name)
+
+        for r in zip(*returns):
+            r0 = r[0]
+
+            pyccel_symbol  = isinstance(r0, PyccelSymbol)
+            same_results   = all(r0 == ri for ri in r)
+            name_available = all(r0 != a.name for a in arguments)
+
+            if pyccel_symbol and same_results and name_available:
+                result_name = r0
             else:
-                results.append(i[0])
+                result_name, result_counter = create_variable(self._used_names, \
+                            prefix = 'Out', counter = result_counter)
+
+            results.append(result_name)
 
         func = FunctionDef(
                name,
@@ -903,7 +902,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Attribute(self, stmt):
         val  = self._visit(stmt.value)
-        attr = Symbol(stmt.attr)
+        attr = PyccelSymbol(stmt.attr)
         return DottedName(val, attr)
 
 
@@ -920,12 +919,11 @@ class SyntaxParser(BasicParser):
 
         func = self._visit(stmt.func)
 
-        if isinstance(func, Symbol):
-            f_name = str(func.name)
-            if f_name == "print":
+        if isinstance(func, PyccelSymbol):
+            if func == "print":
                 func = PythonPrint(PythonTuple(*args))
             else:
-                func = FunctionCall(f_name, args)
+                func = FunctionCall(func, args)
         elif isinstance(func, DottedName):
             f_name = str(func.name[-1])
             func_attr = FunctionCall(f_name, args)

@@ -7,7 +7,6 @@
 """This file contains different utilities for the Parser."""
 
 from sympy import srepr
-from sympy import Symbol
 import os
 
 import string
@@ -15,6 +14,7 @@ import random
 
 from pyccel.ast.variable       import DottedName
 from pyccel.parser.extend_tree import CommentLine
+from pyccel.ast.internals      import PyccelSymbol
 
 pyccel_external_lib = {"mpi4py"             : "pyccel.stdlib.external.mpi4py",
                        "scipy.linalg.lapack": "pyccel.stdlib.external.lapack",
@@ -122,7 +122,7 @@ def get_default_path(name):
       and returns the path full bash of the library
       if the library is in stdlib"""
     name_ = name
-    if isinstance(name, (DottedName, Symbol)):
+    if isinstance(name, (DottedName, PyccelSymbol)):
         name_ = str(name)
     if name_ in pyccel_external_lib.keys():
         name = pyccel_external_lib[name_].split('.')
