@@ -4,6 +4,7 @@ from pyccel.codegen.codegen import Codegen
 from pyccel.parser.parser   import Parser
 from pyccel.errors.errors   import Errors
 
+from pyccel.ast.basic       import Basic
 from pyccel.ast.core        import Assign, Return
 from pyccel.ast.literals    import LiteralInteger
 from pyccel.ast.operators   import PyccelAdd, PyccelMinus
@@ -117,3 +118,25 @@ def test_get_direct_user_nodes():
     assert(all(isinstance(s, (PyccelAdd, PyccelMinus)) for s in sums))
 
     assert(len(sums) == 2)
+
+def test_substitute():
+    filename = os.path.join(path_dir, "math.py")
+
+    interesting_var = Variable('int', 'a')
+    new_var = Variable('int', 'Z')
+
+    fst = get_functions(filename)[0]
+    atts = set(fst.get_attribute_nodes(Variable))
+    atts = [v for v in atts  if v == interesting_var]
+
+    a_var = atts[0]
+    old_parents = a_var.get_user_nodes(Basic)
+    assert(len(a_var.get_user_nodes(Basic))>0)
+
+    fst.substitute(a_var, new_var)
+
+    assert(len(a_var.get_user_nodes(Basic))==0)
+
+    atts = set(fst.get_attribute_nodes(Variable))
+    assert(new_var in atts)
+    assert(set(new_var.get_user_nodes(Basic)) == set(old_parents))
