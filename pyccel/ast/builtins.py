@@ -11,8 +11,6 @@ In this module we implement some of them in alphabetical order.
 
 """
 
-from sympy import Symbol
-
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
@@ -432,7 +430,7 @@ class PythonPrint(Basic):
 
     Examples
 
-    >>> from sympy import symbols
+    >>> from pyccel.ast.internals import symbols
     >>> from pyccel.ast.core import Print
     >>> n,m = symbols('n,m')
     >>> Print(('results', n,m))
@@ -457,9 +455,9 @@ class PythonRange(Basic):
 
     >>> from pyccel.ast.core import Variable
     >>> from pyccel.ast.core import Range
-    >>> from sympy import Symbol
+    >>> from pyccel.ast.internals import PyccelSymbol
     >>> s = Variable('int', 's')
-    >>> e = Symbol('e')
+    >>> e = PyccelSymbol('e')
     >>> Range(s, e, 1)
     Range(0, n, 1)
     """

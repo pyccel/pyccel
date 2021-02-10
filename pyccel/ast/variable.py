@@ -8,8 +8,6 @@ different stages of pyccel. Memory block labels are usually either Variables or 
 variables
 """
 import inspect
-from sympy import Symbol
-
 from pyccel.errors.errors import Errors
 
 from .basic     import Basic, PyccelAstNode
@@ -32,7 +30,7 @@ __all__ = (
     'VariableAddress'
 )
 
-class Variable(Symbol, PyccelAstNode):
+class Variable(PyccelAstNode):
 
     """Represents a typed variable.
 
@@ -97,9 +95,6 @@ class Variable(Symbol, PyccelAstNode):
     matrix.n_rows
     """
 
-    def __new__( cls, *args, **kwargs ):
-        return PyccelAstNode.__new__(cls, *args, **kwargs)
-
     def __init__(
         self,
         dtype,
@@ -120,7 +115,6 @@ class Variable(Symbol, PyccelAstNode):
         is_kwonly=False,
         allows_negative_indexes=False
         ):
-        Symbol.__init__(self)
 
         # ------------ PyccelAstNode Properties ---------------
         if isinstance(dtype, str) or str(dtype) == '*':
@@ -165,6 +159,9 @@ class Variable(Symbol, PyccelAstNode):
             else:
                 name = DottedName(*name)
 
+        if name == '':
+            raise ValueError("Variable name can't be empty")
+
         if not isinstance(name, (str, DottedName)):
             raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
         self._name = name
@@ -201,7 +198,7 @@ class Variable(Symbol, PyccelAstNode):
         self._order          = order
         self._is_argument    = is_argument
         self._is_kwonly      = is_kwonly
-        PyccelAstNode.__init__(self)
+        super().__init__()
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
@@ -357,6 +354,14 @@ class Variable(Symbol, PyccelAstNode):
     def __str__(self):
         return str(self.name)
 
+    def __eq__(self, other):
+        if type(self) is type(other):
+            return self._name == other.name
+        return False
+
+    def __hash__(self):
+        return hash((type(self).__name__, self._name))
+
     def _sympystr(self, printer):
         """ sympy equivalent of __str__"""
         sstr = printer.doprint
@@ -411,9 +416,10 @@ class Variable(Symbol, PyccelAstNode):
         return cls(**new_kwargs)
 
     def rename(self, newname):
-        """Change variable name."""
-
-        self._name = newname
+        """ Forbidden method for renaming the variable
+        """
+        # The name is part of the hash so it must never change
+        raise RuntimeError('Cannot modify hash definition')
 
     def __reduce_ex__(self, i):
         """ Used by pickle to create an object of this class.
@@ -478,6 +484,7 @@ class DottedName(Basic):
     """
 
     def __init__(self, *args):
+
         self._name = args
         super().__init__()
 
@@ -823,3 +830,12 @@ class DottedVariable(Variable):
         The lhs is a
         """
         return self._lhs
+
+    def __eq__(self, other):
+        if type(self) is type(other):
+            return self.name == other.name and self.lhs == other.lhs
+
+        return False
+
+    def __hash__(self):
+        return hash((type(self).__name__, self.name, self.lhs))
