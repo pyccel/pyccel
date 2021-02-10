@@ -1530,7 +1530,7 @@ class FCodePrinter(CodePrinter):
         return '\n'.join(p for p in parts if p)
 
     def _print_FunctionAddress(self, expr):
-        return str(expr.name)
+        return expr.name
 
     def function_signature(self, expr, name):
         is_pure      = expr.is_pure

@@ -116,7 +116,7 @@ def _get_name(var):
     if isinstance(var, (IndexedElement)):
         return str(var.base)
     if isinstance(var, FunctionCall):
-        return str(var.funcdef)
+        return var.funcdef
     if isinstance(var, AsName):
         return var.target
     msg = 'Name of Object : {} cannot be determined'.format(type(var).__name__)
@@ -1245,7 +1245,7 @@ class SemanticParser(BasicParser):
             return expr
 
     def _visit_FunctionCall(self, expr, **settings):
-        name     = str(expr.funcdef)
+        name     = expr.funcdef
 
         # Check for specialised method
         annotation_method = '_visit_' + name
@@ -1623,7 +1623,7 @@ class SemanticParser(BasicParser):
         lhs = expr.lhs
 
         if isinstance(rhs, FunctionCall):
-            name = str(rhs.funcdef)
+            name = rhs.funcdef
             macro = self.get_macro(name)
             if macro is None:
                 rhs = self._visit(rhs, **settings)
