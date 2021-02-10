@@ -180,8 +180,6 @@ class PythonComplex(PyccelAstNode):
         return super().__new__(cls, arg0, arg1)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
-        self._shape = arg.shape
-        self._rank  = len(self._shape)
         self._is_cast = arg0.dtype is NativeComplex() and \
                         isinstance(arg1, Literal) and arg1.python_value == 0
 
