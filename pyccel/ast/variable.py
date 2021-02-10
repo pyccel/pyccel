@@ -232,6 +232,12 @@ class Variable(PyccelAstNode):
         return tuple(new_shape)
 
     @property
+    def name(self):
+        """ Name of the variable
+        """
+        return self._name
+
+    @property
     def alloc_shape(self):
         """ Shape of the variable at allocation
 
