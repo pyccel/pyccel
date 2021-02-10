@@ -915,8 +915,8 @@ class CWrapperCodePrinter(CCodePrinter):
             static_funcs = expr.funcs
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in static_funcs)
 
-        interface_funcs = [f.name for i in interfaces for f in i.functions]
-        funcs = [*interfaces, *(f for f in expr.funcs if f.name not in interface_funcs)]
+        interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
+        funcs = [*expr.interfaces, *(f for f in expr.funcs if f.name not in interface_funcs)]
 
 
         function_defs = '\n\n'.join(self._print(f) for f in funcs)
