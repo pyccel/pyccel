@@ -157,7 +157,7 @@ OmpMergeable: name='mergeable';
 OmpNogroup: name='nogroup';
 OmpAtomicClause: name=AtomicClause;
 AtomicMemoryClause: name=AtomicMClause;
-FlushList: name='flush' '(' args+=ID[','] ')';
+FlushList: '(' args+=ID[','] ')';
 OmpCancelType: name=CancelType;
 ////////////////////////////////////////////////////
 

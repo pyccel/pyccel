@@ -754,7 +754,6 @@ class FlushList(BasicStmt):
     def __init__(self, **kwargs):
         """
         """
-        self.name = kwargs.pop('name')
         self.args = kwargs.pop('args')
 
         super().__init__(**kwargs)
@@ -766,7 +765,7 @@ class FlushList(BasicStmt):
 
         # TODO check if variable exist in namespace
         args = ', '.join(str(arg) for arg in self.args)
-        return '{}({})'.format(self.name, args)
+        return '({})'.format(args)
 
 class OmpCriticalName(BasicStmt):
     """Class representing a ."""

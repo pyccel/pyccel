@@ -347,3 +347,20 @@ def omp_simd(n):
     for i in range(0, n):
         result = result + arr[i]
     return result
+
+def omp_flush():
+    from pyccel.stdlib.internal.openmp import omp_get_thread_num
+    flag = 0
+    #$ omp parallel num_threads(2)
+    if omp_get_thread_num() == 0:
+        #$ omp atomic update
+        flag = flag + 1
+    elif omp_get_thread_num() == 1:
+        #$ omp flush(flag)
+        while flag < 1:
+            pass
+            #$ omp flush(flag)
+        #$ omp atomic update
+        flag = flag + 1
+    #$ omp end parallel
+    return flag
