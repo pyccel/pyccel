@@ -217,15 +217,6 @@ class Basic(sp_Basic):
         """
         return [p for p in self._user_nodes if condition(p)]
 
-    @property
-    def current_user_node(self):
-        """ Get the current user_node of the object
-        """
-        if self._user_nodes:
-            return self._user_nodes[-1]
-        else:
-            return None
-
     @current_user_node.setter
     def current_user_node(self, user_nodes):
         self._user_nodes.append(user_nodes)
