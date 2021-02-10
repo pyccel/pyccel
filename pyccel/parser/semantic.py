@@ -2549,8 +2549,8 @@ class SemanticParser(BasicParser):
             # insert the FunctionDef into the scope
             # to handle the case of a recursive function
             # TODO improve in the case of an interface
-            func = FunctionDef(name, args, results, [])
-            self.insert_function(func)
+            recursive_func_obj = FunctionDef(name, args, results, [])
+            self.insert_function(recursive_func_obj)
 
             # Create a new list that store local variables for each FunctionDef to handle nested functions
             self._allocs.append([])
@@ -2671,6 +2671,8 @@ class SemanticParser(BasicParser):
                     functions = sub_funcs,
                     interfaces = func_interfaces,
                     doc_string = doc_string)
+            func.body.substitute(recursive_func_obj, func)
+            recursive_func_obj.invalidate_node()
 
             if cls_name:
                 cls = self.get_class(cls_name)
