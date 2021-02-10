@@ -119,6 +119,7 @@ class Variable(PyccelAstNode):
         is_kwonly=False,
         allows_negative_indexes=False
         ):
+        super().__init__()
 
         # ------------ PyccelAstNode Properties ---------------
         if isinstance(dtype, str) or str(dtype) == '*':
@@ -202,7 +203,6 @@ class Variable(PyccelAstNode):
         self._order          = order
         self._is_argument    = is_argument
         self._is_kwonly      = is_kwonly
-        super().__init__()
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
