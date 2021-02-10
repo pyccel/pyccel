@@ -313,6 +313,8 @@ class PythonInt(PyccelAstNode):
 
     def __init__(self, arg):
         self._arg = arg
+        self._shape = arg.shape
+        self._rank  = len(self._shape)
         super().__init__()
 
     @property

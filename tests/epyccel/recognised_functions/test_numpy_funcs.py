@@ -3537,6 +3537,7 @@ def test_numpy_real_scalar(language):
     import numpy as np
 
     integer = randint(1e6)
+    bl = np.bool(randint(1e5))
     integer8 = np.int8(randint(0, 127))
     integer16 = np.int16(randint(1e6))
     integer32 = np.int32(randint(1e6))
@@ -3547,12 +3548,13 @@ def test_numpy_real_scalar(language):
 
     f_bl = epyccel(test_bool, language=language)
     f_bl = epyccel(test_bool, language=language)
-    assert (f_bl(True) == test_bool(True))
-    assert (f_bl(False) == test_bool(False))
 
-    # ensuring that we calculate the result type correctly for numpy bloo convertions.
-    assert (type(f_bl(False)) == type(test_bool(False)))
-    assert (type(f_bl(True)) == type(test_bool(True)))
+    f_bl_output = f_bl(bl)
+    test_bool_output = test_bool(bl)
+
+    assert f_bl_output == test_bool_output
+
+    assert (type(f_bl_output) == type(test_bool_output))
 
     f_integer = epyccel(test_int, language=language)
     f_integer8 = epyccel(test_int8, language=language)
@@ -3639,8 +3641,8 @@ def test_numpy_real_scalar(language):
 def test_numpy_real_array_like_1d(language):
 
     def test_bool():
-        from numpy import real, shape, array
-        arr = array([4,5,6,2,1], bool)
+        from numpy import real, shape, array, bool as Bool
+        arr = array([4,5,0,2,1], Bool)
         a = real(arr)
         s = shape(a)
         return len(s), s[0], a[0]
