@@ -569,10 +569,13 @@ class Allocate(Basic):
                 sstr(self.variable), sstr(self.shape), sstr(self.order), sstr(self.status))
 
     def __eq__(self, other):
-        return (self.variable is other.variable) and \
-               (self.shape    == other.shape   ) and \
-               (self.order    == other.order   ) and \
-               (self.status   == other.status  )
+        if isinstance(other, Allocate):
+            return (self.variable is other.variable) and \
+                   (self.shape    == other.shape   ) and \
+                   (self.order    == other.order   ) and \
+                   (self.status   == other.status  )
+        else:
+            return False
 
     def __hash__(self):
         return hash((id(self.variable), self.shape, self.order, self.status))
