@@ -42,16 +42,6 @@ __all__ = (
 )
 
 #==============================================================================
-# TODO [YG, 06.03.2020]: avoid core duplication between builtins and core
-local_sympify = {
-    'N'    : Symbol('N'),
-    'S'    : Symbol('S'),
-    'zeros': Symbol('zeros'),
-    'ones' : Symbol('ones'),
-    'Point': Symbol('Point')
-}
-
-#==============================================================================
 class PythonComplexProperty(PyccelInternalFunction):
     """Represents a call to the .real or .imag property
 
@@ -472,9 +462,9 @@ class PythonRange(Basic):
 
     >>> from pyccel.ast.core import Variable
     >>> from pyccel.ast.core import Range
-    >>> from pyccel.ast.internals import Symbol
+    >>> from pyccel.ast.internals import PyccelSymbol
     >>> s = Variable('int', 's')
-    >>> e = Symbol('e')
+    >>> e = PyccelSymbol('e')
     >>> Range(s, e, 1)
     Range(0, n, 1)
     """

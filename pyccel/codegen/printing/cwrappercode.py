@@ -645,7 +645,7 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_func_body.append(Return(wrapper_results))
             self._to_free_PyObject_list.clear()
             # Building Mini wrapper function
-            mini_wrapper_func_name = self.get_new_name(used_names.union(self._global_names), func.name.name + '_mini_wrapper')
+            mini_wrapper_func_name = self.get_new_name(used_names.union(self._global_names), func.name + '_mini_wrapper')
             self._global_names.add(mini_wrapper_func_name)
 
             mini_wrapper_func_def = FunctionDef(name = mini_wrapper_func_name,
@@ -661,7 +661,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Errors / Types management
         # Creating check_type function
-        check_func_def = self._create_wrapper_check(check_var, parse_args, types_dict, used_names, funcs[0].name.name)
+        check_func_def = self._create_wrapper_check(check_var, parse_args, types_dict, used_names, funcs[0].name)
         funcs_def.append(check_func_def)
 
         # Create the wrapper body with collected informations
@@ -726,7 +726,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
 
     def _get_wrapper_name(self, used_names, func):
-        name = func.name.name if isinstance(func, FunctionDef) else func.name
+        name = func.name if isinstance(func, FunctionDef) else func.name
         wrapper_name = self.get_new_name(used_names.union(self._global_names), name+"_wrapper")
         self._function_wrapper_names[func.name] = wrapper_name
         self._global_names.add(wrapper_name)
@@ -790,7 +790,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_FunctionDef(self, expr):
         # Save all used names
-        used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name.name])
+        used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name])
 
         # update ndarray local variables properties
         local_arg_vars = [a.clone(a.name, is_pointer=True, allocatable=False) if isinstance(a, Variable) and a.rank > 0 else a for a in expr.arguments]
@@ -906,7 +906,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
-        self._global_names = set(f.name.name for f in expr.funcs)
+        self._global_names = set(f.name for f in expr.funcs)
         self._module_name  = expr.name
         sep = self._print(SeparatorComment(40))
         if self._target_language == 'fortran':
