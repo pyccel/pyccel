@@ -43,7 +43,7 @@ def test_module_2(language):
 def test_module_3(language):
     set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp', language=language)
     set_num_threads(4)
-    f1 = epyccel(openmp.test_module_1test_omp_in_parallel1, accelerator='openmp', language=language)
+    f1 = epyccel(openmp.test_omp_in_parallel1, accelerator='openmp', language=language)
     f2 = epyccel(openmp.test_omp_in_parallel2, accelerator='openmp', language=language)
 
     assert f1() == 0
