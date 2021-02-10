@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, redefined-builtin, missing-module-docstring, unidiomatic-typecheck/
+# pylint: disable=missing-function-docstring, missing-module-docstring, unidiomatic-typecheck/
 import sys
 import pytest
 from numpy.random import rand, randint, uniform
@@ -3641,8 +3641,8 @@ def test_numpy_real_scalar(language):
 def test_numpy_real_array_like_1d(language):
 
     def test_bool():
-        from numpy import real, shape, array, bool as Bool
-        arr = array([4,5,0,2,1], Bool)
+        from numpy import real, shape, array
+        arr = array([4,5,0,2,1], bool)
         a = real(arr)
         s = shape(a)
         return len(s), s[0], a[0]
@@ -3684,7 +3684,7 @@ def test_numpy_real_array_like_1d(language):
         return len(s), s[0], a[0]
 
     def test_float():
-        from numpy import real, shape, array, float
+        from numpy import real, shape, array
         arr = array([4,5,6,2,1], float)
         a = real(arr)
         s = shape(a)
