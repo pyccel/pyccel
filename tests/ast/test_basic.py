@@ -78,11 +78,11 @@ def test_get_user_nodes():
 
     a_var = atts[0]
 
-    sums = a_var.get_user_nodes((PyccelAdd, PyccelMinus))
+    sums = set(a_var.get_user_nodes((PyccelAdd, PyccelMinus)))
 
     assert(all(isinstance(s, (PyccelAdd, PyccelMinus)) for s in sums))
 
-    assert(len(sums) == 4)
+    assert(len(sums) == 3)
 
 def test_get_user_nodes_excluded():
     filename = os.path.join(path_dir, "math.py")
@@ -100,3 +100,20 @@ def test_get_user_nodes_excluded():
     assert(len(ret_assign) == 1)
     ret = ret_assign[0].get_user_nodes(Return)
     assert(len(ret)==1)
+
+def test_get_direct_user_nodes():
+    filename = os.path.join(path_dir, "math.py")
+
+    interesting_var = Variable('int', 'a')
+
+    fst = get_functions(filename)[0]
+    atts = set(fst.get_attribute_nodes(Variable))
+    atts = [v for v in atts  if v == interesting_var]
+
+    a_var = atts[0]
+
+    sums = set(a_var.get_direct_user_nodes(lambda x : isinstance(x,(PyccelAdd, PyccelMinus))))
+
+    assert(all(isinstance(s, (PyccelAdd, PyccelMinus)) for s in sums))
+
+    assert(len(sums) == 2)
