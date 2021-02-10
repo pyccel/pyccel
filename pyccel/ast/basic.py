@@ -58,8 +58,33 @@ class Basic(sp_Basic):
                 for ci in c:
                     if ci and not isinstance(ci, PyccelSymbol):
                         ci.set_current_user_node(self)
-            elif c:
+            elif c and not isinstance(c, PyccelSymbol):
                 c.set_current_user_node(self)
+
+    def invalidate_node(self):
+        """ Indicate that this node is temporary.
+        This will allow it to remove itself from its children's users.
+        If a child subsequently has no users, invalidate_node is called recursively
+        """
+        for c_name in self._attribute_nodes:
+            c = getattr(self, c_name)
+            from pyccel.ast.internals import PyccelSymbol
+            from pyccel.ast.literals import convert_to_literal
+            if isinstance(c, PyccelSymbol):
+                # Anti-pattern
+                # PyccelSymbol is not a Basic so it must be handled separately
+                continue
+
+            if isinstance(c, tuple):
+                for ci in c:
+                    if ci and not isinstance(ci, PyccelSymbol):
+                        ci.remove_user_node(self)
+                        if not ci._user_nodes:
+                            ci.invalidate_node()
+            elif c and not isinstance(c, PyccelSymbol):
+                c.remove_user_node(self)
+                if not c._user_nodes:
+                    c.invalidate_node()
 
     def get_user_nodes(self, search_type, excluded_nodes = ()):
         """ Returns all objects of the requested type
@@ -230,6 +255,7 @@ class Basic(sp_Basic):
         user_node : Basic
                     Node which previously used the current node
         """
+        assert(user_node in self._user_nodes)
         self._user_nodes.remove(user_node)
 
     def __eq__(self, other):
