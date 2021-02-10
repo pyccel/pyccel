@@ -4387,250 +4387,6 @@ def test_numpy_complex128(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
-            pytest.mark.c]
-        )
-    )
-)
-
-def test_numpy_real_scalar(language):
-
-    @types('bool')
-    def test_bool(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    @types('int')
-    def test_int(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    @types('int8')
-    def test_int8(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    @types('int16')
-    def test_int16(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    @types('int32')
-    def test_int32(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    @types('int64')
-    def test_int64(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    @types('float')
-    def test_float(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    @types('float32')
-    def test_float32(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    @types('float64')
-    def test_float64(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    @types('complex64')
-    def test_complex64(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    @types('complex128')
-    def test_complex128(a):
-        import numpy as np
-        b = np.real(a)
-        return b
-
-    import numpy as np
-
-    bl = np.bool(randint(1e6))
-    integer = randint(1e6)
-    integer8 = np.int8(randint(1e6))
-    integer16 = np.int16(randint(1e6))
-    integer32 = np.int32(randint(1e6))
-    integer64 = np.int64(randint(1e6))
-    fl = np.float(randint(1e6))
-    fl32 = np.float32(randint(1e6))
-    fl64 = np.float64(randint(1e6))
-
-    # gfortran complains about boolean to numeric convertions, given that boolean type in Fortran
-    # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
-    if (language == 'c'):
-        f_bl = epyccel(test_bool, language=language)
-        assert (f_bl(bl) == test_bool(bl))
-
-    f_integer = epyccel(test_int, language=language)
-    f_integer8 = epyccel(test_int8, language=language)
-    f_integer16 = epyccel(test_int16, language=language)
-    f_integer32 = epyccel(test_int32, language=language)
-    f_integer64 = epyccel(test_int64, language=language)
-
-    assert (f_integer(integer) == test_int(integer))
-    assert (f_integer8(integer8) == test_int8(integer8))
-    assert (f_integer16(integer16) == test_int16(integer16))
-    assert (f_integer32(integer32) == test_int32(integer32))
-    assert (f_integer64(integer64) == test_int64(integer64))
-
-    f_fl = epyccel(test_float, language=language)
-    f_fl32 = epyccel(test_float32, language=language)
-    f_fl64 = epyccel(test_float64, language=language)
-
-    assert (f_fl(fl) == test_float(fl))
-    assert (f_fl32(fl32) == test_float32(fl32))
-    assert (f_fl64(fl64) == test_float64(fl64))
-
-    f_complex64 = epyccel(test_complex64, language=language)
-    f_complex128 = epyccel(test_complex128, language=language)
-
-    assert (f_complex64(1+5j) == test_complex64(1+5j))
-    assert (f_complex128(1+5j) == test_complex128(1+5j))
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
-            pytest.mark.c]
-        )
-    )
-)
-
-def test_numpy_imag_scalar(language):
-
-    @types('bool')
-    def test_bool(a):
-        import numpy as np
-        b = np.imag(a)
-        return b
-
-    @types('int')
-    def test_int(a):
-        import numpy as np
-        b = np.imag(a)
-        return b
-
-    @types('int8')
-    def test_int8(a):
-        import numpy as np
-        b = np.imag(a)
-        return b
-
-    @types('int16')
-    def test_int16(a):
-        import numpy as np
-        b = np.imag(a)
-        return b
-
-    @types('int32')
-    def test_int32(a):
-        import numpy as np
-        b = np.imag(a)
-        return b
-
-    @types('int64')
-    def test_int64(a):
-        import numpy as np
-        b = np.imag(a)
-        return b
-
-    @types('float')
-    def test_float(a):
-        import numpy as np
-        b = np.imag(a)
-        return b
-
-    @types('float32')
-    def test_float32(a):
-        import numpy as np
-        b = np.imag(a)
-        return b
-
-    @types('float64')
-    def test_float64(a):
-        import numpy as np
-        b = np.imag(a)
-        return b
-
-    @types('complex64')
-    def test_complex64(a):
-        import numpy as np
-        b = np.imag(a)
-        return b
-
-    @types('complex128')
-    def test_complex128(a):
-        import numpy as np
-        b = np.imag(a)
-        return b
-
-    import numpy as np
-
-    bl = np.bool(randint(1e6))
-    integer = randint(1e6)
-    integer8 = np.int8(randint(1e6))
-    integer16 = np.int16(randint(1e6))
-    integer32 = np.int32(randint(1e6))
-    integer64 = np.int64(randint(1e6))
-    fl = np.float(randint(1e6))
-    fl32 = np.float32(randint(1e6))
-    fl64 = np.float64(randint(1e6))
-
-    # gfortran complains about boolean to numeric convertions, given that boolean type in Fortran
-    # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
-    if (language == 'c'):
-        f_bl = epyccel(test_bool, language=language)
-        assert (f_bl(bl) == test_bool(bl))
-
-    f_integer = epyccel(test_int, language=language)
-    f_integer8 = epyccel(test_int8, language=language)
-    f_integer16 = epyccel(test_int16, language=language)
-    f_integer32 = epyccel(test_int32, language=language)
-    f_integer64 = epyccel(test_int64, language=language)
-
-    assert (f_integer(integer) == test_int(integer))
-    assert (f_integer8(integer8) == test_int8(integer8))
-    assert (f_integer16(integer16) == test_int16(integer16))
-    assert (f_integer32(integer32) == test_int32(integer32))
-    assert (f_integer64(integer64) == test_int64(integer64))
-
-    f_fl = epyccel(test_float, language=language)
-    f_fl32 = epyccel(test_float32, language=language)
-    f_fl64 = epyccel(test_float64, language=language)
-
-    assert (f_fl(fl) == test_float(fl))
-    assert (f_fl32(fl32) == test_float32(fl32))
-    assert (f_fl64(fl64) == test_float64(fl64))
-
-    f_complex64 = epyccel(test_complex64, language=language)
-    f_complex128 = epyccel(test_complex128, language=language)
-
-    assert (f_complex64(1+5j) == test_complex64(1+5j))
-    assert (f_complex128(1+5j) == test_complex128(1+5j))
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
             pytest.mark.skip(reason="Complex not supported yet")]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Mod function not supported in C"),
@@ -4753,7 +4509,7 @@ def test_numpy_mod_scalar(language):
 def test_numpy_mod_array_like_1d(language):
 
     def test_int():
-        from numpy import mod, shape, array, int
+        from numpy import mod, shape, array
         x1 = array([4,5,6,2,1], int)
         x2 = array([4,5,6,2,1], int)
         a = mod(x1, x2)
@@ -4793,7 +4549,7 @@ def test_numpy_mod_array_like_1d(language):
         return len(s), s[0], a[0]
 
     def test_float():
-        from numpy import mod, shape, array, float
+        from numpy import mod, shape, array
         x1 = array([4,5,6,2,1], float)
         x2 = array([4,5,6,2,1], float)
         a = mod(x1, x2)
@@ -4873,7 +4629,7 @@ def test_numpy_mod_array_like_1d(language):
 def test_numpy_mod_array_like_2d(language):
 
     def test_int():
-        from numpy import mod, shape, array, int
+        from numpy import mod, shape, array
         x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int)
         x2 = array([[4,5,6,2,1],[4,5,6,2,1]], int)
         a = mod(x1, x2)
@@ -4913,7 +4669,7 @@ def test_numpy_mod_array_like_2d(language):
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
     def test_float():
-        from numpy import mod, shape, array, float
+        from numpy import mod, shape, array
         x1 = array([[4,5,6,2,1],[4,5,6,2,1]], float)
         x2 = array([[4,5,6,2,1],[4,5,6,2,1]], float)
         a = mod(x1, x2)
@@ -5343,61 +5099,61 @@ def test_numpy_prod_scalar(language):
 def test_numpy_prod_array_like_1d(language):
 
     def test_int():
-        from numpy import prod, shape, array, int
+        from numpy import prod, array
         x1 = array([4,5,6,2,1], int)
         a = prod(x1)
         return a
 
     def test_int8():
-        from numpy import prod, shape, array, int8
+        from numpy import prod, array, int8
         x1 = array([4,5,6,2,1], int8)
         a = prod(x1)
         return a
 
     def test_int16():
-        from numpy import prod, shape, array, int16
+        from numpy import prod, array, int16
         x1 = array([4,5,6,2,1], int16)
         a = prod(x1)
         return a
 
     def test_int32():
-        from numpy import prod, shape, array, int32
+        from numpy import prod, array, int32
         x1 = array([4,5,6,2,1], int32)
         a = prod(x1)
         return a
 
     def test_int64():
-        from numpy import prod, shape, array, int64
+        from numpy import prod, array, int64
         x1 = array([4,5,6,2,1], int64)
         a = prod(x1)
         return a
 
     def test_float():
-        from numpy import prod, shape, array, float
+        from numpy import prod, array, float
         x1 = array([4,5,6,2,1], float)
         a = prod(x1)
         return a
 
     def test_float32():
-        from numpy import prod, shape, array, float32
+        from numpy import prod, array, float32
         x1 = array([4,5,6,2,1], float32)
         a = prod(x1)
         return a
 
     def test_float64():
-        from numpy import prod, shape, array, float64
+        from numpy import prod, array, float64
         x1 = array([4,5,6,2,1], float64)
         a = prod(x1)
         return a
 
     def test_complex64():
-        from numpy import prod, shape, array, complex64
+        from numpy import prod, array, complex64
         x1 = array([4,5,6,2,1], complex64)
         a = prod(x1)
         return a
 
     def test_complex128():
-        from numpy import prod, shape, array, complex128
+        from numpy import prod, array, complex128
         x1 = array([4,5,6,2,1], complex128)
         a = prod(x1)
         return a
@@ -5443,61 +5199,61 @@ def test_numpy_prod_array_like_1d(language):
 def test_numpy_prod_array_like_2d(language):
 
     def test_int():
-        from numpy import prod, shape, array, int
+        from numpy import prod, array, int
         x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int)
         a = prod(x1)
         return a
 
     def test_int8():
-        from numpy import prod, shape, array, int8
+        from numpy import prod, array, int8
         x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
         a = prod(x1)
         return a
 
     def test_int16():
-        from numpy import prod, shape, array, int16
+        from numpy import prod, array, int16
         x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
         a = prod(x1)
         return a
 
     def test_int32():
-        from numpy import prod, shape, array, int32
+        from numpy import prod, array, int32
         x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int32)
         a = prod(x1)
         return a
 
     def test_int64():
-        from numpy import prod, shape, array, int64
+        from numpy import prod, array, int64
         x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int64)
         a = prod(x1)
         return a
 
     def test_float():
-        from numpy import prod, shape, array, float
+        from numpy import prod, array, float
         x1 = array([[4,5,6,2,1],[4,5,6,2,1]], float)
         a = prod(x1)
         return a
 
     def test_float32():
-        from numpy import prod, shape, array, float32
+        from numpy import prod, array, float32
         x1 = array([[4,5,6,2,1],[4,5,6,2,1]], float32)
         a = prod(x1)
         return a
 
     def test_float64():
-        from numpy import prod, shape, array, float64
+        from numpy import prod, array, float64
         x1 = array([[4,5,6,2,1],[4,5,6,2,1]], float64)
         a = prod(x1)
         return a
 
     def test_complex64():
-        from numpy import prod, shape, array, complex64
+        from numpy import prod, array, complex64
         x1 = array([[4,5,6,2,1],[4,5,6,2,1]], complex64)
         a = prod(x1)
         return a
 
     def test_complex128():
-        from numpy import prod, shape, array, complex128
+        from numpy import prod, array, complex128
         x1 = array([[4,5,6,2,1],[4,5,6,2,1]], complex128)
         a = prod(x1)
         return a
