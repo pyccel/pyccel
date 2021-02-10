@@ -1180,7 +1180,7 @@ class SemanticParser(BasicParser):
             tuple_args = [ai for a in args for ai in get_vars(a)]
             expr_new = PythonTuple(*tuple_args)
         else:
-            nil = [a.invalidate_node() for a in args]
+            _ = [a.invalidate_node() for a in args]
             expr_new = self._visit_PyccelOperator(expr, **settings)
         return expr_new
 
@@ -1191,7 +1191,7 @@ class SemanticParser(BasicParser):
         elif isinstance(args[1], (TupleVariable, PythonTuple, PythonList)):
             expr_new = self._visit(Dlist(args[1], args[0]))
         else:
-            nil = [a.invalidate_node() for a in args]
+            _ = [a.invalidate_node() for a in args]
             expr_new = self._visit_PyccelOperator(expr, **settings)
         return expr_new
 

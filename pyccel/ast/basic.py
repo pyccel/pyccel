@@ -69,7 +69,6 @@ class Basic(sp_Basic):
         for c_name in self._attribute_nodes:
             c = getattr(self, c_name)
             from pyccel.ast.internals import PyccelSymbol
-            from pyccel.ast.literals import convert_to_literal
             if isinstance(c, PyccelSymbol):
                 # Anti-pattern
                 # PyccelSymbol is not a Basic so it must be handled separately
@@ -79,11 +78,11 @@ class Basic(sp_Basic):
                 for ci in c:
                     if ci and not isinstance(ci, PyccelSymbol):
                         ci.remove_user_node(self)
-                        if not ci._user_nodes:
+                        if ci.is_unused:
                             ci.invalidate_node()
             elif c and not isinstance(c, PyccelSymbol):
                 c.remove_user_node(self)
-                if not c._user_nodes:
+                if not c.is_unused:
                     c.invalidate_node()
 
     def get_user_nodes(self, search_type, excluded_nodes = ()):
@@ -243,6 +242,8 @@ class Basic(sp_Basic):
         return [p for p in self._user_nodes if condition(p)]
 
     def set_current_user_node(self, user_nodes):
+        """ Inform the class about the most recent user of the node
+        """
         self._user_nodes.append(user_nodes)
 
     def remove_user_node(self, user_node):
@@ -257,6 +258,12 @@ class Basic(sp_Basic):
         """
         assert(user_node in self._user_nodes)
         self._user_nodes.remove(user_node)
+
+    @property
+    def is_unused(self):
+        """ Indicates whether the class has any users
+        """
+        return len(self._user_nodes)==0
 
     def __eq__(self, other):
         #TODO: Remove with sympy inheritance
