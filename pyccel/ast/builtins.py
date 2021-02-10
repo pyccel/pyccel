@@ -99,7 +99,9 @@ class PythonImag(PythonComplexProperty):
     arg : Variable, Literal
     """
     def __new__(cls, arg):
-        if arg.dtype is not NativeComplex():
+        if isinstance(arg.dtype, NativeBool):
+            return PythonInt(arg)
+        elif arg.dtype is not NativeComplex():
             return get_default_literal_value(arg.dtype)
         else:
             return super().__new__(cls, arg)

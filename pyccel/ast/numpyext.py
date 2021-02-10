@@ -133,20 +133,7 @@ class NumpyInt64(NumpyInt):
     _precision = dtype_registry['int64'][1]
 
 #==============================================================================
-class NumpyReal(PythonReal):
-    """Represents a call to  numpy.real for code generation.
 
-    > a = 1+2j
-    > np.real(a)
-    1.0
-    """
-    def __init__(self, arg):
-        super().__init__(arg)
-        self._precision = arg.precision
-        self._shape = process_shape(self.internal_var.shape)
-        self._rank  = len(self._shape)
-
-#==============================================================================
 DtypePrecisionToCastFunction = {
     'Int' : {
         4 : NumpyInt32,
@@ -417,6 +404,22 @@ def Shape(arg):
         return PythonTuple(*arg.shape)
 
 #==============================================================================
+
+class NumpyReal(PythonReal):
+    """Represents a call to  numpy.real for code generation.
+
+    > a = 1+2j
+    > np.real(a)
+    1.0
+    """
+    def __init__(self, arg):
+        super().__init__(arg)
+        self._precision = arg.precision
+        self._shape = process_shape(self.internal_var.shape)
+        self._rank  = len(self._shape)
+
+#==============================================================================
+
 class NumpyImag(PythonImag):
     """Represents a call to  numpy.real for code generation.
 
@@ -424,7 +427,11 @@ class NumpyImag(PythonImag):
     > np.imag(a)
     2.0
     """
-
+    def __init__(self, arg):
+        super().__init__(arg)
+        self._precision = arg.precision
+        self._shape = process_shape(self.internal_var.shape)
+        self._rank  = len(self._shape)
 #==============================================================================
 class NumpyLinspace(NumpyNewArray):
 
