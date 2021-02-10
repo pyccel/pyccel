@@ -1,3 +1,11 @@
+# coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+"""
+"""
+
 from .basic import Basic
 
 class OmpAnnotatedComment(Basic):
@@ -27,14 +35,16 @@ class OmpAnnotatedComment(Basic):
 
     @property
     def txt(self):
+        """Used to store clauses."""
         return self._txt
 
     @property
     def combined(self):
+        """Used to store the combined construct of a directive."""
         return self._combined
 
     def __getnewargs__(self):
-        """used for Pickling self."""
+        """Used for Pickling self."""
 
         args = (self.txt, self.combined)
         return args
@@ -46,13 +56,13 @@ class OMP_For_Loop(OmpAnnotatedComment):
 
 class OMP_Parallel_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Parallel construct. """
-    def __init__(cls, txt, combined=None):
-        OmpAnnotatedComment.__init__(cls, txt, combined)
+    def __init__(self, txt, combined=None):
+        OmpAnnotatedComment.__init__(self, txt, combined)
 
 class OMP_Task_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Task construct. """
-    def __init__(cls, txt):
-        OmpAnnotatedComment.__init__(cls, txt)
+    def __init__(self, txt):
+        OmpAnnotatedComment.__init__(self, txt)
 
 class OMP_Single_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Single construct. """
@@ -61,43 +71,43 @@ class OMP_Single_Construct(OmpAnnotatedComment):
 
 class OMP_Critical_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Critical construct. """
-    def __init__(cls, txt):
-        OmpAnnotatedComment.__init__(cls, txt)
+    def __init__(self, txt):
+        OmpAnnotatedComment.__init__(self, txt)
 
 class OMP_Master_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Master construct. """
-    def __init__(cls, txt):
-        OmpAnnotatedComment.__init__(cls, txt)
+    def __init__(self, txt):
+        OmpAnnotatedComment.__init__(self, txt)
 
 class OMP_Masked_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Masked construct. """
-    def __init__(cls, txt, combined=None):
-        OmpAnnotatedComment.__init__(cls, txt, combined)
+    def __init__(self, txt, combined=None):
+        OmpAnnotatedComment.__init__(self, txt, combined)
 
 class OMP_Cancel_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Cancel construct. """
-    def __init__(cls, txt):
-        OmpAnnotatedComment.__init__(cls, txt)
+    def __init__(self, txt):
+        OmpAnnotatedComment.__init__(self, txt)
 
 class OMP_Target_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Target construct. """
-    def __init__(cls, txt, combined=None):
-        OmpAnnotatedComment.__init__(cls, txt, combined)
+    def __init__(self, txt, combined=None):
+        OmpAnnotatedComment.__init__(self, txt, combined)
 
 class OMP_Teams_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Target construct. """
-    def __init__(cls, txt, combined=None):
-        OmpAnnotatedComment.__init__(cls, txt, combined)
+    def __init__(self, txt, combined=None):
+        OmpAnnotatedComment.__init__(self, txt, combined)
 
 class OMP_Sections_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Sections construct. """
-    def __init__(cls, txt):
-        OmpAnnotatedComment.__init__(cls, txt)
+    def __init__(self, txt):
+        OmpAnnotatedComment.__init__(self, txt)
 
 class OMP_Section_Construct(OmpAnnotatedComment):
     """ Represent OpenMP Section construct. """
-    def __init__(cls, txt):
-        OmpAnnotatedComment.__init__(cls, txt)
+    def __init__(self, txt):
+        OmpAnnotatedComment.__init__(self, txt)
 
 class Omp_End_Clause(OmpAnnotatedComment):
     """ Represents the End of an OpenMP block. """

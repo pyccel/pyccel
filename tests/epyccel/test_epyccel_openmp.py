@@ -305,3 +305,7 @@ def test_omp_tasks(language):
     for _ in range(0, 4):
         x = random.randint(10, 20)
         assert openmp.omp_tasks(x) == f1(x)
+
+def test_omp_simd(language):
+    f1 = epyccel(openmp.omp_simd, accelerator='openmp', language=language)
+    assert openmp.omp_simd(1337) == f1(1337)

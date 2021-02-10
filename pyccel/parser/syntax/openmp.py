@@ -507,7 +507,7 @@ class OmpTargetConstruct(BasicStmt):
                           OmpinReduction, \
                           OmpDepend, \
                           OmpMap)
-        
+
         combined = None
         if isinstance(self.combined, OmpTargetParallel):
             combined = self.combined.expr

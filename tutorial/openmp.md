@@ -282,14 +282,12 @@ x2 = 0
 for i in range(0, 100):
   #$ omp atomic
   x1 = x1 + 1 #Will be executed (100 x 2) times.
-  #$ omp end atomic
 
 #$ omp single
 #$ omp taskloop
 for i in range(0, 100):
   #$ omp atomic
   x2 = x2 + 1 #Will be executed (100) times.
-  #$ omp end atomic
 #$ omp end single
 
 #$ omp end parallel
