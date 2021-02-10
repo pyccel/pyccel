@@ -2602,7 +2602,7 @@ class SemanticParser(BasicParser):
             assigned     = [a.name for a in all_assigned if a.rank > 0]
             all_assigned = [i.name for i in all_assigned]
 
-            apps = list(body.get_attribute_nodes(FunctionCall))
+            apps = body.get_attribute_nodes(FunctionCall)
             apps = [i for i in apps if (i.__class__.__name__
                     in self.get_parent_functions())]
 
