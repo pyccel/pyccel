@@ -16,7 +16,7 @@ from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeGeneric,
                         default_precision)
-from .internals import PyccelArraySize, Slice, PyccelSymbol
+from .internals import PyccelArraySize, Slice
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv,
                         PyccelUnarySub, PyccelAdd)
