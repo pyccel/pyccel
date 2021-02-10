@@ -1550,6 +1550,9 @@ class SemanticParser(BasicParser):
 
                         else:
                             previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
+                            if not previous_allocations:
+                                errors.report("PYCCEL INTERNAL ERROR : Variable exists already, but it has never been allocated",
+                                        symbol=var, severity='fatal')
                             if previous_allocations[-1].get_user_nodes((If, For, While)):
                                 status='unknown'
                             elif previous_allocations[-1].get_user_nodes(IfSection):
