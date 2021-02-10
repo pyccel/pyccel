@@ -57,13 +57,13 @@ class Basic(sp_Basic):
             if isinstance(c, tuple):
                 for ci in c:
                     if ci:
-                        ci.user_nodes = self
+                        ci.current_user_node = self
             elif c:
-                c.user_nodes = self
+                c.current_user_node = self
 
     def get_user_nodes(self, search_type, excluded_nodes = ()):
-        """ Find out if any of the user nodes are instances
-        of the provided object.
+        """ Returns all objects of the requested type
+        which use the current object
 
         Parameters
         ----------
@@ -74,8 +74,8 @@ class Basic(sp_Basic):
 
         Results
         -------
-        Boolean : True if one of the user nodes is an instance of
-                  the class in the argument
+        list : List containing all objects of the
+               requested type which contain self
         """
         from pyccel.ast.internals import PyccelSymbol
         excluded_nodes += (PyccelSymbol,)
@@ -151,19 +151,20 @@ class Basic(sp_Basic):
                 idx = original.index(v)
                 v.remove_user_node(self)
                 setattr(self, n, replacement[idx])
-                replacement[idx].user_nodes = self
+                replacement[idx].current_user_node = self
             elif isinstance(v, tuple):
                 new_v = []
                 for vi in v:
+                    new_vi = vi
                     if vi in original:
                         idx = original.index(vi)
                         vi.remove_user_node(self)
-                        new_v.append(replacement[idx])
-                        replacement[idx].user_nodes = self
-                    else:
-                        new_v.append(vi)
+                        new_vi = replacement[idx]
+                        replacement[idx].current_user_node = self
+                    elif not isinstance(vi, excluded_nodes):
                         vi.substitute(original, replacement, excluded_nodes)
-                setattr(self, n, v)
+                    new_v.append(new_vi)
+                setattr(self, n, tuple(new_v))
             elif not isinstance(v, excluded_nodes):
                 v.substitute(original, replacement, excluded_nodes)
 
@@ -177,7 +178,6 @@ class Basic(sp_Basic):
         """Sets the python.ast fst."""
         if not isinstance(fst, ast.AST):
             raise TypeError("Fst must be an AST object, not {}".format(type(fst)))
-        assert(isinstance(fst, ast.AST))
 
         if not hasattr(fst, 'lineno'):
             # Handle module object
@@ -207,16 +207,16 @@ class Basic(sp_Basic):
         return [p for p in self._user_nodes if condition(p)]
 
     @property
-    def user_nodes(self):
-        """ Get the current user_nodes of the object
+    def current_user_node(self):
+        """ Get the current user_node of the object
         """
         if self._user_nodes:
             return self._user_nodes[-1]
         else:
             return None
 
-    @user_nodes.setter
-    def user_nodes(self, user_nodes):
+    @current_user_node.setter
+    def current_user_node(self, user_nodes):
         self._user_nodes.append(user_nodes)
 
     def remove_user_node(self, user_node):
