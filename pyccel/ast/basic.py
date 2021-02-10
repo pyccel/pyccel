@@ -32,8 +32,12 @@ class Basic(sp_Basic):
         self._fst = []
         for c_name in self._attribute_nodes:
             c = getattr(self, c_name)
+            from pyccel.ast.internals import PyccelSymbol
             from pyccel.ast.literals import convert_to_literal
-            if isinstance(c, (int, float, complex, str, bool)):
+            if isinstance(c, PyccelSymbol):
+                # PyccelSymbol is not a Basic so it must be handled separately
+                continue
+            elif isinstance(c, (int, float, complex, str, bool)):
                 # Convert basic types to literal types
                 c = convert_to_literal(c)
                 setattr(self, c_name, c)
@@ -41,7 +45,8 @@ class Basic(sp_Basic):
             elif isinstance(c, iterable_types):
                 if any(isinstance(ci, iterable_types) for ci in c):
                     raise TypeError("Basic child cannot be a tuple of tuples")
-                c = tuple(ci if not isinstance(ci, (int, float, complex, str, bool)) \
+                c = tuple(ci if (not isinstance(ci, (int, float, complex, str, bool)) \
+                                 or isinstance(ci, PyccelSymbol)) \
                         else convert_to_literal(ci) for ci in c)
                 setattr(self, c_name, c)
 
@@ -71,6 +76,8 @@ class Basic(sp_Basic):
         Boolean : True if one of the user nodes is an instance of
                   the class in the argument
         """
+        from pyccel.ast.internals import PyccelSymbol
+        excluded_nodes += (PyccelSymbol,)
         if len(self._user_nodes) == 0:
             return []
         else:
@@ -95,6 +102,8 @@ class Basic(sp_Basic):
         list : List containing all objects of the
                requested type which exist in self
         """
+        from pyccel.ast.internals import PyccelSymbol
+        excluded_nodes += (PyccelSymbol,)
         results = []
         for n in self._attribute_nodes:
             v = getattr(self, n)
