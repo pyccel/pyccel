@@ -191,13 +191,14 @@ class Basic(sp_Basic):
                 new_v = []
                 for vi in v:
                     new_vi = vi
-                    if vi in original:
-                        idx = original.index(vi)
-                        vi.remove_user_node(self)
-                        new_vi = replacement[idx]
-                        replacement[idx].set_current_user_node(self)
-                    elif not isinstance(vi, excluded_nodes):
-                        vi.substitute(original, replacement, excluded_nodes)
+                    if not isinstance(vi, excluded_nodes):
+                        if vi in original:
+                            idx = original.index(vi)
+                            vi.remove_user_node(self)
+                            new_vi = replacement[idx]
+                            replacement[idx].set_current_user_node(self)
+                        elif vi and not isinstance(vi, PyccelSymbol):
+                            vi.substitute(original, replacement, excluded_nodes)
                     new_v.append(new_vi)
                 setattr(self, n, tuple(new_v))
             elif v is not None and not isinstance(v, PyccelSymbol):
