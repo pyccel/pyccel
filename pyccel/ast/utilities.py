@@ -22,7 +22,6 @@ from .literals      import LiteralString
 
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants)
-from .operators     import PyccelNot
 from .variable      import (Constant, Variable, ValuedVariable)
 
 __all__ = (
