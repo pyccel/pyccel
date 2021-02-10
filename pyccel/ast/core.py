@@ -2221,6 +2221,10 @@ class FunctionDef(Basic):
                 args   = args,
                 result = result)
 
+    @property
+    def is_unused(self):
+        return False
+
 class Interface(Basic):
 
     """Represents an Interface.
@@ -2720,6 +2724,10 @@ class ClassDef(Basic):
 
     def _eval_subs(self, old , new):
         return self
+
+    @property
+    def is_unused(self):
+        return False
 
 
 class Import(Basic):
