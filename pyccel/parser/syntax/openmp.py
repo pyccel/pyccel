@@ -1262,7 +1262,7 @@ class OmpTargetParallel(BasicStmt):
     def expr(self):
         if DEBUG:
             print("> Combined Target Parallel")
-        
+
         txt = self.pname
         if self.fname:
             txt += ' ' + self.fname
