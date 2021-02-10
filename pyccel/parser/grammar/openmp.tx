@@ -50,7 +50,7 @@ OmpSimdConstruct:       name='simd'       clauses*=AllOmpClauses;
 OmpAtomicConstruct:     name='atomic'     clauses*=AllOmpClauses; // Not all clause were added (cant test them).
 OmpTaskConstruct:       name='task'       clauses*=AllOmpClauses;
 OmpCancelConstruct:     name='cancel'     clauses*=AllOmpClauses;
-OmpTargetConstruct:     name='target'     clauses*=AllOmpClauses;
+OmpTargetConstruct:     name='target'     combined=TargetCombined? clauses*=AllOmpClauses;
 OmpTeamsConstruct:      name='teams'      combined=TeamsCombined? clauses*=AllOmpClauses;
 OmpDistributeConstruct: name='distribute' clauses*=AllOmpClauses;
 OmpSectionsConstruct:   name='sections'   clauses*=AllOmpClauses;
@@ -67,8 +67,9 @@ OmpTaskyieldConstruct:  name='taskyield';
 ////////////////////////////////////////////////////
 
 ParallelCombined: OmpForSimd | OmpMaskedTaskloop | OmpPSections;
-MaskedCombined: OmpTaskloopSimd;
-TeamsCombined: OmpDistributeCombined;
+MaskedCombined:   OmpTaskloopSimd;
+TeamsCombined:    OmpDistributeCombined;
+TargetCombined:   OmpTargetParallel;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -80,6 +81,7 @@ OmpMaskedTaskloop: mname='masked' (tname='taskloop' sname='simd'?)?;
 OmpPSections: sname='sections';
 OmpTaskloopSimd: tname='taskloop' sname='simd'?;
 OmpDistributeCombined: dname='distribute' (sname='simd' | (pname='parallel' fname='for' ssname='simd'?))?;
+OmpTargetParallel: pname='parallel' (fname='for' sname='simd'?)?;
 
 ////////////////////////////////////////////////////
 

@@ -3326,8 +3326,8 @@ class OMP_Cancel_Construct(OmpAnnotatedComment):
 
 class OMP_Target_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Target construct. """
-    def __init__(cls, txt):
-        OmpAnnotatedComment.__init__(cls, txt)
+    def __init__(cls, txt, combined=None):
+        OmpAnnotatedComment.__init__(cls, txt, combined)
 
 class OMP_Teams_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Target construct. """

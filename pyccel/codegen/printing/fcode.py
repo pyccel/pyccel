@@ -1905,8 +1905,11 @@ class FCodePrinter(CodePrinter):
         return omp_expr
 
     def _print_OMP_Target_Construct(self, expr):
-        omp_expr = str(expr.txt)
-        omp_expr = '!$omp {}\n'.format(omp_expr)
+        clauses = ''
+        if expr.combined:
+            clauses = ' ' + expr.combined.replace("for", "do")
+        clauses += str(expr.txt)
+        omp_expr = '!$omp target{}\n'.format(clauses)
         return omp_expr
 
     def _print_OMP_Teams_Construct(self, expr):

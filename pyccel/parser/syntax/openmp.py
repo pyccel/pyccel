@@ -493,6 +493,8 @@ class OmpTargetConstruct(BasicStmt):
         """
         self.clauses  = kwargs.pop('clauses')
         self.name     = kwargs.pop('name')
+        self.combined = kwargs.pop('combined', None)
+
         super().__init__(**kwargs)
 
     @property
@@ -505,14 +507,21 @@ class OmpTargetConstruct(BasicStmt):
                           OmpinReduction, \
                           OmpDepend, \
                           OmpMap)
-
-        txt = self.name
+        
+        combined = None
+        if isinstance(self.combined, OmpTargetParallel):
+            combined = self.combined.expr
+            _valid_clauses = _valid_clauses + _valid_parallel_clauses
+            if 'for' in self.combined.expr:
+                _valid_clauses = _valid_clauses + _valid_simd_clauses
+                _valid_clauses = _valid_clauses + _valid_loop_clauses
+        txt = ''
         for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
+            if isinstance(clause, _valid_clauses) and not isinstance(clause, OmpCopyin):
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpCancelConstruct')
-        return OMP_Target_Construct(txt)
+        return OMP_Target_Construct(txt, combined)
 
 class OmpTeamsConstruct(BasicStmt):
     """Class representing a Teams stmt ."""
@@ -1238,6 +1247,30 @@ class OmpDistributeCombined(BasicStmt):
 
         return txt
 
+class OmpTargetParallel(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.pname = kwargs.pop('pname')
+        self.fname = kwargs.pop('fname', None)
+        self.sname = kwargs.pop('sname', None)
+
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> Combined Target Parallel")
+        
+        txt = self.pname
+        if self.fname:
+            txt += ' ' + self.fname
+            if self.sname:
+                txt += ' ' + self.sname
+
+        return txt
+
 #################################################
 
 #################################################
@@ -1307,7 +1340,7 @@ omp_directives = [OmpParallelConstruct,
                   OmpTaskConstruct,
                   OmpFlushConstruct,
                   OmpCancelConstruct,
-                 OmpTargetConstruct,
+                  OmpTargetConstruct,
                   OmpTeamsConstruct,
                   OmpDistributeConstruct,
                   OmpSectionsConstruct,
@@ -1348,7 +1381,8 @@ omp_clauses = [OmpCollapse,
                OmpMaskedTaskloop,
                OmpPSections,
                OmpTaskloopSimd,
-               OmpDistributeCombined]
+               OmpDistributeCombined,
+               OmpTargetParallel]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 
