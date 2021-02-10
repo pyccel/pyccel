@@ -77,14 +77,14 @@ class Basic(sp_Basic):
         list : List containing all objects of the
                requested type which contain self
         """
-        from pyccel.ast.internals import PyccelSymbol
-        excluded_nodes += (PyccelSymbol,)
         if len(self._user_nodes) == 0:
             return []
         else:
-            results  = [p for p in self._user_nodes if isinstance(p, search_type)]
-            results += [r for p in self._user_nodes if not isinstance(p, (search_type, *excluded_nodes)) \
-                    for r in p.get_user_nodes(search_type)]
+            from pyccel.ast.internals import PyccelSymbol
+
+            results  = [p for p in self._user_nodes if isinstance(p, search_type) and not isinstance(p, excluded_nodes)]
+            results += [r for p in self._user_nodes if not isinstance(p, (search_type, PyccelSymbol, excluded_nodes)) \
+                    for r in p.get_user_nodes(search_type, excluded_nodes = excluded_nodes)]
             return results
 
     def get_attribute_nodes(self, search_type, excluded_nodes = ()):
@@ -104,23 +104,30 @@ class Basic(sp_Basic):
                requested type which exist in self
         """
         from pyccel.ast.internals import PyccelSymbol
-        excluded_nodes += (PyccelSymbol,)
+
         results = []
         for n in self._attribute_nodes:
             v = getattr(self, n)
-            if isinstance(v, search_type):
+            if isinstance(v, excluded_nodes):
+                continue
+
+            elif isinstance(v, search_type):
                 results.append(v)
 
-            if isinstance(v, tuple):
+            elif isinstance(v, tuple):
                 for vi in v:
-                    if isinstance(vi, search_type):
+                    if isinstance(vi, excluded_nodes):
+                        continue
+                    elif isinstance(vi, search_type):
                         results.append(vi)
 
-                    elif vi is not None and not isinstance(vi, excluded_nodes):
-                        results.extend(vi.get_attribute_nodes(search_type))
+                    elif vi is not None and not isinstance(vi, PyccelSymbol):
+                        results.extend(vi.get_attribute_nodes(
+                            search_type, excluded_nodes=excluded_nodes))
 
-            elif v is not None and not isinstance(v, excluded_nodes):
-                results.extend(v.get_attribute_nodes(search_type))
+            elif v is not None and not isinstance(v, PyccelSymbol):
+                results.extend(v.get_attribute_nodes(
+                    search_type, excluded_nodes = excluded_nodes))
 
         return results
 
@@ -138,6 +145,8 @@ class Basic(sp_Basic):
         excluded_nodes : tuple of types
                       Types for which substitute should not be called
         """
+        from pyccel.ast.internals import PyccelSymbol
+
         if isinstance(original, tuple):
             assert(isinstance(replacement, tuple))
             assert(len(original) == len(replacement))
@@ -147,7 +156,9 @@ class Basic(sp_Basic):
 
         for n in self._attribute_nodes:
             v = getattr(self, n)
-            if v in original:
+            if isinstance(v, excluded_nodes):
+                continue
+            elif v in original:
                 idx = original.index(v)
                 v.remove_user_node(self)
                 setattr(self, n, replacement[idx])
@@ -165,7 +176,7 @@ class Basic(sp_Basic):
                         vi.substitute(original, replacement, excluded_nodes)
                     new_v.append(new_vi)
                 setattr(self, n, tuple(new_v))
-            elif not isinstance(v, excluded_nodes):
+            elif v is not None and not isinstance(v, PyccelSymbol):
                 v.substitute(original, replacement, excluded_nodes)
 
     @property
