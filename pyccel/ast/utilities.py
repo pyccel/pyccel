@@ -7,7 +7,6 @@
 
 import inspect
 
-from sympy import Not
 from numpy import pi
 
 import pyccel.decorators as pyccel_decorators
@@ -53,13 +52,8 @@ def builtin_function(expr, args=None):
     if name in dic.keys() :
         return dic[name](*args)
 
-    if name == 'Not':
-        return Not(*args)
-
     if name == 'map':
-        func = str(expr.args[0].name)
-        args = [func]+list(args[1:])
-        return PythonMap(*args)
+        return PythonMap(expr.args[0], *args[1:])
 
     if name == 'lambdify':
         return lambdify(expr, args)
@@ -92,7 +86,7 @@ def collect_relevant_imports(func_dictionary, targets):
             import_name = target.name
             code_name = target.target
         else:
-            import_name = str(target)
+            import_name = target
             code_name = import_name
 
         if import_name in func_dictionary.keys():
@@ -106,14 +100,14 @@ def builtin_import(expr):
         raise TypeError('Expecting an Import expression')
 
     if isinstance(expr.source, AsName):
-        source = str(expr.source.name)
+        source = expr.source.name
     else:
         source = str(expr.source)
 
     if source == 'pyccel.decorators':
         funcs = [f[0] for f in inspect.getmembers(pyccel_decorators, inspect.isfunction)]
         for target in expr.target:
-            search_target = target.name if isinstance(target, AsName) else str(target)
+            search_target = target.name if isinstance(target, AsName) else target
             if search_target not in funcs:
                 errors = Errors()
                 errors.report("{} does not exist in pyccel.decorators".format(target),

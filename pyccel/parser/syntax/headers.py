@@ -7,9 +7,6 @@
 """
 from os.path import join, dirname
 
-from sympy.core import Symbol
-from sympy import sympify
-
 from textx.metamodel import metamodel_from_file
 
 from pyccel.parser.syntax.basic import BasicStmt
@@ -20,6 +17,7 @@ from pyccel.ast.core      import ValuedArgument
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
 from pyccel.ast.literals  import LiteralString
+from pyccel.ast.internals import PyccelSymbol
 from pyccel.errors.errors import Errors
 
 DEBUG = False
@@ -386,13 +384,11 @@ class MacroArg(BasicStmt):
         arg_ = self.arg
         if isinstance(arg_, MacroList):
             return tuple(arg_.expr)
-        arg = Symbol(str(arg_))
+        arg = PyccelSymbol(arg_)
         value = self.value
         if not(value is None):
             if isinstance(value, (MacroStmt,StringStmt)):
                 value = value.expr
-            else:
-                value = sympify(str(value),locals={'N':Symbol('N'),'S':Symbol('S')})
             return ValuedArgument(arg, value)
         return arg
 
@@ -412,7 +408,7 @@ class MacroStmt(BasicStmt):
     @property
     def expr(self):
         name = str(self.macro)
-        arg  = str(self.arg)
+        arg  = PyccelSymbol(self.arg)
         parameter = self.parameter
         return construct_macro(name, arg, parameter=parameter)
 
@@ -451,6 +447,8 @@ class FunctionMacroStmt(BasicStmt):
 
         self.dotted_name = tuple(kwargs.pop('dotted_name'))
         self.results = kwargs.pop('results',None)
+        if self.results:
+            self.results = [PyccelSymbol(r) for r in self.results]
         self.args = kwargs.pop('args')
         self.master_name = tuple(kwargs.pop('master_name'))
         self.master_args = kwargs.pop('master_args')
@@ -483,7 +481,7 @@ class FunctionMacroStmt(BasicStmt):
             if isinstance(i, MacroStmt):
                 master_args.append(i.expr)
             else:
-                master_args.append(Symbol(str(i)))
+                master_args.append(PyccelSymbol(i))
 
 
         results = self.results

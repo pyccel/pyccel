@@ -22,7 +22,6 @@ from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, Py
 from pyccel.ast.operators import PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
-from pyccel.ast.datatypes import default_precision, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
 
 from pyccel.ast.internals import Slice
@@ -45,7 +44,6 @@ from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT )
 
-from .fcode import python_builtin_datatypes
 
 errors = Errors()
 
@@ -632,7 +630,7 @@ class CCodePrinter(CodePrinter):
 
         if source is None:
             return ''
-        if str(expr.source) in c_library_headers:
+        if expr.source in c_library_headers:
             return '#include <{0}.h>'.format(source)
         else:
             return '#include "{0}.h"'.format(source)
@@ -787,7 +785,24 @@ class CCodePrinter(CodePrinter):
     def _print_NativeString(self, expr):
         return 'string'
 
-    def function_signature(self, expr):
+    def function_signature(self, expr, print_arg_names = True):
+        """Extract from function definition all the information
+        (name, input, output) needed to create the signature
+
+        Parameters
+        ----------
+        expr            : FunctionDef
+            the function defintion
+
+        print_arg_names : Bool
+            default value True and False when we don't need to print
+            arguments names
+
+        Return
+        ------
+        String
+            Signature of the function
+        """
         args = list(expr.arguments)
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
@@ -800,8 +815,9 @@ class CCodePrinter(CodePrinter):
         if not args:
             arg_code = 'void'
         else:
-            arg_code = ', '.join('{}'.format(self.function_signature(i))
-                        if isinstance(i, FunctionAddress) else '{0}{1}'.format(self.get_declare_type(i), i)
+            arg_code = ', '.join('{}'.format(self.function_signature(i, False))
+                        if isinstance(i, FunctionAddress)
+                        else '{0}'.format(self.get_declare_type(i)) + (i.name if print_arg_names else '')
                         for i in args)
         if isinstance(expr, FunctionAddress):
             return '{}(*{})({})'.format(ret_type, name, arg_code)
@@ -1423,6 +1439,9 @@ class CCodePrinter(CodePrinter):
         comments = self._print(expr.text)
 
         return '/*' + comments + '*/'
+
+    def _print_PyccelSymbol(self, expr):
+        return expr
 
     def _print_CommentBlock(self, expr):
         txts = expr.comments
