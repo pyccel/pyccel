@@ -143,7 +143,7 @@ class Basic(sp_Basic):
             assert(len(original) == len(replacement))
         else:
             original = (original,)
-            substitute = (substitute,)
+            replacement = (replacement,)
 
         for n in self._attribute_nodes:
             v = getattr(self, n)
