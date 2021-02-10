@@ -156,7 +156,7 @@ class Basic(sp_Basic):
                 new_v = []
                 for vi in v:
                     if vi in original:
-                        idx = original.index(v)
+                        idx = original.index(vi)
                         vi.remove_user_node(self)
                         new_v.append(replacement[idx])
                         replacement[idx].user_nodes = self
