@@ -207,6 +207,7 @@ class NumpyArray(NumpyNewArray):
     arg : list, tuple, PythonList
 
     """
+    _attribute_nodes = ('_arg',)
 
     def __init__(self, arg, dtype=None, order='C'):
 
@@ -269,6 +270,7 @@ class NumpyArange(NumpyNewArray):
         The type of the output array, if dtype is not given,
         infer the data type from the other input arguments.
     """
+    _attribute_nodes = ('_start','_step','_stop')
 
     def __init__(self, start, stop = None, step = None, dtype = None):
 
@@ -528,6 +530,7 @@ class NumpyRandint(PyccelInternalFunction):
     _dtype = NativeInteger()
     _precision = default_precision['integer']
     _order = 'C'
+    _attribute_nodes = ('_low', '_high')
 
     def __init__(self, low, high = None, size = None):
         if size is None:

@@ -30,12 +30,14 @@ class Literal(PyccelAstNode):
     """
     _rank      = 0
     _shape     = ()
+    _attribute_nodes  = ()
 
     def __init__(self, precision):
         super().__init__()
         if not isinstance(precision, int):
             raise TypeError("precision must be an integer")
         self._precision = precision
+
     @PyccelAstNode.precision.setter
     def precision(self, precision):
         """ Set precision for a literal class"""
@@ -50,6 +52,15 @@ class Literal(PyccelAstNode):
 
     def _sympystr(self, printer):
         return printer.doprint(self.python_value)
+
+    def __eq__(self, other):
+        if isinstance(other, PyccelAstNode):
+            return isinstance(other, type(self)) and self.python_value == other.python_value
+        else:
+            return self.python_value == other
+
+    def __hash__(self):
+        return hash(self.python_value)
 
 #------------------------------------------------------------------------------
 class LiteralTrue(Literal):
@@ -68,7 +79,7 @@ class LiteralFalse(Literal):
     """Represents the python value False"""
     _dtype     = NativeBool()
 
-    def __init__(self,precision = default_precision['bool']):
+    def __init__(self, precision = default_precision['bool']):
         super().__init__(precision)
 
     @property
@@ -171,6 +182,7 @@ class LiteralString(Literal):
     """Represents a string literal in python"""
     _dtype     = NativeString()
     _precision = 0
+
     def __init__(self, arg):
         super().__init__(self._precision)
         if not isinstance(arg, str):
@@ -199,11 +211,18 @@ class Nil(Basic):
     """
     class for None object in the code.
     """
+    _attribute_nodes = ()
+
     def __str__(self):
         return 'None'
 
     def __bool__(self):
         return False
+
+    def __eq__(self, other):
+        #TODO [EB 7.2.2021] Make Nil singleton. See https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python method 3
+        #                   Blocked by issue 662
+        return isinstance(other, Nil)
 
 #------------------------------------------------------------------------------
 
