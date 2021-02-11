@@ -69,7 +69,7 @@ class Basic(sp_Basic):
                 c.set_current_user_node(self)
 
     def ignore(self, c):
-        """ Indicates if a node should be ignored when recungg
+        """ Indicates if a node should be ignored when recursing
         """
         return c is None or isinstance(c, self._ignored_types)
 
