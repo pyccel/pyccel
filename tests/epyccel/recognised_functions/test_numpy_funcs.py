@@ -4251,8 +4251,8 @@ def test_numpy_imag_array_like_2d(language):
         s = shape(a)
         return len(s), s[0], s[1]
 
-    # f_bl = epyccel(test_bool, language=language)
-    # assert (f_bl() == test_bool())
+    f_bl = epyccel(test_bool, language=language)
+    assert (f_bl() == test_bool())
 
     f_integer = epyccel(test_int, language=language)
 
