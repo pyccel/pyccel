@@ -36,6 +36,7 @@ class Basic(sp_Basic):
     def __init__(self):
         self._user_nodes = []
         self._fst = []
+        self._recursion_in_progress = False
         for c_name in self._attribute_nodes:
             c = getattr(self, c_name)
 
@@ -104,9 +105,14 @@ class Basic(sp_Basic):
         list : List containing all objects of the
                requested type which contain self
         """
+        if self._recursion_in_progress:
+            self._recursion_in_progress = False
+            return []
+
         if len(self._user_nodes) == 0:
             return []
         else:
+            self._recursion_in_progress = True
 
             results  = [p for p in self._user_nodes if     isinstance(p, search_type) and \
                                                        not isinstance(p, excluded_nodes)]
@@ -114,6 +120,7 @@ class Basic(sp_Basic):
             results += [r for p in self._user_nodes if not self.ignore(p) and \
                                                        not isinstance(p, (search_type, excluded_nodes)) \
                           for r in p.get_user_nodes(search_type, excluded_nodes = excluded_nodes)]
+            self._recursion_in_progress = False
             return results
 
     def get_attribute_nodes(self, search_type, excluded_nodes = ()):
@@ -132,6 +139,10 @@ class Basic(sp_Basic):
         list : List containing all objects of the
                requested type which exist in self
         """
+        if self._recursion_in_progress:
+            self._recursion_in_progress = False
+            return
+        self._recursion_in_progress = True
 
         results = []
         for n in self._attribute_nodes:
@@ -157,6 +168,7 @@ class Basic(sp_Basic):
                 results.extend(v.get_attribute_nodes(
                     search_type, excluded_nodes = excluded_nodes))
 
+        self._recursion_in_progress = False
         return results
 
     def substitute(self, original, replacement, excluded_nodes = ()):
@@ -173,6 +185,10 @@ class Basic(sp_Basic):
         excluded_nodes : tuple of types
                       Types for which substitute should not be called
         """
+        if self._recursion_in_progress:
+            self._recursion_in_progress = False
+            return
+        self._recursion_in_progress = True
 
         if isinstance(original, tuple):
             assert(isinstance(replacement, tuple))
@@ -183,8 +199,10 @@ class Basic(sp_Basic):
 
         def prepare_sub(found_node):
             idx = original.index(found_node)
-            found_node.remove_user_node(self)
-            replacement[idx].set_current_user_node(self)
+            if not self.ignore(found_node):
+                found_node.remove_user_node(self)
+            if not self.ignore(replacement[idx]):
+                replacement[idx].set_current_user_node(self)
             return replacement[idx]
 
         for n in self._attribute_nodes:
@@ -209,6 +227,7 @@ class Basic(sp_Basic):
                 setattr(self, n, tuple(new_v))
             elif not self.ignore(v):
                 v.substitute(original, replacement, excluded_nodes)
+        self._recursion_in_progress = False
 
     @property
     def is_atomic(self):

@@ -5,7 +5,7 @@ from pyccel.parser.parser   import Parser
 from pyccel.errors.errors   import Errors
 
 from pyccel.ast.basic       import Basic
-from pyccel.ast.core        import Assign, Return
+from pyccel.ast.core        import Assign, Return, FunctionDef
 from pyccel.ast.literals    import LiteralInteger
 from pyccel.ast.operators   import PyccelAdd, PyccelMinus
 from pyccel.ast.variable    import Variable, ValuedVariable
@@ -165,3 +165,19 @@ def test_substitute_exclude():
     new_parents = set(new_var.get_user_nodes(Basic))
     assert(len(new_parents.difference(old_parents))==0)
     assert(len(old_parents.difference(new_parents))==1)
+
+def test_recursive():
+    filename = os.path.join(path_dir, "cyclic_dependence.py")
+
+    fst = get_functions(filename)[0]
+
+    atts = fst.get_attribute_nodes(PyccelMinus)
+    assert(len(set(atts))==2)
+
+    var = atts[0].args[0]
+
+    atts = var.get_user_nodes(FunctionDef)
+    assert(len(set(atts))==2) # The actual FunctionDef + the signature version
+
+    fst.substitute(LiteralInteger(2), LiteralInteger(3))
+
