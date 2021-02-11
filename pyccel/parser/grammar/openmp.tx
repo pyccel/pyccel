@@ -32,8 +32,8 @@ OmpConstructOrDirective:
   | OmpTargetConstruct
   | OmpTeamsConstruct
   | OmpDistributeConstruct
-  | OmpSectionConstruct
   | OmpSectionsConstruct
+  | OmpSectionConstruct
 ;
 ////////////////////////////////////////////////////
 
