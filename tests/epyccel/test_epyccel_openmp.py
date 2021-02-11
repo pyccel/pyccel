@@ -295,7 +295,9 @@ def test_omp_taskloop(language):
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="Nested functions not handled for C !"),
             pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Maximum recursion depth exceeded while calling a Python object !"),
+            pytest.mark.fortran])
     ]
 )
 def test_omp_tasks(language):
