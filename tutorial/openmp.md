@@ -537,12 +537,14 @@ Team num : 1
 
 ```python
 #$ omp sections [clause[ [,]clause] ... ]
+
 #$ omp section
 structured-block-sequence
 #$ omp end section
 #$ omp section
 structured-block-sequence
 #$ omp end section
+
 #$ omp end sections
 ```
 
@@ -577,8 +579,8 @@ for i in range(0, n):
   sum3 = sum3 + i
 print("sum3 :", sum3, ", thread :", omp_get_thread_num())
 #$ omp end section
-#$ omp end sections
 
+#$ omp end sections
 #$ omp end parallel
 ```
 

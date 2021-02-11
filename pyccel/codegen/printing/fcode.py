@@ -1937,7 +1937,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_Omp_End_Clause(self, expr):
         omp_expr = str(expr.txt)
-        print(omp_expr)
         if "section" in omp_expr and "sections" not in omp_expr:
             return ''
         omp_expr = omp_expr.replace("for", "do")
