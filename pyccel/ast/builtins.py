@@ -100,7 +100,7 @@ class PythonImag(PythonComplexProperty):
     """
     def __new__(cls, arg):
         if isinstance(arg.dtype, NativeBool):
-            return PythonInt(arg)
+            return PythonBool(arg)
         elif arg.dtype is not NativeComplex():
             return get_default_literal_value(arg.dtype)
         else:
