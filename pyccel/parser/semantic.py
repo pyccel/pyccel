@@ -2681,6 +2681,7 @@ class SemanticParser(BasicParser):
                     functions = sub_funcs,
                     interfaces = func_interfaces,
                     doc_string = doc_string)
+            func.body.substitute(recursive_func_obj, func)
             recursive_func_obj.invalidate_node()
 
             if cls_name:
