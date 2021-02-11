@@ -17,11 +17,8 @@ from collections import OrderedDict
 import functools
 import operator
 
-from sympy.core import Symbol
 from sympy.core.numbers import NegativeInfinity as NINF
 from sympy.core.numbers import Infinity as INF
-
-from sympy.logic.boolalg import Not
 
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import AddOp, MulOp, SubOp, DivOp
@@ -32,12 +29,12 @@ from pyccel.ast.internals    import PyccelInternalFunction
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, Dlist, AsName,
-                             If)
+                             If, IfSection)
 from pyccel.ast.variable  import (Variable, TupleVariable,
                              IndexedElement,
                              DottedName, PyccelArraySize)
 
-from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus
+from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelDiv, PyccelMinus, PyccelNot
 
 from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
@@ -282,6 +279,8 @@ class FCodePrinter(CodePrinter):
         return iso_c_binding[self._print(expr.dtype)][expr.precision]
 
     # ============ Elements ============ #
+    def _print_PyccelSymbol(self, expr):
+        return expr
 
     def _print_Module(self, expr):
         self._handle_fortran_specific_a_prioris(self.parser.get_variables(self._namespace))
@@ -415,14 +414,10 @@ class FCodePrinter(CodePrinter):
 
             elif isinstance(i, str):
                 line = '{prefix} {target}'.format(prefix=prefix,
-                                                  target=str(i))
-
-            elif isinstance(i, Symbol):
-                line = '{prefix} {target}'.format(prefix=prefix,
-                                                  target=str(i.name))
+                                                  target=i)
 
             else:
-                raise TypeError('Expecting str, Symbol, DottedName or AsName, '
+                raise TypeError('Expecting str, PyccelSymbol, DottedName or AsName, '
                                 'given {}'.format(type(i)))
 
             code = (code + '\n' + line) if code else line
@@ -552,7 +547,7 @@ class FCodePrinter(CodePrinter):
             if self._current_function:
                 name = self._current_function
                 func = self.get_function(name)
-                func.local_vars.append(var)
+                func.add_local_var(var)
             else:
                 self._namespace.variables[var.name] = var
 
@@ -753,7 +748,7 @@ class FCodePrinter(CodePrinter):
         if self._current_function:
             name = self._current_function
             func = self.get_function(name)
-            func.local_vars.append(index)
+            func.add_local_var(index)
         else:
             self._namespace.variables[index.name] = index
 
@@ -844,7 +839,7 @@ class FCodePrinter(CodePrinter):
         if self._current_function:
             name = self._current_function
             func = self.get_function(name)
-            func.local_vars.append(var)
+            func.add_local_var(var)
         else:
             self._namespace.variables[var.name] = var
 
@@ -1027,7 +1022,7 @@ class FCodePrinter(CodePrinter):
 
         # meta-variables
         if (isinstance(expr.variable, Variable) and
-              str(expr.variable.name).startswith('__')):
+            expr.variable.name.startswith('__')):
             return ''
         # ...
 
@@ -1509,15 +1504,12 @@ class FCodePrinter(CodePrinter):
             else:
                 intent='in'
 
-            if arg in results:
-                results.remove(i)
-
             dec = Declare(arg.dtype, arg, intent=intent , static=True)
-            args_decs[str(arg.name)] = dec
+            args_decs[arg] = dec
 
         for result in results:
             dec = Declare(result.dtype, result, intent='out', static=True)
-            args_decs[str(result)] = dec
+            args_decs[result] = dec
 
         if len(results) != 1:
             func_type = 'subroutine'
@@ -1527,7 +1519,7 @@ class FCodePrinter(CodePrinter):
             result = results.pop()
             func_end = 'result({0})'.format(result.name)
             dec = Declare(result.dtype, result, static=True)
-            args_decs[str(result.name)] = dec
+            args_decs[result] = dec
         # ...
 
         interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
@@ -1557,13 +1549,6 @@ class FCodePrinter(CodePrinter):
         out_args = []
         args_decs = OrderedDict()
 
-        for j, i in enumerate(expr.results):
-            if not i.name:
-                i.rename('out_{}'.format(j))
-        for j, i in enumerate(expr.arguments):
-            if not i.name:
-                i.rename('in_{}'.format(j))
-
         func_end  = ''
         rec = 'recursive' if expr.is_recursive else ''
         if len(expr.results) != 1:
@@ -1574,7 +1559,7 @@ class FCodePrinter(CodePrinter):
                     dec = Declare(result.dtype, result, intent='inout')
                 else:
                     dec = Declare(result.dtype, result, intent='out')
-                args_decs[str(result)] = dec
+                args_decs[result] = dec
 
             functions = expr.functions
 
@@ -1587,7 +1572,7 @@ class FCodePrinter(CodePrinter):
             func_end = 'result({0})'.format(result.name)
 
             dec = Declare(result.dtype, result)
-            args_decs[str(result)] = dec
+            args_decs[result] = dec
         # ...
 
         for i,arg in enumerate(expr.arguments):
@@ -1598,7 +1583,7 @@ class FCodePrinter(CodePrinter):
                     dec = Declare(arg.dtype, arg, intent='inout')
                 else:
                     dec = Declare(arg.dtype, arg, intent='in')
-                args_decs[str(arg)] = dec
+                args_decs[arg] = dec
 
         #remove parametres intent(inout) from out_args to prevent repetition
         for i in expr.arguments:
@@ -1658,12 +1643,12 @@ class FCodePrinter(CodePrinter):
 
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
-            decs[str(i)] = dec
+            decs[i] = dec
 
         vars_to_print = self.parser.get_variables(self._namespace)
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in expr.results) and (v not in expr.arguments):
-                decs[str(v)] = Declare(v.dtype,v)
+                decs[v] = Declare(v.dtype,v)
         prelude += ''.join(self._print(i) for i in decs.values())
         if len(functions)>0:
             functions_code = '\n'.join(self._print(i) for  i in functions)
@@ -2248,7 +2233,7 @@ class FCodePrinter(CodePrinter):
         DEBUG = True
 
         err = ErrorExit()
-        args = [(Not(expr.test), [PythonPrint(["'Assert Failed'"]), err])]
+        args = [IfSection(PyccelNot(expr.test), [PythonPrint(["'Assert Failed'"]), err])]
 
         if DEBUG:
             args.append((True, PythonPrint(["'PASSED'"])))
@@ -2330,9 +2315,6 @@ class FCodePrinter(CodePrinter):
         value_true = self._print(value_true)
         value_false = self._print(value_false)
         return 'merge({true}, {false}, {cond})'.format(cond = cond, true = value_true, false = value_false)
-
-    def _print_MatrixElement(self, expr):
-        return "{0}({1}, {2})".format(expr.parent, expr.i + 1, expr.j + 1)
 
     def _print_PyccelPow(self, expr):
         base = expr.args[0]
@@ -2635,7 +2617,7 @@ class FCodePrinter(CodePrinter):
                 if self._current_function:
                     name = self._current_function
                     func = self.get_function(name)
-                    func.local_vars.append(var)
+                    func.add_local_var(var)
                 else:
                     self._namespace.variables[var.name] = var
 
@@ -2773,7 +2755,7 @@ class FCodePrinter(CodePrinter):
                 if self._current_function:
                     name = self._current_function
                     func = self.get_function(name)
-                    func.local_vars.append(var)
+                    func.add_local_var(var)
                 else:
                     self._namespace.variables[var.name] = var
 
@@ -2807,7 +2789,7 @@ class FCodePrinter(CodePrinter):
             if self._current_function:
                 name = self._current_function
                 func = self.get_function(name)
-                func.local_vars.append(var)
+                func.add_local_var(var)
             else:
                 self._namespace.variables[var.name] = var
 

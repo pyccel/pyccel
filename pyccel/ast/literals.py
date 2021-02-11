@@ -30,12 +30,14 @@ class Literal(PyccelAstNode):
     """
     _rank      = 0
     _shape     = ()
+    _attribute_nodes  = ()
 
     def __init__(self, precision):
         super().__init__()
         if not isinstance(precision, int):
             raise TypeError("precision must be an integer")
         self._precision = precision
+
     @PyccelAstNode.precision.setter
     def precision(self, precision):
         """ Set precision for a literal class"""
@@ -77,7 +79,7 @@ class LiteralFalse(Literal):
     """Represents the python value False"""
     _dtype     = NativeBool()
 
-    def __init__(self,precision = default_precision['bool']):
+    def __init__(self, precision = default_precision['bool']):
         super().__init__(precision)
 
     @property
@@ -180,6 +182,7 @@ class LiteralString(Literal):
     """Represents a string literal in python"""
     _dtype     = NativeString()
     _precision = 0
+
     def __init__(self, arg):
         super().__init__(self._precision)
         if not isinstance(arg, str):
@@ -208,11 +211,18 @@ class Nil(Basic):
     """
     class for None object in the code.
     """
+    _attribute_nodes = ()
+
     def __str__(self):
         return 'None'
 
     def __bool__(self):
         return False
+
+    def __eq__(self, other):
+        #TODO [EB 7.2.2021] Make Nil singleton. See https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python method 3
+        #                   Blocked by issue 662
+        return isinstance(other, Nil)
 
 #------------------------------------------------------------------------------
 
@@ -231,3 +241,60 @@ def get_default_literal_value(dtype):
     else:
         raise TypeError('Unknown type')
     return value
+
+#------------------------------------------------------------------------------
+
+def convert_to_literal(value, dtype = None, precision = None):
+    """ Convert a python value to a pyccel Literal
+
+    Parameters
+    ----------
+    value     : int/float/complex/bool/str
+                The python value
+    dtype     : DataType
+                The datatype of the python value
+                Default : Matches type of 'value'
+    precision : int
+                The precision of the value in the generated code
+                Default : python precision (see default_precision)
+
+    Returns
+    -------
+    literal_val : Literal
+                  The python value 'value' expressed as a literal
+                  with the specified dtype and precision
+    """
+    if dtype is None:
+        if isinstance(value, int):
+            dtype = NativeInteger()
+        elif isinstance(value, float):
+            dtype = NativeReal()
+        elif isinstance(value, complex):
+            dtype = NativeComplex()
+        elif isinstance(value, bool):
+            dtype = NativeBool()
+        elif isinstance(value, str):
+            dtype = NativeString()
+        else:
+            raise TypeError('Unknown type')
+
+    if precision is None and dtype is not NativeString():
+        precision = default_precision[str(dtype)]
+
+    if isinstance(dtype, NativeInteger):
+        literal_val = LiteralInteger(value, precision)
+    elif isinstance(dtype, NativeReal):
+        literal_val = LiteralFloat(value, precision)
+    elif isinstance(dtype, NativeComplex):
+        literal_val = LiteralComplex(value.real, value.imag, precision)
+    elif isinstance(dtype, NativeBool):
+        if value:
+            literal_val = LiteralTrue(precision)
+        else:
+            literal_val = LiteralFalse(precision)
+    elif isinstance(dtype, NativeString):
+        literal_val = LiteralString(value)
+    else:
+        raise TypeError('Unknown type')
+
+    return literal_val
