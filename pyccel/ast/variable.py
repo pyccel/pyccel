@@ -526,10 +526,7 @@ class ValuedVariable(Variable):
     >>> n
     n := 4
     """
-    #TODO: Can this have children?
-    # We have a problem when we do `dtype=float` as `float`
-    # becomes a class, not a Pyccel object
-    #_attribute_nodes = ('_value',)
+    _attribute_nodes = ('_value',)
 
     def __init__(self, *args, **kwargs):
 
