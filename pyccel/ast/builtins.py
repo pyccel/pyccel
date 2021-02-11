@@ -16,7 +16,7 @@ from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
 from .internals import PyccelInternalFunction
-from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
+from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, LiteralFalse, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
@@ -99,9 +99,7 @@ class PythonImag(PythonComplexProperty):
     arg : Variable, Literal
     """
     def __new__(cls, arg):
-        if isinstance(arg.dtype, NativeBool):
-            return PythonBool(arg)
-        elif arg.dtype is not NativeComplex():
+        if arg.dtype is not NativeComplex():
             return get_default_literal_value(arg.dtype)
         else:
             return super().__new__(cls, arg)

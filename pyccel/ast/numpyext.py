@@ -427,6 +427,11 @@ class NumpyImag(PythonImag):
     > np.imag(a)
     2.0
     """
+    def __new__(cls, arg):
+        if not isinstance(arg.dtype, NativeComplex):
+            return arg
+        return super().__new__(cls, arg)
+
     def __init__(self, arg):
         super().__init__(arg)
         self._precision = arg.precision
