@@ -1,7 +1,7 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring, unused-variable
 
 def fib_caller(x : int):
-    @types('int', results='int')
-    def fib(n):
+    def fib(n : int) -> int:
         if n < 2:
             return n
         i = fib(n-1)
