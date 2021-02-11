@@ -11,8 +11,6 @@ In this module we implement some of them in alphabetical order.
 
 """
 
-from sympy import Symbol
-
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
@@ -113,6 +111,7 @@ class PythonBool(PyccelAstNode):
     _shape = ()
     _precision = default_precision['bool']
     _dtype = NativeBool()
+    _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
         if getattr(arg, 'is_optional', None):
@@ -145,6 +144,7 @@ class PythonComplex(PyccelAstNode):
     _shape = ()
     _precision = default_precision['complex']
     _dtype = NativeComplex()
+    _attribute_nodes = ('_real_part', '_imag_part', '_internal_var')
 
     def __new__(cls, arg0, arg1=LiteralFloat(0)):
 
@@ -239,6 +239,7 @@ class PythonEnumerate(Basic):
     Represents the enumerate stmt
 
     """
+    _attribute_nodes = ('_element',)
 
     def __init__(self, arg):
         if PyccelAstNode.stage != "syntactic" and \
@@ -259,6 +260,7 @@ class PythonFloat(PyccelAstNode):
     _shape = ()
     _precision = default_precision['real']
     _dtype = NativeReal()
+    _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralFloat):
@@ -276,7 +278,6 @@ class PythonFloat(PyccelAstNode):
     def arg(self):
         return self._arg
 
-
     def __str__(self):
         return 'LiteralFloat({0})'.format(str(self.arg))
 
@@ -292,6 +293,7 @@ class PythonInt(PyccelAstNode):
     _shape     = ()
     _precision = default_precision['integer']
     _dtype     = NativeInteger()
+    _attribute_nodes  = ('_arg',)
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralInteger):
@@ -314,6 +316,7 @@ class PythonTuple(PyccelAstNode):
     _iterable        = True
     _is_homogeneous  = False
     _order = 'C'
+    _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
         self._args = args
@@ -415,6 +418,7 @@ class PythonList(PythonTuple):
 class PythonMap(Basic):
     """ Represents the map stmt
     """
+    _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
         if len(args)<2:
@@ -432,12 +436,13 @@ class PythonPrint(Basic):
 
     Examples
 
-    >>> from sympy import symbols
+    >>> from pyccel.ast.internals import symbols
     >>> from pyccel.ast.core import Print
     >>> n,m = symbols('n,m')
     >>> Print(('results', n,m))
     Print((results, n, m))
     """
+    _attribute_nodes = ('_expr',)
 
     def __init__(self, expr):
         self._expr = expr
@@ -457,12 +462,13 @@ class PythonRange(Basic):
 
     >>> from pyccel.ast.core import Variable
     >>> from pyccel.ast.core import Range
-    >>> from sympy import Symbol
+    >>> from pyccel.ast.internals import PyccelSymbol
     >>> s = Variable('int', 's')
-    >>> e = Symbol('e')
+    >>> e = PyccelSymbol('e')
     >>> Range(s, e, 1)
     Range(0, n, 1)
     """
+    _attribute_nodes = ('_start', '_stop', '_step')
 
     def __init__(self, *args):
         # Define default values
@@ -505,6 +511,7 @@ class PythonZip(Basic):
     Represents a zip stmt.
 
     """
+    _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
         if not isinstance(args, (tuple, list)):
@@ -597,6 +604,7 @@ class Lambda(Basic):
     expr      : PyccelAstNode
                 The expression carried out when the lambda function is called
     """
+    _attribute_nodes = ('_variables', '_expr')
     def __init__(self, variables, expr):
         if not isinstance(variables, (list, tuple)):
             raise TypeError("Lambda arguments must be a tuple or list")

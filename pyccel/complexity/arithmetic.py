@@ -54,20 +54,23 @@ def count_ops(expr, visual=None):
 
     symbol_map = {}
     used_names = set()
-    expr = pyccel_to_sympy(expr, symbol_map, used_names)
 
     if isinstance(expr, Assign):
-        return sympy_count_ops(expr.rhs, visual)
+        rhs = pyccel_to_sympy(expr.rhs, symbol_map, used_names)
+        return sympy_count_ops(rhs, visual)
     elif isinstance(expr, For):
-        a = expr.iterable.size
+        a = pyccel_to_sympy(expr.iterable, symbol_map, used_names).size
         ops = sum(count_ops(i, visual) for i in expr.body.body)
         return a*ops
-    elif isinstance(expr, Tuple):
-        return sum(count_ops(i, visual) for i in expr)
     elif isinstance(expr, CodeBlock):
         return sum(count_ops(i, visual) for i in expr.body)
     elif isinstance(expr, (NumpyZeros, NumpyOnes, Comment)):
         return 0
+
+    expr = pyccel_to_sympy(expr, symbol_map, used_names)
+
+    if isinstance(expr, Tuple):
+        return sum(count_ops(i, visual) for i in expr)
     else:
         raise NotImplementedError('TODO count_ops for {}'.format(type(expr)))
 

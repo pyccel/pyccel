@@ -8,7 +8,6 @@ different stages of pyccel. Memory block labels are usually either Variables or 
 variables
 """
 import inspect
-from sympy import Symbol
 
 from pyccel.errors.errors import Errors
 
@@ -21,7 +20,9 @@ from .internals import PyccelArraySize, Slice
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv,
                         PyccelUnarySub, PyccelAdd)
+
 errors = Errors()
+
 __all__ = (
     'DottedName',
     'DottedVariable',
@@ -32,7 +33,7 @@ __all__ = (
     'VariableAddress'
 )
 
-class Variable(Symbol, PyccelAstNode):
+class Variable(PyccelAstNode):
 
     """Represents a typed variable.
 
@@ -96,9 +97,7 @@ class Variable(Symbol, PyccelAstNode):
     >>> Variable('int', DottedName('matrix', 'n_rows'))
     matrix.n_rows
     """
-
-    def __new__( cls, *args, **kwargs ):
-        return PyccelAstNode.__new__(cls, *args, **kwargs)
+    _attribute_nodes = ()
 
     def __init__(
         self,
@@ -120,7 +119,7 @@ class Variable(Symbol, PyccelAstNode):
         is_kwonly=False,
         allows_negative_indexes=False
         ):
-        Symbol.__init__(self)
+        super().__init__()
 
         # ------------ PyccelAstNode Properties ---------------
         if isinstance(dtype, str) or str(dtype) == '*':
@@ -165,6 +164,9 @@ class Variable(Symbol, PyccelAstNode):
             else:
                 name = DottedName(*name)
 
+        if name == '':
+            raise ValueError("Variable name can't be empty")
+
         if not isinstance(name, (str, DottedName)):
             raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
         self._name = name
@@ -201,7 +203,6 @@ class Variable(Symbol, PyccelAstNode):
         self._order          = order
         self._is_argument    = is_argument
         self._is_kwonly      = is_kwonly
-        PyccelAstNode.__init__(self)
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
@@ -357,6 +358,14 @@ class Variable(Symbol, PyccelAstNode):
     def __str__(self):
         return str(self.name)
 
+    def __eq__(self, other):
+        if type(self) is type(other):
+            return self._name == other.name
+        return False
+
+    def __hash__(self):
+        return hash((type(self).__name__, self._name))
+
     def _sympystr(self, printer):
         """ sympy equivalent of __str__"""
         sstr = printer.doprint
@@ -411,9 +420,10 @@ class Variable(Symbol, PyccelAstNode):
         return cls(**new_kwargs)
 
     def rename(self, newname):
-        """Change variable name."""
-
-        self._name = newname
+        """ Forbidden method for renaming the variable
+        """
+        # The name is part of the hash so it must never change
+        raise RuntimeError('Cannot modify hash definition')
 
     def __reduce_ex__(self, i):
         """ Used by pickle to create an object of this class.
@@ -463,6 +473,10 @@ class Variable(Symbol, PyccelAstNode):
 
         return IndexedElement(self, *args)
 
+    def invalidate_node(self):
+        # Don't invalidate Variables
+        pass
+
 class DottedName(Basic):
 
     """
@@ -476,8 +490,10 @@ class DottedName(Basic):
     >>> DottedName('pyccel', 'stdlib', 'parallel')
     pyccel.stdlib.parallel
     """
+    _attribute_nodes = ()
 
     def __init__(self, *args):
+
         self._name = args
         super().__init__()
 
@@ -514,6 +530,7 @@ class ValuedVariable(Variable):
     >>> n
     n := 4
     """
+    _attribute_nodes = ('_value',)
 
     def __init__(self, *args, **kwargs):
 
@@ -553,6 +570,7 @@ class TupleVariable(Variable):
     >>> n
     n
     """
+    _attribute_nodes = ('_vars',)
 
     def __init__(self, arg_vars, dtype, name, *args, **kwargs):
         self._vars = tuple(arg_vars)
@@ -669,6 +687,8 @@ class Constant(ValuedVariable):
     --------
 
     """
+    # The value of a constant is not a translated object
+    _attribute_nodes = ()
 
 
 
@@ -688,6 +708,7 @@ class IndexedElement(PyccelAstNode):
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
+    _attribute_nodes = ('_label', '_indices')
 
     def __init__(
         self,
@@ -776,6 +797,7 @@ class VariableAddress(PyccelAstNode):
     VariableAddress(Variable('int','a'))                     is  &a
     VariableAddress(Variable('int','a', is_pointer=True))    is   a
     """
+    _attribute_nodes = ('_variable',)
 
     def __init__(self, variable):
         if not isinstance(variable, Variable):
@@ -808,6 +830,7 @@ class DottedVariable(Variable):
     In this case b is a DottedVariable where the lhs
     is a
     """
+    _attribute_nodes = ('_lhs',)
 
     def __init__(self, *args, lhs, **kwargs):
         self._lhs = lhs
@@ -823,3 +846,12 @@ class DottedVariable(Variable):
         The lhs is a
         """
         return self._lhs
+
+    def __eq__(self, other):
+        if type(self) is type(other):
+            return self.name == other.name and self.lhs == other.lhs
+
+        return False
+
+    def __hash__(self):
+        return hash((type(self).__name__, self.name, self.lhs))
