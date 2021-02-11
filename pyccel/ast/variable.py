@@ -473,6 +473,10 @@ class Variable(PyccelAstNode):
 
         return IndexedElement(self, *args)
 
+    def invalidate_node(self):
+        # Don't invalidate Variables
+        pass
+
 class DottedName(Basic):
 
     """
