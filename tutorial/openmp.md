@@ -456,6 +456,8 @@ flag: 2
 
 The ``` #$ omp cancel ``` is used to request cancellation of the innermost enclosing region of the type specified.
 ```python
+import numpy as np
+v = np.array([1, -5, 3, 4, 5])
 result = 0
 #$ omp parallel
 #$ omp for private(i) reduction (+:result)
@@ -463,7 +465,7 @@ for i in range(len(v)):
   result = result + v[i]
   if result < 0:
     #$ omp cancel for
-    break
+    pass
 #$ omp end parallel
 ```
 
