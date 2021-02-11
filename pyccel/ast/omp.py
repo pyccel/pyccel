@@ -28,6 +28,7 @@ class OmpAnnotatedComment(Basic):
     >>> OmpAnnotatedComment('parallel')
     OmpAnnotatedComment(parallel)
     """
+    _attribute_nodes = ()
 
     def __init__(self, txt, combined=None):
         self._txt = txt
