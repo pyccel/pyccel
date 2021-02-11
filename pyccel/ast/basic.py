@@ -19,9 +19,15 @@ dict_values = type({}.values())
 iterable_types = (list, tuple, dict_keys, dict_values)
 
 #==============================================================================
+class Immutable:
+    """ Superclass for classes which cannot inherit
+    from Basic """
+
+#==============================================================================
 class Basic(sp_Basic):
     """Basic class for Pyccel AST."""
     _fst = None
+    _ignored_types = (Immutable, type)
 
     def __new__(cls, *args, **kwargs):
         hashable_args  = [a if not isinstance(a, list) else tuple(a) for a in args]
@@ -32,12 +38,12 @@ class Basic(sp_Basic):
         self._fst = []
         for c_name in self._attribute_nodes:
             c = getattr(self, c_name)
-            from pyccel.ast.internals import PyccelSymbol
+
             from pyccel.ast.literals import convert_to_literal
-            if isinstance(c, PyccelSymbol):
-                # Anti-pattern
-                # PyccelSymbol is not a Basic so it must be handled separately
+
+            if self.ignore(c):
                 continue
+
             elif isinstance(c, (int, float, complex, str, bool)):
                 # Convert basic types to literal types
                 c = convert_to_literal(c)
@@ -47,19 +53,23 @@ class Basic(sp_Basic):
                 if any(isinstance(ci, iterable_types) for ci in c):
                     raise TypeError("Basic child cannot be a tuple of tuples")
                 c = tuple(ci if (not isinstance(ci, (int, float, complex, str, bool)) \
-                                 or isinstance(ci, PyccelSymbol)) \
+                                 or self.ignore(ci)) \
                         else convert_to_literal(ci) for ci in c)
                 setattr(self, c_name, c)
 
-            elif not isinstance(c, Basic) and c is not None:
+            elif not isinstance(c, Basic):
                 raise TypeError("Basic child must be a Basic or a tuple not {}".format(type(c)))
+
 
             if isinstance(c, tuple):
                 for ci in c:
-                    if ci and not isinstance(ci, PyccelSymbol):
+                    if not self.ignore(ci):
                         ci.set_current_user_node(self)
-            elif c and not isinstance(c, PyccelSymbol):
+            else:
                 c.set_current_user_node(self)
+
+    def ignore(self, c):
+        return c is None or isinstance(c, self._ignored_types)
 
     def invalidate_node(self):
         """ Indicate that this node is temporary.
@@ -68,22 +78,13 @@ class Basic(sp_Basic):
         """
         for c_name in self._attribute_nodes:
             c = getattr(self, c_name)
-            from pyccel.ast.internals import PyccelSymbol
-            if isinstance(c, PyccelSymbol):
-                # Anti-pattern
-                # PyccelSymbol is not a Basic so it must be handled separately
-                continue
 
-            if isinstance(c, tuple):
-                for ci in c:
-                    if ci and not isinstance(ci, PyccelSymbol):
-                        ci.remove_user_node(self)
-                        if ci.is_unused:
-                            ci.invalidate_node()
-            elif c and not isinstance(c, PyccelSymbol):
+            if self.ignore(c):
+                continue
+            elif isinstance(c, tuple):
+                _ = [ci.remove_user_node(self) for ci in c if not self.ignore(ci)]
+            else:
                 c.remove_user_node(self)
-                if c.is_unused:
-                    c.invalidate_node()
 
     def get_user_nodes(self, search_type, excluded_nodes = ()):
         """ Returns all objects of the requested type
@@ -104,11 +105,13 @@ class Basic(sp_Basic):
         if len(self._user_nodes) == 0:
             return []
         else:
-            from pyccel.ast.internals import PyccelSymbol
 
-            results  = [p for p in self._user_nodes if isinstance(p, search_type) and not isinstance(p, excluded_nodes)]
-            results += [r for p in self._user_nodes if not isinstance(p, (search_type, PyccelSymbol, excluded_nodes)) \
-                    for r in p.get_user_nodes(search_type, excluded_nodes = excluded_nodes)]
+            results  = [p for p in self._user_nodes if     isinstance(p, search_type) and \
+                                                       not isinstance(p, excluded_nodes)]
+
+            results += [r for p in self._user_nodes if not self.ignore(p) and \
+                                                       not isinstance(p, (search_type, excluded_nodes)) \
+                          for r in p.get_user_nodes(search_type, excluded_nodes = excluded_nodes)]
             return results
 
     def get_attribute_nodes(self, search_type, excluded_nodes = ()):
@@ -127,11 +130,11 @@ class Basic(sp_Basic):
         list : List containing all objects of the
                requested type which exist in self
         """
-        from pyccel.ast.internals import PyccelSymbol
 
         results = []
         for n in self._attribute_nodes:
             v = getattr(self, n)
+
             if isinstance(v, excluded_nodes):
                 continue
 
@@ -144,12 +147,11 @@ class Basic(sp_Basic):
                         continue
                     elif isinstance(vi, search_type):
                         results.append(vi)
-
-                    elif vi is not None and not isinstance(vi, PyccelSymbol):
+                    elif not self.ignore(vi):
                         results.extend(vi.get_attribute_nodes(
                             search_type, excluded_nodes=excluded_nodes))
 
-            elif v is not None and not isinstance(v, PyccelSymbol):
+            elif not self.ignore(v):
                 results.extend(v.get_attribute_nodes(
                     search_type, excluded_nodes = excluded_nodes))
 
@@ -169,7 +171,6 @@ class Basic(sp_Basic):
         excluded_nodes : tuple of types
                       Types for which substitute should not be called
         """
-        from pyccel.ast.internals import PyccelSymbol
 
         if isinstance(original, tuple):
             assert(isinstance(replacement, tuple))
@@ -178,30 +179,33 @@ class Basic(sp_Basic):
             original = (original,)
             replacement = (replacement,)
 
+        def prepare_sub(found_node):
+            idx = original.index(found_node)
+            found_node.remove_user_node(self)
+            replacement[idx].set_current_user_node(self)
+            return replacement[idx]
+
         for n in self._attribute_nodes:
             v = getattr(self, n)
+
             if isinstance(v, excluded_nodes):
                 continue
+
             elif v in original:
-                idx = original.index(v)
-                v.remove_user_node(self)
-                setattr(self, n, replacement[idx])
-                replacement[idx].set_current_user_node(self)
+                setattr(self, n, prepare_sub(v))
+
             elif isinstance(v, tuple):
                 new_v = []
                 for vi in v:
                     new_vi = vi
                     if not isinstance(vi, excluded_nodes):
                         if vi in original:
-                            idx = original.index(vi)
-                            vi.remove_user_node(self)
-                            new_vi = replacement[idx]
-                            replacement[idx].set_current_user_node(self)
-                        elif vi and not isinstance(vi, PyccelSymbol):
+                            new_vi = prepare_sub(vi)
+                        elif not self.ignore(vi):
                             vi.substitute(original, replacement, excluded_nodes)
                     new_v.append(new_vi)
                 setattr(self, n, tuple(new_v))
-            elif v is not None and not isinstance(v, PyccelSymbol):
+            elif not self.ignore(v):
                 v.substitute(original, replacement, excluded_nodes)
 
     @property
@@ -259,6 +263,8 @@ class Basic(sp_Basic):
         """
         assert(user_node in self._user_nodes)
         self._user_nodes.remove(user_node)
+        if self.is_unused:
+            self.invalidate_node()
 
     @property
     def is_unused(self):
