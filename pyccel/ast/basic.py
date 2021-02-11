@@ -14,8 +14,8 @@ from sympy.core.basic import Basic as sp_Basic
 
 __all__ = ('Basic', 'PyccelAstNode')
 
-dict_keys   = {}.keys().__class__
-dict_values = {}.values().__class__
+dict_keys   = type({}.keys())
+dict_values = type({}.values())
 iterable_types = (list, tuple, dict_keys, dict_values)
 
 #==============================================================================
