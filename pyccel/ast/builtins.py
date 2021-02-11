@@ -80,7 +80,9 @@ class PythonReal(PythonComplexProperty):
     arg : Variable, Literal
     """
     def __new__(cls, arg):
-        if arg.dtype is not NativeComplex():
+        if isinstance(arg.dtype, NativeBool):
+            return PythonInt(arg)
+        elif not isinstance(arg.dtype, NativeComplex):
             return arg
         else:
             return super().__new__(cls, arg)
@@ -107,8 +109,6 @@ class PythonImag(PythonComplexProperty):
 class PythonBool(PyccelAstNode):
     """ Represents a call to Python's native bool() function.
     """
-    _rank = 0
-    _shape = ()
     _precision = default_precision['bool']
     _dtype = NativeBool()
     _attribute_nodes = ('_arg',)
@@ -123,6 +123,8 @@ class PythonBool(PyccelAstNode):
 
     def __init__(self, arg):
         self._arg = arg
+        self._shape = arg.shape
+        self._rank  = len(self._shape)
         super().__init__()
 
     @property
@@ -256,8 +258,6 @@ class PythonEnumerate(Basic):
 class PythonFloat(PyccelAstNode):
     """ Represents a call to Python's native float() function.
     """
-    _rank = 0
-    _shape = ()
     _precision = default_precision['real']
     _dtype = NativeReal()
     _attribute_nodes = ('_arg',)
@@ -272,6 +272,8 @@ class PythonFloat(PyccelAstNode):
 
     def __init__(self, arg):
         self._arg = arg
+        self._shape = arg.shape
+        self._rank  = len(self._shape)
         super().__init__()
 
     @property
@@ -289,8 +291,6 @@ class PythonInt(PyccelAstNode):
     """ Represents a call to Python's native int() function.
     """
 
-    _rank      = 0
-    _shape     = ()
     _precision = default_precision['integer']
     _dtype     = NativeInteger()
     _attribute_nodes  = ('_arg',)
@@ -303,6 +303,8 @@ class PythonInt(PyccelAstNode):
 
     def __init__(self, arg):
         self._arg = arg
+        self._shape = arg.shape
+        self._rank  = len(self._shape)
         super().__init__()
 
     @property
