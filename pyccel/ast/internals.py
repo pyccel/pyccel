@@ -7,7 +7,7 @@
 File containing basic classes which are used throughout pyccel.
 To avoid circular imports this file should only import from basic, datatypes, and literals
 """
-from .basic     import Basic, PyccelAstNode
+from .basic     import Basic, PyccelAstNode, Immutable
 from .datatypes import NativeInteger, default_precision
 from .literals  import LiteralInteger
 
@@ -21,9 +21,10 @@ class PyccelInternalFunction(PyccelAstNode):
     """ Abstract class used by function calls
     which are translated to Pyccel objects
     """
+    _attribute_nodes = ('_args',)
     def __init__(self, *args):
-        PyccelAstNode.__init__(self)
         self._args   = tuple(args)
+        super().__init__()
 
     @property
     def args(self):
@@ -45,25 +46,25 @@ class PyccelArraySize(PyccelInternalFunction):
             The dimension along which the shape is
             provided
     """
+    _attribute_nodes = ('_arg', '_index')
 
     def __init__(self, arg, index):
         if not isinstance(arg, (list,
                                 tuple,
                                 PyccelAstNode)):
             raise TypeError('Unknown type of  %s.' % type(arg))
-
         if isinstance(index, int):
             index = LiteralInteger(index)
         elif not isinstance(index, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(index))
 
-        PyccelInternalFunction.__init__(self, arg, index)
         self._arg   = arg
         self._index = index
         self._dtype = NativeInteger()
         self._rank  = 0
         self._shape = ()
         self._precision = default_precision['integer']
+        super().__init__()
 
     @property
     def arg(self):
@@ -79,6 +80,12 @@ class PyccelArraySize(PyccelInternalFunction):
 
     def __str__(self):
         return 'Shape({},{})'.format(str(self.arg), str(self.index))
+
+    def __eq__(self, other):
+        if isinstance(other, PyccelArraySize):
+            return self.arg == other.arg and self.index == other.index
+        else:
+            return False
 
 class Slice(Basic):
 
@@ -107,15 +114,13 @@ class Slice(Basic):
     >>> Slice(start, stop, step)
     start : stop : step
     """
-
-    def __new__(cls, start, stop, step = None):
-        return Basic.__new__(cls, start, stop, step)
+    _attribute_nodes = ('_start','_stop','_step')
 
     def __init__(self, start, stop, step = None):
-        Basic.__init__(self)
         self._start = start
         self._stop = stop
         self._step = step
+        super().__init__()
         if PyccelAstNode.stage == 'syntactic':
             return
         if start is not None and not (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger)):
@@ -168,7 +173,7 @@ class Slice(Basic):
             stop = str(self.stop)
         return '{0} : {1}'.format(start, stop)
 
-class PyccelSymbol(str):
+class PyccelSymbol(str, Immutable):
     """Symbolic placeholder for a Python variable, which has a name but no type yet.
     This is very generic, and it can also represent a function or a module.
 

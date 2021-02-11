@@ -105,17 +105,20 @@ class PyccelOperator(Expr, PyccelAstNode):
     args: tuple
         The arguments passed to the operator
     """
+    _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
         self._args = tuple(self._handle_precedence(args))
 
         if self.stage == 'syntactic':
+            super().__init__()
             return
         self._set_dtype()
         self._set_shape_rank()
         # rank is None for lambda functions
         if self._rank is not None and self._rank > 1:
             self._set_order()
+        super().__init__()
 
     @property
     def precedence(self):
@@ -187,7 +190,7 @@ class PyccelUnaryOperator(PyccelOperator):
     """
 
     def __init__(self, arg):
-        PyccelOperator.__init__(self, arg)
+        super().__init__(arg)
 
     def _set_dtype(self):
         """ Sets the dtype and precision
@@ -311,7 +314,7 @@ class PyccelBinaryOperator(PyccelOperator):
     """
 
     def __init__(self, arg1, arg2):
-        PyccelOperator.__init__(self, arg1, arg2)
+        super().__init__(arg1, arg2)
 
     def _set_dtype(self):
         """ Sets the dtype and precision
@@ -832,7 +835,7 @@ class PyccelIs(PyccelBooleanOperator):
     _precedence = 7
 
     def __init__(self, arg1, arg2):
-        PyccelBooleanOperator.__init__(self, arg1, arg2)
+        super().__init__(arg1, arg2)
 
     @property
     def lhs(self):
