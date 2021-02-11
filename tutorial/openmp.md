@@ -592,3 +592,17 @@ sum1 : 1, thread : 0
 sum2 : 6, thread : 0
 sum3 : 28, thread : 1
 ```
+
+## Combined Constructs Usage on Pyccel
+
+### parallel for
+
+#### Syntax of *parallel for*
+
+```python
+#$ omp parallel for [clause[ [,]clause] ... ]
+loop-nest
+```
+
+#### Example
+
