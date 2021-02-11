@@ -606,3 +606,22 @@ loop-nest
 
 #### Example
 
+The ```#$ omp parallel for``` construct specifies a parallel construct containing a worksharingloop construct with a canonical loop nest.
+
+statements.
+```python
+import numpy as np
+x = np.array([2,5,4,3,2,5,7])
+result = 0
+#$ omp parallel for reduction (+:result)
+for i in range(0, len(x)):
+    result += x[i]
+print("result:", result)
+```
+
+The output of this program is :
+```shell
+❯ pyccel omp_test.py --openmp
+❯ ./omp_test
+result: 28
+```
