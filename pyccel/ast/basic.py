@@ -105,10 +105,7 @@ class Basic(sp_Basic):
         list : List containing all objects of the
                requested type which contain self
         """
-        if self._recursion_in_progress:
-            return []
-
-        if len(self._user_nodes) == 0:
+        if self._recursion_in_progress or len(self._user_nodes) == 0:
             return []
         else:
             self._recursion_in_progress = True
@@ -139,7 +136,7 @@ class Basic(sp_Basic):
                requested type which exist in self
         """
         if self._recursion_in_progress:
-            return
+            return []
         self._recursion_in_progress = True
 
         results = []
