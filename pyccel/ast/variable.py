@@ -86,7 +86,7 @@ class Variable(PyccelAstNode):
     is_const: bool
         if object is a const argument of a function [Default value: False]
     is_temp: bool
-        if object is created by the Pyccel [Default value: False]
+        if the object is created by Pyccel [Default value: False]
 
     Examples
     --------

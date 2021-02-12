@@ -2358,14 +2358,12 @@ class SemanticParser(BasicParser):
         return_vars = self.get_function(f_name).results
         assigns     = []
         for v,r in zip(return_vars, results):
-            if not (isinstance(r, Symbol) and r.name == v.name):
-                assign = Assign(v,r)
-                assign.set_fst(expr.fst)
-                assign = self._visit_Assign(assign)
-                assign.lhs.is_temp = True
-                assigns.append(assign)
+            if not (isinstance(r, PyccelSymbol) and r == v):
+                a = Assign(v, r)
+                a.set_fst(expr.fst)
+                assigns.append(a)
 
-        results = [self._visit_Symbol(i, **settings) for i in return_vars]
+        assigns = [self._visit_Assign(e) for e in assigns]
         #add the Deallocate node before the Return node
         code = assigns + [Deallocate(i) for i in self._allocs[-1]]
         if code:
