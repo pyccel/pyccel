@@ -3450,22 +3450,6 @@ def test_zeros_like_combined_args(language):
     assert(isclose(     f3_val()  ,      create_zeros_like_3_val()        , rtol=RTOL, atol=ATOL))
     assert(type(f3_val())  == type(create_zeros_like_3_val().item()))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def test_numpy_real_scalar(language):
 
     @types('bool')
