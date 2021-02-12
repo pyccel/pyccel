@@ -106,7 +106,6 @@ class Basic(sp_Basic):
                requested type which contain self
         """
         if self._recursion_in_progress:
-            self._recursion_in_progress = False
             return []
 
         if len(self._user_nodes) == 0:
@@ -140,7 +139,6 @@ class Basic(sp_Basic):
                requested type which exist in self
         """
         if self._recursion_in_progress:
-            self._recursion_in_progress = False
             return
         self._recursion_in_progress = True
 
@@ -186,7 +184,6 @@ class Basic(sp_Basic):
                       Types for which substitute should not be called
         """
         if self._recursion_in_progress:
-            self._recursion_in_progress = False
             return
         self._recursion_in_progress = True
 
