@@ -199,11 +199,12 @@ class Basic(sp_Basic):
 
         def prepare_sub(found_node):
             idx = original.index(found_node)
+            rep = replacement[idx]
             if not self.ignore(found_node):
                 found_node.remove_user_node(self)
-            if not self.ignore(replacement[idx]):
-                replacement[idx].set_current_user_node(self)
-            return replacement[idx]
+            if not self.ignore(rep):
+                rep.set_current_user_node(self)
+            return rep
 
         for n in self._attribute_nodes:
             v = getattr(self, n)
