@@ -13,6 +13,7 @@ from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 from pyccel.ast.core      import Declare
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
 from pyccel.ast.core      import Deallocate
+from pyccel.ast.core      import CodeBlock
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, datatype, Import, AugAssign
 from pyccel.ast.core      import SeparatorComment
@@ -1120,8 +1121,11 @@ class CCodePrinter(CodePrinter):
             self._additional_args.append(expr.results)
         body  = self._print(expr.body)
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
-        if len(expr.results) <= 1 :
-            decs += [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.results]
+        if len(expr.results) == 1 :
+            if isinstance(expr.results[0], Variable) and not expr.results[0].is_temp:
+                decs += [Declare(expr.results[0].dtype, expr.results[0])]
+            elif isinstance(expr.results[0], FunctionAddress):
+                decs += [FuncAddressDeclare(expr.results[0])]
         decs += [Declare(i.dtype, i) for i in self._additional_declare]
         decs  = '\n'.join(self._print(i) for i in decs)
         self._additional_declare.clear()
@@ -1200,15 +1204,19 @@ class CCodePrinter(CodePrinter):
         return self._print(val)
 
     def _print_Return(self, expr):
-        code = ''
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
-        if expr.stmt:
-            code += self._print(expr.stmt)+'\n'
+        if len(args) > 1:
+            if expr.stmt:
+                return self._print(expr.stmt)+'\n'+'return 0;'
+            return 'return 0;'
         if len(args) == 1:
-            code +='return {0};'.format(self._print(args[0]))
-        elif len(args) > 1:
-            code += 'return 0;'
-        return code
+            if isinstance(expr.stmt, CodeBlock):
+                for a in expr.stmt.body:
+                    if isinstance(a, Assign):
+                        b = a
+                return 'return {0};'.format(self._print(b.rhs))
+            return 'return {0};'.format(self._print(args[0]))
+        return ''
 
     def _print_Pass(self, expr):
         return '// pass'

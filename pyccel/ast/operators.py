@@ -951,8 +951,6 @@ class IfTernaryOperator(PyccelOperator):
         """
         return self._args[2]
 
-
-
 #==============================================================================
 Relational = (PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe, PyccelAnd, PyccelOr,  PyccelNot, PyccelIs, PyccelIsNot)
 
