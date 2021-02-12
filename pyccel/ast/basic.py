@@ -136,12 +136,7 @@ class Basic(sp_Basic):
                requested type which exist in self
         """
         if self._recursion_in_progress:
-<<<<<<< HEAD
-            self._recursion_in_progress = False
-            return
-=======
             return []
->>>>>>> master
         self._recursion_in_progress = True
 
         results = []
