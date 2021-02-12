@@ -36,7 +36,7 @@ errors = Errors()
 
 #==============================================================================
 class Header(Basic):
-    pass
+    _attribute_nodes = ()
 
 #==============================================================================
 class MetaVariable(Header):
@@ -158,7 +158,7 @@ class Template(Header):
         return super().__new__(cls)
 
     def __init__(self, name, dtypes):
-        Header.__init__(self)
+        super().__init__()
         self._name = name
         self._dtypes = dtypes
 

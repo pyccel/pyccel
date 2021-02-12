@@ -902,7 +902,7 @@ class CWrapperCodePrinter(CCodePrinter):
             arguments = wrapper_args,
             results = wrapper_results,
             body = wrapper_body,
-            local_vars = wrapper_vars.values())
+            local_vars = tuple(wrapper_vars.values()))
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
@@ -915,9 +915,8 @@ class CWrapperCodePrinter(CCodePrinter):
             static_funcs = expr.funcs
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in static_funcs)
 
-        interfaces = expr.interfaces
-        interface_funcs = [f.name for i in interfaces for f in i.functions]
-        funcs = interfaces + [f for f in expr.funcs if f.name not in interface_funcs]
+        interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
+        funcs = [*expr.interfaces, *(f for f in expr.funcs if f.name not in interface_funcs)]
 
 
         function_defs = '\n\n'.join(self._print(f) for f in funcs)
