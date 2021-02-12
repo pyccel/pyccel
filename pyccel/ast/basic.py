@@ -181,10 +181,6 @@ class Basic(sp_Basic):
                       Types for which substitute should not be called
         """
         if self._recursion_in_progress:
-<<<<<<< HEAD
-            self._recursion_in_progress = False
-=======
->>>>>>> master
             return
         self._recursion_in_progress = True
 
@@ -197,20 +193,12 @@ class Basic(sp_Basic):
 
         def prepare_sub(found_node):
             idx = original.index(found_node)
-<<<<<<< HEAD
-            if not self.ignore(found_node):
-                found_node.remove_user_node(self)
-            if not self.ignore(replacement[idx]):
-                replacement[idx].set_current_user_node(self)
-            return replacement[idx]
-=======
             rep = replacement[idx]
             if not self.ignore(found_node):
                 found_node.remove_user_node(self)
             if not self.ignore(rep):
                 rep.set_current_user_node(self)
             return rep
->>>>>>> master
 
         for n in self._attribute_nodes:
             v = getattr(self, n)
