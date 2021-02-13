@@ -116,14 +116,6 @@ def count_ops(expr, visual=None, costs=None):
     used_names = set()
 
     if isinstance(expr, Assign):
-<<<<<<< Updated upstream
-        rhs = pyccel_to_sympy(expr.rhs, symbol_map, used_names)
-        return sympy_count_ops(rhs, visual)
-    elif isinstance(expr, For):
-        a = pyccel_to_sympy(expr.iterable, symbol_map, used_names).size
-        ops = sum(count_ops(i, visual) for i in expr.body.body)
-        return a*ops
-=======
         if isinstance(expr.rhs, (NumpyZeros, NumpyOnes, Comment, EmptyNode)):
             return 0
 
@@ -148,7 +140,7 @@ def count_ops(expr, visual=None, costs=None):
         # TODO treat the case step /= 1
         return summation(ops, (i, b, e-1))
 
-    elif isinstance(expr, (Tuple, list)):
+    elif isinstance(expr, (Tuple, tuple, list)):
         return sum(count_ops(i, visual, costs=costs) for i in expr)
 
     elif isinstance(expr, FunctionDef):
@@ -165,7 +157,6 @@ def count_ops(expr, visual=None, costs=None):
 
         return costs[fname]
 
->>>>>>> Stashed changes
     elif isinstance(expr, CodeBlock):
         return sum(count_ops(i, visual, costs=costs) for i in expr.body)
 
@@ -175,12 +166,9 @@ def count_ops(expr, visual=None, costs=None):
     elif isinstance(expr, PyccelArraySize):
         return 0
 
-<<<<<<< Updated upstream
-    expr = pyccel_to_sympy(expr, symbol_map, used_names)
-
-    if isinstance(expr, Tuple):
+    elif isinstance(expr, (Tuple, list)):
         return sum(count_ops(i, visual) for i in expr)
-=======
+
     elif isinstance(expr, Literal):
         return 0
 
@@ -215,7 +203,6 @@ def count_ops(expr, visual=None, costs=None):
     elif isinstance(expr, PyccelOperator):
         return sum(count_ops(i, visual, costs=costs) for i in expr.args)
 
->>>>>>> Stashed changes
     else:
         raise NotImplementedError('TODO count_ops for {}'.format(type(expr)))
 
