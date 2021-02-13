@@ -1196,7 +1196,7 @@ class FCodePrinter(CodePrinter):
         if self._current_function:
             name = self._current_function
             func = self.get_function(name)
-            func.local_vars.extend(new_vars)
+            func.add_local_var(*new_vars)
         else:
             for var in new_vars:
                 self._namespace.variables[var.name] = var
