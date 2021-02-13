@@ -184,6 +184,9 @@ def process_dtype(dtype):
 
 #==============================================================================
 class NumpyNewArray(PyccelInternalFunction):
+    """ Class from which all numpy functions which imply a call to Allocate
+    inherit
+    """
 
     #--------------------------------------------------------------------------
     @staticmethod
