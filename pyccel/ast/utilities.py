@@ -317,15 +317,12 @@ def collect_loops(block, indices, language_has_vectors = False):
                 not line.rhs.get_attribute_nodes(array_creator_types): # not creating array
 
             if isinstance(line.lhs, Variable):
-                lhs_var = line.lhs
+                lhs_vars = [line.lhs]
             elif isinstance(line.lhs, IndexedElement):
-                lhs_var = line.lhs.base
+                lhs_vars = [line.lhs.base]
             else:
-                lhs_var = line.lhs.get_attribute_nodes((Variable, IndexedElement))
-                assert(len(lhs_var)) == 1
-                lhs_var = lhs_var[0]
-                if isinstance(lhs_var, IndexedElement):
-                    lhs_var = lhs_var.internal_var
+                lhs_vars = set(line.lhs.get_attribute_nodes((Variable, IndexedElement)))
+                lhs_vars = [v.internal_var if isinstance(v, IndexedElement) else v for v in lhs_vars]
 
             notable_nodes = line.get_attribute_nodes((Variable,
                                                        IndexedElement,
@@ -376,14 +373,14 @@ def collect_loops(block, indices, language_has_vectors = False):
                 # Select the existing loop if the shape matches the
                 # shape of the expression
                 if save_spot[-1][1] == shape[j] and not any(u in save_spot[-1][2] for u in used_vars):
-                    save_spot[-1][2].update([lhs_var])
+                    save_spot[-1][2].update(lhs_vars)
                     save_spot = save_spot[-1][0]
                     j+=1
                 else:
                     break
             for k in range(j,new_level):
                 # Create new loops until we have the neccesary depth
-                save_spot.append(([], shape[k], set([lhs_var])))
+                save_spot.append(([], shape[k], set(lhs_vars)))
                 save_spot = save_spot[-1][0]
 
             # Save results
