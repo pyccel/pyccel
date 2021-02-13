@@ -1208,7 +1208,9 @@ class CCodePrinter(CodePrinter):
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
 
         if len(args) > 1:
-            return self._print(expr.stmt)+'\n'+'return 0;'
+            if expr.stmt:
+                return self._print(expr.stmt)+'\n'+'return 0;'
+            return 'return 0;'
 
         if expr.stmt:
             # get Assign nodes form CodeBlock object expr.stmt
