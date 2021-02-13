@@ -27,7 +27,7 @@ from .literals      import LiteralString, LiteralInteger, Literal
 
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants)
-from .operators     import PyccelOperator
+from .operators     import PyccelOperator, PyccelAdd, PyccelMul
 from .variable      import (Constant, Variable, ValuedVariable, IndexedElement)
 
 __all__ = (
