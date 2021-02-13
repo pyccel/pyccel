@@ -782,7 +782,7 @@ class FCodePrinter(CodePrinter):
     def _print_PythonInt(self, expr):
         value = self._print(expr.arg)
         if (expr.arg.dtype is NativeBool()):
-            code = 'MERGE(1_8, 0_8, {})'.format(value)
+            code = 'MERGE(1_{0}, 0_{1}, {2})'.format(self.print_kind(expr), self.print_kind(expr),value)
         else:
             code  = 'Int({0}, {1})'.format(value, self.print_kind(expr))
         return code
@@ -1218,7 +1218,7 @@ class FCodePrinter(CodePrinter):
         return self._print_Comment(stmt)
 
     def _print_NumpyReal(self, expr):
-        value = self._print(expr.arg)
+        value = self._print(expr.internal_var)
         code = 'Real({0}, {1})'.format(value, self.print_kind(expr))
         return code
 
