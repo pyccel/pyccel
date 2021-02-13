@@ -6,6 +6,7 @@
 #------------------------------------------------------------------------------------------#
 
 import inspect
+from itertools import chain
 
 from numpy import pi
 
@@ -14,18 +15,20 @@ from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors, PyccelCodegenError
 from pyccel.errors.messages import FORTRAN_ALLOCATABLE_IN_EXPRESSION
 
-from .core     import (AsName, Import, FunctionDef, FunctionCall)
+from .basic import PyccelAstNode
+from .core     import (AsName, Import, FunctionDef, FunctionCall, Allocate, Dlist, Assign, AugAssign, For)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange, PythonList, PythonTuple)
-from .internals     import PyccelInternalFunction
+from .internals     import PyccelInternalFunction, Slice
 from .itertoolsext  import Product
 from .mathext       import math_functions, math_constants, MathFunctionBase
 from .literals      import LiteralString, LiteralInteger, Literal
 
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants)
-from .variable      import (Constant, Variable, ValuedVariable)
+from .operators     import PyccelOperator
+from .variable      import (Constant, Variable, ValuedVariable, IndexedElement)
 
 __all__ = (
     'build_types_decorator',
@@ -182,117 +185,36 @@ def split_positional_keyword_arguments(*args):
     return args, kwargs
 
 #==============================================================================
-def reduce_slice_to_index(expr, pos):
-    """
-    Function to insert a 0 index into an expression at a given
-    position if the size is 1 in that dimension
-
-    Parameters
-    ==========
-    expr        : Ast Node
-                The expression to be modified
-    pos         : int
-                The index at which the expression is modified
-                (If negative then there is no index to insert)
-
-    Returns
-    =======
-    expr        : Ast Node
-                Either a modified version of expr or expr itself
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable, Assign
-    >>> from pyccel.ast.operators import PyccelAdd
-    >>> from pyccel.ast.utilities import insert_index
-    >>> a = Variable('int', 'a', shape=(4,), rank=1)
-    >>> b = Variable('int', 'b', shape=(4,), rank=1)
-    >>> c = Variable('int', 'c', shape=(4,), rank=1)
-    >>> i = Variable('int', 'i', shape=())
-    >>> d = PyccelAdd(a,b)
-    >>> expr = Assign(c,d)
-    >>> insert_index(expr, 0, i, language_has_vectors = False)
-    IndexedElement(c, i) := IndexedElement(a, i) + IndexedElement(b, i)
-    >>> insert_index(expr, 0, i, language_has_vectors = True)
-    c := a + b
-    """
-    if isinstance(expr, Variable):
-        if expr.rank==0 or -pos>expr.rank:
-            return expr
-        if expr.shape[pos]==1:
-            indexes = [Slice(None,None)]*(expr.rank+pos) + [LiteralInteger(0)]+[Slice(None,None)]*(-1-pos)
-            var = IndexedVariable(expr)
-            return var[indexes]
-    elif isinstance(expr, IndexedElement):
-        base = expr.base
-        indices = list(expr.indices)
-        if -pos>expr.base.rank or not isinstance(indices[pos], Slice):
-            return expr
-        if expr.base.shape[pos]==1:
-            assert(indices[pos].start is None)
-            indices[pos] = LiteralInteger(0)
-            return base[indices]
-        return expr
-    elif isinstance(expr, PyccelAstNode) and expr.rank==0:
-        return expr
-    elif isinstance(expr, AugAssign):
-        cls = type(expr)
-        rhs = reduce_slice_to_index(expr.rhs, pos)
-        lhs = reduce_slice_to_index(expr.lhs, pos)
-        return cls(lhs, expr.op, rhs, expr.status, expr.like)
-    elif isinstance(expr, Assign):
-        cls = type(expr)
-        rhs = reduce_slice_to_index(expr.rhs, pos)
-        lhs = reduce_slice_to_index(expr.lhs, pos)
-
-        return cls(lhs, rhs, expr.status, expr.like)
-    elif isinstance(expr, PyccelOperator):
-        cls = type(expr)
-        args = [reduce_slice_to_index(a, pos) for a in expr.args]
-        return cls(*args)
-    elif isinstance(expr, IfTernaryOperator):
-        cond        = reduce_slice_to_index(expr.cond       , pos)
-        value_true  = reduce_slice_to_index(expr.value_true , pos)
-        value_false = reduce_slice_to_index(expr.value_false, pos)
-        return IfTernaryOperator(cond, value_true, value_false)
-    return expr
-
-#==============================================================================
-def compatible_operation(*args):
+def compatible_operation(*args, language_has_vectors = True):
     """
     Indicates whether an operation requires an index to be
     correctly understood
 
     Parameters
     ==========
-    args : list of PyccelAstNode
-           The operator arguments
+    args      : list of PyccelAstNode
+                The operator arguments
+    language_has_vectors : bool
+                Indicates if the language has support for vector
+                operations of the same shape
     Results
     =======
     compatible : bool
                  A boolean indicating if the operation is compatible
     """
-    # If the shapes don't match then an index must be required
-    shapes = [a.shape for a in args if a.shape != ()]
-    shapes = set(tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes)
-    order  = set(a.order for a in args if a.order is not None)
-    return len(shapes) == 1 and len(order) == 1
-
-#==============================================================================
-def get_variable(var):
-    if isinstance(var, Variable):
-        return (var,)
-    elif isinstance(var, VariableAddress):
-        return (var.variable,)
-    elif isinstance(var, IndexedElement):
-        return (var.base.internal_variable,)
-    elif isinstance(var, TupleVariable):
-        return var.get_vars()
+    if len(args)==1:
+        return True
+    if language_has_vectors:
+        # If the shapes don't match then an index must be required
+        shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.shape != ()]
+        shapes = set(tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes)
+        order  = set(a.order for a in args if a.order is not None)
+        return len(shapes) == 1 and len(order) == 1
     else:
-        raise NotImplementedError('Strange lhs type {}'.format(str(type(var))))
+        return all(a.shape==() for a in args)
 
 #==============================================================================
-def insert_index(expr, pos, index_var, used_vars, language_has_vectors):
+def insert_index(expr, pos, index_var):
     """
     Function to insert an index into an expression at a given position
 
@@ -305,9 +227,6 @@ def insert_index(expr, pos, index_var, used_vars, language_has_vectors):
                 (If negative then there is no index to insert)
     index_var   : Variable
                 The variable which will be used for indexing
-    language_has_vectors : bool
-                Indicates if the language has support for vector
-                operations of the same shape
 
     Returns
     =======
@@ -335,9 +254,8 @@ def insert_index(expr, pos, index_var, used_vars, language_has_vectors):
             return expr
         if expr.shape[pos]==1:
             index_var = LiteralInteger(0)
-        var = IndexedVariable(expr)
         indexes = [Slice(None,None)]*(expr.rank+pos) + [index_var]+[Slice(None,None)]*(-1-pos)
-        return var[indexes]
+        return expr[indexes]
 
     elif isinstance(expr, IndexedElement):
         base = expr.base
@@ -354,87 +272,6 @@ def insert_index(expr, pos, index_var, used_vars, language_has_vectors):
                 index_var = PyccelAdd(index_var, indices[pos].start)
         indices[pos] = index_var
         return base[indices]
-
-    elif isinstance(expr, FunctionCall):
-        if expr.funcdef.is_elemental:
-            if not language_has_vectors:
-                args = [insert_index(a, pos, index_var, used_vars, language_has_vectors) \
-                        for a in expr.arguments]
-                return FunctionCall(expr.funcdef, args)
-            else:
-                return expr
-        else:
-            used_vars.update(get_variable(a) for a in expr.arguments)
-            return expr
-
-    elif isinstance(expr, (MathFunctionBase, NumpyFunctionBase)):
-        used_vars.update(get_variable(a) for a in expr.args)
-        return expr
-
-    elif isinstance(expr, PyccelAstNode) and expr.rank==0:
-        return expr
-
-    elif isinstance(expr, AugAssign):
-        cls = type(expr)
-
-        compatible = compatible_operation(expr.lhs, expr.rhs)
-
-        lhs = insert_index(expr.lhs, pos, index_var, used_vars, language_has_vectors)
-        rhs = insert_index(expr.rhs, pos, index_var, used_vars, language_has_vectors)
-
-        # Indicates whether the rhs needs an index inserting
-        changed = not isinstance(rhs, (Variable, IndexedElement)) \
-                and expr.rhs is not rhs
-
-        if changed or not compatible or not language_has_vectors:
-            return cls(lhs, expr.op, rhs, expr.status, expr.like)
-        else:
-            return expr
-
-    elif isinstance(expr, Assign):
-        cls = type(expr)
-        lhs = insert_index(expr.lhs, pos, index_var, used_vars, language_has_vectors)
-        rhs = insert_index(expr.rhs, pos, index_var, used_vars, language_has_vectors)
-
-        compatible = compatible_operation(expr.lhs, expr.rhs)
-
-        # a = b does not need indexing inserting if a and b have the same shape
-        var_assign = isinstance(rhs, (Variable, IndexedElement)) and compatible
-
-        if  rhs is not expr.rhs and (not var_assign or not language_has_vectors):
-            return cls(lhs, rhs, expr.status, expr.like)
-        else:
-            return expr
-
-    elif isinstance(expr, PyccelOperator):
-        cls = type(expr)
-
-        args = [insert_index(a, pos, index_var, used_vars, language_has_vectors) for a in expr.args]
-
-        compatible = compatible_operation(*expr.args)
-        changed = any(a is not na for a,na in zip(expr.args, args) if not isinstance(a, (Variable, IndexedElement)))
-
-        if changed or not compatible or not language_has_vectors:
-            return cls(*args)
-        else:
-            return expr
-
-    elif isinstance(expr, IfTernaryOperator):
-        cond        = insert_index(expr.cond       , pos, index_var, used_vars, language_has_vectors)
-        value_true  = insert_index(expr.value_true , pos, index_var, used_vars, language_has_vectors)
-        value_false = insert_index(expr.value_false, pos, index_var, used_vars, language_has_vectors)
-
-        changed = not ( cond is expr.cond and
-                        value_true is expr.value_true and
-                        value_false is expr.value_false )
-
-        if changed or not language_has_vectors:
-            return IfTernaryOperator(cond, value_true, value_false)
-        else:
-            return expr
-
-    elif isinstance(expr, NumpyNewArray):
-        raise PyccelCodegenError(FORTRAN_ALLOCATABLE_IN_EXPRESSION)
 
     else:
         raise NotImplementedError("Expansion not implemented for type : {}".format(type(expr)))
@@ -473,64 +310,80 @@ def collect_loops(block, indices, language_has_vectors = False):
     """
     result = []
     current_level = 0
-    array_creator_types = (NumpyNewArray,
-                           NumpyFunctionBase, MathFunctionBase,
-                           PythonList, PythonTuple, Nil, Dlist)
+    used_vars = set()
+    array_creator_types = (Allocate, PythonList, PythonTuple, Dlist)
     for line in block:
         if isinstance(line, Assign) and \
-                not isinstance(line.rhs, array_creator_types) and \
-                not (isinstance(line.rhs, FunctionCall) and not line.rhs.funcdef.is_elemental) and \
-                not ( not isinstance(line, AugAssign) and isinstance(line.rhs, Variable)) and \
-                not ( isinstance(line.rhs, IfTernaryOperator) and \
-                (isinstance(line.rhs.value_true, array_creator_types) or \
-                isinstance(line.rhs.value_false, array_creator_types)) ):
-            lhs = line.lhs
-            lhs_var = get_variable(lhs)
-            saved_line = line
-            used_vars = set()
+                not line.rhs.get_attribute_nodes(array_creator_types): # not creating array
 
+            if isinstance(line.lhs, Variable):
+                lhs_var = line.lhs
+            elif isinstance(line.lhs, IndexedElement):
+                lhs_var = line.lhs.base
+            else:
+                lhs_var = line.lhs.get_attribute_nodes((Variable, IndexedElement))
+                assert(len(lhs_var)) == 1
+                lhs_var = lhs_var[0]
+                if isinstance(lhs_var, IndexedElement):
+                    lhs_var = lhs_var.internal_var
+
+            notable_nodes = line.get_attribute_nodes((Variable,
+                                                       IndexedElement,
+                                                       FunctionCall,
+                                                       PyccelInternalFunction))
+            variables       = [v for v in notable_nodes if isinstance(v, (Variable, IndexedElement))]
+
+            funcs           = [f.funcdef for f in notable_nodes if isinstance(f, FunctionCall)]
+            variables      += [v for f in funcs if f.is_elemental for v in f.get_attribute_nodes((Variable, IndexedElement))]
+            elemental_funcs = [f for f in funcs if f.is_elemental]
+
+            funcs           = [f for f in funcs if not f.is_elemental]
+            internal_funcs  = [f for f in notable_nodes if isinstance(f, PyccelInternalFunction)]
+
+            used_vars       = set(v for f in chain(funcs, internal_funcs) \
+                                    for v in f.get_attribute_nodes((Variable, IndexedElement)))
+
+            variables = list(set(variables))
+
+            if compatible_operation(*variables, language_has_vectors = language_has_vectors):
+                result.append(line)
+                current_level = 0
+                continue
+
+            rank = line.lhs.rank
+            shape = line.lhs.shape
+            new_vars = variables
             # Loop over indexes, inserting until the expression can be evaluated
             # in the desired language
             new_level = 0
-            for kk, index in enumerate(range(-lhs.rank,0)):
-                if lhs.rank+index >= len(indices):
+            for kk, index in enumerate(range(-rank,0)):
+                new_level += 1
+                if rank+index >= len(indices):
                     indices.append(Variable('int','i_{}'.format(kk)))
-                index_var = indices[lhs.rank+index]
-                line = reduce_slice_to_index(line, index)
-                try:
-                    new_stmt = insert_index(line, index, index_var, used_vars, language_has_vectors)
-                except PyccelCodegenError:
-                    line = saved_line
+                index_var = indices[rank+index]
+                new_vars = [insert_index(v, index, index_var) for v in new_vars]
+                if compatible_operation(*new_vars, language_has_vectors = language_has_vectors):
                     break
-                if new_stmt is line:
-                    break
-                else:
-                    new_level += 1
-                    line = new_stmt
 
-            # Remve all slices of size 1 in remaining dimensions
-            index = new_level
-            while line.lhs.rank != line.rhs.rank and index < lhs.rank:
-                line = reduce_slice_to_index(line, index)
-                index += 1
+            line.substitute(variables, new_vars)
 
             # Recurse through result tree to save line with lines which need
             # the same set of for loops
             save_spot = result
+            print(result)
             j = 0
-            shape = lhs.shape
             for _ in range(min(new_level,current_level)):
                 # Select the existing loop if the shape matches the
                 # shape of the expression
                 if save_spot[-1][1] == shape[j] and not any(u in save_spot[-1][2] for u in used_vars):
-                    save_spot[-1][2].update(lhs_var)
+                    save_spot[-1][2].update([lhs_var])
                     save_spot = save_spot[-1][0]
                     j+=1
                 else:
                     break
             for k in range(j,new_level):
                 # Create new loops until we have the neccesary depth
-                save_spot.append(([], shape[k], set(lhs_var)))
+                save_spot.append(([], shape[k], set([lhs_var])))
                 save_spot = save_spot[-1][0]
 
             # Save results
