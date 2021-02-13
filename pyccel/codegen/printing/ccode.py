@@ -1206,20 +1206,33 @@ class CCodePrinter(CodePrinter):
     def _print_Return(self, expr):
         code = ''
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
+
         if len(args) > 1:
-            if expr.stmt:
-                return self._print(expr.stmt)+'\n'+'return 0;'
-            return 'return 0;'
+            return self._print(expr.stmt)+'\n'+'return 0;'
+
         if expr.stmt:
-            last_assign = expr.stmt.get_attribute_nodes(Assign)[-1]
+            # get Assign nodes form CodeBlock object expr.stmt
+            assigns = expr.stmt.get_attribute_nodes(Assign)
+
+            # check the Assign objects list in case of
+            # the user assigns a variable to an object contains IndexedElement object
+            if not assigns:
+                return 'return {0};'.format(self._print(args[0]))
+            last_assign = assigns[-1]
             deallocations = expr.stmt.get_attribute_nodes(Deallocate)
+
+            # print deallocation nodes
+            if deallocations:
+                code += '\n' + self._print(last_assign)
+                for a in deallocations:
+                    code += '\n' + self._print(a)
+
+            # return the rhs(what the temporary variable is holding) if the temporary variable is not holding a value from a freed variable,
+            # else return lhs(the temporary variable).
             freed_vars = [d.variable for d in deallocations]
             if all(v not in freed_vars for v in last_assign.rhs.get_attribute_nodes(Variable)):
                 return 'return {0};'.format(self._print(last_assign.rhs))
             else:
-                code += '\n' + self._print(last_assign)
-                for a in deallocations:
-                    code += '\n' + self._print(a)
                 return code + '\nreturn {0};'.format(self._print(last_assign.lhs))
         return 'return {0};'.format(self._print(args[0]))
 
