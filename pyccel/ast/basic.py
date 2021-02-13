@@ -184,8 +184,8 @@ class Basic(sp_Basic):
             return
         self._recursion_in_progress = True
 
-        if isinstance(original, tuple):
-            assert(isinstance(replacement, tuple))
+        if isinstance(original, (tuple, list)):
+            assert(isinstance(replacement, (tuple, list)))
             assert(len(original) == len(replacement))
         else:
             original = (original,)
