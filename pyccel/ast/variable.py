@@ -85,6 +85,8 @@ class Variable(PyccelAstNode):
 
     is_const: bool
         if object is a const argument of a function [Default value: False]
+    is_temp: bool
+        if object assigned to an object that has no allocatable objects or an indexedElements [Default value: False]
 
     Examples
     --------
@@ -117,6 +119,7 @@ class Variable(PyccelAstNode):
         precision=0,
         is_argument=False,
         is_kwonly=False,
+        is_temp =False,
         allows_negative_indexes=False
         ):
         super().__init__()
@@ -203,6 +206,7 @@ class Variable(PyccelAstNode):
         self._order          = order
         self._is_argument    = is_argument
         self._is_kwonly      = is_kwonly
+        self._is_temp        = is_temp
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
@@ -285,6 +289,16 @@ class Variable(PyccelAstNode):
         if not isinstance(is_pointer, bool):
             raise TypeError('is_pointer must be a boolean.')
         self._is_pointer = is_pointer
+
+    @property
+    def is_temp(self):
+        return self._is_temp
+
+    @is_temp.setter
+    def is_temp(self, is_temp):
+        if not isinstance(is_temp, bool):
+            raise TypeError('is_temp must be a boolean.')
+        self._is_temp = is_temp
 
     @property
     def is_target(self):

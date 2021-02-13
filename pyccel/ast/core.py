@@ -1749,8 +1749,8 @@ class Return(Basic):
 
     def __init__(self, expr, stmt=None):
 
-        if stmt and not isinstance(stmt, (Assign, CodeBlock)):
-            raise TypeError('stmt should only be of type Assign')
+        if stmt and not isinstance(stmt, CodeBlock):
+            raise TypeError('stmt should only be of type CodeBlock')
 
         self._expr = expr
         self._stmt = stmt

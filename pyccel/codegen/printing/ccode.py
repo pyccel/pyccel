@@ -1121,7 +1121,11 @@ class CCodePrinter(CodePrinter):
         body  = self._print(expr.body)
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
-            decs += [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.results]
+            for i in expr.results:
+                if isinstance(i, Variable) and not i.is_temp:
+                        decs += [Declare(i.dtype, i)]
+                elif not isinstance(i, Variable):
+                    decs += [FuncAddressDeclare(i)]
         decs += [Declare(i.dtype, i) for i in self._additional_declare]
         decs  = '\n'.join(self._print(i) for i in decs)
         self._additional_declare.clear()
@@ -1202,13 +1206,22 @@ class CCodePrinter(CodePrinter):
     def _print_Return(self, expr):
         code = ''
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
+        if len(args) > 1:
+            if expr.stmt:
+                return self._print(expr.stmt)+'\n'+'return 0;'
+            return 'return 0;'
         if expr.stmt:
-            code += self._print(expr.stmt)+'\n'
-        if len(args) == 1:
-            code +='return {0};'.format(self._print(args[0]))
-        elif len(args) > 1:
-            code += 'return 0;'
-        return code
+            last_assign = expr.stmt.get_attribute_nodes(Assign)[-1]
+            deallocations = expr.stmt.get_attribute_nodes(Deallocate)
+            freed_vars = [d.variable for d in deallocations]
+            if all(v not in freed_vars for v in last_assign.rhs.get_attribute_nodes(Variable)):
+                return 'return {0};'.format(self._print(last_assign.rhs))
+            else:
+                code += '\n' + self._print(last_assign)
+                for a in deallocations:
+                    code += '\n' + self._print(a)
+                return code + '\nreturn {0};'.format(self._print(last_assign.lhs))
+        return 'return {0};'.format(self._print(args[0]))
 
     def _print_Pass(self, expr):
         return '// pass'

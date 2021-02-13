@@ -2362,9 +2362,12 @@ class SemanticParser(BasicParser):
             if not (isinstance(r, PyccelSymbol) and r == v):
                 a = Assign(v, r)
                 a.set_fst(expr.fst)
+                a = self._visit_Assign(a)
+                ind = a.rhs.get_attribute_nodes(IndexedElement)
+                if len(ind) == 0 and not isinstance(a.rhs, IndexedElement):
+                    a.lhs.is_temp = True
                 assigns.append(a)
 
-        assigns = [self._visit_Assign(e) for e in assigns]
         results = [self._visit(i, **settings) for i in return_vars]
 
         #add the Deallocate node before the Return node
