@@ -4,6 +4,8 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
+from collections import OrderedDict
+
 from pyccel.parser.parser import Parser
 
 
@@ -25,16 +27,35 @@ class Complexity(object):
         settings = {}
         self._ast = pyccel.annotate(**settings).ast
 
+        # ...
+        functions = OrderedDict()
+        if pyccel.namespace.functions:
+            functions = pyccel.namespace.functions
+
+        for son in pyccel.sons:
+            functions.update(son.namespace.functions)
+
+        self._functions = functions
+        # ...
+
+        # TODO add setter for _costs
+        self._costs = OrderedDict()
+
     @property
     def ast(self):
         """Returns the Abstract Syntax Tree."""
         return self._ast
 
+    @property
+    def functions(self):
+        """Returns declared functions."""
+        return self._functions
+
+    @property
+    def costs(self):
+        """Returns costs of declared functions."""
+        return self._costs
+
     def cost(self):
         """Computes the complexity of the given code."""
         return 0
-
-
-
-
-
