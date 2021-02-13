@@ -519,7 +519,7 @@ class CCodePrinter(CodePrinter):
             var = self._print(e)
             if i == 0:
                 lines.append("if (%s)\n{" % self._print(c))
-            elif i == len(expr.blocks) - 1 and c is LiteralTrue():
+            elif i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
                 lines.append("else\n{")
             else:
                 lines.append("else if (%s)\n{" % self._print(c))
