@@ -12,22 +12,20 @@ from numpy import pi
 
 import pyccel.decorators as pyccel_decorators
 from pyccel.symbolic import lambdify
-from pyccel.errors.errors import Errors, PyccelCodegenError
-from pyccel.errors.messages import FORTRAN_ALLOCATABLE_IN_EXPRESSION
+from pyccel.errors.errors import Errors
 
-from .basic import PyccelAstNode
-from .core     import (AsName, Import, FunctionDef, FunctionCall, Allocate, Dlist, Assign, AugAssign, For)
+from .core     import (AsName, Import, FunctionDef, FunctionCall, Allocate, Dlist, Assign, For)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange, PythonList, PythonTuple)
 from .internals     import PyccelInternalFunction, Slice
 from .itertoolsext  import Product
-from .mathext       import math_functions, math_constants, MathFunctionBase
+from .mathext       import math_functions, math_constants
 from .literals      import LiteralString, LiteralInteger, Literal
 
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants)
-from .operators     import PyccelOperator, PyccelAdd, PyccelMul
+from .operators     import PyccelAdd, PyccelMul
 from .variable      import (Constant, Variable, ValuedVariable, IndexedElement)
 
 __all__ = (
@@ -332,7 +330,6 @@ def collect_loops(block, indices, language_has_vectors = False):
 
             funcs           = [f.funcdef for f in notable_nodes if isinstance(f, FunctionCall)]
             variables      += [v for f in funcs if f.is_elemental for v in f.get_attribute_nodes((Variable, IndexedElement))]
-            elemental_funcs = [f for f in funcs if f.is_elemental]
 
             funcs           = [f for f in funcs if not f.is_elemental]
             internal_funcs  = [f for f in notable_nodes if isinstance(f, PyccelInternalFunction)]
