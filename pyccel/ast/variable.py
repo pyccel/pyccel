@@ -292,6 +292,10 @@ class Variable(PyccelAstNode):
 
     @property
     def is_temp(self):
+        """
+        Indicates if object assigned to an object that has non-allocated objects
+        or an indexedElements [Default value: False]
+        """
         return self._is_temp
 
     @is_temp.setter

@@ -1123,7 +1123,7 @@ class CCodePrinter(CodePrinter):
         if len(expr.results) <= 1 :
             for i in expr.results:
                 if isinstance(i, Variable) and not i.is_temp:
-                        decs += [Declare(i.dtype, i)]
+                    decs += [Declare(i.dtype, i)]
                 elif not isinstance(i, Variable):
                     decs += [FuncAddressDeclare(i)]
         decs += [Declare(i.dtype, i) for i in self._additional_declare]
