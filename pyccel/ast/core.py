@@ -21,7 +21,7 @@ from pyccel.errors.errors import Errors
 from pyccel.errors.messages import RECURSIVE_RESULTS_REQUIRED
 
 from .basic     import Basic, PyccelAstNode
-from .builtins  import (PythonEnumerate, PythonLen, PythonMap,
+from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeBool, NativeRange,
@@ -419,6 +419,10 @@ class Assign(Basic):
         status=None,
         like=None,
         ):
+        if isinstance(lhs, (tuple, list)):
+            lhs = PythonTuple(*lhs)
+        if isinstance(rhs, (tuple, list)):
+            rhs = PythonTuple(*rhs)
         self._lhs = lhs
         self._rhs = rhs
         self._status = status
