@@ -4115,7 +4115,7 @@ def test_numpy_int64(language):
 
     bl = np.bool(randint(1e6))
     integer = randint(1e6)
-    integer8 = np.int8(randint(0, 172))
+    integer8 = np.int8(randint(0, 127))
     integer16 = np.int16(randint(1e6))
     integer32 = np.int32(randint(1e6))
     integer64 = np.int64(randint(1e6))
