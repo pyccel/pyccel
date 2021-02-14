@@ -150,6 +150,11 @@ class PythonComplex(PyccelAstNode):
 
     def __new__(cls, arg0, arg1=LiteralFloat(0)):
 
+        if isinstance(arg0.dtype, NativeBool) or isinstance(arg1.dtype, NativeBool):
+            arg0 = PythonInt(arg0) if isinstance(arg0.dtype, NativeBool) else arg0
+            arg1 = PythonInt(arg1) if isinstance(arg1.dtype, NativeBool) else arg1
+            return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit()))
+
         if isinstance(arg0, Literal) and isinstance(arg1, Literal):
             real_part = 0
             imag_part = 0
@@ -263,7 +268,9 @@ class PythonFloat(PyccelAstNode):
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
-        if isinstance(arg, LiteralFloat):
+        if isinstance(arg.dtype, NativeBool):
+            return PythonInt(arg)
+        elif isinstance(arg, LiteralFloat):
             return LiteralFloat(arg, precision = cls._precision)
         elif isinstance(arg, LiteralInteger):
             return LiteralFloat(arg.p, precision = cls._precision)
