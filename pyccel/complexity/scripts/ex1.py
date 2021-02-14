@@ -177,3 +177,160 @@ def array_int32_1d_scalar_add_stride3( x: 'int32[:,:]', a: 'int32' ):
 # ...
 def array_int32_1d_scalar_add_stride4( x: 'int32[:,:]', a: 'int32' ):
     x[:5, 2:] += a
+
+# ...
+def abs_real_scalar( x: 'real' ):
+    return abs(x)
+
+# ...
+def floor_real_scalar( x: 'real' ):
+    from numpy import floor
+    return floor(x)
+
+# ...
+def exp_real_scalar( x: 'real' ):
+    from numpy import exp
+    return exp(x)
+
+# ...
+def log_real_scalar( x: 'real' ):
+    from numpy import log
+    return log(x)
+
+# ...
+def sqrt_real_scalar( x: 'real' ):
+    from numpy import sqrt
+    return sqrt(x)
+
+# ...
+def sin_real_scalar( x: 'real' ):
+    from numpy import sin
+    return sin(x)
+
+# ...
+def cos_real_scalar( x: 'real' ):
+    from numpy import cos
+    return cos(x)
+
+# ...
+def tan_real_scalar( x: 'real' ):
+    from numpy import tan
+    return tan(x)
+
+# ...
+def arcsin_real_scalar( x: 'real' ):
+    from numpy import arcsin
+    return arcsin(x)
+
+# ...
+def arccos_real_scalar( x: 'real' ):
+    from numpy import arccos
+    return arccos(x)
+
+# ...
+def arctan_real_scalar( x: 'real' ):
+    from numpy import arctan
+    return arctan(x)
+
+# ...
+def sinh_real_scalar( x: 'real' ):
+    from numpy import sinh
+    return sinh(x)
+
+# ...
+def cosh_real_scalar( x: 'real' ):
+    from numpy import cosh
+    return cosh(x)
+
+# ...
+def tanh_real_scalar( x: 'real' ):
+    from numpy import tanh
+    return tanh(x)
+# ...
+def arcsinh_real_scalar( x: 'real' ):
+    from numpy import arcsinh
+    return arcsinh(x)
+
+# ...
+def arccosh_real_scalar( x: 'real' ):
+    from numpy import arccosh
+    return arccosh(x)
+
+# ...
+def arctanh_real_scalar( x: 'real' ):
+    from numpy import arctanh
+    return arctanh(x)
+
+# ...
+def arctan2_real_scalar( y: 'real', x: 'real' ):
+    from numpy import arctan2
+    return arctan2(y, x)
+
+# ...
+def sin_real_array_1d( x: 'real[:]', out: 'real[:]' ):
+    from numpy import sin
+    out[:] = sin(x)
+
+# ...
+def cos_real_array_1d( x: 'real[:]', out: 'real[:]' ):
+    from numpy import cos
+    out[:] = cos(x)
+
+# ...
+def tan_real_array_1d( x: 'real[:]', out: 'real[:]' ):
+    from numpy import tan
+    out[:] = tan(x)
+
+# ...
+def arcsin_real_array_1d( x: 'real[:]', out: 'real[:]' ):
+    from numpy import arcsin
+    out[:] = arcsin(x)
+
+# ...
+def arccos_real_array_1d( x: 'real[:]', out: 'real[:]' ):
+    from numpy import arccos
+    out[:] = arccos(x)
+
+# ...
+def arctan_real_array_1d( x: 'real[:]', out: 'real[:]' ):
+    from numpy import arctan
+    out[:] = arctan(x)
+
+# ...
+def sinh_real_array_1d( x: 'real[:]', out: 'real[:]' ):
+    from numpy import sinh
+    out[:] = sinh(x)
+
+# ...
+def cosh_real_array_1d( x: 'real[:]', out: 'real[:]' ):
+    from numpy import cosh
+    out[:] = cosh(x)
+
+# ...
+def tanh_real_array_1d( x: 'real[:]', out: 'real[:]' ):
+    from numpy import tanh
+    out[:] = tanh(x)
+# ...
+def arcsinh_real_array_1d( x: 'real[:]', out: 'real[:]' ):
+    from numpy import arcsinh
+    out[:] = arcsinh(x)
+
+# ...
+def arccosh_real_array_1d( x: 'real[:]', out: 'real[:]' ):
+    from numpy import arccosh
+    out[:] = arccosh(x)
+
+# ...
+def arctanh_real_array_1d( x: 'real[:]', out: 'real[:]' ):
+    from numpy import arctanh
+    out[:] = arctanh(x)
+
+# ...
+def arctan2_real_array_1d( x: 'real[:]', y: 'real[:]', out: 'real[:]' ):
+    from numpy import arctan2
+    out[:] = arctan2(y, x)
+
+# ...
+def numpy_math_expr_real_scalar( x: 'real', y: 'real', z: 'real' ):
+    from numpy import sin
+    return sin(x*2+y/z)

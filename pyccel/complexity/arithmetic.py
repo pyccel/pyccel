@@ -27,11 +27,19 @@ from pyccel.ast.core     import Allocate, Deallocate
 from pyccel.ast.core     import FunctionDef, FunctionCall
 from pyccel.ast.core     import Return
 from pyccel.ast.core     import AddOp, SubOp, MulOp, DivOp
+from pyccel.ast.numpyext import NumpyUfuncBase
+from pyccel.ast.numpyext import ( NumpySin, NumpyCos, NumpyTan, NumpyArcsin,
+                                  NumpyArccos, NumpyArctan, NumpyArctan2, NumpySinh, NumpyCosh, NumpyTanh,
+                                  NumpyArcsinh, NumpyArccosh, NumpyArctanh )
+from pyccel.ast.numpyext import ( NumpyMax, NumpyMin, NumpyFloor, NumpyAbs, NumpyFabs, NumpyExp, NumpyLog,
+                                  NumpySqrt )
+
 from pyccel.ast.internals import PyccelArraySize, Slice
 from pyccel.ast.operators import PyccelAdd, PyccelMinus, PyccelDiv, PyccelMul, PyccelFloorDiv
 from pyccel.ast.variable  import IndexedElement, Variable
-from pyccel.ast.numpyext import NumpyZeros, NumpyOnes
-from pyccel.ast.operators import  PyccelOperator, PyccelAssociativeParenthesis
+from pyccel.ast.numpyext  import NumpyZeros, NumpyOnes
+from pyccel.ast.operators import PyccelOperator, PyccelAssociativeParenthesis
+from pyccel.ast.builtins  import PythonAbs
 from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.complexity.basic import Complexity
 
@@ -42,6 +50,7 @@ SUB = Symbol('SUB')
 MUL = Symbol('MUL')
 DIV = Symbol('DIV')
 IDIV = Symbol('IDIV')
+ABS = Symbol('ABS')
 
 op_registry = {
     AddOp(): ADD,
@@ -53,6 +62,35 @@ op_registry = {
 
 SHAPE = Function('shape')
 
+# ...
+numpy_functions_registery = {
+    #
+    NumpySin:      'sin',
+    NumpyCos:      'cos',
+    NumpyTan:      'tan',
+    NumpyArcsin:   'arcsin',
+    NumpyArccos:   'arccos',
+    NumpyArctan:   'arctan',
+    NumpyArctan2:  'arctan2',
+    NumpySinh:     'sinh',
+    NumpyCosh:     'cosh',
+    NumpyTanh:     'tanh',
+    NumpyArcsinh:  'arcsinh',
+    NumpyArccosh:  'arccosh',
+    NumpyArctanh:  'arctanh',
+    #
+    NumpyMax:      'max',
+    NumpyMin:      'min',
+    #
+    NumpyFloor:    'floor',
+    NumpyAbs:      'abs',
+    NumpyFabs:     'fabs',
+    NumpyExp:      'exp',
+    NumpyLog:      'log',
+    NumpySqrt:     'sqrt',
+}
+
+# ...
 # ==============================================================================
 class OpComplexity(Complexity):
     """class for Operation complexity computation."""
@@ -223,8 +261,20 @@ def count_ops(expr, visual=None, costs=None):
         ops = sum(count_ops(i, visual, costs=costs) for i in expr.args)
         return ops+MUL
 
+    elif isinstance(expr, PythonAbs):
+        ops = sum(count_ops(i, visual, costs=costs) for i in expr.args)
+        return ops+ABS
+
     elif isinstance(expr, PyccelOperator):
         return sum(count_ops(i, visual, costs=costs) for i in expr.args)
+
+    elif isinstance(expr, NumpyUfuncBase):
+        try:
+            f = numpy_functions_registery[type(expr)]
+        except:
+            raise NotImplementedError('TODO count_ops for {}'.format(type(expr)))
+
+        return Symbol(f.upper()) + sum(count_ops(i, visual, costs=costs) for i in expr.args)
 
     else:
         raise NotImplementedError('TODO count_ops for {}'.format(type(expr)))
