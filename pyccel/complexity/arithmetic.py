@@ -11,20 +11,6 @@ the arithmetic complexity a of a program.
 Example
 -------
 
->>> code = '''
-... n = 10
-... for i in range(0,n):
-...     for j in range(0,n):
-...         x = pow(i,2) + pow(i,3) + 3*i
-...         y = x / 3 + 2* x
-... '''
-
->>> from pyccel.complexity.memory import MemComplexity
->>> M = OpComplexity(code)
->>> d = M.cost()
->>> print "f = ", d['f']
-f =  n**2*(2*ADD + DIV + 2*MUL + 2*POW)
-
 """
 
 from collections import OrderedDict
@@ -33,6 +19,7 @@ from sympy import count_ops as sympy_count_ops
 from sympy import Tuple
 from sympy import summation
 from sympy import Symbol
+from sympy import Function
 
 from pyccel.ast.literals import Literal
 from pyccel.ast.core     import For, Assign, AugAssign, CodeBlock, Comment, EmptyNode
@@ -40,7 +27,7 @@ from pyccel.ast.core     import Allocate, Deallocate
 from pyccel.ast.core     import FunctionDef, FunctionCall
 from pyccel.ast.core     import Return
 from pyccel.ast.core     import AddOp, SubOp, MulOp, DivOp
-from pyccel.ast.internals import PyccelArraySize
+from pyccel.ast.internals import PyccelArraySize, Slice
 from pyccel.ast.operators import PyccelAdd, PyccelMinus, PyccelDiv, PyccelMul
 from pyccel.ast.variable  import IndexedElement, Variable
 from pyccel.ast.numpyext import NumpyZeros, NumpyOnes
@@ -63,6 +50,7 @@ op_registry = {
 #    ModOp: MOD,
     }
 
+SHAPE = Function('shape')
 
 # ==============================================================================
 class OpComplexity(Complexity):
@@ -120,13 +108,27 @@ def count_ops(expr, visual=None, costs=None):
             return 0
 
         # ...
+        ntimes = 1
         if isinstance(expr, AugAssign):
             op = op_registry[expr.op]
+
+            if isinstance(expr.lhs, IndexedElement):
+                for e,i in enumerate(expr.lhs.indices):
+                    if isinstance(i, Slice):
+                        if i.start == None and i.stop == None and i.step == None:
+                            ntimes *= SHAPE(expr.lhs.base, e)
+
+                        else:
+                            raise NotImplementedError('only : case is implemented')
+                    else:
+                        # TODO treat this case
+                        pass
+
         else:
             op = 0
         # ...
 
-        return op + count_ops(expr.rhs, visual, costs=costs)
+        return ntimes * ( op + count_ops(expr.rhs, visual, costs=costs) )
 
     elif isinstance(expr, For):
         ops = sum(count_ops(i, visual, costs=costs) for i in expr.body.body)
@@ -150,7 +152,7 @@ def count_ops(expr, visual=None, costs=None):
         if costs is None:
             raise ValueError('costs dict is None')
 
-        fname = expr.func_name.name #func_name is sympy.Symbol here
+        fname = expr.func_name
 
         if not fname in costs.keys():
             raise ValueError('Cannot find the cost of the function {}'.format(fname))
@@ -205,30 +207,3 @@ def count_ops(expr, visual=None, costs=None):
 
     else:
         raise NotImplementedError('TODO count_ops for {}'.format(type(expr)))
-
-
-##############################################
-if __name__ == "__main__":
-    code = '''
-n = 10
-
-for i in range(0,n):
-    for j in range(0,n):
-        x = pow(i,2) + pow(i,3) + 3*i
-        y = x / 3 + 2* x
-    '''
-
-#    complexity = OpComplexity(code)
-#    complexity = OpComplexity('ex1.py')
-#    complexity = OpComplexity('ex_assembly.py')
-#    complexity = OpComplexity('exam_exo1.py')
-#    complexity = OpComplexity('ex2.py')
-    complexity = OpComplexity('ex3.py')
-
-#    expr = complexity.cost(mode='simple')
-    expr = complexity.cost(mode=None)
-    print(expr)
-    print(complexity.costs)
-    print('----------------------')
-    for f, c in complexity.costs.items():
-        print('> cost of {} = {}'.format(f, c))
