@@ -9,6 +9,8 @@ from pyccel.epyccel import epyccel
 
 min_float = sys.float_info.min  # Minimum positive float
 
+# int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722
+
 # Relative and absolute tolerances for array comparisons in the form
 # numpy.isclose(a, b, rtol, atol). Windows has larger round-off errors.
 if sys.platform == 'win32':
@@ -3848,15 +3850,6 @@ def test_numpy_real_array_like_2d(language):
     assert (f_complex64() == test_complex64())
     assert (f_complex128() == test_complex128())
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
-            pytest.mark.c]
-        )
-    )
-)
 
 def test_numpy_int(language):
 
@@ -3918,7 +3911,7 @@ def test_numpy_int(language):
 
     bl = np.bool(randint(1e6))
     integer = randint(1e6)
-    integer8 = np.int8(randint(1e6))
+    integer8 = np.int8(randint(0, 127))
     integer16 = np.int16(randint(1e6))
     integer32 = np.int32(randint(1e6))
     integer64 = np.int64(randint(1e6))
@@ -3949,16 +3942,6 @@ def test_numpy_int(language):
     assert (f_fl(fl) == test_float_int(fl))
     assert (f_fl32(fl32) == test_float32_int(fl32))
     assert (f_fl64(fl64) == test_float64_int(fl64))
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
-            pytest.mark.c]
-        )
-    )
-)
 
 def test_numpy_int32(language):
 
@@ -4020,7 +4003,7 @@ def test_numpy_int32(language):
 
     bl = np.bool(randint(1e6))
     integer = randint(1e6)
-    integer8 = np.int8(randint(1e6))
+    integer8 = np.int8(randint(0, 127))
     integer16 = np.int16(randint(1e6))
     integer32 = np.int32(randint(1e6))
     integer64 = np.int64(randint(1e6))
@@ -4051,16 +4034,6 @@ def test_numpy_int32(language):
     assert (f_fl(fl) == test_float_int32(fl))
     assert (f_fl32(fl32) == test_float32_int32(fl32))
     assert (f_fl64(fl64) == test_float64_int32(fl64))
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
-            pytest.mark.c]
-        )
-    )
-)
 
 def test_numpy_int64(language):
 
@@ -4122,7 +4095,7 @@ def test_numpy_int64(language):
 
     bl = np.bool(randint(1e6))
     integer = randint(1e6)
-    integer8 = np.int8(randint(1e6))
+    integer8 = np.int8(randint(0, 172))
     integer16 = np.int16(randint(1e6))
     integer32 = np.int32(randint(1e6))
     integer64 = np.int64(randint(1e6))
@@ -4154,16 +4127,6 @@ def test_numpy_int64(language):
     assert (f_fl32(fl32) == test_float32_int64(fl32))
     assert (f_fl64(fl64) == test_float64_int64(fl64))
 
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
-            pytest.mark.c]
-        )
-    )
-)
 
 def test_numpy_float(language):
 
@@ -4225,7 +4188,7 @@ def test_numpy_float(language):
 
     bl = np.bool(randint(1e6))
     integer = randint(1e6)
-    integer8 = np.int8(randint(1e6))
+    integer8 = np.int8(randint(0, 127))
     integer16 = np.int16(randint(1e6))
     integer32 = np.int32(randint(1e6))
     integer64 = np.int64(randint(1e6))
@@ -4233,11 +4196,9 @@ def test_numpy_float(language):
     fl32 = np.float32(randint(1e6))
     fl64 = np.float64(randint(1e6))
 
-    # gfortran complains about boolean to numeric convertions, given that boolean type in Fortran
-    # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
-    if (language == 'c'):
-        f_bl = epyccel(test_bool_float, language=language)
-        assert (f_bl(bl) == test_bool_float(bl))
+    f_bl = epyccel(test_bool_float, language=language)
+    
+    assert (f_bl(bl) == test_bool_float(bl))
 
     f_integer = epyccel(test_int_float, language=language)
     f_integer8 = epyccel(test_int8_float, language=language)
@@ -4258,16 +4219,6 @@ def test_numpy_float(language):
     assert (f_fl(fl) == test_float_float(fl))
     assert (f_fl32(fl32) == test_float32_float(fl32))
     assert (f_fl64(fl64) == test_float64_float(fl64))
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
-            pytest.mark.c]
-        )
-    )
-)
 
 def test_numpy_float32(language):
 
@@ -4329,7 +4280,7 @@ def test_numpy_float32(language):
 
     bl = np.bool(randint(1e6))
     integer = randint(1e6)
-    integer8 = np.int8(randint(1e6))
+    integer8 = np.int8(randint(0, 127))
     integer16 = np.int16(randint(1e6))
     integer32 = np.int32(randint(1e6))
     integer64 = np.int64(randint(1e6))
@@ -4337,11 +4288,9 @@ def test_numpy_float32(language):
     fl32 = np.float32(randint(1e6))
     fl64 = np.float64(randint(1e6))
 
-    # gfortran complains about boolean to numeric convertions, given that boolean type in Fortran
-    # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
-    if (language == 'c'):
-        f_bl = epyccel(test_bool_float32, language=language)
-        assert (f_bl(bl) == test_bool_float32(bl))
+    f_bl = epyccel(test_bool_float32, language=language)
+    
+    assert (f_bl(bl) == test_bool_float32(bl))
 
     f_integer = epyccel(test_int_float32, language=language)
     f_integer8 = epyccel(test_int8_float32, language=language)
@@ -4362,16 +4311,6 @@ def test_numpy_float32(language):
     assert (f_fl(fl) == test_float_float32(fl))
     assert (f_fl32(fl32) == test_float32_float32(fl32))
     assert (f_fl64(fl64) == test_float64_float32(fl64))
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
-            pytest.mark.c]
-        )
-    )
-)
 
 def test_numpy_float64(language):
 
@@ -4441,11 +4380,9 @@ def test_numpy_float64(language):
     fl32 = np.float32(randint(1e6))
     fl64 = np.float64(randint(1e6))
 
-    # gfortran complains about boolean to numeric convertions, given that boolean type in Fortran
-    # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
-    if (language == 'c'):
-        f_bl = epyccel(test_bool_float64, language=language)
-        assert (f_bl(bl) == test_bool_float64(bl))
+    f_bl = epyccel(test_bool_float64, language=language)
+    
+    assert (f_bl(bl) == test_bool_float64(bl))
 
     f_integer = epyccel(test_int_float64, language=language)
     f_integer8 = epyccel(test_int8_float64, language=language)
@@ -4466,17 +4403,6 @@ def test_numpy_float64(language):
     assert (f_fl(fl) == test_float_float64(fl))
     assert (f_fl32(fl32) == test_float32_float64(fl32))
     assert (f_fl64(fl64) == test_float64_float64(fl64))
-
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
-            pytest.mark.c]
-        )
-    )
-)
 
 def test_numpy_double(language):
 
@@ -4538,7 +4464,7 @@ def test_numpy_double(language):
 
     bl = np.bool(randint(1e6))
     integer = randint(1e6)
-    integer8 = np.int8(randint(1e6))
+    integer8 = np.int8(randint(0, 127))
     integer16 = np.int16(randint(1e6))
     integer32 = np.int32(randint(1e6))
     integer64 = np.int64(randint(1e6))
@@ -4546,11 +4472,9 @@ def test_numpy_double(language):
     fl32 = np.float32(randint(1e6))
     fl64 = np.float64(randint(1e6))
 
-    # gfortran complains about boolean to numeric convertions, given that boolean type in Fortran
-    # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
-    if (language == 'c'):
-        f_bl = epyccel(test_bool_double, language=language)
-        assert (f_bl(bl) == test_bool_double(bl))
+    f_bl = epyccel(test_bool_double, language=language)
+    
+    assert (f_bl(bl) == test_bool_double(bl))
 
     f_integer = epyccel(test_int_double, language=language)
     f_integer8 = epyccel(test_int8_double, language=language)
@@ -4571,16 +4495,6 @@ def test_numpy_double(language):
     assert (f_fl(fl) == test_float_double(fl))
     assert (f_fl32(fl32) == test_float32_double(fl32))
     assert (f_fl64(fl64) == test_float64_double(fl64))
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
-            pytest.mark.c]
-        )
-    )
-)
 
 def test_numpy_complex64(language):
 
@@ -4642,7 +4556,7 @@ def test_numpy_complex64(language):
 
     bl = np.bool(randint(1e6))
     integer = randint(1e6)
-    integer8 = np.int8(randint(1e6))
+    integer8 = np.int8(randint(0, 172))
     integer16 = np.int16(randint(1e6))
     integer32 = np.int32(randint(1e6))
     integer64 = np.int64(randint(1e6))
@@ -4650,11 +4564,9 @@ def test_numpy_complex64(language):
     fl32 = np.float32(randint(1e6))
     fl64 = np.float64(randint(1e6))
 
-    # gfortran complains about boolean to numeric convertions, given that boolean type in Fortran
-    # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
-    if (language == 'c'):
-        f_bl = epyccel(test_bool_complex64, language=language)
-        assert (f_bl(bl) == test_bool_complex64(bl))
+    f_bl = epyccel(test_bool_complex64, language=language)
+
+    assert (f_bl(bl) == test_bool_complex64(bl))
 
     f_integer = epyccel(test_int_complex64, language=language)
     f_integer8 = epyccel(test_int8_complex64, language=language)
@@ -4675,16 +4587,6 @@ def test_numpy_complex64(language):
     assert (f_fl(fl) == test_float_complex64(fl))
     assert (f_fl32(fl32) == test_float32_complex64(fl32))
     assert (f_fl64(fl64) == test_float64_complex64(fl64))
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722")]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722"),
-            pytest.mark.c]
-        )
-    )
-)
 
 def test_numpy_complex128(language):
 
@@ -4746,7 +4648,7 @@ def test_numpy_complex128(language):
 
     bl = np.bool(randint(1e6))
     integer = randint(1e6)
-    integer8 = np.int8(randint(1e6))
+    integer8 = np.int8(randint(0, 127))
     integer16 = np.int16(randint(1e6))
     integer32 = np.int32(randint(1e6))
     integer64 = np.int64(randint(1e6))
@@ -4754,11 +4656,9 @@ def test_numpy_complex128(language):
     fl32 = np.float32(randint(1e6))
     fl64 = np.float64(randint(1e6))
 
-    # gfortran complains about boolean to numeric convertions, given that boolean type in Fortran
-    # is not a numerical type, so Real function in Fortran doesn't accept a non-numerical type in the first argument
-    if (language == 'c'):
-        f_bl = epyccel(test_bool_complex128, language=language)
-        assert (f_bl(bl) == test_bool_complex128(bl))
+    f_bl = epyccel(test_bool_complex128, language=language)
+
+    assert (f_bl(bl) == test_bool_complex128(bl))
 
     f_integer = epyccel(test_int_complex128, language=language)
     f_integer8 = epyccel(test_int8_complex128, language=language)
