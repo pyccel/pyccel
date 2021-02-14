@@ -161,3 +161,19 @@ def array_int32_2d_mul( x: 'int32[:,:]', y: 'int32[:,:]' ):
 # ...
 def array_int32_2d_idiv( x: 'int32[:,:]', y: 'int32[:,:]' ):
     x[:,:] = x // y
+
+# ...
+def array_int32_1d_scalar_add_stride1( x: 'int32[:,:]', a: 'int32' ):
+    x[1:10] += a
+
+# ...
+def array_int32_1d_scalar_add_stride2( x: 'int32[:,:]', a: 'int32' ):
+    x[1:10, 2:5] += a
+
+# ...
+def array_int32_1d_scalar_add_stride3( x: 'int32[:,:]', a: 'int32' ):
+    x[:5, 2:5] += a
+
+# ...
+def array_int32_1d_scalar_add_stride4( x: 'int32[:,:]', a: 'int32' ):
+    x[:5, 2:] += a

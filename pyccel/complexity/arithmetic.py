@@ -117,16 +117,32 @@ def count_ops(expr, visual=None, costs=None):
         # ...
         ntimes = 1
         if isinstance(expr.lhs, IndexedElement):
-            for e,i in enumerate(expr.lhs.indices):
-                if isinstance(i, Slice):
-                    if i.start == None and i.stop == None and i.step == None:
-                        ntimes *= SHAPE(expr.lhs.base, e)
+            indices = [(e,i) for e,i in enumerate(expr.lhs.indices) if isinstance(i, Slice)]
+            for e,i in indices:
+                # ...
+                start = 0
+                if not i.start == None:
+                    start = i.start.python_value
+                # ...
 
-                    else:
-                        raise NotImplementedError('only : case is implemented')
-                else:
-                    # TODO treat this case
-                    pass
+                # ...
+                stop = SHAPE(expr.lhs.base, e)
+                if not i.stop == None:
+                    stop = i.stop.python_value
+                # ...
+
+                # ...
+                step = 1
+                if not i.step == None:
+                    step = i.step.python_value
+                # ...
+
+                if not(step == 1):
+                    raise NotImplementedError('only step == 1 is treated')
+
+                # TODO uncomment this
+                #      this was commented because we get floor(...)
+                ntimes *= (stop - start) #// step
         # ...
 
         return ntimes * ( op + count_ops(expr.rhs, visual, costs=costs) )

@@ -25,7 +25,7 @@ def test_complexity(f, mode=None):
 ######################
 if __name__ == '__main__':
 
-#    test_complexity('scripts/tmp.py')
+#    test_complexity('tmp.py')
 
     print('*********************************')
     print('***                           ***')
