@@ -19,12 +19,6 @@ min_float = sys.float_info.min  # Minimum positive float
 #    float
 #    double
 #    mod
-#    float32
-#    float64
-#    int32
-#    int64
-#    complex128
-#    complex64
 #    matmul
 #    prod
 #    product
@@ -4223,7 +4217,7 @@ def test_numpy_float(language):
     fl64 = np.float64(randint(1e6))
 
     f_bl = epyccel(test_bool_float, language=language)
-    
+
     assert (f_bl(bl) == test_bool_float(bl))
 
     f_integer = epyccel(test_int_float, language=language)
