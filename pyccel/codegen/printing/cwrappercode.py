@@ -191,10 +191,12 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         Create If block to differentiate between python and numpy data types when collecting value
         format :
-            if (collect_var is numpy_scalar)
+            if (collect_var is numpy_type)
                 collect_value from numpy type
-            else
+            else if (collect_var is python_type)
                 collect value from python type
+            else
+                raise error
         Parameters:
         ----------
         variable: variable
@@ -209,13 +211,23 @@ class CWrapperCodePrinter(CCodePrinter):
         body : If block
         """
         var = tmp_variable if tmp_variable else variable
-        python_type_collect_func_call =  self.get_collect_function_call(variable, collect_var)
+        
+        python_type_check = PythonType_Check(variable, collect_var)
+        numpy_type_check  = NumpyType_Check(variable, collect_var)
 
-        numpy_type_collect_func_call = FunctionCall(PyArray_ScalarAsCtype, [collect_var, var])
-        check_scalar_type = FunctionCall(PyArray_CheckScalar, [collect_var])
+        error = PyErr_SetString('PyExc_TypeError', '"{var_name} must be {precision} bit {dtype}"'.format(
+                                    var_name  = variable,
+                                    precision = variable.precision * 8,
+                                    dtype     = variable.dtype))
 
-        body = If(IfSection(check_scalar_type, [numpy_type_collect_func_call]),
-                IfSection(LiteralTrue() , [Assign(var, python_type_collect_func_call)]))
+        python_collect_func  = self.get_collect_function_call(variable, collect_var)
+        numpy_collect_func   = FunctionCall(PyArray_ScalarAsCtype, [collect_var, var])
+
+        numpy_type_section   = IfSection(numpy_type_check, [numpy_collect_func])
+        python_type_section  = IfSection(python_type_check, [Assign(var, python_collect_func)])
+        error_section        = IfSection(LiteralTrue(), [error, Return([Nil()])])
+
+        body = If(numpy_type_section, python_type_section, error_section)
 
         return body
 
@@ -477,7 +489,12 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var = Variable(dtype= collect_type, is_pointer = True, rank = variable.rank,
                                     order= variable.order, name=self.get_new_name(used_names, variable.name+"_tmp"))
 
-        elif isinstance(variable, ValuedVariable):
+        else:
+            collect_type = PyccelPyObject()
+            collect_var = Variable(dtype=collect_type, is_pointer=True,
+                name = self.get_new_name(used_names, variable.name+"_tmp"))
+
+        '''elif isinstance(variable, ValuedVariable):
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
@@ -491,7 +508,7 @@ class CWrapperCodePrinter(CCodePrinter):
         elif variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
-                name = self.get_new_name(used_names, variable.name+"_tmp"))
+                name = self.get_new_name(used_names, variable.name+"_tmp"))'''
 
         return collect_var, cast_function
 
