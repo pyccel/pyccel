@@ -9,15 +9,6 @@ from pyccel.epyccel import epyccel
 
 min_float = sys.float_info.min  # Minimum positive float
 
-# Functions still to be tested:
-#    # ...
-#    product
-#    linspace
-#    diag
-#    where
-#    cross
-#    # ---
-
 # Relative and absolute tolerances for array comparisons in the form
 # numpy.isclose(a, b, rtol, atol). Windows has larger round-off errors.
 if sys.platform == 'win32':
