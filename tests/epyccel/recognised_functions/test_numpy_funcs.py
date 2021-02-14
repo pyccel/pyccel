@@ -3708,7 +3708,6 @@ def test_numpy_real_array_like_1d(language):
     f_integer = epyccel(test_int, language=language)
 
     # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
-    
     #f_integer8 = epyccel(test_int8, language=language)
     #f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
@@ -3717,7 +3716,6 @@ def test_numpy_real_array_like_1d(language):
     assert (f_integer() == test_int())
 
     # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
-    
     #assert (f_integer8() == test_int8())
     #assert (f_integer16() == test_int16())
     assert (f_integer32() == test_int32())
@@ -5788,7 +5786,7 @@ def test_numpy_norm_scalar(language):
     fl64 = np.float64(randint(1e6))
 
     f_bl = epyccel(test_bool, language=language)
-    
+
     assert (f_bl(True) == test_bool(True))
     assert (f_bl(False) == test_bool(False))
 
@@ -5980,7 +5978,7 @@ def test_numpy_norm_array_like_2d(language):
         return a
 
     def test_float():
-        from numpy import norm, array, float
+        from numpy import norm, array
         x1 = array([[4,5,6,2,1],[4,5,6,2,1]], float)
         a = norm(x1)
         return a
@@ -6976,7 +6974,7 @@ def test_numpy_linspace_array_like_2d(language):
         return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
 
     def test_float():
-        from numpy import linspace, array, shape, float
+        from numpy import linspace, array, shape
         start = array([[4,5,6,2,1],[4,5,6,2,1]], float)
         stop = array([[5,6,7,3,2],[5,6,7,3,2]], float)
         NumberOfSamplesToGenerate = 7
