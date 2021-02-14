@@ -3638,7 +3638,7 @@ def test_numpy_real_array_like_1d(language):
         s = shape(a)
         return len(s), s[0], a[0]
 
-    # should be uncommented after resolving #733
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     # def test_int8():
     #     from numpy import real, shape, array, int8
     #     arr = array([4,5,6,2,1], int8)
@@ -3707,8 +3707,8 @@ def test_numpy_real_array_like_1d(language):
 
     f_integer = epyccel(test_int, language=language)
 
-    # should be uncommented after resolving #733
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    
     #f_integer8 = epyccel(test_int8, language=language)
     #f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
@@ -3716,8 +3716,8 @@ def test_numpy_real_array_like_1d(language):
 
     assert (f_integer() == test_int())
 
-    # should be uncommented after resolving #733
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    
     #assert (f_integer8() == test_int8())
     #assert (f_integer16() == test_int16())
     assert (f_integer32() == test_int32())
@@ -3762,7 +3762,7 @@ def test_numpy_real_array_like_2d(language):
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    # should be uncommented after resolving #733
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     # def test_int8():
     #     from numpy import real, shape, array, int8
     #     arr = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
@@ -3831,8 +3831,7 @@ def test_numpy_real_array_like_2d(language):
 
     f_integer = epyccel(test_int, language=language)
 
-    # should be uncommented after resolving #733
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     # f_integer8 = epyccel(test_int8, language=language)
     # f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
@@ -3840,8 +3839,7 @@ def test_numpy_real_array_like_2d(language):
 
     assert (f_integer() == test_int())
 
-    # should be uncommented after resolving #733
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     # assert (f_integer8() == test_int8())
     # assert (f_integer16() == test_int16())
     assert (f_integer32() == test_int32())
@@ -4924,21 +4922,22 @@ def test_numpy_mod_array_like_1d(language):
         s = shape(a)
         return len(s), s[0], a[0]
 
-    def test_int8():
-        from numpy import mod, shape, array, int8
-        x1 = array([4,5,6,2,1], int8)
-        x2 = array([4,5,6,2,1], int8)
-        a = mod(x1, x2)
-        s = shape(a)
-        return len(s), s[0], a[0]
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    # def test_int8():
+    #     from numpy import mod, shape, array, int8
+    #     x1 = array([4,5,6,2,1], int8)
+    #     x2 = array([4,5,6,2,1], int8)
+    #     a = mod(x1, x2)
+    #     s = shape(a)
+    #     return len(s), s[0], a[0]
 
-    def test_int16():
-        from numpy import mod, shape, array, int16
-        x1 = array([4,5,6,2,1], int16)
-        x2 = array([4,5,6,2,1], int16)
-        a = mod(x1, x2)
-        s = shape(a)
-        return len(s), s[0], a[0]
+    # def test_int16():
+    #     from numpy import mod, shape, array, int16
+    #     x1 = array([4,5,6,2,1], int16)
+    #     x2 = array([4,5,6,2,1], int16)
+    #     a = mod(x1, x2)
+    #     s = shape(a)
+    #     return len(s), s[0], a[0]
 
     def test_int32():
         from numpy import mod, shape, array, int32
@@ -4997,14 +4996,14 @@ def test_numpy_mod_array_like_1d(language):
         return len(s), s[0], a[0]
 
     f_integer = epyccel(test_int, language=language)
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     #f_integer8 = epyccel(test_int8, language=language)
     #f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer() == test_int())
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     #assert (f_integer8() == test_int8())
     #assert (f_integer16() == test_int16())
     assert (f_integer32() == test_int32())
@@ -5044,21 +5043,22 @@ def test_numpy_mod_array_like_2d(language):
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_int8():
-        from numpy import mod, shape, array, int8
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
-        x2 = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
-        a = mod(x1, x2)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    # def test_int8():
+    #     from numpy import mod, shape, array, int8
+    #     x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
+    #     x2 = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
+    #     a = mod(x1, x2)
+    #     s = shape(a)
+    #     return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_int16():
-        from numpy import mod, shape, array, int16
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
-        x2 = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
-        a = mod(x1, x2)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
+    # def test_int16():
+    #     from numpy import mod, shape, array, int16
+    #     x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
+    #     x2 = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
+    #     a = mod(x1, x2)
+    #     s = shape(a)
+    #     return len(s), s[0], s[1], a[0,1], a[1,0]
 
     def test_int32():
         from numpy import mod, shape, array, int32
@@ -5117,14 +5117,14 @@ def test_numpy_mod_array_like_2d(language):
         return len(s), s[0], s[1]
 
     f_integer = epyccel(test_int, language=language)
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     # f_integer8 = epyccel(test_int8, language=language)
     # f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer() == test_int())
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     # assert (f_integer8() == test_int8())
     # assert (f_integer16() == test_int16())
     assert (f_integer32() == test_int32())
@@ -5164,21 +5164,22 @@ def test_numpy_matmul_array_like_1d(language):
         s = shape(a)
         return len(s), s[0], a[0]
 
-    def test_int8():
-        from numpy import matmul, shape, array, int8
-        x1 = array([4,5,6,2,1], int8)
-        x2 = array([4,5,6,2,1], int8)
-        a = matmul(x1, x2)
-        s = shape(a)
-        return len(s), s[0], a[0]
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    # def test_int8():
+    #     from numpy import matmul, shape, array, int8
+    #     x1 = array([4,5,6,2,1], int8)
+    #     x2 = array([4,5,6,2,1], int8)
+    #     a = matmul(x1, x2)
+    #     s = shape(a)
+    #     return len(s), s[0], a[0]
 
-    def test_int16():
-        from numpy import matmul, shape, array, int16
-        x1 = array([4,5,6,2,1], int16)
-        x2 = array([4,5,6,2,1], int16)
-        a = matmul(x1, x2)
-        s = shape(a)
-        return len(s), s[0], a[0]
+    # def test_int16():
+    #     from numpy import matmul, shape, array, int16
+    #     x1 = array([4,5,6,2,1], int16)
+    #     x2 = array([4,5,6,2,1], int16)
+    #     a = matmul(x1, x2)
+    #     s = shape(a)
+    #     return len(s), s[0], a[0]
 
     def test_int32():
         from numpy import matmul, shape, array, int32
@@ -5237,14 +5238,14 @@ def test_numpy_matmul_array_like_1d(language):
         return len(s), s[0], a[0]
 
     f_integer = epyccel(test_int, language=language)
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     #f_integer8 = epyccel(test_int8, language=language)
     #f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer() == test_int())
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     #assert (f_integer8() == test_int8())
     #assert (f_integer16() == test_int16())
     assert (f_integer32() == test_int32())
@@ -5284,21 +5285,22 @@ def test_numpy_matmul_array_like_2x2d(language):
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_int8():
-        from numpy import matmul, shape, array, int8
-        x1 = array([[4,5],[2,1]], int8)
-        x2 = array([[4,5],[2,1]], int8)
-        a = matmul(x1, x2)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    # def test_int8():
+    #     from numpy import matmul, shape, array, int8
+    #     x1 = array([[4,5],[2,1]], int8)
+    #     x2 = array([[4,5],[2,1]], int8)
+    #     a = matmul(x1, x2)
+    #     s = shape(a)
+    #     return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_int16():
-        from numpy import matmul, shape, array, int16
-        x1 = array([[4,5],[2,1]], int16)
-        x2 = array([[4,5],[2,1]], int16)
-        a = matmul(x1, x2)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
+    # def test_int16():
+    #     from numpy import matmul, shape, array, int16
+    #     x1 = array([[4,5],[2,1]], int16)
+    #     x2 = array([[4,5],[2,1]], int16)
+    #     a = matmul(x1, x2)
+    #     s = shape(a)
+    #     return len(s), s[0], s[1], a[0,1], a[1,0]
 
     def test_int32():
         from numpy import matmul, shape, array, int32
@@ -5357,14 +5359,14 @@ def test_numpy_matmul_array_like_2x2d(language):
         return len(s), s[0], s[1]
 
     f_integer = epyccel(test_int, language=language)
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     # f_integer8 = epyccel(test_int8, language=language)
     # f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer() == test_int())
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     # assert (f_integer8() == test_int8())
     # assert (f_integer16() == test_int16())
     assert (f_integer32() == test_int32())
@@ -5512,17 +5514,18 @@ def test_numpy_prod_array_like_1d(language):
         a = prod(x1)
         return a
 
-    def test_int8():
-        from numpy import prod, array, int8
-        x1 = array([4,5,6,2,1], int8)
-        a = prod(x1)
-        return a
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    # def test_int8():
+    #     from numpy import prod, array, int8
+    #     x1 = array([4,5,6,2,1], int8)
+    #     a = prod(x1)
+    #     return a
 
-    def test_int16():
-        from numpy import prod, array, int16
-        x1 = array([4,5,6,2,1], int16)
-        a = prod(x1)
-        return a
+    # def test_int16():
+    #     from numpy import prod, array, int16
+    #     x1 = array([4,5,6,2,1], int16)
+    #     a = prod(x1)
+    #     return a
 
     def test_int32():
         from numpy import prod, array, int32
@@ -5567,14 +5570,14 @@ def test_numpy_prod_array_like_1d(language):
         return a
 
     f_integer = epyccel(test_int, language=language)
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     #f_integer8 = epyccel(test_int8, language=language)
     #f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer() == test_int())
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     #assert (f_integer8() == test_int8())
     #assert (f_integer16() == test_int16())
     assert (f_integer32() == test_int32())
@@ -5612,17 +5615,18 @@ def test_numpy_prod_array_like_2d(language):
         a = prod(x1)
         return a
 
-    def test_int8():
-        from numpy import prod, array, int8
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
-        a = prod(x1)
-        return a
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    # def test_int8():
+    #     from numpy import prod, array, int8
+    #     x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
+    #     a = prod(x1)
+    #     return a
 
-    def test_int16():
-        from numpy import prod, array, int16
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
-        a = prod(x1)
-        return a
+    # def test_int16():
+    #     from numpy import prod, array, int16
+    #     x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
+    #     a = prod(x1)
+    #     return a
 
     def test_int32():
         from numpy import prod, array, int32
@@ -5667,14 +5671,14 @@ def test_numpy_prod_array_like_2d(language):
         return a
 
     f_integer = epyccel(test_int, language=language)
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     # f_integer8 = epyccel(test_int8, language=language)
     # f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer() == test_int())
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     # assert (f_integer8() == test_int8())
     # assert (f_integer16() == test_int16())
     assert (f_integer32() == test_int32())
@@ -5837,24 +5841,19 @@ def test_numpy_norm_array_like_1d(language):
         x1 = array([4,5,6,2,1], int)
         a = norm(x1)
         return a
-   
-    def test_int():
-        from numpy import norm, array
-        x1 = array([4,5,6,2,1], int)
-        a = norm(x1)
-        return a
 
-    def test_int8():
-        from numpy import norm, array, int8
-        x1 = array([4,5,6,2,1], int8)
-        a = norm(x1)
-        return a
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    # def test_int8():
+    #     from numpy import norm, array, int8
+    #     x1 = array([4,5,6,2,1], int8)
+    #     a = norm(x1)
+    #     return a
 
-    def test_int16():
-        from numpy import norm, array, int16
-        x1 = array([4,5,6,2,1], int16)
-        a = norm(x1)
-        return a
+    # def test_int16():
+    #     from numpy import norm, array, int16
+    #     x1 = array([4,5,6,2,1], int16)
+    #     a = norm(x1)
+    #     return a
 
     def test_int32():
         from numpy import norm, array, int32
@@ -5903,14 +5902,14 @@ def test_numpy_norm_array_like_1d(language):
     assert (f_bl() == test_bool())
 
     f_integer = epyccel(test_int, language=language)
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     #f_integer8 = epyccel(test_int8, language=language)
     #f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer() == test_int())
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     #assert (f_integer8() == test_int8())
     #assert (f_integer16() == test_int16())
     assert (f_integer32() == test_int32())
@@ -5955,17 +5954,18 @@ def test_numpy_norm_array_like_2d(language):
         a = norm(x1)
         return a
 
-    def test_int8():
-        from numpy import norm, array, int8
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
-        a = norm(x1)
-        return a
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    # def test_int8():
+    #     from numpy import norm, array, int8
+    #     x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
+    #     a = norm(x1)
+    #     return a
 
-    def test_int16():
-        from numpy import norm, array, int16
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
-        a = norm(x1)
-        return a
+    # def test_int16():
+    #     from numpy import norm, array, int16
+    #     x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
+    #     a = norm(x1)
+    #     return a
 
     def test_int32():
         from numpy import norm, array, int32
@@ -6014,14 +6014,14 @@ def test_numpy_norm_array_like_2d(language):
     assert (f_bl() == test_bool())
 
     f_integer = epyccel(test_int, language=language)
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     # f_integer8 = epyccel(test_int8, language=language)
     # f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer() == test_int())
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     # assert (f_integer8() == test_int8())
     # assert (f_integer16() == test_int16())
     assert (f_integer32() == test_int32())
@@ -6187,17 +6187,18 @@ def test_numpy_where_array_like_1d_with_condition(language):
         a = where(x1 > 5, x1, x1*2)
         return a
 
-    def test_int8():
-        from numpy import where, array, int8
-        x1 = array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], int8)
-        a = where(x1 > 5, x1, x1*2)
-        return a
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    # def test_int8():
+    #     from numpy import where, array, int8
+    #     x1 = array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], int8)
+    #     a = where(x1 > 5, x1, x1*2)
+    #     return a
 
-    def test_int16():
-        from numpy import where, array, int16
-        x1 = array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], int16)
-        a = where(x1 > 5, x1, x1*2)
-        return a
+    # def test_int16():
+    #     from numpy import where, array, int16
+    #     x1 = array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], int16)
+    #     a = where(x1 > 5, x1, x1*2)
+    #     return a
 
     def test_int32():
         from numpy import where, array, int32
@@ -6246,14 +6247,14 @@ def test_numpy_where_array_like_1d_with_condition(language):
     assert f_bl() == test_bool()
 
     f_integer = epyccel(test_int, language=language)
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     #f_integer8 = epyccel(test_int8, language=language)
     #f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer() == test_int())
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     #assert (f_integer8() == test_int8())
     #assert (f_integer16() == test_int16())
     assert (f_integer32() == test_int32())
@@ -6297,17 +6298,18 @@ def test_numpy_where_array_like_1d(language):
         a = where(x1)
         return a
 
-    def test_int8():
-        from numpy import where, array, int8
-        x1 = array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], int8)
-        a = where(x1)
-        return a
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    # def test_int8():
+    #     from numpy import where, array, int8
+    #     x1 = array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], int8)
+    #     a = where(x1)
+    #     return a
 
-    def test_int16():
-        from numpy import where, array, int16
-        x1 = array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], int16)
-        a = where(x1)
-        return a
+    # def test_int16():
+    #     from numpy import where, array, int16
+    #     x1 = array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], int16)
+    #     a = where(x1)
+    #     return a
 
     def test_int32():
         from numpy import where, array, int32
@@ -6356,14 +6358,14 @@ def test_numpy_where_array_like_1d(language):
     assert f_bl() == test_bool()
 
     f_integer = epyccel(test_int, language=language)
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     #f_integer8 = epyccel(test_int8, language=language)
     #f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer() == test_int())
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     #assert (f_integer8() == test_int8())
     #assert (f_integer16() == test_int16())
     assert (f_integer32() == test_int32())
@@ -6409,17 +6411,18 @@ def test_numpy_where_array_like_2d_with_condition(language):
         a = where(x1%2, x1, x1+1)
         return a
 
-    def test_int8():
-        from numpy import where, array, int8
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
-        a = where(x1%2, x1, x1+1)
-        return a
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    # def test_int8():
+    #     from numpy import where, array, int8
+    #     x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
+    #     a = where(x1%2, x1, x1+1)
+    #     return a
 
-    def test_int16():
-        from numpy import where, array, int16
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
-        a = where(x1%2, x1, x1+1)
-        return a
+    # def test_int16():
+    #     from numpy import where, array, int16
+    #     x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
+    #     a = where(x1%2, x1, x1+1)
+    #     return a
 
     def test_int32():
         from numpy import where, array, int32
@@ -6434,7 +6437,7 @@ def test_numpy_where_array_like_2d_with_condition(language):
         return a
 
     def test_float():
-        from numpy import where, array, float
+        from numpy import where, array
         x1 = array([[4,5,6,2,1],[4,5,6,2,1]], float)
         a = where(x1%2, x1, x1+1)
         return a
@@ -6468,14 +6471,14 @@ def test_numpy_where_array_like_2d_with_condition(language):
     assert f_bl() == test_bool()
 
     f_integer = epyccel(test_int, language=language)
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     # f_integer8 = epyccel(test_int8, language=language)
     # f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer() == test_int())
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     # assert (f_integer8() == test_int8())
     # assert (f_integer16() == test_int16())
     assert (f_integer32() == test_int32())
@@ -6520,17 +6523,18 @@ def test_numpy_where_array_like_2d(language):
         a = where(x1)
         return a
 
-    def test_int8():
-        from numpy import where, array, int8
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
-        a = where(x1)
-        return a
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    # def test_int8():
+    #     from numpy import where, array, int8
+    #     x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
+    #     a = where(x1)
+    #     return a
 
-    def test_int16():
-        from numpy import where, array, int16
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
-        a = where(x1)
-        return a
+    # def test_int16():
+    #     from numpy import where, array, int16
+    #     x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
+    #     a = where(x1)
+    #     return a
 
     def test_int32():
         from numpy import where, array, int32
@@ -6579,14 +6583,14 @@ def test_numpy_where_array_like_2d(language):
     assert f_bl() == test_bool()
 
     f_integer = epyccel(test_int, language=language)
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     # f_integer8 = epyccel(test_int8, language=language)
     # f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
     assert (f_integer() == test_int())
-    # int8 and int16 numpy data types not recognised by Pyccel.
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
     # assert (f_integer8() == test_int8())
     # assert (f_integer16() == test_int16())
     assert (f_integer32() == test_int32())
@@ -6606,3 +6610,444 @@ def test_numpy_where_array_like_2d(language):
     assert (f_complex64() == test_complex64())
     assert (f_complex128() == test_complex128())
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran,
+            pytest.mark.skip(reason="Still inder maintenance")]),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Still inder maintenance"),
+            pytest.mark.c]
+        )
+    )
+)
+
+def test_numpy_linspace_scalar(language):
+
+    @types('bool')
+    def test_bool(start):
+        import numpy as np
+        stop = start + 7
+        NumberOfSamplesToGenerate = 7
+        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
+        s = np.shape(b)
+        return len(s), s[0], b[0], b[5]
+
+    @types('int')
+    def test_int(start):
+        import numpy as np
+        stop = start + 7
+        NumberOfSamplesToGenerate = 7
+        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
+        s = np.shape(b)
+        return len(s), s[0], b[0], b[5]
+
+    @types('int8')
+    def test_int8(start):
+        import numpy as np
+        stop = start + 7
+        NumberOfSamplesToGenerate = 7
+        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
+        s = np.shape(b)
+        return len(s), s[0], b[0], b[5]
+
+    @types('int16')
+    def test_int16(start):
+        import numpy as np
+        stop = start + 7
+        NumberOfSamplesToGenerate = 7
+        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
+        s = np.shape(b)
+        return len(s), s[0], b[0], b[5]
+
+    @types('int32')
+    def test_int32(start):
+        import numpy as np
+        stop = start + 7
+        NumberOfSamplesToGenerate = 7
+        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
+        s = np.shape(b)
+        return len(s), s[0], b[0], b[5]
+
+    @types('int64')
+    def test_int64(start):
+        import numpy as np
+        stop = start + 7
+        NumberOfSamplesToGenerate = 7
+        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
+        s = np.shape(b)
+        return len(s), s[0], b[0], b[5]
+
+    @types('float')
+    def test_float(start):
+        import numpy as np
+        stop = start + 7
+        NumberOfSamplesToGenerate = 7
+        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
+        s = np.shape(b)
+        return len(s), s[0], b[0], b[5]
+
+    @types('float32')
+    def test_float32(start):
+        import numpy as np
+        stop = start + 7
+        NumberOfSamplesToGenerate = 7
+        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
+        s = np.shape(b)
+        return len(s), s[0], b[0], b[5]
+
+    @types('float64')
+    def test_float64(start):
+        import numpy as np
+        stop = start + 7
+        NumberOfSamplesToGenerate = 7
+        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
+        s = np.shape(b)
+        return len(s), s[0], b[0], b[5]
+
+    @types('complex64')
+    def test_complex64(start):
+        import numpy as np
+        stop = start + 7
+        NumberOfSamplesToGenerate = 7
+        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
+        s = np.shape(b)
+        return len(s), s[0], b[0], b[5]
+
+    @types('complex128')
+    def test_complex128(start):
+        import numpy as np
+        stop = start + 7
+        NumberOfSamplesToGenerate = 7
+        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
+        s = np.shape(b)
+        return len(s), s[0], b[0], b[5]
+
+    import numpy as np
+
+    integer = randint(1e6)
+    integer8 = np.int8(randint(1e6))
+    integer16 = np.int16(randint(1e6))
+    integer32 = np.int32(randint(1e6))
+    integer64 = np.int64(randint(1e6))
+    fl = np.float(randint(1e6))
+    fl32 = np.float32(randint(1e6))
+    fl64 = np.float64(randint(1e6))
+
+    f_bl = epyccel(test_bool, language=language)
+
+    assert (f_bl(True) == test_bool(True))
+    assert (f_bl(False) == test_bool(False))
+
+    f_integer = epyccel(test_int, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
+    f_integer32 = epyccel(test_int32, language=language)
+    f_integer64 = epyccel(test_int64, language=language)
+
+    assert (f_integer(integer) == test_int(integer))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer32(integer32) == test_int32(integer32))
+    assert (f_integer64(integer64) == test_int64(integer64))
+
+    f_fl = epyccel(test_float, language=language)
+    f_fl32 = epyccel(test_float32, language=language)
+    f_fl64 = epyccel(test_float64, language=language)
+
+    assert (f_fl(fl) == test_float(fl))
+    assert (f_fl32(fl32) == test_float32(fl32))
+    assert (f_fl64(fl64) == test_float64(fl64))
+
+    f_complex64 = epyccel(test_complex64, language=language)
+    f_complex128 = epyccel(test_complex128, language=language)
+
+    assert (f_complex64(1+5j) == test_complex64(1+5j))
+    assert (f_complex128(1+5j) == test_complex128(1+5j))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran,
+            pytest.mark.skip(reason="Still inder maintenance")]),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Still inder maintenance"),
+            pytest.mark.c]
+        )
+    )
+)
+
+def test_numpy_linspace_array_like_1d(language):
+
+    def test_bool():
+        from numpy import linspace, array, shape
+        start = array([4,5,0,2,0], bool)
+        stop = array([5,6,1,3,1], bool)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
+
+    def test_int():
+        from numpy import linspace, array, shape
+        start = array([4,5,0,2,0], int)
+        stop = array([5,6,1,3,1], int)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
+
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    # def test_int8():
+    #     from numpy import linspace, array, shape, int8
+    #     start = array([4,5,0,2,0], int8)
+    #     stop = array([5,6,1,3,1], int8)
+    #     NumberOfSamplesToGenerate = 7
+    #     a = linspace(start, stop, NumberOfSamplesToGenerate)
+    #     s = shape(a)
+    #     return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
+
+    # def test_int16():
+    #     from numpy import linspace, array, shape, int16
+    #     start = array([4,5,0,2,0], int16)
+    #     stop = array([5,6,1,3,1], int16)
+    #     NumberOfSamplesToGenerate = 7
+    #     a = linspace(start, stop, NumberOfSamplesToGenerate)
+    #     s = shape(a)
+    #     return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
+
+    def test_int32():
+        from numpy import linspace, array, shape, int32
+        start = array([4,5,0,2,0], int32)
+        stop = array([5,6,1,3,1], int32)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
+
+    def test_int64():
+        from numpy import linspace, array, shape, int64
+        start = array([4,5,0,2,0], int64)
+        stop = array([5,6,1,3,1], int64)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
+
+    def test_float():
+        from numpy import linspace, array, shape
+        start = array([4,5,0,2,0], float)
+        stop = array([5,6,1,3,1], float)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
+
+    def test_float32():
+        from numpy import linspace, array, shape, float32
+        start = array([4,5,0,2,0], float32)
+        stop = array([5,6,1,3,1], float32)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
+
+    def test_float64():
+        from numpy import linspace, array, shape, float64
+        start = array([4,5,0,2,0], float64)
+        stop = array([5,6,1,3,1], float64)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
+
+    def test_complex64():
+        from numpy import linspace, array, shape, complex64
+        start = array([4,5,0,2,0], complex64)
+        stop = array([5,6,1,3,1], complex64)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
+
+    def test_complex128():
+        from numpy import linspace, array, shape, complex128
+        start = array([4,5,0,2,0], complex128)
+        stop = array([5,6,1,3,1], complex128)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
+
+    f_bl = epyccel(test_bool, language=language)
+
+    assert (f_bl() == test_bool())
+
+    f_integer = epyccel(test_int, language=language)
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    #f_integer8 = epyccel(test_int8, language=language)
+    #f_integer16 = epyccel(test_int16, language=language)
+    f_integer32 = epyccel(test_int32, language=language)
+    f_integer64 = epyccel(test_int64, language=language)
+
+    assert (f_integer() == test_int())
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    #assert (f_integer8() == test_int8())
+    #assert (f_integer16() == test_int16())
+    assert (f_integer32() == test_int32())
+    assert (f_integer64() == test_int64())
+
+    f_fl = epyccel(test_float, language=language)
+    f_fl32 = epyccel(test_float32, language=language)
+    f_fl64 = epyccel(test_float64, language=language)
+
+    assert (f_fl() == test_float())
+    assert (f_fl32() == test_float32())
+    assert (f_fl64() == test_float64())
+
+    f_complex64 = epyccel(test_complex64, language=language)
+    f_complex128 = epyccel(test_complex128, language=language)
+
+    assert (f_complex64() == test_complex64())
+    assert (f_complex128() == test_complex128())
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran,
+            pytest.mark.skip(reason="Still inder maintenance")]),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Still inder maintenance"),
+            pytest.mark.c]
+        )
+    )
+)
+
+
+def test_numpy_linspace_array_like_2d(language):
+
+    def test_bool():
+        from numpy import linspace, array, shape
+        start = array([[4,5,6,2,1],[4,5,6,2,1]], bool)
+        stop = array([[5,6,7,3,2],[5,6,7,3,2]], bool)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
+
+    def test_int():
+        from numpy import linspace, array, shape
+        start = array([[4,5,6,2,1],[4,5,6,2,1]], int)
+        stop = array([[5,6,7,3,2],[5,6,7,3,2]], int)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
+
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    # def test_int8():
+    #     from numpy import linspace, array, shape, int8
+    #     start = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
+    #     stop = array([[5,6,7,3,2],[5,6,7,3,2]], int8)
+    #     NumberOfSamplesToGenerate = 7
+    #     a = linspace(start, stop, NumberOfSamplesToGenerate)
+    #     s = shape(a)
+    #     return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
+
+    # def test_int16():
+    #     from numpy import linspace, array, shape, int16
+    #     start = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
+    #     stop = array([[5,6,7,3,2],[5,6,7,3,2]], int16)
+    #     NumberOfSamplesToGenerate = 7
+    #     a = linspace(start, stop, NumberOfSamplesToGenerate)
+    #     s = shape(a)
+    #     return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
+
+    def test_int32():
+        from numpy import linspace, array, shape, int32
+        start = array([[4,5,6,2,1],[4,5,6,2,1]], int32)
+        stop = array([[5,6,7,3,2],[5,6,7,3,2]], int32)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
+
+    def test_int64():
+        from numpy import linspace, array, shape, int64
+        start = array([[4,5,6,2,1],[4,5,6,2,1]], int64)
+        stop = array([[5,6,7,3,2],[5,6,7,3,2]], int64)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
+
+    def test_float():
+        from numpy import linspace, array, shape, float
+        start = array([[4,5,6,2,1],[4,5,6,2,1]], float)
+        stop = array([[5,6,7,3,2],[5,6,7,3,2]], float)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
+
+    def test_float32():
+        from numpy import linspace, array, shape, float32
+        start = array([[4,5,6,2,1],[4,5,6,2,1]], float32)
+        stop = array([[5,6,7,3,2],[5,6,7,3,2]], float32)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
+
+    def test_float64():
+        from numpy import linspace, array, shape, float64
+        start = array([[4,5,6,2,1],[4,5,6,2,1]], float64)
+        stop = array([[5,6,7,3,2],[5,6,7,3,2]], float64)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
+
+    def test_complex64():
+        from numpy import linspace, array, shape, complex64
+        start = array([[4,5,6,2,1],[4,5,6,2,1]], complex64)
+        stop = array([[5,6,7,3,2],[5,6,7,3,2]], complex64)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
+
+    def test_complex128():
+        from numpy import linspace, array, shape, complex128
+        start = array([[4,5,6,2,1],[4,5,6,2,1]], complex128)
+        stop = array([[5,6,7,3,2],[5,6,7,3,2]], complex128)
+        NumberOfSamplesToGenerate = 7
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
+
+    f_bl = epyccel(test_bool, language=language)
+
+    assert (f_bl() == test_bool())
+
+    f_integer = epyccel(test_int, language=language)
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    # f_integer8 = epyccel(test_int8, language=language)
+    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer32 = epyccel(test_int32, language=language)
+    f_integer64 = epyccel(test_int64, language=language)
+
+    assert (f_integer() == test_int())
+    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    # assert (f_integer8() == test_int8())
+    # assert (f_integer16() == test_int16())
+    assert (f_integer32() == test_int32())
+    assert (f_integer64() == test_int64())
+
+    f_fl = epyccel(test_float, language=language)
+    f_fl32 = epyccel(test_float32, language=language)
+    f_fl64 = epyccel(test_float64, language=language)
+
+    assert (f_fl() == test_float())
+    assert (f_fl32() == test_float32())
+    assert (f_fl64() == test_float64())
+
+    f_complex64 = epyccel(test_complex64, language=language)
+    f_complex128 = epyccel(test_complex128, language=language)
+
+    assert (f_complex64() == test_complex64())
+    assert (f_complex128() == test_complex128())
