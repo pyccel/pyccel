@@ -3877,3 +3877,831 @@ def test_numpy_real_array_like_2d(language):
     assert (f_complex64() == test_complex64())
     assert (f_complex128() == test_complex128())
 
+def test_numpy_int(language):
+
+    @types('bool')
+    def test_bool_int(a):
+        import numpy as np
+        b = np.int(a)
+        return b
+
+    @types('int')
+    def test_int_int(a):
+        import numpy as np
+        b = np.int(a)
+        return b
+
+    @types('int8')
+    def test_int8_int(a):
+        import numpy as np
+        b = np.int(a)
+        return b
+
+    @types('int16')
+    def test_int16_int(a):
+        import numpy as np
+        b = np.int(a)
+        return b
+
+    @types('int32')
+    def test_int32_int(a):
+        import numpy as np
+        b = np.int(a)
+        return b
+
+    @types('int64')
+    def test_int64_int(a):
+        import numpy as np
+        b = np.int(a)
+        return b
+
+    @types('float')
+    def test_float_int(a):
+        import numpy as np
+        b = np.int(a)
+        return b
+
+    @types('float32')
+    def test_float32_int(a):
+        import numpy as np
+        b = np.int(a)
+        return b
+
+    @types('float64')
+    def test_float64_int(a):
+        import numpy as np
+        b = np.int(a)
+        return b
+
+    import numpy as np
+
+    bl = np.bool(randint(1e6))
+    integer = randint(1e6)
+    integer8 = np.int8(randint(0, 127))
+    integer16 = np.int16(randint(1e6))
+    integer32 = np.int32(randint(1e6))
+    integer64 = np.int64(randint(1e6))
+    fl = np.float(randint(1e6))
+    fl32 = np.float32(randint(1e6))
+    fl64 = np.float64(randint(1e6))
+
+    f_bl = epyccel(test_bool_int, language=language)
+
+    assert (f_bl(bl) == test_bool_int(bl))
+
+    f_integer = epyccel(test_int_int, language=language)
+    f_integer8 = epyccel(test_int8_int, language=language)
+    f_integer16 = epyccel(test_int16_int, language=language)
+    f_integer32 = epyccel(test_int32_int, language=language)
+    f_integer64 = epyccel(test_int64_int, language=language)
+
+    assert (f_integer(integer) == test_int_int(integer))
+    assert (f_integer8(integer8) == test_int8_int(integer8))
+    assert (f_integer16(integer16) == test_int16_int(integer16))
+    assert (f_integer32(integer32) == test_int32_int(integer32))
+    assert (f_integer64(integer64) == test_int64_int(integer64))
+
+    f_fl = epyccel(test_float_int, language=language)
+    f_fl32 = epyccel(test_float32_int, language=language)
+    f_fl64 = epyccel(test_float64_int, language=language)
+
+    assert (f_fl(fl) == test_float_int(fl))
+    assert (f_fl32(fl32) == test_float32_int(fl32))
+    assert (f_fl64(fl64) == test_float64_int(fl64))
+
+def test_numpy_int32(language):
+
+    @types('bool')
+    def test_bool_int32(a):
+        import numpy as np
+        b = np.int32(a)
+        return b
+
+    @types('int')
+    def test_int_int32(a):
+        import numpy as np
+        b = np.int32(a)
+        return b
+
+    @types('int8')
+    def test_int8_int32(a):
+        import numpy as np
+        b = np.int32(a)
+        return b
+
+    @types('int16')
+    def test_int16_int32(a):
+        import numpy as np
+        b = np.int32(a)
+        return b
+
+    @types('int32')
+    def test_int32_int32(a):
+        import numpy as np
+        b = np.int32(a)
+        return b
+
+    @types('int64')
+    def test_int64_int32(a):
+        import numpy as np
+        b = np.int32(a)
+        return b
+
+    @types('float')
+    def test_float_int32(a):
+        import numpy as np
+        b = np.int32(a)
+        return b
+
+    @types('float32')
+    def test_float32_int32(a):
+        import numpy as np
+        b = np.int32(a)
+        return b
+
+    @types('float64')
+    def test_float64_int32(a):
+        import numpy as np
+        b = np.int32(a)
+        return b
+
+    import numpy as np
+
+    bl = np.bool(randint(1e6))
+    integer = randint(1e6)
+    integer8 = np.int8(randint(0, 127))
+    integer16 = np.int16(randint(1e6))
+    integer32 = np.int32(randint(1e6))
+    integer64 = np.int64(randint(1e6))
+    fl = np.float(randint(1e6))
+    fl32 = np.float32(randint(1e6))
+    fl64 = np.float64(randint(1e6))
+
+    f_bl = epyccel(test_bool_int32, language=language)
+
+    assert (f_bl(bl) == test_bool_int32(bl))
+
+    f_integer = epyccel(test_int_int32, language=language)
+    f_integer8 = epyccel(test_int8_int32, language=language)
+    f_integer16 = epyccel(test_int16_int32, language=language)
+    f_integer32 = epyccel(test_int32_int32, language=language)
+    f_integer64 = epyccel(test_int64_int32, language=language)
+
+    assert (f_integer(integer) == test_int_int32(integer))
+    assert (f_integer8(integer8) == test_int8_int32(integer8))
+    assert (f_integer16(integer16) == test_int16_int32(integer16))
+    assert (f_integer32(integer32) == test_int32_int32(integer32))
+    assert (f_integer64(integer64) == test_int64_int32(integer64))
+
+    f_fl = epyccel(test_float_int32, language=language)
+    f_fl32 = epyccel(test_float32_int32, language=language)
+    f_fl64 = epyccel(test_float64_int32, language=language)
+
+    assert (f_fl(fl) == test_float_int32(fl))
+    assert (f_fl32(fl32) == test_float32_int32(fl32))
+    assert (f_fl64(fl64) == test_float64_int32(fl64))
+
+def test_numpy_int64(language):
+
+    @types('bool')
+    def test_bool_int64(a):
+        import numpy as np
+        b = np.int64(a)
+        return b
+
+    @types('int')
+    def test_int_int64(a):
+        import numpy as np
+        b = np.int64(a)
+        return b
+
+    @types('int8')
+    def test_int8_int64(a):
+        import numpy as np
+        b = np.int64(a)
+        return b
+
+    @types('int16')
+    def test_int16_int64(a):
+        import numpy as np
+        b = np.int64(a)
+        return b
+
+    @types('int32')
+    def test_int32_int64(a):
+        import numpy as np
+        b = np.int64(a)
+        return b
+
+    @types('int64')
+    def test_int64_int64(a):
+        import numpy as np
+        b = np.int64(a)
+        return b
+
+    @types('float')
+    def test_float_int64(a):
+        import numpy as np
+        b = np.int64(a)
+        return b
+
+    @types('float32')
+    def test_float32_int64(a):
+        import numpy as np
+        b = np.int64(a)
+        return b
+
+    @types('float64')
+    def test_float64_int64(a):
+        import numpy as np
+        b = np.int64(a)
+        return b
+
+    import numpy as np
+
+    bl = np.bool(randint(1e6))
+    integer = randint(1e6)
+    integer8 = np.int8(randint(0, 172))
+    integer16 = np.int16(randint(1e6))
+    integer32 = np.int32(randint(1e6))
+    integer64 = np.int64(randint(1e6))
+    fl = np.float(randint(1e6))
+    fl32 = np.float32(randint(1e6))
+    fl64 = np.float64(randint(1e6))
+
+    f_bl = epyccel(test_bool_int64, language=language)
+
+    assert (f_bl(bl) == test_bool_int64(bl))
+
+    f_integer = epyccel(test_int_int64, language=language)
+    f_integer8 = epyccel(test_int8_int64, language=language)
+    f_integer16 = epyccel(test_int16_int64, language=language)
+    f_integer32 = epyccel(test_int32_int64, language=language)
+    f_integer64 = epyccel(test_int64_int64, language=language)
+
+    assert (f_integer(integer) == test_int_int64(integer))
+    assert (f_integer8(integer8) == test_int8_int64(integer8))
+    assert (f_integer16(integer16) == test_int16_int64(integer16))
+    assert (f_integer32(integer32) == test_int32_int64(integer32))
+    assert (f_integer64(integer64) == test_int64_int64(integer64))
+
+    f_fl = epyccel(test_float_int64, language=language)
+    f_fl32 = epyccel(test_float32_int64, language=language)
+    f_fl64 = epyccel(test_float64_int64, language=language)
+
+    assert (f_fl(fl) == test_float_int64(fl))
+    assert (f_fl32(fl32) == test_float32_int64(fl32))
+    assert (f_fl64(fl64) == test_float64_int64(fl64))
+
+
+def test_numpy_float(language):
+
+    @types('bool')
+    def test_bool_float(a):
+        import numpy as np
+        b = np.float(a)
+        return b
+
+    @types('int')
+    def test_int_float(a):
+        import numpy as np
+        b = np.float(a)
+        return b
+
+    @types('int8')
+    def test_int8_float(a):
+        import numpy as np
+        b = np.float(a)
+        return b
+
+    @types('int16')
+    def test_int16_float(a):
+        import numpy as np
+        b = np.float(a)
+        return b
+
+    @types('int32')
+    def test_int32_float(a):
+        import numpy as np
+        b = np.float(a)
+        return b
+
+    @types('int64')
+    def test_int64_float(a):
+        import numpy as np
+        b = np.float(a)
+        return b
+
+    @types('float')
+    def test_float_float(a):
+        import numpy as np
+        b = np.float(a)
+        return b
+
+    @types('float32')
+    def test_float32_float(a):
+        import numpy as np
+        b = np.float(a)
+        return b
+
+    @types('float64')
+    def test_float64_float(a):
+        import numpy as np
+        b = np.float(a)
+        return b
+
+    import numpy as np
+
+    bl = np.bool(randint(1e6))
+    integer = randint(1e6)
+    integer8 = np.int8(randint(0, 127))
+    integer16 = np.int16(randint(1e6))
+    integer32 = np.int32(randint(1e6))
+    integer64 = np.int64(randint(1e6))
+    fl = np.float(randint(1e6))
+    fl32 = np.float32(randint(1e6))
+    fl64 = np.float64(randint(1e6))
+
+    f_bl = epyccel(test_bool_float, language=language)
+    
+    assert (f_bl(bl) == test_bool_float(bl))
+
+    f_integer = epyccel(test_int_float, language=language)
+    f_integer8 = epyccel(test_int8_float, language=language)
+    f_integer16 = epyccel(test_int16_float, language=language)
+    f_integer32 = epyccel(test_int32_float, language=language)
+    f_integer64 = epyccel(test_int64_float, language=language)
+
+    assert (f_integer(integer) == test_int_float(integer))
+    assert (f_integer8(integer8) == test_int8_float(integer8))
+    assert (f_integer16(integer16) == test_int16_float(integer16))
+    assert (f_integer32(integer32) == test_int32_float(integer32))
+    assert (f_integer64(integer64) == test_int64_float(integer64))
+
+    f_fl = epyccel(test_float_float, language=language)
+    f_fl32 = epyccel(test_float32_float, language=language)
+    f_fl64 = epyccel(test_float64_float, language=language)
+
+    assert (f_fl(fl) == test_float_float(fl))
+    assert (f_fl32(fl32) == test_float32_float(fl32))
+    assert (f_fl64(fl64) == test_float64_float(fl64))
+
+def test_numpy_float32(language):
+
+    @types('bool')
+    def test_bool_float32(a):
+        import numpy as np
+        b = np.float32(a)
+        return b
+
+    @types('int')
+    def test_int_float32(a):
+        import numpy as np
+        b = np.float32(a)
+        return b
+
+    @types('int8')
+    def test_int8_float32(a):
+        import numpy as np
+        b = np.float32(a)
+        return b
+
+    @types('int16')
+    def test_int16_float32(a):
+        import numpy as np
+        b = np.float32(a)
+        return b
+
+    @types('int32')
+    def test_int32_float32(a):
+        import numpy as np
+        b = np.float32(a)
+        return b
+
+    @types('int64')
+    def test_int64_float32(a):
+        import numpy as np
+        b = np.float32(a)
+        return b
+
+    @types('float')
+    def test_float_float32(a):
+        import numpy as np
+        b = np.float32(a)
+        return b
+
+    @types('float32')
+    def test_float32_float32(a):
+        import numpy as np
+        b = np.float32(a)
+        return b
+
+    @types('float64')
+    def test_float64_float32(a):
+        import numpy as np
+        b = np.float32(a)
+        return b
+
+    import numpy as np
+
+    bl = np.bool(randint(1e6))
+    integer = randint(1e6)
+    integer8 = np.int8(randint(0, 127))
+    integer16 = np.int16(randint(1e6))
+    integer32 = np.int32(randint(1e6))
+    integer64 = np.int64(randint(1e6))
+    fl = np.float(randint(1e6))
+    fl32 = np.float32(randint(1e6))
+    fl64 = np.float64(randint(1e6))
+
+    f_bl = epyccel(test_bool_float32, language=language)
+
+    assert (f_bl(bl) == test_bool_float32(bl))
+
+    f_integer = epyccel(test_int_float32, language=language)
+    f_integer8 = epyccel(test_int8_float32, language=language)
+    f_integer16 = epyccel(test_int16_float32, language=language)
+    f_integer32 = epyccel(test_int32_float32, language=language)
+    f_integer64 = epyccel(test_int64_float32, language=language)
+
+    assert (f_integer(integer) == test_int_float32(integer))
+    assert (f_integer8(integer8) == test_int8_float32(integer8))
+    assert (f_integer16(integer16) == test_int16_float32(integer16))
+    assert (f_integer32(integer32) == test_int32_float32(integer32))
+    assert (f_integer64(integer64) == test_int64_float32(integer64))
+
+    f_fl = epyccel(test_float_float32, language=language)
+    f_fl32 = epyccel(test_float32_float32, language=language)
+    f_fl64 = epyccel(test_float64_float32, language=language)
+
+    assert (f_fl(fl) == test_float_float32(fl))
+    assert (f_fl32(fl32) == test_float32_float32(fl32))
+    assert (f_fl64(fl64) == test_float64_float32(fl64))
+
+def test_numpy_float64(language):
+
+    @types('bool')
+    def test_bool_float64(a):
+        import numpy as np
+        b = np.float64(a)
+        return b
+
+    @types('int')
+    def test_int_float64(a):
+        import numpy as np
+        b = np.float64(a)
+        return b
+
+    @types('int8')
+    def test_int8_float64(a):
+        import numpy as np
+        b = np.float64(a)
+        return b
+
+    @types('int16')
+    def test_int16_float64(a):
+        import numpy as np
+        b = np.float64(a)
+        return b
+
+    @types('int32')
+    def test_int32_float64(a):
+        import numpy as np
+        b = np.float64(a)
+        return b
+
+    @types('int64')
+    def test_int64_float64(a):
+        import numpy as np
+        b = np.float64(a)
+        return b
+
+    @types('float')
+    def test_float_float64(a):
+        import numpy as np
+        b = np.float64(a)
+        return b
+
+    @types('float32')
+    def test_float32_float64(a):
+        import numpy as np
+        b = np.float64(a)
+        return b
+
+    @types('float64')
+    def test_float64_float64(a):
+        import numpy as np
+        b = np.float64(a)
+        return b
+
+    import numpy as np
+
+    bl = np.bool(randint(1e6))
+    integer = randint(1e6)
+    integer8 = np.int8(randint(1e6))
+    integer16 = np.int16(randint(1e6))
+    integer32 = np.int32(randint(1e6))
+    integer64 = np.int64(randint(1e6))
+    fl = np.float(randint(1e6))
+    fl32 = np.float32(randint(1e6))
+    fl64 = np.float64(randint(1e6))
+
+    f_bl = epyccel(test_bool_float64, language=language)
+
+    assert (f_bl(bl) == test_bool_float64(bl))
+
+    f_integer = epyccel(test_int_float64, language=language)
+    f_integer8 = epyccel(test_int8_float64, language=language)
+    f_integer16 = epyccel(test_int16_float64, language=language)
+    f_integer32 = epyccel(test_int32_float64, language=language)
+    f_integer64 = epyccel(test_int64_float64, language=language)
+
+    assert (f_integer(integer) == test_int_float64(integer))
+    assert (f_integer8(integer8) == test_int8_float64(integer8))
+    assert (f_integer16(integer16) == test_int16_float64(integer16))
+    assert (f_integer32(integer32) == test_int32_float64(integer32))
+    assert (f_integer64(integer64) == test_int64_float64(integer64))
+
+    f_fl = epyccel(test_float_float64, language=language)
+    f_fl32 = epyccel(test_float32_float64, language=language)
+    f_fl64 = epyccel(test_float64_float64, language=language)
+
+    assert (f_fl(fl) == test_float_float64(fl))
+    assert (f_fl32(fl32) == test_float32_float64(fl32))
+    assert (f_fl64(fl64) == test_float64_float64(fl64))
+
+def test_numpy_double(language):
+
+    @types('bool')
+    def test_bool_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    @types('int')
+    def test_int_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    @types('int8')
+    def test_int8_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    @types('int16')
+    def test_int16_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    @types('int32')
+    def test_int32_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    @types('int64')
+    def test_int64_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    @types('float')
+    def test_float_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    @types('float32')
+    def test_float32_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    @types('float64')
+    def test_float64_double(a):
+        import numpy as np
+        b = np.double(a)
+        return b
+
+    import numpy as np
+
+    bl = np.bool(randint(1e6))
+    integer = randint(1e6)
+    integer8 = np.int8(randint(0, 127))
+    integer16 = np.int16(randint(1e6))
+    integer32 = np.int32(randint(1e6))
+    integer64 = np.int64(randint(1e6))
+    fl = np.float(randint(1e6))
+    fl32 = np.float32(randint(1e6))
+    fl64 = np.float64(randint(1e6))
+
+    f_bl = epyccel(test_bool_double, language=language)
+
+    assert (f_bl(bl) == test_bool_double(bl))
+
+    f_integer = epyccel(test_int_double, language=language)
+    f_integer8 = epyccel(test_int8_double, language=language)
+    f_integer16 = epyccel(test_int16_double, language=language)
+    f_integer32 = epyccel(test_int32_double, language=language)
+    f_integer64 = epyccel(test_int64_double, language=language)
+
+    assert (f_integer(integer) == test_int_double(integer))
+    assert (f_integer8(integer8) == test_int8_double(integer8))
+    assert (f_integer16(integer16) == test_int16_double(integer16))
+    assert (f_integer32(integer32) == test_int32_double(integer32))
+    assert (f_integer64(integer64) == test_int64_double(integer64))
+
+    f_fl = epyccel(test_float_double, language=language)
+    f_fl32 = epyccel(test_float32_double, language=language)
+    f_fl64 = epyccel(test_float64_double, language=language)
+
+    assert (f_fl(fl) == test_float_double(fl))
+    assert (f_fl32(fl32) == test_float32_double(fl32))
+    assert (f_fl64(fl64) == test_float64_double(fl64))
+
+def test_numpy_complex64(language):
+
+    @types('bool')
+    def test_bool_complex64(a):
+        import numpy as np
+        b = np.complex64(a)
+        return b
+
+    @types('int')
+    def test_int_complex64(a):
+        import numpy as np
+        b = np.complex64(a)
+        return b
+
+    @types('int8')
+    def test_int8_complex64(a):
+        import numpy as np
+        b = np.complex64(a)
+        return b
+
+    @types('int16')
+    def test_int16_complex64(a):
+        import numpy as np
+        b = np.complex64(a)
+        return b
+
+    @types('int32')
+    def test_int32_complex64(a):
+        import numpy as np
+        b = np.complex64(a)
+        return b
+
+    @types('int64')
+    def test_int64_complex64(a):
+        import numpy as np
+        b = np.complex64(a)
+        return b
+
+    @types('float')
+    def test_float_complex64(a):
+        import numpy as np
+        b = np.complex64(a)
+        return b
+
+    @types('float32')
+    def test_float32_complex64(a):
+        import numpy as np
+        b = np.complex64(a)
+        return b
+
+    @types('float64')
+    def test_float64_complex64(a):
+        import numpy as np
+        b = np.complex64(a)
+        return b
+
+    import numpy as np
+
+    bl = np.bool(randint(1e6))
+    integer = randint(1e6)
+    integer8 = np.int8(randint(0, 172))
+    integer16 = np.int16(randint(1e6))
+    integer32 = np.int32(randint(1e6))
+    integer64 = np.int64(randint(1e6))
+    fl = np.float(randint(1e6))
+    fl32 = np.float32(randint(1e6))
+    fl64 = np.float64(randint(1e6))
+
+    f_bl = epyccel(test_bool_complex64, language=language)
+
+    assert (f_bl(bl) == test_bool_complex64(bl))
+
+    f_integer = epyccel(test_int_complex64, language=language)
+    f_integer8 = epyccel(test_int8_complex64, language=language)
+    f_integer16 = epyccel(test_int16_complex64, language=language)
+    f_integer32 = epyccel(test_int32_complex64, language=language)
+    f_integer64 = epyccel(test_int64_complex64, language=language)
+
+    assert (f_integer(integer) == test_int_complex64(integer))
+    assert (f_integer8(integer8) == test_int8_complex64(integer8))
+    assert (f_integer16(integer16) == test_int16_complex64(integer16))
+    assert (f_integer32(integer32) == test_int32_complex64(integer32))
+    assert (f_integer64(integer64) == test_int64_complex64(integer64))
+
+    f_fl = epyccel(test_float_complex64, language=language)
+    f_fl32 = epyccel(test_float32_complex64, language=language)
+    f_fl64 = epyccel(test_float64_complex64, language=language)
+
+    assert (f_fl(fl) == test_float_complex64(fl))
+    assert (f_fl32(fl32) == test_float32_complex64(fl32))
+    assert (f_fl64(fl64) == test_float64_complex64(fl64))
+
+def test_numpy_complex128(language):
+
+    @types('bool')
+    def test_bool_complex128(a):
+        import numpy as np
+        b = np.complex128(a)
+        return b
+
+    @types('int')
+    def test_int_complex128(a):
+        import numpy as np
+        b = np.complex128(a)
+        return b
+
+    @types('int8')
+    def test_int8_complex128(a):
+        import numpy as np
+        b = np.complex128(a)
+        return b
+
+    @types('int16')
+    def test_int16_complex128(a):
+        import numpy as np
+        b = np.complex128(a)
+        return b
+
+    @types('int32')
+    def test_int32_complex128(a):
+        import numpy as np
+        b = np.complex128(a)
+        return b
+
+    @types('int64')
+    def test_int64_complex128(a):
+        import numpy as np
+        b = np.complex128(a)
+        return b
+
+    @types('float')
+    def test_float_complex128(a):
+        import numpy as np
+        b = np.complex128(a)
+        return b
+
+    @types('float32')
+    def test_float32_complex128(a):
+        import numpy as np
+        b = np.complex128(a)
+        return b
+
+    @types('float64')
+    def test_float64_complex128(a):
+        import numpy as np
+        b = np.complex128(a)
+        return b
+
+    import numpy as np
+
+    bl = np.bool(randint(1e6))
+    integer = randint(1e6)
+    integer8 = np.int8(randint(0, 127))
+    integer16 = np.int16(randint(1e6))
+    integer32 = np.int32(randint(1e6))
+    integer64 = np.int64(randint(1e6))
+    fl = np.float(randint(1e6))
+    fl32 = np.float32(randint(1e6))
+    fl64 = np.float64(randint(1e6))
+
+    f_bl = epyccel(test_bool_complex128, language=language)
+
+    assert (f_bl(bl) == test_bool_complex128(bl))
+
+    f_integer = epyccel(test_int_complex128, language=language)
+    f_integer8 = epyccel(test_int8_complex128, language=language)
+    f_integer16 = epyccel(test_int16_complex128, language=language)
+    f_integer32 = epyccel(test_int32_complex128, language=language)
+    f_integer64 = epyccel(test_int64_complex128, language=language)
+
+    assert (f_integer(integer) == test_int_complex128(integer))
+    assert (f_integer8(integer8) == test_int8_complex128(integer8))
+    assert (f_integer16(integer16) == test_int16_complex128(integer16))
+    assert (f_integer32(integer32) == test_int32_complex128(integer32))
+    assert (f_integer64(integer64) == test_int64_complex128(integer64))
+
+    f_fl = epyccel(test_float_complex128, language=language)
+    f_fl32 = epyccel(test_float32_complex128, language=language)
+    f_fl64 = epyccel(test_float64_complex128, language=language)
+
+    assert (f_fl(fl) == test_float_complex128(fl))
+    assert (f_fl32(fl32) == test_float32_complex128(fl32))
+    assert (f_fl64(fl64) == test_float64_complex128(fl64))
