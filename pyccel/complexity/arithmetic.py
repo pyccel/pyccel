@@ -28,7 +28,7 @@ from pyccel.ast.core     import FunctionDef, FunctionCall
 from pyccel.ast.core     import Return
 from pyccel.ast.core     import AddOp, SubOp, MulOp, DivOp
 from pyccel.ast.internals import PyccelArraySize, Slice
-from pyccel.ast.operators import PyccelAdd, PyccelMinus, PyccelDiv, PyccelMul
+from pyccel.ast.operators import PyccelAdd, PyccelMinus, PyccelDiv, PyccelMul, PyccelFloorDiv
 from pyccel.ast.variable  import IndexedElement, Variable
 from pyccel.ast.numpyext import NumpyZeros, NumpyOnes
 from pyccel.ast.operators import  PyccelOperator, PyccelAssociativeParenthesis
@@ -41,6 +41,7 @@ ADD = Symbol('ADD')
 SUB = Symbol('SUB')
 MUL = Symbol('MUL')
 DIV = Symbol('DIV')
+IDIV = Symbol('IDIV')
 
 op_registry = {
     AddOp(): ADD,
@@ -108,24 +109,24 @@ def count_ops(expr, visual=None, costs=None):
             return 0
 
         # ...
-        ntimes = 1
+        op = 0
         if isinstance(expr, AugAssign):
             op = op_registry[expr.op]
+        # ...
 
-            if isinstance(expr.lhs, IndexedElement):
-                for e,i in enumerate(expr.lhs.indices):
-                    if isinstance(i, Slice):
-                        if i.start == None and i.stop == None and i.step == None:
-                            ntimes *= SHAPE(expr.lhs.base, e)
+        # ...
+        ntimes = 1
+        if isinstance(expr.lhs, IndexedElement):
+            for e,i in enumerate(expr.lhs.indices):
+                if isinstance(i, Slice):
+                    if i.start == None and i.stop == None and i.step == None:
+                        ntimes *= SHAPE(expr.lhs.base, e)
 
-                        else:
-                            raise NotImplementedError('only : case is implemented')
                     else:
-                        # TODO treat this case
-                        pass
-
-        else:
-            op = 0
+                        raise NotImplementedError('only : case is implemented')
+                else:
+                    # TODO treat this case
+                    pass
         # ...
 
         return ntimes * ( op + count_ops(expr.rhs, visual, costs=costs) )
@@ -197,6 +198,10 @@ def count_ops(expr, visual=None, costs=None):
     elif isinstance(expr, PyccelDiv):
         ops = sum(count_ops(i, visual, costs=costs) for i in expr.args)
         return ops+DIV
+
+    elif isinstance(expr, PyccelFloorDiv):
+        ops = sum(count_ops(i, visual, costs=costs) for i in expr.args)
+        return ops+IDIV
 
     elif isinstance(expr, PyccelMul):
         ops = sum(count_ops(i, visual, costs=costs) for i in expr.args)

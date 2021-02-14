@@ -15,19 +15,23 @@ def div( x: 'int', y: 'int' ):
     return x/y
 
 # ...
-def iadd( x: 'int', y: 'int' ):
+def idiv( x: 'int', y: 'int' ):
+    return x//y
+
+# ...
+def aug_add( x: 'int', y: 'int' ):
     x += y
 
 # ...
-def isub( x: 'int', y: 'int' ):
+def aug_sub( x: 'int', y: 'int' ):
     x -= y
 
 # ...
-def imul( x: 'int', y: 'int' ):
+def aug_mul( x: 'int', y: 'int' ):
     x *= y
 
 # ...
-def idiv( x: 'int', y: 'int' ):
+def aug_div( x: 'int', y: 'int' ):
     x /= y
 
 # ...
@@ -91,6 +95,69 @@ def array_int32_1d_scalar_add( x: 'int32[:]', a: 'int32' ):
     x[:] += a
 
 # ...
+def array_int32_1d_scalar_sub( x: 'int32[:]', a: 'int32' ):
+    x[:] -= a
+
+# ...
+def array_int32_1d_scalar_mul( x: 'int32[:]', a: 'int32' ):
+    x[:] *= a
+
+# ...
+def array_int32_1d_scalar_div( x: 'int32[:]', a: 'int32' ):
+    x[:] = x / a
+
+# ...
+def array_int32_1d_scalar_idiv( x: 'int32[:]', a: 'int32' ):
+    x[:] = x // a
+
+# ...
 def array_int32_2d_scalar_add( x: 'int32[:,:]', a: 'int32' ):
     x[:,:] += a
 
+# ...
+def array_int32_2d_scalar_sub( x: 'int32[:,:]', a: 'int32' ):
+    x[:,:] -= a
+
+# ...
+def array_int32_2d_scalar_mul( x: 'int32[:,:]', a: 'int32' ):
+    x[:,:] *= a
+
+# ...
+def array_int32_2d_scalar_div( x: 'int32[:,:]', a: 'int32' ):
+    x[:,:] = x / a
+
+# ...
+def array_int32_2d_scalar_idiv( x: 'int32[:,:]', a: 'int32' ):
+    x[:,:] = x // a
+
+# ...
+def array_int32_1d_add( x: 'int32[:]', y: 'int32[:]' ):
+    x[:] += y
+
+# ...
+def array_int32_1d_sub( x: 'int32[:]', y: 'int32[:]' ):
+    x[:] -= y
+
+# ...
+def array_int32_1d_mul( x: 'int32[:]', y: 'int32[:]' ):
+    x[:] *= y
+
+# ...
+def array_int32_1d_idiv( x: 'int32[:]', y: 'int32[:]' ):
+    x[:] = x // y
+
+# ...
+def array_int32_2d_add( x: 'int32[:,:]', y: 'int32[:,:]' ):
+    x[:,:] += y
+
+# ...
+def array_int32_2d_sub( x: 'int32[:,:]', y: 'int32[:,:]' ):
+    x[:,:] -= y
+
+# ...
+def array_int32_2d_mul( x: 'int32[:,:]', y: 'int32[:,:]' ):
+    x[:,:] *= y
+
+# ...
+def array_int32_2d_idiv( x: 'int32[:,:]', y: 'int32[:,:]' ):
+    x[:,:] = x // y
