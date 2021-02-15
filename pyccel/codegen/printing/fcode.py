@@ -1237,15 +1237,6 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_Assign(self, expr):
-        if isinstance(expr.lhs, TupleVariable) and not expr.lhs.is_homogeneous \
-            and isinstance(expr.rhs, (PythonTuple,TupleVariable)):
-            return '\n'.join(self._print_Assign(
-                        Assign(lhs,
-                                rhs,
-                                status=expr.status,
-                                like=expr.like,
-                                )
-                        ) for lhs,rhs in zip(expr.lhs,expr.rhs))
 
         lhs_code = self._print(expr.lhs)
         rhs = expr.rhs
