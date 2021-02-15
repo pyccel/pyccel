@@ -33,7 +33,7 @@ before_script:  # Coverage instructions - setup
   - export COVERAGE_PROCESS_START=$(pwd)/.coveragerc
 
 script:
-  - cd tests/epyccel/recognised_functions
+  - cd tests
   - ${PYTHON} -m pytest -rx -m "not parallel and c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
   - ${PYTHON} -m pytest -rx -m "not parallel and not c" --ignore=ast --ignore=printers --ignore=symbolic --ignore=ndarrays
   - ${PYTHON} -m pytest ndarrays/ -rx
