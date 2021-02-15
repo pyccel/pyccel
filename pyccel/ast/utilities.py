@@ -433,6 +433,8 @@ def collect_loops(block, indices, new_index_name, language_has_vectors = False):
             current_level = 0
     return result
 
+#==============================================================================
+
 def insert_fors(blocks, indices, level = 0):
     """
     Run through the output of collect_loops and create For loops of the
@@ -440,7 +442,7 @@ def insert_fors(blocks, indices, level = 0):
 
     Parameters
     ==========
-    block   : list of LoopCollections
+    block   : list of LoopCollection
             The result of a call to collect_loops
     indices : list
             The index variables
@@ -451,10 +453,10 @@ def insert_fors(blocks, indices, level = 0):
     block : list of PyccelAstNodes
             The modified expression
     """
-    if all(not isinstance(b, LoopCollections) for b in blocks.body):
+    if all(not isinstance(b, LoopCollection) for b in blocks.body):
         body = blocks.body
     else:
-        body = [insert_fors(b, indices, level+1) if isinstance(b, LoopCollections) else [b] \
+        body = [insert_fors(b, indices, level+1) if isinstance(b, LoopCollection) else [b] \
                 for b in blocks.body]
         body = [bi for b in body for bi in b]
     if blocks.length == 1:
