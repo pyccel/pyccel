@@ -212,6 +212,7 @@ class FCodePrinter(CodePrinter):
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
         self._current_function = None
+        self._current_class    = None
 
         self._additional_code = None
         self._additional_imports = set([])
@@ -221,6 +222,10 @@ class FCodePrinter(CodePrinter):
     def get_additional_imports(self):
         """return the additional imports collected in printing stage"""
         return self._additional_imports
+
+    def set_current_class(self, name):
+
+        self._current_class = name
 
     def set_current_function(self, name):
 
@@ -241,6 +246,18 @@ class FCodePrinter(CodePrinter):
                     name = name[0]
         self._current_function = name
 
+    def get_method(self, cls_name, method_name):
+        container = self._namespace
+        while container:
+            if cls_name in container.classes:
+                cls = container.classes[cls_name]
+                return cls.methods_as_dict[method_name]
+            container = container.parent_scope
+        if isinstance(name, DottedName):
+            return self.get_function(DottedName(name.name[1:]))
+        errors.report(UNDEFINED_FUNCTION, symbol=name,
+            severity='fatal')
+
     def get_function(self, name):
         container = self._namespace
         while container:
@@ -248,10 +265,20 @@ class FCodePrinter(CodePrinter):
                 return container.functions[name]
             container = container.parent_scope
         if isinstance(name, DottedName):
-            return self.get_function(name.name[-1])
+            return self.get_function(DottedName(name.name[-1]))
         errors.report(UNDEFINED_FUNCTION, symbol=name,
             severity='fatal')
 
+    def add_vars_to_namespace(*new_vars):
+        if self._current_function:
+            if self._current_class:
+                func = self.get_method(self._current_class, self._current_function)
+            else:
+                func = self.get_function(self._current_function)
+            func.add_local_var(*new_vars)
+        else:
+            for var in new_vars:
+                self._namespace.variables[var.name] = var
 
     def _get_statement(self, codestring):
         return codestring
@@ -544,12 +571,7 @@ class FCodePrinter(CodePrinter):
             var_name = self.parser.get_new_name()
             var = base.clone(var_name)
 
-            if self._current_function:
-                name = self._current_function
-                func = self.get_function(name)
-                func.add_local_var(var)
-            else:
-                self._namespace.variables[var.name] = var
+            self.add_vars_to_namespace(var)
 
             self._additional_code = self._additional_code + self._print(Assign(var,expr.lhs)) + '\n'
             return self._print(var) + '%' +self._print(expr.name)
@@ -745,12 +767,7 @@ class FCodePrinter(CodePrinter):
         shape  = PyccelMinus(expr.shape[0], LiteralInteger(1))
         index  = Variable(NativeInteger(), name =  self.parser.get_new_name('i'))
 
-        if self._current_function:
-            name = self._current_function
-            func = self.get_function(name)
-            func.add_local_var(index)
-        else:
-            self._namespace.variables[index.name] = index
+        self.add_vars_to_namespace(index)
 
         code = '[({start} + {step} * {index}, {index} = {0}, {shape}, {1})]'
         code = code.format(self._print(LiteralInteger(0)),
@@ -836,12 +853,7 @@ class FCodePrinter(CodePrinter):
                 shape = expr.shape, precision = expr.precision,
                 order = expr.order, rank = expr.rank)
 
-        if self._current_function:
-            name = self._current_function
-            func = self.get_function(name)
-            func.add_local_var(var)
-        else:
-            self._namespace.variables[var.name] = var
+        self.add_vars_to_namespace(var)
 
         self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
         return self._print(var)
@@ -1193,13 +1205,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_CodeBlock(self, expr):
         body_exprs, new_vars = expand_to_loops(expr, language_has_vectors = True)
-        if self._current_function:
-            name = self._current_function
-            func = self.get_function(name)
-            func.add_local_var(*new_vars)
-        else:
-            for var in new_vars:
-                self._namespace.variables[var.name] = var
+        self.add_vars_to_namespace(*new_vars)
         body_stmts = []
         for b in body_exprs :
             line = self._print(b)
@@ -1704,6 +1710,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         name = self._print(expr.name)
+        self.set_current_class(name)
         base = None # TODO: add base in ClassDef
 
         decs = ''.join(self._print(Declare(i.dtype, i)) for i in expr.attributes)
@@ -1746,13 +1753,14 @@ class FCodePrinter(CodePrinter):
         for i in expr.interfaces:
             cls_methods +=  [j.clone('{0}'.format(j.name)) for j in i.functions]
 
-
         methods = ''
         for i in cls_methods:
             methods = ('{methods}\n'
                      '{sep}\n'
                      '{f}\n'
                      '{sep}\n').format(methods=methods, sep=sep, f=self._print(i))
+
+        self.set_current_class(None)
 
         return decs, methods
 
@@ -2614,12 +2622,7 @@ class FCodePrinter(CodePrinter):
                         shape=base.shape,precision=base.precision,
                         order=base.order,rank=base.rank)
 
-                if self._current_function:
-                    name = self._current_function
-                    func = self.get_function(name)
-                    func.add_local_var(var)
-                else:
-                    self._namespace.variables[var.name] = var
+                self.add_vars_to_namespace(var)
 
                 self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
                 return self._print(var[expr.indices])
@@ -2752,12 +2755,7 @@ class FCodePrinter(CodePrinter):
                 var_name = self.parser.get_new_name()
                 var =  r.clone(name = var_name)
 
-                if self._current_function:
-                    name = self._current_function
-                    func = self.get_function(name)
-                    func.add_local_var(var)
-                else:
-                    self._namespace.variables[var.name] = var
+                self.add_vars_to_namespace(var)
 
                 out_vars.append(var)
 
@@ -2786,12 +2784,7 @@ class FCodePrinter(CodePrinter):
             var_name = self.parser.get_new_name()
             var = base.clone(var_name)
 
-            if self._current_function:
-                name = self._current_function
-                func = self.get_function(name)
-                func.add_local_var(var)
-            else:
-                self._namespace.variables[var.name] = var
+            self.add_vars_to_namespace(var)
 
             self._additional_code = self._additional_code + self._print(Assign(var,expr.prefix)) + '\n'
             expr = DottedFunctionCall(expr.funcdef, expr.args, var)
