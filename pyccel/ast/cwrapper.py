@@ -118,8 +118,18 @@ class PyArgKeywords(Basic):
 
 #using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
 pytype_parse_registry = {
-    PyccelPyObject()      : 'O',
-    PyccelPyArrayObject() : 'O!',
+    (NativeInteger(), 4)       : 'i',
+    (NativeInteger(), 8)       : 'l',
+    (NativeInteger(), 2)       : 'h',
+    (NativeInteger(), 1)       : 'b',
+    (NativeReal(), 8)          : 'd',
+    (NativeReal(), 4)          : 'f',
+    (NativeComplex(), 4)       : 'O',
+    (NativeComplex(), 8)       : 'O',
+    (NativeBool(), 4)          : 'p',
+    (NativeString(), 0)        : 's',
+    (PyccelPyObject(), 0)      : 'O',
+    (PyccelPyArrayObject(), 0) : 'O!',
     }
 
 class PyArg_ParseTupleNode(Basic):
@@ -193,7 +203,7 @@ class PyArg_ParseTupleNode(Basic):
             return 'O'
         else:
             try:
-                return pytype_parse_registry[(parse_arg.dtype)]
+                return pytype_parse_registry[parse_arg.dtype]
             except KeyError as e:
                 raise NotImplementedError("Type not implemented for argument collection : "+str(type(parse_arg))) from e
 

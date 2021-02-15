@@ -675,6 +675,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Parsing Arguments
         parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, funcs[0].arguments, parse_args, keyword_list)
+
         wrapper_body += list(default_value.values())
         wrapper_body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
 
@@ -848,6 +849,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, local_arg_vars, parse_args, keyword_list)
+
         wrapper_body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
         wrapper_body.extend(wrapper_body_translations)
 
