@@ -400,7 +400,7 @@ def test_floor_return_type(language):
     fflags = "-Werror -Wconversion"
     f1 = epyccel(floor_return_type_real, language = language, fflags=fflags)
 
-    x = randint(100)
+    x = uniform(100)
     assert(isclose(f1(x) ,  floor_return_type_real(x), rtol=1e-14, atol=1e-15))
     assert(isclose(f1(-x) ,  floor_return_type_real(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x))  == type(floor_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
