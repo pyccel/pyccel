@@ -217,19 +217,38 @@ class CWrapperCodePrinter(CCodePrinter):
 
 
     def _valued_variable_management(self, variable, collect_var, tmp_variable):
-        "TODO"
+        """
+        Responsible for creating the body collecting the default value of an valuedVariable 
+        and the check needed.
+        if the valuedVariable is optional create body to collect the new value
 
-        valued_var_check = PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
-        optional_var_collect = []
+        Parameters:
+        tmp_variable : Variable
+            The temporary variable  to hold result
+        variable     : Variable
+            The optional variable
+        collect_var  : variable
+            the pyobject type variable  holder of value
+    
+        Returns
+        -------
+        section      :
+            IfSection
+        collect_body :
+            body that collect new optional variable value
+        """
+
+        valued_var_check  = PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
+        collect_body      = []
 
         if variable.is_optional:
-            optional_var_collect = [Assign(VariableAddress(variable), VariableAddress(tmp_variable))]
-            section = IfSection(valued_var_check, [Assign(VariableAddress(variable), Nil())])
+            collect_body  = [Assign(VariableAddress(variable), VariableAddress(tmp_variable))]
+            section       = IfSection(valued_var_check, [Assign(VariableAddress(variable), Nil())])
 
         else:
-            section = IfSection(valued_var_check, [Assign(variable, variable.value)])
+            section       = IfSection(valued_var_check, [Assign(variable, variable.value)])
 
-        return section, optional_var_collect
+        return section, collect_body
 
 
     def _body_scalar(self, variable, collect_var, error_check = True, tmp_variable = None):
