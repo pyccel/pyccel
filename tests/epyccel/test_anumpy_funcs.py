@@ -4676,7 +4676,7 @@ def test_numpy_complex128(language):
     fl32 = np.float32(randint(1e6))
     fl64 = np.float64(randint(1e6))
 
-    f_bl = epyccel(test_bool_complex128, language=language, verbos=True)
+    f_bl = epyccel(test_bool_complex128, language=language, verbose=True)
 
     assert (f_bl(bl) == test_bool_complex128(bl))
 
