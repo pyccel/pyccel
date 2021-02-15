@@ -308,12 +308,13 @@ def collect_loops(block, indices, language_has_vectors = False):
     current_level = 0
     used_vars = set()
     array_creator_types = (Allocate, PythonList, PythonTuple, Dlist)
-    func_types = (FunctionCall, PyccelInternalFunction)
+    is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
+                                or (isinstance(f, PyccelInternalFunction) and not f.is_elemental))
     for line in block:
         if (isinstance(line, Assign) and
                 not isinstance(line.rhs, array_creator_types) and # not creating array
                 not line.rhs.get_attribute_nodes(array_creator_types) and # not creating array
-                not isinstance(line.rhs, func_types)): # not a basic function call
+                not is_function_call(line.rhs)): # not a basic function call
 
             if isinstance(line.lhs, Variable):
                 lhs_vars = [line.lhs]
@@ -329,14 +330,23 @@ def collect_loops(block, indices, language_has_vectors = False):
                                                        PyccelInternalFunction))
             variables       = [v for v in notable_nodes if isinstance(v, (Variable, IndexedElement))]
 
-            funcs           = [f.funcdef for f in notable_nodes if isinstance(f, FunctionCall)]
-            variables      += [v for f in funcs if f.is_elemental for v in f.get_attribute_nodes((Variable, IndexedElement))]
+            elemental_func_calls  = [f for f in notable_nodes if (isinstance(f, FunctionCall) \
+                                                                and f.funcdef.is_elemental)]
+            elemental_func_calls += [f for f in notable_nodes if (isinstance(f, PyccelInternalFunction) \
+                                                                and f.is_elemental)]
 
-            funcs           = [f for f in funcs if not f.is_elemental]
-            internal_funcs  = [f for f in notable_nodes if isinstance(f, PyccelInternalFunction)]
+            variables      += [v for f in elemental_func_calls \
+                                 for v in f.get_attribute_nodes((Variable, IndexedElement),
+                                                            excluded_nodes = (FunctionDef))]
+
+            funcs           = [f for f in notable_nodes if (isinstance(f, FunctionCall) \
+                                                            and not f.funcdef.is_elemental)]
+            internal_funcs  = [f for f in notable_nodes if (isinstance(f, PyccelInternalFunction) \
+                                                            and not f.is_elemental)]
 
             used_vars       = set(v for f in chain(funcs, internal_funcs) \
-                                    for v in f.get_attribute_nodes((Variable, IndexedElement)))
+                                    for v in f.get_attribute_nodes((Variable, IndexedElement),
+                                        excluded_nodes = (FunctionDef)))
 
             variables = list(set(variables))
 
@@ -360,7 +370,7 @@ def collect_loops(block, indices, language_has_vectors = False):
                 if compatible_operation(*new_vars, language_has_vectors = language_has_vectors):
                     break
 
-            line.substitute(variables, new_vars)
+            line.substitute(variables, new_vars, excluded_nodes = (FunctionDef))
 
             # Recurse through result tree to save line with lines which need
             # the same set of for loops
