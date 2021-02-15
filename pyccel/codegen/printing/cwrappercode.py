@@ -550,7 +550,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Find a name for the wrapper function
         wrapper_name = self._get_wrapper_name(used_names, expr)
-        self._global_names.add(wrapper_name)
 
         # Collect local variables
         python_func_args    = self.get_new_PyObject("args"  , used_names)
