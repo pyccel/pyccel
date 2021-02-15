@@ -487,13 +487,13 @@ class CWrapperCodePrinter(CCodePrinter):
 
         if variable.rank > 0:
             collect_type = PyccelPyArrayObject()
-            collect_var = Variable(dtype= collect_type, is_pointer = True, rank = variable.rank,
+            collect_var  = Variable(dtype= collect_type, is_pointer = True, rank = variable.rank,
                                    order= variable.order, 
                                    name=self.get_new_name(used_names, variable.name+"_tmp"))
 
         else:
             collect_type = PyccelPyObject()
-            collect_var = Variable(dtype=collect_type, is_pointer=True,
+            collect_var  = Variable(dtype=collect_type, is_pointer=True,
                                    name = self.get_new_name(used_names, variable.name+"_tmp"))
 
         return collect_var
