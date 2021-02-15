@@ -443,7 +443,6 @@ def expand_tuple_assignments(block):
     >>> expand_to_loops(expr, language_has_vectors = False)
     [For(i_0, PythonRange(0, LiteralInteger(4), LiteralInteger(1)), CodeBlock([IndexedElement(c, i_0) := PyccelAdd(IndexedElement(a, i_0), IndexedElement(b, i_0))]), [])]
     """
-    ass = block.get_attribute_nodes(Assign)
     assigns = [a for a in block.get_attribute_nodes(Assign) \
                 if isinstance(a.lhs, TupleVariable) and not a.lhs.is_homogeneous \
                 and isinstance(a.rhs, (PythonTuple,TupleVariable))]
