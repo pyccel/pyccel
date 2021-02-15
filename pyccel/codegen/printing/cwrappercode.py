@@ -627,7 +627,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body_translations = [If(*body_tmp)]
 
         # Parsing Arguments
-        parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, funcs[0].arguments, parse_args, keyword_list, True)
+        parse_node = PyArg_ParseTupleNode(python_func_args, python_func_kwargs, funcs[0].arguments, parse_args, keyword_list)
         wrapper_body += list(default_value.values())
         wrapper_body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
 
