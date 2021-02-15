@@ -181,7 +181,6 @@ class PyArg_ParseTupleNode(Basic):
         while i < len(c_func_args):
             self._flags += self.get_pytype(c_func_args[i], parse_args[i])
             i+=1
-
         # Restriction as of python 3.8
         if any([isinstance(a, (Variable, FunctionAddress)) and a.is_kwonly for a in c_func_args]):
             errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
@@ -203,7 +202,7 @@ class PyArg_ParseTupleNode(Basic):
             return 'O'
         else:
             try:
-                return pytype_parse_registry[parse_arg.dtype]
+                return pytype_parse_registry[(parse_arg.dtype, parse_arg.precision)]
             except KeyError as e:
                 raise NotImplementedError("Type not implemented for argument collection : "+str(type(parse_arg))) from e
 
