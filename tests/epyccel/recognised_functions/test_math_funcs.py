@@ -470,8 +470,8 @@ def test_copysign_call(language):
     assert(isclose(copysign_call(-x, y), f1(-x, y), rtol=1e-14, atol=1e-15))
     assert(isclose(copysign_call(x, -y), f1(x, -y), rtol=1e-14, atol=1e-15))
     # x =/= 0, y = 0 and x = 0, y =/= 0
-    assert(isclose(copysign_call(x, 0), f1(x, 0), rtol=1e-14, atol=1e-15))
-    assert(isclose(copysign_call(0, y), f1(0, y), rtol=1e-14, atol=1e-15))
+    assert(isclose(copysign_call(x, 0.0), f1(x, 0.0), rtol=1e-14, atol=1e-15))
+    assert(isclose(copysign_call(0.0, y), f1(0.0, y), rtol=1e-14, atol=1e-15))
 
 def test_copysign_call_zero_case(language):
     @types('int', 'int')
