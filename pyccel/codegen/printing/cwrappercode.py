@@ -187,7 +187,7 @@ class CWrapperCodePrinter(CCodePrinter):
     # --------------------------------------------------------------------
     # Functions that take care of creating cast or convert type function call :
     # --------------------------------------------------------------------
-    def _create_collecting_value_body(self, variable, collect_var, tmp_variable = None):
+    def _create_collecting_value_body(self, variable, collect_var, error_check = True, tmp_variable = None):
         """
         Create If block to differentiate between python and numpy data types when collecting value
         format :
@@ -210,24 +210,40 @@ class CWrapperCodePrinter(CCodePrinter):
         -------
         body : If block
         """
-        var = tmp_variable if tmp_variable else variable
-        
-        python_type_check = PythonType_Check(variable, collect_var)
-        numpy_type_check  = NumpyType_Check(variable, collect_var)
 
-        error = PyErr_SetString('PyExc_TypeError', '"{var_name} must be {precision} bit {dtype}"'.format(
+        var = tmp_variable if tmp_variable else variable
+        sections = []
+
+        numpy_type_check  = NumpyType_Check(variable, collect_var) if error_check \
+                            else FunctionCall(PyArray_CheckScalar, [collect_var])
+        python_type_check = PythonType_Check(variable, collect_var) if error_check \
+                            else LiteralTrue()
+        
+        python_collect  = [Assign(var, self.get_collect_function_call(variable, collect_var))]
+        numpy_collect   = [FunctionCall(PyArray_ScalarAsCtype, [collect_var, var])]
+
+        if isinstance(variable, ValuedVariable):
+            valued_var_check = PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
+            if variable.is_optional:
+                sections.append(IfSection(valued_var_check, [Assign(VariableAddress(variable), Nil())]))
+                assign_optional = Assign(VariableAddress(variable), VariableAddress(tmp_variable))
+                python_collect.append(assign_optional)
+                numpy_collect.append(assign_optional)
+
+            else :
+                sections.append(IfSection(valued_var_check, [Assign(variable, variable.value)]))
+
+        sections.append(IfSection(numpy_type_check, numpy_collect))
+        sections.append(IfSection(python_type_check, python_collect))
+
+        if error_check:
+            error = PyErr_SetString('PyExc_TypeError', '"{var_name} must be {precision} bit {dtype}"'.format(
                                     var_name  = variable,
                                     precision = variable.precision * 8,
                                     dtype     = variable.dtype))
+            sections.append(IfSection(LiteralTrue(), [error, Return([Nil()])]))
 
-        python_collect_func  = self.get_collect_function_call(variable, collect_var)
-        numpy_collect_func   = FunctionCall(PyArray_ScalarAsCtype, [collect_var, var])
-
-        numpy_type_section   = IfSection(numpy_type_check, [numpy_collect_func])
-        python_type_section  = IfSection(python_type_check, [Assign(var, python_collect_func)])
-        error_section        = IfSection(LiteralTrue(), [error, Return([Nil()])])
-
-        body = If(numpy_type_section, python_type_section, error_section)
+        body = If(*sections)
 
         return body
 
@@ -442,18 +458,11 @@ class CWrapperCodePrinter(CCodePrinter):
         if variable.rank > 0:
             body = self._body_array(variable, collect_var, check_type)
 
-        elif variable.is_optional:
-            tmp_variable = Variable(dtype=variable.dtype, name = self.get_new_name(used_names, variable.name+"_tmp"))
-            body = self._body_optional_variable(tmp_variable, variable, collect_var, check_type)
+        if variable.is_optional:
+            tmp_variable = Variable(dtype=variable.dtype, precision = variable.precision,
+                                    name = self.get_new_name(used_names, variable.name+"_tmp"))
 
-        elif isinstance(variable, ValuedVariable):
-            body = self._body_valued_variable(variable, collect_var, check_type)
-
-        elif isinstance(collect_var.dtype, PyccelPyObject):
-            body = [self._create_collecting_value_body(variable, collect_var)]
-
-        elif cast_function is not None:
-            body = [Assign(variable, cast_function)]
+        body = [self._create_collecting_value_body(variable, collect_var, check_type, tmp_variable)]
 
         return body, tmp_variable
 
