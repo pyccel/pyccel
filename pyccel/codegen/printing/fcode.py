@@ -251,7 +251,15 @@ class FCodePrinter(CodePrinter):
         while container:
             if cls_name in container.classes:
                 cls = container.classes[cls_name]
-                return cls.methods_as_dict[method_name]
+                methods = cls.methods_as_dict
+                if method_name in methods:
+                    return methods[method_name]
+                else:
+                    interface_funcs = {f.name:f for i in cls.interfaces for f in i.functions}
+                    if method_name in interface_funcs:
+                        return interface_funcs[method_name]
+                    errors.report(UNDEFINED_METHOD, symbol=method_name,
+                        severity='fatal')
             container = container.parent_scope
         if isinstance(method_name, DottedName):
             return self.get_function(DottedName(method_name.name[1:]))

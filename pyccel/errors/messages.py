@@ -121,6 +121,7 @@ IMPORTING_EXISTING_IDENTIFIED = \
         'Trying to import an identifier that already exists in the namespace. Hint: use import as'
 
 UNDEFINED_FUNCTION = 'Undefined function'
+UNDEFINED_METHOD   = 'Undefined method'
 UNDEFINED_VARIABLE = 'Undefined variable'
 UNDEFINED_INDEXED_VARIABLE = 'Undefined indexed variable'
 UNDEFINED_IMPORT_OBJECT = 'Could not find {} in imported module {}'
