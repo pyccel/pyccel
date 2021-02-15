@@ -263,7 +263,7 @@ class CWrapperCodePrinter(CCodePrinter):
         if error_check:
             sections.append(IfSection(LiteralTrue(), [error, Return([Nil()])]))
 
-        body = If(*sections)
+        body = [If(*sections)]
 
         return body
 
@@ -324,85 +324,6 @@ class CWrapperCodePrinter(CCodePrinter):
     # -------------------------------------------------------------------
     # Functions managing  the creation of wrapper body
     # -------------------------------------------------------------------
-    def _body_optional_variable(self, tmp_variable, variable, collect_var, check_type = False):
-        """
-        Responsible for collecting value and managing error and create the body
-        of optional arguments in format
-                if (pyobject == Py_None){
-                    collect Null
-                }else if(Type Check == False){
-                    Print TypeError Wrong Type
-                    return Null
-                }else{
-                    assign pyobject value to tmp variable
-                    collect the adress of the tmp variable
-                }
-        Parameters:
-        ----------
-        tmp_variable : Variable
-            The temporary variable  to hold result
-        Variable : Variable
-            The optional variable
-        collect_var : variable
-            the pyobject type variable  holder of value
-        check_type : Boolean
-            True if the type is needed
-
-        Returns
-        -------
-        body : list
-            A list of statements
-        """
-        body = [IfSection(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
-                [Assign(VariableAddress(variable), Nil())])]
-        if check_type : # Type check
-            check = PyccelNot(PyccelOr(NumpyType_Check(variable, collect_var)
-                    , PythonType_Check(variable, collect_var)))
-            error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, variable.dtype))
-            body += [IfSection(check, [error, Return([Nil()])])]
-        body += [IfSection(LiteralTrue(), [self._create_collecting_value_body(variable, collect_var, tmp_variable),
-                    Assign(VariableAddress(variable), VariableAddress(tmp_variable))])]
-        body = [If(*body)]
-
-        return body
-
-    def _body_valued_variable(self, variable, collect_var, check_type = False) :
-        """
-        Responsible for collecting value and managing error and create the body
-        of valued arguments in format
-                if (pyobject == Py_None){
-                    collect default value
-                }else if(Type Check == False){
-                    Print TypeError Wrong Type
-                    return Null
-                }else{
-                    collect the value from PyObject
-                }
-        Parameters:
-        ----------
-        Variable : Variable
-            The optional variable
-        collect_var : variable
-            the pyobject type variable  holder of value
-        check_type : Boolean
-            True if the type is needed
-
-        Returns
-        -------
-        body : list
-            A list of statements
-        """
-        body = [IfSection(PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None)),
-                [Assign(variable, variable.value)])]
-        if check_type : # Type check
-            check = PyccelNot(PyccelOr(NumpyType_Check(variable, collect_var)
-                    , PythonType_Check(variable, collect_var)))
-            error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, variable.dtype))
-            body += [IfSection(check, [error, Return([Nil()])])]
-        body += [IfSection(LiteralTrue(), [self._create_collecting_value_body(variable, collect_var)])]
-        body = [If(*body)]
-
-        return body
 
     def _body_array(self, variable, collect_var, check_type = False) :
         """
@@ -482,7 +403,7 @@ class CWrapperCodePrinter(CCodePrinter):
             tmp_variable = Variable(dtype=variable.dtype, precision = variable.precision,
                                     name = self.get_new_name(used_names, variable.name+"_tmp"))
 
-        body = [self._create_collecting_value_body(variable, collect_var, check_type, tmp_variable)]
+        body = self._create_collecting_value_body(variable, collect_var, check_type, tmp_variable)
 
         return body, tmp_variable
 
@@ -527,12 +448,6 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-
-        elif variable.dtype is NativeBool():
-            collect_type = NativeInteger()
-            collect_var = Variable(dtype=collect_type, precision=4,
-                name = self.get_new_name(used_names, variable.name+"_tmp"))
-            cast_function =  self.get_cast_function_call('pyint_to_bool', collect_var)
 
         elif variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
