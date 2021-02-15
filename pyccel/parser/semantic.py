@@ -2363,24 +2363,12 @@ class SemanticParser(BasicParser):
                 a = Assign(v, r)
                 a.set_fst(expr.fst)
                 a = self._visit_Assign(a)
-                ind = a.rhs.get_attribute_nodes(IndexedElement)
-                if len(ind) == 0 and not isinstance(a.rhs, IndexedElement):
-                    a.lhs.is_temp = True
-                elif isinstance(a.rhs, IndexedElement) and a.rhs.base.is_argument:
-                    a.lhs.is_temp = True
-                elif len(ind) > 0:
-                    a.lhs.is_temp = True
-                    for b in ind:
-                        if not b.base.is_argument:
-                            a.lhs.is_temp = False
-                            break
-                if isinstance(a.rhs, FunctionCall):
-                    args = a.rhs.args
-                    a.lhs.is_temp = True
-                    for b in args:
-                        if isinstance(b, Variable) and not b.is_argument and b.allocatable:
-                            a.lhs.is_temp = False
-                            break
+                variables = a.rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
+                a.lhs.is_temp = True
+                for b in variables:
+                    if not b.is_argument and b.allocatable:
+                        a.lhs.is_temp = False
+                        break
                 assigns.append(a)
 
         results = [self._visit(i, **settings) for i in return_vars]

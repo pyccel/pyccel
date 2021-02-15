@@ -86,7 +86,7 @@ class Variable(PyccelAstNode):
     is_const: bool
         if object is a const argument of a function [Default value: False]
     is_temp: bool
-        if object assigned to an object that has no allocatable objects or an indexedElements [Default value: False]
+        Indicates if the variable is created by Pyccel and it is not necessary to print [Default value: False]
 
     Examples
     --------
@@ -293,8 +293,7 @@ class Variable(PyccelAstNode):
     @property
     def is_temp(self):
         """
-        Indicates if object assigned to an object that has non-allocated objects
-        or an indexedElements [Default value: False]
+        Indicates if the variable is created by Pyccel and it is not necessary to print [Default value: False]
         """
         return self._is_temp
 
