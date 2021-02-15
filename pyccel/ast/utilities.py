@@ -313,8 +313,9 @@ def collect_loops(block, indices, language_has_vectors = False):
     func_types = (FunctionCall, PyccelInternalFunction)
     for line in block:
         if (isinstance(line, Assign) and
-                not isinstance(line.rhs, array_creator_types) # not creating array
-                and not isinstance(line.rhs, func_types)): # not a basic function call
+                not isinstance(line.rhs, array_creator_types) and # not creating array
+                not line.rhs.get_attribute_nodes(array_creator_types) and # not creating array
+                not isinstance(line.rhs, func_types)): # not a basic function call
 
             if isinstance(line.lhs, Variable):
                 lhs_vars = [line.lhs]
