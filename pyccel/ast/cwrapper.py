@@ -197,7 +197,8 @@ class PyArg_ParseTupleNode(Basic):
         super().__init__()
 
     def get_pytype(self, c_arg, parse_arg):
-        "TODO"
+        """Return the needed flag to parse or build value
+        """
         if isinstance(c_arg, FunctionAddress):
             return 'O'
         else:
