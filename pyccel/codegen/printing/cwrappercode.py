@@ -63,6 +63,11 @@ class CWrapperCodePrinter(CCodePrinter):
         self._global_names = set()
         self._module_name = None
 
+
+    # --------------------------------------------------------------------
+    #                       Helper functions
+    # --------------------------------------------------------------------
+
     def stored_in_c_pointer(self, a):
         stored_in_c = CCodePrinter.stored_in_c_pointer(self, a)
         if self._target_language == 'fortran':
@@ -197,7 +202,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return wrapper_name
 
     # --------------------------------------------------------------------
-    # Functions that take care of creating cast or convert type function call :
+    # Functions that take care of creating cast or convert type function call
     # --------------------------------------------------------------------
     def get_collect_function_call(self, variable, collect_var):
         """
@@ -254,7 +259,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return FunctionCall(cast_function, [arg])
 
     # --------------------------------------------------------------------
-    # Functions that take care of collecting data (type, rank) checks and creating the error code:
+    # Functions that take care of collecting (data type, rank) checks and creating the error code
     # --------------------------------------------------------------------
 
     def _get_array_type_check(self, variable, collect_var):
