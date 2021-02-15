@@ -403,4 +403,4 @@ def test_dup_header(language):
     f1 = epyccel(mod2.dup_header , language = language)
     f2 = mod2.dup_header
 
-    assert f1(0) == f2(0)
+    assert f1(0.0) == f2(0.0)
