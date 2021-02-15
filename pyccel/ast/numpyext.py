@@ -9,27 +9,25 @@ import numpy
 
 from sympy           import Expr
 
-from .core           import (ClassDef, FunctionDef,
-                            process_shape, ValuedArgument)
-
-from .internals      import PyccelInternalFunction
-
-from .operators      import broadcast, PyccelMinus, PyccelDiv
-
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList)
+
+from .core           import (ClassDef, FunctionDef,
+                            process_shape, ValuedArgument)
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              default_precision, datatype, NativeInteger,
                              NativeReal, NativeComplex, NativeBool, str_dtype,
                              NativeNumeric)
 
+from .internals      import PyccelInternalFunction
+
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
-from .basic          import PyccelAstNode
-from .variable       import (Variable, IndexedElement, Constant)
 from .mathext        import MathCeil
+from .operators      import broadcast, PyccelMinus, PyccelDiv
+from .variable       import (Variable, IndexedElement, Constant)
 
 
 __all__ = (
