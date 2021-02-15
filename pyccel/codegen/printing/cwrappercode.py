@@ -451,7 +451,7 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-                
+
         return collect_var
 
     def get_PyBuildValue(self, used_names, variable):
@@ -532,12 +532,8 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_vars[check_var.name] = check_var
         types_dict = OrderedDict((a, set()) for a in funcs[0].arguments) #dict to collect each variable possible type and the corresponding flags
         # collect parse arg
-        parse_args = [Variable(dtype= PyccelPyArrayObject(), is_pointer = True, rank = a.rank,
-                            order= a.order,
-                            name=self.get_new_name(used_names, a.name+"_tmp")) if a.rank > 0 else
-            Variable(dtype = PyccelPyObject() ,
-                    name = self.get_new_name(used_names, a.name + "_tmp"),
-                    is_pointer= True) for a in funcs[0].arguments]
+        parse_args = [self.get_PyArgParseType(used_names,a) for a in funcs[0].arguments]
+
         # Managing the body of wrapper
         for func in funcs :
             mini_wrapper_func_body = []
