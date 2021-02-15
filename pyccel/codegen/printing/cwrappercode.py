@@ -187,6 +187,38 @@ class CWrapperCodePrinter(CCodePrinter):
     # --------------------------------------------------------------------
     # Functions that take care of creating cast or convert type function call :
     # --------------------------------------------------------------------
+    def _get_types_check(self, variable, collect_var, error_check = True):
+
+        
+        if not error_check :
+            scalar_check =  FunctionCall(PyArray_CheckScalar, [collect_var])
+            return scalar_check, LiteralTrue(), None
+
+        numpy_type_check  = NumpyType_Check(variable, collect_var)
+        python_type_check = PythonType_Check(variable, collect_var)
+
+        error = PyErr_SetString('PyExc_TypeError', '"{var_name} must be {precision} bit {dtype}"'.format(
+                        var_name  = variable,
+                        precision = variable.precision * 8,
+                        dtype     = variable.dtype))
+
+        return numpy_type_check, python_type_check, error
+
+
+    def _valued_variable_management(self, variable, collect_var, tmp_variable):
+        
+        valued_var_check = PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
+        optional_var_collect = []
+        if variable.is_optional:
+            optional_var_collect = [Assign(VariableAddress(variable), VariableAddress(tmp_variable))]
+            section = IfSection(valued_var_check, [Assign(VariableAddress(variable), Nil())])
+
+        else :
+            section = IfSection(valued_var_check, [Assign(variable, variable.value)])
+
+        return section, optional_var_collect
+
+
     def _create_collecting_value_body(self, variable, collect_var, error_check = True, tmp_variable = None):
         """
         Create If block to differentiate between python and numpy data types when collecting value
@@ -214,33 +246,21 @@ class CWrapperCodePrinter(CCodePrinter):
         var = tmp_variable if tmp_variable else variable
         sections = []
 
-        numpy_type_check  = NumpyType_Check(variable, collect_var) if error_check \
-                            else FunctionCall(PyArray_CheckScalar, [collect_var])
-        python_type_check = PythonType_Check(variable, collect_var) if error_check \
-                            else LiteralTrue()
+        numpy_check, python_check, error = self._get_types_check(variable, collect_var, error_check)
         
         python_collect  = [Assign(var, self.get_collect_function_call(variable, collect_var))]
         numpy_collect   = [FunctionCall(PyArray_ScalarAsCtype, [collect_var, var])]
 
         if isinstance(variable, ValuedVariable):
-            valued_var_check = PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
-            if variable.is_optional:
-                sections.append(IfSection(valued_var_check, [Assign(VariableAddress(variable), Nil())]))
-                assign_optional = Assign(VariableAddress(variable), VariableAddress(tmp_variable))
-                python_collect.append(assign_optional)
-                numpy_collect.append(assign_optional)
+            section, optional_collect = self._valued_variable_management(variable, collect_var, tmp_variable)
+            sections.append(section)
+            python_collect += optional_collect
+            numpy_collect  += optional_collect
 
-            else :
-                sections.append(IfSection(valued_var_check, [Assign(variable, variable.value)]))
-
-        sections.append(IfSection(numpy_type_check, numpy_collect))
-        sections.append(IfSection(python_type_check, python_collect))
+        sections.append(IfSection(numpy_check, numpy_collect))
+        sections.append(IfSection(python_check, python_collect))
 
         if error_check:
-            error = PyErr_SetString('PyExc_TypeError', '"{var_name} must be {precision} bit {dtype}"'.format(
-                                    var_name  = variable,
-                                    precision = variable.precision * 8,
-                                    dtype     = variable.dtype))
             sections.append(IfSection(LiteralTrue(), [error, Return([Nil()])]))
 
         body = If(*sections)
