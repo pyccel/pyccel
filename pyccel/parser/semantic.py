@@ -2374,6 +2374,13 @@ class SemanticParser(BasicParser):
                         if not b.base.is_argument:
                             a.lhs.is_temp = False
                             break
+                if isinstance(a.rhs, FunctionCall):
+                    args = a.rhs.args
+                    a.lhs.is_temp = True
+                    for b in args:
+                        if not b.is_argument and b.allocatable:
+                            a.lhs.is_temp = False
+                            break
                 assigns.append(a)
 
         results = [self._visit(i, **settings) for i in return_vars]
