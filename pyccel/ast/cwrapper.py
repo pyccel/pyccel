@@ -118,18 +118,8 @@ class PyArgKeywords(Basic):
 
 #using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
 pytype_parse_registry = {
-    (NativeInteger(), 4)       : 'i',
-    (NativeInteger(), 8)       : 'l',
-    (NativeInteger(), 2)       : 'h',
-    (NativeInteger(), 1)       : 'b',
-    (NativeReal(), 8)          : 'd',
-    (NativeReal(), 4)          : 'f',
-    (NativeComplex(), 4)       : 'O',
-    (NativeComplex(), 8)       : 'O',
-    (NativeBool(), 4)          : 'p',
-    (NativeString(), 0)        : 's',
-    (PyccelPyObject(), 0)      : 'O',
-    (PyccelPyArrayObject(), 0) : 'O!',
+    PyccelPyObject()      : 'O',
+    PyccelPyArrayObject() : 'O!',
     }
 
 class PyArg_ParseTupleNode(Basic):
@@ -156,8 +146,7 @@ class PyArg_ParseTupleNode(Basic):
     def __init__(self, python_func_args,
                         python_func_kwargs,
                         c_func_args, parse_args,
-                        arg_names,
-                        is_interface=False):
+                        arg_names):
         if not isinstance(python_func_args, Variable):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
@@ -170,10 +159,7 @@ class PyArg_ParseTupleNode(Basic):
             raise TypeError('Parse args should be a list of Variables')
         if len(parse_args) != len(c_func_args):
             raise TypeError('There should be the same number of c_func_args and parse_args')
-        if not isinstance(is_interface, bool):
-            raise TypeError('is_interface should be a boolean')
 
-        self._is_interface = is_interface
         self._flags      = ''
         i = 0
 
@@ -202,11 +188,12 @@ class PyArg_ParseTupleNode(Basic):
         super().__init__()
 
     def get_pytype(self, c_arg, parse_arg):
-        if isinstance(c_arg, FunctionAddress) or (self._is_interface and c_arg.rank == 0):
+        "TODO"
+        if isinstance(c_arg, FunctionAddress):
             return 'O'
         else:
             try:
-                return pytype_parse_registry[(parse_arg.dtype, parse_arg.precision)]
+                return pytype_parse_registry[(parse_arg.dtype)]
             except KeyError as e:
                 raise NotImplementedError("Type not implemented for argument collection : "+str(type(parse_arg))) from e
 
@@ -646,14 +633,14 @@ numpy_to_ndarray_shape = FunctionDef(name = 'numpy_to_ndarray_shape',
 
 collect_function_registry = {
     NativeInteger(): PyLong_AsLong,
-    NativeReal() : PyFloat_AsDouble,
+    NativeReal()   : PyFloat_AsDouble,
 }
 
 check_type_registry  = {
-    NativeInteger(): 'PyLong_Check',
+    NativeInteger() : 'PyLong_Check',
     NativeComplex() : 'PyComplex_Check',
-    NativeReal() : 'PyFloat_Check',
-    NativeBool() : 'PyBool_Check',
+    NativeReal()    : 'PyFloat_Check',
+    NativeBool()    : 'PyBool_Check',
 }
 
 
