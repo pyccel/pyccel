@@ -273,7 +273,7 @@ def insert_index(expr, pos, index_var):
         raise NotImplementedError("Expansion not implemented for type : {}".format(type(expr)))
 
 #==============================================================================
-def collect_loops(block, indices, language_has_vectors = False):
+def collect_loops(block, indices, new_index_name, language_has_vectors = False):
     """
     Run through a code block and split it into lists of tuples of lists where
     each inner list represents a code block and the tuples contain the lists
@@ -292,11 +292,14 @@ def collect_loops(block, indices, language_has_vectors = False):
 
     Parameters
     ==========
-    block                   : list of Ast Nodes
+    block                 : list of Ast Nodes
                             The expressions to be modified
-    indices                 : list
+    indices               : list
                             An empty list to be filled with the temporary variables created
-    language_has_vectors    : bool
+    new_index_name        : function
+                            A function which provides a new variable name from a base name,
+                            avoiding name collisions
+    language_has_vectors  : bool
                             Indicates if the language has support for vector
                             operations of the same shape
     Results
@@ -363,8 +366,9 @@ def collect_loops(block, indices, language_has_vectors = False):
             new_level = 0
             for kk, index in enumerate(range(-rank,0)):
                 new_level += 1
+                # If an index exists at the same depth, reuse it if not create one
                 if rank+index >= len(indices):
-                    indices.append(Variable('int','i_{}'.format(kk)))
+                    indices.append(Variable('int',new_index_name('i').format(kk)))
                 index_var = indices[rank+index]
                 new_vars = [insert_index(v, index, index_var) for v in new_vars]
                 if compatible_operation(*new_vars, language_has_vectors = language_has_vectors):
@@ -463,19 +467,20 @@ def expand_tuple_assignments(block):
         expand_tuple_assignments(block)
 
 #==============================================================================
-def expand_to_loops(block, language_has_vectors = False, index = 0):
+def expand_to_loops(block, new_index_name, language_has_vectors = False):
     """
     Re-write a list of expressions to include explicit loops where necessary
 
     Parameters
     ==========
-    block      : CodeBlock
-                The expressions to be modified
+    block          : CodeBlock
+                     The expressions to be modified
+    new_index_name : function
+                     A function which provides a new variable name from a base name,
+                     avoiding name collisions
     language_has_vectors : bool
-                Indicates if the language has support for vector
-                operations of the same shape
-    index       : int
-                The index from which the expression is modified
+                     Indicates if the language has support for vector
+                     operations of the same shape
 
     Returns
     =======
@@ -498,7 +503,7 @@ def expand_to_loops(block, language_has_vectors = False, index = 0):
     """
     expand_tuple_assignments(block)
     indices = []
-    res = collect_loops(block.body, indices, language_has_vectors)
+    res = collect_loops(block.body, indices, new_index_name, language_has_vectors)
 
     body = [insert_fors(b, indices) if isinstance(b, tuple) else [b] for b in res]
     body = [bi for b in body for bi in b]
