@@ -188,7 +188,10 @@ class CWrapperCodePrinter(CCodePrinter):
     # Functions that take care of creating cast or convert type function call :
     # --------------------------------------------------------------------
     def _get_array_type_check(self, variable, collect_var):
-       "TODO"
+        """
+        Responsible for collecting array type check and creating the
+        corresponding error code
+        """
 
         numpy_dtype = self.find_in_numpy_dtype_registry(variable)
         arg_dtype   = self.find_in_dtype_registry(self._print(variable.dtype), variable.precision)
@@ -199,7 +202,10 @@ class CWrapperCodePrinter(CCodePrinter):
         return check, error
     
     def _get_scalar_type_check(self, variable, collect_var, error_check = True):
-        "TODO"
+        """
+        Responsible for collecting numpy and python type check and creating the
+        corresponding error code
+        """
         
         if not error_check :
             scalar_check =  FunctionCall(PyArray_CheckScalar, [collect_var])
@@ -223,11 +229,12 @@ class CWrapperCodePrinter(CCodePrinter):
         if the valuedVariable is optional create body to collect the new value
 
         Parameters:
+        ----------
         tmp_variable : Variable
             The temporary variable  to hold result
         variable     : Variable
             The optional variable
-        collect_var  : variable
+        collect_var  : Variable
             the pyobject type variable  holder of value
     
         Returns
@@ -274,7 +281,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         Returns
         -------
-        body : [If block]
+        body : If block
         """
 
         var      = tmp_variable if tmp_variable else variable
@@ -297,9 +304,7 @@ class CWrapperCodePrinter(CCodePrinter):
         if error_check:
             sections.append(IfSection(LiteralTrue(), [error, Return([Nil()])]))
 
-        body = [If(*sections)]
-
-        return body
+        return If(*sections)
 
     def get_collect_function_call(self, variable, collect_var):
         """
@@ -434,7 +439,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 tmp_variable = Variable(dtype=variable.dtype, precision = variable.precision,
                                         name = self.get_new_name(used_names, variable.name+"_tmp"))
 
-            body = self._body_scalar(variable, collect_var, check_type, tmp_variable)
+            body = [self._body_scalar(variable, collect_var, check_type, tmp_variable)]
 
         return body, tmp_variable
 
