@@ -265,7 +265,7 @@ class FCodePrinter(CodePrinter):
                 return container.functions[name]
             container = container.parent_scope
         if isinstance(name, DottedName):
-            return self.get_function(DottedName(name.name[-1]))
+            return self.get_function(name.name[-1])
         errors.report(UNDEFINED_FUNCTION, symbol=name,
             severity='fatal')
 
