@@ -994,6 +994,7 @@ def test_log10_phrase(language):
 
 def test_pow_call(language):
     @types('real', 'real')
+    @types('real', 'int')
     def pow_call(x, y):
         from math import pow as my_pow
         return my_pow(x, y)
