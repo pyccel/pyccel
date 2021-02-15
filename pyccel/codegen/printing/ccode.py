@@ -1217,6 +1217,8 @@ class CCodePrinter(CodePrinter):
         return 'NULL'
 
     def _print_PyccelAdd(self, expr):
+        if isinstance(expr.args[0].dtype, NativeInteger):
+            self._additional_imports.add('stdint')
         return ' + '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelMinus(self, expr):
