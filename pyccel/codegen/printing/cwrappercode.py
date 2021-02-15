@@ -437,20 +437,18 @@ class CWrapperCodePrinter(CCodePrinter):
         -------
         collect_var : Variable
             The variable which will be used to collect the argument
-
-        cast_fun : FunctionCall
-            call to cast function responsible of the conversion of one data type into another
         """
 
         if variable.rank > 0:
             collect_type = PyccelPyArrayObject()
             collect_var = Variable(dtype= collect_type, is_pointer = True, rank = variable.rank,
-                                    order= variable.order, name=self.get_new_name(used_names, variable.name+"_tmp"))
+                                   order= variable.order, 
+                                   name=self.get_new_name(used_names, variable.name+"_tmp"))
 
         else:
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
-                name = self.get_new_name(used_names, variable.name+"_tmp"))
+                                   name = self.get_new_name(used_names, variable.name+"_tmp"))
 
         return collect_var
 
