@@ -3813,7 +3813,7 @@ def test_numpy_arange_negative_step_2(language):
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
 #
-#def teardown_module(language):
+#def teardown_module():
 #    import os, glob
 #    dirname  = os.path.dirname( arrays.__file__ )
 #    pattern  = os.path.join( dirname, '__epyccel__*' )
