@@ -253,9 +253,9 @@ class FCodePrinter(CodePrinter):
                 cls = container.classes[cls_name]
                 return cls.methods_as_dict[method_name]
             container = container.parent_scope
-        if isinstance(name, DottedName):
-            return self.get_function(DottedName(name.name[1:]))
-        errors.report(UNDEFINED_FUNCTION, symbol=name,
+        if isinstance(method_name, DottedName):
+            return self.get_function(DottedName(method_name.name[1:]))
+        errors.report(UNDEFINED_FUNCTION, symbol=method_name,
             severity='fatal')
 
     def get_function(self, name):
@@ -269,7 +269,7 @@ class FCodePrinter(CodePrinter):
         errors.report(UNDEFINED_FUNCTION, symbol=name,
             severity='fatal')
 
-    def add_vars_to_namespace(*new_vars):
+    def add_vars_to_namespace(self, *new_vars):
         if self._current_function:
             if self._current_class:
                 func = self.get_method(self._current_class, self._current_function)
