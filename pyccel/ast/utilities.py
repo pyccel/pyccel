@@ -26,7 +26,7 @@ from .literals      import LiteralString, LiteralInteger, Literal
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants)
 from .operators     import PyccelAdd, PyccelMul
-from .variable      import (Constant, Variable, ValuedVariable, IndexedElement)
+from .variable      import (Constant, Variable, ValuedVariable, IndexedElement, TupleVariable)
 
 __all__ = (
     'build_types_decorator',
@@ -366,7 +366,6 @@ def collect_loops(block, indices, language_has_vectors = False):
             # Recurse through result tree to save line with lines which need
             # the same set of for loops
             save_spot = result
-            print(result)
             j = 0
             for _ in range(min(new_level,current_level)):
                 # Select the existing loop if the shape matches the
@@ -421,13 +420,48 @@ def insert_fors(blocks, indices, level = 0):
         return [For(indices[level], PythonRange(0,blocks[1]), body)]
 
 #==============================================================================
+def expand_tuple_assignments(block):
+    """
+    Simplify expressions in a CodeBlock by unravelling tuple assignments into multiple lines
+
+    Parameters
+    ==========
+    block      : CodeBlock
+                The expression to be modified
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.operators import PyccelAdd
+    >>> from pyccel.ast.utilities import expand_to_loops
+    >>> a = Variable('int', 'a', shape=(4,), rank=1)
+    >>> b = Variable('int', 'b', shape=(4,), rank=1)
+    >>> c = Variable('int', 'c', shape=(4,), rank=1)
+    >>> i = Variable('int', 'i', shape=())
+    >>> d = PyccelAdd(a,b)
+    >>> expr = [Assign(c,d)]
+    >>> expand_to_loops(expr, language_has_vectors = False)
+    [For(i_0, PythonRange(0, LiteralInteger(4), LiteralInteger(1)), CodeBlock([IndexedElement(c, i_0) := PyccelAdd(IndexedElement(a, i_0), IndexedElement(b, i_0))]), [])]
+    """
+    ass = block.get_attribute_nodes(Assign)
+    assigns = [a for a in block.get_attribute_nodes(Assign) \
+                if isinstance(a.lhs, TupleVariable) and not a.lhs.is_homogeneous \
+                and isinstance(a.rhs, (PythonTuple,TupleVariable))]
+    if len(assigns) == 0:
+        return
+    else:
+        new_assigns = [[Assign(l,r) for l,r in zip(a.lhs, a.rhs)] for a in assigns]
+        block.substitute(assigns, new_assigns)
+        expand_tuple_assignments(block)
+
+#==============================================================================
 def expand_to_loops(block, language_has_vectors = False, index = 0):
     """
     Re-write a list of expressions to include explicit loops where necessary
 
     Parameters
     ==========
-    block      : list of Ast Nodes
+    block      : CodeBlock
                 The expressions to be modified
     language_has_vectors : bool
                 Indicates if the language has support for vector
@@ -454,9 +488,11 @@ def expand_to_loops(block, language_has_vectors = False, index = 0):
     >>> expand_to_loops(expr, language_has_vectors = False)
     [For(i_0, PythonRange(0, LiteralInteger(4), LiteralInteger(1)), CodeBlock([IndexedElement(c, i_0) := PyccelAdd(IndexedElement(a, i_0), IndexedElement(b, i_0))]), [])]
     """
+    expand_tuple_assignments(block)
     indices = []
-    res = collect_loops(block, indices, language_has_vectors)
+    res = collect_loops(block.body, indices, language_has_vectors)
 
     body = [insert_fors(b, indices) if isinstance(b, tuple) else [b] for b in res]
     body = [bi for b in body for bi in b]
+
     return body, indices
