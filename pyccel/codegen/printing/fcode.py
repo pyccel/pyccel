@@ -2291,7 +2291,7 @@ class FCodePrinter(CodePrinter):
 
             if i == 0:
                 lines.append("if (%s) then\n" % self._print(c))
-            elif i == len(expr.blocks) - 1 and c is LiteralTrue():
+            elif i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
                 lines.append("else\n")
             else:
                 lines.append("else if (%s) then\n" % self._print(c))
