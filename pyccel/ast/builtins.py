@@ -151,7 +151,7 @@ class PythonComplex(PyccelAstNode):
     def __new__(cls, arg0, arg1=LiteralFloat(0)):
 
         if isinstance(arg0.dtype, NativeBool) or isinstance(arg1.dtype, NativeBool):
-			from .numpyext import NumpyInt64
+            from .numpyext import NumpyInt64
             arg0 = NumpyInt64(arg0) if isinstance(arg0.dtype, NativeBool) else arg0
             arg1 = NumpyInt64(arg1) if isinstance(arg1.dtype, NativeBool) else arg1
             return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit()))
