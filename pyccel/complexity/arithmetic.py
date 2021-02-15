@@ -4,6 +4,10 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
+# TODO: - Pow
+#       - If
+#       - FunctionalFor
+
 """
 This module provides us with functions and objects that allow us to compute
 the arithmetic complexity a of a program.
@@ -43,8 +47,9 @@ from pyccel.ast.builtins  import PythonAbs
 from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.complexity.basic import Complexity
 
-__all__ = ["count_ops", "OpComplexity"]
+__all__ = ["OpComplexity"]
 
+# ...
 ADD = Symbol('ADD')
 SUB = Symbol('SUB')
 MUL = Symbol('MUL')
@@ -61,41 +66,47 @@ op_registry = {
     }
 
 SHAPE = Function('shape')
-
 # ...
-numpy_functions_registery = {
-    #
-    NumpySin:      'sin',
-    NumpyCos:      'cos',
-    NumpyTan:      'tan',
-    NumpyArcsin:   'arcsin',
-    NumpyArccos:   'arccos',
-    NumpyArctan:   'arctan',
-    NumpyArctan2:  'arctan2',
-    NumpySinh:     'sinh',
-    NumpyCosh:     'cosh',
-    NumpyTanh:     'tanh',
-    NumpyArcsinh:  'arcsinh',
-    NumpyArccosh:  'arccosh',
-    NumpyArctanh:  'arctanh',
-    #
-    NumpyMax:      'max',
-    NumpyMin:      'min',
-    #
-    NumpyFloor:    'floor',
-    NumpyAbs:      'abs',
-    NumpyFabs:     'fabs',
-    NumpyExp:      'exp',
-    NumpyLog:      'log',
-    NumpySqrt:     'sqrt',
-}
 
-# ...
+# ==============================================================================
+def _compute_size_lhs(expr):
+    ntimes = 1
+
+    if isinstance(expr.lhs, IndexedElement):
+        indices = [(e,i) for e,i in enumerate(expr.lhs.indices) if isinstance(i, Slice)]
+        for e,i in indices:
+            # ...
+            start = 0
+            if not i.start == None:
+                start = i.start.python_value
+            # ...
+
+            # ...
+            stop = SHAPE(expr.lhs.base, e)
+            if not i.stop == None:
+                stop = i.stop.python_value
+            # ...
+
+            # ...
+            step = 1
+            if not i.step == None:
+                step = i.step.python_value
+            # ...
+
+            if not(step == 1):
+                raise NotImplementedError('only step == 1 is treated')
+
+            # TODO uncomment this
+            #      this was commented because we get floor(...)
+            ntimes *= (stop - start) #// step
+
+    return ntimes
+
 # ==============================================================================
 class OpComplexity(Complexity):
     """class for Operation complexity computation."""
 
-    def cost(self, mode=None):
+    def cost(self, visual=True, mode=None):
         """
         Computes the complexity of the given code.
 
@@ -105,176 +116,283 @@ class OpComplexity(Complexity):
         mode: string
             possible values are (None, simple)
         """
+
+        self._symbol_map = {}
+        self._used_names = set()
+        self._mode = mode
+
         costs = OrderedDict()
 
         # ... first we treat declared functions
         if self.functions:
             for fname, d in self.functions.items():
-                expr = count_ops(d, visual=True, costs=costs)
-
-                if not(expr == 0) and (mode == 'simple'):
-                    for i in ['ADD', 'SUB', 'DIV', 'MUL']:
-                        expr = expr.subs(Symbol(i), 1)
+                expr =  self._cost(d)
 
                 costs[fname] = expr
         # ...
-#        print('*** ', costs)
+
+        self._costs = costs
+        self._visual = visual
 
         # ... then we compute the complexity for the main program
-        expr = count_ops(self.ast, visual=True, costs=costs)
-
-        if not(expr == 0) and (mode == 'simple'):
-            for i in ['ADD', 'SUB', 'DIV', 'MUL']:
-                expr = expr.subs(Symbol(i), 1)
+        expr = self._cost(self.ast)
         # ...
-
-        # TODO use setter here
-        self._costs = costs
 
         return expr
 
-# ==============================================================================
-# TODO move inside OpComplexity following the visiter algorithm
-def count_ops(expr, visual=None, costs=None):
+    @property
+    def mode(self):
+        return self._mode
 
-#    print('>>> ', expr)
+    @property
+    def costs(self):
+        return self._costs
 
-    symbol_map = {}
-    used_names = set()
+    @property
+    def visual(self):
+        return self._visual
 
-    if isinstance(expr, Assign):
-        if isinstance(expr.rhs, (NumpyZeros, NumpyOnes, Comment, EmptyNode)):
+    def _cost(self, expr, **settings):
+        if expr is None:
             return 0
 
-        # ...
-        op = 0
-        if isinstance(expr, AugAssign):
-            op = op_registry[expr.op]
-        # ...
+        classes = type(expr).__mro__
+        for cls in classes:
+            method = '_cost_' + cls.__name__
+            if hasattr(self, method):
+                obj = getattr(self, method)(expr, **settings)
+                return obj
+            else:
+                raise NotImplementedError('{} not available for {}'.format(method, type(expr)))
 
-        # ...
-        ntimes = 1
-        if isinstance(expr.lhs, IndexedElement):
-            indices = [(e,i) for e,i in enumerate(expr.lhs.indices) if isinstance(i, Slice)]
-            for e,i in indices:
-                # ...
-                start = 0
-                if not i.start == None:
-                    start = i.start.python_value
-                # ...
+    def _cost_CodeBlock(self, expr, **settings):
+        return sum(self._cost(i, **settings) for i in expr.body)
 
-                # ...
-                stop = SHAPE(expr.lhs.base, e)
-                if not i.stop == None:
-                    stop = i.stop.python_value
-                # ...
+    def _cost_Comment(self, expr, **settings):
+        return 0
 
-                # ...
-                step = 1
-                if not i.step == None:
-                    step = i.step.python_value
-                # ...
+    def _cost_EmptyNode(self, expr, **settings):
+        return 0
 
-                if not(step == 1):
-                    raise NotImplementedError('only step == 1 is treated')
+    def _cost_Variable(self, expr, **settings):
+        return 0
 
-                # TODO uncomment this
-                #      this was commented because we get floor(...)
-                ntimes *= (stop - start) #// step
-        # ...
+    def _cost_LiteralInteger(self, expr, **settings):
+        return 0
 
-        return ntimes * ( op + count_ops(expr.rhs, visual, costs=costs) )
+    def _cost_LiteralFloat(self, expr, **settings):
+        return 0
 
-    elif isinstance(expr, For):
-        ops = sum(count_ops(i, visual, costs=costs) for i in expr.body.body)
+    def _cost_IndexedElement(self, expr, **settings):
+        return 0
 
-        i = expr.target
-        b = expr.iterable.start
-        e = expr.iterable.stop
-        i = pyccel_to_sympy(i, symbol_map, used_names)
-        b = pyccel_to_sympy(b, symbol_map, used_names)
-        e = pyccel_to_sympy(e, symbol_map, used_names)
-        # TODO treat the case step /= 1
-        return summation(ops, (i, b, e-1))
+    def _cost_Tuple(self, expr, **settings):
+        return sum(self._cost(i, **settings) for i in expr)
 
-    elif isinstance(expr, (Tuple, tuple, list)):
-        return sum(count_ops(i, visual, costs=costs) for i in expr)
+    def _cost_list(self, expr, **settings):
+        return sum(self._cost(i, **settings) for i in expr)
 
-    elif isinstance(expr, FunctionDef):
-        return count_ops(expr.body, visual, costs=costs)
+    def _cost_tuple(self, expr, **settings):
+        return sum(self._cost(i, **settings) for i in expr)
 
-    elif isinstance(expr, FunctionCall):
-        if costs is None:
+    def _cost_PyccelArraySize(self, expr, **settings):
+        return 0
+
+    def _cost_NumpyZeros(self, expr, **settings):
+        return 0
+
+    def _cost_NumpyOnes(self, expr, **settings):
+        return 0
+
+    def _cost_Allocate(self, expr, **settings):
+        return 0
+
+    def _cost_Deallocate(self, expr, **settings):
+        return 0
+
+    def _cost_NumpyFloor(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('FLOOR')
+
+    def _cost_NumpyExp(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('EXP')
+
+    def _cost_NumpyLog(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('LOG')
+
+    def _cost_NumpySqrt(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('SQRT')
+
+    def _cost_NumpySin(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('SIN')
+
+    def _cost_NumpyCos(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('COS')
+
+    def _cost_NumpyTan(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('TAN')
+
+    def _cost_NumpyArcsin(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('ARCSIN')
+
+    def _cost_NumpyArccos(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('ARCCOS')
+
+    def _cost_NumpyArctan(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('ARCTAN')
+
+    def _cost_NumpyArctan2(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('ARCTAN2')
+
+    def _cost_NumpySinh(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('SINH')
+
+    def _cost_NumpyCosh(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('COSH')
+
+    def _cost_NumpyTanh(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('TANH')
+
+    def _cost_NumpyArcsinh(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('ARCSINH')
+
+    def _cost_NumpyArccosh(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('ARCCOSH')
+
+    def _cost_NumpyArctanh(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        return ops + Symbol('ARCTANH')
+
+    def _cost_PyccelAssociativeParenthesis(self, expr, **settings):
+        return sum(self._cost(i, **settings) for i in expr._args)
+
+    def _cost_Return(self, expr, **settings):
+        return sum(self._cost(i, **settings) for i in [expr.stmt, expr.expr])
+
+    def _cost_PyccelAdd(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + ADD
+
+    def _cost_PyccelMinus(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + SUB
+
+    def _cost_PyccelDiv(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + DIV
+
+    def _cost_PyccelFloorDiv(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + IDIV
+
+    def _cost_PyccelMul(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + MUL
+
+    def _cost_PythonAbs(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.args)
+        if self.mode:
+            return ops + 0
+        else:
+            return ops + ABS
+
+    def _cost_PyccelPow(self, expr, **settings):
+        # TODO
+        return 0
+
+    def _cost_PyccelOperator(self, expr, **settings):
+        return sum(self._cost(i, **settings) for i in expr.args)
+
+    def _cost_FunctionDef(self, expr, **settings):
+        return self._cost(expr.body, **settings)
+
+    def _cost_FunctionCall(self, expr, **settings):
+        if self.costs is None:
             raise ValueError('costs dict is None')
 
         fname = expr.func_name
 
-        if not fname in costs.keys():
+        if not fname in self.costs.keys():
             raise ValueError('Cannot find the cost of the function {}'.format(fname))
 
-        return costs[fname]
+        return self.costs[fname]
 
-    elif isinstance(expr, CodeBlock):
-        return sum(count_ops(i, visual, costs=costs) for i in expr.body)
-
-    elif isinstance(expr, (NumpyZeros, NumpyOnes, Comment, EmptyNode, Allocate, Deallocate)):
-        return 0
-
-    elif isinstance(expr, PyccelArraySize):
-        return 0
-
-    elif isinstance(expr, (Tuple, list)):
-        return sum(count_ops(i, visual) for i in expr)
-
-    elif isinstance(expr, Literal):
-        return 0
-
-    elif isinstance(expr, Variable):
-        return 0
-
-    elif isinstance(expr, IndexedElement):
-        return 0
-
-    elif expr is None:
-        return 0
-
-    elif isinstance(expr, Return):
-        return sum(count_ops(i, visual, costs=costs) for i in [expr.stmt, expr.expr])
-
-    elif isinstance(expr, PyccelAdd):
-        ops = sum(count_ops(i, visual, costs=costs) for i in expr.args)
-        return ops+ADD
-
-    elif isinstance(expr, PyccelMinus):
-        ops = sum(count_ops(i, visual, costs=costs) for i in expr.args)
-        return ops+SUB
-
-    elif isinstance(expr, PyccelDiv):
-        ops = sum(count_ops(i, visual, costs=costs) for i in expr.args)
-        return ops+DIV
-
-    elif isinstance(expr, PyccelFloorDiv):
-        ops = sum(count_ops(i, visual, costs=costs) for i in expr.args)
-        return ops+IDIV
-
-    elif isinstance(expr, PyccelMul):
-        ops = sum(count_ops(i, visual, costs=costs) for i in expr.args)
-        return ops+MUL
-
-    elif isinstance(expr, PythonAbs):
-        ops = sum(count_ops(i, visual, costs=costs) for i in expr.args)
-        return ops+ABS
-
-    elif isinstance(expr, PyccelOperator):
-        return sum(count_ops(i, visual, costs=costs) for i in expr.args)
-
-    elif isinstance(expr, NumpyUfuncBase):
+    def _cost_NumpyUfuncBase(self, expr, **settings):
         try:
             f = numpy_functions_registery[type(expr)]
         except:
-            raise NotImplementedError('TODO count_ops for {}'.format(type(expr)))
+            raise NotImplementedError('{}'.format(type(expr)))
 
-        return Symbol(f.upper()) + sum(count_ops(i, visual, costs=costs) for i in expr.args)
+        ops = sum(self._cost(i, **settings) for i in expr.args)
 
-    else:
-        raise NotImplementedError('TODO count_ops for {}'.format(type(expr)))
+        return Symbol(f.upper()) + ops
+
+    def _cost_For(self, expr, **settings):
+        ops = sum(self._cost(i, **settings) for i in expr.body.body)
+
+        # ...
+        i = expr.target
+        i = pyccel_to_sympy(i, self._symbol_map, self._used_names)
+
+        b = expr.iterable.start
+        b = pyccel_to_sympy(b, self._symbol_map, self._used_names)
+
+        e = expr.iterable.stop
+        e = pyccel_to_sympy(e, self._symbol_map, self._used_names)
+        # ...
+
+        # TODO treat the case step /= 1
+        return summation(ops, (i, b, e-1))
+
+    def _cost_Assign(self, expr, **settings):
+        if isinstance(expr.rhs, (NumpyZeros, NumpyOnes, Comment, EmptyNode)):
+            return 0
+
+        ntimes = _compute_size_lhs(expr)
+
+        return ntimes * ( self._cost(expr.rhs, **settings) )
+
+    def _cost_AugAssign(self, expr, **settings):
+        if isinstance(expr.rhs, (NumpyZeros, NumpyOnes, Comment, EmptyNode)):
+            return 0
+
+        # ...
+        if self.mode:
+            op = 1
+        else:
+            op = op_registry[expr.op]
+        # ...
+
+        ntimes = _compute_size_lhs(expr)
+
+        return ntimes * ( op + self._cost(expr.rhs, **settings) )

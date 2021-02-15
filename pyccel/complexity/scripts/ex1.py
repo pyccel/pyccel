@@ -334,3 +334,8 @@ def arctan2_real_array_1d( x: 'real[:]', y: 'real[:]', out: 'real[:]' ):
 def numpy_math_expr_real_scalar( x: 'real', y: 'real', z: 'real' ):
     from numpy import sin
     return sin(x*2+y/z)
+
+# ...
+def numpy_math_expr_real_array_1d( x: 'real[:]', y: 'real[:]', z: 'real[:]', out: 'real[:]' ):
+    from numpy import sin
+    out[:] = sin(x*2+y/z)
