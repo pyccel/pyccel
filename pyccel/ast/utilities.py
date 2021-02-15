@@ -201,13 +201,11 @@ def compatible_operation(*args, language_has_vectors = True):
                  A boolean indicating if the operation is compatible
     """
     if language_has_vectors:
-        if len(args)==1:
-            return True
         # If the shapes don't match then an index must be required
         shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.shape != ()]
         shapes = set(tuple(d if isinstance(d, Literal) else -1 for d in s) for s in shapes)
         order  = set(a.order for a in args if a.order is not None)
-        return len(shapes) == 1 and len(order) == 1
+        return len(shapes) <= 1 and len(order) <= 1
     else:
         return all(a.shape==() for a in args)
 
