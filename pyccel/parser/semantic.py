@@ -836,6 +836,7 @@ class SemanticParser(BasicParser):
 
     def _visit_CodeBlock(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr.body]
+        ls = [line for l in ls for line in (l.body if isinstance(l, CodeBlock) else [l])]
         return CodeBlock(ls)
 
     def _visit_Nil(self, expr, **settings):
