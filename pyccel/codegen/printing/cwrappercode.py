@@ -234,26 +234,28 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _body_scalar(self, variable, collect_var, error_check = True, tmp_variable = None):
         """
-        Create If block to differentiate between python and numpy data types when collecting value
-        format :
-            if (collect_var is numpy_type)
+        Responsible for collecting value and managing error and create the body
+        of arguments in format:
+            if collect_var is numpy_type:
                 collect_value from numpy type
-            else if (collect_var is python_type)
+            elif collect_var is python_type:
                 collect value from python type
             else
-                raise error
+                raise an error
         Parameters:
         ----------
-        variable: variable
+        variable    : variable
             the variable needed to collect
         collect_var : variable
             the pyobject variable
+        error_check : boolean
+            True if checking the data type and raising error is needed
         tmp_variable : variable
             temporary variable to hold value default None
 
         Returns
         -------
-        body : If block
+        body : [If block]
         """
 
         var      = tmp_variable if tmp_variable else variable
