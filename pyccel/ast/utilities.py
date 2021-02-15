@@ -14,19 +14,21 @@ import pyccel.decorators as pyccel_decorators
 from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors
 
-from .core     import (AsName, Import, FunctionDef, FunctionCall, Allocate, Dlist, Assign, For)
+from .core          import (AsName, Import, FunctionDef, FunctionCall,
+                            Allocate, Dlist, Assign, For)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
                             PythonRange, PythonList, PythonTuple)
 from .internals     import PyccelInternalFunction, Slice
 from .itertoolsext  import Product
 from .mathext       import math_functions, math_constants
-from .literals      import LiteralString, LiteralInteger, Literal
+from .literals      import LiteralString, LiteralInteger, Literal, Nil
 
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants)
 from .operators     import PyccelAdd, PyccelMul
-from .variable      import (Constant, Variable, ValuedVariable, IndexedElement, TupleVariable)
+from .variable      import (Constant, Variable, ValuedVariable,
+                            IndexedElement, TupleVariable, VariableAddress)
 
 __all__ = (
     'build_types_decorator',
@@ -245,13 +247,13 @@ def insert_index(expr, pos, index_var):
     >>> insert_index(expr, 0, i, language_has_vectors = True)
     c := a + b
     """
-    if isinstance(expr, Variable):
+    if isinstance(expr, (Variable, VariableAddress)):
         if expr.rank==0 or -pos>expr.rank:
             return expr
         if expr.shape[pos]==1:
             index_var = LiteralInteger(0)
         indexes = [Slice(None,None)]*(expr.rank+pos) + [index_var]+[Slice(None,None)]*(-1-pos)
-        return expr[indexes]
+        return IndexedElement(expr, *indexes)
 
     elif isinstance(expr, IndexedElement):
         base = expr.base
@@ -267,7 +269,7 @@ def insert_index(expr, pos, index_var):
             if indices[pos].start is not None:
                 index_var = PyccelAdd(index_var, indices[pos].start)
         indices[pos] = index_var
-        return base[indices]
+        return IndexedElement(base, *indices)
 
     else:
         raise NotImplementedError("Expansion not implemented for type : {}".format(type(expr)))
@@ -310,13 +312,13 @@ def collect_loops(block, indices, new_index_name, language_has_vectors = False):
     result = []
     current_level = 0
     used_vars = set()
-    array_creator_types = (Allocate, PythonList, PythonTuple, Dlist)
+    array_creator_types = (Allocate, PythonList, PythonTuple, Dlist, Nil)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
                                 or (isinstance(f, PyccelInternalFunction) and not f.is_elemental))
     for line in block:
         if (isinstance(line, Assign) and
                 not isinstance(line.rhs, array_creator_types) and # not creating array
-                not line.rhs.get_attribute_nodes(array_creator_types) and # not creating array
+                not line.rhs.get_attribute_nodes(array_creator_types, excluded_nodes = (ValuedVariable)) and # not creating array
                 not is_function_call(line.rhs)): # not a basic function call
 
             if isinstance(line.lhs, Variable):
@@ -325,13 +327,16 @@ def collect_loops(block, indices, new_index_name, language_has_vectors = False):
                 lhs_vars = [line.lhs.base]
             else:
                 lhs_vars = set(line.lhs.get_attribute_nodes((Variable, IndexedElement)))
-                lhs_vars = [v.internal_var if isinstance(v, IndexedElement) else v for v in lhs_vars]
+                lhs_vars = [v.base if isinstance(v, IndexedElement) else v for v in lhs_vars]
 
             notable_nodes = line.get_attribute_nodes((Variable,
                                                        IndexedElement,
+                                                       VariableAddress,
                                                        FunctionCall,
                                                        PyccelInternalFunction))
-            variables       = [v for v in notable_nodes if isinstance(v, (Variable, IndexedElement))]
+            variables       = [v for v in notable_nodes if isinstance(v, (Variable,
+                                                                          IndexedElement,
+                                                                          VariableAddress))]
 
             elemental_func_calls  = [f for f in notable_nodes if (isinstance(f, FunctionCall) \
                                                                 and f.funcdef.is_elemental)]
@@ -339,7 +344,7 @@ def collect_loops(block, indices, new_index_name, language_has_vectors = False):
                                                                 and f.is_elemental)]
 
             variables      += [v for f in elemental_func_calls \
-                                 for v in f.get_attribute_nodes((Variable, IndexedElement),
+                                 for v in f.get_attribute_nodes((Variable, IndexedElement, VariableAddress),
                                                             excluded_nodes = (FunctionDef))]
 
             funcs           = [f for f in notable_nodes if (isinstance(f, FunctionCall) \
@@ -348,7 +353,7 @@ def collect_loops(block, indices, new_index_name, language_has_vectors = False):
                                                             and not f.is_elemental)]
 
             used_vars       = set(v for f in chain(funcs, internal_funcs) \
-                                    for v in f.get_attribute_nodes((Variable, IndexedElement),
+                                    for v in f.get_attribute_nodes((Variable, IndexedElement, VariableAddress),
                                         excluded_nodes = (FunctionDef)))
 
             variables = list(set(variables))
