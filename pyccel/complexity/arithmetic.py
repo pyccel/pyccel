@@ -21,7 +21,6 @@ from collections import OrderedDict
 
 from sympy import count_ops as sympy_count_ops
 from sympy import Tuple
-from sympy import summation
 from sympy import Symbol
 from sympy import Function
 
@@ -44,7 +43,6 @@ from pyccel.ast.variable  import IndexedElement, Variable
 from pyccel.ast.numpyext  import NumpyZeros, NumpyOnes
 from pyccel.ast.operators import PyccelOperator, PyccelAssociativeParenthesis
 from pyccel.ast.builtins  import PythonAbs
-from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.complexity.basic import Complexity
 
 __all__ = ["OpComplexity"]
@@ -106,82 +104,11 @@ def _compute_size_lhs(expr):
 class OpComplexity(Complexity):
     """class for Operation complexity computation."""
 
-    def cost(self, visual=True, mode=None):
-        """
-        Computes the complexity of the given code.
-
-        verbose: bool
-            talk more
-
-        mode: string
-            possible values are (None, simple)
-        """
-        # ...
-        self._visual = visual
-        self._mode = mode
-        # ...
-
-        # ...
-        costs = OrderedDict()
-
-        # ... first we treat declared functions
-        if self.functions:
-            for fname, d in self.functions.items():
-                expr =  self._cost(d)
-
-                costs[fname] = expr
-
-        self._costs.update(costs)
-        # ...
-
-        # ... then we compute the complexity for the main program
-        expr = self._cost(self.ast)
-        # ...
-
-        return expr
-
-    def _cost(self, expr, **settings):
-        if expr is None:
-            return 0
-
-        classes = type(expr).__mro__
-        for cls in classes:
-            method = '_cost_' + cls.__name__
-            if hasattr(self, method):
-                obj = getattr(self, method)(expr, **settings)
-                return obj
-            else:
-                raise NotImplementedError('{} not available for {}'.format(method, type(expr)))
-
-    def _cost_CodeBlock(self, expr, **settings):
-        return sum(self._cost(i, **settings) for i in expr.body)
-
-    def _cost_Comment(self, expr, **settings):
-        return 0
-
-    def _cost_EmptyNode(self, expr, **settings):
-        return 0
-
     def _cost_Variable(self, expr, **settings):
-        return 0
-
-    def _cost_LiteralInteger(self, expr, **settings):
-        return 0
-
-    def _cost_LiteralFloat(self, expr, **settings):
         return 0
 
     def _cost_IndexedElement(self, expr, **settings):
         return 0
-
-    def _cost_Tuple(self, expr, **settings):
-        return sum(self._cost(i, **settings) for i in expr)
-
-    def _cost_list(self, expr, **settings):
-        return sum(self._cost(i, **settings) for i in expr)
-
-    def _cost_tuple(self, expr, **settings):
-        return sum(self._cost(i, **settings) for i in expr)
 
     def _cost_PyccelArraySize(self, expr, **settings):
         return 0
@@ -266,12 +193,6 @@ class OpComplexity(Complexity):
         ops = sum(self._cost(i, **settings) for i in expr.args)
         return ops + Symbol('ARCTANH')
 
-    def _cost_PyccelAssociativeParenthesis(self, expr, **settings):
-        return sum(self._cost(i, **settings) for i in expr._args)
-
-    def _cost_Return(self, expr, **settings):
-        return sum(self._cost(i, **settings) for i in [expr.stmt, expr.expr])
-
     def _cost_PyccelAdd(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
         if self.mode:
@@ -317,50 +238,6 @@ class OpComplexity(Complexity):
     def _cost_PyccelPow(self, expr, **settings):
         # TODO
         return 0
-
-    def _cost_PyccelOperator(self, expr, **settings):
-        return sum(self._cost(i, **settings) for i in expr.args)
-
-    def _cost_FunctionDef(self, expr, **settings):
-        return self._cost(expr.body, **settings)
-
-    def _cost_FunctionCall(self, expr, **settings):
-        if self.costs is None:
-            raise ValueError('costs dict is None')
-
-        fname = expr.func_name
-
-        if not fname in self.costs.keys():
-            raise ValueError('Cannot find the cost of the function {}'.format(fname))
-
-        return self.costs[fname]
-
-    def _cost_NumpyUfuncBase(self, expr, **settings):
-        try:
-            f = numpy_functions_registery[type(expr)]
-        except:
-            raise NotImplementedError('{}'.format(type(expr)))
-
-        ops = sum(self._cost(i, **settings) for i in expr.args)
-
-        return Symbol(f.upper()) + ops
-
-    def _cost_For(self, expr, **settings):
-        ops = sum(self._cost(i, **settings) for i in expr.body.body)
-
-        # ...
-        i = expr.target
-        i = pyccel_to_sympy(i, self._symbol_map, self._used_names)
-
-        b = expr.iterable.start
-        b = pyccel_to_sympy(b, self._symbol_map, self._used_names)
-
-        e = expr.iterable.stop
-        e = pyccel_to_sympy(e, self._symbol_map, self._used_names)
-        # ...
-
-        # TODO treat the case step /= 1
-        return summation(ops, (i, b, e-1))
 
     def _cost_Assign(self, expr, **settings):
         if isinstance(expr.rhs, (NumpyZeros, NumpyOnes, Comment, EmptyNode)):
