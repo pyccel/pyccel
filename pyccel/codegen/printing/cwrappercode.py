@@ -232,7 +232,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return section, optional_var_collect
 
 
-    def _create_collecting_value_body(self, variable, collect_var, error_check = True, tmp_variable = None):
+    def _body_scalar(self, variable, collect_var, error_check = True, tmp_variable = None):
         """
         Create If block to differentiate between python and numpy data types when collecting value
         format :
@@ -256,7 +256,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body : If block
         """
 
-        var = tmp_variable if tmp_variable else variable
+        var      = tmp_variable if tmp_variable else variable
         sections = []
 
         numpy_check, python_check, error = self._get_scalar_type_check(variable, collect_var, error_check)
@@ -403,7 +403,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Responsible for calling functions that take care of body creation
         """
         tmp_variable = None
-        body = []
+        body         = []
 
         if variable.rank > 0:
             body = self._body_array(variable, collect_var, check_type)
@@ -411,9 +411,9 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             if variable.is_optional:
                 tmp_variable = Variable(dtype=variable.dtype, precision = variable.precision,
-                                    name = self.get_new_name(used_names, variable.name+"_tmp"))
+                                        name = self.get_new_name(used_names, variable.name+"_tmp"))
 
-            body = self._create_collecting_value_body(variable, collect_var, check_type, tmp_variable)
+            body = self._body_scalar(variable, collect_var, check_type, tmp_variable)
 
         return body, tmp_variable
 
