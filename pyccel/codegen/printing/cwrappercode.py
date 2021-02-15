@@ -427,7 +427,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body  += [IfSection(check, [error, Return([Nil()])])]
         if check_type : #Type check
             check, error = self._get_array_type_check(variable, collect_var)
-            body += [IfSection(check, [info_dump, error, Return([Nil()])])]
+            body += [IfSection(check, [error, Return([Nil()])])]
 
         if collect_var.rank > 1 and self._target_language == 'fortran' :#Order check
             if collect_var.order == 'F':
