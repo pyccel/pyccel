@@ -187,7 +187,18 @@ class CWrapperCodePrinter(CCodePrinter):
     # --------------------------------------------------------------------
     # Functions that take care of creating cast or convert type function call :
     # --------------------------------------------------------------------
-    def _get_types_check(self, variable, collect_var, error_check = True):
+    def _get_array_type_check(self, variable, collect_var):
+       "TODO"
+
+        numpy_dtype = self.find_in_numpy_dtype_registry(variable)
+        arg_dtype   = self.find_in_dtype_registry(self._print(variable.dtype), variable.precision)
+
+        check = PyccelNe(FunctionCall(numpy_get_type, [collect_var]), numpy_dtype)
+        error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, arg_dtype))
+
+        return check, error
+    
+    def _get_scalar_type_check(self, variable, collect_var, error_check = True):
         "TODO"
         
         if not error_check :
@@ -210,12 +221,12 @@ class CWrapperCodePrinter(CCodePrinter):
 
         valued_var_check = PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
         optional_var_collect = []
-        
+
         if variable.is_optional:
             optional_var_collect = [Assign(VariableAddress(variable), VariableAddress(tmp_variable))]
             section = IfSection(valued_var_check, [Assign(VariableAddress(variable), Nil())])
 
-        else :
+        else:
             section = IfSection(valued_var_check, [Assign(variable, variable.value)])
 
         return section, optional_var_collect
@@ -248,7 +259,7 @@ class CWrapperCodePrinter(CCodePrinter):
         var = tmp_variable if tmp_variable else variable
         sections = []
 
-        numpy_check, python_check, error = self._get_types_check(variable, collect_var, error_check)
+        numpy_check, python_check, error = self._get_scalar_type_check(variable, collect_var, error_check)
         
         python_collect  = [Assign(var, self.get_collect_function_call(variable, collect_var))]
         numpy_collect   = [FunctionCall(PyArray_ScalarAsCtype, [collect_var, var])]
@@ -369,11 +380,7 @@ class CWrapperCodePrinter(CCodePrinter):
         error = PyErr_SetString('PyExc_TypeError', '"{} must have rank {}"'.format(collect_var, str(collect_var.rank)))
         body  += [IfSection(check, [error, Return([Nil()])])]
         if check_type : #Type check
-            numpy_dtype = self.find_in_numpy_dtype_registry(variable)
-            arg_dtype   = self.find_in_dtype_registry(self._print(variable.dtype), variable.precision)
-            check = PyccelNe(FunctionCall(numpy_get_type, [collect_var]), numpy_dtype)
-            info_dump = PythonPrint([FunctionCall(numpy_get_type, [collect_var]), numpy_dtype])
-            error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, arg_dtype))
+            check, error = self._get_array_type_check(variable, collect_var)
             body += [IfSection(check, [info_dump, error, Return([Nil()])])]
 
         if collect_var.rank > 1 and self._target_language == 'fortran' :#Order check
@@ -401,11 +408,12 @@ class CWrapperCodePrinter(CCodePrinter):
         if variable.rank > 0:
             body = self._body_array(variable, collect_var, check_type)
 
-        if variable.is_optional:
-            tmp_variable = Variable(dtype=variable.dtype, precision = variable.precision,
+        else:
+            if variable.is_optional:
+                tmp_variable = Variable(dtype=variable.dtype, precision = variable.precision,
                                     name = self.get_new_name(used_names, variable.name+"_tmp"))
 
-        body = self._create_collecting_value_body(variable, collect_var, check_type, tmp_variable)
+            body = self._create_collecting_value_body(variable, collect_var, check_type, tmp_variable)
 
         return body, tmp_variable
 
@@ -443,18 +451,7 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
-
-        '''elif isinstance(variable, ValuedVariable):
-            collect_type = PyccelPyObject()
-            collect_var = Variable(dtype=collect_type, is_pointer=True,
-                name = self.get_new_name(used_names, variable.name+"_tmp"))
-
-
-        elif variable.dtype is NativeComplex():
-            collect_type = PyccelPyObject()
-            collect_var = Variable(dtype=collect_type, is_pointer=True,
-                name = self.get_new_name(used_names, variable.name+"_tmp"))'''
-
+                
         return collect_var
 
     def get_PyBuildValue(self, used_names, variable):
