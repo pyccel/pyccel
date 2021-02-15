@@ -440,7 +440,7 @@ def insert_fors(blocks, indices, level = 0):
 
     Parameters
     ==========
-    block   : list of tuples of lists
+    block   : list of LoopCollections
             The result of a call to collect_loops
     indices : list
             The index variables
@@ -451,16 +451,16 @@ def insert_fors(blocks, indices, level = 0):
     block : list of PyccelAstNodes
             The modified expression
     """
-    if all(not isinstance(b, tuple) for b in blocks[0]):
-        body = blocks[0]
+    if all(not isinstance(b, LoopCollections) for b in blocks.body):
+        body = blocks.body
     else:
-        body = [insert_fors(b, indices, level+1) if isinstance(b, tuple) else [b] \
-                for b in blocks[0]]
+        body = [insert_fors(b, indices, level+1) if isinstance(b, LoopCollections) else [b] \
+                for b in blocks.body]
         body = [bi for b in body for bi in b]
-    if blocks[1] == 1:
+    if blocks.length == 1:
         return body
     else:
-        return [For(indices[level], PythonRange(0,blocks[1]), body)]
+        return [For(indices[level], PythonRange(0,blocks.length), body)]
 
 #==============================================================================
 def expand_tuple_assignments(block):
