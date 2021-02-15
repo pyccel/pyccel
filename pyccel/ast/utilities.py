@@ -7,6 +7,7 @@
 
 import inspect
 from itertools import chain
+from collections import namedtuple
 
 from numpy import pi
 
@@ -251,7 +252,10 @@ def insert_index(expr, pos, index_var):
         if expr.rank==0 or -pos>expr.rank:
             return expr
         if expr.shape[pos]==1:
+            # If there is no dimemsion in this axis, reduce the rank
             index_var = LiteralInteger(0)
+
+        # Add index at the required position
         indexes = [Slice(None,None)]*(expr.rank+pos) + [index_var]+[Slice(None,None)]*(-1-pos)
         return IndexedElement(expr, *indexes)
 
@@ -260,19 +264,29 @@ def insert_index(expr, pos, index_var):
         indices = list(expr.indices)
         if -pos>expr.base.rank or not isinstance(indices[pos], Slice):
             return expr
+
+        # Add index at the required position
         if expr.base.shape[pos]==1:
+            # If there is no dimemsion in this axis, reduce the rank
             assert(indices[pos].start is None)
             index_var = LiteralInteger(0)
+
         else:
+            # Calculate new index to preserve slice behaviour
             if indices[pos].step is not None:
                 index_var = PyccelMul(index_var, indices[pos].step)
             if indices[pos].start is not None:
                 index_var = PyccelAdd(index_var, indices[pos].start)
+
         indices[pos] = index_var
         return IndexedElement(base, *indices)
 
     else:
         raise NotImplementedError("Expansion not implemented for type : {}".format(type(expr)))
+
+#==============================================================================
+
+LoopCollection = namedtuple('LoopCollection', ['body', 'length', 'modified_vars'])
 
 #==============================================================================
 def collect_loops(block, indices, new_index_name, language_has_vectors = False):
@@ -311,7 +325,6 @@ def collect_loops(block, indices, new_index_name, language_has_vectors = False):
     """
     result = []
     current_level = 0
-    used_vars = set()
     array_creator_types = (Allocate, PythonList, PythonTuple, Dlist, Nil)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
                                 or (isinstance(f, PyccelInternalFunction) and not f.is_elemental))
@@ -321,6 +334,8 @@ def collect_loops(block, indices, new_index_name, language_has_vectors = False):
                 not line.rhs.get_attribute_nodes(array_creator_types, excluded_nodes = (ValuedVariable)) and # not creating array
                 not is_function_call(line.rhs)): # not a basic function call
 
+            # Collect lhs variable
+            # This is needed to know what has already been modified in the loop
             if isinstance(line.lhs, Variable):
                 lhs_vars = [line.lhs]
             elif isinstance(line.lhs, IndexedElement):
@@ -329,39 +344,47 @@ def collect_loops(block, indices, new_index_name, language_has_vectors = False):
                 lhs_vars = set(line.lhs.get_attribute_nodes((Variable, IndexedElement)))
                 lhs_vars = [v.base if isinstance(v, IndexedElement) else v for v in lhs_vars]
 
+            # Get all objects which affect where indices are inserted
             notable_nodes = line.get_attribute_nodes((Variable,
                                                        IndexedElement,
                                                        VariableAddress,
                                                        FunctionCall,
                                                        PyccelInternalFunction))
-            variables       = [v for v in notable_nodes if isinstance(v, (Variable,
-                                                                          IndexedElement,
-                                                                          VariableAddress))]
 
+            # Find all elemental function calls. Normally function call arguments are not indexed
+            # However elemental functions are an exception
             elemental_func_calls  = [f for f in notable_nodes if (isinstance(f, FunctionCall) \
                                                                 and f.funcdef.is_elemental)]
             elemental_func_calls += [f for f in notable_nodes if (isinstance(f, PyccelInternalFunction) \
                                                                 and f.is_elemental)]
 
+            # Collect all objects into which indices may be inserted
+            variables       = [v for v in notable_nodes if isinstance(v, (Variable,
+                                                                          IndexedElement,
+                                                                          VariableAddress))]
             variables      += [v for f in elemental_func_calls \
                                  for v in f.get_attribute_nodes((Variable, IndexedElement, VariableAddress),
                                                             excluded_nodes = (FunctionDef))]
 
+            variables = list(set(variables))
+
+            # Check if the expression is already satisfactory
+            if compatible_operation(*variables, language_has_vectors = language_has_vectors):
+                result.append(line)
+                current_level = 0
+                continue
+
+            # Find function calls in this line
             funcs           = [f for f in notable_nodes if (isinstance(f, FunctionCall) \
                                                             and not f.funcdef.is_elemental)]
             internal_funcs  = [f for f in notable_nodes if (isinstance(f, PyccelInternalFunction) \
                                                             and not f.is_elemental)]
 
-            used_vars       = set(v for f in chain(funcs, internal_funcs) \
-                                    for v in f.get_attribute_nodes((Variable, IndexedElement, VariableAddress),
-                                        excluded_nodes = (FunctionDef)))
-
-            variables = list(set(variables))
-
-            if compatible_operation(*variables, language_has_vectors = language_has_vectors):
-                result.append(line)
-                current_level = 0
-                continue
+            # Collect all variables for which values other than the value indexed in the loop are important
+            # E.g. x = np.sum(a) has a dependence on a
+            dependencies = set(v for f in chain(funcs, internal_funcs) \
+                                 for v in f.get_attribute_nodes((Variable, IndexedElement, VariableAddress),
+                                     excluded_nodes = (FunctionDef)))
 
             rank = line.lhs.rank
             shape = line.lhs.shape
@@ -379,6 +402,7 @@ def collect_loops(block, indices, new_index_name, language_has_vectors = False):
                 if compatible_operation(*new_vars, language_has_vectors = language_has_vectors):
                     break
 
+            # Replace variable expressions with Indexed versions
             line.substitute(variables, new_vars, excluded_nodes = (FunctionDef))
 
             # Recurse through result tree to save line with lines which need
@@ -386,18 +410,19 @@ def collect_loops(block, indices, new_index_name, language_has_vectors = False):
             save_spot = result
             j = 0
             for _ in range(min(new_level,current_level)):
-                # Select the existing loop if the shape matches the
-                # shape of the expression
-                if save_spot[-1][1] == shape[j] and not any(u in save_spot[-1][2] for u in used_vars):
-                    save_spot[-1][2].update(lhs_vars)
-                    save_spot = save_spot[-1][0]
+                # Select the existing loop if the shape matches the shape of the expression
+                # and the loop is not used to modify one of the variable dependencies
+                if save_spot[-1].length == shape[j] and not any(u in save_spot[-1].modified_vars for u in dependencies):
+                    save_spot[-1].modified_vars.update(lhs_vars)
+                    save_spot = save_spot[-1].body
                     j+=1
                 else:
                     break
+
             for k in range(j,new_level):
                 # Create new loops until we have the neccesary depth
-                save_spot.append(([], shape[k], set(lhs_vars)))
-                save_spot = save_spot[-1][0]
+                save_spot.append(LoopCollection([], shape[k], set(lhs_vars)))
+                save_spot = save_spot[-1].body
 
             # Save results
             save_spot.append(line)
