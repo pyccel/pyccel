@@ -60,8 +60,8 @@ def test_module_3(language):
 def test_modules_4(lang):
     f1 = epyccel(openmp.test_omp_set_get_dynamic, accelerator='openmp', language=lang)
 
-    assert f1(1) == 1
-    assert f1(0) == 0
+    assert f1(True) == 1
+    assert f1(False) == 0
 
 @pytest.mark.parametrize( 'lang', (
         pytest.param("c", marks = pytest.mark.c),
