@@ -663,6 +663,9 @@ class CodeBlock(Basic):
     def insert2body(self, obj):
         self._body = tuple(self.body + (obj,))
 
+    def __str__(self):
+        return 'CodeBlock({})'.format(self.body)
+
 class AliasAssign(Basic):
 
     """Represents aliasing for code generation. An alias is any statement of the
