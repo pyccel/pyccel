@@ -2378,7 +2378,7 @@ class SemanticParser(BasicParser):
                     args = a.rhs.args
                     a.lhs.is_temp = True
                     for b in args:
-                        if not b.is_argument and b.allocatable:
+                        if isinstance(b, Variable) not b.is_argument and b.allocatable:
                             a.lhs.is_temp = False
                             break
                 assigns.append(a)
