@@ -182,11 +182,6 @@ class PythonComplex(PyccelAstNode):
         if arg0.dtype is NativeComplex() and arg1.dtype is NativeComplex():
             # both args are complex
             return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit()))
-        from .numpyext import NumpyInt64
-        if isinstance((arg0.dtype), NativeInteger):
-            arg0 = NumpyInt64(arg0)
-        if isinstance((arg1.dtype), NativeInteger):
-            arg1 = NumpyInt64(arg1)
         return super().__new__(cls, arg0, arg1)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
