@@ -188,7 +188,7 @@ class CWrapperCodePrinter(CCodePrinter):
     # Functions that take care of creating cast or convert type function call :
     # --------------------------------------------------------------------
     def _get_types_check(self, variable, collect_var, error_check = True):
-
+        "TODO"
         
         if not error_check :
             scalar_check =  FunctionCall(PyArray_CheckScalar, [collect_var])
@@ -206,9 +206,11 @@ class CWrapperCodePrinter(CCodePrinter):
 
 
     def _valued_variable_management(self, variable, collect_var, tmp_variable):
-        
+        "TODO"
+
         valued_var_check = PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
         optional_var_collect = []
+        
         if variable.is_optional:
             optional_var_collect = [Assign(VariableAddress(variable), VariableAddress(tmp_variable))]
             section = IfSection(valued_var_check, [Assign(VariableAddress(variable), Nil())])
@@ -431,8 +433,6 @@ class CWrapperCodePrinter(CCodePrinter):
         cast_fun : FunctionCall
             call to cast function responsible of the conversion of one data type into another
         """
-        cast_function = None
-        collect_var = variable
 
         if variable.rank > 0:
             collect_type = PyccelPyArrayObject()
@@ -449,12 +449,13 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))
 
+
         elif variable.dtype is NativeComplex():
             collect_type = PyccelPyObject()
             collect_var = Variable(dtype=collect_type, is_pointer=True,
                 name = self.get_new_name(used_names, variable.name+"_tmp"))'''
 
-        return collect_var, cast_function
+        return collect_var
 
     def get_PyBuildValue(self, used_names, variable):
         """
@@ -798,10 +799,10 @@ class CWrapperCodePrinter(CCodePrinter):
         parse_args = []
         collect_vars = {}
         for arg in local_arg_vars:
-            collect_var , cast_func = self.get_PyArgParseType(used_names, arg)
+            collect_var  = self.get_PyArgParseType(used_names, arg)
             collect_vars[arg] = collect_var
 
-            body, tmp_variable = self._body_management(used_names, arg, collect_var, cast_func, True)
+            body, tmp_variable = self._body_management(used_names, arg, collect_var, None, True)
             if tmp_variable :
                 wrapper_vars[tmp_variable.name] = tmp_variable
 
