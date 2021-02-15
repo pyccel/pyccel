@@ -2577,7 +2577,7 @@ def test_full_like_basic_real(language):
         a = full_like(arr, val, float, 'F', shape = (2,3))
         return a[0,0],a[0,1],a[0,2],a[1,0],a[1,1],a[1,2]
 
-    size = randint(10)
+    size = uniform(10)
     val  = rand()*5
 
     f_shape_1d  = epyccel(create_full_like_shape_1d, language = language)
