@@ -665,3 +665,58 @@ z[ 5 ] : 3
 z[ 6 ] : 3
 z[ 7 ] : 3
 ```
+
+### teams distribute
+
+#### Syntax of *teams distribute*
+
+```python
+#$ omp teams distribute [clause[ [,]clause] ... ]
+loop-nest
+```
+
+### teams distribute simd
+
+#### Syntax of *teams distribut simd*
+
+```python
+#$ omp teams distribute simd [clause[ [,]clause] ... ]
+loop-nest
+```
+
+### teams distribute parallel for
+
+#### Syntax of *teams distribute parallel for*
+
+```python
+#$ omp teams distribute parallel for [clause[ [,]clause] ... ]
+loop-nest
+```
+
+### target parallel
+
+#### Syntax of *target parallel*
+
+```python
+#$ omp target parallel [clause[ [,]clause] ... ]
+structured-block
+#$ omp end target parallel
+```
+
+### target parallel for
+
+#### Syntax of *target parallel for*
+
+```python
+#$ omp target parallel for [clause[ [,]clause] ... ]
+loop-nest
+```
+
+### target parallel for simd
+
+#### Syntax of *target parallel for simd*
+
+```python
+#$ omp target parallel for simd [clause[ [,]clause] ... ]
+loop-nest
+```
