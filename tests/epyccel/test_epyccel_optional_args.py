@@ -137,13 +137,6 @@ def test_f11(language):
     assert mod.call_optional_12() == modnew.call_optional_12()
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Numpy array are not yet implemented for C language"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_optional_args_1d(language):
     @types( 'int[:]', 'int[:]')
     def f12(x, y = None):
@@ -162,13 +155,6 @@ def test_optional_args_1d(language):
     assert np.array_equal(x1, x2)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Numpy array are not yet implemented for C language"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_optional_2d_F(language):
     @types('int32[:,:](order=F)', 'int32[:,:](order=F)')
     def f13(x, y = None):

@@ -43,14 +43,6 @@ def test_local_module_1(language):
     assert np.allclose( x, x_expected, rtol=1e-15, atol=1e-15 )
     # ...
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="slicing not implemented in C language"),
-            pytest.mark.c]
-        )
-    )
-)
 def test_module_2(language):
     import modules.Module_2 as mod
 

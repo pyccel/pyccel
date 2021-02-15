@@ -169,13 +169,6 @@ def test_modules_16(language):
 
     assert f1() == 5
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Numpy Arrays not implemented in C !"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_omp_matmul(language):
     f1 = epyccel(openmp.omp_matmul, accelerator='openmp', language=language)
     set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp', language=language)
@@ -195,7 +188,7 @@ def test_omp_matmul(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Numpy Arrays not implemented in C !"),
+            pytest.mark.xfail(reason="Numpy matmul not implemented in C !"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -217,13 +210,6 @@ def test_omp_matmul_single(language):
 
     assert np.array_equal(y1, y2)
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Numpy Arrays not implemented in C !"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_omp_matmul_2d_2d(language):
     f1 = epyccel(openmp.omp_matmul, accelerator='openmp', language=language)
     set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp', language=language)
@@ -241,13 +227,6 @@ def test_omp_matmul_2d_2d(language):
 
     assert np.array_equal(y1, y2)
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Numpy Arrays not implemented in C !"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_omp_arraysum(language):
     f1 = epyccel(openmp.omp_arraysum, accelerator='openmp', language=language)
     set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp', language=language)
@@ -257,13 +236,6 @@ def test_omp_arraysum(language):
 
     assert f1(x) == np.sum(x)
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Numpy Arrays not implemented in C !"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_omp_arraysum_single(language):
     f1 = epyccel(openmp.omp_arraysum_single, accelerator='openmp', language=language)
     set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp', language=language)
