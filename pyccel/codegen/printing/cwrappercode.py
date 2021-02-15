@@ -184,9 +184,79 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return check
 
+    def _get_wrapper_name(self, used_names, func):
+        """
+        create wrapper function name
+        """
+        name         = func.name
+        wrapper_name = self.get_new_name(used_names.union(self._global_names), name+"_wrapper")
+
+        self._function_wrapper_names[func.name] = wrapper_name
+        self._global_names.add(wrapper_name)
+    
+        return wrapper_name
+
     # --------------------------------------------------------------------
     # Functions that take care of creating cast or convert type function call :
     # --------------------------------------------------------------------
+    def get_collect_function_call(self, variable, collect_var):
+        """
+        Represents a call to cast function responsible of collecting value from python object.
+
+        Parameters:
+        ----------
+        variable: variable
+            the variable needed to collect
+        collect_var :
+            the pyobject variable
+        """
+        if variable.rank > 0 :
+            if self._target_language == 'c':
+                return self.get_cast_function_call('pyarray_to_ndarray', collect_var)
+            return FunctionCall(numpy_get_data,[collect_var])
+        if isinstance(variable.dtype, NativeComplex):
+            return self.get_cast_function_call('pycomplex_to_complex', collect_var)
+
+        if isinstance(variable.dtype, NativeBool):
+            return self.get_cast_function_call('pybool_to_bool', collect_var)
+        try :
+            collect_function = collect_function_registry[variable.dtype]
+        except KeyError:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=variable.dtype,severity='fatal')
+        return FunctionCall(collect_function, [collect_var])
+
+
+    def get_cast_function_call(self, cast_type, arg):
+        """
+        Represents a call to cast function responsible of the conversion of one data type into another.
+
+        Parameters:
+        ----------
+        cast_type: string
+            The type of cast function on format 'data type_to_data type'
+        arg: variable
+            the variable needed to cast
+        """
+
+        if cast_type in self._cast_functions_dict:
+            cast_function = self._cast_functions_dict[cast_type]
+
+        else:
+            cast_function_name = self.get_new_name(self._global_names, cast_type)
+
+            try:
+                cast_function = cast_function_registry[cast_type](cast_function_name)
+            except KeyError as e:
+                raise NotImplementedError("No conversion function : {}".format(cast_type)) from e
+
+            self._cast_functions_dict[cast_type] = cast_function
+
+        return FunctionCall(cast_function, [arg])
+
+    # --------------------------------------------------------------------
+    # Functions that take care of collecting data (type, rank) checks and creating the error code:
+    # --------------------------------------------------------------------
+
     def _get_array_type_check(self, variable, collect_var):
         """
         Responsible for collecting array type check and creating the
@@ -221,6 +291,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return numpy_type_check, python_type_check, error
 
+    # -------------------------------------------------------------------
+    # Functions managing  the creation of wrapper body
+    # -------------------------------------------------------------------
 
     def _valued_variable_management(self, variable, collect_var, tmp_variable):
         """
@@ -305,64 +378,6 @@ class CWrapperCodePrinter(CCodePrinter):
             sections.append(IfSection(LiteralTrue(), [error, Return([Nil()])]))
 
         return If(*sections)
-
-    def get_collect_function_call(self, variable, collect_var):
-        """
-        Represents a call to cast function responsible of collecting value from python object.
-
-        Parameters:
-        ----------
-        variable: variable
-            the variable needed to collect
-        collect_var :
-            the pyobject variable
-        """
-        if variable.rank > 0 :
-            if self._target_language == 'c':
-                return self.get_cast_function_call('pyarray_to_ndarray', collect_var)
-            return FunctionCall(numpy_get_data,[collect_var])
-        if isinstance(variable.dtype, NativeComplex):
-            return self.get_cast_function_call('pycomplex_to_complex', collect_var)
-
-        if isinstance(variable.dtype, NativeBool):
-            return self.get_cast_function_call('pybool_to_bool', collect_var)
-        try :
-            collect_function = collect_function_registry[variable.dtype]
-        except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=variable.dtype,severity='fatal')
-        return FunctionCall(collect_function, [collect_var])
-
-
-    def get_cast_function_call(self, cast_type, arg):
-        """
-        Represents a call to cast function responsible of the conversion of one data type into another.
-
-        Parameters:
-        ----------
-        cast_type: string
-            The type of cast function on format 'data type_to_data type'
-        arg: variable
-            the variable needed to cast
-        """
-
-        if cast_type in self._cast_functions_dict:
-            cast_function = self._cast_functions_dict[cast_type]
-
-        else:
-            cast_function_name = self.get_new_name(self._global_names, cast_type)
-
-            try:
-                cast_function = cast_function_registry[cast_type](cast_function_name)
-            except KeyError as e:
-                raise NotImplementedError("No conversion function : {}".format(cast_type)) from e
-
-            self._cast_functions_dict[cast_type] = cast_function
-
-        return FunctionCall(cast_function, [arg])
-
-    # -------------------------------------------------------------------
-    # Functions managing  the creation of wrapper body
-    # -------------------------------------------------------------------
 
     def _body_array(self, variable, collect_var, check_type = False) :
         """
@@ -516,6 +531,10 @@ class CWrapperCodePrinter(CCodePrinter):
             self._to_free_PyObject_list.append(collect_var)
 
         return collect_var, cast_function
+
+    #--------------------------------------------------------------------
+    #                 _print_ClassName functions
+    #--------------------------------------------------------------------
 
     def _print_Interface(self, expr):
 
@@ -702,18 +721,6 @@ class CWrapperCodePrinter(CCodePrinter):
             body = check_func_body,
             local_vars = [])
         return check_func_def
-
-
-    def _get_wrapper_name(self, used_names, func):
-        name = func.name if isinstance(func, FunctionDef) else func.name
-        wrapper_name = self.get_new_name(used_names.union(self._global_names), name+"_wrapper")
-        self._function_wrapper_names[func.name] = wrapper_name
-        self._global_names.add(wrapper_name)
-        return wrapper_name
-
-    #--------------------------------------------------------------------
-    #                 _print_ClassName functions
-    #--------------------------------------------------------------------
 
     def _print_IndexedElement(self, expr):
         assert(len(expr.indices)==1)
