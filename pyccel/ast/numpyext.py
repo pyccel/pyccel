@@ -761,6 +761,9 @@ class NumpyNorm(PyccelInternalFunction):
 #==============================================================================
 class NumpyUfuncBase(PyccelInternalFunction):
     """Base class for Numpy's universal functions."""
+    @property
+    def is_elemental(self):
+        return True
 
 #------------------------------------------------------------------------------
 class NumpyUfuncUnary(NumpyUfuncBase):
@@ -804,6 +807,10 @@ class NumpyUfuncBinary(NumpyUfuncBase):
             self._order = x1.order
         else:
             self._order = 'C'
+
+    @property
+    def is_elemental(self):
+        return True
 
 #------------------------------------------------------------------------------
 # Math operations
@@ -893,6 +900,10 @@ class NumpyMin(NumpyUfuncUnary):
         self._dtype     = x.dtype
         self._precision = x.precision
 
+    @property
+    def is_elemental(self):
+        return False
+
 class NumpyMax(NumpyUfuncUnary):
     def _set_shape_rank(self, x):
         self._shape     = ()
@@ -901,6 +912,10 @@ class NumpyMax(NumpyUfuncUnary):
     def _set_dtype_precision(self, x):
         self._dtype     = x.dtype
         self._precision = x.precision
+
+    @property
+    def is_elemental(self):
+        return False
 
 
 #=======================================================================================
