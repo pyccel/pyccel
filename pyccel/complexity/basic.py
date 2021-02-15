@@ -38,8 +38,11 @@ class Complexity(object):
         self._functions = functions
         # ...
 
-        # TODO add setter for _costs
         self._costs = OrderedDict()
+        self._symbol_map = {}
+        self._used_names = set()
+        self._visual = True
+        self._mode = None
 
     @property
     def ast(self):
@@ -55,6 +58,14 @@ class Complexity(object):
     def costs(self):
         """Returns costs of declared functions."""
         return self._costs
+
+    @property
+    def mode(self):
+        return self._mode
+
+    @property
+    def visual(self):
+        return self._visual
 
     def cost(self):
         """Computes the complexity of the given code."""

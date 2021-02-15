@@ -116,11 +116,12 @@ class OpComplexity(Complexity):
         mode: string
             possible values are (None, simple)
         """
-
-        self._symbol_map = {}
-        self._used_names = set()
+        # ...
+        self._visual = visual
         self._mode = mode
+        # ...
 
+        # ...
         costs = OrderedDict()
 
         # ... first we treat declared functions
@@ -129,28 +130,15 @@ class OpComplexity(Complexity):
                 expr =  self._cost(d)
 
                 costs[fname] = expr
-        # ...
 
-        self._costs = costs
-        self._visual = visual
+        self._costs.update(costs)
+        # ...
 
         # ... then we compute the complexity for the main program
         expr = self._cost(self.ast)
         # ...
 
         return expr
-
-    @property
-    def mode(self):
-        return self._mode
-
-    @property
-    def costs(self):
-        return self._costs
-
-    @property
-    def visual(self):
-        return self._visual
 
     def _cost(self, expr, **settings):
         if expr is None:
