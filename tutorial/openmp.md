@@ -608,7 +608,6 @@ loop-nest
 
 The ```#$ omp parallel for``` construct specifies a parallel construct containing a worksharingloop construct with a canonical loop nest.
 
-statements.
 ```python
 import numpy as np
 x = np.array([2,5,4,3,2,5,7])
@@ -624,4 +623,45 @@ The output of this program is :
 ❯ pyccel omp_test.py --openmp
 ❯ ./omp_test
 result: 28
+```
+
+### parallel for simd
+
+#### Syntax of *parallel for simd*
+
+```python
+#$ omp parallel for simd [clause[ [,]clause] ... ]
+loop-nest
+```
+
+#### Example
+
+The ```#$ omp parallel for simd``` construct specifies a parallel construct containing only one worksharing-loop SIMD construct.
+
+```python
+import numpy as np
+x = np.array([1,2,1,2,1,2,1,2])
+y = np.array([2,1,2,1,2,1,2,1])
+z = np.zeros(8, dtype = int)
+result = 0
+#$ omp parallel for simd
+for i in range(0, 8):
+    z[i] = x[i] + y[i]
+
+for i in range(0, 8):
+    print("z[",i,"] :", z[i])
+```
+
+The output of this program is :
+```shell
+❯ pyccel omp_test.py --openmp
+❯ ./omp_test
+z[ 0 ] : 3
+z[ 1 ] : 3
+z[ 2 ] : 3
+z[ 3 ] : 3
+z[ 4 ] : 3
+z[ 5 ] : 3
+z[ 6 ] : 3
+z[ 7 ] : 3
 ```
