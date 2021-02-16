@@ -808,10 +808,6 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         else:
             self._order = 'C'
 
-    @property
-    def is_elemental(self):
-        return True
-
 #------------------------------------------------------------------------------
 # Math operations
 #------------------------------------------------------------------------------
