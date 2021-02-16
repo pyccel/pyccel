@@ -112,7 +112,7 @@ class LiteralFloat(Literal):
         if not isinstance(value, (int, float, LiteralFloat)):
             raise TypeError("A LiteralFloat can only be created with an integer or a float")
         Literal.__init__(self, precision)
-        self._value = value
+        self._value = float(value)
 
     @property
     def python_value(self):
