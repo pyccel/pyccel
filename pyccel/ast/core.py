@@ -7,20 +7,15 @@
 
 from collections     import OrderedDict
 
-from sympy import preorder_traversal
-
 from sympy.core.compatibility import with_metaclass
 from sympy.core.singleton     import Singleton
-from sympy.core.expr          import Expr
 from sympy.logic.boolalg      import And as sp_And
-
-from sympy.utilities.iterables          import iterable
 
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import RECURSIVE_RESULTS_REQUIRED
 
-from .basic     import Basic, PyccelAstNode
+from .basic     import Basic, PyccelAstNode, iterable
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol,
@@ -169,44 +164,11 @@ def subs(expr, new_elements):
         new_expr = expr.subs(new_elements)
         new_expr.set_fst(expr.fst)
         return new_expr
-    elif isinstance(expr, Expr):
+    elif isinstance(expr, PyccelAstNode):
         return expr.subs(new_elements)
 
     else:
         return expr
-
-
-
-#def collect_vars(ast):
-#    """ collect variables in order to be declared"""
-#    #TODO use the namespace to get the declared variables
-#    variables = {}
-#    def collect(stmt):
-#
-#        if isinstance(stmt, Variable):
-#            if not isinstance(stmt.name, DottedName):
-#                variables[stmt.name] = stmt
-#        elif isinstance(stmt, (tuple, list)):
-#            for i in stmt:
-#                collect(i)
-#        if isinstance(stmt, For):
-#            collect(stmt.target)
-#            collect(stmt.body)
-#        elif isinstance(stmt, FunctionalFor):
-#            collect(stmt.lhs)
-#            collect(stmt.loops)
-#        elif isinstance(stmt, If):
-#            collect(stmt.bodies)
-#        elif isinstance(stmt, (While, CodeBlock)):
-#            collect(stmt.body)
-#        elif isinstance(stmt, (Assign, AliasAssign, AugAssign)):
-#            collect(stmt.lhs)
-#            if isinstance(stmt.rhs, (Linspace, Diag, Where)):
-#                collect(stmt.rhs.index)
-#
-#
-#    collect(ast)
-#    return variables.values()
 
 def inline(func, args):
     local_vars = func.local_vars
@@ -342,7 +304,7 @@ class Dlist(PyccelAstNode):
 
     Parameters
     ----------
-    value : Expr
+    value : PyccelAstNode
            a sympy expression which represents the initilized value of the list
 
     shape : the shape of the array
@@ -372,7 +334,7 @@ class Assign(Basic):
 
     Parameters
     ----------
-    lhs : Expr
+    lhs : PyccelAstNode
         In the syntactic stage:
            Object representing the lhs of the expression. These should be
            singular objects, such as one would use in writing code. Notable types
@@ -381,7 +343,7 @@ class Assign(Basic):
         In the semantic stage:
            Variable or IndexedElement
 
-    rhs : Expr
+    rhs : PyccelAstNode
         In the syntactic stage:
           Object representing the rhs of the expression
         In the semantic stage :
@@ -814,7 +776,7 @@ class AugAssign(Assign):
 
     Parameters
     ----------
-    lhs : Expr
+    lhs : PyccelAstNode
         In the syntactic stage:
            Object representing the lhs of the expression. These should be
            singular objects, such as one would use in writing code. Notable types
@@ -826,7 +788,7 @@ class AugAssign(Assign):
     op : str
         Operator (+, -, /, \*, %).
 
-    rhs : Expr
+    rhs : PyccelAstNode
         In the syntactic stage:
           Object representing the rhs of the expression
         In the semantic stage :
@@ -2843,7 +2805,7 @@ class FuncAddressDeclare(Basic):
         An instance of FunctionAddress.
     intent: None, str
         one among {'in', 'out', 'inout'}
-    value: Expr
+    value: PyccelAstNode
         variable value
     static: bool
         True for a static declaration of an array.
@@ -2922,7 +2884,7 @@ class Declare(Basic):
         Variables must be of the same type.
     intent: None, str
         one among {'in', 'out', 'inout'}
-    value: Expr
+    value: PyccelAstNode
         variable value
     static: bool
         True for a static declaration of an array.
@@ -3265,7 +3227,7 @@ class Assert(Basic):
 
     Parameters
     ----------
-    test: Expr
+    test: PyccelAstNode
         boolean expression to check
 
     Examples
