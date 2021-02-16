@@ -378,8 +378,8 @@ def test_folder_imports(language):
     compare_pyth_fort_output(pyth_out, fort_out)
 
 #------------------------------------------------------------------------------
-def test_funcs():
-    pyccel_test("scripts/runtest_funcs.py")
+def test_funcs(language):
+    pyccel_test("scripts/runtest_funcs.py", language = language)
 
 #------------------------------------------------------------------------------
 def test_inout_func():
@@ -399,6 +399,7 @@ def test_expressions(language):
                 output_dtype = types)
 
 #------------------------------------------------------------------------------
+# See issue #756 for c problem
 def test_generic_functions():
     pyccel_test("scripts/runtest_generic_functions.py",
             dependencies = "scripts/generic_functions.py",
@@ -408,6 +409,7 @@ def test_generic_functions():
                     int,int])
 
 #------------------------------------------------------------------------------
+# C does not handle functions in functions
 def test_default_arguments():
     pyccel_test("scripts/runtest_default_args.py",
             dependencies = "scripts/default_args_mod.py",
@@ -430,6 +432,7 @@ def test_pyccel_calling_directory(language):
     compare_pyth_fort_output( pyth_out, fort_out )
 
 #------------------------------------------------------------------------------
+# C does not handle stack arrays of variable size. See #760
 def test_in_specified():
     pyccel_test("scripts/runtest_degree_in.py")
 
@@ -441,7 +444,7 @@ def test_in_specified():
                                         "scripts/hope_benchmarks/hope_pairwise_python.py",
                                         "scripts/hope_benchmarks/point_spread_func.py",
                                         "scripts/hope_benchmarks/simplify.py",
-                                        pytest.param("scripts/hope_benchmarks/fib.py",
+                                        pytest.param("scripts/hope_benchmarks_decorators/fib.py",
                                             marks = pytest.mark.xfail(reason="Issue 344 : Functions and modules cannot share the same name")),
                                         "scripts/hope_benchmarks_decorators/hope_ln_python.py",
                                         "scripts/hope_benchmarks_decorators/hope_pairwise_python.py",
@@ -453,6 +456,28 @@ def test_in_specified():
                                         ] )
 def test_hope_benchmarks( test_file ):
     pyccel_test(test_file)
+
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/hope_fib.py",
+                                        pytest.param("scripts/hope_benchmarks/quicksort.py",
+                                            marks = pytest.mark.skip(reason="len not implemented in c")),
+                                        "scripts/hope_benchmarks/hope_pisum.py",
+                                        "scripts/hope_benchmarks/hope_ln_python.py",
+                                        "scripts/hope_benchmarks/hope_pairwise_python.py",
+                                        pytest.param("scripts/hope_benchmarks/point_spread_func.py",
+                                            marks = pytest.mark.skip(reason="Numpy sum not implemented in c")),
+                                        "scripts/hope_benchmarks/simplify.py",
+                                        "scripts/hope_benchmarks_decorators/fib.py",
+                                        "scripts/hope_benchmarks_decorators/hope_ln_python.py",
+                                        "scripts/hope_benchmarks_decorators/hope_pairwise_python.py",
+                                        pytest.param("scripts/hope_benchmarks_decorators/point_spread_func.py",
+                                            marks = pytest.mark.skip(reason="Numpy sum not implemented in c")),
+                                        "scripts/hope_benchmarks_decorators/simplify.py",
+                                        pytest.param("scripts/hope_benchmarks_decorators/quicksort.py",
+                                            marks = pytest.mark.skip(reason="len not implemented in c")),
+                                        ] )
+def test_hope_benchmarks_c( test_file ):
+    pyccel_test(test_file, language='c')
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/import_syntax/from_mod_import.py",
@@ -509,6 +534,7 @@ def test_multiple_results(language):
                 ,float,float,float,float], language=language)
 
 #------------------------------------------------------------------------------
+# Print array not implemented in c
 def test_elemental():
     pyccel_test("scripts/decorators_elemental.py")
 

@@ -253,7 +253,7 @@ class SemanticParser(BasicParser):
         Return the same CodeBlock if a trailing Return is found otherwise Return a new CodeBlock with additional Deallocate Nodes.
         """
         code = expr
-        if not isinstance(expr.body[-1], Return):
+        if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
             code = expr.body + tuple(Deallocate(i) for i in self._allocs[-1])
             code = CodeBlock(code)
         self._allocs.pop()
@@ -836,6 +836,7 @@ class SemanticParser(BasicParser):
 
     def _visit_CodeBlock(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr.body]
+        ls = [line for l in ls for line in (l.body if isinstance(l, CodeBlock) else [l])]
         return CodeBlock(ls)
 
     def _visit_Nil(self, expr, **settings):

@@ -22,7 +22,7 @@ from pyccel.ast.core import create_incremented_string, SeparatorComment
 from pyccel.ast.core import Import
 from pyccel.ast.core import AugAssign
 
-from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelAnd, PyccelNe, PyccelOr, PyccelAssociativeParenthesis, IfTernaryOperator
+from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelAnd, PyccelNe, PyccelOr, PyccelAssociativeParenthesis, IfTernaryOperator, PyccelIsNot
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, str_dtype, default_precision
 
@@ -153,7 +153,7 @@ class CWrapperCodePrinter(CCodePrinter):
                         var = Variable(dtype=NativeInteger() ,name = self.get_new_name(used_names, a.name + "_dim"))
                         body = FunctionCall(numpy_get_dim, [collect_dict[a], i])
                         if a.is_optional:
-                            body = IfTernaryOperator(VariableAddress(collect_dict[a]), body , LiteralInteger(0))
+                            body = IfTernaryOperator(PyccelIsNot(VariableAddress(collect_dict[a]),Nil()), body , LiteralInteger(0))
                         body = Assign(var, body)
                         additional_body.append(body)
                         static_args.append(var)
