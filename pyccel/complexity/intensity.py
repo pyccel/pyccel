@@ -13,6 +13,8 @@ Example
 
 """
 
+from collections import OrderedDict
+
 from sympy import sympify, Symbol
 from sympy import Poly, LT
 
@@ -28,6 +30,7 @@ _cost_symbols = {ADD, SUB, MUL, DIV, IDIV, ABS,
 __all__ = ["computational_intensity"]
 
 
+# ==============================================================================
 def _leading_term(expr, *args):
     """
     Returns the leading term in a sympy Polynomial.
@@ -41,30 +44,41 @@ def _leading_term(expr, *args):
     expr = sympify(str(expr))
     P = Poly(expr, *args)
     return LT(P)
-# ...
 
-# ...
+# ==============================================================================
+def _intensity(f, m):
+    if f * m == 0:
+        return 0
+
+    args = f.free_symbols.union(m.free_symbols) - _cost_symbols
+    args = list(args)
+
+    lt_f = _leading_term(f, *args)
+    lt_m = _leading_term(m, *args)
+
+    return lt_f/lt_m
+
+# ==============================================================================
 def computational_intensity(filename_or_text, args=None, mode=None,
                             verbose=False):
 
     # ...
     complexity = OpComplexity(filename_or_text)
     f = complexity.cost(mode=mode)
+    f_costs = complexity.costs
 
     complexity = MemComplexity(filename_or_text)
     m = complexity.cost(mode=mode)
+    m_costs = complexity.costs
     # ...
 
     # ...
-    args = f.free_symbols.union(m.free_symbols) - _cost_symbols
-    args = list(args)
-    # ...
-
-    # ...
-    lt_f = _leading_term(f, *args)
-    lt_m = _leading_term(m, *args)
-
-    q = lt_f/lt_m
+    q = _intensity(f, m)
+    costs = OrderedDict()
+    for i,fi in f_costs.items():
+        mi = m_costs[i]
+        qi = _intensity(fi, mi)
+        costs[i] = qi
     # ...
 
     # ...
@@ -73,5 +87,6 @@ def computational_intensity(filename_or_text, args=None, mode=None,
         print((" memory cost             ~ " + str(m)))
         print((" computational intensity ~ " + str(q)))
     # ...
+    print(costs)
 
-    return q
+    return q, costs
