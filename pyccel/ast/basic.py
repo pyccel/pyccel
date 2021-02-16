@@ -29,9 +29,6 @@ class Basic:
     _fst = None
     _ignored_types = (Immutable, type)
 
-    def __new__(cls, *args, **kwargs):
-        hashable_args  = [a if not isinstance(a, list) else tuple(a) for a in args]
-
     def __init__(self):
         self._user_nodes = []
         self._fst = []
