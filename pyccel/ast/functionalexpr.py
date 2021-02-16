@@ -58,24 +58,22 @@ class FunctionalFor(Basic):
         return self._index
 
 #==============================================================================
-class GeneratorComprehension(Basic):
-    _attribute_nodes = ()
+class GeneratorComprehension(FunctionalFor):
+    """ Super class for all functions which reduce generator expressions to scalars
+    """
 
 #==============================================================================
-class FunctionalSum(GeneratorComprehension, FunctionalFor):
-    _attribute_nodes = FunctionalFor._attribute_nodes
+class FunctionalSum(GeneratorComprehension):
     name = 'sum'
 
 #==============================================================================
-class FunctionalMax(GeneratorComprehension, FunctionalFor):
-    _attribute_nodes = FunctionalFor._attribute_nodes
+class FunctionalMax(GeneratorComprehension):
     name = 'max'
 #==============================================================================
 
-class FunctionalMin(GeneratorComprehension, FunctionalFor):
-    _attribute_nodes = FunctionalFor._attribute_nodes
+class FunctionalMin(GeneratorComprehension):
     name = 'min'
 
 #==============================================================================
-class FunctionalMap(GeneratorComprehension, FunctionalFor):
-    _attribute_nodes = FunctionalFor._attribute_nodes
+class FunctionalMap(GeneratorComprehension):
+    pass
