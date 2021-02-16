@@ -99,22 +99,10 @@ def test_not_int(language):
     test.compare_epyccel( 0 )
     test.compare_epyccel( 4 )
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("fortran", marks = [
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c)
-    ]
-)
 def test_compare_is_nil(language):
     test = epyccel_test(base.is_nil, lang=language)
     test.compare_epyccel( None )
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("fortran", marks = [
-            pytest.mark.fortran]),
-        pytest.param("c", marks = pytest.mark.c)
-    ]
-)
 def test_compare_is_not_nil(language):
     test = epyccel_test(base.is_not_nil, lang=language)
     test.compare_epyccel( None )

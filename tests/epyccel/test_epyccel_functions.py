@@ -88,13 +88,13 @@ def test_decorator_f1(language):
     # ...
 
 #------------------------------------------------------------------------------
-def test_decorator_f2():
+def test_decorator_f2(language):
     @types('int [:]')
     def f2(x):
         y = x[0] - 1
         return y
 
-    f = epyccel(f2)
+    f = epyccel(f2, language=language)
 
     # ...
     x = np.array([3, 4, 5, 6], dtype=int)
@@ -107,6 +107,7 @@ def test_decorator_f2():
     # ...
 
 #------------------------------------------------------------------------------
+# Semantic error doesn't need testing in multiple languages
 def test_decorator_f3():
     @types('int [:]')
     def f3(x):
@@ -119,6 +120,7 @@ def test_decorator_f3():
         epyccel(f3)
 
 #------------------------------------------------------------------------------
+# Semantic error doesn't need testing in multiple languages
 def test_decorator_f4():
     @types('real [:,:]')
     def f4(x):
@@ -153,7 +155,7 @@ def test_decorator_f5(language):
     # ...
 
 #------------------------------------------------------------------------------
-def test_decorator_f6():
+def test_decorator_f6(language):
     @types('int', 'int', 'real [:,:]')
     def f6_1(m1, m2, x):
         x[:,:] = 0.
@@ -161,7 +163,7 @@ def test_decorator_f6():
             for j in range(0, m2):
                 x[i,j] = (2*i+j) * 1.
 
-    f = epyccel(f6_1)
+    f = epyccel(f6_1, language=language)
 
     # ...
     m1 = 2 ; m2 = 3
@@ -217,6 +219,7 @@ def test_decorator_f8(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python),
     ]
 )
@@ -236,6 +239,7 @@ def test_arguments_f9(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python),
     ]
 )
@@ -289,12 +293,12 @@ def test_multiple_returns_f13(language):
     f = epyccel(get_min, language=language)
     assert f(2,3) == get_min(2,3)
 
-def test_multiple_returns_f14():
+def test_multiple_returns_f14(language):
     @types('int', 'int')
     def g(x, y):
         return x,y,y,y,x
 
-    f = epyccel(g)
+    f = epyccel(g, language=language)
     assert f(2,1) == g(2,1)
 
 

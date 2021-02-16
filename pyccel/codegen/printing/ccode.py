@@ -33,6 +33,8 @@ from pyccel.ast.literals  import Nil
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
+from pyccel.ast.utilities import expand_to_loops
+
 from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variable import DottedName
@@ -517,7 +519,7 @@ class CCodePrinter(CodePrinter):
             var = self._print(e)
             if i == 0:
                 lines.append("if (%s)\n{" % self._print(c))
-            elif i == len(expr.blocks) - 1 and c is LiteralTrue():
+            elif i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
                 lines.append("else\n{")
             else:
                 lines.append("else if (%s)\n{" % self._print(c))
@@ -1331,13 +1333,15 @@ class CCodePrinter(CodePrinter):
                 stop=stop, step=step, body=body)
 
     def _print_CodeBlock(self, expr):
-        body = []
-        for b in expr.body :
+        body_exprs, new_vars = expand_to_loops(expr, self._parser.get_new_variable, language_has_vectors = False)
+        self._additional_declare.extend(new_vars)
+        body_stmts = []
+        for b in body_exprs :
             code = self._print(b)
             code = self._additional_code + code
             self._additional_code = ''
-            body.append(code)
-        return '\n'.join(self._print(b) for b in body)
+            body_stmts.append(code)
+        return '\n'.join(self._print(b) for b in body_stmts)
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
