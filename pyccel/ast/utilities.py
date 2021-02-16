@@ -401,8 +401,15 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             _          = [v.copy_attributes(f) for v,f in zip(func_vars1, internal_funcs)]
             assigns    = [Assign(v, f) for v,f in zip(func_vars1, internal_funcs)]
 
-            func_vars2 = [f.funcdef.results.clone(new_index_name('tmp')) for f in funcs]
+
+            if any(len(f.funcdef.results)!=1 for f in funcs)):
+                errors.report("Loop unravelling cannot handle function calls \
+                        which return tuples or None",
+                        symbol=line, severity='fatal')
+
+            func_vars2 = [f.funcdef.results[0].clone(new_index_name('tmp')) for f in funcs]
             assigns   += [Assign(v, f) for v,f in zip(func_vars2, funcs)]
+
             if assigns:
                 # For now we do not handle memory allocation in loop unravelling
                 if any(v.rank > 0 for v in func_vars1) or any(v.rank > 0 for v in func_vars1):
