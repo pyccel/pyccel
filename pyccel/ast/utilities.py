@@ -402,7 +402,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             assigns    = [Assign(v, f) for v,f in zip(func_vars1, internal_funcs)]
 
 
-            if any(len(f.funcdef.results)!=1 for f in funcs)):
+            if any(len(f.funcdef.results)!=1 for f in funcs):
                 errors.report("Loop unravelling cannot handle function calls \
                         which return tuples or None",
                         symbol=line, severity='fatal')
