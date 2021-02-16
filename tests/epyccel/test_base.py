@@ -199,7 +199,7 @@ def test_pass_if(language):
 def test_pass2_if(language):
     test = epyccel_test(base.pass2_if, lang=language)
     test.compare_epyccel(0.2)
-    test.compare_epyccel(0.2)
+    test.compare_epyccel(0.0)
 
 def test_use_optional(language):
     test = epyccel_test(base.use_optional, lang=language)
