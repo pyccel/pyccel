@@ -292,14 +292,6 @@ class Basic:
         """
         return len(self._user_nodes)==0
 
-    def __eq__(self, other):
-        #TODO: Remove with sympy inheritance
-        return id(self) == id(other)
-
-    def __hash__(self):
-        #TODO: Remove with sympy inheritance
-        return id(self)
-
 class PyccelAstNode(Basic):
     """Class from which all nodes containing objects inherit
     """
