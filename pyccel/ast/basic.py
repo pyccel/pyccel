@@ -184,8 +184,8 @@ class Basic(sp_Basic):
             return
         self._recursion_in_progress = True
 
-        if isinstance(original, tuple):
-            assert(isinstance(replacement, tuple))
+        if isinstance(original, iterable_types):
+            assert(isinstance(replacement, iterable_types))
             assert(len(original) == len(replacement))
         else:
             original = (original,)
@@ -196,8 +196,13 @@ class Basic(sp_Basic):
             rep = replacement[idx]
             if not self.ignore(found_node):
                 found_node.remove_user_node(self)
-            if not self.ignore(rep):
-                rep.set_current_user_node(self)
+            if isinstance(rep, iterable_types):
+                for r in rep:
+                    if not self.ignore(r):
+                        r.set_current_user_node(self)
+            else:
+                if not self.ignore(rep):
+                    rep.set_current_user_node(self)
             return rep
 
         for n in self._attribute_nodes:
@@ -218,7 +223,10 @@ class Basic(sp_Basic):
                             new_vi = prepare_sub(vi)
                         elif not self.ignore(vi):
                             vi.substitute(original, replacement, excluded_nodes)
-                    new_v.append(new_vi)
+                    if isinstance(new_vi, iterable_types):
+                        new_v.extend(new_vi)
+                    else:
+                        new_v.append(new_vi)
                 setattr(self, n, tuple(new_v))
             elif not self.ignore(v):
                 v.substitute(original, replacement, excluded_nodes)

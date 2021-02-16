@@ -21,7 +21,7 @@ from pyccel.errors.errors import Errors
 from pyccel.errors.messages import RECURSIVE_RESULTS_REQUIRED
 
 from .basic     import Basic, PyccelAstNode
-from .builtins  import (PythonEnumerate, PythonLen, PythonMap,
+from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeBool, NativeRange,
@@ -419,6 +419,10 @@ class Assign(Basic):
         status=None,
         like=None,
         ):
+        if isinstance(lhs, (tuple, list)):
+            lhs = PythonTuple(*lhs)
+        if isinstance(rhs, (tuple, list)):
+            rhs = PythonTuple(*rhs)
         self._lhs = lhs
         self._rhs = rhs
         self._status = status
@@ -643,7 +647,7 @@ class CodeBlock(Basic):
         for i in body:
             if isinstance(i, CodeBlock):
                 ls += i.body
-            else:
+            elif i is not None and not isinstance(i, EmptyNode):
                 ls.append(i)
         self._body = tuple(ls)
         super().__init__()
@@ -658,6 +662,9 @@ class CodeBlock(Basic):
 
     def insert2body(self, obj):
         self._body = tuple(self.body + (obj,))
+
+    def __str__(self):
+        return 'CodeBlock({})'.format(self.body)
 
 class AliasAssign(Basic):
 
@@ -2149,17 +2156,17 @@ class FunctionDef(Basic):
 
         self._name = newname
 
-    def add_local_var(self, var):
+    def add_local_vars(self, *variables):
         """
-        Add a new variable to the local variables tuple
+        Add (a) new variable(s) to the local variables tuple
 
         Parameters
         ----------
         var : Variable
               The new local variable
         """
-        var.set_current_user_node(self)
-        self._local_vars = self._local_vars + (var,)
+        _ = [v.set_current_user_node(self) for v in variables]
+        self._local_vars += variables
 
     def __getnewargs__(self):
         """
