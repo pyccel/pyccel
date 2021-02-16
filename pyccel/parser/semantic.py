@@ -1164,7 +1164,7 @@ class SemanticParser(BasicParser):
     def _visit_PyccelOperator(self, expr, **settings):
         args     = [self._visit(a, **settings) for a in expr.args]
         try:
-            expr_new = expr.func(*args)
+            expr_new = type(expr)(*args)
         except PyccelSemanticError as err:
             msg = str(err)
             errors.report(msg, symbol=expr,

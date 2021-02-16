@@ -176,6 +176,10 @@ class PyccelOperator(PyccelAstNode):
         else:
             self._order = 'C'
 
+    @property
+    def args(self):
+        return self._args
+
 #==============================================================================
 
 class PyccelUnaryOperator(PyccelOperator):
