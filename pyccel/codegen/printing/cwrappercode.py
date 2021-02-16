@@ -287,7 +287,11 @@ class CWrapperCodePrinter(CCodePrinter):
             return scalar_check, LiteralTrue(), None
 
         numpy_type_check  = NumpyType_Check(variable, collect_var)
-        python_type_check = PythonType_Check(variable, collect_var)
+        python_type_check = None
+
+        #When the variable precision is equal to default system precision a python type check is needed
+        if variable.precision == default_precision[str_dtype(variable.dtype)] :
+            python_type_check = PythonType_Check(variable, collect_var)
 
         error = PyErr_SetString('PyExc_TypeError', '"{var_name} must be {precision} bit {dtype}"'.format(
                         var_name  = variable,
@@ -342,7 +346,7 @@ class CWrapperCodePrinter(CCodePrinter):
         of arguments in format:
             if collect_var is numpy_type:
                 collect_value from numpy type
-            elif collect_var is python_type:
+            elif collect_var is python_type: #When needed
                 collect value from python type
             else
                 raise an error
@@ -377,7 +381,8 @@ class CWrapperCodePrinter(CCodePrinter):
             numpy_collect  += optional_collect
 
         sections.append(IfSection(numpy_check, numpy_collect))
-        sections.append(IfSection(python_check, python_collect))
+        if python_check:
+            sections.append(IfSection(python_check, python_collect))
 
         if error_check:
             sections.append(IfSection(LiteralTrue(), [error, Return([Nil()])]))
