@@ -436,6 +436,8 @@ class PythonMap(Basic):
 
     @property
     def args(self):
+        """ Arguments of the map
+        """
         return self._args
 
 #==============================================================================

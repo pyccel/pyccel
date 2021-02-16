@@ -65,14 +65,23 @@ class GeneratorComprehension(FunctionalFor):
 #==============================================================================
 class FunctionalSum(GeneratorComprehension):
     name = 'sum'
+    """ Represents a call to sum for a list argument
+    >>> sum([i in range(5)])
+    """
 
 #==============================================================================
 class FunctionalMax(GeneratorComprehension):
     name = 'max'
+    """ Represents a call to max for a list argument
+    >>> max([i in range(5)])
+    """
 #==============================================================================
 
 class FunctionalMin(GeneratorComprehension):
     name = 'min'
+    """ Represents a call to min for a list argument
+    >>> min([i in range(5)])
+    """
 
 #==============================================================================
 class FunctionalMap(GeneratorComprehension):
