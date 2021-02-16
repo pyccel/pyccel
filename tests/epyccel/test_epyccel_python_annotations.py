@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import numpy as np
+from numpy.random import randint
 
 from pyccel.epyccel import epyccel
 from modules import python_annotations
@@ -11,7 +12,7 @@ def test_array_int32_1d_scalar_add():
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
-    a = 5
+    a = randint(low = -1e9, high = 1e9, dtype = np.int32)
 
     f1(x1, a)
     f2(x2, a)
@@ -25,7 +26,7 @@ def test_array_int32_2d_C_scalar_add():
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
     x2 = np.copy(x1)
-    a = 5
+    a = randint(low = -1e9, high = 1e9, dtype = np.int32)
 
     f1(x1, a)
     f2(x2, a)
