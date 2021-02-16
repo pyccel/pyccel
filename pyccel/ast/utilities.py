@@ -289,7 +289,7 @@ def insert_index(expr, pos, index_var):
 LoopCollection = namedtuple('LoopCollection', ['body', 'length', 'modified_vars'])
 
 #==============================================================================
-def collect_loops(block, indices, new_index_name, language_has_vectors = False):
+def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors = False):
     """
     Run through a code block and split it into lists of tuples of lists where
     each inner list represents a code block and the tuples contain the lists
@@ -315,6 +315,8 @@ def collect_loops(block, indices, new_index_name, language_has_vectors = False):
     new_index_name        : function
                             A function which provides a new variable name from a base name,
                             avoiding name collisions
+    tmp_vars              : list
+                            A list to which any temporary variables created can be appended
     language_has_vectors  : bool
                             Indicates if the language has support for vector
                             operations of the same shape
@@ -386,6 +388,30 @@ def collect_loops(block, indices, new_index_name, language_has_vectors = False):
                                  for v in f.get_attribute_nodes((Variable, IndexedElement, VariableAddress),
                                      excluded_nodes = (FunctionDef)))
 
+            # Replace function calls with temporary variables
+            # This ensures that the function is only called once and stops problems
+            # for expressions such as:
+            # c += b*np.sum(c)
+            func_vars1 = [Variable(f.dtype, new_index_name('tmp')) for f in internal_funcs]
+            _          = [v.copy_attributes(f) for v,f in zip(func_vars1, internal_funcs)]
+            assigns    = [Assign(v, f) for v,f in zip(func_vars1, internal_funcs)]
+
+            func_vars2 = [f.funcdef.results.clone(new_index_name('tmp')) for f in funcs]
+            assigns   += [Assign(v, f) for v,f in zip(func_vars2, funcs)]
+            if assigns:
+                # For now we do not handle memory allocation in loop unravelling
+                if any(v.rank > 0 for v in func_vars1) or any(v.rank > 0 for v in func_vars1):
+                    errors.report("Loop unravelling cannot handle extraction of function calls \
+                            which return arrays as this requires allocation. Please place the function \
+                            call on its own line",
+                            symbol=line, severity='fatal')
+                line.substitute(internal_funcs, func_vars1, excluded_nodes=(FunctionCall))
+                line.substitute(funcs, func_vars2)
+                tmp_vars.extend(func_vars1)
+                tmp_vars.extend(func_vars2)
+                result.extend(assigns)
+                current_level = 0
+
             rank = line.lhs.rank
             shape = line.lhs.shape
             new_vars = variables
@@ -396,14 +422,15 @@ def collect_loops(block, indices, new_index_name, language_has_vectors = False):
                 new_level += 1
                 # If an index exists at the same depth, reuse it if not create one
                 if rank+index >= len(indices):
-                    indices.append(Variable('int',new_index_name('i').format(kk)))
+                    indices.append(Variable('int',new_index_name('i')))
                 index_var = indices[rank+index]
                 new_vars = [insert_index(v, index, index_var) for v in new_vars]
                 if compatible_operation(*new_vars, language_has_vectors = language_has_vectors):
                     break
 
             # Replace variable expressions with Indexed versions
-            line.substitute(variables, new_vars, excluded_nodes = (FunctionDef))
+            line.substitute(variables, new_vars, excluded_nodes = (FunctionCall, PyccelInternalFunction))
+            _ = [f.substitute(variables, new_vars, excluded_nodes = (FunctionDef)) for f in elemental_func_calls]
 
             # Recurse through result tree to save line with lines which need
             # the same set of for loops
@@ -535,9 +562,10 @@ def expand_to_loops(block, new_index_name, language_has_vectors = False):
     """
     expand_tuple_assignments(block)
     indices = []
-    res = collect_loops(block.body, indices, new_index_name, language_has_vectors)
+    tmp_vars = []
+    res = collect_loops(block.body, indices, new_index_name, tmp_vars, language_has_vectors)
 
     body = [insert_fors(b, indices) if isinstance(b, tuple) else [b] for b in res]
     body = [bi for b in body for bi in b]
 
-    return body, indices
+    return body, indices+tmp_vars
