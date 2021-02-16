@@ -3,6 +3,7 @@ from pyccel.decorators import types, stack_array, pure
 
 @pure
 @types('int')
+@stack_array('tmp')
 def test_degree(degree):
     from numpy import empty
 

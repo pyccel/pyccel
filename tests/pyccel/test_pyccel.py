@@ -432,8 +432,9 @@ def test_pyccel_calling_directory(language):
     compare_pyth_fort_output( pyth_out, fort_out )
 
 #------------------------------------------------------------------------------
-def test_in_specified(language):
-    pyccel_test("scripts/runtest_degree_in.py", language=language)
+# C does not handle stack arrays of variable size. See #760
+def test_in_specified():
+    pyccel_test("scripts/runtest_degree_in.py")
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/hope_fib.py",
