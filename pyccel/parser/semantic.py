@@ -2302,8 +2302,10 @@ class SemanticParser(BasicParser):
         return If(*args)
 
     def _visit_IfTernaryOperator(self, expr, **settings):
-        args = [self._visit(i, **settings) for i in expr.args]
-        return expr.func(*args)
+        cond        = self._visit(expr.cond, **settings)
+        value_true  = self._visit(expr.value_true, **settings)
+        value_false = self._visit(expr.value_false, **settings)
+        return IfTernaryOperator(cond, value_true, value_false)
 
     def _visit_VariableHeader(self, expr, **settings):
 
