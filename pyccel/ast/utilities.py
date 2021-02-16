@@ -27,7 +27,7 @@ from .literals      import LiteralString, LiteralInteger, Literal, Nil
 
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants)
-from .operators     import PyccelAdd, PyccelMul
+from .operators     import PyccelAdd, PyccelMul, PyccelIs
 from .variable      import (Constant, Variable, ValuedVariable,
                             IndexedElement, TupleVariable, VariableAddress)
 
@@ -329,12 +329,12 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
     """
     result = []
     current_level = 0
-    array_creator_types = (Allocate, PythonList, PythonTuple, Dlist, Nil)
+    array_creator_types = (Allocate, PythonList, PythonTuple, Dlist)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
                                 or (isinstance(f, PyccelInternalFunction) and not f.is_elemental))
     for line in block:
         if (isinstance(line, Assign) and
-                not isinstance(line.rhs, array_creator_types) and # not creating array
+                not isinstance(line.rhs, (array_creator_types, Nil)) and # not creating array
                 not line.rhs.get_attribute_nodes(array_creator_types, excluded_nodes = (ValuedVariable)) and # not creating array
                 not is_function_call(line.rhs)): # not a basic function call
 
@@ -353,7 +353,8 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                                                        IndexedElement,
                                                        VariableAddress,
                                                        FunctionCall,
-                                                       PyccelInternalFunction))
+                                                       PyccelInternalFunction,
+                                                       PyccelIs))
 
             # Find all elemental function calls. Normally function call arguments are not indexed
             # However elemental functions are an exception
@@ -370,10 +371,12 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
                                  for v in f.get_attribute_nodes((Variable, IndexedElement, VariableAddress),
                                                             excluded_nodes = (FunctionDef))]
 
+            is_checks = [n for n in notable_nodes if isinstance(n, PyccelIs)]
+
             variables = list(set(variables))
 
             # Check if the expression is already satisfactory
-            if compatible_operation(*variables, language_has_vectors = language_has_vectors):
+            if compatible_operation(*variables, *is_checks, language_has_vectors = language_has_vectors):
                 result.append(line)
                 current_level = 0
                 continue
