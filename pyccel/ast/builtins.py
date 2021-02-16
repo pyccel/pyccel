@@ -532,7 +532,7 @@ class PythonZip(PyccelInternalFunction):
             raise TypeError('args must be a list or tuple')
         elif len(args) < 2:
             raise ValueError('args must be of length > 2')
-        super().__init__(args)
+        super().__init__(*args)
         if PyccelAstNode.stage == 'syntactic':
             self._length = None
             return
