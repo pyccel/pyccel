@@ -20,10 +20,12 @@ from pyccel.ast.basic        import Basic
 from pyccel.ast.builtins     import PythonTuple
 from pyccel.ast.core         import For, Assign, CodeBlock
 from pyccel.ast.internals    import PyccelSymbol
-from pyccel.ast.internals import Slice
+from pyccel.ast.internals    import Slice
+from pyccel.ast.literals     import Literal
 from pyccel.ast.numpyext     import NumpyZeros, NumpyOnes
 from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.complexity.basic import Complexity
+from pyccel.complexity.basic import SHAPE
 
 
 __all__ = ["count_access", "MemComplexity"]
@@ -131,19 +133,28 @@ class MemComplexity(Complexity):
             # ...
             start = 0
             if not i.start == None:
-                start = i.start.python_value
+                if isinstance(i.start, Literal):
+                    start = i.start.python_value
+                else:
+                    start = pyccel_to_sympy(i.start, self._symbol_map, self._used_names)
             # ...
 
             # ...
-            stop = SHAPE(expr.lhs.base, e)
+            stop = SHAPE(expr.base, e)
             if not i.stop == None:
-                stop = i.stop.python_value
+                if isinstance(i.stop, Literal):
+                    stop = i.stop.python_value
+                else:
+                    stop = pyccel_to_sympy(i.stop, self._symbol_map, self._used_names)
             # ...
 
             # ...
             step = 1
             if not i.step == None:
-                step = i.step.python_value
+                if isinstance(i.step, Literal):
+                    step = i.step.python_value
+                else:
+                    step = pyccel_to_sympy(i.step, self._symbol_map, self._used_names)
             # ...
 
             if not(step == 1):
