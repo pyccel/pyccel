@@ -449,7 +449,7 @@ class CCodePrinter(CodePrinter):
         return str(expr.p)
 
     def _print_LiteralFloat(self, expr):
-        return CodePrinter._print_Float(self, expr)
+        return repr(expr)
 
     def _print_LiteralComplex(self, expr):
         if expr.real == LiteralFloat(0):

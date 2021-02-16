@@ -2596,7 +2596,7 @@ class FCodePrinter(CodePrinter):
         return str(expr)
 
     def _print_LiteralFloat(self, expr):
-        printed = CodePrinter._print_Float(self, expr)
+        printed = repr(expr)
         return "{}_{}".format(printed, self.print_kind(expr))
 
     def _print_LiteralComplex(self, expr):
