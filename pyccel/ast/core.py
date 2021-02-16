@@ -628,6 +628,27 @@ class CodeBlock(Basic):
     def __str__(self):
         return 'CodeBlock({})'.format(self.body)
 
+    def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable function that can be called
+           to create the initial version of the object
+           and its arguments.
+        """
+        kwargs = dict(body = self.body)
+        return (apply, (self.__class__, (), kwargs))
+
 class AliasAssign(Basic):
 
     """Represents aliasing for code generation. An alias is any statement of the
@@ -3091,9 +3112,29 @@ class Comment(Basic):
     def text(self):
         return self._text
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '# {0}'.format(sstr(self.text))
+    def __str__(self):
+        return '# {0}'.format(str(self.text))
+
+    def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable function that can be called
+           to create the initial version of the object
+           and its arguments.
+        """
+        kwargs = dict(text = self.text)
+        return (apply, (self.__class__, (), kwargs))
 
 
 class SeparatorComment(Comment):
