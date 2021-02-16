@@ -513,19 +513,23 @@ def expand_tuple_assignments(block):
     block      : CodeBlock
                 The expression to be modified
 
+    Results
+    =======
+    list : The contents of a replacement CodeBlock
+
     Examples
     --------
-    >>> from pyccel.ast.core import Variable, Assign
-    >>> from pyccel.ast.operators import PyccelAdd
+    >>> from pyccel.ast.builtins  import PythonTuple
+    >>> from pyccel.ast.core      import Assign, CodeBlock
+    >>> from pyccel.ast.literals  import LiteralInteger
     >>> from pyccel.ast.utilities import expand_to_loops
-    >>> a = Variable('int', 'a', shape=(4,), rank=1)
-    >>> b = Variable('int', 'b', shape=(4,), rank=1)
-    >>> c = Variable('int', 'c', shape=(4,), rank=1)
-    >>> i = Variable('int', 'i', shape=())
-    >>> d = PyccelAdd(a,b)
-    >>> expr = [Assign(c,d)]
-    >>> expand_to_loops(expr, language_has_vectors = False)
-    [For(i_0, PythonRange(0, LiteralInteger(4), LiteralInteger(1)), CodeBlock([IndexedElement(c, i_0) := PyccelAdd(IndexedElement(a, i_0), IndexedElement(b, i_0))]), [])]
+    >>> from pyccel.ast.variable  import Variable
+    >>> a = Variable('int', 'a', shape=(,), rank=0)
+    >>> b = Variable('int', 'b', shape=(,), rank=0)
+    >>> c = Variable('int', 'c', shape=(,), rank=0)
+    >>> expr = [Assign(PythonTuple(a,b,c),PythonTuple(LiteralInteger(0),LiteralInteger(1),LiteralInteger(2))]
+    >>> expand_tuple_assignments(CodeBlock(expr))
+    [Assign(a, LiteralInteger(0)), Assign(b, LiteralInteger(1)), Assign(c, LiteralInteger(2))]
     """
     assigns = [a for a in block.get_attribute_nodes(Assign) \
                 if isinstance(a.lhs, TupleVariable) and not a.lhs.is_homogeneous \
