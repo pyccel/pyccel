@@ -178,6 +178,8 @@ class PyccelOperator(PyccelAstNode):
 
     @property
     def args(self):
+        """ Arguments of the operator
+        """
         return self._args
 
 #==============================================================================
