@@ -9,7 +9,6 @@ from .basic import Basic
 
 __all__ = (
     'FunctionalFor',
-    'FunctionalMap',
     'FunctionalMax',
     'FunctionalMin',
     'FunctionalSum',
@@ -82,7 +81,3 @@ class FunctionalMin(GeneratorComprehension):
     """ Represents a call to min for a list argument
     >>> min([i in range(5)])
     """
-
-#==============================================================================
-class FunctionalMap(GeneratorComprehension):
-    pass
