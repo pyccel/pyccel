@@ -20,29 +20,12 @@ Example
 from collections import OrderedDict
 
 from sympy import count_ops as sympy_count_ops
-from sympy import Tuple
 from sympy import Symbol
-from sympy import Function
 
-from pyccel.ast.literals import Literal
-from pyccel.ast.core     import For, Assign, AugAssign, CodeBlock, Comment, EmptyNode
-from pyccel.ast.core     import Allocate, Deallocate
-from pyccel.ast.core     import FunctionDef, FunctionCall
-from pyccel.ast.core     import Return
+from pyccel.ast.core     import Comment, EmptyNode
 from pyccel.ast.core     import AddOp, SubOp, MulOp, DivOp
-from pyccel.ast.numpyext import NumpyUfuncBase
-from pyccel.ast.numpyext import ( NumpySin, NumpyCos, NumpyTan, NumpyArcsin,
-                                  NumpyArccos, NumpyArctan, NumpyArctan2, NumpySinh, NumpyCosh, NumpyTanh,
-                                  NumpyArcsinh, NumpyArccosh, NumpyArctanh )
-from pyccel.ast.numpyext import ( NumpyMax, NumpyMin, NumpyFloor, NumpyAbs, NumpyFabs, NumpyExp, NumpyLog,
-                                  NumpySqrt )
-
-from pyccel.ast.internals import PyccelArraySize, Slice
-from pyccel.ast.operators import PyccelAdd, PyccelMinus, PyccelDiv, PyccelMul, PyccelFloorDiv
-from pyccel.ast.variable  import IndexedElement, Variable
 from pyccel.ast.numpyext  import NumpyZeros, NumpyOnes
-from pyccel.ast.operators import PyccelOperator, PyccelAssociativeParenthesis
-from pyccel.ast.builtins  import PythonAbs
+from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.complexity.basic import Complexity
 
 __all__ = ["OpComplexity"]
@@ -62,43 +45,7 @@ op_registry = {
     DivOp(): DIV,
 #    ModOp: MOD,
     }
-
-SHAPE = Function('shape')
 # ...
-
-# ==============================================================================
-def _compute_size_lhs(expr):
-    ntimes = 1
-
-    if isinstance(expr.lhs, IndexedElement):
-        indices = [(e,i) for e,i in enumerate(expr.lhs.indices) if isinstance(i, Slice)]
-        for e,i in indices:
-            # ...
-            start = 0
-            if not i.start == None:
-                start = i.start.python_value
-            # ...
-
-            # ...
-            stop = SHAPE(expr.lhs.base, e)
-            if not i.stop == None:
-                stop = i.stop.python_value
-            # ...
-
-            # ...
-            step = 1
-            if not i.step == None:
-                step = i.step.python_value
-            # ...
-
-            if not(step == 1):
-                raise NotImplementedError('only step == 1 is treated')
-
-            # TODO uncomment this
-            #      this was commented because we get floor(...)
-            ntimes *= (stop - start) #// step
-
-    return ntimes
 
 # ==============================================================================
 class OpComplexity(Complexity):
@@ -240,14 +187,22 @@ class OpComplexity(Complexity):
         return 0
 
     def _cost_Assign(self, expr, **settings):
-        if isinstance(expr.rhs, (NumpyZeros, NumpyOnes, Comment, EmptyNode)):
+        if isinstance(expr.rhs, (Comment, EmptyNode)):
             return 0
 
-        ntimes = _compute_size_lhs(expr)
+        # TODO add other numpy array constructors
+        if isinstance(expr.rhs, (NumpyZeros, NumpyOnes)):
+            shape = [pyccel_to_sympy(i, self._symbol_map, self._used_names) for i in expr.rhs.shape]
+            self._shapes[expr.lhs] = shape
+
+            return 0
+
+        ntimes = self._compute_size_lhs(expr)
 
         return ntimes * ( self._cost(expr.rhs, **settings) )
 
     def _cost_AugAssign(self, expr, **settings):
+        # TODO add other numpy array constructors
         if isinstance(expr.rhs, (NumpyZeros, NumpyOnes, Comment, EmptyNode)):
             return 0
 
@@ -258,6 +213,6 @@ class OpComplexity(Complexity):
             op = op_registry[expr.op]
         # ...
 
-        ntimes = _compute_size_lhs(expr)
+        ntimes = self._compute_size_lhs(expr)
 
         return ntimes * ( op + self._cost(expr.rhs, **settings) )

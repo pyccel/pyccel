@@ -20,10 +20,10 @@ from pyccel.ast.basic        import Basic
 from pyccel.ast.builtins     import PythonTuple
 from pyccel.ast.core         import For, Assign, CodeBlock
 from pyccel.ast.internals    import PyccelSymbol
+from pyccel.ast.internals import Slice
 from pyccel.ast.numpyext     import NumpyZeros, NumpyOnes
 from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.complexity.basic import Complexity
-from pyccel.complexity.arithmetic import _compute_size_lhs
 
 
 __all__ = ["count_access", "MemComplexity"]
@@ -78,12 +78,23 @@ class MemComplexity(Complexity):
     """
 
     def _cost_Assign(self, expr, **settings):
-        ntimes = _compute_size_lhs(expr)
-        return ntimes * ( self._cost(expr.rhs, **settings) + WRITE )
+        # TODO add other numpy array constructors
+        if isinstance(expr.rhs, (NumpyZeros, NumpyOnes)):
+            shape = [pyccel_to_sympy(i, self._symbol_map, self._used_names) for i in expr.rhs.shape]
+            size = 1
+            for i in shape:
+                size *= i
+
+            self._shapes[expr.lhs] = shape
+
+            return size * WRITE
+
+        ntimes = self._compute_size_lhs(expr)
+        return  self._cost(expr.rhs, **settings) + ntimes * WRITE
 
     def _cost_AugAssign(self, expr, **settings):
-        ntimes = _compute_size_lhs(expr)
-        return ntimes * ( self._cost(expr.rhs, **settings) + WRITE )
+        ntimes = self._compute_size_lhs(expr)
+        return  self._cost(expr.rhs, **settings) + ntimes * WRITE
 
     def _cost_PyccelAdd(self, expr, **settings):
         return sum(self._cost(i, **settings) for i in expr.args)
@@ -100,6 +111,9 @@ class MemComplexity(Complexity):
     def _cost_PyccelMul(self, expr, **settings):
         return sum(self._cost(i, **settings) for i in expr.args)
 
+    def _cost_PyccelPow(self, expr, **settings):
+        return sum(self._cost(i, **settings) for i in expr.args)
+
     def _cost_PythonAbs(self, expr, **settings):
         return sum(self._cost(i, **settings) for i in expr.args)
 
@@ -108,6 +122,46 @@ class MemComplexity(Complexity):
 
     def _cost_PyccelSymbol(self, expr, **settings):
         return READ
+
+    def _cost_IndexedElement(self, expr, **settings):
+
+        ntimes = 1
+        indices = [(e,i) for e,i in enumerate(expr.indices) if isinstance(i, Slice)]
+        for e,i in indices:
+            # ...
+            start = 0
+            if not i.start == None:
+                start = i.start.python_value
+            # ...
+
+            # ...
+            stop = SHAPE(expr.lhs.base, e)
+            if not i.stop == None:
+                stop = i.stop.python_value
+            # ...
+
+            # ...
+            step = 1
+            if not i.step == None:
+                step = i.step.python_value
+            # ...
+
+            if not(step == 1):
+                raise NotImplementedError('only step == 1 is treated')
+
+            # TODO uncomment this
+            #      this was commented because we get floor(...)
+            ntimes *= (stop - start) #// step
+
+        return ntimes * READ
+
+    def _cost_Allocate(self, expr, **settings):
+        # TODO
+        return 0
+
+    def _cost_Deallocate(self, expr, **settings):
+        # TODO
+        return 0
 
     def _cost_NumpyFloor(self, expr, **settings):
         return sum(self._cost(i, **settings) for i in expr.args)

@@ -7,12 +7,18 @@
 from collections import OrderedDict
 
 from sympy import summation
+from sympy import Function
 
 from pyccel.parser.parser import Parser
 from pyccel.ast.sympy_helper import pyccel_to_sympy
+from pyccel.ast.variable import IndexedElement
+from pyccel.ast.internals import Slice
 
 
 __all__ = ["Complexity"]
+
+SHAPE = Function('shape')
+
 
 # ...
 class Complexity(object):
@@ -42,6 +48,7 @@ class Complexity(object):
         # ...
 
         self._costs = OrderedDict()
+        self._shapes = OrderedDict()
         self._symbol_map = {}
         self._used_names = set()
         self._visual = True
@@ -61,6 +68,11 @@ class Complexity(object):
     def costs(self):
         """Returns costs of declared functions."""
         return self._costs
+
+    @property
+    def shapes(self):
+        """Returns shapes of allocated arrays."""
+        return self._shapes
 
     @property
     def mode(self):
@@ -185,3 +197,44 @@ class Complexity(object):
 
     def _cost_PyccelArraySize(self, expr, **settings):
         return 0
+
+    def _compute_size_lhs(self, expr):
+        ntimes = 1
+
+        if isinstance(expr.lhs, IndexedElement):
+            shape = None
+            if expr.lhs.base in self.shapes.keys():
+                shape = self.shapes[expr.lhs.base]
+
+            indices = [(e,i) for e,i in enumerate(expr.lhs.indices) if isinstance(i, Slice)]
+            for e,i in indices:
+                # ...
+                start = 0
+                if not i.start == None:
+                    start = i.start.python_value
+                # ...
+
+                # ...
+                stop = SHAPE(expr.lhs.base, e)
+                if not i.stop == None:
+                    stop = i.stop.python_value
+
+                elif not(shape is None):
+                        stop = shape[e]
+                # ...
+
+                # ...
+                step = 1
+                if not i.step == None:
+                    step = i.step.python_value
+                # ...
+
+                if not(step == 1):
+                    raise NotImplementedError('only step == 1 is treated')
+
+                # TODO uncomment this
+                #      this was commented because we get floor(...)
+                ntimes *= (stop - start) #// step
+
+        return ntimes
+
