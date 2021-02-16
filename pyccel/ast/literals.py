@@ -4,6 +4,7 @@
 #------------------------------------------------------------------------------------------#
 """ This module contains all literal types
 """
+from pyccel.utilities.metaclasses import Singleton, ArgumentSingleton
 
 from .basic              import PyccelAstNode, Basic
 from .datatypes          import (NativeInteger, NativeBool, NativeReal,
@@ -62,7 +63,7 @@ class Literal(PyccelAstNode):
         return hash(self.python_value)
 
 #------------------------------------------------------------------------------
-class LiteralTrue(Literal):
+class LiteralTrue(Literal, metaclass = ArgumentSingleton):
     """Represents the python value True"""
     _dtype     = NativeBool()
 
@@ -74,7 +75,7 @@ class LiteralTrue(Literal):
         return True
 
 #------------------------------------------------------------------------------
-class LiteralFalse(Literal):
+class LiteralFalse(Literal, metaclass = ArgumentSingleton):
     """Represents the python value False"""
     _dtype     = NativeBool()
 
@@ -207,7 +208,7 @@ class LiteralString(Literal):
 
 #------------------------------------------------------------------------------
 
-class Nil(Basic):
+class Nil(Basic, metaclass=Singleton):
 
     """
     class for None object in the code.
@@ -221,8 +222,6 @@ class Nil(Basic):
         return False
 
     def __eq__(self, other):
-        #TODO [EB 7.2.2021] Make Nil singleton. See https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python method 3
-        #                   Blocked by issue 662
         return isinstance(other, Nil)
 
 #------------------------------------------------------------------------------

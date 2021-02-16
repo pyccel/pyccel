@@ -9,12 +9,11 @@
 Classes and methods that handle supported datatypes in C/Fortran.
 """
 
-from .basic import Basic
-
-from sympy.core.singleton import Singleton
-from sympy.core.compatibility import with_metaclass
-
 import numpy
+
+from pyccel.utilities.metaclasses import Singleton
+
+from .basic import Basic
 
 # TODO [YG, 12.03.2020] verify why we need all these types
 # NOTE: symbols not used in pyccel are commented out
@@ -112,7 +111,7 @@ dtype_and_precision_registry = { 'real':('real',default_precision['float']),
                                  'pythonbool' :('bool',default_precision['bool'])}
 
 
-class DataType(with_metaclass(Singleton)):
+class DataType(metaclass=Singleton):
     """Base class representing native datatypes"""
     _name = '__UNDEFINED__'
 

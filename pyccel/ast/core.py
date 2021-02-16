@@ -7,13 +7,13 @@
 
 from collections     import OrderedDict
 
-from sympy.core.compatibility import with_metaclass
-from sympy.core.singleton     import Singleton
 from sympy.logic.boolalg      import And as sp_And
 
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import RECURSIVE_RESULTS_REQUIRED
+
+from pyccel.utilities.metaclasses import Singleton
 
 from .basic     import Basic, PyccelAstNode, iterable
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
@@ -747,7 +747,7 @@ class SymbolicAssign(Basic):
 # smaller that could be used, that would be preferable. We only use them as
 # tokens.
 
-class NativeOp(with_metaclass(Singleton)):
+class NativeOp(metaclass=Singleton):
 
     """Base type for native operands."""
 
