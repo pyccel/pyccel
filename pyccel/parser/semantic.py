@@ -1198,14 +1198,14 @@ class SemanticParser(BasicParser):
     def _visit_Lambda(self, expr, **settings):
 
 
-        expr_names = set(map(str, expr.expr.atoms(PyccelSymbol, Argument)))
+        expr_names = set(map(str, expr.expr.get_attribute_nodes((PyccelSymbol, Argument))))
         var_names = map(str, expr.variables)
         missing_vars = expr_names.difference(var_names)
         if len(missing_vars) > 0:
             errors.report(UNDEFINED_LAMBDA_VARIABLE, symbol = missing_vars,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal', blocker=True)
-        funcs = expr.expr.atoms(FunctionCall)
+        funcs = expr.expr.get_attribute_nodes(FunctionCall)
         for func in funcs:
             name = _get_name(func)
             f = self.get_symbolic_function(name)
@@ -3043,8 +3043,8 @@ class SemanticParser(BasicParser):
     def _visit_Dlist(self, expr, **settings):
         # Arguments have been treated in PyccelMul
 
-        val = expr.args[0]
-        length = expr.args[1]
+        val = expr.val
+        length = expr.length
         if isinstance(val, (TupleVariable, PythonTuple)) and \
                 not isinstance(val, PythonList):
             if isinstance(length, LiteralInteger):
