@@ -74,71 +74,122 @@ class OpComplexity(Complexity):
 
     def _cost_NumpyFloor(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('FLOOR')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('FLOOR')
 
     def _cost_NumpyExp(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('EXP')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('EXP')
 
     def _cost_NumpyLog(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('LOG')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('LOG')
 
     def _cost_NumpySqrt(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('SQRT')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('SQRT')
 
     def _cost_NumpySin(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('SIN')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('SIN')
 
     def _cost_NumpyCos(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('COS')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('COS')
 
     def _cost_NumpyTan(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('TAN')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('TAN')
 
     def _cost_NumpyArcsin(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('ARCSIN')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('ARCSIN')
 
     def _cost_NumpyArccos(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('ARCCOS')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('ARCCOS')
 
     def _cost_NumpyArctan(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('ARCTAN')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('ARCTAN')
 
     def _cost_NumpyArctan2(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('ARCTAN2')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('ARCTAN2')
 
     def _cost_NumpySinh(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('SINH')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('SINH')
 
     def _cost_NumpyCosh(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('COSH')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('COSH')
 
     def _cost_NumpyTanh(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('TANH')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('TANH')
 
     def _cost_NumpyArcsinh(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('ARCSINH')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('ARCSINH')
 
     def _cost_NumpyArccosh(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('ARCCOSH')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('ARCCOSH')
 
     def _cost_NumpyArctanh(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
-        return ops + Symbol('ARCTANH')
+        if self.mode:
+            return ops + 1
+        else:
+            return ops + Symbol('ARCTANH')
 
     def _cost_PyccelAdd(self, expr, **settings):
         ops = sum(self._cost(i, **settings) for i in expr.args)
