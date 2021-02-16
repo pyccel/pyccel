@@ -509,18 +509,26 @@ class OmpTargetConstruct(BasicStmt):
                           OmpMap)
 
         combined = None
-        if isinstance(self.combined, OmpTargetParallel):
+        if isinstance(self.combined, OmpTargetParallel) or isinstance(self.combined, OmpTargetTeams):
             combined = self.combined.expr
-            _valid_clauses = _valid_clauses + _valid_parallel_clauses
-            if 'for' in self.combined.expr:
+            if 'distribute' in self.combined.expr:
+                _valid_clauses = _valid_clauses + _valid_Distribute_clauses
+            if 'parallel' in self.combined.expr:
+                _valid_clauses = _valid_clauses + _valid_parallel_clauses
+            if 'simd' in self.combined.expr:
                 _valid_clauses = _valid_clauses + _valid_simd_clauses
+            if 'for' in self.combined.expr:
                 _valid_clauses = _valid_clauses + _valid_loop_clauses
+            if 'teams' in self.combined.expr:
+                _valid_clauses = _valid_clauses + _valid_teams_clauses
         txt = ''
         for clause in self.clauses:
-            if isinstance(clause, _valid_clauses) and not isinstance(clause, OmpCopyin):
+            if isinstance(clause, _valid_clauses):
+                if isinstance(clause, OmpCopyin) and isinstance(self.combined, OmpTargetParallel):
+                    raise TypeError('Wrong clause for OmpTargetConstruct')
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
-                raise TypeError('Wrong clause for OmpCancelConstruct')
+                raise TypeError('Wrong clause for OmpTargetConstruct')
         return OMP_Target_Construct(txt, combined)
 
 class OmpTeamsConstruct(BasicStmt):
@@ -539,12 +547,7 @@ class OmpTeamsConstruct(BasicStmt):
         if DEBUG:
             print("> OmpTeamsConstruct: expr")
 
-        _valid_clauses = (OmpPrivate,\
-                          OmpLastPrivate, \
-                          OmpShared, \
-                          OmpReduction, \
-                          OmpNumTeams, \
-                          OmpThreadLimit)
+        _valid_clauses = _valid_teams_clauses
 
         combined = None
         if isinstance(self.combined, OmpDistributeCombined):
@@ -1270,11 +1273,47 @@ class OmpTargetParallel(BasicStmt):
 
         return txt
 
+class OmpTargetTeams(BasicStmt):
+    """Class representing a ."""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.tname  = kwargs.pop('tname')
+        self.dname  = kwargs.pop('dname', None)
+        self.sname  = kwargs.pop('sname', None)
+        self.pname  = kwargs.pop('pname', None)
+        self.fname  = kwargs.pop('fname', None)
+        self.ssname = kwargs.pop('ssname', None)
+
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> Combined Target Teams")
+
+        txt = self.tname
+        if self.dname:
+            txt += ' ' + self.dname
+            if self.sname:
+                txt += ' ' + self.sname
+            else:
+                txt += ' ' + self.pname + ' ' + self.fname
+                if self.ssname:
+                    txt += ' ' + self.ssname
+        return txt
 #################################################
 
 #################################################
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
+
+_valid_teams_clauses = (OmpPrivate,\
+                        OmpLastPrivate, \
+                        OmpShared, \
+                        OmpReduction, \
+                        OmpNumTeams, \
+                        OmpThreadLimit)
 
 _valid_sections_clauses = (OmpPrivate, \
                            OmpFirstPrivate, \
@@ -1381,7 +1420,8 @@ omp_clauses = [OmpCollapse,
                OmpPSections,
                OmpTaskloopSimd,
                OmpDistributeCombined,
-               OmpTargetParallel]
+               OmpTargetParallel,
+               OmpTargetTeams]
 
 omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
 

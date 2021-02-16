@@ -49,7 +49,7 @@ OmpMaskedConstruct:     name='masked'     combined=MaskedCombined? clauses*=AllO
 OmpSimdConstruct:       name='simd'       clauses*=AllOmpClauses;
 OmpAtomicConstruct:     name='atomic'     clauses*=AllOmpClauses; // Not all clause were added (cant test them).
 OmpTaskConstruct:       name='task'       clauses*=AllOmpClauses;
-OmpCancelConstruct:     name='cancel'     clauses*=AllOmpClauses;
+OmpCancelConstruct:     name='cancel'     clauses*=OmpCancelType;
 OmpTargetConstruct:     name='target'     combined=TargetCombined? clauses*=AllOmpClauses;
 OmpTeamsConstruct:      name='teams'      combined=TeamsCombined? clauses*=AllOmpClauses;
 OmpDistributeConstruct: name='distribute' clauses*=AllOmpClauses;
@@ -69,7 +69,7 @@ OmpTaskyieldConstruct:  name='taskyield';
 ParallelCombined: OmpForSimd | OmpMaskedTaskloop | OmpPSections;
 MaskedCombined:   OmpTaskloopSimd;
 TeamsCombined:    OmpDistributeCombined;
-TargetCombined:   OmpTargetParallel;
+TargetCombined:   OmpTargetParallel | OmpTargetTeams;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -82,7 +82,7 @@ OmpPSections: sname='sections';
 OmpTaskloopSimd: tname='taskloop' sname='simd'?;
 OmpDistributeCombined: dname='distribute' (sname='simd' | (pname='parallel' fname='for' ssname='simd'?))?;
 OmpTargetParallel: pname='parallel' (fname='for' sname='simd'?)?;
-
+OmpTargetTeams: tname='teams' (dname='distribute' (sname='simd' | (pname='parallel' fname='for' ssname='simd'?))?)?;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
@@ -103,7 +103,6 @@ AllOmpClauses:
   | OmpinReduction // Deprecated in OpenMP 5.0 for TaskLoop/Task Constructs
   | OmpDepend // TODO : depend-modifier, dependence-type: (source, sink)
   | FlushList
-  | OmpCancelType
   | OmpLastPrivate
   | OmpMap
   | OmpNumTeams
