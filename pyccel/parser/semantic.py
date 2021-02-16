@@ -2364,11 +2364,7 @@ class SemanticParser(BasicParser):
                 a.set_fst(expr.fst)
                 a = self._visit_Assign(a)
                 variables = a.rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
-                a.lhs.is_temp = True
-                for b in variables:
-                    if not b.is_argument and b.allocatable:
-                        a.lhs.is_temp = False
-                        break
+                a.lhs.is_temp = not any(b.allocatable and not b.is_argument for b in variables)
                 assigns.append(a)
 
         results = [self._visit(i, **settings) for i in return_vars]
