@@ -198,7 +198,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         self._function_wrapper_names[func.name] = wrapper_name
         self._global_names.add(wrapper_name)
-    
+
         return wrapper_name
 
     # --------------------------------------------------------------------
@@ -275,13 +275,13 @@ class CWrapperCodePrinter(CCodePrinter):
         error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, arg_dtype))
 
         return check, error
-    
+
     def _get_scalar_type_check(self, variable, collect_var, error_check = True):
         """
         Responsible for collecting numpy and python type check and creating the
         corresponding error code
         """
-        
+
         if not error_check :
             scalar_check =  FunctionCall(PyArray_CheckScalar, [collect_var])
             return scalar_check, LiteralTrue(), None
@@ -306,7 +306,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _valued_variable_management(self, variable, collect_var, tmp_variable):
         """
-        Responsible for creating the body collecting the default value of an valuedVariable 
+        Responsible for creating the body collecting the default value of an valuedVariable
         and the check needed.
         if the valuedVariable is optional create body to collect the new value
 
@@ -318,7 +318,7 @@ class CWrapperCodePrinter(CCodePrinter):
             The optional variable
         collect_var  : Variable
             the pyobject type variable  holder of value
-    
+
         Returns
         -------
         section      :
@@ -370,7 +370,7 @@ class CWrapperCodePrinter(CCodePrinter):
         sections = []
 
         numpy_check, python_check, error = self._get_scalar_type_check(variable, collect_var, error_check)
-        
+
         python_collect  = [Assign(var, self.get_collect_function_call(variable, collect_var))]
         numpy_collect   = [FunctionCall(PyArray_ScalarAsCtype, [collect_var, var])]
 
@@ -493,7 +493,7 @@ class CWrapperCodePrinter(CCodePrinter):
         if variable.rank > 0:
             collect_type = PyccelPyArrayObject()
             collect_var  = Variable(dtype= collect_type, is_pointer = True, rank = variable.rank,
-                                   order= variable.order, 
+                                   order= variable.order,
                                    name=self.get_new_name(used_names, variable.name+"_tmp"))
 
         else:
