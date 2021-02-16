@@ -293,10 +293,14 @@ class CWrapperCodePrinter(CCodePrinter):
         if variable.precision == default_precision[str_dtype(variable.dtype)] :
             python_type_check = PythonType_Check(variable, collect_var)
 
-        error = PyErr_SetString('PyExc_TypeError', '"{var_name} must be {precision} bit {dtype}"'.format(
+        dtype     = variable.dtype
+        precision = '' if isinstance(dtype, NativeBool) else '{} bit '.format(variable.precision * 2 * 8)\
+                       if isinstance(dtype, NativeComplex) else '{} bit '.format(variable.precision * 8)
+
+        error = PyErr_SetString('PyExc_TypeError', '"{var_name} must be {precision}{dtype}"'.format(
                         var_name  = variable,
-                        precision = variable.precision * 8,
-                        dtype     = variable.dtype))
+                        precision = precision,
+                        dtype     = self._print(variable.dtype)))
 
         return numpy_type_check, python_type_check, error
 
