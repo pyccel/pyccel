@@ -4,6 +4,9 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
+# TODO - use SHAPE(...) as args for Poly => ex1.py breaks down for a function
+#        like array_int32_1d_scalar_add
+
 """
 This module provides us with functions and objects that allow us to compute
 the computational intensity
@@ -50,6 +53,9 @@ def _intensity(f, m):
     if f * m == 0:
         return 0
 
+    f = sympify(str(f))
+    m = sympify(str(m))
+
     args = f.free_symbols.union(m.free_symbols) - _cost_symbols
     args = list(args)
 
@@ -59,34 +65,39 @@ def _intensity(f, m):
     return lt_f/lt_m
 
 # ==============================================================================
-def computational_intensity(filename_or_text, args=None, mode=None,
-                            verbose=False):
+class ComputationalIntensity(object):
+    def __init__(self, filename_or_text):
+        self._arithmetic = OpComplexity(filename_or_text)
+        self._memory     = MemComplexity(filename_or_text)
+        self._costs = OrderedDict()
 
-    # ...
-    complexity = OpComplexity(filename_or_text)
-    f = complexity.cost(mode=mode)
-    f_costs = complexity.costs
+    @property
+    def arithmetic(self):
+        return self._arithmetic
 
-    complexity = MemComplexity(filename_or_text)
-    m = complexity.cost(mode=mode)
-    m_costs = complexity.costs
-    # ...
+    @property
+    def memory(self):
+        return self._memory
 
-    # ...
-    q = _intensity(f, m)
-    costs = OrderedDict()
-    for i,fi in f_costs.items():
-        mi = m_costs[i]
-        qi = _intensity(fi, mi)
-        costs[i] = qi
-    # ...
+    @property
+    def costs(self):
+        return self._costs
 
-    # ...
-    if verbose:
-        print((" arithmetic cost         ~ " + str(f)))
-        print((" memory cost             ~ " + str(m)))
-        print((" computational intensity ~ " + str(q)))
-    # ...
-    print(costs)
+    def cost(self, mode=None):
+        f = self.arithmetic.cost(mode=mode)
+        m = self.memory.cost(mode=mode)
 
-    return q, costs
+        f_costs = self.arithmetic.costs
+        m_costs = self.memory.costs
+
+        q = _intensity(f, m)
+
+        # ...
+        self._costs = OrderedDict()
+        for i,fi in f_costs.items():
+            mi = m_costs[i]
+            qi = _intensity(fi, mi)
+            self._costs[i] = qi
+        # ...
+
+        return q

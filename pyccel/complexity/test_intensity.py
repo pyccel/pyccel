@@ -4,7 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-from pyccel.complexity.intensity import computational_intensity
+from pyccel.complexity.intensity import ComputationalIntensity
 import os
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -16,16 +16,17 @@ files = [os.path.join(path_dir,f) for f in files if (f.endswith(".py"))]
 # ==============================================================================
 def test_complexity(f, mode=None):
 
-    complexity = computational_intensity(f, verbose=True)
-#    print(complexity)
-#    print('----------------------')
-#    for f, c in complexity.costs.items():
-#        print('> cost of {} = {}'.format(f, c))
+    complexity = ComputationalIntensity(f)
+    print(complexity.cost(mode=mode))
+    print('----------------------')
+    for f, c in complexity.costs.items():
+        print('> cost of {} = {}'.format(f, c))
 
 ######################
 if __name__ == '__main__':
 
-    test_complexity('tmp.py')
+    test_complexity('scripts/ex2.py')
+    test_complexity('scripts/ex_assembly.py')
 
 #    print('*********************************')
 #    print('***                           ***')
