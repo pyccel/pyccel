@@ -1,10 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 
-import pytest
-import numpy as np
-
-from pyccel.epyccel import epyccel
-
 def test_int_default(x : 'int'):
     return x
 
