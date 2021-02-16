@@ -126,3 +126,14 @@ def dependencies(a,b):
     c += b*np.sum(a)
 
     a[:] = c[:]
+
+@types('int[:,:]','int[:]')
+def auto_dependencies(a,b):
+    import numpy as np
+
+    c = np.ones_like(a)
+
+    a[:] += b
+    c += b*np.sum(c)
+
+    a[:] = c[:]

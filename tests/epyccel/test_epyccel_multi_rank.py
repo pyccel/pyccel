@@ -226,3 +226,18 @@ def test_dependencies():
     f2(x2, y2)
 
     assert np.array_equal( x1, x2 )
+
+def test_auto_dependencies():
+    f1 = multi_rank.auto_dependencies
+    f2 = epyccel( f1 )
+
+    x1 = np.array(rand(4,5)*10, dtype=int)
+    x2 = np.copy(x1)
+
+    y1 = np.array(rand(5)*10, dtype=int)
+    y2 = np.copy(y1)
+
+    f1(x1, y1)
+    f2(x2, y2)
+
+    assert np.array_equal( x1, x2 )
