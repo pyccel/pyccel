@@ -261,6 +261,19 @@ class CWrapperCodePrinter(CCodePrinter):
     # --------------------------------------------------------------------
     # Functions that take care of collecting (data type, rank) checks and creating the error code
     # --------------------------------------------------------------------
+    def _generate_TypeError_message(self, variable):
+        """
+        Generate TypeError message from the variable informations (datatype, precision)
+        """
+        dtype     = variable.dtype
+        precision = '' if isinstance(dtype, NativeBool) else '{} bit '.format(variable.precision * 2 * 8)\
+                       if isinstance(dtype, NativeComplex) else '{} bit '.format(variable.precision * 8)
+
+        message = '"{var_name} must be {precision}{dtype}"'.format(
+                        var_name  = variable,
+                        precision = precision,
+                        dtype     = self._print(variable.dtype))
+        return message
 
     def _get_array_type_check(self, variable, collect_var):
         """
@@ -297,10 +310,7 @@ class CWrapperCodePrinter(CCodePrinter):
         precision = '' if isinstance(dtype, NativeBool) else '{} bit '.format(variable.precision * 2 * 8)\
                        if isinstance(dtype, NativeComplex) else '{} bit '.format(variable.precision * 8)
 
-        error = PyErr_SetString('PyExc_TypeError', '"{var_name} must be {precision}{dtype}"'.format(
-                        var_name  = variable,
-                        precision = precision,
-                        dtype     = self._print(variable.dtype)))
+        error = PyErr_SetString('PyExc_TypeError', self._generate_TypeError_message(variable))
 
         return numpy_type_check, python_type_check, error
 
