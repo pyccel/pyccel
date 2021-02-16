@@ -534,7 +534,7 @@ class PythonZip(Basic):
             self._length = None
             return
         else:
-            lengths = [a.shape[0] for a in self.args if not isinstance(a.shape[0], PyccelArraySize)]
+            lengths = [a.shape[0].python_value for a in self.args if isinstance(a.shape[0], LiteralInteger)]
             if lengths:
                 self._length = max(lengths)
             else:
