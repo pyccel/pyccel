@@ -2156,7 +2156,7 @@ class FunctionDef(Basic):
 
         self._name = newname
 
-    def add_local_var(self, *var):
+    def add_local_vars(self, *variables):
         """
         Add (a) new variable(s) to the local variables tuple
 
@@ -2165,8 +2165,8 @@ class FunctionDef(Basic):
         var : Variable
               The new local variable
         """
-        _ = [v.set_current_user_node(self) for v in var]
-        self._local_vars += var
+        _ = [v.set_current_user_node(self) for v in variables]
+        self._local_vars += variables
 
     def __getnewargs__(self):
         """
