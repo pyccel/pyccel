@@ -15,7 +15,7 @@ from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
-from .internals import PyccelInternalFunction, PyccelArraySize
+from .internals import PyccelInternalFunction
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
@@ -392,6 +392,8 @@ class PythonTuple(PyccelAstNode):
 
     @property
     def args(self):
+        """ Arguments of the tuple
+        """
         return self._args
 
 #==============================================================================
@@ -515,7 +517,7 @@ class PythonRange(Basic):
 
 
 #==============================================================================
-class PythonZip(Basic):
+class PythonZip(PyccelInternalFunction):
 
     """
     Represents a zip stmt.
@@ -528,24 +530,21 @@ class PythonZip(Basic):
             raise TypeError('args must be a list or tuple')
         elif len(args) < 2:
             raise ValueError('args must be of length > 2')
-        self._args = args
-        super().__init__()
+        super().__init__(args)
         if PyccelAstNode.stage == 'syntactic':
             self._length = None
             return
         else:
             lengths = [a.shape[0].python_value for a in self.args if isinstance(a.shape[0], LiteralInteger)]
             if lengths:
-                self._length = max(lengths)
+                self._length = min(lengths)
             else:
                 self._length = self.args[0].shape[0]
 
     @property
-    def args(self):
-        return self._args
-
-    @property
     def length(self):
+        """ Length of the shortest zip argument
+        """
         return self._length
 
 #==============================================================================
