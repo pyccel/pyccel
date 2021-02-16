@@ -50,7 +50,6 @@ from pyccel.ast.core import With, Block
 from pyccel.ast.builtins import PythonList
 from pyccel.ast.core import Dlist
 from pyccel.ast.core import StarredArguments
-from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
 from pyccel.ast.itertoolsext import Product
@@ -1719,22 +1718,6 @@ class SemanticParser(BasicParser):
                 i.set_fst(fst)
             rhs = self._visit_FunctionDef(rhs, **settings)
             return rhs
-
-        elif isinstance(rhs, Block):
-            #case of inline
-            results = rhs.get_attribute_nodes(rhs.body,Return)
-            sub = list(zip(results,[EmptyNode()]*len(results)))
-            body = rhs.body
-            body = subs(body,sub)
-            results = [i.expr for i in results]
-            lhs = expr.lhs
-            if isinstance(lhs ,(list, tuple, PythonTuple)):
-                sub = [list(zip(i,lhs)) for i in results]
-            else:
-                sub = [(i[0],lhs) for i in results]
-            body = subs(body,sub)
-            expr = Block(rhs.name, rhs.variables, body)
-            return expr
 
         elif isinstance(rhs, CodeBlock):
             if len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
