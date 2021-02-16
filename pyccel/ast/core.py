@@ -2166,7 +2166,7 @@ class FunctionDef(Basic):
               The new local variable
         """
         _ = [v.set_current_user_node(self) for v in var]
-        self._local_vars = self._local_vars + var
+        self._local_vars += var
 
     def __getnewargs__(self):
         """
