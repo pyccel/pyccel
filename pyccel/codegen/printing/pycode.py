@@ -33,6 +33,8 @@ def _construct_header(func_name, args):
 
 #==============================================================================
 class PythonCodePrinter(CodePrinter):
+    """A printer to convert pyccel expressions to strings of Python code"""
+    printmethod = "_pycode"
     _kf = dict(chain(
         _known_functions.items(),
         [(k, '' + v) for k, v in _known_functions_math.items()]
@@ -107,7 +109,7 @@ class PythonCodePrinter(CodePrinter):
                 for func in f:
                     args = func.args
                     if args:
-                        args = ', '.join("{}".format(self._print(i)) for i in args)
+                        args = ', '.join(self._print(i) for i in args)
                         dec += '@{name}({args})\n'.format(name=n, args=args)
 
                     else:
@@ -268,8 +270,8 @@ class PythonCodePrinter(CodePrinter):
                 lines.append(self._print(e))
         return "\n".join(lines)
 
-    def _print_LiteralString(self, expr):
-        return '"{}"'.format(self._print(expr.arg))
+    def _print_Literal(self, expr):
+        return repr(expr.python_value)
 
     def _print_Shape(self, expr):
         arg = self._print(expr.arg)
@@ -288,10 +290,10 @@ class PythonCodePrinter(CodePrinter):
 
             elif isinstance(f, tuple):
                 for i in f:
-                    args.append("{}".format(self._print(i)))
+                    args.append(self._print(i))
 
             else:
-                args.append("{}".format(self._print(f)))
+                args.append(self._print(f))
 
         fs = ', '.join(i for i in args)
 
