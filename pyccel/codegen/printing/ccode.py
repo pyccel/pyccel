@@ -252,17 +252,17 @@ class CCodePrinter(CodePrinter):
         'dereference': set()
     }
 
-    def __init__(self, parser, settings=None):
+    def __init__(self, parser, **settings):
 
         if parser.filename:
             errors.set_target(parser.filename, 'file')
 
-        prefix_module = None if settings is None else settings.pop('prefix_module', None)
+        prefix_module = settings.pop('prefix_module', None)
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
-        userfuncs = {} if settings is None else settings.get('user_functions', {})
+        userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
-        self._dereference = set([] if settings is None else settings.get('dereference', []))
+        self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
         self._additional_imports = set(['stdlib'])
         self._parser = parser

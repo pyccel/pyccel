@@ -198,7 +198,7 @@ class FCodePrinter(CodePrinter):
     }
 
 
-    def __init__(self, parser, settings={}):
+    def __init__(self, parser, **settings):
 
         prefix_module = settings.pop('prefix_module', None)
 
@@ -1833,7 +1833,7 @@ class FCodePrinter(CodePrinter):
                                        prolog, epilog)
 
         elif isinstance(expr.iterable, Product):
-            for i, a in zip(expr.target, expr.iterable.args):
+            for i, a in zip(expr.target, expr.iterable.elements):
                 if isinstance(a, PythonRange):
                     itr_ = a
                 else:
