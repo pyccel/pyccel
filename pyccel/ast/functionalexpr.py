@@ -6,7 +6,6 @@
 #------------------------------------------------------------------------------------------#
 
 from .basic import Basic
-from sympy.core.expr  import AtomicExpr
 
 __all__ = (
     'FunctionalFor',
@@ -59,7 +58,7 @@ class FunctionalFor(Basic):
         return self._index
 
 #==============================================================================
-class GeneratorComprehension(AtomicExpr, Basic):
+class GeneratorComprehension(Basic):
     _attribute_nodes = ()
 
 #==============================================================================

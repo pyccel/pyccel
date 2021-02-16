@@ -7,8 +7,6 @@
 
 import numpy
 
-from sympy           import Expr
-
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList)
 
@@ -320,8 +318,7 @@ class NumpySum(PyccelInternalFunction):
     """
 
     def __init__(self, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, PythonList,
-                            Variable, Expr)):
+        if not isinstance(arg, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
         self._dtype = arg.dtype
@@ -341,8 +338,7 @@ class NumpyProduct(PyccelInternalFunction):
     """
 
     def __init__(self, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, PythonList,
-                                Variable, Expr)):
+        if not isinstance(arg, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
         self._dtype = arg.dtype
@@ -362,11 +358,9 @@ class NumpyMatmul(PyccelInternalFunction):
     """
 
     def __init__(self, a ,b):
-        if not isinstance(a, (list, tuple, PythonTuple, PythonList,
-                                Variable, Expr)):
+        if not isinstance(a, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(a))
-        if not isinstance(b, (list, tuple, PythonTuple, PythonList,
-                                Variable, Expr)):
+        if not isinstance(b, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(a))
         super().__init__(a, b)
 

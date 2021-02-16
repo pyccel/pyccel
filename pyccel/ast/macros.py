@@ -7,8 +7,6 @@
 """
 This module contains all classes and functions used for handling macros.
 """
-from sympy.core.expr import AtomicExpr
-
 from .basic          import PyccelAstNode
 from .datatypes      import default_precision
 from .datatypes      import NativeInteger, NativeGeneric
@@ -24,7 +22,7 @@ __all__ = (
 )
 
 #==============================================================================
-class Macro(AtomicExpr, PyccelAstNode):
+class Macro(PyccelAstNode):
     """."""
     _name = '__UNDEFINED__'
     _attribute_nodes = ()

@@ -8,7 +8,6 @@ These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the dtype, precision, rank, shape
 """
-from sympy.core.expr        import Expr
 
 from ..errors.errors        import Errors, PyccelSemanticError
 
@@ -94,7 +93,7 @@ def broadcast(shape_1, shape_2):
 
 #==============================================================================
 
-class PyccelOperator(Expr, PyccelAstNode):
+class PyccelOperator(PyccelAstNode):
     """
     Abstract superclass for all builtin operators.
     The __init__ function is common

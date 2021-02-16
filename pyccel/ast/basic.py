@@ -10,13 +10,13 @@ They are:
 - PyccelAstNode which describes each PyccelAstNode
 """
 import ast
-from sympy.core.basic import Basic as sp_Basic
 
 __all__ = ('Basic', 'PyccelAstNode')
 
 dict_keys   = type({}.keys())
 dict_values = type({}.values())
 iterable_types = (list, tuple, dict_keys, dict_values)
+iterable = lambda x : isinstance(x, iterable_types)
 
 #==============================================================================
 class Immutable:
@@ -24,14 +24,13 @@ class Immutable:
     from Basic """
 
 #==============================================================================
-class Basic(sp_Basic):
+class Basic:
     """Basic class for Pyccel AST."""
     _fst = None
     _ignored_types = (Immutable, type)
 
     def __new__(cls, *args, **kwargs):
         hashable_args  = [a if not isinstance(a, list) else tuple(a) for a in args]
-        return sp_Basic.__new__(cls, *hashable_args)
 
     def __init__(self):
         self._user_nodes = []

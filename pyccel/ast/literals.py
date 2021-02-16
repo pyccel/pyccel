@@ -4,7 +4,6 @@
 #------------------------------------------------------------------------------------------#
 """ This module contains all literal types
 """
-from sympy               import Float as sp_Float
 
 from .basic              import PyccelAstNode, Basic
 from .datatypes          import (NativeInteger, NativeBool, NativeReal,
@@ -105,20 +104,19 @@ class LiteralInteger(Literal):
         return self.python_value
 
 #------------------------------------------------------------------------------
-class LiteralFloat(Literal, sp_Float):
+class LiteralFloat(Literal):
     """Represents a float literal in python"""
     _dtype     = NativeReal()
-    def __new__(cls, value, *, precision = default_precision['float']):
-        return sp_Float.__new__(cls, value)
 
     def __init__(self, value, *, precision = default_precision['float']):
         if not isinstance(value, (int, float, LiteralFloat)):
             raise TypeError("A LiteralFloat can only be created with an integer or a float")
         Literal.__init__(self, precision)
+        self._value = value
 
     @property
     def python_value(self):
-        return float(self)
+        return self._value
 
 
 #------------------------------------------------------------------------------
