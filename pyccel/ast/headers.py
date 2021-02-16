@@ -152,9 +152,6 @@ class Template(Header):
     >>> T = Template('T', [d_var0, d_var1])
     """
 
-    def __new__(cls, *args, **kwargs):
-        return super().__new__(cls)
-
     def __init__(self, name, dtypes):
         super().__init__()
         self._name = name

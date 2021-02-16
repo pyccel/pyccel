@@ -126,13 +126,13 @@ class LiteralComplex(Literal):
 
     def __new__(cls, real, imag, precision = default_precision['complex']):
         if cls is LiteralImaginaryUnit:
-            return super().__new__(cls, real, imag)
+            return super().__new__(cls)
         real_part = cls._collect_python_val(real)
         imag_part = cls._collect_python_val(imag)
         if real_part == 0 and imag_part == 1:
             return LiteralImaginaryUnit()
         else:
-            return super().__new__(cls, real, imag)
+            return super().__new__(cls)
 
     def __init__(self, real, imag, precision = default_precision['complex']):
         super().__init__(precision)

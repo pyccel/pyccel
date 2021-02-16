@@ -1821,11 +1821,6 @@ class FunctionDef(Basic):
                  '_interfaces'
                  )
 
-    def __new__(cls, *args, **kwargs):
-        kwargs.pop('decorators', None)
-        kwargs.pop('templates', None)
-        return super().__new__(cls, *args, **kwargs)
-
     def __init__(
         self,
         name,
@@ -2386,10 +2381,6 @@ class ValuedFunctionAddress(FunctionAddress):
     """
     _attribute_nodes = (*FunctionAddress._attribute_nodes, '_value')
 
-    def __new__(cls, *args, **kwargs):
-        kwargs.pop('value', Nil())
-        return super().__new__(cls, *args, **kwargs)
-
     def __init__(self, *args, **kwargs):
         self._value = kwargs.pop('value', Nil())
         super().__init__(*args, **kwargs)
@@ -2425,8 +2416,6 @@ class BindCFunctionDef(FunctionDef):
         The function from which the c-compatible version was created
     """
     _attribute_nodes = (*FunctionDef._attribute_nodes, '_original_function')
-    def __new__(cls, *args, original_function, **kwargs):
-        return super().__new__(cls, *args, **kwargs)
 
     def __init__(self, *args, original_function, **kwargs):
         self._original_function = original_function

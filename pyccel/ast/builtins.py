@@ -85,7 +85,7 @@ class PythonReal(PythonComplexProperty):
         elif not isinstance(arg.dtype, NativeComplex):
             return arg
         else:
-            return super().__new__(cls, arg)
+            return super().__new__(cls)
 
 #==============================================================================
 class PythonImag(PythonComplexProperty):
@@ -102,7 +102,7 @@ class PythonImag(PythonComplexProperty):
         if arg.dtype is not NativeComplex():
             return get_default_literal_value(arg.dtype)
         else:
-            return super().__new__(cls, arg)
+            return super().__new__(cls)
 
 
 #==============================================================================
@@ -115,11 +115,11 @@ class PythonBool(PyccelAstNode):
 
     def __new__(cls, arg):
         if getattr(arg, 'is_optional', None):
-            bool_expr = super().__new__(cls, arg)
+            bool_expr = super().__new__(cls)
             bool_expr.__init__(arg)
             return PyccelAnd(PyccelIsNot(arg, Nil()), bool_expr)
         else:
-            return super().__new__(cls, arg)
+            return super().__new__(cls)
 
     def __init__(self, arg):
         self._arg = arg
@@ -177,7 +177,7 @@ class PythonComplex(PyccelAstNode):
         if arg0.dtype is NativeComplex() and arg1.dtype is NativeComplex():
             # both args are complex
             return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit()))
-        return super().__new__(cls, arg0, arg1)
+        return super().__new__(cls)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
         self._is_cast = arg0.dtype is NativeComplex() and \
@@ -268,7 +268,7 @@ class PythonFloat(PyccelAstNode):
         elif isinstance(arg, LiteralInteger):
             return LiteralFloat(arg.p, precision = cls._precision)
         else:
-            return super().__new__(cls, arg)
+            return super().__new__(cls)
 
     def __init__(self, arg):
         self._arg = arg
@@ -299,7 +299,7 @@ class PythonInt(PyccelAstNode):
         if isinstance(arg, LiteralInteger):
             return LiteralInteger(arg.p, precision = cls._precision)
         else:
-            return super().__new__(cls, arg)
+            return super().__new__(cls)
 
     def __init__(self, arg):
         self._arg = arg

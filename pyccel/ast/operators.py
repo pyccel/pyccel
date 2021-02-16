@@ -473,7 +473,7 @@ class PyccelAdd(PyccelArithmeticOperator):
            arg1.real == LiteralFloat(0):
             return LiteralComplex(arg2, arg1.imag)
         else:
-            return PyccelArithmeticOperator.__new__(cls, arg1, arg2)
+            return super().__new__(cls)
 
     def _handle_str_type(self, strs):
         self._dtype = NativeString()
@@ -532,7 +532,7 @@ class PyccelMinus(PyccelArithmeticOperator):
            arg1.real == LiteralFloat(0):
             return LiteralComplex(-arg2.python_value, arg1.imag)
         else:
-            return PyccelArithmeticOperator.__new__(cls, arg1, arg2)
+            return super().__new__(cls)
 
     def __repr__(self):
         return '{} - {}'.format(repr(self.args[0]), repr(self.args[1]))

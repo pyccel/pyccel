@@ -25,7 +25,7 @@ class Product(Basic):
         elif len(args) < 2:
             return args[0]
         else:
-            return super().__new__(cls, *args)
+            return super().__new__(cls)
 
     def __init__(self, *args):
         self._elements = args

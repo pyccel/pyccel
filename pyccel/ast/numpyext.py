@@ -116,7 +116,7 @@ class NumpyInt(PythonInt):
     """ Represents a call to numpy.int() function.
     """
     def __new__(cls, arg=None, base=10):
-        return PythonInt.__new__(cls, arg)
+        return super().__new__(cls, arg)
 
 class NumpyInt32(NumpyInt):
     """ Represents a call to numpy.int32() function.
