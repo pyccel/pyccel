@@ -1842,7 +1842,7 @@ class FCodePrinter(CodePrinter):
                                            prolog, epilog)
 
         elif isinstance(expr.iterable, PythonZip):
-            itr_ = PythonRange(expr.iterable.element.shape[0])
+            itr_ = PythonRange(expr.iterable.length)
             prolog, epilog = _do_range(expr.target, itr_, \
                                        prolog, epilog)
 

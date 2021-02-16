@@ -15,7 +15,7 @@ from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
-from .internals import PyccelInternalFunction
+from .internals import PyccelInternalFunction, PyccelArraySize
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
@@ -390,6 +390,10 @@ class PythonTuple(PyccelAstNode):
     def inconsistent_shape(self):
         return self._inconsistent_shape
 
+    @property
+    def args(self):
+        return self._args
+
 #==============================================================================
 class PythonLen(PyccelInternalFunction):
 
@@ -427,6 +431,10 @@ class PythonMap(Basic):
             raise TypeError('wrong number of arguments')
         self._args = args
         super().__init__()
+
+    @property
+    def args(self):
+        return self._args
 
 #==============================================================================
 class PythonPrint(Basic):
@@ -522,10 +530,23 @@ class PythonZip(Basic):
             raise ValueError('args must be of length > 2')
         self._args = args
         super().__init__()
+        if PyccelAstNode.stage == 'syntactic':
+            self._length = None
+            return
+        else:
+            lengths = [a.shape[0] for a in self.args if not isinstance(a.shape[0], PyccelArraySize)]
+            if lengths:
+                self._length = max(lengths)
+            else:
+                self._length = self.args[0].shape[0]
 
     @property
-    def element(self):
-        return self._args[0]
+    def args(self):
+        return self._args
+
+    @property
+    def length(self):
+        return self._length
 
 #==============================================================================
 class PythonAbs(PyccelInternalFunction):

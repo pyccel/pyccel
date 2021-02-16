@@ -2011,7 +2011,7 @@ class SemanticParser(BasicParser):
         elif isinstance(iterable, PythonEnumerate):
             indx   = iterator.args[0]
             var    = iterator.args[1]
-            assign = Assign(var, IndexedElement(iterable.args[0], indx))
+            assign = Assign(var, IndexedElement(iterable.element, indx))
             assign.set_fst(expr.fst)
             iterator = indx
             body     = [assign] + body
