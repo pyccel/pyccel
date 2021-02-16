@@ -31,6 +31,8 @@ from .operators     import PyccelAdd, PyccelMul
 from .variable      import (Constant, Variable, ValuedVariable,
                             IndexedElement, TupleVariable, VariableAddress)
 
+errors = Errors()
+
 __all__ = (
     'build_types_decorator',
     'builtin_function',
@@ -418,7 +420,7 @@ def collect_loops(block, indices, new_index_name, tmp_vars, language_has_vectors
             # Loop over indexes, inserting until the expression can be evaluated
             # in the desired language
             new_level = 0
-            for kk, index in enumerate(range(-rank,0)):
+            for index in range(-rank,0):
                 new_level += 1
                 # If an index exists at the same depth, reuse it if not create one
                 if rank+index >= len(indices):
