@@ -3617,8 +3617,8 @@ def test_numpy_real_scalar(language):
     f_complex64 = epyccel(test_complex64, language=language)
     f_complex128 = epyccel(test_complex128, language=language)
 
-    f_complex64_output = f_complex64(1+5j)
-    test_complex64_output = test_complex64(1+5j)
+    f_complex64_output = f_complex64(np.complex64(1+5j))
+    test_complex64_output = test_complex64(np.complex64(1+5j))
 
     assert f_complex64_output == test_complex64_output
     assert (type(f_complex64_output) == type(test_complex64_output))

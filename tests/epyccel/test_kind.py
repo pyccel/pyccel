@@ -32,7 +32,7 @@ def test_real_greater_bool(language):
     assert(real_greater_bool(1.5,1.2)==epyc_real_greater_bool(1.5,1.2))
 
 def test_input_output_matching_types(language):
-    @types('float32', 'float32')
+    @types('real', 'real')
     def add_real(a, b):
         c = a+b
         return c
@@ -47,7 +47,7 @@ def test_input_output_matching_types(language):
     assert(add_real(1.0,2.0)==epyc_add_real(1.0,2.0))
 
 def test_output_types_1(language):
-    @types('float32')
+    @types('real')
     def cast_to_int(a):
         b = int(a)
         return b
