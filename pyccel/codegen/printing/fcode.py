@@ -2936,4 +2936,4 @@ def fcode(expr, parser, assign_to=None, **settings):
         for examples.
     """
 
-    return FCodePrinter(parser, settings).doprint(expr, assign_to)
+    return FCodePrinter(parser, **settings).doprint(expr, assign_to)
