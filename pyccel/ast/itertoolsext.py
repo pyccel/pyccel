@@ -17,7 +17,7 @@ class Product(Basic):
 
     arg : list, tuple
     """
-    _attribute_nodes = ('_args',)
+    _attribute_nodes = ('_elements',)
 
     def __new__(cls, *args):
         if not isinstance(args, (tuple, list)):
