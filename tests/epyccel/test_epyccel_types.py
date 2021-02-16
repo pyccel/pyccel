@@ -3,8 +3,8 @@
 import numpy as np
 from numpy.random import randint, uniform
 
-from pyccel.epyccel import epyccel
 from modules import types
+from pyccel.epyccel import epyccel
 
 def test_int_default(language):
     f1 = types.test_int_default
