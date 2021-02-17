@@ -15,7 +15,7 @@ def test_int16(x : 'int16'):
 def test_int8(x : 'int8'):
     return x
 
-def test_real_default(x : 'real'):
+def test_real_default(x : 'float'):
     return x
 
 def test_float32(x : 'float32'):
