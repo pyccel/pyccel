@@ -276,8 +276,13 @@ class CWrapperCodePrinter(CCodePrinter):
         Generate TypeError message from the variable informations (datatype, precision)
         """
         dtype     = variable.dtype
-        precision = '' if isinstance(dtype, NativeBool) else '{} bit '.format(variable.precision * 2 * 8)\
-                       if isinstance(dtype, NativeComplex) else '{} bit '.format(variable.precision * 8)
+
+        if isinstance(dtype, NativeBool):
+            precision = ''
+        if isinstance(dtype, NativeComplex):
+            precision = '{} bit '.format(variable.precision * 2 * 8)
+        else:
+            precision = '{} bit '.format(variable.precision * 8)
 
         message = '"{var_name} must be {precision}{dtype}"'.format(
                         var_name  = variable,
