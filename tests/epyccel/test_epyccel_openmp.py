@@ -154,7 +154,13 @@ def test_modules_14_1(language):
 
     assert f3() == 1
 
-#@pytest.mark.xfail(reason = "Teams not supported yet for openmp !")
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="omp_get_team_num() and omp_get_num_teams() return a wrong result!"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_modules_15(language):
     f1 = epyccel(openmp.test_omp_get_num_teams, accelerator='openmp', language=language)
     f2 = epyccel(openmp.test_omp_get_team_num, accelerator='openmp', language=language)
