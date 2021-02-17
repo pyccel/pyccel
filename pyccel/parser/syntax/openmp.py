@@ -87,7 +87,7 @@ class OpenmpStmt(BasicStmt):
             raise TypeError('Wrong stmt for OpenmpStmt')
 
 class OmpParallelConstruct(BasicStmt):
-    """Class representing a ."""
+    """Class representing a parallel construct."""
     def __init__(self, **kwargs):
         """
         """
@@ -129,7 +129,7 @@ class OmpParallelConstruct(BasicStmt):
         return OMP_Parallel_Construct(txt, combined)
 
 class OmpLoopConstruct(BasicStmt):
-    """Class representing a ."""
+    """Class representing a For loop construct."""
     def __init__(self, **kwargs):
         """
         """
@@ -152,7 +152,7 @@ class OmpLoopConstruct(BasicStmt):
         return OMP_For_Loop(txt)
 
 class OmpTaskLoopConstruct(BasicStmt):
-    """Class representing a ."""
+    """Class representing a taskloop construct."""
     def __init__(self, **kwargs):
         """
         """
@@ -212,7 +212,7 @@ class OmpTaskConstruct(BasicStmt):
         return OMP_Task_Construct(txt)
 
 class OmpSingleConstruct(BasicStmt):
-    """Class representing a ."""
+    """Class representing a single construct."""
     def __init__(self, **kwargs):
         """
         """
@@ -239,7 +239,7 @@ class OmpSingleConstruct(BasicStmt):
         return OMP_Single_Construct(txt)
 
 class OmpCriticalConstruct(BasicStmt):
-    """Class representing a Critical stmt."""
+    """Class representing a Critical construct."""
     def __init__(self, **kwargs):
         """
         """
@@ -302,7 +302,7 @@ class OmpMasterConstruct(BasicStmt):
         return OMP_Master_Construct(txt)
 
 class OmpMaskedConstruct(BasicStmt):
-    """Class representing the Masked construct."""
+    """Class representing a Masked construct."""
     def __init__(self, **kwargs):
         self.name     = kwargs.pop('name')
         self.combined = kwargs.pop('combined', None)
@@ -332,7 +332,7 @@ class OmpMaskedConstruct(BasicStmt):
         return OMP_Masked_Construct(txt, combined)
 
 class OmpSectionsConstruct(BasicStmt):
-    """Class representing a Sections stmt."""
+    """Class representing a Sections construct."""
     def __init__(self, **kwargs):
         self.name = kwargs.pop('name')
         self.clauses = kwargs.pop('clauses')
@@ -354,7 +354,7 @@ class OmpSectionsConstruct(BasicStmt):
         return OMP_Sections_Construct(txt)
 
 class OmpSectionConstruct(BasicStmt):
-    """Class representing a Section stmt."""
+    """Class representing a Section construct."""
     def __init__(self, **kwargs):
         self.name = kwargs.pop('name')
 
@@ -369,7 +369,7 @@ class OmpSectionConstruct(BasicStmt):
         return OMP_Section_Construct(txt)
 
 class OmpDistributeConstruct(BasicStmt):
-    """Class representing a Barrier stmt."""
+    """Class representing a distribute construct."""
     def __init__(self, **kwargs):
         self.name = kwargs.pop('name')
         self.clauses = kwargs.pop('clauses')
@@ -391,7 +391,7 @@ class OmpDistributeConstruct(BasicStmt):
         return OmpAnnotatedComment(txt)
 
 class OmpBarrierConstruct(BasicStmt):
-    """Class representing a Barrier stmt."""
+    """Class representing a Barrier construct."""
     def __init__(self, **kwargs):
         """
         """
@@ -407,7 +407,7 @@ class OmpBarrierConstruct(BasicStmt):
         return OmpAnnotatedComment(txt)
 
 class OmpTaskWaitConstruct(BasicStmt):
-    """Class representing a TaskWait stmt."""
+    """Class representing a TaskWait construct."""
     def __init__(self, **kwargs):
         """
         """
@@ -423,7 +423,7 @@ class OmpTaskWaitConstruct(BasicStmt):
         return OmpAnnotatedComment(txt)
 
 class OmpTaskyieldConstruct(BasicStmt):
-    """Class representing a Taskyield stmt."""
+    """Class representing a Taskyield construct."""
     def __init__(self, **kwargs):
         """
         """
@@ -439,7 +439,7 @@ class OmpTaskyieldConstruct(BasicStmt):
         return OmpAnnotatedComment(txt)
 
 class OmpFlushConstruct(BasicStmt):
-    """Class representing a Flush stmt."""
+    """Class representing a Flush construct."""
     def __init__(self, **kwargs):
         """
         """
@@ -463,7 +463,7 @@ class OmpFlushConstruct(BasicStmt):
         return OmpAnnotatedComment(txt)
 
 class OmpCancelConstruct(BasicStmt):
-    """Class representing a Cancel stmt."""
+    """Class representing a Cancel construct."""
     def __init__(self, **kwargs):
         """
         """
@@ -487,7 +487,7 @@ class OmpCancelConstruct(BasicStmt):
         return OMP_Cancel_Construct(txt)
 
 class OmpTargetConstruct(BasicStmt):
-    """Class representing a Target stmt."""
+    """Class representing a Target construct."""
     def __init__(self, **kwargs):
         """
         """
@@ -532,7 +532,7 @@ class OmpTargetConstruct(BasicStmt):
         return OMP_Target_Construct(txt, combined)
 
 class OmpTeamsConstruct(BasicStmt):
-    """Class representing a Teams stmt ."""
+    """Class representing a Teams construct."""
     def __init__(self, **kwargs):
         """
         """
@@ -567,7 +567,7 @@ class OmpTeamsConstruct(BasicStmt):
         return OMP_Teams_Construct(txt, combined)
 
 class OmpAtomicConstruct(BasicStmt):
-    """Class representing an Atomic stmt ."""
+    """Class representing an Atomic construct ."""
     def __init__(self, **kwargs):
         """
         """
@@ -579,7 +579,7 @@ class OmpAtomicConstruct(BasicStmt):
     @property
     def expr(self):
         if DEBUG:
-            print("> OmpBarrierConstruct: expr")
+            print("> OmpAtomicConstruct: expr")
 
         _valid_clauses = (OmpAtomicClause, \
                           AtomicMemoryClause)
@@ -593,7 +593,7 @@ class OmpAtomicConstruct(BasicStmt):
         return OmpAnnotatedComment(txt)
 
 class OmpEndClause(BasicStmt):
-    """Class representing a ."""
+    """Class representing an end construct."""
     def __init__(self, **kwargs):
         """
         """
@@ -613,7 +613,7 @@ class OmpEndClause(BasicStmt):
         return Omp_End_Clause(txt)
 
 class OmpNumThread(BasicStmt):
-    """Class representing a ."""
+    """Class representing a num_thread clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -631,7 +631,7 @@ class OmpNumThread(BasicStmt):
         return 'num_threads({})'.format(thread)
 
 class OmpNumTeams(BasicStmt):
-    """Class representing a ."""
+    """Class representing a num_teams clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -649,7 +649,7 @@ class OmpNumTeams(BasicStmt):
         return 'num_teams({})'.format(teams)
 
 class OmpThreadLimit(BasicStmt):
-    """Class representing a ."""
+    """Class representing a thread_limit clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -667,7 +667,7 @@ class OmpThreadLimit(BasicStmt):
         return 'thread_limit({})'.format(limit)
 
 class OmpNumTasks(BasicStmt):
-    """Class representing a ."""
+    """Class representing a num_tasks clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -685,7 +685,7 @@ class OmpNumTasks(BasicStmt):
         return 'num_tasks({})'.format(tasks)
 
 class OmpGrainSize(BasicStmt):
-    """Class representing a ."""
+    """Class representing a grainsize clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -703,7 +703,7 @@ class OmpGrainSize(BasicStmt):
         return 'grainsize({})'.format(size)
 
 class OmpDefault(BasicStmt):
-    """Class representing a ."""
+    """Class representing a default clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -719,7 +719,7 @@ class OmpDefault(BasicStmt):
         return 'default({})'.format(self.status)
 
 class OmpProcBind(BasicStmt):
-    """Class representing a ."""
+    """Class representing a proc_bind clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -735,7 +735,7 @@ class OmpProcBind(BasicStmt):
         return 'proc_bind({})'.format(self.status)
 
 class OmpPrivate(BasicStmt):
-    """Class representing a ."""
+    """Class representing a private clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -753,7 +753,7 @@ class OmpPrivate(BasicStmt):
         return 'private({})'.format(args)
 
 class FlushList(BasicStmt):
-    """Class representing a ."""
+    """Class representing a list of variables of the flush construct."""
     def __init__(self, **kwargs):
         """
         """
@@ -771,7 +771,7 @@ class FlushList(BasicStmt):
         return '({})'.format(args)
 
 class OmpCriticalName(BasicStmt):
-    """Class representing a ."""
+    """Class representing the name of a critical construct."""
     def __init__(self, **kwargs):
         """
         """
@@ -789,7 +789,7 @@ class OmpCriticalName(BasicStmt):
         return '({})'.format(txt)
 
 class OmpShared(BasicStmt):
-    """Class representing a ."""
+    """Class representing a shared clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -807,7 +807,7 @@ class OmpShared(BasicStmt):
         return 'shared({})'.format(args)
 
 class OmpFirstPrivate(BasicStmt):
-    """Class representing a ."""
+    """Class representing a firstprivate clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -825,7 +825,7 @@ class OmpFirstPrivate(BasicStmt):
         return 'firstprivate({})'.format(args)
 
 class OmpLastPrivate(BasicStmt):
-    """Class representing a ."""
+    """Class representing a lastprivate clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -843,7 +843,7 @@ class OmpLastPrivate(BasicStmt):
         return 'lastprivate({})'.format(args)
 
 class OmpCopyin(BasicStmt):
-    """Class representing a ."""
+    """Class representing a copyin clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -860,7 +860,7 @@ class OmpCopyin(BasicStmt):
         return 'copyin({})'.format(args)
 
 class OmpReduction(BasicStmt):
-    """Class representing a ."""
+    """Class representing a reduction clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -879,7 +879,7 @@ class OmpReduction(BasicStmt):
         return 'reduction({0}: {1})'.format(op, args)
 
 class OmpDepend(BasicStmt):
-    """Class representing a ."""
+    """Class representing a depend clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -898,7 +898,7 @@ class OmpDepend(BasicStmt):
         return 'depend({0}: {1})'.format(dtype, args)
 
 class OmpMap(BasicStmt):
-    """Class representing a ."""
+    """Class representing a map clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -917,7 +917,7 @@ class OmpMap(BasicStmt):
         return 'map({0} {1})'.format(mtype, args)
 
 class OmpinReduction(BasicStmt):
-    """Class representing a ."""
+    """Class representing an in_reduction clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -939,7 +939,7 @@ class OmpinReduction(BasicStmt):
         return '{0}({1}: {2})'.format(ctype, op, args)
 
 class OmpCollapse(BasicStmt):
-    """Class representing a ."""
+    """Class representing a collapse clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -955,7 +955,7 @@ class OmpCollapse(BasicStmt):
         return 'collapse({})'.format(self.n)
 
 class OmpOrdered(BasicStmt):
-    """Class representing a ."""
+    """Class representing an ordered clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -974,7 +974,7 @@ class OmpOrdered(BasicStmt):
             return 'ordered'
 
 class OmpLinear(BasicStmt):
-    """Class representing a ."""
+    """Class representing a linear clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -991,7 +991,7 @@ class OmpLinear(BasicStmt):
         return 'linear({0}:{1})'.format(self.val, self.step)
 
 class OmpSchedule(BasicStmt):
-    """Class representing a ."""
+    """Class representing a schedule clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -1011,7 +1011,7 @@ class OmpSchedule(BasicStmt):
             return 'schedule({0})'.format(self.kind)
 
 class OmpFilter(BasicStmt):
-    """Class representing a ."""
+    """Class representing a filter clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -1028,7 +1028,7 @@ class OmpFilter(BasicStmt):
         return '{}({})'.format(self.name, self.n)
 
 class OmpUntied(BasicStmt):
-    """Class representing a ."""
+    """Class representing an untied clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -1044,7 +1044,7 @@ class OmpUntied(BasicStmt):
         return 'untied'
 
 class OmpMergeable(BasicStmt):
-    """Class representing a ."""
+    """Class representing a mergeable clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -1060,7 +1060,7 @@ class OmpMergeable(BasicStmt):
         return 'mergeable'
 
 class OmpNogroup(BasicStmt):
-    """Class representing a ."""
+    """Class representing a nogroup clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -1076,7 +1076,7 @@ class OmpNogroup(BasicStmt):
         return 'nogroup'
 
 class OmpPriority(BasicStmt):
-    """Class representing a ."""
+    """Class representing a priority clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -1093,7 +1093,7 @@ class OmpPriority(BasicStmt):
         return '{}({})'.format(self.name, self.n)
 
 class OmpAtomicClause(BasicStmt):
-    """Class representing a ."""
+    """Class representing an atomic clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -1109,7 +1109,7 @@ class OmpAtomicClause(BasicStmt):
         return '{}'.format(self.name)
 
 class OmpCancelType(BasicStmt):
-    """Class representing a ."""
+    """Class representing a type of a cancel construct."""
     def __init__(self, **kwargs):
         """
         """
@@ -1125,7 +1125,7 @@ class OmpCancelType(BasicStmt):
         return '{}'.format(self.name)
 
 class AtomicMemoryClause(BasicStmt):
-    """Class representing a ."""
+    """Class representing a atomic memory clause."""
     def __init__(self, **kwargs):
         """
         """
@@ -1141,7 +1141,7 @@ class AtomicMemoryClause(BasicStmt):
         return '{}'.format(self.name)
 
 class OmpForSimd(BasicStmt):
-    """Class representing a ."""
+    """Class representing a combined comstruct."""
     def __init__(self, **kwargs):
         """
         """
@@ -1161,7 +1161,7 @@ class OmpForSimd(BasicStmt):
         return '{}'.format(txt)
 
 class OmpMaskedTaskloop(BasicStmt):
-    """Class representing a ."""
+    """Class representing a combined comstruct."""
     def __init__(self, **kwargs):
         """
         """
@@ -1184,7 +1184,7 @@ class OmpMaskedTaskloop(BasicStmt):
         return '{}'.format(txt)
 
 class OmpPSections(BasicStmt):
-    """Class representing a ."""
+    """Class representing a combined comstruct."""
     def __init__(self, **kwargs):
         """
         """
@@ -1201,7 +1201,7 @@ class OmpPSections(BasicStmt):
         return txt
 
 class OmpTaskloopSimd(BasicStmt):
-    """Class representing a ."""
+    """Class representing a combined comstruct."""
     def __init__(self, **kwargs):
         """
         """
@@ -1221,7 +1221,7 @@ class OmpTaskloopSimd(BasicStmt):
         return txt
 
 class OmpDistributeCombined(BasicStmt):
-    """Class representing a ."""
+    """Class representing a combined comstruct."""
     def __init__(self, **kwargs):
         """
         """
@@ -1250,7 +1250,7 @@ class OmpDistributeCombined(BasicStmt):
         return txt
 
 class OmpTargetParallel(BasicStmt):
-    """Class representing a ."""
+    """Class representing a combined comstruct."""
     def __init__(self, **kwargs):
         """
         """
@@ -1274,7 +1274,7 @@ class OmpTargetParallel(BasicStmt):
         return txt
 
 class OmpTargetTeams(BasicStmt):
-    """Class representing a ."""
+    """Class representing a combined comstruct."""
     def __init__(self, **kwargs):
         """
         """
