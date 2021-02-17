@@ -216,7 +216,7 @@ class CWrapperCodePrinter(CCodePrinter):
     # --------------------------------------------------------------------
     def get_collect_function_call(self, variable, collect_var):
         """
-        Represents a call to cast function responsible of collecting value from python object.
+        Represents a call to cast function responsible for collecting value from python object.
 
         Parameters:
         ----------
@@ -243,7 +243,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_cast_function_call(self, cast_type, arg):
         """
-        Represents a call to cast function responsible of the conversion of one data type into another.
+        Represents a call to cast function responsible for the conversion of one data type into another.
 
         Parameters:
         ----------
@@ -292,7 +292,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _get_array_type_check(self, variable, collect_var):
         """
-        Responsible of collecting array type check and creating the
+        Responsible for collecting array type check and creating the
         corresponding error code
 
         Parameters:
@@ -305,7 +305,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Returns:
         -------
         check : FunctionCall
-            functionCall responsible of data type check
+            functionCall responsible for checking the data type
         error : FunctionCall
             function call that raise TypeError
         """
@@ -320,7 +320,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _get_scalar_type_check(self, variable, collect_var, error_check = False):
         """
-        Responsible of collecting numpy and python type check and creating the
+        Responsible for collecting numpy and python type check and creating the
         corresponding error code
 
         Parameters:
@@ -335,11 +335,11 @@ class CWrapperCodePrinter(CCodePrinter):
         Returns:
         -------
         python_type_check : FunctionCall
-            functionCall responsible of python data type check
+            functionCall responsible for checking python data type
             None when error_check is False
 
         numpy_type_check : FunctionCall or None
-            functionCall responsible of numpy data type check
+            functionCall responsible for checking numpy data type
 
         error : FunctionCall or None
             function call that raise TypeError
@@ -367,7 +367,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _valued_variable_management(self, variable, collect_var, tmp_variable):
         """
-        Responsible of creating the body collecting the default value of an valuedVariable
+        Responsible for creating the body collecting the default value of an valuedVariable
         and the check needed.
         if the valuedVariable is optional create body to collect the new value
 
@@ -403,7 +403,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _body_scalar(self, variable, collect_var, error_check = False, tmp_variable = None):
         """
-        Responsible of collecting value and managing error and create the body
+        Responsible for collecting value and managing error and create the body
         of arguments in format:
             if collect_var is numpy_type:
                 collect_value from numpy type
@@ -452,7 +452,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _body_array(self, variable, collect_var, check_type = False) :
         """
-        Responsible of collecting value and managing error and create the body
+        Responsible for collecting value and managing error and create the body
         of arguments with rank greater than 0 in format
                 if (rank check == False){
                     print TypeError Wrong rank
@@ -512,7 +512,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _body_management(self, used_names, variable, collect_var, check_type = False):
         """
-        Responsible of calling functions that take care of body creation
+        Responsible for calling functions that take care of body creation
         Parameters:
         ----------
         used_names : list of strings
@@ -551,7 +551,7 @@ class CWrapperCodePrinter(CCodePrinter):
     # -------------------------------------------------------------------
     def get_PyArgParseType(self, used_names, variable):
         """
-        Responsible of creating any necessary intermediate variables which are used
+        Responsible for creating any necessary intermediate variables which are used
         to collect the result of PyArgParse, and collecting the required cast function
 
         Parameters:
@@ -600,7 +600,7 @@ class CWrapperCodePrinter(CCodePrinter):
             The variable which will be provided to PyBuild
 
         cast_func_stmts : functionCall
-            call to cast function responsible of the conversion of one data type into another
+            call to cast function responsible for the conversion of one data type into another
         """
         collect_var = variable
         cast_function = None
@@ -655,7 +655,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body_translations = []
         body_tmp = []
 
-        # To store the mini function responsible of collecting value and calling interfaces functions and return the builded value
+        # To store the mini function responsible for collecting value and calling interfaces functions and return the builded value
         funcs_def = []
         default_value = {} # dict to collect all initialisation needed in the wrapper
         check_var = Variable(dtype = NativeInteger(), name = self.get_new_name(used_names , "check"))
