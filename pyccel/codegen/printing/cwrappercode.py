@@ -322,6 +322,28 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         Responsible for collecting numpy and python type check and creating the
         corresponding error code
+
+        Parameters:
+        ----------
+        variable     : Variable
+            The optional variable
+        collect_var  : Variable
+            the pyobject type variable  holder of value
+        error_check  : Bool
+            True if checking the data type and raising error is needed
+
+        Returns:
+        -------
+        python_type_check : FunctionCall
+            functionCall responsible of python data type check
+            None when error_check is False
+
+        numpy_type_check : FunctionCall or None
+            functionCall responsible of numpy data type check
+
+        error : FunctionCall or None
+            function call that raise TypeError
+            None when error_check is False
         """
 
         if not error_check :
