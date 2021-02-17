@@ -1465,7 +1465,7 @@ class ConstructorCall(Basic):
         self._arguments = arguments
         super().__init__()
 
-    def __str__(self, printer):
+    def __str__(self):
         name = str(self.name)
         args = ''
         if not self.arguments is None:

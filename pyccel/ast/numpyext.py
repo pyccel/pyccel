@@ -244,7 +244,7 @@ class NumpyArray(NumpyNewArray):
         self._precision = prec
         super().__init__()
 
-    def __str__(self, printer):
+    def __str__(self):
         return str(self.arg)
 
     @property
@@ -474,7 +474,7 @@ class NumpyLinspace(NumpyNewArray):
         return (self.stop - self.start) / (self.size - 1)
 
     def __str__(self):
-        code = 'linspace({}, {}, {})',format(str(self.start),
+        code = 'linspace({}, {}, {})'.format(str(self.start),
                                              str(self.stop),
                                              str(self.size))
         return code
