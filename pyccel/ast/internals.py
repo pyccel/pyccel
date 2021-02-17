@@ -22,9 +22,9 @@ class PyccelInternalFunction(PyccelAstNode):
     which are translated to Pyccel objects
     """
     _attribute_nodes = ('_args',)
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         self._args   = tuple(args)
-        super().__init__()
+        super().__init__(**kwargs)
 
     @property
     def args(self):
@@ -54,6 +54,10 @@ class PyccelArraySize(PyccelInternalFunction):
             provided
     """
     _attribute_nodes = ('_arg', '_index')
+    _AstNodeProperties = {'dtype'     : NativeInteger(),
+                          'precision' : default_precision['integer'],
+                          'shape'     : ()
+                          'rank'      : 0  }
 
     def __init__(self, arg, index):
         if not isinstance(arg, (list,
@@ -67,11 +71,7 @@ class PyccelArraySize(PyccelInternalFunction):
 
         self._arg   = arg
         self._index = index
-        self._dtype = NativeInteger()
-        self._rank  = 0
-        self._shape = ()
-        self._precision = default_precision['integer']
-        super().__init__()
+        super().__init__(**self._AstNodeProperties)
 
     @property
     def arg(self):

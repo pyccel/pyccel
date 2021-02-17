@@ -109,8 +109,6 @@ class PythonImag(PythonComplexProperty):
 class PythonBool(PyccelAstNode):
     """ Represents a call to Python's native bool() function.
     """
-    _precision = default_precision['bool']
-    _dtype = NativeBool()
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
@@ -123,9 +121,9 @@ class PythonBool(PyccelAstNode):
 
     def __init__(self, arg):
         self._arg = arg
-        self._shape = arg.shape
-        self._rank  = len(self._shape)
-        super().__init__()
+        super().__init__(dtype = NativeBool(),
+                        precision = default_precision['bool'],
+                        shape = arg.shape)
 
     @property
     def arg(self):
@@ -139,10 +137,6 @@ class PythonComplex(PyccelAstNode):
     """ Represents a call to Python's native complex() function.
     """
 
-    _rank = 0
-    _shape = ()
-    _precision = default_precision['complex']
-    _dtype = NativeComplex()
     _attribute_nodes = ('_real_part', '_imag_part', '_internal_var')
 
     def __new__(cls, arg0, arg1=LiteralFloat(0)):
@@ -205,7 +199,11 @@ class PythonComplex(PyccelAstNode):
             else:
                 self._real_part = arg0
                 self._imag_part = arg1
-        super().__init__()
+
+        super().__init__(dtype = NativeComplex(),
+                        precision = default_precision['complex'],
+                        shape = (),
+                        rank = 0)
 
     @property
     def is_cast(self):
@@ -255,8 +253,6 @@ class PythonEnumerate(Basic):
 class PythonFloat(PyccelAstNode):
     """ Represents a call to Python's native float() function.
     """
-    _precision = default_precision['real']
-    _dtype = NativeReal()
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
@@ -269,9 +265,9 @@ class PythonFloat(PyccelAstNode):
 
     def __init__(self, arg):
         self._arg = arg
-        self._shape = arg.shape
-        self._rank  = len(self._shape)
-        super().__init__()
+        super().__init__(dtype = NativeReal(),
+                        precision = default_precision['real'],
+                        shape = arg.shape)
 
     @property
     def arg(self):
@@ -285,8 +281,6 @@ class PythonInt(PyccelAstNode):
     """ Represents a call to Python's native int() function.
     """
 
-    _precision = default_precision['integer']
-    _dtype     = NativeInteger()
     _attribute_nodes  = ('_arg',)
 
     def __new__(cls, arg):
@@ -297,9 +291,9 @@ class PythonInt(PyccelAstNode):
 
     def __init__(self, arg):
         self._arg = arg
-        self._shape = arg.shape
-        self._rank  = len(self._shape)
-        super().__init__()
+        super().__init__(dtype = NativeInteger(),
+                        precision = default_precision['integer'],
+                        shape = arg.shape)
 
     @property
     def arg(self):
@@ -311,13 +305,12 @@ class PythonTuple(PyccelAstNode):
     """
     _iterable        = True
     _is_homogeneous  = False
-    _order = 'C'
     _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
         self._args = args
-        super().__init__()
         if self.stage == 'syntactic' or len(args) == 0:
+            super().__init__()
             return
         is_homogeneous = all(a.dtype is not NativeGeneric() and \
                              args[0].dtype == a.dtype and \
@@ -332,37 +325,39 @@ class PythonTuple(PyccelAstNode):
             bools     = [a for a in args if a.dtype is NativeBool()]
             strs      = [a for a in args if a.dtype is NativeString()]
             if strs:
-                self._dtype = NativeString()
-                self._rank  = 0
-                self._shape = ()
+                dtype = NativeString()
+                rank  = 0
+                shape = ()
             else:
                 if complexes:
-                    self._dtype     = NativeComplex()
-                    self._precision = max(a.precision for a in complexes)
+                    dtype     = NativeComplex()
+                    precision = max(a.precision for a in complexes)
                 elif reals:
-                    self._dtype     = NativeReal()
-                    self._precision = max(a.precision for a in reals)
+                    dtype     = NativeReal()
+                    precision = max(a.precision for a in reals)
                 elif integers:
-                    self._dtype     = NativeInteger()
-                    self._precision = max(a.precision for a in integers)
+                    dtype     = NativeInteger()
+                    precision = max(a.precision for a in integers)
                 elif bools:
-                    self._dtype     = NativeBool()
-                    self._precision  = max(a.precision for a in bools)
+                    dtype     = NativeBool()
+                    precision  = max(a.precision for a in bools)
                 else:
                     raise TypeError('cannot determine the type of {}'.format(self))
 
 
                 shapes     = [a.shape for a in args]
-                self._rank = max(a.rank for a in args) + 1
+                rank = max(a.rank for a in args) + 1
                 if all(sh is not None for sh in shapes):
-                    self._shape = (LiteralInteger(len(args)), ) + shapes[0]
-                    self._rank  = len(self._shape)
+                    shape = (LiteralInteger(len(args)), ) + shapes[0]
+                    rank  = len(shape)
 
         else:
-            self._rank      = max(a.rank for a in args) + 1
-            self._dtype     = NativeGeneric()
-            self._precision = 0
-            self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
+            rank      = max(a.rank for a in args) + 1
+            dtype     = NativeGeneric()
+            precision = 0
+            shape     = (LiteralInteger(len(args)), ) + args[0].shape
+
+        super().__init__(dtype, precision, shape, rank, 'C')
 
     def __getitem__(self,i):
         return self._args[i]

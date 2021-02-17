@@ -27,7 +27,7 @@ class Macro(PyccelAstNode):
     _name = '__UNDEFINED__'
     _attribute_nodes = ()
 
-    def __init__(self, argument):
+    def __init__(self, argument, **kwargs):
         if not isinstance(argument, (PyccelSymbol, Variable)):
             raise TypeError("Argument must be a Pyccelsymbol or a Variable not {}".format(type(argument)))
 
@@ -46,14 +46,14 @@ class Macro(PyccelAstNode):
 class MacroShape(Macro):
     """."""
     _name      = 'shape'
-    _rank      = 1
-    _shape     = ()
-    _dtype     = NativeInteger()
-    _precision = default_precision['integer']
+    _AstNodeProperties = {'dtype'     : NativeInteger(),
+                          'precision' : default_precision['integer'],
+                          'shape'     : ()
+                          'rank'      : 0  }
 
     def __init__(self, argument, index=None):
         self._index = index
-        super().__init__(argument)
+        super().__init__(argument, **self._AstNodeProperties)
 
     @property
     def index(self):
@@ -70,10 +70,13 @@ class MacroShape(Macro):
 class MacroType(Macro):
     """."""
     _name      = 'dtype'
-    _dtype     = NativeGeneric()
-    _rank      = 0
-    _shape     = ()
-    _precision = 0
+    _AstNodeProperties = {'dtype'     : NativeGeneric(),
+                          'precision' : 0,
+                          'shape'     : ()
+                          'rank'      : 0  }
+
+    def __init__(self, argument):
+        super().__init__(argument, **self._AstNodeProperties)
 
     def __str__(self):
         return 'MacroType({})'.format(str(self.argument))
@@ -82,10 +85,13 @@ class MacroType(Macro):
 class MacroCount(Macro):
     """."""
     _name      = 'count'
-    _rank      = 0
-    _shape     = ()
-    _dtype     = NativeInteger()
-    _precision = default_precision['integer']
+    _AstNodeProperties = {'dtype'     : NativeInteger(),
+                          'precision' : default_precision['integer'],
+                          'shape'     : ()
+                          'rank'      : 0  }
+
+    def __init__(self, argument):
+        super().__init__(argument, **self._AstNodeProperties)
 
     def __str__(self):
         return 'MacroCount({})'.format(str(self.argument))

@@ -311,12 +311,13 @@ class Dlist(PyccelAstNode):
     _attribute_nodes = ('_val', '_length')
 
     def __init__(self, val, length):
-        self._rank = val.rank
-        self._shape = tuple(s if i!= 0 else PyccelMul(s, length) for i,s in enumerate(val.shape))
-        self._order = val.order
         self._val = val
         self._length = length
-        super().__init__()
+        super().__init__(dtype = None,
+                precision = None,
+                shape = tuple(s if i!= 0 else PyccelMul(s, length) for i,s in enumerate(val.shape))
+                rank  = val.rank
+                order = val.order)
 
     @property
     def val(self):
@@ -1646,13 +1647,13 @@ class FunctionCall(PyccelAstNode):
 
         self._funcdef       = func
         self._arguments     = args
-        self._dtype         = func.results[0].dtype     if len(func.results) == 1 else NativeTuple()
-        self._rank          = func.results[0].rank      if len(func.results) == 1 else None
-        self._shape         = func.results[0].shape     if len(func.results) == 1 else None
-        self._precision     = func.results[0].precision if len(func.results) == 1 else None
-        self._order         = func.results[0].order     if len(func.results) == 1 else None
         self._func_name     = func.name
-        super().__init__()
+        dtype         = func.results[0].dtype     if len(func.results) == 1 else NativeTuple()
+        rank          = func.results[0].rank      if len(func.results) == 1 else None
+        shape         = func.results[0].shape     if len(func.results) == 1 else None
+        precision     = func.results[0].precision if len(func.results) == 1 else None
+        order         = func.results[0].order     if len(func.results) == 1 else None
+        super().__init__(dtype, precision, shape, rank, order)
 
     @property
     def args(self):

@@ -295,11 +295,23 @@ class PyccelAstNode(Basic):
     """Class from which all nodes containing objects inherit
     """
     stage      = None
-    _shape     = None
-    _rank      = None
-    _dtype     = None
-    _precision = None
-    _order     = None
+    __slots__ = ('_shape', '_rank', '_dtype', '_precision', '_order')
+
+    def __init__(self, dtype = None, precision = None, shape = None, rank = None, order = None):
+        if PyccelAstNode.stage == "syntactic":
+            return
+        else:
+            self._dtype = dtype
+            self._precision = precision
+            self._shape = shape
+            if rank is None:
+                rank = len(shape)
+            else:
+                self._rank = rank
+            if rank > 1:
+                self._order = order
+            else:
+                self._order = None
 
     @property
     def shape(self):
