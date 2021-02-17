@@ -669,7 +669,11 @@ class CWrapperCodePrinter(CCodePrinter):
             mini_wrapper_func_body = []
             res_args = []
             mini_wrapper_func_vars = {a.name : a for a in func.arguments}
-            local_arg_vars = [a.clone(a.name, is_pointer=True, allocatable=False) if isinstance(a, Variable) and a.rank > 0 else a for a in func.arguments]
+            # update ndarray local variables properties
+            local_arg_vars = [a.clone(a.name, is_pointer=True, allocatable=False)
+                              if isinstance(a, Variable) and a.rank > 0 else a for a in func.arguments]
+            # update optional variable properties
+            local_arg_vars = [a.clone(a.name, is_pointer=True) if a.is_optional else a for a in local_args_vars]
             flags = 0
             collect_vars = {}
 
@@ -867,7 +871,10 @@ class CWrapperCodePrinter(CCodePrinter):
         used_names = set([a.name for a in expr.arguments] + [r.name for r in expr.results] + [expr.name])
 
         # update ndarray local variables properties
-        local_arg_vars = [a.clone(a.name, is_pointer=True, allocatable=False) if isinstance(a, Variable) and a.rank > 0 else a for a in expr.arguments]
+        local_arg_vars = [a.clone(a.name, is_pointer=True, allocatable=False)
+                          if isinstance(a, Variable) and a.rank > 0 else a for a in expr.arguments]
+        # update optional variable properties
+        local_arg_vars = [a.clone(a.name, is_pointer=True) if a.is_optional else a for a in local_args_vars]
 
         # Find a name for the wrapper function
         wrapper_name = self._get_wrapper_name(used_names, expr)
