@@ -273,7 +273,7 @@ class CWrapperCodePrinter(CCodePrinter):
     # --------------------------------------------------------------------
     def _generate_TypeError_message(self, variable):
         """
-        Generate TypeError message from the variable informations (datatype, precision)
+        Generate TypeError message from the variable information (datatype, precision)
         """
         dtype     = variable.dtype
 
@@ -292,7 +292,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _get_array_type_check(self, variable, collect_var):
         """
-        Responsible for collecting array type check and creating the
+        Responsible of collecting array type check and creating the
         corresponding error code
 
         Parameters:
@@ -320,7 +320,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _get_scalar_type_check(self, variable, collect_var, error_check = False):
         """
-        Responsible for collecting numpy and python type check and creating the
+        Responsible of collecting numpy and python type check and creating the
         corresponding error code
 
         Parameters:
@@ -367,7 +367,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _valued_variable_management(self, variable, collect_var, tmp_variable):
         """
-        Responsible for creating the body collecting the default value of an valuedVariable
+        Responsible of creating the body collecting the default value of an valuedVariable
         and the check needed.
         if the valuedVariable is optional create body to collect the new value
 
@@ -384,8 +384,8 @@ class CWrapperCodePrinter(CCodePrinter):
         -------
         section      :
             IfSection
-        collect_body :
-            body that collect new optional variable value
+        collect_body : List
+            list containing the lines necessary to collect the new optional variable value
         """
 
         valued_var_check  = PyccelEq(VariableAddress(collect_var), VariableAddress(Py_None))
@@ -403,7 +403,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _body_scalar(self, variable, collect_var, error_check = False, tmp_variable = None):
         """
-        Responsible for collecting value and managing error and create the body
+        Responsible of collecting value and managing error and create the body
         of arguments in format:
             if collect_var is numpy_type:
                 collect_value from numpy type
@@ -452,7 +452,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _body_array(self, variable, collect_var, check_type = False) :
         """
-        Responsible for collecting value and managing error and create the body
+        Responsible of collecting value and managing error and create the body
         of arguments with rank greater than 0 in format
                 if (rank check == False){
                     print TypeError Wrong rank
@@ -512,7 +512,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _body_management(self, used_names, variable, collect_var, check_type = False):
         """
-        Responsible for calling functions that take care of body creation
+        Responsible of calling functions that take care of body creation
         Parameters:
         ----------
         used_names : list of strings
@@ -551,7 +551,7 @@ class CWrapperCodePrinter(CCodePrinter):
     # -------------------------------------------------------------------
     def get_PyArgParseType(self, used_names, variable):
         """
-        Responsible for creating any necessary intermediate variables which are used
+        Responsible of creating any necessary intermediate variables which are used
         to collect the result of PyArgParse, and collecting the required cast function
 
         Parameters:
