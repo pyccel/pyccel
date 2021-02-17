@@ -32,6 +32,13 @@ class PyccelInternalFunction(PyccelAstNode):
         """
         return self._args
 
+    @property
+    def is_elemental(self):
+        """ Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return False
+
 
 class PyccelArraySize(PyccelInternalFunction):
     """

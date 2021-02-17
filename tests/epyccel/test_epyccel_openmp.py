@@ -171,7 +171,7 @@ def test_modules_16(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Numpy Arrays not implemented in C !"),
+            pytest.mark.xfail(reason="len not implemented in C !"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -195,7 +195,7 @@ def test_omp_matmul(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Numpy Arrays not implemented in C !"),
+            pytest.mark.xfail(reason="Numpy matmul not implemented in C !"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -219,7 +219,7 @@ def test_omp_matmul_single(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Numpy Arrays not implemented in C !"),
+            pytest.mark.xfail(reason="len not implemented in C !"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -240,6 +240,7 @@ def test_omp_matmul_2d_2d(language):
     y2[:] = matmul(A2, x2)
 
     assert np.array_equal(y1, y2)
+
 
 def test_omp_arraysum(language):
     f1 = epyccel(openmp.omp_arraysum, accelerator='openmp', language=language)
