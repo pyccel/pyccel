@@ -44,7 +44,7 @@ class Variable(PyccelAstNode):
         or a str (bool, int, real).
 
     name : str, list, DottedName
-        The sympy object the variable represents. This can be either a string
+        The name of the variable represented. This can be either a string
         or a dotted name, when using a Class attribute.
 
     rank : int
@@ -383,11 +383,6 @@ class Variable(PyccelAstNode):
     def __hash__(self):
         return hash((type(self).__name__, self._name))
 
-    def _sympystr(self, printer):
-        """ sympy equivalent of __str__"""
-        sstr = printer.doprint
-        return '{}'.format(sstr(self.name))
-
     def inspect(self):
         """inspects the variable."""
 
@@ -476,10 +471,6 @@ class Variable(PyccelAstNode):
         out =  (apply, (Variable, args, kwargs))
         return out
 
-    def _eval_subs(self, old, new):
-        """ Overrides sympy method to indicate an atom"""
-        return self
-
     def __getitem__(self, *args):
 
         if len(args) == 1 and isinstance(args[0], (tuple, list)):
@@ -524,11 +515,6 @@ class DottedName(Basic):
     def __str__(self):
         return """.""".join(str(n) for n in self.name)
 
-    def _sympystr(self, printer):
-        """ sympy equivalent of __str__"""
-        sstr = printer.doprint
-        return """.""".join(sstr(n) for n in self.name)
-
 class ValuedVariable(Variable):
 
     """Represents a valued variable in the code.
@@ -561,12 +547,9 @@ class ValuedVariable(Variable):
         """
         return self._value
 
-    def _sympystr(self, printer):
-        """ sympy equivalent of __str__"""
-        sstr = printer.doprint
-
-        name = sstr(self.name)
-        value = sstr(self.value)
+    def __str__(self):
+        name = str(self.name)
+        value = str(self.value)
         return '{0}={1}'.format(name, value)
 
 class TupleVariable(Variable):
@@ -716,10 +699,10 @@ class IndexedElement(PyccelAstNode):
 
     Examples
     --------
-    >>> from sympy import symbols, Idx
     >>> from pyccel.ast.core import Variable, IndexedElement
-    >>> i, j = symbols('i j', cls=Idx)
-    >>> A = Variable('A', dtype='int')
+    >>> A = Variable('A', dtype='int', shape=(2,3), rank=2)
+    >>> i = Variable('i', dtype='int')
+    >>> j = Variable('j', dtype='int')
     >>> IndexedElement(A, i, j)
     IndexedElement(A, i, j)
     >>> IndexedElement(A, i, j) == A[i, j]

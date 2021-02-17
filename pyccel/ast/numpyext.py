@@ -7,8 +7,7 @@
 
 import numpy
 
-from sympy           import Expr
-
+from .basic          import PyccelAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList)
 
@@ -118,7 +117,7 @@ class NumpyInt(PythonInt):
     """ Represents a call to numpy.int() function.
     """
     def __new__(cls, arg=None, base=10):
-        return PythonInt.__new__(cls, arg)
+        return super().__new__(cls, arg)
 
 class NumpyInt32(NumpyInt):
     """ Represents a call to numpy.int32() function.
@@ -245,8 +244,8 @@ class NumpyArray(NumpyNewArray):
         self._precision = prec
         super().__init__()
 
-    def _sympystr(self, printer):
-        return self.arg
+    def __str__(self):
+        return str(self.arg)
 
     @property
     def arg(self):
@@ -320,8 +319,7 @@ class NumpySum(PyccelInternalFunction):
     """
 
     def __init__(self, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, PythonList,
-                            Variable, Expr)):
+        if not isinstance(arg, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
         self._dtype = arg.dtype
@@ -341,8 +339,7 @@ class NumpyProduct(PyccelInternalFunction):
     """
 
     def __init__(self, arg):
-        if not isinstance(arg, (list, tuple, PythonTuple, PythonList,
-                                Variable, Expr)):
+        if not isinstance(arg, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
         self._dtype = arg.dtype
@@ -362,11 +359,9 @@ class NumpyMatmul(PyccelInternalFunction):
     """
 
     def __init__(self, a ,b):
-        if not isinstance(a, (list, tuple, PythonTuple, PythonList,
-                                Variable, Expr)):
+        if not isinstance(a, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(a))
-        if not isinstance(b, (list, tuple, PythonTuple, PythonList,
-                                Variable, Expr)):
+        if not isinstance(b, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(a))
         super().__init__(a, b)
 
@@ -478,11 +473,10 @@ class NumpyLinspace(NumpyNewArray):
     def step(self):
         return (self.stop - self.start) / (self.size - 1)
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        code = 'linspace({}, {}, {})',format(sstr(self.start),
-                                             sstr(self.stop),
-                                             sstr(self.size))
+    def __str__(self):
+        code = 'linspace({}, {}, {})'.format(str(self.start),
+                                             str(self.stop),
+                                             str(self.size))
         return code
 
 #==============================================================================

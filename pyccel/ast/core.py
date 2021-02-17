@@ -7,20 +7,15 @@
 
 from collections     import OrderedDict
 
-from sympy import preorder_traversal
-
-from sympy.core.compatibility import with_metaclass
-from sympy.core.singleton     import Singleton
-from sympy.core.expr          import Expr
 from sympy.logic.boolalg      import And as sp_And
-
-from sympy.utilities.iterables          import iterable
 
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import RECURSIVE_RESULTS_REQUIRED
 
-from .basic     import Basic, PyccelAstNode
+from pyccel.utilities.metaclasses import Singleton
+
+from .basic     import Basic, PyccelAstNode, iterable
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol,
@@ -169,44 +164,11 @@ def subs(expr, new_elements):
         new_expr = expr.subs(new_elements)
         new_expr.set_fst(expr.fst)
         return new_expr
-    elif isinstance(expr, Expr):
+    elif isinstance(expr, PyccelAstNode):
         return expr.subs(new_elements)
 
     else:
         return expr
-
-
-
-#def collect_vars(ast):
-#    """ collect variables in order to be declared"""
-#    #TODO use the namespace to get the declared variables
-#    variables = {}
-#    def collect(stmt):
-#
-#        if isinstance(stmt, Variable):
-#            if not isinstance(stmt.name, DottedName):
-#                variables[stmt.name] = stmt
-#        elif isinstance(stmt, (tuple, list)):
-#            for i in stmt:
-#                collect(i)
-#        if isinstance(stmt, For):
-#            collect(stmt.target)
-#            collect(stmt.body)
-#        elif isinstance(stmt, FunctionalFor):
-#            collect(stmt.lhs)
-#            collect(stmt.loops)
-#        elif isinstance(stmt, If):
-#            collect(stmt.bodies)
-#        elif isinstance(stmt, (While, CodeBlock)):
-#            collect(stmt.body)
-#        elif isinstance(stmt, (Assign, AliasAssign, AugAssign)):
-#            collect(stmt.lhs)
-#            if isinstance(stmt.rhs, (Linspace, Diag, Where)):
-#                collect(stmt.rhs.index)
-#
-#
-#    collect(ast)
-#    return variables.values()
 
 def inline(func, args):
     local_vars = func.local_vars
@@ -322,9 +284,8 @@ class AsName(Basic):
     def target(self):
         return self._target
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} as {1}'.format(sstr(self.name), sstr(self.target))
+    def __str__(self):
+        return '{0} as {1}'.format(str(self.name), str(self.target))
 
     def __eq__(self, string):
         if isinstance(string, str):
@@ -342,8 +303,8 @@ class Dlist(PyccelAstNode):
 
     Parameters
     ----------
-    value : Expr
-           a sympy expression which represents the initilized value of the list
+    value : PyccelAstNode
+           an expression which represents the initilized value of the list
 
     shape : the shape of the array
     """
@@ -372,7 +333,7 @@ class Assign(Basic):
 
     Parameters
     ----------
-    lhs : Expr
+    lhs : PyccelAstNode
         In the syntactic stage:
            Object representing the lhs of the expression. These should be
            singular objects, such as one would use in writing code. Notable types
@@ -381,7 +342,7 @@ class Assign(Basic):
         In the semantic stage:
            Variable or IndexedElement
 
-    rhs : Expr
+    rhs : PyccelAstNode
         In the syntactic stage:
           Object representing the rhs of the expression
         In the semantic stage :
@@ -429,9 +390,8 @@ class Assign(Basic):
         self._like = like
         super().__init__()
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := {1}'.format(sstr(self.lhs), sstr(self.rhs))
+    def __str__(self):
+        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
 
     @property
     def lhs(self):
@@ -567,10 +527,9 @@ class Allocate(Basic):
     def status(self):
         return self._status
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
+    def __str__(self):
         return 'Allocate({}, shape={}, order={}, status={})'.format(
-                sstr(self.variable), sstr(self.shape), sstr(self.order), sstr(self.status))
+                str(self.variable), str(self.shape), str(self.order), str(self.status))
 
     def __eq__(self, other):
         if isinstance(other, Allocate):
@@ -666,6 +625,27 @@ class CodeBlock(Basic):
     def __str__(self):
         return 'CodeBlock({})'.format(self.body)
 
+    def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable function that can be called
+           to create the initial version of the object
+           and its arguments.
+        """
+        kwargs = dict(body = self.body)
+        return (apply, (self.__class__, (), kwargs))
+
 class AliasAssign(Basic):
 
     """Represents aliasing for code generation. An alias is any statement of the
@@ -706,9 +686,8 @@ class AliasAssign(Basic):
         self._rhs = rhs
         super().__init__()
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := {1}'.format(sstr(self.lhs), sstr(self.rhs))
+    def __str__(self):
+        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
 
     @property
     def lhs(self):
@@ -747,9 +726,8 @@ class SymbolicAssign(Basic):
         self._rhs = rhs
         super().__init__()
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := {1}'.format(sstr(self.lhs), sstr(self.rhs))
+    def __str__(self):
+        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
 
     @property
     def lhs(self):
@@ -760,11 +738,11 @@ class SymbolicAssign(Basic):
         return self._rhs
 
 
-# The following are defined to be sympy approved nodes. If there is something
+# The following were defined to be sympy approved nodes. If there is something
 # smaller that could be used, that would be preferable. We only use them as
 # tokens.
 
-class NativeOp(with_metaclass(Singleton)):
+class NativeOp(metaclass=Singleton):
 
     """Base type for native operands."""
 
@@ -814,7 +792,7 @@ class AugAssign(Assign):
 
     Parameters
     ----------
-    lhs : Expr
+    lhs : PyccelAstNode
         In the syntactic stage:
            Object representing the lhs of the expression. These should be
            singular objects, such as one would use in writing code. Notable types
@@ -826,7 +804,7 @@ class AugAssign(Assign):
     op : str
         Operator (+, -, /, \*, %).
 
-    rhs : Expr
+    rhs : PyccelAstNode
         In the syntactic stage:
           Object representing the rhs of the expression
         In the semantic stage :
@@ -867,10 +845,9 @@ class AugAssign(Assign):
 
         super().__init__(lhs, rhs, status, like)
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} {1}= {2}'.format(sstr(self.lhs), self.op._symbol,
-                sstr(self.rhs))
+    def __str__(self):
+        return '{0} {1}= {2}'.format(str(self.lhs), self.op._symbol,
+                str(self.rhs))
 
     @property
     def op(self):
@@ -887,9 +864,9 @@ class While(Basic):
 
     Parameters
     ----------
-    test : expression
-        test condition given as a sympy expression
-    body : sympy expr
+    test : PyccelAstNode
+        test condition given as an expression
+    body : list of Pyccel objects
         list of statements representing the body of the While statement.
 
     Examples
@@ -941,9 +918,9 @@ class With(Basic):
 
     Parameters
     ----------
-    test : expression
-        test condition given as a sympy expression
-    body : sympy expr
+    test : PyccelAstNode
+        test condition given as an expression
+    body : list of Pyccel objects
         list of statements representing the body of the With statement.
 
     Examples
@@ -1327,11 +1304,11 @@ class For(Basic):
 
     Parameters
     ----------
-    target : symbol
+    target : symbol / Variable
         symbol representing the iterator
     iter : iterable
         iterable object. for the moment only Range is used
-    body : sympy expr
+    body : list of pyccel objects
         list of statements representing the body of the For statement.
 
     Examples
@@ -1488,12 +1465,11 @@ class ConstructorCall(Basic):
         self._arguments = arguments
         super().__init__()
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        name = sstr(self.name)
+    def __str__(self):
+        name = str(self.name)
         args = ''
         if not self.arguments is None:
-            args = ', '.join(sstr(i) for i in self.arguments)
+            args = ', '.join(str(i) for i in self.arguments)
         return '{0}({1})'.format(name, args)
 
     @property
@@ -1601,11 +1577,9 @@ class ValuedArgument(Basic):
     def is_kwonly(self):
         return self._kwonly
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-
-        argument = sstr(self.argument)
-        value = sstr(self.value)
+    def __str__(self):
+        argument = str(self.argument)
+        value = str(self.value)
         return '{0}={1}'.format(argument, value)
 
 class FunctionCall(PyccelAstNode):
@@ -1747,7 +1721,7 @@ class Return(Basic):
 
     Parameters
     ----------
-    expr : sympy expr
+    expr : PyccelAstNode
         The expression to return.
 
     stmts :represent assign stmts in the case of expression return
@@ -1858,11 +1832,6 @@ class FunctionDef(Basic):
                  '_functions',
                  '_interfaces'
                  )
-
-    def __new__(cls, *args, **kwargs):
-        kwargs.pop('decorators', None)
-        kwargs.pop('templates', None)
-        return super().__new__(cls, *args, **kwargs)
 
     def __init__(
         self,
@@ -2424,10 +2393,6 @@ class ValuedFunctionAddress(FunctionAddress):
     """
     _attribute_nodes = (*FunctionAddress._attribute_nodes, '_value')
 
-    def __new__(cls, *args, **kwargs):
-        kwargs.pop('value', Nil())
-        return super().__new__(cls, *args, **kwargs)
-
     def __init__(self, *args, **kwargs):
         self._value = kwargs.pop('value', Nil())
         super().__init__(*args, **kwargs)
@@ -2463,8 +2428,6 @@ class BindCFunctionDef(FunctionDef):
         The function from which the c-compatible version was created
     """
     _attribute_nodes = (*FunctionDef._attribute_nodes, '_original_function')
-    def __new__(cls, *args, original_function, **kwargs):
-        return super().__new__(cls, *args, **kwargs)
 
     def __init__(self, *args, original_function, **kwargs):
         self._original_function = original_function
@@ -2729,9 +2692,6 @@ class ClassDef(Basic):
         else:
             return self.is_iterable or self.is_with_construct
 
-    def _eval_subs(self, old , new):
-        return self
-
     @property
     def is_unused(self):
         return False
@@ -2809,13 +2769,12 @@ class Import(Basic):
             raise TypeError('to_ignore must be a boolean.')
         self._ignore_at_print = to_ignore
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        source = sstr(self.source)
+    def __str__(self):
+        source = str(self.source)
         if len(self.target) == 0:
             return 'import {source}'.format(source=source)
         else:
-            target = ', '.join([sstr(i) for i in self.target])
+            target = ', '.join([str(i) for i in self.target])
             return 'from {source} import {target}'.format(source=source,
                     target=target)
 
@@ -2843,7 +2802,7 @@ class FuncAddressDeclare(Basic):
         An instance of FunctionAddress.
     intent: None, str
         one among {'in', 'out', 'inout'}
-    value: Expr
+    value: PyccelAstNode
         variable value
     static: bool
         True for a static declaration of an array.
@@ -2922,7 +2881,7 @@ class Declare(Basic):
         Variables must be of the same type.
     intent: None, str
         one among {'in', 'out', 'inout'}
-    value: Expr
+    value: PyccelAstNode
         variable value
     static: bool
         True for a static declaration of an array.
@@ -3026,8 +2985,8 @@ class SymbolicPrint(Basic):
 
     Parameters
     ----------
-    expr : sympy expr
-        The expression to return.
+    expr : PyccelAstNode
+        The expression to print
 
     Examples
     --------
@@ -3111,7 +3070,7 @@ class EmptyNode(Basic):
     """
     _attribute_nodes = ()
 
-    def _sympystr(self, printer):
+    def __str__(self):
         return ''
 
 
@@ -3140,9 +3099,29 @@ class Comment(Basic):
     def text(self):
         return self._text
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '# {0}'.format(sstr(self.text))
+    def __str__(self):
+        return '# {0}'.format(str(self.text))
+
+    def __reduce_ex__(self, i):
+        """ Used by pickle to create an object of this class.
+
+          Parameters
+          ----------
+
+          i : int
+           protocol
+
+          Results
+          -------
+
+          out : tuple
+           A tuple of two elements
+           a callable function that can be called
+           to create the initial version of the object
+           and its arguments.
+        """
+        kwargs = dict(text = self.text)
+        return (apply, (self.__class__, (), kwargs))
 
 
 class SeparatorComment(Comment):
@@ -3265,7 +3244,7 @@ class Assert(Basic):
 
     Parameters
     ----------
-    test: Expr
+    test: PyccelAstNode
         boolean expression to check
 
     Examples
@@ -3602,7 +3581,6 @@ def get_iterable_ranges(it, var_name=None):
         cls_base = it.this.cls_base
 
         # arguments[0] is 'self'
-        # TODO must be improved in syntax, so that a['value'] is a sympy object
 
         args = []
         kwargs = {}
