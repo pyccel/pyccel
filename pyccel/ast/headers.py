@@ -186,7 +186,7 @@ class Template(Header):
            to create the initial version of the object
            and its arguments
            """
-        return (self.__class__, (self.name, self.args))
+        return (self.__class__, (self.name, self.dtypes))
 
 #==============================================================================
 class FunctionHeader(Header):
