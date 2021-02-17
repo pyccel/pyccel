@@ -2692,9 +2692,6 @@ class ClassDef(Basic):
         else:
             return self.is_iterable or self.is_with_construct
 
-    def _eval_subs(self, old , new):
-        return self
-
     @property
     def is_unused(self):
         return False
