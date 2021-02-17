@@ -284,9 +284,8 @@ class AsName(Basic):
     def target(self):
         return self._target
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} as {1}'.format(sstr(self.name), sstr(self.target))
+    def __str__(self):
+        return '{0} as {1}'.format(str(self.name), str(self.target))
 
     def __eq__(self, string):
         if isinstance(string, str):
@@ -391,9 +390,8 @@ class Assign(Basic):
         self._like = like
         super().__init__()
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := {1}'.format(sstr(self.lhs), sstr(self.rhs))
+    def __str__(self):
+        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
 
     @property
     def lhs(self):
@@ -529,10 +527,9 @@ class Allocate(Basic):
     def status(self):
         return self._status
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
+    def __str__(self):
         return 'Allocate({}, shape={}, order={}, status={})'.format(
-                sstr(self.variable), sstr(self.shape), sstr(self.order), sstr(self.status))
+                str(self.variable), str(self.shape), str(self.order), str(self.status))
 
     def __eq__(self, other):
         if isinstance(other, Allocate):
@@ -689,9 +686,8 @@ class AliasAssign(Basic):
         self._rhs = rhs
         super().__init__()
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := {1}'.format(sstr(self.lhs), sstr(self.rhs))
+    def __str__(self):
+        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
 
     @property
     def lhs(self):
@@ -730,9 +726,8 @@ class SymbolicAssign(Basic):
         self._rhs = rhs
         super().__init__()
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} := {1}'.format(sstr(self.lhs), sstr(self.rhs))
+    def __str__(self):
+        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
 
     @property
     def lhs(self):
@@ -850,10 +845,9 @@ class AugAssign(Assign):
 
         super().__init__(lhs, rhs, status, like)
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return '{0} {1}= {2}'.format(sstr(self.lhs), self.op._symbol,
-                sstr(self.rhs))
+    def __str__(self):
+        return '{0} {1}= {2}'.format(str(self.lhs), self.op._symbol,
+                str(self.rhs))
 
     @property
     def op(self):
@@ -1471,12 +1465,11 @@ class ConstructorCall(Basic):
         self._arguments = arguments
         super().__init__()
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        name = sstr(self.name)
+    def __str__(self, printer):
+        name = str(self.name)
         args = ''
         if not self.arguments is None:
-            args = ', '.join(sstr(i) for i in self.arguments)
+            args = ', '.join(str(i) for i in self.arguments)
         return '{0}({1})'.format(name, args)
 
     @property
@@ -1584,11 +1577,9 @@ class ValuedArgument(Basic):
     def is_kwonly(self):
         return self._kwonly
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-
-        argument = sstr(self.argument)
-        value = sstr(self.value)
+    def __str__(self):
+        argument = str(self.argument)
+        value = str(self.value)
         return '{0}={1}'.format(argument, value)
 
 class FunctionCall(PyccelAstNode):
@@ -2781,13 +2772,12 @@ class Import(Basic):
             raise TypeError('to_ignore must be a boolean.')
         self._ignore_at_print = to_ignore
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        source = sstr(self.source)
+    def __str__(self):
+        source = str(self.source)
         if len(self.target) == 0:
             return 'import {source}'.format(source=source)
         else:
-            target = ', '.join([sstr(i) for i in self.target])
+            target = ', '.join([str(i) for i in self.target])
             return 'from {source} import {target}'.format(source=source,
                     target=target)
 
@@ -3083,7 +3073,7 @@ class EmptyNode(Basic):
     """
     _attribute_nodes = ()
 
-    def _sympystr(self, printer):
+    def __str__(self, printer):
         return ''
 
 

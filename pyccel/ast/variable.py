@@ -366,11 +366,6 @@ class Variable(PyccelAstNode):
     def __hash__(self):
         return hash((type(self).__name__, self._name))
 
-    def _sympystr(self, printer):
-        """ sympy equivalent of __str__"""
-        sstr = printer.doprint
-        return '{}'.format(sstr(self.name))
-
     def inspect(self):
         """inspects the variable."""
 
@@ -507,11 +502,6 @@ class DottedName(Basic):
     def __str__(self):
         return """.""".join(str(n) for n in self.name)
 
-    def _sympystr(self, printer):
-        """ sympy equivalent of __str__"""
-        sstr = printer.doprint
-        return """.""".join(sstr(n) for n in self.name)
-
 class ValuedVariable(Variable):
 
     """Represents a valued variable in the code.
@@ -544,12 +534,9 @@ class ValuedVariable(Variable):
         """
         return self._value
 
-    def _sympystr(self, printer):
-        """ sympy equivalent of __str__"""
-        sstr = printer.doprint
-
-        name = sstr(self.name)
-        value = sstr(self.value)
+    def __str__(self):
+        name = str(self.name)
+        value = str(self.value)
         return '{0}={1}'.format(name, value)
 
 class TupleVariable(Variable):

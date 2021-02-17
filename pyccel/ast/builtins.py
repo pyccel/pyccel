@@ -134,9 +134,6 @@ class PythonBool(PyccelAstNode):
     def __str__(self):
         return 'Bool({})'.format(str(self.arg))
 
-    def _sympystr(self, printer):
-        return self.__str__()
-
 #==============================================================================
 class PythonComplex(PyccelAstNode):
     """ Represents a call to Python's native complex() function.
@@ -282,9 +279,6 @@ class PythonFloat(PyccelAstNode):
 
     def __str__(self):
         return 'LiteralFloat({0})'.format(str(self.arg))
-
-    def _sympystr(self, printer):
-        return self.__str__()
 
 #==============================================================================
 class PythonInt(PyccelAstNode):

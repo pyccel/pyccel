@@ -244,8 +244,8 @@ class NumpyArray(NumpyNewArray):
         self._precision = prec
         super().__init__()
 
-    def _sympystr(self, printer):
-        return self.arg
+    def __str__(self, printer):
+        return str(self.arg)
 
     @property
     def arg(self):
@@ -473,11 +473,10 @@ class NumpyLinspace(NumpyNewArray):
     def step(self):
         return (self.stop - self.start) / (self.size - 1)
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        code = 'linspace({}, {}, {})',format(sstr(self.start),
-                                             sstr(self.stop),
-                                             sstr(self.size))
+    def __str__(self):
+        code = 'linspace({}, {}, {})',format(str(self.start),
+                                             str(self.stop),
+                                             str(self.size))
         return code
 
 #==============================================================================

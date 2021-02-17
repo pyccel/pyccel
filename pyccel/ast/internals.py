@@ -156,19 +156,6 @@ class Slice(Basic):
         """
         return self._step
 
-    def _sympystr(self, printer):
-        """ sympy equivalent of __str__"""
-        sstr = printer.doprint
-        if self.start is None:
-            start = ''
-        else:
-            start = sstr(self.start)
-        if self.stop is None:
-            stop = ''
-        else:
-            stop = sstr(self.stop)
-        return '{0} : {1}'.format(start, stop)
-
     def __str__(self):
         if self.start is None:
             start = ''

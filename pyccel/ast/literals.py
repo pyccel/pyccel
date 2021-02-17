@@ -47,11 +47,8 @@ class Literal(PyccelAstNode):
     def python_value(self):
         """ Get python literal represented by this instance """
 
-    def __repr__(self):
-        return repr(self.python_value)
-
-    def _sympystr(self, printer):
-        return printer.doprint(self.python_value)
+    def __str__(self):
+        return str(self.python_value)
 
     def __eq__(self, other):
         if isinstance(other, PyccelAstNode):
