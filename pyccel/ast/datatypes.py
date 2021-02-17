@@ -92,7 +92,6 @@ default_precision = {'real': 8,
                     'float':8}
 dtype_and_precision_registry = { 'real':('real',default_precision['float']),
                                  'double':('real',default_precision['float']),
-                                 'float':('real',default_precision['float']),       # sympy.Float
                                  'pythonfloat':('real',default_precision['float']), # built-in float
                                  'float32':('real',4),
                                  'float64':('real',8),
@@ -290,9 +289,9 @@ def is_with_construct_datatype(dtype):
 def datatype(arg):
     """Returns the datatype singleton for the given dtype.
 
-    arg : str or sympy expression
+    arg : str or pyccel expression
         If a str ('bool', 'int', 'real','complex', or 'void'), return the
-        singleton for the corresponding dtype. If a sympy expression, return
+        singleton for the corresponding dtype. If a pyccel expression, return
         the datatype that best fits the expression. This is determined from the
         assumption system. For more control, use the `DataType` class directly.
 
@@ -314,7 +313,7 @@ def datatype(arg):
 def str_dtype(dtype):
 
     """
-    This function takes a datatype and returns a sympy datatype as a string
+    This function takes a datatype and returns a pyccel datatype as a string
 
     Example
     -------

@@ -439,8 +439,8 @@ class PythonPrint(Basic):
 
     """Represents a print function in the code.
 
-    expr : sympy expr
-        The expression to return.
+    expr : PyccelAstNode
+        The expression to print
 
     Examples
 

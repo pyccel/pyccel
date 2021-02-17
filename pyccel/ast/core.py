@@ -304,7 +304,7 @@ class Dlist(PyccelAstNode):
     Parameters
     ----------
     value : PyccelAstNode
-           a sympy expression which represents the initilized value of the list
+           an expression which represents the initilized value of the list
 
     shape : the shape of the array
     """
@@ -738,7 +738,7 @@ class SymbolicAssign(Basic):
         return self._rhs
 
 
-# The following are defined to be sympy approved nodes. If there is something
+# The following were defined to be sympy approved nodes. If there is something
 # smaller that could be used, that would be preferable. We only use them as
 # tokens.
 
@@ -864,9 +864,9 @@ class While(Basic):
 
     Parameters
     ----------
-    test : expression
-        test condition given as a sympy expression
-    body : sympy expr
+    test : PyccelAstNode
+        test condition given as an expression
+    body : list of Pyccel objects
         list of statements representing the body of the While statement.
 
     Examples
@@ -918,9 +918,9 @@ class With(Basic):
 
     Parameters
     ----------
-    test : expression
-        test condition given as a sympy expression
-    body : sympy expr
+    test : PyccelAstNode
+        test condition given as an expression
+    body : list of Pyccel objects
         list of statements representing the body of the With statement.
 
     Examples
@@ -1304,11 +1304,11 @@ class For(Basic):
 
     Parameters
     ----------
-    target : symbol
+    target : symbol / Variable
         symbol representing the iterator
     iter : iterable
         iterable object. for the moment only Range is used
-    body : sympy expr
+    body : list of pyccel objects
         list of statements representing the body of the For statement.
 
     Examples
@@ -1721,7 +1721,7 @@ class Return(Basic):
 
     Parameters
     ----------
-    expr : sympy expr
+    expr : PyccelAstNode
         The expression to return.
 
     stmts :represent assign stmts in the case of expression return
@@ -2988,8 +2988,8 @@ class SymbolicPrint(Basic):
 
     Parameters
     ----------
-    expr : sympy expr
-        The expression to return.
+    expr : PyccelAstNode
+        The expression to print
 
     Examples
     --------
@@ -3584,7 +3584,6 @@ def get_iterable_ranges(it, var_name=None):
         cls_base = it.this.cls_base
 
         # arguments[0] is 'self'
-        # TODO must be improved in syntax, so that a['value'] is a sympy object
 
         args = []
         kwargs = {}

@@ -44,7 +44,7 @@ class Variable(PyccelAstNode):
         or a str (bool, int, real).
 
     name : str, list, DottedName
-        The sympy object the variable represents. This can be either a string
+        The name of the variable represented. This can be either a string
         or a dotted name, when using a Class attribute.
 
     rank : int
@@ -454,10 +454,6 @@ class Variable(PyccelAstNode):
         out =  (apply, (Variable, args, kwargs))
         return out
 
-    def _eval_subs(self, old, new):
-        """ Overrides sympy method to indicate an atom"""
-        return self
-
     def __getitem__(self, *args):
 
         if len(args) == 1 and isinstance(args[0], (tuple, list)):
@@ -686,10 +682,10 @@ class IndexedElement(PyccelAstNode):
 
     Examples
     --------
-    >>> from sympy import symbols, Idx
     >>> from pyccel.ast.core import Variable, IndexedElement
-    >>> i, j = symbols('i j', cls=Idx)
-    >>> A = Variable('A', dtype='int')
+    >>> A = Variable('A', dtype='int', shape=(2,3), rank=2)
+    >>> i = Variable('i', dtype='int')
+    >>> j = Variable('j', dtype='int')
     >>> IndexedElement(A, i, j)
     IndexedElement(A, i, j)
     >>> IndexedElement(A, i, j) == A[i, j]
