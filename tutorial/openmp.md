@@ -720,3 +720,70 @@ loop-nest
 #$ omp target parallel for simd [clause[ [,]clause] ... ]
 loop-nest
 ```
+
+### target teams
+
+#### Syntax of *target teams*
+
+```python
+#$ omp target teams [clause[ [,]clause] ... ]
+structured-block
+#$ omp end target teams
+```
+
+### target teams distribute
+
+#### Syntax of *target teams distribute*
+
+```python
+#$ omp target teams distribute [clause[ [,]clause] ... ]
+loop-nest
+```
+
+### target teams distribute simd
+
+#### Syntax of *target teams distribute simd*
+
+```python
+#$ omp target teams distribute simd [clause[ [,]clause] ... ]
+loop-nest
+```
+
+### target teams distribute parallel for
+
+#### Syntax of *target teams distribute parallel for*
+
+```python
+#$ omp target teams distribute parallel for [clause[ [,]clause] ... ]
+loop-nest
+```
+
+### target teams distribute parallel for simd
+
+#### Syntax of *target teams distribute parallel for simd*
+
+```python
+#$ omp target teams distribute parallel for simd [clause[ [,]clause] ... ]
+loop-nest
+```
+
+#### Example
+
+The ```#$ omp parallel for simd``` construct specifies a parallel construct containing only one worksharing-loo
+p SIMD construct.
+
+```python
+r = 0
+#$ omp target teams distribute parallel for reduction(+:r)
+for i in range(0, 10000):
+    r = r + i
+
+print("result:",r)
+```
+
+The output of this program is :
+```shell
+❯ pyccel omp_test.py --openmp
+❯ ./omp_test
+result: 49995000
+```

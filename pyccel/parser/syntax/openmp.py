@@ -509,7 +509,7 @@ class OmpTargetConstruct(BasicStmt):
                           OmpMap)
 
         combined = None
-        if isinstance(self.combined, OmpTargetParallel) or isinstance(self.combined, OmpTargetTeams):
+        if isinstance(self.combined, (OmpTargetParallel, OmpTargetTeams)):
             combined = self.combined.expr
             if 'distribute' in self.combined.expr:
                 _valid_clauses = _valid_clauses + _valid_Distribute_clauses
