@@ -3073,7 +3073,7 @@ class EmptyNode(Basic):
     """
     _attribute_nodes = ()
 
-    def __str__(self, printer):
+    def __str__(self):
         return ''
 
 
