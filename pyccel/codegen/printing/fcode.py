@@ -2593,6 +2593,12 @@ class FCodePrinter(CodePrinter):
         printed = repr(expr.python_value)
         return "{}_{}".format(printed, self.print_kind(expr))
 
+    def _print_LiteralTrue(self, expr):
+        return ".True._{}".format(self.print_kind(expr))
+
+    def _print_LiteralFalse(self, expr):
+        return ".False._{}".format(self.print_kind(expr))
+
     def _print_LiteralComplex(self, expr):
         real_str = self._print(expr.real)
         imag_str = self._print(expr.imag)
