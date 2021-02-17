@@ -46,7 +46,7 @@ from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
-from pyccel.ast.core import With, Block
+from pyccel.ast.core import With
 from pyccel.ast.builtins import PythonList
 from pyccel.ast.core import Dlist
 from pyccel.ast.core import StarredArguments
