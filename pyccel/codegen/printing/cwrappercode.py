@@ -300,7 +300,7 @@ class CWrapperCodePrinter(CCodePrinter):
         variable     : Variable
             The optional variable
         collect_var  : Variable
-            the pyobject type variable  holder of value
+            variable which holds the value collected with PyArg_Parsetuple
 
         Returns:
         -------
@@ -328,7 +328,7 @@ class CWrapperCodePrinter(CCodePrinter):
         variable     : Variable
             The optional variable
         collect_var  : Variable
-            the pyobject type variable  holder of value
+            variable which holds the value collected with PyArg_Parsetuple
         error_check  : Bool
             True if checking the data type and raising error is needed
 
@@ -378,7 +378,7 @@ class CWrapperCodePrinter(CCodePrinter):
         variable     : Variable
             The optional variable
         collect_var  : Variable
-            the pyobject type variable  holder of value
+            variable which holds the value collected with PyArg_Parsetuple
 
         Returns
         -------
@@ -413,13 +413,13 @@ class CWrapperCodePrinter(CCodePrinter):
                 raise an error
         Parameters:
         ----------
-        variable    : variable
+        variable    : Variable
             the variable needed to collect
-        collect_var : variable
-            the pyobject variable
+        collect_var : Variable
+            variable which holds the value collected with PyArg_Parsetuple
         error_check : boolean
             True if checking the data type and raising error is needed
-        tmp_variable : variable
+        tmp_variable : Variable
             temporary variable to hold value default None
 
         Returns
