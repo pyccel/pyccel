@@ -634,6 +634,20 @@ class CCodePrinter(CodePrinter):
         else:
             return '#include "{0}.h"'.format(source)
 
+    def _print_LiteralString(self, expr):
+        format_str = format(expr.arg)
+        format_str = format_str.replace("\\", "\\\\")\
+                               .replace('\a', '\\a')\
+                               .replace('\b', '\\b')\
+                               .replace('\f', '\\f')\
+                               .replace("\n", "\\n")\
+                               .replace('\r', '\\r')\
+                               .replace('\t', '\\t')\
+                               .replace('\v', '\\v')\
+                               .replace('"', '\\"')\
+                               .replace("'", "\\'")
+        return '"{}"'.format(format_str)
+
     def get_print_format_and_arg(self, var):
         type_to_format = {('real',8)    : '%.12lf',
                           ('real',4)    : '%.12f',
