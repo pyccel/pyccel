@@ -318,7 +318,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return check, error
 
-    def _get_scalar_type_check(self, variable, collect_var, error_check = True):
+    def _get_scalar_type_check(self, variable, collect_var, error_check = False):
         """
         Responsible for collecting numpy and python type check and creating the
         corresponding error code
@@ -401,7 +401,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return section, collect_body
 
 
-    def _body_scalar(self, variable, collect_var, error_check = True, tmp_variable = None):
+    def _body_scalar(self, variable, collect_var, error_check = False, tmp_variable = None):
         """
         Responsible for collecting value and managing error and create the body
         of arguments in format:
@@ -510,9 +510,26 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return body
 
-    def _body_management(self, used_names, variable, collect_var, cast_function, check_type = False):
+    def _body_management(self, used_names, variable, collect_var, check_type = False):
         """
         Responsible for calling functions that take care of body creation
+        Parameters:
+        ----------
+        used_names : list of strings
+            List of variable and function names to avoid name collisions
+        Variable : Variable
+            The optional variable
+        collect_var : variable
+            the pyobject type variable  holder of value
+        check_type : Boolean
+            True if the type is needed
+
+        Returns
+        -------
+        body : list
+            A list of statements
+        tmp_variable : Variable
+            temporary variable to hold value default None
         """
         tmp_variable = None
         body         = []
@@ -659,7 +676,7 @@ class CWrapperCodePrinter(CCodePrinter):
             # Loop for all args in every functions and create the corresponding condition and body
             for p_arg, f_arg in zip(parse_args, local_arg_vars):
                 collect_vars[f_arg] = p_arg
-                body, tmp_variable = self._body_management(used_names, f_arg, p_arg, None)
+                body, tmp_variable = self._body_management(used_names, f_arg, p_arg)
                 if tmp_variable :
                     mini_wrapper_func_vars[tmp_variable.name] = tmp_variable
 
@@ -897,7 +914,7 @@ class CWrapperCodePrinter(CCodePrinter):
             collect_var  = self.get_PyArgParseType(used_names, arg)
             collect_vars[arg] = collect_var
 
-            body, tmp_variable = self._body_management(used_names, arg, collect_var, None, True)
+            body, tmp_variable = self._body_management(used_names, arg, collect_var, True)
             if tmp_variable :
                 wrapper_vars[tmp_variable.name] = tmp_variable
 
