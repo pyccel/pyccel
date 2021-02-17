@@ -199,8 +199,8 @@ class CWrapperCodePrinter(CCodePrinter):
             List of variable and function names to avoid name collisions
         func      : FunctionDef or Interface
 
-        Results   :
-        -----------
+        Returns:
+        -------
         wrapper_name : string
         """
         name         = func.name
@@ -294,6 +294,20 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         Responsible for collecting array type check and creating the
         corresponding error code
+
+        Parameters:
+        ----------
+        variable     : Variable
+            The optional variable
+        collect_var  : Variable
+            the pyobject type variable  holder of value
+
+        Returns:
+        -------
+        check : FunctionCall
+            functionCall responsible of data type check
+        error : FunctionCall
+            function call that raise TypeError
         """
 
         numpy_dtype = self.find_in_numpy_dtype_registry(variable)
