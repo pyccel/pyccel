@@ -232,7 +232,7 @@ class PythonComplex(PyccelAstNode):
         return self._internal_var
 
     def __str__(self):
-        return "complex({}, {})".format(str(self._args[0]), str(self._args[1]))
+        return "complex({}, {})".format(str(self.real), str(self.imag))
 
 #==============================================================================
 class PythonEnumerate(Basic):
