@@ -445,11 +445,8 @@ class CCodePrinter(CodePrinter):
         value = self._print(expr.arg)
         return '({} != 0)'.format(value)
 
-    def _print_LiteralInteger(self, expr):
-        return str(expr.p)
-
-    def _print_LiteralFloat(self, expr):
-        return repr(expr)
+    def _print_Literal(self, expr):
+        return repr(expr.python_value)
 
     def _print_LiteralComplex(self, expr):
         if expr.real == LiteralFloat(0):
@@ -636,20 +633,6 @@ class CCodePrinter(CodePrinter):
             return '#include <{0}.h>'.format(source)
         else:
             return '#include "{0}.h"'.format(source)
-
-    def _print_LiteralString(self, expr):
-        format_str = format(expr.arg)
-        format_str = format_str.replace("\\", "\\\\")\
-                               .replace('\a', '\\a')\
-                               .replace('\b', '\\b')\
-                               .replace('\f', '\\f')\
-                               .replace("\n", "\\n")\
-                               .replace('\r', '\\r')\
-                               .replace('\t', '\\t')\
-                               .replace('\v', '\\v')\
-                               .replace('"', '\\"')\
-                               .replace("'", "\\'")
-        return '"{}"'.format(format_str)
 
     def get_print_format_and_arg(self, var):
         type_to_format = {('real',8)    : '%.12lf',
