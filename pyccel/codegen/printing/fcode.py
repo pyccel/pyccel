@@ -198,7 +198,7 @@ class FCodePrinter(CodePrinter):
     }
 
 
-    def __init__(self, parser, settings={}):
+    def __init__(self, parser, **settings):
 
         prefix_module = settings.pop('prefix_module', None)
 
@@ -1404,12 +1404,6 @@ class FCodePrinter(CodePrinter):
     def _print_DataType(self, expr):
         return self._print(expr.name)
 
-    def _print_LiteralTrue(self, expr):
-        return '.True._{}'.format(self.print_kind(expr))
-
-    def _print_LiteralFalse(self, expr):
-        return '.False._{}'.format(self.print_kind(expr))
-
     def _print_LiteralString(self, expr):
         sp_chars = ['\a', '\b', '\f', '\r', '\t', '\v', "'", '\n']
         sub_str = ''
@@ -1833,7 +1827,7 @@ class FCodePrinter(CodePrinter):
                                        prolog, epilog)
 
         elif isinstance(expr.iterable, Product):
-            for i, a in zip(expr.target, expr.iterable.args):
+            for i, a in zip(expr.target, expr.iterable.elements):
                 if isinstance(a, PythonRange):
                     itr_ = a
                 else:
@@ -1842,7 +1836,7 @@ class FCodePrinter(CodePrinter):
                                            prolog, epilog)
 
         elif isinstance(expr.iterable, PythonZip):
-            itr_ = PythonRange(expr.iterable.element.shape[0])
+            itr_ = PythonRange(expr.iterable.length)
             prolog, epilog = _do_range(expr.target, itr_, \
                                        prolog, epilog)
 
@@ -2595,17 +2589,20 @@ class FCodePrinter(CodePrinter):
     def _print_int(self, expr):
         return str(expr)
 
-    def _print_LiteralFloat(self, expr):
-        printed = CodePrinter._print_Float(self, expr)
+    def _print_Literal(self, expr):
+        printed = repr(expr.python_value)
         return "{}_{}".format(printed, self.print_kind(expr))
+
+    def _print_LiteralTrue(self, expr):
+        return ".True._{}".format(self.print_kind(expr))
+
+    def _print_LiteralFalse(self, expr):
+        return ".False._{}".format(self.print_kind(expr))
 
     def _print_LiteralComplex(self, expr):
         real_str = self._print(expr.real)
         imag_str = self._print(expr.imag)
         return "({}, {})".format(real_str, imag_str)
-
-    def _print_LiteralInteger(self, expr):
-        return "{0}_{1}".format(str(expr.p), self.print_kind(expr))
 
     def _print_IndexedElement(self, expr):
         base = expr.base
@@ -2936,4 +2933,4 @@ def fcode(expr, parser, assign_to=None, **settings):
         for examples.
     """
 
-    return FCodePrinter(parser, settings).doprint(expr, assign_to)
+    return FCodePrinter(parser, **settings).doprint(expr, assign_to)

@@ -252,17 +252,17 @@ class CCodePrinter(CodePrinter):
         'dereference': set()
     }
 
-    def __init__(self, parser, settings=None):
+    def __init__(self, parser, **settings):
 
         if parser.filename:
             errors.set_target(parser.filename, 'file')
 
-        prefix_module = None if settings is None else settings.pop('prefix_module', None)
+        prefix_module = settings.pop('prefix_module', None)
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
-        userfuncs = {} if settings is None else settings.get('user_functions', {})
+        userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
-        self._dereference = set([] if settings is None else settings.get('dereference', []))
+        self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
         self._additional_imports = set(['stdlib'])
         self._parser = parser
@@ -445,11 +445,8 @@ class CCodePrinter(CodePrinter):
         value = self._print(expr.arg)
         return '({} != 0)'.format(value)
 
-    def _print_LiteralInteger(self, expr):
-        return str(expr.p)
-
-    def _print_LiteralFloat(self, expr):
-        return CodePrinter._print_Float(self, expr)
+    def _print_Literal(self, expr):
+        return repr(expr.python_value)
 
     def _print_LiteralComplex(self, expr):
         if expr.real == LiteralFloat(0):
@@ -1559,4 +1556,4 @@ def ccode(expr, parser, assign_to=None, **settings):
         For example, if ``dereference=[a]``, the resulting code would print
         ``(*a)`` instead of ``a``.
     """
-    return CCodePrinter(parser, settings).doprint(expr, assign_to)
+    return CCodePrinter(parser, **settings).doprint(expr, assign_to)
