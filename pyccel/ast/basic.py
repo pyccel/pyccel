@@ -26,8 +26,7 @@ class Immutable:
 #==============================================================================
 class Basic:
     """Basic class for Pyccel AST."""
-    _fst = None
-    _ignored_types = (Immutable, type)
+    __slots__ = ('_user_nodes', '_fst', '_recursion_in_progress', '_attribute_nodes')
 
     def __init__(self):
         self._user_nodes = []
@@ -68,7 +67,7 @@ class Basic:
     def ignore(self, c):
         """ Indicates if a node should be ignored when recursing
         """
-        return c is None or isinstance(c, self._ignored_types)
+        return c is None or isinstance(c, (Immutable, type))
 
     def invalidate_node(self):
         """ Indicate that this node is temporary.
