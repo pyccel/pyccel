@@ -392,8 +392,8 @@ class CWrapperCodePrinter(CCodePrinter):
         collect_body      = []
 
         if variable.is_optional:
-            collect_body  = [Assign(VariableAddress(variable), VariableAddress(tmp_variable))]
-            section       = IfSection(valued_var_check, [Assign(VariableAddress(variable), Nil())])
+            collect_body  = [AliasAssign(variable, tmp_variable)]
+            section       = IfSection(valued_var_check, [AliasAssign(variable, Nil())])
 
         else:
             section       = IfSection(valued_var_check, [Assign(variable, variable.value)])
@@ -673,7 +673,7 @@ class CWrapperCodePrinter(CCodePrinter):
             local_arg_vars = [a.clone(a.name, is_pointer=True, allocatable=False)
                               if isinstance(a, Variable) and a.rank > 0 else a for a in func.arguments]
             # update optional variable properties
-            local_arg_vars = [a.clone(a.name, is_pointer=True) if a.is_optional else a for a in local_args_vars]
+            local_arg_vars = [a.clone(a.name, is_pointer=True) if a.is_optional else a for a in local_arg_vars]
             flags = 0
             collect_vars = {}
 
@@ -874,7 +874,7 @@ class CWrapperCodePrinter(CCodePrinter):
         local_arg_vars = [a.clone(a.name, is_pointer=True, allocatable=False)
                           if isinstance(a, Variable) and a.rank > 0 else a for a in expr.arguments]
         # update optional variable properties
-        local_arg_vars = [a.clone(a.name, is_pointer=True) if a.is_optional else a for a in local_args_vars]
+        local_arg_vars = [a.clone(a.name, is_pointer=True) if a.is_optional else a for a in local_arg_vars]
 
         # Find a name for the wrapper function
         wrapper_name = self._get_wrapper_name(used_names, expr)
