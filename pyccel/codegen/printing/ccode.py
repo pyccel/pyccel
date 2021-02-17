@@ -1215,29 +1215,23 @@ class CCodePrinter(CodePrinter):
             return 'return 0;'
 
         if expr.stmt:
-            # get Assign nodes form CodeBlock object expr.stmt
-            assigns = expr.stmt.get_attribute_nodes(Assign)
+            # get Assign nodes form the CodeBlock object expr.stmt.
+            last_assign = expr.stmt.get_attribute_nodes(Assign)
 
-            # check the Assign objects list in case of
-            # the user assigns a variable to an object contains IndexedElement object
-            if not assigns:
+            # Check the Assign objects list in case of
+            # the user assigns a variable to an object contains IndexedElement object.
+            if not last_assign:
                 return 'return {0};'.format(self._print(args[0]))
-            last_assign = assigns[-1]
-            deallocations = expr.stmt.get_attribute_nodes(Deallocate)
 
-            # print deallocation nodes
-            if deallocations:
-                code += '\n' + self._print(last_assign)
-                for a in deallocations:
-                    code += '\n' + self._print(a)
+            # make sure that stmt contains one assign node.
+            assert(len(last_assign)==1)
 
-            # return the rhs(what the temporary variable is holding) if the temporary variable is not holding a value from a freed variable,
-            # else return lhs(the temporary variable).
-            freed_vars = [d.variable for d in deallocations]
-            if all(v not in freed_vars for v in last_assign.rhs.get_attribute_nodes(Variable)):
-                return 'return {0};'.format(self._print(last_assign.rhs))
+            if last_assign[0].lhs.is_temp:
+                code = '\n'.join(self._print(a) for a in expr.stmt.body if a is not last_assign[0])
+                return code + '\nreturn {};'.format(self._print(last_assign[0].rhs))
             else:
-                return code + '\nreturn {0};'.format(self._print(last_assign.lhs))
+                code = '\n'+self._print(expr.stmt)
+                return code + '\nreturn {};'.format(self._print(last_assign[0].lhs))
         return 'return {0};'.format(self._print(args[0]))
 
     def _print_Pass(self, expr):
