@@ -158,7 +158,9 @@ def test_modules_14_1(language):
         pytest.param("c", marks = [
             pytest.mark.xfail(reason="omp_get_team_num() and omp_get_num_teams() return a wrong result!"),
             pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Compilation fails on github action"),
+            pytest.mark.fortran])
     ]
 )
 def test_modules_15(language):
