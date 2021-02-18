@@ -182,6 +182,18 @@ class PyccelSymbol(str, Immutable):
     >>> x = PyccelSymbol('x')
     x
     """
+    _is_temp = False
+
+    @property
+    def is_temp(self):
+        """
+        Indicates if the variable created by Pyccel [default value: False]
+        """
+        return self._is_temp
+
+    @is_temp.setter
+    def is_temp(self, is_temp):
+        self._is_temp = is_temp
 
 def symbols(names):
     """

@@ -1350,14 +1350,14 @@ class SemanticParser(BasicParser):
 
                 elem_dtype = elem_d_lhs.pop('datatype')
 
-                var = self._create_variable(elem_name, elem_dtype, r, elem_d_lhs)
+                var = self._create_variable(elem_name, elem_dtype, r, elem_d_lhs, is_temp=True)
                 elem_vars.append(var)
 
             d_lhs['is_pointer'] = any(v.is_pointer for v in elem_vars)
-            lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
+            lhs = TupleVariable(elem_vars, dtype, name, **d_lhs, is_temp=True)
 
         else:
-            lhs = Variable(dtype, name, **d_lhs)
+            lhs = Variable(dtype, name, **d_lhs, is_temp=True)
 
         return lhs
 
@@ -1898,7 +1898,7 @@ class SemanticParser(BasicParser):
             alloc = Assign(lhs, NumpyZeros(lhs.shape, lhs.dtype))
             alloc.set_fst(fst)
             index_name = self.get_new_name(expr)
-            index = Variable('int',index_name)
+            index = Variable('int',index_name, is_temp=True)
             range_ = FunctionCall('range', (FunctionCall('len', lhs,),))
             name  = _get_name(lhs)
             var   = IndexedElement(name, index)
@@ -2349,8 +2349,6 @@ class SemanticParser(BasicParser):
                 a = Assign(v, r)
                 a.set_fst(expr.fst)
                 a = self._visit_Assign(a)
-                variables = a.rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
-                a.lhs.is_temp = not any(b.allocatable and not b.is_argument for b in variables)
                 assigns.append(a)
 
         results = [self._visit(i, **settings) for i in return_vars]

@@ -11,7 +11,7 @@ import operator
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
 from pyccel.ast.core      import Declare
-from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
+from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionDef
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, datatype, Import, AugAssign
@@ -268,6 +268,7 @@ class CCodePrinter(CodePrinter):
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
+        self._shouldnt_declare = []
         self._additional_args = []
         self._temporary_args = []
 
@@ -1121,7 +1122,7 @@ class CCodePrinter(CodePrinter):
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
             for i in expr.results:
-                if isinstance(i, Variable) and not i.is_temp:
+                if isinstance(i, Variable) and i not in self._shouldnt_declare: 
                     decs += [Declare(i.dtype, i)]
                 elif not isinstance(i, Variable):
                     decs += [FuncAddressDeclare(i)]
@@ -1222,9 +1223,11 @@ class CCodePrinter(CodePrinter):
 
             # make sure that stmt contains one assign node.
             assert(len(last_assign)==1)
-
-            if last_assign[0].lhs.is_temp:
+            variables = last_assign[0].rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
+            should_print = not any(b.allocatable and not b.is_argument for b in variables)
+            if should_print:
                 code = '\n'.join(self._print(a) for a in expr.stmt.body if a is not last_assign[0])
+                self._shouldnt_declare.append(last_assign[0].lhs)
                 return code + '\nreturn {};'.format(self._print(last_assign[0].rhs))
             else:
                 code = '\n'+self._print(expr.stmt)
