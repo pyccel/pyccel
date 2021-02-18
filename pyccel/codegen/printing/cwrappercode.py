@@ -54,8 +54,8 @@ dtype_registry = {('pyobject'     , 0) : 'PyObject',
 class CWrapperCodePrinter(CCodePrinter):
     """A printer to convert a python module to strings of c code creating
     an interface between python and an implementation of the module in c"""
-    def __init__(self, parser, target_language, settings=None):
-        CCodePrinter.__init__(self, parser,settings)
+    def __init__(self, parser, target_language, **settings):
+        CCodePrinter.__init__(self, parser, **settings)
         self._target_language = target_language
         self._cast_functions_dict = OrderedDict()
         self._to_free_PyObject_list = []
@@ -1103,4 +1103,4 @@ def cwrappercode(expr, parser, target_language, assign_to=None, **settings):
         ``(*a)`` instead of ``a``.
     """
 
-    return CWrapperCodePrinter(parser, target_language, settings).doprint(expr, assign_to)
+    return CWrapperCodePrinter(parser, target_language, **settings).doprint(expr, assign_to)
