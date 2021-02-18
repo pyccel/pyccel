@@ -1350,7 +1350,7 @@ class SemanticParser(BasicParser):
 
                 elem_dtype = elem_d_lhs.pop('datatype')
 
-                var = self._create_variable(elem_name, elem_dtype, r, elem_d_lhs, is_temp=True)
+                var = self._create_variable(elem_name, elem_dtype, r, elem_d_lhs)
                 elem_vars.append(var)
 
             d_lhs['is_pointer'] = any(v.is_pointer for v in elem_vars)
