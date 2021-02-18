@@ -268,7 +268,6 @@ class CCodePrinter(CodePrinter):
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
-        self._shouldnt_declare = []
         self._additional_args = []
         self._temporary_args = []
 
@@ -1122,7 +1121,7 @@ class CCodePrinter(CodePrinter):
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
             for i in expr.results:
-                if isinstance(i, Variable) and i not in self._shouldnt_declare: 
+                if isinstance(i, Variable) and i not in self._shouldnt_declare:
                     decs += [Declare(i.dtype, i)]
                 elif not isinstance(i, Variable):
                     decs += [FuncAddressDeclare(i)]
