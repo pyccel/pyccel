@@ -115,13 +115,20 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return code
 
     def _print_Return(self, expr):
-        code = ''
+        rhs_list = []
+        lhs_list = []
+        expr_return_vars = []
         if expr.stmt:
-            code += self._print(expr.stmt)+'\n'
-        if expr.expr:
-            ret = ','.join([self._print(i) for i in expr.expr])
-            code += 'return {}'.format(ret)
-        return code
+            for i in expr.stmt.body:
+                rhs_list.append(i.rhs)
+                lhs_list.append(i.lhs)
+        for a in expr.expr:
+            if lhs_list and a not in lhs_list:
+                expr_return_vars.append(a)
+            elif not lhs_list:
+                expr_return_vars.append(a)
+
+        return 'return ' + ','.join(self._print(i) for i in expr_return_vars + rhs_list)
 
     def _print_Program(self, expr):
         body  = self._print(expr.body)
