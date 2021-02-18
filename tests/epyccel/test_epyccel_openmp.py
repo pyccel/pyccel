@@ -121,7 +121,7 @@ def test_modules_11(language):
     set_num_threads(8)
     assert f1() == 8
 
-@pytest.mark.xfail(reason = "Tasks not supported yet for openmp !")
+@pytest.mark.xfail(reason = "arithmetic expression not managed yet inside a clause !")
 def test_modules_12(language):
     f1 = epyccel(openmp.test_omp_in_final, accelerator='openmp', language=language)
 
@@ -147,12 +147,12 @@ def test_modules_14_0(language):
     assert f1(0) == 0
     assert f2() >= 0
 
-# omp_get_initial_device give a compilation error on Travis (Linux and Windows), also Target construct not implemented yet !"
 def test_modules_14_1(language):
     f3 = epyccel(openmp.test_omp_is_initial_device, accelerator='openmp', language=language)
-    # f4 = epyccel(openmp.test_omp_get_initial_device, accelerator='openmp') #Target construct not implemented yet and need a non-host device to test the function
+    f4 = epyccel(openmp.test_omp_get_initial_device, accelerator='openmp') #Needs a non-host device to test the function properly
 
     assert f3() == 1
+    assert f4() == 0
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -169,11 +169,10 @@ def test_modules_15(language):
     assert f2(0) == 0
     assert f2(1) == 1
 
-@pytest.mark.xfail(reason = "Tasks not supported yet for openmp !")
 def test_modules_16(language):
     f1 = epyccel(openmp.test_omp_get_max_task_priority, accelerator='openmp', language=language)
 
-    assert f1() == 5
+    assert f1() == 0 # omp_get_max_task_priority() return always 0
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [

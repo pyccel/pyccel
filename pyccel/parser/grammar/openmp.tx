@@ -117,9 +117,9 @@ AllOmpClauses:
   | OmpNumTasks
   | OmpGrainSize
   | OmpNogroup
-  | OmpPriority
   | OmpSchedule
   | OmpOrdered
+  | OmpFinal
 ;
 
 ////////////////////////////////////////////////////
@@ -132,6 +132,7 @@ OmpNumTeams: 'num_teams' '(' teams=TeamIndex ')';
 OmpNumTasks: 'num_tasks' '(' tasks=TaskIndex ')';
 OmpThreadLimit: 'thread_limit' '(' limit=ThreadIndex ')';
 OmpGrainSize: 'grainsize' '(' tasks=TaskIndex ')';
+OmpFinal: 'final' '(' final=TaskIndex ')';
 OmpDefault: 'default' '(' status=OmpDefaultStatus ')';
 OmpProcBind: 'proc_bind' '(' status=OmpProcBindStatus ')';
 OmpMap: 'map' '(' mtype=OmpMapType? args+=ID[','] ')'; // TODO NH : Array and shaping
@@ -150,7 +151,7 @@ OmpSchedule: 'schedule' '(' kind=OmpScheduleKind (',' chunk_size=INT)? ')';
 OmpEndClause: 'end' construct*=OpenmpConstructs (simd='simd')? (nowait='nowait')?;
 OmpCriticalName: '(' args=ID ')';
 OmpFilter: name='filter' '(' n=INT ')';
-OmpPriority: name='priority' '(' n=INT ')';
+OmpPriority: name='priority' '(' n=PriorityIndex ')';
 OmpUntied: name='untied';
 OmpMergeable: name='mergeable';
 OmpNogroup: name='nogroup';
@@ -175,5 +176,6 @@ AtomicMClause: ('seq_cst' | 'acq_rel' | 'release' | 'acquire' | 'relaxed');
 ThreadIndex: (ID | INT);
 TaskIndex: (ID | INT);
 TeamIndex: (ID | INT);
+PriorityIndex: (ID | INT);
 NotaStmt: /.*$/;
 ////////////////////////////////////////////////////

@@ -193,6 +193,7 @@ class OmpTaskConstruct(BasicStmt):
             print("> OmpTaskConstruct: expr")
 
         _valid_clauses = (OmpPriority, \
+                          OmpFinal, \
                           OmpDefault, \
                           OmpPrivate, \
                           OmpShared, \
@@ -611,6 +612,23 @@ class OmpEndClause(BasicStmt):
         construct = ' '.join(self.construct)
         txt = 'end {0} {1} {2}'.format(construct, self.simd, self.nowait)
         return Omp_End_Clause(txt)
+
+class OmpFinal(BasicStmt):
+    """Class representing a final clause"""
+    def __init__(self, **kwargs):
+        """
+        """
+        self.final = kwargs.pop('final')
+
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpFinal: expr")
+
+        final = self.final
+        return 'final({})'.format(final)
 
 class OmpNumThread(BasicStmt):
     """Class representing a num_thread clause."""
@@ -1411,6 +1429,7 @@ omp_clauses = [OmpCollapse,
                AtomicMemoryClause,
                OmpDepend,
                FlushList,
+               OmpFinal,
                OmpCancelType,
                OmpMap,
                OmpNumTeams,

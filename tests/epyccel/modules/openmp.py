@@ -124,7 +124,7 @@ def test_omp_in_final():
 
     #$ omp parallel
     #$ omp single
-    #$ omp task final (i >= 10)
+    #$ omp task final(i >= 10)
     for i in range(x):
         z = z + i
         if omp_in_final() == 1:
@@ -197,7 +197,7 @@ def test_omp_is_initial_device():
 
 def test_omp_get_initial_device():
     from pyccel.stdlib.internal.openmp import omp_get_initial_device
-    #$ omp target device(deviceid)
+    #$ omp target
     host_device = omp_get_initial_device()
     #$ omp end target
     return host_device
@@ -219,13 +219,12 @@ def test_omp_get_set_schedule():
 def test_omp_get_max_task_priority():
     from pyccel.stdlib.internal.openmp import omp_get_max_task_priority
     result = 0
+    max_task_priority_var = 0
     #$ omp parallel
     #$ omp single
-    #$ omp task priority(i)
-    for i in range(10):
-        result = result + i
-        if i == 5:
-            max_task_priority_var = omp_get_max_task_priority()
+    #$ omp task
+    max_task_priority_var = omp_get_max_task_priority()
+    #$ omp end task
     #$ omp end single
     #$ omp end parallel
     return max_task_priority_var
