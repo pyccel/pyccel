@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------------------#
 """ This module contains all literal types
 """
-from sympy               import Float as sp_Float
+from pyccel.utilities.metaclasses import Singleton, ArgumentSingleton
 
 from .basic              import PyccelAstNode, Basic
 from .datatypes          import (NativeInteger, NativeBool, NativeReal,
@@ -47,11 +47,8 @@ class Literal(PyccelAstNode):
     def python_value(self):
         """ Get python literal represented by this instance """
 
-    def __repr__(self):
-        return repr(self.python_value)
-
-    def _sympystr(self, printer):
-        return printer.doprint(self.python_value)
+    def __str__(self):
+        return str(self.python_value)
 
     def __eq__(self, other):
         if isinstance(other, PyccelAstNode):
@@ -63,7 +60,7 @@ class Literal(PyccelAstNode):
         return hash(self.python_value)
 
 #------------------------------------------------------------------------------
-class LiteralTrue(Literal):
+class LiteralTrue(Literal, metaclass = ArgumentSingleton):
     """Represents the python value True"""
     _dtype     = NativeBool()
 
@@ -75,7 +72,7 @@ class LiteralTrue(Literal):
         return True
 
 #------------------------------------------------------------------------------
-class LiteralFalse(Literal):
+class LiteralFalse(Literal, metaclass = ArgumentSingleton):
     """Represents the python value False"""
     _dtype     = NativeBool()
 
@@ -105,20 +102,22 @@ class LiteralInteger(Literal):
         return self.python_value
 
 #------------------------------------------------------------------------------
-class LiteralFloat(Literal, sp_Float):
+class LiteralFloat(Literal):
     """Represents a float literal in python"""
     _dtype     = NativeReal()
-    def __new__(cls, value, *, precision = default_precision['float']):
-        return sp_Float.__new__(cls, value)
 
     def __init__(self, value, *, precision = default_precision['float']):
         if not isinstance(value, (int, float, LiteralFloat)):
             raise TypeError("A LiteralFloat can only be created with an integer or a float")
         Literal.__init__(self, precision)
+        if isinstance(value, LiteralFloat):
+            self._value = value.python_value
+        else:
+            self._value = float(value)
 
     @property
     def python_value(self):
-        return float(self)
+        return self._value
 
 
 #------------------------------------------------------------------------------
@@ -128,13 +127,13 @@ class LiteralComplex(Literal):
 
     def __new__(cls, real, imag, precision = default_precision['complex']):
         if cls is LiteralImaginaryUnit:
-            return super().__new__(cls, real, imag)
+            return super().__new__(cls)
         real_part = cls._collect_python_val(real)
         imag_part = cls._collect_python_val(imag)
         if real_part == 0 and imag_part == 1:
             return LiteralImaginaryUnit()
         else:
-            return super().__new__(cls, real, imag)
+            return super().__new__(cls)
 
     def __init__(self, real, imag, precision = default_precision['complex']):
         super().__init__(precision)
@@ -206,7 +205,7 @@ class LiteralString(Literal):
 
 #------------------------------------------------------------------------------
 
-class Nil(Basic):
+class Nil(Basic, metaclass=Singleton):
 
     """
     class for None object in the code.
@@ -220,8 +219,6 @@ class Nil(Basic):
         return False
 
     def __eq__(self, other):
-        #TODO [EB 7.2.2021] Make Nil singleton. See https://stackoverflow.com/questions/6760685/creating-a-singleton-in-python method 3
-        #                   Blocked by issue 662
         return isinstance(other, Nil)
 
 #------------------------------------------------------------------------------
