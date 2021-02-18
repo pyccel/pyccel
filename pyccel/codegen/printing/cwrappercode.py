@@ -334,13 +334,13 @@ class CWrapperCodePrinter(CCodePrinter):
 
         Returns:
         -------
+        numpy_type_check : FunctionCall or None
+            functionCall responsible for checking numpy data type
+
         python_type_check : FunctionCall | LiteralTrue | None
             functionCall responsible for checking python data type
             LiteralTrue when error_check is False
             None when default system precision is different than the variable precision
-
-        numpy_type_check : FunctionCall or None
-            functionCall responsible for checking numpy data type
 
         error : FunctionCall or None
             function call that raise TypeError
