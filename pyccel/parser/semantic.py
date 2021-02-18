@@ -46,11 +46,10 @@ from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
-from pyccel.ast.core import With, Block
+from pyccel.ast.core import With
 from pyccel.ast.builtins import PythonList
 from pyccel.ast.core import Dlist
 from pyccel.ast.core import StarredArguments
-from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
 from pyccel.ast.itertoolsext import Product
@@ -1164,7 +1163,7 @@ class SemanticParser(BasicParser):
     def _visit_PyccelOperator(self, expr, **settings):
         args     = [self._visit(a, **settings) for a in expr.args]
         try:
-            expr_new = expr.func(*args)
+            expr_new = type(expr)(*args)
         except PyccelSemanticError as err:
             msg = str(err)
             errors.report(msg, symbol=expr,
@@ -1199,14 +1198,14 @@ class SemanticParser(BasicParser):
     def _visit_Lambda(self, expr, **settings):
 
 
-        expr_names = set(map(str, expr.expr.atoms(PyccelSymbol, Argument)))
+        expr_names = set(map(str, expr.expr.get_attribute_nodes((PyccelSymbol, Argument))))
         var_names = map(str, expr.variables)
         missing_vars = expr_names.difference(var_names)
         if len(missing_vars) > 0:
             errors.report(UNDEFINED_LAMBDA_VARIABLE, symbol = missing_vars,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal', blocker=True)
-        funcs = expr.expr.atoms(FunctionCall)
+        funcs = expr.expr.get_attribute_nodes(FunctionCall)
         for func in funcs:
             name = _get_name(func)
             f = self.get_symbolic_function(name)
@@ -1720,22 +1719,6 @@ class SemanticParser(BasicParser):
             rhs = self._visit_FunctionDef(rhs, **settings)
             return rhs
 
-        elif isinstance(rhs, Block):
-            #case of inline
-            results = rhs.get_attribute_nodes(rhs.body,Return)
-            sub = list(zip(results,[EmptyNode()]*len(results)))
-            body = rhs.body
-            body = subs(body,sub)
-            results = [i.expr for i in results]
-            lhs = expr.lhs
-            if isinstance(lhs ,(list, tuple, PythonTuple)):
-                sub = [list(zip(i,lhs)) for i in results]
-            else:
-                sub = [(i[0],lhs) for i in results]
-            body = subs(body,sub)
-            expr = Block(rhs.name, rhs.variables, body)
-            return expr
-
         elif isinstance(rhs, CodeBlock):
             if len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
                 return rhs
@@ -2028,7 +2011,7 @@ class SemanticParser(BasicParser):
         elif isinstance(iterable, PythonEnumerate):
             indx   = iterator.args[0]
             var    = iterator.args[1]
-            assign = Assign(var, IndexedElement(iterable.args[0], indx))
+            assign = Assign(var, IndexedElement(iterable.element, indx))
             assign.set_fst(expr.fst)
             iterator = indx
             body     = [assign] + body
@@ -2319,8 +2302,10 @@ class SemanticParser(BasicParser):
         return If(*args)
 
     def _visit_IfTernaryOperator(self, expr, **settings):
-        args = [self._visit(i, **settings) for i in expr.args]
-        return expr.func(*args)
+        cond        = self._visit(expr.cond, **settings)
+        value_true  = self._visit(expr.value_true, **settings)
+        value_false = self._visit(expr.value_false, **settings)
+        return IfTernaryOperator(cond, value_true, value_false)
 
     def _visit_VariableHeader(self, expr, **settings):
 
@@ -3060,8 +3045,8 @@ class SemanticParser(BasicParser):
     def _visit_Dlist(self, expr, **settings):
         # Arguments have been treated in PyccelMul
 
-        val = expr.args[0]
-        length = expr.args[1]
+        val = expr.val
+        length = expr.length
         if isinstance(val, (TupleVariable, PythonTuple)) and \
                 not isinstance(val, PythonList):
             if isinstance(length, LiteralInteger):

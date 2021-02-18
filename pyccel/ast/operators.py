@@ -8,7 +8,6 @@ These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the dtype, precision, rank, shape
 """
-from sympy.core.expr        import Expr
 
 from ..errors.errors        import Errors, PyccelSemanticError
 
@@ -94,7 +93,7 @@ def broadcast(shape_1, shape_2):
 
 #==============================================================================
 
-class PyccelOperator(Expr, PyccelAstNode):
+class PyccelOperator(PyccelAstNode):
     """
     Abstract superclass for all builtin operators.
     The __init__ function is common
@@ -176,6 +175,12 @@ class PyccelOperator(Expr, PyccelAstNode):
             self._order = self._args[0].order
         else:
             self._order = 'C'
+
+    @property
+    def args(self):
+        """ Arguments of the operator
+        """
+        return self._args
 
 #==============================================================================
 
@@ -474,7 +479,7 @@ class PyccelAdd(PyccelArithmeticOperator):
            arg1.real == LiteralFloat(0):
             return LiteralComplex(arg2, arg1.imag)
         else:
-            return PyccelArithmeticOperator.__new__(cls, arg1, arg2)
+            return super().__new__(cls)
 
     def _handle_str_type(self, strs):
         self._dtype = NativeString()
@@ -533,7 +538,7 @@ class PyccelMinus(PyccelArithmeticOperator):
            arg1.real == LiteralFloat(0):
             return LiteralComplex(-arg2.python_value, arg1.imag)
         else:
-            return PyccelArithmeticOperator.__new__(cls, arg1, arg2)
+            return super().__new__(cls)
 
     def __repr__(self):
         return '{} - {}'.format(repr(self.args[0]), repr(self.args[1]))
@@ -826,9 +831,10 @@ class PyccelIs(PyccelBooleanOperator):
 
     Examples
     --------
-    >>> from pyccel.ast import PyccelIs
-    >>> from pyccel.literals import Nil
-    >>> from sympy.abc import x
+    >>> from pyccel.ast.operators import PyccelIs
+    >>> from pyccel.ast.literals  import Nil
+    >>> from pyccel.ast.internals import PyccelSymbol
+    >>> x = PyccelSymbol('x')
     >>> PyccelIs(x, Nil())
     PyccelIs(x, None)
     """
@@ -858,9 +864,10 @@ class PyccelIsNot(PyccelIs):
 
     Examples
     --------
-    >>> from pyccel.ast import PyccelIsNot
-    >>> from pyccel.ast.literals import Nil
-    >>> from sympy.abc import x
+    >>> from pyccel.ast.operators import PyccelIsNot
+    >>> from pyccel.ast.literals  import Nil
+    >>> from pyccel.ast.internals import PyccelSymbol
+    >>> x = PyccelSymbol('x')
     >>> PyccelIsNot(x, Nil())
     PyccelIsNot(x, None)
     """
