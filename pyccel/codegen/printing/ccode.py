@@ -268,6 +268,7 @@ class CCodePrinter(CodePrinter):
         self._parser = parser
         self._additional_code = ''
         self._additional_declare = []
+        self._shouldnt_declare = []
         self._additional_args = []
         self._temporary_args = []
 
