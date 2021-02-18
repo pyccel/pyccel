@@ -336,7 +336,7 @@ class CWrapperCodePrinter(CCodePrinter):
         -------
         python_type_check : FunctionCall
             functionCall responsible for checking python data type
-            None when error_check is False
+            LiteralTrue() when error_check is False
 
         numpy_type_check : FunctionCall or None
             functionCall responsible for checking numpy data type
