@@ -12,7 +12,9 @@ import sys
 
 from collections import OrderedDict
 from os.path import basename
+
 from pyccel.ast.basic import Basic
+from pyccel.utilities.metaclasses import Singleton
 
 # ...
 #ERROR = 'error'
@@ -126,20 +128,7 @@ class ErrorInfo:
         return pattern.format(**info)
 
 
-def _singleton(cls):
-    """
-    A Class representing a singleton. Python does not offer this pattern.
-    """
-    instances = {}
-    def getinstance():
-        if cls not in instances:
-            instances[cls] = cls() # Line 5
-        return instances[cls]
-    return getinstance
-
-
-@_singleton
-class ErrorsMode:
+class ErrorsMode(metaclass = Singleton):
     """Developper or User mode.
     pyccel command line will set it.
     """
@@ -155,8 +144,7 @@ class ErrorsMode:
         self._mode = mode
 
 
-@_singleton
-class Errors:
+class Errors(metaclass = Singleton):
     """Container for compile errors.
     """
 

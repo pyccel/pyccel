@@ -458,6 +458,7 @@ def test_hope_benchmarks( test_file ):
     pyccel_test(test_file)
 
 #------------------------------------------------------------------------------
+@pytest.mark.c
 @pytest.mark.parametrize( "test_file", ["scripts/hope_benchmarks/hope_fib.py",
                                         pytest.param("scripts/hope_benchmarks/quicksort.py",
                                             marks = pytest.mark.skip(reason="len not implemented in c")),

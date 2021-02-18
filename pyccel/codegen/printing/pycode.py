@@ -8,7 +8,6 @@
 
 from itertools import chain
 
-from sympy.printing.pycode import PythonCodePrinter as SympyPythonCodePrinter
 from sympy.printing.pycode import _known_functions
 from sympy.printing.pycode import _known_functions_math
 from sympy.printing.pycode import _known_constants_math
@@ -17,6 +16,8 @@ from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.utilities  import build_types_decorator
 from pyccel.ast.core       import CodeBlock, Import, DottedName
+
+from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -31,18 +32,26 @@ def _construct_header(func_name, args):
     return pattern.format(name=func_name, args=args)
 
 #==============================================================================
-class PythonCodePrinter(SympyPythonCodePrinter):
+class PythonCodePrinter(CodePrinter):
+    """A printer to convert pyccel expressions to strings of Python code"""
+    printmethod = "_pycode"
     _kf = dict(chain(
         _known_functions.items(),
         [(k, '' + v) for k, v in _known_functions_math.items()]
     ))
     _kc = {k: ''+v for k, v in _known_constants_math.items()}
 
-    def __init__(self, parser=None, settings=None):
+    def __init__(self, parser=None, **settings):
         self.assert_contiguous = settings.pop('assert_contiguous', False)
         self.parser = parser
-        SympyPythonCodePrinter.__init__(self, settings=settings)
+        super().__init__(settings=settings)
         self._additional_imports = set()
+
+    def _indent_codestring(self, lines):
+        return '    '+lines.replace('\n','\n    ')
+
+    def _format_code(self, lines):
+        return lines
 
     def get_additional_imports(self):
         """return the additional imports collected in printing stage"""
@@ -100,7 +109,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
                 for func in f:
                     args = func.args
                     if args:
-                        args = ', '.join("{}".format(self._print(i)) for i in args)
+                        args = ', '.join(self._print(i) for i in args)
                         dec += '@{name}({args})\n'.format(name=n, args=args)
 
                     else:
@@ -211,7 +220,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         op  = self._print(expr.op._symbol)
         return'{0} {1}= {2}'.format(lhs,op,rhs)
 
-    def _print_Range(self, expr):
+    def _print_PythonRange(self, expr):
         start = self._print(expr.start)
         stop  = self._print(expr.stop)
         step  = self._print(expr.step)
@@ -268,8 +277,8 @@ class PythonCodePrinter(SympyPythonCodePrinter):
                 lines.append(self._print(e))
         return "\n".join(lines)
 
-    def _print_LiteralString(self, expr):
-        return '"{}"'.format(self._print(expr.arg))
+    def _print_Literal(self, expr):
+        return repr(expr.python_value)
 
     def _print_Shape(self, expr):
         arg = self._print(expr.arg)
@@ -288,10 +297,10 @@ class PythonCodePrinter(SympyPythonCodePrinter):
 
             elif isinstance(f, tuple):
                 for i in f:
-                    args.append("{}".format(self._print(i)))
+                    args.append(self._print(i))
 
             else:
-                args.append("{}".format(self._print(f)))
+                args.append(self._print(f))
 
         fs = ', '.join(i for i in args)
 
@@ -379,7 +388,7 @@ class PythonCodePrinter(SympyPythonCodePrinter):
         return expr
 
 #==============================================================================
-def pycode(expr, **settings):
+def pycode(expr, assign_to=None, **settings):
     """ Converts an expr to a string of Python code
     Parameters
     ==========
@@ -396,4 +405,4 @@ def pycode(expr, **settings):
     'math.tan(x) + 1'
     """
     settings.pop('parser', None)
-    return PythonCodePrinter(settings).doprint(expr)
+    return PythonCodePrinter(settings).doprint(expr, assign_to)
