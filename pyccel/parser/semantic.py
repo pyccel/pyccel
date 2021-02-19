@@ -1357,7 +1357,10 @@ class SemanticParser(BasicParser):
             lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
 
         else:
-            lhs = Variable(dtype, name, **d_lhs, is_temp=name.is_temp)
+            if isinstance(name, PyccelSymbol):
+                lhs = Variable(dtype, name, **d_lhs, is_temp=name.is_temp)
+            else:
+                lhs = Variable(dtype, name, **d_lhs)
 
         return lhs
 
