@@ -248,9 +248,7 @@ def create_variable(forbidden_names, prefix = None, counter = 1):
 
     name, counter = create_incremented_string(forbidden_names, prefix, counter = counter)
 
-    ps = PyccelSymbol(name)
-    ps.is_temp = True
-    return ps, counter
+    return PyccelSymbol(name, is_temp=True), counter
 
 
 class AsName(Basic):

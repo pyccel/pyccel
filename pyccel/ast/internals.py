@@ -184,6 +184,13 @@ class PyccelSymbol(str, Immutable):
     """
     _is_temp = False
 
+    def __new__(cls, name, is_temp=False):
+        return super().__new__(cls, name)
+
+    def __init__(self, name, is_temp=False):
+        self._is_temp = is_temp
+        super().__init__()
+
     @property
     def is_temp(self):
         """

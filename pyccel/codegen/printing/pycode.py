@@ -127,6 +127,8 @@ class PythonCodePrinter(CodePrinter):
         rhs_list = []
         lhs_list = []
         expr_return_vars = []
+        print("stmt == ", expr.stmt)
+        print("expr == ", expr.expr)
         if expr.stmt:
             for i in expr.stmt.body:
                 rhs_list.append(i.rhs)

@@ -297,12 +297,6 @@ class Variable(PyccelAstNode):
         """
         return self._is_temp
 
-    @is_temp.setter
-    def is_temp(self, is_temp):
-        if not isinstance(is_temp, bool):
-            raise TypeError('is_temp must be a boolean.')
-        self._is_temp = is_temp
-
     @property
     def is_target(self):
         """ Indicates if the data in this Variable is
