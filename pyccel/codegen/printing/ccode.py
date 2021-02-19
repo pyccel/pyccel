@@ -1223,8 +1223,8 @@ class CCodePrinter(CodePrinter):
             # make sure that stmt contains one assign node.
             assert(len(last_assign)==1)
             variables = last_assign[0].rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
-            should_print = not any(b.allocatable and not b.is_argument for b in variables)
-            if should_print:
+            unneeded_var = not any(b.allocatable and not b.is_argument for b in variables)
+            if unneeded_var:
                 code = '\n'.join(self._print(a) for a in expr.stmt.body if a is not last_assign[0])
                 return code + '\nreturn {};'.format(self._print(last_assign[0].rhs))
             else:
