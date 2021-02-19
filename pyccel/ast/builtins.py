@@ -85,7 +85,7 @@ class PythonReal(PythonComplexProperty):
         elif not isinstance(arg.dtype, NativeComplex):
             return arg
         else:
-            return super().__new__(cls, arg)
+            return super().__new__(cls)
 
 #==============================================================================
 class PythonImag(PythonComplexProperty):
@@ -102,7 +102,7 @@ class PythonImag(PythonComplexProperty):
         if arg.dtype is not NativeComplex():
             return get_default_literal_value(arg.dtype)
         else:
-            return super().__new__(cls, arg)
+            return super().__new__(cls)
 
 
 #==============================================================================
@@ -115,11 +115,11 @@ class PythonBool(PyccelAstNode):
 
     def __new__(cls, arg):
         if getattr(arg, 'is_optional', None):
-            bool_expr = super().__new__(cls, arg)
+            bool_expr = super().__new__(cls)
             bool_expr.__init__(arg)
             return PyccelAnd(PyccelIsNot(arg, Nil()), bool_expr)
         else:
-            return super().__new__(cls, arg)
+            return super().__new__(cls)
 
     def __init__(self, arg):
         self._arg = arg
@@ -133,9 +133,6 @@ class PythonBool(PyccelAstNode):
 
     def __str__(self):
         return 'Bool({})'.format(str(self.arg))
-
-    def _sympystr(self, printer):
-        return self.__str__()
 
 #==============================================================================
 class PythonComplex(PyccelAstNode):
@@ -182,7 +179,7 @@ class PythonComplex(PyccelAstNode):
         if arg0.dtype is NativeComplex() and arg1.dtype is NativeComplex():
             # both args are complex
             return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit()))
-        return super().__new__(cls, arg0, arg1)
+        return super().__new__(cls)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
         self._is_cast = arg0.dtype is NativeComplex() and \
@@ -237,7 +234,7 @@ class PythonComplex(PyccelAstNode):
         return self._internal_var
 
     def __str__(self):
-        return "complex({}, {})".format(str(self._args[0]), str(self._args[1]))
+        return "complex({}, {})".format(str(self.real), str(self.imag))
 
 #==============================================================================
 class PythonEnumerate(Basic):
@@ -275,7 +272,7 @@ class PythonFloat(PyccelAstNode):
         elif isinstance(arg, LiteralInteger):
             return LiteralFloat(arg.p, precision = cls._precision)
         else:
-            return super().__new__(cls, arg)
+            return super().__new__(cls)
 
     def __init__(self, arg):
         self._arg = arg
@@ -290,9 +287,6 @@ class PythonFloat(PyccelAstNode):
     def __str__(self):
         return 'LiteralFloat({0})'.format(str(self.arg))
 
-    def _sympystr(self, printer):
-        return self.__str__()
-
 #==============================================================================
 class PythonInt(PyccelAstNode):
     """ Represents a call to Python's native int() function.
@@ -306,7 +300,7 @@ class PythonInt(PyccelAstNode):
         if isinstance(arg, LiteralInteger):
             return LiteralInteger(arg.p, precision = cls._precision)
         else:
-            return super().__new__(cls, arg)
+            return super().__new__(cls)
 
     def __init__(self, arg):
         self._arg = arg
@@ -397,6 +391,12 @@ class PythonTuple(PyccelAstNode):
     def inconsistent_shape(self):
         return self._inconsistent_shape
 
+    @property
+    def args(self):
+        """ Arguments of the tuple
+        """
+        return self._args
+
 #==============================================================================
 class PythonLen(PyccelInternalFunction):
 
@@ -435,13 +435,19 @@ class PythonMap(Basic):
         self._args = args
         super().__init__()
 
+    @property
+    def args(self):
+        """ Arguments of the map
+        """
+        return self._args
+
 #==============================================================================
 class PythonPrint(Basic):
 
     """Represents a print function in the code.
 
-    expr : sympy expr
-        The expression to return.
+    expr : PyccelAstNode
+        The expression to print
 
     Examples
 
@@ -514,7 +520,7 @@ class PythonRange(Basic):
 
 
 #==============================================================================
-class PythonZip(Basic):
+class PythonZip(PyccelInternalFunction):
 
     """
     Represents a zip stmt.
@@ -527,12 +533,22 @@ class PythonZip(Basic):
             raise TypeError('args must be a list or tuple')
         elif len(args) < 2:
             raise ValueError('args must be of length > 2')
-        self._args = args
-        super().__init__()
+        super().__init__(*args)
+        if PyccelAstNode.stage == 'syntactic':
+            self._length = None
+            return
+        else:
+            lengths = [a.shape[0].python_value for a in self.args if isinstance(a.shape[0], LiteralInteger)]
+            if lengths:
+                self._length = min(lengths)
+            else:
+                self._length = self.args[0].shape[0]
 
     @property
-    def element(self):
-        return self._args[0]
+    def length(self):
+        """ Length of the shortest zip argument
+        """
+        return self._length
 
 #==============================================================================
 class PythonAbs(PyccelInternalFunction):

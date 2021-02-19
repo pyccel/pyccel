@@ -10,13 +10,13 @@ They are:
 - PyccelAstNode which describes each PyccelAstNode
 """
 import ast
-from sympy.core.basic import Basic as sp_Basic
 
 __all__ = ('Basic', 'PyccelAstNode')
 
 dict_keys   = type({}.keys())
 dict_values = type({}.values())
 iterable_types = (list, tuple, dict_keys, dict_values)
+iterable = lambda x : isinstance(x, iterable_types)
 
 #==============================================================================
 class Immutable:
@@ -24,14 +24,10 @@ class Immutable:
     from Basic """
 
 #==============================================================================
-class Basic(sp_Basic):
+class Basic:
     """Basic class for Pyccel AST."""
     _fst = None
     _ignored_types = (Immutable, type)
-
-    def __new__(cls, *args, **kwargs):
-        hashable_args  = [a if not isinstance(a, list) else tuple(a) for a in args]
-        return sp_Basic.__new__(cls, *hashable_args)
 
     def __init__(self):
         self._user_nodes = []
@@ -50,8 +46,8 @@ class Basic(sp_Basic):
                 c = convert_to_literal(c)
                 setattr(self, c_name, c)
 
-            elif isinstance(c, iterable_types):
-                if any(isinstance(ci, iterable_types) for ci in c):
+            elif iterable(c):
+                if any(iterable(ci) for ci in c):
                     raise TypeError("Basic child cannot be a tuple of tuples")
                 c = tuple(ci if (not isinstance(ci, (int, float, complex, str, bool)) \
                                  or self.ignore(ci)) \
@@ -184,8 +180,8 @@ class Basic(sp_Basic):
             return
         self._recursion_in_progress = True
 
-        if isinstance(original, tuple):
-            assert(isinstance(replacement, tuple))
+        if iterable(original):
+            assert(iterable(replacement))
             assert(len(original) == len(replacement))
         else:
             original = (original,)
@@ -196,8 +192,13 @@ class Basic(sp_Basic):
             rep = replacement[idx]
             if not self.ignore(found_node):
                 found_node.remove_user_node(self)
-            if not self.ignore(rep):
-                rep.set_current_user_node(self)
+            if iterable(rep):
+                for r in rep:
+                    if not self.ignore(r):
+                        r.set_current_user_node(self)
+            else:
+                if not self.ignore(rep):
+                    rep.set_current_user_node(self)
             return rep
 
         for n in self._attribute_nodes:
@@ -218,7 +219,10 @@ class Basic(sp_Basic):
                             new_vi = prepare_sub(vi)
                         elif not self.ignore(vi):
                             vi.substitute(original, replacement, excluded_nodes)
-                    new_v.append(new_vi)
+                    if iterable(new_vi):
+                        new_v.extend(new_vi)
+                    else:
+                        new_v.append(new_vi)
                 setattr(self, n, tuple(new_v))
             elif not self.ignore(v):
                 v.substitute(original, replacement, excluded_nodes)
@@ -287,14 +291,6 @@ class Basic(sp_Basic):
         """ Indicates whether the class has any users
         """
         return len(self._user_nodes)==0
-
-    def __eq__(self, other):
-        #TODO: Remove with sympy inheritance
-        return id(self) == id(other)
-
-    def __hash__(self):
-        #TODO: Remove with sympy inheritance
-        return id(self)
 
 class PyccelAstNode(Basic):
     """Class from which all nodes containing objects inherit

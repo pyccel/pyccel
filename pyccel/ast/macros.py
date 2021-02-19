@@ -7,8 +7,6 @@
 """
 This module contains all classes and functions used for handling macros.
 """
-from sympy.core.expr import AtomicExpr
-
 from .basic          import PyccelAstNode
 from .datatypes      import default_precision
 from .datatypes      import NativeInteger, NativeGeneric
@@ -24,7 +22,7 @@ __all__ = (
 )
 
 #==============================================================================
-class Macro(AtomicExpr, PyccelAstNode):
+class Macro(PyccelAstNode):
     """."""
     _name = '__UNDEFINED__'
     _attribute_nodes = ()
@@ -61,13 +59,12 @@ class MacroShape(Macro):
     def index(self):
         return self._index
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
+    def __str__(self):
         if self.index is None:
-            return 'MacroShape({})'.format(sstr(self.argument))
+            return 'MacroShape({})'.format(str(self.argument))
         else:
-            return 'MacroShape({}, {})'.format(sstr(self.argument),
-                                               sstr(self.index))
+            return 'MacroShape({}, {})'.format(str(self.argument),
+                                               str(self.index))
 
 #==============================================================================
 class MacroType(Macro):
@@ -78,9 +75,8 @@ class MacroType(Macro):
     _shape     = ()
     _precision = 0
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return 'MacroType({})'.format(sstr(self.argument))
+    def __str__(self):
+        return 'MacroType({})'.format(str(self.argument))
 
 #==============================================================================
 class MacroCount(Macro):
@@ -91,9 +87,8 @@ class MacroCount(Macro):
     _dtype     = NativeInteger()
     _precision = default_precision['integer']
 
-    def _sympystr(self, printer):
-        sstr = printer.doprint
-        return 'MacroCount({})'.format(sstr(self.argument))
+    def __str__(self):
+        return 'MacroCount({})'.format(str(self.argument))
 
 
 
