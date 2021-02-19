@@ -198,10 +198,6 @@ class PyccelSymbol(str, Immutable):
         """
         return self._is_temp
 
-    @is_temp.setter
-    def is_temp(self, is_temp):
-        self._is_temp = is_temp
-
 def symbols(names):
     """
     Transform strings into instances of PyccelSymbol class.
