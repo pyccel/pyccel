@@ -8,7 +8,6 @@ These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the dtype, precision, rank, shape
 """
-from sympy.core.expr        import Expr
 
 from ..errors.errors        import Errors, PyccelSemanticError
 
@@ -94,7 +93,7 @@ def broadcast(shape_1, shape_2):
 
 #==============================================================================
 
-class PyccelOperator(Expr, PyccelAstNode):
+class PyccelOperator(PyccelAstNode):
     """
     Abstract superclass for all builtin operators.
     The __init__ function is common
@@ -105,17 +104,20 @@ class PyccelOperator(Expr, PyccelAstNode):
     args: tuple
         The arguments passed to the operator
     """
+    _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
         self._args = tuple(self._handle_precedence(args))
 
         if self.stage == 'syntactic':
+            super().__init__()
             return
         self._set_dtype()
         self._set_shape_rank()
         # rank is None for lambda functions
         if self._rank is not None and self._rank > 1:
             self._set_order()
+        super().__init__()
 
     @property
     def precedence(self):
@@ -174,6 +176,12 @@ class PyccelOperator(Expr, PyccelAstNode):
         else:
             self._order = 'C'
 
+    @property
+    def args(self):
+        """ Arguments of the operator
+        """
+        return self._args
+
 #==============================================================================
 
 class PyccelUnaryOperator(PyccelOperator):
@@ -187,7 +195,7 @@ class PyccelUnaryOperator(PyccelOperator):
     """
 
     def __init__(self, arg):
-        PyccelOperator.__init__(self, arg)
+        super().__init__(arg)
 
     def _set_dtype(self):
         """ Sets the dtype and precision
@@ -311,7 +319,7 @@ class PyccelBinaryOperator(PyccelOperator):
     """
 
     def __init__(self, arg1, arg2):
-        PyccelOperator.__init__(self, arg1, arg2)
+        super().__init__(arg1, arg2)
 
     def _set_dtype(self):
         """ Sets the dtype and precision
@@ -471,7 +479,7 @@ class PyccelAdd(PyccelArithmeticOperator):
            arg1.real == LiteralFloat(0):
             return LiteralComplex(arg2, arg1.imag)
         else:
-            return PyccelArithmeticOperator.__new__(cls, arg1, arg2)
+            return super().__new__(cls)
 
     def _handle_str_type(self, strs):
         self._dtype = NativeString()
@@ -530,7 +538,7 @@ class PyccelMinus(PyccelArithmeticOperator):
            arg1.real == LiteralFloat(0):
             return LiteralComplex(-arg2.python_value, arg1.imag)
         else:
-            return PyccelArithmeticOperator.__new__(cls, arg1, arg2)
+            return super().__new__(cls)
 
     def __repr__(self):
         return '{} - {}'.format(repr(self.args[0]), repr(self.args[1]))
@@ -823,16 +831,17 @@ class PyccelIs(PyccelBooleanOperator):
 
     Examples
     --------
-    >>> from pyccel.ast import PyccelIs
-    >>> from pyccel.literals import Nil
-    >>> from sympy.abc import x
+    >>> from pyccel.ast.operators import PyccelIs
+    >>> from pyccel.ast.literals  import Nil
+    >>> from pyccel.ast.internals import PyccelSymbol
+    >>> x = PyccelSymbol('x')
     >>> PyccelIs(x, Nil())
     PyccelIs(x, None)
     """
     _precedence = 7
 
     def __init__(self, arg1, arg2):
-        PyccelBooleanOperator.__init__(self, arg1, arg2)
+        super().__init__(arg1, arg2)
 
     @property
     def lhs(self):
@@ -855,9 +864,10 @@ class PyccelIsNot(PyccelIs):
 
     Examples
     --------
-    >>> from pyccel.ast import PyccelIsNot
-    >>> from pyccel.ast.literals import Nil
-    >>> from sympy.abc import x
+    >>> from pyccel.ast.operators import PyccelIsNot
+    >>> from pyccel.ast.literals  import Nil
+    >>> from pyccel.ast.internals import PyccelSymbol
+    >>> x = PyccelSymbol('x')
     >>> PyccelIsNot(x, Nil())
     PyccelIsNot(x, None)
     """

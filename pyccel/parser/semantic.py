@@ -9,7 +9,6 @@
 from collections import OrderedDict
 from itertools import chain
 
-from sympy import Tuple
 from sympy.utilities.iterables import iterable as sympy_iterable
 
 from sympy import Sum as Summation
@@ -21,7 +20,7 @@ from sympy.core import cache
 
 #==============================================================================
 
-from pyccel.ast.basic import PyccelAstNode
+from pyccel.ast.basic import Basic, PyccelAstNode
 
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
@@ -47,13 +46,11 @@ from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.core import ValuedArgument
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
-from pyccel.ast.core import With, Block
+from pyccel.ast.core import With
 from pyccel.ast.builtins import PythonList
 from pyccel.ast.core import Dlist
 from pyccel.ast.core import StarredArguments
-from pyccel.ast.core import subs
 from pyccel.ast.core import get_assigned_symbols
-from pyccel.ast.core import _atomic
 from pyccel.ast.operators import PyccelIs, PyccelIsNot, IfTernaryOperator
 from pyccel.ast.itertoolsext import Product
 
@@ -255,7 +252,7 @@ class SemanticParser(BasicParser):
         Return the same CodeBlock if a trailing Return is found otherwise Return a new CodeBlock with additional Deallocate Nodes.
         """
         code = expr
-        if not isinstance(expr.body[-1], Return):
+        if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
             code = expr.body + tuple(Deallocate(i) for i in self._allocs[-1])
             code = CodeBlock(code)
         self._allocs.pop()
@@ -802,6 +799,8 @@ class SemanticParser(BasicParser):
             annotation_method = '_visit_' + cls.__name__
             if hasattr(self, annotation_method):
                 obj = getattr(self, annotation_method)(expr, **settings)
+                if isinstance(obj, Basic) and self._current_fst_node:
+                    obj.set_fst(self._current_fst_node)
                 self._current_fst_node = current_fst
                 return obj
 
@@ -836,6 +835,7 @@ class SemanticParser(BasicParser):
 
     def _visit_CodeBlock(self, expr, **settings):
         ls = [self._visit(i, **settings) for i in expr.body]
+        ls = [line for l in ls for line in (l.body if isinstance(l, CodeBlock) else [l])]
         return CodeBlock(ls)
 
     def _visit_Nil(self, expr, **settings):
@@ -1163,7 +1163,7 @@ class SemanticParser(BasicParser):
     def _visit_PyccelOperator(self, expr, **settings):
         args     = [self._visit(a, **settings) for a in expr.args]
         try:
-            expr_new = expr.func(*args)
+            expr_new = type(expr)(*args)
         except PyccelSemanticError as err:
             msg = str(err)
             errors.report(msg, symbol=expr,
@@ -1180,6 +1180,7 @@ class SemanticParser(BasicParser):
             tuple_args = [ai for a in args for ai in get_vars(a)]
             expr_new = PythonTuple(*tuple_args)
         else:
+            _ = [a.invalidate_node() for a in args]
             expr_new = self._visit_PyccelOperator(expr, **settings)
         return expr_new
 
@@ -1190,20 +1191,21 @@ class SemanticParser(BasicParser):
         elif isinstance(args[1], (TupleVariable, PythonTuple, PythonList)):
             expr_new = self._visit(Dlist(args[1], args[0]))
         else:
+            _ = [a.invalidate_node() for a in args]
             expr_new = self._visit_PyccelOperator(expr, **settings)
         return expr_new
 
     def _visit_Lambda(self, expr, **settings):
 
 
-        expr_names = set(map(str, expr.expr.atoms(PyccelSymbol, Argument)))
+        expr_names = set(map(str, expr.expr.get_attribute_nodes((PyccelSymbol, Argument))))
         var_names = map(str, expr.variables)
         missing_vars = expr_names.difference(var_names)
         if len(missing_vars) > 0:
             errors.report(UNDEFINED_LAMBDA_VARIABLE, symbol = missing_vars,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal', blocker=True)
-        funcs = expr.expr.atoms(FunctionCall)
+        funcs = expr.expr.get_attribute_nodes(FunctionCall)
         for func in funcs:
             name = _get_name(func)
             f = self.get_symbolic_function(name)
@@ -1547,17 +1549,25 @@ class SemanticParser(BasicParser):
                                     self._current_fst_node.col_offset))
 
                         else:
-                            # TODO [YG, 04.11.2020] If we could be sure that the
-                            # array was not created in an if-then-else block, we
-                            # would use status='allocated' instead.
+                            previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
+                            if not previous_allocations:
+                                errors.report("PYCCEL INTERNAL ERROR : Variable exists already, but it has never been allocated",
+                                        symbol=var, severity='fatal')
+                            if previous_allocations[-1].get_user_nodes((If, For, While)):
+                                status='unknown'
+                            elif previous_allocations[-1].get_user_nodes(IfSection):
+                                status = previous_allocations[-1].status
+                            else:
+                                status='allocated'
                             new_expressions.append(Allocate(var,
                                 shape=d_var['shape'], order=d_var['order'],
-                                status='unknown'))
+                                status=status))
 
-                            errors.report(ARRAY_REALLOCATION, symbol=name,
-                                severity='warning', blocker=False,
-                                bounding_box=(self._current_fst_node.lineno,
-                                    self._current_fst_node.col_offset))
+                            if status != 'unallocated':
+                                errors.report(ARRAY_REALLOCATION, symbol=name,
+                                    severity='warning', blocker=False,
+                                    bounding_box=(self._current_fst_node.lineno,
+                                        self._current_fst_node.col_offset))
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.
@@ -1577,7 +1587,7 @@ class SemanticParser(BasicParser):
                 cls      = self.get_class(cls_name)
 
                 attributes = cls.attributes
-                parent     = cls.parent
+                parent     = cls.superclass
                 attributes = list(attributes)
                 n_name     = str(lhs.name[-1])
 
@@ -1613,8 +1623,6 @@ class SemanticParser(BasicParser):
         new_expressions = []
         fst = expr.fst
         assert(fst)
-        if fst:
-            self._current_fst_node = fst
 
         rhs = expr.rhs
         lhs = expr.lhs
@@ -1668,7 +1676,6 @@ class SemanticParser(BasicParser):
                 if isinstance(macro, MacroVariable):
                     rhs = master
                 else:
-
                     # If macro is function, create left-hand side variable
                     if isinstance(master, FunctionDef) and master.results:
                         d_var = self._infere_type(master.results[0], **settings)
@@ -1711,22 +1718,6 @@ class SemanticParser(BasicParser):
                 i.set_fst(fst)
             rhs = self._visit_FunctionDef(rhs, **settings)
             return rhs
-
-        elif isinstance(rhs, Block):
-            #case of inline
-            results = _atomic(rhs.body,Return)
-            sub = list(zip(results,[EmptyNode()]*len(results)))
-            body = rhs.body
-            body = subs(body,sub)
-            results = [i.expr for i in results]
-            lhs = expr.lhs
-            if isinstance(lhs ,(list, tuple, PythonTuple)):
-                sub = [list(zip(i,lhs)) for i in results]
-            else:
-                sub = [(i[0],lhs) for i in results]
-            body = subs(body,sub)
-            expr = Block(rhs.name, rhs.variables, body)
-            return expr
 
         elif isinstance(rhs, CodeBlock):
             if len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
@@ -1975,12 +1966,10 @@ class SemanticParser(BasicParser):
             new_expressions.append(new_expr)
         if (len(new_expressions)==1):
             new_expressions = new_expressions[0]
-            new_expressions.set_fst(fst)
 
             return new_expressions
         else:
             result = CodeBlock(new_expressions)
-            result.set_fst(fst)
             return result
 
     def _visit_For(self, expr, **settings):
@@ -2022,7 +2011,7 @@ class SemanticParser(BasicParser):
         elif isinstance(iterable, PythonEnumerate):
             indx   = iterator.args[0]
             var    = iterator.args[1]
-            assign = Assign(var, IndexedElement(iterable.args[0], indx))
+            assign = Assign(var, IndexedElement(iterable.element, indx))
             assign.set_fst(expr.fst)
             iterator = indx
             body     = [assign] + body
@@ -2178,8 +2167,11 @@ class SemanticParser(BasicParser):
                               bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                               severity='fatal')
             self.insert_variable(var)
+            step.invalidate_node()
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
+            start.invalidate_node()
             start = pyccel_to_sympy(start, idx_subs, tmp_used_names)
+            stop.invalidate_node()
             stop  = pyccel_to_sympy(stop , idx_subs, tmp_used_names)
             size = (stop - start) / step
             if (step != 1):
@@ -2283,6 +2275,8 @@ class SemanticParser(BasicParser):
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='error', blocker=self.blocking)
 
+        target.invalidate_node()
+
         loops = [self._visit(i, **settings) for i in expr.loops]
         index = self._visit(index, **settings)
 
@@ -2308,8 +2302,10 @@ class SemanticParser(BasicParser):
         return If(*args)
 
     def _visit_IfTernaryOperator(self, expr, **settings):
-        args = [self._visit(i, **settings) for i in expr.args]
-        return expr.func(*args)
+        cond        = self._visit(expr.cond, **settings)
+        value_true  = self._visit(expr.value_true, **settings)
+        value_false = self._visit(expr.value_false, **settings)
+        return IfTernaryOperator(cond, value_true, value_false)
 
     def _visit_VariableHeader(self, expr, **settings):
 
@@ -2547,8 +2543,8 @@ class SemanticParser(BasicParser):
             # insert the FunctionDef into the scope
             # to handle the case of a recursive function
             # TODO improve in the case of an interface
-            func = FunctionDef(name, args, results, [])
-            self.insert_function(func)
+            recursive_func_obj = FunctionDef(name, args, results, [])
+            self.insert_function(recursive_func_obj)
 
             # Create a new list that store local variables for each FunctionDef to handle nested functions
             self._allocs.append([])
@@ -2602,7 +2598,7 @@ class SemanticParser(BasicParser):
             assigned     = [a.name for a in all_assigned if a.rank > 0]
             all_assigned = [i.name for i in all_assigned]
 
-            apps = list(Tuple(*body.body).atoms(FunctionCall))
+            apps = body.get_attribute_nodes(FunctionCall)
             apps = [i for i in apps if (i.__class__.__name__
                     in self.get_parent_functions())]
 
@@ -2669,6 +2665,8 @@ class SemanticParser(BasicParser):
                     functions = sub_funcs,
                     interfaces = func_interfaces,
                     doc_string = doc_string)
+            if recursive_func_obj not in body.get_attribute_nodes(FunctionDef):
+                recursive_func_obj.invalidate_node()
 
             if cls_name:
                 cls = self.get_class(cls_name)
@@ -2677,7 +2675,7 @@ class SemanticParser(BasicParser):
                 # update the class methods
 
                 self.insert_class(ClassDef(cls_name, cls.attributes,
-                        methods, superclass=cls.parent))
+                        methods, superclass=cls.superclass))
 
             funcs += [func]
 
@@ -2746,7 +2744,7 @@ class SemanticParser(BasicParser):
         name = expr.name
         name = name.replace("'", '')
         methods = list(expr.methods)
-        parent = expr.parent
+        parent = expr.superclass
         interfaces = []
 
         # remove quotes for str representation
@@ -3047,8 +3045,8 @@ class SemanticParser(BasicParser):
     def _visit_Dlist(self, expr, **settings):
         # Arguments have been treated in PyccelMul
 
-        val = expr.args[0]
-        length = expr.args[1]
+        val = expr.val
+        length = expr.length
         if isinstance(val, (TupleVariable, PythonTuple)) and \
                 not isinstance(val, PythonList):
             if isinstance(length, LiteralInteger):

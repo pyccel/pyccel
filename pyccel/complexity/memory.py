@@ -32,13 +32,14 @@ m =  WRITE + 2*n**2*(READ + WRITE)
 
 """
 
-from sympy import Symbol, sympify, Tuple
+from sympy import sympify, Symbol
 from sympy import Poly, LT
-from sympy.core.expr import Expr
 
-
-from pyccel.ast.core     import For, Assign, CodeBlock, Comment
-from pyccel.ast.numpyext import NumpyZeros, NumpyOnes
+from pyccel.ast.basic        import Basic
+from pyccel.ast.builtins     import PythonTuple
+from pyccel.ast.core         import For, Assign, CodeBlock
+from pyccel.ast.internals    import PyccelSymbol
+from pyccel.ast.numpyext     import NumpyZeros, NumpyOnes
 from pyccel.ast.sympy_helper import pyccel_to_sympy
 from pyccel.complexity.basic import Complexity
 
@@ -66,25 +67,18 @@ def count_access(expr, visual=True):
 
     symbol_map = {}
     used_names = set()
-    expr = pyccel_to_sympy(expr, symbol_map, used_names)
 
-
-    if isinstance(expr, Expr):
-
-        atoms = expr.atoms(Symbol)
-        return READ*len(atoms)
-
-    elif isinstance(expr, Assign):
+    if isinstance(expr, Assign):
         return count_access(expr.rhs, visual) + WRITE
 
-    elif isinstance(expr, Tuple):
+    elif isinstance(expr, PythonTuple):
         return sum(count_access(i, visual) for i in expr)
 
     elif isinstance(expr, CodeBlock):
         return sum(count_access(i, visual) for i in expr.body)
 
     elif isinstance(expr, For):
-        s = expr.iterable.size
+        s = pyccel_to_sympy(expr.iterable, symbol_map, used_names).size
         ops = sum(count_access(i, visual) for i in expr.body.body)
         return ops*s
 
@@ -92,8 +86,11 @@ def count_access(expr, visual=True):
         import numpy as np
         return WRITE*np.prod(expr.shape)
 
-    elif isinstance(expr, Comment):
-        return 0
+    elif isinstance(expr, Basic):
+
+        atoms = expr.get_attribute_nodes(PyccelSymbol)
+        return READ*len(atoms)
+
     else:
         raise NotImplementedError('TODO count_access for {}'.format(type(expr)))
 

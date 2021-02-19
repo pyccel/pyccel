@@ -13,12 +13,11 @@ import ast
 
 #==============================================================================
 
-from sympy import Dict
 from sympy.core import cache
 
 #==============================================================================
 
-from pyccel.ast.basic import PyccelAstNode
+from pyccel.ast.basic import Basic, PyccelAstNode
 
 from pyccel.ast.core import FunctionCall
 from pyccel.ast.core import ParserResult
@@ -44,7 +43,6 @@ from pyccel.ast.core import With
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import IndexedElement
-from pyccel.ast.core import _atomic
 from pyccel.ast.core import create_variable
 
 from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
@@ -171,6 +169,8 @@ class SyntaxParser(BasicParser):
         if hasattr(self, syntax_method):
             self._scope.append(stmt)
             result = getattr(self, syntax_method)(stmt)
+            if isinstance(result, Basic) and isinstance(stmt, ast.AST):
+                result.set_fst(stmt)
             self._scope.pop()
             return result
 
@@ -256,9 +256,6 @@ class SyntaxParser(BasicParser):
                             module    = mod_code,
                             prog_name = prog_name,
                             mod_name  = current_mod_name)
-        code.set_fst(stmt)
-        code._fst.lineno=1
-        code._fst.col_offset=1
         return code
 
     def _visit_Expr(self, stmt):
@@ -289,21 +286,8 @@ class SyntaxParser(BasicParser):
             return old
 
     def _visit_Dict(self, stmt):
-
-        d = {}
-        for key, value in zip(stmt.keys, stmt.values):
-
-            key = self._visit(key)
-            value = self._visit(value)
-
-            # sympy does not allow keys to be strings
-
-            if isinstance(key, LiteralString):
-                errors.report(SYMPY_RESTRICTION_DICT_KEYS,
-                              severity='error')
-
-            d[key] = value
-        return Dict(d)
+        errors.report(PYCCEL_RESTRICTION_TODO,
+                symbol=stmt, severity='fatal')
 
     def _visit_NoneType(self, stmt):
         return Nil()
@@ -343,7 +327,6 @@ class SyntaxParser(BasicParser):
 
         # we set the fst to keep track of needed information for errors
 
-        expr.set_fst(stmt)
         return expr
 
     def _visit_AugAssign(self, stmt):
@@ -366,7 +349,6 @@ class SyntaxParser(BasicParser):
 
         # we set the fst to keep track of needed information for errors
 
-        expr.set_fst(stmt)
         return expr
 
     def _visit_arguments(self, stmt):
@@ -465,7 +447,6 @@ class SyntaxParser(BasicParser):
             return expr[0]
         else:
             expr = CodeBlock(expr)
-            expr.set_fst(stmt)
             return expr
 
     def _visit_ImportFrom(self, stmt):
@@ -483,7 +464,6 @@ class SyntaxParser(BasicParser):
             targets.append(s)
 
         expr = Import(source, targets)
-        expr.set_fst(stmt)
         self.insert_import(expr)
         return expr
 
@@ -609,7 +589,6 @@ class SyntaxParser(BasicParser):
         if not isinstance(results, (list, PythonTuple, PythonList)):
             results = [results]
         expr = Return(results)
-        expr.set_fst(stmt)
         return expr
 
     def _visit_Pass(self, stmt):
@@ -816,7 +795,9 @@ class SyntaxParser(BasicParser):
         if 'private' in decorators.keys():
             is_private = True
 
-        returns = [i.expr for i in _atomic(body, cls=Return)]
+        body = CodeBlock(body)
+
+        returns = [i.expr for i in body.get_attribute_nodes(Return)]
         assert all(len(i) == len(returns[0]) for i in returns)
         results = []
         result_counter = 1
@@ -851,7 +832,6 @@ class SyntaxParser(BasicParser):
                headers=headers,
                doc_string=doc_string)
 
-        func.set_fst(stmt)
         return func
 
     def _visit_ClassDef(self, stmt):
@@ -867,7 +847,6 @@ class SyntaxParser(BasicParser):
 
         # we set the fst to keep track of needed information for errors
 
-        expr.set_fst(stmt)
         return expr
 
     def _visit_Subscript(self, stmt):
@@ -925,8 +904,7 @@ class SyntaxParser(BasicParser):
             else:
                 func = FunctionCall(func, args)
         elif isinstance(func, DottedName):
-            f_name = str(func.name[-1])
-            func_attr = FunctionCall(f_name, args)
+            func_attr = FunctionCall(func.name[-1], args)
             func = DottedName(*func.name[:-1], func_attr)
         else:
             raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
@@ -945,7 +923,6 @@ class SyntaxParser(BasicParser):
         iterable = self._visit(stmt.iter)
         body = self._visit(stmt.body)
         expr = For(iterator, iterable, body)
-        expr.set_fst(stmt)
         return expr
 
     def _visit_comprehension(self, stmt):
@@ -953,7 +930,6 @@ class SyntaxParser(BasicParser):
         iterator = self._visit(stmt.target)
         iterable = self._visit(stmt.iter)
         expr = For(iterator, iterable, [])
-        expr.set_fst(stmt)
         return expr
 
     def _visit_ListComp(self, stmt):
@@ -1043,7 +1019,6 @@ class SyntaxParser(BasicParser):
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='fatal')
 
-        expr.set_fst(stmt)
         return expr
 
     def _visit_If(self, stmt):
@@ -1054,6 +1029,8 @@ class SyntaxParser(BasicParser):
         if len(orelse)==1 and isinstance(orelse[0],If):
             orelse = orelse[0].blocks
             return If(IfSection(test, body), *orelse)
+        elif len(orelse)==0:
+            return If(IfSection(test, body))
         else:
             orelse = IfSection(LiteralTrue(), orelse)
             return If(IfSection(test, body), orelse)
@@ -1064,7 +1041,6 @@ class SyntaxParser(BasicParser):
         first = self._visit(stmt.body)
         second = self._visit(stmt.orelse)
         expr = IfTernaryOperator(test1, first, second)
-        expr.set_fst(stmt)
         return expr
 
     def _visit_While(self, stmt):
@@ -1134,8 +1110,6 @@ class SyntaxParser(BasicParser):
 
                     self._metavars[str(expr.name)] = str(expr.value)
                     expr = EmptyNode()
-                else:
-                    expr.set_fst(stmt)
 
                 return expr
             else:

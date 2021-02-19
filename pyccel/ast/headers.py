@@ -4,20 +4,18 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-from sympy.utilities.iterables import iterable
-
-from ..errors.errors import Errors
-from ..errors.messages import TEMPLATE_IN_UNIONTYPE
-from .core import Basic
-from .core import ValuedArgument
-from .core import FunctionDef, Interface, FunctionAddress
-from .core import create_incremented_string
-from .datatypes import datatype, DataTypeFactory, UnionType
-from .macros import Macro, MacroShape, construct_macro
-from .variable import DottedName, DottedVariable
-from .variable import Variable
-from .variable import ValuedVariable
-from .internals import PyccelSymbol
+from ..errors.errors    import Errors
+from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
+from .basic             import Basic, iterable
+from .core              import ValuedArgument
+from .core              import FunctionDef, Interface, FunctionAddress
+from .core              import create_incremented_string
+from .datatypes         import datatype, DataTypeFactory, UnionType
+from .internals         import PyccelSymbol
+from .macros            import Macro, MacroShape, construct_macro
+from .variable          import DottedName, DottedVariable
+from .variable          import Variable
+from .variable          import ValuedVariable
 
 __all__ = (
     'ClassHeader',
@@ -36,7 +34,7 @@ errors = Errors()
 
 #==============================================================================
 class Header(Basic):
-    pass
+    _attribute_nodes = ()
 
 #==============================================================================
 class MetaVariable(Header):
@@ -154,11 +152,8 @@ class Template(Header):
     >>> T = Template('T', [d_var0, d_var1])
     """
 
-    def __new__(cls, *args, **kwargs):
-        return super().__new__(cls)
-
     def __init__(self, name, dtypes):
-        Header.__init__(self)
+        super().__init__()
         self._name = name
         self._dtypes = dtypes
 
@@ -191,7 +186,7 @@ class Template(Header):
            to create the initial version of the object
            and its arguments
            """
-        return (self.__class__, (self.name, self.args))
+        return (self.__class__, (self.name, self.dtypes))
 
 #==============================================================================
 class FunctionHeader(Header):

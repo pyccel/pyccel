@@ -7,11 +7,14 @@
 This module contains classes and methods that manipilate the various errors and warnings
 that could be shown by pyccel.
 """
+import ast
+import sys
 
 from collections import OrderedDict
 from os.path import basename
-from ast import dump as ast_dump
+
 from pyccel.ast.basic import Basic
+from pyccel.utilities.metaclasses import Singleton
 
 # ...
 #ERROR = 'error'
@@ -125,20 +128,7 @@ class ErrorInfo:
         return pattern.format(**info)
 
 
-def _singleton(cls):
-    """
-    A Class representing a singleton. Python does not offer this pattern.
-    """
-    instances = {}
-    def getinstance():
-        if cls not in instances:
-            instances[cls] = cls() # Line 5
-        return instances[cls]
-    return getinstance
-
-
-@_singleton
-class ErrorsMode:
+class ErrorsMode(metaclass = Singleton):
     """Developper or User mode.
     pyccel command line will set it.
     """
@@ -154,8 +144,7 @@ class ErrorsMode:
         self._mode = mode
 
 
-@_singleton
-class Errors:
+class Errors(metaclass = Singleton):
     """Container for compile errors.
     """
 
@@ -239,16 +228,21 @@ class Errors:
             line   = bounding_box[0]
             column = bounding_box[1]
 
+        fst = None
+
         if symbol is not None:
-            if getattr(symbol, '__module__', '') == '_ast':
-                line   = symbol.lineno
-                column = symbol.col_offset
-                symbol = ast_dump(symbol)
+            if isinstance(symbol, ast.AST):
+                fst = symbol
+                if sys.version_info < (3, 9):
+                    symbol = ast.dump(fst)
+                else:
+                    symbol = ast.unparse(fst) # pylint: disable=no-member
             elif isinstance(symbol, Basic):
-                fst = getattr(symbol, 'fst', None)
-                if fst is not None:
-                    line   = fst.lineno
-                    column = fst.col_offset
+                fst = symbol.fst
+
+        if fst:
+            line   = fst.lineno
+            column = fst.col_offset
 
         info = ErrorInfo(stage=self._parser_stage,
                          filename=filename,
