@@ -311,8 +311,10 @@ def test_decorator_f15(language):
             return d + e
 
     f = epyccel(f15, language=language)
-    assert f(True, 1, 2, 3, 4)  == f15(True, 1, 2, 3, 4)
-    assert f(False, 1, 2, 3, 4)  == f15(False, 1, 2, 3, 4)
+    assert f(True, np.int8(1), np.int16(2), np.int32(3), np.int64(4)) == \
+           f15(True, np.int8(1), np.int16(2), np.int32(3), np.int64(4))
+    assert f(False, np.int8(1), np.int16(2), np.int32(3), np.int64(4)) == \
+           f15(False, np.int8(1), np.int16(2), np.int32(3), np.int64(4))
 
 
 def test_decorator_f16(language):

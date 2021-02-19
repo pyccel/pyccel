@@ -400,7 +400,7 @@ def test_floor_return_type(language):
     fflags = "-Werror -Wconversion"
     f1 = epyccel(floor_return_type_real, language = language, fflags=fflags)
 
-    x = randint(100)
+    x = uniform(100)
     assert(isclose(f1(x) ,  floor_return_type_real(x), rtol=1e-14, atol=1e-15))
     assert(isclose(f1(-x) ,  floor_return_type_real(-x), rtol=1e-14, atol=1e-15))
     assert(type(f1(x))  == type(floor_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
@@ -470,8 +470,8 @@ def test_copysign_call(language):
     assert(isclose(copysign_call(-x, y), f1(-x, y), rtol=1e-14, atol=1e-15))
     assert(isclose(copysign_call(x, -y), f1(x, -y), rtol=1e-14, atol=1e-15))
     # x =/= 0, y = 0 and x = 0, y =/= 0
-    assert(isclose(copysign_call(x, 0), f1(x, 0), rtol=1e-14, atol=1e-15))
-    assert(isclose(copysign_call(0, y), f1(0, y), rtol=1e-14, atol=1e-15))
+    assert(isclose(copysign_call(x, 0.0), f1(x, 0.0), rtol=1e-14, atol=1e-15))
+    assert(isclose(copysign_call(0.0, y), f1(0.0, y), rtol=1e-14, atol=1e-15))
 
 def test_copysign_call_zero_case(language):
     @types('int', 'int')
@@ -994,6 +994,7 @@ def test_log10_phrase(language):
 
 def test_pow_call(language):
     @types('real', 'real')
+    @types('real', 'int')
     def pow_call(x, y):
         from math import pow as my_pow
         return my_pow(x, y)
