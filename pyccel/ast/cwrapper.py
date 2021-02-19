@@ -156,8 +156,7 @@ class PyArg_ParseTupleNode(Basic):
     def __init__(self, python_func_args,
                         python_func_kwargs,
                         c_func_args, parse_args,
-                        arg_names,
-                        is_interface=False):
+                        arg_names):
         if not isinstance(python_func_args, Variable):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
@@ -170,10 +169,7 @@ class PyArg_ParseTupleNode(Basic):
             raise TypeError('Parse args should be a list of Variables')
         if len(parse_args) != len(c_func_args):
             raise TypeError('There should be the same number of c_func_args and parse_args')
-        if not isinstance(is_interface, bool):
-            raise TypeError('is_interface should be a boolean')
 
-        self._is_interface = is_interface
         self._flags      = ''
         i = 0
 
@@ -185,7 +181,6 @@ class PyArg_ParseTupleNode(Basic):
         while i < len(c_func_args):
             self._flags += self.get_pytype(c_func_args[i], parse_args[i])
             i+=1
-
         # Restriction as of python 3.8
         if any([isinstance(a, (Variable, FunctionAddress)) and a.is_kwonly for a in c_func_args]):
             errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
@@ -202,7 +197,9 @@ class PyArg_ParseTupleNode(Basic):
         super().__init__()
 
     def get_pytype(self, c_arg, parse_arg):
-        if isinstance(c_arg, FunctionAddress) or (self._is_interface and c_arg.rank == 0):
+        """Return the needed flag to parse or build value
+        """
+        if isinstance(c_arg, FunctionAddress):
             return 'O'
         else:
             try:
@@ -646,14 +643,14 @@ numpy_to_ndarray_shape = FunctionDef(name = 'numpy_to_ndarray_shape',
 
 collect_function_registry = {
     NativeInteger(): PyLong_AsLong,
-    NativeReal() : PyFloat_AsDouble,
+    NativeReal()   : PyFloat_AsDouble,
 }
 
 check_type_registry  = {
-    NativeInteger(): 'PyLong_Check',
+    NativeInteger() : 'PyLong_Check',
     NativeComplex() : 'PyComplex_Check',
-    NativeReal() : 'PyFloat_Check',
-    NativeBool() : 'PyBool_Check',
+    NativeReal()    : 'PyFloat_Check',
+    NativeBool()    : 'PyBool_Check',
 }
 
 
