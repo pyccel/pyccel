@@ -1354,10 +1354,10 @@ class SemanticParser(BasicParser):
                 elem_vars.append(var)
 
             d_lhs['is_pointer'] = any(v.is_pointer for v in elem_vars)
-            lhs = TupleVariable(elem_vars, dtype, name, **d_lhs, is_temp=True)
+            lhs = TupleVariable(elem_vars, dtype, name, **d_lhs)
 
         else:
-            lhs = Variable(dtype, name, **d_lhs, is_temp=True)
+            lhs = Variable(dtype, name, **d_lhs, is_temp=name.is_temp)
 
         return lhs
 
