@@ -128,14 +128,9 @@ class PythonCodePrinter(CodePrinter):
         lhs_list = []
         expr_return_vars = []
         if expr.stmt:
-            for i in expr.stmt.body:
-                rhs_list.append(i.rhs)
-                lhs_list.append(i.lhs)
-        for a in expr.expr:
-            if lhs_list and a not in lhs_list:
-                expr_return_vars.append(a)
-            elif not lhs_list:
-                expr_return_vars.append(a)
+            rhs_list = [i.rhs for i in expr.stmt.body]
+            lhs_list = [i.lhs for i in expr.stmt.body]
+        expr_return_vars = [a for a in expr.expr if not lhs_list or a not in lhs_list]
 
         return 'return ' + ','.join(self._print(i) for i in expr_return_vars + rhs_list)
 
