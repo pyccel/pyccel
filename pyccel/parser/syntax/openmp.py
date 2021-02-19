@@ -11,9 +11,11 @@ from os.path import join, dirname
 from textx.metamodel import metamodel_from_file
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.omp import OmpAnnotatedComment, OMP_For_Loop, OMP_Parallel_Construct, OMP_Single_Construct,\
-        Omp_End_Clause, OMP_Critical_Construct, OMP_Master_Construct,\
-        OMP_Masked_Construct, OMP_Task_Construct, OMP_Cancel_Construct, OMP_Target_Construct, OMP_Teams_Construct, OMP_Sections_Construct, OMP_Section_Construct
+from pyccel.ast.omp import (OmpAnnotatedComment, OMP_For_Loop, OMP_Parallel_Construct,
+                            OMP_Single_Construct, Omp_End_Clause, OMP_Critical_Construct,
+                            OMP_Master_Construct, OMP_Masked_Construct, OMP_Task_Construct,
+                            OMP_Cancel_Construct, OMP_Target_Construct, OMP_Teams_Construct,
+                            OMP_Sections_Construct, OMP_Section_Construct)
 
 DEBUG = False
 
@@ -41,47 +43,13 @@ class OpenmpStmt(BasicStmt):
             print("> OpenmpStmt: expr")
 
         stmt = self.stmt
-        if isinstance(stmt, OmpEndClause):
-            return stmt.expr
-        elif isinstance(stmt, OmpParallelConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpLoopConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpSingleConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpCriticalConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpBarrierConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpMasterConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpMaskedConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpTaskLoopConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpSimdConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpAtomicConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpTaskWaitConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpTaskyieldConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpTaskConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpFlushConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpCancelConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpTargetConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpTeamsConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpDistributeConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpSectionConstruct):
-            return stmt.expr
-        elif isinstance(stmt, OmpSectionsConstruct):
+        if isinstance(stmt, (OmpEndClause, OmpParallelConstruct, OmpLoopConstruct,
+                             OmpSingleConstruct, OmpCriticalConstruct, OmpBarrierConstruct,
+                             OmpMasterConstruct, OmpMaskedConstruct, OmpTaskLoopConstruct,
+                             OmpSimdConstruct, OmpAtomicConstruct, OmpTaskWaitConstruct,
+                             OmpTaskyieldConstruct, OmpTaskConstruct, OmpFlushConstruct,
+                             OmpCancelConstruct, OmpTargetConstruct, OmpTeamsConstruct,
+                             OmpDistributeConstruct, OmpSectionConstruct, OmpSectionsConstruct)):
             return stmt.expr
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
