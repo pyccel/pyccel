@@ -55,6 +55,9 @@ class OpenmpStmt(BasicStmt):
             raise TypeError('Wrong stmt for OpenmpStmt')
 
 def check_get_clauses(name, valid_clauses, clauses):
+    """
+    Function check if the clauses are correct for a given Construct
+    """
     txt = ''
     for clause in clauses:
         if isinstance(clause, valid_clauses):
