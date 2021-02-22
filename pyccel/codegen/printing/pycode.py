@@ -124,13 +124,10 @@ class PythonCodePrinter(CodePrinter):
         return code
 
     def _print_Return(self, expr):
-        rhs_list = []
-        lhs_list = []
-        expr_return_vars = []
-        if expr.stmt:
-            rhs_list = [i.rhs for i in expr.stmt.body]
-            lhs_list = [i.lhs for i in expr.stmt.body]
-        expr_return_vars = [a for a in expr.expr if not lhs_list or a not in lhs_list]
+
+        rhs_list = [i.rhs for i in expr.stmt.body] if expr.stmt else []
+        lhs_list = [i.lhs for i in expr.stmt.body] if expr.stmt else []
+        expr_return_vars = [a for a in expr.expr if a not in lhs_list]
 
         return 'return ' + ','.join(self._print(i) for i in expr_return_vars + rhs_list)
 

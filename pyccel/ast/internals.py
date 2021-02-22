@@ -194,7 +194,8 @@ class PyccelSymbol(str, Immutable):
     @property
     def is_temp(self):
         """
-        Indicates if the variable created by Pyccel [default value: False]
+        Indicates if this symbol represents a temporary variable created by Pyccel,
+        and was not present in the original Python code [default value : False].
         """
         return self._is_temp
 

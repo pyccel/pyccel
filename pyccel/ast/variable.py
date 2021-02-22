@@ -85,8 +85,10 @@ class Variable(PyccelAstNode):
 
     is_const: bool
         if object is a const argument of a function [Default value: False]
+
     is_temp: bool
-        Indicates if the variable is created by Pyccel and it is not necessary to print [Default value: False]
+        Indicates if this symbol represents a temporary variable created by Pyccel,
+        and was not present in the original Python code [default value : False].
 
     Examples
     --------
@@ -293,7 +295,8 @@ class Variable(PyccelAstNode):
     @property
     def is_temp(self):
         """
-        Indicates if the variable is created by Pyccel and it is not necessary to print [Default value: False]
+        Indicates if this symbol represents a temporary variable created by Pyccel,
+		and was not present in the original Python code [default value : False].
         """
         return self._is_temp
 
