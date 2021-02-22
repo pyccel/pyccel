@@ -4305,7 +4305,7 @@ def test_numpy_imag_array_like_2d(language):
     cmplx64 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=(2, 5)) + uniform(low=max_float32 / 2, high=max_float32 / 2, size=(2, 5)) * 1j
     cmplx64 = np.complex64(cmplx64)
     cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) * 1j
-    
+
     f_bl = epyccel(test_bool, language=language)
 
     assert (f_bl(bl) == test_bool(bl))
@@ -4337,5 +4337,3 @@ def test_numpy_imag_array_like_2d(language):
 
     assert (f_complex64(cmplx64) == test_complex64(cmplx64))
     assert (f_complex128(cmplx128) == test_complex128(cmplx128))
-
-
