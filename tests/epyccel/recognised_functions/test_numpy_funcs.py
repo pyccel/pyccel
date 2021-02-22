@@ -2,12 +2,28 @@
 import sys
 import pytest
 from numpy.random import rand, randint, uniform
-from numpy import isclose
+from numpy import isclose, iinfo, finfo
 
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 
-min_float = sys.float_info.min  # Minimum positive float
+min_int = iinfo('int').min
+max_int = iinfo('int').max
+
+min_int32 = iinfo('int32').min
+max_int32 = iinfo('int32').max
+
+min_int64 = iinfo('int64').min
+max_int64 = iinfo('int64').max
+
+min_float = finfo('float').min
+max_float = finfo('float').max
+
+min_float32 = finfo('float32').min
+max_float32 = finfo('float32').max
+
+min_float64 = finfo('float64').min
+max_float64 = finfo('float64').max
 
 # Functions still to be tested:
 #    array
@@ -4056,118 +4072,134 @@ def test_numpy_imag_scalar(language):
 
 def test_numpy_imag_array_like_1d(language):
 
-    def test_bool():
-        from numpy import imag, shape, array
-        arr = array([4,5,0,2,1], bool)
+    @types('bool[:]')
+    def test_bool(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
-    def test_int():
-        from numpy import imag, shape, array, int as NumpyInt
-        arr = array([4,5,6,2,1], NumpyInt)
+    @types('int[:]')
+    def test_int(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
     # should be uncommented after resolving #733
-    # def test_int8():
-    #     from numpy import imag, shape, array, int8
-    #     arr = array([4,5,6,2,1], int8)
+    # @types('int8[:]')
+    # def test_int8(arr):
+    #     from numpy import imag, shape
     #     a = imag(arr)
     #     s = shape(a)
     #     return len(s), s[0], a[0]
 
-    # def test_int16():
-    #     from numpy import imag, shape, array, int16
-    #     arr = array([4,5,6,2,1], int16)
+    # # @types('int16[:]')
+    # def test_int16(arr):
+    #     from numpy import imag, shape
     #     a = imag(arr)
     #     s = shape(a)
     #     return len(s), s[0], a[0]
 
-    def test_int32():
-        from numpy import imag, shape, array, int32
-        arr = array([4,5,6,2,1], int32)
+    @types('int32[:]')
+    def test_int32(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
-    def test_int64():
-        from numpy import imag, shape, array, int64
-        arr = array([4,5,6,2,1], int64)
+    @types('int64[:]')
+    def test_int64(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
-    def test_float():
-        from numpy import imag, shape, array
-        arr = array([4,5,6,2,1], float)
+    @types('float[:]')
+    def test_float(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
-    def test_float32():
-        from numpy import imag, shape, array, float32
-        arr = array([4,5,6,2,1], float32)
+    @types('float32[:]')
+    def test_float32(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
-    def test_float64():
-        from numpy import imag, shape, array, float64
-        arr = array([4,5,6,2,1], float64)
+    @types('float64[:]')
+    def test_float64(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
-    def test_complex64():
-        from numpy import imag, shape, array, complex64
-        arr = array([4,5,6,2,1], complex64)
+    @types('complex64[:]')
+    def test_complex64(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
-    def test_complex128():
-        from numpy import imag, shape, array, complex128
-        arr = array([4,5,6,2,1], complex128)
+    @types('complex128[:]')
+    def test_complex128(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
         return len(s), s[0], a[0]
+
+    import numpy as np
+    bl = randint(0, 1, size=(5), dtype= bool)
+
+    # should be uncommented after resolving #733
+    # integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
+    # integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
+    integer = randint(min_int, max_int, size=(5), dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
+
+    fl = uniform(min_float / 2, max_float / 2, size=(5))
+    fl32 = uniform(min_float32, max_float32, size=(5))
+    fl32 = np.float32(fl32)
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
+
+    cmplx64 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=5) + uniform(low=max_float32 / 2, high=max_float32 / 2, size=5) * 1j
+    cmplx64 = np.complex64(cmplx64)
+    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) * 1j
 
     f_bl = epyccel(test_bool, language=language)
-    assert (f_bl() == test_bool())
 
-    f_integer = epyccel(test_int, language=language)
+    assert (f_bl(bl) == test_bool(bl))
 
     # should be uncommented after resolving #733
-    # int8 and int16 numpy data types not recognised by Pyccel.
-    #f_integer8 = epyccel(test_int8, language=language)
-    #f_integer16 = epyccel(test_int16, language=language)
+    # f_integer8 = epyccel(test_int8, language=language)
+    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    assert (f_integer() == test_int())
-
     # should be uncommented after resolving #733
-    # int8 and int16 numpy data types not recognised by Pyccel.
-    #assert (f_integer8() == test_int8())
-    #assert (f_integer16() == test_int16())
-    assert (f_integer32() == test_int32())
-    assert (f_integer64() == test_int64())
+    # assert (f_integer8(integer8) == test_int8(integer8))
+    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer(integer) == test_int(integer))
+    assert (f_integer32(integer32) == test_int32(integer32))
+    assert (f_integer64(integer64) == test_int64(integer64))
 
     f_fl = epyccel(test_float, language=language)
     f_fl32 = epyccel(test_float32, language=language)
     f_fl64 = epyccel(test_float64, language=language)
 
-    assert (f_fl() == test_float())
-    assert (f_fl32() == test_float32())
-    assert (f_fl64() == test_float64())
+    assert (f_fl(fl) == test_float(fl))
+    assert (f_fl32(fl32) == test_float32(fl32))
+    assert (f_fl64(fl64) == test_float64(fl64))
 
     f_complex64 = epyccel(test_complex64, language=language)
     f_complex128 = epyccel(test_complex128, language=language)
 
-    assert (f_complex64() == test_complex64())
-    assert (f_complex128() == test_complex128())
+    assert (f_complex64(cmplx64) == test_complex64(cmplx64))
+    assert (f_complex128(cmplx128) == test_complex128(cmplx128))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -4180,116 +4212,130 @@ def test_numpy_imag_array_like_1d(language):
 
 def test_numpy_imag_array_like_2d(language):
 
-    def test_bool():
-        from numpy import imag, shape, array
-        arr = array([[4,5,6,2,1],[4,5,6,2,1]], bool)
+    @types('bool[:,:]')
+    def test_bool(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_int():
-        from numpy import imag, shape, array, int as NumpyInt
-        arr = array([[4,5,6,2,1],[4,5,6,2,1]], NumpyInt)
+    @types('int[:,:]')
+    def test_int(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
     # should be uncommented after resolving #733
-    # def test_int8():
-    #     from numpy import imag, shape, array, int8
-    #     arr = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
+    # @types('int8[:,:]')
+    # def test_int8(arr):
+    #     from numpy import imag, shape
     #     a = imag(arr)
     #     s = shape(a)
     #     return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    # def test_int16():
-    #     from numpy import imag, shape, array, int16
-    #     arr = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
+    # # @types('int16[:,:]')
+    # def test_int16(arr):
+    #     from numpy import imag, shape
     #     a = imag(arr)
     #     s = shape(a)
     #     return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_int32():
-        from numpy import imag, shape, array, int32
-        arr = array([[4,5,6,2,1],[4,5,6,2,1]], int32)
+    @types('int32[:,:]')
+    def test_int32(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_int64():
-        from numpy import imag, shape, array, int64
-        arr = array([[4,5,6,2,1],[4,5,6,2,1]], int64)
+    @types('int64[:,:]')
+    def test_int64(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_float():
-        from numpy import imag, shape, array
-        arr = array([[4,5,6,2,1],[4,5,6,2,1]], float)
+    @types('float[:,:]')
+    def test_float(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_float32():
-        from numpy import imag, shape, array, float32
-        arr = array([[4,5,6,2,1],[4,5,6,2,1]], float32)
+    @types('float32[:,:]')
+    def test_float32(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_float64():
-        from numpy import imag, shape, array, float64
-        arr = array([[4,5,6,2,1],[4,5,6,2,1]], float64)
+    @types('float64[:,:]')
+    def test_float64(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_complex64():
-        from numpy import imag, shape, array, complex64
-        arr = array([[4,5,6,2,1],[4,5,6,2,1]], complex64)
+    @types('complex64[:,:]')
+    def test_complex64(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
-        return len(s), s[0], s[1]
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_complex128():
-        from numpy import imag, shape, array, complex128
-        arr = array([[4,5,6,2,1],[4,5,6,2,1]], complex128)
+    @types('complex128[:,:]')
+    def test_complex128(arr):
+        from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
-        return len(s), s[0], s[1]
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
+    import numpy as np
+    bl = randint(0, 1, size=(2, 5), dtype= bool)
+
+    integer = randint(min_int, max_int, size=(2, 5), dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size=(2, 5), dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size=(2, 5), dtype=np.int64)
+
+    fl = uniform(min_float / 2, max_float / 2, size=(2, 5))
+    fl32 = uniform(min_float32, max_float32, size=(2, 5))
+    fl32 = np.float32(fl32)
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(2, 5))
+
+    cmplx64 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=(2, 5)) + uniform(low=max_float32 / 2, high=max_float32 / 2, size=(2, 5)) * 1j
+    cmplx64 = np.complex64(cmplx64)
+    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) * 1j
+    
     f_bl = epyccel(test_bool, language=language)
-    assert (f_bl() == test_bool())
 
-    f_integer = epyccel(test_int, language=language)
+    assert (f_bl(bl) == test_bool(bl))
 
     # should be uncommented after resolving #733
-    # int8 and int16 numpy data types not recognised by Pyccel.
     # f_integer8 = epyccel(test_int8, language=language)
     # f_integer16 = epyccel(test_int16, language=language)
+    f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    assert (f_integer() == test_int())
-
     # should be uncommented after resolving #733
-    # int8 and int16 numpy data types not recognised by Pyccel.
-    # assert (f_integer8() == test_int8())
-    # assert (f_integer16() == test_int16())
-    assert (f_integer32() == test_int32())
-    assert (f_integer64() == test_int64())
+    # assert (f_integer8(integer8) == test_int8(integer8))
+    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer(integer) == test_int(integer))
+    assert (f_integer32(integer32) == test_int32(integer32))
+    assert (f_integer64(integer64) == test_int64(integer64))
 
     f_fl = epyccel(test_float, language=language)
     f_fl32 = epyccel(test_float32, language=language)
     f_fl64 = epyccel(test_float64, language=language)
 
-    assert (f_fl() == test_float())
-    assert (f_fl32() == test_float32())
-    assert (f_fl64() == test_float64())
+    assert (f_fl(fl) == test_float(fl))
+    assert (f_fl32(fl32) == test_float32(fl32))
+    assert (f_fl64(fl64) == test_float64(fl64))
 
     f_complex64 = epyccel(test_complex64, language=language)
     f_complex128 = epyccel(test_complex128, language=language)
 
-    assert (f_complex64() == test_complex64())
-    assert (f_complex128() == test_complex128())
+    assert (f_complex64(cmplx64) == test_complex64(cmplx64))
+    assert (f_complex128(cmplx128) == test_complex128(cmplx128))
+
 
