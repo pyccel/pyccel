@@ -3875,6 +3875,15 @@ def test_numpy_real_array_like_2d(language):
     assert (f_complex64() == test_complex64())
     assert (f_complex128() == test_complex128())
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.c]
+        )
+    )
+)
+
 def test_numpy_imag_scalar(language):
 
     @types('bool')

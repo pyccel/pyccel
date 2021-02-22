@@ -425,7 +425,8 @@ class NumpyImag(PythonImag):
     """
     def __new__(cls, arg):
         if not isinstance(arg.dtype, NativeComplex):
-            return NumpyZeros(arg.shape, dtype='int')
+            dtype=NativeInteger() if isinstance(arg.dtype, NativeBool) else arg.dtype
+            return NumpyZeros(arg.shape, dtype=dtype)
         return super().__new__(cls, arg)
 
     def __init__(self, arg):
