@@ -54,6 +54,15 @@ class OpenmpStmt(BasicStmt):
         else:
             raise TypeError('Wrong stmt for OpenmpStmt')
 
+def check_get_clauses(name, valid_clauses, clauses):
+    txt = ''
+    for clause in clauses:
+        if isinstance(clause, valid_clauses):
+            txt = '{0} {1}'.format(txt, clause.expr)
+        else:
+            raise TypeError('Wrong clause', type(clause).__name__,'for', type(name).__name__)
+    return txt
+
 class OmpParallelConstruct(BasicStmt):
     """Class representing a parallel construct."""
     def __init__(self, **kwargs):
@@ -62,6 +71,27 @@ class OmpParallelConstruct(BasicStmt):
         self.clauses  = kwargs.pop('clauses')
         self.combined = kwargs.pop('combined')
 
+        _valid_clauses = _valid_parallel_clauses
+
+        self.com = None
+        if isinstance(self.combined, OmpForSimd):
+            _valid_clauses = _valid_clauses + _valid_loop_clauses
+            if 'simd' in self.combined.expr:
+                _valid_clauses = _valid_clauses + _valid_simd_clauses
+            self.com = self.combined.expr
+        if isinstance(self.combined, OmpMaskedTaskloop):
+            _valid_clauses = _valid_clauses + (OmpFilter,)
+            if 'simd' in self.combined.expr:
+                _valid_clauses = _valid_clauses + _valid_simd_clauses
+            if 'taskloop' in self.combined.expr:
+                _valid_clauses = _valid_clauses + _valid_taskloop_clauses
+            self.com = self.combined.expr
+        if isinstance(self.combined, OmpPSections):
+            _valid_clauses = _valid_clauses + _valid_sections_clauses
+            self.com = self.combined.expr
+
+        self.txt = check_get_clauses(self, _valid_clauses, self.clauses)
+
         super().__init__(**kwargs)
 
     @property
@@ -69,32 +99,7 @@ class OmpParallelConstruct(BasicStmt):
         if DEBUG:
             print("> OmpParallelConstruct: expr")
 
-        _valid_clauses = _valid_parallel_clauses
-
-        txt = ''
-        combined = None
-        if isinstance(self.combined, OmpForSimd):
-            _valid_clauses = _valid_clauses + _valid_loop_clauses
-            if 'simd' in self.combined.expr:
-                _valid_clauses = _valid_clauses + _valid_simd_clauses
-            combined = self.combined.expr
-        if isinstance(self.combined, OmpMaskedTaskloop):
-            _valid_clauses = _valid_clauses + (OmpFilter,)
-            if 'simd' in self.combined.expr:
-                _valid_clauses = _valid_clauses + _valid_simd_clauses
-            if 'taskloop' in self.combined.expr:
-                _valid_clauses = _valid_clauses + _valid_taskloop_clauses
-            combined = self.combined.expr
-        if isinstance(self.combined, OmpPSections):
-            _valid_clauses = _valid_clauses + _valid_sections_clauses
-            combined = self.combined.expr
-        for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpParallelConstruct')
-
-        return OMP_Parallel_Construct(txt, combined)
+        return OMP_Parallel_Construct(self.txt, self.com)
 
 class OmpLoopConstruct(BasicStmt):
     """Class representing a For loop construct."""
@@ -103,6 +108,8 @@ class OmpLoopConstruct(BasicStmt):
         """
         self.clauses = kwargs.pop('clauses')
 
+        self.txt = check_get_clauses(self, _valid_loop_clauses, self.clauses)
+
         super().__init__(**kwargs)
 
     @property
@@ -110,14 +117,7 @@ class OmpLoopConstruct(BasicStmt):
         if DEBUG:
             print("> OmpLoopConstruct: expr")
 
-        txt = ''
-        for clause in self.clauses:
-            if isinstance(clause, _valid_loop_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpLoopConstruct. Given : ', \
-                                type(clause))
-        return OMP_For_Loop(txt)
+        return OMP_For_Loop(self.txt)
 
 class OmpTaskLoopConstruct(BasicStmt):
     """Class representing a taskloop construct."""
@@ -127,6 +127,11 @@ class OmpTaskLoopConstruct(BasicStmt):
         self.clauses = kwargs.pop('clauses')
         self.name = kwargs.pop('name')
 
+        _valid_clauses = _valid_taskloop_clauses + (OmpinReduction,)
+
+        self.txt = self.name
+        self.txt += check_get_clauses(self, _valid_clauses, self.clauses)
+
         super().__init__(**kwargs)
 
     @property
@@ -134,16 +139,7 @@ class OmpTaskLoopConstruct(BasicStmt):
         if DEBUG:
             print("> OmpTaskLoopConstruct: expr")
 
-        _valid_clauses = _valid_taskloop_clauses + (OmpinReduction,)
-
-        txt = self.name
-        for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpTaskLoopConstruct. Given : ', \
-                                type(clause))
-        return OmpAnnotatedComment(txt)
+        return OmpAnnotatedComment(self.txt)
 
 class OmpTaskConstruct(BasicStmt):
     """Class representing a Task Construct """
@@ -152,13 +148,6 @@ class OmpTaskConstruct(BasicStmt):
         """
         self.clauses  = kwargs.pop('clauses')
         self.name     = kwargs.pop('name')
-
-        super().__init__(**kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpTaskConstruct: expr")
 
         _valid_clauses = (OmpPriority, \
                           OmpFinal, \
@@ -171,14 +160,17 @@ class OmpTaskConstruct(BasicStmt):
                           OmpinReduction, \
                           OmpDepend)
 
-        txt = self.name
-        for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpTaskConstruct')
+        self.txt = self.name
+        self.txt += check_get_clauses(self, _valid_clauses, self.clauses)
 
-        return OMP_Task_Construct(txt)
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpTaskConstruct: expr")
+
+        return OMP_Task_Construct(self.txt)
 
 class OmpSingleConstruct(BasicStmt):
     """Class representing a single construct."""
@@ -188,6 +180,12 @@ class OmpSingleConstruct(BasicStmt):
         self.clauses = kwargs.pop('clauses')
         self.name    = kwargs.pop('name')
 
+        _valid_clauses = (OmpPrivate,
+                          OmpFirstPrivate)
+
+        self.txt = self.name
+        self.txt += check_get_clauses(self, _valid_clauses, self.clauses)
+
         super().__init__(**kwargs)
 
     @property
@@ -195,17 +193,7 @@ class OmpSingleConstruct(BasicStmt):
         if DEBUG:
             print("> OmpSingleConstruct: expr")
 
-        _valid_clauses = (OmpPrivate, \
-                         OmpFirstPrivate)
-
-        txt = self.name
-        for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpSingleConstruct')
-
-        return OMP_Single_Construct(txt)
+        return OMP_Single_Construct(self.txt)
 
 class OmpCriticalConstruct(BasicStmt):
     """Class representing a Critical construct."""
@@ -215,6 +203,11 @@ class OmpCriticalConstruct(BasicStmt):
         self.clauses = kwargs.pop('clauses')
         self.name    = kwargs.pop('name')
 
+        _valid_clauses = (OmpCriticalName)
+
+        self.txt = self.name
+        self.txt += check_get_clauses(self, _valid_clauses, self.clauses)
+
         super().__init__(**kwargs)
 
     @property
@@ -222,22 +215,18 @@ class OmpCriticalConstruct(BasicStmt):
         if DEBUG:
             print("> OmpCriticalConstruct: expr")
 
-        _valid_clauses = (OmpCriticalName)
-
-        txt = self.name
-        for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpCriticalConstruct')
-
-        return OMP_Critical_Construct(txt)
+        return OMP_Critical_Construct(self.txt)
 
 class OmpSimdConstruct(BasicStmt):
     """Class representing a Simd construct."""
     def __init__(self, **kwargs):
+        """
+        """
         self.name = kwargs.pop('name')
         self.clauses = kwargs.pop('clauses')
+        
+        self.txt = self.name
+        self.txt += check_get_clauses(self, _valid_simd_clauses, self.clauses)
 
         super().__init__(**kwargs)
 
@@ -246,19 +235,15 @@ class OmpSimdConstruct(BasicStmt):
         if DEBUG:
             print("> OmpSimdConstruct: expr")
 
-        txt = self.name
-        for clause in self.clauses:
-            if isinstance(clause, _valid_simd_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpSimdConstruct')
-
-        return OmpAnnotatedComment(txt)
+        return OmpAnnotatedComment(self.txt)
 
 class OmpMasterConstruct(BasicStmt):
     """Class representing the master construct."""
     def __init__(self, **kwargs):
+        """
+        """
         self.name = kwargs.pop('name')
+
         super().__init__(**kwargs)
 
     @property
@@ -266,16 +251,27 @@ class OmpMasterConstruct(BasicStmt):
         if DEBUG:
             print("> OmpMasterConstruct: expr")
 
-        txt = self.name
-
-        return OMP_Master_Construct(txt)
+        return OMP_Master_Construct(self.name)
 
 class OmpMaskedConstruct(BasicStmt):
     """Class representing a Masked construct."""
     def __init__(self, **kwargs):
+        """
+        """
         self.name     = kwargs.pop('name')
         self.combined = kwargs.pop('combined', None)
         self.clauses  = kwargs.pop('clauses')
+
+        _valid_clauses = (OmpFilter,)
+        self.com = None
+        if isinstance(self.combined, OmpTaskloopSimd):
+            self.com = self.combined.expr
+            if 'simd' in self.combined.expr:
+                _valid_clauses = _valid_clauses + _valid_simd_clauses
+            _valid_clauses = _valid_clauses + _valid_taskloop_clauses
+
+        self.txt = check_get_clauses(self, _valid_clauses, self.clauses)
+
         super().__init__(**kwargs)
 
     @property
@@ -283,29 +279,18 @@ class OmpMaskedConstruct(BasicStmt):
         if DEBUG:
             print("> OmpMaskedConstruct: expr")
 
-        _valid_clauses = (OmpFilter,)
-
-        combined = None
-        if isinstance(self.combined, OmpTaskloopSimd):
-            combined = self.combined.expr
-            if 'simd' in self.combined.expr:
-                _valid_clauses = _valid_clauses + _valid_simd_clauses
-            _valid_clauses = _valid_clauses + _valid_taskloop_clauses
-        txt = ''
-        for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpMaskedConstruct')
-
-        return OMP_Masked_Construct(txt, combined)
+        return OMP_Masked_Construct(self.txt, self.com)
 
 class OmpSectionsConstruct(BasicStmt):
     """Class representing a Sections construct."""
     def __init__(self, **kwargs):
+        """
+        """
         self.name = kwargs.pop('name')
         self.clauses = kwargs.pop('clauses')
-
+        
+        self.txt = self.name
+        self.txt += check_get_clauses(self, _valid_sections_clauses, self.clauses)
         super().__init__(**kwargs)
 
     @property
@@ -313,18 +298,13 @@ class OmpSectionsConstruct(BasicStmt):
         if DEBUG:
             print("> OmpSectionsConstruct: expr")
 
-        txt = self.name
-        for clause in self.clauses:
-            if isinstance(clause, _valid_sections_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpSectionsConstruct')
-
-        return OMP_Sections_Construct(txt)
+        return OMP_Sections_Construct(self.txt)
 
 class OmpSectionConstruct(BasicStmt):
     """Class representing a Section construct."""
     def __init__(self, **kwargs):
+        """
+        """
         self.name = kwargs.pop('name')
 
         super().__init__(**kwargs)
@@ -334,14 +314,18 @@ class OmpSectionConstruct(BasicStmt):
         if DEBUG:
             print("> OmpSectionConstruct: expr")
 
-        txt = self.name
-        return OMP_Section_Construct(txt)
+        return OMP_Section_Construct(self.name)
 
 class OmpDistributeConstruct(BasicStmt):
     """Class representing a distribute construct."""
     def __init__(self, **kwargs):
+        """
+        """
         self.name = kwargs.pop('name')
         self.clauses = kwargs.pop('clauses')
+
+        self.txt = self.name
+        self.txt += check_get_clauses(self, _valid_Distribute_clauses, self.clauses)
 
         super().__init__(**kwargs)
 
@@ -350,14 +334,7 @@ class OmpDistributeConstruct(BasicStmt):
         if DEBUG:
             print("> OmpDistributeConstruct: expr")
 
-        txt = self.name
-        for clause in self.clauses:
-            if isinstance(clause, _valid_Distribute_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpDistributeConstruct')
-
-        return OmpAnnotatedComment(txt)
+        return OmpAnnotatedComment(self.txt)
 
 class OmpBarrierConstruct(BasicStmt):
     """Class representing a Barrier construct."""
@@ -365,6 +342,7 @@ class OmpBarrierConstruct(BasicStmt):
         """
         """
         self.name = kwargs.pop('name')
+
         super().__init__(**kwargs)
 
     @property
@@ -372,8 +350,7 @@ class OmpBarrierConstruct(BasicStmt):
         if DEBUG:
             print("> OmpBarrierConstruct: expr")
 
-        txt = self.name
-        return OmpAnnotatedComment(txt)
+        return OmpAnnotatedComment(self.name)
 
 class OmpTaskWaitConstruct(BasicStmt):
     """Class representing a TaskWait construct."""
@@ -381,6 +358,7 @@ class OmpTaskWaitConstruct(BasicStmt):
         """
         """
         self.name = kwargs.pop('name')
+
         super().__init__(**kwargs)
 
     @property
@@ -388,8 +366,7 @@ class OmpTaskWaitConstruct(BasicStmt):
         if DEBUG:
             print("> OmpTaskWaitConstruct: expr")
 
-        txt = self.name
-        return OmpAnnotatedComment(txt)
+        return OmpAnnotatedComment(self.name)
 
 class OmpTaskyieldConstruct(BasicStmt):
     """Class representing a Taskyield construct."""
@@ -397,6 +374,7 @@ class OmpTaskyieldConstruct(BasicStmt):
         """
         """
         self.name = kwargs.pop('name')
+
         super().__init__(**kwargs)
 
     @property
@@ -404,8 +382,7 @@ class OmpTaskyieldConstruct(BasicStmt):
         if DEBUG:
             print("> OmpTaskyieldConstruct: expr")
 
-        txt = self.name
-        return OmpAnnotatedComment(txt)
+        return OmpAnnotatedComment(self.name)
 
 class OmpFlushConstruct(BasicStmt):
     """Class representing a Flush construct."""
@@ -414,6 +391,12 @@ class OmpFlushConstruct(BasicStmt):
         """
         self.clauses  = kwargs.pop('clauses')
         self.name     = kwargs.pop('name')
+
+        _valid_clauses = (FlushList)
+
+        self.txt = self.name
+        self.txt += check_get_clauses(self, _valid_clauses, self.clauses)
+
         super().__init__(**kwargs)
 
     @property
@@ -421,15 +404,7 @@ class OmpFlushConstruct(BasicStmt):
         if DEBUG:
             print("> OmpFlushConstruct: expr")
 
-        _valid_clauses = (FlushList)
-
-        txt = self.name
-        for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
-                txt = '{0}{1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpFlushConstruct')
-        return OmpAnnotatedComment(txt)
+        return OmpAnnotatedComment(self.txt)
 
 class OmpCancelConstruct(BasicStmt):
     """Class representing a Cancel construct."""
@@ -438,6 +413,12 @@ class OmpCancelConstruct(BasicStmt):
         """
         self.clauses  = kwargs.pop('clauses')
         self.name = kwargs.pop('name')
+
+        _valid_clauses = (OmpCancelType)
+
+        self.txt = self.name
+        self.txt += check_get_clauses(self, _valid_clauses, self.clauses)
+
         super().__init__(**kwargs)
 
     @property
@@ -445,15 +426,7 @@ class OmpCancelConstruct(BasicStmt):
         if DEBUG:
             print("> OmpCancelConstruct: expr")
 
-        _valid_clauses = (OmpCancelType)
-
-        txt = self.name
-        for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpCancelConstruct')
-        return OMP_Cancel_Construct(txt)
+        return OMP_Cancel_Construct(self.txt)
 
 class OmpTargetConstruct(BasicStmt):
     """Class representing a Target construct."""
@@ -464,22 +437,15 @@ class OmpTargetConstruct(BasicStmt):
         self.name     = kwargs.pop('name')
         self.combined = kwargs.pop('combined', None)
 
-        super().__init__(**kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> OmpTargetConstruct: expr")
-
-        _valid_clauses = (OmpPrivate,\
-                          OmpLastPrivate, \
-                          OmpinReduction, \
-                          OmpDepend, \
+        _valid_clauses = (OmpPrivate,
+                          OmpLastPrivate,
+                          OmpinReduction,
+                          OmpDepend,
                           OmpMap)
 
-        combined = None
+        self.com = None
         if isinstance(self.combined, (OmpTargetParallel, OmpTargetTeams)):
-            combined = self.combined.expr
+            self.com = self.combined.expr
             if 'distribute' in self.combined.expr:
                 _valid_clauses = _valid_clauses + _valid_Distribute_clauses
             if 'parallel' in self.combined.expr:
@@ -490,15 +456,24 @@ class OmpTargetConstruct(BasicStmt):
                 _valid_clauses = _valid_clauses + _valid_loop_clauses
             if 'teams' in self.combined.expr:
                 _valid_clauses = _valid_clauses + _valid_teams_clauses
-        txt = ''
+
+        self.txt = ''
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 if isinstance(clause, OmpCopyin) and isinstance(self.combined, OmpTargetParallel):
                     raise TypeError('Wrong clause for OmpTargetConstruct')
-                txt = '{0} {1}'.format(txt, clause.expr)
+                self.txt = '{0} {1}'.format(txt, clause.expr)
             else:
                 raise TypeError('Wrong clause for OmpTargetConstruct')
-        return OMP_Target_Construct(txt, combined)
+
+        super().__init__(**kwargs)
+
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> OmpTargetConstruct: expr")
+
+        return OMP_Target_Construct(self.txt, self.com)
 
 class OmpTeamsConstruct(BasicStmt):
     """Class representing a Teams construct."""
@@ -509,6 +484,20 @@ class OmpTeamsConstruct(BasicStmt):
         self.clauses  = kwargs.pop('clauses')
         self.combined = kwargs.pop('combined', None)
 
+        _valid_clauses = _valid_teams_clauses
+
+        self.com = None
+        if isinstance(self.combined, OmpDistributeCombined):
+            self.com = self.combined.expr
+            _valid_clauses = _valid_clauses + _valid_Distribute_clauses
+            if 'simd' in self.combined.expr:
+                _valid_clauses = _valid_clauses + _valid_simd_clauses
+            if 'parallel' in self.combined.expr:
+                _valid_clauses = _valid_clauses + _valid_parallel_clauses
+                _valid_clauses = _valid_clauses + _valid_loop_clauses
+
+        self.txt = check_get_clauses(self, _valid_clauses, self.clauses)
+
         super().__init__(**kwargs)
 
     @property
@@ -516,24 +505,7 @@ class OmpTeamsConstruct(BasicStmt):
         if DEBUG:
             print("> OmpTeamsConstruct: expr")
 
-        _valid_clauses = _valid_teams_clauses
-
-        combined = None
-        if isinstance(self.combined, OmpDistributeCombined):
-            combined = self.combined.expr
-            _valid_clauses = _valid_clauses + _valid_Distribute_clauses
-            if 'simd' in self.combined.expr:
-                _valid_clauses = _valid_clauses + _valid_simd_clauses
-            if 'parallel' in self.combined.expr:
-                _valid_clauses = _valid_clauses + _valid_parallel_clauses
-                _valid_clauses = _valid_clauses + _valid_loop_clauses
-        txt = ''
-        for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpTeamsConstruct')
-        return OMP_Teams_Construct(txt, combined)
+        return OMP_Teams_Construct(self.txt, self.com)
 
 class OmpAtomicConstruct(BasicStmt):
     """Class representing an Atomic construct ."""
@@ -542,6 +514,12 @@ class OmpAtomicConstruct(BasicStmt):
         """
         self.name     = kwargs.pop('name')
         self.clauses  = kwargs.pop('clauses')
+        
+        _valid_clauses = (OmpAtomicClause,
+                           AtomicMemoryClause)
+        
+        self.txt = self.name
+        self.txt += check_get_clauses(self, _valid_clauses, self.clauses)
 
         super().__init__(**kwargs)
 
@@ -550,16 +528,7 @@ class OmpAtomicConstruct(BasicStmt):
         if DEBUG:
             print("> OmpAtomicConstruct: expr")
 
-        _valid_clauses = (OmpAtomicClause, \
-                          AtomicMemoryClause)
-
-        txt = self.name
-        for clause in self.clauses:
-            if isinstance(clause, _valid_clauses):
-                txt = '{0} {1}'.format(txt, clause.expr)
-            else:
-                raise TypeError('Wrong clause for OmpAtomicConstruct')
-        return OmpAnnotatedComment(txt)
+        return OmpAnnotatedComment(self.txt)
 
 class OmpEndClause(BasicStmt):
     """Class representing an end construct."""
@@ -570,6 +539,9 @@ class OmpEndClause(BasicStmt):
         self.simd      = kwargs.pop('simd', '')
         self.nowait    = kwargs.pop('nowait', '')
 
+        construct = ' '.join(self.construct)
+        self.txt = 'end {0} {1} {2}'.format(construct, self.simd, self.nowait)
+
         super().__init__(**kwargs)
 
     @property
@@ -577,9 +549,7 @@ class OmpEndClause(BasicStmt):
         if DEBUG:
             print("> OmpEndClause: expr")
 
-        construct = ' '.join(self.construct)
-        txt = 'end {0} {1} {2}'.format(construct, self.simd, self.nowait)
-        return Omp_End_Clause(txt)
+        return Omp_End_Clause(self.txt)
 
 class OmpFinal(BasicStmt):
     """Class representing a final clause"""
