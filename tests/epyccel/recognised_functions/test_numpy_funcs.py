@@ -3929,19 +3929,22 @@ def test_numpy_int(language):
 
     import numpy as np
 
-    bl = np.bool(randint(1e6))
-    integer = randint(1e6)
-    integer8 = np.int8(randint(0, 127))
-    integer16 = np.int16(randint(1e6))
-    integer32 = np.int32(randint(1e6))
-    integer64 = np.int64(randint(1e6))
-    fl = np.float(randint(1e6))
-    fl32 = np.float32(randint(1e6))
-    fl64 = np.float64(randint(1e6))
+    if sys.platform == 'win32':
+        integer = randint(-2147483648, 2147483647)
+    else:
+        integer = randint(-9223372036854775808, 9223372036854775807)
+    integer8 = np.int8(randint(-128, 127))
+    integer16 = np.int16(randint(-32768, 32767))
+    integer32 = np.int32(randint(-2147483648, 2147483647))
+    integer64 = np.int64(randint(-9223372036854775808, 9223372036854775807))
+    fl = np.float(randint(-2147483648, 2147483647))
+    fl32 = np.float32(randint(-2147483648, 2147483647))
+    fl64 = np.float64(randint(-9223372036854775808, 9223372036854775807))
 
     f_bl = epyccel(test_bool_int, language=language)
 
-    assert (f_bl(bl) == test_bool_int(bl))
+    assert (f_bl(True) == test_bool_int(True))
+    assert (f_bl(False) == test_bool_int(False))
 
     f_integer = epyccel(test_int_int, language=language)
     f_integer8 = epyccel(test_int8_int, language=language)
@@ -4021,19 +4024,22 @@ def test_numpy_int32(language):
 
     import numpy as np
 
-    bl = np.bool(randint(1e6))
-    integer = randint(1e6)
-    integer8 = np.int8(randint(0, 127))
-    integer16 = np.int16(randint(1e6))
-    integer32 = np.int32(randint(1e6))
-    integer64 = np.int64(randint(1e6))
-    fl = np.float(randint(1e6))
-    fl32 = np.float32(randint(1e6))
-    fl64 = np.float64(randint(1e6))
+    if sys.platform == 'win32':
+        integer = randint(-2147483648, 2147483647)
+    else:
+        integer = randint(-9223372036854775808, 9223372036854775807)
+    integer8 = np.int8(randint(-128, 127))
+    integer16 = np.int16(randint(-32768, 32767))
+    integer32 = np.int32(randint(-2147483648, 2147483647))
+    integer64 = np.int64(randint(-9223372036854775808, 9223372036854775807))
+    fl = np.float(randint(-2147483648, 2147483647))
+    fl32 = np.float32(randint(-2147483648, 2147483647))
+    fl64 = np.float64(randint(-9223372036854775808, 9223372036854775807))
 
     f_bl = epyccel(test_bool_int32, language=language)
 
-    assert (f_bl(bl) == test_bool_int32(bl))
+    assert (f_bl(True) == test_bool_int32(True))
+    assert (f_bl(False) == test_bool_int32(False))
 
     f_integer = epyccel(test_int_int32, language=language)
     f_integer8 = epyccel(test_int8_int32, language=language)
@@ -4113,19 +4119,22 @@ def test_numpy_int64(language):
 
     import numpy as np
 
-    bl = np.bool(randint(1e6))
-    integer = randint(1e6)
-    integer8 = np.int8(randint(0, 127))
-    integer16 = np.int16(randint(1e6))
-    integer32 = np.int32(randint(1e6))
-    integer64 = np.int64(randint(1e6))
-    fl = np.float(randint(1e6))
-    fl32 = np.float32(randint(1e6))
-    fl64 = np.float64(randint(1e6))
+    if sys.platform == 'win32':
+        integer = randint(-2147483648, 2147483647)
+    else:
+        integer = randint(-9223372036854775808, 9223372036854775807)
+    integer8 = np.int8(randint(-128, 127))
+    integer16 = np.int16(randint(-32768, 32767))
+    integer32 = np.int32(randint(-2147483648, 2147483647))
+    integer64 = np.int64(randint(-9223372036854775808, 9223372036854775807))
+    fl = np.float(randint(-2147483648, 2147483647))
+    fl32 = np.float32(randint(-2147483648, 2147483647))
+    fl64 = np.float64(randint(-9223372036854775808, 9223372036854775807))
 
     f_bl = epyccel(test_bool_int64, language=language)
 
-    assert (f_bl(bl) == test_bool_int64(bl))
+    assert (f_bl(True) == test_bool_int64(True))
+    assert (f_bl(False) == test_bool_int64(False))
 
     f_integer = epyccel(test_int_int64, language=language)
     f_integer8 = epyccel(test_int8_int64, language=language)
@@ -4206,19 +4215,22 @@ def test_numpy_float(language):
 
     import numpy as np
 
-    bl = np.bool(randint(1e6))
-    integer = randint(1e6)
-    integer8 = np.int8(randint(0, 127))
-    integer16 = np.int16(randint(1e6))
-    integer32 = np.int32(randint(1e6))
-    integer64 = np.int64(randint(1e6))
-    fl = np.float(randint(1e6))
-    fl32 = np.float32(randint(1e6))
-    fl64 = np.float64(randint(1e6))
+    if sys.platform == 'win32':
+        integer = randint(-2147483648, 2147483647)
+    else:
+        integer = randint(-9223372036854775808, 9223372036854775807)
+    integer8 = np.int8(randint(-128, 127))
+    integer16 = np.int16(randint(-32768, 32767))
+    integer32 = np.int32(randint(-2147483648, 2147483647))
+    integer64 = np.int64(randint(-9223372036854775808, 9223372036854775807))
+    fl = np.float(randint(-2147483648, 2147483647))
+    fl32 = np.float32(randint(-2147483648, 2147483647))
+    fl64 = np.float64(randint(-9223372036854775808, 9223372036854775807))
 
     f_bl = epyccel(test_bool_float, language=language)
 
-    assert (f_bl(bl) == test_bool_float(bl))
+    assert (f_bl(True) == test_bool_float(True))
+    assert (f_bl(False) == test_bool_float(False))
 
     f_integer = epyccel(test_int_float, language=language)
     f_integer8 = epyccel(test_int8_float, language=language)
@@ -4298,19 +4310,22 @@ def test_numpy_float32(language):
 
     import numpy as np
 
-    bl = np.bool(randint(1e6))
-    integer = randint(1e6)
-    integer8 = np.int8(randint(0, 127))
-    integer16 = np.int16(randint(1e6))
-    integer32 = np.int32(randint(1e6))
-    integer64 = np.int64(randint(1e6))
-    fl = np.float(randint(1e6))
-    fl32 = np.float32(randint(1e6))
-    fl64 = np.float64(randint(1e6))
+    if sys.platform == 'win32':
+        integer = randint(-2147483648, 2147483647)
+    else:
+        integer = randint(-9223372036854775808, 9223372036854775807)
+    integer8 = np.int8(randint(-128, 127))
+    integer16 = np.int16(randint(-32768, 32767))
+    integer32 = np.int32(randint(-2147483648, 2147483647))
+    integer64 = np.int64(randint(-9223372036854775808, 9223372036854775807))
+    fl = np.float(randint(-2147483648, 2147483647))
+    fl32 = np.float32(randint(-2147483648, 2147483647))
+    fl64 = np.float64(randint(-9223372036854775808, 9223372036854775807))
 
     f_bl = epyccel(test_bool_float32, language=language)
 
-    assert (f_bl(bl) == test_bool_float32(bl))
+    assert (f_bl(True) == test_bool_float32(True))
+    assert (f_bl(False) == test_bool_float32(False))
 
     f_integer = epyccel(test_int_float32, language=language)
     f_integer8 = epyccel(test_int8_float32, language=language)
@@ -4390,19 +4405,22 @@ def test_numpy_float64(language):
 
     import numpy as np
 
-    bl = np.bool(randint(1e6))
-    integer = randint(1e6)
-    integer8 = np.int8(randint(0, 127))
-    integer16 = np.int16(randint(1e6))
-    integer32 = np.int32(randint(1e6))
-    integer64 = np.int64(randint(1e6))
-    fl = np.float(randint(1e6))
-    fl32 = np.float32(randint(1e6))
-    fl64 = np.float64(randint(1e6))
+    if sys.platform == 'win32':
+        integer = randint(-2147483648, 2147483647)
+    else:
+        integer = randint(-9223372036854775808, 9223372036854775807)
+    integer8 = np.int8(randint(-128, 127))
+    integer16 = np.int16(randint(-32768, 32767))
+    integer32 = np.int32(randint(-2147483648, 2147483647))
+    integer64 = np.int64(randint(-9223372036854775808, 9223372036854775807))
+    fl = np.float(randint(-2147483648, 2147483647))
+    fl32 = np.float32(randint(-2147483648, 2147483647))
+    fl64 = np.float64(randint(-9223372036854775808, 9223372036854775807))
 
     f_bl = epyccel(test_bool_float64, language=language)
 
-    assert (f_bl(bl) == test_bool_float64(bl))
+    assert (f_bl(True) == test_bool_float64(True))
+    assert (f_bl(False) == test_bool_float64(False))
 
     f_integer = epyccel(test_int_float64, language=language)
     f_integer8 = epyccel(test_int8_float64, language=language)
@@ -4482,19 +4500,22 @@ def test_numpy_double(language):
 
     import numpy as np
 
-    bl = np.bool(randint(1e6))
-    integer = randint(1e6)
-    integer8 = np.int8(randint(0, 127))
-    integer16 = np.int16(randint(1e6))
-    integer32 = np.int32(randint(1e6))
-    integer64 = np.int64(randint(1e6))
-    fl = np.float(randint(1e6))
-    fl32 = np.float32(randint(1e6))
-    fl64 = np.float64(randint(1e6))
+    if sys.platform == 'win32':
+        integer = randint(-2147483648, 2147483647)
+    else:
+        integer = randint(-9223372036854775808, 9223372036854775807)
+    integer8 = np.int8(randint(-128, 127))
+    integer16 = np.int16(randint(-32768, 32767))
+    integer32 = np.int32(randint(-2147483648, 2147483647))
+    integer64 = np.int64(randint(-9223372036854775808, 9223372036854775807))
+    fl = np.float(randint(-2147483648, 2147483647))
+    fl32 = np.float32(randint(-2147483648, 2147483647))
+    fl64 = np.float64(randint(-9223372036854775808, 9223372036854775807))
 
     f_bl = epyccel(test_bool_double, language=language)
 
-    assert (f_bl(bl) == test_bool_double(bl))
+    assert (f_bl(True) == test_bool_double(True))
+    assert (f_bl(False) == test_bool_double(False))
 
     f_integer = epyccel(test_int_double, language=language)
     f_integer8 = epyccel(test_int8_double, language=language)
@@ -4574,19 +4595,22 @@ def test_numpy_complex64(language):
 
     import numpy as np
 
-    bl = np.bool(randint(1e6))
-    integer = randint(1e6)
-    integer8 = np.int8(randint(0, 127))
-    integer16 = np.int16(randint(1e6))
-    integer32 = np.int32(randint(1e6))
-    integer64 = np.int64(randint(1e6))
-    fl = np.float(randint(1e6))
-    fl32 = np.float32(randint(1e6))
-    fl64 = np.float64(randint(1e6))
+    if sys.platform == 'win32':
+        integer = randint(-2147483648, 2147483647)
+    else:
+        integer = randint(-9223372036854775808, 9223372036854775807)
+    integer8 = np.int8(randint(-128, 127))
+    integer16 = np.int16(randint(-32768, 32767))
+    integer32 = np.int32(randint(-2147483648, 2147483647))
+    integer64 = np.int64(randint(-9223372036854775808, 9223372036854775807))
+    fl = np.float(randint(-2147483648, 2147483647))
+    fl32 = np.float32(randint(-2147483648, 2147483647))
+    fl64 = np.float64(randint(-9223372036854775808, 9223372036854775807))
 
     f_bl = epyccel(test_bool_complex64, language=language)
 
-    assert (f_bl(bl) == test_bool_complex64(bl))
+    assert (f_bl(True) == test_bool_complex64(True))
+    assert (f_bl(False) == test_bool_complex64(False))
 
     f_integer = epyccel(test_int_complex64, language=language)
     f_integer8 = epyccel(test_int8_complex64, language=language)
@@ -4666,19 +4690,22 @@ def test_numpy_complex128(language):
 
     import numpy as np
 
-    bl = np.bool(randint(1e6))
-    integer = randint(1e6)
-    integer8 = np.int8(randint(0, 127))
-    integer16 = np.int16(randint(1e6))
-    integer32 = np.int32(randint(1e6))
-    integer64 = np.int64(randint(1e6))
-    fl = np.float(randint(1e6))
-    fl32 = np.float32(randint(1e6))
-    fl64 = np.float64(randint(1e6))
+    if sys.platform == 'win32':
+        integer = randint(-2147483648, 2147483647)
+    else:
+        integer = randint(-9223372036854775808, 9223372036854775807)
+    integer8 = np.int8(randint(-128, 127))
+    integer16 = np.int16(randint(-32768, 32767))
+    integer32 = np.int32(randint(-2147483648, 2147483647))
+    integer64 = np.int64(randint(-9223372036854775808, 9223372036854775807))
+    fl = np.float(randint(-2147483648, 2147483647))
+    fl32 = np.float32(randint(-2147483648, 2147483647))
+    fl64 = np.float64(randint(-9223372036854775808, 9223372036854775807))
 
     f_bl = epyccel(test_bool_complex128, language=language, verbose=True)
 
-    assert (f_bl(bl) == test_bool_complex128(bl))
+    assert (f_bl(True) == test_bool_complex128(True))
+    assert (f_bl(False) == test_bool_complex128(False))
 
     f_integer = epyccel(test_int_complex128, language=language)
     f_integer8 = epyccel(test_int8_complex128, language=language)
