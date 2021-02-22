@@ -47,7 +47,7 @@ OmpSingleConstruct:     name='single'     clauses*=AllOmpClauses;
 OmpCriticalConstruct:   name='critical'   clauses*=AllOmpClauses;
 OmpMaskedConstruct:     name='masked'     combined=MaskedCombined? clauses*=AllOmpClauses;
 OmpSimdConstruct:       name='simd'       clauses*=AllOmpClauses;
-OmpAtomicConstruct:     name='atomic'     clauses*=AllOmpClauses; // Not all clause were added (cant test them).
+OmpAtomicConstruct:     name='atomic'     clauses*=AllOmpClauses; // Not all clauses were added (can't test them).
 OmpTaskConstruct:       name='task'       clauses*=AllOmpClauses;
 OmpCancelConstruct:     name='cancel'     clauses*=OmpCancelType;
 OmpTargetConstruct:     name='target'     combined=TargetCombined? clauses*=AllOmpClauses;
