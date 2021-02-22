@@ -416,23 +416,8 @@ def Shape(arg):
 
 #==============================================================================
 
-class NumpyReal(PythonReal):
-    """Represents a call to  numpy.real for code generation.
-
-    > a = 1+2j
-    > np.real(a)
-    1.0
-    """
-    def __init__(self, arg):
-        super().__init__(arg)
-        self._precision = arg.precision
-        self._shape = process_shape(self.internal_var.shape)
-        self._rank  = len(self._shape)
-
-#==============================================================================
-
 class NumpyImag(PythonImag):
-    """Represents a call to  numpy.real for code generation.
+    """Represents a call to  numpy.imag for code generation.
 
     > a = 1+2j
     > np.imag(a)
