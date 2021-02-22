@@ -74,3 +74,21 @@ PyObject	*Bool_to_PyBool(bool b)
 
 	return b == true ? PyTrue : PyFalse;
 }
+
+
+/*  CHECK FUNCTION  */
+
+bool	PyArray_Check(PyArrayObject *a, int rank, int dtype)
+{
+	char	*error;
+
+	if (PyArray_NDIM(a) != rank)
+	{
+		PyErr_SetString(PyExc_TypeError, "\"x_tmp must have rank \"");
+		return 0;
+	}
+	else if(PyArray_TYPE(a) != dtype)
+	{
+		return 0;
+	}
+}

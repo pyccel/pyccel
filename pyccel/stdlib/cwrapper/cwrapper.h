@@ -23,5 +23,9 @@ PyObject	*Complex64_to_PyComplex(float complex c);
 PyObject	*Complex128_to_PyComplex(double complex c);
 PyObject	*Bool_to_PyBool(bool b);
 
+/* CHECK FUNCTIONS */
+
+
+bool	PyArray_Check(PyArrayObject *a, int rank, int dtype);
 
 #endif
