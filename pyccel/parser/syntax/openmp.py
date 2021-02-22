@@ -240,7 +240,7 @@ class OmpSimdConstruct(BasicStmt):
         """
         self.name = kwargs.pop('name')
         self.clauses = kwargs.pop('clauses')
-        
+
         txt = self.name
         txt += check_get_clauses(self, _valid_simd_clauses, self.clauses)
 
@@ -310,7 +310,7 @@ class OmpSectionsConstruct(BasicStmt):
         """
         self.name = kwargs.pop('name')
         self.clauses = kwargs.pop('clauses')
-        
+
         txt = self.name
         txt += check_get_clauses(self, _valid_sections_clauses, self.clauses)
 
@@ -557,10 +557,10 @@ class OmpAtomicConstruct(BasicStmt):
         """
         self.name     = kwargs.pop('name')
         self.clauses  = kwargs.pop('clauses')
-        
+
         _valid_clauses = (OmpAtomicClause,
                            AtomicMemoryClause)
-        
+
         txt = self.name
         txt += check_get_clauses(self, _valid_clauses, self.clauses)
 
