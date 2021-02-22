@@ -33,6 +33,8 @@ from pyccel.ast.literals  import Nil
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 
+from pyccel.ast.utilities import expand_to_loops
+
 from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
 from pyccel.ast.variable import DottedName
@@ -250,17 +252,17 @@ class CCodePrinter(CodePrinter):
         'dereference': set()
     }
 
-    def __init__(self, parser, settings=None):
+    def __init__(self, parser, **settings):
 
         if parser.filename:
             errors.set_target(parser.filename, 'file')
 
-        prefix_module = None if settings is None else settings.pop('prefix_module', None)
+        prefix_module = settings.pop('prefix_module', None)
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
-        userfuncs = {} if settings is None else settings.get('user_functions', {})
+        userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
-        self._dereference = set([] if settings is None else settings.get('dereference', []))
+        self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
         self._additional_imports = set(['stdlib'])
         self._parser = parser
@@ -443,11 +445,8 @@ class CCodePrinter(CodePrinter):
         value = self._print(expr.arg)
         return '({} != 0)'.format(value)
 
-    def _print_LiteralInteger(self, expr):
-        return str(expr.p)
-
-    def _print_LiteralFloat(self, expr):
-        return CodePrinter._print_Float(self, expr)
+    def _print_Literal(self, expr):
+        return repr(expr.python_value)
 
     def _print_LiteralComplex(self, expr):
         if expr.real == LiteralFloat(0):
@@ -517,7 +516,7 @@ class CCodePrinter(CodePrinter):
             var = self._print(e)
             if i == 0:
                 lines.append("if (%s)\n{" % self._print(c))
-            elif i == len(expr.blocks) - 1 and c is LiteralTrue():
+            elif i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
                 lines.append("else\n{")
             else:
                 lines.append("else if (%s)\n{" % self._print(c))
@@ -1331,13 +1330,15 @@ class CCodePrinter(CodePrinter):
                 stop=stop, step=step, body=body)
 
     def _print_CodeBlock(self, expr):
-        body = []
-        for b in expr.body :
+        body_exprs, new_vars = expand_to_loops(expr, self._parser.get_new_variable, language_has_vectors = False)
+        self._additional_declare.extend(new_vars)
+        body_stmts = []
+        for b in body_exprs :
             code = self._print(b)
             code = self._additional_code + code
             self._additional_code = ''
-            body.append(code)
-        return '\n'.join(self._print(b) for b in body)
+            body_stmts.append(code)
+        return '\n'.join(self._print(b) for b in body_stmts)
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
@@ -1555,4 +1556,4 @@ def ccode(expr, parser, assign_to=None, **settings):
         For example, if ``dereference=[a]``, the resulting code would print
         ``(*a)`` instead of ``a``.
     """
-    return CCodePrinter(parser, settings).doprint(expr, assign_to)
+    return CCodePrinter(parser, **settings).doprint(expr, assign_to)

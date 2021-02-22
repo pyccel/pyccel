@@ -6,11 +6,9 @@
 #------------------------------------------------------------------------------------------#
 
 from .basic import Basic
-from sympy.core.expr  import AtomicExpr
 
 __all__ = (
     'FunctionalFor',
-    'FunctionalMap',
     'FunctionalMax',
     'FunctionalMin',
     'FunctionalSum',
@@ -59,24 +57,27 @@ class FunctionalFor(Basic):
         return self._index
 
 #==============================================================================
-class GeneratorComprehension(AtomicExpr, Basic):
-    _attribute_nodes = ()
+class GeneratorComprehension(FunctionalFor):
+    """ Super class for all functions which reduce generator expressions to scalars
+    """
 
 #==============================================================================
-class FunctionalSum(GeneratorComprehension, FunctionalFor):
-    _attribute_nodes = FunctionalFor._attribute_nodes
+class FunctionalSum(GeneratorComprehension):
+    """ Represents a call to sum for a list argument
+    >>> sum([i in range(5)])
+    """
     name = 'sum'
 
 #==============================================================================
-class FunctionalMax(GeneratorComprehension, FunctionalFor):
-    _attribute_nodes = FunctionalFor._attribute_nodes
+class FunctionalMax(GeneratorComprehension):
+    """ Represents a call to max for a list argument
+    >>> max([i in range(5)])
+    """
     name = 'max'
 #==============================================================================
 
-class FunctionalMin(GeneratorComprehension, FunctionalFor):
-    _attribute_nodes = FunctionalFor._attribute_nodes
+class FunctionalMin(GeneratorComprehension):
+    """ Represents a call to min for a list argument
+    >>> min([i in range(5)])
+    """
     name = 'min'
-
-#==============================================================================
-class FunctionalMap(GeneratorComprehension, FunctionalFor):
-    _attribute_nodes = FunctionalFor._attribute_nodes

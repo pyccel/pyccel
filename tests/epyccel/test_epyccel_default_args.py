@@ -20,14 +20,14 @@ def test_f1(language):
     assert f() == f1()
     # ...
 #------------------------------------------------------------------------------
-def test_f2():
+def test_f2(language):
     @types('real [:]', 'int')
     def f5(x, m1 = 2):
         x[:] = 0.
         for i in range(0, m1):
             x[i] = i * 1.
 
-    f = epyccel(f5)
+    f = epyccel(f5, language=language)
 
     # ...
     m1 = 3
