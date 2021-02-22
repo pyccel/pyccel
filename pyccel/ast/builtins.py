@@ -16,7 +16,7 @@ from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric, default_precision)
 from .internals import PyccelInternalFunction
-from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, LiteralFalse, Nil
+from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot

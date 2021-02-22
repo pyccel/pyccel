@@ -22,7 +22,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
 from .internals      import PyccelInternalFunction
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
-from .literals       import LiteralTrue
+from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
 from .operators      import broadcast, PyccelMinus, PyccelDiv
