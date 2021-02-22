@@ -39,3 +39,38 @@ bool			PyBool_to_Bool(Pyobject *o)
 
     return b;
 }
+
+// C to Python
+
+PyObject	*Complex64_to_PyComplex(float complex c)
+{
+	float		real_part;
+	float		imag_part;
+	PyObject	*o;
+
+	real_part = creal(c);
+	imag_part = cimag(c);
+	o = PyComplex_FromDouble((double)real_part, (double)imag_part);
+
+	return o;
+}
+
+PyObject	*Complex64_to_PyComplex(double complex c)
+{
+	double		real_part;
+	double		imag_part;
+	PyObject	*o;
+
+	real_part = creal(c);
+	imag_part = cimag(c);
+	o = PyComplex_FromDouble(real_part, imag_part);
+
+	return o;
+}
+
+PyObject	*Bool_to_PyBool(bool b)
+{
+	PyObject	*o;
+
+	return b == true ? PyTrue : PyFalse;
+}
