@@ -149,15 +149,15 @@ class OmpTaskConstruct(BasicStmt):
         self.clauses  = kwargs.pop('clauses')
         self.name     = kwargs.pop('name')
 
-        _valid_clauses = (OmpPriority, \
-                          OmpFinal, \
-                          OmpDefault, \
-                          OmpPrivate, \
-                          OmpShared, \
-                          OmpFirstPrivate, \
-                          OmpUntied, \
-                          OmpMergeable, \
-                          OmpinReduction, \
+        _valid_clauses = (OmpPriority,
+                          OmpFinal,
+                          OmpDefault,
+                          OmpPrivate,
+                          OmpShared,
+                          OmpFirstPrivate,
+                          OmpUntied,
+                          OmpMergeable,
+                          OmpinReduction,
                           OmpDepend)
 
         self.txt = self.name
@@ -1264,58 +1264,58 @@ class OmpTargetTeams(BasicStmt):
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
 
-_valid_teams_clauses = (OmpPrivate,\
-                        OmpLastPrivate, \
-                        OmpShared, \
-                        OmpReduction, \
-                        OmpNumTeams, \
+_valid_teams_clauses = (OmpPrivate,
+                        OmpLastPrivate,
+                        OmpShared,
+                        OmpReduction,
+                        OmpNumTeams,
                         OmpThreadLimit)
 
-_valid_sections_clauses = (OmpPrivate, \
-                           OmpFirstPrivate, \
-                           OmpLastPrivate, \
+_valid_sections_clauses = (OmpPrivate,
+                           OmpFirstPrivate,
+                           OmpLastPrivate,
                            OmpReduction)
 
-_valid_Distribute_clauses = (OmpPrivate, \
-                             OmpFirstPrivate, \
-                             OmpLastPrivate, \
+_valid_Distribute_clauses = (OmpPrivate,
+                             OmpFirstPrivate,
+                             OmpLastPrivate,
                              OmpCollapse)
 
-_valid_simd_clauses = (OmpLinear, \
-                       OmpReduction, \
-                       OmpCollapse, \
+_valid_simd_clauses = (OmpLinear,
+                       OmpReduction,
+                       OmpCollapse,
                        OmpLastPrivate)
 
-_valid_taskloop_clauses = (OmpShared, \
-                           OmpPrivate, \
-                           OmpFirstPrivate, \
-                           OmpLastPrivate, \
-                           OmpReduction, \
-                           OmpinReduction, \
-                           OmpNumTasks, \
-                           OmpGrainSize, \
-                           OmpCollapse, \
-                           OmpUntied, \
-                           OmpMergeable, \
-                           OmpNogroup, \
+_valid_taskloop_clauses = (OmpShared,
+                           OmpPrivate,
+                           OmpFirstPrivate,
+                           OmpLastPrivate,
+                           OmpReduction,
+                           OmpinReduction,
+                           OmpNumTasks,
+                           OmpGrainSize,
+                           OmpCollapse,
+                           OmpUntied,
+                           OmpMergeable,
+                           OmpNogroup,
                            OmpPriority)
 
-_valid_loop_clauses = (OmpPrivate, \
-                       OmpFirstPrivate, \
-                       OmpLastPrivate, \
-                       OmpReduction, \
-                       OmpSchedule, \
-                       OmpCollapse, \
-                       OmpLinear, \
+_valid_loop_clauses = (OmpPrivate,
+                       OmpFirstPrivate,
+                       OmpLastPrivate,
+                       OmpReduction,
+                       OmpSchedule,
+                       OmpCollapse,
+                       OmpLinear,
                        OmpOrdered)
 
-_valid_parallel_clauses = (OmpNumThread, \
-                           OmpDefault, \
-                           OmpPrivate, \
-                           OmpShared, \
-                           OmpFirstPrivate, \
-                           OmpCopyin, \
-                           OmpReduction, \
+_valid_parallel_clauses = (OmpNumThread,
+                           OmpDefault,
+                           OmpPrivate,
+                           OmpShared,
+                           OmpFirstPrivate,
+                           OmpCopyin,
+                           OmpReduction,
                            OmpProcBind)
 
 omp_directives = [OmpParallelConstruct,
