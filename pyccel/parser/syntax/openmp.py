@@ -60,7 +60,8 @@ def check_get_clauses(name, valid_clauses, clauses):
         if isinstance(clause, valid_clauses):
             txt = '{0} {1}'.format(txt, clause.expr)
         else:
-            raise TypeError('Wrong clause', type(clause).__name__,'for', type(name).__name__)
+            msg = 'Wrong clause ' + type(clause).__name__ + ' for ', type(name).__name__
+            raise TypeError(msg)
     return txt
 
 class OmpParallelConstruct(BasicStmt):
@@ -73,24 +74,26 @@ class OmpParallelConstruct(BasicStmt):
 
         _valid_clauses = _valid_parallel_clauses
 
-        self.com = None
+        com = None
         if isinstance(self.combined, OmpForSimd):
             _valid_clauses = _valid_clauses + _valid_loop_clauses
             if 'simd' in self.combined.expr:
                 _valid_clauses = _valid_clauses + _valid_simd_clauses
-            self.com = self.combined.expr
+            com = self.combined.expr
         if isinstance(self.combined, OmpMaskedTaskloop):
             _valid_clauses = _valid_clauses + (OmpFilter,)
             if 'simd' in self.combined.expr:
                 _valid_clauses = _valid_clauses + _valid_simd_clauses
             if 'taskloop' in self.combined.expr:
                 _valid_clauses = _valid_clauses + _valid_taskloop_clauses
-            self.com = self.combined.expr
+            com = self.combined.expr
         if isinstance(self.combined, OmpPSections):
             _valid_clauses = _valid_clauses + _valid_sections_clauses
             self.com = self.combined.expr
 
-        self.txt = check_get_clauses(self, _valid_clauses, self.clauses)
+        txt = check_get_clauses(self, _valid_clauses, self.clauses)
+
+        self._expr = OMP_Parallel_Construct(txt, com)
 
         super().__init__(**kwargs)
 
@@ -99,7 +102,7 @@ class OmpParallelConstruct(BasicStmt):
         if DEBUG:
             print("> OmpParallelConstruct: expr")
 
-        return OMP_Parallel_Construct(self.txt, self.com)
+        return self._expr
 
 class OmpLoopConstruct(BasicStmt):
     """Class representing a For loop construct."""
