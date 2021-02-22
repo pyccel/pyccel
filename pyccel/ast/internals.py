@@ -182,7 +182,6 @@ class PyccelSymbol(str, Immutable):
     >>> x = PyccelSymbol('x')
     x
     """
-    _is_temp = False
 
     def __new__(cls, name, is_temp=False):
         return super().__new__(cls, name)
