@@ -3878,7 +3878,7 @@ def test_numpy_real_array_like_2d(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="cimage for arrays not implemented yet"),
             pytest.mark.c]
         )
     )
