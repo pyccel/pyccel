@@ -3945,27 +3945,32 @@ def test_numpy_imag_scalar(language):
 
     import numpy as np
 
-    integer = randint(1e6)
-    bl = np.bool(randint(1e5))
-    integer8 = np.int8(randint(0, 127))
-    integer16 = np.int16(randint(1e6))
-    integer32 = np.int32(randint(1e6))
-    integer64 = np.int64(randint(1e6))
-    fl = np.float(randint(1e6))
-    fl32 = np.float32(randint(1e6))
-    fl64 = np.float64(randint(1e6))
+    if sys.platform == 'win32':
+        integer = randint(-2147483648, 2147483647)
+    else:
+        integer = randint(-9223372036854775808, 9223372036854775807)
+    integer8 = np.int8(randint(-128, 127))
+    integer16 = np.int16(randint(-32768, 32767))
+    integer32 = np.int32(randint(-2147483648, 2147483647))
+    integer64 = np.int64(randint(-9223372036854775808, 9223372036854775807))
+    fl = np.float(randint(-2147483648, 2147483647))
+    fl32 = np.float32(randint(-2147483648, 2147483647))
+    fl64 = np.float64(randint(-9223372036854775808, 9223372036854775807))
     cmplx64 = np.complex64(1+5j)
     cmplx128 = np.complex128(1+5j)
 
     f_bl = epyccel(test_bool, language=language)
-    f_bl = epyccel(test_bool, language=language)
 
-    f_bl_output = f_bl(bl)
-    test_bool_output = test_bool(bl)
+    f_bl_true_output = f_bl(True)
+    test_bool_true_output = test_bool(True)
 
-    assert f_bl_output == test_bool_output
+    f_bl_false_output = f_bl(False)
+    test_bool_false_output = test_bool(False)
 
-    assert (type(f_bl_output) == type(test_bool_output))
+    assert f_bl_true_output == test_bool_true_output
+    assert f_bl_false_output == test_bool_false_output
+
+    assert (type(f_bl_true_output) == type(test_bool_false_output))
 
     f_integer = epyccel(test_int, language=language)
     f_integer8 = epyccel(test_int8, language=language)
