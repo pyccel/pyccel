@@ -3878,7 +3878,7 @@ def test_numpy_real_array_like_2d(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="cimage for arrays not implemented yet"),
+            pytest.mark.skip(reason="Cimage is not supporting arrays yet"),
             pytest.mark.c]
         )
     )
@@ -3963,6 +3963,8 @@ def test_numpy_imag_scalar(language):
     fl = np.float(randint(1e6))
     fl32 = np.float32(randint(1e6))
     fl64 = np.float64(randint(1e6))
+    cmplx64 = np.complex64(1+5j)
+    cmplx128 = np.complex128(1+5j)
 
     f_bl = epyccel(test_bool, language=language)
     f_bl = epyccel(test_bool, language=language)
@@ -4035,17 +4037,17 @@ def test_numpy_imag_scalar(language):
     f_complex64 = epyccel(test_complex64, language=language)
     f_complex128 = epyccel(test_complex128, language=language)
 
-    f_complex64_output = f_complex64(1+5j)
-    test_complex64_output = test_complex64(1+5j)
+    f_complex64_output = f_complex64(cmplx64)
+    test_complex64_output = test_complex64(cmplx64)
 
     assert f_complex64_output == test_complex64_output
-    assert (type(f_complex64_output) == type(test_complex64_output))
+    assert (type(f_complex64_output) == type(test_complex64_output.item()))
 
-    f_complex128_output = f_complex128(1+5j)
-    test_complex128_output = test_complex128(1+5j)
+    f_complex128_output = f_complex128(cmplx128)
+    test_complex128_output = test_complex128(cmplx128)
 
     assert f_complex128_output == test_complex128_output
-    assert (type(f_complex64_output) == type(test_complex64_output))
+    assert (type(f_complex64_output) == type(test_complex64_output.item()))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
