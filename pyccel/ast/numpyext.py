@@ -21,7 +21,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
 
 from .internals      import PyccelInternalFunction
 
-from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
+from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, Literal, convert_to_literal
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
@@ -426,6 +426,8 @@ class NumpyImag(PythonImag):
     def __new__(cls, arg):
         if not isinstance(arg.dtype, NativeComplex):
             dtype=NativeInteger() if isinstance(arg.dtype, NativeBool) else arg.dtype
+            if isinstance(arg, Literal) or (isinstance(arg, Variable) and not arg.allocatable):
+                return convert_to_literal(0, dtype, arg.precision)
             return NumpyZeros(arg.shape, dtype=dtype)
         return super().__new__(cls, arg)
 
@@ -434,6 +436,14 @@ class NumpyImag(PythonImag):
         self._precision = arg.precision
         self._shape = process_shape(self.internal_var.shape)
         self._rank  = len(self._shape)
+
+    @property
+    def is_elemental(self):
+        """ Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
+
 #==============================================================================
 class NumpyLinspace(NumpyNewArray):
 
