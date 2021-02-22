@@ -37,7 +37,7 @@ class PyccelInternalFunction(PyccelAstNode):
         """ Indicates whether the function should be
         called elementwise for an array argument
         """
-        return True
+        return False
 
 
 class PyccelArraySize(PyccelInternalFunction):
