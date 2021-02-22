@@ -97,7 +97,7 @@ class OMP_Target_Construct(OmpAnnotatedComment):
         OmpAnnotatedComment.__init__(self, txt, combined)
 
 class OMP_Teams_Construct(OmpAnnotatedComment):
-    """ Represents OpenMP Target construct. """
+    """ Represents OpenMP Teams construct. """
     def __init__(self, txt, combined=None):
         OmpAnnotatedComment.__init__(self, txt, combined)
 
