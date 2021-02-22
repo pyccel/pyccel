@@ -139,7 +139,7 @@ class OmpTaskLoopConstruct(BasicStmt):
 
         txt = self.name
         txt += check_get_clauses(self, _valid_clauses, self.clauses)
-        
+
         self._expr = OmpAnnotatedComment(txt)
 
         super().__init__(**kwargs)
@@ -596,7 +596,7 @@ class OmpEndClause(BasicStmt):
         if DEBUG:
             print("> OmpEndClause: expr")
 
-        return self._expr 
+        return self._expr
 
 class OmpFinal(BasicStmt):
     """Class representing a final clause"""
