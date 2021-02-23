@@ -76,7 +76,7 @@ def get_wrapper_arguments(self, used_names)
 #--------------------------------------------------------------------
 #                   Convert functions
 #--------------------------------------------------------------------
-def generate_scalar_convert_function(self, used_names, variable):
+def generate_scalar_converter_function(self, used_names, variable):
     """
     """
 
@@ -87,7 +87,7 @@ def generate_scalar_convert_function(self, used_names, variable):
                                       is_pointer = True)]
 
     local_vars      = []
-    func_body       = [#TODO]
+    func_body       = #TODO
 
     funcDef =  FunctionDef(name       = func_name,
                           arguments  = func_arguments,
@@ -97,7 +97,7 @@ def generate_scalar_convert_function(self, used_names, variable):
 
     return funcDef
 
-def generate_array_convert_function(self, used_names, variable):
+def generate_array_converter_function(self, used_names, variable):
     """
     """
 
@@ -108,7 +108,7 @@ def generate_array_convert_function(self, used_names, variable):
                                       is_pointer = True)]
 
     local_vars      = []
-    func_body       = [#TODO]
+    func_body       = #TODO]
 
     funcDef =  FunctionDef(name       = func_name,
                           arguments  = func_arguments,
@@ -127,9 +127,9 @@ def get_PyArgParse_Converter_Function(self, variable):
     if xxxxxxx not in self.parsing_converter_functions:
 
         if variable.rank > 0:
-            function = self.generate_array_convert_function(variable)
+            function = self.generate_array_converter_function(variable)
         else:
-            function = self.generate_scalar_convert_function(variable)
+            function = self.generate_scalar_converter_function(variable)
 
         self.parsing_converter_functions[xxxxxxx] = function
 
