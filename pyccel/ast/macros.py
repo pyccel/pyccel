@@ -48,7 +48,7 @@ class MacroShape(Macro):
     _name      = 'shape'
     _AstNodeProperties = {'dtype'     : NativeInteger(),
                           'precision' : default_precision['integer'],
-                          'shape'     : ()
+                          'shape'     : (),
                           'rank'      : 0  }
 
     def __init__(self, argument, index=None):
@@ -72,7 +72,7 @@ class MacroType(Macro):
     _name      = 'dtype'
     _AstNodeProperties = {'dtype'     : NativeGeneric(),
                           'precision' : 0,
-                          'shape'     : ()
+                          'shape'     : (),
                           'rank'      : 0  }
 
     def __init__(self, argument):
@@ -87,7 +87,7 @@ class MacroCount(Macro):
     _name      = 'count'
     _AstNodeProperties = {'dtype'     : NativeInteger(),
                           'precision' : default_precision['integer'],
-                          'shape'     : ()
+                          'shape'     : (),
                           'rank'      : 0  }
 
     def __init__(self, argument):
