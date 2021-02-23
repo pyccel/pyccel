@@ -501,6 +501,7 @@ class DottedName(Basic):
     >>> DottedName('pyccel', 'stdlib', 'parallel')
     pyccel.stdlib.parallel
     """
+    __slots__ = ('_name',)
     _attribute_nodes = ()
 
     def __init__(self, *args):
@@ -536,6 +537,7 @@ class ValuedVariable(Variable):
     >>> n
     n := 4
     """
+    __slots__ = ('_value',)
     _attribute_nodes = ('_value',)
 
     def __init__(self, *args, **kwargs):
@@ -573,6 +575,7 @@ class TupleVariable(Variable):
     >>> n
     n
     """
+    __slots__ = ('_vars','_inconsistent_shape','_is_homogeneous')
     _attribute_nodes = ('_vars',)
 
     def __init__(self, arg_vars, dtype, name, *args, **kwargs):
@@ -691,6 +694,7 @@ class Constant(ValuedVariable):
 
     """
     # The value of a constant is not a translated object
+    __slots__ = ()
     _attribute_nodes = ()
 
 
@@ -711,6 +715,7 @@ class IndexedElement(PyccelAstNode):
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
+    __slots__ = ('_label', '_indices')
     _attribute_nodes = ('_label', '_indices')
 
     def __init__(
@@ -730,11 +735,6 @@ class IndexedElement(PyccelAstNode):
             super().__init__()
             return
 
-        self._dtype = base.dtype
-        self._order = base.order
-        self._precision = base.precision
-
-        shape = base.shape
         rank  = base.rank
 
         # Add empty slices to fully index the object
@@ -748,12 +748,13 @@ class IndexedElement(PyccelAstNode):
         self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in args)
         super().__init__()
 
+    def _set_shape(self):
         # Calculate new shape
 
-        if shape is not None:
+        if self.base.shape is not None:
             new_shape = []
             from .mathext import MathCeil
-            for a,s in zip(args, shape):
+            for a,s in zip(args, self.base.shape):
                 if isinstance(a, Slice):
                     start = a.start
                     stop  = a.stop if a.stop is not None else s
@@ -773,13 +774,25 @@ class IndexedElement(PyccelAstNode):
                         _shape = MathCeil(PyccelDiv(_shape, step))
                     new_shape.append(_shape)
             self._shape = tuple(new_shape)
-            self._rank  = len(new_shape)
         else:
-            new_rank = rank
-            for i in range(rank):
-                if not isinstance(args[i], Slice):
+            self._shape = None
+
+    def _set_rank(self):
+        if self._shape is not None:
+            self._rank  = len(self._shape)
+        else:
+            new_rank = self.base.rank
+            for i in range(self.base.rank):
+                if not isinstance(self.indices[i], Slice):
                     new_rank -= 1
             self._rank = new_rank
+
+    def _set_dtype(self):
+        self._dtype = self.base.dtype
+        self._precision = self.base.precision
+
+    def _set_order(self):
+        self._order = self.base.order
 
     @property
     def base(self):
@@ -800,19 +813,27 @@ class VariableAddress(PyccelAstNode):
     VariableAddress(Variable('int','a'))                     is  &a
     VariableAddress(Variable('int','a', is_pointer=True))    is   a
     """
+    __slots__ = ('_variable',)
     _attribute_nodes = ('_variable',)
 
     def __init__(self, variable):
         if not isinstance(variable, Variable):
             raise TypeError('variable must be a variable')
         self._variable = variable
-
-        self._shape     = variable.shape
-        self._rank      = variable.rank
-        self._dtype     = variable.dtype
-        self._precision = variable.precision
-        self._order     = variable.order
         super().__init__()
+
+    def _set_dtype(self):
+        self._dtype     = self.variable.dtype
+        self._precision = self.variable.precision
+
+    def _set_shape(self):
+        self._shape     = self.variable.shape
+
+    def _set_rank(self):
+        self._rank      = self.variable.rank
+
+    def _set_order(self):
+        self._order     = self.variable.order
 
     @property
     def variable(self):
@@ -833,6 +854,7 @@ class DottedVariable(Variable):
     In this case b is a DottedVariable where the lhs
     is a
     """
+    __slots__ = ('_lhs',)
     _attribute_nodes = ('_lhs',)
 
     def __init__(self, *args, lhs, **kwargs):
