@@ -83,7 +83,7 @@ class CWrapperCodePrinter(CCodePrinter):
                         is_pointer = True)
 
 
-    def get_wrapper_arguments(self, used_names)
+    def get_wrapper_arguments(self, used_names):
         """
         """
         python_func_args    = self.get_new_PyObject("args"  , used_names)
