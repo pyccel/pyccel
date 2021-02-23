@@ -27,6 +27,8 @@ class Immutable:
 class Basic:
     """Basic class for Pyccel AST."""
     __slots__ = ('_user_nodes', '_fst', '_recursion_in_progress', '_attribute_nodes')
+    _fst = None
+    _ignored_types = (Immutable, type)
 
     def __init__(self):
         self._user_nodes = []
@@ -45,8 +47,8 @@ class Basic:
                 c = convert_to_literal(c)
                 setattr(self, c_name, c)
 
-            elif isinstance(c, iterable_types):
-                if any(isinstance(ci, iterable_types) for ci in c):
+            elif iterable(c):
+                if any(iterable(ci) for ci in c):
                     raise TypeError("Basic child cannot be a tuple of tuples")
                 c = tuple(ci if (not isinstance(ci, (int, float, complex, str, bool)) \
                                  or self.ignore(ci)) \
@@ -179,8 +181,8 @@ class Basic:
             return
         self._recursion_in_progress = True
 
-        if isinstance(original, iterable_types):
-            assert(isinstance(replacement, iterable_types))
+        if iterable(original):
+            assert(iterable(replacement))
             assert(len(original) == len(replacement))
         else:
             original = (original,)
@@ -191,7 +193,7 @@ class Basic:
             rep = replacement[idx]
             if not self.ignore(found_node):
                 found_node.remove_user_node(self)
-            if isinstance(rep, iterable_types):
+            if iterable(rep):
                 for r in rep:
                     if not self.ignore(r):
                         r.set_current_user_node(self)
@@ -218,7 +220,7 @@ class Basic:
                             new_vi = prepare_sub(vi)
                         elif not self.ignore(vi):
                             vi.substitute(original, replacement, excluded_nodes)
-                    if isinstance(new_vi, iterable_types):
+                    if iterable(new_vi):
                         new_v.extend(new_vi)
                     else:
                         new_v.append(new_vi)

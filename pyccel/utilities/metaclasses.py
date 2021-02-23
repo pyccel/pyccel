@@ -26,7 +26,7 @@ class ArgumentSingleton(type):
     """
     _instances = {}
     def __call__(cls, *args, **kwargs):
-        index = (cls, *args, *kwargs.values())
+        index = (cls, *args, *sorted(kwargs.items()))
         if index not in cls._instances:
             cls._instances[index] = super().__call__(*args, **kwargs)
         return cls._instances[index]

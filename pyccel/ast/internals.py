@@ -183,6 +183,21 @@ class PyccelSymbol(str, Immutable):
     x
     """
 
+    def __new__(cls, name, is_temp=False):
+        return super().__new__(cls, name)
+
+    def __init__(self, name, is_temp=False):
+        self._is_temp = is_temp
+        super().__init__()
+
+    @property
+    def is_temp(self):
+        """
+        Indicates if this symbol represents a temporary variable created by Pyccel,
+        and was not present in the original Python code [default value : False].
+        """
+        return self._is_temp
+
 def symbols(names):
     """
     Transform strings into instances of PyccelSymbol class.
