@@ -101,6 +101,9 @@ class Variable(PyccelAstNode):
     >>> Variable('int', DottedName('matrix', 'n_rows'))
     matrix.n_rows
     """
+    __slots__ = ('_name', '_alloc_shape', '_allocatable', '_is_const', '_is_pointer',
+            '_is_stack_array', '_is_target', '_is_optional', '_allows_negative_indexes',
+            '_cls_base', '_is_argument', '_is_kwonly', '_is_temp')
     _attribute_nodes = ()
 
     def __init__(
@@ -124,41 +127,28 @@ class Variable(PyccelAstNode):
         is_temp =False,
         allows_negative_indexes=False
         ):
-        super().__init__()
 
         # ------------ PyccelAstNode Properties ---------------
         if isinstance(dtype, str) or str(dtype) == '*':
-
-            dtype = datatype(str(dtype))
-        elif not isinstance(dtype, DataType):
+            self._dtype = datatype(str(dtype))
+        elif isinstance(dtype, DataType):
+            self._dtype = dtype
+        else:
             raise TypeError('datatype must be an instance of DataType.')
 
         if not isinstance(rank, int):
             raise TypeError('rank must be an instance of int.')
+        else:
+            self._rank = rank
 
-        if rank == 0:
-            shape = ()
-
-        if shape is None:
-            shape = tuple(None for i in range(rank))
-
-        if not precision:
-            if isinstance(dtype, NativeInteger):
-                precision = default_precision['int']
-            elif isinstance(dtype, NativeReal):
-                precision = default_precision['real']
-            elif isinstance(dtype, NativeComplex):
-                precision = default_precision['complex']
-            elif isinstance(dtype, NativeBool):
-                precision = default_precision['bool']
-        if not isinstance(precision,int) and precision is not None:
+        if isinstance(precision,int):
+            self._precision = precision
+        elif precision is not None:
             raise TypeError('precision must be an integer or None.')
 
         self._alloc_shape = shape
-        self._dtype = dtype
-        self._rank  = rank
-        self._shape = self.process_shape(shape)
-        self._precision = precision
+        self._order          = order
+        super().__init__()
 
         # ------------ Variable Properties ---------------
         # if class attribute
@@ -205,10 +195,26 @@ class Variable(PyccelAstNode):
         self._allows_negative_indexes = allows_negative_indexes
 
         self._cls_base       = cls_base
-        self._order          = order
         self._is_argument    = is_argument
         self._is_kwonly      = is_kwonly
         self._is_temp        = is_temp
+
+    def _set_dtype(self):
+        pass
+
+    def _set_shape(self):
+        if self.rank == 0:
+            self._shape = ()
+        elif self._alloc_shape is None:
+            self._shape = tuple(None for i in range(self.rank))
+        else:
+            self._shape = self.process_shape(self._alloc_shape)
+
+    def _set_rank(self):
+        pass
+
+    def _set_order(self):
+        pass
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it

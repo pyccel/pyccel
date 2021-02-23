@@ -30,10 +30,11 @@ class Literal(PyccelAstNode):
     """
     _attribute_nodes  = ()
 
-    def __init__(self, precision):
-        if not isinstance(precision, int):
-            raise TypeError("precision must be an integer")
-        self._precision = precision
+    def __init__(self, precision = None):
+        if precision is not None:
+            if not isinstance(precision, int):
+                raise TypeError("precision must be an integer")
+            self._precision = precision
         super().__init__()
 
     def _set_shape(self):
@@ -86,7 +87,7 @@ class LiteralFalse(Literal, metaclass = ArgumentSingleton):
 class LiteralInteger(Literal):
     """Represents an integer literal in python"""
 
-    def __init__(self, value, precision = default_precision['integer']):
+    def __init__(self, value, precision = None):
         super().__init__(precision)
         if not isinstance(value, int):
             raise TypeError("A LiteralInteger can only be created with an integer")
@@ -106,7 +107,7 @@ class LiteralInteger(Literal):
 class LiteralFloat(Literal):
     """Represents a float literal in python"""
 
-    def __init__(self, value, *, precision = default_precision['float']):
+    def __init__(self, value, *, precision = None):
         if not isinstance(value, (int, float, LiteralFloat)):
             raise TypeError("A LiteralFloat can only be created with an integer or a float")
         super().__init__(precision)
@@ -128,7 +129,7 @@ class LiteralFloat(Literal):
 class LiteralComplex(Literal):
     """Represents a complex literal in python"""
 
-    def __new__(cls, real, imag, precision = default_precision['complex']):
+    def __new__(cls, real, imag, precision = None):
         if cls is LiteralImaginaryUnit:
             return super().__new__(cls)
         real_part = cls._collect_python_val(real)
@@ -138,7 +139,7 @@ class LiteralComplex(Literal):
         else:
             return super().__new__(cls)
 
-    def __init__(self, real, imag, precision = default_precision['complex']):
+    def __init__(self, real, imag, precision = None):
         super().__init__(precision)
         self._real_part = LiteralFloat(self._collect_python_val(real))
         self._imag_part = LiteralFloat(self._collect_python_val(imag))
