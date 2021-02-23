@@ -19,7 +19,7 @@ from .builtins  import PythonRange, PythonTuple
 
 from .mathext   import MathCeil
 
-from .literals  import LiteralInteger, LiteralFloat
+from .literals  import LiteralInteger, LiteralFloat, Literal
 
 from .datatypes import NativeInteger
 
