@@ -725,6 +725,8 @@ class FCodePrinter(CodePrinter):
 
         # If Numpy array is stored with column-major ordering, transpose values
         # use reshape with order for rank > 2
+        if expr.rank < 2:
+            rhs_code = self._print(expr.arg)
         if expr.order == 'F':
             if expr.rank == 2:
                 rhs_code = self._print(expr.arg)
