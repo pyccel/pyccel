@@ -69,7 +69,7 @@ class PyccelArraySize(PyccelInternalFunction):
 
         self._arg   = arg
         self._index = index
-        super().__init__(**self._AstNodeProperties)
+        super().__init__()
 
     def _set_dtype(self):
         self._dtype = NativeInteger()
