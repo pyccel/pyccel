@@ -58,7 +58,6 @@ class OMP_For_Loop(OmpAnnotatedComment):
 
 class OMP_Parallel_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Parallel construct. """
-    pass
 
 class OMP_Task_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Task construct. """
@@ -82,7 +81,6 @@ class OMP_Master_Construct(OmpAnnotatedComment):
 
 class OMP_Masked_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Masked construct. """
-    pass
 
 class OMP_Cancel_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Cancel construct. """
@@ -91,11 +89,9 @@ class OMP_Cancel_Construct(OmpAnnotatedComment):
 
 class OMP_Target_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Target construct. """
-    pass
 
 class OMP_Teams_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Teams construct. """
-    pass
 
 class OMP_Sections_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Sections construct. """
