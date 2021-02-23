@@ -13,8 +13,6 @@ import numpy
 
 from pyccel.utilities.metaclasses import Singleton
 
-from .basic import Basic
-
 # TODO [YG, 12.03.2020] verify why we need all these types
 # NOTE: symbols not used in pyccel are commented out
 __all__ = (
@@ -221,8 +219,7 @@ dtype_registry = {'bool': Bool,
                   'str': String}
 
 
-class UnionType(Basic):
-    _attribute_nodes = ()
+class UnionType:
 
     def __init__(self, args):
         self._args = args
