@@ -561,7 +561,7 @@ def test_log_call_i(language):
         return log(x)
 
     f1 = epyccel(log_call_i, language = language)
-    x = randint(low=min_float, high=1e6)
+    x = randint(low=min_int, high=max_int)
     assert(isclose(f1(x), log_call_i(x), rtol=RTOL, atol=ATOL))
     assert(type(f1(x)) == type(log_call_i(x).item()))
 
