@@ -37,6 +37,7 @@ class PyccelInvert(PyccelUnaryOperator):
     arg: PyccelAstNode
         The argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 14
 
     def _set_dtype(self):
@@ -65,6 +66,7 @@ class PyccelBitOperator(PyccelOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
 
     def _set_dtype(self):
         """ Sets the dtype and precision
@@ -113,6 +115,7 @@ class PyccelRShift(PyccelBitOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 11
 
     def __repr__(self):
@@ -135,6 +138,7 @@ class PyccelLShift(PyccelBitOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 11
 
     def __repr__(self):
@@ -153,6 +157,7 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     def _handle_integer_type(self, integers):
         if all(a.dtype is NativeInteger() for a in integers):
             self._dtype = NativeInteger()
@@ -180,6 +185,7 @@ class PyccelBitXor(PyccelBitComparisonOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 9
 
     def __repr__(self):
@@ -202,6 +208,7 @@ class PyccelBitOr(PyccelBitComparisonOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 8
 
     def __repr__(self):
@@ -224,6 +231,7 @@ class PyccelBitAnd(PyccelBitComparisonOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
+    __slots__ = ()
     _precedence = 10
 
     def __repr__(self):
