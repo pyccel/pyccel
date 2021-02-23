@@ -1561,7 +1561,7 @@ class ValuedArgument(Basic):
     >>> n
     n=4
     """
-    __slots__ = ('_expr','_value','_kwonly')
+    __slots__ = ('_name','_expr','_value','_kwonly')
     _attribute_nodes = ()
 
     def __init__(self, expr, value, *, kwonly = False):
