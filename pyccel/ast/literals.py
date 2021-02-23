@@ -28,6 +28,7 @@ class Literal(PyccelAstNode):
     Represents a python literal
     This class is abstract and should be implemented for each dtype
     """
+    __slots__ = ()
     _attribute_nodes  = ()
 
     def __init__(self, precision = None):
@@ -64,6 +65,7 @@ class Literal(PyccelAstNode):
 #------------------------------------------------------------------------------
 class LiteralTrue(Literal, metaclass = ArgumentSingleton):
     """Represents the python value True"""
+    __slots__ = ()
 
     def _set_dtype(self):
         self._dtype = NativeBool()
@@ -75,6 +77,7 @@ class LiteralTrue(Literal, metaclass = ArgumentSingleton):
 #------------------------------------------------------------------------------
 class LiteralFalse(Literal, metaclass = ArgumentSingleton):
     """Represents the python value False"""
+    __slots__ = ()
 
     def _set_dtype(self):
         self._dtype = NativeBool()
@@ -86,6 +89,7 @@ class LiteralFalse(Literal, metaclass = ArgumentSingleton):
 #------------------------------------------------------------------------------
 class LiteralInteger(Literal):
     """Represents an integer literal in python"""
+    __slots__ = ('p',)
 
     def __init__(self, value, precision = None):
         super().__init__(precision)
@@ -106,6 +110,7 @@ class LiteralInteger(Literal):
 #------------------------------------------------------------------------------
 class LiteralFloat(Literal):
     """Represents a float literal in python"""
+    __slots__ = ('_value',)
 
     def __init__(self, value, *, precision = None):
         if not isinstance(value, (int, float, LiteralFloat)):
@@ -128,6 +133,7 @@ class LiteralFloat(Literal):
 #------------------------------------------------------------------------------
 class LiteralComplex(Literal):
     """Represents a complex literal in python"""
+    __slots__ = ('_real_part','_imag_part')
 
     def __new__(cls, real, imag, precision = None):
         if cls is LiteralImaginaryUnit:
@@ -173,6 +179,7 @@ class LiteralComplex(Literal):
 #------------------------------------------------------------------------------
 class LiteralImaginaryUnit(LiteralComplex):
     """Represents the python value j"""
+    __slots__ = ()
     def __new__(cls):
         return super().__new__(cls, 0, 1)
 
@@ -186,6 +193,7 @@ class LiteralImaginaryUnit(LiteralComplex):
 #------------------------------------------------------------------------------
 class LiteralString(Literal):
     """Represents a string literal in python"""
+    __slots__ = ('_string',)
 
     def __init__(self, arg):
         super().__init__()
@@ -218,6 +226,7 @@ class Nil(Basic, metaclass=Singleton):
     """
     class for None object in the code.
     """
+    __slots__ = ()
     _attribute_nodes = ()
 
     def __str__(self):
