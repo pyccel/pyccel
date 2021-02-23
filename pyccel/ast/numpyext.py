@@ -260,13 +260,13 @@ class NumpyArray(NumpyNewArray):
     def _set_dtype(self):
         # Verify dtype and get precision
         if self._dtype is None:
-            self._dtype = arg.dtype
+            self._dtype = self.arg.dtype
         dtype, prec = process_dtype(self._dtype)
         self._dtype = dtype
         self._precision = prec
 
     def _set_shape(self):
-        self._shape = process_shape(arg.shape)
+        self._shape = process_shape(self.arg.shape)
 
     def _set_order(self):
         # ... Determine ordering
