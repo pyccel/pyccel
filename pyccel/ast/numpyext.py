@@ -23,7 +23,7 @@ from .internals      import PyccelInternalFunction
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
 from .literals       import LiteralTrue, LiteralFalse
-from .literals       import Nil
+from .literals       import Nil, convert_to_literal
 from .mathext        import MathCeil
 from .operators      import broadcast, PyccelMinus, PyccelDiv
 from .variable       import (Variable, IndexedElement, Constant)

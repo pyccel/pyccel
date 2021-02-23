@@ -298,7 +298,7 @@ def convert_to_literal(value, dtype = None, precision = None):
     if isinstance(dtype, NativeInteger):
         literal_val = LiteralInteger(value, precision)
     elif isinstance(dtype, NativeReal):
-        literal_val = LiteralFloat(value, precision)
+        literal_val = LiteralFloat(value, precision = precision)
     elif isinstance(dtype, NativeComplex):
         literal_val = LiteralComplex(value.real, value.imag, precision)
     elif isinstance(dtype, NativeBool):

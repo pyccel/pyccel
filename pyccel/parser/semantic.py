@@ -62,7 +62,7 @@ from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal, NativeString, NativeGeneric, NativeComplex
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
-from pyccel.ast.literals import LiteralInteger, LiteralFloat
+from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import Nil
 
 from pyccel.ast.headers import FunctionHeader, ClassHeader, MethodHeader
@@ -854,6 +854,8 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_Literal(self, expr, **settings):
         return type(expr)(expr.python_value)
+    def _visit_LiteralComplex(self, expr, **settings):
+        return LiteralComplex(expr.real, expr.imag)
     def _visit_LiteralTrue(self, expr, **settings):
         return LiteralTrue()
     def _visit_LiteralFalse(self, expr, **settings):

@@ -934,15 +934,26 @@ class IfTernaryOperator(PyccelOperator):
 
         self._precision = max([self.value_true.precision, self.value_false.precision])
 
-    def _set_shape_rank(self):
+    def _set_shape(self):
         """
-        Sets the shape and rank and the order for IfTernaryOperator
+        Sets the shape for IfTernaryOperator
         """
         self._shape = self.value_true.shape
+
+    def _set_rank(self):
+        """
+        Sets the rank for IfTernaryOperator
+        """
         self._rank  = self.value_true.rank
-        if self._rank is not None and self._rank > 1:
-            if self.value_false.order != self.value_true.order :
-                errors.report('Ternary Operator results should have the same order', severity='fatal')
+
+    def _set_order(self):
+        """
+        Sets the order for IfTernaryOperator
+        """
+        if self.value_false.order != self.value_true.order :
+            errors.report('Ternary Operator results should have the same order', severity='fatal')
+        else:
+            self._order = self.value_false.order
 
     @property
     def cond(self):
