@@ -770,7 +770,7 @@ class PyccelBooleanOperator(PyccelOperator):
     def _set_dtype(self):
         self._dtype = NativeBool()
 
-    def _set_shape_rank(self):
+    def _set_shape(self):
         self._shape = ()
 
 #==============================================================================
