@@ -314,6 +314,8 @@ class PyccelAstNode(Basic):
 
             if self.rank is not None and self.rank > 1:
                 self._set_order()
+            else:
+                self._order = None
 
     def _set_dtype(self):
         """ Set all information about the datatype. This includes both the type and precision
@@ -329,10 +331,7 @@ class PyccelAstNode(Basic):
     def _set_rank(self):
         """ Determine the rank of the object. This should be the length of the shape
         """
-        if self._shape is not None:
-            self._rank = len(self._shape)
-        else:
-            self._rank = None
+        self._rank = len(self._shape)
 
     def _set_order(self):
         """ Determine the ordering of the object. This should be either "C" or "F"
