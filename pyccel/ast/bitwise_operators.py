@@ -38,7 +38,6 @@ class PyccelInvert(PyccelUnaryOperator):
         The argument passed to the operator
     """
     _precedence = 14
-    _dtype     = NativeInteger()
 
     def _set_dtype(self):
         a = self._args[0]
@@ -47,6 +46,7 @@ class PyccelInvert(PyccelUnaryOperator):
 
         self._args      = (PythonInt(a) if a.dtype is NativeBool() else a,)
 
+        self._dtype = NativeInteger()
         self._precision = a.precision
 
     def __repr__(self):
@@ -65,8 +65,6 @@ class PyccelBitOperator(PyccelOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
-    _rank = 0
-    _shape = ()
 
     def _set_dtype(self):
         """ Sets the dtype and precision
@@ -90,8 +88,8 @@ class PyccelBitOperator(PyccelOperator):
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
-    def _set_shape_rank(self):
-        pass
+    def _set_shape(self):
+        self._shape = ()
 
     def _handle_integer_type(self, integers):
         self._dtype     = NativeInteger()

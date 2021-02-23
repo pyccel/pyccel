@@ -313,11 +313,16 @@ class Dlist(PyccelAstNode):
     def __init__(self, val, length):
         self._val = val
         self._length = length
-        super().__init__(dtype = None,
-                precision = None,
-                shape = tuple(s if i!= 0 else PyccelMul(s, length) for i,s in enumerate(val.shape))
-                rank  = val.rank
-                order = val.order)
+
+    def _set_dtype(self):
+        self._dtype = None
+        self._precision = None
+
+    def _set_shape(self):
+        self._shape = tuple(PyccelMul(val.shape[0], length), *val.shape[1:])
+
+    def _set_order(self):
+        self._order = self.val.order
 
     @property
     def val(self):
@@ -1492,7 +1497,7 @@ class ConstructorCall(Basic):
         else:
             return self.func
 
-class Argument(PyccelAstNode):
+class Argument(Basic):
 
     """An abstract Argument data structure.
 
@@ -1648,12 +1653,17 @@ class FunctionCall(PyccelAstNode):
         self._funcdef       = func
         self._arguments     = args
         self._func_name     = func.name
-        dtype         = func.results[0].dtype     if len(func.results) == 1 else NativeTuple()
-        rank          = func.results[0].rank      if len(func.results) == 1 else None
-        shape         = func.results[0].shape     if len(func.results) == 1 else None
-        precision     = func.results[0].precision if len(func.results) == 1 else None
-        order         = func.results[0].order     if len(func.results) == 1 else None
-        super().__init__(dtype, precision, shape, rank, order)
+        super().__init__()
+
+    def _set_dtype(self):
+        self._dtype     = self.funcdef.results[0].dtype     if len(func.results) == 1 else NativeTuple()
+        self._precision = self.funcdef.results[0].precision if len(func.results) == 1 else None
+
+    def _set_shape(self):
+        self._shape = self.funcdef.results[0].shape if len(func.results) == 1 else None
+
+    def _set_order(self):
+        self._order = self.funcdef.results[0].order if len(func.results) == 1 else None
 
     @property
     def args(self):

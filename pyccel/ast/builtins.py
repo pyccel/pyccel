@@ -52,18 +52,18 @@ class PythonComplexProperty(PyccelInternalFunction):
 
     arg : Variable, Literal
     """
-    _dtype = NativeReal()
-    _rank  = 0
-    _shape = ()
-
-    def __init__(self, arg):
-        self._precision = arg.precision
-        super().__init__(arg)
 
     @property
     def internal_var(self):
         """Return the variable on which the function was called"""
         return self._args[0]
+
+    def _set_dtype(self):
+        self._dtype = NativeReal()
+        self._precision = self.internal_var.precision
+
+    def _set_shape(self):
+        self._shape = ()
 
     def __str__(self):
         return 'Real({0})'.format(str(self.internal_var))
@@ -109,6 +109,7 @@ class PythonImag(PythonComplexProperty):
 class PythonBool(PyccelAstNode):
     """ Represents a call to Python's native bool() function.
     """
+    __slots__ = ('_arg',)
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
@@ -121,9 +122,17 @@ class PythonBool(PyccelAstNode):
 
     def __init__(self, arg):
         self._arg = arg
-        super().__init__(dtype = NativeBool(),
-                        precision = default_precision['bool'],
-                        shape = arg.shape)
+        super().__init__()
+
+    def _set_dtype(self):
+        self._dtype = NativeBool()
+        self._precision = default_precision['bool']
+
+    def _set_shape(self):
+        self._shape = self.arg.shape
+
+    def _set_order(self):
+        self._order = self.arg.order
 
     @property
     def arg(self):
@@ -136,7 +145,7 @@ class PythonBool(PyccelAstNode):
 class PythonComplex(PyccelAstNode):
     """ Represents a call to Python's native complex() function.
     """
-
+    __slots__ = ('_real_part', '_imag_part', '_internal_var', '_is_cast')
     _attribute_nodes = ('_real_part', '_imag_part', '_internal_var')
 
     def __new__(cls, arg0, arg1=LiteralFloat(0)):
@@ -200,10 +209,14 @@ class PythonComplex(PyccelAstNode):
                 self._real_part = arg0
                 self._imag_part = arg1
 
-        super().__init__(dtype = NativeComplex(),
-                        precision = default_precision['complex'],
-                        shape = (),
-                        rank = 0)
+        super().__init__()
+
+    def _set_dtype(self):
+        self._dtype = NativeComplex()
+        self._precision = default_precision['complex']
+
+    def _set_shape(self):
+        self._shape = ()
 
     @property
     def is_cast(self):
@@ -236,6 +249,7 @@ class PythonEnumerate(Basic):
     Represents the enumerate stmt
 
     """
+    __slots__ = ('_element',)
     _attribute_nodes = ('_element',)
 
     def __init__(self, arg):
@@ -253,6 +267,7 @@ class PythonEnumerate(Basic):
 class PythonFloat(PyccelAstNode):
     """ Represents a call to Python's native float() function.
     """
+    __slots__ = ('_arg',)
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
@@ -265,9 +280,13 @@ class PythonFloat(PyccelAstNode):
 
     def __init__(self, arg):
         self._arg = arg
-        super().__init__(dtype = NativeReal(),
-                        precision = default_precision['real'],
-                        shape = arg.shape)
+        super().__init__()
+
+    def _set_dtype(self):
+        self._dtype = NativeReal()
+
+    def _set_shape(self):
+        self._shape = self.arg.shape
 
     @property
     def arg(self):

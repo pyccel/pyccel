@@ -27,7 +27,6 @@ class Immutable:
 class Basic:
     """Basic class for Pyccel AST."""
     __slots__ = ('_user_nodes', '_fst', '_recursion_in_progress', '_attribute_nodes')
-    _fst = None
     _ignored_types = (Immutable, type)
 
     def __init__(self):
@@ -299,21 +298,36 @@ class PyccelAstNode(Basic):
     stage      = None
     __slots__ = ('_shape', '_rank', '_dtype', '_precision', '_order')
 
-    def __init__(self, dtype = None, precision = None, shape = None, rank = None, order = None):
+    def __init__(self):
+        super().__init__()
         if PyccelAstNode.stage == "syntactic":
             return
         else:
-            self._dtype = dtype
-            self._precision = precision
-            self._shape = shape
-            if rank is None:
-                rank = len(shape)
-            else:
-                self._rank = rank
-            if rank > 1:
-                self._order = order
-            else:
-                self._order = None
+            self._set_dtype()
+
+            if not hasattr(self, '_precision'):
+                self._precision = default_precision[str(self._dtype)]
+
+            self._set_shape()
+            self._set_rank()
+
+            if rank is not None and rank > 1:
+                self._set_order()
+
+    def _set_dtype(self):
+        raise NotImplementedError("A PyccelAstNode must know how to determine dtype and precision")
+
+    def _set_shape(self):
+        raise NotImplementedError("A PyccelAstNode must know how to determine shape")
+
+    def _set_rank(self):
+        if self._shape is not None:
+            rank = len(shape)
+        else:
+            rank = None
+
+    def _set_order(self):
+        raise NotImplementedError("A PyccelAstNode must know how to determine the ordering")
 
     @property
     def shape(self):
