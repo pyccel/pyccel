@@ -63,7 +63,7 @@ def check_get_clauses(name, valid_clauses, clauses):
         if isinstance(clause, valid_clauses):
             txt = '{0} {1}'.format(txt, clause.expr)
         else:
-            msg = 'Wrong clause ' + type(clause).__name__ + ' for ', type(name).__name__
+            msg = "Wrong clause " + type(clause).__name__
             raise TypeError(msg)
     return txt
 
@@ -500,10 +500,12 @@ class OmpTargetConstruct(BasicStmt):
         for clause in self.clauses:
             if isinstance(clause, _valid_clauses):
                 if isinstance(clause, OmpCopyin) and isinstance(self.combined, OmpTargetParallel):
-                    raise TypeError('Wrong clause for OmpTargetConstruct')
+                    msg = "Wrong clause " + type(clause).__name__
+                    raise TypeError(msg)
                 txt = '{0} {1}'.format(txt, clause.expr)
             else:
-                raise TypeError('Wrong clause for OmpTargetConstruct')
+                msg = "Wrong clause " + type(clause).__name__
+                raise TypeError(msg)
 
         self._expr = OMP_Target_Construct(txt, com)
 
@@ -1365,7 +1367,7 @@ _valid_parallel_clauses = (OmpNumThread,
                            OmpReduction,
                            OmpProcBind)
 
-omp_directives = [OmpParallelConstruct,
+omp_directives = (OmpParallelConstruct,
                   OmpLoopConstruct,
                   OmpSingleConstruct,
                   OmpEndClause,
@@ -1385,9 +1387,9 @@ omp_directives = [OmpParallelConstruct,
                   OmpTeamsConstruct,
                   OmpDistributeConstruct,
                   OmpSectionsConstruct,
-                  OmpSectionConstruct]
+                  OmpSectionConstruct)
 
-omp_clauses = [OmpCollapse,
+omp_clauses = (OmpCollapse,
                OmpCopyin,
                OmpFirstPrivate,
                OmpLastPrivate,
@@ -1425,10 +1427,9 @@ omp_clauses = [OmpCollapse,
                OmpTaskloopSimd,
                OmpDistributeCombined,
                OmpTargetParallel,
-               OmpTargetTeams]
+               OmpTargetTeams)
 
-omp_classes = [Openmp, OpenmpStmt] + omp_directives + omp_clauses
-
+omp_classes = (Openmp, OpenmpStmt) + omp_directives + omp_clauses
 
 this_folder = dirname(__file__)
 
