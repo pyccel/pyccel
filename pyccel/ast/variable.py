@@ -121,7 +121,7 @@ class Variable(PyccelAstNode):
         shape=None,
         cls_base=None,
         order='C',
-        precision=0,
+        precision=None,
         is_argument=False,
         is_kwonly=False,
         is_temp =False,
