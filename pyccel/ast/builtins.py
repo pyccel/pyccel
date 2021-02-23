@@ -14,7 +14,7 @@ In this module we implement some of them in alphabetical order.
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
-                        NativeGeneric)
+                        NativeGeneric, default_precision)
 from .internals import PyccelInternalFunction
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
@@ -273,9 +273,9 @@ class PythonFloat(PyccelAstNode):
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralFloat):
-            return LiteralFloat(arg, precision = cls._precision)
+            return LiteralFloat(arg, precision = default_precision['real'])
         elif isinstance(arg, LiteralInteger):
-            return LiteralFloat(arg.p, precision = cls._precision)
+            return LiteralFloat(arg.p, precision = default_precision['real'])
         else:
             return super().__new__(cls)
 
@@ -288,6 +288,9 @@ class PythonFloat(PyccelAstNode):
 
     def _set_shape(self):
         self._shape = self.arg.shape
+
+    def _set_order(self):
+        self._order = self.arg.order
 
     @property
     def arg(self):
@@ -319,6 +322,9 @@ class PythonInt(PyccelAstNode):
 
     def _set_shape(self):
         self._shape = self.arg.shape
+
+    def _set_order(self):
+        self._order = self.arg.order
 
     @property
     def arg(self):
