@@ -73,9 +73,80 @@ def get_wrapper_arguments(self, used_names)
 
     return [python_func_selfarg, python_func_args, python_func_kwargs]
 
+#--------------------------------------------------------------------
+#                   Convert functions
+#--------------------------------------------------------------------
+def generate_scalar_convert_function(self, used_names, variable):
+    """
+    """
+
+    func_name       = 'py_to_{}'.format(self._print(variable.dtype))
+
+    func_arguments  = [self.get_new_PyObject('O', used_names)]
+    func_arguments += [variable.clone(name = self.get_new_name(used_name, variable.name),
+                                      is_pointer = True)]
+
+    local_vars      = []
+    func_body       = [#TODO]
+
+    funcDef =  FunctionDef(name       = func_name,
+                          arguments  = func_arguments,
+                          results    = [],
+                          local_vars = local_vars,
+                          body       = func_body)
+
+    return funcDef
+
+def generate_array_convert_function(self, used_names, variable):
+    """
+    """
+
+    func_name       = 'py_to_{}'.format(self._print(variable.dtype))
+
+    func_arguments  = [self.get_new_PyObject('O', used_names)]
+    func_arguments += [variable.clone(name = self.get_new_name(used_name, variable.name),
+                                      is_pointer = True)]
+
+    local_vars      = []
+    func_body       = [#TODO]
+
+    funcDef =  FunctionDef(name       = func_name,
+                          arguments  = func_arguments,
+                          results    = [],
+                          local_vars = local_vars,
+                          body       = func_body)
+
+    return funcDef
+
+# -------------------------------------------------------------------
+# Parsing arguments and building values Types functions
+# -------------------------------------------------------------------
+def get_PyArgParse_Converter_Function(self, variable):
+    """
+    """
+    if xxxxxxx not in self.parsing_converter_functions:
+
+        if variable.rank > 0:
+            function = self.generate_array_convert_function(variable)
+        else:
+            function = self.generate_scalar_convert_function(variable)
+
+        self.parsing_converter_functions[xxxxxxx] = function
+
+def get_PyBuildValue_Converter_function(self, variable):
+    """
+    """
+    if xxxxxxx not in self.parsing_converter_functions:
+        function =  #TODO
+
+        self.building_converter_functions[xxxxxxx] = function
+
+#--------------------------------------------------------------------
+#                 _print_ClassName functions
+#--------------------------------------------------------------------
 
 def _print_Interface(self, expr):
-    # TODO
+    # TODO nightmare
 
 def _print_FunctionDef(self, expr):
     # Save all used names
@@ -91,38 +162,34 @@ def _print_FunctionDef(self, expr):
     wrapper_results = [self.get_new_PyObject("result", used_names)]
 
     arg_names         = [a.name for a in expr.arguments]
-    keyword_list_name = self.get_new_name(used_names,'kwlist')
+    keyword_list_name = self.get_new_name(used_names, 'kwlist')
     keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
 
-    func_args = []
-    wrapper_body = [keyword_list]
-    convert_function_dict = {}
+    wrapper_body      = [keyword_list]
+    func_args         = []
 
     for arg in expr.arguments:
-        convert_function = None #TODO Generate convert function
+        self.get_PyArgParse_Converter_Function(arg)
         func_args.append(None) #TODO Bind_C_Arg
-        convert_function_dict[arg] = convert_function.name
 
-    parse_node = PyArg_ParseTupleNode() #TODO
+    parse_node = PyArg_ParseTupleNode(self.parsing_converter_functions, expr.arguments)
 
-    wrapper_body.append(If(IfSection(PyccelNot(parse_node),
-                        [Return([Nil()])])))
+    wrapper_body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
 
     static_function = None #TODO Generate Bind_C_Arg functionCall
 
-    function_call = FunctionCall(static_function, func_args)
+    function_call   = FunctionCall(static_function, func_args)
     
     if len(expr.results) > 0:
         results       = expr.results if len(expr.results)>1 else expr.results[0]
         function_call = Assign(results, function_call)
     
-    wrapper_body.append(func_call)
+    wrapper_body.append(function_call)
 
     for res in expr.results:
-        convert_function = None: #TODO
-        convert_function_dict[arg] = convert_function.name
+        self.get_PyBuildValue_Converter_function(res)
 
-    build_node = PyBuildValueNode(convert_function_dict, expr.results)
+    build_node = PyBuildValueNode(self.building_converter_functions, expr.results)
 
     wrapper_body.append(AliasAssign(wrapper_results[0], build_node))
 
