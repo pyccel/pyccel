@@ -38,12 +38,6 @@ t_ndarray   array_create(int32_t nd, int64_t *shape, enum e_types type)
         case nd_bool:
             arr.type_size = sizeof(bool);
             break;
-        case nd_cfloat:
-            arr.type_size = sizeof(float complex);
-            break;
-        case nd_cdouble:
-            arr.type_size = sizeof(double complex);
-            break;
     }
     arr.is_view = false;
     arr.length = 1;
@@ -170,25 +164,6 @@ void   _array_fill_double(double c, t_ndarray arr)
     else
         for (int32_t i = 0; i < arr.length; i++)
             arr.nd_double[i] = c;
-}
-
-void   _array_fill_cfloat(float complex c, t_ndarray arr)
-{
-    if (c == 0)
-        memset(arr.raw_data, 0, arr.buffer_size);
-    else
-        for (int32_t i = 0; i < arr.length; i++)
-            arr.nd_cfloat[i] = c;
-}
-
-
-void   _array_fill_cdouble(double complex c, t_ndarray arr)
-{
-    if (c == 0)
-        memset(arr.raw_data, 0, arr.buffer_size);
-    else
-        for (int32_t i = 0; i < arr.length; i++)
-            arr.nd_cdouble[i] = c;
 }
 
 /*

@@ -15,7 +15,7 @@
 # include <stdint.h>
 
 /* mapping the function array_fill to the correct type */
-# define array_fill(c, arr) _Generic((c), int64_t : _array_fill_int64,\
+/*# define array_fill(c, arr) _Generic((c), int64_t : _array_fill_int64,\
                                         int32_t : _array_fill_int32,\
                                         int16_t : _array_fill_int16,\
                                         int8_t : _array_fill_int8,\
@@ -23,7 +23,7 @@
                                         double : _array_fill_double,\
                                         bool : _array_fill_bool,\
                                         float complex : _array_fill_cfloat,\
-                                        double complex : _array_fill_cdouble)(c, arr)
+                                        double complex : _array_fill_cdouble)(c, arr)*/
 
 typedef struct  s_slice
 {
@@ -61,8 +61,6 @@ typedef struct  s_ndarray
             float           *nd_float;
             double          *nd_double;
             bool            *nd_bool;
-            double complex  *nd_cdouble;
-            float  complex  *nd_cfloat;
             };
     /* number of dimensions */
     int32_t                 nd;
@@ -94,8 +92,6 @@ void        _array_fill_int64(int64_t c, t_ndarray arr);
 void        _array_fill_float(float c, t_ndarray arr);
 void        _array_fill_double(double c, t_ndarray arr);
 void        _array_fill_bool(bool c, t_ndarray arr);
-void        _array_fill_cfloat(float complex c, t_ndarray arr);
-void        _array_fill_cdouble(double complex c, t_ndarray arr);
 
 /* slicing */
                 /* creating a Slice object */
