@@ -3951,10 +3951,10 @@ def test_numpy_int(language):
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2)
-    fl32 = uniform(min_float32, max_float32)
+    fl = uniform(min_int / 2, max_int / 2)
+    fl32 = uniform(min_int, max_int)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2)
+    fl64 = uniform(min_int / 2, max_int / 2)
 
     f_bl = epyccel(test_bool_int, language=language)
 
@@ -4045,10 +4045,10 @@ def test_numpy_int32(language):
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2)
+    fl = uniform(min_int32 / 2, max_int32 / 2)
     fl32 = uniform(min_float32, max_float32)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2)
+    fl64 = uniform(min_int32 / 2, max_int32 / 2)
 
     f_bl = epyccel(test_bool_int32, language=language)
 
@@ -4139,10 +4139,10 @@ def test_numpy_int64(language):
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2)
+    fl = uniform(min_int64 / 2, max_int64 / 2)
     fl32 = uniform(min_float32, max_float32)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2)
+    fl64 = uniform(min_int64 / 2, max_int64 / 2)
 
     f_bl = epyccel(test_bool_int64, language=language)
 
