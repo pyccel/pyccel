@@ -443,14 +443,14 @@ class NumpyMatmul(PyccelInternalFunction):
             self._shape = (m, n)
 
     def _set_rank(self):
-        if a.rank == 1 or b.rank == 1:
+        if self.a.rank == 1 or self.b.rank == 1:
             self._rank = 1
         else:
             self._rank = 2
 
     def _set_order(self):
-        if a.order == b.order:
-            self._order = a.order
+        if self.a.order == self.b.order:
+            self._order = self.a.order
         else:
             self._order = 'C'
 
@@ -592,9 +592,11 @@ class NumpyRandint(PyccelInternalFunction):
 
     def __init__(self, low, high = None, size = None):
         if size is None:
-            size = ()
-        if not hasattr(size,'__iter__'):
-            size = (size,)
+            self._shape = ()
+        elif not hasattr(size,'__iter__'):
+            self._shape = (size,)
+        else:
+            self._shape = size
 
         self._rand    = NumpyRand(*size)
         self._low     = low
@@ -605,7 +607,7 @@ class NumpyRandint(PyccelInternalFunction):
         self._dtype = NativeInteger()
 
     def _set_shape(self):
-        self._shape   = size
+        pass
 
     def _set_order(self):
         self._order = 'C'
@@ -653,18 +655,24 @@ class NumpyFull(NumpyNewArray):
         self._shape = shape
         self._order = order
 
+        # If there is no dtype, extract it from fill_value
+        # TODO: must get dtype from an annotated node
+        if not self._dtype:
+            self._dtype = self.fill_value.dtype
+        # Verify dtype and get precision
+        dtype, precision = process_dtype(dtype)
+        self._dtype = dtype
+        self._precision = precision
+
         # Cast fill_value to correct type
-        if fill_value and not isinstance(fill_value, Nil):
+        if fill_value and not isinstance(fill_value, Nil) and dtype != fill_value.dtype:
             cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
             fill_value = cast_func(fill_value)
 
         super().__init__(fill_value)
 
     def _set_dtype(self):
-        # If there is no dtype, extract it from fill_value
-        # TODO: must get dtype from an annotated node
-        if not self._dtype:
-            self._dtype = self.fill_value.dtype
+        pass
 
         # Verify dtype and get precision
         dtype, precision = process_dtype(self._dtype)
@@ -915,11 +923,11 @@ class NumpyMod(NumpyUfuncBinary):
         shapes = [a.shape for a in self.args]
 
         if len(args) == 1:
-            shape = args[0].shape
+            shape = self.args[0].shape
         else:
-            shape = broadcast(args[0].shape, args[1].shape)
+            shape = broadcast(self.args[0].shape, self.args[1].shape)
 
-            for a in args[2:]:
+            for a in self.args[2:]:
                 shape = broadcast(shape, a.shape)
 
         self._shape = shape
