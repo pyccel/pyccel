@@ -75,20 +75,32 @@ PyObject	*Bool_to_PyBool(bool b)
 	return b == true ? PyTrue : PyFalse;
 }
 
-
 /*  CHECK FUNCTION  */
+bool	PyArray_Check_Rank(PyArrayObject *a, int rank)
+{
+}
+
+bool	PyArray_Check_Type(PyArrayObject *a, int rank)
+{
+
+}
+
 
 bool	PyArray_Check(PyArrayObject *a, int rank, int dtype)
+{
+
+}
 {
 	char	*error;
 
 	if (PyArray_NDIM(a) != rank)
 	{
-		PyErr_SetString(PyExc_TypeError, "\"x_tmp must have rank \"");
+		PyErr_Format(PyExc_TypeError, "Arguments rank must be %d", rank);
 		return 0;
 	}
 	else if(PyArray_TYPE(a) != dtype)
 	{
+		PyErr_Format(PyExc_TypeError, "Arguments type must be %d", dtype);
 		return 0;
 	}
 }

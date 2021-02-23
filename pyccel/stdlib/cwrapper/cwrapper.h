@@ -8,6 +8,8 @@
 # include <stdbool.h>
 
 
+
+
 /*CAST FUNCTIONS*/
 
 // Python to C
@@ -26,6 +28,8 @@ PyObject	*Bool_to_PyBool(bool b);
 /* CHECK FUNCTIONS */
 
 
-bool	PyArray_Check(PyArrayObject *a, int rank, int dtype);
+bool	PyArray_Check_Rank(PyArrayObject *a, int rank);
+bool	PyArray_Check_Type(PyArrayObject *a, int dtype);
+
 
 #endif
