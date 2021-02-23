@@ -99,6 +99,7 @@ class CWrapperCodePrinter(CCodePrinter):
             return CCodePrinter.get_declare_type(self, expr)
         else :
             dtype = self.find_in_dtype_registry(dtype, prec)
+        print('[HERE 1]', expr, self.stored_in_c_pointer(expr))
 
         if self.stored_in_c_pointer(expr):
             return '{0} *'.format(dtype)
