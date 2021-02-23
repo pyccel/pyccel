@@ -488,7 +488,7 @@ class NumpyLinspace(NumpyNewArray):
     Represents numpy.linspace.
 
     """
-    __slots__ = ('_index','_start','_stop','_size'))
+    __slots__ = ('_index','_start','_stop','_size')
 
     def __init__(self, start, stop, size):
 
