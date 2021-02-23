@@ -331,7 +331,7 @@ class PyccelAstNode(Basic):
     def _set_rank(self):
         """ Determine the rank of the object. This should be the length of the shape
         """
-        if shape is not None:
+        if self._shape is not None:
             self._rank = len(self._shape)
         else:
             self._rank = None
