@@ -574,7 +574,7 @@ class PythonRange(Basic):
 
 
 #==============================================================================
-class PythonZip(PyccelInternalFunction):
+class PythonZip(Basic):
 
     """
     Represents a zip stmt.
