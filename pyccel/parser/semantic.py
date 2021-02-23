@@ -2030,6 +2030,7 @@ class SemanticParser(BasicParser):
                     assign.set_fst(expr.fst)
                     body        = [assign] + body
                     iterator[i] = indx
+        PyccelAstNode.stage = 'semantic'
 
         if isinstance(iterator, PyccelSymbol):
             name   = iterator
@@ -2052,7 +2053,6 @@ class SemanticParser(BasicParser):
             errors.report(INVALID_FOR_ITERABLE, symbol=expr.target,
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='error', blocker=self.blocking)
-        PyccelAstNode.stage = 'semantic'
 
         body = [self._visit(i, **settings) for i in body]
 
