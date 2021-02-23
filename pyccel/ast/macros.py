@@ -24,6 +24,7 @@ __all__ = (
 #==============================================================================
 class Macro(PyccelAstNode):
     """."""
+    __slots__ = ('_argument',)
     _name = '__UNDEFINED__'
     _attribute_nodes = ()
 
@@ -45,15 +46,18 @@ class Macro(PyccelAstNode):
 #==============================================================================
 class MacroShape(Macro):
     """."""
+    __slots__ = ('_index',)
     _name      = 'shape'
-    _AstNodeProperties = {'dtype'     : NativeInteger(),
-                          'precision' : default_precision['integer'],
-                          'shape'     : (),
-                          'rank'      : 0  }
 
     def __init__(self, argument, index=None):
         self._index = index
         super().__init__(argument, **self._AstNodeProperties)
+
+    def _set_dtype(self):
+        self._dtype = NativeInteger()
+
+    def _set_shape(self):
+        self._shape = ()
 
     @property
     def index(self):
@@ -69,14 +73,18 @@ class MacroShape(Macro):
 #==============================================================================
 class MacroType(Macro):
     """."""
+    __slots__ = ()
     _name      = 'dtype'
-    _AstNodeProperties = {'dtype'     : NativeGeneric(),
-                          'precision' : 0,
-                          'shape'     : (),
-                          'rank'      : 0  }
 
     def __init__(self, argument):
         super().__init__(argument, **self._AstNodeProperties)
+
+    def _set_dtype(self):
+        self._dtype = NativeGeneric()
+        self._precision = 0
+
+    def _set_shape(self):
+        self._shape = ()
 
     def __str__(self):
         return 'MacroType({})'.format(str(self.argument))
@@ -84,14 +92,17 @@ class MacroType(Macro):
 #==============================================================================
 class MacroCount(Macro):
     """."""
+    __slots__ = ()
     _name      = 'count'
-    _AstNodeProperties = {'dtype'     : NativeInteger(),
-                          'precision' : default_precision['integer'],
-                          'shape'     : (),
-                          'rank'      : 0  }
 
     def __init__(self, argument):
         super().__init__(argument, **self._AstNodeProperties)
+
+    def _set_dtype(self):
+        self._dtype = NativeInteger()
+
+    def _set_shape(self):
+        self._shape = ()
 
     def __str__(self):
         return 'MacroCount({})'.format(str(self.argument))
