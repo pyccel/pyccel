@@ -437,6 +437,7 @@ class CCodePrinter(CodePrinter):
         return '({0})({1})'.format(type_name, value)
 
     def _print_PythonInt(self, expr):
+        self._additional_imports.add('stdint')
         value = self._print(expr.arg)
         type_name = self.find_in_dtype_registry('int', expr.precision)
         return '({0})({1})'.format(type_name, value)
@@ -1239,8 +1240,6 @@ class CCodePrinter(CodePrinter):
         return 'NULL'
 
     def _print_PyccelAdd(self, expr):
-        if isinstance(expr.args[0].dtype, NativeInteger):
-            self._additional_imports.add('stdint')
         return ' + '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelMinus(self, expr):
