@@ -260,10 +260,8 @@ class PythonFloat(PyccelAstNode):
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
-        if isinstance(arg, LiteralFloat):
-            return LiteralFloat(arg, precision = cls._precision)
-        elif isinstance(arg, LiteralInteger):
-            return LiteralFloat(arg.p, precision = cls._precision)
+        if isinstance(arg, (LiteralInteger, LiteralFloat)):
+            return LiteralFloat(arg.python_value, precision = cls._precision)
         else:
             return super().__new__(cls)
 
@@ -291,7 +289,7 @@ class PythonInt(PyccelAstNode):
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralInteger):
-            return LiteralInteger(arg.p, precision = cls._precision)
+            return LiteralInteger(arg.python_value, precision = cls._precision)
         else:
             return super().__new__(cls)
 
