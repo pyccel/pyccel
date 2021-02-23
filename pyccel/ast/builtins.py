@@ -431,7 +431,6 @@ class PythonList(PythonTuple):
     """ Represents a call to Python's native list() function.
     """
     __slots__ = ()
-    _is_homogeneous = True
 
 #==============================================================================
 class PythonMap(Basic):
