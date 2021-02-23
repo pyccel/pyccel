@@ -754,7 +754,7 @@ class IndexedElement(PyccelAstNode):
         if self.base.shape is not None:
             new_shape = []
             from .mathext import MathCeil
-            for a,s in zip(args, self.base.shape):
+            for a,s in zip(self.indices, self.base.shape):
                 if isinstance(a, Slice):
                     start = a.start
                     stop  = a.stop if a.stop is not None else s
