@@ -1677,14 +1677,17 @@ class FunctionCall(PyccelAstNode):
         super().__init__()
 
     def _set_dtype(self):
-        self._dtype     = self.funcdef.results[0].dtype     if len(func.results) == 1 else NativeTuple()
-        self._precision = self.funcdef.results[0].precision if len(func.results) == 1 else None
+        func = self.funcdef
+        self._dtype     = func.results[0].dtype     if len(func.results) == 1 else NativeTuple()
+        self._precision = func.results[0].precision if len(func.results) == 1 else None
 
     def _set_shape(self):
-        self._shape = self.funcdef.results[0].shape if len(func.results) == 1 else None
+        func = self.funcdef
+        self._shape = func.results[0].shape if len(func.results) == 1 else None
 
     def _set_order(self):
-        self._order = self.funcdef.results[0].order if len(func.results) == 1 else None
+        func = self.funcdef
+        self._order = func.results[0].order if len(func.results) == 1 else None
 
     @property
     def args(self):
