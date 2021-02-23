@@ -331,7 +331,10 @@ class PyccelAstNode(Basic):
     def _set_rank(self):
         """ Determine the rank of the object. This should be the length of the shape
         """
-        self._rank = len(self._shape)
+        if shape is not None:
+            self._rank = len(self._shape)
+        else:
+            self._rank = None
 
     def _set_order(self):
         """ Determine the ordering of the object. This should be either "C" or "F"
