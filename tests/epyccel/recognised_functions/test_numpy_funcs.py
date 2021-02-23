@@ -2,12 +2,28 @@
 import sys
 import pytest
 from numpy.random import rand, randint, uniform
-from numpy import isclose
+from numpy import isclose, iinfo, finfo
 
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 
-min_float = sys.float_info.min  # Minimum positive float
+min_int = iinfo('int').min
+max_int = iinfo('int').max
+
+min_int32 = iinfo('int32').min
+max_int32 = iinfo('int32').max
+
+min_int64 = iinfo('int64').min
+max_int64 = iinfo('int64').max
+
+min_float = sys.float_info.min
+max_float = finfo('float').max
+
+min_float32 = finfo('float32').min
+max_float32 = finfo('float32').max
+
+min_float64 = finfo('float64').min
+max_float64 = finfo('float64').max
 
 # int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722
 
@@ -4681,8 +4697,7 @@ def test_numpy_complex128(language):
     assert (f_fl64(fl64) == test_float64_complex128(fl64))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Complex not supported yet")]),
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Mod function not supported in C"),
             pytest.mark.c]
@@ -4697,73 +4712,63 @@ def test_numpy_mod_scalar(language):
     @types('int')
     def test_int(a):
         import numpy as np
-        b = np.mod(a, a)
+        b = np.mod(a + 1, a)
         return b
 
     @types('int8')
     def test_int8(a):
         import numpy as np
-        b = np.mod(a, a)
+        b = np.mod(a + 1, a)
         return b
 
     @types('int16')
     def test_int16(a):
         import numpy as np
-        b = np.mod(a, a)
+        b = np.mod(a + 1, a)
         return b
 
     @types('int32')
     def test_int32(a):
         import numpy as np
-        b = np.mod(a, a)
+        b = np.mod(a + 1, a)
         return b
 
     @types('int64')
     def test_int64(a):
         import numpy as np
-        b = np.mod(a, a)
+        b = np.mod(a + 1, a)
         return b
 
     @types('float')
     def test_float(a):
         import numpy as np
-        b = np.mod(a, a)
+        b = np.mod(a + 1, a)
         return b
 
     @types('float32')
     def test_float32(a):
         import numpy as np
-        b = np.mod(a, a)
+        b = np.mod(a + 1, a)
         return b
 
     @types('float64')
     def test_float64(a):
         import numpy as np
-        b = np.mod(a, a)
-        return b
-
-    @types('complex64')
-    def test_complex64(a):
-        import numpy as np
-        b = np.mod(a, a)
-        return b
-
-    @types('complex128')
-    def test_complex128(a):
-        import numpy as np
-        b = np.mod(a, a)
+        b = np.mod(a + 1, a)
         return b
 
     import numpy as np
 
-    integer = randint(1e6)
-    integer8 = np.int8(randint(1e6))
-    integer16 = np.int16(randint(1e6))
-    integer32 = np.int32(randint(1e6))
-    integer64 = np.int64(randint(1e6))
-    fl = np.float(randint(1e6))
-    fl32 = np.float32(randint(1e6))
-    fl64 = np.float64(randint(1e6))
+    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
+    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer = randint(min_int, max_int, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
+
+    fl = uniform(min_int / 2, max_int / 2)
+    fl32 = uniform(min_int, max_int)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(min_int / 2, max_int / 2)
 
     f_integer = epyccel(test_int, language=language)
     f_integer8 = epyccel(test_int8, language=language)
@@ -4785,15 +4790,8 @@ def test_numpy_mod_scalar(language):
     assert (f_fl32(fl32) == test_float32(fl32))
     assert (f_fl64(fl64) == test_float64(fl64))
 
-    f_complex64 = epyccel(test_complex64, language=language)
-    f_complex128 = epyccel(test_complex128, language=language)
-
-    assert (f_complex64(1+5j) == test_complex64(1+5j))
-    assert (f_complex128(1+5j) == test_complex128(1+5j))
-
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Complex not supported yet")]),
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Mod function not supported in C"),
             pytest.mark.c]
@@ -4801,120 +4799,118 @@ def test_numpy_mod_scalar(language):
     )
 )
 
+
 def test_numpy_mod_array_like_1d(language):
 
-    def test_int():
-        from numpy import mod, shape, array
-        x1 = array([4,5,6,2,1], int)
-        x2 = array([4,5,6,2,1], int)
-        a = mod(x1, x2)
+    @types('bool[:]')
+    def test_bool(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
+        s = shape(a)
+        return len(s), s[0], a[0]
+
+    @types('int[:]')
+    def test_int(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
     # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
-    # def test_int8():
-    #     from numpy import mod, shape, array, int8
-    #     x1 = array([4,5,6,2,1], int8)
-    #     x2 = array([4,5,6,2,1], int8)
-    #     a = mod(x1, x2)
+    # @types('int8[:]')
+    # def test_int8(arr):
+    #     from numpy import mod, shape
+    #     a = mod(arr, arr)
     #     s = shape(a)
     #     return len(s), s[0], a[0]
 
-    # def test_int16():
-    #     from numpy import mod, shape, array, int16
-    #     x1 = array([4,5,6,2,1], int16)
-    #     x2 = array([4,5,6,2,1], int16)
-    #     a = mod(x1, x2)
+    # # @types('int16[:]')
+    # def test_int16(arr):
+    #     from numpy import mod, shape
+    #     a = mod(arr, arr)
     #     s = shape(a)
     #     return len(s), s[0], a[0]
 
-    def test_int32():
-        from numpy import mod, shape, array, int32
-        x1 = array([4,5,6,2,1], int32)
-        x2 = array([4,5,6,2,1], int32)
-        a = mod(x1, x2)
+    @types('int32[:]')
+    def test_int32(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
-    def test_int64():
-        from numpy import mod, shape, array, int64
-        x1 = array([4,5,6,2,1], int64)
-        x2 = array([4,5,6,2,1], int64)
-        a = mod(x1, x2)
+    @types('int64[:]')
+    def test_int64(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
-    def test_float():
-        from numpy import mod, shape, array
-        x1 = array([4,5,6,2,1], float)
-        x2 = array([4,5,6,2,1], float)
-        a = mod(x1, x2)
+    @types('float[:]')
+    def test_float(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
-    def test_float32():
-        from numpy import mod, shape, array, float32
-        x1 = array([4,5,6,2,1], float32)
-        x2 = array([4,5,6,2,1], float32)
-        a = mod(x1, x2)
+    @types('float32[:]')
+    def test_float32(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
-    def test_float64():
-        from numpy import mod, shape, array, float64
-        x1 = array([4,5,6,2,1], float64)
-        x2 = array([4,5,6,2,1], float64)
-        a = mod(x1, x2)
+    @types('float64[:]')
+    def test_float64(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
-    def test_complex64():
-        from numpy import mod, shape, array, complex64
-        x1 = array([4,5,6,2,1], complex64)
-        x2 = array([4,5,6,2,1], complex64)
-        a = mod(x1, x2)
-        s = shape(a)
-        return len(s), s[0], a[0]
+    import numpy as np
 
-    def test_complex128():
-        from numpy import mod, shape, array, complex128
-        x1 = array([4,5,6,2,1], complex128)
-        x2 = array([4,5,6,2,1], complex128)
-        a = mod(x1, x2)
-        s = shape(a)
-        return len(s), s[0], a[0]
+    bl = randint(0, 1, size=(5), dtype= bool)
 
+    # should be uncommented after resolving #733
+    # integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
+    # integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
+    integer = randint(min_int, max_int, size=(5), dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
+
+    fl = uniform(min_float / 2, max_float / 2, size=(5))
+    fl32 = uniform(min_float32, max_float32, size=(5))
+    fl32 = np.float32(fl32)
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
+
+    f_bl = epyccel(test_bool, language=language)
+
+    assert (f_bl(bl) == test_bool(bl))
+
+    # should be uncommented after resolving #733
+    # f_integer8 = epyccel(test_int8, language=language)
+    # f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
-    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
-    #f_integer8 = epyccel(test_int8, language=language)
-    #f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    assert (f_integer() == test_int())
-    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
-    #assert (f_integer8() == test_int8())
-    #assert (f_integer16() == test_int16())
-    assert (f_integer32() == test_int32())
-    assert (f_integer64() == test_int64())
+    # should be uncommented after resolving #733
+    # assert (f_integer8(integer8) == test_int8(integer8))
+    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer(integer) == test_int(integer))
+    assert (f_integer32(integer32) == test_int32(integer32))
+    assert (f_integer64(integer64) == test_int64(integer64))
 
     f_fl = epyccel(test_float, language=language)
     f_fl32 = epyccel(test_float32, language=language)
     f_fl64 = epyccel(test_float64, language=language)
 
-    assert (f_fl() == test_float())
-    assert (f_fl32() == test_float32())
-    assert (f_fl64() == test_float64())
+    assert (f_fl(fl) == test_float(fl))
+    assert (f_fl32(fl32) == test_float32(fl32))
+    assert (f_fl64(fl64) == test_float64(fl64))
 
-    f_complex64 = epyccel(test_complex64, language=language)
-    f_complex128 = epyccel(test_complex128, language=language)
-
-    assert (f_complex64() == test_complex64())
-    assert (f_complex128() == test_complex128())
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Complex not supported yet")]),
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Mod function not supported in C"),
             pytest.mark.c]
@@ -4924,114 +4920,107 @@ def test_numpy_mod_array_like_1d(language):
 
 def test_numpy_mod_array_like_2d(language):
 
-    def test_int():
-        from numpy import mod, shape, array
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int)
-        x2 = array([[4,5,6,2,1],[4,5,6,2,1]], int)
-        a = mod(x1, x2)
+    @types('bool[:,:]')
+    def test_bool(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
-    # def test_int8():
-    #     from numpy import mod, shape, array, int8
-    #     x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
-    #     x2 = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
-    #     a = mod(x1, x2)
+    @types('int[:,:]')
+    def test_int(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
+
+    # should be uncommented after resolving #733
+    # @types('int8[:,:]')
+    # def test_int8(arr):
+    #     from numpy import mod, shape
+    #     a = mod(arr, arr)
     #     s = shape(a)
     #     return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    # def test_int16():
-    #     from numpy import mod, shape, array, int16
-    #     x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
-    #     x2 = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
-    #     a = mod(x1, x2)
+    # # @types('int16[:,:]')
+    # def test_int16(arr):
+    #     from numpy import mod, shape
+    #     a = mod(arr, arr)
     #     s = shape(a)
     #     return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_int32():
-        from numpy import mod, shape, array, int32
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int32)
-        x2 = array([[4,5,6,2,1],[4,5,6,2,1]], int32)
-        a = mod(x1, x2)
+    @types('int32[:,:]')
+    def test_int32(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_int64():
-        from numpy import mod, shape, array, int64
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], int64)
-        x2 = array([[4,5,6,2,1],[4,5,6,2,1]], int64)
-        a = mod(x1, x2)
+    @types('int64[:,:]')
+    def test_int64(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_float():
-        from numpy import mod, shape, array
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], float)
-        x2 = array([[4,5,6,2,1],[4,5,6,2,1]], float)
-        a = mod(x1, x2)
+    @types('float[:,:]')
+    def test_float(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_float32():
-        from numpy import mod, shape, array, float32
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], float32)
-        x2 = array([[4,5,6,2,1],[4,5,6,2,1]], float32)
-        a = mod(x1, x2)
+    @types('float32[:,:]')
+    def test_float32(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_float64():
-        from numpy import mod, shape, array, float64
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], float64)
-        x2 = array([[4,5,6,2,1],[4,5,6,2,1]], float64)
-        a = mod(x1, x2)
+    @types('float64[:,:]')
+    def test_float64(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    def test_complex64():
-        from numpy import mod, shape, array, complex64
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], complex64)
-        x2 = array([[4,5,6,2,1],[4,5,6,2,1]], complex64)
-        a = mod(x1, x2)
-        s = shape(a)
-        return len(s), s[0], s[1]
+    import numpy as np
+    bl = randint(0, 1, size=(2, 5), dtype= bool)
 
-    def test_complex128():
-        from numpy import mod, shape, array, complex128
-        x1 = array([[4,5,6,2,1],[4,5,6,2,1]], complex128)
-        x2 = array([[4,5,6,2,1],[4,5,6,2,1]], complex128)
-        a = mod(x1, x2)
-        s = shape(a)
-        return len(s), s[0], s[1]
+    integer = randint(min_int, max_int, size=(2, 5), dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size=(2, 5), dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size=(2, 5), dtype=np.int64)
 
-    f_integer = epyccel(test_int, language=language)
-    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
+    fl = uniform(min_float / 2, max_float / 2, size=(2, 5))
+    fl32 = uniform(min_float32, max_float32, size=(2, 5))
+    fl32 = np.float32(fl32)
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(2, 5))
+
+    f_bl = epyccel(test_bool, language=language)
+
+    assert (f_bl(bl) == test_bool(bl))
+
+    # should be uncommented after resolving #733
     # f_integer8 = epyccel(test_int8, language=language)
     # f_integer16 = epyccel(test_int16, language=language)
+    f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    assert (f_integer() == test_int())
-    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
-    # assert (f_integer8() == test_int8())
-    # assert (f_integer16() == test_int16())
-    assert (f_integer32() == test_int32())
-    assert (f_integer64() == test_int64())
+    # should be uncommented after resolving #733
+    # assert (f_integer8(integer8) == test_int8(integer8))
+    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer(integer) == test_int(integer))
+    assert (f_integer32(integer32) == test_int32(integer32))
+    assert (f_integer64(integer64) == test_int64(integer64))
 
     f_fl = epyccel(test_float, language=language)
     f_fl32 = epyccel(test_float32, language=language)
     f_fl64 = epyccel(test_float64, language=language)
 
-    assert (f_fl() == test_float())
-    assert (f_fl32() == test_float32())
-    assert (f_fl64() == test_float64())
-
-    f_complex64 = epyccel(test_complex64, language=language)
-    f_complex128 = epyccel(test_complex128, language=language)
-
-    assert (f_complex64() == test_complex64())
-    assert (f_complex128() == test_complex128())
+    assert (f_fl(fl) == test_float(fl))
+    assert (f_fl32(fl32) == test_float32(fl32))
+    assert (f_fl64(fl64) == test_float64(fl64))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
