@@ -204,11 +204,12 @@ class Variable(PyccelAstNode):
 
     def _set_shape(self):
         if self.rank == 0:
-            self._shape = ()
+            shape = ()
         elif self._alloc_shape is None:
-            self._shape = tuple(None for i in range(self.rank))
+            shape = tuple(None for i in range(self.rank))
         else:
-            self._shape = self.process_shape(self._alloc_shape)
+            shape = self._alloc_shape
+        self._shape = self.process_shape(shape)
 
     def _set_rank(self):
         pass
