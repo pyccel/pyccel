@@ -784,10 +784,6 @@ class NumpyUfuncBinary(NumpyUfuncBase):
     # TODO: apply Numpy's broadcasting rules to get shape/rank of output
     def __init__(self, x1, x2):
         super().__init__(x1, x2)
-        print(x1.dtype, x2.dtype)
-        x1 = PythonInt(x1) if isinstance(x1.dtype, NativeBool) else x1
-        x2 = PythonInt(x2) if isinstance(x2.dtype, NativeBool) else x2
-        print(x1.dtype, x2.dtype)
         self._set_dtype_precision(x1, x2)
         self._set_shape_rank(x1, x2)
         self._set_order(x1, x2)
