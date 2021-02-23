@@ -568,7 +568,7 @@ def test_log_call_r(language):
         return log(x)
 
     f1 = epyccel(log_call_r, language = language)
-    x = uniform(low=min_float, high=1e6)
+    x = uniform(low=0, high=max_float)
     assert(isclose(f1(x), log_call_r(x), rtol=RTOL, atol=ATOL))
     assert(type(f1(x)) == type(log_call_r(x).item()))
 
@@ -3945,16 +3945,16 @@ def test_numpy_int(language):
 
     import numpy as np
 
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
-    integer = randint(min_int, max_int, size=(5), dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
+    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
+    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer = randint(min_int, max_int, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size=(5))
-    fl32 = uniform(min_float32, max_float32, size=(5))
+    fl = uniform(min_float / 2, max_float / 2)
+    fl32 = uniform(min_float32, max_float32)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
+    fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
     f_bl = epyccel(test_bool_int, language=language)
 
@@ -4039,16 +4039,16 @@ def test_numpy_int32(language):
 
     import numpy as np
 
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
-    integer = randint(min_int, max_int, size=(5), dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
+    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
+    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer = randint(min_int, max_int, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size=(5))
-    fl32 = uniform(min_float32, max_float32, size=(5))
+    fl = uniform(min_float / 2, max_float / 2)
+    fl32 = uniform(min_float32, max_float32)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
+    fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
     f_bl = epyccel(test_bool_int32, language=language)
 
@@ -4133,16 +4133,16 @@ def test_numpy_int64(language):
 
     import numpy as np
 
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
-    integer = randint(min_int, max_int, size=(5), dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
+    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
+    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer = randint(min_int, max_int, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size=(5))
-    fl32 = uniform(min_float32, max_float32, size=(5))
+    fl = uniform(min_float / 2, max_float / 2)
+    fl32 = uniform(min_float32, max_float32)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
+    fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
     f_bl = epyccel(test_bool_int64, language=language)
 
@@ -4228,16 +4228,16 @@ def test_numpy_float(language):
 
     import numpy as np
 
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
-    integer = randint(min_int, max_int, size=(5), dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
+    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
+    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer = randint(min_int, max_int, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size=(5))
-    fl32 = uniform(min_float32, max_float32, size=(5))
+    fl = uniform(min_float / 2, max_float / 2)
+    fl32 = uniform(min_float32, max_float32)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
+    fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
     f_bl = epyccel(test_bool_float, language=language)
 
@@ -4322,16 +4322,16 @@ def test_numpy_float32(language):
 
     import numpy as np
 
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
-    integer = randint(min_int, max_int, size=(5), dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
+    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
+    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer = randint(min_int, max_int, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size=(5))
-    fl32 = uniform(min_float32, max_float32, size=(5))
+    fl = uniform(min_float / 2, max_float / 2)
+    fl32 = uniform(min_float32, max_float32)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
+    fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
     f_bl = epyccel(test_bool_float32, language=language)
 
@@ -4416,16 +4416,16 @@ def test_numpy_float64(language):
 
     import numpy as np
 
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
-    integer = randint(min_int, max_int, size=(5), dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
+    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
+    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer = randint(min_int, max_int, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size=(5))
-    fl32 = uniform(min_float32, max_float32, size=(5))
+    fl = uniform(min_float / 2, max_float / 2)
+    fl32 = uniform(min_float32, max_float32)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
+    fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
     f_bl = epyccel(test_bool_float64, language=language)
 
@@ -4510,16 +4510,16 @@ def test_numpy_double(language):
 
     import numpy as np
 
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
-    integer = randint(min_int, max_int, size=(5), dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
+    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
+    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer = randint(min_int, max_int, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size=(5))
-    fl32 = uniform(min_float32, max_float32, size=(5))
+    fl = uniform(min_float / 2, max_float / 2)
+    fl32 = uniform(min_float32, max_float32)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
+    fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
     f_bl = epyccel(test_bool_double, language=language)
 
@@ -4604,16 +4604,16 @@ def test_numpy_complex64(language):
 
     import numpy as np
 
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
-    integer = randint(min_int, max_int, size=(5), dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
+    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
+    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer = randint(min_int, max_int, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size=(5))
-    fl32 = uniform(min_float32, max_float32, size=(5))
+    fl = uniform(min_float / 2, max_float / 2)
+    fl32 = uniform(min_float32, max_float32)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
+    fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
     f_bl = epyccel(test_bool_complex64, language=language)
 
@@ -4698,16 +4698,16 @@ def test_numpy_complex128(language):
 
     import numpy as np
 
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
-    integer = randint(min_int, max_int, size=(5), dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
+    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
+    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer = randint(min_int, max_int, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size=(5))
-    fl32 = uniform(min_float32, max_float32, size=(5))
+    fl = uniform(min_float / 2, max_float / 2)
+    fl32 = uniform(min_float32, max_float32)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
+    fl64 = uniform(min_float64 / 2, max_float64 / 2)
 
     f_bl = epyccel(test_bool_complex128, language=language, verbose=True)
 
