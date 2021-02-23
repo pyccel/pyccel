@@ -19,7 +19,7 @@ from .builtins  import PythonRange, PythonTuple
 
 from .mathext   import MathCeil
 
-from .literals  import LiteralInteger, LiteralFloat, Literal
+from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
 
 from .datatypes import NativeInteger
 
@@ -126,8 +126,14 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
     """
 
     #Constants
-    if isinstance(expr, Literal):
-        return expr.python_value
+    if isinstance(expr, LiteralInteger):
+        return sp.Integer(expr.python_value)
+
+    elif isinstance(expr, LiteralReal):
+        return sp.Float(expr.python_value)
+
+    elif isinstance(expr, LiteralComplex):
+        return sp.Float(expr.real) + sp.Float(expr.imag) * 1j
 
     #Operators
     elif isinstance(expr, PyccelDiv):
