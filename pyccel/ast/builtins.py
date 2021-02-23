@@ -328,14 +328,14 @@ class PythonInt(PyccelAstNode):
 class PythonTuple(PyccelAstNode):
     """ Represents a call to Python's native tuple() function.
     """
-    __slots__ = ()
+    __slots__ = ('_args','_inconsistent_shape','_is_homogeneous')
     _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
         self._args = args
-        super().__init__()
         if self.stage == 'syntactic' or len(args) == 0:
             self._is_homogeneous  = False
+            super().__init__()
             return
         is_homogeneous = all(a.dtype is not NativeGeneric() and \
                              args[0].dtype == a.dtype and \
@@ -343,54 +343,15 @@ class PythonTuple(PyccelAstNode):
                              args[0].order == a.order for a in args[1:])
         self._inconsistent_shape = not all(args[0].shape==a.shape   for a in args[1:])
         self._is_homogeneous = is_homogeneous
-        if is_homogeneous:
-            integers  = [a for a in args if a.dtype is NativeInteger()]
-            reals     = [a for a in args if a.dtype is NativeReal()]
-            complexes = [a for a in args if a.dtype is NativeComplex()]
-            bools     = [a for a in args if a.dtype is NativeBool()]
-            strs      = [a for a in args if a.dtype is NativeString()]
-            if strs:
-                dtype = NativeString()
-                rank  = 0
-                shape = ()
-            else:
-                if complexes:
-                    dtype     = NativeComplex()
-                    precision = max(a.precision for a in complexes)
-                elif reals:
-                    dtype     = NativeReal()
-                    precision = max(a.precision for a in reals)
-                elif integers:
-                    dtype     = NativeInteger()
-                    precision = max(a.precision for a in integers)
-                elif bools:
-                    dtype     = NativeBool()
-                    precision  = max(a.precision for a in bools)
-                else:
-                    raise TypeError('cannot determine the type of {}'.format(self))
-
-
-                shapes     = [a.shape for a in args]
-                rank = max(a.rank for a in args) + 1
-                if all(sh is not None for sh in shapes):
-                    shape = (LiteralInteger(len(args)), ) + shapes[0]
-                    rank  = len(shape)
-
-        else:
-            rank      = max(a.rank for a in args) + 1
-            dtype     = NativeGeneric()
-            precision = 0
-            shape     = (LiteralInteger(len(args)), ) + args[0].shape
-
-        super().__init__(dtype, precision, shape, rank, 'C')
+        super().__init__()
 
     def _set_dtype(self):
-        if is_homogeneous:
-            integers  = [a for a in args if a.dtype is NativeInteger()]
-            reals     = [a for a in args if a.dtype is NativeReal()]
-            complexes = [a for a in args if a.dtype is NativeComplex()]
-            bools     = [a for a in args if a.dtype is NativeBool()]
-            strs      = [a for a in args if a.dtype is NativeString()]
+        if self.is_homogeneous:
+            integers  = [a for a in self.args if a.dtype is NativeInteger()]
+            reals     = [a for a in self.args if a.dtype is NativeReal()]
+            complexes = [a for a in self.args if a.dtype is NativeComplex()]
+            bools     = [a for a in self.args if a.dtype is NativeBool()]
+            strs      = [a for a in self.args if a.dtype is NativeString()]
             if strs:
                 self._dtype = NativeString()
             else:
@@ -413,7 +374,7 @@ class PythonTuple(PyccelAstNode):
             self._precision = 0
 
     def _set_shape(self):
-        self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
+        self._shape     = (LiteralInteger(len(self.args)), ) + self.args[0].shape
 
     def _set_order(self):
         self._order = 'C'
