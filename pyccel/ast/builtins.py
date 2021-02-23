@@ -14,7 +14,7 @@ In this module we implement some of them in alphabetical order.
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeReal,
                         NativeComplex, NativeString, str_dtype,
-                        NativeGeneric, default_precision)
+                        NativeGeneric)
 from .internals import PyccelInternalFunction
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
@@ -129,7 +129,6 @@ class PythonBool(PyccelAstNode):
 
     def _set_dtype(self):
         self._dtype = NativeBool()
-        self._precision = default_precision['bool']
 
     def _set_shape(self):
         self._shape = self.arg.shape
@@ -216,7 +215,6 @@ class PythonComplex(PyccelAstNode):
 
     def _set_dtype(self):
         self._dtype = NativeComplex()
-        self._precision = default_precision['complex']
 
     def _set_shape(self):
         self._shape = ()
