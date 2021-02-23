@@ -3966,14 +3966,15 @@ def test_numpy_imag_scalar(language):
     integer = randint(min_int, max_int, dtype=np.int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
-    cmplx64 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
-    cmplx64 = np.complex64(cmplx64)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
 
     fl = uniform(min_int / 2, max_int / 2)
     fl32 = uniform(min_int, max_int)
     fl32 = np.float32(fl32)
     fl64 = uniform(min_int / 2, max_int / 2)
+
+    cmplx64 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    cmplx64 = np.complex64(cmplx64)
+    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
 
     f_bl = epyccel(test_bool, language=language)
 
