@@ -129,7 +129,7 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
     if isinstance(expr, LiteralInteger):
         return sp.Integer(expr.python_value)
 
-    elif isinstance(expr, LiteralReal):
+    elif isinstance(expr, LiteralFloat):
         return sp.Float(expr.python_value)
 
     elif isinstance(expr, LiteralComplex):
