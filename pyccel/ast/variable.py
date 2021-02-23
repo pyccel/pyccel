@@ -427,9 +427,9 @@ class Variable(PyccelAstNode):
             cls = new_class
 
         args = inspect.signature(Variable.__init__)
-        new_kwargs = {k:self.__dict__['_'+k] \
+        new_kwargs = {k:getattr(self, '_'+k) \
                             for k in args.parameters.keys() \
-                            if '_'+k in self.__dict__}
+                            if '_'+k in dir(self)}
         new_kwargs.update(kwargs)
         new_kwargs['name'] = name
 
