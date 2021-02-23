@@ -126,11 +126,8 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
     """
 
     #Constants
-    if isinstance(expr, LiteralInteger):
-        return sp.Integer(expr.p)
-
-    elif isinstance(expr, LiteralFloat):
-        return sp.Float(expr)
+    if isinstance(expr, Literal):
+        return expr.python_value
 
     #Operators
     elif isinstance(expr, PyccelDiv):
@@ -139,7 +136,7 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     elif isinstance(expr, PyccelMul):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
-        return sp.Mul(*args)
+        return args[0] * args[1]
 
     elif isinstance(expr, PyccelMinus):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
@@ -151,11 +148,11 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     elif isinstance(expr, PyccelAdd):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
-        return sp.Add(*args)
+        return args[0] + args[1]
 
     elif isinstance(expr, PyccelPow):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
-        return sp.Pow(*args)
+        return args[0] ** args[1]
 
     elif isinstance(expr, PyccelAssociativeParenthesis):
         return pyccel_to_sympy(expr.args[0], symbol_map, used_names)
