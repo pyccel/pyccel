@@ -3961,19 +3961,19 @@ def test_numpy_imag_scalar(language):
 
     import numpy as np
 
-    if sys.platform == 'win32':
-        integer = randint(-2147483648, 2147483647)
-    else:
-        integer = randint(-9223372036854775808, 9223372036854775807)
-    integer8 = np.int8(randint(-128, 127))
-    integer16 = np.int16(randint(-32768, 32767))
-    integer32 = np.int32(randint(-2147483648, 2147483647))
-    integer64 = np.int64(randint(-9223372036854775808, 9223372036854775807))
-    fl = np.float(randint(-2147483648, 2147483647))
-    fl32 = np.float32(randint(-2147483648, 2147483647))
-    fl64 = np.float64(randint(-9223372036854775808, 9223372036854775807))
-    cmplx64 = np.complex64(1+5j)
-    cmplx128 = np.complex128(1+5j)
+    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
+    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer = randint(min_int, max_int, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
+    cmplx64 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    cmplx64 = np.complex64(cmplx64)
+    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
+
+    fl = uniform(min_int / 2, max_int / 2)
+    fl32 = uniform(min_int, max_int)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(min_int / 2, max_int / 2)
 
     f_bl = epyccel(test_bool, language=language)
 
@@ -4044,7 +4044,7 @@ def test_numpy_imag_scalar(language):
     test_float64_output = test_float64(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output.item())
+    assert type(f_fl64_output) == type(test_float64_output)
 
     f_complex64 = epyccel(test_complex64, language=language)
     f_complex128 = epyccel(test_complex128, language=language)
