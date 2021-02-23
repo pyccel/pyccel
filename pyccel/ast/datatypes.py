@@ -87,8 +87,7 @@ default_precision = {'real': 8,
                     'integer': numpy.dtype(int).alignment,
                     'complex': 8,
                     'bool':4,
-                    'float':8,
-                    'string':0}
+                    'float':8}
 dtype_and_precision_registry = { 'real':('real',default_precision['float']),
                                  'double':('real',default_precision['float']),
                                  'float':('real',default_precision['float']),

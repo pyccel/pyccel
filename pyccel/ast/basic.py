@@ -307,7 +307,7 @@ class PyccelAstNode(Basic):
             self._set_dtype()
 
             if not hasattr(self, '_precision'):
-                self._precision = default_precision[str(self._dtype)]
+                self._precision = default_precision.get(str(self._dtype), 0)
 
             self._set_shape()
             self._set_rank()
