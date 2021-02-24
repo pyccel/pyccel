@@ -1518,7 +1518,7 @@ class CCodePrinter(CodePrinter):
     def _print_OmpAnnotatedComment(self, expr):
         omp_expr = str(expr.txt)
         if isinstance(expr, OMP_For_Loop):
-            omp_expr = '#pragma omp for'.format(omp_expr)
+            omp_expr = '#pragma omp for{}'.format(omp_expr)
         else:
             omp_expr = '#pragma omp {}'.format(omp_expr)
         if isinstance(expr, (OMP_Sections_Construct, OMP_Section_Construct,
