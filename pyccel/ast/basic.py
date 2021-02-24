@@ -27,14 +27,14 @@ class Immutable:
 #==============================================================================
 class Basic:
     """Basic class for Pyccel AST."""
-    __slots__ = ('_user_nodes', '_fst', '_recursion_in_progress', '_attribute_nodes')
+    __slots__ = ('_user_nodes', '_fst', '_recursion_in_progress')
     _ignored_types = (Immutable, type)
 
     def __init__(self):
         self._user_nodes = []
         self._fst = []
         self._recursion_in_progress = False
-        for c_name in self._attribute_nodes:
+        for c_name in type(self)._attribute_nodes:
             c = getattr(self, c_name)
 
             from pyccel.ast.literals import convert_to_literal
@@ -76,7 +76,7 @@ class Basic:
         This will allow it to remove itself from its children's users.
         If a child subsequently has no users, invalidate_node is called recursively
         """
-        for c_name in self._attribute_nodes:
+        for c_name in type(self)._attribute_nodes:
             c = getattr(self, c_name)
 
             if self.ignore(c):
@@ -137,7 +137,7 @@ class Basic:
         self._recursion_in_progress = True
 
         results = []
-        for n in self._attribute_nodes:
+        for n in type(self)._attribute_nodes:
             v = getattr(self, n)
 
             if isinstance(v, excluded_nodes):
@@ -202,7 +202,7 @@ class Basic:
                     rep.set_current_user_node(self)
             return rep
 
-        for n in self._attribute_nodes:
+        for n in type(self)._attribute_nodes:
             v = getattr(self, n)
 
             if isinstance(v, excluded_nodes):
@@ -233,7 +233,7 @@ class Basic:
     def is_atomic(self):
         """ Indicates whether the object has any attribute nodes
         """
-        return not self._attribute_nodes
+        return not type(self)._attribute_nodes
 
     def set_fst(self, fst):
         """Sets the python.ast fst."""
