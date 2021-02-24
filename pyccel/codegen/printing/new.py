@@ -36,7 +36,8 @@ from pyccel.ast.core        import create_incremented_string, SeparatorComment
 
 from pyccel.ast.core        import (FunctionCall, FunctionDef)
 
-from pyccel.ast.cwrapper    import (PyArgKeywordsm, PyArg_ParseTupleNode)
+from pyccel.ast.cwrapper    import (PyArgKeywordsm, PyArg_ParseTupleNode,
+                                    PyBuildValueNode)
 
 from pyccel.ast.variable    import Variable
 
@@ -201,12 +202,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
-
-    def _print_PyBuildValueNode(self, expr):
-        #TODO
-
-    def _print_PyArg_ParseTupleNode(self, expr):
-        #TODO
 
     def _print_PyArgKeywords(self, expr):
         arg_names  = ['"{}"'.format(a) for a in expr.arg_names]
