@@ -636,28 +636,27 @@ class NumpyFull(NumpyNewArray):
         (row- or column-wise) order in memory.
 
     """
-    _attribute_nodes = ('_fill_value',)
     __slots__ = ('_fill_value',)
 
     def __init__(self, shape, fill_value, dtype=None, order='C'):
-        self._dtype = dtype
         self._shape = shape
         self._order = order
-        super.__init__()
 
-        # Cast fill_value to correct type
-        if fill_value and not isinstance(fill_value, Nil) and self.dtype != fill_value.dtype:
-            cast_func = DtypePrecisionToCastFunction[dtype.name][self.precision]
-            fill_value = cast_func(fill_value)
-        self._fill_value = fill_value
-
-    def _get_dtype(self):
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
         if not dtype:
             dtype = fill_value.dtype
         # Verify dtype and get precision
-        return process_dtype(dtype)
+        self._dtype, self._precision = process_dtype(dtype)
+
+        # Cast fill_value to correct type
+        if fill_value and not isinstance(fill_value, Nil) and self.dtype != fill_value.dtype:
+            cast_func = DtypePrecisionToCastFunction[self.dtype.name][self.precision]
+            fill_value = cast_func(fill_value)
+        super().__init__(fill_value)
+
+    def _get_dtype(self):
+        return self._dtype, self._precision
 
     def _get_shape(self):
         # Convert shape to PythonTuple
@@ -670,7 +669,7 @@ class NumpyFull(NumpyNewArray):
     #--------------------------------------------------------------------------
     @property
     def fill_value(self):
-        return self._fill_value
+        return self._args[0]
 
 #==============================================================================
 class NumpyAutoFill(NumpyFull):
