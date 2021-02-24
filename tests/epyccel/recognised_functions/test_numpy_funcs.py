@@ -5036,78 +5036,70 @@ def test_numpy_mod_array_like_2d(language):
 
 def test_numpy_matmul_array_like_1d(language):
 
-    @types('int[:,:]')
+    @types('int[:]')
     def test_int(arr):
         from numpy import matmul, shape
         a = matmul(arr, arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+        return a
 
-    @types('int8[:,:]')
+    @types('int8[:]')
     def test_int8(arr):
         from numpy import matmul, shape
         a = matmul(arr, arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+        return a
 
-    @types('int16[:,:]')
+    @types('int16[:]')
     def test_int16(arr):
         from numpy import matmul, shape
         a = matmul(arr, arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+        return a
 
-    @types('int32[:,:]')
+    @types('int32[:]')
     def test_int32(arr):
         from numpy import matmul, shape
         a = matmul(arr, arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+        return a
 
-    @types('int64[:,:]')
+    @types('int64[:]')
     def test_int64(arr):
         from numpy import matmul, shape
         a = matmul(arr, arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+        return a
 
-    @types('float[:,:]')
+    @types('float[:]')
     def test_float(arr):
         from numpy import matmul, shape
         a = matmul(arr, arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+        return a
 
-    @types('float32[:,:]')
+    @types('float32[:]')
     def test_float32(arr):
         from numpy import matmul, shape
         a = matmul(arr, arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+        return a
 
-    @types('float64[:,:]')
+    @types('float64[:]')
     def test_float64(arr):
         from numpy import matmul, shape
         a = matmul(arr, arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+        return a
 
     @types('complex64[:]')
     def test_complex64(arr):
         from numpy import matmul, shape
-        a = matmul(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+        a = matmul(arr, arr)
+        return a
 
     @types('complex128[:]')
     def test_complex128(arr):
         from numpy import matmul, shape
-        a = matmul(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+        a = matmul(arr, arr)
+        return a
 
     import numpy as np
 
+    integer8 = randint(min_int8, max_int8, size=5, dtype=np.int)
+    integer16 = randint(min_int16, max_int16, size=5, dtype=np.int)
     integer = randint(min_int, max_int, size=5, dtype=np.int)
     integer32 = randint(min_int32, max_int32, size=5, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=5, dtype=np.int64)
@@ -5218,16 +5210,16 @@ def test_numpy_matmul_array_like_2x2d(language):
     @types('complex64[:]')
     def test_complex64(arr):
         from numpy import matmul, shape
-        a = matmul(arr)
+        a = matmul(arr, arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), a
 
     @types('complex128[:]')
     def test_complex128(arr):
         from numpy import matmul, shape
-        a = matmul(arr)
+        a = matmul(arr, arr)
         s = shape(a)
-        return len(s), s[0], a[0]
+        return len(s), a
 
     import numpy as np
 
@@ -5289,61 +5281,61 @@ def test_numpy_prod_scalar(language):
     @types('int')
     def test_int(a):
         from numpy import prod
-        b = np.prod(a)
+        b =  prod(a)
         return b
 
     @types('int8')
     def test_int8(a):
         from numpy import prod
-        b = np.prod(a)
+        b =  prod(a)
         return b
 
     @types('int16')
     def test_int16(a):
         from numpy import prod
-        b = np.prod(a)
+        b =  prod(a)
         return b
 
     @types('int32')
     def test_int32(a):
         from numpy import prod
-        b = np.prod(a)
+        b =  prod(a)
         return b
 
     @types('int64')
     def test_int64(a):
         from numpy import prod
-        b = np.prod(a)
+        b =  prod(a)
         return b
 
     @types('float')
     def test_float(a):
         from numpy import prod
-        b = np.prod(a)
+        b =  prod(a)
         return b
 
     @types('float32')
     def test_float32(a):
         from numpy import prod
-        b = np.prod(a)
+        b =  prod(a)
         return b
 
     @types('float64')
     def test_float64(a):
         from numpy import prod
-        b = np.prod(a)
+        b =  prod(a)
         return b
 
     @types('complex64')
     def test_complex64(a):
         from numpy import prod
-        b = np.prod(a)
+        b =  prod(a)
         return b
 
     @types('complex128')
     def test_complex128(a):
         from numpy import prod
-        b = np.prod(a)
+        b =  prod(a)
         return b
 
     import numpy as np
@@ -5668,9 +5660,9 @@ def test_numpy_prod_array_like_2d(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance")]),
+            pytest.mark.skip(reason="Still under maintenance, See #769")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance"),
+            pytest.mark.skip(reason="Still under maintenance, See #769"),
             pytest.mark.c]
         )
     )
@@ -5850,9 +5842,9 @@ def test_numpy_norm_scalar(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance")]),
+            pytest.mark.skip(reason="Still under maintenance, See #769")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance"),
+            pytest.mark.skip(reason="Still under maintenance, See #769"),
             pytest.mark.c]
         )
     )
@@ -5976,9 +5968,9 @@ def test_numpy_norm_array_like_1d(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance")]),
+            pytest.mark.skip(reason="Still under maintenance, See #769")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance"),
+            pytest.mark.skip(reason="Still under maintenance, See #769"),
             pytest.mark.c]
         )
     )
@@ -6102,9 +6094,9 @@ def test_numpy_norm_array_like_2d(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance")]),
+            pytest.mark.skip(reason="Still under maintenance, See #770")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance"),
+            pytest.mark.skip(reason="Still under maintenance, See #770"),
             pytest.mark.c]
         )
     )
@@ -6285,9 +6277,9 @@ def test_numpy_where_scalar(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance")]),
+            pytest.mark.skip(reason="Still under maintenance, See #770")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance"),
+            pytest.mark.skip(reason="Still under maintenance, See #770"),
             pytest.mark.c]
         )
     )
@@ -6411,9 +6403,9 @@ def test_numpy_where_array_like_1d_with_condition(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance")]),
+            pytest.mark.skip(reason="Still under maintenance, See #770")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance"),
+            pytest.mark.skip(reason="Still under maintenance, See #770"),
             pytest.mark.c]
         )
     )
@@ -6537,9 +6529,9 @@ def test_numpy_where_array_like_1d(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance")]),
+            pytest.mark.skip(reason="Still under maintenance, See #770")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance"),
+            pytest.mark.skip(reason="Still under maintenance, See #770"),
             pytest.mark.c]
         )
     )
@@ -6663,9 +6655,9 @@ def test_numpy_where_array_like_2d_with_condition(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance")]),
+            pytest.mark.skip(reason="Still under maintenance, See #770")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance"),
+            pytest.mark.skip(reason="Still under maintenance, See #770"),
             pytest.mark.c]
         )
     )
@@ -6790,9 +6782,9 @@ def test_numpy_where_array_like_2d(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance")]),
+            pytest.mark.skip(reason="Still under maintenance, See #771")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance"),
+            pytest.mark.skip(reason="Still under maintenance, See #771"),
             pytest.mark.c]
         )
     )
@@ -6949,9 +6941,9 @@ def test_numpy_linspace_scalar(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance")]),
+            pytest.mark.skip(reason="Still under maintenance, See #771")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance"),
+            pytest.mark.skip(reason="Still under maintenance, See #771"),
             pytest.mark.c]
         )
     )
@@ -7008,7 +7000,6 @@ def test_numpy_linspace_array_like_1d(language):
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
-        
 
     @types('int64[:]')
     def test_int64(arr):
@@ -7120,9 +7111,9 @@ def test_numpy_linspace_array_like_1d(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance")]),
+            pytest.mark.skip(reason="Still under maintenance, See #771")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance"),
+            pytest.mark.skip(reason="Still under maintenance, See #771"),
             pytest.mark.c]
         )
     )
