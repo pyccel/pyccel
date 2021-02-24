@@ -4165,13 +4165,13 @@ def test_numpy_int64(language):
         f_integer64 = epyccel(test_int64_int64, language=language)
         assert (f_integer64(integer64) == test_int64_int64(integer64))
 
-    f_fl = epyccel(test_float_int64, language=language)
-    f_fl32 = epyccel(test_float32_int64, language=language)
-    f_fl64 = epyccel(test_float64_int64, language=language)
+        f_fl = epyccel(test_float_int64, language=language)
+        f_fl32 = epyccel(test_float32_int64, language=language)
+        f_fl64 = epyccel(test_float64_int64, language=language)
 
-    assert (f_fl(fl) == test_float_int64(fl))
-    assert (f_fl32(fl32) == test_float32_int64(fl32))
-    assert (f_fl64(fl64) == test_float64_int64(fl64))
+        assert (f_fl(fl) == test_float_int64(fl))
+        assert (f_fl32(fl32) == test_float32_int64(fl32))
+        assert (f_fl64(fl64) == test_float64_int64(fl64))
 
 
 def test_numpy_float(language):
