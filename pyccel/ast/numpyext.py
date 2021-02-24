@@ -15,14 +15,13 @@ from .core           import (ClassDef, FunctionDef,
                             process_shape, ValuedArgument)
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
-                             default_precision, datatype, NativeInteger,
+                             datatype, NativeInteger,
                              NativeReal, NativeComplex, NativeBool, str_dtype,
                              NativeNumeric)
 
 from .internals      import PyccelInternalFunction
 
-from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
-from .literals       import LiteralTrue, LiteralFalse
+from .literals       import LiteralInteger, LiteralFloat
 from .literals       import Nil, convert_to_literal
 from .mathext        import MathCeil
 from .operators      import broadcast, PyccelMinus, PyccelDiv
@@ -407,7 +406,7 @@ class NumpyMatmul(PyccelInternalFunction):
     def _set_dtype(self):
         args      = self.args
 
-        integers  = [e for e in args if e.dtype is NativeInteger() or a.dtype is NativeBool()]
+        integers  = [e for e in args if e.dtype is NativeInteger() or e.dtype is NativeBool()]
         reals     = [e for e in args if e.dtype is NativeReal()]
         complexs  = [e for e in args if e.dtype is NativeComplex()]
 
@@ -426,8 +425,8 @@ class NumpyMatmul(PyccelInternalFunction):
     def _set_shape(self):
         if not (self.a.shape is None or self.b.shape is None):
 
-            m = 1 if a.rank < 2 else a.shape[0]
-            n = 1 if b.rank < 2 else b.shape[1]
+            m = 1 if self.a.rank < 2 else self.a.shape[0]
+            n = 1 if self.b.rank < 2 else self.b.shape[1]
             self._shape = (m, n)
 
     def _set_rank(self):
@@ -839,8 +838,6 @@ class NumpyUfuncBinary(NumpyUfuncBase):
     # TODO: apply Numpy's broadcasting rules to get shape/rank of output
     def __init__(self, x1, x2):
         super().__init__(x1, x2)
-        self._set_dtype_precision(x1, x2)
-        self._set_shape_rank(x1, x2)
 
     def _set_dtype(self):
         self._dtype     = NativeReal()

@@ -7,8 +7,7 @@ import math
 
 from pyccel.ast.variable  import Constant
 from pyccel.ast.internals import PyccelInternalFunction
-from pyccel.ast.datatypes import (NativeInteger, NativeBool, NativeReal,
-                                  default_precision)
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeReal
 
 __all__ = (
     'math_constants',
