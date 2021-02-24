@@ -661,11 +661,6 @@ class NumpyFull(NumpyNewArray):
     def _set_dtype(self):
         pass
 
-        # Verify dtype and get precision
-        dtype, precision = process_dtype(self._dtype)
-        self._dtype = dtype
-        self._precision = precision
-
     def _set_shape(self):
         # Convert shape to PythonTuple
         self._shape = process_shape(self._shape)
@@ -919,11 +914,10 @@ class NumpyMod(NumpyUfuncBinary):
 
         self._shape = shape
 
-    def _set_dtype(self, x1, x2):
-        args      = (x1, x2)
-        integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
-        reals     = [a for a in args if a.dtype is NativeReal()]
-        others    = [a for a in args if a not in integers+reals]
+    def _set_dtype(self):
+        integers  = [a for a in self.args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
+        reals     = [a for a in self.args if a.dtype is NativeReal()]
+        others    = [a for a in self.args if a not in integers+reals]
 
         if others:
             raise TypeError('{} not supported'.format(others[0].dtype))
