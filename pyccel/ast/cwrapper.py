@@ -319,77 +319,41 @@ def PyErr_SetString(error_type, error_msg):
 # Parameters :
 # name of function , list of arguments ,  list of results
 
-def pyint_to_bool(cast_function_name):
-    cast_function_argument = Variable(dtype=NativeInteger(), name = 'i', precision=4)
-    cast_function_result   = Variable(dtype=NativeBool(), name = 'b')
-    cast_function_body     = [Assign(cast_function_result, PythonBool(cast_function_argument)),
-                              Return([cast_function_result])  ]
-    return FunctionDef(name      = cast_function_name,
-                       arguments = [cast_function_argument],
-                       body      = cast_function_body,
-                       results   = [cast_function_result])
+bool_to_pybool          = FunctionDef(name = 'Bool_to_PyBool',
+                                arguments  = [Variable(dtype=NativeBool(), name = 'b')],
+                                body       = [],
+                                results    = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)])
 
-def bool_to_pyobj(cast_function_name):
-    cast_function_argument = Variable(dtype=NativeBool(), name = 'b')
-    cast_function_result   = Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)
-    cast_function_body = [If(
-                            IfSection(PythonBool(cast_function_argument),
-                                [AliasAssign(cast_function_result, Py_True)]),
-                            IfSection(LiteralTrue(),
-                                [AliasAssign(cast_function_result, Py_False)])
-                          ),
-                          Return([cast_function_result])]
-    return FunctionDef(name      = cast_function_name,
-                       arguments = [cast_function_argument],
-                       body      = cast_function_body,
-                       results   = [cast_function_result])
+complex128_to_pycomplex = FunctionDef(name = 'Complex128_to_PyComplex',
+                                arguments  = [Variable(dtype=NativeComplex(), name = 'c', precision = 8)],
+                                body       = [],
+                                results    = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)])
 
-def complex_to_pycomplex(cast_function_name):
-    cast_function_argument = Variable(dtype=NativeComplex(), name = 'c')
-    cast_function_result   = Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)
-    real_part = Variable(dtype = NativeReal(), name = 'real_part')
-    imag_part = Variable(dtype = NativeReal(), name = 'imag_part')
-    cast_function_local_vars = [real_part, imag_part]
+complex64_to_pycomplex  = FunctionDef(name = 'Complex64_to_PyComplex',
+                                arguments  = [Variable(dtype=NativeComplex(), name = 'c', precision = 4)],
+                                body       = [],
+                                results    = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)])
 
-    cast_function_body = [Assign(real_part, NumpyReal(cast_function_argument)),
-                          Assign(imag_part, NumpyImag(cast_function_argument)),
-                          AliasAssign(cast_function_result,
-                              FunctionCall(pycomplex_fromdoubles, [real_part, imag_part])),
-                          Return([cast_function_result])]
-    return FunctionDef(name       = cast_function_name,
-                       arguments  = [cast_function_argument],
-                       body       = cast_function_body,
-                       results    = [cast_function_result],
-                       local_vars = cast_function_local_vars)
+pycomplex_to_complex64  = FunctionDef(name = 'PyComplex_to_Complex64',
+                                arguments  = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)],
+                                body       = [],
+                                results    = [Variable(dtype=NativeComplex(), name = 'c', precision = 4)])
 
-def pycomplex_to_complex(cast_function_name):
-    cast_function_argument = Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)
-    cast_function_result   = Variable(dtype=NativeComplex(), name = 'c')
-    real_part = Variable(dtype = NativeReal(), name = 'real_part')
-    imag_part = Variable(dtype = NativeReal(), name = 'imag_part')
-    cast_function_local_vars = [real_part, imag_part]
+pycomplex_to_complex128 = FunctionDef(name = 'PyComplex_to_Complex64',
+                                arguments  = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)],
+                                body       = [],
+                                results    = [Variable(dtype=NativeComplex(), name = 'c', precision = 8)])
 
-    cast_function_body = [Assign(real_part, FunctionCall(pycomplex_real, [cast_function_argument])),
-                          Assign(imag_part, FunctionCall(pycomplex_imag, [cast_function_argument])),
-                          Assign(cast_function_result, PythonComplex(real_part, imag_part)),
-                          Return([cast_function_result])]
-    return FunctionDef(name      = cast_function_name,
-                       arguments = [cast_function_argument],
-                       body      = cast_function_body,
-                       results   = [cast_function_result],
-                       local_vars= cast_function_local_vars)
+pybool_to_bool          = FunctionDef(name = 'PyBool_to_Bool',
+                                arguments  = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)],
+                                body       = [],
+                                results    = [Variable(dtype=NativeBool(), name = 'b')])
 
-def pybool_to_bool(cast_function_name):
-    cast_function_argument = Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)
-    cast_function_result   = Variable(dtype=NativeBool(), name = 'c')
+pyarray_to_ndarray      = FunctionDef(name = 'PyArray_to_ndarray',
+                                arguments  = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)],
+                                body       = [],
+                                results    = [])#TODO
 
-    cast_function_body = [Assign(cast_function_result , PyccelEq(VariableAddress(cast_function_argument), VariableAddress(Py_True)))
-                        , Return([cast_function_result])]
-
-    return FunctionDef(name      = cast_function_name,
-                       arguments = [cast_function_argument],
-                       body      = cast_function_body,
-                       results   = [cast_function_result])
 
 cast_function_registry = {
     'pyint_to_bool' : pyint_to_bool,
