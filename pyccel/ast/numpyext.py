@@ -964,7 +964,7 @@ class NumpyMod(NumpyUfuncBinary):
 
             return shape, None
         else:
-            return None, max(a.rank for a in args)
+            return None, max(a.rank for a in self.args)
 
     def _get_dtype(self):
         integers  = [a for a in self.args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
