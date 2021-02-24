@@ -30,6 +30,9 @@ from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, Dlist, AsName,
                              If, IfSection)
+
+from pyccel.ast.omp import (OMP_For_Loop, OMP_Cancel_Construct)
+
 from pyccel.ast.variable  import (Variable, TupleVariable,
                              IndexedElement,
                              DottedName, PyccelArraySize)
@@ -1870,37 +1873,12 @@ class FCodePrinter(CodePrinter):
         omp_expr = '!$omp parallel{}\n'.format(clauses)
         return omp_expr
 
-    def _print_OMP_For_Loop(self, expr):
-        omp_expr   = str(expr.txt)
-        return '!$omp do{}\n'.format(omp_expr)
-
-    def _print_OMP_Single_Construct(self, expr):
-        omp_expr   = str(expr.txt)
-        omp_expr = '!$omp {}\n'.format(omp_expr)
-        return omp_expr
-
-    def _print_OMP_Critical_Construct(self, expr):
-        omp_expr = str(expr.txt)
-        omp_expr = '!$omp {}\n'.format(omp_expr)
-        return omp_expr
-
-    def _print_OMP_Master_Construct(self, expr):
-        omp_expr = str(expr.txt)
-        omp_expr = '!$omp {}\n'.format(omp_expr)
-        return omp_expr
-
     def _print_OMP_Masked_Construct(self, expr):
         clauses = ''
         if expr.combined:
             clauses = ' ' + expr.combined
         clauses += str(expr.txt)
         omp_expr = '!$omp masked{}\n'.format(clauses)
-        return omp_expr
-
-    def _print_OMP_Cancel_Construct(self, expr):
-        omp_expr = str(expr.txt)
-        omp_expr = omp_expr.replace("for", "do")
-        omp_expr = '!$omp {}\n'.format(omp_expr)
         return omp_expr
 
     def _print_OMP_Target_Construct(self, expr):
@@ -1919,19 +1897,14 @@ class FCodePrinter(CodePrinter):
         omp_expr = '!$omp teams{}\n'.format(clauses)
         return omp_expr
 
-    def _print_OMP_Sections_Construct(self, expr):
-        omp_expr = str(expr.txt)
-        omp_expr = '!$omp {}\n'.format(omp_expr)
-        return omp_expr
-
-    def _print_OMP_Section_Construct(self, expr):
-        omp_expr = str(expr.txt)
-        omp_expr = '!$omp {}\n'.format(omp_expr)
-        return omp_expr
-
     def _print_OmpAnnotatedComment(self, expr):
         omp_expr = str(expr.txt)
-        omp_expr = '!$omp {}\n'.format(omp_expr)
+        if isinstance(expr, OMP_Cancel_Construct):
+            omp_expr = omp_expr.replace("cancel for", "cancel do")
+        if isinstance(expr, OMP_For_Loop):
+            omp_expr = '!$omp do{}\n'.format(omp_expr)
+        else:
+            omp_expr = '!$omp {}\n'.format(omp_expr)
         return omp_expr
 
     def _print_Omp_End_Clause(self, expr):
