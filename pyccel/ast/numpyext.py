@@ -860,45 +860,88 @@ class NumpyUfuncBinary(NumpyUfuncBase):
 # Math operations
 #------------------------------------------------------------------------------
 #class NumpyAbsolute(NumpyUfuncUnary): __slots__ = ()
-class NumpyFabs    (NumpyUfuncUnary): __slots__ = ()
-class NumpyExp     (NumpyUfuncUnary): __slots__ = ()
-class NumpyLog     (NumpyUfuncUnary): __slots__ = ()
-class NumpySqrt    (NumpyUfuncUnary): __slots__ = ()
+class NumpyFabs    (NumpyUfuncUnary):
+    """Represent a call to the fabs function in the Numpy library"""
+    __slots__ = ()
+class NumpyExp     (NumpyUfuncUnary):
+    """Represent a call to the exp function in the Numpy library"""
+    __slots__ = ()
+class NumpyLog     (NumpyUfuncUnary):
+    """Represent a call to the log function in the Numpy library"""
+    __slots__ = ()
+class NumpySqrt    (NumpyUfuncUnary):
+    """Represent a call to the sqrt function in the Numpy library"""
+    __slots__ = ()
 
 #------------------------------------------------------------------------------
 # Trigonometric functions
 #------------------------------------------------------------------------------
-class NumpySin    (NumpyUfuncUnary) : __slots__ = ()
-class NumpyCos    (NumpyUfuncUnary) : __slots__ = ()
-class NumpyTan    (NumpyUfuncUnary) : __slots__ = ()
-class NumpyArcsin (NumpyUfuncUnary) : __slots__ = ()
-class NumpyArccos (NumpyUfuncUnary) : __slots__ = ()
-class NumpyArctan (NumpyUfuncUnary) : __slots__ = ()
-class NumpyArctan2(NumpyUfuncBinary): __slots__ = ()
-class NumpyHypot  (NumpyUfuncBinary): __slots__ = ()
-class NumpySinh   (NumpyUfuncUnary) : __slots__ = ()
-class NumpyCosh   (NumpyUfuncUnary) : __slots__ = ()
-class NumpyTanh   (NumpyUfuncUnary) : __slots__ = ()
-class NumpyArcsinh(NumpyUfuncUnary) : __slots__ = ()
-class NumpyArccosh(NumpyUfuncUnary) : __slots__ = ()
-class NumpyArctanh(NumpyUfuncUnary) : __slots__ = ()
-#class NumpyDeg2rad(NumpyUfuncUnary) : __slots__ = ()
-#class NumpyRad2deg(NumpyUfuncUnary) : __slots__ = ()
+class NumpySin    (NumpyUfuncUnary)
+    """Represent a call to the sin function in the Numpy library"""
+: __slots__ = ()
+class NumpyCos    (NumpyUfuncUnary)
+    """Represent a call to the cos function in the Numpy library"""
+: __slots__ = ()
+class NumpyTan    (NumpyUfuncUnary)
+    """Represent a call to the tan function in the Numpy library"""
+: __slots__ = ()
+class NumpyArcsin (NumpyUfuncUnary)
+    """Represent a call to the arcsin function in the Numpy library"""
+: __slots__ = ()
+class NumpyArccos (NumpyUfuncUnary)
+    """Represent a call to the arccos function in the Numpy library"""
+: __slots__ = ()
+class NumpyArctan (NumpyUfuncUnary)
+    """Represent a call to the arctan function in the Numpy library"""
+: __slots__ = ()
+class NumpyArctan2(NumpyUfuncBinary):
+    """Represent a call to the arctan2 function in the Numpy library"""
+    __slots__ = ()
+class NumpyHypot  (NumpyUfuncBinary):
+    """Represent a call to the hypot function in the Numpy library"""
+    __slots__ = ()
+class NumpySinh   (NumpyUfuncUnary)
+    """Represent a call to the sinh function in the Numpy library"""
+: __slots__ = ()
+class NumpyCosh   (NumpyUfuncUnary)
+    """Represent a call to the cosh function in the Numpy library"""
+: __slots__ = ()
+class NumpyTanh   (NumpyUfuncUnary)
+    """Represent a call to the tanh function in the Numpy library"""
+: __slots__ = ()
+class NumpyArcsinh(NumpyUfuncUnary)
+    """Represent a call to the arcsinh function in the Numpy library"""
+: __slots__ = ()
+class NumpyArccosh(NumpyUfuncUnary)
+    """Represent a call to the arccosh function in the Numpy library"""
+: __slots__ = ()
+class NumpyArctanh(NumpyUfuncUnary)
+    """Represent a call to the arctanh function in the Numpy library"""
+: __slots__ = ()
+#class NumpyDeg2rad(NumpyUfuncUnary)
+#    """Represent a call to the numpydeg2rad function in the Numpy library"""
+#: __slots__ = ()
+#class NumpyRad2deg(NumpyUfuncUnary)
+#    """Represent a call to the numpyrad2deg function in the Numpy library"""
+#: __slots__ = ()
 
 #=======================================================================================
 
 class NumpyAbs(NumpyUfuncUnary):
+    """Represent a call to the abs function in the Numpy library"""
     __slots__ = ()
     def _set_dtype(self):
         x = self.args[0]
         self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
 
 class NumpyFloor(NumpyUfuncUnary):
+    """Represent a call to the floor function in the Numpy library"""
     __slots__ = ()
     def _set_dtype(self):
         self._dtype     = NativeReal()
 
 class NumpyMod(NumpyUfuncBinary):
+    """Represent a call to the mod function in the Numpy library"""
     __slots__ = ()
 
     def _set_shape(self):
@@ -932,6 +975,7 @@ class NumpyMod(NumpyUfuncBinary):
             raise TypeError('cannot determine the type of {}'.format(self))
 
 class NumpyMin(NumpyUfuncUnary):
+    """Represent a call to the min function in the Numpy library"""
     __slots__ = ()
     def _set_shape(self):
         self._shape     = ()
@@ -946,6 +990,7 @@ class NumpyMin(NumpyUfuncUnary):
         return False
 
 class NumpyMax(NumpyUfuncUnary):
+    """Represent a call to the max function in the Numpy library"""
     __slots__ = ()
     def _set_shape(self):
         self._shape     = ()
