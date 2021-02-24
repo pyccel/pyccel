@@ -630,13 +630,13 @@ class PythonMax(PyccelInternalFunction):
     __slots__ = ()
 
     def __init__(self, x):
-        if not isinstance(x, (list, tuple, PythonTuple, PythonList)):
+        if not isinstance(x, (PythonTuple, PythonList)):
             raise TypeError('Unknown type of  %s.' % type(x))
         super().__init__(x)
 
     def _set_dtype(self):
-        self._dtype = self.args.dtype
-        self._precision = self.args.precision
+        self._dtype = self.args[0].dtype
+        self._precision = self.args[0].precision
 
     def _set_shape(self):
         self._shape = ()
@@ -653,8 +653,8 @@ class PythonMin(PyccelInternalFunction):
         super().__init__(x)
 
     def _set_dtype(self):
-        self._dtype = self.args.dtype
-        self._precision = self.args.precision
+        self._dtype = self.args[0].dtype
+        self._precision = self.args[0].precision
 
     def _set_shape(self):
         self._shape = ()
