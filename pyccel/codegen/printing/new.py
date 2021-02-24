@@ -211,6 +211,32 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return  code.format(name = expr.name, arg_names = arg_names))
 
+    def _print_PyArg_ParseTupleNode(self, expr):
+        name    = 'PyArg_ParseTupleAndKeywords'
+        pyarg   = expr.pyarg
+        pykwarg = expr.pykwarg
+        flags   = expr.flags
+        # All args are modified so even pointers are passed by address
+        args    = ', '.join(['&{}'.format(a.name) for a in expr.args])
+
+        if expr.args:
+            code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(
+                            name    = name,
+                            pyarg   = pyarg,
+                            pykwarg = pykwarg,
+                            flags   = flags,
+                            kwlist  = expr.arg_names.name,
+                            args    = args)
+        else :
+            code ='{name}({pyarg}, {pykwarg}, "", {kwlist})'.format(
+                    name    = name,
+                    pyarg   = pyarg,
+                    pykwarg = pykwarg,
+                    kwlist  = expr.arg_names.name)
+
+        return code
+
+
     def _print_Interface(self, expr):
         # TODO nightmare
 
