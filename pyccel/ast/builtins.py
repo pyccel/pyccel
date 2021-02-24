@@ -558,7 +558,8 @@ class PythonZip(Basic):
             raise TypeError('args must be a list or tuple')
         elif len(args) < 2:
             raise ValueError('args must be of length > 2')
-        super().__init__(*args)
+        self._args = args
+        super().__init__()
         if PyccelAstNode.stage == 'syntactic':
             self._length = None
             return
@@ -568,6 +569,12 @@ class PythonZip(Basic):
                 self._length = min(lengths)
             else:
                 self._length = self.args[0].shape[0]
+
+    @property
+    def args(self):
+        """ The arguments passed to zip
+        """
+        return self._args
 
     @property
     def length(self):
