@@ -47,6 +47,9 @@ class PyccelPyArrayObject(DataType):
     class used to hold numpy objects"""
     _name = 'pyarrayobject'
 
+class PyccelPyObject(DataType):
+    _name = 'pyobject'
+
 PyArray_Type = Variable(NativeGeneric(), 'PyArray_Type')
 
 #-------------------------------------------------------------------
