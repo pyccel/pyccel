@@ -327,18 +327,18 @@ class PyccelAstNode(Basic):
             else:
                 self._order = None
 
-    def _set_dtype(self):
+    def _get_dtype(self):
         """ Set all information about the datatype. This includes both the type and precision
         If the precision is not set then it will take the default value for the dtype
         """
         raise NotImplementedError("Problem in class {} : A PyccelAstNode must know how to determine dtype and precision".format(type(self)))
 
-    def _set_shape(self):
+    def _get_shape(self):
         """ Determine the shape and rank of the object. The shape should be a tuple containing the size of each dimension
         """
         raise NotImplementedError("Problem in class {} : A PyccelAstNode must know how to determine shape".format(type(self)))
 
-    def _set_order(self):
+    def _get_order(self):
         """ Determine the ordering of the object. This should be either "C" or "F"
         """
         raise NotImplementedError("Problem in class {} : A PyccelAstNode must know how to determine the ordering".format(type(self)))

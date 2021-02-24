@@ -37,7 +37,8 @@ class Literal(PyccelAstNode):
         self._precision = precision
         super().__init__()
 
-    def _get_shape(self):
+    @staticmethod
+    def _get_shape():
         return (), 0
 
     @PyccelAstNode.precision.setter
@@ -200,7 +201,8 @@ class LiteralString(Literal):
             raise TypeError('arg must be of type str')
         self._string = arg
 
-    def _get_dtype(self):
+    @staticmethod
+    def _get_dtype():
         return NativeString(), 0
 
     @property

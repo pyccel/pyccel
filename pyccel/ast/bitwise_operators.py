@@ -89,7 +89,8 @@ class PyccelBitOperator(PyccelOperator):
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
-    def _get_shape(self):
+    @staticmethod
+    def _get_shape():
         return (), 0
 
     def _handle_integer_type(self, integers):

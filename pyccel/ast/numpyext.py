@@ -357,7 +357,8 @@ class NumpySum(PyccelInternalFunction):
     def _get_dtype(self):
         return self.arg.dtype, None
 
-    def _get_shape(self):
+    @staticmethod
+    def _get_shape():
         return (), 0
 
     @property
@@ -380,7 +381,8 @@ class NumpyProduct(PyccelInternalFunction):
     def _get_dtype(self):
         return self.arg.dtype, None
 
-    def _get_shape(self):
+    @staticmethod
+    def _get_shape():
         return (), 0
 
     @property
@@ -494,7 +496,8 @@ class NumpyLinspace(NumpyNewArray):
         self._size  = size
         super().__init__()
 
-    def _get_dtype(self):
+    @staticmethod
+    def _get_dtype():
         return NativeReal(), None
 
     def _get_shape(self):
@@ -558,7 +561,8 @@ class NumpyRand(PyccelInternalFunction):
         super().__init__(*args)
         self._shape = args
 
-    def _get_dtype(self):
+    @staticmethod
+    def _get_dtype():
         return NativeReal(), None
 
     def _get_shape(self):
@@ -591,13 +595,15 @@ class NumpyRandint(PyccelInternalFunction):
         self._high    = high
         super().__init__()
 
-    def _get_dtype(self):
+    @staticmethod
+    def _get_dtype():
         return NativeInteger(), None
 
     def _get_shape(self):
         return self._shape, None
 
-    def _get_order(self):
+    @staticmethod
+    def _get_order():
         return 'C'
 
     @property
@@ -782,7 +788,8 @@ class NumpyNorm(PyccelInternalFunction):
             self._shape = ()
         super().__init__(arg, dim)
 
-    def _get_dtype(self):
+    @staticmethod
+    def _get_dtype():
         return NativeReal(), None
 
     def _get_shape(self):
@@ -838,7 +845,8 @@ class NumpyUfuncBinary(NumpyUfuncBase):
     def __init__(self, x1, x2):
         super().__init__(x1, x2)
 
-    def _get_dtype(self):
+    @staticmethod
+    def _get_dtype():
         return NativeReal(), None
 
     def _get_shape(self):
@@ -933,7 +941,8 @@ class NumpyAbs(NumpyUfuncUnary):
 class NumpyFloor(NumpyUfuncUnary):
     """Represent a call to the floor function in the Numpy library"""
     __slots__ = ()
-    def _get_dtype(self):
+    @staticmethod
+    def _get_dtype():
         return NativeReal(), None
 
 class NumpyMod(NumpyUfuncBinary):
@@ -978,7 +987,8 @@ class NumpyMod(NumpyUfuncBinary):
 class NumpyMin(NumpyUfuncUnary):
     """Represent a call to the min function in the Numpy library"""
     __slots__ = ()
-    def _get_shape(self):
+    @staticmethod
+    def _get_shape():
         return (), 0
 
     def _get_dtype(self):
@@ -992,7 +1002,8 @@ class NumpyMin(NumpyUfuncUnary):
 class NumpyMax(NumpyUfuncUnary):
     """Represent a call to the max function in the Numpy library"""
     __slots__ = ()
-    def _get_shape(self):
+    @staticmethod
+    def _get_shape():
         return (), 0
 
     def _get_dtype(self):

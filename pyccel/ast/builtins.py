@@ -62,7 +62,8 @@ class PythonComplexProperty(PyccelInternalFunction):
     def _get_dtype(self):
         return NativeReal(), self.internal_var.precision
 
-    def _get_shape(self):
+    @staticmethod
+    def _get_shape():
         return (), 0
 
     def __str__(self):
@@ -126,7 +127,8 @@ class PythonBool(PyccelAstNode):
         self._arg = arg
         super().__init__()
 
-    def _get_dtype(self):
+    @staticmethod
+    def _get_dtype():
         return NativeBool(),None
 
     def _get_shape(self):
@@ -385,7 +387,8 @@ class PythonTuple(PyccelAstNode):
     def _get_shape(self):
         return (LiteralInteger(len(self.args)), ) + self.args[0].shape, None
 
-    def _get_order(self):
+    @staticmethod
+    def _get_order():
         return 'C'
 
     def __getitem__(self,i):
@@ -425,10 +428,12 @@ class PythonLen(PyccelInternalFunction):
     def __init__(self, arg):
         super().__init__(arg)
 
-    def _get_dtype(self):
+    @staticmethod
+    def _get_dtype():
         return NativeInteger(), None
 
-    def _get_shape(self):
+    @staticmethod
+    def _get_shape():
         return (), 0
 
     @property
@@ -547,7 +552,7 @@ class PythonZip(Basic):
     Represents a zip stmt.
 
     """
-    __slots__ = ('_length',)
+    __slots__ = ('_length','_args')
     _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
@@ -555,7 +560,9 @@ class PythonZip(Basic):
             raise TypeError('args must be a list or tuple')
         elif len(args) < 2:
             raise ValueError('args must be of length > 2')
+
         self._args = args
+
         super().__init__()
         if PyccelAstNode.stage == 'syntactic':
             self._length = None
@@ -618,7 +625,8 @@ class PythonSum(PyccelInternalFunction):
     def _get_dtype(self):
         return self.arg.dtype, None
 
-    def _get_shape(self):
+    @staticmethod
+    def _get_shape():
         return (), 0
 
     @property
@@ -641,7 +649,8 @@ class PythonMax(PyccelInternalFunction):
     def _get_dtype(self):
         return self.args[0].dtype, self.args[0].precision
 
-    def _get_shape(self):
+    @staticmethod
+    def _get_shape():
         return (), 0
 
 
@@ -658,7 +667,8 @@ class PythonMin(PyccelInternalFunction):
     def _get_dtype(self):
         return self.args[0].dtype, self.args[0].precision
 
-    def _get_shape(self):
+    @staticmethod
+    def _get_shape():
         return (), 0
 
 #==============================================================================

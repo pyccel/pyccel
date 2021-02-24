@@ -271,10 +271,12 @@ class PyccelNot(PyccelUnaryOperator):
     def __repr__(self):
         return 'not {}'.format(repr(self.args[0]))
 
-    def _get_dtype(self):
+    @staticmethod
+    def _get_dtype():
         return NativeBool(), None
 
-    def _get_shape(self):
+    @staticmethod
+    def _get_shape():
         return (), None
 
 #==============================================================================
@@ -349,7 +351,8 @@ class PyccelBinaryOperator(PyccelOperator):
         """
         raise TypeError("unsupported operand type(s) for /: 'str' and 'str'")
 
-    def _handle_complex_type(self, complexes):
+    @staticmethod
+    def _handle_complex_type(complexes):
         """
         Set dtype and precision when the result is complex
         """
@@ -357,7 +360,8 @@ class PyccelBinaryOperator(PyccelOperator):
         precision = max(a.precision for a in complexes)
         return dtype, precision
 
-    def _handle_real_type(self, reals):
+    @staticmethod
+    def _handle_real_type(reals):
         """
         Set dtype and precision when the result is real
         """
@@ -365,7 +369,8 @@ class PyccelBinaryOperator(PyccelOperator):
         precision = max(a.precision for a in reals)
         return dtype, precision
 
-    def _handle_integer_type(self, integers):
+    @staticmethod
+    def _handle_integer_type(integers):
         """
         Set dtype and precision when the result is integer
         """
@@ -472,7 +477,8 @@ class PyccelAdd(PyccelArithmeticOperator):
         else:
             return super().__new__(cls)
 
-    def _handle_str_type(self, strs):
+    @staticmethod
+    def _handle_str_type(strs):
         return NativeString(), 0
 
     def __repr__(self):
@@ -556,7 +562,8 @@ class PyccelDiv(PyccelArithmeticOperator):
     __slots__ = ()
     _precedence = 13
 
-    def _handle_integer_type(self, integers):
+    @staticmethod
+    def _handle_integer_type(integers):
         return NativeReal(), None
 
     def __repr__(self):
@@ -623,7 +630,8 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
     """
     __slots__ = ()
     _precedence = 7
-    def _get_dtype(self):
+    @staticmethod
+    def _get_dtype():
         return NativeBool(), None
 
 #==============================================================================
@@ -762,10 +770,12 @@ class PyccelBooleanOperator(PyccelOperator):
         The second argument passed to the operator
     """
     __slots__ = ()
-    def _get_dtype(self):
+    @staticmethod
+    def _get_dtype():
         return NativeBool(), None
 
-    def _get_shape(self):
+    @staticmethod
+    def _get_shape():
         return (), 0
 
 #==============================================================================
@@ -942,7 +952,7 @@ class IfTernaryOperator(PyccelOperator):
         Sets the order for IfTernaryOperator
         """
         if self.value_false.order != self.value_true.order :
-            errors.report('Ternary Operator results should have the same order', severity='fatal')
+            return errors.report('Ternary Operator results should have the same order', severity='fatal')
         else:
             return self.value_false.order
 

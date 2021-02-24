@@ -200,7 +200,8 @@ class PyArg_ParseTupleNode(Basic):
         self._arg_names  = arg_names
         super().__init__()
 
-    def get_pytype(self, c_arg, parse_arg):
+    @staticmethod
+    def get_pytype(c_arg, parse_arg):
         """Return the needed flag to parse or build value
         """
         if isinstance(c_arg, FunctionAddress):
