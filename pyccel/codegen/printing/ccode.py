@@ -1427,7 +1427,6 @@ class CCodePrinter(CodePrinter):
             return expr.name
 
     def _print_VariableAddress(self, expr):
-        print('[HERE]', expr)
         if self.stored_in_c_pointer(expr.variable) or expr.variable.rank > 0:
             return '{}'.format(expr.variable.name)
         else:

@@ -8,36 +8,54 @@
 
 float complex	PyComplex_to_Complex64(Pyobject *o)
 {
-    float			real_part;
-    float			imag_part;
-    float complex	c;
+	float			real_part;
+	float			imag_part;
+	float complex	c;
 
-    real_part = PyComplex_Real_AsDouble(o);
-    imag_part = PyComplex_Imag_AsDouble(o);
+	real_part = PyComplex_Real_AsDouble(o);
+	imag_part = PyComplex_Imag_AsDouble(o);
 
-    c = CMPLXF(real_part, imag_part);
-    return c;
+	c = CMPLXF(real_part, imag_part);
+	return c;
 }
 
 double complex	PyComplex_to_Complex128(Pyobject *o)
 {
-    double			real_part;
-    double			imag_part;
-    double complex	c;
+	double			real_part;
+	double			imag_part;
+	double complex	c;
 
-    real_part = PyComplex_Real_AsDouble(o);
-    imag_part = PyComplex_Imag_AsDouble(o);
+	real_part = PyComplex_Real_AsDouble(o);
+	imag_part = PyComplex_Imag_AsDouble(o);
 
-    c = CMPLX(real_part, imag_part);
-    return c;
+	c = CMPLX(real_part, imag_part);
+	return c;
 }
 
 bool			PyBool_to_Bool(Pyobject *o)
 {
-    bool	b;
-    b = o == PyTrue;
+	bool	b;
 
-    return b;
+	b = o == PyTrue;
+
+	return b;
+}
+
+t_ndarray		PyArray_to_ndarray(PyObject *o)
+{
+	t_ndarray	array;
+
+	c.nd          = PyArray_NDIM(o);
+	c.raw_data    = PyArray_DATA(o);
+	c.type_size   = PyArray_ITEMSIZE(o);
+	c.type        = PyArray_TYPE(o);
+	c.length      = PyArray_SIZE(o);
+	c.buffer_size = PyArray_NBYTES(o);
+	c.shape       = numpy_to_ndarray_shape(PyArray_SHAPE(o), c.nd);
+	c.strides     = numpy_to_ndarray_strides(PyArray_STRIDES(o), c.type_size, c.nd);
+	c.is_view     = 1;
+
+	return array;
 }
 
 // C to Python
