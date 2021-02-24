@@ -96,7 +96,7 @@ class PyccelBitOperator(PyccelOperator):
     def _handle_integer_type(self, integers):
         self._dtype     = NativeInteger()
         self._precision = max(a.precision for a in integers)
-        self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
+        self._args = tuple(PythonInt(a) if a.dtype is NativeBool() else a for a in integers)
 
 #==============================================================================
 
@@ -165,7 +165,7 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
             self._dtype = NativeBool()
         else:
             self._dtype = NativeInteger()
-            self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
+            self._args = tuple(PythonInt(a) if a.dtype is NativeBool() else a for a in integers)
         self._precision = max(a.precision for a in integers)
 
 #==============================================================================
