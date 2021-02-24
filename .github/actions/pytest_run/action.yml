@@ -5,10 +5,10 @@ runs:
   steps:
     - name: Test with pytest
       run: |
-        python -m pytest -rx -m "not parallel and c" --ignore=printers --ignore=symbolic --ignore=ndarrays
-        python -m pytest -rx -m "not parallel and not c and not python" --ignore=printers --ignore=symbolic --ignore=ndarrays
-        python -m pytest -rx -m "not parallel and python" --ignore=printers --ignore=symbolic --ignore=ndarrays
-        python -m pytest ndarrays/ -rx
+        python -m pytest -n auto -rx -m "not parallel and c" --ignore=printers --ignore=symbolic --ignore=ndarrays
+        python -m pytest -n auto -rx -m "not parallel and not c and not python" --ignore=printers --ignore=symbolic --ignore=ndarrays
+        python -m pytest -n auto -rx -m "not parallel and python" --ignore=printers --ignore=symbolic --ignore=ndarrays
+        python -m pytest -n auto ndarrays/ -rx
         mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel/test_parallel_epyccel.py -v -m parallel -rx
         #mpiexec -n 4 ${MPI_OPTS} python -m pytest epyccel -v -m parallel -rx
       shell: bash
