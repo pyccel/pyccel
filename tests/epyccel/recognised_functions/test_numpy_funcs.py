@@ -3684,20 +3684,19 @@ def test_numpy_real_array_like_1d(language):
         s = shape(a)
         return len(s), s[0], a[0]
 
-    # should be uncommented after resolving #733
-    # @types('int8[:]')
-    # def test_int8(arr):
-    #     from numpy import real, shape
-    #     a = real(arr)
-    #     s = shape(a)
-    #     return len(s), s[0], a[0]
+    @types('int8[:]')
+    def test_int8(arr):
+        from numpy import real, shape
+        a = real(arr)
+        s = shape(a)
+        return len(s), s[0], a[0]
 
-    # # @types('int16[:]')
-    # def test_int16(arr):
-    #     from numpy import real, shape
-    #     a = real(arr)
-    #     s = shape(a)
-    #     return len(s), s[0], a[0]
+    @types('int16[:]')
+    def test_int16(arr):
+        from numpy import real, shape
+        a = real(arr)
+        s = shape(a)
+        return len(s), s[0], a[0]
 
     @types('int32[:]')
     def test_int32(arr):
@@ -3751,9 +3750,8 @@ def test_numpy_real_array_like_1d(language):
     import numpy as np
     bl = randint(0, 1, size=(5), dtype= bool)
 
-    # should be uncommented after resolving #733
-    # integer8 = randint(min_int8, max_int8, size=(5), dtype=np.int8)
-    # integer16 = randint(min_int16, max_int16, size=(5), dtype=np.int16)
+    integer8 = randint(min_int8, max_int8, size=(5), dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, size=(5), dtype=np.int16)
     integer = randint(min_int, max_int, size=(5), dtype=np.int)
     integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
@@ -3771,15 +3769,13 @@ def test_numpy_real_array_like_1d(language):
 
     assert (f_bl(bl) == test_bool(bl))
 
-    # should be uncommented after resolving #733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
 
-    # should be uncommented after resolving #733
-    # assert (f_integer8(integer8) == test_int8(integer8))
-    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
 
@@ -3827,20 +3823,19 @@ def test_numpy_real_array_like_2d(language):
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    # should be uncommented after resolving #733
-    # @types('int8[:,:]')
-    # def test_int8(arr):
-    #     from numpy import real, shape
-    #     a = real(arr)
-    #     s = shape(a)
-    #     return len(s), s[0], s[1], a[0,1], a[1,0]
+    @types('int8[:,:]')
+    def test_int8(arr):
+        from numpy import real, shape
+        a = real(arr)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    # # @types('int16[:,:]')
-    # def test_int16(arr):
-    #     from numpy import real, shape
-    #     a = real(arr)
-    #     s = shape(a)
-    #     return len(s), s[0], s[1], a[0,1], a[1,0]
+    @types('int16[:,:]')
+    def test_int16(arr):
+        from numpy import real, shape
+        a = real(arr)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
     @types('int32[:,:]')
     def test_int32(arr):
@@ -3894,6 +3889,8 @@ def test_numpy_real_array_like_2d(language):
     import numpy as np
     bl = randint(0, 1, size=(2, 5), dtype= bool)
 
+    integer8 = randint(min_int8, max_int8, size=(2, 5), dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, size=(2, 5), dtype=np.int16)
     integer = randint(min_int, max_int, size=(2, 5), dtype=np.int)
     integer32 = randint(min_int32, max_int32, size=(2, 5), dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=(2, 5), dtype=np.int64)
@@ -3911,15 +3908,13 @@ def test_numpy_real_array_like_2d(language):
 
     assert (f_bl(bl) == test_bool(bl))
 
-    # should be uncommented after resolving #733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
 
-    # should be uncommented after resolving #733
-    # assert (f_integer8(integer8) == test_int8(integer8))
-    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
 
@@ -4139,20 +4134,19 @@ def test_numpy_imag_array_like_1d(language):
         s = shape(a)
         return len(s), s[0], a[0]
 
-    # should be uncommented after resolving #733
-    # @types('int8[:]')
-    # def test_int8(arr):
-    #     from numpy import imag, shape
-    #     a = imag(arr)
-    #     s = shape(a)
-    #     return len(s), s[0], a[0]
+    @types('int8[:]')
+    def test_int8(arr):
+        from numpy import imag, shape
+        a = imag(arr)
+        s = shape(a)
+        return len(s), s[0], a[0]
 
-    # # @types('int16[:]')
-    # def test_int16(arr):
-    #     from numpy import imag, shape
-    #     a = imag(arr)
-    #     s = shape(a)
-    #     return len(s), s[0], a[0]
+    @types('int16[:]')
+    def test_int16(arr):
+        from numpy import imag, shape
+        a = imag(arr)
+        s = shape(a)
+        return len(s), s[0], a[0]
 
     @types('int32[:]')
     def test_int32(arr):
@@ -4206,9 +4200,8 @@ def test_numpy_imag_array_like_1d(language):
     import numpy as np
     bl = randint(0, 1, size=(5), dtype= bool)
 
-    # should be uncommented after resolving #733
-    # integer8 = randint(min_int8, max_int8, size=(5), dtype=np.int8)
-    # integer16 = randint(min_int16, max_int16, size=(5), dtype=np.int16)
+    integer8 = randint(min_int8, max_int8, size=(5), dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, size=(5), dtype=np.int16)
     integer = randint(min_int, max_int, size=(5), dtype=np.int)
     integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
@@ -4226,16 +4219,14 @@ def test_numpy_imag_array_like_1d(language):
 
     assert (f_bl(bl) == test_bool(bl))
 
-    # should be uncommented after resolving #733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    # should be uncommented after resolving #733
-    # assert (f_integer8(integer8) == test_int8(integer8))
-    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
     assert (f_integer64(integer64) == test_int64(integer64))
@@ -4279,20 +4270,19 @@ def test_numpy_imag_array_like_2d(language):
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    # should be uncommented after resolving #733
-    # @types('int8[:,:]')
-    # def test_int8(arr):
-    #     from numpy import imag, shape
-    #     a = imag(arr)
-    #     s = shape(a)
-    #     return len(s), s[0], s[1], a[0,1], a[1,0]
+    @types('int8[:,:]')
+    def test_int8(arr):
+        from numpy import imag, shape
+        a = imag(arr)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    # # @types('int16[:,:]')
-    # def test_int16(arr):
-    #     from numpy import imag, shape
-    #     a = imag(arr)
-    #     s = shape(a)
-    #     return len(s), s[0], s[1], a[0,1], a[1,0]
+    @types('int16[:,:]')
+    def test_int16(arr):
+        from numpy import imag, shape
+        a = imag(arr)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
     @types('int32[:,:]')
     def test_int32(arr):
@@ -4346,6 +4336,8 @@ def test_numpy_imag_array_like_2d(language):
     import numpy as np
     bl = randint(0, 1, size=(2, 5), dtype= bool)
 
+    integer8 = randint(min_int8, max_int8, size=(2, 5), dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, size=(2, 5), dtype=np.int16)
     integer = randint(min_int, max_int, size=(2, 5), dtype=np.int)
     integer32 = randint(min_int32, max_int32, size=(2, 5), dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=(2, 5), dtype=np.int64)
@@ -4363,16 +4355,14 @@ def test_numpy_imag_array_like_2d(language):
 
     assert (f_bl(bl) == test_bool(bl))
 
-    # should be uncommented after resolving #733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    # should be uncommented after resolving #733
-    # assert (f_integer8(integer8) == test_int8(integer8))
-    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
     assert (f_integer64(integer64) == test_int64(integer64))
