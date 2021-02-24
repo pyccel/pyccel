@@ -3965,7 +3965,6 @@ def test_numpy_int(language):
     f_integer8 = epyccel(test_int8_int, language=language)
     f_integer16 = epyccel(test_int16_int, language=language)
     f_integer32 = epyccel(test_int32_int, language=language)
-    f_integer64 = epyccel(test_int64_int, language=language)
 
     assert (f_integer(integer) == test_int_int(integer))
     assert (f_integer8(integer8) == test_int8_int(integer8))
@@ -3973,6 +3972,7 @@ def test_numpy_int(language):
     assert (f_integer32(integer32) == test_int32_int(integer32))
     # the if block should be removed after resovling (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
+        f_integer64 = epyccel(test_int64_int, language=language)
         assert (f_integer64(integer64) == test_int64_int(integer64))
 
     f_fl = epyccel(test_float_int, language=language)
@@ -4155,7 +4155,6 @@ def test_numpy_int64(language):
     f_integer8 = epyccel(test_int8_int64, language=language)
     f_integer16 = epyccel(test_int16_int64, language=language)
     f_integer32 = epyccel(test_int32_int64, language=language)
-    f_integer64 = epyccel(test_int64_int64, language=language)
 
     assert (f_integer(integer) == test_int_int64(integer))
     assert (f_integer8(integer8) == test_int8_int64(integer8))
@@ -4163,6 +4162,7 @@ def test_numpy_int64(language):
     assert (f_integer32(integer32) == test_int32_int64(integer32))
     # the if block should be removed after resovling (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
+        f_integer64 = epyccel(test_int64_int64, language=language)
         assert (f_integer64(integer64) == test_int64_int64(integer64))
 
     f_fl = epyccel(test_float_int64, language=language)
