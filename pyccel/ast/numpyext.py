@@ -947,15 +947,24 @@ class NumpyMod(NumpyUfuncBinary):
     def _set_shape(self):
         shapes = [a.shape for a in self.args]
 
-        if len(args) == 1:
-            shape = self.args[0].shape
+        if all(sh is not None for sh in shapes):
+
+            if len(self.args) == 1:
+                shape = self.args[0].shape
+            else:
+                shape = broadcast(self.args[0].shape, self.args[1].shape)
+
+                for a in self.args[2:]:
+                    shape = broadcast(shape, a.shape)
+
+            self._shape = shape
+            self._rank  = len(shape)
         else:
-            shape = broadcast(self.args[0].shape, self.args[1].shape)
+            self._rank = max(a.rank for a in args)
+            self._shape = (None,)*self._rank
 
-            for a in self.args[2:]:
-                shape = broadcast(shape, a.shape)
-
-        self._shape = shape
+    def _set_rank(self):
+        pass
 
     def _set_dtype(self):
         integers  = [a for a in self.args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
