@@ -14,7 +14,7 @@
 // Python to C
 
 float complex	Pycomplex_to_Complex64(PyObject *o);
-double complex	Pycomplex_to_Complex64(PyObject *o);
+double complex	Pycomplex_to_Complex128(PyObject *o);
 bool			PyBool_to_Bool(PyObject *o);
 t_ndarray		PyArray_to_ndarray(PyObject *o);
 
@@ -28,8 +28,8 @@ PyObject	*Bool_to_PyBool(bool b);
 /* CHECK FUNCTIONS */
 
 
-bool	PyArray_Check_Rank(PyArrayObject *a, int rank);
-bool	PyArray_Check_Type(PyArrayObject *a, int dtype);
+bool		PyArray_Check_Rank(PyArrayObject *a, int rank);
+bool		PyArray_Check_Type(PyArrayObject *a, int dtype);
 
 
 
