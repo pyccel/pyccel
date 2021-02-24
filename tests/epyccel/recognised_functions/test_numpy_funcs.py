@@ -3490,68 +3490,68 @@ def test_numpy_real_scalar(language):
 
     @types('bool')
     def test_bool(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('int')
     def test_int(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('int8')
     def test_int8(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('int16')
     def test_int16(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('int32')
     def test_int32(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('int64')
     def test_int64(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('float')
     def test_float(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('float32')
     def test_float32(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('float64')
     def test_float64(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('complex64')
     def test_complex64(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('complex128')
     def test_complex128(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     import numpy as np
@@ -3947,68 +3947,68 @@ def test_numpy_imag_scalar(language):
 
     @types('bool')
     def test_bool(a):
-        import numpy as np
-        b = np.imag(a)
+        from numpy import imag
+        b = imag(a)
         return b
 
     @types('int')
     def test_int(a):
-        import numpy as np
-        b = np.imag(a)
+        from numpy import imag
+        b = imag(a)
         return b
 
     @types('int8')
     def test_int8(a):
-        import numpy as np
-        b = np.imag(a)
+        from numpy import imag
+        b = imag(a)
         return b
 
     @types('int16')
     def test_int16(a):
-        import numpy as np
-        b = np.imag(a)
+        from numpy import imag
+        b = imag(a)
         return b
 
     @types('int32')
     def test_int32(a):
-        import numpy as np
-        b = np.imag(a)
+        from numpy import imag
+        b = imag(a)
         return b
 
     @types('int64')
     def test_int64(a):
-        import numpy as np
-        b = np.imag(a)
+        from numpy import imag
+        b = imag(a)
         return b
 
     @types('float')
     def test_float(a):
-        import numpy as np
-        b = np.imag(a)
+        from numpy import imag
+        b = imag(a)
         return b
 
     @types('float32')
     def test_float32(a):
-        import numpy as np
-        b = np.imag(a)
+        from numpy import imag
+        b = imag(a)
         return b
 
     @types('float64')
     def test_float64(a):
-        import numpy as np
-        b = np.imag(a)
+        from numpy import imag
+        b = imag(a)
         return b
 
     @types('complex64')
     def test_complex64(a):
-        import numpy as np
-        b = np.imag(a)
+        from numpy import imag
+        b = imag(a)
         return b
 
     @types('complex128')
     def test_complex128(a):
-        import numpy as np
-        b = np.imag(a)
+        from numpy import imag
+        b = imag(a)
         return b
 
     import numpy as np
