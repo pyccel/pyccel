@@ -70,7 +70,7 @@ class Basic:
     def ignore(self, c):
         """ Indicates if a node should be ignored when recursing
         """
-        return c is None or isinstance(c, (Immutable, type))
+        return c is None or isinstance(c, self._ignored_types)
 
     def invalidate_node(self):
         """ Indicate that this node is temporary.
