@@ -121,11 +121,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return static_func
 
-
-    def generate_valued_variable_code(self, variable):
-        #TODO
-
-
     #--------------------------------------------------------------------
     #                   Convert functions
     #--------------------------------------------------------------------
@@ -157,20 +152,41 @@ class CWrapperCodePrinter(CCodePrinter):
 
         func_name       = 'py_to_{}'.format(self._print(variable.dtype))
 
-        func_arguments  = [self.get_new_PyObject('O', used_names)]
+        func_arguments  = [self.get_new_PyObject('o', used_names)]
         func_arguments += [variable.clone(name = self.get_new_name(used_name, variable.name),
                                         is_pointer = True)]
 
         local_vars      = []
         func_body       = #TODO]
 
-        funcDef = FunctionDef(name       = func_name,
+        funcDef = FunctionDef(name     = func_name,
                             arguments  = func_arguments,
                             results    = [],
                             local_vars = local_vars,
                             body       = func_body)
 
         return funcDef
+
+    def generate_pyobject_converter_function(self, used_names, variable):
+        """
+        """
+
+        func_name       = '{}_to_py'.format(self._print(variable.dtype))
+
+        func_arguments  = [self.get_new_PyObject('o', used_names)]
+        func_arguments += [variable.clone(name = self.get_new_name(used_name, variable.name),
+                                is_pointer = True)]
+        local_vars      = []
+        func_body       = #TODO]
+
+        funcDef = FunctionDef(name     = func_name,
+                            arguments  = func_arguments,
+                            results    = [],
+                            local_vars = local_vars,
+                            body       = func_body)
+
+        return funcDef
+
 
     # -------------------------------------------------------------------
     #       Parsing arguments and building values  functions
@@ -192,7 +208,8 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         """
         if xxxxxxx not in self.parsing_converter_functions:
-            function =  #TODO
+
+            function = self.generate_pyobject_converter_function(variable)
 
             self.building_converter_functions[xxxxxxx] = function
 
@@ -303,7 +320,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         wrapper_body.append(AliasAssign(wrapper_results[0], build_node))
 
-        wrapper_function = FunctionDef(name        = wrapper_name,
+        wrapper_function = FunctionDef(name     = wrapper_name,
                                     arguments   = wrapper_args,
                                     results     = wrapper_results,
                                     body        = wrapper_body,
