@@ -1683,7 +1683,7 @@ class FunctionCall(PyccelAstNode):
 
     def _get_shape(self):
         func = self.funcdef
-        return (func.results[0].shape if len(func.results) == 1 else None), None
+        return (func.results[0].shape if len(func.results) == 1 else ()), None
 
     def _get_order(self):
         func = self.funcdef

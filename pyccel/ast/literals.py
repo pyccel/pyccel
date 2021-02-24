@@ -32,10 +32,9 @@ class Literal(PyccelAstNode):
     _attribute_nodes  = ()
 
     def __init__(self, precision = None):
-        if precision is not None:
-            if not isinstance(precision, int):
-                raise TypeError("precision must be an integer")
-            self._precision = precision
+        if precision is not None and not isinstance(precision, int):
+            raise TypeError("precision must be an integer")
+        self._precision = precision
         super().__init__()
 
     def _get_shape(self):

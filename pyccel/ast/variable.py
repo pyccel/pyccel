@@ -140,9 +140,9 @@ class Variable(PyccelAstNode):
         else:
             self._rank = rank
 
-        if isinstance(precision,int):
+        if precision is None or isinstance(precision,int):
             self._precision = precision
-        elif precision is not None:
+        else:
             raise TypeError('precision must be an integer or None.')
 
         self._alloc_shape = shape
