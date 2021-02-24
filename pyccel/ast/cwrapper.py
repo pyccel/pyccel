@@ -10,30 +10,18 @@ Handling the transitions between python code and C code.
 
 import numpy as np
 
-from ..errors.errors import Errors
+from ..errors.errors   import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
 from .basic     import Basic
-
-from .builtins  import PythonBool, PythonComplex
-from .numpy_wrapper import pyarray_to_ndarray
 
 from .datatypes import DataType
 from .datatypes import NativeInteger, NativeReal, NativeComplex
 from .datatypes import NativeBool, NativeString, NativeGeneric, NativeVoid
 
 from .core      import FunctionCall, FunctionDef, FunctionAddress
-from .core      import AliasAssign, Assign, Return, If, DottedVariable
-from .core      import IfSection
 
-from .literals  import LiteralTrue
-
-from .numpyext  import NumpyReal, NumpyImag
-
-from .operators import PyccelEq
-
-from .variable  import Variable, ValuedVariable, VariableAddress
-
+from .variable  import Variable, ValuedVariable
 
 errors = Errors()
 

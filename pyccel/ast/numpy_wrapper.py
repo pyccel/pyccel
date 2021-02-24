@@ -13,19 +13,15 @@ import numpy as np
 from ..errors.errors   import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
-from .datatypes import (NativeInteger, NativeReal, NativeComplex,
-                        NativeBool, NativeString, NativeGeneric,
-                        NativeVoid)
+from .datatypes import DataType
+from .datatypes import NativeInteger, NativeReal, NativeComplex
+from .datatypes import NativeBool, NativeString, NativeGeneric, NativeVoid
 
 from .cwrapper  import PyccelPyObject, PyccelPyArrayObject
 
 from .core      import FunctionCall, FunctionDef
-from .core      import Assign, Return, DottedVariable
-
-from .literals  import LiteralTrue
 
 from .variable  import Variable
-
 
 errors = Errors()
 
