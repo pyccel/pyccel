@@ -636,7 +636,7 @@ class NumpyFull(NumpyNewArray):
         (row- or column-wise) order in memory.
 
     """
-    _attribut_nodes = ('_fill_value',)
+    _attribute_nodes = ('_fill_value',)
     __slots__ = ('_fill_value',)
 
     def __init__(self, shape, fill_value, dtype=None, order='C'):
@@ -650,8 +650,6 @@ class NumpyFull(NumpyNewArray):
             cast_func = DtypePrecisionToCastFunction[dtype.name][self.precision]
             fill_value = cast_func(fill_value)
         self._fill_value = fill_value
-
-        super().__init__(fill_value)
 
     def _get_dtype(self):
         # If there is no dtype, extract it from fill_value
