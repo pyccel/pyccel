@@ -4711,56 +4711,56 @@ def test_numpy_mod_scalar(language):
 
     @types('int')
     def test_int(a):
-        import numpy as np
-        b = np.mod(a + 1, a)
+        from numpy import mod
+        b = mod(a + 1, a)
         return b
 
     @types('int8')
     def test_int8(a):
-        import numpy as np
-        b = np.mod(a + 1, a)
+        from numpy import mod
+        b = mod(a + 1, a)
         return b
 
     @types('int16')
     def test_int16(a):
-        import numpy as np
-        b = np.mod(a + 1, a)
+        from numpy import mod
+        b = mod(a + 1, a)
         return b
 
     @types('int32')
     def test_int32(a):
-        import numpy as np
-        b = np.mod(a + 1, a)
+        from numpy import mod
+        b = mod(a + 1, a)
         return b
 
     @types('int64')
     def test_int64(a):
-        import numpy as np
-        b = np.mod(a + 1, a)
+        from numpy import mod
+        b = mod(a + 1, a)
         return b
 
     @types('float')
     def test_float(a):
-        import numpy as np
-        b = np.mod(a + 1, a)
+        from numpy import mod
+        b = mod(a + 1, a)
         return b
 
     @types('float32')
     def test_float32(a):
-        import numpy as np
-        b = np.mod(a + 1, a)
+        from numpy import mod
+        b = mod(a + 1, a)
         return b
 
     @types('float64')
     def test_float64(a):
-        import numpy as np
-        b = np.mod(a + 1, a)
+        from numpy import mod
+        b = mod(a + 1, a)
         return b
 
     import numpy as np
 
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer8 = randint(np.iinfo('int8').min, np.iinfo('int8').max, dtype=np.int8)
+    integer16 = randint(np.iinfo('int16').min, np.iinfo('int16').max, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
@@ -4816,20 +4816,19 @@ def test_numpy_mod_array_like_1d(language):
         s = shape(a)
         return len(s), s[0], a[0]
 
-    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
-    # @types('int8[:]')
-    # def test_int8(arr):
-    #     from numpy import mod, shape
-    #     a = mod(arr, arr)
-    #     s = shape(a)
-    #     return len(s), s[0], a[0]
+    @types('int8[:]')
+    def test_int8(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
+        s = shape(a)
+        return len(s), s[0], a[0]
 
-    # # @types('int16[:]')
-    # def test_int16(arr):
-    #     from numpy import mod, shape
-    #     a = mod(arr, arr)
-    #     s = shape(a)
-    #     return len(s), s[0], a[0]
+    @types('int16[:]')
+    def test_int16(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
+        s = shape(a)
+        return len(s), s[0], a[0]
 
     @types('int32[:]')
     def test_int32(arr):
@@ -4870,9 +4869,8 @@ def test_numpy_mod_array_like_1d(language):
 
     bl = randint(0, 1, size=(5), dtype= bool)
 
-    # should be uncommented after resolving #733
-    # integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
-    # integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
+    integer8 = randint(np.iinfo('int8').min, np.iinfo('int8').max, size=(5), dtype=np.int8)
+    integer16 = randint(np.iinfo('int16').min, np.iinfo('int16').max, size=(5), dtype=np.int16)
     integer = randint(min_int, max_int, size=(5), dtype=np.int)
     integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
@@ -4886,16 +4884,14 @@ def test_numpy_mod_array_like_1d(language):
 
     assert (f_bl(bl) == test_bool(bl))
 
-    # should be uncommented after resolving #733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    # should be uncommented after resolving #733
-    # assert (f_integer8(integer8) == test_int8(integer8))
-    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
     assert (f_integer64(integer64) == test_int64(integer64))
@@ -4934,20 +4930,19 @@ def test_numpy_mod_array_like_2d(language):
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    # should be uncommented after resolving #733
-    # @types('int8[:,:]')
-    # def test_int8(arr):
-    #     from numpy import mod, shape
-    #     a = mod(arr, arr)
-    #     s = shape(a)
-    #     return len(s), s[0], s[1], a[0,1], a[1,0]
+    @types('int8[:,:]')
+    def test_int8(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    # # @types('int16[:,:]')
-    # def test_int16(arr):
-    #     from numpy import mod, shape
-    #     a = mod(arr, arr)
-    #     s = shape(a)
-    #     return len(s), s[0], s[1], a[0,1], a[1,0]
+    @types('int16[:,:]')
+    def test_int16(arr):
+        from numpy import mod, shape
+        a = mod(arr, arr)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
     @types('int32[:,:]')
     def test_int32(arr):
@@ -5000,16 +4995,14 @@ def test_numpy_mod_array_like_2d(language):
 
     assert (f_bl(bl) == test_bool(bl))
 
-    # should be uncommented after resolving #733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    # should be uncommented after resolving #733
-    # assert (f_integer8(integer8) == test_int8(integer8))
-    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
     assert (f_integer64(integer64) == test_int64(integer64))
@@ -5041,20 +5034,19 @@ def test_numpy_matmul_array_like_1d(language):
         s = shape(a)
         return len(s), s[0], a[0]
 
-    # should be uncommented after resolving #733
-    # @types('int8[:,:]')
-    # def test_int8(arr):
-    #     from numpy import matmul, shape
-    #     a = matmul(arr, arr)
-    #     s = shape(a)
-    #     return len(s), s[0], a[0]
+    @types('int8[:,:]')
+    def test_int8(arr):
+        from numpy import matmul, shape
+        a = matmul(arr, arr)
+        s = shape(a)
+        return len(s), s[0], a[0]
 
-    # # @types('int16[:,:]')
-    # def test_int16(arr):
-    #     from numpy import matmul, shape
-    #     a = matmul(arr, arr)
-    #     s = shape(a)
-    #     return len(s), s[0], a[0]
+    @types('int16[:,:]')
+    def test_int16(arr):
+        from numpy import matmul, shape
+        a = matmul(arr, arr)
+        s = shape(a)
+        return len(s), s[0], a[0]
 
     @types('int32[:,:]')
     def test_int32(arr):
@@ -5120,16 +5112,14 @@ def test_numpy_matmul_array_like_1d(language):
     cmplx64 = np.complex64(cmplx64)
     cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) * 1j
 
-    # should be uncommented after resolving #733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    # should be uncommented after resolving #733
-    # assert (f_integer8(integer8) == test_int8(integer8))
-    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
     assert (f_integer64(integer64) == test_int64(integer64))
@@ -5167,20 +5157,19 @@ def test_numpy_matmul_array_like_2x2d(language):
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    # should be uncommented after resolving #733
-    # @types('int8[:,:]')
-    # def test_int8(arr):
-    #     from numpy import matmul, shape
-    #     a = matmul(arr, arr)
-    #     s = shape(a)
-    #     return len(s), s[0], s[1], a[0,1], a[1,0]
+    @types('int8[:,:]')
+    def test_int8(arr):
+        from numpy import matmul, shape
+        a = matmul(arr, arr)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    # # @types('int16[:,:]')
-    # def test_int16(arr):
-    #     from numpy import matmul, shape
-    #     a = matmul(arr, arr)
-    #     s = shape(a)
-    #     return len(s), s[0], s[1], a[0,1], a[1,0]
+    @types('int16[:,:]')
+    def test_int16(arr):
+        from numpy import matmul, shape
+        a = matmul(arr, arr)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,1], a[1,0]
 
     @types('int32[:,:]')
     def test_int32(arr):
@@ -5246,16 +5235,14 @@ def test_numpy_matmul_array_like_2x2d(language):
     cmplx64 = np.complex64(cmplx64)
     cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 2)) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 2)) * 1j
 
-    # should be uncommented after resolving #733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    # should be uncommented after resolving #733
-    # assert (f_integer8(integer8) == test_int8(integer8))
-    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
     assert (f_integer64(integer64) == test_int64(integer64))
@@ -5290,68 +5277,68 @@ def test_numpy_prod_scalar(language):
 
     @types('int')
     def test_int(a):
-        import numpy as np
+        from numpy import prod
         b = np.prod(a)
         return b
 
     @types('int8')
     def test_int8(a):
-        import numpy as np
+        from numpy import prod
         b = np.prod(a)
         return b
 
     @types('int16')
     def test_int16(a):
-        import numpy as np
+        from numpy import prod
         b = np.prod(a)
         return b
 
     @types('int32')
     def test_int32(a):
-        import numpy as np
+        from numpy import prod
         b = np.prod(a)
         return b
 
     @types('int64')
     def test_int64(a):
-        import numpy as np
+        from numpy import prod
         b = np.prod(a)
         return b
 
     @types('float')
     def test_float(a):
-        import numpy as np
+        from numpy import prod
         b = np.prod(a)
         return b
 
     @types('float32')
     def test_float32(a):
-        import numpy as np
+        from numpy import prod
         b = np.prod(a)
         return b
 
     @types('float64')
     def test_float64(a):
-        import numpy as np
+        from numpy import prod
         b = np.prod(a)
         return b
 
     @types('complex64')
     def test_complex64(a):
-        import numpy as np
+        from numpy import prod
         b = np.prod(a)
         return b
 
     @types('complex128')
     def test_complex128(a):
-        import numpy as np
+        from numpy import prod
         b = np.prod(a)
         return b
 
     import numpy as np
 
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer8 = randint(np.iinfo('int8').min, np.iinfo('int8').max, dtype=np.int8)
+    integer16 = randint(np.iinfo('int16').min, np.iinfo('int16').max, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
@@ -5455,18 +5442,17 @@ def test_numpy_prod_array_like_1d(language):
         a = prod(arr)
         return a
 
-    # should be uncommented after resolving #733
-    # @types('int8[:]')
-    # def test_int8(arr):
-    #     from numpy import prod
-    #     a = prod(arr)
-    #     return a
+    @types('int8[:]')
+    def test_int8(arr):
+        from numpy import prod
+        a = prod(arr)
+        return a
 
-    # # @types('int16[:]')
-    # def test_int16(arr):
-    #     from numpy import prod
-    #     a = prod(arr)
-    #     return a
+    @types('int16[:]')
+    def test_int16(arr):
+        from numpy import prod
+        a = prod(arr)
+        return a
 
     @types('int32[:]')
     def test_int32(arr):
@@ -5512,9 +5498,8 @@ def test_numpy_prod_array_like_1d(language):
 
     import numpy as np
 
-    # should be uncommented after resolving #733
-    # integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
-    # integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
+    integer8 = randint(np.iinfo('int8').min, np.iinfo('int8').max, size=(5), dtype=np.int8)
+    integer16 = randint(np.iinfo('int16').min, np.iinfo('int16').max, size=(5), dtype=np.int16)
     integer = randint(min_int, max_int, size=(5), dtype=np.int)
     integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
@@ -5528,16 +5513,14 @@ def test_numpy_prod_array_like_1d(language):
     cmplx64 = np.complex64(cmplx64)
     cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) * 1j
 
-    # should be uncommented after resolving #733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    # should be uncommented after resolving #733
-    # assert (f_integer8(integer8) == test_int8(integer8))
-    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
     assert (f_integer64(integer64) == test_int64(integer64))
@@ -5574,18 +5557,17 @@ def test_numpy_prod_array_like_2d(language):
         a = prod(arr)
         return a
 
-    # should be uncommented after resolving #733
-    # @types('int8[:,:]')
-    # def test_int8(arr):
-    #     from numpy import prod
-    #     a = prod(arr)
-    #     return a
+    @types('int8[:,:]')
+    def test_int8(arr):
+        from numpy import prod
+        a = prod(arr)
+        return a
 
-    # # @types('int16[:,:]')
-    # def test_int16(arr):
-    #     from numpy import prod
-    #     a = prod(arr)
-    #     return a
+    @types('int16[:,:]')
+    def test_int16(arr):
+        from numpy import prod
+        a = prod(arr)
+        return a
 
     @types('int32[:,:]')
     def test_int32(arr):
@@ -5645,16 +5627,14 @@ def test_numpy_prod_array_like_2d(language):
     cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) * 1j
 
 
-    # should be uncommented after resolving #733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    # should be uncommented after resolving #733
-    # assert (f_integer8(integer8) == test_int8(integer8))
-    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
     assert (f_integer64(integer64) == test_int64(integer64))
@@ -5687,74 +5667,74 @@ def test_numpy_norm_scalar(language):
 
     @types('bool')
     def test_bool(a):
-        import numpy as np
-        b = np.norm(a)
+        from numpy import norm
+        b = norm(a)
         return b
 
     @types('int')
     def test_int(a):
-        import numpy as np
-        b = np.norm(a)
+        from numpy import norm
+        b = norm(a)
         return b
 
     @types('int8')
     def test_int8(a):
-        import numpy as np
-        b = np.norm(a)
+        from numpy import norm
+        b = norm(a)
         return b
 
     @types('int16')
     def test_int16(a):
-        import numpy as np
-        b = np.norm(a)
+        from numpy import norm
+        b = norm(a)
         return b
 
     @types('int32')
     def test_int32(a):
-        import numpy as np
-        b = np.norm(a)
+        from numpy import norm
+        b = norm(a)
         return b
 
     @types('int64')
     def test_int64(a):
-        import numpy as np
-        b = np.norm(a)
+        from numpy import norm
+        b = norm(a)
         return b
 
     @types('float')
     def test_float(a):
-        import numpy as np
-        b = np.norm(a)
+        from numpy import norm
+        b = norm(a)
         return b
 
     @types('float32')
     def test_float32(a):
-        import numpy as np
-        b = np.norm(a)
+        from numpy import norm
+        b = norm(a)
         return b
 
     @types('float64')
     def test_float64(a):
-        import numpy as np
-        b = np.norm(a)
+        from numpy import norm
+        b = norm(a)
         return b
 
     @types('complex64')
     def test_complex64(a):
-        import numpy as np
-        b = np.norm(a)
+        from numpy import norm
+        b = norm(a)
         return b
 
     @types('complex128')
     def test_complex128(a):
-        import numpy as np
-        b = np.norm(a)
+        from numpy import norm
+        b = norm(a)
         return b
 
     import numpy as np
 
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer8 = randint(np.iinfo('int8').min, np.iinfo('int8').max, dtype=np.int8)
+    integer16 = randint(np.iinfo('int16').min, np.iinfo('int16').max, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
@@ -5879,18 +5859,17 @@ def test_numpy_norm_array_like_1d(language):
         a = norm(arr)
         return a
 
-    # should be uncommented after resolving #733
-    # @types('int8[:]')
-    # def test_int8(arr):
-    #     from numpy import norm
-    #     a = norm(arr)
-    #     return a
+    @types('int8[:]')
+    def test_int8(arr):
+        from numpy import norm
+        a = norm(arr)
+        return a
 
-    # # @types('int16[:]')
-    # def test_int16(arr):
-    #     from numpy import norm
-    #     a = norm(arr)
-    #     return a
+    @types('int16[:]')
+    def test_int16(arr):
+        from numpy import norm
+        a = norm(arr)
+        return a
 
     @types('int32[:]')
     def test_int32(arr):
@@ -5937,9 +5916,8 @@ def test_numpy_norm_array_like_1d(language):
     import numpy as np
     bl = randint(0, 1, size=(5), dtype= bool)
 
-    # should be uncommented after resolving #733
-    # integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
-    # integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
+    integer8 = randint(np.iinfo('int8').min, np.iinfo('int8').max, size=(5), dtype=np.int8)
+    integer16 = randint(np.iinfo('int16').min, np.iinfo('int16').max, size=(5), dtype=np.int16)
     integer = randint(min_int, max_int, size=(5), dtype=np.int)
     integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
@@ -5957,16 +5935,14 @@ def test_numpy_norm_array_like_1d(language):
 
     assert (f_bl(bl) == test_bool(bl))
 
-    # should be uncommented after resolving #733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    # should be uncommented after resolving #733
-    # assert (f_integer8(integer8) == test_int8(integer8))
-    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
     assert (f_integer64(integer64) == test_int64(integer64))
@@ -6009,18 +5985,17 @@ def test_numpy_norm_array_like_2d(language):
         a = norm(arr)
         return a
 
-    # should be uncommented after resolving #733
-    # @types('int8[:,:]')
-    # def test_int8(arr):
-    #     from numpy import norm
-    #     a = norm(arr)
-    #     return a
+    @types('int8[:,:]')
+    def test_int8(arr):
+        from numpy import norm
+        a = norm(arr)
+        return a
 
-    # # @types('int16[:,:]')
-    # def test_int16(arr):
-    #     from numpy import norm
-    #     a = norm(arr)
-    #     return a
+    @types('int16[:,:]')
+    def test_int16(arr):
+        from numpy import norm
+        a = norm(arr)
+        return a
 
     @types('int32[:,:]')
     def test_int32(arr):
@@ -6084,16 +6059,15 @@ def test_numpy_norm_array_like_2d(language):
 
     assert (f_bl(bl) == test_bool(bl))
 
-    # should be uncommented after resolving #733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    # should be uncommented after resolving #733
-    # assert (f_integer8(integer8) == test_int8(integer8))
-    # assert (f_integer16(integer16) == test_int16(integer16))
+    should be uncommented after resolving #733
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
     assert (f_integer64(integer64) == test_int64(integer64))
@@ -6128,74 +6102,74 @@ def test_numpy_where_scalar(language):
 
     @types('bool')
     def test_bool(a):
-        import numpy as np
-        b = np.where(a)
+        from numpy import where
+        b = where(a)
         return b
 
     @types('int')
     def test_int(a):
-        import numpy as np
-        b = np.where(a)
+        from numpy import where
+        b = where(a)
         return b
 
     @types('int8')
     def test_int8(a):
-        import numpy as np
-        b = np.where(a)
+        from numpy import where
+        b = where(a)
         return b
 
     @types('int16')
     def test_int16(a):
-        import numpy as np
-        b = np.where(a)
+        from numpy import where
+        b = where(a)
         return b
 
     @types('int32')
     def test_int32(a):
-        import numpy as np
-        b = np.where(a)
+        from numpy import where
+        b = where(a)
         return b
 
     @types('int64')
     def test_int64(a):
-        import numpy as np
-        b = np.where(a)
+        from numpy import where
+        b = where(a)
         return b
 
     @types('float')
     def test_float(a):
-        import numpy as np
-        b = np.where(a)
+        from numpy import where
+        b = where(a)
         return b
 
     @types('float32')
     def test_float32(a):
-        import numpy as np
-        b = np.where(a)
+        from numpy import where
+        b = where(a)
         return b
 
     @types('float64')
     def test_float64(a):
-        import numpy as np
-        b = np.where(a)
+        from numpy import where
+        b = where(a)
         return b
 
     @types('complex64')
     def test_complex64(a):
-        import numpy as np
-        b = np.where(a)
+        from numpy import where
+        b = where(a)
         return b
 
     @types('complex128')
     def test_complex128(a):
-        import numpy as np
+        from numpy import where
         b = np.imag(a)
         return b
 
     import numpy as np
 
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer8 = randint(np.iinfo('int8').min, np.iinfo('int8').max, dtype=np.int8)
+    integer16 = randint(np.iinfo('int16').min, np.iinfo('int16').max, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
@@ -6319,18 +6293,17 @@ def test_numpy_where_array_like_1d_with_condition(language):
         a = where(arr > 5, arr, arr*2)
         return a
 
-    # should be uncommented after resolving #733
-    # @types('int8[:]')
-    # def test_int8(arr):
-    #     from numpy import where
-    #     a = where(arr > 5, arr, arr*2)
-    #     return a
+    @types('int8[:]')
+    def test_int8(arr):
+        from numpy import where
+        a = where(arr > 5, arr, arr*2)
+        return a
 
-    # # @types('int16[:]')
-    # def test_int16(arr):
-    #     from numpy import where
-    #     a = where(arr > 5, arr, arr*2)
-    #     return a
+    @types('int16[:]')
+    def test_int16(arr):
+        from numpy import where
+        a = where(arr > 5, arr, arr*2)
+        return a
 
     @types('int32[:]')
     def test_int32(arr):
@@ -6377,9 +6350,8 @@ def test_numpy_where_array_like_1d_with_condition(language):
     import numpy as np
     bl = randint(0, 1, size=(5), dtype= bool)
 
-    # should be uncommented after resolving #733
-    # integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
-    # integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
+    integer8 = randint(np.iinfo('int8').min, np.iinfo('int8').max, size=(5), dtype=np.int8)
+    integer16 = randint(np.iinfo('int16').min, np.iinfo('int16').max, size=(5), dtype=np.int16)
     integer = randint(min_int, max_int, size=(5), dtype=np.int)
     integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
@@ -6397,16 +6369,14 @@ def test_numpy_where_array_like_1d_with_condition(language):
 
     assert (f_bl(bl) == test_bool(bl))
 
-    # should be uncommented after resolving #733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    # should be uncommented after resolving #733
-    # assert (f_integer8(integer8) == test_int8(integer8))
-    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
     assert (f_integer64(integer64) == test_int64(integer64))
@@ -6449,18 +6419,17 @@ def test_numpy_where_array_like_1d(language):
         a = where(arr)
         return a
 
-    # should be uncommented after resolving #733
-    # @types('int8[:]')
-    # def test_int8(arr):
-    #     from numpy import where
-    #     a = where(arr)
-    #     return a
+    @types('int8[:]')
+    def test_int8(arr):
+        from numpy import where
+        a = where(arr)
+        return a
 
-    # # @types('int16[:]')
-    # def test_int16(arr):
-    #     from numpy import where
-    #     a = where(arr)
-    #     return a
+    @types('int16[:]')
+    def test_int16(arr):
+        from numpy import where
+        a = where(arr)
+        return a
 
     @types('int32[:]')
     def test_int32(arr):
@@ -6507,9 +6476,8 @@ def test_numpy_where_array_like_1d(language):
     import numpy as np
     bl = randint(0, 1, size=(5), dtype= bool)
 
-    # should be uncommented after resolving #733
-    # integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
-    # integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
+    integer8 = randint(np.iinfo('int8').min, np.iinfo('int8').max, size=(5), dtype=np.int8)
+    integer16 = randint(np.iinfo('int16').min, np.iinfo('int16').max, size=(5), dtype=np.int16)
     integer = randint(min_int, max_int, size=(5), dtype=np.int)
     integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
@@ -6527,16 +6495,14 @@ def test_numpy_where_array_like_1d(language):
 
     assert (f_bl(bl) == test_bool(bl))
 
-    # should be uncommented after resolving #733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    # should be uncommented after resolving #733
-    # assert (f_integer8(integer8) == test_int8(integer8))
-    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
     assert (f_integer64(integer64) == test_int64(integer64))
@@ -6579,18 +6545,17 @@ def test_numpy_where_array_like_2d_with_condition(language):
         a = where(arr%2, arr, arr+1)
         return a
 
-    # should be uncommented after resolving #733
-    # @types('int8[:,:]')
-    # def test_int8(arr):
-    #     from numpy import where
-    #     a = where(arr%2, arr, arr+1)
-    #     return a
+    @types('int8[:,:]')
+    def test_int8(arr):
+        from numpy import where
+        a = where(arr%2, arr, arr+1)
+        return a
 
-    # # @types('int16[:,:]')
-    # def test_int16(arr):
-    #     from numpy import where
-    #     a = where(arr%2, arr, arr+1)
-    #     return a
+    @types('int16[:,:]')
+    def test_int16(arr):
+        from numpy import where
+        a = where(arr%2, arr, arr+1)
+        return a
 
     @types('int32[:,:]')
     def test_int32(arr):
@@ -6654,16 +6619,14 @@ def test_numpy_where_array_like_2d_with_condition(language):
 
     assert (f_bl(bl) == test_bool(bl))
 
-    # should be uncommented after resolving #733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    # should be uncommented after resolving #733
-    # assert (f_integer8(integer8) == test_int8(integer8))
-    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
     assert (f_integer64(integer64) == test_int64(integer64))
@@ -6707,18 +6670,17 @@ def test_numpy_where_array_like_2d(language):
         a = where(arr)
         return a
 
-    # should be uncommented after resolving #733
-    # @types('int8[:,:]')
-    # def test_int8(arr):
-    #     from numpy import where
-    #     a = where(arr)
-    #     return a
+    @types('int8[:,:]')
+    def test_int8(arr):
+        from numpy import where
+        a = where(arr)
+        return a
 
-    # # @types('int16[:,:]')
-    # def test_int16(arr):
-    #     from numpy import where
-    #     a = where(arr)
-    #     return a
+    @types('int16[:,:]')
+    def test_int16(arr):
+        from numpy import where
+        a = where(arr)
+        return a
 
     @types('int32[:,:]')
     def test_int32(arr):
@@ -6782,16 +6744,14 @@ def test_numpy_where_array_like_2d(language):
 
     assert (f_bl(bl) == test_bool(bl))
 
-    # should be uncommented after resolving #733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    # should be uncommented after resolving #733
-    # assert (f_integer8(integer8) == test_int8(integer8))
-    # assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
     assert (f_integer64(integer64) == test_int64(integer64))
@@ -6824,113 +6784,119 @@ def test_numpy_linspace_scalar(language):
 
     @types('bool')
     def test_bool(start):
-        import numpy as np
+        from numpy import linspace, shape
         stop = start + 7
         NumberOfSamplesToGenerate = 7
-        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
-        s = np.shape(b)
+        b = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(b)
         return len(s), s[0], b[0], b[5]
 
     @types('int')
     def test_int(start):
-        import numpy as np
+        from numpy import linspace, shape
         stop = start + 7
         NumberOfSamplesToGenerate = 7
-        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
-        s = np.shape(b)
+        b = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(b)
         return len(s), s[0], b[0], b[5]
 
     @types('int8')
     def test_int8(start):
-        import numpy as np
+        from numpy import linspace, shape
         stop = start + 7
         NumberOfSamplesToGenerate = 7
-        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
-        s = np.shape(b)
+        b = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(b)
         return len(s), s[0], b[0], b[5]
 
     @types('int16')
     def test_int16(start):
-        import numpy as np
+        from numpy import linspace, shape
         stop = start + 7
         NumberOfSamplesToGenerate = 7
-        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
-        s = np.shape(b)
+        b = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(b)
         return len(s), s[0], b[0], b[5]
 
     @types('int32')
     def test_int32(start):
-        import numpy as np
+        from numpy import linspace, shape
         stop = start + 7
         NumberOfSamplesToGenerate = 7
-        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
-        s = np.shape(b)
+        b = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(b)
         return len(s), s[0], b[0], b[5]
 
     @types('int64')
     def test_int64(start):
-        import numpy as np
+        from numpy import linspace, shape
         stop = start + 7
         NumberOfSamplesToGenerate = 7
-        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
-        s = np.shape(b)
+        b = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(b)
         return len(s), s[0], b[0], b[5]
 
     @types('float')
     def test_float(start):
-        import numpy as np
+        from numpy import linspace, shape
         stop = start + 7
         NumberOfSamplesToGenerate = 7
-        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
-        s = np.shape(b)
+        b = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(b)
         return len(s), s[0], b[0], b[5]
 
     @types('float32')
     def test_float32(start):
-        import numpy as np
+        from numpy import linspace, shape
         stop = start + 7
         NumberOfSamplesToGenerate = 7
-        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
-        s = np.shape(b)
+        b = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(b)
         return len(s), s[0], b[0], b[5]
 
     @types('float64')
     def test_float64(start):
-        import numpy as np
+        from numpy import linspace, shape
         stop = start + 7
         NumberOfSamplesToGenerate = 7
-        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
-        s = np.shape(b)
+        b = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(b)
         return len(s), s[0], b[0], b[5]
 
     @types('complex64')
     def test_complex64(start):
-        import numpy as np
+        from numpy import linspace, shape
         stop = start + 7
         NumberOfSamplesToGenerate = 7
-        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
-        s = np.shape(b)
+        b = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(b)
         return len(s), s[0], b[0], b[5]
 
     @types('complex128')
     def test_complex128(start):
-        import numpy as np
+        from numpy import linspace, shape
         stop = start + 7
         NumberOfSamplesToGenerate = 7
-        b = np.linspace(start, stop, NumberOfSamplesToGenerate)
-        s = np.shape(b)
+        b = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(b)
         return len(s), s[0], b[0], b[5]
 
     import numpy as np
 
-    integer = randint(1e6)
-    integer8 = np.int8(randint(1e6))
-    integer16 = np.int16(randint(1e6))
-    integer32 = np.int32(randint(1e6))
-    integer64 = np.int64(randint(1e6))
-    fl = np.float(randint(1e6))
-    fl32 = np.float32(randint(1e6))
-    fl64 = np.float64(randint(1e6))
+    integer8 = randint(np.iinfo('int8').min, np.iinfo('int8').max, size=(5), dtype=np.int8)
+    integer16 = randint(np.iinfo('int16').min, np.iinfo('int16').max, size=(5), dtype=np.int16)
+    integer = randint(min_int, max_int, size=(5), dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
+
+    fl = uniform(min_float / 2, max_float / 2, size=(5))
+    fl32 = uniform(min_float32, max_float32, size=(5))
+    fl32 = np.float32(fl32)
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
+
+    cmplx64 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=5) + uniform(low=max_float32 / 2, high=max_float32 / 2, size=5) * 1j
+    cmplx64 = np.complex64(cmplx64)
+    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) * 1j
 
     f_bl = epyccel(test_bool, language=language)
 
@@ -6960,8 +6926,8 @@ def test_numpy_linspace_scalar(language):
     f_complex64 = epyccel(test_complex64, language=language)
     f_complex128 = epyccel(test_complex128, language=language)
 
-    assert (f_complex64(1+5j) == test_complex64(1+5j))
-    assert (f_complex128(1+5j) == test_complex128(1+5j))
+    assert (f_complex64(cmplx64) == test_complex64(cmplx64))
+    assert (f_complex128(cmplx128) == test_complex128(cmplx128))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
@@ -6975,137 +6941,164 @@ def test_numpy_linspace_scalar(language):
 
 def test_numpy_linspace_array_like_1d(language):
 
-    def test_bool():
-        from numpy import linspace, array, shape
-        start = array([4,5,0,2,0], bool)
-        stop = array([5,6,1,3,1], bool)
+    @types('bool[:]')
+    def test_bool(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones(5)
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
 
-    def test_int():
-        from numpy import linspace, array, shape
-        start = array([4,5,0,2,0], int)
-        stop = array([5,6,1,3,1], int)
+    @types('int[:]')
+    def test_int(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones(5)
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
 
-    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
-    # def test_int8():
-    #     from numpy import linspace, array, shape, int8
-    #     start = array([4,5,0,2,0], int8)
-    #     stop = array([5,6,1,3,1], int8)
-    #     NumberOfSamplesToGenerate = 7
-    #     a = linspace(start, stop, NumberOfSamplesToGenerate)
-    #     s = shape(a)
-    #     return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
-
-    # def test_int16():
-    #     from numpy import linspace, array, shape, int16
-    #     start = array([4,5,0,2,0], int16)
-    #     stop = array([5,6,1,3,1], int16)
-    #     NumberOfSamplesToGenerate = 7
-    #     a = linspace(start, stop, NumberOfSamplesToGenerate)
-    #     s = shape(a)
-    #     return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
-
-    def test_int32():
-        from numpy import linspace, array, shape, int32
-        start = array([4,5,0,2,0], int32)
-        stop = array([5,6,1,3,1], int32)
+    @types('int8[:]')
+    def test_int8(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones(5)
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
 
-    def test_int64():
-        from numpy import linspace, array, shape, int64
-        start = array([4,5,0,2,0], int64)
-        stop = array([5,6,1,3,1], int64)
+    @types('int16[:]')
+    def test_int16(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones(5)
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
 
-    def test_float():
-        from numpy import linspace, array, shape
-        start = array([4,5,0,2,0], float)
-        stop = array([5,6,1,3,1], float)
+    @types('int32[:]')
+    def test_int32(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones(5)
+        stop = arr
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
+        
+
+    @types('int64[:]')
+    def test_int64(arr):
+        from numpy import linspace, shape, ones
+        NumberOfSamplesToGenerate = 7
+        start = ones(5)
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
 
-    def test_float32():
-        from numpy import linspace, array, shape, float32
-        start = array([4,5,0,2,0], float32)
-        stop = array([5,6,1,3,1], float32)
+    @types('float[:]')
+    def test_float(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones(5)
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
 
-    def test_float64():
-        from numpy import linspace, array, shape, float64
-        start = array([4,5,0,2,0], float64)
-        stop = array([5,6,1,3,1], float64)
+    @types('float32[:]')
+    def test_float32(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones(5)
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
 
-    def test_complex64():
-        from numpy import linspace, array, shape, complex64
-        start = array([4,5,0,2,0], complex64)
-        stop = array([5,6,1,3,1], complex64)
+    @types('float64[:]')
+    def test_float64(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones(5)
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
 
-    def test_complex128():
-        from numpy import linspace, array, shape, complex128
-        start = array([4,5,0,2,0], complex128)
-        stop = array([5,6,1,3,1], complex128)
+    @types('complex64[:]')
+    def test_complex64(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones(5)
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
+
+    @types('complex128[:]')
+    def test_complex128(arr):
+        from numpy import linspace, shape, ones
+        NumberOfSamplesToGenerate = 7
+        start = ones(5)
+        stop = arr
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], a[0,0], a[0,5], a[1,0], a[1,5]
+
+    import numpy as np
+    bl = randint(0, 1, size=(5), dtype= bool)
+
+    integer8 = randint(np.iinfo('int8').min, np.iinfo('int8').max, size=(5), dtype=np.int8)
+    integer16 = randint(np.iinfo('int16').min, np.iinfo('int16').max, size=(5), dtype=np.int16)
+    integer = randint(min_int, max_int, size=(5), dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
+
+    fl = uniform(min_float / 2, max_float / 2, size=(5))
+    fl32 = uniform(min_float32, max_float32, size=(5))
+    fl32 = np.float32(fl32)
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
+
+    cmplx64 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=5) + uniform(low=max_float32 / 2, high=max_float32 / 2, size=5) * 1j
+    cmplx64 = np.complex64(cmplx64)
+    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) * 1j
 
     f_bl = epyccel(test_bool, language=language)
 
-    assert (f_bl() == test_bool())
+    assert (f_bl(bl) == test_bool(bl))
 
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
-    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
-    #f_integer8 = epyccel(test_int8, language=language)
-    #f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    assert (f_integer() == test_int())
-    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
-    #assert (f_integer8() == test_int8())
-    #assert (f_integer16() == test_int16())
-    assert (f_integer32() == test_int32())
-    assert (f_integer64() == test_int64())
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer(integer) == test_int(integer))
+    assert (f_integer32(integer32) == test_int32(integer32))
+    assert (f_integer64(integer64) == test_int64(integer64))
 
     f_fl = epyccel(test_float, language=language)
     f_fl32 = epyccel(test_float32, language=language)
     f_fl64 = epyccel(test_float64, language=language)
 
-    assert (f_fl() == test_float())
-    assert (f_fl32() == test_float32())
-    assert (f_fl64() == test_float64())
+    assert (f_fl(fl) == test_float(fl))
+    assert (f_fl32(fl32) == test_float32(fl32))
+    assert (f_fl64(fl64) == test_float64(fl64))
 
     f_complex64 = epyccel(test_complex64, language=language)
     f_complex128 = epyccel(test_complex128, language=language)
 
-    assert (f_complex64() == test_complex64())
-    assert (f_complex128() == test_complex128())
+    assert (f_complex64(cmplx64) == test_complex64(cmplx64))
+    assert (f_complex128(cmplx128) == test_complex128(cmplx128))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
@@ -7117,137 +7110,163 @@ def test_numpy_linspace_array_like_1d(language):
     )
 )
 
-
 def test_numpy_linspace_array_like_2d(language):
 
-    def test_bool():
-        from numpy import linspace, array, shape
-        start = array([[4,5,6,2,1],[4,5,6,2,1]], bool)
-        stop = array([[5,6,7,3,2],[5,6,7,3,2]], bool)
+    @types('bool[:]')
+    def test_bool(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones((2,5))
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
 
-    def test_int():
-        from numpy import linspace, array, shape
-        start = array([[4,5,6,2,1],[4,5,6,2,1]], int)
-        stop = array([[5,6,7,3,2],[5,6,7,3,2]], int)
+    @types('int[:]')
+    def test_int(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones((2,5))
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
 
-    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
-    # def test_int8():
-    #     from numpy import linspace, array, shape, int8
-    #     start = array([[4,5,6,2,1],[4,5,6,2,1]], int8)
-    #     stop = array([[5,6,7,3,2],[5,6,7,3,2]], int8)
-    #     NumberOfSamplesToGenerate = 7
-    #     a = linspace(start, stop, NumberOfSamplesToGenerate)
-    #     s = shape(a)
-    #     return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
-
-    # def test_int16():
-    #     from numpy import linspace, array, shape, int16
-    #     start = array([[4,5,6,2,1],[4,5,6,2,1]], int16)
-    #     stop = array([[5,6,7,3,2],[5,6,7,3,2]], int16)
-    #     NumberOfSamplesToGenerate = 7
-    #     a = linspace(start, stop, NumberOfSamplesToGenerate)
-    #     s = shape(a)
-    #     return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
-
-    def test_int32():
-        from numpy import linspace, array, shape, int32
-        start = array([[4,5,6,2,1],[4,5,6,2,1]], int32)
-        stop = array([[5,6,7,3,2],[5,6,7,3,2]], int32)
+    should be uncommented after resolving #733
+    @types('int8[:]')
+    def test_int8(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones((2,5))
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
 
-    def test_int64():
-        from numpy import linspace, array, shape, int64
-        start = array([[4,5,6,2,1],[4,5,6,2,1]], int64)
-        stop = array([[5,6,7,3,2],[5,6,7,3,2]], int64)
+    @types('int16[:]')
+    def test_int16(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones((2,5))
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
 
-    def test_float():
-        from numpy import linspace, array, shape
-        start = array([[4,5,6,2,1],[4,5,6,2,1]], float)
-        stop = array([[5,6,7,3,2],[5,6,7,3,2]], float)
+    @types('int32[:]')
+    def test_int32(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones((2,5))
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
 
-    def test_float32():
-        from numpy import linspace, array, shape, float32
-        start = array([[4,5,6,2,1],[4,5,6,2,1]], float32)
-        stop = array([[5,6,7,3,2],[5,6,7,3,2]], float32)
+    @types('int64[:]')
+    def test_int64(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones((2,5))
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
 
-    def test_float64():
-        from numpy import linspace, array, shape, float64
-        start = array([[4,5,6,2,1],[4,5,6,2,1]], float64)
-        stop = array([[5,6,7,3,2],[5,6,7,3,2]], float64)
+    @types('float[:]')
+    def test_float(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones((2,5))
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
 
-    def test_complex64():
-        from numpy import linspace, array, shape, complex64
-        start = array([[4,5,6,2,1],[4,5,6,2,1]], complex64)
-        stop = array([[5,6,7,3,2],[5,6,7,3,2]], complex64)
+    @types('float32[:]')
+    def test_float32(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones((2,5))
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
 
-    def test_complex128():
-        from numpy import linspace, array, shape, complex128
-        start = array([[4,5,6,2,1],[4,5,6,2,1]], complex128)
-        stop = array([[5,6,7,3,2],[5,6,7,3,2]], complex128)
+    @types('float64[:]')
+    def test_float64(arr):
+        from numpy import linspace, shape, ones
         NumberOfSamplesToGenerate = 7
+        start = ones((2,5))
+        stop = arr
         a = linspace(start, stop, NumberOfSamplesToGenerate)
         s = shape(a)
         return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
+
+    @types('complex64[:]')
+    def test_complex64(arr):
+        from numpy import linspace, shape, ones
+        NumberOfSamplesToGenerate = 7
+        start = ones((2,5))
+        stop = arr
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
+
+    @types('complex128[:]')
+    def test_complex128(arr):
+        from numpy import linspace, shape, ones
+        NumberOfSamplesToGenerate = 7
+        start = ones((2,5))
+        stop = arr
+        a = linspace(start, stop, NumberOfSamplesToGenerate)
+        s = shape(a)
+        return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
+
+    import numpy as np
+    bl = randint(0, 1, size=(2,5), dtype= bool)
+
+    integer8 = randint(np.iinfo('int8').min, np.iinfo('int8').max, size=(2,5), dtype=np.int8)
+    integer16 = randint(np.iinfo('int16').min, np.iinfo('int16').max, size=(2,5), dtype=np.int16)
+    integer = randint(min_int, max_int, size=(2,5), dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size=(2,5), dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size=(2,5), dtype=np.int64)
+
+    fl = uniform(min_float / 2, max_float / 2, size=(2,5))
+    fl32 = uniform(min_float32, max_float32, size=(2,5))
+    fl32 = np.float32(fl32)
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(2,5))
+
+    cmplx64 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=(2,5)) + uniform(low=max_float32 / 2, high=max_float32 / 2, size=(2,5)) * 1j
+    cmplx64 = np.complex64(cmplx64)
+    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2,5)) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2,5)) * 1j
 
     f_bl = epyccel(test_bool, language=language)
 
-    assert (f_bl() == test_bool())
+    assert (f_bl(bl) == test_bool(bl))
 
+    f_integer8 = epyccel(test_int8, language=language)
+    f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
-    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
-    # f_integer8 = epyccel(test_int8, language=language)
-    # f_integer16 = epyccel(test_int16, language=language)
     f_integer32 = epyccel(test_int32, language=language)
     f_integer64 = epyccel(test_int64, language=language)
 
-    assert (f_integer() == test_int())
-    # should be uncommented after resolving #733, see it here https://github.com/pyccel/pyccel/issues/733
-    # assert (f_integer8() == test_int8())
-    # assert (f_integer16() == test_int16())
-    assert (f_integer32() == test_int32())
-    assert (f_integer64() == test_int64())
+    assert (f_integer8(integer8) == test_int8(integer8))
+    assert (f_integer16(integer16) == test_int16(integer16))
+    assert (f_integer(integer) == test_int(integer))
+    assert (f_integer32(integer32) == test_int32(integer32))
+    assert (f_integer64(integer64) == test_int64(integer64))
 
     f_fl = epyccel(test_float, language=language)
     f_fl32 = epyccel(test_float32, language=language)
     f_fl64 = epyccel(test_float64, language=language)
 
-    assert (f_fl() == test_float())
-    assert (f_fl32() == test_float32())
-    assert (f_fl64() == test_float64())
+    assert (f_fl(fl) == test_float(fl))
+    assert (f_fl32(fl32) == test_float32(fl32))
+    assert (f_fl64(fl64) == test_float64(fl64))
 
     f_complex64 = epyccel(test_complex64, language=language)
     f_complex128 = epyccel(test_complex128, language=language)
 
-    assert (f_complex64() == test_complex64())
-    assert (f_complex128() == test_complex128())
+    assert (f_complex64(cmplx64) == test_complex64(cmplx64))
+    assert (f_complex128(cmplx128) == test_complex128(cmplx128))
