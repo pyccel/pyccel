@@ -3,6 +3,7 @@ import sys
 import pytest
 from numpy.random import rand, randint, uniform
 from numpy import isclose, iinfo, finfo
+import numpy as np
 
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
@@ -3554,8 +3555,6 @@ def test_numpy_real_scalar(language):
         b = real(a)
         return b
 
-    import numpy as np
-
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
@@ -3747,7 +3746,6 @@ def test_numpy_real_array_like_1d(language):
         s = shape(a)
         return len(s), s[0], a[0]
 
-    import numpy as np
     bl = randint(0, 1, size=(5), dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size=(5), dtype=np.int8)
@@ -3886,7 +3884,6 @@ def test_numpy_real_array_like_2d(language):
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    import numpy as np
     bl = randint(0, 1, size=(2, 5), dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size=(2, 5), dtype=np.int8)
@@ -4005,8 +4002,6 @@ def test_numpy_imag_scalar(language):
         from numpy import imag
         b = imag(a)
         return b
-
-    import numpy as np
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
@@ -4197,7 +4192,6 @@ def test_numpy_imag_array_like_1d(language):
         s = shape(a)
         return len(s), s[0], a[0]
 
-    import numpy as np
     bl = randint(0, 1, size=(5), dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size=(5), dtype=np.int8)
@@ -4333,7 +4327,6 @@ def test_numpy_imag_array_like_2d(language):
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    import numpy as np
     bl = randint(0, 1, size=(2, 5), dtype= bool)
 
     integer8 = randint(min_int8, max_int8, size=(2, 5), dtype=np.int8)
