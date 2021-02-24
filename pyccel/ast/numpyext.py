@@ -821,11 +821,11 @@ class NumpyUfuncUnary(NumpyUfuncBase):
     def __init__(self, x):
         super().__init__(x)
 
-    def _set_dtype_precision(self):
+    def _set_dtype(self):
         x = self.args[0]
         self._dtype = x.dtype if x.dtype is NativeComplex() else NativeReal()
 
-    def _set_shape(self, x):
+    def _set_shape(self):
         self._shape = self.args[0].shape
 
     def _set_order(self):
@@ -842,7 +842,7 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         self._set_dtype_precision(x1, x2)
         self._set_shape_rank(x1, x2)
 
-    def _set_dtype_precision(self):
+    def _set_dtype(self):
         self._dtype     = NativeReal()
 
     def _set_shape(self):
