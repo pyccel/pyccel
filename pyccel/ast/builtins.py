@@ -149,6 +149,7 @@ class PythonComplex(PyccelAstNode):
     """
     __slots__ = ('_real_part', '_imag_part', '_internal_var', '_is_cast')
     _attribute_nodes = ('_real_part', '_imag_part', '_internal_var')
+    _default_precision = default_precision['complex']
 
     def __new__(cls, arg0, arg1=LiteralFloat(0)):
 
@@ -170,7 +171,7 @@ class PythonComplex(PyccelAstNode):
             else:
                 imag_part += arg1.python_value
 
-            return LiteralComplex(real_part, imag_part, precision = cls._precision)
+            return LiteralComplex(real_part, imag_part, precision = cls._default_precision)
 
 
         # Split arguments depending on their type to ensure that the arguments are
@@ -215,6 +216,7 @@ class PythonComplex(PyccelAstNode):
 
     def _set_dtype(self):
         self._dtype = NativeComplex()
+        self._precision = self._default_precision
 
     def _set_shape(self):
         self._shape = ()
@@ -270,12 +272,13 @@ class PythonFloat(PyccelAstNode):
     """
     __slots__ = ('_arg',)
     _attribute_nodes = ('_arg',)
+    _default_precision = default_precision['real']
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralFloat):
-            return LiteralFloat(arg, precision = default_precision['real'])
+            return LiteralFloat(arg, precision = self._default_precision)
         elif isinstance(arg, LiteralInteger):
-            return LiteralFloat(arg.p, precision = default_precision['real'])
+            return LiteralFloat(arg.p, precision = self._default_precision)
         else:
             return super().__new__(cls)
 
@@ -285,6 +288,7 @@ class PythonFloat(PyccelAstNode):
 
     def _set_dtype(self):
         self._dtype = NativeReal()
+        self._precision = self._default_precision
 
     def _set_shape(self):
         self._shape = self.arg.shape
@@ -306,10 +310,11 @@ class PythonInt(PyccelAstNode):
 
     __slots__ = ('_arg',)
     _attribute_nodes  = ('_arg',)
+    _default_precision = default_precision['int']
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralInteger):
-            return LiteralInteger(arg.p, precision = cls._precision)
+            return LiteralInteger(arg.p, precision = cls._default_precision)
         else:
             return super().__new__(cls)
 
@@ -319,6 +324,7 @@ class PythonInt(PyccelAstNode):
 
     def _set_dtype(self):
         self._dtype = NativeInteger()
+        self._precision = self._default_precision
 
     def _set_shape(self):
         self._shape = self.arg.shape

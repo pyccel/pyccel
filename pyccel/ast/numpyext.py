@@ -95,17 +95,13 @@ class NumpyComplex64(NumpyComplex):
     """ Represents a call to numpy.complex64() function.
     """
     __slots__ = ()
-    def _set_dtype(self):
-        self._dtype = NativeComplex()
-        self._precision = dtype_registry['complex64'][1]
+    _default_precision = dtype_registry['complex64'][1]
 
 class NumpyComplex128(NumpyComplex):
     """ Represents a call to numpy.complex128() function.
     """
     __slots__ = ()
-    def _set_dtype(self):
-        self._dtype = NativeComplex()
-        self._precision = dtype_registry['complex128'][1]
+    _default_precision = dtype_registry['complex128'][1]
 
 #=======================================================================================
 class NumpyFloat(PythonFloat):
@@ -117,17 +113,13 @@ class NumpyFloat32(NumpyFloat):
     """ Represents a call to numpy.float32() function.
     """
     __slots__ = ()
-    def _set_dtype(self):
-        self._dtype = NativeReal()
-        self._precision = dtype_registry['float32'][1]
+    _default_precision = dtype_registry['float32'][1]
 
 class NumpyFloat64(NumpyFloat):
     """ Represents a call to numpy.float64() function.
     """
     __slots__ = ()
-    def _set_dtype(self):
-        self._dtype = NativeReal()
-        self._precision = dtype_registry['float64'][1]
+    _default_precision = dtype_registry['float64'][1]
 
 #=======================================================================================
 # TODO [YG, 13.03.2020]: handle case where base != 10
@@ -142,17 +134,13 @@ class NumpyInt32(NumpyInt):
     """ Represents a call to numpy.int32() function.
     """
     __slots__ = ()
-    def _set_dtype(self):
-        self._dtype = NativeInteger()
-        self._precision = dtype_registry['int32'][1]
+    _default_precision = dtype_registry['int32'][1]
 
 class NumpyInt64(NumpyInt):
     """ Represents a call to numpy.int64() function.
     """
     __slots__ = ()
-    def _set_dtype(self):
-        self._dtype = NativeInteger()
-        self._precision = dtype_registry['int64'][1]
+    _default_precision = dtype_registry['int64'][1]
 
 #==============================================================================
 class NumpyReal(PythonReal):
@@ -651,14 +639,13 @@ class NumpyFull(NumpyNewArray):
     __slots__ = ()
 
     def __init__(self, shape, fill_value, dtype=None, order='C'):
-        self._dtype = dtype
         self._shape = shape
         self._order = order
 
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
-        if not self._dtype:
-            self._dtype = self.fill_value.dtype
+        if not dtype:
+            dtype = fill_value.dtype
         # Verify dtype and get precision
         dtype, precision = process_dtype(dtype)
         self._dtype = dtype
