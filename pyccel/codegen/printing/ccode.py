@@ -1421,13 +1421,13 @@ class CCodePrinter(CodePrinter):
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
 
     def _print_Variable(self, expr):
-        print('[HERE 2]', expr, self.stored_in_c_pointer(expr))
         if expr in self._dereference or self.stored_in_c_pointer(expr):
             return '(*{0})'.format(expr.name)
         else:
             return expr.name
 
     def _print_VariableAddress(self, expr):
+        print('[HERE]', expr)
         if self.stored_in_c_pointer(expr.variable) or expr.variable.rank > 0:
             return '{}'.format(expr.variable.name)
         else:

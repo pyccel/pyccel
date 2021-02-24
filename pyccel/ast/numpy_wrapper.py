@@ -14,8 +14,9 @@ from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
 from .datatypes import DataType
-from .datatypes import (NativeInteger, NativeReal, NativeComplex
-                        NativeBool, NativeString, NativeGeneric)
+from .datatypes import (NativeInteger, NativeReal, NativeComplex,
+                        NativeBool, NativeString, NativeGeneric,
+                        NativeVoid)
 
 from .core      import FunctionCall, FunctionDef
 from .core      import Assign, Return, DottedVariable
@@ -279,3 +280,28 @@ numpy_type_check_registry = {
     (NativeComplex(), 8)       : Numpy_Complex128_ref,
     (NativeBool(), 4)          : Numpy_Bool_ref
 }
+
+def NumpyType_Check(variable, argument):
+    """
+    Create FunctionCall responsible of checking numpy argument data type
+    Parameters:
+    ----------
+    variable : Variable
+        The variable needed for the generation of the type check
+    argument : Variable
+        argument of the check function
+
+    Returns
+    -------
+    FunctionCall : Check type FunctionCall
+    """
+    try :
+        check_numpy_ref = numpy_type_check_registry[(variable.dtype, variable.precision)]
+    except KeyError:
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=variable.dtype,severity='fatal')
+
+    check_numpy_func = FunctionDef(name = 'PyArray_IsScalar',
+                    body = [],
+                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True), check_numpy_ref],
+                    results   = [Variable(dtype=NativeBool(), name = 'r')])
+    return FunctionCall(check_numpy_func, [argument, check_numpy_ref])
