@@ -3608,11 +3608,13 @@ def test_numpy_real_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    f_integer64_output = f_integer64(integer64)
-    test_int64_output = test_int64(integer64)
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64_output = f_integer64(integer64)
+        test_int64_output = test_int64(integer64)
 
-    assert f_integer64_output == test_int64_output
-    assert type(f_integer64_output) == type(test_int64_output.item())
+        assert f_integer64_output == test_int64_output
+        assert type(f_integer64_output) == type(test_int64_output.item())
 
     f_fl = epyccel(test_float, language=language)
     f_fl32 = epyccel(test_float32, language=language)
