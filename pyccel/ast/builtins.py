@@ -59,12 +59,11 @@ class PythonComplexProperty(PyccelInternalFunction):
         """Return the variable on which the function was called"""
         return self._args[0]
 
-    def _set_dtype(self):
-        self._dtype = NativeReal()
-        self._precision = self.internal_var.precision
+    def _get_dtype(self):
+        return NativeReal(), self.internal_var.precision
 
-    def _set_shape(self):
-        self._shape = ()
+    def _get_shape(self):
+        return (), 0
 
     def __str__(self):
         return 'Real({0})'.format(str(self.internal_var))
@@ -127,14 +126,14 @@ class PythonBool(PyccelAstNode):
         self._arg = arg
         super().__init__()
 
-    def _set_dtype(self):
-        self._dtype = NativeBool()
+    def _get_dtype(self):
+        return NativeBool(),None
 
-    def _set_shape(self):
-        self._shape = self.arg.shape
+    def _get_shape(self):
+        return self.arg.shape, None
 
-    def _set_order(self):
-        self._order = self.arg.order
+    def _get_order(self):
+        return self.arg.order
 
     @property
     def arg(self):
@@ -214,12 +213,11 @@ class PythonComplex(PyccelAstNode):
 
         super().__init__()
 
-    def _set_dtype(self):
-        self._dtype = NativeComplex()
-        self._precision = self._default_precision
+    def _get_dtype(self):
+        return NativeComplex(), self._default_precision
 
-    def _set_shape(self):
-        self._shape = ()
+    def _get_shape(self):
+        return (), 0
 
     @property
     def is_cast(self):
@@ -286,15 +284,14 @@ class PythonFloat(PyccelAstNode):
         self._arg = arg
         super().__init__()
 
-    def _set_dtype(self):
-        self._dtype = NativeReal()
-        self._precision = self._default_precision
+    def _get_dtype(self):
+        return NativeReal(), self._default_precision
 
-    def _set_shape(self):
-        self._shape = self.arg.shape
+    def _get_shape(self):
+        return self.arg.shape, None
 
-    def _set_order(self):
-        self._order = self.arg.order
+    def _get_order(self):
+        return self.arg.order
 
     @property
     def arg(self):
@@ -322,15 +319,14 @@ class PythonInt(PyccelAstNode):
         self._arg = arg
         super().__init__()
 
-    def _set_dtype(self):
-        self._dtype = NativeInteger()
-        self._precision = self._default_precision
+    def _get_dtype(self):
+        return NativeInteger(), self._default_precision
 
-    def _set_shape(self):
-        self._shape = self.arg.shape
+    def _get_shape(self):
+        return self.arg.shape, None
 
-    def _set_order(self):
-        self._order = self.arg.order
+    def _get_order(self):
+        return self.arg.order
 
     @property
     def arg(self):
@@ -357,7 +353,7 @@ class PythonTuple(PyccelAstNode):
         self._is_homogeneous = is_homogeneous
         super().__init__()
 
-    def _set_dtype(self):
+    def _get_dtype(self):
         if self.is_homogeneous:
             integers  = [a for a in self.args if a.dtype is NativeInteger()]
             reals     = [a for a in self.args if a.dtype is NativeReal()]
@@ -368,28 +364,29 @@ class PythonTuple(PyccelAstNode):
                 self._dtype = NativeString()
             else:
                 if complexes:
-                    self._dtype     = NativeComplex()
-                    self._precision = max(a.precision for a in complexes)
+                    dtype     = NativeComplex()
+                    precision = max(a.precision for a in complexes)
                 elif reals:
-                    self._dtype     = NativeReal()
-                    self._precision = max(a.precision for a in reals)
+                    dtype     = NativeReal()
+                    precision = max(a.precision for a in reals)
                 elif integers:
-                    self._dtype     = NativeInteger()
-                    self._precision = max(a.precision for a in integers)
+                    dtype     = NativeInteger()
+                    precision = max(a.precision for a in integers)
                 elif bools:
-                    self._dtype     = NativeBool()
-                    self._precision  = max(a.precision for a in bools)
+                    dtype     = NativeBool()
+                    precision  = max(a.precision for a in bools)
                 else:
                     raise TypeError('cannot determine the type of {}'.format(self))
         else:
-            self._dtype     = NativeGeneric()
-            self._precision = 0
+            dtype     = NativeGeneric()
+            precision = 0
+        return dtype, precision
 
-    def _set_shape(self):
-        self._shape     = (LiteralInteger(len(self.args)), ) + self.args[0].shape
+    def _get_shape(self):
+        return (LiteralInteger(len(self.args)), ) + self.args[0].shape, None
 
-    def _set_order(self):
-        self._order = 'C'
+    def _get_order(self):
+        return 'C'
 
     def __getitem__(self,i):
         return self._args[i]
@@ -428,11 +425,11 @@ class PythonLen(PyccelInternalFunction):
     def __init__(self, arg):
         super().__init__(arg)
 
-    def _set_dtype(self):
-        self._dtype = NativeInteger()
+    def _get_dtype(self):
+        return NativeInteger(), None
 
-    def _set_shape(self):
-        self._shape = ()
+    def _get_shape(self):
+        return (), 0
 
     @property
     def arg(self):
@@ -592,14 +589,14 @@ class PythonAbs(PyccelInternalFunction):
     def __init__(self, x):
         super().__init__(x)
 
-    def _set_dtype(self):
-        self._dtype     = NativeInteger() if self.arg.dtype is NativeInteger() else NativeReal()
+    def _get_dtype(self):
+        return NativeInteger() if self.arg.dtype is NativeInteger() else NativeReal(), None
 
-    def _set_shape(self):
-        self._shape     = self.arg.shape
+    def _get_shape(self):
+        return self.arg.shape, None
 
-    def _set_order(self):
-        self._order     = self.arg.order
+    def _get_order(self):
+        return self.arg.order
 
     @property
     def arg(self):
@@ -618,11 +615,11 @@ class PythonSum(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
 
-    def _set_dtype(self):
-        self._dtype = self.arg.dtype
+    def _get_dtype(self):
+        return self.arg.dtype, None
 
-    def _set_shape(self):
-        self._shape = ()
+    def _get_shape(self):
+        return (), 0
 
     @property
     def arg(self):
@@ -641,12 +638,11 @@ class PythonMax(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(x))
         super().__init__(x)
 
-    def _set_dtype(self):
-        self._dtype = self.args[0].dtype
-        self._precision = self.args[0].precision
+    def _get_dtype(self):
+        return self.args[0].dtype, self.args[0].precision
 
-    def _set_shape(self):
-        self._shape = ()
+    def _get_shape(self):
+        return (), 0
 
 
 #==============================================================================
@@ -659,12 +655,11 @@ class PythonMin(PyccelInternalFunction):
     def __init__(self, x):
         super().__init__(x)
 
-    def _set_dtype(self):
-        self._dtype = self.args[0].dtype
-        self._precision = self.args[0].precision
+    def _get_dtype(self):
+        return self.args[0].dtype, self.args[0].precision
 
-    def _set_shape(self):
-        self._shape = ()
+    def _get_shape(self):
+        return (), 0
 
 #==============================================================================
 class Lambda(Basic):

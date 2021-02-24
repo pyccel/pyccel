@@ -198,23 +198,20 @@ class Variable(PyccelAstNode):
         self._is_kwonly      = is_kwonly
         self._is_temp        = is_temp
 
-    def _set_dtype(self):
-        pass
+    def _get_dtype(self):
+        return self._dtype, self._precision
 
-    def _set_shape(self):
+    def _get_shape(self):
         if self.rank == 0:
             shape = ()
         elif self._alloc_shape is None:
             shape = tuple(None for i in range(self.rank))
         else:
             shape = self._alloc_shape
-        self._shape = self.process_shape(shape)
+        return self.process_shape(shape), self._rank
 
-    def _set_rank(self):
-        pass
-
-    def _set_order(self):
-        pass
+    def _get_order(self):
+        return self._order
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
@@ -748,7 +745,7 @@ class IndexedElement(PyccelAstNode):
         self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in args)
         super().__init__()
 
-    def _set_shape(self):
+    def _get_shape(self):
         # Calculate new shape
 
         if self.base.shape is not None:
@@ -773,26 +770,20 @@ class IndexedElement(PyccelAstNode):
 
                         _shape = MathCeil(PyccelDiv(_shape, step))
                     new_shape.append(_shape)
-            self._shape = tuple(new_shape)
-        else:
-            self._shape = None
-
-    def _set_rank(self):
-        if self._shape is not None:
-            self._rank  = len(self._shape)
+            return tuple(new_shape), None
         else:
             new_rank = self.base.rank
             for i in range(self.base.rank):
                 if not isinstance(self.indices[i], Slice):
                     new_rank -= 1
-            self._rank = new_rank
+            return None, new_rank
 
-    def _set_dtype(self):
-        self._dtype = self.base.dtype
-        self._precision = self.base.precision
+    def _get_dtype(self):
+        x = self.base
+        return x.dtype, x.precision
 
-    def _set_order(self):
-        self._order = self.base.order
+    def _get_order(self):
+        return self.base.order
 
     @property
     def base(self):
@@ -822,18 +813,16 @@ class VariableAddress(PyccelAstNode):
         self._variable = variable
         super().__init__()
 
-    def _set_dtype(self):
-        self._dtype     = self.variable.dtype
-        self._precision = self.variable.precision
+    def _get_dtype(self):
+        x = self.variable
+        return x.dtype, x.precision
 
-    def _set_shape(self):
-        self._shape     = self.variable.shape
+    def _get_shape(self):
+        x = self.variable
+        return x.shape, x.rank
 
-    def _set_rank(self):
-        self._rank      = self.variable.rank
-
-    def _set_order(self):
-        self._order     = self.variable.order
+    def _get_order(self):
+        return self.variable.order
 
     @property
     def variable(self):

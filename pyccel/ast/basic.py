@@ -305,16 +305,25 @@ class PyccelAstNode(Basic):
         if PyccelAstNode.stage == "syntactic" and not self.is_atomic:
             return
         else:
-            self._set_dtype()
+            self._dtype, precision = self._get_dtype()
 
-            if not hasattr(self, '_precision'):
+            if precision is None:
                 self._precision = default_precision.get(str(self._dtype), 0)
+            else:
+                self._precision = precision
 
-            self._set_shape()
-            self._set_rank()
+            shape, rank = self._get_shape()
+            if shape is None and rank is None:
+                raise RuntimeError("No rank information available")
+            elif shape is None:
+                rank = len(shape)
+            else:
+                shape = (None,)*rank
+            self._shape = shape
+            self._rank  = rank
 
             if self.rank is not None and self.rank > 1:
-                self._set_order()
+                self._order = self._get_order()
             else:
                 self._order = None
 
@@ -325,17 +334,9 @@ class PyccelAstNode(Basic):
         raise NotImplementedError("Problem in class {} : A PyccelAstNode must know how to determine dtype and precision".format(type(self)))
 
     def _set_shape(self):
-        """ Determine the shape of the object. This should be a tuple containing the size of each dimension
+        """ Determine the shape and rank of the object. The shape should be a tuple containing the size of each dimension
         """
         raise NotImplementedError("Problem in class {} : A PyccelAstNode must know how to determine shape".format(type(self)))
-
-    def _set_rank(self):
-        """ Determine the rank of the object. This should be the length of the shape
-        """
-        if self._shape is not None:
-            self._rank = len(self._shape)
-        else:
-            self._rank = None
 
     def _set_order(self):
         """ Determine the ordering of the object. This should be either "C" or "F"

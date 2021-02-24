@@ -153,11 +153,11 @@ class NumpyReal(PythonReal):
     def __init__(self, arg):
         super().__init__(arg)
 
-    def _set_shape(self):
-        self._shape = process_shape(self.internal_var.shape)
+    def _get_shape(self):
+        return process_shape(self.internal_var.shape), None
 
-    def _set_order(self):
-        self._order = self.internal_var.order
+    def _get_order(self):
+        return self.internal_var.order
 
 #==============================================================================
 DtypePrecisionToCastFunction = {
@@ -244,18 +244,16 @@ class NumpyArray(NumpyNewArray):
         self._order = order
         super().__init__()
 
-    def _set_dtype(self):
+    def _get_dtype(self):
         # Verify dtype and get precision
         if self._dtype is None:
             self._dtype = self.arg.dtype
-        dtype, prec = process_dtype(self._dtype)
-        self._dtype = dtype
-        self._precision = prec
+        return process_dtype(self._dtype)
 
-    def _set_shape(self):
-        self._shape = process_shape(self.arg.shape)
+    def _get_shape(self):
+        return process_shape(self.arg.shape), None
 
-    def _set_order(self):
+    def _get_order(self):
         # ... Determine ordering
         order = self._order
         if isinstance(order, ValuedArgument):
@@ -268,7 +266,7 @@ class NumpyArray(NumpyNewArray):
         # TODO [YG, 18.02.2020]: set correct order based on input array
         if order in ('K', 'A'):
             order = 'C'
-        self._order = order
+        return order
 
     def __str__(self):
         return str(self.arg)
@@ -314,16 +312,17 @@ class NumpyArange(NumpyNewArray):
 
         super().__init__()
 
-    def _set_dtype(self):
+    def _get_dtype(self):
         if self._dtype is None:
-            self._dtype = max([i.dtype for i in self.arg], key = NativeNumeric.index)
-            self._precision = max([i.precision for i in self.arg])
+            dtype = max([i.dtype for i in self.arg], key = NativeNumeric.index)
+            precision = max([i.precision for i in self.arg])
+            return dtype, precision
         else:
-            self._dtype, self._precision = process_dtype(self._dtype)
+            return process_dtype(self._dtype)
 
-    def _set_shape(self):
-        self._shape = (MathCeil(PyccelDiv(PyccelMinus(self._stop, self._start), self._step)))
-        self._shape = process_shape(self._shape)
+    def _get_shape(self):
+        shape = (MathCeil(PyccelDiv(PyccelMinus(self._stop, self._start), self._step)))
+        return process_shape(shape), None
 
     @property
     def arg(self):
@@ -355,11 +354,11 @@ class NumpySum(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
 
-    def _set_dtype(self):
-        self._dtype = self.arg.dtype
+    def _get_dtype(self):
+        return self.arg.dtype, None
 
-    def _set_shape(self):
-        self._shape = ()
+    def _get_shape(self):
+        return (), 0
 
     @property
     def arg(self):
@@ -378,11 +377,11 @@ class NumpyProduct(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
 
-    def _set_dtype(self):
-        self._dtype = self.arg.dtype
+    def _get_dtype(self):
+        return self.arg.dtype, None
 
-    def _set_shape(self):
-        self._shape = ()
+    def _get_shape(self):
+        return (), 0
 
     @property
     def arg(self):
@@ -403,7 +402,7 @@ class NumpyMatmul(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(a))
         super().__init__(a, b)
 
-    def _set_dtype(self):
+    def _get_dtype(self):
         args      = self.args
 
         integers  = [e for e in args if e.dtype is NativeInteger() or e.dtype is NativeBool()]
@@ -411,35 +410,37 @@ class NumpyMatmul(PyccelInternalFunction):
         complexs  = [e for e in args if e.dtype is NativeComplex()]
 
         if complexs:
-            self._dtype     = NativeComplex()
-            self._precision = max(e.precision for e in complexs)
-        if reals:
-            self._dtype     = NativeReal()
-            self._precision = max(e.precision for e in reals)
+            dtype     = NativeComplex()
+            precision = max(e.precision for e in complexs)
+        elif reals:
+            dtype     = NativeReal()
+            precision = max(e.precision for e in reals)
         elif integers:
-            self._dtype     = NativeInteger()
-            self._precision = max(e.precision for e in integers)
+            dtype     = NativeInteger()
+            precision = max(e.precision for e in integers)
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
+        return dtype, precision
 
-    def _set_shape(self):
+    def _get_shape(self):
         if not (self.a.shape is None or self.b.shape is None):
 
             m = 1 if self.a.rank < 2 else self.a.shape[0]
             n = 1 if self.b.rank < 2 else self.b.shape[1]
-            self._shape = (m, n)
-
-    def _set_rank(self):
+            shape = (m, n)
+        else:
+            shape = None
         if self.a.rank == 1 or self.b.rank == 1:
-            self._rank = 1
+            rank = 1
         else:
-            self._rank = 2
+            rank = 2
+        return shape, rank
 
-    def _set_order(self):
+    def _get_order(self):
         if self.a.order == self.b.order:
-            self._order = self.a.order
+            return self.a.order
         else:
-            self._order = 'C'
+            return 'C'
 
     @property
     def a(self):
@@ -493,11 +494,11 @@ class NumpyLinspace(NumpyNewArray):
         self._size  = size
         super().__init__()
 
-    def _set_dtype(self):
-        _dtype     = NativeReal()
+    def _get_dtype(self):
+        return NativeReal(), None
 
-    def _set_shape(self):
-        self._shape = (self.size,)
+    def _get_shape(self):
+        return (self.size,), 1
 
     @property
     def start(self):
@@ -557,11 +558,11 @@ class NumpyRand(PyccelInternalFunction):
         super().__init__(*args)
         self._shape = args
 
-    def _set_dtype(self):
-        self._dtype = NativeReal()
+    def _get_dtype(self):
+        return NativeReal(), None
 
-    def _set_shape(self):
-        pass
+    def _get_shape(self):
+        return self._shape, None
 
     @property
     def order(self):
@@ -590,14 +591,14 @@ class NumpyRandint(PyccelInternalFunction):
         self._high    = high
         super().__init__()
 
-    def _set_dtype(self):
-        self._dtype = NativeInteger()
+    def _get_dtype(self):
+        return NativeInteger(), None
 
-    def _set_shape(self):
-        pass
+    def _get_shape(self):
+        return self._shape, None
 
-    def _set_order(self):
-        self._order = 'C'
+    def _get_order(self):
+        return 'C'
 
     @property
     def rand_expr(self):
@@ -635,43 +636,43 @@ class NumpyFull(NumpyNewArray):
         (row- or column-wise) order in memory.
 
     """
-    __slots__ = ()
+    _attribut_nodes = ('_fill_value',)
+    __slots__ = ('_fill_value',)
 
     def __init__(self, shape, fill_value, dtype=None, order='C'):
+        self._dtype = dtype
         self._shape = shape
         self._order = order
+        super.__init__()
 
+        # Cast fill_value to correct type
+        if fill_value and not isinstance(fill_value, Nil) and self.dtype != fill_value.dtype:
+            cast_func = DtypePrecisionToCastFunction[dtype.name][self.precision]
+            fill_value = cast_func(fill_value)
+        self._fill_value = fill_value
+
+        super().__init__(fill_value)
+
+    def _get_dtype(self):
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
         if not dtype:
             dtype = fill_value.dtype
         # Verify dtype and get precision
-        dtype, precision = process_dtype(dtype)
-        self._dtype = dtype
-        self._precision = precision
+        return process_dtype(dtype)
 
-        # Cast fill_value to correct type
-        if fill_value and not isinstance(fill_value, Nil) and dtype != fill_value.dtype:
-            cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
-            fill_value = cast_func(fill_value)
-
-        super().__init__(fill_value)
-
-    def _set_dtype(self):
-        pass
-
-    def _set_shape(self):
+    def _get_shape(self):
         # Convert shape to PythonTuple
-        self._shape = process_shape(self._shape)
+        return process_shape(self._shape), None
 
-    def _set_order(self):
+    def _get_order(self):
         # Verify array ordering
-        self._order = NumpyNewArray._process_order(self._order)
+        return NumpyNewArray._process_order(self._order)
 
     #--------------------------------------------------------------------------
     @property
     def fill_value(self):
-        return self._args[0]
+        return self._fill_value
 
 #==============================================================================
 class NumpyAutoFill(NumpyFull):
@@ -784,11 +785,11 @@ class NumpyNorm(PyccelInternalFunction):
             self._shape = ()
         super().__init__(arg, dim)
 
-    def _set_dtype(self):
-        self._dtype = NativeReal()
+    def _get_dtype(self):
+        return NativeReal(), None
 
-    def _set_shape(self):
-        pass
+    def _get_shape(self):
+        return self._shape, None
 
     @property
     def arg(self):
@@ -820,15 +821,16 @@ class NumpyUfuncUnary(NumpyUfuncBase):
     def __init__(self, x):
         super().__init__(x)
 
-    def _set_dtype(self):
+    def _get_dtype(self):
         x = self.args[0]
-        self._dtype = x.dtype if x.dtype is NativeComplex() else NativeReal()
+        dtype = x.dtype if x.dtype is NativeComplex() else NativeReal()
+        return dtype, None
 
-    def _set_shape(self):
-        self._shape = self.args[0].shape
+    def _get_shape(self):
+        return self.args[0].shape, None
 
-    def _set_order(self):
-        self._order = self.args[0].order
+    def _get_order(self):
+        return self.args[0].order
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
@@ -839,19 +841,19 @@ class NumpyUfuncBinary(NumpyUfuncBase):
     def __init__(self, x1, x2):
         super().__init__(x1, x2)
 
-    def _set_dtype(self):
-        self._dtype     = NativeReal()
+    def _get_dtype(self):
+        return NativeReal(), None
 
-    def _set_shape(self):
-        self._shape = self.args[0].shape  # TODO ^^
+    def _get_shape(self):
+        return self.args[0].shape, self.args[0].rank  # TODO ^^
 
-    def _set_order(self):
+    def _get_order(self):
         x1 = self.args[0]
         x2 = self.args[1]
         if x1.order == x2.order:
-            self._order = x1.order
+            return x1.order
         else:
-            self._order = 'C'
+            return 'C'
 
 #------------------------------------------------------------------------------
 # Math operations
@@ -927,21 +929,21 @@ class NumpyArctanh(NumpyUfuncUnary):
 class NumpyAbs(NumpyUfuncUnary):
     """Represent a call to the abs function in the Numpy library"""
     __slots__ = ()
-    def _set_dtype(self):
+    def _get_dtype(self):
         x = self.args[0]
-        self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeReal()
+        return (NativeInteger() if x.dtype is NativeInteger() else NativeReal()), None
 
 class NumpyFloor(NumpyUfuncUnary):
     """Represent a call to the floor function in the Numpy library"""
     __slots__ = ()
-    def _set_dtype(self):
-        self._dtype     = NativeReal()
+    def _get_dtype(self):
+        return NativeReal(), None
 
 class NumpyMod(NumpyUfuncBinary):
     """Represent a call to the mod function in the Numpy library"""
     __slots__ = ()
 
-    def _set_shape(self):
+    def _get_shape(self):
         shapes = [a.shape for a in self.args]
 
         if all(sh is not None for sh in shapes):
@@ -954,16 +956,11 @@ class NumpyMod(NumpyUfuncBinary):
                 for a in self.args[2:]:
                     shape = broadcast(shape, a.shape)
 
-            self._shape = shape
-            self._rank  = len(shape)
+            return shape, None
         else:
-            self._rank = max(a.rank for a in args)
-            self._shape = (None,)*self._rank
+            return None, max(a.rank for a in args)
 
-    def _set_rank(self):
-        pass
-
-    def _set_dtype(self):
+    def _get_dtype(self):
         integers  = [a for a in self.args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
         reals     = [a for a in self.args if a.dtype is NativeReal()]
         others    = [a for a in self.args if a not in integers+reals]
@@ -972,24 +969,24 @@ class NumpyMod(NumpyUfuncBinary):
             raise TypeError('{} not supported'.format(others[0].dtype))
 
         if reals:
-            self._dtype     = NativeReal()
-            self._precision = max(a.precision for a in reals)
+            dtype     = NativeReal()
+            precision = max(a.precision for a in reals)
         elif integers:
-            self._dtype     = NativeInteger()
-            self._precision = max(a.precision for a in integers)
+            dtype     = NativeInteger()
+            precision = max(a.precision for a in integers)
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
+        return dtype, precision
 
 class NumpyMin(NumpyUfuncUnary):
     """Represent a call to the min function in the Numpy library"""
     __slots__ = ()
-    def _set_shape(self):
-        self._shape     = ()
+    def _get_shape(self):
+        return (), 0
 
-    def _set_dtype(self):
+    def _get_dtype(self):
         x = self.args[0]
-        self._dtype     = x.dtype
-        self._precision = x.precision
+        return x.dtype, x.precision
 
     @property
     def is_elemental(self):
@@ -998,13 +995,12 @@ class NumpyMin(NumpyUfuncUnary):
 class NumpyMax(NumpyUfuncUnary):
     """Represent a call to the max function in the Numpy library"""
     __slots__ = ()
-    def _set_shape(self):
-        self._shape     = ()
+    def _get_shape(self):
+        return (), 0
 
-    def _set_dtype(self):
+    def _get_dtype(self):
         x = self.args[0]
-        self._dtype     = x.dtype
-        self._precision = x.precision
+        return x.dtype, x.precision
 
     @property
     def is_elemental(self):

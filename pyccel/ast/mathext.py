@@ -86,23 +86,23 @@ math_constants = {
 class MathFunctionBase(PyccelInternalFunction):
     """Abstract base class for the Math Functions"""
     __slots__ = ()
-    def _set_shape(self):
-        self._shape = ()
+    def _get_shape(self):
+        return (), 0
 
 class MathFunctionFloat(MathFunctionBase):
     __slots__ = ()
-    def _set_dtype(self):
-        self._dtype = NativeReal()
+    def _get_dtype(self):
+        return NativeReal(), None
 
 class MathFunctionInt(MathFunctionBase):
     __slots__ = ()
-    def _set_dtype(self):
-        self._dtype = NativeInteger()
+    def _get_dtype(self):
+        return NativeInteger(), None
 
 class MathFunctionBool(MathFunctionBase):
     __slots__ = ()
-    def _set_dtype(self):
-        self._dtype = NativeBool()
+    def _get_dtype(self):
+        return NativeBool(), None
 
 #==============================================================================
 # Functions that return one value

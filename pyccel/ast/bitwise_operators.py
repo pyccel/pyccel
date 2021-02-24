@@ -40,15 +40,14 @@ class PyccelInvert(PyccelUnaryOperator):
     __slots__ = ()
     _precedence = 14
 
-    def _set_dtype(self):
+    def _get_dtype(self):
         a = self._args[0]
         if a.dtype not in (NativeInteger(), NativeBool()):
             raise TypeError('unsupported operand type(s): {}'.format(self))
 
         self._args      = (PythonInt(a) if a.dtype is NativeBool() else a,)
 
-        self._dtype = NativeInteger()
-        self._precision = a.precision
+        return NativeInteger(), a.precision
 
     def __repr__(self):
         return '~{}'.format(repr(self.args[0]))
@@ -68,7 +67,7 @@ class PyccelBitOperator(PyccelOperator):
     """
     __slots__ = ()
 
-    def _set_dtype(self):
+    def _get_dtype(self):
         """ Sets the dtype and precision
 
         If one argument is a string then all arguments must be strings
@@ -86,17 +85,17 @@ class PyccelBitOperator(PyccelOperator):
         if strs or complexes or reals:
             raise TypeError('unsupported operand type(s): {}'.format(self))
         elif integers:
-            self._handle_integer_type(integers)
+            return self._handle_integer_type(integers)
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
-    def _set_shape(self):
-        self._shape = ()
+    def _get_shape(self):
+        return (), 0
 
     def _handle_integer_type(self, integers):
-        self._dtype     = NativeInteger()
-        self._precision = max(a.precision for a in integers)
+        precision = max(a.precision for a in integers)
         self._args = tuple(PythonInt(a) if a.dtype is NativeBool() else a for a in integers)
+        return NativeInteger(), precision
 
 #==============================================================================
 
@@ -160,13 +159,14 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
     __slots__ = ()
     def _handle_integer_type(self, integers):
         if all(a.dtype is NativeInteger() for a in integers):
-            self._dtype = NativeInteger()
+            dtype = NativeInteger()
         elif all(a.dtype is NativeBool() for a in integers):
-            self._dtype = NativeBool()
+            dtype = NativeBool()
         else:
-            self._dtype = NativeInteger()
+            dtype = NativeInteger()
             self._args = tuple(PythonInt(a) if a.dtype is NativeBool() else a for a in integers)
-        self._precision = max(a.precision for a in integers)
+        precision = max(a.precision for a in integers)
+        return dtype, precision
 
 #==============================================================================
 

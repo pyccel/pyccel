@@ -38,8 +38,8 @@ class Literal(PyccelAstNode):
             self._precision = precision
         super().__init__()
 
-    def _set_shape(self):
-        self._shape = ()
+    def _get_shape(self):
+        return (), 0
 
     @PyccelAstNode.precision.setter
     def precision(self, precision):
@@ -67,8 +67,8 @@ class LiteralTrue(Literal, metaclass = ArgumentSingleton):
     """Represents the python value True"""
     __slots__ = ()
 
-    def _set_dtype(self):
-        self._dtype = NativeBool()
+    def _get_dtype(self):
+        return NativeBool(), self._precision
 
     @property
     def python_value(self):
@@ -79,8 +79,8 @@ class LiteralFalse(Literal, metaclass = ArgumentSingleton):
     """Represents the python value False"""
     __slots__ = ()
 
-    def _set_dtype(self):
-        self._dtype = NativeBool()
+    def _get_dtype(self):
+        return NativeBool(), self._precision
 
     @property
     def python_value(self):
@@ -97,8 +97,8 @@ class LiteralInteger(Literal):
             raise TypeError("A LiteralInteger can only be created with an integer")
         self.p = value
 
-    def _set_dtype(self):
-        self._dtype = NativeInteger()
+    def _get_dtype(self):
+        return NativeInteger(), self._precision
 
     @property
     def python_value(self):
@@ -122,8 +122,8 @@ class LiteralFloat(Literal):
         else:
             self._value = float(value)
 
-    def _set_dtype(self):
-        self._dtype = NativeReal()
+    def _get_dtype(self):
+        return NativeReal(), self._precision
 
     @property
     def python_value(self):
@@ -150,8 +150,8 @@ class LiteralComplex(Literal):
         self._real_part = LiteralFloat(self._collect_python_val(real))
         self._imag_part = LiteralFloat(self._collect_python_val(imag))
 
-    def _set_dtype(self):
-        self._dtype = NativeComplex()
+    def _get_dtype(self):
+        return NativeComplex(), self._precision
 
     @staticmethod
     def _collect_python_val(arg):
@@ -201,8 +201,8 @@ class LiteralString(Literal):
             raise TypeError('arg must be of type str')
         self._string = arg
 
-    def _set_dtype(self):
-        self._dtype = NativeString()
+    def _get_dtype(self):
+        return NativeString(), 0
 
     @property
     def arg(self):

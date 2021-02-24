@@ -159,15 +159,15 @@ class PyccelOperator(PyccelAstNode):
     def __str__(self):
         return repr(self)
 
-    def _set_order(self):
+    def _get_order(self):
         """ Sets the shape and rank
         This is chosen to match the arguments if they are in agreement.
         Otherwise it defaults to 'C'
         """
         if all(a.order == self._args[0].order for a in self._args):
-            self._order = self._args[0].order
+            return self._args[0].order
         else:
-            self._order = 'C'
+            return 'C'
 
     @property
     def args(self):
@@ -191,20 +191,19 @@ class PyccelUnaryOperator(PyccelOperator):
     def __init__(self, arg):
         super().__init__(arg)
 
-    def _set_dtype(self):
+    def _get_dtype(self):
         """ Sets the dtype and precision
         They are chosen to match the argument
         """
         a = self._args[0]
-        self._dtype     = a.dtype
-        self._precision = a.precision
+        return a.dtype, a.precision
 
-    def _set_shape(self):
+    def _get_shape(self):
         """ Sets the shape
         It is chosen to match the argument
         """
         a = self._args[0]
-        self._shape     = a.shape
+        return a.shape, None
 
 #==============================================================================
 
@@ -272,11 +271,11 @@ class PyccelNot(PyccelUnaryOperator):
     def __repr__(self):
         return 'not {}'.format(repr(self.args[0]))
 
-    def _set_dtype(self):
-        self._dtype = NativeBool()
+    def _get_dtype(self):
+        return NativeBool(), None
 
-    def _set_shape(self):
-        self._shape = ()
+    def _get_shape(self):
+        return (), None
 
 #==============================================================================
 
@@ -315,7 +314,7 @@ class PyccelBinaryOperator(PyccelOperator):
     def __init__(self, arg1, arg2):
         super().__init__(arg1, arg2)
 
-    def _set_dtype(self):
+    def _get_dtype(self):
         """ Sets the dtype and precision
 
         If one argument is a string then all arguments must be strings
@@ -331,14 +330,14 @@ class PyccelBinaryOperator(PyccelOperator):
         strs      = [a for a in self._args if a.dtype is NativeString()]
 
         if strs:
-            self._handle_str_type(strs)
             assert len(integers + reals + complexes) == 0
+            return self._handle_str_type(strs)
         elif complexes:
-            self._handle_complex_type(complexes)
+            return self._handle_complex_type(complexes)
         elif reals:
-            self._handle_real_type(reals)
+            return self._handle_real_type(reals)
         elif integers:
-            self._handle_integer_type(integers)
+            return self._handle_integer_type(integers)
         else:
             raise TypeError('cannot determine the type of {}'.format(self))
 
@@ -354,24 +353,27 @@ class PyccelBinaryOperator(PyccelOperator):
         """
         Set dtype and precision when the result is complex
         """
-        self._dtype     = NativeComplex()
-        self._precision = max(a.precision for a in complexes)
+        dtype     = NativeComplex()
+        precision = max(a.precision for a in complexes)
+        return dtype, precision
 
     def _handle_real_type(self, reals):
         """
         Set dtype and precision when the result is real
         """
-        self._dtype     = NativeReal()
-        self._precision = max(a.precision for a in reals)
+        dtype     = NativeReal()
+        precision = max(a.precision for a in reals)
+        return dtype, precision
 
     def _handle_integer_type(self, integers):
         """
         Set dtype and precision when the result is integer
         """
-        self._dtype     = NativeInteger()
-        self._precision = max(a.precision for a in integers)
+        dtype     = NativeInteger()
+        precision = max(a.precision for a in integers)
+        return dtype, precision
 
-    def _set_shape(self):
+    def _get_shape(self):
         """ Sets the shape and rank
 
         Strings must be scalars.
@@ -380,22 +382,16 @@ class PyccelBinaryOperator(PyccelOperator):
         to numpy broadcasting rules where possible
         """
         if self._dtype is NativeString():
-            self._shape = ()
-            self._rank  = 0
+            return (), 0
         else:
             shapes = [a.shape for a in self._args]
 
             if all(sh is not None for tup in shapes for sh in tup):
                 shape = broadcast(self._args[0].shape, self._args[1].shape)
 
-                self._shape = shape
-                self._rank  = len(shape)
+                return shape, None
             else:
-                self._rank  = max(a.rank for a in self._args)
-                self._shape = [None]*self._rank
-
-    def _set_rank(self):
-        pass
+                return None, max(a.rank for a in self._args)
 
 #==============================================================================
 
@@ -477,7 +473,7 @@ class PyccelAdd(PyccelArithmeticOperator):
             return super().__new__(cls)
 
     def _handle_str_type(self, strs):
-        self._dtype = NativeString()
+        return NativeString(), 0
 
     def __repr__(self):
         return '{} + {}'.format(self.args[0], self.args[1])
@@ -561,8 +557,7 @@ class PyccelDiv(PyccelArithmeticOperator):
     _precedence = 13
 
     def _handle_integer_type(self, integers):
-        self._dtype     = NativeReal()
-        self._precision = default_precision['real']
+        return NativeReal(), None
 
     def __repr__(self):
         return '{} / {}'.format(self.args[0], self.args[1])
@@ -628,8 +623,8 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
     """
     __slots__ = ()
     _precedence = 7
-    def _set_dtype(self):
-        self._dtype = NativeBool()
+    def _get_dtype(self):
+        return NativeBool(), None
 
 #==============================================================================
 
@@ -767,11 +762,11 @@ class PyccelBooleanOperator(PyccelOperator):
         The second argument passed to the operator
     """
     __slots__ = ()
-    def _set_dtype(self):
-        self._dtype = NativeBool()
+    def _get_dtype(self):
+        return NativeBool(), None
 
-    def _set_shape(self):
-        self._shape = ()
+    def _get_shape(self):
+        return (), 0
 
 #==============================================================================
 
@@ -923,37 +918,33 @@ class IfTernaryOperator(PyccelOperator):
         if value_false.shape != value_true.shape :
             errors.report('Ternary Operator results should have the same shape', severity='fatal')
 
-    def _set_dtype(self):
+    def _get_dtype(self):
         """
         Sets the dtype and precision for IfTernaryOperator
         """
         if self.value_true.dtype in NativeNumeric and self.value_false.dtype in NativeNumeric:
-            self._dtype = max([self.value_true.dtype, self.value_false.dtype], key = NativeNumeric.index)
+            dtype = max([self.value_true.dtype, self.value_false.dtype], key = NativeNumeric.index)
         else:
-            self._dtype = self.value_true.dtype
+            dtype = self.value_true.dtype
 
-        self._precision = max([self.value_true.precision, self.value_false.precision])
+        precision = max([self.value_true.precision, self.value_false.precision])
+        return dtype, precision
 
-    def _set_shape(self):
+    def _get_shape(self):
         """
         Sets the shape for IfTernaryOperator
         """
-        self._shape = self.value_true.shape
+        x = self.value_true
+        return x.shape, x.rank
 
-    def _set_rank(self):
-        """
-        Sets the rank for IfTernaryOperator
-        """
-        self._rank  = self.value_true.rank
-
-    def _set_order(self):
+    def _get_order(self):
         """
         Sets the order for IfTernaryOperator
         """
         if self.value_false.order != self.value_true.order :
             errors.report('Ternary Operator results should have the same order', severity='fatal')
         else:
-            self._order = self.value_false.order
+            return self.value_false.order
 
     @property
     def cond(self):

@@ -52,11 +52,11 @@ class MacroShape(Macro):
         self._index = index
         super().__init__(argument)
 
-    def _set_dtype(self):
-        self._dtype = NativeInteger()
+    def _get_dtype(self):
+        return NativeInteger(), None
 
-    def _set_shape(self):
-        self._shape = ()
+    def _get_shape(self):
+        return (), 0
 
     @property
     def index(self):
@@ -78,12 +78,11 @@ class MacroType(Macro):
     def __init__(self, argument):
         super().__init__(argument)
 
-    def _set_dtype(self):
-        self._dtype = NativeGeneric()
-        self._precision = 0
+    def _get_dtype(self):
+        return NativeGeneric(), 0
 
-    def _set_shape(self):
-        self._shape = ()
+    def _get_shape(self):
+        return (), 0
 
     def __str__(self):
         return 'MacroType({})'.format(str(self.argument))
@@ -97,11 +96,11 @@ class MacroCount(Macro):
     def __init__(self, argument):
         super().__init__(argument)
 
-    def _set_dtype(self):
-        self._dtype = NativeInteger()
+    def _get_dtype(self):
+        return NativeInteger(), None
 
-    def _set_shape(self):
-        self._shape = ()
+    def _get_shape(self):
+        return (), 0
 
     def __str__(self):
         return 'MacroCount({})'.format(str(self.argument))
