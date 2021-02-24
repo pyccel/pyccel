@@ -233,7 +233,7 @@ class Basic:
     def is_atomic(self):
         """ Indicates whether the object has any attribute nodes
         """
-        return bool(self._attribute_nodes)
+        return not self._attribute_nodes
 
     def set_fst(self, fst):
         """Sets the python.ast fst."""
@@ -301,7 +301,7 @@ class PyccelAstNode(Basic):
 
     def __init__(self):
         super().__init__()
-        if PyccelAstNode.stage == "syntactic":
+        if PyccelAstNode.stage == "syntactic" and not self.is_atomic:
             return
         else:
             self._set_dtype()

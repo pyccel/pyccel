@@ -853,13 +853,7 @@ class SemanticParser(BasicParser):
     def _visit_AnnotatedComment(self, expr, **settings):
         return expr
     def _visit_Literal(self, expr, **settings):
-        return type(expr)(expr.python_value)
-    def _visit_LiteralComplex(self, expr, **settings):
-        return LiteralComplex(expr.real, expr.imag)
-    def _visit_LiteralTrue(self, expr, **settings):
-        return LiteralTrue()
-    def _visit_LiteralFalse(self, expr, **settings):
-        return LiteralFalse()
+        return expr
     def _visit_Integer(self, expr, **settings):
         """Visit sympy.Integer"""
         return LiteralInteger(expr.p)
