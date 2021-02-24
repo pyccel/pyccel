@@ -32,6 +32,16 @@ Print_FunctionDef():
 
 Print_Module():
 
+
+
+
+
+
+from pyccel.errors.errors   import Errors
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+
+errors = Errors()
+
 __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 
 dtype_registry = {('pyobject'     , 0) : 'PyObject',
@@ -92,6 +102,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return [python_func_selfarg, python_func_args, python_func_kwargs]
 
+
+    def get_static_function
 
     def generate_valued_variable_code(self, variable):
         #TODO
@@ -310,7 +322,7 @@ class CWrapperCodePrinter(CCodePrinter):
         
         # Print imports last to be sure that all additional_imports have been collected
         imports  = [Import(s) for s in self._additional_imports]
-        imports += [Import('Python')]
+        imports += [Import('Python'), Import('cwrapper')]
         imports += [Import('numpy/arrayobject')]
         imports  = '\n'.join(self._print(i) for i in imports)
 

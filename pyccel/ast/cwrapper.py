@@ -56,6 +56,7 @@ __all__ = (
     'pybool_to_bool',
 )
 
+
 class PyccelPyObject(DataType):
     _name = 'pyobject'
 
@@ -63,6 +64,7 @@ class PyccelPyArrayObject(DataType):
     """ Datatype representing a PyArrayObject which is the
     class used to hold numpy objects"""
     _name = 'pyarrayobject'
+
 
 PyArray_Type = Variable(NativeGeneric(), 'PyArray_Type')
 
@@ -236,38 +238,28 @@ class PyBuildValueNode(Basic):
 #-------------------------------------------------------------------
 
 # Python.h object  representing Booleans True and False
-Py_True = Variable(PyccelPyObject(), 'Py_True',is_pointer=True)
+Py_True  = Variable(PyccelPyObject(), 'Py_True',is_pointer=True)
 Py_False = Variable(PyccelPyObject(), 'Py_False',is_pointer=True)
 
 # Python.h object representing None
-Py_None = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
+Py_None  = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
 
 # Python.h function managing complex data type
-pycomplex_real = FunctionDef(name      = 'PyComplex_RealAsDouble',
-                           body      = [],
-                           arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                           results   = [Variable(dtype=NativeReal(), name = 'r')])
-pycomplex_imag = FunctionDef(name      = 'PyComplex_ImagAsDouble',
-                           body      = [],
-                           arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                           results   = [Variable(dtype=NativeReal(), name = 'r')])
-pycomplex_fromdoubles = FunctionDef(name      = 'PyComplex_FromDoubles',
-                           body      = [],
-                           arguments = [Variable(dtype=NativeReal(), name = 'r'),
-                                        Variable(dtype=NativeReal(), name = 'i')],
-                           results   = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)])
-Py_DECREF = FunctionDef(name = 'Py_DECREF',
-                        body = [],
-                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                        results = [])
-PyLong_AsLong = FunctionDef(name = 'PyLong_AsLong',
-                        body = [],
-                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                        results   = [Variable(dtype=NativeInteger(), name = 'r')])
-PyFloat_AsDouble = FunctionDef(name = 'PyFloat_AsDouble',
-                        body = [],
-                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                        results   = [Variable(dtype=NativeReal(), name = 'r')])
+
+Py_DECREF        = FunctionDef(name   = 'Py_DECREF',
+                            body      = [],
+                            arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                            results   = [])
+
+PyLong_AsLong    = FunctionDef(name   = 'PyLong_AsLong',
+                            body      = [],
+                            arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                            results   = [Variable(dtype=NativeInteger(), name = 'r')])
+
+PyFloat_AsDouble = FunctionDef(name   = 'PyFloat_AsDouble',
+                            body      = [],
+                            arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                            results   = [Variable(dtype=NativeReal(), name = 'r')])
 
 def PythonType_Check(variable, argument):
     """
