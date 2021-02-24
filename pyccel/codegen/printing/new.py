@@ -33,8 +33,7 @@ Print_FunctionDef():
 Print_Module():
 
 
-
-
+from pyccel.ast.bind_c      import as_static_function_call
 
 
 from pyccel.errors.errors   import Errors
@@ -103,7 +102,18 @@ class CWrapperCodePrinter(CCodePrinter):
         return [python_func_selfarg, python_func_args, python_func_kwargs]
 
 
-    def get_static_function
+    def get_static_function(self, function):
+        """
+        """
+        if self._target_language == 'fortran':
+            static_func = as_static_function_call(function,
+                                                  self._module_name,
+                                                  name = function.name)
+        else:
+            static_func = function
+
+        return static_func
+
 
     def generate_valued_variable_code(self, variable):
         #TODO
@@ -232,7 +242,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         wrapper_body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
 
-        static_function = None #TODO Generate Bind_C_Arg functionCall
+        static_function = self.get_static_function
 
         function_call   = FunctionCall(static_function, func_args)
         
@@ -261,10 +271,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self._global_names = set(f.name for f in expr.funcs)
         self._module_name  = expr.name
         
-        if self._target_language == 'fortran':
-            static_funcs = [as_static_function_call(f, expr.name, name=f.name) for f in expr.funcs]
-        else:
-            static_funcs = expr.funcs
+        static_funcs = [self.get_static_function(func) for func in expr.funcs]
         
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in static_funcs)
 
