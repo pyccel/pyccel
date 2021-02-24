@@ -650,7 +650,7 @@ class NumpyFull(NumpyNewArray):
         self._dtype, self._precision = process_dtype(dtype)
 
         # Cast fill_value to correct type
-        if fill_value and not isinstance(fill_value, Nil) and self.dtype != fill_value.dtype:
+        if fill_value and not isinstance(fill_value, Nil):
             cast_func = DtypePrecisionToCastFunction[self.dtype.name][self.precision]
             fill_value = cast_func(fill_value)
         super().__init__(fill_value)
