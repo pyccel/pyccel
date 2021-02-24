@@ -276,9 +276,9 @@ class PythonFloat(PyccelAstNode):
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralFloat):
-            return LiteralFloat(arg, precision = self._default_precision)
+            return LiteralFloat(arg, precision = cls._default_precision)
         elif isinstance(arg, LiteralInteger):
-            return LiteralFloat(arg.p, precision = self._default_precision)
+            return LiteralFloat(arg.p, precision = cls._default_precision)
         else:
             return super().__new__(cls)
 
