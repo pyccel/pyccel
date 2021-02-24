@@ -7,6 +7,12 @@ from numpy import isclose, iinfo, finfo
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 
+min_int8 = iinfo('int8').min
+max_int8 = iinfo('int8').max
+
+min_int16 = iinfo('int16').min
+max_int16 = iinfo('int16').max
+
 min_int = iinfo('int').min
 max_int = iinfo('int').max
 
@@ -3550,8 +3556,8 @@ def test_numpy_real_scalar(language):
 
     import numpy as np
 
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
@@ -3746,8 +3752,8 @@ def test_numpy_real_array_like_1d(language):
     bl = randint(0, 1, size=(5), dtype= bool)
 
     # should be uncommented after resolving #733
-    # integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
-    # integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
+    # integer8 = randint(min_int8, max_int8, size=(5), dtype=np.int8)
+    # integer16 = randint(min_int16, max_int16, size=(5), dtype=np.int16)
     integer = randint(min_int, max_int, size=(5), dtype=np.int)
     integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
@@ -3770,22 +3776,25 @@ def test_numpy_real_array_like_1d(language):
     # f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
-    f_integer64 = epyccel(test_int64, language=language)
 
     # should be uncommented after resolving #733
     # assert (f_integer8(integer8) == test_int8(integer8))
     # assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
-    assert (f_integer64(integer64) == test_int64(integer64))
 
-    f_fl = epyccel(test_float, language=language)
-    f_fl32 = epyccel(test_float32, language=language)
-    f_fl64 = epyccel(test_float64, language=language)
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64 = epyccel(test_int64, language=language)
+        assert (f_integer64(integer64) == test_int64(integer64))
 
-    assert (f_fl(fl) == test_float(fl))
-    assert (f_fl32(fl32) == test_float32(fl32))
-    assert (f_fl64(fl64) == test_float64(fl64))
+        f_fl = epyccel(test_float, language=language)
+        f_fl32 = epyccel(test_float32, language=language)
+        f_fl64 = epyccel(test_float64, language=language)
+
+        assert (f_fl(fl) == test_float(fl))
+        assert (f_fl32(fl32) == test_float32(fl32))
+        assert (f_fl64(fl64) == test_float64(fl64))
 
     f_complex64 = epyccel(test_complex64, language=language)
     f_complex128 = epyccel(test_complex128, language=language)
@@ -3907,22 +3916,25 @@ def test_numpy_real_array_like_2d(language):
     # f_integer16 = epyccel(test_int16, language=language)
     f_integer = epyccel(test_int, language=language)
     f_integer32 = epyccel(test_int32, language=language)
-    f_integer64 = epyccel(test_int64, language=language)
 
     # should be uncommented after resolving #733
     # assert (f_integer8(integer8) == test_int8(integer8))
     # assert (f_integer16(integer16) == test_int16(integer16))
     assert (f_integer(integer) == test_int(integer))
     assert (f_integer32(integer32) == test_int32(integer32))
-    assert (f_integer64(integer64) == test_int64(integer64))
 
-    f_fl = epyccel(test_float, language=language)
-    f_fl32 = epyccel(test_float32, language=language)
-    f_fl64 = epyccel(test_float64, language=language)
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64 = epyccel(test_int64, language=language)
+        assert (f_integer64(integer64) == test_int64(integer64))
 
-    assert (f_fl(fl) == test_float(fl))
-    assert (f_fl32(fl32) == test_float32(fl32))
-    assert (f_fl64(fl64) == test_float64(fl64))
+        f_fl = epyccel(test_float, language=language)
+        f_fl32 = epyccel(test_float32, language=language)
+        f_fl64 = epyccel(test_float64, language=language)
+
+        assert (f_fl(fl) == test_float(fl))
+        assert (f_fl32(fl32) == test_float32(fl32))
+        assert (f_fl64(fl64) == test_float64(fl64))
 
     f_complex64 = epyccel(test_complex64, language=language)
     f_complex128 = epyccel(test_complex128, language=language)
@@ -4001,8 +4013,8 @@ def test_numpy_imag_scalar(language):
 
     import numpy as np
 
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
@@ -4195,8 +4207,8 @@ def test_numpy_imag_array_like_1d(language):
     bl = randint(0, 1, size=(5), dtype= bool)
 
     # should be uncommented after resolving #733
-    # integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, size=(5), dtype=np.int8)
-    # integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, size=(5), dtype=np.int16)
+    # integer8 = randint(min_int8, max_int8, size=(5), dtype=np.int8)
+    # integer16 = randint(min_int16, max_int16, size=(5), dtype=np.int16)
     integer = randint(min_int, max_int, size=(5), dtype=np.int)
     integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
