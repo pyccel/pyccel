@@ -32,9 +32,15 @@ Print_FunctionDef():
 
 Print_Module():
 
+from pyccel.ast.core        import create_incremented_string, SeparatorComment
+
+from pyccel.ast.core        import (FunctionCall, FunctionDef)
+
+from pyccel.ast.cwrapper    import (PyArgKeywordsm, PyArg_ParseTupleNode)
+
+from pyccel.ast.variable    import Variable
 
 from pyccel.ast.bind_c      import as_static_function_call
-
 
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
