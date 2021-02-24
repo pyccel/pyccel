@@ -238,7 +238,9 @@ class CWrapperCodePrinter(CCodePrinter):
             self.get_PyArgParse_Converter_Function(arg)
             func_args.append(None) #TODO Bind_C_Arg
 
-        parse_node = PyArg_ParseTupleNode(self.parsing_converter_functions, expr.arguments)
+        parse_node = PyArg_ParseTupleNode(*wrapper_args[:-1]
+                                          self.parsing_converter_functions,
+                                          expr.arguments, keyword_list)
 
         wrapper_body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
 

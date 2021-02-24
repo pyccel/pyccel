@@ -121,52 +121,51 @@ class PyArg_ParseTupleNode(Basic):
         Args provided to the function in python
     python_func_kwargs: Variable
         Kwargs provided to the function in python
-    c_func_args: list of Variable
-        List of expected arguments. This helps determine the expected output types
     parse_args: list of Variable
         List of arguments into which the result will be collected
     arg_names : list of str
         A list of the names of the function arguments
-    is_interface : boolean
-        Default value False and True when working with interface functions
     """
+
     _attribute_nodes = ('_pyarg','_pykwarg','_parse_args','_arg_names')
 
     def __init__(self, python_func_args,
-                        python_func_kwargs,
-                        c_func_args, parse_args,
-                        arg_names):
+                       python_func_kwargs,
+                       converter_functions,
+                       parse_args,
+                       arg_names):
+
         if not isinstance(python_func_args, Variable):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
             raise TypeError('Python func kwargs should be a Variable')
-        if not all(isinstance(c, (Variable, FunctionAddress)) for c in c_func_args):
-            raise TypeError('C func args should be a list of Variables')
+        if not isinstance(converter_functions):
+            raise TypeError('converter_functions should be a Dictionary')
+        if any(not isinstance(f, FunctionDef) for f in converter_functions.keys()):
+            raise TypeError('Converter function should be a FunctionDef')
         if not isinstance(parse_args, list) and any(not isinstance(c, Variable) for c in parse_args):
             raise TypeError('Parse args should be a list of Variables')
         if not isinstance(arg_names, PyArgKeywords):
             raise TypeError('Parse args should be a list of Variables')
-        if len(parse_args) != len(c_func_args):
-            raise TypeError('There should be the same number of c_func_args and parse_args')
 
-        self._flags      = ''
-        i = 0
+        self._flags = ''
+        i           = 0
+        args_count  = len(parse_args)
 
-        while i < len(c_func_args) and not isinstance(c_func_args[i], ValuedVariable):
-            self._flags += self.get_pytype(c_func_args[i], parse_args[i])
-            i+=1
-        if i < len(c_func_args):
+        while i < args_count and not isinstance(parse_args[i], ValuedVariable):
+            self._flags += 'O&'
+            i += 1
+        if i < args_count:
             self._flags += '|'
-        while i < len(c_func_args):
-            self._flags += self.get_pytype(c_func_args[i], parse_args[i])
-            i+=1
+        while i < args_count:
+            self._flags += 'O&' #TODO ? when iterface are back this should be in a function
+            i += 1
         # Restriction as of python 3.8
-        if any([isinstance(a, (Variable, FunctionAddress)) and a.is_kwonly for a in c_func_args]):
+        if any([isinstance(a, (Variable, FunctionAddress)) and a.is_kwonly for a in parse_args]):
             errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
-                          symbol=c_func_args, severity='warning')
+                          symbol=parse_args, severity='warning')
 
-        parse_args = [[PyArray_Type, a] if isinstance(a, Variable) and a.dtype is PyccelPyArrayObject()
-                else [a] for a in parse_args]
+        parse_args = [[converter_functions[] , a] for a in parse_args]
         parse_args = [a for arg in parse_args for a in arg]
 
         self._pyarg      = python_func_args
@@ -174,18 +173,6 @@ class PyArg_ParseTupleNode(Basic):
         self._parse_args = parse_args
         self._arg_names  = arg_names
         super().__init__()
-
-    def get_pytype(self, c_arg, parse_arg):
-        """Return the needed flag to parse or build value
-        """
-        print('[HERE]', parse_arg, parse_arg.dtype, parse_arg.precision)
-        if isinstance(c_arg, FunctionAddress):
-            return 'O'
-        else:
-            try:
-                return pytype_parse_registry[(parse_arg.dtype, parse_arg.precision)]
-            except KeyError as e:
-                raise NotImplementedError("Type not implemented for argument collection : "+str(type(parse_arg))) from e
 
     @property
     def pyarg(self):
@@ -206,6 +193,7 @@ class PyArg_ParseTupleNode(Basic):
     @property
     def arg_names(self):
         return self._arg_names
+
 
 class PyBuildValueNode(Basic):
     """
