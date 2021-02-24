@@ -242,6 +242,21 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return code
 
+    def _print_PyBuildValueNode(self, expr):
+        name  = 'Py_BuildValue'
+        flags = expr.flags
+        args  = ', '.join(['{}'.format(a.name) for a in expr.args])
+
+        #to change for args rank 1 +
+        if expr.args:
+            code = '{name}("{flags}", {args})'.format(name = name,
+                                                     flags = flags,
+                                                     args  = args)
+        else :
+            code = '{name}("")'.format(name = name)
+
+        return code
+
 
     def _print_Interface(self, expr):
         # TODO nightmare
@@ -289,7 +304,7 @@ class CWrapperCodePrinter(CCodePrinter):
         for res in expr.results:
             self.get_PyBuildValue_Converter_function(res)
 
-        build_node = PyBuildValueNode(self.building_converter_functions, expr.results)
+        build_node = PyBuildValueNode(expr.results, self.building_converter_functions)
 
         wrapper_body.append(AliasAssign(wrapper_results[0], build_node))
 

@@ -206,11 +206,14 @@ class PyBuildValueNode(Basic):
     """
     _attribute_nodes = ('_result_args',)
 
-    def __init__(self, result_args = ()):
-        self._flags = ''
-        self._result_args = result_args
+    def __init__(self, result_args = (), converter_functions = {}):
+        self._flags       = ''
         for i in result_args:
-            self._flags += pytype_parse_registry[(i.dtype, i.precision)]
+            self._flags  += 'O&'
+
+        result_args       = [[converter_functions[xxxxx], arg] for arg in result_args]
+        self._result_args = [a for arg in result_args for a in arg]
+
         super().__init__()
 
     @property
