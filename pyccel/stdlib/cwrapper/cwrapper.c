@@ -6,7 +6,7 @@
 
 // Python to C
 
-float complex	PyComplex_to_Complex64(Pyobject *o)
+int PyComplex_to_Complex64(Pyobject *o)
 {
 	float			real_part;
 	float			imag_part;
@@ -19,7 +19,7 @@ float complex	PyComplex_to_Complex64(Pyobject *o)
 	return c;
 }
 
-double complex	PyComplex_to_Complex128(Pyobject *o)
+int	PyComplex_to_Complex128(Pyobject *o)
 {
 	double			real_part;
 	double			imag_part;
@@ -32,7 +32,7 @@ double complex	PyComplex_to_Complex128(Pyobject *o)
 	return c;
 }
 
-bool			PyBool_to_Bool(Pyobject *o)
+int	PyBool_to_Bool(Pyobject *o)
 {
 	bool	b;
 
