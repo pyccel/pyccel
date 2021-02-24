@@ -317,7 +317,7 @@ class PyccelAstNode(Basic):
                 raise RuntimeError("No rank information available")
             elif rank is None:
                 rank = len(shape)
-            else:
+            elif shape is None:
                 shape = (None,)*rank
             self._shape = shape
             self._rank  = rank
