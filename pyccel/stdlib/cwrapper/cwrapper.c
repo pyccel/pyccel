@@ -6,7 +6,26 @@
 
 // Python to C
 
-int	PyComplex_to_Complex64(Pyobject *o, float complex *c)
+
+const bool	g_t_py_to_c[9] =
+{
+	&PyComplex_to_Complex64,
+	&PyComplex_to_Complex128,
+
+	&PyInt64_to_Int64,
+	&PyInt32_to_Int32,
+	&PyInt16_to_Int16,
+	&PyInt8_to_Int8,
+
+	&PyFloat_to_Float,
+	&PyDouble_to_Doube,
+
+	&PyBool_to_Bool,
+};
+
+
+
+static int	PyComplex_to_Complex64(Pyobject *o, float complex *c)
 {
 	float	real_part;
 	float	imag_part;
@@ -17,10 +36,10 @@ int	PyComplex_to_Complex64(Pyobject *o, float complex *c)
 
 	*c = CMPLXF(real_part, imag_part);
 
-	return 1;
+	return true;
 }
 
-int	PyComplex_to_Complex128(Pyobject *o, double complex *c)
+static int	PyComplex_to_Complex128(Pyobject *o, double complex *c)
 {
 	double	real_part;
 	double	imag_part;
@@ -30,93 +49,102 @@ int	PyComplex_to_Complex128(Pyobject *o, double complex *c)
 
 	*c = CMPLXF(real_part, imag_part);
 
-	return 1;
+	return true;
 }
 
-int	PyInt64_to_Int64(PyObject *o, int64_t *i)
+static int	PyInt64_to_Int64(PyObject *o, int64_t *i)
 {
 	long long	out;
 
 	out = PyLong_AsLongLong(o);
 	if (out == -1 && PyErr_Occurred())
-		return 0;
+		return false;
 
 	*i = (int64_t)out;
 
-	return 1;
+	return true;
 }
 
-int	PyInt32_to_Int32(PyObject *o, int32_t *i)
+static int	PyInt32_to_Int32(PyObject *o, int32_t *i)
 {
 	long	out;
 
 	out = PyLong_AsLong(o);
 	if (out == -1 && PyErr_Occurred())
-		return 0;
+		return false;
 
 	*i = (int32_t)out;
 
-	return 1;
+	return true;
 }
 
-int	PyInt16_to_Int16(PyObject *o, int16_t *i)
+static bool	PyInt16_to_Int16(PyObject *o, int16_t *i)
 {
 	long	out;
 
 	out = PyLong_AsLong(o);
 	if (out == -1 && PyErr_Occurred())
-		return 0;
+		return false;
 
 	*i = (int16_t)out;
 
-	return 1;
+	return true;
 }
 
-int	PyInt8_to_Int8(PyObject *o, int8_t *i)
+static bool	PyInt8_to_Int8(PyObject *o, int8_t *i)
 {
 	long	out;
 
 	out = PyLong_AsLong(o);
 	if (out == -1 && PyErr_Occurred())
-		return 0;
+		return false;
 
 	*i = (int8_t)out;
 
-	return 1;
+	return true;
 }
 
-int	PyBool_to_Bool(Pyobject *o, bool *b)
+static bool	PyBool_to_Bool(Pyobject *o, bool *b)
 {
 	*b = o == PyTrue;
 
-	return 1;
+	return true;
 }
 
-int	PyFloat_to_Float(Pyobject *o, float *f)
+static bool	PyFloat_to_Float(Pyobject *o, float *f)
 {
 	double	out;
 
 
 	out = PyFloat_AsDouble(o);
 	if (out  == -1.0 && PyErr_Occured())
-		return 0;
+		return false;
 
 	*f = (float)out;
-	return 1;
+	return true;
 }
 
-int PyDouble_to_Double(PyObject *o, double *d)
+static bool	PyDouble_to_Double(PyObject *o, double *d)
 {
 	double	out;
 
 	out = PyFloat_AsDouble(o);
 	if (out  == -1.0 && PyErr_Occured())
-		return 0;
+		return false;
 
 	*d = out;
 
-	return 1;
+	return true;
 }
+
+bool		PyObject_As_Ctype(PyObject *o, void *v, int type)
+{
+	return g_t_py_to_c[type](o, v);
+}
+
+
+
+
 
 t_ndarray		PyArray_to_ndarray(PyObject *o)
 {
@@ -176,7 +204,7 @@ PyObject	*Int64_to_PyInt64(int64_t i)
 
 	o = PyLong_FromLongLong(i)
 
-	return 0;
+		return 0;
 }
 
 

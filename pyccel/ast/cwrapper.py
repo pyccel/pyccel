@@ -65,9 +65,6 @@ class PyccelPyArrayObject(DataType):
     class used to hold numpy objects"""
     _name = 'pyarrayobject'
 
-
-PyArray_Type = Variable(NativeGeneric(), 'PyArray_Type')
-
 #TODO: Is there an equivalent to static so this can be a static list of strings?
 class PyArgKeywords(Basic):
     """
@@ -94,22 +91,6 @@ class PyArgKeywords(Basic):
     @property
     def arg_names(self):
         return self._arg_names
-
-#using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
-pytype_parse_registry = {
-    (NativeInteger(), 4)       : 'i',
-    (NativeInteger(), 8)       : 'l',
-    (NativeInteger(), 2)       : 'h',
-    (NativeInteger(), 1)       : 'b',
-    (NativeReal(), 8)          : 'd',
-    (NativeReal(), 4)          : 'f',
-    (NativeComplex(), 4)       : 'O',
-    (NativeComplex(), 8)       : 'O',
-    (NativeBool(), 4)          : 'p',
-    (NativeString(), 0)        : 's',
-    (PyccelPyObject(), 0)      : 'O',
-    (PyccelPyArrayObject(), 0) : 'O!',
-    }
 
 class PyArg_ParseTupleNode(Basic):
     """
@@ -247,92 +228,38 @@ Py_False = Variable(PyccelPyObject(), 'Py_False',is_pointer=True)
 # Python.h object representing None
 Py_None  = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
 
-# Python.h function managing complex data type
 
-Py_DECREF        = FunctionDef(name   = 'Py_DECREF',
-                            body      = [],
-                            arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                            results   = [])
 
-PyLong_AsLong    = FunctionDef(name   = 'PyLong_AsLong',
-                            body      = [],
-                            arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                            results   = [Variable(dtype=NativeInteger(), name = 'r')])
 
-PyFloat_AsDouble = FunctionDef(name   = 'PyFloat_AsDouble',
-                            body      = [],
-                            arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                            results   = [Variable(dtype=NativeReal(), name = 'r')])
-
-def PythonType_Check(variable, argument):
-    """
-    Create FunctionCall responsible of checking python argument data type
-    Parameters:
-    ----------
-    variable : Variable
-        The variable needed for the generation of the type check
-    argument : Variable
-        argument of the check function
-
-    Returns
-    -------
-    FunctionCall : Check type FunctionCall
-    """
-    try :
-        check_type = check_type_registry[variable.dtype]
-    except KeyError:
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=variable.dtype,severity='fatal')
-    check_func = FunctionDef(name = check_type,
-                    body = [],
-                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                    results   = [Variable(dtype=NativeBool(), name = 'r')])
-    return FunctionCall(check_func, [argument])
-
-def PyErr_SetString(error_type, error_msg):
-    func = FunctionDef(name = 'PyErr_SetString',
-                body = [],
-                arguments = [Variable(dtype=PyccelPyObject(), name = 'o'),
-                             Variable(dtype =NativeString(), name = 's')],
-                results   = [])
-    err_type = Variable(PyccelPyObject(), error_type)
-    return FunctionCall(func, [err_type, error_msg])
 
 # Casting functions
 # Represents type of cast function responsible of the conversion of one data type into another.
-# Parameters :
-# name of function , list of arguments ,  list of results
+# More information are in pyccel/stdlib/cwrapper/
 
-bool_to_pybool          = FunctionDef(name = 'Bool_to_PyBool',
+c_bool_type        = Variable(dtype=NativeInteger(),  name = 'BOOL', precision = 4)
+c_int8_type        = Variable(dtype=NativeInteger(),  name = 'INT8', precision = 4)
+c_int16_type       = Variable(dtype=NativeInteger(),  name = 'INT16', precision = 4)
+c_int32_type       = Variable(dtype=NativeInteger(),  name = 'INT32', precision = 4)
+c_int64_type       = Variable(dtype=NativeInteger(),  name = 'INT64', precision = 4)
+c_float_type       = Variable(dtype=NativeInteger(),  name = 'FLOAT', precision = 4)
+c_double_type      = Variable(dtype=NativeInteger(),  name = 'DOUBLE', precision = 4)
+c_cfloat_type      = Variable(dtype=NativeInteger(),  name = 'CFLOAT', precision = 4)
+c_cdouble_type     = Variable(dtype=NativeInteger(),  name = 'CDOUBLE', precision = 4)
+
+PyObject_AsCtype    = FunctionDef(name     = 'PyObject_AsCtype',
+                                arguments  = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)
+                                              Variable(dtype=NativeVoid(), name = 'v', precision = 4,
+                                                       is_pointer = True),
+                                              Variable(dtype=NativeInteger(), name = 'type')],
+                                body       = [],
+                                results    = [Variable(dtype=NativeBool(), name = 'b')])
+
+PyObject_from_Ctype = FunctionDef(name     = 'PyObject_from_Ctype',
                                 arguments  = [Variable(dtype=NativeBool(), name = 'b')],
                                 body       = [],
                                 results    = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)])
 
-complex128_to_pycomplex = FunctionDef(name = 'Complex128_to_PyComplex',
-                                arguments  = [Variable(dtype=NativeComplex(), name = 'c', precision = 8)],
-                                body       = [],
-                                results    = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)])
-
-complex64_to_pycomplex  = FunctionDef(name = 'Complex64_to_PyComplex',
-                                arguments  = [Variable(dtype=NativeComplex(), name = 'c', precision = 4)],
-                                body       = [],
-                                results    = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)])
-
-pycomplex_to_complex64  = FunctionDef(name = 'PyComplex_to_Complex64',
-                                arguments  = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)],
-                                body       = [],
-                                results    = [Variable(dtype=NativeComplex(), name = 'c', precision = 4)])
-
-pycomplex_to_complex128 = FunctionDef(name = 'PyComplex_to_Complex64',
-                                arguments  = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)],
-                                body       = [],
-                                results    = [Variable(dtype=NativeComplex(), name = 'c', precision = 8)])
-
-pybool_to_bool          = FunctionDef(name = 'PyBool_to_Bool',
-                                arguments  = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)],
-                                body       = [],
-                                results    = [Variable(dtype=NativeBool(), name = 'b')])
-
-pyarray_to_ndarray      = FunctionDef(name = 'PyArray_to_ndarray',
+pyarray_to_ndarray  = FunctionDef(name     = 'PyArray_to_ndarray',
                                 arguments  = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)],
                                 body       = [],
                                 results    = [])#TODO
@@ -345,11 +272,6 @@ cast_function_registry = {
     'complex_to_pycomplex': complex_to_pycomplex,
     'pybool_to_bool' : pybool_to_bool,
     'pyarray_to_ndarray' : pyarray_to_ndarray,
-}
-
-collect_function_registry = {
-    NativeInteger(): PyLong_AsLong,
-    NativeReal()   : PyFloat_AsDouble,
 }
 
 check_type_registry  = {
