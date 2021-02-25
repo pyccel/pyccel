@@ -39,23 +39,20 @@ __all__ = (
     'Py_False',
     'Py_None',
 #----- C / PYTHON FUNCTIONS ---
-    'pycomplex_real',
-    'pycomplex_imag',
-    'pycomplex_fromdoubles',
-    'Py_DECREF',
-    'PyLong_AsLong',
-    'PyFloat_AsDouble',
-    'PythonType_Check',
-    'NumpyType_Check',
     'PyErr_SetString',
 #------- CAST FUNCTIONS ------
-    'pyint_to_bool',
-    'bool_to_pyobj',
-    'pycomplex_to_complex',
-    'complex_to_pycomplex',
-    'pybool_to_bool',
+    'C_to_Python',
+    'Python_to_C',
+#-------CHECK FUNCTIONS ------
+    'PythonType_Check',
+#-------- Regestry -----------
+    'flags_registry'
 )
 
+
+#-------------------------------------------------------------------
+#                        Python DataTypes
+#-------------------------------------------------------------------
 
 class PyccelPyObject(DataType):
     _name = 'pyobject'
@@ -65,7 +62,12 @@ class PyccelPyArrayObject(DataType):
     class used to hold numpy objects"""
     _name = 'pyarrayobject'
 
-#TODO: Is there an equivalent to static so this can be a static list of strings?
+
+#-------------------------------------------------------------------
+#                  Parsing and Building Classes
+#-------------------------------------------------------------------
+
+# TODO: Is there an equivalent to static so this can be a static list of strings?
 class PyArgKeywords(Basic):
     """
     Represents the list containing the names of all arguments to a function.
@@ -218,7 +220,7 @@ def get_custom_key(variable):
 
 
 #-------------------------------------------------------------------
-#                      Python.h functions
+#                      Python.h Constants
 #-------------------------------------------------------------------
 
 # Python.h object  representing Booleans True and False
@@ -227,6 +229,10 @@ Py_False = Variable(PyccelPyObject(), 'Py_False',is_pointer=True)
 
 # Python.h object representing None
 Py_None  = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
+
+#-------------------------------------------------------------------
+#                      cwrapper.h functions
+#-------------------------------------------------------------------
 
 def Python_To_C(c_object):
     """
@@ -252,7 +258,7 @@ def Python_To_C(c_object):
 
     return cast_func
 
-# Functions and functions descriptions are defined in pyccel/stdlib/cwrapper/
+# Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 py_to_c_registry = {
     (NativeBool(), 4)    : 'PyBool_to_Bool',
     (NativeInteger(), 1) : 'PyInt8_to_Int8',
@@ -287,7 +293,7 @@ def C_to_Python(c_object)
 
     return cast_func
 
-# Functions and functions descriptions are defined in pyccel/stdlib/cwrapper/
+# Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 # TODO create cast functions of different precision of int issue #735
 c_to_py_registry = {
     (NativeBool(), 4)    : 'Bool_to_PyBool',
@@ -300,6 +306,10 @@ c_to_py_registry = {
     (NativeComplex, 4)   : 'Complex_to_PyComplex',
     (NativeComplex, 8)   : 'Complex_to_PyComplex'}
 
+
+#-------------------------------------------------------------------
+#              errors and check functions
+#-------------------------------------------------------------------
 
 def PythonType_Check(c_object, py_object):
     """
@@ -337,6 +347,32 @@ check_type_registry  = {
     NativeReal()    : 'PyFloat_Check',
     NativeBool()    : 'PyBool_Check',
 }
+
+
+def PyErr_SetString(exception, message):
+    """
+    Generate function Call of c/python api PyErr_SetString
+    https://docs.python.org/3/c-api/exceptions.html#c.PyErr_SetString
+    used to set the error indicator.
+
+    Parameters:
+    ----------
+    exception  : str
+        The exception type
+    message    : str
+        Error message
+    Returns
+    FunctionCall : raise error FunctionCall
+    """
+    func = FunctionDef(name = 'PyErr_SetString',
+                  body      = [],
+                  arguments = [Variable(dtype = PyccelPyObject(), name = 'o'),
+                               Variable(dtype = NativeString(), name = 's')],
+                  results   = [])
+
+    exception = Variable(PyccelPyObject(), name = exception)
+
+    return FunctionCall(func, [exception, message])
 
 # This registry is used for interface management,
 # mapping each data type to a given flag
