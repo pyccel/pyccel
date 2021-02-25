@@ -80,7 +80,7 @@ class PyArgKeywords(Basic):
     """
     _attribute_nodes = ()
     def __init__(self, name, arg_names):
-        self._name = name
+        self._name      = name
         self._arg_names = arg_names
         super().__init__()
 
