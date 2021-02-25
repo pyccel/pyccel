@@ -10,17 +10,16 @@ Handling the transitions between python code and C code.
 
 import numpy as np
 
+from .datatypes         import NativeInteger, NativeReal, NativeComplex
+from .datatypes         import NativeBool, NativeGeneric, NativeVoid
+
+from .cwrapper          import PyccelPyObject, PyccelPyArrayObject
+
+from .core              import FunctionDef
+
+from .variable          import Variable
+
 from ..errors.errors   import Errors
-from ..errors.messages import PYCCEL_RESTRICTION_TODO
-
-from .datatypes import NativeInteger, NativeReal, NativeComplex
-from .datatypes import NativeBool, NativeGeneric, NativeVoid
-
-from .cwrapper  import PyccelPyObject, PyccelPyArrayObject
-
-from .core      import FunctionCall, FunctionDef
-
-from .variable  import Variable
 
 errors = Errors()
 
