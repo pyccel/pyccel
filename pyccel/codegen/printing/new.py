@@ -40,12 +40,15 @@ from pyccel.ast.core        import If, IfSection, PyccelEq
 
 from pyccel.ast.cwrapper    import (PyArgKeywordsm, PyArg_ParseTupleNode,
                                     PyBuildValueNode)
+from pyccel.ast.cwrapper    import Python_to_C, C_to_Python, PythonType_Check
 
 from pyccel.ast.cwrapper    import PyccelPyObject, PyNone
 from pyccel.ast.cwrapper    import get_custom_key
-from pyccel.ast.variable    import Variable, ValuedVariable, VariableAddress
 
-from pyccel.ast.bind_c      import as_static_function_call
+from pyccel.ast.numpy_wrapper   import PyArray_CheckScalar, PyArray_ScalarAsCtype
+from pyccel.ast.variable        import Variable, ValuedVariable, VariableAddress
+
+from pyccel.ast.bind_c          import as_static_function_call
 
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
@@ -136,6 +139,34 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return [IfSection(check, body)]
 
+    #TODO modify it to accepte multiple variables or list of variables
+    def generate_type_error(variable):
+        """
+        Generate TypeError exception from the variable information (datatype, precision)
+        Parameters:
+        ----------
+        variable : Variable
+
+        Returns:
+        -------
+        func     : FunctionCall
+        call to PyErr_SetString with TypeError as exception and custom message
+        """
+        dtype     = variable.dtype
+
+        if isinstance(dtype, NativeBool):
+            precision = ''
+        if isinstance(dtype, NativeComplex):
+            precision = '{} bit '.format(variable.precision * 2 * 8)
+        else:
+            precision = '{} bit '.format(variable.precision * 8)
+
+        message = '"{var_name} must be {precision}{dtype}"'.format(
+                        var_name  = variable,
+                        precision = precision,
+                        dtype     = self._print(variable.dtype))
+        return PyErr_SetString(PyExc_TypeError, message)
+
     #--------------------------------------------------------------------
     #                   Convert functions
     #--------------------------------------------------------------------
@@ -156,7 +187,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body.append(generate_python_type_body()) #TODO
 
         if check_is_needed:
-            body.append(IfSection(LiteralTrue(), [generate_type_error()])) #TODO
+            body.append(IfSection(LiteralTrue(), [self.generate_type_error()])) #TODO
 
         body    = [If(*body)]
         funcDef = FunctionDef(name     = func_name,
