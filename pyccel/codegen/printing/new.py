@@ -34,12 +34,16 @@ Print_Module():
 
 from pyccel.ast.core        import create_incremented_string, SeparatorComment
 
-from pyccel.ast.core        import (FunctionCall, FunctionDef)
+from pyccel.ast.core        import FunctionCall, FunctionDef
+from pyccel.ast.core        import Assign, AliasAssign, Nil
+from pyccel.ast.core        import If, IfSection, PyccelEq
 
 from pyccel.ast.cwrapper    import (PyArgKeywordsm, PyArg_ParseTupleNode,
                                     PyBuildValueNode)
 
-from pyccel.ast.variable    import Variable
+from pyccel.ast.cwrapper    import PyccelPyObject, PyNone        
+
+from pyccel.ast.variable    import Variable, ValuedVariable, VariableAddress
 
 from pyccel.ast.bind_c      import as_static_function_call
 
