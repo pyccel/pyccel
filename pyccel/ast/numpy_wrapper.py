@@ -35,13 +35,15 @@ __all__ = (
     'numpy_flag_c_contig',
     'numpy_flag_f_contig',
     'numpy_dtype_registry',
+    'PyArray_CheckScalar',
+    'PyArray_ScalarAsCtype',
 )
-
-PyArray_Type = Variable(NativeGeneric(), 'PyArray_Type')
 
 #-------------------------------------------------------------------
 #                      Numpy functions
 #-------------------------------------------------------------------
+# All the numpy function list are part of  numpy/c api
+# https://numpy.org/doc/stable/reference/c-api/array.html
 
 numpy_get_ndims   = FunctionDef(name = 'PyArray_NDIM',
                            body      = [],
@@ -106,9 +108,23 @@ numpy_get_type    = FunctionDef(name  = 'PyArray_TYPE',
                             arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
                             results   = [Variable(dtype=NativeInteger(), name = 'i', precision = 4)])
 
+PyArray_CheckScalar   = FunctionDef(name      = 'PyArray_CheckScalar',
+                                    body      = [],
+                                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                                    results   = [Variable(dtype=NativeBool(), name = 'r')])
+
+PyArray_ScalarAsCtype = FunctionDef(name      = 'PyArray_ScalarAsCtype',
+                                    body      = [],
+                                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
+                                                Variable(dtype=NativeVoid(), name = 'c', is_pointer = True)],
+                                    results   = [])
+
+
 numpy_flag_own_data     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_OWNDATA')
 numpy_flag_c_contig     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_C_CONTIGUOUS')
 numpy_flag_f_contig     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_F_CONTIGUOUS')
+
+# https://numpy.org/doc/stable/reference/c-api/dtype.html
 numpy_bool_type         = Variable(dtype=NativeInteger(),  name = 'NPY_BOOL', precision = 4)
 numpy_byte_type         = Variable(dtype=NativeInteger(),  name = 'NPY_BYTE', precision = 4)
 numpy_ubyte_type        = Variable(dtype=NativeInteger(),  name = 'NPY_UBYTE', precision = 4)
@@ -164,35 +180,6 @@ numpy_dtype_registry = {('bool',4)     : numpy_bool_type,
                         ('complex',4)  : numpy_cfloat_type,
                         ('complex',8)  : numpy_cdouble_type,
                         ('complex',16) : numpy_clongdouble_type}
-
-PyArray_CheckScalar   = FunctionDef(name      = 'PyArray_CheckScalar',
-                                    body      = [],
-                                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                                    results   = [Variable(dtype=NativeBool(), name = 'r')])
-
-PyArray_ScalarAsCtype = FunctionDef(name      = 'PyArray_ScalarAsCtype',
-                                    body      = [],
-                                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
-                                                Variable(dtype=NativeVoid(), name = 'c', is_pointer = True)],
-                                    results   = [])
-
-# construct the call of the function numpy_to_ndarray_strides
-# (the function definition is available at pyccel/stdlib/ndarrays/ndarrays.c)
-numpy_to_ndarray_strides = FunctionDef(name    = 'numpy_to_ndarray_strides',
-                                    body       = [],
-                                    arguments  = [Variable(dtype=NativeInteger(), name = 'np_strides', is_pointer=True),
-                                                 Variable(dtype=NativeInteger(), name = 'type_size'),
-                                                 Variable(dtype=NativeInteger(), name = 'nd')],
-                                    results    = [Variable(dtype=NativeInteger(), name = 'nd_strides', is_pointer=True)])
-
-# construct the call of the function numpy_to_ndarray_shape
-# (the function definition is available at pyccel/stdlib/ndarrays/ndarrays.c)
-numpy_to_ndarray_shape   = FunctionDef(name    = 'numpy_to_ndarray_shape',
-                                    body       = [],
-                                    arguments  = [Variable(dtype=NativeInteger(), name = 'np_shape', is_pointer=True),
-                                                  Variable(dtype=NativeInteger(), name = 'nd')],
-                                    results    = [Variable(dtype=NativeInteger(), name = 'nd_strides', is_pointer=True)])
-
 
 # Needed to check for numpy arguments type
 Numpy_Bool_ref       = Variable(dtype=NativeVoid(),  name = 'Bool')
