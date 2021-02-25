@@ -34,12 +34,12 @@ PyObject	*Complex64_to_PyComplex(float complex c);
 PyObject	*Complex128_to_PyComplex(double complex *c);
 
 PyObject	*Int64_to_PyInt64(int64_t *i);
-PyObject	*Int32_to_PyInt32(int32_t *i);
-PyObject	*Int16_to_PyInt16(int16_t *i);
-PyObject	*Int8_to_PyInt8(int8_t *i);
+//PyObject	*Int32_to_PyInt32(int32_t *i);
+//PyObject	*Int16_to_PyInt16(int16_t *i);
+//PyObject	*Int8_to_PyInt8(int8_t *i);
 
-PyObject	*Float_to_PyFloat(int8_t *i);
-PyObject	*Double_to_PyDouble(int8_t *i);
+//PyObject	*Float_to_PyFloat(int8_t *i);
+//PyObject	*Double_to_PyDouble(int8_t *i);
 
 PyObject	*Bool_to_PyBool(int8_t *i);
 
