@@ -192,6 +192,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return funcDef
 
+    def generate_tuple_converter_function(self, used_names, variable):
+        #TODO
+
     def generate_pyobject_converter_function(self, used_names, variable):
         """
         """
