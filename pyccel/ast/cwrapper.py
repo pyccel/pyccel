@@ -104,6 +104,8 @@ class PyArg_ParseTupleNode(Basic):
         Args provided to the function in python
     python_func_kwargs: Variable
         Kwargs provided to the function in python
+    converter_functions : dict
+        dictionary maping argument to cast functions
     parse_args: list of Variable
         List of arguments into which the result will be collected
     arg_names : list of str
@@ -186,6 +188,9 @@ class PyBuildValueNode(Basic):
     ---------
     parse_args: list of Variable
         List of arguments which the result will be buit from
+
+    converter_functions : dict
+        dictionary maping argument to cast functions
     """
     _attribute_nodes = ('_result_args',)
 
