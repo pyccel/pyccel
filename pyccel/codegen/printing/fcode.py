@@ -1866,6 +1866,7 @@ class FCodePrinter(CodePrinter):
     # .....................................................
     #                   OpenMP statements
     # .....................................................
+
     def _print_OmpCombinedAnnotatedComment(self, expr):
         clauses = ''
         if expr.combined:

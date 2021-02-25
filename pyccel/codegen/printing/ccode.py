@@ -21,7 +21,9 @@ from pyccel.ast.core      import create_incremented_string
 from pyccel.ast.omp       import (OMP_Sections_Construct, OMP_Section_Construct,
                                   OMP_Task_Construct, OMP_Single_Construct,
                                   OMP_For_Loop, OMP_Critical_Construct,
-                                  OMP_Master_Construct)
+                                  OMP_Master_Construct, OMP_Parallel_Construct,
+                                  OMP_Masked_Construct, OMP_Target_Construct,
+                                  OMP_Teams_Construct)
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis
@@ -1493,49 +1495,34 @@ class CCodePrinter(CodePrinter):
 
     #=================== OMP ==================
 
-    def _print_OMP_Parallel_Construct(self, expr):
+    def _print_OmpCombinedAnnotatedComment(self, expr):
         clauses = ''
         if expr.combined:
             clauses = ' ' + expr.combined
         clauses += str(expr.txt)
-        omp_expr   = '#pragma omp parallel{}'.format(clauses)
-        if expr.combined is None:
-            omp_expr += '\n{'
-        elif (expr.combined and "for" not in expr.combined):
-            if "masked taskloop" not in expr.combined:
+        omp_expr = '#pragma omp'
+        if isinstance(expr, OMP_Parallel_Construct):
+            omp_expr += ' parallel{}'.format(clauses)
+            if expr.combined is None:
                 omp_expr += '\n{'
-        return omp_expr
+            elif (expr.combined and "for" not in expr.combined):
+                if "masked taskloop" not in expr.combined:
+                    omp_expr += '\n{'
+        elif isinstance(expr, OMP_Masked_Construct):
+            omp_expr += ' masked{}'.format(clauses)
+            if expr.combined is None:
+                omp_expr += '\n{'
+        elif isinstance(expr, OMP_Target_Construct):
+            omp_expr += ' target{}'.format(clauses)
+            if expr.combined is None:
+                omp_expr += '\n{'
+            elif (expr.combined and "for" not in expr.combined):
+                omp_expr += '\n{'
+        elif isinstance(expr, OMP_Teams_Construct):
+            omp_expr += ' teams{}'.format(clauses)
+            if expr.combined is None:
+                omp_expr += '\n{'
 
-    def _print_OMP_Masked_Construct(self, expr):
-        clauses = ''
-        if expr.combined:
-            clauses = ' ' + expr.combined
-        clauses += str(expr.txt)
-        omp_expr = '#pragma omp masked{}'.format(clauses)
-        if expr.combined is None:
-            omp_expr += '\n{'
-        return omp_expr
-
-    def _print_OMP_Target_Construct(self, expr):
-        clauses = ''
-        if expr.combined:
-            clauses = ' ' + expr.combined
-        clauses += str(expr.txt)
-        omp_expr = '#pragma omp target{}'.format(clauses)
-        if expr.combined is None:
-            omp_expr += '\n{'
-        elif (expr.combined and "for" not in expr.combined):
-            omp_expr += '\n{'
-        return omp_expr
-
-    def _print_OMP_Teams_Construct(self, expr):
-        clauses = ''
-        if expr.combined:
-            clauses = ' ' + expr.combined
-        clauses += str(expr.txt)
-        omp_expr = '#pragma omp teams{}'.format(clauses)
-        if expr.combined is None:
-            omp_expr += '\n{'
         return omp_expr
 
     def _print_OmpAnnotatedComment(self, expr):
