@@ -9,18 +9,17 @@
 
 const bool	g_t_py_to_c[9] =
 {
-	&PyComplex_to_Complex64,
-	&PyComplex_to_Complex128,
-
-	&PyInt64_to_Int64,
-	&PyInt32_to_Int32,
-	&PyInt16_to_Int16,
+	&PyBool_to_Bool,
 	&PyInt8_to_Int8,
+	&PyInt16_to_Int16,
+	&PyInt32_to_Int32,
+	&PyInt64_to_Int64,
 
 	&PyFloat_to_Float,
 	&PyDouble_to_Doube,
 
-	&PyBool_to_Bool,
+	&PyComplex_to_Complex64,
+	&PyComplex_to_Complex128,
 };
 
 
