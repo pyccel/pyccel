@@ -157,7 +157,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body.append(generate_python_type_body()) #TODO
 
         if check_is_needed:
-            body.append(IfSection(LiteralTrue(), [generate_type_error()]) #TODO
+            body.append(IfSection(LiteralTrue(), [generate_type_error()])) #TODO
 
         body    = [If(*body)]
         funcDef = FunctionDef(name     = func_name,
@@ -180,7 +180,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body.append(IfSection(PyArray_CheckOrder(),[generate_order_error()])) #TODO
 
         if check_is_needed:
-            body.append(IfSection(PyArray_CheckType, [generate_type_error()]) #TODO
+            body.append(IfSection(PyArray_CheckType, [generate_type_error()])) #TODO
 
         body.append(IfSection(LiteralTrue(), [PyArray_to_Array()])) #TODO
 
