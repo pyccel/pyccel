@@ -1503,25 +1503,24 @@ class CCodePrinter(CodePrinter):
         omp_expr = '#pragma omp'
         if isinstance(expr, OMP_Parallel_Construct):
             omp_expr += ' parallel{}'.format(clauses)
-            if expr.combined is None:
-                omp_expr += '\n{'
-            elif (expr.combined and "for" not in expr.combined):
-                if "masked taskloop" not in expr.combined:
-                    omp_expr += '\n{'
         elif isinstance(expr, OMP_Masked_Construct):
             omp_expr += ' masked{}'.format(clauses)
-            if expr.combined is None:
-                omp_expr += '\n{'
         elif isinstance(expr, OMP_Target_Construct):
             omp_expr += ' target{}'.format(clauses)
-            if expr.combined is None:
-                omp_expr += '\n{'
-            elif (expr.combined and "for" not in expr.combined):
-                omp_expr += '\n{'
         elif isinstance(expr, OMP_Teams_Construct):
             omp_expr += ' teams{}'.format(clauses)
-            if expr.combined is None:
-                omp_expr += '\n{'
+
+        if expr.combined is None:
+            omp_expr += '\n{'
+        else:
+            if isinstance(expr, OMP_Parallel_Construct):
+                if (expr.combined and "for" not in expr.combined):
+                    if "masked taskloop" not in expr.combined:
+                        omp_expr += '\n{'
+            elif isinstance(expr, OMP_Target_Construct):
+                if (expr.combined and "for" not in expr.combined):
+                    if "distribute" not in expr.combined:
+                        omp_expr += '\n{'
 
         return omp_expr
 
