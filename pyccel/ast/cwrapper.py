@@ -230,8 +230,6 @@ Py_None  = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
 
 
 
-
-
 # Casting functions
 # Represents type of cast function responsible of the conversion of one data type into another.
 # More information are in pyccel/stdlib/cwrapper/
@@ -245,6 +243,16 @@ c_float_type       = Variable(dtype=NativeInteger(),  name = 'FLOAT', precision 
 c_double_type      = Variable(dtype=NativeInteger(),  name = 'DOUBLE', precision = 4)
 c_cfloat_type      = Variable(dtype=NativeInteger(),  name = 'CFLOAT', precision = 4)
 c_cdouble_type     = Variable(dtype=NativeInteger(),  name = 'CDOUBLE', precision = 4)
+
+c_dtype_registry = {('bool',4)     : c_bool_type,
+                    ('int',1)      : c_int8_type,
+                    ('int',2)      : c_int16_type,
+                    ('int',4)      : c_int32_type,
+                    ('int',8)      : c_int64_type,
+                    ('real',4)     : c_float_type,
+                    ('real',8)     : c_double_type,
+                    ('complex',4)  : c_cfloat_type,
+                    ('complex',8)  : c_cdouble_type}
 
 PyObject_AsCtype    = FunctionDef(name     = 'PyObject_AsCtype',
                                 arguments  = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)
@@ -265,13 +273,11 @@ pyarray_to_ndarray  = FunctionDef(name     = 'PyArray_to_ndarray',
                                 results    = [])#TODO
 
 
-cast_function_registry = {
-    'pyint_to_bool' : pyint_to_bool,
-    'bool_to_pyobj' : bool_to_pyobj,
-    'pycomplex_to_complex' : pycomplex_to_complex,
-    'complex_to_pycomplex': complex_to_pycomplex,
-    'pybool_to_bool' : pybool_to_bool,
-    'pyarray_to_ndarray' : pyarray_to_ndarray,
+c_to_py_registry = {
+    NativeInteger : PyLong_FromLongLong,
+    NativeFloat   : ,
+    NativeBool    : ,
+    NativeComplex : ,
 }
 
 check_type_registry  = {
@@ -281,6 +287,10 @@ check_type_registry  = {
     NativeBool()    : 'PyBool_Check',
 }
 
+
+# This registry is used for interface management,
+# mapping each data type to a given flag
+# Thos flag are used in a betset #TODO
 flags_registry = {
     (NativeInteger(), 4)       : 1,
     (NativeInteger(), 8)       : 2,
