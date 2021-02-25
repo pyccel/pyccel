@@ -3,9 +3,16 @@ import sys
 import pytest
 from numpy.random import rand, randint, uniform
 from numpy import isclose, iinfo, finfo
+import numpy as np
 
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
+
+min_int8 = iinfo('int8').min
+max_int8 = iinfo('int8').max
+
+min_int16 = iinfo('int16').min
+max_int16 = iinfo('int16').max
 
 min_int = iinfo('int').min
 max_int = iinfo('int').max
@@ -3480,68 +3487,68 @@ def test_numpy_real_scalar(language):
 
     @types('bool')
     def test_bool(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('int')
     def test_int(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('int8')
     def test_int8(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('int16')
     def test_int16(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('int32')
     def test_int32(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('int64')
     def test_int64(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('float')
     def test_float(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('float32')
     def test_float32(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('float64')
     def test_float64(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('complex64')
     def test_complex64(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     @types('complex128')
     def test_complex128(a):
-        import numpy as np
-        b = np.real(a)
+        from numpy import real
+        b = real(a)
         return b
 
     import numpy as np
@@ -3891,62 +3898,60 @@ def test_numpy_int(language):
 
     @types('bool')
     def test_bool_int(a):
-        import numpy as np
-        b = np.int(a)
+        from numpy import int
+        b = int(a)
         return b
 
     @types('int')
     def test_int_int(a):
-        import numpy as np
-        b = np.int(a)
+        from numpy import int
+        b = int(a)
         return b
 
     @types('int8')
     def test_int8_int(a):
-        import numpy as np
-        b = np.int(a)
+        from numpy import int
+        b = int(a)
         return b
 
     @types('int16')
     def test_int16_int(a):
-        import numpy as np
-        b = np.int(a)
+        from numpy import int
+        b = int(a)
         return b
 
     @types('int32')
     def test_int32_int(a):
-        import numpy as np
-        b = np.int(a)
+        from numpy import int
+        b = int(a)
         return b
 
     @types('int64')
     def test_int64_int(a):
-        import numpy as np
-        b = np.int(a)
+        from numpy import int
+        b = int(a)
         return b
 
     @types('float')
     def test_float_int(a):
-        import numpy as np
-        b = np.int(a)
+        from numpy import int
+        b = int(a)
         return b
 
     @types('float32')
     def test_float32_int(a):
-        import numpy as np
-        b = np.int(a)
+        from numpy import int
+        b = int(a)
         return b
 
     @types('float64')
     def test_float64_int(a):
-        import numpy as np
-        b = np.int(a)
+        from numpy import int
+        b = int(a)
         return b
 
-    import numpy as np
-
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
@@ -3987,62 +3992,60 @@ def test_numpy_int32(language):
 
     @types('bool')
     def test_bool_int32(a):
-        import numpy as np
-        b = np.int32(a)
+        from numpy import int32
+        b = int32(a)
         return b
 
     @types('int')
     def test_int_int32(a):
-        import numpy as np
-        b = np.int32(a)
+        from numpy import int32
+        b = int32(a)
         return b
 
     @types('int8')
     def test_int8_int32(a):
-        import numpy as np
-        b = np.int32(a)
+        from numpy import int32
+        b = int32(a)
         return b
 
     @types('int16')
     def test_int16_int32(a):
-        import numpy as np
-        b = np.int32(a)
+        from numpy import int32
+        b = int32(a)
         return b
 
     @types('int32')
     def test_int32_int32(a):
-        import numpy as np
-        b = np.int32(a)
+        from numpy import int32
+        b = int32(a)
         return b
 
     @types('int64')
     def test_int64_int32(a):
-        import numpy as np
-        b = np.int32(a)
+        from numpy import int32
+        b = int32(a)
         return b
 
     @types('float')
     def test_float_int32(a):
-        import numpy as np
-        b = np.int32(a)
+        from numpy import int32
+        b = int32(a)
         return b
 
     @types('float32')
     def test_float32_int32(a):
-        import numpy as np
-        b = np.int32(a)
+        from numpy import int32
+        b = int32(a)
         return b
 
     @types('float64')
     def test_float64_int32(a):
-        import numpy as np
-        b = np.int32(a)
+        from numpy import int32
+        b = int32(a)
         return b
 
-    import numpy as np
-
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
@@ -4081,62 +4084,60 @@ def test_numpy_int64(language):
 
     @types('bool')
     def test_bool_int64(a):
-        import numpy as np
-        b = np.int64(a)
+        from numpy import int64
+        b = int64(a)
         return b
 
     @types('int')
     def test_int_int64(a):
-        import numpy as np
-        b = np.int64(a)
+        from numpy import int64
+        b = int64(a)
         return b
 
     @types('int8')
     def test_int8_int64(a):
-        import numpy as np
-        b = np.int64(a)
+        from numpy import int64
+        b = int64(a)
         return b
 
     @types('int16')
     def test_int16_int64(a):
-        import numpy as np
-        b = np.int64(a)
+        from numpy import int64
+        b = int64(a)
         return b
 
     @types('int32')
     def test_int32_int64(a):
-        import numpy as np
-        b = np.int64(a)
+        from numpy import int64
+        b = int64(a)
         return b
 
     @types('int64')
     def test_int64_int64(a):
-        import numpy as np
-        b = np.int64(a)
+        from numpy import int64
+        b = int64(a)
         return b
 
     @types('float')
     def test_float_int64(a):
-        import numpy as np
-        b = np.int64(a)
+        from numpy import int64
+        b = int64(a)
         return b
 
     @types('float32')
     def test_float32_int64(a):
-        import numpy as np
-        b = np.int64(a)
+        from numpy import int64
+        b = int64(a)
         return b
 
     @types('float64')
     def test_float64_int64(a):
-        import numpy as np
-        b = np.int64(a)
+        from numpy import int64
+        b = int64(a)
         return b
 
-    import numpy as np
-
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
@@ -4178,62 +4179,60 @@ def test_numpy_float(language):
 
     @types('bool')
     def test_bool_float(a):
-        import numpy as np
-        b = np.float(a)
+        from numpy import float
+        b = float(a)
         return b
 
     @types('int')
     def test_int_float(a):
-        import numpy as np
-        b = np.float(a)
+        from numpy import float
+        b = float(a)
         return b
 
     @types('int8')
     def test_int8_float(a):
-        import numpy as np
-        b = np.float(a)
+        from numpy import float
+        b = float(a)
         return b
 
     @types('int16')
     def test_int16_float(a):
-        import numpy as np
-        b = np.float(a)
+        from numpy import float
+        b = float(a)
         return b
 
     @types('int32')
     def test_int32_float(a):
-        import numpy as np
-        b = np.float(a)
+        from numpy import float
+        b = float(a)
         return b
 
     @types('int64')
     def test_int64_float(a):
-        import numpy as np
-        b = np.float(a)
+        from numpy import float
+        b = float(a)
         return b
 
     @types('float')
     def test_float_float(a):
-        import numpy as np
-        b = np.float(a)
+        from numpy import float
+        b = float(a)
         return b
 
     @types('float32')
     def test_float32_float(a):
-        import numpy as np
-        b = np.float(a)
+        from numpy import float
+        b = float(a)
         return b
 
     @types('float64')
     def test_float64_float(a):
-        import numpy as np
-        b = np.float(a)
+        from numpy import float
+        b = float(a)
         return b
 
-    import numpy as np
-
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
@@ -4272,62 +4271,60 @@ def test_numpy_float32(language):
 
     @types('bool')
     def test_bool_float32(a):
-        import numpy as np
-        b = np.float32(a)
+        from numpy import float32
+        b = float32(a)
         return b
 
     @types('int')
     def test_int_float32(a):
-        import numpy as np
-        b = np.float32(a)
+        from numpy import float32
+        b = float32(a)
         return b
 
     @types('int8')
     def test_int8_float32(a):
-        import numpy as np
-        b = np.float32(a)
+        from numpy import float32
+        b = float32(a)
         return b
 
     @types('int16')
     def test_int16_float32(a):
-        import numpy as np
-        b = np.float32(a)
+        from numpy import float32
+        b = float32(a)
         return b
 
     @types('int32')
     def test_int32_float32(a):
-        import numpy as np
-        b = np.float32(a)
+        from numpy import float32
+        b = float32(a)
         return b
 
     @types('int64')
     def test_int64_float32(a):
-        import numpy as np
-        b = np.float32(a)
+        from numpy import float32
+        b = float32(a)
         return b
 
     @types('float')
     def test_float_float32(a):
-        import numpy as np
-        b = np.float32(a)
+        from numpy import float32
+        b = float32(a)
         return b
 
     @types('float32')
     def test_float32_float32(a):
-        import numpy as np
-        b = np.float32(a)
+        from numpy import float32
+        b = float32(a)
         return b
 
     @types('float64')
     def test_float64_float32(a):
-        import numpy as np
-        b = np.float32(a)
+        from numpy import float32
+        b = float32(a)
         return b
 
-    import numpy as np
-
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
@@ -4366,62 +4363,60 @@ def test_numpy_float64(language):
 
     @types('bool')
     def test_bool_float64(a):
-        import numpy as np
-        b = np.float64(a)
+        from numpy import float64
+        b = float64(a)
         return b
 
     @types('int')
     def test_int_float64(a):
-        import numpy as np
-        b = np.float64(a)
+        from numpy import float64
+        b = float64(a)
         return b
 
     @types('int8')
     def test_int8_float64(a):
-        import numpy as np
-        b = np.float64(a)
+        from numpy import float64
+        b = float64(a)
         return b
 
     @types('int16')
     def test_int16_float64(a):
-        import numpy as np
-        b = np.float64(a)
+        from numpy import float64
+        b = float64(a)
         return b
 
     @types('int32')
     def test_int32_float64(a):
-        import numpy as np
-        b = np.float64(a)
+        from numpy import float64
+        b = float64(a)
         return b
 
     @types('int64')
     def test_int64_float64(a):
-        import numpy as np
-        b = np.float64(a)
+        from numpy import float64
+        b = float64(a)
         return b
 
     @types('float')
     def test_float_float64(a):
-        import numpy as np
-        b = np.float64(a)
+        from numpy import float64
+        b = float64(a)
         return b
 
     @types('float32')
     def test_float32_float64(a):
-        import numpy as np
-        b = np.float64(a)
+        from numpy import float64
+        b = float64(a)
         return b
 
     @types('float64')
     def test_float64_float64(a):
-        import numpy as np
-        b = np.float64(a)
+        from numpy import float64
+        b = float64(a)
         return b
 
-    import numpy as np
-
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
@@ -4460,62 +4455,60 @@ def test_numpy_double(language):
 
     @types('bool')
     def test_bool_double(a):
-        import numpy as np
-        b = np.double(a)
+        from numpy import double
+        b = double(a)
         return b
 
     @types('int')
     def test_int_double(a):
-        import numpy as np
-        b = np.double(a)
+        from numpy import double
+        b = double(a)
         return b
 
     @types('int8')
     def test_int8_double(a):
-        import numpy as np
-        b = np.double(a)
+        from numpy import double
+        b = double(a)
         return b
 
     @types('int16')
     def test_int16_double(a):
-        import numpy as np
-        b = np.double(a)
+        from numpy import double
+        b = double(a)
         return b
 
     @types('int32')
     def test_int32_double(a):
-        import numpy as np
-        b = np.double(a)
+        from numpy import double
+        b = double(a)
         return b
 
     @types('int64')
     def test_int64_double(a):
-        import numpy as np
-        b = np.double(a)
+        from numpy import double
+        b = double(a)
         return b
 
     @types('float')
     def test_float_double(a):
-        import numpy as np
-        b = np.double(a)
+        from numpy import double
+        b = double(a)
         return b
 
     @types('float32')
     def test_float32_double(a):
-        import numpy as np
-        b = np.double(a)
+        from numpy import double
+        b = double(a)
         return b
 
     @types('float64')
     def test_float64_double(a):
-        import numpy as np
-        b = np.double(a)
+        from numpy import double
+        b = double(a)
         return b
 
-    import numpy as np
-
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
@@ -4554,62 +4547,60 @@ def test_numpy_complex64(language):
 
     @types('bool')
     def test_bool_complex64(a):
-        import numpy as np
-        b = np.complex64(a)
+        from numpy import complex64
+        b = complex64(a)
         return b
 
     @types('int')
     def test_int_complex64(a):
-        import numpy as np
-        b = np.complex64(a)
+        from numpy import complex64
+        b = complex64(a)
         return b
 
     @types('int8')
     def test_int8_complex64(a):
-        import numpy as np
-        b = np.complex64(a)
+        from numpy import complex64
+        b = complex64(a)
         return b
 
     @types('int16')
     def test_int16_complex64(a):
-        import numpy as np
-        b = np.complex64(a)
+        from numpy import complex64
+        b = complex64(a)
         return b
 
     @types('int32')
     def test_int32_complex64(a):
-        import numpy as np
-        b = np.complex64(a)
+        from numpy import complex64
+        b = complex64(a)
         return b
 
     @types('int64')
     def test_int64_complex64(a):
-        import numpy as np
-        b = np.complex64(a)
+        from numpy import complex64
+        b = complex64(a)
         return b
 
     @types('float')
     def test_float_complex64(a):
-        import numpy as np
-        b = np.complex64(a)
+        from numpy import complex64
+        b = complex64(a)
         return b
 
     @types('float32')
     def test_float32_complex64(a):
-        import numpy as np
-        b = np.complex64(a)
+        from numpy import complex64
+        b = complex64(a)
         return b
 
     @types('float64')
     def test_float64_complex64(a):
-        import numpy as np
-        b = np.complex64(a)
+        from numpy import complex64
+        b = complex64(a)
         return b
 
-    import numpy as np
-
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
@@ -4648,62 +4639,60 @@ def test_numpy_complex128(language):
 
     @types('bool')
     def test_bool_complex128(a):
-        import numpy as np
-        b = np.complex128(a)
+        from numpy import complex128
+        b = complex128(a)
         return b
 
     @types('int')
     def test_int_complex128(a):
-        import numpy as np
-        b = np.complex128(a)
+        from numpy import complex128
+        b = complex128(a)
         return b
 
     @types('int8')
     def test_int8_complex128(a):
-        import numpy as np
-        b = np.complex128(a)
+        from numpy import complex128
+        b = complex128(a)
         return b
 
     @types('int16')
     def test_int16_complex128(a):
-        import numpy as np
-        b = np.complex128(a)
+        from numpy import complex128
+        b = complex128(a)
         return b
 
     @types('int32')
     def test_int32_complex128(a):
-        import numpy as np
-        b = np.complex128(a)
+        from numpy import complex128
+        b = complex128(a)
         return b
 
     @types('int64')
     def test_int64_complex128(a):
-        import numpy as np
-        b = np.complex128(a)
+        from numpy import complex128
+        b = complex128(a)
         return b
 
     @types('float')
     def test_float_complex128(a):
-        import numpy as np
-        b = np.complex128(a)
+        from numpy import complex128
+        b = complex128(a)
         return b
 
     @types('float32')
     def test_float32_complex128(a):
-        import numpy as np
-        b = np.complex128(a)
+        from numpy import complex128
+        b = complex128(a)
         return b
 
     @types('float64')
     def test_float64_complex128(a):
-        import numpy as np
-        b = np.complex128(a)
+        from numpy import complex128
+        b = complex128(a)
         return b
 
-    import numpy as np
-
-    integer8 = randint(np.iinfo(np.int8(1)).min, np.iinfo(np.int8(1)).max, dtype=np.int8)
-    integer16 = randint(np.iinfo(np.int16(1)).min, np.iinfo(np.int16(1)).max, dtype=np.int16)
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
