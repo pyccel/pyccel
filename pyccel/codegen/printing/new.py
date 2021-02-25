@@ -137,48 +137,54 @@ class CWrapperCodePrinter(CCodePrinter):
     #                   Convert functions
     #--------------------------------------------------------------------
 
-    def generate_scalar_converter_function(self, used_names, variable):
+    def generate_scalar_converter_function(self, used_names, variable, check_is_needed = True):
         """
         """
 
         func_name       = 'py_to_{}'.format(self._print(variable.dtype))
         py_variable     = self.get_new_PyObject('o', used_names)
         c_variable      = Variable.clone(name = 'c', is_pointer = True)
+        body            = []
 
         if isinstance(variable, ValuedVariable):
-            func_body = generate_valued_variable_body(py_object, variable)
+            body.append(generate_valued_variable_body(py_object, variable))
 
-        func_body      += [
-                IfSection(numpy_type_check(), [])
-                IfSection(python_type_check(), [])
-        ]
+        body.append(generate_numpy_type_body()) #TODO
+        body.append(generate_python_type_body()) #TODO
 
+        if check_is_needed:
+            body.append(IfSection(LiteralTrue(), [generate_type_error()]) #TODO
+
+        body    = [If(*body)]
         funcDef = FunctionDef(name     = func_name,
                             arguments  = [py_variable, c_variable],
                             results    = [],
-                            local_vars = local_vars,
-                            body       = func_body)
+                            body       = body)
 
         return funcDef
 
-    def generate_array_converter_function(self, used_names, variable):
+    def generate_array_converter_function(self, used_names, variable, check_is_needed = True):
         """
         """
 
         func_name       = 'py_to_{}'.format(self._print(variable.dtype))
+        py_variable     = self.get_new_PyObject('o', used_names)
+        c_variable      = Variable.clone(name = 'c', is_pointer = True)
+        body            = []
 
-        func_arguments  = [self.get_new_PyObject('o', used_names)]
-        func_arguments += [variable.clone(name = self.get_new_name(used_name, variable.name),
-                                        is_pointer = True)]
+        body.append(IfSection(PyArray_CheckRank(), [generate_rank_error()])) #TODO
+        body.append(IfSection(PyArray_CheckOrder(),[generate_order_error()])) #TODO
 
-        local_vars      = []
-        func_body       = #TODO]
+        if check_is_needed:
+            body.append(IfSection(PyArray_CheckType, [generate_type_error()]) #TODO
 
+        body.append(IfSection(LiteralTrue(), [PyArray_to_Array()])) #TODO
+
+        body    = [If(*body)]
         funcDef = FunctionDef(name     = func_name,
                             arguments  = func_arguments,
                             results    = [],
-                            local_vars = local_vars,
-                            body       = func_body)
+                            body       = fbody)
 
         return funcDef
 
