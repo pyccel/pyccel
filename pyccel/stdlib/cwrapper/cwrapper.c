@@ -4,7 +4,18 @@
 /*                        CAST_FUNCTIONS                        */
 /*                                                              */
 
-// Python to C
+/*
+** All functions listed down are based on C/python api
+** with more tolerance to different precisions.
+** Arguments : Python Object and  C Object as pointer
+** Return    : return false upon failure and raise Error
+** reference of the used c python api function:
+** https://docs.python.org/3/c-api/float.html#c.PyFloat_AsDouble
+** https://docs.python.org/3/c-api/complex.html#c.PyComplex_RealAsDouble
+** https://docs.python.org/3/c-api/complex.html#c.PyComplex_ImagAsDouble
+** https://docs.python.org/3/c-api/long.html#c.PyLong_AsLong
+** https://docs.python.org/3/c-api/long.html#c.PyLong_AsLongLong
+*/
 
 bool	PyComplex_to_Complex64(Pyobject *o, float complex *c)
 {
@@ -119,6 +130,12 @@ bool	PyDouble_to_Double(PyObject *o, double *d)
 }
 
 
+/*
+** A Cast function that convert numpy array variable into ndarray variable,
+** by copying its information and data to a new variable of type ndarray struct
+** and return this variable to be used inside c code.
+*/
+
 t_ndarray		PyArray_to_ndarray(PyObject *o)
 {
 	t_ndarray	array;
@@ -136,7 +153,16 @@ t_ndarray		PyArray_to_ndarray(PyObject *o)
 	return array;
 }
 
-// C to Python
+/*
+** Some of the function used below are based on C/python api
+** with more tolerance to different precisions and complex type.
+** Arguments : 	C Object
+** Return    :  Python Object
+** reference of the used c python api function:
+** https://docs.python.org/3/c-api/complex.html#c.PyComplex_FromDoubles
+** https://docs.python.org/3/c-api/float.html#c.PyFloat_FromDouble
+** https://docs.python.org/3/c-api/long.html#c.PyLong_FromLongLong
+*/
 
 PyObject	*Complex64_to_PyComplex(float complex *c)
 {
@@ -190,7 +216,8 @@ PyObject	*Double_to_PyDouble(double *d)
 }
 
 
-/*  CHECK FUNCTION  */
+/*  array check function  */
+
 bool	PyArray_Check_Rank(PyObject *a, int rank)
 {
 	return PyArray_NDIM(a) == rank;
