@@ -203,3 +203,29 @@ numpy_type_check_registry = {
     (NativeComplex(), 8)       : Numpy_Complex128_ref,
     (NativeBool(), 4)          : Numpy_Bool_ref
 }
+
+
+def PyArray_CheckType(c_object, py_object):
+    """
+    Responsible for creating array data type check
+
+    Parameters:
+    ----------
+    c_object  : Variable
+        The variable needed for the generation of the type check
+    py_object : Variable
+        The python argument of the check function
+
+    Returns:
+    -------
+    check : FunctionCall
+        functionCall responsible for checking the array data type
+    """
+    
+    numpy_dtype = self.find_in_numpy_dtype_registry(variable)
+    arg_dtype   = self.find_in_dtype_registry(self._print(variable.dtype), variable.precision)
+
+    check = PyccelNe(FunctionCall(numpy_get_type, [collect_var]), numpy_dtype)
+    error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, arg_dtype))
+
+    return check, error
