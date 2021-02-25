@@ -121,6 +121,18 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return static_func
 
+    def generate_valued_variable_body(self, py_variable, c_variable):
+        """
+        """
+        check = PyccelEq(VariableAddress(py_variable), VariableAddress(Py_None))
+        if c_variable.is_optional:
+            body =  [AliasAssign(variable, Nil())]
+
+        else:
+            body = [Assign(variable, variable.value)]
+
+        return [IfSection(check, body)]
+
     #--------------------------------------------------------------------
     #                   Convert functions
     #--------------------------------------------------------------------
@@ -130,16 +142,19 @@ class CWrapperCodePrinter(CCodePrinter):
         """
 
         func_name       = 'py_to_{}'.format(self._print(variable.dtype))
+        py_variable     = self.get_new_PyObject('o', used_names)
+        c_variable      = Variable.clone(name = 'c', is_pointer = True)
 
-        func_arguments  = [self.get_new_PyObject('O', used_names)]
-        func_arguments += [variable.clone(name = self.get_new_name(used_name, variable.name),
-                                        is_pointer = True)]
+        if isinstance(variable, ValuedVariable):
+            func_body = generate_valued_variable_body(py_object, variable)
 
-        local_vars      = []
-        func_body       = #TODO
+        func_body      += [
+                IfSection(numpy_type_check(), [])
+                IfSection(python_type_check(), [])
+        ]
 
-        funcDef = FunctionDef(name       = func_name,
-                            arguments  = func_arguments,
+        funcDef = FunctionDef(name     = func_name,
+                            arguments  = [py_variable, c_variable],
                             results    = [],
                             local_vars = local_vars,
                             body       = func_body)
