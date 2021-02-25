@@ -431,6 +431,12 @@ class CCodePrinter(CodePrinter):
 
     # ============ Elements ============ #
 
+    def _print_PythonAbs(self, expr):
+        """ print the python builtin function abs
+        args : variable
+        """
+        return "abs({})".format(self._print(expr.arg))
+
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
         type_name = self.find_in_dtype_registry('real', expr.precision)
