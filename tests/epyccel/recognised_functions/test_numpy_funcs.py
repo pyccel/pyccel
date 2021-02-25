@@ -4058,4 +4058,3 @@ def test_numpy_imag_array_like_2d(language):
 
     assert (f_complex64(cmplx64) == get_imag(cmplx64))
     assert (f_complex128(cmplx128) == get_imag(cmplx128))
-
