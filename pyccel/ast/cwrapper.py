@@ -228,33 +228,31 @@ Py_False = Variable(PyccelPyObject(), 'Py_False',is_pointer=True)
 # Python.h object representing None
 Py_None  = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
 
-def Python_To_C(variable, argument):
+def Python_To_C(c_object):
     """
-    Create FunctionCall responsible for casting python argument to C
+    Create FunctionDef responsible for casting python argument to C
     Parameters:
     ----------
-    variable : Variable
+    c_object  : Variable
         The variable needed for the generation of the cast_function
-    argument : Variable
-        The python argument of the cast function
     Returns
     -------
-    FunctionCall : cast type FunctionCall
+    FunctionDef : cast type FunctionDef
     """
     try :
-        cast_function = py_to_c_registry[(variable.dtype, variable.precision)]
+        cast_function = py_to_c_registry[(c_object.dtype, c_object.precision)]
     except KeyError:
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=variable.dtype,severity='fatal')
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
     cast_func = FunctionDef(name = check_type,
-                    body      = [],
-                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
-                                 Variable(dtype=variable.dtype, name = 'v',
-                                          precision = variable.precision, is_pointer=True)],
-                    results   = [Variable(dtype=NativeBool(), name = 'r')])
-    return FunctionCall(cast_func, [argument])
+                       body      = [],
+                       arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
+                                    Variable(dtype=c_object.dtype, name = 'v',
+                                            precision = c_object.precision, is_pointer=True)],
+                       results   = [Variable(dtype=NativeBool(), name = 'r')])
+
+    return cast_func
 
 # Functions and functions descriptions are defined in pyccel/stdlib/cwrapper/
-
 py_to_c_registry = {
     (NativeBool(), 4)    : 'PyBool_to_Bool',
     (NativeInteger(), 1) : 'PyInt8_to_Int8',
@@ -267,28 +265,65 @@ py_to_c_registry = {
     (NativeComplex, 8)   : 'PyComplex_to_Complex128'}
 
 
-def PythonType_Check(variable, argument):
+def C_to_Python(c_object)
+    """
+    Create FunctionDef responsible for casting c argument to python
+    Parameters:
+    ----------
+    c_object  : Variable
+        The variable needed for the generation of the cast_function
+    Returns
+    -------
+    FunctionDef : cast type FunctionDef
+    """
+    try :
+        cast_function = c_to_py_registry[(c_object.dtype, c_object.precision)]
+    except KeyError:
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
+    cast_func = FunctionDef(name = check_type,
+                       body      = [],
+                       arguments = [Variable(dtype=c_object.dtype, name = 'v', precision = c_object.precision)],
+                       results   = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)])
+
+    return cast_func
+
+# Functions and functions descriptions are defined in pyccel/stdlib/cwrapper/
+# TODO create cast functions of different precision of int issue #735
+c_to_py_registry = {
+    (NativeBool(), 4)    : 'Bool_to_PyBool',
+    (NativeInteger(), 1) : 'Int_to_pyLong,
+    (NativeInteger(), 2) : 'Int_to_pyLong,
+    (NativeInteger(), 4) : 'Int_to_PyLong',
+    (NativeInteger(), 8) : 'Int_to_PyLong',
+    (NativeReal(), 4)    : 'Double_to_PyDouble',
+    (NativeReal, 8)      : 'Double_to_PyDouble',
+    (NativeComplex, 4)   : 'Complex_to_PyComplex',
+    (NativeComplex, 8)   : 'Complex_to_PyComplex'}
+
+
+def PythonType_Check(c_object, py_object):
     """
     Create FunctionCall responsible for checking python argument data type
     Parameters:
     ----------
-    variable : Variable
+    c_object  : Variable
         The variable needed for the generation of the type check
-    argument : Variable
+    py_object : Variable
         The python argument of the check function
     Returns
     -------
     FunctionCall : Check type FunctionCall
     """
     try :
-        check_type = check_type_registry[variable.dtype]
+        check_type = check_type_registry[c_object.dtype]
     except KeyError:
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=variable.dtype,severity='fatal')
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
     check_func = FunctionDef(name = check_type,
                     body      = [],
                     arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
                     results   = [Variable(dtype=NativeBool(), name = 'r')])
-    return FunctionCall(check_func, [argument])
+
+    return FunctionCall(check_func, [py_object])
 
 # All functions used for type are from c python api :
 # https://docs.python.org/3/c-api/long.html#c.PyLong_Check

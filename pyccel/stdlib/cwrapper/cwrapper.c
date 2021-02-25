@@ -164,20 +164,7 @@ t_ndarray		PyArray_to_ndarray(PyObject *o)
 ** https://docs.python.org/3/c-api/long.html#c.PyLong_FromLongLong
 */
 
-PyObject	*Complex64_to_PyComplex(float complex *c)
-{
-	float		real_part;
-	float		imag_part;
-	PyObject	*o;
-
-	real_part = creal(c);
-	imag_part = cimag(c);
-	o = PyComplex_FromDouble((double)real_part, (double)imag_part);
-
-	return o;
-}
-
-PyObject	*Complex128_to_PyComplex(double complex *c)
+PyObject	*Complex_to_PyComplex(double complex *c)
 {
 	double		real_part;
 	double		imag_part;
@@ -197,11 +184,11 @@ PyObject	*Bool_to_PyBool(bool *b)
 	return b == true ? PyTrue : PyFalse;
 }
 
-PyObject	*Int64_to_PyInt64(int64_t *i)
+PyObject	*Int_to_PyLong(int64_t *i)
 {
 	PyObject	*o;
 
-	o = PyLong_FromLongLong(i)
+	o = PyLong_FromLongLong((long long) i)
 
 	return o;
 }

@@ -31,12 +31,11 @@ t_ndarray	PyArray_to_ndarray(PyObject *o);
 
 
 /* casting c type to python object */
-PyObject	*Complex64_to_PyComplex(float complex *c;
-PyObject	*Complex128_to_PyComplex(double complex *c);
+PyObject	*Complex_to_PyComplex(double complex *c);
 
 PyObject	*Bool_to_PyBool(bool *b);
 
-PyObject	*Int64_to_PyInt64(int64_t *i);
+PyObject	*Int_to_PyLong(int64_t *i);
 
 PyObject	*Double_to_PyDouble(double *d);
 
