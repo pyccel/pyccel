@@ -3495,38 +3495,20 @@ def test_zeros_like_combined_args(language):
 def test_numpy_real_scalar(language):
 
     @types('bool')
-    def test_bool(a):
-        from numpy import real
-        b = real(a)
-        return b
-
+    @types('int')
     @types('int8')
     @types('int16')
-    @types('int')
     @types('int32')
     @types('int64')
-    def test_int(a):
-        from numpy import real
-        b = real(a)
-        return b
-
     @types('float')
     @types('float32')
     @types('float64')
-    def test_float(a):
-        from numpy import real
-        b = real(a)
-        return b
-
     @types('complex64')
     @types('complex128')
-    def test_complex(a):
+    def get_real(a):
         from numpy import real
         b = real(a)
         return b
-
-    for type in int_types:
-        integer = randint(np.iinfo(type).min, np.iinfo(type).min, dtype=type)
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
@@ -3545,45 +3527,45 @@ def test_numpy_real_scalar(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
 
-    f_bl = epyccel(test_bool, language=language)
+    f_bl = epyccel(get_real, language=language)
 
     f_bl_true_output = f_bl(True)
-    test_bool_true_output = test_bool(True)
+    test_bool_true_output = get_real(True)
 
     f_bl_false_output = f_bl(False)
-    test_bool_false_output = test_bool(False)
+    test_bool_false_output = get_real(False)
 
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
     assert (type(f_bl_true_output) == type(test_bool_false_output))
 
-    f_integer = epyccel(test_int, language=language)
-    f_integer8 = epyccel(test_int8, language=language)
-    f_integer16 = epyccel(test_int16, language=language)
-    f_integer32 = epyccel(test_int32, language=language)
-    f_integer64 = epyccel(test_int64, language=language)
+    f_integer = epyccel(get_real, language=language)
+    f_integer8 = epyccel(get_real, language=language)
+    f_integer16 = epyccel(get_real, language=language)
+    f_integer32 = epyccel(get_real, language=language)
+    f_integer64 = epyccel(get_real, language=language)
 
     f_integer_output = f_integer(integer)
-    test_int_output  = test_int(integer)
+    test_int_output  = get_real(integer)
 
     assert f_integer_output == test_int_output
     assert type(f_integer_output) == type(test_int_output)
 
     f_integer8_output = f_integer8(integer8)
-    test_int8_output = test_int8(integer8)
+    test_int8_output = get_real(integer8)
 
     assert f_integer8_output == test_int8_output
     assert type(f_integer8_output) == type(test_int8_output.item())
 
     f_integer16_output = f_integer16(integer16)
-    test_int16_output = test_int16(integer16)
+    test_int16_output = get_real(integer16)
 
     assert f_integer16_output == test_int16_output
     assert type(f_integer16_output) == type(test_int16_output.item())
 
     f_integer32_output = f_integer32(integer32)
-    test_int32_output = test_int32(integer32)
+    test_int32_output = get_real(integer32)
 
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
@@ -3591,44 +3573,44 @@ def test_numpy_real_scalar(language):
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
-        test_int64_output = test_int64(integer64)
+        test_int64_output = get_real(integer64)
 
         assert f_integer64_output == test_int64_output
         assert type(f_integer64_output) == type(test_int64_output.item())
 
-    f_fl = epyccel(test_float, language=language)
-    f_fl32 = epyccel(test_float32, language=language)
-    f_fl64 = epyccel(test_float64, language=language)
+    f_fl = epyccel(get_real, language=language)
+    f_fl32 = epyccel(get_real, language=language)
+    f_fl64 = epyccel(get_real, language=language)
 
     f_fl_output = f_fl(fl)
-    test_float_output = test_float(fl)
+    test_float_output = get_real(fl)
 
     assert f_fl_output == test_float_output
     assert type(f_fl_output) == type(test_float_output)
 
     f_fl32_output = f_fl32(fl32)
-    test_float32_output = test_float32(fl32)
+    test_float32_output = get_real(fl32)
 
     assert f_fl32_output == test_float32_output
     assert type(f_fl32_output) == type(test_float32_output.item())
 
     f_fl64_output = f_fl64(fl64)
-    test_float64_output = test_float64(fl64)
+    test_float64_output = get_real(fl64)
 
     assert f_fl64_output == test_float64_output
     assert type(f_fl64_output) == type(test_float64_output)
 
-    f_complex64 = epyccel(test_complex64, language=language)
-    f_complex128 = epyccel(test_complex128, language=language)
+    f_complex64 = epyccel(get_real, language=language)
+    f_complex128 = epyccel(get_real, language=language)
 
     f_complex64_output = f_complex64(cmplx64)
-    test_complex64_output = test_complex64(cmplx64)
+    test_complex64_output = get_real(cmplx64)
 
     assert f_complex64_output == test_complex64_output
     assert (type(f_complex64_output) == type(test_complex64_output.item()))
 
     f_complex128_output = f_complex128(cmplx128)
-    test_complex128_output = test_complex128(cmplx128)
+    test_complex128_output = get_real(cmplx128)
 
     assert f_complex128_output == test_complex128_output
     assert (type(f_complex64_output) == type(test_complex64_output.item()))
@@ -3645,77 +3627,17 @@ def test_numpy_real_scalar(language):
 def test_numpy_real_array_like_1d(language):
 
     @types('bool[:]')
-    def test_bool(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('int[:]')
-    def test_int(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('int8[:]')
-    def test_int8(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('int16[:]')
-    def test_int16(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('int32[:]')
-    def test_int32(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('int64[:]')
-    def test_int64(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('float[:]')
-    def test_float(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('float32[:]')
-    def test_float32(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('float64[:]')
-    def test_float64(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('complex64[:]')
-    def test_complex64(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('complex128[:]')
-    def test_complex128(arr):
+    def get_real(arr):
         from numpy import real, shape
         a = real(arr)
         s = shape(a)
@@ -3740,38 +3662,38 @@ def test_numpy_real_array_like_1d(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) * 1j
 
-    f_bl = epyccel(test_bool, language=language)
+    f_bl = epyccel(get_real, language=language)
 
-    assert (f_bl(bl) == test_bool(bl))
+    assert (f_bl(bl) == get_real(bl))
 
-    f_integer8 = epyccel(test_int8, language=language)
-    f_integer16 = epyccel(test_int16, language=language)
-    f_integer = epyccel(test_int, language=language)
-    f_integer32 = epyccel(test_int32, language=language)
+    f_integer8 = epyccel(get_real, language=language)
+    f_integer16 = epyccel(get_real, language=language)
+    f_integer = epyccel(get_real, language=language)
+    f_integer32 = epyccel(get_real, language=language)
 
-    assert (f_integer8(integer8) == test_int8(integer8))
-    assert (f_integer16(integer16) == test_int16(integer16))
-    assert (f_integer(integer) == test_int(integer))
-    assert (f_integer32(integer32) == test_int32(integer32))
+    assert (f_integer8(integer8) == get_real(integer8))
+    assert (f_integer16(integer16) == get_real(integer16))
+    assert (f_integer(integer) == get_real(integer))
+    assert (f_integer32(integer32) == get_real(integer32))
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
-        f_integer64 = epyccel(test_int64, language=language)
-        assert (f_integer64(integer64) == test_int64(integer64))
+        f_integer64 = epyccel(get_real, language=language)
+        assert (f_integer64(integer64) == get_real(integer64))
 
-        f_fl = epyccel(test_float, language=language)
-        f_fl32 = epyccel(test_float32, language=language)
-        f_fl64 = epyccel(test_float64, language=language)
+        f_fl = epyccel(get_real, language=language)
+        f_fl32 = epyccel(get_real, language=language)
+        f_fl64 = epyccel(get_real, language=language)
 
-        assert (f_fl(fl) == test_float(fl))
-        assert (f_fl32(fl32) == test_float32(fl32))
-        assert (f_fl64(fl64) == test_float64(fl64))
+        assert (f_fl(fl) == get_real(fl))
+        assert (f_fl32(fl32) == get_real(fl32))
+        assert (f_fl64(fl64) == get_real(fl64))
 
-    f_complex64 = epyccel(test_complex64, language=language)
-    f_complex128 = epyccel(test_complex128, language=language)
+    f_complex64 = epyccel(get_real, language=language)
+    f_complex128 = epyccel(get_real, language=language)
 
-    assert (f_complex64(cmplx64) == test_complex64(cmplx64))
-    assert (f_complex128(cmplx128) == test_complex128(cmplx128))
+    assert (f_complex64(cmplx64) == get_real(cmplx64))
+    assert (f_complex128(cmplx128) == get_real(cmplx128))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -3785,77 +3707,17 @@ def test_numpy_real_array_like_1d(language):
 def test_numpy_real_array_like_2d(language):
 
     @types('bool[:,:]')
-    def test_bool(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('int[:,:]')
-    def test_int(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('int8[:,:]')
-    def test_int8(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('int16[:,:]')
-    def test_int16(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('int32[:,:]')
-    def test_int32(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('int64[:,:]')
-    def test_int64(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('float[:,:]')
-    def test_float(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('float32[:,:]')
-    def test_float32(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('float64[:,:]')
-    def test_float64(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('complex64[:,:]')
-    def test_complex64(arr):
-        from numpy import real, shape
-        a = real(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('complex128[:,:]')
-    def test_complex128(arr):
+    def get_real(arr):
         from numpy import real, shape
         a = real(arr)
         s = shape(a)
@@ -3880,104 +3742,54 @@ def test_numpy_real_array_like_2d(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) * 1j
 
-    f_bl = epyccel(test_bool, language=language)
+    f_bl = epyccel(get_real, language=language)
 
-    assert (f_bl(bl) == test_bool(bl))
+    assert (f_bl(bl) == get_real(bl))
 
-    f_integer8 = epyccel(test_int8, language=language)
-    f_integer16 = epyccel(test_int16, language=language)
-    f_integer = epyccel(test_int, language=language)
-    f_integer32 = epyccel(test_int32, language=language)
+    f_integer8 = epyccel(get_real, language=language)
+    f_integer16 = epyccel(get_real, language=language)
+    f_integer = epyccel(get_real, language=language)
+    f_integer32 = epyccel(get_real, language=language)
 
-    assert (f_integer8(integer8) == test_int8(integer8))
-    assert (f_integer16(integer16) == test_int16(integer16))
-    assert (f_integer(integer) == test_int(integer))
-    assert (f_integer32(integer32) == test_int32(integer32))
+    assert (f_integer8(integer8) == get_real(integer8))
+    assert (f_integer16(integer16) == get_real(integer16))
+    assert (f_integer(integer) == get_real(integer))
+    assert (f_integer32(integer32) == get_real(integer32))
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
-        f_integer64 = epyccel(test_int64, language=language)
-        assert (f_integer64(integer64) == test_int64(integer64))
+        f_integer64 = epyccel(get_real, language=language)
+        assert (f_integer64(integer64) == get_real(integer64))
 
-        f_fl = epyccel(test_float, language=language)
-        f_fl32 = epyccel(test_float32, language=language)
-        f_fl64 = epyccel(test_float64, language=language)
+        f_fl = epyccel(get_real, language=language)
+        f_fl32 = epyccel(get_real, language=language)
+        f_fl64 = epyccel(get_real, language=language)
 
-        assert (f_fl(fl) == test_float(fl))
-        assert (f_fl32(fl32) == test_float32(fl32))
-        assert (f_fl64(fl64) == test_float64(fl64))
+        assert (f_fl(fl) == get_real(fl))
+        assert (f_fl32(fl32) == get_real(fl32))
+        assert (f_fl64(fl64) == get_real(fl64))
 
-    f_complex64 = epyccel(test_complex64, language=language)
-    f_complex128 = epyccel(test_complex128, language=language)
+    f_complex64 = epyccel(get_real, language=language)
+    f_complex128 = epyccel(get_real, language=language)
 
-    assert (f_complex64(cmplx64) == test_complex64(cmplx64))
-    assert (f_complex128(cmplx128) == test_complex128(cmplx128))
+    assert (f_complex64(cmplx64) == get_real(cmplx64))
+    assert (f_complex128(cmplx128) == get_real(cmplx128))
 
 
 def test_numpy_imag_scalar(language):
 
     @types('bool')
-    def test_bool(a):
-        from numpy import imag
-        b = imag(a)
-        return b
-
     @types('int')
-    def test_int(a):
-        from numpy import imag
-        b = imag(a)
-        return b
-
     @types('int8')
-    def test_int8(a):
-        from numpy import imag
-        b = imag(a)
-        return b
-
     @types('int16')
-    def test_int16(a):
-        from numpy import imag
-        b = imag(a)
-        return b
-
     @types('int32')
-    def test_int32(a):
-        from numpy import imag
-        b = imag(a)
-        return b
-
     @types('int64')
-    def test_int64(a):
-        from numpy import imag
-        b = imag(a)
-        return b
-
     @types('float')
-    def test_float(a):
-        from numpy import imag
-        b = imag(a)
-        return b
-
     @types('float32')
-    def test_float32(a):
-        from numpy import imag
-        b = imag(a)
-        return b
-
     @types('float64')
-    def test_float64(a):
-        from numpy import imag
-        b = imag(a)
-        return b
-
     @types('complex64')
-    def test_complex64(a):
-        from numpy import imag
-        b = imag(a)
-        return b
-
     @types('complex128')
-    def test_complex128(a):
+    def get_imag(a):
         from numpy import imag
         b = imag(a)
         return b
@@ -3993,95 +3805,96 @@ def test_numpy_imag_scalar(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_int / 2, max_int / 2)
 
-
     cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j
 
-    f_bl = epyccel(test_bool, language=language)
+    f_bl = epyccel(get_imag, language=language)
 
     f_bl_true_output = f_bl(True)
-    test_bool_true_output = test_bool(True)
+    test_bool_true_output = get_imag(True)
 
     f_bl_false_output = f_bl(False)
-    test_bool_false_output = test_bool(False)
+    test_bool_false_output = get_imag(False)
 
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
     assert (type(f_bl_true_output) == type(test_bool_false_output))
 
-    f_integer = epyccel(test_int, language=language)
-    f_integer8 = epyccel(test_int8, language=language)
-    f_integer16 = epyccel(test_int16, language=language)
-    f_integer32 = epyccel(test_int32, language=language)
-    f_integer64 = epyccel(test_int64, language=language)
+    f_integer = epyccel(get_imag, language=language)
+    f_integer8 = epyccel(get_imag, language=language)
+    f_integer16 = epyccel(get_imag, language=language)
+    f_integer32 = epyccel(get_imag, language=language)
+    f_integer64 = epyccel(get_imag, language=language)
 
     f_integer_output = f_integer(integer)
-    test_int_output  = test_int(integer)
+    test_int_output  = get_imag(integer)
 
     assert f_integer_output == test_int_output
     assert type(f_integer_output) == type(test_int_output)
 
     f_integer8_output = f_integer8(integer8)
-    test_int8_output = test_int8(integer8)
+    test_int8_output = get_imag(integer8)
 
     assert f_integer8_output == test_int8_output
     assert type(f_integer8_output) == type(test_int8_output.item())
 
     f_integer16_output = f_integer16(integer16)
-    test_int16_output = test_int16(integer16)
+    test_int16_output = get_imag(integer16)
 
     assert f_integer16_output == test_int16_output
     assert type(f_integer16_output) == type(test_int16_output.item())
 
     f_integer32_output = f_integer32(integer32)
-    test_int32_output = test_int32(integer32)
+    test_int32_output = get_imag(integer32)
 
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    f_integer64_output = f_integer64(integer64)
-    test_int64_output = test_int64(integer64)
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64_output = f_integer64(integer64)
+        test_int64_output = get_imag(integer64)
 
-    assert f_integer64_output == test_int64_output
-    assert type(f_integer64_output) == type(test_int64_output.item())
+        assert f_integer64_output == test_int64_output
+        assert type(f_integer64_output) == type(test_int64_output.item())
 
-    f_fl = epyccel(test_float, language=language)
-    f_fl32 = epyccel(test_float32, language=language)
-    f_fl64 = epyccel(test_float64, language=language)
+    f_fl = epyccel(get_imag, language=language)
+    f_fl32 = epyccel(get_imag, language=language)
+    f_fl64 = epyccel(get_imag, language=language)
 
     f_fl_output = f_fl(fl)
-    test_float_output = test_float(fl)
+    test_float_output = get_imag(fl)
 
     assert f_fl_output == test_float_output
     assert type(f_fl_output) == type(test_float_output)
 
     f_fl32_output = f_fl32(fl32)
-    test_float32_output = test_float32(fl32)
+    test_float32_output = get_imag(fl32)
 
     assert f_fl32_output == test_float32_output
     assert type(f_fl32_output) == type(test_float32_output.item())
 
     f_fl64_output = f_fl64(fl64)
-    test_float64_output = test_float64(fl64)
+    test_float64_output = get_imag(fl64)
 
     assert f_fl64_output == test_float64_output
     assert type(f_fl64_output) == type(test_float64_output)
 
-    f_complex64 = epyccel(test_complex64, language=language)
-    f_complex128 = epyccel(test_complex128, language=language)
+    f_complex64 = epyccel(get_imag, language=language)
+    f_complex128 = epyccel(get_imag, language=language)
 
     f_complex64_output = f_complex64(cmplx64)
-    test_complex64_output = test_complex64(cmplx64)
+    test_complex64_output = get_imag(cmplx64)
 
     assert f_complex64_output == test_complex64_output
     assert (type(f_complex64_output) == type(test_complex64_output.item()))
 
     f_complex128_output = f_complex128(cmplx128)
-    test_complex128_output = test_complex128(cmplx128)
+    test_complex128_output = get_imag(cmplx128)
 
     assert f_complex128_output == test_complex128_output
     assert (type(f_complex64_output) == type(test_complex64_output.item()))
@@ -4098,77 +3911,17 @@ def test_numpy_imag_scalar(language):
 def test_numpy_imag_array_like_1d(language):
 
     @types('bool[:]')
-    def test_bool(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('int[:]')
-    def test_int(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('int8[:]')
-    def test_int8(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('int16[:]')
-    def test_int16(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('int32[:]')
-    def test_int32(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('int64[:]')
-    def test_int64(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('float[:]')
-    def test_float(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('float32[:]')
-    def test_float32(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('float64[:]')
-    def test_float64(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('complex64[:]')
-    def test_complex64(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
-
     @types('complex128[:]')
-    def test_complex128(arr):
+    def get_imag(arr):
         from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
@@ -4187,42 +3940,44 @@ def test_numpy_imag_array_like_1d(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
 
-
     cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=5) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=5) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) * 1j
 
-    f_bl = epyccel(test_bool, language=language)
+    f_bl = epyccel(get_imag, language=language)
 
-    assert (f_bl(bl) == test_bool(bl))
+    assert (f_bl(bl) == get_imag(bl))
 
-    f_integer8 = epyccel(test_int8, language=language)
-    f_integer16 = epyccel(test_int16, language=language)
-    f_integer = epyccel(test_int, language=language)
-    f_integer32 = epyccel(test_int32, language=language)
-    f_integer64 = epyccel(test_int64, language=language)
+    f_integer8 = epyccel(get_imag, language=language)
+    f_integer16 = epyccel(get_imag, language=language)
+    f_integer = epyccel(get_imag, language=language)
+    f_integer32 = epyccel(get_imag, language=language)
 
-    assert (f_integer8(integer8) == test_int8(integer8))
-    assert (f_integer16(integer16) == test_int16(integer16))
-    assert (f_integer(integer) == test_int(integer))
-    assert (f_integer32(integer32) == test_int32(integer32))
-    assert (f_integer64(integer64) == test_int64(integer64))
+    assert (f_integer8(integer8) == get_imag(integer8))
+    assert (f_integer16(integer16) == get_imag(integer16))
+    assert (f_integer(integer) == get_imag(integer))
+    assert (f_integer32(integer32) == get_imag(integer32))
 
-    f_fl = epyccel(test_float, language=language)
-    f_fl32 = epyccel(test_float32, language=language)
-    f_fl64 = epyccel(test_float64, language=language)
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64 = epyccel(get_imag, language=language)
+        assert (f_integer64(integer64) == get_imag(integer64))
 
-    assert (f_fl(fl) == test_float(fl))
-    assert (f_fl32(fl32) == test_float32(fl32))
-    assert (f_fl64(fl64) == test_float64(fl64))
+        f_fl = epyccel(get_imag, language=language)
+        f_fl32 = epyccel(get_imag, language=language)
+        f_fl64 = epyccel(get_imag, language=language)
 
-    f_complex64 = epyccel(test_complex64, language=language)
-    f_complex128 = epyccel(test_complex128, language=language)
+        assert (f_fl(fl) == get_imag(fl))
+        assert (f_fl32(fl32) == get_imag(fl32))
+        assert (f_fl64(fl64) == get_imag(fl64))
 
-    assert (f_complex64(cmplx64) == test_complex64(cmplx64))
-    assert (f_complex128(cmplx128) == test_complex128(cmplx128))
+    f_complex64 = epyccel(get_imag, language=language)
+    f_complex128 = epyccel(get_imag, language=language)
+
+    assert (f_complex64(cmplx64) == get_imag(cmplx64))
+    assert (f_complex128(cmplx128) == get_imag(cmplx128))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -4236,77 +3991,17 @@ def test_numpy_imag_array_like_1d(language):
 def test_numpy_imag_array_like_2d(language):
 
     @types('bool[:,:]')
-    def test_bool(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('int[:,:]')
-    def test_int(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('int8[:,:]')
-    def test_int8(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('int16[:,:]')
-    def test_int16(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('int32[:,:]')
-    def test_int32(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('int64[:,:]')
-    def test_int64(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('float[:,:]')
-    def test_float(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('float32[:,:]')
-    def test_float32(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('float64[:,:]')
-    def test_float64(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('complex64[:,:]')
-    def test_complex64(arr):
-        from numpy import imag, shape
-        a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
-
     @types('complex128[:,:]')
-    def test_complex128(arr):
+    def get_imag(arr):
         from numpy import imag, shape
         a = imag(arr)
         s = shape(a)
@@ -4331,32 +4026,36 @@ def test_numpy_imag_array_like_2d(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) * 1j
 
-    f_bl = epyccel(test_bool, language=language)
+    f_bl = epyccel(get_imag, language=language)
 
-    assert (f_bl(bl) == test_bool(bl))
+    assert (f_bl(bl) == get_imag(bl))
 
-    f_integer8 = epyccel(test_int8, language=language)
-    f_integer16 = epyccel(test_int16, language=language)
-    f_integer = epyccel(test_int, language=language)
-    f_integer32 = epyccel(test_int32, language=language)
-    f_integer64 = epyccel(test_int64, language=language)
+    f_integer8 = epyccel(get_imag, language=language)
+    f_integer16 = epyccel(get_imag, language=language)
+    f_integer = epyccel(get_imag, language=language)
+    f_integer32 = epyccel(get_imag, language=language)
 
-    assert (f_integer8(integer8) == test_int8(integer8))
-    assert (f_integer16(integer16) == test_int16(integer16))
-    assert (f_integer(integer) == test_int(integer))
-    assert (f_integer32(integer32) == test_int32(integer32))
-    assert (f_integer64(integer64) == test_int64(integer64))
+    assert (f_integer8(integer8) == get_imag(integer8))
+    assert (f_integer16(integer16) == get_imag(integer16))
+    assert (f_integer(integer) == get_imag(integer))
+    assert (f_integer32(integer32) == get_imag(integer32))
 
-    f_fl = epyccel(test_float, language=language)
-    f_fl32 = epyccel(test_float32, language=language)
-    f_fl64 = epyccel(test_float64, language=language)
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64 = epyccel(get_imag, language=language)
+        assert (f_integer64(integer64) == get_imag(integer64))
 
-    assert (f_fl(fl) == test_float(fl))
-    assert (f_fl32(fl32) == test_float32(fl32))
-    assert (f_fl64(fl64) == test_float64(fl64))
+        f_fl = epyccel(get_imag, language=language)
+        f_fl32 = epyccel(get_imag, language=language)
+        f_fl64 = epyccel(get_imag, language=language)
 
-    f_complex64 = epyccel(test_complex64, language=language)
-    f_complex128 = epyccel(test_complex128, language=language)
+        assert (f_fl(fl) == get_imag(fl))
+        assert (f_fl32(fl32) == get_imag(fl32))
+        assert (f_fl64(fl64) == get_imag(fl64))
 
-    assert (f_complex64(cmplx64) == test_complex64(cmplx64))
-    assert (f_complex128(cmplx128) == test_complex128(cmplx128))
+    f_complex64 = epyccel(get_imag, language=language)
+    f_complex128 = epyccel(get_imag, language=language)
+
+    assert (f_complex64(cmplx64) == get_imag(cmplx64))
+    assert (f_complex128(cmplx128) == get_imag(cmplx128))
+
