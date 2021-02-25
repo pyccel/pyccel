@@ -165,7 +165,7 @@ class PyArg_ParseTupleNode(Basic):
             errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
                           symbol=parse_args, severity='warning')
 
-        parse_args = [[converter_functions[] , a] for a in parse_args]
+        parse_args = [[converter_functions[get_custom_key(variable)] , a] for a in parse_args]
         parse_args = [a for arg in parse_args for a in arg]
 
         self._pyarg      = python_func_args
@@ -223,6 +223,18 @@ class PyBuildValueNode(Basic):
     @property
     def args(self):
         return self._result_args
+
+
+def get_custom_key(variable):
+    """
+    """
+    dtype     = variable.dtype
+    precision = variable.precision
+    rank      = variable.rank #TODO find a global way to manage different rank in one function
+    is_valued = isinstance(variable, ValuedVariable)
+
+    return (dtype, precision, rank, is_valued)
+
 
 #-------------------------------------------------------------------
 #                      Python.h functions

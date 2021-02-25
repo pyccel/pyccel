@@ -41,8 +41,8 @@ from pyccel.ast.core        import If, IfSection, PyccelEq
 from pyccel.ast.cwrapper    import (PyArgKeywordsm, PyArg_ParseTupleNode,
                                     PyBuildValueNode)
 
-from pyccel.ast.cwrapper    import PyccelPyObject, PyNone        
-
+from pyccel.ast.cwrapper    import PyccelPyObject, PyNone
+from pyccel.ast.cwrapper    import get_custom_key
 from pyccel.ast.variable    import Variable, ValuedVariable, VariableAddress
 
 from pyccel.ast.bind_c      import as_static_function_call
@@ -66,8 +66,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self._function_wrapper_names      = dict()
         self._global_names                = set()
         self._module_name                 = None
-        self.parsing_converter_functions  = {}
-        self.building_converter_functions = {}
+        self.converter_functions_dict     = {}
 
     # --------------------------------------------------------------------
     #                       Helper functions
@@ -223,23 +222,27 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_PyArgParse_Converter_Function(self, variable):
         """
         """
-        if xxxxxxx not in self.parsing_converter_functions:
+        if get_custom_key(variable) in self.converter_functions_dict:
 
             if variable.rank > 0:
                 function = self.generate_array_converter_function(variable)
             else:
                 function = self.generate_scalar_converter_function(variable)
 
-            self.parsing_converter_functions[xxxxxxx] = function
+            self.converter_functions_dict[get_custom_key(variable)]
 
     def get_PyBuildValue_Converter_function(self, variable):
         """
         """
-        if xxxxxxx not in self.parsing_converter_functions:
+        if variable.rank > 0:
+            raise NotImplementedError(
+            'return not implemented for this datatype : {}'.format(variable.dtype))
 
-            function = self.generate_pyobject_converter_function(variable)
-
-            self.building_converter_functions[xxxxxxx] = function
+        try:
+            python_to_c_registry[(variable.dtype, variable.precision)]
+        except: KeyError
+            raise NotImplementedError(
+            'return not implemented for this datatype : {}'.format(variable.dtype))
 
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
@@ -326,7 +329,7 @@ class CWrapperCodePrinter(CCodePrinter):
             func_args.append(None) #TODO Bind_C_Arg
 
         parse_node = PyArg_ParseTupleNode(*wrapper_args[:-1]
-                                          self.parsing_converter_functions,
+                                          self.converter_functions_dict,
                                           expr.arguments, keyword_list)
 
         wrapper_body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
@@ -369,10 +372,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         function_defs         = '\n\n'.join(self._print(f) for f in funcs)
         converters_functions  = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f)
-                                    for f in self.parsing_converter_functions.values())
-
-        converters_functions  = '\n\n'.join(CCodePrinter._print_FunctionDef(self, f)
-                                    for f in self.building_converter_functions.values())
+                                    for f in self.converter_functions_dict.values())
 
         method_def_func = ',\n'.join(('{{\n"{name}",\n'
                                     '(PyCFunction){wrapper_name},\n'
