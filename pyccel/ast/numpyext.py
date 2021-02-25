@@ -143,6 +143,13 @@ class NumpyReal(PythonReal):
         self._order = arg.order
         self._shape = process_shape(self.internal_var.shape)
         self._rank  = len(self._shape)
+    
+    @property
+    def is_elemental(self):
+        """ Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
 
 DtypePrecisionToCastFunction = {
     'Int' : {
