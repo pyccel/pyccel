@@ -51,12 +51,15 @@ class OmpAnnotatedComment(Basic):
         args = (self.txt, self.combined)
         return args
 
+class OmpCombinedAnnotatedComment(OmpAnnotatedComment):
+    """ Represents a Combined construct. """
+
 class OMP_For_Loop(OmpAnnotatedComment):
     """ Represents an OpenMP Loop construct. """
     def __init__(self, txt):
         super().__init__(txt)
 
-class OMP_Parallel_Construct(OmpAnnotatedComment):
+class OMP_Parallel_Construct(OmpCombinedAnnotatedComment):
     """ Represents an OpenMP Parallel construct. """
 
 class OMP_Task_Construct(OmpAnnotatedComment):
@@ -79,7 +82,7 @@ class OMP_Master_Construct(OmpAnnotatedComment):
     def __init__(self, txt):
         super().__init__(txt)
 
-class OMP_Masked_Construct(OmpAnnotatedComment):
+class OMP_Masked_Construct(OmpCombinedAnnotatedComment):
     """ Represents OpenMP Masked construct. """
 
 class OMP_Cancel_Construct(OmpAnnotatedComment):
@@ -87,10 +90,10 @@ class OMP_Cancel_Construct(OmpAnnotatedComment):
     def __init__(self, txt):
         super().__init__(txt)
 
-class OMP_Target_Construct(OmpAnnotatedComment):
+class OMP_Target_Construct(OmpCombinedAnnotatedComment):
     """ Represents OpenMP Target construct. """
 
-class OMP_Teams_Construct(OmpAnnotatedComment):
+class OMP_Teams_Construct(OmpCombinedAnnotatedComment):
     """ Represents OpenMP Teams construct. """
 
 class OMP_Sections_Construct(OmpAnnotatedComment):

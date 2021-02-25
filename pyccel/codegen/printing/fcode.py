@@ -31,7 +31,9 @@ from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, Dlist, AsName,
                              If, IfSection)
 
-from pyccel.ast.omp import (OMP_For_Loop, OMP_Cancel_Construct)
+from pyccel.ast.omp import (OMP_For_Loop, OMP_Cancel_Construct,
+                            OMP_Parallel_Construct, OMP_Masked_Construct,
+                            OMP_Target_Construct, OMP_Teams_Construct)
 
 from pyccel.ast.variable  import (Variable, TupleVariable,
                              IndexedElement,
@@ -1864,37 +1866,24 @@ class FCodePrinter(CodePrinter):
     # .....................................................
     #                   OpenMP statements
     # .....................................................
-    def _print_OMP_Parallel_Construct(self, expr):
+    def _print_OmpCombinedAnnotatedComment(self, expr):
         clauses = ''
         if expr.combined:
-            combined = expr.combined.replace("for", omploop_dict["for"])
+            combined = expr.combined
+            if isinstance(expr, (OMP_Parallel_Construct, OMP_Target_Construct, OMP_Teams_Construct)):
+                combined = combined.replace("for", omploop_dict["for"])
             clauses = ' ' + combined
+        omp_expr = '!$omp'
+        if isinstance(expr, OMP_Parallel_Construct):
+            omp_expr += ' parallel'
+        elif isinstance(expr, OMP_Masked_Construct):
+            omp_expr += ' masked'
+        elif isinstance(expr, OMP_Target_Construct):
+            omp_expr += ' target'
+        elif isinstance(expr, OMP_Teams_Construct):
+            omp_expr += ' teams'
         clauses += str(expr.txt)
-        omp_expr = '!$omp parallel{}\n'.format(clauses)
-        return omp_expr
-
-    def _print_OMP_Masked_Construct(self, expr):
-        clauses = ''
-        if expr.combined:
-            clauses = ' ' + expr.combined
-        clauses += str(expr.txt)
-        omp_expr = '!$omp masked{}\n'.format(clauses)
-        return omp_expr
-
-    def _print_OMP_Target_Construct(self, expr):
-        clauses = ''
-        if expr.combined:
-            clauses = ' ' + expr.combined.replace("for", "do")
-        clauses += str(expr.txt)
-        omp_expr = '!$omp target{}\n'.format(clauses)
-        return omp_expr
-
-    def _print_OMP_Teams_Construct(self, expr):
-        clauses = ''
-        if expr.combined:
-            clauses = ' ' + expr.combined.replace("for", "do")
-        clauses += str(expr.txt)
-        omp_expr = '!$omp teams{}\n'.format(clauses)
+        omp_expr = '{}{}\n'.format(omp_expr, clauses)
         return omp_expr
 
     def _print_OmpAnnotatedComment(self, expr):
