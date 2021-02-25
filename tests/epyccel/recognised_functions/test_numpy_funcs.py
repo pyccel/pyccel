@@ -8,6 +8,11 @@ import numpy as np
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 
+
+int_types = ['int8', 'int16', 'int','int32', 'int64']
+float_types = ['float', 'float32', 'float64']
+complex_types = ['complex32', 'complex64']
+
 min_int8 = iinfo('int8').min
 max_int8 = iinfo('int8').max
 
@@ -3495,65 +3500,33 @@ def test_numpy_real_scalar(language):
         b = real(a)
         return b
 
+    @types('int8')
+    @types('int16')
     @types('int')
+    @types('int32')
+    @types('int64')
     def test_int(a):
         from numpy import real
         b = real(a)
         return b
 
-    @types('int8')
-    def test_int8(a):
-        from numpy import real
-        b = real(a)
-        return b
-
-    @types('int16')
-    def test_int16(a):
-        from numpy import real
-        b = real(a)
-        return b
-
-    @types('int32')
-    def test_int32(a):
-        from numpy import real
-        b = real(a)
-        return b
-
-    @types('int64')
-    def test_int64(a):
-        from numpy import real
-        b = real(a)
-        return b
-
     @types('float')
+    @types('float32')
+    @types('float64')
     def test_float(a):
         from numpy import real
         b = real(a)
         return b
 
-    @types('float32')
-    def test_float32(a):
-        from numpy import real
-        b = real(a)
-        return b
-
-    @types('float64')
-    def test_float64(a):
-        from numpy import real
-        b = real(a)
-        return b
-
     @types('complex64')
-    def test_complex64(a):
+    @types('complex128')
+    def test_complex(a):
         from numpy import real
         b = real(a)
         return b
 
-    @types('complex128')
-    def test_complex128(a):
-        from numpy import real
-        b = real(a)
-        return b
+    for type in int_types:
+        integer = randint(np.iinfo(type).min, np.iinfo(type).min, dtype=type)
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
