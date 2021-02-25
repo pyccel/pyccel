@@ -3894,58 +3894,18 @@ def test_numpy_real_array_like_2d(language):
     assert (f_complex64() == test_complex64())
     assert (f_complex128() == test_complex128())
 
-def test_numpy_int(language):
+def test_numpy_int_scalar(language):
 
     @types('bool')
-    def test_bool_int(a):
-        from numpy import int as NumpyInt
-        b = NumpyInt(a)
-        return b
-
     @types('int')
-    def test_int_int(a):
-        from numpy import int as NumpyInt
-        b = NumpyInt(a)
-        return b
-
     @types('int8')
-    def test_int8_int(a):
-        from numpy import int as NumpyInt
-        b = NumpyInt(a)
-        return b
-
     @types('int16')
-    def test_int16_int(a):
-        from numpy import int as NumpyInt
-        b = NumpyInt(a)
-        return b
-
     @types('int32')
-    def test_int32_int(a):
-        from numpy import int as NumpyInt
-        b = NumpyInt(a)
-        return b
-
     @types('int64')
-    def test_int64_int(a):
-        from numpy import int as NumpyInt
-        b = NumpyInt(a)
-        return b
-
     @types('float')
-    def test_float_int(a):
-        from numpy import int as NumpyInt
-        b = NumpyInt(a)
-        return b
-
     @types('float32')
-    def test_float32_int(a):
-        from numpy import int as NumpyInt
-        b = NumpyInt(a)
-        return b
-
     @types('float64')
-    def test_float64_int(a):
+    def get_int(a):
         from numpy import int as NumpyInt
         b = NumpyInt(a)
         return b
@@ -3961,85 +3921,92 @@ def test_numpy_int(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_int / 2, max_int / 2)
 
-    f_bl = epyccel(test_bool_int, language=language)
 
-    assert (f_bl(True) == test_bool_int(True))
-    assert (f_bl(False) == test_bool_int(False))
+    f_bl = epyccel(get_int, language=language)
 
-    f_integer = epyccel(test_int_int, language=language)
-    f_integer8 = epyccel(test_int8_int, language=language)
-    f_integer16 = epyccel(test_int16_int, language=language)
-    f_integer32 = epyccel(test_int32_int, language=language)
+    f_bl_true_output = f_bl(True)
+    test_bool_true_output = get_int(True)
 
-    assert (f_integer(integer) == test_int_int(integer))
-    assert (f_integer8(integer8) == test_int8_int(integer8))
-    assert (f_integer16(integer16) == test_int16_int(integer16))
-    assert (f_integer32(integer32) == test_int32_int(integer32))
-    # the if block should be removed after resovling (https://github.com/pyccel/pyccel/issues/735).
+    f_bl_false_output = f_bl(False)
+    test_bool_false_output = get_int(False)
+
+    assert f_bl_true_output == test_bool_true_output
+    assert f_bl_false_output == test_bool_false_output
+
+    assert (type(f_bl_true_output) == type(test_bool_false_output))
+
+    f_integer = epyccel(get_int, language=language)
+    f_integer8 = epyccel(get_int, language=language)
+    f_integer16 = epyccel(get_int, language=language)
+    f_integer32 = epyccel(get_int, language=language)
+    f_integer64 = epyccel(get_int, language=language)
+
+    f_integer_output = f_integer(integer)
+    test_int_output  = get_int(integer)
+
+    assert f_integer_output == test_int_output
+    assert type(f_integer_output) == type(test_int_output)
+
+    f_integer8_output = f_integer8(integer8)
+    test_int8_output = get_int(integer8)
+
+    assert f_integer8_output == test_int8_output
+    assert type(f_integer8_output) == type(test_int8_output)
+
+    f_integer16_output = f_integer16(integer16)
+    test_int16_output = get_int(integer16)
+
+    assert f_integer16_output == test_int16_output
+    assert type(f_integer16_output) == type(test_int16_output)
+
+    f_integer32_output = f_integer32(integer32)
+    test_int32_output = get_int(integer32)
+
+    assert f_integer32_output == test_int32_output
+    assert type(f_integer32_output) == type(test_int32_output)
+
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
-        f_integer64 = epyccel(test_int64_int, language=language)
-        assert (f_integer64(integer64) == test_int64_int(integer64))
+        f_integer64_output = f_integer64(integer64)
+        test_int64_output = get_int(integer64)
 
-    f_fl = epyccel(test_float_int, language=language)
-    f_fl32 = epyccel(test_float32_int, language=language)
-    f_fl64 = epyccel(test_float64_int, language=language)
+        assert f_integer64_output == test_int64_output
+        assert type(f_integer64_output) == type(test_int64_output)
 
-    assert (f_fl(fl) == test_float_int(fl))
-    assert (f_fl32(fl32) == test_float32_int(fl32))
-    assert (f_fl64(fl64) == test_float64_int(fl64))
+    f_fl = epyccel(get_int, language=language)
+    f_fl32 = epyccel(get_int, language=language)
+    f_fl64 = epyccel(get_int, language=language)
 
-def test_numpy_int32(language):
+    f_fl_output = f_fl(fl)
+    test_float_output = get_int(fl)
+
+    assert f_fl_output == test_float_output
+    assert type(f_fl_output) == type(test_float_output)
+
+    f_fl32_output = f_fl32(fl32)
+    test_float32_output = get_int(fl32)
+
+    assert f_fl32_output == test_float32_output
+    assert type(f_fl32_output) == type(test_float32_output)
+
+    f_fl64_output = f_fl64(fl64)
+    test_float64_output = get_int(fl64)
+
+    assert f_fl64_output == test_float64_output
+    assert type(f_fl64_output) == type(test_float64_output)
+
+def test_numpy_int32_scalar(language):
 
     @types('bool')
-    def test_bool_int32(a):
-        from numpy import int32
-        b = int32(a)
-        return b
-
     @types('int')
-    def test_int_int32(a):
-        from numpy import int32
-        b = int32(a)
-        return b
-
     @types('int8')
-    def test_int8_int32(a):
-        from numpy import int32
-        b = int32(a)
-        return b
-
     @types('int16')
-    def test_int16_int32(a):
-        from numpy import int32
-        b = int32(a)
-        return b
-
     @types('int32')
-    def test_int32_int32(a):
-        from numpy import int32
-        b = int32(a)
-        return b
-
     @types('int64')
-    def test_int64_int32(a):
-        from numpy import int32
-        b = int32(a)
-        return b
-
     @types('float')
-    def test_float_int32(a):
-        from numpy import int32
-        b = int32(a)
-        return b
-
     @types('float32')
-    def test_float32_int32(a):
-        from numpy import int32
-        b = int32(a)
-        return b
-
     @types('float64')
-    def test_float64_int32(a):
+    def get_int32(a):
         from numpy import int32
         b = int32(a)
         return b
@@ -4051,182 +4018,197 @@ def test_numpy_int32(language):
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
     fl = uniform(min_int32 / 2, max_int32 / 2)
-    fl32 = uniform(min_float32, max_float32)
+    fl32 = uniform(min_int32, max_int32)
     fl32 = np.float32(fl32)
     fl64 = uniform(min_int32 / 2, max_int32 / 2)
 
-    f_bl = epyccel(test_bool_int32, language=language)
 
-    assert (f_bl(True) == test_bool_int32(True))
-    assert (f_bl(False) == test_bool_int32(False))
+    f_bl = epyccel(get_int32, language=language)
 
-    f_integer = epyccel(test_int_int32, language=language)
-    f_integer8 = epyccel(test_int8_int32, language=language)
-    f_integer16 = epyccel(test_int16_int32, language=language)
-    f_integer32 = epyccel(test_int32_int32, language=language)
-    f_integer64 = epyccel(test_int64_int32, language=language)
+    f_bl_true_output = f_bl(True)
+    test_bool_true_output = get_int32(True)
 
-    assert (f_integer(integer) == test_int_int32(integer))
-    assert (f_integer8(integer8) == test_int8_int32(integer8))
-    assert (f_integer16(integer16) == test_int16_int32(integer16))
-    assert (f_integer32(integer32) == test_int32_int32(integer32))
-    assert (f_integer64(integer64) == test_int64_int32(integer64))
+    f_bl_false_output = f_bl(False)
+    test_bool_false_output = get_int32(False)
 
-    f_fl = epyccel(test_float_int32, language=language)
-    f_fl32 = epyccel(test_float32_int32, language=language)
-    f_fl64 = epyccel(test_float64_int32, language=language)
+    assert f_bl_true_output == test_bool_true_output
+    assert f_bl_false_output == test_bool_false_output
 
-    assert (f_fl(fl) == test_float_int32(fl))
-    assert (f_fl32(fl32) == test_float32_int32(fl32))
-    assert (f_fl64(fl64) == test_float64_int32(fl64))
+    assert (type(f_bl_true_output) == type(test_bool_false_output.item()))
 
-def test_numpy_int64(language):
+    f_integer = epyccel(get_int32, language=language)
+    f_integer8 = epyccel(get_int32, language=language)
+    f_integer16 = epyccel(get_int32, language=language)
+    f_integer32 = epyccel(get_int32, language=language)
+    f_integer64 = epyccel(get_int32, language=language)
 
-    @types('bool')
-    def test_bool_int64(a):
-        from numpy import int64
-        b = int64(a)
-        return b
+    f_integer_output = f_integer(integer)
+    test_int_output  = get_int32(integer)
 
-    @types('int')
-    def test_int_int64(a):
-        from numpy import int64
-        b = int64(a)
-        return b
+    assert f_integer_output == test_int_output
+    assert type(f_integer_output) == type(test_int_output.item())
 
-    @types('int8')
-    def test_int8_int64(a):
-        from numpy import int64
-        b = int64(a)
-        return b
+    f_integer8_output = f_integer8(integer8)
+    test_int8_output = get_int32(integer8)
 
-    @types('int16')
-    def test_int16_int64(a):
-        from numpy import int64
-        b = int64(a)
-        return b
+    assert f_integer8_output == test_int8_output
+    assert type(f_integer8_output) == type(test_int8_output.item())
 
-    @types('int32')
-    def test_int32_int64(a):
-        from numpy import int64
-        b = int64(a)
-        return b
+    f_integer16_output = f_integer16(integer16)
+    test_int16_output = get_int32(integer16)
 
-    @types('int64')
-    def test_int64_int64(a):
-        from numpy import int64
-        b = int64(a)
-        return b
+    assert f_integer16_output == test_int16_output
+    assert type(f_integer16_output) == type(test_int16_output.item())
 
-    @types('float')
-    def test_float_int64(a):
-        from numpy import int64
-        b = int64(a)
-        return b
+    f_integer32_output = f_integer32(integer32)
+    test_int32_output = get_int32(integer32)
 
-    @types('float32')
-    def test_float32_int64(a):
-        from numpy import int64
-        b = int64(a)
-        return b
+    assert f_integer32_output == test_int32_output
+    assert type(f_integer32_output) == type(test_int32_output.item())
 
-    @types('float64')
-    def test_float64_int64(a):
-        from numpy import int64
-        b = int64(a)
-        return b
-
-    integer8 = randint(min_int8, max_int8, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, dtype=np.int16)
-    integer = randint(min_int, max_int, dtype=np.int)
-    integer32 = randint(min_int32, max_int32, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, dtype=np.int64)
-
-    fl = uniform(min_int64 / 2, max_int64 / 2)
-    fl32 = uniform(min_float32, max_float32)
-    fl32 = np.float32(fl32)
-    fl64 = uniform(min_int64 / 2, max_int64 / 2)
-
-    f_bl = epyccel(test_bool_int64, language=language)
-
-    assert (f_bl(True) == test_bool_int64(True))
-    assert (f_bl(False) == test_bool_int64(False))
-
-    f_integer = epyccel(test_int_int64, language=language)
-    f_integer8 = epyccel(test_int8_int64, language=language)
-    f_integer16 = epyccel(test_int16_int64, language=language)
-    f_integer32 = epyccel(test_int32_int64, language=language)
-
-    assert (f_integer(integer) == test_int_int64(integer))
-    assert (f_integer8(integer8) == test_int8_int64(integer8))
-    assert (f_integer16(integer16) == test_int16_int64(integer16))
-    assert (f_integer32(integer32) == test_int32_int64(integer32))
-    # the if block should be removed after resovling (https://github.com/pyccel/pyccel/issues/735).
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
-        f_integer64 = epyccel(test_int64_int64, language=language)
-        assert (f_integer64(integer64) == test_int64_int64(integer64))
+        f_integer64_output = f_integer64(integer64)
+        test_int64_output = get_int32(integer64)
 
-        f_fl = epyccel(test_float_int64, language=language)
-        f_fl32 = epyccel(test_float32_int64, language=language)
-        f_fl64 = epyccel(test_float64_int64, language=language)
+        assert f_integer64_output == test_int64_output
+        assert type(f_integer64_output) == type(test_int64_output.item())
 
-        assert (f_fl(fl) == test_float_int64(fl))
-        assert (f_fl32(fl32) == test_float32_int64(fl32))
-        assert (f_fl64(fl64) == test_float64_int64(fl64))
+    f_fl = epyccel(get_int32, language=language)
+    f_fl32 = epyccel(get_int32, language=language)
+    f_fl64 = epyccel(get_int32, language=language)
 
+    f_fl_output = f_fl(fl)
+    test_float_output = get_int32(fl)
 
-def test_numpy_float(language):
+    assert f_fl_output == test_float_output
+    assert type(f_fl_output) == type(test_float_output.item())
+
+    f_fl32_output = f_fl32(fl32)
+    test_float32_output = get_int32(fl32)
+
+    assert f_fl32_output == test_float32_output
+    assert type(f_fl32_output) == type(test_float32_output.item())
+
+    f_fl64_output = f_fl64(fl64)
+    test_float64_output = get_int32(fl64)
+
+    assert f_fl64_output == test_float64_output
+    assert type(f_fl64_output) == type(test_float64_output.item())
+
+def test_numpy_int64_scalar(language):
 
     @types('bool')
-    def test_bool_float(a):
-        from numpy import float as NumpyFloat
-        b = NumpyFloat(a)
-        return b
-
     @types('int')
-    def test_int_float(a):
-        from numpy import float as NumpyFloat
-        b = NumpyFloat(a)
-        return b
-
     @types('int8')
-    def test_int8_float(a):
-        from numpy import float as NumpyFloat
-        b = NumpyFloat(a)
-        return b
-
     @types('int16')
-    def test_int16_float(a):
-        from numpy import float as NumpyFloat
-        b = NumpyFloat(a)
-        return b
-
     @types('int32')
-    def test_int32_float(a):
-        from numpy import float as NumpyFloat
-        b = NumpyFloat(a)
-        return b
-
     @types('int64')
-    def test_int64_float(a):
-        from numpy import float as NumpyFloat
-        b = NumpyFloat(a)
-        return b
-
     @types('float')
-    def test_float_float(a):
-        from numpy import float as NumpyFloat
-        b = NumpyFloat(a)
-        return b
-
     @types('float32')
-    def test_float32_float(a):
-        from numpy import float as NumpyFloat
-        b = NumpyFloat(a)
+    @types('float64')
+    def get_int64(a):
+        from numpy import int64
+        b = int64(a)
         return b
 
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
+    integer = randint(min_int, max_int, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
+
+    fl = uniform(min_int / 2, max_int / 2)
+    fl32 = uniform(min_int, max_int)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(min_int / 2, max_int / 2)
+
+
+    f_bl = epyccel(get_int64, language=language)
+
+    f_bl_true_output = f_bl(True)
+    test_bool_true_output = get_int64(True)
+
+    f_bl_false_output = f_bl(False)
+    test_bool_false_output = get_int64(False)
+
+    assert f_bl_true_output == test_bool_true_output
+    assert f_bl_false_output == test_bool_false_output
+
+    assert (type(f_bl_true_output) == type(test_bool_false_output.item()))
+
+    f_integer = epyccel(get_int64, language=language)
+    f_integer8 = epyccel(get_int64, language=language)
+    f_integer16 = epyccel(get_int64, language=language)
+    f_integer32 = epyccel(get_int64, language=language)
+    f_integer64 = epyccel(get_int64, language=language)
+
+    f_integer_output = f_integer(integer)
+    test_int_output  = get_int64(integer)
+
+    assert f_integer_output == test_int_output
+    assert type(f_integer_output) == type(test_int_output.item())
+
+    f_integer8_output = f_integer8(integer8)
+    test_int8_output = get_int64(integer8)
+
+    assert f_integer8_output == test_int8_output
+    assert type(f_integer8_output) == type(test_int8_output.item())
+
+    f_integer16_output = f_integer16(integer16)
+    test_int16_output = get_int64(integer16)
+
+    assert f_integer16_output == test_int16_output
+    assert type(f_integer16_output) == type(test_int16_output.item())
+
+    f_integer32_output = f_integer32(integer32)
+    test_int32_output = get_int64(integer32)
+
+    assert f_integer32_output == test_int32_output
+    assert type(f_integer32_output) == type(test_int32_output.item())
+
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64_output = f_integer64(integer64)
+        test_int64_output = get_int64(integer64)
+
+        assert f_integer64_output == test_int64_output
+        assert type(f_integer64_output) == type(test_int64_output.item())
+
+    f_fl = epyccel(get_int64, language=language)
+    f_fl32 = epyccel(get_int64, language=language)
+    f_fl64 = epyccel(get_int64, language=language)
+
+    f_fl_output = f_fl(fl)
+    test_float_output = get_int64(fl)
+
+    assert f_fl_output == test_float_output
+    assert type(f_fl_output) == type(test_float_output.item())
+
+    f_fl32_output = f_fl32(fl32)
+    test_float32_output = get_int64(fl32)
+
+    assert f_fl32_output == test_float32_output
+    assert type(f_fl32_output) == type(test_float32_output.item())
+
+    f_fl64_output = f_fl64(fl64)
+    test_float64_output = get_int64(fl64)
+
+    assert f_fl64_output == test_float64_output
+    assert type(f_fl64_output) == type(test_float64_output.item())
+
+def test_numpy_float_scalar(language):
+
+    @types('bool')
+    @types('int')
+    @types('int8')
+    @types('int16')
+    @types('int32')
+    @types('int64')
+    @types('float')
+    @types('float32')
     @types('float64')
-    def test_float64_float(a):
+    def get_float(a):
         from numpy import float as NumpyFloat
         b = NumpyFloat(a)
         return b
@@ -4237,88 +4219,95 @@ def test_numpy_float(language):
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2)
-    fl32 = uniform(min_float32, max_float32)
+    fl = uniform(min_int / 2, max_int / 2)
+    fl32 = uniform(min_int, max_int)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2)
+    fl64 = uniform(min_int / 2, max_int / 2)
 
-    f_bl = epyccel(test_bool_float, language=language)
 
-    assert (f_bl(True) == test_bool_float(True))
-    assert (f_bl(False) == test_bool_float(False))
+    f_bl = epyccel(get_float, language=language)
 
-    f_integer = epyccel(test_int_float, language=language)
-    f_integer8 = epyccel(test_int8_float, language=language)
-    f_integer16 = epyccel(test_int16_float, language=language)
-    f_integer32 = epyccel(test_int32_float, language=language)
-    f_integer64 = epyccel(test_int64_float, language=language)
+    f_bl_true_output = f_bl(True)
+    test_bool_true_output = get_float(True)
 
-    assert (f_integer(integer) == test_int_float(integer))
-    assert (f_integer8(integer8) == test_int8_float(integer8))
-    assert (f_integer16(integer16) == test_int16_float(integer16))
-    assert (f_integer32(integer32) == test_int32_float(integer32))
-    assert (f_integer64(integer64) == test_int64_float(integer64))
+    f_bl_false_output = f_bl(False)
+    test_bool_false_output = get_float(False)
 
-    f_fl = epyccel(test_float_float, language=language)
-    f_fl32 = epyccel(test_float32_float, language=language)
-    f_fl64 = epyccel(test_float64_float, language=language)
+    assert f_bl_true_output == test_bool_true_output
+    assert f_bl_false_output == test_bool_false_output
 
-    assert (f_fl(fl) == test_float_float(fl))
-    assert (f_fl32(fl32) == test_float32_float(fl32))
-    assert (f_fl64(fl64) == test_float64_float(fl64))
+    f_integer = epyccel(get_float, language=language)
+    f_integer8 = epyccel(get_float, language=language)
+    f_integer16 = epyccel(get_float, language=language)
+    f_integer32 = epyccel(get_float, language=language)
+    f_integer64 = epyccel(get_float, language=language)
 
-def test_numpy_float32(language):
+    f_integer_output = f_integer(integer)
+    test_int_output  = get_float(integer)
+
+    assert f_integer_output == test_int_output
+    assert type(f_integer_output) == type(test_int_output)
+
+    f_integer8_output = f_integer8(integer8)
+    test_int8_output = get_float(integer8)
+
+    assert f_integer8_output == test_int8_output
+    assert type(f_integer8_output) == type(test_int8_output)
+
+    f_integer16_output = f_integer16(integer16)
+    test_int16_output = get_float(integer16)
+
+    assert f_integer16_output == test_int16_output
+    assert type(f_integer16_output) == type(test_int16_output)
+
+    f_integer32_output = f_integer32(integer32)
+    test_int32_output = get_float(integer32)
+
+    assert f_integer32_output == test_int32_output
+    assert type(f_integer32_output) == type(test_int32_output)
+
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64_output = f_integer64(integer64)
+        test_int64_output = get_float(integer64)
+
+        assert f_integer64_output == test_int64_output
+        assert type(f_integer64_output) == type(test_int64_output)
+
+    f_fl = epyccel(get_float, language=language)
+    f_fl32 = epyccel(get_float, language=language)
+    f_fl64 = epyccel(get_float, language=language)
+
+    f_fl_output = f_fl(fl)
+    test_float_output = get_float(fl)
+
+    assert f_fl_output == test_float_output
+    assert type(f_fl_output) == type(test_float_output)
+
+    f_fl32_output = f_fl32(fl32)
+    test_float32_output = get_float(fl32)
+
+    assert f_fl32_output == test_float32_output
+    assert type(f_fl32_output) == type(test_float32_output)
+
+    f_fl64_output = f_fl64(fl64)
+    test_float64_output = get_float(fl64)
+
+    assert f_fl64_output == test_float64_output
+    assert type(f_fl64_output) == type(test_float64_output)
+
+def test_numpy_float32_scalar(language):
 
     @types('bool')
-    def test_bool_float32(a):
-        from numpy import float32
-        b = float32(a)
-        return b
-
     @types('int')
-    def test_int_float32(a):
-        from numpy import float32
-        b = float32(a)
-        return b
-
     @types('int8')
-    def test_int8_float32(a):
-        from numpy import float32
-        b = float32(a)
-        return b
-
     @types('int16')
-    def test_int16_float32(a):
-        from numpy import float32
-        b = float32(a)
-        return b
-
     @types('int32')
-    def test_int32_float32(a):
-        from numpy import float32
-        b = float32(a)
-        return b
-
     @types('int64')
-    def test_int64_float32(a):
-        from numpy import float32
-        b = float32(a)
-        return b
-
     @types('float')
-    def test_float_float32(a):
-        from numpy import float32
-        b = float32(a)
-        return b
-
     @types('float32')
-    def test_float32_float32(a):
-        from numpy import float32
-        b = float32(a)
-        return b
-
     @types('float64')
-    def test_float64_float32(a):
+    def get_float32(a):
         from numpy import float32
         b = float32(a)
         return b
@@ -4329,88 +4318,95 @@ def test_numpy_float32(language):
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2)
-    fl32 = uniform(min_float32, max_float32)
+    fl = uniform(min_int / 2, max_int / 2)
+    fl32 = uniform(min_int, max_int)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2)
+    fl64 = uniform(min_int / 2, max_int / 2)
 
-    f_bl = epyccel(test_bool_float32, language=language)
 
-    assert (f_bl(True) == test_bool_float32(True))
-    assert (f_bl(False) == test_bool_float32(False))
+    f_bl = epyccel(get_float32, language=language)
 
-    f_integer = epyccel(test_int_float32, language=language)
-    f_integer8 = epyccel(test_int8_float32, language=language)
-    f_integer16 = epyccel(test_int16_float32, language=language)
-    f_integer32 = epyccel(test_int32_float32, language=language)
-    f_integer64 = epyccel(test_int64_float32, language=language)
+    f_bl_true_output = f_bl(True)
+    test_bool_true_output = get_float32(True)
 
-    assert (f_integer(integer) == test_int_float32(integer))
-    assert (f_integer8(integer8) == test_int8_float32(integer8))
-    assert (f_integer16(integer16) == test_int16_float32(integer16))
-    assert (f_integer32(integer32) == test_int32_float32(integer32))
-    assert (f_integer64(integer64) == test_int64_float32(integer64))
+    f_bl_false_output = f_bl(False)
+    test_bool_false_output = get_float32(False)
 
-    f_fl = epyccel(test_float_float32, language=language)
-    f_fl32 = epyccel(test_float32_float32, language=language)
-    f_fl64 = epyccel(test_float64_float32, language=language)
+    assert f_bl_true_output == test_bool_true_output
+    assert f_bl_false_output == test_bool_false_output
 
-    assert (f_fl(fl) == test_float_float32(fl))
-    assert (f_fl32(fl32) == test_float32_float32(fl32))
-    assert (f_fl64(fl64) == test_float64_float32(fl64))
+    f_integer = epyccel(get_float32, language=language)
+    f_integer8 = epyccel(get_float32, language=language)
+    f_integer16 = epyccel(get_float32, language=language)
+    f_integer32 = epyccel(get_float32, language=language)
+    f_integer64 = epyccel(get_float32, language=language)
 
-def test_numpy_float64(language):
+    f_integer_output = f_integer(integer)
+    test_int_output  = get_float32(integer)
+
+    assert f_integer_output == test_int_output
+    assert type(f_integer_output) == type(test_int_output.item())
+
+    f_integer8_output = f_integer8(integer8)
+    test_int8_output = get_float32(integer8)
+
+    assert f_integer8_output == test_int8_output
+    assert type(f_integer8_output) == type(test_int8_output.item())
+
+    f_integer16_output = f_integer16(integer16)
+    test_int16_output = get_float32(integer16)
+
+    assert f_integer16_output == test_int16_output
+    assert type(f_integer16_output) == type(test_int16_output.item())
+
+    f_integer32_output = f_integer32(integer32)
+    test_int32_output = get_float32(integer32)
+
+    assert f_integer32_output == test_int32_output
+    assert type(f_integer32_output) == type(test_int32_output.item())
+
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64_output = f_integer64(integer64)
+        test_int64_output = get_float32(integer64)
+
+        assert f_integer64_output == test_int64_output
+        assert type(f_integer64_output) == type(test_int64_output.item())
+
+    f_fl = epyccel(get_float32, language=language)
+    f_fl32 = epyccel(get_float32, language=language)
+    f_fl64 = epyccel(get_float32, language=language)
+
+    f_fl_output = f_fl(fl)
+    test_float_output = get_float32(fl)
+
+    assert f_fl_output == test_float_output
+    assert type(f_fl_output) == type(test_float_output.item())
+
+    f_fl32_output = f_fl32(fl32)
+    test_float32_output = get_float32(fl32)
+
+    assert f_fl32_output == test_float32_output
+    assert type(f_fl32_output) == type(test_float32_output.item())
+
+    f_fl64_output = f_fl64(fl64)
+    test_float64_output = get_float32(fl64)
+
+    assert f_fl64_output == test_float64_output
+    assert type(f_fl64_output) == type(test_float64_output.item())
+
+def test_numpy_float64_scalar(language):
 
     @types('bool')
-    def test_bool_float64(a):
-        from numpy import float64
-        b = float64(a)
-        return b
-
     @types('int')
-    def test_int_float64(a):
-        from numpy import float64
-        b = float64(a)
-        return b
-
     @types('int8')
-    def test_int8_float64(a):
-        from numpy import float64
-        b = float64(a)
-        return b
-
     @types('int16')
-    def test_int16_float64(a):
-        from numpy import float64
-        b = float64(a)
-        return b
-
     @types('int32')
-    def test_int32_float64(a):
-        from numpy import float64
-        b = float64(a)
-        return b
-
     @types('int64')
-    def test_int64_float64(a):
-        from numpy import float64
-        b = float64(a)
-        return b
-
     @types('float')
-    def test_float_float64(a):
-        from numpy import float64
-        b = float64(a)
-        return b
-
     @types('float32')
-    def test_float32_float64(a):
-        from numpy import float64
-        b = float64(a)
-        return b
-
     @types('float64')
-    def test_float64_float64(a):
+    def get_float64(a):
         from numpy import float64
         b = float64(a)
         return b
@@ -4421,88 +4417,95 @@ def test_numpy_float64(language):
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2)
-    fl32 = uniform(min_float32, max_float32)
+    fl = uniform(min_int / 2, max_int / 2)
+    fl32 = uniform(min_int, max_int)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2)
+    fl64 = uniform(min_int / 2, max_int / 2)
 
-    f_bl = epyccel(test_bool_float64, language=language)
 
-    assert (f_bl(True) == test_bool_float64(True))
-    assert (f_bl(False) == test_bool_float64(False))
+    f_bl = epyccel(get_float64, language=language)
 
-    f_integer = epyccel(test_int_float64, language=language)
-    f_integer8 = epyccel(test_int8_float64, language=language)
-    f_integer16 = epyccel(test_int16_float64, language=language)
-    f_integer32 = epyccel(test_int32_float64, language=language)
-    f_integer64 = epyccel(test_int64_float64, language=language)
+    f_bl_true_output = f_bl(True)
+    test_bool_true_output = get_float64(True)
 
-    assert (f_integer(integer) == test_int_float64(integer))
-    assert (f_integer8(integer8) == test_int8_float64(integer8))
-    assert (f_integer16(integer16) == test_int16_float64(integer16))
-    assert (f_integer32(integer32) == test_int32_float64(integer32))
-    assert (f_integer64(integer64) == test_int64_float64(integer64))
+    f_bl_false_output = f_bl(False)
+    test_bool_false_output = get_float64(False)
 
-    f_fl = epyccel(test_float_float64, language=language)
-    f_fl32 = epyccel(test_float32_float64, language=language)
-    f_fl64 = epyccel(test_float64_float64, language=language)
+    assert f_bl_true_output == test_bool_true_output
+    assert f_bl_false_output == test_bool_false_output
 
-    assert (f_fl(fl) == test_float_float64(fl))
-    assert (f_fl32(fl32) == test_float32_float64(fl32))
-    assert (f_fl64(fl64) == test_float64_float64(fl64))
+    f_integer = epyccel(get_float64, language=language)
+    f_integer8 = epyccel(get_float64, language=language)
+    f_integer16 = epyccel(get_float64, language=language)
+    f_integer32 = epyccel(get_float64, language=language)
+    f_integer64 = epyccel(get_float64, language=language)
 
-def test_numpy_double(language):
+    f_integer_output = f_integer(integer)
+    test_int_output  = get_float64(integer)
+
+    assert f_integer_output == test_int_output
+    assert type(f_integer_output) == type(test_int_output.item())
+
+    f_integer8_output = f_integer8(integer8)
+    test_int8_output = get_float64(integer8)
+
+    assert f_integer8_output == test_int8_output
+    assert type(f_integer8_output) == type(test_int8_output.item())
+
+    f_integer16_output = f_integer16(integer16)
+    test_int16_output = get_float64(integer16)
+
+    assert f_integer16_output == test_int16_output
+    assert type(f_integer16_output) == type(test_int16_output.item())
+
+    f_integer32_output = f_integer32(integer32)
+    test_int32_output = get_float64(integer32)
+
+    assert f_integer32_output == test_int32_output
+    assert type(f_integer32_output) == type(test_int32_output.item())
+
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64_output = f_integer64(integer64)
+        test_int64_output = get_float64(integer64)
+
+        assert f_integer64_output == test_int64_output
+        assert type(f_integer64_output) == type(test_int64_output.item())
+
+    f_fl = epyccel(get_float64, language=language)
+    f_fl32 = epyccel(get_float64, language=language)
+    f_fl64 = epyccel(get_float64, language=language)
+
+    f_fl_output = f_fl(fl)
+    test_float_output = get_float64(fl)
+
+    assert f_fl_output == test_float_output
+    assert type(f_fl_output) == type(test_float_output.item())
+
+    f_fl32_output = f_fl32(fl32)
+    test_float32_output = get_float64(fl32)
+
+    assert f_fl32_output == test_float32_output
+    assert type(f_fl32_output) == type(test_float32_output.item())
+
+    f_fl64_output = f_fl64(fl64)
+    test_float64_output = get_float64(fl64)
+
+    assert f_fl64_output == test_float64_output
+    assert type(f_fl64_output) == type(test_float64_output.item())
+
+def test_numpy_double_scalar(language):
 
     @types('bool')
-    def test_bool_double(a):
-        from numpy import double
-        b = double(a)
-        return b
-
     @types('int')
-    def test_int_double(a):
-        from numpy import double
-        b = double(a)
-        return b
-
     @types('int8')
-    def test_int8_double(a):
-        from numpy import double
-        b = double(a)
-        return b
-
     @types('int16')
-    def test_int16_double(a):
-        from numpy import double
-        b = double(a)
-        return b
-
     @types('int32')
-    def test_int32_double(a):
-        from numpy import double
-        b = double(a)
-        return b
-
     @types('int64')
-    def test_int64_double(a):
-        from numpy import double
-        b = double(a)
-        return b
-
     @types('float')
-    def test_float_double(a):
-        from numpy import double
-        b = double(a)
-        return b
-
     @types('float32')
-    def test_float32_double(a):
-        from numpy import double
-        b = double(a)
-        return b
-
     @types('float64')
-    def test_float64_double(a):
+    def get_double(a):
         from numpy import double
         b = double(a)
         return b
@@ -4513,88 +4516,95 @@ def test_numpy_double(language):
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2)
-    fl32 = uniform(min_float32, max_float32)
+    fl = uniform(min_int / 2, max_int / 2)
+    fl32 = uniform(min_int, max_int)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2)
+    fl64 = uniform(min_int / 2, max_int / 2)
 
-    f_bl = epyccel(test_bool_double, language=language)
 
-    assert (f_bl(True) == test_bool_double(True))
-    assert (f_bl(False) == test_bool_double(False))
+    f_bl = epyccel(get_double, language=language)
 
-    f_integer = epyccel(test_int_double, language=language)
-    f_integer8 = epyccel(test_int8_double, language=language)
-    f_integer16 = epyccel(test_int16_double, language=language)
-    f_integer32 = epyccel(test_int32_double, language=language)
-    f_integer64 = epyccel(test_int64_double, language=language)
+    f_bl_true_output = f_bl(True)
+    test_bool_true_output = get_double(True)
 
-    assert (f_integer(integer) == test_int_double(integer))
-    assert (f_integer8(integer8) == test_int8_double(integer8))
-    assert (f_integer16(integer16) == test_int16_double(integer16))
-    assert (f_integer32(integer32) == test_int32_double(integer32))
-    assert (f_integer64(integer64) == test_int64_double(integer64))
+    f_bl_false_output = f_bl(False)
+    test_bool_false_output = get_double(False)
 
-    f_fl = epyccel(test_float_double, language=language)
-    f_fl32 = epyccel(test_float32_double, language=language)
-    f_fl64 = epyccel(test_float64_double, language=language)
+    assert f_bl_true_output == test_bool_true_output
+    assert f_bl_false_output == test_bool_false_output
 
-    assert (f_fl(fl) == test_float_double(fl))
-    assert (f_fl32(fl32) == test_float32_double(fl32))
-    assert (f_fl64(fl64) == test_float64_double(fl64))
+    f_integer = epyccel(get_double, language=language)
+    f_integer8 = epyccel(get_double, language=language)
+    f_integer16 = epyccel(get_double, language=language)
+    f_integer32 = epyccel(get_double, language=language)
+    f_integer64 = epyccel(get_double, language=language)
 
-def test_numpy_complex64(language):
+    f_integer_output = f_integer(integer)
+    test_int_output  = get_double(integer)
+
+    assert f_integer_output == test_int_output
+    assert type(f_integer_output) == type(test_int_output.item())
+
+    f_integer8_output = f_integer8(integer8)
+    test_int8_output = get_double(integer8)
+
+    assert f_integer8_output == test_int8_output
+    assert type(f_integer8_output) == type(test_int8_output.item())
+
+    f_integer16_output = f_integer16(integer16)
+    test_int16_output = get_double(integer16)
+
+    assert f_integer16_output == test_int16_output
+    assert type(f_integer16_output) == type(test_int16_output.item())
+
+    f_integer32_output = f_integer32(integer32)
+    test_int32_output = get_double(integer32)
+
+    assert f_integer32_output == test_int32_output
+    assert type(f_integer32_output) == type(test_int32_output.item())
+
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64_output = f_integer64(integer64)
+        test_int64_output = get_double(integer64)
+
+        assert f_integer64_output == test_int64_output
+        assert type(f_integer64_output) == type(test_int64_output.item())
+
+    f_fl = epyccel(get_double, language=language)
+    f_fl32 = epyccel(get_double, language=language)
+    f_fl64 = epyccel(get_double, language=language)
+
+    f_fl_output = f_fl(fl)
+    test_float_output = get_double(fl)
+
+    assert f_fl_output == test_float_output
+    assert type(f_fl_output) == type(test_float_output.item())
+
+    f_fl32_output = f_fl32(fl32)
+    test_float32_output = get_double(fl32)
+
+    assert f_fl32_output == test_float32_output
+    assert type(f_fl32_output) == type(test_float32_output.item())
+
+    f_fl64_output = f_fl64(fl64)
+    test_float64_output = get_double(fl64)
+
+    assert f_fl64_output == test_float64_output
+    assert type(f_fl64_output) == type(test_float64_output.item())
+
+def test_numpy_complex64_scalar(language):
 
     @types('bool')
-    def test_bool_complex64(a):
-        from numpy import complex64
-        b = complex64(a)
-        return b
-
     @types('int')
-    def test_int_complex64(a):
-        from numpy import complex64
-        b = complex64(a)
-        return b
-
     @types('int8')
-    def test_int8_complex64(a):
-        from numpy import complex64
-        b = complex64(a)
-        return b
-
     @types('int16')
-    def test_int16_complex64(a):
-        from numpy import complex64
-        b = complex64(a)
-        return b
-
     @types('int32')
-    def test_int32_complex64(a):
-        from numpy import complex64
-        b = complex64(a)
-        return b
-
     @types('int64')
-    def test_int64_complex64(a):
-        from numpy import complex64
-        b = complex64(a)
-        return b
-
     @types('float')
-    def test_float_complex64(a):
-        from numpy import complex64
-        b = complex64(a)
-        return b
-
     @types('float32')
-    def test_float32_complex64(a):
-        from numpy import complex64
-        b = complex64(a)
-        return b
-
     @types('float64')
-    def test_float64_complex64(a):
+    def get_complex64(a):
         from numpy import complex64
         b = complex64(a)
         return b
@@ -4605,88 +4615,95 @@ def test_numpy_complex64(language):
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2)
-    fl32 = uniform(min_float32, max_float32)
+    fl = uniform(min_int / 2, max_int / 2)
+    fl32 = uniform(min_int, max_int)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2)
+    fl64 = uniform(min_int / 2, max_int / 2)
 
-    f_bl = epyccel(test_bool_complex64, language=language)
 
-    assert (f_bl(True) == test_bool_complex64(True))
-    assert (f_bl(False) == test_bool_complex64(False))
+    f_bl = epyccel(get_complex64, language=language)
 
-    f_integer = epyccel(test_int_complex64, language=language)
-    f_integer8 = epyccel(test_int8_complex64, language=language)
-    f_integer16 = epyccel(test_int16_complex64, language=language)
-    f_integer32 = epyccel(test_int32_complex64, language=language)
-    f_integer64 = epyccel(test_int64_complex64, language=language)
+    f_bl_true_output = f_bl(True)
+    test_bool_true_output = get_complex64(True)
 
-    assert (f_integer(integer) == test_int_complex64(integer))
-    assert (f_integer8(integer8) == test_int8_complex64(integer8))
-    assert (f_integer16(integer16) == test_int16_complex64(integer16))
-    assert (f_integer32(integer32) == test_int32_complex64(integer32))
-    assert (f_integer64(integer64) == test_int64_complex64(integer64))
+    f_bl_false_output = f_bl(False)
+    test_bool_false_output = get_complex64(False)
 
-    f_fl = epyccel(test_float_complex64, language=language)
-    f_fl32 = epyccel(test_float32_complex64, language=language)
-    f_fl64 = epyccel(test_float64_complex64, language=language)
+    assert f_bl_true_output == test_bool_true_output
+    assert f_bl_false_output == test_bool_false_output
 
-    assert (f_fl(fl) == test_float_complex64(fl))
-    assert (f_fl32(fl32) == test_float32_complex64(fl32))
-    assert (f_fl64(fl64) == test_float64_complex64(fl64))
+    f_integer = epyccel(get_complex64, language=language)
+    f_integer8 = epyccel(get_complex64, language=language)
+    f_integer16 = epyccel(get_complex64, language=language)
+    f_integer32 = epyccel(get_complex64, language=language)
+    f_integer64 = epyccel(get_complex64, language=language)
 
-def test_numpy_complex128(language):
+    f_integer_output = f_integer(integer)
+    test_int_output  = get_complex64(integer)
+
+    assert f_integer_output == test_int_output
+    assert type(f_integer_output) == type(test_int_output.item())
+
+    f_integer8_output = f_integer8(integer8)
+    test_int8_output = get_complex64(integer8)
+
+    assert f_integer8_output == test_int8_output
+    assert type(f_integer8_output) == type(test_int8_output.item())
+
+    f_integer16_output = f_integer16(integer16)
+    test_int16_output = get_complex64(integer16)
+
+    assert f_integer16_output == test_int16_output
+    assert type(f_integer16_output) == type(test_int16_output.item())
+
+    f_integer32_output = f_integer32(integer32)
+    test_int32_output = get_complex64(integer32)
+
+    assert f_integer32_output == test_int32_output
+    assert type(f_integer32_output) == type(test_int32_output.item())
+
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64_output = f_integer64(integer64)
+        test_int64_output = get_complex64(integer64)
+
+        assert f_integer64_output == test_int64_output
+        assert type(f_integer64_output) == type(test_int64_output.item())
+
+    f_fl = epyccel(get_complex64, language=language)
+    f_fl32 = epyccel(get_complex64, language=language)
+    f_fl64 = epyccel(get_complex64, language=language)
+
+    f_fl_output = f_fl(fl)
+    test_float_output = get_complex64(fl)
+
+    assert f_fl_output == test_float_output
+    assert type(f_fl_output) == type(test_float_output.item())
+
+    f_fl32_output = f_fl32(fl32)
+    test_float32_output = get_complex64(fl32)
+
+    assert f_fl32_output == test_float32_output
+    assert type(f_fl32_output) == type(test_float32_output.item())
+
+    f_fl64_output = f_fl64(fl64)
+    test_float64_output = get_complex64(fl64)
+
+    assert f_fl64_output == test_float64_output
+    assert type(f_fl64_output) == type(test_float64_output.item())
+
+def test_numpy_complex128_scalar(language):
 
     @types('bool')
-    def test_bool_complex128(a):
-        from numpy import complex128
-        b = complex128(a)
-        return b
-
     @types('int')
-    def test_int_complex128(a):
-        from numpy import complex128
-        b = complex128(a)
-        return b
-
     @types('int8')
-    def test_int8_complex128(a):
-        from numpy import complex128
-        b = complex128(a)
-        return b
-
     @types('int16')
-    def test_int16_complex128(a):
-        from numpy import complex128
-        b = complex128(a)
-        return b
-
     @types('int32')
-    def test_int32_complex128(a):
-        from numpy import complex128
-        b = complex128(a)
-        return b
-
     @types('int64')
-    def test_int64_complex128(a):
-        from numpy import complex128
-        b = complex128(a)
-        return b
-
     @types('float')
-    def test_float_complex128(a):
-        from numpy import complex128
-        b = complex128(a)
-        return b
-
     @types('float32')
-    def test_float32_complex128(a):
-        from numpy import complex128
-        b = complex128(a)
-        return b
-
     @types('float64')
-    def test_float64_complex128(a):
+    def get_complex128(a):
         from numpy import complex128
         b = complex128(a)
         return b
@@ -4697,32 +4714,79 @@ def test_numpy_complex128(language):
     integer32 = randint(min_int32, max_int32, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2)
-    fl32 = uniform(min_float32, max_float32)
+    fl = uniform(min_int / 2, max_int / 2)
+    fl32 = uniform(min_int, max_int)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2)
+    fl64 = uniform(min_int / 2, max_int / 2)
 
-    f_bl = epyccel(test_bool_complex128, language=language, verbose=True)
 
-    assert (f_bl(True) == test_bool_complex128(True))
-    assert (f_bl(False) == test_bool_complex128(False))
+    f_bl = epyccel(get_complex128, language=language)
 
-    f_integer = epyccel(test_int_complex128, language=language)
-    f_integer8 = epyccel(test_int8_complex128, language=language)
-    f_integer16 = epyccel(test_int16_complex128, language=language)
-    f_integer32 = epyccel(test_int32_complex128, language=language)
-    f_integer64 = epyccel(test_int64_complex128, language=language)
+    f_bl_true_output = f_bl(True)
+    test_bool_true_output = get_complex128(True)
 
-    assert (f_integer(integer) == test_int_complex128(integer))
-    assert (f_integer8(integer8) == test_int8_complex128(integer8))
-    assert (f_integer16(integer16) == test_int16_complex128(integer16))
-    assert (f_integer32(integer32) == test_int32_complex128(integer32))
-    assert (f_integer64(integer64) == test_int64_complex128(integer64))
+    f_bl_false_output = f_bl(False)
+    test_bool_false_output = get_complex128(False)
 
-    f_fl = epyccel(test_float_complex128, language=language)
-    f_fl32 = epyccel(test_float32_complex128, language=language)
-    f_fl64 = epyccel(test_float64_complex128, language=language)
+    assert f_bl_true_output == test_bool_true_output
+    assert f_bl_false_output == test_bool_false_output
 
-    assert (f_fl(fl) == test_float_complex128(fl))
-    assert (f_fl32(fl32) == test_float32_complex128(fl32))
-    assert (f_fl64(fl64) == test_float64_complex128(fl64))
+    f_integer = epyccel(get_complex128, language=language)
+    f_integer8 = epyccel(get_complex128, language=language)
+    f_integer16 = epyccel(get_complex128, language=language)
+    f_integer32 = epyccel(get_complex128, language=language)
+    f_integer64 = epyccel(get_complex128, language=language)
+
+    f_integer_output = f_integer(integer)
+    test_int_output  = get_complex128(integer)
+
+    assert f_integer_output == test_int_output
+    assert type(f_integer_output) == type(test_int_output.item())
+
+    f_integer8_output = f_integer8(integer8)
+    test_int8_output = get_complex128(integer8)
+
+    assert f_integer8_output == test_int8_output
+    assert type(f_integer8_output) == type(test_int8_output.item())
+
+    f_integer16_output = f_integer16(integer16)
+    test_int16_output = get_complex128(integer16)
+
+    assert f_integer16_output == test_int16_output
+    assert type(f_integer16_output) == type(test_int16_output.item())
+
+    f_integer32_output = f_integer32(integer32)
+    test_int32_output = get_complex128(integer32)
+
+    assert f_integer32_output == test_int32_output
+    assert type(f_integer32_output) == type(test_int32_output.item())
+
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64_output = f_integer64(integer64)
+        test_int64_output = get_complex128(integer64)
+
+        assert f_integer64_output == test_int64_output
+        assert type(f_integer64_output) == type(test_int64_output.item())
+
+    f_fl = epyccel(get_complex128, language=language)
+    f_fl32 = epyccel(get_complex128, language=language)
+    f_fl64 = epyccel(get_complex128, language=language)
+
+    f_fl_output = f_fl(fl)
+    test_float_output = get_complex128(fl)
+
+    assert f_fl_output == test_float_output
+    assert type(f_fl_output) == type(test_float_output.item())
+
+    f_fl32_output = f_fl32(fl32)
+    test_float32_output = get_complex128(fl32)
+
+    assert f_fl32_output == test_float32_output
+    assert type(f_fl32_output) == type(test_float32_output.item())
+
+    f_fl64_output = f_fl64(fl64)
+    test_float64_output = get_complex128(fl64)
+
+    assert f_fl64_output == test_float64_output
+    assert type(f_fl64_output) == type(test_float64_output.item())
