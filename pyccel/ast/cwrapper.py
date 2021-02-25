@@ -228,57 +228,73 @@ Py_False = Variable(PyccelPyObject(), 'Py_False',is_pointer=True)
 # Python.h object representing None
 Py_None  = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
 
+def Python_To_C(variable, argument):
+    """
+    Create FunctionCall responsible for casting python argument to C
+    Parameters:
+    ----------
+    variable : Variable
+        The variable needed for the generation of the cast_function
+    argument : Variable
+        The python argument of the cast function
+    Returns
+    -------
+    FunctionCall : cast type FunctionCall
+    """
+    try :
+        cast_function = py_to_c_registry[(variable.dtype, variable.precision)]
+    except KeyError:
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=variable.dtype,severity='fatal')
+    cast_func = FunctionDef(name = check_type,
+                    body      = [],
+                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
+                                 Variable(dtype=variable.dtype, name = 'v',
+                                          precision = variable.precision, is_pointer=True)],
+                    results   = [Variable(dtype=NativeBool(), name = 'r')])
+    return FunctionCall(cast_func, [argument])
+
+# Functions and functions descriptions are defined in pyccel/stdlib/cwrapper/
+
+py_to_c_registry = {
+    (NativeBool(), 4)    : 'PyBool_to_Bool',
+    (NativeInteger(), 1) : 'PyInt8_to_Int8',
+    (NativeInteger(), 2) : 'PyInt16_to_Int16',
+    (NativeInteger(), 4) : 'PyInt32_to_Int32',
+    (NativeInteger(), 8) : 'PyInt64_to_Int64',
+    (NativeReal(), 4)    : 'PyFloat_to_Float',
+    (NativeReal, 8)      : 'PyDouble_to_Double',
+    (NativeComplex, 4)   : 'PyComplex_to_Complex64',
+    (NativeComplex, 8)   : 'PyComplex_to_Complex128'}
 
 
-# Casting functions
-# Represents type of cast function responsible of the conversion of one data type into another.
-# More information are in pyccel/stdlib/cwrapper/
+def PythonType_Check(variable, argument):
+    """
+    Create FunctionCall responsible for checking python argument data type
+    Parameters:
+    ----------
+    variable : Variable
+        The variable needed for the generation of the type check
+    argument : Variable
+        The python argument of the check function
+    Returns
+    -------
+    FunctionCall : Check type FunctionCall
+    """
+    try :
+        check_type = check_type_registry[variable.dtype]
+    except KeyError:
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=variable.dtype,severity='fatal')
+    check_func = FunctionDef(name = check_type,
+                    body      = [],
+                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                    results   = [Variable(dtype=NativeBool(), name = 'r')])
+    return FunctionCall(check_func, [argument])
 
-c_bool_type        = Variable(dtype=NativeInteger(),  name = 'BOOL', precision = 4)
-c_int8_type        = Variable(dtype=NativeInteger(),  name = 'INT8', precision = 4)
-c_int16_type       = Variable(dtype=NativeInteger(),  name = 'INT16', precision = 4)
-c_int32_type       = Variable(dtype=NativeInteger(),  name = 'INT32', precision = 4)
-c_int64_type       = Variable(dtype=NativeInteger(),  name = 'INT64', precision = 4)
-c_float_type       = Variable(dtype=NativeInteger(),  name = 'FLOAT', precision = 4)
-c_double_type      = Variable(dtype=NativeInteger(),  name = 'DOUBLE', precision = 4)
-c_cfloat_type      = Variable(dtype=NativeInteger(),  name = 'CFLOAT', precision = 4)
-c_cdouble_type     = Variable(dtype=NativeInteger(),  name = 'CDOUBLE', precision = 4)
-
-c_dtype_registry = {('bool',4)     : c_bool_type,
-                    ('int',1)      : c_int8_type,
-                    ('int',2)      : c_int16_type,
-                    ('int',4)      : c_int32_type,
-                    ('int',8)      : c_int64_type,
-                    ('real',4)     : c_float_type,
-                    ('real',8)     : c_double_type,
-                    ('complex',4)  : c_cfloat_type,
-                    ('complex',8)  : c_cdouble_type}
-
-PyObject_AsCtype    = FunctionDef(name     = 'PyObject_AsCtype',
-                                arguments  = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)
-                                              Variable(dtype=NativeVoid(), name = 'v', precision = 4,
-                                                       is_pointer = True),
-                                              Variable(dtype=NativeInteger(), name = 'type')],
-                                body       = [],
-                                results    = [Variable(dtype=NativeBool(), name = 'b')])
-
-PyObject_from_Ctype = FunctionDef(name     = 'PyObject_from_Ctype',
-                                arguments  = [Variable(dtype=NativeBool(), name = 'b')],
-                                body       = [],
-                                results    = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)])
-
-pyarray_to_ndarray  = FunctionDef(name     = 'PyArray_to_ndarray',
-                                arguments  = [Variable(dtype=PyccelPyObject(), name='o', is_pointer=True)],
-                                body       = [],
-                                results    = [])#TODO
-
-
-c_to_py_registry = {
-    NativeInteger : PyLong_FromLongLong,
-    NativeFloat   : ,
-    NativeBool    : ,
-    NativeComplex : ,
-}
+# All functions used for type are from c python api :
+# https://docs.python.org/3/c-api/long.html#c.PyLong_Check
+# https://docs.python.org/3/c-api/complex.html#c.PyComplex_Check
+# https://docs.python.org/3/c-api/float.html#c.PyFloat_Check
+# https://docs.python.org/3/c-api/bool.html#c.PyBool_Check
 
 check_type_registry  = {
     NativeInteger() : 'PyLong_Check',
@@ -286,7 +302,6 @@ check_type_registry  = {
     NativeReal()    : 'PyFloat_Check',
     NativeBool()    : 'PyBool_Check',
 }
-
 
 # This registry is used for interface management,
 # mapping each data type to a given flag
