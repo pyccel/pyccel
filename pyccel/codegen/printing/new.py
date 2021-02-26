@@ -287,7 +287,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # Convert numpy_array to c array
         body.append(IfSection(LiteralTrue(), [PyArray_to_Array()]))
 
-        body    = [If(*body)]
+        body    = [If(*body), Return(LiteralInteger(1))]
         funcDef = FunctionDef(name     = func_name,
                             arguments  = func_arguments,
                             results    = [],
