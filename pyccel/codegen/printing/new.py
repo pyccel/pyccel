@@ -244,7 +244,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Returns:
         -------
         func     : FunctionCall
-        call to PyErr_SetString with TypeError as exception and custom message
+            call to PyErr_SetString with TypeError as exception and custom message
         """
         dtype     = variable.dtype
 
@@ -270,7 +270,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Returns:
         -------
         func     : FunctionCall
-        call to PyErr_SetString with TypeError as exception and custom message
+            call to PyErr_SetString with TypeError as exception and custom message
         """
         rank    = variable.rank
 
@@ -288,7 +288,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Returns:
         -------
         func     : FunctionCall
-        call to PyErr_SetString with TypeError as exception and custom message
+            call to PyErr_SetString with TypeError as exception and custom message
         """
         order   = variable.order
 
@@ -308,7 +308,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Returns:
         -------
         func     : FunctionCall
-        call to PyErr_SetString with TypeError as exception and custom message
+            call to PyErr_SetString with TypeError as exception and custom message
         """
         message = '"Argument type must be {type}"'.format(type = py_type)
 
@@ -441,6 +441,12 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_PyArgParse_Converter_Function(self, variable):
         """
+        Responsible for collecting any necessary intermediate functions which are used
+        to convert python to C.
+        Parameters:
+        ----------
+        variable            : Variable
+            variable holding information needed to chose converter function
         """
         if get_custom_key(variable) in self.converter_functions_dict:
 
@@ -451,18 +457,28 @@ class CWrapperCodePrinter(CCodePrinter):
 
             self.converter_functions_dict[get_custom_key(variable)]
 
-    def get_PyBuildValue_Converter_function(self, variable):
+    def get_PyBuildValue_Converter_function(self, variable, converter_functions):
         """
+        Responsible for collecting any necessary intermediate functions which are used
+        to convert c type to python.
+        Parameters:
+        ----------
+        variable            : Variable
+            variable holding information needed to chose converter function
+        converter_functions : Dictionary
+            dictionary that contains converter functions
         """
         if variable.rank > 0:
             raise NotImplementedError(
-            'return not implemented for this datatype : {}'.format(variable.dtype))
+            'return not implemented for arrays.')
 
         try:
-            python_to_c_registry[(variable.dtype, variable.precision)]
+            func = python_to_c_registry[(variable.dtype, variable.precision)]
         except: KeyError
             raise NotImplementedError(
             'return not implemented for this datatype : {}'.format(variable.dtype))
+        
+        converter_functions[get_custom_key(variable)] = func
 
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
@@ -559,15 +575,16 @@ class CWrapperCodePrinter(CCodePrinter):
         function_call   = FunctionCall(static_function, func_args)
         
         if len(expr.results) > 0:
-            results       = expr.results if len(expr.results)>1 else expr.results[0]
+            results       = expr.results if len(expr.results) > 1 else expr.results[0]
             function_call = Assign(results, function_call)
         
         wrapper_body.append(function_call)
 
+        building_converter_functions = {}
         for res in expr.results:
-            self.get_PyBuildValue_Converter_function(res)
+            self.get_PyBuildValue_Converter_function(res, building_converter_functions)
 
-        build_node = PyBuildValueNode(expr.results, self.building_converter_functions)
+        build_node = PyBuildValueNode(expr.results, building_converter_functions)
 
         wrapper_body.append(AliasAssign(wrapper_results[0], build_node))
 
