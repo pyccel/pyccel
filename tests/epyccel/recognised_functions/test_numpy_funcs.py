@@ -564,7 +564,7 @@ def test_log_call_i(language):
         return log(x)
 
     f1 = epyccel(log_call_i, language = language)
-    x = randint(low=1, high=1e6)
+    x = randint(low=sys.float_info.min, high=1e6)
     assert(isclose(f1(x), log_call_i(x), rtol=RTOL, atol=ATOL))
     assert(type(f1(x)) == type(log_call_i(x).item()))
 
@@ -575,7 +575,7 @@ def test_log_call_r(language):
         return log(x)
 
     f1 = epyccel(log_call_r, language = language)
-    x = uniform(low=abs(min_float), high=max_float)
+    x = uniform(low=sys.float_info.min, high=max_float)
     assert(isclose(f1(x), log_call_r(x), rtol=RTOL, atol=ATOL))
     assert(type(f1(x)) == type(log_call_r(x).item()))
 
@@ -587,8 +587,8 @@ def test_log_phrase(language):
         return a
 
     f2 = epyccel(log_phrase, language = language)
-    x = uniform(low=abs(min_float), high=1e6)
-    y = uniform(low=abs(min_float), high=1e6)
+    x = uniform(low=sys.float_info.min, high=1e6)
+    y = uniform(low=sys.float_info.min, high=1e6)
     assert(isclose(f2(x,y), log_phrase(x,y), rtol=RTOL, atol=ATOL))
 
 #----------------------------- arcsin function -------------------------------#
