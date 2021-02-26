@@ -204,28 +204,66 @@ numpy_type_check_registry = {
     (NativeBool(), 4)          : Numpy_Bool_ref
 }
 
-
-def PyArray_CheckType(c_object, py_object):
+# helpers
+def find_in_numpy_dtype_registry(var):
+    """ Find the numpy dtype key for a given variable
     """
-    Responsible for creating array data type check
+    dtype = var.dtype
+    prec  = var.precision
+    try :
+        return numpy_dtype_registry[(dtype, prec)]
+    except KeyError:
+        errors.report(PYCCEL_RESTRICTION_TODO,
+                symbol = "{}[kind = {}]".format(dtype, prec),
+                severity='fatal')
 
+
+# Check array Elements functions
+def PyArray_TypeCheck(py_variable, c_variable):
+    """
+    Create FunctionCall responsible for checking array data type
     Parameters:
     ----------
     c_object  : Variable
         The variable needed for the generation of the type check
     py_object : Variable
         The python argument of the check function
-
-    Returns:
+    Returns
     -------
-    check : FunctionCall
-        functionCall responsible for checking the array data type
+    FunctionCall : Check type FunctionCall
     """
-    
-    numpy_dtype = self.find_in_numpy_dtype_registry(variable)
-    arg_dtype   = self.find_in_dtype_registry(self._print(variable.dtype), variable.precision)
+    numpy_type = find_in_numpy_dtype_registry(c_variable)
 
-    check = PyccelNe(FunctionCall(numpy_get_type, [collect_var]), numpy_dtype)
-    error = PyErr_SetString('PyExc_TypeError', '"{} must be {}"'.format(variable, arg_dtype))
+    # function definition in pyccel/stdlib/cwrapper/cwrapper.c
+    PyArray_CheckType = FunctionDef(name  = 'PyArray_CheckType',
+                                body      = [],
+                                arguments = [Variable(name = 'o', dtype = PyccelObject, is_pointer = True),
+                                            Variable(name = 'type', dtype = NativeInteger())],
+                                results   = [Variable(name = 'r', dtype = NativeBool())])
 
-    return check, error
+    return FunctionCall(PyArray_CheckType, [py_variable, numpy_type])
+
+
+
+def PyArray_CheckRank(py_variable, c_variable):
+    """
+    Create FunctionCall responsible for checking array rank
+    Parameters:
+    ----------
+    c_object  : Variable
+        The variable needed for the generation of the rank check
+    py_object : Variable
+        The python argument of the check function
+    Returns
+    -------
+    FunctionCall : Check rank FunctionCall
+    """
+
+    # function definition in pyccel/stdlib/cwrapper/cwrapper.c
+    PyArray_CheckRank = FunctionDef(name  = 'PyArray_CheckRank',
+                                body      = [],
+                                arguments = [Variable(name = 'o', dtype = PyccelObject, is_pointer = True),
+                                            Variable(name = 'type', dtype = NativeInteger())],
+                                results   = [Variable(name = 'r', dtype = NativeBool())])
+
+    return FunctionCall(PyArray_CheckRank, [py_variable, c_variable.rank])

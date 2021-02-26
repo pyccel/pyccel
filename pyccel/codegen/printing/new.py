@@ -46,6 +46,7 @@ from pyccel.ast.cwrapper    import PyccelPyObject, PyNone
 from pyccel.ast.cwrapper    import get_custom_key
 
 from pyccel.ast.numpy_wrapper   import PyArray_CheckScalar, PyArray_ScalarAsCtype
+from pyccel.ast.numpy_wrapper   import PyArray_CheckType, PyArray_CheckRank
 from pyccel.ast.variable        import Variable, ValuedVariable, VariableAddress
 
 from pyccel.ast.bind_c          import as_static_function_call
@@ -210,7 +211,8 @@ class CWrapperCodePrinter(CCodePrinter):
         body.append(IfSection(PyArray_CheckOrder(),[generate_order_error()])) #TODO
 
         if check_is_needed:
-            body.append(IfSection(PyArray_CheckType, [generate_type_error()])) #TODO
+            body.append(IfSection(PyArray_CheckType(py_variable, c_variable),
+                            [generate_type_error(variable), Return(LiteralInteger(0))]))
 
         body.append(IfSection(LiteralTrue(), [PyArray_to_Array()])) #TODO
 

@@ -140,15 +140,15 @@ t_ndarray		PyArray_to_ndarray(PyObject *o)
 {
 	t_ndarray	array;
 
-	c.nd          = PyArray_NDIM(o);
-	c.raw_data    = PyArray_DATA(o);
-	c.type_size   = PyArray_ITEMSIZE(o);
-	c.type        = PyArray_TYPE(o);
-	c.length      = PyArray_SIZE(o);
-	c.buffer_size = PyArray_NBYTES(o);
-	c.shape       = numpy_to_ndarray_shape(PyArray_SHAPE(o), c.nd);
-	c.strides     = numpy_to_ndarray_strides(PyArray_STRIDES(o), c.type_size, c.nd);
-	c.is_view     = 1;
+	array.nd          = PyArray_NDIM(o);
+	array.raw_data    = PyArray_DATA(o);
+	array.type_size   = PyArray_ITEMSIZE(o);
+	array.type        = PyArray_TYPE(o);
+	array.length      = PyArray_SIZE(o);
+	array.buffer_size = PyArray_NBYTES(o);
+	array.shape       = numpy_to_ndarray_shape(PyArray_SHAPE(o), c.nd);
+	array.strides     = numpy_to_ndarray_strides(PyArray_STRIDES(o), c.type_size, c.nd);
+	array.is_view     = 1;
 
 	return array;
 }
@@ -179,8 +179,6 @@ PyObject	*Complex_to_PyComplex(double complex *c)
 
 PyObject	*Bool_to_PyBool(bool *b)
 {
-	PyObject	*o;
-
 	return b == true ? PyTrue : PyFalse;
 }
 
@@ -205,12 +203,12 @@ PyObject	*Double_to_PyDouble(double *d)
 
 /*  array check function  */
 
-bool	PyArray_Check_Rank(PyObject *a, int rank)
+bool	PyArray_CheckRank(PyObject *a, int rank)
 {
 	return PyArray_NDIM(a) == rank;
 }
 
-bool	PyArray_Check_Type(PyArrayObject *a, int type)
+bool	PyArray_CheckType(PyArrayObject *a, int type)
 {
 	return PyArray_TYPE(a) == type;
 }
