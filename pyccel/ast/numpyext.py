@@ -21,7 +21,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
 
 from .internals      import PyccelInternalFunction
 
-from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, Literal, convert_to_literal
+from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, convert_to_literal
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
@@ -435,7 +435,7 @@ class NumpyImag(PythonImag):
         if not isinstance(arg.dtype, NativeComplex):
             dtype=NativeInteger() if isinstance(arg.dtype, NativeBool) else arg.dtype
             if arg.rank == 0:
-            	return convert_to_literal(0, dtype, arg.precision)
+                return convert_to_literal(0, dtype, arg.precision)
             return NumpyZeros(arg.shape, dtype=dtype)
         return super().__new__(cls, arg)
 
