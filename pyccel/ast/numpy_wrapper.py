@@ -224,9 +224,9 @@ def PyArray_TypeCheck(py_variable, c_variable):
     Create FunctionCall responsible for checking array data type
     Parameters:
     ----------
-    c_object  : Variable
+    c_variable : Variable
         The variable needed for the generation of the type check
-    py_object : Variable
+    py_object  : Variable
         The python argument of the check function
     Returns
     -------
@@ -250,7 +250,7 @@ def PyArray_CheckRank(py_variable, c_variable):
     Create FunctionCall responsible for checking array rank
     Parameters:
     ----------
-    c_object  : Variable
+    c_variable : Variable
         The variable needed for the generation of the rank check
     py_object : Variable
         The python argument of the check function
@@ -267,3 +267,25 @@ def PyArray_CheckRank(py_variable, c_variable):
                                 results   = [Variable(name = 'r', dtype = NativeBool())])
 
     return FunctionCall(PyArray_CheckRank, [py_variable, c_variable.rank])
+
+def PyArray_OrderCheck(py_variable, c_variable):
+    """
+    Create FunctionCall responsible for checking array order
+    this function only used with the current condition :
+    - target language must be fortran
+    - rank must be strictly greater than 1
+    Parameters:
+    ----------
+    c_variable : Variable
+        The variable needed for the generation of the rank check
+    py_object  : Variable
+        The python argument of the check function
+    Returns
+    -------
+    FunctionCall : Check order FunctionCall
+    """
+    if c_variable.order == 'F'
+        return FunctionCall(numpy_check_flag,[py_variable, numpy_flag_f_contig])
+
+    else:
+        return FunctionCall(numpy_check_flag,[py_variable, numpy_flag_c_contig])

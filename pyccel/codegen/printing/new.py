@@ -141,6 +141,10 @@ class CWrapperCodePrinter(CCodePrinter):
         return [IfSection(check, body)]
 
     #TODO modify it to accepte multiple variables or list of variables
+
+    # --------------------------------------------------------------------
+    #                        Custom error generators
+    # --------------------------------------------------------------------
     def generate_type_error(variable):
         """
         Generate TypeError exception from the variable information (datatype, precision)
@@ -162,11 +166,50 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             precision = '{} bit '.format(variable.precision * 8)
 
-        message = '"{var_name} must be {precision}{dtype}"'.format(
-                        var_name  = variable,
-                        precision = precision,
-                        dtype     = self._print(variable.dtype))
-        return PyErr_SetString(PyExc_TypeError, message)
+        message = '"{name} must be {precision}{dtype}"'.format(
+                name      = variable,
+                precision = precision,
+                dtype     = self._print(variable.dtype))
+        return PyErr_SetString('PyExc_TypeError', message)
+
+    def generate_rank_error(variable)
+        """
+        Generate TypeError exception from the variable information (rank)
+        Parameters:
+        ----------
+        variable : Variable
+
+        Returns:
+        -------
+        func     : FunctionCall
+        call to PyErr_SetString with TypeError as exception and custom message
+        """
+        rank    = variable.rank
+
+        message = '"{name} must have rank {rank}"'.format(name = variable,
+                                                          rank = rank)
+
+        return PyErr_SetString('PyExc_TypeError', message)
+
+    def generate_rank_error(variable):
+        """
+        Generate TypeError exception from the variable information (order)
+        Parameters:
+        ----------
+        variable : Variable
+
+        Returns:
+        -------
+        func     : FunctionCall
+        call to PyErr_SetString with TypeError as exception and custom message
+        """
+        order   = variable.order
+
+        message = '"{name} does not have the expected ordering ({order})"'.format(
+                                name  = variable,
+                                order = order)
+
+        return PyErr_SetString('PyExc_NotImplementedError', message)
 
     #--------------------------------------------------------------------
     #                   Convert functions
@@ -207,14 +250,24 @@ class CWrapperCodePrinter(CCodePrinter):
         c_variable      = Variable.clone(name = 'c', is_pointer = True)
         body            = []
 
-        body.append(IfSection(PyArray_CheckRank(), [generate_rank_error()])) #TODO
-        body.append(IfSection(PyArray_CheckOrder(),[generate_order_error()])) #TODO
+        #Rank check
+        check = PyccelNot(PyArray_CheckRank(py_variable, c_variable))
+        error = generate_rank_error(py_variable, c_variable)
+        body.append(IfSection(check, [error, Return(LiteralInteger(0))]))
 
+        #Order check
+        if c_variable.rank > 1 and self._target_language == 'fortran':
+            check = PyccelNot(PyArray_CheckOrder(py_variable, c_variable))
+            error = generate_order_error(c_variable)
+            body.append(IfSection(check, [error, Return(LiteralInteger(0))]))
+
+         #Typr check
         if check_is_needed:
-            body.append(IfSection(PyArray_CheckType(py_variable, c_variable),
-                            [generate_type_error(variable), Return(LiteralInteger(0))]))
+            check = PyccelNot(PyArray_CheckType(py_variable, c_variable))
+            error = generate_type_error(c_variable)
+            body.append(IfSection(check, [error, Return(LiteralInteger(0))]))
 
-        body.append(IfSection(LiteralTrue(), [PyArray_to_Array()])) #TODO
+        body.append(IfSection(LiteralTrue(), [PyArray_to_Array()]))
 
         body    = [If(*body)]
         funcDef = FunctionDef(name     = func_name,
