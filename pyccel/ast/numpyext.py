@@ -434,7 +434,7 @@ class NumpyImag(PythonImag):
     def __new__(cls, arg):
         if not isinstance(arg.dtype, NativeComplex):
             dtype=NativeInteger() if isinstance(arg.dtype, NativeBool) else arg.dtype
-            if isinstance(arg, Literal) or (isinstance(arg, Variable) and not arg.allocatable):
+            if isinstance(arg, (Literal, Variable)) and arg.rank == 0:
                 return convert_to_literal(0, dtype, arg.precision)
             return NumpyZeros(arg.shape, dtype=dtype)
         return super().__new__(cls, arg)
@@ -443,7 +443,8 @@ class NumpyImag(PythonImag):
         super().__init__(arg)
         self._precision = arg.precision
         self._order = arg.order
-        self._shape = process_shape(self.internal_var.shape)
+        self._dtype = arg.dtype
+        self._shape = arg.shape
         self._rank  = len(self._shape)
 
     @property
