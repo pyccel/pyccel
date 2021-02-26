@@ -225,7 +225,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body            = []
 
         if isinstance(variable, ValuedVariable):
-            body.append(generate_valued_variable_body(py_object, variable))
+            body.append(generate_valued_variable_body(py_object, c_variable))
 
         body.append(generate_numpy_type_body()) #TODO
         body.append(generate_python_type_body()) #TODO
@@ -243,12 +243,29 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def generate_array_converter_function(self, used_names, variable, check_is_needed = True):
         """
+        Generate converter function responsible for collecting value 
+        and managing errors (data type, rank, order) of arguments
+        with rank greater than 0
+        Parameters:
+        ----------
+        used_names : set of strings
+            Set of variable and function names to avoid name collisions
+        variable   : Variable
+            variable hodlding information (data type, rank, order) needed
+            in bulding converter function body 
+        check_is_needed : Boolean
+            True if data type check is needed, used to avoid multiple type check
+            in interface
         """
 
         func_name       = 'py_to_{}'.format(self._print(variable.dtype))
         py_variable     = self.get_new_PyObject('o', used_names)
         c_variable      = Variable.clone(name = 'c', is_pointer = True)
         body            = []
+
+        # (Valued / Optional) variable check
+        if isinstance(variable, ValuedVariable):
+            body.append(generate_valued_variable_body(py_object, c_variable))
 
         #Rank check
         check = PyccelNot(PyArray_CheckRank(py_variable, c_variable))
@@ -261,12 +278,13 @@ class CWrapperCodePrinter(CCodePrinter):
             error = generate_order_error(c_variable)
             body.append(IfSection(check, [error, Return(LiteralInteger(0))]))
 
-         #Typr check
+        #Typr check
         if check_is_needed:
             check = PyccelNot(PyArray_CheckType(py_variable, c_variable))
             error = generate_type_error(c_variable)
             body.append(IfSection(check, [error, Return(LiteralInteger(0))]))
 
+        # Convert numpy_array to c array
         body.append(IfSection(LiteralTrue(), [PyArray_to_Array()]))
 
         body    = [If(*body)]
