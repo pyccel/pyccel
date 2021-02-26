@@ -1,52 +1,34 @@
-Plan:
-#TODO using converter function optional variable need to be treated as ** (double pointer) in coverter functions
-helpers ():
-c_binding():
+# coding: utf-8
+#------------------------------------------------------------------------------------------#
+# This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
+# go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
+#------------------------------------------------------------------------------------------#
+# pylint: disable=R0201
 
-generate_convert_array():
 
-generate_convert_scalar():
+from pyccel.codegen.printing.ccode import CCodePrinter
 
-parseargs()
-buildvalue()
+from pyccel.ast.literals    import LiteralTrue, LiteralInteger, LiteralString
 
-print_Interface():
-
-Print_FunctionDef():
-    --> generate new wrapper name
-    --> collect used_names #it can be droped
-    --> collect wrapper variable
-    --> collect key_words
-    --> loop on all function arguments :
-        --> generate convert function
-        --> generate new_args (needed c binding) #it can be droped
-
-    --> generate PyArg_ParseNode
-    --> generate static functioncall
-
-    --> loop on all  function results :
-        --> generate convert function or use the old principe
-
-    --> build the FunctionDef
-    --> print the FunctionDef
-
-Print_Module():
-
+from pyccel.ast.operators   import PyccelNot, PyccelEq
+from pyccel.ast.datatypes   import NativeBool, NativeComplex
 from pyccel.ast.core        import create_incremented_string, SeparatorComment
 
-from pyccel.ast.core        import FunctionCall, FunctionDef
+from pyccel.ast.core        import FunctionCall, FunctionDef, FunctionAddress
 from pyccel.ast.core        import Assign, AliasAssign, Nil
-from pyccel.ast.core        import If, IfSection, PyccelEq
+from pyccel.ast.core        import If, IfSection, Import
 
 from pyccel.ast.cwrapper    import (PyArgKeywordsm, PyArg_ParseTupleNode,
                                     PyBuildValueNode)
 from pyccel.ast.cwrapper    import Python_to_C, C_to_Python, PythonType_Check
 
-from pyccel.ast.cwrapper    import PyccelPyObject, PyNone
-from pyccel.ast.cwrapper    import get_custom_key
+from pyccel.ast.cwrapper    import PyccelPyObject, Py_None
+from pyccel.ast.cwrapper    import get_custom_key, PyErr_SetString
 
 from pyccel.ast.numpy_wrapper   import PyArray_CheckScalar, PyArray_ScalarAsCtype
-from pyccel.ast.numpy_wrapper   import PyArray_CheckType, PyArray_CheckRank
+from pyccel.ast.numpy_wrapper   import (PyArray_CheckType, PyArray_CheckRank,
+                                        NumpyType_Check)
+
 from pyccel.ast.variable        import Variable, ValuedVariable, VariableAddress
 
 from pyccel.ast.bind_c          import as_static_function_call
