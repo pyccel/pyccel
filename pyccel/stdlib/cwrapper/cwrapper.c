@@ -212,3 +212,4 @@ bool	PyArray_CheckType(PyArrayObject *a, int type)
 {
 	return PyArray_TYPE(a) == type;
 }
+

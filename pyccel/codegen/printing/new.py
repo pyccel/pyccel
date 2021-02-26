@@ -174,6 +174,11 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return static_func
 
+
+    # --------------------------------------------------------------------
+    #                        Custom body generators
+    # --------------------------------------------------------------------
+
     def generate_valued_variable_body(self, py_variable, c_variable):
         """
         Generate valued variable code section (check, collect default value)
@@ -199,6 +204,23 @@ class CWrapperCodePrinter(CCodePrinter):
         return body
         #TODO modify it to accepte multiple variables or list of variables ?
 
+    def generate_numpy_type_body(py_variable, c_variable, check_is_needed = True):
+        """
+        """
+        if check_is_needed:
+            check = 
+        else :
+            check = 
+        body  = 
+
+    def generate_python_type_body(py_variable, c_variable, check_is_needed = True):
+        """
+        """
+        if check_is_needed:
+            check = 
+        else :
+            check = 
+        body  = 
     # --------------------------------------------------------------------
     #                        Custom error generators
     # --------------------------------------------------------------------
@@ -223,8 +245,7 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             precision = '{} bit '.format(variable.precision * 8)
 
-        message = '"{name} must be {precision}{dtype}"'.format(
-                name      = variable,
+        message = '"Argument must be {precision}{dtype}"'.format(
                 precision = precision,
                 dtype     = self._print(variable.dtype))
         return PyErr_SetString('PyExc_TypeError', message)
@@ -243,8 +264,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         rank    = variable.rank
 
-        message = '"{name} must have rank {rank}"'.format(name = variable,
-                                                          rank = rank)
+        message = '"Argument must have rank {rank}"'.format(rank = rank)
 
         return PyErr_SetString('PyExc_TypeError', message)
 
@@ -262,8 +282,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         order   = variable.order
 
-        message = '"{name} does not have the expected ordering ({order})"'.format(
-                                name  = variable,
+        message = '"Argument does not have the expected ordering ({order})"'.format(
                                 order = order)
 
         return PyErr_SetString('PyExc_NotImplementedError', message)
@@ -281,11 +300,9 @@ class CWrapperCodePrinter(CCodePrinter):
         func     : FunctionCall
         call to PyErr_SetString with TypeError as exception and custom message
         """
-        message = '"{name} type must be {type}"'.format(name = variable,
-                                                        type = py_type)
+        message = '"Argument type must be {type}"'.format(type = py_type)
 
         return PyErr_SetString('PyExc_TypeError', message)
-
 
     #--------------------------------------------------------------------
     #                   Convert functions
@@ -310,9 +327,9 @@ class CWrapperCodePrinter(CCodePrinter):
         body.append(generate_python_type_body()) #TODO
 
         if check_is_needed:
-            body.append(IfSection(LiteralTrue(), [self.generate_datatype_error()])) #TODO
+            body.append(IfSection(LiteralTrue(), [self.generate_datatype_error(c_variable)]))
 
-        body    = [If(*body)]
+        body    = [If(*body), Return(LiteralInteger(1))]
         funcDef = FunctionDef(name     = func_name,
                             arguments  = [py_variable, c_variable],
                             results    = [],
@@ -337,7 +354,7 @@ class CWrapperCodePrinter(CCodePrinter):
             in interface
         """
 
-        func_name       = 'py_to_{}'.format(self._print(variable.dtype))
+        func_name       = 'py_to_nd{}'.format(self._print(variable.dtype))
         py_variable     = self.get_new_PyObject('o', used_names)
         c_variable      = Variable.clone(name = 'c', is_pointer = True)
         body            = []
@@ -385,7 +402,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def generate_pyobject_converter_function(self, used_names, variable):
         """
         """
-
+        #TODO this is needed for array, list, tupe ...
         func_name       = '{}_to_py'.format(self._print(variable.dtype))
 
         func_arguments  = [self.get_new_PyObject('o', used_names)]

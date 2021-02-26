@@ -39,12 +39,15 @@ PyObject	*Int_to_PyLong(int64_t *i);
 
 PyObject	*Double_to_PyDouble(double *d);
 
-
-
 /* array check */
 
 bool		PyArray_CheckRank(PyArrayObject *a, int rank);
 bool		PyArray_CheckType(PyArrayObject *a, int dtype);
+
+//order check todo
+
+
+
 
 
 #endif
