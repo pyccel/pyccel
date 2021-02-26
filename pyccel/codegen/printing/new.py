@@ -202,7 +202,7 @@ class CWrapperCodePrinter(CCodePrinter):
     # --------------------------------------------------------------------
     #                        Custom error generators
     # --------------------------------------------------------------------
-    def generate_type_error(variable):
+    def generate_datatype_error(variable):
         """
         Generate TypeError exception from the variable information (datatype, precision)
         Parameters:
@@ -268,6 +268,25 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return PyErr_SetString('PyExc_NotImplementedError', message)
 
+    def generate_type_error(variable, py_type):
+        """
+        Generate TypeError exception from the variable type
+        (array, tuple, list, ...)
+        Parameters:
+        ----------
+        variable : Variable
+
+        Returns:
+        -------
+        func     : FunctionCall
+        call to PyErr_SetString with TypeError as exception and custom message
+        """
+        message = '"{name} type must be {type}"'.format(name = variable,
+                                                        type = py_type)
+
+        return PyErr_SetString('PyExc_TypeError', message)
+
+
     #--------------------------------------------------------------------
     #                   Convert functions
     #--------------------------------------------------------------------
@@ -291,7 +310,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body.append(generate_python_type_body()) #TODO
 
         if check_is_needed:
-            body.append(IfSection(LiteralTrue(), [self.generate_type_error()])) #TODO
+            body.append(IfSection(LiteralTrue(), [self.generate_datatype_error()])) #TODO
 
         body    = [If(*body)]
         funcDef = FunctionDef(name     = func_name,
@@ -327,6 +346,11 @@ class CWrapperCodePrinter(CCodePrinter):
         if isinstance(variable, ValuedVariable):
             body.append(generate_valued_variable_body(py_object, c_variable))
 
+        #Array Check
+        check = PyccelNot(FunctionCall(PyArray_Check, py_variable))
+        error = generate_type_error(c_variable, 'Array')
+        body.append(IfSection(check, [error, Return(LiteralInteger(0))]))
+
         #Rank check
         check = PyccelNot(PyArray_CheckRank(py_variable, c_variable))
         error = generate_rank_error(py_variable, c_variable)
@@ -338,10 +362,10 @@ class CWrapperCodePrinter(CCodePrinter):
             error = generate_order_error(c_variable)
             body.append(IfSection(check, [error, Return(LiteralInteger(0))]))
 
-        #Typr check
+        #datatype check
         if check_is_needed:
             check = PyccelNot(PyArray_CheckType(py_variable, c_variable))
-            error = generate_type_error(c_variable)
+            error = generate_datatype_error(c_variable)
             body.append(IfSection(check, [error, Return(LiteralInteger(0))]))
 
         # Convert numpy_array to c array
