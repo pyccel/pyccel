@@ -23,7 +23,7 @@ max_int32 = iinfo('int32').max
 min_int64 = iinfo('int64').min
 max_int64 = iinfo('int64').max
 
-min_float = sys.float_info.min
+min_float = finfo('float').min
 max_float = finfo('float').max
 
 min_float32 = finfo('float32').min
