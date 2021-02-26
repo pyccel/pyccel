@@ -328,7 +328,7 @@ class CWrapperCodePrinter(CCodePrinter):
         used_names : set of strings
             Set of variable and function names to avoid name collisions
         variable   : Variable
-            variable hodlding information (data type, precision) needed
+            variable holdding information (data type, precision) needed
             in bulding converter function body 
         check_is_needed : Boolean
             True if data type check is needed, used to avoid multiple type check
@@ -377,7 +377,7 @@ class CWrapperCodePrinter(CCodePrinter):
         used_names : set of strings
             Set of variable and function names to avoid name collisions
         variable   : Variable
-            variable hodlding information (data type, rank, order) needed
+            variable holdding information (data type, rank, order) needed
             in bulding converter function body 
         check_is_needed : Boolean
             True if data type check is needed, used to avoid multiple type check
@@ -538,6 +538,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
 
     def _print_Interface(self, expr):
+
         # TODO nightmare
 
     def _print_FunctionDef(self, expr):
@@ -553,41 +554,46 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_args    = get_wrapper_arguments(used_names)
         wrapper_results = [self.get_new_PyObject("result", used_names)]
 
+        # build keyword_list
         arg_names         = [a.name for a in expr.arguments]
         keyword_list_name = self.get_new_name(used_names, 'kwlist')
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
 
         wrapper_body      = [keyword_list]
         func_args         = []
-        
+        # loop on all functions argument to collect needed converter functions
         for arg in expr.arguments:
             self.get_PyArgParse_Converter_Function(arg)
             func_args.append(None) #TODO Bind_C_Arg
 
+        # Parse arguments
         parse_node = PyArg_ParseTupleNode(*wrapper_args[:-1]
                                           self.converter_functions_dict,
                                           expr.arguments, keyword_list)
 
         wrapper_body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
 
-        static_function = self.get_static_function
+        # Call function
+        static_function = self.get_static_function(expr)
 
         function_call   = FunctionCall(static_function, func_args)
-        
         if len(expr.results) > 0:
             results       = expr.results if len(expr.results) > 1 else expr.results[0]
             function_call = Assign(results, function_call)
         
         wrapper_body.append(function_call)
 
+        # loop on all results to collect needed converter functions
         building_converter_functions = {}
         for res in expr.results:
             self.get_PyBuildValue_Converter_function(res, building_converter_functions)
 
+        # builde results
         build_node = PyBuildValueNode(expr.results, building_converter_functions)
 
         wrapper_body.append(AliasAssign(wrapper_results[0], build_node))
-
+        # Return
+        wrapper_body.append(Return(wrapper_results))
         wrapper_function = FunctionDef(name     = wrapper_name,
                                     arguments   = wrapper_args,
                                     results     = wrapper_results,
