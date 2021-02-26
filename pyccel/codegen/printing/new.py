@@ -124,6 +124,15 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_new_PyObject(self, name, used_names):
         """
+        Create new PyccelPyObject Variable with the desired name
+        Parameters:
+        -----------
+        name       : string
+            The desired name
+        used_names : set of strings
+            Set of variable and function names to avoid name collisions
+        Returns: Variable
+        -------
         """
         return Variable(dtype      = PyccelPyObject(),
                         name       = self.get_new_name(used_names, name),
@@ -132,6 +141,12 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_wrapper_arguments(self, used_names):
         """
+        Create wrapper arguments
+        Parameters:
+        -----------
+        used_names : set of strings
+            Set of variable and function names to avoid name collisions
+        Returns: list of Variable
         """
         python_func_args    = self.get_new_PyObject("args"  , used_names)
         python_func_kwargs  = self.get_new_PyObject("kwargs", used_names)
@@ -142,6 +157,13 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_static_function(self, function):
         """
+        Create functionDef for arguments rank > 0 in fortran.
+        Parameters:
+        -----------
+        function    : FunctionDef
+        Returns   :
+        -----------
+        static_func : FunctionDef
         """
         if self._target_language == 'fortran':
             static_func = as_static_function_call(function,
@@ -154,7 +176,18 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def generate_valued_variable_body(self, py_variable, c_variable):
         """
+        Generate valued variable code section (check, collect default value)
+        Parameters:
+        ----------
+        c_variable : Variable
+            The variable that will hold default value
+         py_object : Variable
+            The python argument needed for check
+        Returns   :
+        -----------
+        body      : IfSection
         """
+
         check = PyccelEq(VariableAddress(py_variable), VariableAddress(Py_None))
         if c_variable.is_optional:
             body =  [AliasAssign(variable, Nil())]
@@ -162,7 +195,8 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             body = [Assign(variable, variable.value)]
 
-        return [IfSection(check, body)]
+        body = IfSection(check, body)
+        return body
         #TODO modify it to accepte multiple variables or list of variables ?
 
     # --------------------------------------------------------------------
