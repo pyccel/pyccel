@@ -291,7 +291,7 @@ def C_to_Python(c_object)
         cast_function = c_to_py_registry[(c_object.dtype, c_object.precision)]
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
-    cast_func = FunctionDef(name = check_type,
+    cast_func = FunctionDef(name = cast_function,
                        body      = [],
                        arguments = [Variable(dtype=c_object.dtype, name = 'v', precision = c_object.precision)],
                        results   = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)])
@@ -316,15 +316,15 @@ c_to_py_registry = {
 #              errors and check functions
 #-------------------------------------------------------------------
 
-def PythonType_Check(c_object, py_object):
+def PythonType_Check(py_object, c_object):
     """
     Create FunctionCall responsible for checking python argument data type
     Parameters:
     ----------
-    c_object  : Variable
-        The variable needed for the generation of the type check
-    py_object : Variable
+    py_object  : Variable
         The python argument of the check function
+    c_object : Variable
+        The variable needed for the generation of the type check
     Returns
     -------
     FunctionCall : Check type FunctionCall

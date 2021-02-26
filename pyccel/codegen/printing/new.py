@@ -176,18 +176,18 @@ class CWrapperCodePrinter(CCodePrinter):
 
 
     # --------------------------------------------------------------------
-    #                        Custom body generators
+    #                  Custom body generators [helpers]
     # --------------------------------------------------------------------
 
-    def generate_valued_variable_body(self, py_variable, c_variable):
+    def generate_valued_variable_body(py_variable, c_variable):
         """
         Generate valued variable code section (check, collect default value)
         Parameters:
         ----------
+        py_object : Variable
+            The python argument needed for check
         c_variable : Variable
             The variable that will hold default value
-         py_object : Variable
-            The python argument needed for check
         Returns   :
         -----------
         body      : IfSection
@@ -204,23 +204,33 @@ class CWrapperCodePrinter(CCodePrinter):
         return body
         #TODO modify it to accepte multiple variables or list of variables ?
 
-    def generate_numpy_type_body(py_variable, c_variable, check_is_needed = True):
+    def generate_python_type_body(py_variable, c_variable, check_is_needed)
         """
+        Generate IfSection responsible for collecting value from python object
+        Parameters:
+        ----------
+        py_object : Variable
+            The python argument needed for check
+        c_variable : Variable
+            The variable that will hold default value
+        Returns   :
+        -----------
+        body      : IfSection
         """
-        if check_is_needed:
-            check = 
-        else :
-            check = 
-        body  = 
 
-    def generate_python_type_body(py_variable, c_variable, check_is_needed = True):
-        """
-        """
-        if check_is_needed:
-            check = 
-        else :
-            check = 
-        body  = 
+        if check_is_needed :
+            check = PythonType_Check(py_variable, c_variable)
+        else:
+            check = LiteralTrue()
+
+        body  = PyccelNot(C_to_Python(py_variable, c_variable))
+        # check done during conversion to assure everything is fine
+        body  = If(IfSection(body), [Return(LiteralInteger(0))])
+
+        body  = IfSection(check, [body])
+
+        return body
+
     # --------------------------------------------------------------------
     #                        Custom error generators
     # --------------------------------------------------------------------
@@ -319,13 +329,17 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # (Valued / Optional) variable check
         if isinstance(variable, ValuedVariable):
-            body.append(generate_valued_variable_body(py_object, c_variable))
+            body.append(self.generate_valued_variable_body(py_variable, c_variable))
 
         # Numpy type
-        body.append(generate_numpy_type_body()) #TODO
-        # Python type
-        body.append(generate_python_type_body()) #TODO
+        check = NumpyType_Check(py_variable, c_variable)
+        body  = FunctionCall(PyArray_ScalarAsCtype, [py_variable, c_variable])
+        body.append(IfSection(check, [body]))
 
+        # Python type
+        body.append(self.generate_python_type_body(py_variable, c_variable, check_is_needed))
+
+`       # raise Error when Check type was needed
         if check_is_needed:
             body.append(IfSection(LiteralTrue(), [self.generate_datatype_error(c_variable)]))
 
@@ -379,7 +393,7 @@ class CWrapperCodePrinter(CCodePrinter):
             error = generate_order_error(c_variable)
             body.append(IfSection(check, [error, Return(LiteralInteger(0))]))
 
-        #datatype check
+        #datatqype check
         if check_is_needed:
             check = PyccelNot(PyArray_CheckType(py_variable, c_variable))
             error = generate_datatype_error(c_variable)
