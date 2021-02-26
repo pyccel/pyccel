@@ -294,3 +294,29 @@ def PyArray_OrderCheck(py_variable, c_variable):
 
     else:
         return FunctionCall(numpy_check_flag,[py_variable, numpy_flag_c_contig])
+
+def NumpyType_Check(py_variable, c_variable):
+    """
+    Create FunctionCall responsible of checking numpy argument data type
+    Parameters:
+    ----------
+    c_variable : Variable
+        The variable needed for the generation of the type check
+    py_variable : Variable
+        The python argument of the check function
+    Returns
+    -------
+    FunctionCall : Check type FunctionCall
+    """
+    try :
+        check_numpy_ref = numpy_type_check_registry[(c_variable.dtype, c_variable.precision)]
+    except KeyError:
+        errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_variable.dtype,severity='fatal')
+
+    check_numpy_func = FunctionDef(name = 'PyArray_IsScalar',
+                              body      = [],
+                              arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
+                                           check_numpy_ref],
+                              results   = [Variable(dtype=NativeBool(), name = 'r')])
+
+    return FunctionCall(check_numpy_func, [py_variable, check_numpy_ref])
