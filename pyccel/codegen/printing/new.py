@@ -102,6 +102,16 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_wrapper_name(self, used_names, function):
         """
+        Generate wrapper function name
+        Parameters:
+        -----------
+        used_names : set of strings
+            Set of variable and function names to avoid name collisions
+        function   : FunctionDef or Interface
+
+        Returns:
+        -------
+        wrapper_name : string
         """
         name = function.name
         wrapper_name = self.get_new_name(used_names.union(self._global_names), name+"_wrapper")
