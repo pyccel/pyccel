@@ -78,13 +78,27 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_new_name(self, used_names, requested_name):
         """
+        Generate a new name, return the requested_name if it's not in 
+        used_names set  or generate new one based on the requested_name.
+        the generated name is appended to the set
+        Parameters
+        ----------
+        used_names     : set of strings
+            Set of variable and function names to avoid name collisions
+        requested_name : str
+            The desired name
+        Returns
+        ----------
+        name  : str
+
         """
         if requested_name not in used_names:
             used_names.add(requested_name)
-            return requested_name
+            name = requested_name
         else:
-            incremented_name, _ = create_incremented_string(used_names, prefix=requested_name)
-            return incremented_name
+            name, _ = create_incremented_string(used_names, prefix=requested_name)
+
+        return name
 
     def get_wrapper_name(self, used_names, function):
         """
@@ -139,8 +153,7 @@ class CWrapperCodePrinter(CCodePrinter):
             body = [Assign(variable, variable.value)]
 
         return [IfSection(check, body)]
-
-    #TODO modify it to accepte multiple variables or list of variables
+        #TODO modify it to accepte multiple variables or list of variables ?
 
     # --------------------------------------------------------------------
     #                        Custom error generators
@@ -224,10 +237,13 @@ class CWrapperCodePrinter(CCodePrinter):
         c_variable      = Variable.clone(name = 'c', is_pointer = True)
         body            = []
 
+        # (Valued / Optional) variable check
         if isinstance(variable, ValuedVariable):
             body.append(generate_valued_variable_body(py_object, c_variable))
 
+        # Numpy type
         body.append(generate_numpy_type_body()) #TODO
+        # Python type
         body.append(generate_python_type_body()) #TODO
 
         if check_is_needed:
