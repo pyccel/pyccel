@@ -434,8 +434,8 @@ class NumpyImag(PythonImag):
     def __new__(cls, arg):
         if not isinstance(arg.dtype, NativeComplex):
             dtype=NativeInteger() if isinstance(arg.dtype, NativeBool) else arg.dtype
-            if isinstance(arg, (Literal, Variable)) and arg.rank == 0:
-                return convert_to_literal(0, dtype, arg.precision)
+            if arg.rank == 0:
+            	return convert_to_literal(0, dtype, arg.precision)
             return NumpyZeros(arg.shape, dtype=dtype)
         return super().__new__(cls, arg)
 
