@@ -320,6 +320,22 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def generate_scalar_converter_function(self, used_names, variable, check_is_needed = True):
         """
+        Generate converter function responsible for collecting value 
+        and managing errors (data type, precision) of arguments
+        with rank less than 1
+        Parameters:
+        ----------
+        used_names : set of strings
+            Set of variable and function names to avoid name collisions
+        variable   : Variable
+            variable hodlding information (data type, precision) needed
+            in bulding converter function body 
+        check_is_needed : Boolean
+            True if data type check is needed, used to avoid multiple type check
+            in interface
+        Returns:
+        --------
+        funcDef   : FunctionDef
         """
 
         func_name       = 'py_to_{}'.format(self._print(variable.dtype))
@@ -366,6 +382,9 @@ class CWrapperCodePrinter(CCodePrinter):
         check_is_needed : Boolean
             True if data type check is needed, used to avoid multiple type check
             in interface
+        Returns:
+        --------
+        funcDef   : FunctionDef
         """
 
         func_name       = 'py_to_nd{}'.format(self._print(variable.dtype))
@@ -413,26 +432,8 @@ class CWrapperCodePrinter(CCodePrinter):
     def generate_tuple_converter_function(self, used_names, variable):
         #TODO
 
-    def generate_pyobject_converter_function(self, used_names, variable):
-        """
-        """
-        #TODO this is needed for array, list, tupe ...
-        func_name       = '{}_to_py'.format(self._print(variable.dtype))
-
-        func_arguments  = [self.get_new_PyObject('o', used_names)]
-        func_arguments += [variable.clone(name = self.get_new_name(used_name, variable.name),
-                                is_pointer = True)]
-        local_vars      = []
-        func_body       = #TODO]
-
-        funcDef = FunctionDef(name     = func_name,
-                            arguments  = func_arguments,
-                            results    = [],
-                            local_vars = local_vars,
-                            body       = func_body)
-
-        return funcDef
-
+    def generate_list_converter_function(self, used_names, variable):
+        #TODO
 
     # -------------------------------------------------------------------
     #       Parsing arguments and building values  functions
