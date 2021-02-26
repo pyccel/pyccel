@@ -156,6 +156,15 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return static_func
 
+    def get_flag_value(flag, variable):
+        """
+        """
+        try :
+            new_flag = flags_registry[(variable.dtype, variable.precision)]
+        except: KeyError
+            raise NotImplementedError(
+            'datatype not implemented as arguments : {}'.format(variable.dtype))
+        return (flag << 4) + flag
 
     # --------------------------------------------------------------------
     #                  Custom body generators [helpers]
@@ -430,16 +439,19 @@ class CWrapperCodePrinter(CCodePrinter):
         variable            : Variable
             variable holding information needed to chose converter function
         """
-        if get_custom_key(variable) in self.converter_functions_dict:
+        if get_custom_key(variable) not in self.converter_functions_dict:
 
             if variable.rank > 0:
                 function = self.generate_array_converter_function(variable)
             else:
                 function = self.generate_scalar_converter_function(variable)
 
-            self.converter_functions_dict[get_custom_key(variable)]
+            self.converter_functions_dict[get_custom_key(variable)] = functions
 
-    def get_PyBuildValue_Converter_function(self, variable, converter_functions):
+            return function
+        return self.converter_functions_dict[get_custom_key(variable)]
+
+    def get_PyBuildValue_Converter_function(self, variable):
         """
         Responsible for collecting any necessary intermediate functions which are used
         to convert c type to python.
@@ -447,8 +459,6 @@ class CWrapperCodePrinter(CCodePrinter):
         ----------
         variable            : Variable
             variable holding information needed to chose converter function
-        converter_functions : Dictionary
-            dictionary that contains converter functions
         """
         if variable.rank > 0:
             raise NotImplementedError(
@@ -460,7 +470,7 @@ class CWrapperCodePrinter(CCodePrinter):
             raise NotImplementedError(
             'return not implemented for this datatype : {}'.format(variable.dtype))
         
-        converter_functions[get_custom_key(variable)] = func
+        return func
 
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
@@ -520,8 +530,121 @@ class CWrapperCodePrinter(CCodePrinter):
 
 
     def _print_Interface(self, expr):
+        funcs = expr.functions
 
-        # TODO nightmare
+        # Save all used names
+        used_names = set([a.name for a in expr.func[0].arguments]
+            + [r.name for r in expr.func[0].results]
+            + [f.name for f in expr.func])
+
+        # Find a name for the wrapper function
+        wrapper_name = self.get_wrapper_name(used_names, expr)
+
+        # Collect arguments and results
+        wrapper_args    = get_wrapper_arguments(used_names)
+        wrapper_results = [self.get_new_PyObject("result", used_names)]
+
+        # build keyword_list
+        arg_names         = [a.name for a in expr.arguments]
+        keyword_list_name = self.get_new_name(used_names, 'kwlist')
+        keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
+
+        wrapper_body      = []
+        # variable holding the bitset of type check
+        check_variable = Variable(dtype = NativeInteger(), precision = 8,
+                                   name = self.get_new_name(used_names , "check"))
+
+        # temporary parsing args needed to hold python value
+        parse_args     = [self.get_new_PyObject(a.name + 'tmp', used_names)
+                          for a in funcs[0].arguments]
+
+        #dict to collect each variable possible type
+        types_dict     = OrderedDict((a, set()) for a in funcs[0].arguments)
+        # To store the mini function responsible for collecting value and
+        # calling interfaces functions and return the builded value
+        wrapper_functions = []
+        for func in expr.functions:
+            mini_wrapper_name = self.get_wrapper_name(used_names, expr)
+            mini_wrapper_body = []
+            func_args_args    = []
+            flag              = 0
+
+            # loop on all functions argument to collect needed converter functions
+            for f_arg, p_args in zip(func.arguments, parse_args):
+                convert_func = self.get_PyArgParse_Converter_Function(f_arg)
+                func_args.append(f_args) #TODO Bind_C_Arg
+
+                flag = self.get_flag_value(flag, f_arg) # set flag value
+                types_dict[p_arg].add(f_arg.dtype) # collect type
+                call = FunctionCall(p_arg, VariableAddress(f_arg)) # convert py to c type
+                body = If(IfSection(PyccelNot(call), Return([Nil()]))) # check in cas of error
+                mini_wrapper_body.append(body)
+
+            # Call function
+            static_function = self.get_static_function(func)
+            function_call   = FunctionCall(static_function, func_args)
+
+            if len(func.results) > 0:
+                results       = func.results if len(func.results) > 1 else func.results[0]
+                function_call = Assign(results, function_call)
+
+            mini_wrapper_body.append(function_call)
+
+            # loop on all results to collect needed converter functions
+            building_converter_functions = {}
+            for res in expr.results:
+                convert_func = self.get_PyBuildValue_Converter_function(res)
+            building_converter_functions[get_custum_key(res)] = convert_func
+
+            # builde results
+            build_node = PyBuildValueNode(func.results, building_converter_functions)
+
+            mini_wrapper_body.append(AliasAssign(wrapper_results[0], build_node))
+            # Return
+            mini_wrapper_body.append(Return(wrapper_results))
+            # Creating mini_wrapper functionDef
+            mini_wrapper_function  = FunctionDef(
+                    name        = mini_wrapper_name,
+                    arguments   = parse_args,
+                    results     = wrapper_results,
+                    body        = mini_wrapper_body,
+                    local_vars  = func.arguments)
+            wrapper_functions.append(mini_wrapper_function)
+
+            # call mini_wrapper function from the interface wrapper with the correponding check
+            call  = AliasAssign(wrapper_results[0], FunctionCall(mini_wrapper_function, parse_args))
+            check = If(IfSection(PyccelEq(check_variable, LiteralInteger(flags)), [call]))
+            wrapper_body.append(check)
+
+        # Errors / Types management
+        # Creating check_type function
+        check_function = self.generate_interface_check_function(types_dict)
+        wrapper_functions.append(check_function)
+        # generate error
+        wrapper_body.append(IfSection(LiteralTrue(),
+            [PyErr_SetString('PyExc_TypeError', '"Arguments combinations don\'t exist"'),
+             Return([Nil()])]))
+
+        # Parse arguments
+        parse_node = PyArg_ParseTupleNode(*wrapper_args[:-1]
+                                    self.converter_functions_dict,
+                                    expr.arguments, keyword_list)
+
+        parse_node   = If(IfSection(PyccelNot(parse_node), [Return([Nil()])]))
+        check_call   = Assign(check_variable, FunctionCall(check_function, parse_args))
+        wrapper_body = [keyword_list, parse_node, check_call] + wrapper_body
+
+        # Create FunctionDef for interface wrapper
+        funcs_def.append(FunctionDef(
+                    name       = wrapper_name,
+                    arguments  = wrapper_args,
+                    results    = wrapper_results,
+                    body       = wrapper_body,
+                    local_vars = parse_args + [check_variable]))
+
+        sep = self._print(SeparatorComment(40))
+
+        return sep + '\n'.join(CCodePrinter._print_FunctionDef(self, f) for f in wrapper_functions)
 
     def _print_FunctionDef(self, expr):
         # Save all used names
@@ -546,7 +669,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # loop on all functions argument to collect needed converter functions
         for arg in expr.arguments:
             self.get_PyArgParse_Converter_Function(arg)
-            func_args.append(None) #TODO Bind_C_Arg
+            func_args.append(arg) #TODO Bind_C_Arg
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(*wrapper_args[:-1]
@@ -557,18 +680,19 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Call function
         static_function = self.get_static_function(expr)
-
         function_call   = FunctionCall(static_function, func_args)
+
         if len(expr.results) > 0:
             results       = expr.results if len(expr.results) > 1 else expr.results[0]
             function_call = Assign(results, function_call)
-        
+
         wrapper_body.append(function_call)
 
         # loop on all results to collect needed converter functions
         building_converter_functions = {}
         for res in expr.results:
-            self.get_PyBuildValue_Converter_function(res, building_converter_functions)
+            convert_func = self.get_PyBuildValue_Converter_function(res)
+            building_converter_functions[get_custum_key(res)] = convert_func
 
         # builde results
         build_node = PyBuildValueNode(expr.results, building_converter_functions)
