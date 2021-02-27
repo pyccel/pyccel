@@ -23,11 +23,7 @@ max_int32 = iinfo('int32').max
 min_int64 = iinfo('int64').min
 max_int64 = iinfo('int64').max
 
-<<<<<<< HEAD
-min_float = sys.float_info.min
-=======
 min_float = finfo('float').min
->>>>>>> master
 max_float = finfo('float').max
 
 min_float32 = finfo('float32').min
@@ -36,28 +32,12 @@ max_float32 = finfo('float32').max
 min_float64 = finfo('float64').min
 max_float64 = finfo('float64').max
 
-<<<<<<< HEAD
-# int8 variable does not accept negative numbers, see https://github.com/pyccel/pyccel/issues/722
-=======
 # Functions still to be tested:
 #    array
 #    # ...
-#    norm
-#    int
-#    real
-#    imag
-#    float
-#    double
-#    mod
-#    matmul
-#    prod
-#    product
-#    linspace
 #    diag
-#    where
 #    cross
 #    # ---
->>>>>>> master
 
 # Relative and absolute tolerances for array comparisons in the form
 # numpy.isclose(a, b, rtol, atol). Windows has larger round-off errors.
