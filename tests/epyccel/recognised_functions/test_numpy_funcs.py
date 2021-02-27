@@ -5021,7 +5021,7 @@ def test_numpy_mod_array_like_2d(language):
     )
 )
 
-def test_numpy_matmul_array_like_2d(language):
+def test_numpy_matmul_array_like_1d(language):
 
     @types('bool[:,:]')
     @types('int[:,:]')
@@ -5035,28 +5035,28 @@ def test_numpy_matmul_array_like_2d(language):
     @types('complex64[:,:]')
     @types('complex128[:,:]')
     def get_matmul(arr):
-        from numpy import matmul, shape
+        from numpy import matmul
         a = matmul(arr, arr)
         return a
 
-    bl = randint(0, 1, size=(2, 5), dtype= bool)
+    bl = randint(0, 1, size=5, dtype= bool)
 
-    integer8 = randint(min_int8, max_int8, size=(2, 5), dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=(2, 5), dtype=np.int16)
-    integer = randint(min_int, max_int, size=(2, 5), dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=(2, 5), dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=(2, 5), dtype=np.int64)
+    integer8 = randint(min_int8, max_int8, size=5, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, size=5, dtype=np.int16)
+    integer = randint(min_int, max_int, size=5, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size=5, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size=5, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size=(2, 5))
-    fl32 = uniform(min_float32, max_float32, size=(2, 5))
+    fl = uniform(min_float / 2, max_float / 2, size=5)
+    fl32 = uniform(min_float32, max_float32, size=5)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(2, 5))
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=5)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=(2, 5)) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=(2, 5)) * 1j
+    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=5) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=5) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) * 1j
+    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) * 1j
 
     f_bl = epyccel(get_matmul, language=language)
 
@@ -5169,8 +5169,7 @@ def test_numpy_matmul_array_like_2x2d(language):
     assert (f_complex128(cmplx128) == get_matmul(cmplx128))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="NumpyProd is not supporting scalar arguments")]),
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Prod function not supported in C"),
             pytest.mark.c]
@@ -5226,7 +5225,7 @@ def test_numpy_prod_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output))
+    assert (type(f_bl_true_output) == type(test_bool_false_output.item()))
 
     f_integer = epyccel(get_prod, language=language)
     f_integer8 = epyccel(get_prod, language=language)
@@ -5238,7 +5237,7 @@ def test_numpy_prod_scalar(language):
     test_int_output  = get_prod(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output)
+    assert type(f_integer_output) == type(test_int_output.item())
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_prod(integer8)
@@ -5272,7 +5271,7 @@ def test_numpy_prod_scalar(language):
     test_float_output = get_prod(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output)
+    assert type(f_fl_output) == type(test_float_output.item())
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_prod(fl32)
@@ -5284,7 +5283,7 @@ def test_numpy_prod_scalar(language):
     test_float64_output = get_prod(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output)
+    assert type(f_fl64_output) == type(test_float64_output.item())
 
     f_complex64 = epyccel(get_prod, language=language)
     f_complex128 = epyccel(get_prod, language=language)
@@ -5324,7 +5323,7 @@ def test_numpy_prod_array_like_1d(language):
     @types('complex64[:]')
     @types('complex128[:]')
     def get_prod(arr):
-        from numpy import prod, shape
+        from numpy import prod
         a = prod(arr)
         return a
 
@@ -5402,7 +5401,7 @@ def test_numpy_prod_array_like_2d(language):
     @types('complex64[:]')
     @types('complex128[:]')
     def get_prod(arr):
-        from numpy import prod, shape
+        from numpy import prod
         a = prod(arr)
         return a
 
