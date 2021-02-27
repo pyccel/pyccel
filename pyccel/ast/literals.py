@@ -92,11 +92,11 @@ class LiteralInteger(Literal):
         super().__init__(precision)
         if not isinstance(value, int):
             raise TypeError("A LiteralInteger can only be created with an integer")
-        self.p = value
+        self._value = value
 
     @property
     def python_value(self):
-        return self.p
+        return self._value
 
     def __index__(self):
         return self.python_value
