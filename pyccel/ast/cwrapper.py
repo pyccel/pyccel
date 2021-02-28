@@ -315,6 +315,11 @@ c_to_py_registry = {
 #-------------------------------------------------------------------
 #              errors and check functions
 #-------------------------------------------------------------------
+# https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Occurred
+PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
+                             arguments = [],
+                             returns   = [Variable(dtype = PyccelPyObject(), name = 'r', is_pointer = True)],
+                             body      = [])
 
 def PythonType_Check(py_object, c_object):
     """
