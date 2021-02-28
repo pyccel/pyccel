@@ -13,18 +13,18 @@
 /* functions prototypes */
 
 /* casting python object to c type */
-bool		Pycomplex_to_Complex64(PyObject *o, float complex *c);
-bool		Pycomplex_to_Complex128(PyObject *o, double complex *c);
+float complex	Pycomplex_to_Complex64(PyObject *o, float complex *c);
+double complex	Pycomplex_to_Complex128(PyObject *o, double complex *c);
 
-bool		PyInt64_to_Int64(PyObject *o, int64_t *i);
-bool		PyInt32_to_Int32(PyObject *o, int32_t *i);
-bool		PyInt16_to_Int16(PyObject *o, int16_t *i);
-bool		PyInt8_to_Int8(PyObject *o, int8_t *i);
+int64_t			PyInt64_to_Int64(PyObject *o);
+int32_t			PyInt32_to_Int32(PyObject *o);
+int16_t			PyInt16_to_Int16(PyObject *o);
+int8_t			PyInt8_to_Int8(PyObject *o);
 
-bool		Pyfloat_to_Float(PyObject *o, float *f);
-bool		Pydouble_to_Double(PyObject *o, double *f);
+float			Pyfloat_to_Float(PyObject *o);
+double			Pydouble_to_Double(PyObject *o);
 
-bool		PyBool_to_Bool(PyObject *o, bool *b);
+bool			PyBool_to_Bool(PyObject *o);
 
 /* numpy array to ndarray */
 t_ndarray	PyArray_to_ndarray(PyObject *o);
@@ -43,10 +43,6 @@ PyObject	*Double_to_PyDouble(double *d);
 
 bool			PyArray_CheckType(PyArrayObject *a, int dtype);
 PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
-
-//order check todo
-
-
 
 
 

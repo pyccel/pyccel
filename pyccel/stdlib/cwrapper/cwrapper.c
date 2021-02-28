@@ -1,142 +1,152 @@
 #include "cwrapper.h"
 
-/*                                                              */
-/*                        CAST_FUNCTIONS                        */
-/*                                                              */
-
 /*
- ** All functions listed down are based on C/python api
- ** with more tolerance to different precisions.
- ** Arguments : Python Object and  C Object as pointer
- ** Return    : return false upon failure and raise Error
- ** reference of the used c python api function:
- ** https://docs.python.org/3/c-api/float.html#c.PyFloat_AsDouble
- ** https://docs.python.org/3/c-api/complex.html#c.PyComplex_RealAsDouble
- ** https://docs.python.org/3/c-api/complex.html#c.PyComplex_ImagAsDouble
- ** https://docs.python.org/3/c-api/long.html#c.PyLong_AsLong
- ** https://docs.python.org/3/c-api/long.html#c.PyLong_AsLongLong
+ * Functions : Cast functions
+ * --------------------------
+ * All functions listed down are based on C/python api
+ * with more tolerance to different precision
+ * Convert python type object to the desired C type
+ * 	Parameters :
+ *		o	: the python object
+ *	Returns    :
+ * 		The desired C type, an error may be raised by c/python converter
+ *      so one should call PyErr_Occurred() to check for errors after the
+ *		calling a cast function
+ * reference of the used c python api function
+ * --------------------------------------------
+ * https://docs.python.org/3/c-api/float.html#c.PyFloat_AsDouble
+ * https://docs.python.org/3/c-api/complex.html#c.PyComplex_RealAsDouble
+ * https://docs.python.org/3/c-api/complex.html#c.PyComplex_ImagAsDouble
+ * https://docs.python.org/3/c-api/long.html#c.PyLong_AsLong
+ * https://docs.python.org/3/c-api/long.html#c.PyLong_AsLongLong
  */
 
-bool	PyComplex_to_Complex64(Pyobject *o, float complex *c)
+float complex PyComplex_to_Complex64(Pyobject *o)
 {
-	float	real_part;
-	float	imag_part;
+	float complex	c;
+	float			real_part;
+	float			imag_part;
 
 
 	real_part = (float)PyComplex_RealAsDouble(o);
 	imag_part = (float)PyComplex_ImagAsDouble(o);
 
-	*c = CMPLXF(real_part, imag_part);
+	c = CMPLXF(real_part, imag_part);
 
-	return true;
+	return	c;
 }
 
-bool	PyComplex_to_Complex128(Pyobject *o, double complex *c)
+double complex	PyComplex_to_Complex128(Pyobject *o)
 {
-	double	real_part;
-	double	imag_part;
+	double complex	c;
+	double			real_part;
+	double			imag_part;
 
 	real_part = PyComplex_RealAsDouble(o);
 	imag_part = PyComplex_ImagAsDouble(o);
 
-	*c = CMPLXF(real_part, imag_part);
+	c = CMPLX(real_part, imag_part);
 
-	return true;
+	return	c;
 }
 
-bool	PyInt64_to_Int64(PyObject *o, int64_t *i)
+int64_t	PyInt64_to_Int64(PyObject *o)
 {
+	int64_t		i;
 	long long	out;
 
 	out = PyLong_AsLongLong(o);
-	if (out == -1 && PyErr_Occurred())
-		return false;
 
-	*i = (int64_t)out;
+	i = (int64_t)out;
 
-	return true;
+	return	i;
 }
 
-bool	PyInt32_to_Int32(PyObject *o, int32_t *i)
+int32_t	PyInt32_to_Int32(PyObject *o)
 {
+	int32_t	i;
 	long	out;
 
 	out = PyLong_AsLong(o);
-	if (out == -1 && PyErr_Occurred())
-		return false;
 
-	*i = (int32_t)out;
+	i = (int32_t)out;
 
-	return true;
+	return	i;
 }
 
-bool	PyInt16_to_Int16(PyObject *o, int16_t *i)
+int16_t	PyInt16_to_Int16(PyObject *o)
 {
+	int16_t	i;
 	long	out;
 
 	out = PyLong_AsLong(o);
-	if (out == -1 && PyErr_Occurred())
-		return false;
 
-	*i = (int16_t)out;
+	i = (int16_t)out;
 
-	return true;
+	return	i;
 }
 
-bool	PyInt8_to_Int8(PyObject *o, int8_t *i)
+int8_t	PyInt8_to_Int8(PyObject *o)
 {
+	int8_t	i;
 	long	out;
 
 	out = PyLong_AsLong(o);
-	if (out == -1 && PyErr_Occurred())
-		return false;
 
-	*i = (int8_t)out;
+	i = (int8_t)out;
 
-	return true;
+	return	i;
 }
 
-bool	PyBool_to_Bool(Pyobject *o, bool *b)
+bool	PyBool_to_Bool(Pyobject *o)
 {
-	*b = o == PyTrue;
+	bool	b;
 
-	return true;
+	b = o == PyTrue;
+
+	return	b;
 }
 
-bool	PyFloat_to_Float(Pyobject *o, float *f)
+bool	PyFloat_to_Float(Pyobject *o)
 {
-	double	out;
-
-
-	out = PyFloat_AsDouble(o);
-	if (out  == -1.0 && PyErr_Occured())
-		return false;
-
-	*f = (float)out;
-	return true;
-}
-
-bool	PyDouble_to_Double(PyObject *o, double *d)
-{
+	float	f;
 	double	out;
 
 	out = PyFloat_AsDouble(o);
-	if (out  == -1.0 && PyErr_Occured())
-		return false;
 
-	*d = out;
+	f = (float)out;
 
-	return true;
+	return	f;
+}
+
+bool	PyDouble_to_Double(PyObject *o)
+{
+	double	d;
+
+	d = PyFloat_AsDouble(o);
+
+	return	d;
 }
 
 
 /*
- ** A Cast function that convert numpy array variable into ndarray variable,
- ** by copying its information and data to a new variable of type ndarray struct
- ** and return this variable to be used inside c code.
+ * Function: PyArray_to_ndarray
+ * ----------------------------
+ * A Cast function that convert numpy array variable into ndarray variable,
+ * by copying its information and data to a new variable of type ndarray struct
+ * and return this variable to be used inside c code.
+ * 	Parameters	:
+ *		o 	  : python array object
+ * 	Returns		:
+ *		array : c ndarray
+ *
+ * reference of the used c/numpy api function
+ * -------------------------------------------
+ * https://numpy.org/doc/stable/reference/c-api/array.html
  */
 
-t_ndarray		PyArray_to_ndarray(PyObject *o)
+
+t_ndarray		PyArray_to_ndarray(PyArrayObject *o)
 {
 	t_ndarray	array;
 
@@ -153,15 +163,21 @@ t_ndarray		PyArray_to_ndarray(PyObject *o)
 	return array;
 }
 
+
 /*
- ** Some of the function used below are based on C/python api
- ** with more tolerance to different precisions and complex type.
- ** Arguments : 	C Object
- ** Return    :  Python Object
- ** reference of the used c python api function:
- ** https://docs.python.org/3/c-api/complex.html#c.PyComplex_FromDoubles
- ** https://docs.python.org/3/c-api/float.html#c.PyFloat_FromDouble
- ** https://docs.python.org/3/c-api/long.html#c.PyLong_FromLongLong
+ * Functions : Cast functions
+ * ---------------------------
+ * Some of the function used below are based on C/python api
+ * with more tolerance to different precisions and complex type.
+ *	Parameterss	:
+ *		C object
+ *	Returns     :
+ *		o  : python object
+ * reference of the used c/python api function
+ * ---------------------------------------------------
+ * https://docs.python.org/3/c-api/complex.html#c.PyComplex_FromDoubles
+ * https://docs.python.org/3/c-api/float.html#c.PyFloat_FromDouble
+ * https://docs.python.org/3/c-api/long.html#c.PyLong_FromLongLong
  */
 
 PyObject	*Complex_to_PyComplex(double complex *c)
@@ -188,7 +204,7 @@ PyObject	*Int_to_PyLong(int64_t *i)
 
 	o = PyLong_FromLongLong((long long) i)
 
-		return o;
+	return o;
 }
 
 PyObject	*Double_to_PyDouble(double *d)
@@ -197,7 +213,7 @@ PyObject	*Double_to_PyDouble(double *d)
 
 	o = PyFloat_FromDouble(d)
 
-		return o;
+	return o;
 }
 
 
@@ -210,16 +226,20 @@ PyObject	*Double_to_PyDouble(double *d)
  * 		a     : Python Object
  *  	rank  : The desired rank
  *  	order : The desired order
+ *               0 if the check order is not needed
  *
  *  Returns    :
  * 		reference to PyArray Object
  *      returns NULL on error
+ * reference of the used c/python api function
+ * -------------------------------------------
+ * https://numpy.org/doc/stable/reference/c-api/array.html
  */
 
 PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
 {
 	PyArrayObject	*array;
-	char			_order;
+	char			order;
 
 	//PyArray type Check
 	if (!PyArray_Check(a))
