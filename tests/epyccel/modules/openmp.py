@@ -363,3 +363,5 @@ def omp_flush():
         flag = flag + 1
     #$ omp end parallel
     return flag
+
+# TODO [nhamid] add test for barrier construct

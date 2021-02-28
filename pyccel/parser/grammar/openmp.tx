@@ -45,13 +45,13 @@ OmpLoopConstruct:       'for'             clauses*=AllOmpClauses;
 OmpTaskLoopConstruct:   name='taskloop'   clauses*=AllOmpClauses;
 OmpSingleConstruct:     name='single'     clauses*=AllOmpClauses;
 OmpCriticalConstruct:   name='critical'   clauses*=AllOmpClauses;
-OmpMaskedConstruct:     name='masked'     combined=MaskedCombined? clauses*=AllOmpClauses;
+OmpMaskedConstruct:     'masked'          combined=MaskedCombined? clauses*=AllOmpClauses;
 OmpSimdConstruct:       name='simd'       clauses*=AllOmpClauses;
 OmpAtomicConstruct:     name='atomic'     clauses*=AllOmpClauses; // Not all clauses were added (can't test them).
 OmpTaskConstruct:       name='task'       clauses*=AllOmpClauses;
 OmpCancelConstruct:     name='cancel'     clauses*=OmpCancelType;
-OmpTargetConstruct:     name='target'     combined=TargetCombined? clauses*=AllOmpClauses;
-OmpTeamsConstruct:      name='teams'      combined=TeamsCombined? clauses*=AllOmpClauses;
+OmpTargetConstruct:     'target'          combined=TargetCombined? clauses*=AllOmpClauses;
+OmpTeamsConstruct:      'teams'           combined=TeamsCombined? clauses*=AllOmpClauses;
 OmpDistributeConstruct: name='distribute' clauses*=AllOmpClauses;
 OmpSectionsConstruct:   name='sections'   clauses*=AllOmpClauses;
 OmpFlushConstruct:      name='flush'      clauses*=AllOmpClauses;
