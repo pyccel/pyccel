@@ -1,7 +1,7 @@
 #ifndef CWRAPPER_H
 # define CWRAPPER_H
 
-# include "python.h"
+# include <python.h>
 # include "numpy/arrayObject.h"
 # include "ndarray.h"
 # include <complex.h>

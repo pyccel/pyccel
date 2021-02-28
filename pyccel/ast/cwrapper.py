@@ -239,7 +239,7 @@ Py_None  = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
 #                      cwrapper.h functions
 #-------------------------------------------------------------------
 
-def Python_To_C(c_object):
+def Python_to_C(c_object):
     """
     Create FunctionDef responsible for casting python argument to C
     Parameters:
@@ -276,7 +276,7 @@ py_to_c_registry = {
     (NativeComplex, 8)   : 'PyComplex_to_Complex128'}
 
 
-def C_to_Python(c_object)
+def C_to_Python(c_object):
     """
     Create FunctionDef responsible for casting c argument to python
     Parameters:
@@ -302,8 +302,8 @@ def C_to_Python(c_object)
 # TODO create cast functions of different precision of int issue #735
 c_to_py_registry = {
     (NativeBool(), 4)    : 'Bool_to_PyBool',
-    (NativeInteger(), 1) : 'Int_to_pyLong,
-    (NativeInteger(), 2) : 'Int_to_pyLong,
+    (NativeInteger(), 1) : 'Int_to_pyLong',
+    (NativeInteger(), 2) : 'Int_to_pyLong',
     (NativeInteger(), 4) : 'Int_to_PyLong',
     (NativeInteger(), 8) : 'Int_to_PyLong',
     (NativeReal(), 4)    : 'Double_to_PyDouble',
@@ -318,7 +318,7 @@ c_to_py_registry = {
 # https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Occurred
 PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
                              arguments = [],
-                             returns   = [Variable(dtype = PyccelPyObject(), name = 'r', is_pointer = True)],
+                             results   = [Variable(dtype = PyccelPyObject(), name = 'r', is_pointer = True)],
                              body      = [])
 
 def PythonType_Check(py_object, c_object):

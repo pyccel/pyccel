@@ -236,7 +236,7 @@ def Check_Array(py_variable, c_variable, language = 'Fortran'):
     rank = c_variable.rank
 
     if rank > 1 and language == 'fortran':
-        if c_variable.order = 'F':
+        if c_variable.order == 'F':
             flag = numpy_flag_f_contig
         else:
             flag = numpy_flag_c_contig
@@ -282,6 +282,6 @@ def NumpyType_Check(py_variable, c_variable):
 
 # numpy array to ndarray : function definition in pyccel/stdlib/cwrapper.c
 PyArray_to_Array = FunctionDef(name      = 'PyArray_to_Array',
-                               arguments = [Variable(dtype = PyccelArrayObject(), name = 'a', is_pointer = True)],
-                               results   = [Variable(dtype = dtype=NativeVoid(), name = 'array')],
+                               arguments = [Variable(dtype = PyccelPyArrayObject(), name = 'a', is_pointer = True)],
+                               results   = [Variable(dtype = NativeVoid(), name = 'array')],
                                body      = [])

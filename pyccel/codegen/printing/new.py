@@ -18,11 +18,11 @@ from pyccel.ast.core        import FunctionCall, FunctionDef, FunctionAddress
 from pyccel.ast.core        import Assign, AliasAssign, Nil
 from pyccel.ast.core        import If, IfSection, Import
 
-from pyccel.ast.cwrapper    import (PyArgKeywordsm, PyArg_ParseTupleNode,
+from pyccel.ast.cwrapper    import (PyArgKeywords, PyArg_ParseTupleNode,
                                     PyBuildValueNode)
 from pyccel.ast.cwrapper    import Python_to_C, C_to_Python, PythonType_Check
 
-from pyccel.ast.cwrapper    import PyccelPyObject, PyccelArrayObject, Py_None
+from pyccel.ast.cwrapper    import PyccelPyObject, PyccelPyArrayObject, Py_None
 from pyccel.ast.cwrapper    import get_custom_key, PyErr_SetString, PyErr_Occurred
 
 from pyccel.ast.numpy_wrapper   import Check_Array, NumpyType_Check, PyArray_to_Array
@@ -159,7 +159,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         try :
             new_flag = flags_registry[(variable.dtype, variable.precision)]
-        except: KeyError
+        except KeyError:
             raise NotImplementedError(
             'datatype not implemented as arguments : {}'.format(variable.dtype))
         return (flag << 4) + flag
@@ -261,14 +261,14 @@ class CWrapperCodePrinter(CCodePrinter):
             python_check = PythonType_Check(py_variable, c_variable)
             check        = PyccelNot(PyccelAnd(numpy_check, python_check))
             error        = generate_datatype_error(c_variable)
-            body.append(If(IfSection(check, [error, Return(LiteralInteger(0))])))
+            body.append(If(IfSection(check, [error, Return([LiteralInteger(0)])])))
 
         body = [If(*body)]
         # Collect value
         body.append(Assign(c_variable, FunctionCall(Python_to_C(c_variable), [py_variable])))
         # call PyErr_Occurred to check any error durring conversion
-        body.append(If(IfSection(FunctionCall(PyErr_Occurred, []), [Return(LiteralInteger(0))])))
-        body.append(Return(LiteralInteger(1)))
+        body.append(If(IfSection(FunctionCall(PyErr_Occurred, []), [Return([LiteralInteger(0)])])))
+        body.append(Return([LiteralInteger(1)]))
 
         funcDef = FunctionDef(name     = func_name,
                             arguments  = [py_variable, c_variable],
@@ -299,7 +299,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         func_name       = 'py_to_nd{}'.format(self._print(variable.dtype))
         py_variable     = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
-        py_array        = Variable(name = 'py_array', dtype = PyccelArrayObject(), is_pointer = True)
+        py_array        = Variable(name = 'py_array', dtype = PyccelPyArrayObject(), is_pointer = True)
         c_variable      = Variable.clone(name = 'c_variable', is_pointer = True)
         body            = []
 
@@ -315,26 +315,28 @@ class CWrapperCodePrinter(CCodePrinter):
         if check_is_needed:
             check = PyccelNot(PyArray_CheckType(py_variable, c_variable, self.target_language))
             error = generate_datatype_error(c_variable)
-            body.append(If(IfSection(check, [error, Return(LiteralInteger(0))])))
+            body.append(If(IfSection(check, [error, Return([LiteralInteger(0)])])))
 
         body    = [If(*body)]
 
         # Convert numpy_array to c array
         body.append(Assign(c_variable, FunctionCall(PyArray_to_Array, [py_array])))
-        body.append(Return(LiteralInteger(1))
+        body.append(Return([LiteralInteger(1)]))
 
         funcDef = FunctionDef(name     = func_name,
                             arguments  = [py_variable, c_variable],
                             results    = [],
-                            local_vars = [py_array]
+                            local_vars = [py_array],
                             body       = body)
 
         return funcDef
 
     def generate_tuple_converter_function(self, used_names, variable):
+        pass
         #TODO
 
     def generate_list_converter_function(self, used_names, variable):
+        pass
         #TODO
 
     # -------------------------------------------------------------------
@@ -372,12 +374,11 @@ class CWrapperCodePrinter(CCodePrinter):
             variable holding information needed to chose converter function
         """
         if variable.rank > 0:
-            raise NotImplementedError(
-            'return not implemented for arrays.')
+            raise NotImplementedError('return not implemented for arrays.')
 
         try:
             func = python_to_c_registry[(variable.dtype, variable.precision)]
-        except: KeyError
+        except KeyError:
             raise NotImplementedError(
             'return not implemented for this datatype : {}'.format(variable.dtype))
         
@@ -397,7 +398,7 @@ class CWrapperCodePrinter(CCodePrinter):
         arg_names  = ',\n'.join(arg_names)
         code       = 'static char *{name}[] = {{\n{arg_names}\n}};\n'
 
-        return  code.format(name = expr.name, arg_names = arg_names))
+        return  code.format(name = expr.name, arg_names = arg_names)
 
     def _print_PyArg_ParseTupleNode(self, expr):
         name    = 'PyArg_ParseTupleAndKeywords'
@@ -537,7 +538,7 @@ class CWrapperCodePrinter(CCodePrinter):
              Return([Nil()])]))
 
         # Parse arguments
-        parse_node = PyArg_ParseTupleNode(*wrapper_args[:-1]
+        parse_node = PyArg_ParseTupleNode(*wrapper_args[:-1],
                                     self.converter_functions_dict,
                                     expr.arguments, keyword_list)
 
@@ -583,7 +584,7 @@ class CWrapperCodePrinter(CCodePrinter):
             func_args.append(arg) #TODO Bind_C_Arg
 
         # Parse arguments
-        parse_node = PyArg_ParseTupleNode(*wrapper_args[:-1]
+        parse_node = PyArg_ParseTupleNode(*wrapper_args[:-1],
                                           self.converter_functions_dict,
                                           expr.arguments, keyword_list)
 
