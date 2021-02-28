@@ -225,14 +225,14 @@ PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
 	if (!PyArray_Check(a))
 	{
 		PyErr_Format(PyExc_TypeError,
-			"argument must be numpy.ndarray, not %s", Py_TYPE(a)->tp_name);
+			"argument must be numpy.ndarray, not %s",
+			 a == Py_None ? "None" : Py_TYPE(a)->tp_name);
 		return NULL;
 	}
 	array = (PyArrayObject *)a;
 
 
 	// Rank Check
-
 	if (PyArray_NDIM(array) != rank)
 	{
 		PyErr_Format(PyExc_TypeError, "argument rank must be %d", rank);
@@ -246,7 +246,7 @@ PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
 		{
 			order = flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : 'F';
 			PyErr_Format(PyExc_NotImplementedError,
-					"argument does not have the expected ordering (%c)", order);
+				"argument does not have the expected ordering (%c)", order);
 			return NULL;
 		}
 	}
