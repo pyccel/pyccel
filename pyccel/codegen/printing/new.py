@@ -26,8 +26,7 @@ from pyccel.ast.cwrapper    import PyccelPyObject, Py_None
 from pyccel.ast.cwrapper    import get_custom_key, PyErr_SetString
 
 from pyccel.ast.numpy_wrapper   import PyArray_CheckScalar, PyArray_ScalarAsCtype
-from pyccel.ast.numpy_wrapper   import (PyArray_CheckType, PyArray_CheckRank,
-                                        NumpyType_Check)
+from pyccel.ast.numpy_wrapper   import Check_Array, NumpyType_Check
 
 from pyccel.ast.variable        import Variable, ValuedVariable, VariableAddress
 
@@ -251,60 +250,6 @@ class CWrapperCodePrinter(CCodePrinter):
                 dtype     = self._print(variable.dtype))
         return PyErr_SetString('PyExc_TypeError', message)
 
-    def generate_rank_error(variable)
-        """
-        Generate TypeError exception from the variable information (rank)
-        Parameters:
-        ----------
-        variable : Variable
-
-        Returns:
-        -------
-        func     : FunctionCall
-            call to PyErr_SetString with TypeError as exception and custom message
-        """
-        rank    = variable.rank
-
-        message = '"Argument must have rank {rank}"'.format(rank = rank)
-
-        return PyErr_SetString('PyExc_TypeError', message)
-
-    def generate_rank_error(variable):
-        """
-        Generate TypeError exception from the variable information (order)
-        Parameters:
-        ----------
-        variable : Variable
-
-        Returns:
-        -------
-        func     : FunctionCall
-            call to PyErr_SetString with TypeError as exception and custom message
-        """
-        order   = variable.order
-
-        message = '"Argument does not have the expected ordering ({order})"'.format(
-                                order = order)
-
-        return PyErr_SetString('PyExc_NotImplementedError', message)
-
-    def generate_type_error(variable, py_type):
-        """
-        Generate TypeError exception from the variable type
-        (array, tuple, list, ...)
-        Parameters:
-        ----------
-        variable : Variable
-
-        Returns:
-        -------
-        func     : FunctionCall
-            call to PyErr_SetString with TypeError as exception and custom message
-        """
-        message = '"Argument type must be {type}"'.format(type = py_type)
-
-        return PyErr_SetString('PyExc_TypeError', message)
-
     #--------------------------------------------------------------------
     #                   Convert functions
     #--------------------------------------------------------------------
@@ -379,44 +324,36 @@ class CWrapperCodePrinter(CCodePrinter):
         """
 
         func_name       = 'py_to_nd{}'.format(self._print(variable.dtype))
-        py_variable     = self.get_new_PyObject('o', used_names)
-        c_variable      = Variable.clone(name = 'c', is_pointer = True)
+        py_variable     = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
+        py_array        = Variable(name = 'py_array', dtype = PyccelArrayObject(), is_pointer = True)
+        c_variable      = Variable.clone(name = 'c_variable', is_pointer = True)
         body            = []
 
         # (Valued / Optional) variable check
         if isinstance(variable, ValuedVariable):
-            body.append(generate_valued_variable_body(py_object, c_variable))
+            body.append(If(generate_valued_variable_body(py_object, c_variable)))
 
-        #Array Check
-        check = PyccelNot(FunctionCall(PyArray_Check, py_variable))
-        error = generate_type_error(c_variable, 'Array')
-        body.append(IfSection(check, [error, Return(LiteralInteger(0))]))
-
-        #Rank check
-        check = PyccelNot(PyArray_CheckRank(py_variable, c_variable))
-        error = generate_rank_error(py_variable, c_variable)
-        body.append(IfSection(check, [error, Return(LiteralInteger(0))]))
-
-        #Order check
-        if c_variable.rank > 1 and self._target_language == 'fortran':
-            check = PyccelNot(PyArray_CheckOrder(py_variable, c_variable))
-            error = generate_order_error(c_variable)
-            body.append(IfSection(check, [error, Return(LiteralInteger(0))]))
+        #array check
+        body.append(AliasAssign(py_array, FunctionCall(Check_Array(py_variable, c_variable))))
+        body.append(If(IfSection(PyccelEq(py_array, PyNone), [Return(LiteralInteger(0))])))
 
         #datatqype check
         if check_is_needed:
             check = PyccelNot(PyArray_CheckType(py_variable, c_variable))
             error = generate_datatype_error(c_variable)
-            body.append(IfSection(check, [error, Return(LiteralInteger(0))]))
+            body.append(If(IfSection(check, [error, Return(LiteralInteger(0))])))
+
+        body    = [If(*body)]
 
         # Convert numpy_array to c array
-        body.append(IfSection(LiteralTrue(), [PyArray_to_Array()]))
+        body.append(PyArray_to_Array())
+        body.append(Return(LiteralInteger(1))
 
-        body    = [If(*body), Return(LiteralInteger(1))]
         funcDef = FunctionDef(name     = func_name,
-                            arguments  = func_arguments,
+                            arguments  = [py_variable, c_variable],
                             results    = [],
-                            body       = fbody)
+                            local_vars = [py_array]
+                            body       = body)
 
         return funcDef
 

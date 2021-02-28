@@ -222,78 +222,30 @@ def find_in_numpy_dtype_registry(var):
                 symbol = "{}[kind = {}]".format(dtype, prec),
                 severity='fatal')
 
-
-# Check array Elements functions
-def PyArray_TypeCheck(py_variable, c_variable):
+# check array
+def Check_Array(py_variable, c_variable, language = 'Fortran'):
     """
-    Create FunctionCall responsible for checking array data type
-    Parameters:
-    ----------
-    c_variable : Variable
-        The variable needed for the generation of the type check
-    py_object  : Variable
-        The python argument of the check function
-    Returns
-    -------
-    FunctionCall : Check type FunctionCall
     """
-    numpy_type = find_in_numpy_dtype_registry(c_variable)
+    rank = c_variable.rank
 
-    # function definition in pyccel/stdlib/cwrapper/cwrapper.c
-    PyArray_CheckType = FunctionDef(name  = 'PyArray_CheckType',
-                                body      = [],
-                                arguments = [Variable(name = 'o', dtype = PyccelObject, is_pointer = True),
-                                            Variable(name = 'type', dtype = NativeInteger())],
-                                results   = [Variable(name = 'r', dtype = NativeBool())])
-
-    return FunctionCall(PyArray_CheckType, [py_variable, numpy_type])
-
-
-
-def PyArray_CheckRank(py_variable, c_variable):
-    """
-    Create FunctionCall responsible for checking array rank
-    Parameters:
-    ----------
-    c_variable : Variable
-        The variable needed for the generation of the rank check
-    py_object : Variable
-        The python argument of the check function
-    Returns
-    -------
-    FunctionCall : Check rank FunctionCall
-    """
-
-    # function definition in pyccel/stdlib/cwrapper/cwrapper.c
-    PyArray_CheckRank = FunctionDef(name  = 'PyArray_CheckRank',
-                                body      = [],
-                                arguments = [Variable(name = 'o', dtype = PyccelObject, is_pointer = True),
-                                            Variable(name = 'type', dtype = NativeInteger())],
-                                results   = [Variable(name = 'r', dtype = NativeBool())])
-
-    return FunctionCall(PyArray_CheckRank, [py_variable, c_variable.rank])
-
-def PyArray_OrderCheck(py_variable, c_variable):
-    """
-    Create FunctionCall responsible for checking array order
-    this function only used with the current condition :
-    - target language must be fortran
-    - rank must be strictly greater than 1
-    Parameters:
-    ----------
-    c_variable : Variable
-        The variable needed for the generation of the rank check
-    py_object  : Variable
-        The python argument of the check function
-    Returns
-    -------
-    FunctionCall : Check order FunctionCall
-    """
-    if c_variable.order == 'F'
-        return FunctionCall(numpy_check_flag,[py_variable, numpy_flag_f_contig])
-
+    if rank > 1 and language == 'Fortran':
+        if c_variable.order = 'F':
+            flag = numpy_flag_f_contig
+        else:
+            flag = numpy_flag_c_contig
     else:
-        return FunctionCall(numpy_check_flag,[py_variable, numpy_flag_c_contig])
+        flag = LiteralInteger(0)
+
+    func = FunctionDef(name = 'Check_Array',
+                       arguments = [Variable(dtype = PyccelPyObject(), name = 'a', is_pointer = True),
+                                    Variable(dtype = NativeInteger(),  name = 'rank'),
+                                    Variable(dtype = NativeInteger(),  name = 'flag')],
+                       body      = [],
+                       results   = [Variable(dtype = PyccelPyArrayObject(), is_pointer = True)])
+
+    return FunctionCall(func, [py_variable, Literalnteger(rank), flag])
+
+
 
 def NumpyType_Check(py_variable, c_variable):
     """

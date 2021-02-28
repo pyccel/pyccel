@@ -203,13 +203,44 @@ PyObject	*Double_to_PyDouble(double *d)
 
 /*  array check function  */
 
-bool	PyArray_CheckRank(PyObject *a, int rank)
-{
-	return PyArray_NDIM(a) == rank;
-}
+/*
+**
+**
+**
+*/
 
-bool	PyArray_CheckType(PyArrayObject *a, int type)
+PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
 {
-	return PyArray_TYPE(a) == type;
-}
+	PyArrayObject	*array;
+	char			order;
 
+
+	//PyArray type Check
+	if (!PyArray_Check(a))
+	{
+		PyErr_SetString(PyExc_TypeError, "argument must be numpy.ndarray");
+		return NULL;
+	}
+	array = (PyArrayObject *)a;
+
+
+	// Rank Check
+	if (PyArray_NDIM(array) != rank)
+	{
+		PyErr_Format(PyExc_TypeError, "argument must be rank %d", rank);
+		return NULL;
+	}
+
+	//Order check
+	if (rank > 1 && flags != 0)
+	{
+		if (!PyArray_CHKFLAGS(array, flags))
+		{
+			order = flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : 'F';
+			PyErr_Format(PyExc_NotImplementedError,
+				"argument does not have the expected ordering %c", order);
+			return NULL;
+		}
+	}
+	return array;
+}
