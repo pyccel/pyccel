@@ -22,11 +22,10 @@ from pyccel.ast.cwrapper    import (PyArgKeywordsm, PyArg_ParseTupleNode,
                                     PyBuildValueNode)
 from pyccel.ast.cwrapper    import Python_to_C, C_to_Python, PythonType_Check
 
-from pyccel.ast.cwrapper    import PyccelPyObject, Py_None
-from pyccel.ast.cwrapper    import get_custom_key, PyErr_SetString
+from pyccel.ast.cwrapper    import PyccelPyObject, PyccelArrayObject, Py_None
+from pyccel.ast.cwrapper    import get_custom_key, PyErr_SetString, PyErr_Occurred
 
-from pyccel.ast.numpy_wrapper   import PyArray_CheckScalar, PyArray_ScalarAsCtype
-from pyccel.ast.numpy_wrapper   import Check_Array, NumpyType_Check
+from pyccel.ast.numpy_wrapper   import Check_Array, NumpyType_Check, PyArray_to_Array
 
 from pyccel.ast.variable        import Variable, ValuedVariable, VariableAddress
 
@@ -256,7 +255,6 @@ class CWrapperCodePrinter(CCodePrinter):
         if isinstance(variable, ValuedVariable):
             body.append(self.generate_valued_variable_body(py_variable, c_variable))
 
-
         #datatqype check
         if check_is_needed:
             numpy_check  = NumpyType_Check(py_variable, c_variable)
@@ -322,7 +320,7 @@ class CWrapperCodePrinter(CCodePrinter):
         body    = [If(*body)]
 
         # Convert numpy_array to c array
-        body.append(PyArray_to_Array())
+        body.append(Assign(c_variable, FunctionCall(PyArray_to_Array, [py_array])))
         body.append(Return(LiteralInteger(1))
 
         funcDef = FunctionDef(name     = func_name,

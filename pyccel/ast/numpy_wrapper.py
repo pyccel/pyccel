@@ -284,3 +284,9 @@ def NumpyType_Check(py_variable, c_variable):
                               results   = [Variable(dtype=NativeBool(), name = 'r')])
 
     return FunctionCall(check_numpy_func, [py_variable, check_numpy_ref])
+
+# numpy array to ndarray : function definition in pyccel/stdlib/cwrapper.c
+PyArray_to_Array = FunctionDef(name      = 'PyArray_to_Array',
+                               arguments = [Variable(dtype = PyccelArrayObject(), name = 'a', is_pointer = True)],
+                               results   = [Variable(dtype = dtype=NativeVoid(), name = 'array')],
+                               body      = [])
