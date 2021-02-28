@@ -219,22 +219,23 @@ PyObject	*Double_to_PyDouble(double *d)
 PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
 {
 	PyArrayObject	*array;
-	char			order;
-
+	char			_order;
 
 	//PyArray type Check
 	if (!PyArray_Check(a))
 	{
-		PyErr_SetString(PyExc_TypeError, "argument must be numpy.ndarray");
+		PyErr_Format(PyExc_TypeError,
+			"argument must be numpy.ndarray, not %s", Py_TYPE(a)->tp_name);
 		return NULL;
 	}
 	array = (PyArrayObject *)a;
 
 
 	// Rank Check
+
 	if (PyArray_NDIM(array) != rank)
 	{
-		PyErr_Format(PyExc_TypeError, "argument must be rank %d", rank);
+		PyErr_Format(PyExc_TypeError, "argument rank must be %d", rank);
 		return NULL;
 	}
 
