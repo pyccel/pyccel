@@ -225,10 +225,22 @@ def find_in_numpy_dtype_registry(var):
 # check array
 def Check_Array(py_variable, c_variable, language = 'Fortran'):
     """
+    Create FunctionCall responsible of checking numpy array order and rank
+    Parameters:
+    ----------
+    c_variable  : Variable
+        The variable needed for the generation of the type check
+    py_variable : Variable
+        The python argument of the check function
+    language    : string
+        Needed to collect the flag for order check
+    Returns
+    -------
+    FunctionCall : Check type FunctionCall
     """
     rank = c_variable.rank
 
-    if rank > 1 and language == 'Fortran':
+    if rank > 1 and language == 'fortran':
         if c_variable.order = 'F':
             flag = numpy_flag_f_contig
         else:

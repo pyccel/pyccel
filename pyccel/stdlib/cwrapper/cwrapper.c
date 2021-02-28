@@ -5,17 +5,17 @@
 /*                                                              */
 
 /*
-** All functions listed down are based on C/python api
-** with more tolerance to different precisions.
-** Arguments : Python Object and  C Object as pointer
-** Return    : return false upon failure and raise Error
-** reference of the used c python api function:
-** https://docs.python.org/3/c-api/float.html#c.PyFloat_AsDouble
-** https://docs.python.org/3/c-api/complex.html#c.PyComplex_RealAsDouble
-** https://docs.python.org/3/c-api/complex.html#c.PyComplex_ImagAsDouble
-** https://docs.python.org/3/c-api/long.html#c.PyLong_AsLong
-** https://docs.python.org/3/c-api/long.html#c.PyLong_AsLongLong
-*/
+ ** All functions listed down are based on C/python api
+ ** with more tolerance to different precisions.
+ ** Arguments : Python Object and  C Object as pointer
+ ** Return    : return false upon failure and raise Error
+ ** reference of the used c python api function:
+ ** https://docs.python.org/3/c-api/float.html#c.PyFloat_AsDouble
+ ** https://docs.python.org/3/c-api/complex.html#c.PyComplex_RealAsDouble
+ ** https://docs.python.org/3/c-api/complex.html#c.PyComplex_ImagAsDouble
+ ** https://docs.python.org/3/c-api/long.html#c.PyLong_AsLong
+ ** https://docs.python.org/3/c-api/long.html#c.PyLong_AsLongLong
+ */
 
 bool	PyComplex_to_Complex64(Pyobject *o, float complex *c)
 {
@@ -131,10 +131,10 @@ bool	PyDouble_to_Double(PyObject *o, double *d)
 
 
 /*
-** A Cast function that convert numpy array variable into ndarray variable,
-** by copying its information and data to a new variable of type ndarray struct
-** and return this variable to be used inside c code.
-*/
+ ** A Cast function that convert numpy array variable into ndarray variable,
+ ** by copying its information and data to a new variable of type ndarray struct
+ ** and return this variable to be used inside c code.
+ */
 
 t_ndarray		PyArray_to_ndarray(PyObject *o)
 {
@@ -154,15 +154,15 @@ t_ndarray		PyArray_to_ndarray(PyObject *o)
 }
 
 /*
-** Some of the function used below are based on C/python api
-** with more tolerance to different precisions and complex type.
-** Arguments : 	C Object
-** Return    :  Python Object
-** reference of the used c python api function:
-** https://docs.python.org/3/c-api/complex.html#c.PyComplex_FromDoubles
-** https://docs.python.org/3/c-api/float.html#c.PyFloat_FromDouble
-** https://docs.python.org/3/c-api/long.html#c.PyLong_FromLongLong
-*/
+ ** Some of the function used below are based on C/python api
+ ** with more tolerance to different precisions and complex type.
+ ** Arguments : 	C Object
+ ** Return    :  Python Object
+ ** reference of the used c python api function:
+ ** https://docs.python.org/3/c-api/complex.html#c.PyComplex_FromDoubles
+ ** https://docs.python.org/3/c-api/float.html#c.PyFloat_FromDouble
+ ** https://docs.python.org/3/c-api/long.html#c.PyLong_FromLongLong
+ */
 
 PyObject	*Complex_to_PyComplex(double complex *c)
 {
@@ -188,7 +188,7 @@ PyObject	*Int_to_PyLong(int64_t *i)
 
 	o = PyLong_FromLongLong((long long) i)
 
-	return o;
+		return o;
 }
 
 PyObject	*Double_to_PyDouble(double *d)
@@ -197,17 +197,22 @@ PyObject	*Double_to_PyDouble(double *d)
 
 	o = PyFloat_FromDouble(d)
 
-	return o;
+		return o;
 }
 
 
-/*  array check function  */
-
 /*
-**
-**
-**
-*/
+ * Function: Check_Array
+ * --------------------
+ * Check Python Object (ArrayType, Rank, Order):
+ *
+ *  a     : Python Object
+ *  rank  : The desired rank
+ *  order : The desired order
+ *
+ *  returns: reference to PyArray Object
+ *           returns NULL on error
+ */
 
 PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
 {
@@ -238,7 +243,7 @@ PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
 		{
 			order = flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : 'F';
 			PyErr_Format(PyExc_NotImplementedError,
-				"argument does not have the expected ordering %c", order);
+					"argument does not have the expected ordering (%c)", order);
 			return NULL;
 		}
 	}

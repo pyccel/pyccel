@@ -339,7 +339,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         #datatqype check
         if check_is_needed:
-            check = PyccelNot(PyArray_CheckType(py_variable, c_variable))
+            check = PyccelNot(PyArray_CheckType(py_variable, c_variable, self.target_language))
             error = generate_datatype_error(c_variable)
             body.append(If(IfSection(check, [error, Return(LiteralInteger(0))])))
 
