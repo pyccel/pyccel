@@ -119,11 +119,6 @@ PyArray_ScalarAsCtype = FunctionDef(name      = 'PyArray_ScalarAsCtype',
                                                 Variable(dtype=NativeVoid(), name = 'c', is_pointer = True)],
                                     results   = [])
 
-PyArray_Check         = FunctionDef(name  = 'PyArray_Check',
-                                body      = [],
-                                arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
-                                results   = [Variable(dtype=NativeInteger(), name = 'b')])
-
 
 numpy_flag_own_data     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_OWNDATA')
 numpy_flag_c_contig     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_C_CONTIGUOUS')
