@@ -206,12 +206,14 @@ PyObject	*Double_to_PyDouble(double *d)
  * --------------------
  * Check Python Object (ArrayType, Rank, Order):
  *
- *  a     : Python Object
- *  rank  : The desired rank
- *  order : The desired order
+ *  Parameters :
+ * 		a     : Python Object
+ *  	rank  : The desired rank
+ *  	order : The desired order
  *
- *  returns: reference to PyArray Object
- *           returns NULL on error
+ *  Returns    :
+ * 		reference to PyArray Object
+ *      returns NULL on error
  */
 
 PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)

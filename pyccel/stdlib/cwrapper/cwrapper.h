@@ -41,8 +41,8 @@ PyObject	*Double_to_PyDouble(double *d);
 
 /* array check */
 
-bool		PyArray_CheckRank(PyArrayObject *a, int rank);
-bool		PyArray_CheckType(PyArrayObject *a, int dtype);
+bool			PyArray_CheckType(PyArrayObject *a, int dtype);
+PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
 
 //order check todo
 
