@@ -17,7 +17,7 @@ from pyccel.ast.omp import (OmpAnnotatedComment, OMP_For_Loop, OMP_Parallel_Cons
                             OMP_Cancel_Construct, OMP_Target_Construct, OMP_Teams_Construct,
                             OMP_Sections_Construct, OMP_Section_Construct)
 
-DEBUG = True
+DEBUG = False
 
 class OmpConstruct(BasicStmt):
     """Class representing all OpenMP constructs."""
@@ -47,7 +47,7 @@ class OmpConstruct(BasicStmt):
             if 'teams' in combined.expr:
                 _valid_clauses += _valid_teams_clauses
             com = combined.expr
-       
+
         txt = ''
         if name:
             txt += name
@@ -69,8 +69,8 @@ def check_get_clauses(name, valid_clauses, clauses, combined = None):
     for clause in clauses:
         if isinstance(clause, valid_clauses):
             if isinstance(clause, OmpCopyin) and isinstance(combined, OmpTargetParallel):
-                 msg = "Wrong clause " + type(clause).__name__
-                 raise TypeError(msg)
+                msg = "Wrong clause " + type(clause).__name__
+                raise TypeError(msg)
             txt = '{0} {1}'.format(txt, clause.expr)
         else:
             msg = "Wrong clause " + type(clause).__name__
@@ -224,7 +224,7 @@ class OmpSectionsConstruct(OmpConstruct):
 class OmpSectionConstruct(OmpConstruct):
     """Class representing a Section construct."""
     def __init__(self, **kwargs):
-        super().__init__(MP_Section_Construct, None, **kwargs)
+        super().__init__(OMP_Section_Construct, None, **kwargs)
 
     @property
     def expr(self):
