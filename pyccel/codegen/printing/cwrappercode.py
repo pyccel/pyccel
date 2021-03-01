@@ -586,7 +586,7 @@ class CWrapperCodePrinter(CCodePrinter):
              Return([Nil()])]))
 
         # Parse arguments
-        parse_node = PyArg_ParseTupleNode(*wrapper_args[:-1],
+        parse_node = PyArg_ParseTupleNode(*wrapper_args[1:],
                                     self.converter_functions_dict,
                                     expr.arguments, keyword_list)
 
@@ -632,7 +632,7 @@ class CWrapperCodePrinter(CCodePrinter):
             func_args.extend(self.get_static_args(arg)) # Bind_C args
 
         # Parse arguments
-        parse_node = PyArg_ParseTupleNode(*wrapper_args[:-1],
+        parse_node = PyArg_ParseTupleNode(*wrapper_args[1:],
                                           self.converter_functions_dict,
                                           expr.arguments, keyword_list)
 
