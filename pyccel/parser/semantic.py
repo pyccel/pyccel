@@ -856,22 +856,10 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_Literal(self, expr, **settings):
         return expr
-    def _visit_Integer(self, expr, **settings):
-        """Visit sympy.Integer"""
-        return LiteralInteger(expr.p)
-    def _visit_Float(self, expr, **settings):
-        """Visit sympy.Integer"""
-        return LiteralFloat(expr)
     def _visit_PythonComplex(self, expr, **settings):
         return expr
     def _visit_Pass(self, expr, **settings):
         return expr
-
-    def _visit_NumberSymbol(self, expr, **settings):
-        return expr.n()
-
-    def _visit_Number(self, expr, **settings):
-        return expr.n()
 
     def _visit_Variable(self, expr, **settings):
         name = expr.name
@@ -3055,7 +3043,7 @@ class SemanticParser(BasicParser):
         if isinstance(val, (TupleVariable, PythonTuple)) and \
                 not isinstance(val, PythonList):
             if isinstance(length, LiteralInteger):
-                length = length.p
+                length = length.python_value
             if isinstance(val, TupleVariable):
                 return PythonTuple(*(val.get_vars()*length))
             else:
