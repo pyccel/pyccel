@@ -443,7 +443,7 @@ class NumpyImag(PythonImag):
         super().__init__(arg)
         self._precision = arg.precision
         self._order = arg.order
-        self._dtype = arg.dtype if not isinstance(arg.dtype, NativeComplex) else NativeReal()
+        self._dtype = NativeReal()
         self._shape = self.internal_var.shape
         self._rank  = len(self._shape)
 
