@@ -379,3 +379,17 @@ def omp_barrier():
         result = result + arr[i]
     #$ omp end parallel
     return result
+
+def combined_for_simd():
+    import numpy as np
+    x = np.array([1,2,1,2,1,2,1,2])
+    y = np.array([2,1,2,1,2,1,2,1])
+    z = np.zeros(8, dtype = int)
+    result = 0
+    #$ omp parallel for simd
+    for i in range(0, 8):
+        z[i] = x[i] + y[i]
+
+    for i in range(0, 8):
+        result = result + z[i]
+    return result
