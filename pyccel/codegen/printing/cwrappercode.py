@@ -643,9 +643,9 @@ class CWrapperCodePrinter(CCodePrinter):
                                     arguments   = wrapper_args,
                                     results     = wrapper_results,
                                     body        = wrapper_body,
-                                    local_varts = tuple(func_args + expr.results))
+                                    local_vars = tuple(func_args + list(expr.results)))
         
-        return CCodePrinter._print_FunctionDef(self, wrapper_func)
+        return CCodePrinter._print_FunctionDef(self, wrapper_function)
 
     def _print_Module(self, expr):
         self._global_names = set(f.name for f in expr.funcs)
