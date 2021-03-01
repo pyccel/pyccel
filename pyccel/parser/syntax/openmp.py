@@ -11,6 +11,7 @@ from os.path import join, dirname
 from textx.metamodel import metamodel_from_file
 
 from pyccel.parser.syntax.basic import BasicStmt
+
 from pyccel.ast.omp import (OmpAnnotatedComment, OMP_For_Loop, OMP_Parallel_Construct,
                             OMP_Single_Construct, Omp_End_Clause, OMP_Critical_Construct,
                             OMP_Master_Construct, OMP_Masked_Construct, OMP_Task_Construct,
@@ -61,6 +62,13 @@ class OmpConstruct(BasicStmt):
 
         super().__init__(**kwargs)
 
+    @property
+    def expr(self):
+        if DEBUG:
+            print("> {}: expr".format(type(self).__name__))
+
+        return self._expr
+
 def check_get_clauses(name, valid_clauses, clauses, combined = None):
     """
     Function to check if the clauses are correct for a given Construct.
@@ -106,240 +114,100 @@ class OmpParallelConstruct(OmpConstruct):
     def __init__(self, **kwargs):
         super().__init__(OMP_Parallel_Construct, _valid_parallel_clauses, **kwargs)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
-
 class OmpLoopConstruct(OmpConstruct):
     """Class representing a For loop construct."""
     def __init__(self, **kwargs):
         super().__init__(OMP_For_Loop, _valid_loop_clauses, **kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
 
 class OmpTaskLoopConstruct(OmpConstruct):
     """Class representing a taskloop construct."""
     def __init__(self, **kwargs):
         super().__init__(OmpAnnotatedComment, (_valid_taskloop_clauses + (OmpinReduction,)), **kwargs)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
-
 class OmpTaskConstruct(OmpConstruct):
     """Class representing a Task Construct """
     def __init__(self, **kwargs):
         super().__init__(OMP_Task_Construct, _valid_task_clauses, **kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
 
 class OmpSingleConstruct(OmpConstruct):
     """Class representing a single construct."""
     def __init__(self, **kwargs):
         super().__init__(OMP_Single_Construct, _valid_single_clauses, **kwargs)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
-
 class OmpCriticalConstruct(OmpConstruct):
     """Class representing a Critical construct."""
     def __init__(self, **kwargs):
         super().__init__(OMP_Critical_Construct, (OmpCriticalName,), **kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
 
 class OmpSimdConstruct(OmpConstruct):
     """Class representing a Simd construct."""
     def __init__(self, **kwargs):
         super().__init__(OmpAnnotatedComment, _valid_simd_clauses, **kwargs)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
-
 class OmpMasterConstruct(OmpConstruct):
     """Class representing the master construct."""
     def __init__(self, **kwargs):
         super().__init__(OMP_Master_Construct, _valid_simd_clauses, **kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
 
 class OmpMaskedConstruct(OmpConstruct):
     """Class representing a Masked construct."""
     def __init__(self, **kwargs):
         super().__init__(OMP_Masked_Construct, (OmpFilter,), **kwargs)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
-
 class OmpSectionsConstruct(OmpConstruct):
     """Class representing a Sections construct."""
     def __init__(self, **kwargs):
         super().__init__(OMP_Sections_Construct, _valid_sections_clauses, **kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
 
 class OmpSectionConstruct(OmpConstruct):
     """Class representing a Section construct."""
     def __init__(self, **kwargs):
         super().__init__(OMP_Section_Construct, None, **kwargs)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
-
 class OmpDistributeConstruct(OmpConstruct):
     """Class representing a distribute construct."""
     def __init__(self, **kwargs):
         super().__init__(OmpAnnotatedComment, _valid_Distribute_clauses, **kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
 
 class OmpBarrierConstruct(OmpConstruct):
     """Class representing a Barrier construct."""
     def __init__(self, **kwargs):
         super().__init__(OmpAnnotatedComment, None, **kwargs)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
-
 class OmpTaskWaitConstruct(OmpConstruct):
     """Class representing a TaskWait construct."""
     def __init__(self, **kwargs):
         super().__init__(OmpAnnotatedComment, None, **kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
 
 class OmpTaskyieldConstruct(OmpConstruct):
     """Class representing a Taskyield construct."""
     def __init__(self, **kwargs):
         super().__init__(OmpAnnotatedComment, None, **kwargs)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
-
 class OmpFlushConstruct(OmpConstruct):
     """Class representing a Flush construct."""
     def __init__(self, **kwargs):
         super().__init__(OmpAnnotatedComment, (FlushList,), **kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
 
 class OmpCancelConstruct(OmpConstruct):
     """Class representing a Cancel construct."""
     def __init__(self, **kwargs):
         super().__init__(OMP_Cancel_Construct, (OmpCancelType,), **kwargs)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
-
 class OmpTargetConstruct(OmpConstruct):
     """Class representing a Target construct."""
     def __init__(self, **kwargs):
         super().__init__(OMP_Target_Construct, _valid_target_clauses, **kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
 
 class OmpTeamsConstruct(OmpConstruct):
     """Class representing a Teams construct."""
     def __init__(self, **kwargs):
         super().__init__(OMP_Teams_Construct, _valid_teams_clauses, **kwargs)
 
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
-
 class OmpAtomicConstruct(OmpConstruct):
     """Class representing an Atomic construct ."""
     def __init__(self, **kwargs):
         super().__init__(OmpAnnotatedComment, _valid_atomic_clauses, **kwargs)
-
-    @property
-    def expr(self):
-        if DEBUG:
-            print("> {}: expr".format(type(self).__name__))
-
-        return self._expr
 
 class OmpEndClause(BasicStmt):
     """Class representing an end construct."""
