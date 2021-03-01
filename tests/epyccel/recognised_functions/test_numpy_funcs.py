@@ -41,9 +41,6 @@ max_float64 = finfo('float64').max
 #    array
 #    # ...
 #    norm
-#    int
-#    float
-#    double
 #    mod
 #    matmul
 #    prod
@@ -3637,24 +3634,26 @@ def test_numpy_real_array_like_1d(language):
         s = shape(a)
         return len(s), s[0], a[0]
 
-    bl = randint(0, 1, size=(5), dtype= bool)
+    size = 5
 
-    integer8 = randint(min_int8, max_int8, size=(5), dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=(5), dtype=np.int16)
-    integer = randint(min_int, max_int, size=(5), dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
+    bl = randint(0, 1, size = size, dtype= bool)
 
-    fl = uniform(min_float / 2, max_float / 2, size=(5))
-    fl32 = uniform(min_float32, max_float32, size=(5))
+    integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
+    integer = randint(min_int, max_int, size = size, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size = size, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size = size, dtype=np.int64)
+
+    fl = uniform(min_float / 2, max_float / 2, size = size)
+    fl32 = uniform(min_float32, max_float32, size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=5) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=5) * 1j
+    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size = size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size = size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) * 1j
+    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size = size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size = size) * 1j
 
     f_bl = epyccel(get_real, language=language)
 
@@ -3717,24 +3716,26 @@ def test_numpy_real_array_like_2d(language):
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    bl = randint(0, 1, size=(2, 5), dtype= bool)
+    size = (2, 5)
 
-    integer8 = randint(min_int8, max_int8, size=(2, 5), dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=(2, 5), dtype=np.int16)
-    integer = randint(min_int, max_int, size=(2, 5), dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=(2, 5), dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=(2, 5), dtype=np.int64)
+    bl = randint(0, 1, size = size, dtype= bool)
 
-    fl = uniform(min_float / 2, max_float / 2, size=(2, 5))
-    fl32 = uniform(min_float32, max_float32, size=(2, 5))
+    integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
+    integer = randint(min_int, max_int, size = size, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size = size, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size = size, dtype=np.int64)
+
+    fl = uniform(min_float / 2, max_float / 2, size = size)
+    fl32 = uniform(min_float32, max_float32, size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(2, 5))
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=(2, 5)) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=(2, 5)) * 1j
+    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size = size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size = size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) * 1j
+    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size = size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size = size) * 1j
 
     f_bl = epyccel(get_real, language=language)
 
@@ -3921,24 +3922,26 @@ def test_numpy_imag_array_like_1d(language):
         s = shape(a)
         return len(s), s[0], a[0]
 
-    bl = randint(0, 1, size=(5), dtype= bool)
+    size = 5
 
-    integer8 = randint(min_int8, max_int8, size=(5), dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=(5), dtype=np.int16)
-    integer = randint(min_int, max_int, size=(5), dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
+    bl = randint(0, 1, size = size, dtype= bool)
 
-    fl = uniform(min_float / 2, max_float / 2, size=(5))
-    fl32 = uniform(min_float32, max_float32, size=(5))
+    integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
+    integer = randint(min_int, max_int, size = size, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size = size, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size = size, dtype=np.int64)
+
+    fl = uniform(min_float / 2, max_float / 2, size = size)
+    fl32 = uniform(min_float32, max_float32, size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=5) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=5) * 1j
+    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size = size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size = size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) * 1j
+    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size = size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size = size) * 1j
 
     f_bl = epyccel(get_imag, language=language)
 
@@ -4001,24 +4004,26 @@ def test_numpy_imag_array_like_2d(language):
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
-    bl = randint(0, 1, size=(2, 5), dtype= bool)
+    size = (2, 5)
 
-    integer8 = randint(min_int8, max_int8, size=(2, 5), dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=(2, 5), dtype=np.int16)
-    integer = randint(min_int, max_int, size=(2, 5), dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=(2, 5), dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=(2, 5), dtype=np.int64)
+    bl = randint(0, 1, size = size, dtype= bool)
 
-    fl = uniform(min_float / 2, max_float / 2, size=(2, 5))
-    fl32 = uniform(min_float32, max_float32, size=(2, 5))
+    integer8 = randint(min_int8, max_int8, size = size, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, size = size, dtype=np.int16)
+    integer = randint(min_int, max_int, size = size, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size = size, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size = size, dtype=np.int64)
+
+    fl = uniform(min_float / 2, max_float / 2, size = size)
+    fl32 = uniform(min_float32, max_float32, size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(2, 5))
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=(2, 5)) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=(2, 5)) * 1j
+    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size = size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size = size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) * 1j
+    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size = size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size = size) * 1j
 
     f_bl = epyccel(get_imag, language=language)
 
