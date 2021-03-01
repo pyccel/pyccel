@@ -726,7 +726,7 @@ class CWrapperCodePrinter(CCodePrinter):
         
         # Print imports last to be sure that all additional_imports have been collected
         imports  = [Import(s) for s in self._additional_imports]
-        imports += [Import('Python'), Import('cwrapper')]
+        imports += [Import('cwrapper')]
         imports  = '\n'.join(self._print(i) for i in imports)
 
         numpy_max_acceptable_version = [1, 19]
