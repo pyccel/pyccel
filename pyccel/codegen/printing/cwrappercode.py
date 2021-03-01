@@ -178,7 +178,7 @@ class CWrapperCodePrinter(CCodePrinter):
         -----------
         """
         if self._target_language == 'fortran' and argument.rank > 0:
-            return [PyccelArraySize(argument, i) for i in argument.rank] + [arg]
+            return [PyccelArraySize(argument, i) for i in range(argument.rank)] + [argument]
         else:
             return [argument]
 
