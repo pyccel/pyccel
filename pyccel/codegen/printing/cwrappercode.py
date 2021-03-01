@@ -97,14 +97,13 @@ class CWrapperCodePrinter(CCodePrinter):
         name = function.name
         wrapper_name = self.get_new_name(used_names.union(self._global_names), name+"_wrapper")
 
-        self._function_wrapper_names[func.name] = wrapper_name
+        self._function_wrapper_names[name] = wrapper_name
         self._global_names.add(wrapper_name)
         used_names.add(wrapper_name)
 
         return wrapper_name
 
-    @staticmethod
-    def get_new_PyObject(name, used_names):
+    def get_new_PyObject(self, name, used_names):
         """
         Create new PyccelPyObject Variable with the desired name
         Parameters:
@@ -248,7 +247,7 @@ class CWrapperCodePrinter(CCodePrinter):
     #                   Convert functions
     #--------------------------------------------------------------------
 
-    def generate_scalar_converter_function(self, used_names, variable, check_is_needed = True):
+    def generate_scalar_converter_function(self, variable, check_is_needed = True):
         """
         Generate converter function responsible for collecting value 
         and managing errors (data type, precision) of arguments
@@ -269,7 +268,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
 
         func_name       = 'py_to_{}'.format(self._print(variable.dtype))
-        py_variable     = self.get_new_PyObject('o', used_names)
+        py_variable     = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
         c_variable      = Variable.clone(name = 'c', is_pointer = True)
         body            = []
 
@@ -299,7 +298,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return funcDef
 
-    def generate_array_converter_function(self, used_names, variable, check_is_needed = True):
+    def generate_array_converter_function(self, variable, check_is_needed = True):
         """
         Generate converter function responsible for collecting value 
         and managing errors (data type, rank, order) of arguments
@@ -478,7 +477,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_name = self.get_wrapper_name(used_names, expr)
 
         # Collect arguments and results
-        wrapper_args    = get_wrapper_arguments(used_names)
+        wrapper_args    = self.get_wrapper_arguments(used_names)
         wrapper_results = [self.get_new_PyObject("result", used_names)]
 
         # build keyword_list
@@ -593,7 +592,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_name = self.get_wrapper_name(used_names, expr)
 
         # Collect arguments and results
-        wrapper_args    = get_wrapper_arguments(used_names)
+        wrapper_args    = self.get_wrapper_arguments(used_names)
         wrapper_results = [self.get_new_PyObject("result", used_names)]
 
         # build keyword_list
@@ -705,7 +704,6 @@ class CWrapperCodePrinter(CCodePrinter):
         # Print imports last to be sure that all additional_imports have been collected
         imports  = [Import(s) for s in self._additional_imports]
         imports += [Import('Python'), Import('cwrapper')]
-        imports += [Import('numpy/arrayobject')]
         imports  = '\n'.join(self._print(i) for i in imports)
 
         numpy_max_acceptable_version = [1, 19]
