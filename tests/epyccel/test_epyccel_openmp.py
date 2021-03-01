@@ -331,3 +331,8 @@ def test_combined_for_simd(language):
     f1 = epyccel(openmp.combined_for_simd, accelerator='openmp', language=language)
     f2 = openmp.combined_for_simd
     assert f1() == f2()
+
+def test_omp_sections(language):
+    f1 = epyccel(openmp.omp_sections, accelerator='openmp', language=language)
+    f2 = openmp.omp_sections
+    assert f1() == f2()

@@ -393,3 +393,31 @@ def combined_for_simd():
     for i in range(0, 8):
         result = result + z[i]
     return result
+
+def omp_sections():
+    n = 8
+    sum1 = 0
+    sum2 = 0
+    sum3 = 0
+    #$ omp parallel num_threads(2)
+    #$ omp sections
+
+    #$ omp section
+    for i in range(0, int(n/3)):
+        sum1 = sum1 + i
+    #$ omp end section
+
+    #$ omp section
+    for i in range(0, int(n/2)):
+        sum2 = sum2 + i
+    #$ omp end section
+
+    #$ omp section
+    for i in range(0, n):
+        sum3 = sum3 + i
+    #$ omp end section
+    #$ omp end sections
+
+    #$ omp end parallel
+
+    return (sum1 + sum2 + sum3)
