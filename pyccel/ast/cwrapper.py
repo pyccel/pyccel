@@ -257,10 +257,8 @@ def Python_to_C(c_object):
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
-                       arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
-                                    Variable(dtype=c_object.dtype, name = 'v',
-                                            precision = c_object.precision, is_pointer=True)],
-                       results   = [Variable(dtype=NativeBool(), name = 'r')])
+                       arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True)],
+                       results   = [Variable(dtype=c_object.dtype, name = 'v', precision = c_object.precision)])
 
     return cast_func
 
