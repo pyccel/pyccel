@@ -165,8 +165,8 @@ class NumpyReal(PythonReal):
 #==============================================================================
 DtypePrecisionToCastFunction = {
     'Int' : {
-        1 : NumpyInt8, # ask
-        2 : NumpyInt16, # ask
+        1 : NumpyInt8,
+        2 : NumpyInt16,
         4 : NumpyInt32,
         8 : NumpyInt64},
     'Real' : {
@@ -178,7 +178,7 @@ DtypePrecisionToCastFunction = {
         16 : NumpyComplex128,},
     'Bool':  {
         4 : PythonBool,
-        4 : NumpyBool}#ask
+        4 : NumpyBool}
 }
 
 #==============================================================================
