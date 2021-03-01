@@ -1,14 +1,13 @@
 #ifndef CWRAPPER_H
 # define CWRAPPER_H
 
+
+
 # include "Python.h"
 # include "numpy/arrayobject.h"
-# include "ndarray.h"
 # include <complex.h>
-# include <stding.h>
+# include <stdint.h>
 # include <stdbool.h>
-
-
 
 /* functions prototypes */
 
@@ -31,18 +30,18 @@ t_ndarray	PyArray_to_ndarray(PyObject *o);
 
 
 /* casting c type to python object */
-PyObject	*Complex_to_PyComplex(double complex *c);
+PyObject	*Complex_to_PyComplex(double complex c);
 
-PyObject	*Bool_to_PyBool(bool *b);
+PyObject	*Bool_to_PyBool(bool b);
 
-PyObject	*Int_to_PyLong(int64_t *i);
+PyObject	*Int_to_PyLong(int64_t i);
 
-PyObject	*Double_to_PyDouble(double *d);
+PyObject	*Double_to_PyDouble(double d);
 
 /* array check */
 
 bool			PyArray_CheckType(PyArrayObject *a, int dtype);
-PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
+PyArrayObject	*Check_Array(PyObject *a, int rank, int flags);
 
 
 

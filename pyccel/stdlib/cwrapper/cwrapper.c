@@ -21,7 +21,7 @@
  * https://docs.python.org/3/c-api/long.html#c.PyLong_AsLongLong
  */
 
-float complex PyComplex_to_Complex64(Pyobject *o)
+float complex PyComplex_to_Complex64(PyObject *o)
 {
 	float complex	c;
 	float			real_part;
@@ -36,7 +36,7 @@ float complex PyComplex_to_Complex64(Pyobject *o)
 	return	c;
 }
 
-double complex	PyComplex_to_Complex128(Pyobject *o)
+double complex	PyComplex_to_Complex128(PyObject *o)
 {
 	double complex	c;
 	double			real_part;
@@ -98,16 +98,16 @@ int8_t	PyInt8_to_Int8(PyObject *o)
 	return	i;
 }
 
-bool	PyBool_to_Bool(Pyobject *o)
+bool	PyBool_to_Bool(PyObject *o)
 {
 	bool	b;
 
-	b = o == PyTrue;
+	b = o == Py_True;
 
 	return	b;
 }
 
-bool	PyFloat_to_Float(Pyobject *o)
+bool	PyFloat_to_Float(PyObject *o)
 {
 	float	f;
 	double	out;
@@ -180,7 +180,7 @@ t_ndarray		PyArray_to_ndarray(PyArrayObject *o)
  * https://docs.python.org/3/c-api/long.html#c.PyLong_FromLongLong
  */
 
-PyObject	*Complex_to_PyComplex(double complex *c)
+PyObject	*Complex_to_PyComplex(double complex c)
 {
 	double		real_part;
 	double		imag_part;
@@ -188,30 +188,30 @@ PyObject	*Complex_to_PyComplex(double complex *c)
 
 	real_part = creal(c);
 	imag_part = cimag(c);
-	o = PyComplex_FromDouble(real_part, imag_part);
+	o = PyComplex_FromDoubles(real_part, imag_part);
 
 	return o;
 }
 
-PyObject	*Bool_to_PyBool(bool *b)
+PyObject	*Bool_to_PyBool(bool b)
 {
-	return b == true ? PyTrue : PyFalse;
+	return b == true ? Py_True : Py_False;
 }
 
-PyObject	*Int_to_PyLong(int64_t *i)
+PyObject	*Int_to_PyLong(int64_t i)
 {
 	PyObject	*o;
 
-	o = PyLong_FromLongLong((long long) i)
+	o = PyLong_FromLongLong((long long) i);
 
 	return o;
 }
 
-PyObject	*Double_to_PyDouble(double *d)
+PyObject	*Double_to_PyDouble(double d)
 {
 	PyObject	*o;
 
-	o = PyFloat_FromDouble(d)
+	o = PyFloat_FromDouble(d);
 
 	return o;
 }
@@ -264,7 +264,7 @@ PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
 	{
 		if (!PyArray_CHKFLAGS(array, flags))
 		{
-			order = flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : 'F';
+			order = flags == NPY_ARRAY_C_CONTIGUOUS ? 'C' : 'F';
 			PyErr_Format(PyExc_NotImplementedError,
 				"argument does not have the expected ordering (%c)", order);
 			return NULL;
