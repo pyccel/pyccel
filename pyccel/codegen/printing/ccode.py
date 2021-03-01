@@ -1495,7 +1495,7 @@ class CCodePrinter(CodePrinter):
         clauses += str(expr.txt)
         omp_expr = '#pragma omp {}{}'.format(expr.name, clauses)
 
-        if expr._is_multiline:
+        if expr.is_multiline:
             if expr.combined is None:
                 omp_expr += '\n{'
             elif (expr.combined and "for" not in expr.combined):
