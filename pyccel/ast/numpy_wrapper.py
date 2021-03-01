@@ -15,7 +15,7 @@ from .datatypes         import NativeBool, NativeGeneric, NativeVoid
 
 from .cwrapper          import PyccelPyObject, PyccelPyArrayObject
 
-from .core              import FunctionDef
+from .core              import FunctionDef, FunctionCall
 
 from .variable          import Variable
 

@@ -10,17 +10,18 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.literals    import LiteralTrue, LiteralInteger, LiteralString
 
-from pyccel.ast.operators   import PyccelNot, PyccelEq
+from pyccel.ast.operators   import PyccelNot, PyccelEq, PyccelOr
 from pyccel.ast.datatypes   import NativeBool, NativeComplex
 from pyccel.ast.core        import create_incremented_string, SeparatorComment
 
 from pyccel.ast.core        import FunctionCall, FunctionDef, FunctionAddress
 from pyccel.ast.core        import Assign, AliasAssign, Nil
-from pyccel.ast.core        import If, IfSection, Import
+from pyccel.ast.core        import If, IfSection, Import, Return
 
 from pyccel.ast.cwrapper    import (PyArgKeywords, PyArg_ParseTupleNode,
                                     PyBuildValueNode)
 from pyccel.ast.cwrapper    import Python_to_C, C_to_Python, PythonType_Check
+from pyccel.ast.cwrapper    import get_custom_key
 
 from pyccel.ast.cwrapper    import PyccelPyObject, PyccelPyArrayObject, Py_None
 from pyccel.ast.cwrapper    import get_custom_key, PyErr_SetString, PyErr_Occurred
@@ -169,9 +170,9 @@ class CWrapperCodePrinter(CCodePrinter):
         -----------
         """
         if self._target_language == 'fortran' and argument.rank > 0:
-            return [PyccelArraySize(arg, i) for i in argument.rank] + [arg]
+            return [PyccelArraySize(argument, i) for i in argument.rank] + [arg]
         else:
-            return [arg]
+            return [argument]
 
     @staticmethod
     def get_flag_value(flag, variable):
@@ -270,7 +271,7 @@ class CWrapperCodePrinter(CCodePrinter):
         func_name       = 'py_to_{}'.format(self._print(variable.dtype))
         func_name       = self.get_new_name(used_names, func_name)
         py_variable     = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
-        c_variable      = Variable.clone(name = 'c', is_pointer = True)
+        c_variable      = variable.clone(name = 'c', is_pointer = True)
         body            = []
 
         # (Valued / Optional) variable check
@@ -281,9 +282,9 @@ class CWrapperCodePrinter(CCodePrinter):
         if check_is_needed:
             numpy_check  = NumpyType_Check(py_variable, c_variable)
             python_check = PythonType_Check(py_variable, c_variable)
-            check        = PyccelNot(PyccelAnd(numpy_check, python_check))
-            error        = generate_datatype_error(c_variable)
-            body.append(If(IfSection(check, [error, Return([LiteralInteger(0)])])))
+            check        = PyccelNot(PyccelOr(numpy_check, python_check))
+            error        = self.generate_datatype_error(c_variable)
+            body.append(IfSection(check, [error, Return([LiteralInteger(0)])]))
 
         body = [If(*body)]
         # Collect value
@@ -337,7 +338,7 @@ class CWrapperCodePrinter(CCodePrinter):
         #datatqype check
         if check_is_needed:
             check = PyccelNot(PyArray_CheckType(py_variable, c_variable, self.target_language))
-            error = generate_datatype_error(c_variable)
+            error = self.generate_datatype_error(c_variable)
             body.append(If(IfSection(check, [error, Return([LiteralInteger(0)])])))
 
         body    = [If(*body)]
@@ -382,7 +383,7 @@ class CWrapperCodePrinter(CCodePrinter):
             else:
                 function = self.generate_scalar_converter_function(used_names, variable)
 
-            self.converter_functions_dict[get_custom_key(variable)] = functions
+            self.converter_functions_dict[get_custom_key(variable)] = function
 
             return function
         return self.converter_functions_dict[get_custom_key(variable)]
@@ -400,7 +401,7 @@ class CWrapperCodePrinter(CCodePrinter):
             raise NotImplementedError('return not implemented for arrays.')
 
         try:
-            func = python_to_c_registry[(variable.dtype, variable.precision)]
+            func = C_to_Python(variable)
         except KeyError:
             raise NotImplementedError(
             'return not implemented for this datatype : {}'.format(variable.dtype))
@@ -532,7 +533,7 @@ class CWrapperCodePrinter(CCodePrinter):
             building_converter_functions = {}
             for res in expr.results:
                 convert_func = self.get_PyBuildValue_Converter_function(res)
-            building_converter_functions[get_custum_key(res)] = convert_func
+            building_converter_functions[get_custom_key(res)] = convert_func
 
             # builde results
             build_node = PyBuildValueNode(func.results, building_converter_functions)
@@ -630,7 +631,7 @@ class CWrapperCodePrinter(CCodePrinter):
         building_converter_functions = {}
         for res in expr.results:
             convert_func = self.get_PyBuildValue_Converter_function(res)
-            building_converter_functions[get_custum_key(res)] = convert_func
+            building_converter_functions[get_custom_key(res)] = convert_func
 
         # builde results
         build_node = PyBuildValueNode(expr.results, building_converter_functions)

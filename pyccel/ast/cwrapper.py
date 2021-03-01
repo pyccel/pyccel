@@ -124,9 +124,9 @@ class PyArg_ParseTupleNode(Basic):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
             raise TypeError('Python func kwargs should be a Variable')
-        if not isinstance(converter_functions):
+        if not isinstance(converter_functions, dict):
             raise TypeError('converter_functions should be a Dictionary')
-        if any(not isinstance(f, FunctionDef) for f in converter_functions.keys()):
+        if any(not isinstance(f, FunctionDef) for f in converter_functions.values()):
             raise TypeError('Converter function should be a FunctionDef')
         if not isinstance(parse_args, list) and any(not isinstance(c, Variable) for c in parse_args):
             raise TypeError('Parse args should be a list of Variables')
@@ -150,7 +150,7 @@ class PyArg_ParseTupleNode(Basic):
             errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
                           symbol=parse_args, severity='warning')
 
-        parse_args = [[converter_functions[get_custom_key(variable)] , a] for a in parse_args]
+        parse_args = [[converter_functions[get_custom_key(arg)] , arg] for arg in parse_args]
         parse_args = [a for arg in parse_args for a in arg]
 
         self._pyarg      = python_func_args
@@ -199,7 +199,7 @@ class PyBuildValueNode(Basic):
         for i in result_args:
             self._flags  += 'O&'
 
-        result_args       = [[converter_functions[xxxxx], arg] for arg in result_args]
+        result_args       = [[converter_functions[get_custom_key(arg)], arg] for arg in result_args]
         self._result_args = [a for arg in result_args for a in arg]
 
         super().__init__()
@@ -254,7 +254,7 @@ def Python_to_C(c_object):
         cast_function = py_to_c_registry[(c_object.dtype, c_object.precision)]
     except KeyError:
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
-    cast_func = FunctionDef(name = check_type,
+    cast_func = FunctionDef(name = cast_function,
                        body      = [],
                        arguments = [Variable(dtype=PyccelPyObject(), name = 'o', is_pointer=True),
                                     Variable(dtype=c_object.dtype, name = 'v',
