@@ -341,7 +341,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
         #array check
         body.append(AliasAssign(py_array, Check_Array(py_variable, c_variable, self._target_language)))
-        body.append(If(IfSection(PyccelEq(py_array, Py_None), [Return([LiteralInteger(0)])])))
+        body.append(If(IfSection(
+            PyccelNot(VariableAddress(py_array)),
+            [Return([LiteralInteger(0)])])))
 
         #datatqype check
         if check_is_needed:
