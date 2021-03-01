@@ -341,7 +341,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         #array check
         body.append(AliasAssign(py_array, Check_Array(py_variable, c_variable, self._target_language)))
-        body.append(If(IfSection(PyccelEq(py_array, Py_None), [Return(LiteralInteger(0))])))
+        body.append(If(IfSection(PyccelEq(py_array, Py_None), [Return([LiteralInteger(0)])])))
 
         #datatqype check
         if check_is_needed:
@@ -661,7 +661,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                     arguments   = wrapper_args,
                                     results     = wrapper_results,
                                     body        = wrapper_body,
-                                    local_vars = tuple(func_args + list(expr.results)))
+                                    local_vars = tuple(expr.arguments + expr.results))
         
         return CCodePrinter._print_FunctionDef(self, wrapper_function)
 
