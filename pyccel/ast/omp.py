@@ -36,10 +36,10 @@ class OmpAnnotatedComment(Basic):
         self._combined = combined
         super().__init__()
 
-    @classmethod
-    def is_multiline(cls):
+    @property
+    def is_multiline(self):
         """Used to check if the construct needs brackets."""
-        return cls._is_multiline
+        return self._is_multiline
 
     @property
     def name(self):
