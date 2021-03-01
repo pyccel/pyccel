@@ -132,6 +132,8 @@ class PyArg_ParseTupleNode(Basic):
             raise TypeError('Parse args should be a list of Variables')
         if not isinstance(arg_names, PyArgKeywords):
             raise TypeError('Parse args should be a list of Variables')
+        if (len(result_args) > 0 and len(converter_functions) == 0):
+            raise TypeError('There should be at least one converter function when args are present')
 
         self._flags = ''
         i           = 0
@@ -150,13 +152,11 @@ class PyArg_ParseTupleNode(Basic):
             errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
                           symbol=parse_args, severity='warning')
 
-        parse_args = [[converter_functions[get_custom_key(arg)] , arg] for arg in parse_args]
-        parse_args = [a for arg in parse_args for a in arg]
-
-        self._pyarg      = python_func_args
-        self._pykwarg    = python_func_kwargs
-        self._parse_args = parse_args
-        self._arg_names  = arg_names
+        self._converter_functions = converter_functions
+        self._pyarg               = python_func_args
+        self._pykwarg             =  python_func_kwargs
+        self._parse_args          = parse_args
+        self._arg_names           = arg_names
         super().__init__()
 
     @property
@@ -179,6 +179,8 @@ class PyArg_ParseTupleNode(Basic):
     def arg_names(self):
         return self._arg_names
 
+    def get_converter(self, arg):
+        return self._converter_functions[get_custom_key(arg)]
 
 class PyBuildValueNode(Basic):
     """
@@ -199,8 +201,11 @@ class PyBuildValueNode(Basic):
         for i in result_args:
             self._flags  += 'O&'
 
-        result_args       = [[converter_functions[get_custom_key(arg)], arg] for arg in result_args]
-        self._result_args = [a for arg in result_args for a in arg]
+        if (len(result_args) > 0 and len(converter_functions) == 0):
+            raise TypeError('There should be at least one converter function when args are present')
+
+        self._result_args         = results_args
+        self._converter_functions = converter_functions
 
         super().__init__()
 
@@ -212,6 +217,8 @@ class PyBuildValueNode(Basic):
     def args(self):
         return self._result_args
 
+    def get_converter(self, arg):
+        return self._converter_functions[get_custom_key(arg)]
 
 def get_custom_key(variable):
     """
