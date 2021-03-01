@@ -19,7 +19,7 @@ from .builtins  import PythonRange, PythonTuple
 
 from .mathext   import MathCeil
 
-from .literals  import LiteralInteger, LiteralFloat
+from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
 
 from .datatypes import NativeInteger
 
@@ -127,10 +127,13 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     #Constants
     if isinstance(expr, LiteralInteger):
-        return sp.Integer(expr.p)
+        return sp.Integer(expr.python_value)
 
     elif isinstance(expr, LiteralFloat):
-        return sp.Float(expr)
+        return sp.Float(expr.python_value)
+
+    elif isinstance(expr, LiteralComplex):
+        return sp.Float(expr.real) + sp.Float(expr.imag) * 1j
 
     #Operators
     elif isinstance(expr, PyccelDiv):
@@ -139,7 +142,7 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     elif isinstance(expr, PyccelMul):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
-        return sp.Mul(*args)
+        return args[0] * args[1]
 
     elif isinstance(expr, PyccelMinus):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
@@ -151,11 +154,11 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     elif isinstance(expr, PyccelAdd):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
-        return sp.Add(*args)
+        return args[0] + args[1]
 
     elif isinstance(expr, PyccelPow):
         args = [pyccel_to_sympy(e, symbol_map, used_names) for e in expr.args]
-        return sp.Pow(*args)
+        return args[0] ** args[1]
 
     elif isinstance(expr, PyccelAssociativeParenthesis):
         return pyccel_to_sympy(expr.args[0], symbol_map, used_names)
