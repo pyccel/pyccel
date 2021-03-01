@@ -305,7 +305,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         funcDef = FunctionDef(name     = func_name,
                             arguments  = [py_variable, c_variable],
-                            results    = [Variable(dtype = LiteralInteger(), name = 'r', is_temp = True)],
+                            results    = [Variable(name = 'r', dtype = NativeInteger(), is_temp = True)],
                             body       = body)
 
         return funcDef
@@ -358,7 +358,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         funcDef = FunctionDef(name     = func_name,
                             arguments  = [py_variable, c_variable],
-                            results    = [Variable(dtype = LiteralInteger(), name = 'r', is_temp = True)],
+                            results    = [Variable(dtype = NativeInteger(), name = 'r', is_temp = True)],
                             local_vars = [py_array],
                             body       = body)
 
