@@ -12,7 +12,7 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.ast.literals    import LiteralTrue, LiteralInteger, LiteralString
 
 from pyccel.ast.operators   import PyccelNot, PyccelEq, PyccelOr
-from pyccel.ast.datatypes   import NativeBool, NativeComplex
+from pyccel.ast.datatypes   import NativeBool, NativeComplex, NativeInteger
 from pyccel.ast.core        import create_incremented_string, SeparatorComment
 
 from pyccel.ast.core        import FunctionCall, FunctionDef, FunctionAddress
@@ -22,7 +22,7 @@ from pyccel.ast.core        import If, IfSection, Import, Return
 from pyccel.ast.cwrapper    import (PyArgKeywords, PyArg_ParseTupleNode,
                                     PyBuildValueNode)
 from pyccel.ast.cwrapper    import Python_to_C, C_to_Python, PythonType_Check
-from pyccel.ast.cwrapper    import get_custom_key
+from pyccel.ast.cwrapper    import get_custom_key, flags_registry
 
 from pyccel.ast.cwrapper    import PyccelPyObject, PyccelPyArrayObject, Py_None
 from pyccel.ast.cwrapper    import get_custom_key, PyErr_SetString, PyErr_Occurred
@@ -216,7 +216,7 @@ class CWrapperCodePrinter(CCodePrinter):
             body =  [AliasAssign(variable, Nil())]
 
         else:
-            body = [Assign(variable, variable.value)]
+            body = [Assign(c_variable, variable.value)]
 
         body = IfSection(check, body)
         return body
@@ -308,7 +308,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return funcDef
 
-    def generate_array_converter_function(self, variable, check_is_needed = True):
+    def generate_array_converter_function(self, used_names, variable, check_is_needed = True):
         """
         Generate converter function responsible for collecting value 
         and managing errors (data type, rank, order) of arguments
@@ -337,11 +337,11 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # (Valued / Optional) variable check
         if isinstance(variable, ValuedVariable):
-            body.append(If(generate_valued_variable_body(py_object, c_variable)))
+            body.append(If(self.generate_valued_variable_body(py_object, c_variable)))
 
         #array check
-        body.append(AliasAssign(py_array, FunctionCall(Check_Array(py_variable, c_variable))))
-        body.append(If(IfSection(PyccelEq(py_array, PyNone), [Return(LiteralInteger(0))])))
+        body.append(AliasAssign(py_array, Check_Array(py_variable, c_variable)))
+        body.append(If(IfSection(PyccelEq(py_array, Py_None), [Return(LiteralInteger(0))])))
 
         #datatqype check
         if check_is_needed:
@@ -375,14 +375,23 @@ class CWrapperCodePrinter(CCodePrinter):
     #       Parsing arguments and building values  functions
     # -------------------------------------------------------------------
 
-    def get_PyArgParse_Converter_Function(self, used_names, variable):
+    def get_PyArgParse_Converter_Function(self, used_names, variable, check_is_needed = True):
         """
         Responsible for collecting any necessary intermediate functions which are used
         to convert python to C.
         Parameters:
         ----------
-        variable            : Variable
+        used_names : set of strings
+            Set of variable and function names to avoid name collisions
+        variable   : Variable
             variable holding information needed to chose converter function
+            in bulding converter function body
+        check_is_needed : Boolean
+            True if data type check is needed, used to avoid multiple type check
+            in interface
+        Returns:
+        --------
+        function : FunctionDef
         """
         if get_custom_key(variable) not in self.converter_functions_dict:
 
@@ -402,8 +411,11 @@ class CWrapperCodePrinter(CCodePrinter):
         to convert c type to python.
         Parameters:
         ----------
-        variable            : Variable
+        variable : Variable
             variable holding information needed to chose converter function
+        Returns:
+        --------
+        func     : FunctionDef
         """
         if variable.rank > 0:
             raise NotImplementedError('return not implemented for arrays.')
@@ -513,11 +525,11 @@ class CWrapperCodePrinter(CCodePrinter):
         for func in expr.functions:
             mini_wrapper_name = self.get_wrapper_name(used_names, expr)
             mini_wrapper_body = []
-            func_args_args    = []
+            func_args         = []
             flag              = 0
 
             # loop on all functions argument to collect needed converter functions
-            for f_arg, p_args in zip(func.arguments, parse_args):
+            for f_arg, p_arg in zip(func.arguments, parse_args):
                 convert_func = self.get_PyArgParse_Converter_Function(used_names, f_arg)
                 func_args.extend(self.get_static_args(arg)) # Bind_C args
 

@@ -215,6 +215,7 @@ class PyBuildValueNode(Basic):
 
 def get_custom_key(variable):
     """
+    #TODO
     """
     dtype     = variable.dtype
     precision = variable.precision

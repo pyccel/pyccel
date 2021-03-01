@@ -248,7 +248,7 @@ def Check_Array(py_variable, c_variable, language = 'Fortran'):
                                     Variable(dtype = NativeInteger(),  name = 'rank'),
                                     Variable(dtype = NativeInteger(),  name = 'flag')],
                        body      = [],
-                       results   = [Variable(dtype = PyccelPyArrayObject(), is_pointer = True)])
+                       results   = [Variable(dtype = PyccelPyArrayObject(), name = 'array', is_pointer = True)])
 
     return FunctionCall(func, [py_variable, Literalnteger(rank), flag])
 
