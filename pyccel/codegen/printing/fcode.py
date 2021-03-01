@@ -1864,37 +1864,19 @@ class FCodePrinter(CodePrinter):
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
 
     # .....................................................
-    #                   OpenMP statements
+    #               Print OpenMP AnnotatedComment
     # .....................................................
 
-    def _print_OmpCombinedAnnotatedComment(self, expr):
+    def _print_OmpAnnotatedComment(self, expr):
         clauses = ''
         if expr.combined:
-            combined = expr.combined
-            if isinstance(expr, (OMP_Parallel_Construct, OMP_Target_Construct, OMP_Teams_Construct)):
-                combined = combined.replace("for", omploop_dict["for"])
+            combined = expr.combined.replace("for", omploop_dict["for"])
             clauses = ' ' + combined
-        omp_expr = '!$omp'
-        if isinstance(expr, OMP_Parallel_Construct):
-            omp_expr += ' parallel'
-        elif isinstance(expr, OMP_Masked_Construct):
-            omp_expr += ' masked'
-        elif isinstance(expr, OMP_Target_Construct):
-            omp_expr += ' target'
-        elif isinstance(expr, OMP_Teams_Construct):
-            omp_expr += ' teams'
-        clauses += str(expr.txt)
-        omp_expr = '{}{}\n'.format(omp_expr, clauses)
-        return omp_expr
 
-    def _print_OmpAnnotatedComment(self, expr):
-        omp_expr = str(expr.txt)
-        if isinstance(expr, OMP_Cancel_Construct):
-            omp_expr = omp_expr.replace("cancel for", "cancel do")
-        if isinstance(expr, OMP_For_Loop):
-            omp_expr = '!$omp do{}\n'.format(omp_expr)
-        else:
-            omp_expr = '!$omp {}\n'.format(omp_expr)
+        omp_expr = '!$omp {}'.format(expr.name.replace("for", "do"))
+        clauses += str(expr.txt).replace("cancel for", "cancel do")
+        omp_expr = '{}{}\n'.format(omp_expr, clauses)
+
         return omp_expr
 
     def _print_Omp_End_Clause(self, expr):

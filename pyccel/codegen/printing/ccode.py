@@ -1495,45 +1495,20 @@ class CCodePrinter(CodePrinter):
 
     #=================== OMP ==================
 
-    def _print_OmpCombinedAnnotatedComment(self, expr):
+    def _print_OmpAnnotatedComment(self, expr):
         clauses = ''
         if expr.combined:
             clauses = ' ' + expr.combined
         clauses += str(expr.txt)
-        omp_expr = '#pragma omp'
-        if isinstance(expr, OMP_Parallel_Construct):
-            omp_expr += ' parallel{}'.format(clauses)
-        elif isinstance(expr, OMP_Masked_Construct):
-            omp_expr += ' masked{}'.format(clauses)
-        elif isinstance(expr, OMP_Target_Construct):
-            omp_expr += ' target{}'.format(clauses)
-        elif isinstance(expr, OMP_Teams_Construct):
-            omp_expr += ' teams{}'.format(clauses)
+        omp_expr = '#pragma omp {}{}'.format(expr.name, clauses)
 
-        if expr.combined is None:
-            omp_expr += '\n{'
-        else:
-            if isinstance(expr, OMP_Parallel_Construct):
-                if (expr.combined and "for" not in expr.combined):
-                    if "masked taskloop" not in expr.combined:
-                        omp_expr += '\n{'
-            elif isinstance(expr, OMP_Target_Construct):
-                if (expr.combined and "for" not in expr.combined):
-                    if "distribute" not in expr.combined:
-                        omp_expr += '\n{'
+        if expr._is_multiline:
+            if expr.combined is None:
+                omp_expr += '\n{'
+            elif (expr.combined and "for" not in expr.combined):
+                if ("masked taskloop" not in expr.combined) and ("distribute" not in expr.combined):
+                    omp_expr += '\n{'
 
-        return omp_expr
-
-    def _print_OmpAnnotatedComment(self, expr):
-        omp_expr = str(expr.txt)
-        if isinstance(expr, OMP_For_Loop):
-            omp_expr = '#pragma omp for{}'.format(omp_expr)
-        else:
-            omp_expr = '#pragma omp {}'.format(omp_expr)
-        if isinstance(expr, (OMP_Sections_Construct, OMP_Section_Construct,
-                             OMP_Task_Construct, OMP_Single_Construct,
-                             OMP_Critical_Construct, OMP_Master_Construct)):
-            omp_expr += '\n{'
         return omp_expr
 
     def _print_Omp_End_Clause(self, expr):
