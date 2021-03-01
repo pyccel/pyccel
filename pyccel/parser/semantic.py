@@ -80,7 +80,8 @@ from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonMap, PythonTuple, Lambda)
 
 from pyccel.ast.numpyext import NumpyZeros
-from pyccel.ast.numpyext import NumpyInt, NumpyInt32, NumpyInt64
+from pyccel.ast.numpyext import NumpyBool
+from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
@@ -663,7 +664,7 @@ class SemanticParser(BasicParser):
         d_var = {}
         # TODO improve => put settings as attribut of Parser
 
-        if expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt,
+        if expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyBool, NumpyInt, NumpyInt8, NumpyInt16,
                       NumpyInt32, NumpyInt64, NumpyComplex, NumpyComplex64,
 					  NumpyComplex128, NumpyFloat, NumpyFloat64, NumpyFloat32):
 

@@ -100,6 +100,7 @@ dtype_and_precision_registry = { 'real':('real',default_precision['float']),
                                  'complex':('complex',default_precision['complex']),  # to create numpy array with dtype='complex'
                                  'complex64':('complex',4),
                                  'complex128':('complex',8),
+                                 'bool' :('bool',1),#ask
                                  'int8' :('int',1),
                                  'int16':('int',2),
                                  'int32':('int',4),

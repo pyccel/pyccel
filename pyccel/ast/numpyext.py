@@ -62,7 +62,10 @@ __all__ = (
     'NumpyFull',
     'NumpyFullLike',
     'NumpyImag',
+    'NumpyBool',
     'NumpyInt',
+    'NumpyInt8',
+    'NumpyInt16',
     'NumpyInt32',
     'NumpyInt64',
     'NumpyLinspace',
@@ -112,12 +115,28 @@ class NumpyFloat64(NumpyFloat):
     _precision = dtype_registry['float64'][1]
 
 #=======================================================================================
+class NumpyBool(PythonBool):
+    """ Represents a call to numpy.bool() function.
+    """
+    def __new__(cls, arg=None, base=10):
+        return super().__new__(cls, arg)
+#=======================================================================================
 # TODO [YG, 13.03.2020]: handle case where base != 10
 class NumpyInt(PythonInt):
     """ Represents a call to numpy.int() function.
     """
     def __new__(cls, arg=None, base=10):
         return super().__new__(cls, arg)
+
+class NumpyInt8(NumpyInt):
+    """ Represents a call to numpy.int8() function.
+    """
+    _precision = dtype_registry['int8'][1]
+
+class NumpyInt16(NumpyInt):
+    """ Represents a call to numpy.int16() function.
+    """
+    _precision = dtype_registry['int16'][1]
 
 class NumpyInt32(NumpyInt):
     """ Represents a call to numpy.int32() function.
@@ -146,6 +165,8 @@ class NumpyReal(PythonReal):
 #==============================================================================
 DtypePrecisionToCastFunction = {
     'Int' : {
+        1 : NumpyInt8, # ask
+        2 : NumpyInt16, # ask
         4 : NumpyInt32,
         8 : NumpyInt64},
     'Real' : {
@@ -156,7 +177,8 @@ DtypePrecisionToCastFunction = {
         8 : PythonComplex,
         16 : NumpyComplex128,},
     'Bool':  {
-        4 : PythonBool}
+        4 : PythonBool,
+        4 : NumpyBool}#ask
 }
 
 #==============================================================================
@@ -168,7 +190,7 @@ def process_dtype(dtype):
     if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool):
         # remove python prefix from dtype.name len("python") = 6
         dtype = dtype.__name__.lower()[6:]
-    elif dtype  in (NumpyInt, NumpyInt32, NumpyInt64, NumpyComplex, NumpyFloat,
+    elif dtype  in (NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64, NumpyComplex, NumpyFloat,
 				  NumpyComplex128, NumpyComplex64, NumpyFloat64, NumpyFloat32):
         # remove numpy prefix from dtype.name len("numpy") = 5
         dtype = dtype.__name__.lower()[5:]
@@ -952,6 +974,9 @@ numpy_functions = {
     'mod'       : NumpyMod,
     'float32'   : NumpyFloat32,
     'float64'   : NumpyFloat64,
+    'bool'   : NumpyBool,
+    'int8'      : NumpyInt8,
+    'int16'     : NumpyInt16,
     'int32'     : NumpyInt32,
     'int64'     : NumpyInt64,
     'complex'   : NumpyComplex,
