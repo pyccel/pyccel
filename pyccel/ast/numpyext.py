@@ -177,8 +177,7 @@ DtypePrecisionToCastFunction = {
         8 : PythonComplex,
         16 : NumpyComplex128,},
     'Bool':  {
-        4 : PythonBool,
-        4 : NumpyBool}
+        4 : PythonBool}
 }
 
 #==============================================================================
@@ -974,7 +973,7 @@ numpy_functions = {
     'mod'       : NumpyMod,
     'float32'   : NumpyFloat32,
     'float64'   : NumpyFloat64,
-    'bool'   : NumpyBool,
+    'bool'      : NumpyBool,
     'int8'      : NumpyInt8,
     'int16'     : NumpyInt16,
     'int32'     : NumpyInt32,
