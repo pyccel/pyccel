@@ -413,6 +413,9 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
 
+    def _print_PyccelPyArrayObject(self, expr):
+        return 'pyarrayobject'
+
     def _print_PyArgKeywords(self, expr):
         arg_names  = ['"{}"'.format(a) for a in expr.arg_names]
         arg_names += [self._print(Nil())]
