@@ -4880,11 +4880,13 @@ def test_numpy_prod_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    f_integer64_output = f_integer64(integer64)
-    test_int64_output = get_prod(integer64)
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64_output = f_integer64(integer64)
+        test_int64_output = get_prod(integer64)
 
-    assert f_integer64_output == test_int64_output
-    assert type(f_integer64_output) == type(test_int64_output.item())
+        assert f_integer64_output == test_int64_output
+        assert type(f_integer64_output) == type(test_int64_output.item())
 
     f_fl = epyccel(get_prod, language=language)
     f_fl32 = epyccel(get_prod, language=language)
@@ -4949,7 +4951,7 @@ def test_numpy_prod_array_like_1d(language):
         from numpy import prod
         a = prod(arr)
         return a
-    
+
     size = 5
 
     bl = randint(0, 1, size = size, dtype= bool)
@@ -4985,8 +4987,10 @@ def test_numpy_prod_array_like_1d(language):
     assert (f_integer(integer) == get_prod(integer))
     assert (f_integer32(integer32) == get_prod(integer32))
 
-    f_integer64 = epyccel(get_prod, language=language)
-    assert (f_integer64(integer64) == get_prod(integer64))
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64 = epyccel(get_prod, language=language)
+        assert (f_integer64(integer64) == get_prod(integer64))
 
     f_fl = epyccel(get_prod, language=language)
     f_fl32 = epyccel(get_prod, language=language)
@@ -5065,8 +5069,10 @@ def test_numpy_prod_array_like_2d(language):
     assert (f_integer(integer) == get_prod(integer))
     assert (f_integer32(integer32) == get_prod(integer32))
 
-    f_integer64 = epyccel(get_prod, language=language)
-    assert (f_integer64(integer64) == get_prod(integer64))
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64 = epyccel(get_prod, language=language)
+        assert (f_integer64(integer64) == get_prod(integer64))
 
     f_fl = epyccel(get_prod, language=language)
     f_fl32 = epyccel(get_prod, language=language)
