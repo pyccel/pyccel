@@ -435,7 +435,14 @@ class CCodePrinter(CodePrinter):
         """ print the python builtin function abs
         args : variable
         """
-        return "abs({})".format(self._print(expr.arg))
+        func = "abs"
+        if expr.arg.dtype is NativeReal():
+            self._additional_imports.add("math")
+            func = "fabs"
+        elif expr.arg.dtype is NativeComplex():
+            self._additional_imports.add("complex")
+            func = "cabs"
+        return "{}({})".format(func, self._print(expr.arg))
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
