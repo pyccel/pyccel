@@ -132,7 +132,7 @@ class PyArg_ParseTupleNode(Basic):
             raise TypeError('Parse args should be a list of Variables')
         if not isinstance(arg_names, PyArgKeywords):
             raise TypeError('Parse args should be a list of Variables')
-        if (len(result_args) != len(converter_functions)):
+        if (len(parse_args) != len(converter_functions)):
             raise TypeError('There should be same number of converter functions and arguments')
 
         self._flags = ''
@@ -181,7 +181,7 @@ class PyArg_ParseTupleNode(Basic):
 
     @property
     def converters(self):
-        return self.__converter_functions
+        return self._converter_functions
 
 class PyBuildValueNode(Basic):
     """
@@ -205,7 +205,7 @@ class PyBuildValueNode(Basic):
         if (len(result_args) != len(converter_functions)):
             raise TypeError('There should be same number of converter functions and arguments')
 
-        self._result_args         = results_args
+        self._result_args         = result_args
         self._converter_functions = converter_functions
 
         super().__init__()
@@ -220,7 +220,7 @@ class PyBuildValueNode(Basic):
 
     @property
     def converters(self):
-        return self.__converter_functions
+        return self._converter_functions
 
 def get_custom_key(variable):
     """
