@@ -247,7 +247,7 @@ class CWrapperCodePrinter(CCodePrinter):
     #                   Convert functions
     #--------------------------------------------------------------------
 
-    def generate_scalar_converter_function(self, variable, check_is_needed = True):
+    def generate_scalar_converter_function(self, used_names, variable, check_is_needed = True):
         """
         Generate converter function responsible for collecting value 
         and managing errors (data type, precision) of arguments
@@ -268,6 +268,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
 
         func_name       = 'py_to_{}'.format(self._print(variable.dtype))
+        func_name       = self.get_new_name(used_names, func_name)
         py_variable     = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
         c_variable      = Variable.clone(name = 'c', is_pointer = True)
         body            = []
@@ -319,6 +320,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
 
         func_name       = 'py_to_nd{}'.format(self._print(variable.dtype))
+        func_name       = self.get_new_name(used_names, func_name)
         py_variable     = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
         py_array        = Variable(name = 'py_array', dtype = PyccelPyArrayObject(), is_pointer = True)
         c_variable      = Variable.clone(name = 'c_variable', is_pointer = True)
@@ -364,7 +366,7 @@ class CWrapperCodePrinter(CCodePrinter):
     #       Parsing arguments and building values  functions
     # -------------------------------------------------------------------
 
-    def get_PyArgParse_Converter_Function(self, variable):
+    def get_PyArgParse_Converter_Function(self, used_names, variable):
         """
         Responsible for collecting any necessary intermediate functions which are used
         to convert python to C.
@@ -376,9 +378,9 @@ class CWrapperCodePrinter(CCodePrinter):
         if get_custom_key(variable) not in self.converter_functions_dict:
 
             if variable.rank > 0:
-                function = self.generate_array_converter_function(variable)
+                function = self.generate_array_converter_function(used_names, variable)
             else:
-                function = self.generate_scalar_converter_function(variable)
+                function = self.generate_scalar_converter_function(used_names, variable)
 
             self.converter_functions_dict[get_custom_key(variable)] = functions
 
@@ -507,7 +509,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # loop on all functions argument to collect needed converter functions
             for f_arg, p_args in zip(func.arguments, parse_args):
-                convert_func = self.get_PyArgParse_Converter_Function(f_arg)
+                convert_func = self.get_PyArgParse_Converter_Function(used_names, f_arg)
                 func_args.extend(self.get_static_args(arg)) # Bind_C args
 
                 flag = self.get_flag_value(flag, f_arg) # set flag value
@@ -604,7 +606,7 @@ class CWrapperCodePrinter(CCodePrinter):
         func_args         = []
         # loop on all functions argument to collect needed converter functions
         for arg in expr.arguments:
-            self.get_PyArgParse_Converter_Function(arg)
+            self.get_PyArgParse_Converter_Function(used_names, arg)
             func_args.extend(self.get_static_args(arg)) # Bind_C args
 
         # Parse arguments
