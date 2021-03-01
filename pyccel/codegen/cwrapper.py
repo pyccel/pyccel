@@ -56,7 +56,7 @@ def create_c_setup(mod_name,
     code += "import numpy\n"
     code += "\n"
 
-    wrapper_file = "[ r'{0}' ]".format(wrapper_file)
+    wrapper_file = "[ r'{0}' , r'cwrapper/cwrapper.c']".format(wrapper_file) #TODO temporary fix
 
     deps  = ['{0}.o'.format(d) for d in dependencies]
 
@@ -85,7 +85,7 @@ def create_c_setup(mod_name,
 
     numpy_max_acceptable_version = [1, 19]
     numpy_current_version = [int(v) for v in np.version.version.split('.')[:2]]
-    numpy_api_macro = '(\'NPY_NO_DEPRECATED_API\', \'NPY_{}_{}_API_VERSION\')'.format(
+    numpy_api_macro = '(r\'NPY_NO_DEPRECATED_API\', r\'NPY_{}_{}_API_VERSION\')'.format(
             min(numpy_max_acceptable_version[0], numpy_current_version[0]),
 	    min(numpy_max_acceptable_version[1], numpy_current_version[1]))
 
