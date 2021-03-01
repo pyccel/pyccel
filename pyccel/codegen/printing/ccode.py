@@ -11,7 +11,7 @@ import operator
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
 from pyccel.ast.core      import Declare
-from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
+from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionDef
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, datatype, Import, AugAssign
@@ -437,6 +437,7 @@ class CCodePrinter(CodePrinter):
         return '({0})({1})'.format(type_name, value)
 
     def _print_PythonInt(self, expr):
+        self._additional_imports.add('stdint')
         value = self._print(expr.arg)
         type_name = self.find_in_dtype_registry('int', expr.precision)
         return '({0})({1})'.format(type_name, value)
@@ -1120,7 +1121,11 @@ class CCodePrinter(CodePrinter):
         body  = self._print(expr.body)
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
-            decs += [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.results]
+            for i in expr.results:
+                if isinstance(i, Variable) and not i.is_temp:
+                    decs += [Declare(i.dtype, i)]
+                elif not isinstance(i, Variable):
+                    decs += [FuncAddressDeclare(i)]
         decs += [Declare(i.dtype, i) for i in self._additional_declare]
         decs  = '\n'.join(self._print(i) for i in decs)
         self._additional_declare.clear()
@@ -1201,13 +1206,32 @@ class CCodePrinter(CodePrinter):
     def _print_Return(self, expr):
         code = ''
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
+
+        if len(args) > 1:
+            if expr.stmt:
+                return self._print(expr.stmt)+'\n'+'return 0;'
+            return 'return 0;'
+
         if expr.stmt:
-            code += self._print(expr.stmt)+'\n'
-        if len(args) == 1:
-            code +='return {0};'.format(self._print(args[0]))
-        elif len(args) > 1:
-            code += 'return 0;'
-        return code
+            # get Assign nodes form the CodeBlock object expr.stmt.
+            last_assign = expr.stmt.get_attribute_nodes(Assign)
+
+            # Check the Assign objects list in case of
+            # the user assigns a variable to an object contains IndexedElement object.
+            if not last_assign:
+                return 'return {0};'.format(self._print(args[0]))
+
+            # make sure that stmt contains one assign node.
+            assert(len(last_assign)==1)
+            variables = last_assign[0].rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
+            unneeded_var = not any(b.allocatable and not b.is_argument for b in variables)
+            if unneeded_var:
+                code = '\n'.join(self._print(a) for a in expr.stmt.body if a is not last_assign[0])
+                return code + '\nreturn {};'.format(self._print(last_assign[0].rhs))
+            else:
+                code = '\n'+self._print(expr.stmt)
+                self._additional_declare.append(last_assign[0].lhs)
+        return code + 'return {0};'.format(self._print(args[0]))
 
     def _print_Pass(self, expr):
         return '// pass'

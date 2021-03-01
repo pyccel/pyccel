@@ -203,8 +203,8 @@ class PythonComplex(PyccelAstNode):
                     self._real_part = PyccelMinus(arg0, PythonImag(arg1))
                     self._imag_part = PythonReal(arg1)
             else:
-                self._real_part = arg0
-                self._imag_part = arg1
+                self._real_part = PythonInt(arg0) if isinstance(arg0.dtype, NativeBool) else arg0
+                self._imag_part = PythonInt(arg1) if isinstance(arg1.dtype, NativeBool) else arg1
         super().__init__()
 
     @property
@@ -260,12 +260,13 @@ class PythonFloat(PyccelAstNode):
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
-        if isinstance(arg, LiteralFloat):
-            return LiteralFloat(arg, precision = cls._precision)
-        elif isinstance(arg, LiteralInteger):
-            return LiteralFloat(arg.p, precision = cls._precision)
-        else:
-            return super().__new__(cls)
+        if isinstance(arg.dtype, NativeBool):
+            return PythonInt(arg)
+        if isinstance(arg, LiteralFloat) and arg.precision == cls._precision:
+            return arg
+        if isinstance(arg, (LiteralInteger, LiteralFloat)):
+            return LiteralFloat(arg.python_value, precision = cls._precision)
+        return super().__new__(cls)
 
     def __init__(self, arg):
         self._arg = arg
@@ -291,7 +292,7 @@ class PythonInt(PyccelAstNode):
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralInteger):
-            return LiteralInteger(arg.p, precision = cls._precision)
+            return LiteralInteger(arg.python_value, precision = cls._precision)
         else:
             return super().__new__(cls)
 
