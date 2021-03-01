@@ -372,7 +372,7 @@ def omp_barrier():
     #$ omp for
     for i in range(0, 1000):
         arr[i] = i * 2
-    
+
     #$ omp barrier
     #$ omp for reduction(+:result)
     for i in range(0, 1000):
