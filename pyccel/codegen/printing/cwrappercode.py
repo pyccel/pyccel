@@ -400,7 +400,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 function = self.generate_array_converter_function(used_names, variable)
             else:
                 function = self.generate_scalar_converter_function(used_names, variable)
-
+            self.converter_functions_dict[get_custom_key(variable)] = function
             return function
         return self.converter_functions_dict[get_custom_key(variable)]
 
@@ -589,15 +589,12 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(*wrapper_args[1:],
-                                    self.converter_functions_dict,
+                                    parsing_converter_functions,
                                     expr.arguments, keyword_list)
 
         parse_node   = If(IfSection(PyccelNot(parse_node), [Return([Nil()])]))
         check_call   = Assign(check_variable, FunctionCall(check_function, parse_args))
         wrapper_body = [keyword_list, parse_node, check_call] + wrapper_body
-
-        # save parsing converter functions to be printed later
-        self.converter_functions_dict.update(parsing_converter_functions)
 
         # Create FunctionDef for interface wrapper
         funcs_def.append(FunctionDef(
@@ -663,8 +660,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # builde results
         build_node = PyBuildValueNode(expr.results, building_converter_functions)
-        # save parsing converter functions to be printed later
-        self.converter_functions_dict.update(parsing_converter_functions)
 
         wrapper_body.append(AliasAssign(wrapper_results[0], build_node))
         # Return
