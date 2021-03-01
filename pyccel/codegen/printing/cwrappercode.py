@@ -5,6 +5,7 @@
 #------------------------------------------------------------------------------------------#
 # pylint: disable=R0201
 
+import numpy as np
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
@@ -136,6 +137,13 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return [python_func_selfarg, python_func_args, python_func_kwargs]
 
+    def find_in_dtype_registry(self, dtype, prec):
+        """
+        """
+        try :
+            return dtype_registry[(dtype, prec)]
+        except KeyError:
+            return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
     def get_static_function(self, function):
         """
