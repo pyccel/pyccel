@@ -280,12 +280,12 @@ class CWrapperCodePrinter(CCodePrinter):
         func_name       = 'py_to_{}'.format(self._print(variable.dtype))
         func_name       = self.get_new_name(used_names, func_name)
         py_variable     = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
-        c_variable      = variable.clone(name = 'c', is_pointer = True, value = variable.value) # update clone ?
+        c_variable      = variable.clone(name = variable.name, is_pointer = True)
         body            = []
 
         # (Valued / Optional) variable check
         if isinstance(variable, ValuedVariable):
-            body.append(self.generate_valued_variable_body(py_variable, c_variable))
+            body.append(self.generate_valued_variable_body(py_variable, variable))
 
         #datatqype check
         if check_is_needed:
@@ -305,7 +305,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         funcDef = FunctionDef(name     = func_name,
                             arguments  = [py_variable, c_variable],
-                            results    = [],
+                            results    = [Variable(dtype = LiteralInteger(), name = 'r', is_temp = True)],
                             body       = body)
 
         return funcDef
@@ -334,7 +334,7 @@ class CWrapperCodePrinter(CCodePrinter):
         func_name       = self.get_new_name(used_names, func_name)
         py_variable     = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
         py_array        = Variable(name = 'py_array', dtype = PyccelPyArrayObject(), is_pointer = True)
-        c_variable      = variable.clone(name = 'c_variable', is_pointer = True)
+        c_variable      = variable.clone(name = variable.name, is_pointer = True)
         body            = []
 
         # (Valued / Optional) variable check
@@ -358,7 +358,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         funcDef = FunctionDef(name     = func_name,
                             arguments  = [py_variable, c_variable],
-                            results    = [],
+                            results    = [Variable(dtype = LiteralInteger(), name = 'r', is_temp = True)],
                             local_vars = [py_array],
                             body       = body)
 
@@ -522,7 +522,8 @@ class CWrapperCodePrinter(CCodePrinter):
         types_dict     = OrderedDict((a, set()) for a in funcs[0].arguments)
         # To store the mini function responsible for collecting value and
         # calling interfaces functions and return the builded value
-        wrapper_functions = []
+        wrapper_functions           = []
+        parsing_converter_functions = {}
         for func in expr.functions:
             mini_wrapper_name = self.get_wrapper_name(used_names, expr)
             mini_wrapper_body = []
@@ -531,8 +532,9 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # loop on all functions argument to collect needed converter functions
             for f_arg, p_arg in zip(func.arguments, parse_args):
-                convert_func = self.get_PyArgParse_Converter_Function(used_names, f_arg)
+                function = self.get_PyArgParse_Converter_Function(used_names, f_arg)
                 func_args.extend(self.get_static_args(arg)) # Bind_C args
+                parsing_converter_functions[get_custom_key(res)] = function
 
                 flag = self.get_flag_value(flag, f_arg) # set flag value
                 types_dict[p_arg].add(f_arg.dtype) # collect type
@@ -594,6 +596,9 @@ class CWrapperCodePrinter(CCodePrinter):
         check_call   = Assign(check_variable, FunctionCall(check_function, parse_args))
         wrapper_body = [keyword_list, parse_node, check_call] + wrapper_body
 
+        # save parsing converter functions to be printed later
+        self.converter_functions_dict.update(parsing_converter_functions)
+
         # Create FunctionDef for interface wrapper
         funcs_def.append(FunctionDef(
                     name       = wrapper_name,
@@ -626,14 +631,16 @@ class CWrapperCodePrinter(CCodePrinter):
 
         wrapper_body      = [keyword_list]
         func_args         = []
+        parsing_converter_functions = {}
         # loop on all functions argument to collect needed converter functions
         for arg in expr.arguments:
-            self.get_PyArgParse_Converter_Function(used_names, arg)
+            function = self.get_PyArgParse_Converter_Function(used_names, arg)
+            parsing_converter_functions[get_custom_key(res)] = function
             func_args.extend(self.get_static_args(arg)) # Bind_C args
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(*wrapper_args[1:],
-                                          self.converter_functions_dict,
+                                          parsing_converter_functions,
                                           expr.arguments, keyword_list)
 
         wrapper_body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
@@ -656,6 +663,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # builde results
         build_node = PyBuildValueNode(expr.results, building_converter_functions)
+        # save parsing converter functions to be printed later
+        self.converter_functions_dict.update(parsing_converter_functions)
 
         wrapper_body.append(AliasAssign(wrapper_results[0], build_node))
         # Return
