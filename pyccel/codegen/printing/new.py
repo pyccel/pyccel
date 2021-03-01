@@ -27,6 +27,7 @@ from pyccel.ast.cwrapper    import get_custom_key, PyErr_SetString, PyErr_Occurr
 
 from pyccel.ast.numpy_wrapper   import Check_Array, NumpyType_Check, PyArray_to_Array
 
+from pyccel.ast.internals       import PyccelArraySize
 from pyccel.ast.variable        import Variable, ValuedVariable, VariableAddress
 
 from pyccel.ast.bind_c          import as_static_function_call
@@ -154,6 +155,24 @@ class CWrapperCodePrinter(CCodePrinter):
             static_func = function
 
         return static_func
+
+    def get_static_args(self, argument):
+        """
+        Create bind_C arguments for arguments rank > 0 in fortran.
+        needed in static function call
+        func(a) ==> static_func(a.DIM , a.DATA)
+        where a.DATA = buffer holding data
+              a.DIM = size of array
+        Parameters:
+        -----------
+        argument    : Variable
+        Returns     : List of arguments
+        -----------
+        """
+        if self._target_language == 'fortran' and argument.rank > 0:
+            return [PyccelArraySize(arg, i) for i in argument.rank] + [arg]
+        else:
+            return [arg]
 
     @staticmethod
     def get_flag_value(flag, variable):
@@ -487,7 +506,7 @@ class CWrapperCodePrinter(CCodePrinter):
             # loop on all functions argument to collect needed converter functions
             for f_arg, p_args in zip(func.arguments, parse_args):
                 convert_func = self.get_PyArgParse_Converter_Function(f_arg)
-                func_args.append(f_args) #TODO Bind_C_Arg
+                func_args.extend(self.get_static_args(arg)) # Bind_C args
 
                 flag = self.get_flag_value(flag, f_arg) # set flag value
                 types_dict[p_arg].add(f_arg.dtype) # collect type
@@ -584,7 +603,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # loop on all functions argument to collect needed converter functions
         for arg in expr.arguments:
             self.get_PyArgParse_Converter_Function(arg)
-            func_args.append() #TODO Bind_C_Arg
+            func_args.extend(self.get_static_args(arg)) # Bind_C args
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(*wrapper_args[:-1],
