@@ -55,8 +55,8 @@ class CWrapperCodePrinter(CCodePrinter):
     # --------------------------------------------------------------------
     #                       Helper functions
     # --------------------------------------------------------------------
-
-    def get_new_name(self, used_names, requested_name):
+    @staticmethod
+    def get_new_name(used_names, requested_name):
         """
         Generate a new name, return the requested_name if it's not in 
         used_names set  or generate new one based on the requested_name.
@@ -102,7 +102,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return wrapper_name
 
-    def get_new_PyObject(self, name, used_names):
+    @staticmethod
+    def get_new_PyObject(name, used_names):
         """
         Create new PyccelPyObject Variable with the desired name
         Parameters:
@@ -154,6 +155,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return static_func
 
+    @staticmethod
     def get_flag_value(flag, variable):
         """
         """
@@ -167,7 +169,7 @@ class CWrapperCodePrinter(CCodePrinter):
     # --------------------------------------------------------------------
     #                  Custom body generators [helpers]
     # --------------------------------------------------------------------
-
+    @staticmethod
     def generate_valued_variable_body(py_variable, c_variable):
         """
         Generate valued variable code section (check, collect default value)
@@ -196,6 +198,7 @@ class CWrapperCodePrinter(CCodePrinter):
     # --------------------------------------------------------------------
     #                        Custom error generators
     # --------------------------------------------------------------------
+    @staticmethod
     def generate_datatype_error(variable):
         """
         Generate TypeError exception from the variable information (datatype, precision)
@@ -219,7 +222,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         message = '"Argument must be {precision}{dtype}"'.format(
                 precision = precision,
-                dtype     = self._print(variable.dtype))
+                dtype     = variable.dtype)
         return PyErr_SetString('PyExc_TypeError', message)
 
     #--------------------------------------------------------------------
@@ -581,7 +584,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # loop on all functions argument to collect needed converter functions
         for arg in expr.arguments:
             self.get_PyArgParse_Converter_Function(arg)
-            func_args.append(arg) #TODO Bind_C_Arg
+            func_args.append() #TODO Bind_C_Arg
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(*wrapper_args[:-1],
