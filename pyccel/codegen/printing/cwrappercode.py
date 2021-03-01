@@ -32,6 +32,7 @@ from pyccel.ast.numpy_wrapper   import Check_Array, NumpyType_Check, PyArray_to_
 from pyccel.ast.internals       import PyccelArraySize
 from pyccel.ast.variable        import Variable, ValuedVariable, VariableAddress
 
+from pyccel.ast.builtins         import PythonBool
 from pyccel.ast.bind_c          import as_static_function_call
 
 from pyccel.errors.errors   import Errors
@@ -216,7 +217,7 @@ class CWrapperCodePrinter(CCodePrinter):
             body =  [AliasAssign(variable, Nil())]
 
         else:
-            body = [Assign(c_variable, variable.value)]
+            body = [Assign(c_variable, c_variable.value)]
 
         body = IfSection(check, body)
         return body
@@ -279,7 +280,7 @@ class CWrapperCodePrinter(CCodePrinter):
         func_name       = 'py_to_{}'.format(self._print(variable.dtype))
         func_name       = self.get_new_name(used_names, func_name)
         py_variable     = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
-        c_variable      = variable.clone(name = 'c', is_pointer = True)
+        c_variable      = variable.clone(name = 'c', is_pointer = True, value = variable.value) # update clone ?
         body            = []
 
         # (Valued / Optional) variable check
@@ -298,7 +299,8 @@ class CWrapperCodePrinter(CCodePrinter):
         # Collect value
         body.append(Assign(c_variable, FunctionCall(Python_to_C(c_variable), [py_variable])))
         # call PyErr_Occurred to check any error durring conversion
-        body.append(If(IfSection(FunctionCall(PyErr_Occurred, []), [Return([LiteralInteger(0)])])))
+        body.append(If(IfSection(FunctionCall(PyErr_Occurred, []),
+            [Return([LiteralInteger(0)])])))
         body.append(Return([LiteralInteger(1)]))
 
         funcDef = FunctionDef(name     = func_name,
@@ -342,8 +344,7 @@ class CWrapperCodePrinter(CCodePrinter):
         #array check
         body.append(AliasAssign(py_array, Check_Array(py_variable, c_variable, self._target_language)))
         body.append(If(IfSection(
-            PyccelNot(VariableAddress(py_array)),
-            [Return([LiteralInteger(0)])])))
+            PyccelNot(VariableAddress(py_array)), [Return([LiteralInteger(0)])])))
 
         #datatqype check
         if check_is_needed:
