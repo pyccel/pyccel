@@ -38,10 +38,12 @@ class OmpAnnotatedComment(Basic):
 
     @classmethod
     def is_multiline(cls):
+        """Used to check if the construct needs brackets."""
         return cls._is_multiline
 
     @property
     def name(self):
+        """Name of the construct."""
         return ''
 
     @property
@@ -67,6 +69,7 @@ class OMP_For_Loop(OmpAnnotatedComment):
 
     @property
     def name(self):
+        """Name of the construct."""
         return 'for'
 
 class OMP_Parallel_Construct(OmpAnnotatedComment):
@@ -74,6 +77,7 @@ class OMP_Parallel_Construct(OmpAnnotatedComment):
     _is_multiline = True
     @property
     def name(self):
+        """Name of the construct."""
         return 'parallel'
 
 class OMP_Task_Construct(OmpAnnotatedComment):
@@ -105,6 +109,7 @@ class OMP_Masked_Construct(OmpAnnotatedComment):
     _is_multiline = True
     @property
     def name(self):
+        """Name of the construct."""
         return 'masked'
 
 class OMP_Cancel_Construct(OmpAnnotatedComment):
@@ -117,6 +122,7 @@ class OMP_Target_Construct(OmpAnnotatedComment):
     _is_multiline = True
     @property
     def name(self):
+        """Name of the construct."""
         return 'target'
 
 
@@ -125,6 +131,7 @@ class OMP_Teams_Construct(OmpAnnotatedComment):
     _is_multiline = True
     @property
     def name(self):
+        """Name of the construct."""
         return 'teams'
 
 

@@ -54,7 +54,7 @@ class OmpConstruct(BasicStmt):
             txt += name
         if clauses:
             txt += check_get_clauses(self, _valid_clauses, clauses, combined)
-        
+
         if combined:
             self._expr = omp_type(txt, com)
         else:

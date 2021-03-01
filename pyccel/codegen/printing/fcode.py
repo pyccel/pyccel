@@ -31,10 +31,6 @@ from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, Dlist, AsName,
                              If, IfSection)
 
-from pyccel.ast.omp import (OMP_For_Loop, OMP_Cancel_Construct,
-                            OMP_Parallel_Construct, OMP_Masked_Construct,
-                            OMP_Target_Construct, OMP_Teams_Construct)
-
 from pyccel.ast.variable  import (Variable, TupleVariable,
                              IndexedElement,
                              DottedName, PyccelArraySize)

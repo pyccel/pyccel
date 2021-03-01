@@ -18,13 +18,6 @@ from pyccel.ast.core      import Assign, datatype, Import, AugAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import create_incremented_string
 
-from pyccel.ast.omp       import (OMP_Sections_Construct, OMP_Section_Construct,
-                                  OMP_Task_Construct, OMP_Single_Construct,
-                                  OMP_For_Loop, OMP_Critical_Construct,
-                                  OMP_Master_Construct, OMP_Parallel_Construct,
-                                  OMP_Masked_Construct, OMP_Target_Construct,
-                                  OMP_Teams_Construct)
-
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
