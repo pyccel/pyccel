@@ -17,6 +17,8 @@ from .cwrapper          import PyccelPyObject, PyccelPyArrayObject
 
 from .core              import FunctionDef, FunctionCall
 
+from .literals          import LiteralInteger
+
 from .variable          import Variable
 
 from ..errors.errors   import Errors
@@ -250,7 +252,7 @@ def Check_Array(py_variable, c_variable, language = 'Fortran'):
                        body      = [],
                        results   = [Variable(dtype = PyccelPyArrayObject(), name = 'array', is_pointer = True)])
 
-    return FunctionCall(func, [py_variable, Literalnteger(rank), flag])
+    return FunctionCall(func, [py_variable, LiteralInteger(rank), flag])
 
 
 

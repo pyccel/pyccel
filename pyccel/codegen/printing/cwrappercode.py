@@ -332,7 +332,7 @@ class CWrapperCodePrinter(CCodePrinter):
         func_name       = self.get_new_name(used_names, func_name)
         py_variable     = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
         py_array        = Variable(name = 'py_array', dtype = PyccelPyArrayObject(), is_pointer = True)
-        c_variable      = Variable.clone(name = 'c_variable', is_pointer = True)
+        c_variable      = variable.clone(name = 'c_variable', is_pointer = True)
         body            = []
 
         # (Valued / Optional) variable check
@@ -340,16 +340,14 @@ class CWrapperCodePrinter(CCodePrinter):
             body.append(If(self.generate_valued_variable_body(py_object, c_variable)))
 
         #array check
-        body.append(AliasAssign(py_array, Check_Array(py_variable, c_variable)))
+        body.append(AliasAssign(py_array, Check_Array(py_variable, c_variable, self._target_language)))
         body.append(If(IfSection(PyccelEq(py_array, Py_None), [Return(LiteralInteger(0))])))
 
         #datatqype check
         if check_is_needed:
-            check = PyccelNot(PyArray_CheckType(py_variable, c_variable, self.target_language))
+            check = PyccelNot(NumpyType_Check(py_array, c_variable))
             error = self.generate_datatype_error(c_variable)
             body.append(If(IfSection(check, [error, Return([LiteralInteger(0)])])))
-
-        body    = [If(*body)]
 
         # Convert numpy_array to c array
         body.append(Assign(c_variable, FunctionCall(PyArray_to_Array, [py_array])))
