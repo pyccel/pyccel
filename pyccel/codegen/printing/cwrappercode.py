@@ -401,8 +401,6 @@ class CWrapperCodePrinter(CCodePrinter):
             else:
                 function = self.generate_scalar_converter_function(used_names, variable)
 
-            self.converter_functions_dict[get_custom_key(variable)] = function
-
             return function
         return self.converter_functions_dict[get_custom_key(variable)]
 
@@ -418,6 +416,8 @@ class CWrapperCodePrinter(CCodePrinter):
         --------
         func     : FunctionDef
         """
+        # TODO when returning complex data type (array, tuple) this function should like
+        # get_PyArgParse_Converter_Function
         if variable.rank > 0:
             raise NotImplementedError('return not implemented for arrays.')
 
@@ -454,7 +454,7 @@ class CWrapperCodePrinter(CCodePrinter):
         pykwarg = expr.pykwarg
         flags   = expr.flags
         # All args are modified so even pointers are passed by address
-        args    = ', '.join(['&{}'.format(a.name) for a in expr.args])
+        args  = ', '.join(['&{}, &{}'.format(f.name, a.name) for a, f in zip(expr.converters, expr.args)])
 
         if expr.args:
             code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(
@@ -476,7 +476,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyBuildValueNode(self, expr):
         name  = 'Py_BuildValue'
         flags = expr.flags
-        args  = ', '.join(['&{}'.format(a.name) for a in expr.args])
+        args  = ', '.join(['&{}, {}'.format(f.name, a.name) for a, f in zip(expr.converters, expr.args)])
 
         #to change for args rank 1 +
         if expr.args:
@@ -631,11 +631,11 @@ class CWrapperCodePrinter(CCodePrinter):
 
         wrapper_body      = [keyword_list]
         func_args         = []
-        parsing_converter_functions = {}
+        parsing_converter_functions = []
         # loop on all functions argument to collect needed converter functions
         for arg in expr.arguments:
             function = self.get_PyArgParse_Converter_Function(used_names, arg)
-            parsing_converter_functions[get_custom_key(res)] = function
+            parsing_converter_functions.append(function)
             func_args.extend(self.get_static_args(arg)) # Bind_C args
 
         # Parse arguments
@@ -656,10 +656,10 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.append(function_call)
 
         # loop on all results to collect needed converter functions
-        building_converter_functions = {}
+        building_converter_functions = []
         for res in expr.results:
-            convert_func = self.get_PyBuildValue_Converter_function(res)
-            building_converter_functions[get_custom_key(res)] = convert_func
+            function = self.get_PyBuildValue_Converter_function(res)
+            building_converter_functions.append(function)
 
         # builde results
         build_node = PyBuildValueNode(expr.results, building_converter_functions)

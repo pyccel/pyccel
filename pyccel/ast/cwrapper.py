@@ -124,16 +124,16 @@ class PyArg_ParseTupleNode(Basic):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
             raise TypeError('Python func kwargs should be a Variable')
-        if not isinstance(converter_functions, dict):
-            raise TypeError('converter_functions should be a Dictionary')
-        if any(not isinstance(f, FunctionDef) for f in converter_functions.values()):
+        if not isinstance(converter_functions, list):
+            raise TypeError('converter_functions should be a list')
+        if any(not isinstance(f, FunctionDef) for f in converter_functions):
             raise TypeError('Converter function should be a FunctionDef')
         if not isinstance(parse_args, list) and any(not isinstance(c, Variable) for c in parse_args):
             raise TypeError('Parse args should be a list of Variables')
         if not isinstance(arg_names, PyArgKeywords):
             raise TypeError('Parse args should be a list of Variables')
-        if (len(result_args) > 0 and len(converter_functions) == 0):
-            raise TypeError('There should be at least one converter function when args are present')
+        if (len(result_args) != len(converter_functions)):
+            raise TypeError('There should be same number of converter functions and arguments')
 
         self._flags = ''
         i           = 0
@@ -179,8 +179,9 @@ class PyArg_ParseTupleNode(Basic):
     def arg_names(self):
         return self._arg_names
 
-    def get_converter(self, arg):
-        return self._converter_functions[get_custom_key(arg)]
+    @property
+    def converters(self):
+        return self.__converter_functions
 
 class PyBuildValueNode(Basic):
     """
@@ -196,13 +197,13 @@ class PyBuildValueNode(Basic):
     """
     _attribute_nodes = ('_result_args',)
 
-    def __init__(self, result_args = (), converter_functions = {}):
+    def __init__(self, result_args = (), converter_functions = []):
         self._flags       = ''
         for i in result_args:
             self._flags  += 'O&'
 
-        if (len(result_args) > 0 and len(converter_functions) == 0):
-            raise TypeError('There should be at least one converter function when args are present')
+        if (len(result_args) != len(converter_functions)):
+            raise TypeError('There should be same number of converter functions and arguments')
 
         self._result_args         = results_args
         self._converter_functions = converter_functions
@@ -217,8 +218,9 @@ class PyBuildValueNode(Basic):
     def args(self):
         return self._result_args
 
-    def get_converter(self, arg):
-        return self._converter_functions[get_custom_key(arg)]
+    @property
+    def converters(self):
+        return self.__converter_functions
 
 def get_custom_key(variable):
     """
