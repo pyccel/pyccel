@@ -321,3 +321,8 @@ def test_omp_simd(language):
 def test_omp_flush(language):
     f1 = epyccel(openmp.omp_flush, accelerator='openmp', language=language)
     assert 2 == f1()
+
+def test_omp_barrier(language):
+    f1 = epyccel(openmp.omp_barrier, accelerator='openmp', language=language)
+    f2 = openmp.omp_barrier
+    assert f1() == f2()

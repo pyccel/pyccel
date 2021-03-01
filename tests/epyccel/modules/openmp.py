@@ -364,4 +364,18 @@ def omp_flush():
     #$ omp end parallel
     return flag
 
-# TODO [nhamid] add test for barrier construct
+def omp_barrier():
+    from numpy import zeros
+    arr = zeros(1000, dtype=int)
+    result = 0
+    #$ omp parallel num_threads(3)
+    #$ omp for
+    for i in range(0, 1000):
+        arr[i] = i * 2
+    
+    #$ omp barrier
+    #$ omp for reduction(+:result)
+    for i in range(0, 1000):
+        result = result + arr[i]
+    #$ omp end parallel
+    return result
