@@ -8,7 +8,6 @@ different stages of pyccel. Memory block labels are usually either Variables or 
 variables
 """
 import inspect
-from sympy import Symbol
 
 from pyccel.errors.errors import Errors
 
@@ -21,7 +20,9 @@ from .internals import PyccelArraySize, Slice
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv,
                         PyccelUnarySub, PyccelAdd)
+
 errors = Errors()
+
 __all__ = (
     'DottedName',
     'DottedVariable',
@@ -32,7 +33,7 @@ __all__ = (
     'VariableAddress'
 )
 
-class Variable(Symbol, PyccelAstNode):
+class Variable(PyccelAstNode):
 
     """Represents a typed variable.
 
@@ -43,7 +44,7 @@ class Variable(Symbol, PyccelAstNode):
         or a str (bool, int, real).
 
     name : str, list, DottedName
-        The sympy object the variable represents. This can be either a string
+        The name of the variable represented. This can be either a string
         or a dotted name, when using a Class attribute.
 
     rank : int
@@ -85,6 +86,10 @@ class Variable(Symbol, PyccelAstNode):
     is_const: bool
         if object is a const argument of a function [Default value: False]
 
+    is_temp: bool
+        Indicates if this symbol represents a temporary variable created by Pyccel,
+        and was not present in the original Python code [default value : False].
+
     Examples
     --------
     >>> from pyccel.ast.core import Variable
@@ -96,9 +101,7 @@ class Variable(Symbol, PyccelAstNode):
     >>> Variable('int', DottedName('matrix', 'n_rows'))
     matrix.n_rows
     """
-
-    def __new__( cls, *args, **kwargs ):
-        return PyccelAstNode.__new__(cls, *args, **kwargs)
+    _attribute_nodes = ()
 
     def __init__(
         self,
@@ -118,9 +121,10 @@ class Variable(Symbol, PyccelAstNode):
         precision=0,
         is_argument=False,
         is_kwonly=False,
+        is_temp =False,
         allows_negative_indexes=False
         ):
-        Symbol.__init__(self)
+        super().__init__()
 
         # ------------ PyccelAstNode Properties ---------------
         if isinstance(dtype, str) or str(dtype) == '*':
@@ -165,6 +169,9 @@ class Variable(Symbol, PyccelAstNode):
             else:
                 name = DottedName(*name)
 
+        if name == '':
+            raise ValueError("Variable name can't be empty")
+
         if not isinstance(name, (str, DottedName)):
             raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
         self._name = name
@@ -201,7 +208,7 @@ class Variable(Symbol, PyccelAstNode):
         self._order          = order
         self._is_argument    = is_argument
         self._is_kwonly      = is_kwonly
-        PyccelAstNode.__init__(self)
+        self._is_temp        = is_temp
 
     def process_shape(self, shape):
         """ Simplify the provided shape and ensure it
@@ -286,6 +293,14 @@ class Variable(Symbol, PyccelAstNode):
         self._is_pointer = is_pointer
 
     @property
+    def is_temp(self):
+        """
+        Indicates if this symbol represents a temporary variable created by Pyccel,
+		and was not present in the original Python code [default value : False].
+        """
+        return self._is_temp
+
+    @property
     def is_target(self):
         """ Indicates if the data in this Variable is
         shared with (pointed at by) another Variable
@@ -357,10 +372,13 @@ class Variable(Symbol, PyccelAstNode):
     def __str__(self):
         return str(self.name)
 
-    def _sympystr(self, printer):
-        """ sympy equivalent of __str__"""
-        sstr = printer.doprint
-        return '{}'.format(sstr(self.name))
+    def __eq__(self, other):
+        if type(self) is type(other):
+            return self._name == other.name
+        return False
+
+    def __hash__(self):
+        return hash((type(self).__name__, self._name))
 
     def inspect(self):
         """inspects the variable."""
@@ -411,9 +429,10 @@ class Variable(Symbol, PyccelAstNode):
         return cls(**new_kwargs)
 
     def rename(self, newname):
-        """Change variable name."""
-
-        self._name = newname
+        """ Forbidden method for renaming the variable
+        """
+        # The name is part of the hash so it must never change
+        raise RuntimeError('Cannot modify hash definition')
 
     def __reduce_ex__(self, i):
         """ Used by pickle to create an object of this class.
@@ -449,10 +468,6 @@ class Variable(Symbol, PyccelAstNode):
         out =  (apply, (Variable, args, kwargs))
         return out
 
-    def _eval_subs(self, old, new):
-        """ Overrides sympy method to indicate an atom"""
-        return self
-
     def __getitem__(self, *args):
 
         if len(args) == 1 and isinstance(args[0], (tuple, list)):
@@ -462,6 +477,10 @@ class Variable(Symbol, PyccelAstNode):
             raise IndexError('Rank mismatch.')
 
         return IndexedElement(self, *args)
+
+    def invalidate_node(self):
+        # Don't invalidate Variables
+        pass
 
 class DottedName(Basic):
 
@@ -476,8 +495,10 @@ class DottedName(Basic):
     >>> DottedName('pyccel', 'stdlib', 'parallel')
     pyccel.stdlib.parallel
     """
+    _attribute_nodes = ()
 
     def __init__(self, *args):
+
         self._name = args
         super().__init__()
 
@@ -490,11 +511,6 @@ class DottedName(Basic):
 
     def __str__(self):
         return """.""".join(str(n) for n in self.name)
-
-    def _sympystr(self, printer):
-        """ sympy equivalent of __str__"""
-        sstr = printer.doprint
-        return """.""".join(sstr(n) for n in self.name)
 
 class ValuedVariable(Variable):
 
@@ -514,6 +530,7 @@ class ValuedVariable(Variable):
     >>> n
     n := 4
     """
+    _attribute_nodes = ('_value',)
 
     def __init__(self, *args, **kwargs):
 
@@ -527,12 +544,9 @@ class ValuedVariable(Variable):
         """
         return self._value
 
-    def _sympystr(self, printer):
-        """ sympy equivalent of __str__"""
-        sstr = printer.doprint
-
-        name = sstr(self.name)
-        value = sstr(self.value)
+    def __str__(self):
+        name = str(self.name)
+        value = str(self.value)
         return '{0}={1}'.format(name, value)
 
 class TupleVariable(Variable):
@@ -553,6 +567,7 @@ class TupleVariable(Variable):
     >>> n
     n
     """
+    _attribute_nodes = ('_vars',)
 
     def __init__(self, arg_vars, dtype, name, *args, **kwargs):
         self._vars = tuple(arg_vars)
@@ -669,6 +684,8 @@ class Constant(ValuedVariable):
     --------
 
     """
+    # The value of a constant is not a translated object
+    _attribute_nodes = ()
 
 
 
@@ -679,15 +696,16 @@ class IndexedElement(PyccelAstNode):
 
     Examples
     --------
-    >>> from sympy import symbols, Idx
     >>> from pyccel.ast.core import Variable, IndexedElement
-    >>> i, j = symbols('i j', cls=Idx)
-    >>> A = Variable('A', dtype='int')
+    >>> A = Variable('A', dtype='int', shape=(2,3), rank=2)
+    >>> i = Variable('i', dtype='int')
+    >>> j = Variable('j', dtype='int')
     >>> IndexedElement(A, i, j)
     IndexedElement(A, i, j)
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
+    _attribute_nodes = ('_label', '_indices')
 
     def __init__(
         self,
@@ -776,6 +794,7 @@ class VariableAddress(PyccelAstNode):
     VariableAddress(Variable('int','a'))                     is  &a
     VariableAddress(Variable('int','a', is_pointer=True))    is   a
     """
+    _attribute_nodes = ('_variable',)
 
     def __init__(self, variable):
         if not isinstance(variable, Variable):
@@ -808,6 +827,7 @@ class DottedVariable(Variable):
     In this case b is a DottedVariable where the lhs
     is a
     """
+    _attribute_nodes = ('_lhs',)
 
     def __init__(self, *args, lhs, **kwargs):
         self._lhs = lhs
@@ -823,3 +843,12 @@ class DottedVariable(Variable):
         The lhs is a
         """
         return self._lhs
+
+    def __eq__(self, other):
+        if type(self) is type(other):
+            return self.name == other.name and self.lhs == other.lhs
+
+        return False
+
+    def __hash__(self):
+        return hash((type(self).__name__, self.name, self.lhs))

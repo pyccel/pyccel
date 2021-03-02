@@ -4,19 +4,18 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-from sympy.utilities.iterables import iterable
-from sympy.core import Symbol
-
-from ..errors.errors import Errors
-from ..errors.messages import TEMPLATE_IN_UNIONTYPE
-from .core import Basic
-from .core import ValuedArgument
-from .core import FunctionDef, Interface, FunctionAddress
-from .datatypes import datatype, DataTypeFactory, UnionType
-from .macros import Macro, MacroShape, construct_macro
-from .variable import DottedName, DottedVariable
-from .variable import Variable
-from .variable import ValuedVariable
+from ..errors.errors    import Errors
+from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
+from .basic             import Basic, iterable
+from .core              import ValuedArgument
+from .core              import FunctionDef, Interface, FunctionAddress
+from .core              import create_incremented_string
+from .datatypes         import datatype, DataTypeFactory, UnionType
+from .internals         import PyccelSymbol
+from .macros            import Macro, MacroShape, construct_macro
+from .variable          import DottedName, DottedVariable
+from .variable          import Variable
+from .variable          import ValuedVariable
 
 __all__ = (
     'ClassHeader',
@@ -35,7 +34,7 @@ errors = Errors()
 
 #==============================================================================
 class Header(Basic):
-    pass
+    _attribute_nodes = ()
 
 #==============================================================================
 class MetaVariable(Header):
@@ -153,11 +152,8 @@ class Template(Header):
     >>> T = Template('T', [d_var0, d_var1])
     """
 
-    def __new__(cls, *args, **kwargs):
-        return super().__new__(cls)
-
     def __init__(self, name, dtypes):
-        Header.__init__(self)
+        super().__init__()
         self._name = name
         self._dtypes = dtypes
 
@@ -190,7 +186,7 @@ class Template(Header):
            to create the initial version of the object
            and its arguments
            """
-        return (self.__class__, (self.name, self.args))
+        return (self.__class__, (self.name, self.dtypes))
 
 #==============================================================================
 class FunctionHeader(Header):
@@ -226,7 +222,7 @@ class FunctionHeader(Header):
     def __init__(self, name, dtypes,
                 results=None,
                 is_static=False):
-        name = str(name)
+
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
 
@@ -264,11 +260,12 @@ class FunctionHeader(Header):
         # TODO factorize what can be factorized
         from itertools import product
 
-        name = str(self.name)
+        name = self.name
 
         body      = []
         cls_name  = None
         is_static = self.is_static
+        used_names = set(name)
         imports   = []
         funcs = []
         dtypes = []
@@ -340,11 +337,15 @@ class FunctionHeader(Header):
                 if (d['is_func']):
                     decs = []
                     results = []
+                    _count = 0
                     for dc in d['decs']:
-                        var = build_argument('', dc)
+                        _name, _count = create_incremented_string(used_names, 'in', _count)
+                        var = build_argument(_name, dc)
                         decs.append(var)
+                    _count = 0
                     for dc in d['results']:
-                        var = build_argument('', dc)
+                        _name, _count = create_incremented_string(used_names, 'out', _count)
+                        var = build_argument(_name, dc)
                         results.append(var)
                     arg_name = 'arg_{0}'.format(str(i))
                     arg = FunctionAddress(arg_name, decs, results, [])
@@ -581,8 +582,8 @@ class MacroFunction(Header):
     """."""
 
     def __init__(self, name, args, master, master_args, results=None):
-        if not isinstance(name, (str, Symbol)):
-            raise TypeError('name must be of type str or Symbol')
+        if not isinstance(name, str):
+            raise TypeError('name must be of type str or PyccelSymbol')
 
         # master can be a string or FunctionDef
         if not isinstance(master, (str, FunctionDef, Interface)):
@@ -645,7 +646,7 @@ class MacroFunction(Header):
 
             for arg,val in zip(self.arguments[:len(sorted_args)],sorted_args):
                 if not isinstance(arg, tuple):
-                    d_arguments[arg.name] = val
+                    d_arguments[arg] = val
                 else:
                     if not isinstance(val, (list, tuple)):
                         val = [val]
@@ -675,7 +676,7 @@ class MacroFunction(Header):
             for i, arg in d_arguments.items():
                 if isinstance(arg, Macro):
                     d_arguments[i] = construct_macro(arg.name,
-                                      d_arguments[arg.argument.name])
+                                      d_arguments[arg.argument])
                     if isinstance(arg, MacroShape):
                         d_arguments[i]._index = arg.index
 
@@ -684,7 +685,7 @@ class MacroFunction(Header):
         if not(results is None) and not(self.results is None):
             for (r_macro, r) in zip(self.results, results):
                 # TODO improve name for other Nodes
-                d_results[r_macro.name] = r
+                d_results[r_macro] = r
         # ...
 
         # ... initialize new args with None
@@ -694,27 +695,27 @@ class MacroFunction(Header):
         result_keys = d_results.keys()
         for i,arg in enumerate(self.master_arguments):
 
-            if isinstance(arg, Symbol):
-                if arg.name in argument_keys:
-                    new = d_arguments[arg.name]
-                    if isinstance(new, Symbol) and new.name in result_keys:
-                        new = d_results[new.name]
+            if isinstance(arg, PyccelSymbol):
+                if arg in argument_keys:
+                    new = d_arguments[arg]
+                    if isinstance(new, PyccelSymbol) and new in result_keys:
+                        new = d_results[new]
 
-                elif arg.name in result_keys:
-                    new = d_results[arg.name]
+                elif arg in result_keys:
+                    new = d_results[arg]
                 else:
                     new = arg
                #TODO uncomment later
                #     raise ValueError('Unknown variable name')
             elif isinstance(arg, Macro):
-                if arg.argument.name in argument_keys:
-                    new = d_arguments[arg.argument.name]
-                    if isinstance(new, Symbol) and new.name in result_keys:
-                        new = d_results[new.name]
-                elif arg.argument.name in result_keys:
-                    new = d_results[arg.argument.name]
+                if arg.argument in argument_keys:
+                    new = d_arguments[arg.argument]
+                    if isinstance(new, PyccelSymbol) and new in result_keys:
+                        new = d_results[new]
+                elif arg.argument in result_keys:
+                    new = d_results[arg.argument]
                 else:
-                    raise ValueError('Unkonwn variable name')
+                    raise ValueError('Unknown variable name')
 
                 new = construct_macro(arg.name, new)
                 if isinstance(arg, MacroShape):
@@ -728,7 +729,7 @@ class MacroVariable(Header):
     """."""
 
     def __init__(self, name,  master):
-        if not isinstance(name, (str, Symbol, DottedName)):
+        if not isinstance(name, (str, DottedName)):
             raise TypeError('name must be of type str or DottedName')
 
 

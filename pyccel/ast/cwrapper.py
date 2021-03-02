@@ -102,9 +102,11 @@ class PyArgKeywords(Basic):
     arg_names : list of str
         A list of the names of the function arguments
     """
+    _attribute_nodes = ()
     def __init__(self, name, arg_names):
         self._name = name
         self._arg_names = arg_names
+        super().__init__()
 
     @property
     def name(self):
@@ -149,13 +151,12 @@ class PyArg_ParseTupleNode(Basic):
     is_interface : boolean
         Default value False and True when working with interface functions
     """
+    _attribute_nodes = ('_pyarg','_pykwarg','_parse_args','_arg_names')
 
     def __init__(self, python_func_args,
                         python_func_kwargs,
                         c_func_args, parse_args,
-                        arg_names,
-                        is_interface=False):
-        Basic.__init__(self)
+                        arg_names):
         if not isinstance(python_func_args, Variable):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
@@ -168,10 +169,7 @@ class PyArg_ParseTupleNode(Basic):
             raise TypeError('Parse args should be a list of Variables')
         if len(parse_args) != len(c_func_args):
             raise TypeError('There should be the same number of c_func_args and parse_args')
-        if not isinstance(is_interface, bool):
-            raise TypeError('is_interface should be a boolean')
 
-        self._is_interface = is_interface
         self._flags      = ''
         i = 0
 
@@ -183,7 +181,6 @@ class PyArg_ParseTupleNode(Basic):
         while i < len(c_func_args):
             self._flags += self.get_pytype(c_func_args[i], parse_args[i])
             i+=1
-
         # Restriction as of python 3.8
         if any([isinstance(a, (Variable, FunctionAddress)) and a.is_kwonly for a in c_func_args]):
             errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
@@ -197,9 +194,12 @@ class PyArg_ParseTupleNode(Basic):
         self._pykwarg    = python_func_kwargs
         self._parse_args = parse_args
         self._arg_names  = arg_names
+        super().__init__()
 
     def get_pytype(self, c_arg, parse_arg):
-        if isinstance(c_arg, FunctionAddress) or (self._is_interface and c_arg.rank == 0):
+        """Return the needed flag to parse or build value
+        """
+        if isinstance(c_arg, FunctionAddress):
             return 'O'
         else:
             try:
@@ -236,12 +236,14 @@ class PyBuildValueNode(Basic):
     parse_args: list of Variable
         List of arguments which the result will be buit from
     """
+    _attribute_nodes = ('_result_args',)
 
     def __init__(self, result_args = ()):
         self._flags = ''
         self._result_args = result_args
         for i in result_args:
             self._flags += pytype_parse_registry[(i.dtype, i.precision)]
+        super().__init__()
 
     @property
     def flags(self):
@@ -574,15 +576,15 @@ def pyarray_to_ndarray(cast_function_name):
     # for more info about ndarray struct check pyccel/stdlib/ndarrays/ndarray.h
     res = Variable(dtype=Int, name = 'c', rank=1)
 
-    nd          = DottedVariable(Int,          'nd', lhs=res.name)
-    raw_data    = DottedVariable(Gen,    'raw_data', lhs=res.name, rank=1)
-    shape       = DottedVariable(Int,       'shape', lhs=res.name, is_pointer=True)
-    type_size   = DottedVariable(Int,   'type_size', lhs=res.name)
-    strides     = DottedVariable(Int,     'strides', lhs=res.name)
-    arr_type    = DottedVariable(Int,        'type', lhs=res.name)
-    length      = DottedVariable(Int,      'length', lhs=res.name)
-    buffer_size = DottedVariable(Int, 'buffer_size', lhs=res.name)
-    is_view     = DottedVariable(Int,     'is_view', lhs=res.name)
+    nd          = DottedVariable(Int,          'nd', lhs=res)
+    raw_data    = DottedVariable(Gen,    'raw_data', lhs=res, rank=1)
+    shape       = DottedVariable(Int,       'shape', lhs=res, is_pointer=True)
+    type_size   = DottedVariable(Int,   'type_size', lhs=res)
+    strides     = DottedVariable(Int,     'strides', lhs=res)
+    arr_type    = DottedVariable(Int,        'type', lhs=res)
+    length      = DottedVariable(Int,      'length', lhs=res)
+    buffer_size = DottedVariable(Int, 'buffer_size', lhs=res)
+    is_view     = DottedVariable(Int,     'is_view', lhs=res)
 
     # construction of the cast function body
     body = [Assign(nd,          FunctionCall(numpy_get_ndims, [arg])),
@@ -641,14 +643,14 @@ numpy_to_ndarray_shape = FunctionDef(name = 'numpy_to_ndarray_shape',
 
 collect_function_registry = {
     NativeInteger(): PyLong_AsLong,
-    NativeReal() : PyFloat_AsDouble,
+    NativeReal()   : PyFloat_AsDouble,
 }
 
 check_type_registry  = {
-    NativeInteger(): 'PyLong_Check',
+    NativeInteger() : 'PyLong_Check',
     NativeComplex() : 'PyComplex_Check',
-    NativeReal() : 'PyFloat_Check',
-    NativeBool() : 'PyBool_Check',
+    NativeReal()    : 'PyFloat_Check',
+    NativeBool()    : 'PyBool_Check',
 }
 
 
