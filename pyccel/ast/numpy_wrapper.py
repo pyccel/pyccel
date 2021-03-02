@@ -23,6 +23,8 @@ from .variable          import Variable
 
 from ..errors.errors   import Errors
 
+from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+
 errors = Errors()
 
 __all__ = (
@@ -161,7 +163,7 @@ numpy_type_check_registry = {
 def find_in_numpy_dtype_registry(var):
     """ Find the numpy dtype key for a given variable
     """
-    dtype = var.dtype
+    dtype = str(var.dtype)
     prec  = var.precision
     try :
         return numpy_dtype_registry[(dtype, prec)]
@@ -193,10 +195,7 @@ def PyArray_to_C(py_variable, c_variable, type_check_needed = False, language = 
 
     # extract numpy type ref
     if type_check_needed:
-        try :
-            type_ref = numpy_type_check_registry[(c_variable.dtype, c_variable.precision)]
-        except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_variable.dtype,severity='fatal')
+        type_ref = find_in_numpy_dtype_registry(c_variable)
         
     # order flag
     if rank > 1 and language == 'fortran':
