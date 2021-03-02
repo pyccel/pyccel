@@ -114,6 +114,8 @@ class PythonCodePrinter(CodePrinter):
                         args = func.args
                     else:
                         args = [LiteralString(a) for a in func]
+                    if n == 'types' and len(args)==0:
+                        continue
                     if args:
                         args = ', '.join(self._print(i) for i in args)
                         dec += '@{name}({args})\n'.format(name=n, args=args)
