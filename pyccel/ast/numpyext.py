@@ -344,7 +344,7 @@ class NumpyProduct(PyccelInternalFunction):
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
         self._arg = PythonInt(self._arg) if (isinstance(arg.dtype, NativeBool) or \
-                    (isinstance(arg.dtype, NativeInteger) and self._arg.precision < default_precision['int'])\
+                    (isinstance(arg.dtype, NativeInteger) and self._arg.precision < default_precision['int']))\
                     else self._arg
         self._dtype = self._arg.dtype
         self._rank  = 0
