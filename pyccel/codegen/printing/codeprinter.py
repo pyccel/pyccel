@@ -101,9 +101,16 @@ class CodePrinter:
                                   "subclass of CodePrinter.")
 
     def _print_NumberSymbol(self, expr):
+        """ Print sympy symbols used for constants"""
         return str(expr)
 
+    def _print_str(self, expr):
+        """ Basic print functionality for strings """
+        return expr
+
     def _print_not_supported(self, expr):
+        """ Print an error message if the print function for the type
+        is not implemented """
         errors.report(PYCCEL_RESTRICTION_TODO, symbol = expr,
                 severity='fatal')
 
