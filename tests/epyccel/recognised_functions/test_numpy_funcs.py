@@ -5035,11 +5035,13 @@ def test_numpy_mod_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    f_integer64_output = f_integer64(integer64)
-    test_int64_output = get_mod(integer64)
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64_output = f_integer64(integer64)
+        test_int64_output = get_mod(integer64)
 
-    assert f_integer64_output == test_int64_output
-    assert type(f_integer64_output) == type(test_int64_output.item())
+        assert f_integer64_output == test_int64_output
+        assert type(f_integer64_output) == type(test_int64_output.item())
 
     f_fl = epyccel(get_mod, language=language)
     f_fl32 = epyccel(get_mod, language=language)
@@ -5116,8 +5118,10 @@ def test_numpy_mod_array_like_1d(language):
     assert (f_integer(integer) == get_mod(integer))
     assert (f_integer32(integer32) == get_mod(integer32))
 
-    f_integer64 = epyccel(get_mod, language=language)
-    assert (f_integer64(integer64) == get_mod(integer64))
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64 = epyccel(get_mod, language=language)
+        assert (f_integer64(integer64) == get_mod(integer64))
 
     f_fl = epyccel(get_mod, language=language)
     f_fl32 = epyccel(get_mod, language=language)
@@ -5180,8 +5184,10 @@ def test_numpy_mod_array_like_2d(language):
     assert (f_integer(integer) == get_mod(integer))
     assert (f_integer32(integer32) == get_mod(integer32))
 
-    f_integer64 = epyccel(get_mod, language=language)
-    assert (f_integer64(integer64) == get_mod(integer64))
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64 = epyccel(get_mod, language=language)
+        assert (f_integer64(integer64) == get_mod(integer64))
 
     f_fl = epyccel(get_mod, language=language)
     f_fl32 = epyccel(get_mod, language=language)
