@@ -457,7 +457,6 @@ class CCodePrinter(CodePrinter):
                             PyccelMul(expr.imag, LiteralImaginaryUnit()))))
 
     def _print_PythonComplex(self, expr):
-        self._additional_imports.add("complex")
         if expr.is_cast:
             value = self._print(expr.internal_var)
         else:
@@ -467,6 +466,7 @@ class CCodePrinter(CodePrinter):
         return '({0})({1})'.format(type_name, value)
 
     def _print_LiteralImaginaryUnit(self, expr):
+        self._additional_imports.add("complex")
         return '_Complex_I'
 
     def _print_ModuleHeader(self, expr):
