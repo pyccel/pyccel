@@ -12,13 +12,6 @@
 # define NO_ORDER_CHECK -1
 
 
-// strings order needs to be the same as its equivalent numpy macro
-// https://numpy.org/doc/stable/reference/c-api/dtype.html
-const char* dataTypes[17] = {"Bool", "Int8", "UInt8", "Int16", "UIn16", "Int32", "UInt32",
-                             "Int64", "UInt64", "Int128", "UInt128", "Float32", "Float64",
-                             "Float128", "Complex64", "Complex128", "Complex256"};
-
-
 /* array converter */
 
 bool	pyarray_to_ndarray(PyObject *o, t_ndarray *array, int dtype, int rank, int flag);

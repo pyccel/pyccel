@@ -1,5 +1,15 @@
 #include "cwrapper.h"
 
+
+
+// strings order needs to be the same as its equivalent numpy macro
+// https://numpy.org/doc/stable/reference/c-api/dtype.html
+const char* dataTypes[17] = {"Bool", "Int8", "UInt8", "Int16", "UIn16", "Int32", "UInt32",
+                             "Int64", "UInt64", "Int128", "UInt128", "Float32", "Float64",
+                             "Float128", "Complex64", "Complex128", "Complex256"};
+
+
+
 /*
  * Functions : Cast functions
  * --------------------------
@@ -198,9 +208,9 @@ PyObject	*Double_to_PyDouble(double d)
  */
 
 
-static bool _check_pyarray_dtype(PyArrayObject *a, int dtype)
+static bool	check_pyarray_dtype(PyArrayObject *a, int dtype)
 {
-	int curent_dtype;
+	int current_dtype;
 
 	if (dtype == NO_TYPE_CHECK)
 		return true;
@@ -211,7 +221,7 @@ static bool _check_pyarray_dtype(PyArrayObject *a, int dtype)
 		PyErr_Format(PyExc_TypeError,
 			"argument dtype must be %s, not %s",
 			dataTypes[dtype],
-			dataTypes[curent_dtype]);
+			dataTypes[current_dtype]);
 		return false;
 	}
 
@@ -273,15 +283,12 @@ static bool _check_pyarray_order(PyArrayObject *a, int flag)
 	if (flag == NO_ORDER_CHECK)
 		return true;
 
-	if (rank > 1)
+	if (!PyArray_CHKFLAGS(a, flag))
 	{
-		if (!PyArray_CHKFLAGS(array, flags))
-		{
-			order = flags == NPY_ARRAY_C_CONTIGUOUS ? 'C' : 'F';
-			PyErr_Format(PyExc_NotImplementedError,
-				"argument does not have the expected ordering (%c)", order);
-			return false;
-		}
+		order = flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : 'F';
+		PyErr_Format(PyExc_NotImplementedError,
+			"argument does not have the expected ordering (%c)", order);
+		return false;
 	}
 
 	return true;
@@ -332,11 +339,11 @@ static bool _check_pyarray_type(PyObject *a)
 
 static bool	_check_array(PyArrayObject *a, int dtype, int rank, int flag)
 {
-	if(!__check_pyarray_dtype(pyarray, dtype)) return false;
+	if(!check_pyarray_dtype(a, dtype)) return false;
 
-	if(!__check_pyarray_order(pyarray, order)) return false;
+	if(!_check_pyarray_rank(a, rank)) return false;
 
-	if(!__check_pyarray_rank(pyarray, rank)) return false;
+	if(rank > 1 && !_check_pyarray_order(a, flag)) return false;
 
 	return true;
 }
@@ -368,9 +375,9 @@ bool	pyarray_to_ndarray(PyObject *o, t_ndarray *array, int dtype, int rank, int 
 	// Importing the API
 	if (PyArray_API == NULL) import_array();
 	// Array type c
-	if (!_check_pyarray_type(a)) return false;
+	if (!_check_pyarray_type(o)) return false;
 
-	pyarray = (PyArrayObject *)a;
+	pyarray = (PyArrayObject *)o;
 
 	if (!_check_array(pyarray, dtype, rank, flag)) return false;
 
