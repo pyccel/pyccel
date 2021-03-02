@@ -21,7 +21,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
 
 from .internals      import PyccelInternalFunction
 
-from .literals       import LiteralInteger, LiteralFloat, LiteralComplex
+from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, convert_to_literal
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
@@ -159,14 +159,21 @@ class NumpyReal(PythonReal):
     def __init__(self, arg):
         super().__init__(arg)
         self._precision = arg.precision
+        self._order = arg.order
         self._shape = process_shape(self.internal_var.shape)
         self._rank  = len(self._shape)
 
-#==============================================================================
+    @property
+    def is_elemental(self):
+        """ Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
+
 DtypePrecisionToCastFunction = {
     'Int' : {
-        1 : NumpyInt8,
-        2 : NumpyInt16,
+        1: NumpyInt8,
+        2: NumpyInt16,
         4 : NumpyInt32,
         8 : NumpyInt64},
     'Real' : {
@@ -437,13 +444,36 @@ def Shape(arg):
         return PythonTuple(*arg.shape)
 
 #==============================================================================
+
 class NumpyImag(PythonImag):
-    """Represents a call to  numpy.real for code generation.
+    """Represents a call to  numpy.imag for code generation.
 
     > a = 1+2j
     > np.imag(a)
     2.0
     """
+    def __new__(cls, arg):
+        if not isinstance(arg.dtype, NativeComplex):
+            dtype=NativeInteger() if isinstance(arg.dtype, NativeBool) else arg.dtype
+            if arg.rank == 0:
+                return convert_to_literal(0, dtype, arg.precision)
+            return NumpyZeros(arg.shape, dtype=dtype)
+        return super().__new__(cls, arg)
+
+    def __init__(self, arg):
+        super().__init__(arg)
+        self._precision = arg.precision
+        self._order = arg.order
+        self._dtype = NativeReal()
+        self._shape = self.internal_var.shape
+        self._rank  = len(self._shape)
+
+    @property
+    def is_elemental(self):
+        """ Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
 
 #==============================================================================
 class NumpyLinspace(NumpyNewArray):
@@ -973,9 +1003,9 @@ numpy_functions = {
     'mod'       : NumpyMod,
     'float32'   : NumpyFloat32,
     'float64'   : NumpyFloat64,
-    'bool'      : NumpyBool,
-    'int8'      : NumpyInt8,
-    'int16'     : NumpyInt16,
+    'bool': NumpyBool,
+    'int8': NumpyInt8,
+    'int16': NumpyInt16,
     'int32'     : NumpyInt32,
     'int64'     : NumpyInt64,
     'complex'   : NumpyComplex,
