@@ -128,7 +128,10 @@ class ErrorInfo:
                 info['location'] = ' [{line}]'.format(line=self.line)
 
         if self.symbol:
-            info['symbol'] = ' ({})'.format(self.symbol)
+            if self.traceback:
+                info['symbol'] = ' ({})'.format(repr(self.symbol))
+            else:
+                info['symbol'] = ' ({})'.format(self.symbol)
 
         return pattern.format(**info)
 
