@@ -16,7 +16,7 @@ from types import ModuleType, FunctionType
 from importlib.machinery import ExtensionFileLoader
 
 from pyccel.codegen.pipeline import execute_pyccel
-from pyccel.errors.errors import PyccelError
+from pyccel.errors.errors import PyccelError, ErrorsMode
 
 __all__ = ['random_string', 'get_source_function', 'epyccel_seq', 'epyccel']
 
@@ -221,6 +221,11 @@ def epyccel( python_function_or_module, **kwargs ):
     comm  = kwargs.pop('comm', None)
     root  = kwargs.pop('root', 0)
     bcast = kwargs.pop('bcast', True)
+    if kwargs.pop('developer_mode', None):
+        # this will initialize the singleton ErrorsMode
+        # making this settings available everywhere
+        err_mode = ErrorsMode()
+        err_mode.set_mode('developer')
 
     # Parallel version
     if comm is not None:
