@@ -7,8 +7,7 @@
 
 
 
-from sympy.core.basic import Basic
-from sympy.printing.str import StrPrinter
+from pyccel.ast.basic import Basic
 
 from pyccel.ast.core      import Assign
 from pyccel.ast.internals import PyccelSymbol
