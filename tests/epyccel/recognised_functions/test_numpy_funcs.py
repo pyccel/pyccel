@@ -5078,7 +5078,7 @@ def test_numpy_mod_array_like_1d(language):
     @types('float64[:]')
     def get_mod(arr):
         from numpy import mod, shape
-        a = mod(arr)
+        a = mod(arr, arr)
         s = shape(a)
         return len(s), s[0], a[0]
 
