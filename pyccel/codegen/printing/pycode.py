@@ -78,6 +78,9 @@ class PythonCodePrinter(CodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
+    def _print_ValuedArgument(self, expr):
+        return '{} = {}'.format(self._print(expr.argument), self._print(expr.value))
+
     def _print_Idx(self, expr):
         return self._print(expr.name)
 
@@ -278,6 +281,19 @@ class PythonCodePrinter(CodePrinter):
                 '{2}\n').format(target,iterable,body)
 
         return code
+
+    def _print_While(self, expr):
+        cond = self._print(expr.test)
+        body = self._indent_codestring(self._print(expr.body))
+        return 'while {cond}:\n{body}\n'.format(
+                cond = cond,
+                body = body)
+
+    def _print_Break(self, expr):
+        return 'break'
+
+    def _print_Continue(self, expr):
+        return 'continue'
 
     def _print_Assign(self, expr):
         lhs = self._print(expr.lhs)
