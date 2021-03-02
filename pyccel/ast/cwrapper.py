@@ -273,15 +273,15 @@ def Python_to_C(c_object):
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 py_to_c_registry = {
-    (NativeBool(), 4)    : 'PyBool_to_Bool',
-    (NativeInteger(), 1) : 'PyInt8_to_Int8',
-    (NativeInteger(), 2) : 'PyInt16_to_Int16',
-    (NativeInteger(), 4) : 'PyInt32_to_Int32',
-    (NativeInteger(), 8) : 'PyInt64_to_Int64',
-    (NativeReal(), 4)    : 'PyFloat_to_Float',
-    (NativeReal, 8)      : 'PyDouble_to_Double',
-    (NativeComplex, 4)   : 'PyComplex_to_Complex64',
-    (NativeComplex, 8)   : 'PyComplex_to_Complex128'}
+    (NativeBool(), 4)      : 'PyBool_to_Bool',
+    (NativeInteger(), 1)   : 'PyInt8_to_Int8',
+    (NativeInteger(), 2)   : 'PyInt16_to_Int16',
+    (NativeInteger(), 4)   : 'PyInt32_to_Int32',
+    (NativeInteger(), 8)   : 'PyInt64_to_Int64',
+    (NativeReal(), 4)      : 'PyFloat_to_Float',
+    (NativeReal(), 8)      : 'PyDouble_to_Double',
+    (NativeComplex(), 4)   : 'PyComplex_to_Complex64',
+    (NativeComplex(), 8)   : 'PyComplex_to_Complex128'}
 
 
 def C_to_Python(c_object):
@@ -309,15 +309,15 @@ def C_to_Python(c_object):
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 # TODO create cast functions of different precision of int issue #735
 c_to_py_registry = {
-    (NativeBool(), 4)    : 'Bool_to_PyBool',
-    (NativeInteger(), 1) : 'Int_to_pyLong',
-    (NativeInteger(), 2) : 'Int_to_pyLong',
-    (NativeInteger(), 4) : 'Int_to_PyLong',
-    (NativeInteger(), 8) : 'Int_to_PyLong',
-    (NativeReal(), 4)    : 'Double_to_PyDouble',
-    (NativeReal, 8)      : 'Double_to_PyDouble',
-    (NativeComplex, 4)   : 'Complex_to_PyComplex',
-    (NativeComplex, 8)   : 'Complex_to_PyComplex'}
+    (NativeBool(), 4)      : 'Bool_to_PyBool',
+    (NativeInteger(), 1)   : 'Int_to_pyLong',
+    (NativeInteger(), 2)   : 'Int_to_pyLong',
+    (NativeInteger(), 4)   : 'Int_to_PyLong',
+    (NativeInteger(), 8)   : 'Int_to_PyLong',
+    (NativeReal(), 4)      : 'Double_to_PyDouble',
+    (NativeReal(), 8)      : 'Double_to_PyDouble',
+    (NativeComplex(), 4)   : 'Complex_to_PyComplex',
+    (NativeComplex(), 8)   : 'Complex_to_PyComplex'}
 
 
 #-------------------------------------------------------------------
