@@ -12,7 +12,7 @@
 
 bool			PyArray_CheckType(PyArrayObject *a, int dtype);
 PyArrayObject	*Check_Array(PyObject *a, int rank, int flags);
-
+t_ndarray		PyArray_to_ndarray(PyArrayObject *o);
 
 /* functions prototypes */
 
