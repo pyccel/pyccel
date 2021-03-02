@@ -15,8 +15,8 @@ from sympy.printing.pycode import _known_constants_math
 from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.utilities  import build_types_decorator
-from pyccel.ast.core       import CodeBlock, Import, Assign
-from pyccel.ast.literals   import LiteralTrue
+from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall
+from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.variable   import DottedName
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -110,7 +110,10 @@ class PythonCodePrinter(CodePrinter):
                     f = [f]
                 dec = ''
                 for func in f:
-                    args = func.args
+                    if isinstance(func, FunctionCall):
+                        args = func.args
+                    else:
+                        args = [LiteralString(a) for a in func]
                     if args:
                         args = ', '.join(self._print(i) for i in args)
                         dec += '@{name}({args})\n'.format(name=n, args=args)
