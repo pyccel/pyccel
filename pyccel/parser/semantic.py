@@ -851,6 +851,10 @@ class SemanticParser(BasicParser):
     def _visit_CommentBlock(self, expr, **settings):
         return expr
     def _visit_AnnotatedComment(self, expr, **settings):
+        #print(dir(expr._user_nodes))
+        code = expr._user_nodes
+        print(type(code[0].body[2]))
+        #print(expr._attribute_nodes)
         return expr
     def _visit_Literal(self, expr, **settings):
         return expr
