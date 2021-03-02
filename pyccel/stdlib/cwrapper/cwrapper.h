@@ -6,6 +6,12 @@
 # include <complex.h>
 # include <stdint.h>
 # include <stdbool.h>
+# include "ndarrays.h"
+
+/* array check */
+
+bool			PyArray_CheckType(PyArrayObject *a, int dtype);
+PyArrayObject	*Check_Array(PyObject *a, int rank, int flags);
 
 
 /* functions prototypes */
@@ -36,12 +42,6 @@ PyObject	*Bool_to_PyBool(bool b);
 PyObject	*Int_to_PyLong(int64_t i);
 
 PyObject	*Double_to_PyDouble(double d);
-
-/* array check */
-
-bool			PyArray_CheckType(PyArrayObject *a, int dtype);
-//PyArrayObject	*Check_Array(PyObject *a, int rank, int flags);
-
 
 
 #endif

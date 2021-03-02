@@ -130,40 +130,6 @@ double	PyDouble_to_Double(PyObject *o)
 
 
 /*
- * Function: PyArray_to_ndarray
- * ----------------------------
- * A Cast function that convert numpy array variable into ndarray variable,
- * by copying its information and data to a new variable of type ndarray struct
- * and return this variable to be used inside c code.
- * 	Parameters	:
- *		o 	  : python array object
- * 	Returns		:
- *		array : c ndarray
- *
- * reference of the used c/numpy api function
- * -------------------------------------------
- * https://numpy.org/doc/stable/reference/c-api/array.html
- */
-/*
-
-t_ndarray		PyArray_to_ndarray(PyArrayObject *o)
-{
-	t_ndarray	array;
-
-	array.nd          = PyArray_NDIM(o);
-	array.raw_data    = PyArray_DATA(o);
-	array.type_size   = PyArray_ITEMSIZE(o);
-	array.type        = PyArray_TYPE(o);
-	array.length      = PyArray_SIZE(o);
-	array.buffer_size = PyArray_NBYTES(o);
-	array.shape       = numpy_to_ndarray_shape(PyArray_SHAPE(o), array.nd);
-	array.strides     = numpy_to_ndarray_strides(PyArray_STRIDES(o), array.type_size, array.nd);
-	array.is_view     = 1;
-
-	return array;
-}
-
-/*
  * Functions : Cast functions
  * ---------------------------
  * Some of the function used below are based on C/python api
@@ -215,6 +181,40 @@ PyObject	*Double_to_PyDouble(double d)
 	return o;
 }
 
+/*
+ * Function: PyArray_to_ndarray
+ * ----------------------------
+ * A Cast function that convert numpy array variable into ndarray variable,
+ * by copying its information and data to a new variable of type ndarray struct
+ * and return this variable to be used inside c code.
+ * 	Parameters	:
+ *		o 	  : python array object
+ * 	Returns		:
+ *		array : c ndarray
+ *
+ * reference of the used c/numpy api function
+ * -------------------------------------------
+ * https://numpy.org/doc/stable/reference/c-api/array.html
+ */
+
+
+t_ndarray		PyArray_to_ndarray(PyArrayObject *o)
+{
+	t_ndarray	array;
+
+	array.nd          = PyArray_NDIM(o);
+	array.raw_data    = PyArray_DATA(o);
+	array.type_size   = PyArray_ITEMSIZE(o);
+	array.type        = PyArray_TYPE(o);
+	array.length      = PyArray_SIZE(o);
+	array.buffer_size = PyArray_NBYTES(o);
+	array.shape       = numpy_to_ndarray_shape(PyArray_SHAPE(o), array.nd);
+	array.strides     = numpy_to_ndarray_strides(PyArray_STRIDES(o), array.type_size, array.nd);
+	array.is_view     = 1;
+
+	return array;
+}
+
 
 /*
  * Function: Check_Array
@@ -234,7 +234,7 @@ PyObject	*Double_to_PyDouble(double d)
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html
  */
-/*
+
 PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
 {
 	PyArrayObject	*array;
@@ -271,4 +271,3 @@ PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
 	}
 	return array;
 }
-*/
