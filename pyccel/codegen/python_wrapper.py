@@ -59,7 +59,10 @@ def create_shared_library(codegen,
     lib_dest_path = os.path.join(pyccel_dirpath, lib_name)
     if os.path.exists(lib_dest_path):
         shutil.rmtree(lib_dest_path)
-    #shutil.copytree(lib_path, lib_dest_path)
+    try:
+        shutil.copytree(lib_path, lib_dest_path)
+    except:
+        print('[Error : copy folder]')
     includes.append(lib_dest_path)
     # Consistency checks
     if not codegen.is_module:
