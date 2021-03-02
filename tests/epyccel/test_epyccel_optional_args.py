@@ -12,7 +12,7 @@ from pyccel.decorators import types
     pytest.param("python", marks = [
         pytest.mark.skip(reason="Confusion around ValuedVariable means it cannot be used in python"),
         pytest.mark.python]
-    )
+    )]
 )
 def language(request):
     return request.param

@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 # coding: utf-8
-
+import pytest
 import numpy as np
 
 from pyccel.epyccel import epyccel
@@ -12,7 +12,7 @@ from pyccel.decorators import types
     pytest.param("python", marks = [
         pytest.mark.skip(reason="Confusion around ValuedVariable means it cannot be used in python"),
         pytest.mark.python]
-    )
+    )]
 )
 def language(request):
     return request.param

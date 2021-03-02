@@ -189,7 +189,7 @@ def test_pass2_if(language):
     test.compare_epyccel(0.2)
     test.compare_epyccel(0.0)
 
-@pytest.mark.parametrize( 'lang', (
+@pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
