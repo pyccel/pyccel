@@ -454,7 +454,7 @@ class CWrapperCodePrinter(CCodePrinter):
         pykwarg = expr.pykwarg
         flags   = expr.flags
         # All args are modified so even pointers are passed by address
-        args  = ', '.join(['&{}, &{}'.format(f.name, a.name) for a, f in zip(expr.converters, expr.args)])
+        args  = ', '.join(['&{}, &{}'.format(f.name, a.name) for f, a in zip(expr.converters, expr.args)])
 
         if expr.args:
             code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(
@@ -534,7 +534,7 @@ class CWrapperCodePrinter(CCodePrinter):
             for f_arg, p_arg in zip(func.arguments, parse_args):
                 function = self.get_PyArgParse_Converter_Function(used_names, f_arg)
                 func_args.extend(self.get_static_args(arg)) # Bind_C args
-                parsing_converter_functions[get_custom_key(res)] = function
+                parsing_converter_functions = function
 
                 flag = self.get_flag_value(flag, f_arg) # set flag value
                 types_dict[p_arg].add(f_arg.dtype) # collect type
