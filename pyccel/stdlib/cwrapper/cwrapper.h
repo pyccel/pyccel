@@ -21,7 +21,7 @@ const char* dataTypes[17] = {"Bool", "Int8", "UInt8", "Int16", "UIn16", "Int32",
 
 /* array converter */
 
-bool	pyarray_to_ndarray(PyObject *o, t_ndarray *array, int dtype, int rank, int flag)
+bool	pyarray_to_ndarray(PyObject *o, t_ndarray *array, int dtype, int rank, int flag);
 
 /* functions prototypes */
 

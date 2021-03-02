@@ -27,7 +27,7 @@ from pyccel.ast.cwrapper    import get_custom_key, flags_registry
 from pyccel.ast.cwrapper    import PyccelPyObject, PyccelPyArrayObject, Py_None
 from pyccel.ast.cwrapper    import get_custom_key, PyErr_SetString, PyErr_Occurred
 
-from pyccel.ast.numpy_wrapper   import Check_Array, NumpyType_Check, PyArray_to_Array
+from pyccel.ast.numpy_wrapper   import NumpyType_Check, PyArray_to_C
 
 from pyccel.ast.internals       import PyccelArraySize
 from pyccel.ast.variable        import Variable, ValuedVariable, VariableAddress
@@ -333,33 +333,19 @@ class CWrapperCodePrinter(CCodePrinter):
         func_name       = 'py_to_nd{}'.format(self._print(variable.dtype))
         func_name       = self.get_new_name(used_names, func_name)
         py_variable     = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
-        py_array        = Variable(name = 'py_array', dtype = PyccelPyArrayObject(), is_pointer = True)
-        c_variable      = variable.clone(name = variable.name, is_pointer = True)
+        c_variable      = variable.clone(name = 'c_variable', is_pointer = True)
         body            = []
 
         # (Valued / Optional) variable check
         if isinstance(variable, ValuedVariable):
-            body.append(If(self.generate_valued_variable_body(py_object, c_variable)))
+            body.append(self.generate_valued_variable_body(py_variable, c_variable, variable.value))
 
-        #array check
-        body.append(AliasAssign(py_array, Check_Array(py_variable, c_variable, self._target_language)))
-        body.append(If(IfSection(
-            PyccelNot(VariableAddress(py_array)), [Return([LiteralInteger(0)])])))
-
-        #datatqype check
-        if check_is_needed:
-            check = PyccelNot(NumpyType_Check(py_array, c_variable))
-            error = self.generate_datatype_error(c_variable)
-            body.append(If(IfSection(check, [error, Return([LiteralInteger(0)])])))
-
-        # Convert numpy_array to c array
-        body.append(Assign(c_variable, FunctionCall(PyArray_to_Array, [py_array])))
-        body.append(Return([LiteralInteger(1)]))
+        body = [Return([PyArray_to_C(py_variable, c_variable,
+                            check_is_needed, self._target_language)])]
 
         funcDef = FunctionDef(name     = func_name,
                             arguments  = [py_variable, c_variable],
                             results    = [Variable(dtype = NativeInteger(), name = 'r', is_temp = True)],
-                            local_vars = [py_array],
                             body       = body)
 
         return funcDef
