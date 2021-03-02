@@ -243,26 +243,15 @@ class CCodePrinter(CodePrinter):
     printmethod = "_ccode"
     language = "C"
 
-    _default_settings = {
-        'order': None,
-        'full_prec': 'auto',
-        'human': True,
-        'precision': 15,
-        'user_functions': {},
-        'dereference': set()
-    }
-
-    def __init__(self, parser, **settings):
+    def __init__(self, parser, prefix_module = None, user_functions = None):
 
         if parser.filename:
             errors.set_target(parser.filename, 'file')
 
-        prefix_module = settings.pop('prefix_module', None)
-        CodePrinter.__init__(self, settings)
+        super().__init__()
         self.known_functions = dict(known_functions)
-        userfuncs = settings.get('user_functions', {})
+        userfuncs = user_functions if user_functions is not None else {}
         self.known_functions.update(userfuncs)
-        self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
         self._additional_imports = set(['stdlib'])
         self._parser = parser
@@ -1445,7 +1434,7 @@ class CCodePrinter(CodePrinter):
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
 
     def _print_Variable(self, expr):
-        if expr in self._dereference or self.stored_in_c_pointer(expr):
+        if self.stored_in_c_pointer(expr):
             return '(*{0})'.format(expr.name)
         else:
             return expr.name

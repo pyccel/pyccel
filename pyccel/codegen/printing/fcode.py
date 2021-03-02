@@ -198,18 +198,16 @@ class FCodePrinter(CodePrinter):
     }
 
 
-    def __init__(self, parser, **settings):
-
-        prefix_module = settings.pop('prefix_module', None)
+    def __init__(self, parser, prefix_module = None, user_functions = None):
 
         if parser.filename:
             errors.set_target(parser.filename, 'file')
 
-        CodePrinter.__init__(self, settings)
+        super().__init__()
         self.parser = parser
         self._namespace = self.parser.namespace
         self.known_functions = dict(known_functions)
-        userfuncs = settings.get('user_functions', {})
+        userfuncs = user_functions if user_functions is not None else {}
         self.known_functions.update(userfuncs)
         self._current_function = None
         self._current_class    = None

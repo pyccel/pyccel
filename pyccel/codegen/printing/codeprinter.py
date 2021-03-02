@@ -22,7 +22,7 @@ __all__ = ["CodePrinter"]
 
 errors = Errors()
 
-class CodePrinter(StrPrinter):
+class CodePrinter:
     """
     The base class for code-printing subclasses.
     """

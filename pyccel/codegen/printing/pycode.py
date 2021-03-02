@@ -41,10 +41,10 @@ class PythonCodePrinter(CodePrinter):
     ))
     _kc = {k: ''+v for k, v in _known_constants_math.items()}
 
-    def __init__(self, parser=None, **settings):
+    def __init__(self, parser=None):
         self.assert_contiguous = settings.pop('assert_contiguous', False)
         self.parser = parser
-        super().__init__(settings=settings)
+        super().__init__()
         self._additional_imports = set()
 
     def _indent_codestring(self, lines):
