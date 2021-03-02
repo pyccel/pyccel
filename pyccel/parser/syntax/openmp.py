@@ -71,13 +71,14 @@ class OmpConstruct(BasicStmt):
 
 class OmpClauses(BasicStmt):
     """Class representing the clause expr."""
+    _expr = None
     @property
     def expr(self):
         if DEBUG:
             print("> {}: expr".format(type(self).__name__))
 
         return self._expr
-    
+
 def check_get_clauses(name, valid_clauses, clauses, combined = None):
     """
     Function to check if the clauses are correct for a given construct.
@@ -124,7 +125,7 @@ class OmpParallelConstruct(OmpConstruct):
         super().__init__(OMP_Parallel_Construct, _valid_parallel_clauses, **kwargs)
 
 class OmpLoopConstruct(OmpConstruct):
-    """Class representing The For loop construct."""
+    """Class representing the For loop construct."""
     def __init__(self, **kwargs):
         super().__init__(OMP_For_Loop, _valid_loop_clauses, **kwargs)
 
@@ -298,7 +299,7 @@ class OmpDefault(OmpClauses):
     def __init__(self, **kwargs):
         status = kwargs.pop('status')
 
-        self._expr = 'default({})'.format(self.status)
+        self._expr = 'default({})'.format(status)
 
         super().__init__(**kwargs)
 
@@ -307,7 +308,7 @@ class OmpProcBind(OmpClauses):
     def __init__(self, **kwargs):
         status = kwargs.pop('status')
 
-        self._expr = 'proc_bind({})'.format(self.status)
+        self._expr = 'proc_bind({})'.format(status)
 
         super().__init__(**kwargs)
 
