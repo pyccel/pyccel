@@ -232,7 +232,7 @@ class Basic:
     def is_atomic(self):
         """ Indicates whether the object has any attribute nodes
         """
-        return bool(self._attribute_nodes)
+        return not bool(self._attribute_nodes)
 
     def set_fst(self, fst):
         """Sets the python.ast fst."""
