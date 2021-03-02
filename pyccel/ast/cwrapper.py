@@ -394,7 +394,7 @@ def PyErr_SetString(exception, message):
 
 # This registry is used for interface management,
 # mapping each data type to a given flag
-# Thos flag are used in a betset #TODO
+# Those flags are used in a bitset #TODO
 flags_registry = {
     (NativeInteger(), 4)       : 1,
     (NativeInteger(), 8)       : 2,
