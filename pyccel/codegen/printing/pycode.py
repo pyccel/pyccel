@@ -465,6 +465,24 @@ class PythonCodePrinter(CodePrinter):
         a = self._print(expr.args[0])
         return 'not {}'.format(a)
 
+    def _print_PyccelInvert(self, expr):
+        return '~{}'.format(self._print(expr.args[0]))
+
+    def _print_PyccelRShift(self, expr):
+        return '{} >> {}'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_PyccelLShift(self, expr):
+        return '{} << {}'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_PyccelBitXor(self, expr):
+        return '{} ^ {}'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_PyccelBitOr(self, expr):
+        return '{} | {}'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_PyccelBitAnd(self, expr):
+        return '{} & {}'.format(self._print(expr.args[0]), self._print(expr.args[1]))
+
     def _print_PyccelSymbol(self, expr):
         return expr
 
