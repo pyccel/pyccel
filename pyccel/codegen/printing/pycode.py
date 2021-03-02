@@ -363,6 +363,12 @@ class PythonCodePrinter(CodePrinter):
     def _print_NumpySum(self, expr):
         return "sum({})".format(self._print(expr.arg))
 
+    def _print_NumpyUfuncBase(self, expr):
+        type_name = type(expr).__name__
+        name = type_name[5:].lower()
+        args = ', '.join(self._print(a) for a in expr.args)
+        return "{}({})".format(name, args)
+
     def _print_Max(self, expr):
         args = ', '.join(self._print(e) for e in expr.args)
         return 'max({})'.format(args)
