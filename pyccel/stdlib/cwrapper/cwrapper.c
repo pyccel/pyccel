@@ -182,95 +182,212 @@ PyObject	*Double_to_PyDouble(double d)
 }
 
 /*
- * Function: PyArray_to_ndarray
- * ----------------------------
- * A Cast function that convert numpy array variable into ndarray variable,
- * by copying its information and data to a new variable of type ndarray struct
- * and return this variable to be used inside c code.
- * 	Parameters	:
- *		o 	  : python array object
- * 	Returns		:
- *		array : c ndarray
- *
- * reference of the used c/numpy api function
- * -------------------------------------------
- * https://numpy.org/doc/stable/reference/c-api/array.html
- */
-
-
-t_ndarray		PyArray_to_ndarray(PyArrayObject *o)
-{
-	t_ndarray	array;
-
-	array.nd          = PyArray_NDIM(o);
-	array.raw_data    = PyArray_DATA(o);
-	array.type_size   = PyArray_ITEMSIZE(o);
-	array.type        = PyArray_TYPE(o);
-	array.length      = PyArray_SIZE(o);
-	array.buffer_size = PyArray_NBYTES(o);
-	array.shape       = numpy_to_ndarray_shape(PyArray_SHAPE(o), array.nd);
-	array.strides     = numpy_to_ndarray_strides(PyArray_STRIDES(o), array.type_size, array.nd);
-	array.is_view     = 1;
-
-	return array;
-}
-
-
-/*
- * Function: Check_Array
+ * Function: _check_pyarray_dtype
  * --------------------
- * Check Python Object (ArrayType, Rank, Order):
+ * Check Python Object DataType:
  *
- *  Parameters :
- * 		a     : Python Object
- *  	rank  : The desired rank
- *  	order : The desired order
- *               0 if the check order is not needed
- *
- *  Returns    :
- * 		reference to PyArray Object
- *      returns NULL on error
+ * 	Parameters	:
+ *		a 	  : python array object
+ *      dtype : desired data type enum
+ * 	Returns		:
+ *		return true if no error occurred otherwise it will return false
+ *      and raise TypeError exception
  * reference of the used c/python api function
  * -------------------------------------------
- * https://numpy.org/doc/stable/reference/c-api/array.html
+ * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_TYPE
  */
 
-PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
+
+static bool _check_pyarray_dtype(PyArrayObject *a, int dtype)
 {
-	PyArrayObject	*array;
-	char			order;
+	int curent_dtype;
 
-	// Importing the API
-	if (PyArray_API == NULL) import_array();
+	if (dtype == TYPE_CHECK_NOT_NEEDED)
+		return true;
 
-	//PyArray type Check
-	if (!PyArray_Check(a))
+	current_dtype = PyArray_TYPE(a);
+	if (current_dtype != dtype)
 	{
 		PyErr_Format(PyExc_TypeError,
-			"argument must be numpy.ndarray, not %s",
-			 a == Py_None ? "None" : Py_TYPE(a)->tp_name);
-		return NULL;
+			"argument dtype must be %s, not %s",
+			xxxxxxx[dtype],
+			xxxxxxx[curent_dtype]);
+		return false;
 	}
-	array = (PyArrayObject *)a;
 
+	return true;
+}
 
-	// Rank Check
-	if (PyArray_NDIM(array) != rank)
+/*
+ * Function: _check_pyarray_rank
+ * --------------------
+ * Check Python Object Rank:
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ *      rank  : desired rank
+ * 	Returns		:
+ *		return true if no error occurred otherwise it will return false
+ *      and raise TypeError exception
+ * reference of the used c/python api function
+ * -------------------------------------------
+ * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_NDIM
+ */
+
+static bool _check_pyarray_rank(PyArrayObject *a, int rank)
+{
+	int	current_rank;
+
+	current_rank = PyArray_NDIM(a);
+	if (current_rank != rank)
 	{
-		PyErr_Format(PyExc_TypeError, "argument rank must be %d", rank);
-		return NULL;
+		PyErr_Format(PyExc_TypeError, "argument rank must be %d, not %d",
+			rank,
+			current_rank);
+		return false;
 	}
 
-	//Order check
-	if (rank > 1 && flags != 0)
+	return true;
+}
+
+/*
+ * Function: _check_pyarray_order
+ * --------------------
+ * Check Python Object Order:
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ *      flag  : desired order
+ * 	Returns		:
+ *		return true if no error occurred otherwise it will return false
+ *      and raise NotImplementedError exception
+ * reference of the used c/python api function
+ * -------------------------------------------
+ * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_CHKFLAGS
+ */
+
+static bool _check_pyarray_order(PyArrayObject *a, int flag)
+{
+	char	order;
+
+	if (flag == CHECK_ORDER_NOT_NEEDED)
+		return true;
+
+	if (rank > 1)
 	{
 		if (!PyArray_CHKFLAGS(array, flags))
 		{
 			order = flags == NPY_ARRAY_C_CONTIGUOUS ? 'C' : 'F';
 			PyErr_Format(PyExc_NotImplementedError,
 				"argument does not have the expected ordering (%c)", order);
-			return NULL;
+			return false;
 		}
 	}
-	return array;
+
+	return true;
+}
+
+/*
+ * Function: _check_pyarray_type
+ * --------------------
+ * Check if Python Object is ArrayType:
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ *
+ * 	Returns		:
+ *		return true if no error occurred otherwise it will return false
+ *      and raise TypeError exception
+ * reference of the used c/python api function
+ * -------------------------------------------
+ * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_Check
+ */
+
+static bool _check_pyarray_type(PyObject *a)
+{
+	if (!PyArray_Check(a))
+	{
+		PyErr_Format(PyExc_TypeError,
+			"argument must be numpy.ndarray, not %s",
+			 a == Py_None ? "None" : Py_TYPE(a)->tp_name);
+		return false;
+	}
+
+	return true;
+}
+
+/*
+ * Function: _check_array
+ * --------------------
+ * Check Python Object (DataType, Rank, Order):
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ *      dtype : desired data type enum
+ *		rank  : desired rank
+ *		flag  : desired order flag
+ * 	Returns		:
+ *		return true if no error occurred otherwise it will return false
+ */
+
+static bool	_check_array(PyArrayObject *a, int dtype, int rank, int flag)
+{
+	if(!__check_pyarray_dtype(pyarray, dtype)) return false;
+
+	if(!__check_pyarray_order(pyarray, order)) return false;
+
+	if(!__check_pyarray_rank(pyarray, rank)) return false;
+
+	return true;
+}
+
+/*
+ * Function: pyarray_to_ndarray
+ * ----------------------------
+ * A Cast function that convert numpy array variable into ndarray variable,
+ * by copying its information and data to a new variable of type ndarray struct
+ * and return this variable to be used inside c code.
+ * 	Parameters	:
+ *		o 	  : python array object
+ *      array : c ndarray object
+ *      dtype : desired data type enum
+ *		rank  : desired rank
+ *		flag  : desired order flag
+ * 	Returns		:
+ *		return true if no error occurred otherwise it will return false
+ *
+ * reference of the used c/numpy api function
+ * -------------------------------------------
+ * https://numpy.org/doc/stable/reference/c-api/array.html
+ */
+
+bool	pyarray_to_ndarray(PyObject *o, t_ndarray *array, int dtype, int rank, int flag)
+{
+	PyArrayObject	*pyarray;
+
+	// Importing the API
+	if (PyArray_API == NULL) import_array();
+	// Array type c
+	if (!_check_pyarray_type(a)) return false;
+
+	pyarray = (PyArrayObject *)a;
+
+	if (!_check_array(pyarray, dtype, rank, flag)) return false;
+
+	array->nd          = PyArray_NDIM(pyarray);
+	array->raw_data    = PyArray_DATA(pyarray);
+	array->type_size   = PyArray_ITEMSIZE(pyarray);
+	array->type        = PyArray_TYPE(pyarray);
+	array->length      = PyArray_SIZE(pyarray);
+	array->buffer_size = PyArray_NBYTES(pyarray);
+
+	array->shape       = (int64_t*)malloc(sizeof(int64_t) * array->nd);
+	memcpy(array->shape, PyArray_SHAPE(pyarray), sizeof(int64_t) * array->nd);
+
+	array->strides     = (int64_t*)malloc(sizeof(int64_t) * array->nd);
+	memcpy(array->strides, PyArray_STRIDES(pyarray), sizeof(int64_t) * array->nd);
+
+	array->is_view     = 1;
+
+	return true;
 }

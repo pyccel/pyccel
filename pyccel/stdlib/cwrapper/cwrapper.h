@@ -9,11 +9,9 @@
 # include <stdbool.h>
 # include "ndarrays.h"
 
-/* array check */
+/* array converter */
 
-bool			PyArray_CheckType(PyArrayObject *a, int dtype);
-PyArrayObject	*Check_Array(PyObject *a, int rank, int flags);
-t_ndarray		PyArray_to_ndarray(PyArrayObject *o);
+bool	pyarray_to_ndarray(PyObject *o, t_ndarray *array, int dtype, int rank, int flag)
 
 /* functions prototypes */
 
