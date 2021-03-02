@@ -12,6 +12,7 @@ from pyccel.epyccel import epyccel
 @pytest.fixture(params=[
     pytest.param('fortran', marks = pytest.mark.fortran),
     pytest.param('c'      , marks = pytest.mark.c)
+    ]
 )
 def language(request):
     return request.param

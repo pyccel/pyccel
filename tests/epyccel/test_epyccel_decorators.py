@@ -8,6 +8,7 @@ from pyccel.decorators import private
 @pytest.fixture(params=[
     pytest.param('fortran', marks = pytest.mark.fortran),
     pytest.param('c'      , marks = pytest.mark.c)
+    ]
 )
 def language(request):
     return request.param
