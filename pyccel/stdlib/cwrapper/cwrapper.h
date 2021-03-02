@@ -1,5 +1,6 @@
 #ifndef CWRAPPER_H
 # define CWRAPPER_H
+# define PY_SSIZE_T_CLEAN
 
 # include "Python.h"
 # include "numpy/arrayobject.h"

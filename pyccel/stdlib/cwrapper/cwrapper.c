@@ -240,6 +240,9 @@ PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
 	PyArrayObject	*array;
 	char			order;
 
+	// Importing the API
+	if (PyArray_API == NULL) import_array();
+
 	//PyArray type Check
 	if (!PyArray_Check(a))
 	{
