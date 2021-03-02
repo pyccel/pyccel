@@ -5,15 +5,6 @@ import numpy as np
 
 from pyccel.epyccel import epyccel
 
-@pytest.fixture(params=[
-    pytest.param('fortran', marks = pytest.mark.fortran),
-    pytest.param('c'      , marks = [pytest.mark.c,
-        pytest.mark.xfail(message='Arrays not implemented in C')])
-    ]
-)
-def language(request):
-    return request.param
-
 #==============================================================================
 @pytest.mark.parallel
 def test_module_1(language):

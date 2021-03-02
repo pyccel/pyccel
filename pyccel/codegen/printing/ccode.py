@@ -11,7 +11,7 @@ import operator
 from pyccel.ast.builtins  import PythonRange, PythonFloat, PythonComplex
 
 from pyccel.ast.core      import Declare
-from pyccel.ast.core      import FuncAddressDeclare, FunctionCall
+from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionDef
 from pyccel.ast.core      import Deallocate
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, datatype, Import, AugAssign
@@ -22,7 +22,6 @@ from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, Py
 from pyccel.ast.operators import PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
-from pyccel.ast.datatypes import default_precision, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeReal, NativeTuple
 
 from pyccel.ast.internals import Slice
@@ -33,6 +32,8 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
+
+from pyccel.ast.utilities import expand_to_loops
 
 from pyccel.ast.variable import ValuedVariable
 from pyccel.ast.variable import PyccelArraySize, Variable, VariableAddress
@@ -45,7 +46,6 @@ from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT )
 
-from .fcode import python_builtin_datatypes
 
 errors = Errors()
 
@@ -252,17 +252,17 @@ class CCodePrinter(CodePrinter):
         'dereference': set()
     }
 
-    def __init__(self, parser, settings=None):
+    def __init__(self, parser, **settings):
 
         if parser.filename:
             errors.set_target(parser.filename, 'file')
 
-        prefix_module = None if settings is None else settings.pop('prefix_module', None)
+        prefix_module = settings.pop('prefix_module', None)
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
-        userfuncs = {} if settings is None else settings.get('user_functions', {})
+        userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
-        self._dereference = set([] if settings is None else settings.get('dereference', []))
+        self._dereference = set(settings.get('dereference', []))
         self.prefix_module = prefix_module
         self._additional_imports = set(['stdlib'])
         self._parser = parser
@@ -437,6 +437,7 @@ class CCodePrinter(CodePrinter):
         return '({0})({1})'.format(type_name, value)
 
     def _print_PythonInt(self, expr):
+        self._additional_imports.add('stdint')
         value = self._print(expr.arg)
         type_name = self.find_in_dtype_registry('int', expr.precision)
         return '({0})({1})'.format(type_name, value)
@@ -445,11 +446,8 @@ class CCodePrinter(CodePrinter):
         value = self._print(expr.arg)
         return '({} != 0)'.format(value)
 
-    def _print_LiteralInteger(self, expr):
-        return str(expr.p)
-
-    def _print_LiteralFloat(self, expr):
-        return CodePrinter._print_Float(self, expr)
+    def _print_Literal(self, expr):
+        return repr(expr.python_value)
 
     def _print_LiteralComplex(self, expr):
         if expr.real == LiteralFloat(0):
@@ -459,7 +457,6 @@ class CCodePrinter(CodePrinter):
                             PyccelMul(expr.imag, LiteralImaginaryUnit()))))
 
     def _print_PythonComplex(self, expr):
-        self._additional_imports.add("complex")
         if expr.is_cast:
             value = self._print(expr.internal_var)
         else:
@@ -469,6 +466,7 @@ class CCodePrinter(CodePrinter):
         return '({0})({1})'.format(type_name, value)
 
     def _print_LiteralImaginaryUnit(self, expr):
+        self._additional_imports.add("complex")
         return '_Complex_I'
 
     def _print_ModuleHeader(self, expr):
@@ -519,7 +517,7 @@ class CCodePrinter(CodePrinter):
             var = self._print(e)
             if i == 0:
                 lines.append("if (%s)\n{" % self._print(c))
-            elif i == len(expr.blocks) - 1 and c is LiteralTrue():
+            elif i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
                 lines.append("else\n{")
             else:
                 lines.append("else if (%s)\n{" % self._print(c))
@@ -632,7 +630,7 @@ class CCodePrinter(CodePrinter):
 
         if source is None:
             return ''
-        if str(expr.source) in c_library_headers:
+        if expr.source in c_library_headers:
             return '#include <{0}.h>'.format(source)
         else:
             return '#include "{0}.h"'.format(source)
@@ -787,7 +785,24 @@ class CCodePrinter(CodePrinter):
     def _print_NativeString(self, expr):
         return 'string'
 
-    def function_signature(self, expr):
+    def function_signature(self, expr, print_arg_names = True):
+        """Extract from function definition all the information
+        (name, input, output) needed to create the signature
+
+        Parameters
+        ----------
+        expr            : FunctionDef
+            the function defintion
+
+        print_arg_names : Bool
+            default value True and False when we don't need to print
+            arguments names
+
+        Return
+        ------
+        String
+            Signature of the function
+        """
         args = list(expr.arguments)
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
@@ -800,8 +815,9 @@ class CCodePrinter(CodePrinter):
         if not args:
             arg_code = 'void'
         else:
-            arg_code = ', '.join('{}'.format(self.function_signature(i))
-                        if isinstance(i, FunctionAddress) else '{0}{1}'.format(self.get_declare_type(i), i)
+            arg_code = ', '.join('{}'.format(self.function_signature(i, False))
+                        if isinstance(i, FunctionAddress)
+                        else '{0}'.format(self.get_declare_type(i)) + (i.name if print_arg_names else '')
                         for i in args)
         if isinstance(expr, FunctionAddress):
             return '{}(*{})({})'.format(ret_type, name, arg_code)
@@ -1105,7 +1121,11 @@ class CCodePrinter(CodePrinter):
         body  = self._print(expr.body)
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
         if len(expr.results) <= 1 :
-            decs += [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.results]
+            for i in expr.results:
+                if isinstance(i, Variable) and not i.is_temp:
+                    decs += [Declare(i.dtype, i)]
+                elif not isinstance(i, Variable):
+                    decs += [FuncAddressDeclare(i)]
         decs += [Declare(i.dtype, i) for i in self._additional_declare]
         decs  = '\n'.join(self._print(i) for i in decs)
         self._additional_declare.clear()
@@ -1186,13 +1206,32 @@ class CCodePrinter(CodePrinter):
     def _print_Return(self, expr):
         code = ''
         args = [VariableAddress(a) if self.stored_in_c_pointer(a) else a for a in expr.expr]
+
+        if len(args) > 1:
+            if expr.stmt:
+                return self._print(expr.stmt)+'\n'+'return 0;'
+            return 'return 0;'
+
         if expr.stmt:
-            code += self._print(expr.stmt)+'\n'
-        if len(args) == 1:
-            code +='return {0};'.format(self._print(args[0]))
-        elif len(args) > 1:
-            code += 'return 0;'
-        return code
+            # get Assign nodes form the CodeBlock object expr.stmt.
+            last_assign = expr.stmt.get_attribute_nodes(Assign)
+
+            # Check the Assign objects list in case of
+            # the user assigns a variable to an object contains IndexedElement object.
+            if not last_assign:
+                return 'return {0};'.format(self._print(args[0]))
+
+            # make sure that stmt contains one assign node.
+            assert(len(last_assign)==1)
+            variables = last_assign[0].rhs.get_attribute_nodes(Variable, excluded_nodes=(FunctionDef,))
+            unneeded_var = not any(b.allocatable and not b.is_argument for b in variables)
+            if unneeded_var:
+                code = '\n'.join(self._print(a) for a in expr.stmt.body if a is not last_assign[0])
+                return code + '\nreturn {};'.format(self._print(last_assign[0].rhs))
+            else:
+                code = '\n'+self._print(expr.stmt)
+                self._additional_declare.append(last_assign[0].lhs)
+        return code + 'return {0};'.format(self._print(args[0]))
 
     def _print_Pass(self, expr):
         return '// pass'
@@ -1315,13 +1354,15 @@ class CCodePrinter(CodePrinter):
                 stop=stop, step=step, body=body)
 
     def _print_CodeBlock(self, expr):
-        body = []
-        for b in expr.body :
+        body_exprs, new_vars = expand_to_loops(expr, self._parser.get_new_variable, language_has_vectors = False)
+        self._additional_declare.extend(new_vars)
+        body_stmts = []
+        for b in body_exprs :
             code = self._print(b)
             code = self._additional_code + code
             self._additional_code = ''
-            body.append(code)
-        return '\n'.join(self._print(b) for b in body)
+            body_stmts.append(code)
+        return '\n'.join(self._print(b) for b in body_stmts)
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
@@ -1403,10 +1444,6 @@ class CCodePrinter(CodePrinter):
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
 
-    def _print_MatrixElement(self, expr):
-        return "{0}[{1}]".format(expr.parent, expr.j +
-                expr.i*expr.parent.shape[1])
-
     def _print_Variable(self, expr):
         if expr in self._dereference or self.stored_in_c_pointer(expr):
             return '(*{0})'.format(expr.name)
@@ -1423,6 +1460,9 @@ class CCodePrinter(CodePrinter):
         comments = self._print(expr.text)
 
         return '/*' + comments + '*/'
+
+    def _print_PyccelSymbol(self, expr):
+        return expr
 
     def _print_CommentBlock(self, expr):
         txts = expr.comments
@@ -1540,4 +1580,4 @@ def ccode(expr, parser, assign_to=None, **settings):
         For example, if ``dereference=[a]``, the resulting code would print
         ``(*a)`` instead of ``a``.
     """
-    return CCodePrinter(parser, settings).doprint(expr, assign_to)
+    return CCodePrinter(parser, **settings).doprint(expr, assign_to)

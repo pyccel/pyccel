@@ -173,7 +173,7 @@ class Codegen(object):
         errors = Errors()
         errors.set_parser_stage('codegen')
         # set the code printer
-        self._printer = code_printer(self.parser, settings)
+        self._printer = code_printer(self.parser, **settings)
 
     def get_printer_imports(self):
         """return the imports of the current codeprinter"""
