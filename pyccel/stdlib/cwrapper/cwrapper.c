@@ -107,7 +107,7 @@ bool	PyBool_to_Bool(PyObject *o)
 	return	b;
 }
 
-bool	PyFloat_to_Float(PyObject *o)
+float	PyFloat_to_Float(PyObject *o)
 {
 	float	f;
 	double	out;
@@ -119,7 +119,7 @@ bool	PyFloat_to_Float(PyObject *o)
 	return	f;
 }
 
-bool	PyDouble_to_Double(PyObject *o)
+double	PyDouble_to_Double(PyObject *o)
 {
 	double	d;
 
@@ -144,7 +144,7 @@ bool	PyDouble_to_Double(PyObject *o)
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html
  */
-
+/*
 
 t_ndarray		PyArray_to_ndarray(PyArrayObject *o)
 {
@@ -156,13 +156,12 @@ t_ndarray		PyArray_to_ndarray(PyArrayObject *o)
 	array.type        = PyArray_TYPE(o);
 	array.length      = PyArray_SIZE(o);
 	array.buffer_size = PyArray_NBYTES(o);
-	array.shape       = numpy_to_ndarray_shape(PyArray_SHAPE(o), c.nd);
-	array.strides     = numpy_to_ndarray_strides(PyArray_STRIDES(o), c.type_size, c.nd);
+	array.shape       = numpy_to_ndarray_shape(PyArray_SHAPE(o), array.nd);
+	array.strides     = numpy_to_ndarray_strides(PyArray_STRIDES(o), array.type_size, array.nd);
 	array.is_view     = 1;
 
 	return array;
 }
-
 
 /*
  * Functions : Cast functions
@@ -235,7 +234,7 @@ PyObject	*Double_to_PyDouble(double d)
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html
  */
-
+/*
 PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
 {
 	PyArrayObject	*array;
@@ -272,3 +271,4 @@ PyArrayObject	*Check_Array(PyObject *a, int rank, int flags)
 	}
 	return array;
 }
+*/
