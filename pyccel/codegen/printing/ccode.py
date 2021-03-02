@@ -1349,9 +1349,14 @@ class CCodePrinter(CodePrinter):
             step  = self._print(expr.iterable.step )
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
-        return ('for ({target} = {start}; {target} < {stop}; {target} += '
+        if (step[0] == "-"):
+            return ('for ({target} = {start}; {target} > {stop}; {target} += '
                 '{step})\n{{\n{body}\n}}').format(target=target, start=start,
                 stop=stop, step=step, body=body)
+        else:
+            return ('for ({target} = {start}; {target} < {stop}; {target} += '
+                    '{step})\n{{\n{body}\n}}').format(target=target, start=start,
+                                                      stop=stop, step=step, body=body)
 
     def _print_CodeBlock(self, expr):
         body_exprs, new_vars = expand_to_loops(expr, self._parser.get_new_variable, language_has_vectors = False)
