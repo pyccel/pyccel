@@ -134,6 +134,8 @@ class PythonCodePrinter(CodePrinter):
                 for func in f:
                     if isinstance(func, FunctionCall):
                         args = func.args
+                    elif func == n:
+                        args = []
                     else:
                         args = [LiteralString(a) for a in func]
                     if n == 'types' and len(args)==0:
@@ -218,6 +220,9 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonImag(self, expr):
         return '({}).imag'.format(self._print(expr.internal_var))
+
+    def _print_PythonPrint(self, expr):
+        return 'print({})'.format(', '.join(self._print(a) for a in expr.expr))
 
     def _print_PyccelArraySize(self, expr):
         arg = self._print(expr.arg)
