@@ -875,6 +875,12 @@ class NumpyFloor(NumpyUfuncUnary):
 
 class NumpyMod(NumpyUfuncBinary):
 
+    def __init__(self, x1, x2):
+        super().__init__(x1, x2)
+        x1 = PythonInt(x1) if isinstance(x1.dtype, NativeBool) else x1
+        x2 = PythonInt(x2) if isinstance(x2.dtype, NativeBool) else x2
+        self._args = (x1, x2)
+
     def _set_shape_rank(self, x1, x2):
         args   = (x1, x2)
         shapes = [a.shape for a in args]
