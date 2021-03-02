@@ -47,64 +47,6 @@ __all__ = (
 # All the numpy function list are part of  numpy/c api
 # https://numpy.org/doc/stable/reference/c-api/array.html
 
-numpy_get_ndims   = FunctionDef(name = 'PyArray_NDIM',
-                           body      = [],
-                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
-                           results   = [Variable(dtype=NativeInteger(), name = 'i')])
-
-numpy_get_data    = FunctionDef(name = 'PyArray_DATA',
-                           body      = [],
-                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
-                           results   = [Variable(dtype=NativeGeneric(), name = 'v', rank=1)])
-
-numpy_get_dim     = FunctionDef(name = 'PyArray_DIM',
-                           body      = [],
-                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True),
-                                        Variable(dtype=NativeInteger(), name = 'idx')],
-                           results   = [Variable(dtype=NativeInteger(), name = 'd')])
-
-numpy_get_stride  = FunctionDef(name = 'PyArray_STRIDE',
-                           body      = [],
-                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True),
-                                        Variable(dtype=NativeInteger(), name = 'idx')],
-                           results   = [Variable(dtype=NativeInteger(), name = 's')])
-
-numpy_get_strides = FunctionDef(name = 'PyArray_STRIDES',
-                           body      = [],
-                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
-                           results   = [Variable(dtype=NativeInteger(), name = 's', is_pointer=True)])
-
-numpy_check_flag  = FunctionDef(name  = 'PyArray_CHKFLAGS',
-                            body      = [],
-                            arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True),
-                                            Variable(dtype=NativeInteger(), name = 'flag')],
-                            results   = [Variable(dtype=NativeBool(), name = 'i')])
-
-numpy_get_base    = FunctionDef(name  = 'PyArray_BASE',
-                            body      = [],
-                            arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
-                            results   = [Variable(dtype=PyccelPyObject(), name = 'i')])
-
-numpy_get_shape   = FunctionDef(name  = 'PyArray_SHAPE',
-                            body      = [],
-                            arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
-                            results   = [Variable(dtype=NativeInteger(), name = 'i', is_pointer=True)])
-
-numpy_itemsize    = FunctionDef(name  = 'PyArray_ITEMSIZE',
-                            body      = [],
-                            arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
-                            results   = [Variable(dtype=NativeInteger(), name = 'i')])
-
-numpy_get_size    = FunctionDef(name  = 'PyArray_SIZE',
-                            body      = [],
-                            arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
-                            results   = [Variable(dtype=NativeInteger(), name = 'i')])
-
-numpy_nbytes      = FunctionDef(name  = 'PyArray_NBYTES',
-                            body      = [],
-                            arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
-                            results   = [Variable(dtype=NativeInteger(), name = 'i')])
-
 numpy_get_type    = FunctionDef(name  = 'PyArray_TYPE',
                             body      = [],
                             arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
