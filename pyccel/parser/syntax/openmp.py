@@ -85,10 +85,8 @@ def check_get_clauses(name, valid_clauses, clauses, combined = None):
     """
     txt = ''
     for clause in clauses:
-        if isinstance(clause, valid_clauses):
-            if isinstance(clause, OmpCopyin) and isinstance(combined, OmpTargetParallel):
-                msg = "Wrong clause " + type(clause).__name__
-                raise TypeError(msg)
+        if isinstance(clause, valid_clauses) and \
+           not (isinstance(clause, OmpCopyin) and isinstance(combined, OmpTargetParallel)):
             txt = '{0} {1}'.format(txt, clause.expr)
         else:
             msg = "Wrong clause " + type(clause).__name__
@@ -244,7 +242,7 @@ class OmpFinal(OmpClauses):
     """Class representing the final clause"""
     def __init__(self, **kwargs):
         final = kwargs.pop('final')
-        
+
         self._expr = 'final({})'.format(final)
 
         super().__init__(**kwargs)
