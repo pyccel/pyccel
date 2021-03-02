@@ -1095,6 +1095,7 @@ class SemanticParser(BasicParser):
             for i in methods:
                 if str(i.name) == rhs_name:
                     if 'numpy_wrapper' in i.decorators.keys():
+                        self.insert_import('numpy', rhs_name)
                         func = i.decorators['numpy_wrapper']
                         return func(visited_lhs, *args)
                     else:
