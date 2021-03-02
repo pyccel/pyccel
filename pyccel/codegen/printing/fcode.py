@@ -1787,8 +1787,10 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonRange(self, expr):
         start = self._print(expr.start)
-        stop  = self._print(expr.stop) + '-' + self._print(LiteralInteger(1))
         step  = self._print(expr.step)
+        stop = self._print(expr.stop) + '-' + self._print(LiteralInteger(1))
+        if (step[0] == "-"):
+            stop = self._print(expr.stop) + '+' + self._print(LiteralInteger(1))
         return '{0}, {1}, {2}'.format(start, stop, step)
 
     def _print_FunctionalFor(self, expr):
