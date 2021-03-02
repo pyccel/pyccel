@@ -201,6 +201,12 @@ class PythonCodePrinter(CodePrinter):
     def _print_PythonFloat(self, expr):
         return 'float({})'.format(self._print(expr.arg))
 
+    def _print_PythonComplex(self, expr):
+        if expr.is_cast:
+            return 'complex({})'.format(self._print(self.internal_var))
+        else:
+            return 'complex({}, {})'.format(self._print(expr.real), self._print(expr.imag))
+
     def _print_PythonRange(self, expr):
         return 'range({start}, {stop}, {step})'.format(
                 start = self._print(expr.start),
