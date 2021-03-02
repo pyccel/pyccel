@@ -105,8 +105,18 @@ class PythonCodePrinter(CodePrinter):
 
         imports = '\n'.join(self._print(i) for i in expr.imports)
         imports = self._indent_codestring(imports)
+
+        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
+        doc_string = self._indent_codestring(doc_string)
+
         code = ('def {name}({args}):\n'
-                '\n{imports}\n{body}\n').format(name=name, args=args,imports=imports, body=body)
+                '{doc_string}\n'
+                '\n{imports}\n{body}\n').format(
+                        name=name,
+                        args=args,
+                        doc_string=doc_string,
+                        imports=imports,
+                        body=body)
         decorators = expr.decorators
         if decorators:
             if decorators['template']:
@@ -206,6 +216,10 @@ class PythonCodePrinter(CodePrinter):
         txt = self._print(expr.text)
         return '# {0} '.format(txt)
 
+    def _print_CommentBlock(self, expr):
+        txt = '\n'.join(self._print(c) for c in expr.comments)
+        return '"""{0}"""'.format(txt)
+
     def _print_EmptyNode(self, expr):
         return ''
 
@@ -293,12 +307,25 @@ class PythonCodePrinter(CodePrinter):
                 dtype = self._print(expr.dtype),
                 order = expr.order)
 
+    def _print_NumpyEmpty(self, expr):
+        return "empty({shape}, dtype={dtype}, order='{order}')".format(
+                shape = self._print(expr.shape),
+                dtype = self._print(expr.dtype),
+                order = expr.order)
+
     def _print_NumpyFull(self, expr):
         return "full({shape}, {fill_value}, dtype={dtype}, order='{order}')".format(
                 shape = self._print(expr.shape),
                 fill_value = self._print(expr.fill_value),
                 dtype = self._print(expr.dtype),
                 order = expr.order)
+
+    def _print_NumpyArange(self, expr):
+        return "arange({start}, {stop}, {step}, dtype={dtype})".format(
+                start = self._print(expr.start),
+                stop  = self._print(expr.stop),
+                step  = self._print(expr.step),
+                dtype = self._print(expr.dtype))
 
     def _print_NumpySum(self, expr):
         return "sum({})".format(self._print(expr.arg))
@@ -312,7 +339,13 @@ class PythonCodePrinter(CodePrinter):
         return 'min({})'.format(args)
 
     def _print_Slice(self, expr):
-        return str(expr)
+        start = self._print(expr.start)
+        stop  = self._print(expr.stop)
+        step  = self._print(expr.step)
+        return '{start}:{stop}:{step}'.format(
+                start = start,
+                stop  = stop,
+                step  = step)
 
     def _print_Nil(self, expr):
         return 'None'
@@ -423,7 +456,10 @@ class PythonCodePrinter(CodePrinter):
         return '({})'.format(self._print(expr.args[0]))
 
     def _print_PyccelUnary(self, expr):
-        return '({})'.format(self._print(expr.args[0]))
+        return '+{}'.format(self._print(expr.args[0]))
+
+    def _print_PyccelUnarySub(self, expr):
+        return '-{}'.format(self._print(expr.args[0]))
 
     def _print_PyccelAnd(self, expr):
         return ' and '.join(self._print(a) for a in expr.args)
