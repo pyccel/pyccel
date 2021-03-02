@@ -189,6 +189,15 @@ def test_pass2_if(language):
     test.compare_epyccel(0.2)
     test.compare_epyccel(0.0)
 
+@pytest.mark.parametrize( 'lang', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.xfail(reason="Confusion around ValuedVariable means it cannot be used in python"),
+            pytest.mark.python]
+        )
+    )
+)
 def test_use_optional(language):
     test = epyccel_test(base.use_optional, lang=language)
     test.compare_epyccel()
