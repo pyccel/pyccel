@@ -202,7 +202,7 @@ static bool _check_pyarray_dtype(PyArrayObject *a, int dtype)
 {
 	int curent_dtype;
 
-	if (dtype == TYPE_CHECK_NOT_NEEDED)
+	if (dtype == NO_TYPE_CHECK)
 		return true;
 
 	current_dtype = PyArray_TYPE(a);
@@ -210,8 +210,8 @@ static bool _check_pyarray_dtype(PyArrayObject *a, int dtype)
 	{
 		PyErr_Format(PyExc_TypeError,
 			"argument dtype must be %s, not %s",
-			xxxxxxx[dtype],
-			xxxxxxx[curent_dtype]);
+			dataTypes[dtype],
+			dataTypes[curent_dtype]);
 		return false;
 	}
 
@@ -270,7 +270,7 @@ static bool _check_pyarray_order(PyArrayObject *a, int flag)
 {
 	char	order;
 
-	if (flag == CHECK_ORDER_NOT_NEEDED)
+	if (flag == NO_ORDER_CHECK)
 		return true;
 
 	if (rank > 1)
