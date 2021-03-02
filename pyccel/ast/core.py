@@ -248,7 +248,7 @@ def create_variable(forbidden_names, prefix = None, counter = 1):
 
     name, counter = create_incremented_string(forbidden_names, prefix, counter = counter)
 
-    return PyccelSymbol(name), counter
+    return PyccelSymbol(name, is_temp=True), counter
 
 
 class AsName(Basic):
@@ -1730,8 +1730,8 @@ class Return(Basic):
 
     def __init__(self, expr, stmt=None):
 
-        if stmt and not isinstance(stmt, (Assign, CodeBlock)):
-            raise TypeError('stmt should only be of type Assign')
+        if stmt and not isinstance(stmt, CodeBlock):
+            raise TypeError('stmt should only be of type CodeBlock')
 
         self._expr = expr
         self._stmt = stmt
