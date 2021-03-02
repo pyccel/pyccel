@@ -1349,7 +1349,7 @@ class CCodePrinter(CodePrinter):
             step  = self._print(expr.iterable.step )
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
-        if (step[0] == "-"):
+        if isinstance(expr.iterable.step, PyccelUnarySub):
             return ('for ({target} = {start}; {target} > {stop}; {target} += '
                 '{step})\n{{\n{body}\n}}').format(target=target, start=start,
                 stop=stop, step=step, body=body)
