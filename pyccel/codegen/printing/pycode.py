@@ -63,6 +63,18 @@ class PythonCodePrinter(CodePrinter):
         fs = ', '.join(self._print(f) for f in expr)
         return '({0})'.format(fs)
 
+    def _print_NativeBool(self, expr):
+        return 'bool'
+
+    def _print_NativeInteger(self, expr):
+        return 'int'
+
+    def _print_NativeReal(self, expr):
+        return 'float'
+
+    def _print_NativeComplex(self, expr):
+        return 'complex'
+
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
@@ -281,6 +293,13 @@ class PythonCodePrinter(CodePrinter):
                 dtype = self._print(expr.dtype),
                 order = expr.order)
 
+    def _print_NumpyFull(self, expr):
+        return "full({shape}, {fill_value}, dtype={dtype}, order='{order}')".format(
+                shape = self._print(expr.shape),
+                fill_value = self._print(expr.fill_value),
+                dtype = self._print(expr.dtype),
+                order = expr.order)
+
     def _print_NumpySum(self, expr):
         return "sum({})".format(self._print(expr.arg))
 
@@ -317,7 +336,7 @@ class PythonCodePrinter(CodePrinter):
             if i == 0:
                 lines.append("if %s:" % self._print(c))
 
-            elif i == len(expr.args) - 1 and isinstance(c, LiteralTrue):
+            elif i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
                 lines.append("else:")
 
             else:
