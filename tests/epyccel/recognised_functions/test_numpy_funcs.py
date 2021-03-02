@@ -4058,6 +4058,107 @@ def test_numpy_imag_array_like_2d(language):
     assert (f_complex64(cmplx64) == get_imag(cmplx64))
     assert (f_complex128(cmplx128) == get_imag(cmplx128))
 
+def test_numpy_bool_scalar(language):
+
+    @types('bool')
+    @types('int')
+    @types('int8')
+    @types('int16')
+    @types('int32')
+    @types('int64')
+    @types('float')
+    @types('float32')
+    @types('float64')
+    def get_bool(a):
+        from numpy import bool
+        b = bool(a)
+        return b
+
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
+    integer = randint(min_int, max_int, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
+
+    fl = uniform(min_int / 2, max_int / 2)
+    fl32 = uniform(min_int, max_int)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(min_int / 2, max_int / 2)
+
+
+    f_bl = epyccel(get_bool, language=language)
+
+    f_bl_true_output = f_bl(True)
+    test_bool_true_output = get_bool(True)
+
+    f_bl_false_output = f_bl(False)
+    test_bool_false_output = get_bool(False)
+
+    assert f_bl_true_output == test_bool_true_output
+    assert f_bl_false_output == test_bool_false_output
+
+    assert (type(f_bl_true_output) == type(test_bool_false_output))
+
+    f_integer = epyccel(get_bool, language=language)
+    f_integer8 = epyccel(get_bool, language=language)
+    f_integer16 = epyccel(get_bool, language=language)
+    f_integer32 = epyccel(get_bool, language=language)
+    f_integer64 = epyccel(get_bool, language=language)
+
+    f_integer_output = f_integer(integer)
+    test_int_output  = get_bool(integer)
+
+    assert f_integer_output == test_int_output
+    assert type(f_integer_output) == type(test_int_output)
+
+    f_integer8_output = f_integer8(integer8)
+    test_int8_output = get_bool(integer8)
+
+    assert f_integer8_output == test_int8_output
+    assert type(f_integer8_output) == type(test_int8_output)
+
+    f_integer16_output = f_integer16(integer16)
+    test_int16_output = get_bool(integer16)
+
+    assert f_integer16_output == test_int16_output
+    assert type(f_integer16_output) == type(test_int16_output)
+
+    f_integer32_output = f_integer32(integer32)
+    test_int32_output = get_bool(integer32)
+
+    assert f_integer32_output == test_int32_output
+    assert type(f_integer32_output) == type(test_int32_output)
+
+    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    if sys.platform != 'win32':
+        f_integer64_output = f_integer64(integer64)
+        test_int64_output = get_bool(integer64)
+
+        assert f_integer64_output == test_int64_output
+        assert type(f_integer64_output) == type(test_int64_output)
+
+    f_fl = epyccel(get_bool, language=language)
+    f_fl32 = epyccel(get_bool, language=language)
+    f_fl64 = epyccel(get_bool, language=language)
+
+    f_fl_output = f_fl(fl)
+    test_float_output = get_bool(fl)
+
+    assert f_fl_output == test_float_output
+    assert type(f_fl_output) == type(test_float_output)
+
+    f_fl32_output = f_fl32(fl32)
+    test_float32_output = get_bool(fl32)
+
+    assert f_fl32_output == test_float32_output
+    assert type(f_fl32_output) == type(test_float32_output)
+
+    f_fl64_output = f_fl64(fl64)
+    test_float64_output = get_bool(fl64)
+
+    assert f_fl64_output == test_float64_output
+    assert type(f_fl64_output) == type(test_float64_output)
+
 def test_numpy_int_scalar(language):
 
     @types('bool')
