@@ -2728,13 +2728,13 @@ class Import(Basic):
             source = Import._format(source)
 
         self._source = source
-        self._target = []
+        self._target = set()
         self._ignore_at_print = ignore_at_print
         if isinstance(target, (str, DottedName, AsName)):
-            self._target = [Import._format(target)]
+            self._target = set([Import._format(target)])
         elif iterable(target):
             for i in target:
-                self._target.append(Import._format(i))
+                self._target.add(Import._format(i))
         super().__init__()
 
     @staticmethod
@@ -2779,7 +2779,7 @@ class Import(Basic):
                     target=target)
 
     def define_target(self, new_target):
-        self._target.append(new_target)
+        self._target.add(new_target)
 
     def find_module_target(self, new_target):
         for t in self._target:
