@@ -203,7 +203,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonComplex(self, expr):
         if expr.is_cast:
-            return 'complex({})'.format(self._print(self.internal_var))
+            return 'complex({})'.format(self._print(expr.internal_var))
         else:
             return 'complex({}, {})'.format(self._print(expr.real), self._print(expr.imag))
 
@@ -212,6 +212,12 @@ class PythonCodePrinter(CodePrinter):
                 start = self._print(expr.start),
                 stop  = self._print(expr.stop ),
                 step  = self._print(expr.step ))
+
+    def _print_PythonReal(self, expr):
+        return '({}).real'.format(self._print(expr.internal_var))
+
+    def _print_PythonImag(self, expr):
+        return '({}).imag'.format(self._print(expr.internal_var))
 
     def _print_PyccelArraySize(self, expr):
         arg = self._print(expr.arg)
