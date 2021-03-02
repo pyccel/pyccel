@@ -15,8 +15,9 @@ from sympy.printing.pycode import _known_constants_math
 from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.utilities  import build_types_decorator
-from pyccel.ast.core       import CodeBlock, Import, DottedName
+from pyccel.ast.core       import CodeBlock, Import, Assign
 from pyccel.ast.literals   import LiteralTrue
+from pyccel.ast.variable   import DottedName
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -58,11 +59,12 @@ class PythonCodePrinter(CodePrinter):
         """return the additional imports collected in printing stage"""
         return self._additional_imports
 
+    def _print_tuple(self, expr):
+        fs = ', '.join(self._print(f) for f in expr)
+        return '({0})'.format(fs)
+
     def _print_Variable(self, expr):
         return self._print(expr.name)
-
-    def _print_VariableAddress(self, expr):
-        return self._print(expr.variable)
 
     def _print_Idx(self, expr):
         return self._print(expr.name)
@@ -126,8 +128,8 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Return(self, expr):
 
-        rhs_list = [i.rhs for i in expr.stmt.body] if expr.stmt else []
-        lhs_list = [i.lhs for i in expr.stmt.body] if expr.stmt else []
+        rhs_list = [i.rhs for i in expr.stmt.body if isinstance(i, Assign)] if expr.stmt else []
+        lhs_list = [i.lhs for i in expr.stmt.body if isinstance(i, Assign)] if expr.stmt else []
         expr_return_vars = [a for a in expr.expr if a not in lhs_list]
 
         return 'return ' + ','.join(self._print(i) for i in expr_return_vars + rhs_list)
@@ -273,6 +275,9 @@ class PythonCodePrinter(CodePrinter):
                 shape = self._print(expr.shape),
                 dtype = self._print(expr.dtype),
                 order = expr.order)
+
+    def _print_NumpySum(self, expr):
+        return "sum({})".format(self._print(expr.arg))
 
     def _print_Max(self, expr):
         args = ', '.join(self._print(e) for e in expr.args)
