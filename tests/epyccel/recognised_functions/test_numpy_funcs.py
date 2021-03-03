@@ -3492,6 +3492,16 @@ def test_zeros_like_combined_args(language):
     assert(isclose(     f3_val()  ,      create_zeros_like_3_val()        , rtol=RTOL, atol=ATOL))
     assert matching_types(f3_val(), create_zeros_like_3_val())
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="real handles types in __new__ so it 
+                cannot be used in a translated interface in python"),
+            pytest.mark.python]
+        )
+    )
+)
 def test_numpy_real_scalar(language):
 
     @types('bool')
@@ -3620,6 +3630,11 @@ def test_numpy_real_scalar(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="real handles types in __new__ so it 
+                cannot be used in a translated interface in python"),
+            pytest.mark.python]
         )
     )
 )
@@ -3702,6 +3717,11 @@ def test_numpy_real_array_like_1d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="real handles types in __new__ so it 
+                cannot be used in a translated interface in python"),
+            pytest.mark.python]
         )
     )
 )
@@ -3780,6 +3800,16 @@ def test_numpy_real_array_like_2d(language):
     assert (f_complex128(cmplx128) == get_real(cmplx128))
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="real handles types in __new__ so it 
+                cannot be used in a translated interface in python"),
+            pytest.mark.python]
+        )
+    )
+)
 def test_numpy_imag_scalar(language):
 
     @types('bool')
@@ -3908,6 +3938,11 @@ def test_numpy_imag_scalar(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="real handles types in __new__ so it 
+                cannot be used in a translated interface in python"),
+            pytest.mark.python]
         )
     )
 )
@@ -3990,6 +4025,11 @@ def test_numpy_imag_array_like_1d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="real handles types in __new__ so it 
+                cannot be used in a translated interface in python"),
+            pytest.mark.python]
         )
     )
 )
