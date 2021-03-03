@@ -15,7 +15,7 @@ __all__ = ('Basic', 'PyccelAstNode')
 
 dict_keys   = type({}.keys())
 dict_values = type({}.values())
-iterable_types = (list, tuple, dict_keys, dict_values)
+iterable_types = (list, tuple, dict_keys, dict_values, set)
 iterable = lambda x : isinstance(x, iterable_types)
 
 #==============================================================================
