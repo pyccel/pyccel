@@ -54,7 +54,7 @@ from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice
 
-from pyccel.ast.literals  import LiteralInteger, LiteralFloat
+from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
 from pyccel.ast.literals  import LiteralTrue
 from pyccel.ast.literals  import Nil
 
@@ -1788,7 +1788,19 @@ class FCodePrinter(CodePrinter):
     def _print_PythonRange(self, expr):
         start = self._print(expr.start)
         step  = self._print(expr.step)
-        stop = self._print(expr.stop) + '- ( (merge(1_C_INT64_T, -1_C_INT64_T, ' + self._print(expr.step) + ' > 0_C_INT64_T)) *' + self._print(LiteralInteger(1)) + ')'
+
+        test_step = expr.step
+        if isinstance(test_step, PyccelUnarySub):
+            test_step = expr.step.args[0]
+
+        # testing if the step is a value or an expression
+        if isinstance(test_step, Literal):
+            stop = self._print(expr.stop) + '-' + self._print(LiteralInteger(1))
+            if isinstance(expr.step, PyccelUnarySub):
+                stop = self._print(expr.stop) + '+' + self._print(LiteralInteger(1))
+        else:
+            stop = self._print(expr.stop) + '- ( (merge('+self._print(LiteralInteger(1))+', '+self._print(LiteralInteger(-1))+', ' + self._print(expr.step) + ' > '+ self._print(LiteralInteger(0)) +')) *' + self._print(LiteralInteger(1)) + ')'
+
         return '{0}, {1}, {2}'.format(start, stop, step)
 
     def _print_FunctionalFor(self, expr):

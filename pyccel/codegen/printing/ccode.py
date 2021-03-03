@@ -528,6 +528,7 @@ class CCodePrinter(CodePrinter):
         cond = self._print(expr.cond)
         value_true = self._print(expr.value_true)
         value_false = self._print(expr.value_false)
+        print('here is fine')
         return '{cond} ? {true} : {false}'.format(cond = cond, true =value_true, false = value_false)
 
     def _print_LiteralTrue(self, expr):
@@ -1349,9 +1350,26 @@ class CCodePrinter(CodePrinter):
             step  = self._print(expr.iterable.step )
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
-        return ('for ({target} = {start}; (({step} > 0 ? 1 : -1)*({target})) < (({step} > 0 ? 1 : -1)*({stop})); {target} += '
+
+        test_step = expr.iterable.step
+        if isinstance(test_step, PyccelUnarySub):
+            test_step = expr.iterable.step.args[0]
+
+        # testing if the step is a value or an expression
+        if isinstance(test_step, Literal):
+            if isinstance(expr.iterable.step, PyccelUnarySub):
+                return ('for ({target} = {start}; {target} > {stop}; {target} += '
+                        '{step})\n{{\n{body}\n}}').format(target=target, start=start,
+                                                          stop=stop, step=step, body=body)
+            else:
+                return ('for ({target} = {start}; {target} < {stop}; {target} += '
+                        '{step})\n{{\n{body}\n}}').format(target=target, start=start,
+                                                          stop=stop, step=step, body=body)
+        else:
+            return (
+                'for ({target} = {start}; (({step} > 0 ? 1 : -1)*({target})) < (({step} > 0 ? 1 : -1)*({stop})); {target} += '
                 '{step})\n{{\n{body}\n}}').format(target=target, start=start,
-                stop=stop, step=step, body=body)
+                                                  stop=stop, step=step, body=body)
 
     def _print_CodeBlock(self, expr):
         body_exprs, new_vars = expand_to_loops(expr, self._parser.get_new_variable, language_has_vectors = False)
