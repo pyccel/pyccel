@@ -528,7 +528,6 @@ class CCodePrinter(CodePrinter):
         cond = self._print(expr.cond)
         value_true = self._print(expr.value_true)
         value_false = self._print(expr.value_false)
-        print('here is fine')
         return '{cond} ? {true} : {false}'.format(cond = cond, true =value_true, false = value_false)
 
     def _print_LiteralTrue(self, expr):
@@ -1357,13 +1356,9 @@ class CCodePrinter(CodePrinter):
 
         # testing if the step is a value or an expression
         if isinstance(test_step, Literal):
-            if isinstance(expr.iterable.step, PyccelUnarySub):
-                return ('for ({target} = {start}; {target} > {stop}; {target} += '
-                        '{step})\n{{\n{body}\n}}').format(target=target, start=start,
-                                                          stop=stop, step=step, body=body)
-            else:
-                return ('for ({target} = {start}; {target} < {stop}; {target} += '
-                        '{step})\n{{\n{body}\n}}').format(target=target, start=start,
+            op = '>' if isinstance(expr.iterable.step, PyccelUnarySub) else '<'
+            return ('for ({target} = {start}; {target} {op} {stop}; {target} += '
+                        '{step})\n{{\n{body}\n}}').format(target=target, start=start, op=op,
                                                           stop=stop, step=step, body=body)
         else:
             return (

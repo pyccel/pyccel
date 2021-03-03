@@ -1795,12 +1795,15 @@ class FCodePrinter(CodePrinter):
 
         # testing if the step is a value or an expression
         if isinstance(test_step, Literal):
-            stop = self._print(expr.stop) + '-' + self._print(LiteralInteger(1))
+            stop = PyccelMinus(expr.stop, LiteralInteger(1))
             if isinstance(expr.step, PyccelUnarySub):
-                stop = self._print(expr.stop) + '+' + self._print(LiteralInteger(1))
+                stop = PyccelAdd(expr.stop, LiteralInteger(1))
         else:
-            stop = self._print(expr.stop) + '- ( (merge('+self._print(LiteralInteger(1))+', '+self._print(LiteralInteger(-1))+', ' + self._print(expr.step) + ' > '+ self._print(LiteralInteger(0)) +')) *' + self._print(LiteralInteger(1)) + ')'
+            stop = IfTernaryOperator(PyccelGt(expr.step, LiteralInteger(0)),
+                                     PyccelMinus(expr.stop, LiteralInteger(1)),
+                                     PyccelAdd(expr.stop, LiteralInteger(1)))
 
+        stop = self._print(stop)
         return '{0}, {1}, {2}'.format(start, stop, step)
 
     def _print_FunctionalFor(self, expr):
