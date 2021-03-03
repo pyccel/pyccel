@@ -16,7 +16,7 @@ from pyccel.ast.datatypes   import NativeBool, NativeComplex, NativeInteger
 from pyccel.ast.core        import create_incremented_string, SeparatorComment
 
 from pyccel.ast.core        import FunctionCall, FunctionDef, FunctionAddress
-from pyccel.ast.core        import Assign, AliasAssign, Nil
+from pyccel.ast.core        import Assign, AliasAssign, Nil, datatype
 from pyccel.ast.core        import If, IfSection, Import, Return
 
 from pyccel.ast.cwrapper    import (PyArgKeywords, PyArg_ParseTupleNode,
@@ -183,6 +183,27 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             return [argument]
 
+    def get_static_declare_type(self, expr):
+        """
+        """
+        dtype = self._print(expr.dtype)
+        prec  = expr.precision
+
+        dtype = self.find_in_dtype_registry(dtype, prec)
+
+        if self.stored_in_c_pointer(expr) or (self._target_language == 'fortran' and expr.rank > 0):
+            return '{0} *'.format(dtype)
+        else:
+            return '{0} '.format(dtype)
+
+    def stored_in_c_pointer(self, expr):
+        """
+        """
+        if not isinstance(expr, Variable):
+            return False
+
+        return expr.is_pointer or expr.is_optional
+
     @staticmethod
     def get_flag_value(flag, variable):
         """
@@ -194,32 +215,7 @@ class CWrapperCodePrinter(CCodePrinter):
             'datatype not implemented as arguments : {}'.format(variable.dtype))
         return (flag << 4) + flag
 
-    def stored_in_c_pointer(self, a):
-        """
 
-        """
-        if not isinstance(a, Variable):
-            return False
-
-        return a.is_pointer or a.is_optional or (self._target_language == 'fortran' and a.rank > 0)
-
-    def get_declare_type(self, expr):
-        dtype = self._print(expr.dtype)
-        prec  = expr.precision
-
-        if self._target_language == 'c'  or (self._target_language == 'fortran' and not self.tmp_fix) :
-            f =  CCodePrinter.get_declare_type(self, expr)
-            print('2--', f)
-            return f
-
-        else :
-            dtype = self.find_in_dtype_registry(dtype, prec)
-            print('3--', dtype)
-
-        if self.stored_in_c_pointer(expr):
-            return '{0} *'.format(dtype)
-        else:
-            return '{0} '.format(dtype)
     # --------------------------------------------------------------------
     #                  Custom body generators [helpers]
     # --------------------------------------------------------------------
@@ -446,8 +442,52 @@ class CWrapperCodePrinter(CCodePrinter):
     #                 _print_ClassName functions
     #--------------------------------------------------------------------
 
+    def static_function_signature(self, expr):
+        """Extract from function definition all the information
+        (name, input, output) needed to create the signature
+
+        Parameters
+        ----------
+        expr            : FunctionDef
+            the function defintion
+
+        Return
+        ------
+        String
+            Signature of the function
+        """
+        if self._target_language == 'c':
+            return self.function_signature(expr)
+
+        args = list(expr.arguments)
+        if len(expr.results) == 1:
+            ret_type = self.get_declare_type(expr.results[0])
+        elif len(expr.results) > 1:
+            ret_type = self._print(datatype('int')) + ' '
+            args += [a.clone(name = a.name, is_pointer =True) for a in expr.results]
+        else:
+            ret_type = self._print(datatype('void')) + ' '
+        name = expr.name
+        if not args:
+            arg_code = 'void'
+        else:
+            arg_code = ', '.join('{}'.format(self.function_signature(i, False))
+                        if isinstance(i, FunctionAddress)
+                        else '{0}{1}'.format(self.get_static_declare_type(i), i.name)
+                        for i in args)
+
+        if isinstance(expr, FunctionAddress):
+            return '{}(*{})({})'.format(ret_type, name, arg_code)
+        else:
+            return '{0}{1}({2})'.format(ret_type, name, arg_code)
+
     def _print_PyccelArrayData(self, expr):
-        return '{}.raw_data'.format(expr.arg)
+        dtype = self._print(expr.arg.dtype)
+        prec  = expr.arg.precision
+
+        dtype = self.find_in_ndarray_type_registry(dtype, prec)
+
+        return '{}.{}'.format(expr.arg, dtype)
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
@@ -691,10 +731,9 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_Module(self, expr):
         self._global_names = set(f.name for f in expr.funcs)
         self._module_name  = expr.name
-        self.tmp_fix = True#TODO remove need a better solution
+
         static_funcs = [self.get_static_function(func) for func in expr.funcs]
-        function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in static_funcs)
-        self.tmp_fix = False
+        function_signatures = '\n'.join('{};'.format(self.static_function_signature(f)) for f in static_funcs)
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
         funcs = [*expr.interfaces, *(f for f in expr.funcs if f.name not in interface_funcs)]
