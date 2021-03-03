@@ -205,22 +205,29 @@ class PythonCodePrinter(CodePrinter):
         return 'bool({})'.format(self._print(expr.arg))
 
     def _print_PythonInt(self, expr):
-        precision = '' if expr.precision == default_precision['int'] \
-                       else str(expr.precision*8)
+        type_name = type(expr).__name__.lower()
+        is_numpy = type_name.startswith('numpy')
+        precision = str(expr.precision*8) if is_numpy else ''
         return 'int{}({})'.format(precision, self._print(expr.arg))
 
     def _print_PythonFloat(self, expr):
-        precision = '' if expr.precision == default_precision['float'] \
-                       else str(expr.precision*8)
+        type_name = type(expr).__name__.lower()
+        is_numpy = type_name.startswith('numpy')
+        precision = str(expr.precision*8) if is_numpy else ''
         return 'float{}({})'.format(precision, self._print(expr.arg))
 
     def _print_PythonComplex(self, expr):
-        precision = '' if expr.precision == default_precision['complex'] \
-                       else str(expr.precision*16)
+        if expr.is_cast:
+            return 'complex({})'.format(self._print(expr.internal_var))
+        else:
+            return 'complex({}, {})'.format(self._print(expr.real), self._print(expr.imag))
+
+    def _print_NumpyComplex(self, expr):
+        precision = str(expr.precision*16)
         if expr.is_cast:
             return 'complex{}({})'.format(precision, self._print(expr.internal_var))
         else:
-            return 'complex{}({}, {})'.format(precision, self._print(expr.real), self._print(expr.imag))
+            return 'complex{}({}+{}*1j)'.format(precision, self._print(expr.real), self._print(expr.imag))
 
     def _print_PythonRange(self, expr):
         return 'range({start}, {stop}, {step})'.format(
