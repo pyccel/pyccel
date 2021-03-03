@@ -4,7 +4,10 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 """
-This file contain the OpenMP types.
+OpenMP has several constructs and directives, and this file contains the OpenMP types that are supported.
+We represent some types with the OmpAnnotatedComment type.
+These types are detailed on our documentation:
+https://github.com/pyccel/pyccel/blob/master/tutorial/openmp.md
 """
 
 from .basic import Basic
@@ -133,7 +136,6 @@ class OMP_Teams_Construct(OmpAnnotatedComment):
     def name(self):
         """Name of the construct."""
         return 'teams'
-
 
 class OMP_Sections_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Sections construct. """

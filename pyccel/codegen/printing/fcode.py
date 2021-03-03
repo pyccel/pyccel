@@ -167,8 +167,6 @@ python_builtin_datatypes = {
     'complex' : PythonComplex
 }
 
-omploop_dict = {'for' : 'do'}
-
 errors = Errors()
 
 class FCodePrinter(CodePrinter):
@@ -1866,7 +1864,7 @@ class FCodePrinter(CodePrinter):
     def _print_OmpAnnotatedComment(self, expr):
         clauses = ''
         if expr.combined:
-            combined = expr.combined.replace("for", omploop_dict["for"])
+            combined = expr.combined.replace("for", "do")
             clauses = ' ' + combined
 
         omp_expr = '!$omp {}'.format(expr.name.replace("for", "do"))
