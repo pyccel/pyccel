@@ -381,9 +381,9 @@ class PythonCodePrinter(CodePrinter):
         return 'min({})'.format(args)
 
     def _print_Slice(self, expr):
-        start = self._print(expr.start)
-        stop  = self._print(expr.stop)
-        step  = self._print(expr.step)
+        start = self._print(expr.start) if expr.start else ''
+        stop  = self._print(expr.stop)  if expr.stop  else ''
+        step  = self._print(expr.step)  if expr.step  else ''
         return '{start}:{stop}:{step}'.format(
                 start = start,
                 stop  = stop,
