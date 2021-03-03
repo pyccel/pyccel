@@ -855,16 +855,16 @@ class SemanticParser(BasicParser):
     def _visit_OmpAnnotatedComment(self, expr, **settings):
         #print(dir(expr._user_nodes))
         code = expr._user_nodes
-        print(len(code))
-        print("*")
-        print(code[0])
-        print("*")
-        print(code[1])
+        #print(len(code))
+        #print("*")
+        #print(code[0])
+        #print("*")
+        #print(code[1])
         #print(type(code[0].body))
         #print("---------------- start")
         #for i in code[0].body:
         #    print(expr == i)
-        print("----------------")
+        #print("----------------")
         #print(type(code))
         #print(expr._attribute_nodes)
         return expr

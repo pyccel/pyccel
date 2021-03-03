@@ -120,6 +120,7 @@ AllOmpClauses:
   | OmpSchedule
   | OmpOrdered
   | OmpFinal
+  | OmpNowait
 ;
 
 ////////////////////////////////////////////////////
@@ -159,6 +160,7 @@ OmpAtomicClause: name=AtomicClause;
 AtomicMemoryClause: name=AtomicMClause;
 FlushList: '(' args+=ID[','] ')';
 OmpCancelType: name=CancelType;
+OmpNowait: name='nowait';
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////

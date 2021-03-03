@@ -543,6 +543,15 @@ class AtomicMemoryClause(OmpClauses):
 
         super().__init__(**kwargs)
 
+class OmpNowait(OmpClauses):
+    """Class representing the nowait clause."""
+    def __init__(self, **kwargs):
+        name = kwargs.pop('name')
+
+        self._expr = name
+
+        super().__init__(**kwargs)
+
 class OmpForSimd(OmpClauses):
     """Class representing the combined For Simd construct."""
     def __init__(self, **kwargs):
@@ -725,7 +734,8 @@ _valid_loop_clauses = (OmpPrivate,
                        OmpSchedule,
                        OmpCollapse,
                        OmpLinear,
-                       OmpOrdered)
+                       OmpOrdered,
+                       OmpNowait)
 
 _valid_parallel_clauses = (OmpNumThread,
                            OmpDefault,
@@ -796,7 +806,8 @@ omp_clauses = (OmpCollapse,
                OmpTaskloopSimd,
                OmpDistributeCombined,
                OmpTargetParallel,
-               OmpTargetTeams)
+               OmpTargetTeams,
+               OmpNowait)
 
 omp_classes = (Openmp, OpenmpStmt) + omp_directives + omp_clauses
 
