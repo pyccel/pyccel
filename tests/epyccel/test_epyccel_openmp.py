@@ -133,19 +133,19 @@ def test_modules_13(language):
 
     assert f1() >= 0
 
-#@pytest.mark.parametrize( 'language', [
-#        pytest.param("c", marks = [
-#            pytest.mark.xfail(reason="omp_get_num_devices and omp_get_default_device unrecognized in C !"),
-#            pytest.mark.c]),
-#        pytest.param("fortran", marks = pytest.mark.fortran)
-#    ]
-#)
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.xfail(sys.platform == 'darwin', reason="omp_get_num_devices and omp_get_default_device unrecognized in C !"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_modules_14_0(language):
     f1 = epyccel(openmp.test_omp_set_get_default_device, accelerator='openmp', language=language)
     f2 = epyccel(openmp.test_omp_get_num_devices, accelerator='openmp', language=language)
 
     assert f1(1) == 1
-    assert f1(0) == 0
+    assert f1(2) == 2
     assert f2() >= 0
 
 def test_modules_14_1(language):
