@@ -173,7 +173,7 @@ class FCodePrinter(CodePrinter):
     }
 
 
-    def __init__(self, parser, prefix_module = None)
+    def __init__(self, parser, prefix_module = None):
 
         if parser.filename:
             errors.set_target(parser.filename, 'file')
