@@ -118,7 +118,7 @@ class ErrorInfo:
             'location': '',
             'message' : self.message,
             'symbol'  : '',
-            'traceback': '{}\n'.format(self.traceback) if self.traceback else ''
+            'traceback': self.traceback or ''
         }
 
         if self.line:
