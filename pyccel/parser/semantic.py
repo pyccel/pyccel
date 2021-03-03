@@ -856,6 +856,8 @@ class SemanticParser(BasicParser):
         print(type(code[0].body[2]))
         #print(expr._attribute_nodes)
         return expr
+    def _visit_OmpAnnotatedComment(self, expr, **settings):
+        return expr
     def _visit_Literal(self, expr, **settings):
         return expr
     def _visit_PythonComplex(self, expr, **settings):
