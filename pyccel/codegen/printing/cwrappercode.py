@@ -29,7 +29,7 @@ from pyccel.ast.cwrapper    import get_custom_key, PyErr_SetString, PyErr_Occurr
 
 from pyccel.ast.numpy_wrapper   import NumpyType_Check, PyArray_to_C
 
-from pyccel.ast.internals       import PyccelArraySize
+from pyccel.ast.internals       import PyccelArraySize, PyccelArrayData
 from pyccel.ast.variable        import Variable, ValuedVariable, VariableAddress
 
 from pyccel.ast.builtins         import PythonBool
@@ -178,7 +178,7 @@ class CWrapperCodePrinter(CCodePrinter):
         -----------
         """
         if self._target_language == 'fortran' and argument.rank > 0:
-            return [PyccelArraySize(argument, i) for i in range(argument.rank)] + [argument]
+            return [PyccelArraySize(argument, i) for i in range(argument.rank)] + [PyccelArrayData(argument)]
         else:
             return [argument]
 
@@ -427,6 +427,9 @@ class CWrapperCodePrinter(CCodePrinter):
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
     #--------------------------------------------------------------------
+
+    def _print_PyccelArrayData(self, expr):
+        return '{}.raw_data'.format(expr.arg)
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
