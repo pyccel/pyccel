@@ -2,6 +2,7 @@
 # pylint: disable=wildcard-import
 import multiprocessing
 import os
+import sys
 import pytest
 import numpy as np
 import modules.openmp as openmp
@@ -159,7 +160,7 @@ def test_modules_14_1(language):
             pytest.mark.xfail(reason="omp_get_team_num() and omp_get_num_teams() return a wrong result!"),
             pytest.mark.c]),
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Compilation fails on github action"),
+            pytest.mark.xfail( sys.platform == 'darwin', reason="Compilation fails on github action"),
             pytest.mark.fortran])
     ]
 )
