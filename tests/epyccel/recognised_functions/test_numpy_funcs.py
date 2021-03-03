@@ -3496,8 +3496,8 @@ def test_zeros_like_combined_args(language):
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
-            pytest.mark.skip(reason="real handles types in __new__ so it 
-                cannot be used in a translated interface in python"),
+            pytest.mark.skip(reason=("real handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
             pytest.mark.python]
         )
     )
@@ -3632,8 +3632,8 @@ def test_numpy_real_scalar(language):
             pytest.mark.c]
         ),
         pytest.param("python", marks = [
-            pytest.mark.skip(reason="real handles types in __new__ so it 
-                cannot be used in a translated interface in python"),
+            pytest.mark.skip(reason=("real handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
             pytest.mark.python]
         )
     )
@@ -3719,8 +3719,8 @@ def test_numpy_real_array_like_1d(language):
             pytest.mark.c]
         ),
         pytest.param("python", marks = [
-            pytest.mark.skip(reason="real handles types in __new__ so it 
-                cannot be used in a translated interface in python"),
+            pytest.mark.skip(reason=("real handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
             pytest.mark.python]
         )
     )
@@ -3804,8 +3804,8 @@ def test_numpy_real_array_like_2d(language):
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = [
-            pytest.mark.skip(reason="real handles types in __new__ so it 
-                cannot be used in a translated interface in python"),
+            pytest.mark.skip(reason=("imag handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
             pytest.mark.python]
         )
     )
@@ -3940,8 +3940,8 @@ def test_numpy_imag_scalar(language):
             pytest.mark.c]
         ),
         pytest.param("python", marks = [
-            pytest.mark.skip(reason="real handles types in __new__ so it 
-                cannot be used in a translated interface in python"),
+            pytest.mark.skip(reason=("real handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
             pytest.mark.python]
         )
     )
@@ -4027,8 +4027,8 @@ def test_numpy_imag_array_like_1d(language):
             pytest.mark.c]
         ),
         pytest.param("python", marks = [
-            pytest.mark.skip(reason="real handles types in __new__ so it 
-                cannot be used in a translated interface in python"),
+            pytest.mark.skip(reason=("real handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
             pytest.mark.python]
         )
     )
