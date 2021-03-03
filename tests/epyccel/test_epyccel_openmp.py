@@ -157,20 +157,30 @@ def test_modules_14_1(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="omp_get_team_num() and omp_get_num_teams() return a wrong result!"),
+            pytest.mark.xfail(reason="omp_get_team_num() return a wrong result!"),
             pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail( sys.platform == 'darwin', reason="Compilation fails on github action"),
-            pytest.mark.fortran])
+        pytest.param("fortran", marks = pytest.mark.fortran)
     ]
 )
 def test_modules_15(language):
+    f1 = epyccel(openmp.test_omp_get_team_num, accelerator='openmp', language=language)
+
+    assert f1(0) == 0
+    assert f1(1) == 1
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="and omp_get_num_teams() return a wrong result!"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(sys.platform == 'darwin', reason="Compilation fails on github action"),
+            pytest.mark.fortran])
+    ]
+)
+def test_modules_15_1(language):
     f1 = epyccel(openmp.test_omp_get_num_teams, accelerator='openmp', language=language)
-    f2 = epyccel(openmp.test_omp_get_team_num, accelerator='openmp', language=language)
 
     assert f1() == 2
-    assert f2(0) == 0
-    assert f2(1) == 1
 
 def test_modules_16(language):
     f1 = epyccel(openmp.test_omp_get_max_task_priority, accelerator='openmp', language=language)
