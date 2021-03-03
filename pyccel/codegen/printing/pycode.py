@@ -16,6 +16,7 @@ from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.utilities  import build_types_decorator
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall
+from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.variable   import DottedName
 
@@ -204,16 +205,22 @@ class PythonCodePrinter(CodePrinter):
         return 'bool({})'.format(self._print(expr.arg))
 
     def _print_PythonInt(self, expr):
-        return 'int({})'.format(self._print(expr.arg))
+        precision = '' if expr.precision == default_precision['int'] \
+                       else str(expr.precision*8)
+        return 'int{}({})'.format(precision, self._print(expr.arg))
 
     def _print_PythonFloat(self, expr):
-        return 'float({})'.format(self._print(expr.arg))
+        precision = '' if expr.precision == default_precision['float'] \
+                       else str(expr.precision*8)
+        return 'float{}({})'.format(precision, self._print(expr.arg))
 
     def _print_PythonComplex(self, expr):
+        precision = '' if expr.precision == default_precision['complex'] \
+                       else str(expr.precision*16)
         if expr.is_cast:
-            return 'complex({})'.format(self._print(expr.internal_var))
+            return 'complex{}({})'.format(precision, self._print(expr.internal_var))
         else:
-            return 'complex({}, {})'.format(self._print(expr.real), self._print(expr.imag))
+            return 'complex{}({}, {})'.format(precision, self._print(expr.real), self._print(expr.imag))
 
     def _print_PythonRange(self, expr):
         return 'range({start}, {stop}, {step})'.format(
@@ -265,7 +272,10 @@ class PythonCodePrinter(CodePrinter):
         if not expr.target:
             return 'import {source}'.format(source=source)
         else:
-            target = ', '.join([self._print(i) for i in expr.target])
+            target = [self._print(i) for i in expr.target]
+            if source == "numpy":
+                target = [t[:-5] if t.endswith('_like') else t for t in target]
+            target = ', '.join(target)
             return 'from {source} import {target}'.format(source=source, target=target)
 
     def _print_CodeBlock(self, expr):
@@ -333,35 +343,42 @@ class PythonCodePrinter(CodePrinter):
     def _print_Deallocate(self, expr):
         return ''
 
-    def _print_NumpyZeros(self, expr):
-        return "zeros({shape}, dtype={dtype}, order='{order}')".format(
-                shape = self._print(expr.shape),
-                dtype = self._print(expr.dtype),
-                order = expr.order)
-
     def _print_NumpyArray(self, expr):
+        dtype = self._print(expr.dtype)
+        if expr.precision != default_precision[str(expr.dtype)]:
+            factor = 16 if dtype == 'complex' else 8
+            dtype += str(expr.precision*factor)
+
         return "array({arg}, dtype={dtype}, order='{order}')".format(
                 arg   = self._print(expr.arg),
-                dtype = self._print(expr.dtype),
+                dtype = dtype,
                 order = expr.order)
 
-    def _print_NumpyOnes(self, expr):
-        return "ones({shape}, dtype={dtype}, order='{order}')".format(
-                shape = self._print(expr.shape),
-                dtype = self._print(expr.dtype),
-                order = expr.order)
+    def _print_NumpyAutoFill(self, expr):
+        type_name = type(expr).__name__
+        func_name = type_name[5:].lower()
 
-    def _print_NumpyEmpty(self, expr):
-        return "empty({shape}, dtype={dtype}, order='{order}')".format(
+        dtype = self._print(expr.dtype)
+        if expr.precision != default_precision[str(expr.dtype)]:
+            factor = 16 if dtype == 'complex' else 8
+            dtype += str(expr.precision*factor)
+
+        return "{func_name}({shape}, dtype={dtype}, order='{order}')".format(
+                func_name = func_name,
                 shape = self._print(expr.shape),
-                dtype = self._print(expr.dtype),
+                dtype = dtype,
                 order = expr.order)
 
     def _print_NumpyFull(self, expr):
+        dtype = self._print(expr.dtype)
+        if expr.precision != default_precision[str(expr.dtype)]:
+            factor = 16 if dtype == 'complex' else 8
+            dtype += str(expr.precision*factor)
+
         return "full({shape}, {fill_value}, dtype={dtype}, order='{order}')".format(
                 shape = self._print(expr.shape),
                 fill_value = self._print(expr.fill_value),
-                dtype = self._print(expr.dtype),
+                dtype = dtype,
                 order = expr.order)
 
     def _print_NumpyArange(self, expr):
@@ -377,6 +394,12 @@ class PythonCodePrinter(CodePrinter):
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__
         name = type_name[5:].lower()
+        args = ', '.join(self._print(a) for a in expr.args)
+        return "{}({})".format(name, args)
+
+    def _print_MathFunctionBase(self, expr):
+        type_name = type(expr).__name__
+        name = type_name[4:].lower()
         args = ', '.join(self._print(a) for a in expr.args)
         return "{}({})".format(name, args)
 
