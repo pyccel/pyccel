@@ -250,9 +250,12 @@ class PythonCodePrinter(CodePrinter):
         return '.'.join(self._print(n) for n in expr.name)
 
     def _print_FunctionCall(self, expr):
-        func = expr.funcdef
+        if expr.interface:
+            func_name = expr.interface_name
+        else:
+            func_name = expr.funcdef.name
         args = ', '.join(self._print(i) for i in expr.args)
-        return'{func}({args})'.format(func=func.name, args=args)
+        return'{func}({args})'.format(func=func_name, args=args)
 
     def _print_Len(self, expr):
         return 'len({})'.format(self._print(expr.arg))
