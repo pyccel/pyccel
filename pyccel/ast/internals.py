@@ -113,6 +113,8 @@ class PyccelArrayData(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(arg))
 
         self._arg   = arg
+        self._rank = 1
+
         super().__init__()
 
     @property
