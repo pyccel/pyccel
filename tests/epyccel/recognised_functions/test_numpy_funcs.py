@@ -5108,8 +5108,8 @@ def test_numpy_matmul_array_like_2x2d(language):
     assert (f_complex128(cmplx128) == get_matmul(cmplx128))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance, See #769")]),
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        #    pytest.mark.skip(reason="Still under maintenance, See #769")]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Still under maintenance, See #769"),
             pytest.mark.c]
@@ -5163,7 +5163,7 @@ def test_numpy_norm_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output))
+    assert (type(f_bl_true_output) == type(test_bool_false_output.item()))
 
     f_integer = epyccel(get_norm, language=language)
     f_integer8 = epyccel(get_norm, language=language)
@@ -5174,31 +5174,31 @@ def test_numpy_norm_scalar(language):
     f_integer_output = f_integer(integer)
     test_int_output  = get_norm(integer)
 
-    assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output)
+    assert np.isclose(f_integer_output, test_int_output, rtol=RTOL, atol=ATOL)
+    assert type(f_integer_output) == type(test_int_output.item())
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_norm(integer8)
 
-    assert f_integer8_output == test_int8_output
+    assert np.isclose(f_integer8_output, test_int8_output, rtol=RTOL, atol=ATOL)
     assert type(f_integer8_output) == type(test_int8_output.item())
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_norm(integer16)
 
-    assert f_integer16_output == test_int16_output
+    assert np.isclose(f_integer16_output, test_int16_output, rtol=RTOL, atol=ATOL)
     assert type(f_integer16_output) == type(test_int16_output.item())
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_norm(integer32)
 
-    assert f_integer32_output == test_int32_output
+    assert np.isclose(f_integer32_output, test_int32_output, rtol=RTOL, atol=ATOL)
     assert type(f_integer32_output) == type(test_int32_output.item())
 
     f_integer64_output = f_integer64(integer64)
     test_int64_output = get_norm(integer64)
 
-    assert f_integer64_output == test_int64_output
+    assert np.isclose(f_integer64_output, test_int64_output, rtol=RTOL, atol=ATOL)
     assert type(f_integer64_output) == type(test_int64_output.item())
 
     f_fl = epyccel(get_norm, language=language)
@@ -5208,20 +5208,20 @@ def test_numpy_norm_scalar(language):
     f_fl_output = f_fl(fl)
     test_float_output = get_norm(fl)
 
-    assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output)
+    assert np.isclose(f_fl_output, test_float_output, rtol=RTOL, atol=ATOL)
+    assert type(f_fl_output) == type(test_float_output.item())
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_norm(fl32)
 
-    assert f_fl32_output == test_float32_output
+    assert np.isclose(f_fl32_output, test_float32_output, rtol=RTOL, atol=ATOL)
     assert type(f_fl32_output) == type(test_float32_output.item())
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_norm(fl64)
 
-    assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output)
+    assert np.isclose(f_fl64_output, test_float64_output, rtol=RTOL, atol=ATOL)
+    assert type(f_fl64_output) == type(test_float64_output.item())
 
     f_complex64 = epyccel(get_norm, language=language)
     f_complex128 = epyccel(get_norm, language=language)
@@ -5229,19 +5229,19 @@ def test_numpy_norm_scalar(language):
     f_complex64_output = f_complex64(cmplx64)
     test_complex64_output = get_norm(cmplx64)
 
-    assert f_complex64_output == test_complex64_output
+    assert np.isclose(f_complex64_output, test_complex64_output, rtol=RTOL, atol=ATOL)
     assert (type(f_complex64_output) == type(test_complex64_output.item()))
 
     f_complex128_output = f_complex128(cmplx128)
     test_complex128_output = get_norm(cmplx128)
 
-    assert f_complex128_output == test_complex128_output
+    assert np.isclose(f_complex128_output, test_complex128_output, rtol=RTOL, atol=ATOL)
     assert (type(f_complex64_output) == type(test_complex64_output.item()))
 
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance, See #769")]),
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        #    pytest.mark.skip(reason="Still under maintenance, See #769")]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Still under maintenance, See #769"),
             pytest.mark.c]
@@ -5267,59 +5267,61 @@ def test_numpy_norm_array_like_1d(language):
         a = norm(arr)
         return a
 
-    bl = randint(0, 1, size=(5), dtype= bool)
+    size = 5
 
-    integer8 = randint(min_int8, max_int8, size=(5), dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=(5), dtype=np.int16)
-    integer = randint(min_int, max_int, size=(5), dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=(5), dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=(5), dtype=np.int64)
+    bl = randint(0, 1, size=size, dtype= bool)
 
-    fl = uniform(min_float / 2, max_float / 2, size=(5))
-    fl32 = uniform(min_float32, max_float32, size=(5))
+    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
+    integer = randint(min_int, max_int, size=size, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
+
+    fl = uniform(low=-((min_float ** (1/2)) / size), high=((max_float** (1/2)) / size), size=size)
+    fl32 = uniform(min_float32, max_float32, size=size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(5))
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=size)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=5) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=5) * 1j
+    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=5) * 1j
+    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
 
     f_bl = epyccel(get_norm, language=language)
 
-    assert (f_bl(bl) == get_norm(bl))
+    assert np.isclose(f_bl(bl), get_norm(bl), rtol=RTOL, atol=ATOL)
 
     f_integer8 = epyccel(get_norm, language=language)
     f_integer16 = epyccel(get_norm, language=language)
     f_integer = epyccel(get_norm, language=language)
     f_integer32 = epyccel(get_norm, language=language)
 
-    assert (f_integer8(integer8) == get_norm(integer8))
-    assert (f_integer16(integer16) == get_norm(integer16))
-    assert (f_integer(integer) == get_norm(integer))
-    assert (f_integer32(integer32) == get_norm(integer32))
+    assert np.isclose(f_integer8(integer8), get_norm(integer8), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_integer16(integer16), get_norm(integer16), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_integer(integer), get_norm(integer), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_integer32(integer32), get_norm(integer32), rtol=RTOL, atol=ATOL)
 
     f_integer64 = epyccel(get_norm, language=language)
-    assert (f_integer64(integer64) == get_norm(integer64))
+    assert np.isclose(f_integer64(integer64), get_norm(integer64), rtol=RTOL, atol=ATOL)
 
     f_fl = epyccel(get_norm, language=language)
     f_fl32 = epyccel(get_norm, language=language)
     f_fl64 = epyccel(get_norm, language=language)
 
-    assert (f_fl(fl) == get_norm(fl))
-    assert (f_fl32(fl32) == get_norm(fl32))
-    assert (f_fl64(fl64) == get_norm(fl64))
+    assert np.isclose(f_fl(fl), get_norm(fl), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_fl32(fl32), get_norm(fl32), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_fl64(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
 
     f_complex64 = epyccel(get_norm, language=language)
     f_complex128 = epyccel(get_norm, language=language)
 
-    assert (f_complex64(cmplx64) == get_norm(cmplx64))
-    assert (f_complex128(cmplx128) == get_norm(cmplx128))
+    assert np.isclose(f_complex64(cmplx64), get_norm(cmplx64), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_complex128(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Still under maintenance, See #769")]),
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        #    pytest.mark.skip(reason="Still under maintenance, See #769")]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Still under maintenance, See #769"),
             pytest.mark.c]
@@ -5341,59 +5343,66 @@ def test_numpy_norm_array_like_2d(language):
     @types('complex64[:,:]')
     @types('complex128[:,:]')
     def get_norm(arr):
-        from numpy.linalg import norm 
+        from numpy.linalg import norm
         a = norm(arr)
         return a
 
-    bl = randint(0, 1, size=(2, 5), dtype= bool)
+    size = (2, 5)
 
-    integer8 = randint(min_int8, max_int8, size=(2, 5), dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=(2, 5), dtype=np.int16)
-    integer = randint(min_int, max_int, size=(2, 5), dtype=np.int)
-    integer32 = randint(min_int32, max_int32, size=(2, 5), dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=(2, 5), dtype=np.int64)
+    bl = randint(0, 1, size=size, dtype= bool)
 
-    fl = uniform(min_float / 2, max_float / 2, size=(2, 5))
-    fl32 = uniform(min_float32, max_float32, size=(2, 5))
+    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
+    integer = randint(min_int, max_int, size=size, dtype=np.int)
+    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
+
+    fl = uniform(min_float / 2, max_float / 2, size=size)
+    fl32 = uniform(min_float32, max_float32, size=size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=(2, 5))
+    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=size)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=(2, 5)) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=(2, 5)) * 1j
+    # cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) * 1j
+    # # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
+    # # that's why we need to convert it to a numpy.complex64 the needed type.
+    # cmplx64 = np.complex64(cmplx128_from_float32)
+    # cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
+    cmplx128_from_float32 = uniform(low=-((-min_float32) ** (1/5)), high=(max_float32 ** (1/5)), size = size) + uniform(low=-((-min_float32) ** (1/5)), high=(max_float32 ** (1/5)), size = size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=(2, 5)) * 1j
+    cmplx128 = uniform(low=-((-min_float64) ** (1/5)), high=(max_float64 ** (1/5)), size = size) + uniform(low=-((-min_float64) ** (1/5)), high=(max_float64 ** (1/5)), size = size) * 1j
 
     f_bl = epyccel(get_norm, language=language)
 
-    assert (f_bl(bl) == get_norm(bl))
+    assert np.isclose(f_bl(bl), get_norm(bl), rtol=RTOL, atol=ATOL)
 
     f_integer8 = epyccel(get_norm, language=language)
     f_integer16 = epyccel(get_norm, language=language)
     f_integer = epyccel(get_norm, language=language)
     f_integer32 = epyccel(get_norm, language=language)
 
-    assert (f_integer8(integer8) == get_norm(integer8))
-    assert (f_integer16(integer16) == get_norm(integer16))
-    assert (f_integer(integer) == get_norm(integer))
-    assert (f_integer32(integer32) == get_norm(integer32))
+    assert np.isclose(f_integer8(integer8), get_norm(integer8), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_integer16(integer16), get_norm(integer16), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_integer(integer), get_norm(integer), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_integer32(integer32), get_norm(integer32), rtol=RTOL, atol=ATOL)
 
     f_integer64 = epyccel(get_norm, language=language)
-    assert (f_integer64(integer64) == get_norm(integer64))
+    assert np.isclose(f_integer64(integer64), get_norm(integer64), rtol=RTOL, atol=ATOL)
 
     f_fl = epyccel(get_norm, language=language)
     f_fl32 = epyccel(get_norm, language=language)
     f_fl64 = epyccel(get_norm, language=language)
 
-    assert (f_fl(fl) == get_norm(fl))
-    assert (f_fl32(fl32) == get_norm(fl32))
-    assert (f_fl64(fl64) == get_norm(fl64))
+    assert np.isclose(f_fl(fl) == get_norm(fl), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_fl32(fl32), get_norm(fl32), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_fl64(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
 
     f_complex64 = epyccel(get_norm, language=language)
     f_complex128 = epyccel(get_norm, language=language)
 
-    assert (f_complex64(cmplx64) == get_norm(cmplx64))
-    assert (f_complex128(cmplx128) == get_norm(cmplx128))
+    assert np.isclose(f_complex64(cmplx64), get_norm(cmplx64), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_complex128(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
