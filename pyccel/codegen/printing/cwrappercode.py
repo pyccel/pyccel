@@ -36,7 +36,6 @@ from pyccel.ast.builtins         import PythonBool
 from pyccel.ast.bind_c          import as_static_function_call
 
 from pyccel.errors.errors   import Errors
-from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 
 errors = Errors()
 
@@ -198,7 +197,7 @@ class CWrapperCodePrinter(CCodePrinter):
     #                  Custom body generators [helpers]
     # --------------------------------------------------------------------
     @staticmethod
-    def generate_valued_variable_body(py_variable, c_variable):
+    def generate_valued_variable_body(py_variable, c_variable, default_value):
         """
         Generate valued variable code section (check, collect default value)
         Parameters:
@@ -207,6 +206,8 @@ class CWrapperCodePrinter(CCodePrinter):
             The python argument needed for check
         c_variable : Variable
             The variable that will hold default value
+        default_value : Literal | None
+            default value of the variable
         Returns   :
         -----------
         body      : IfSection
@@ -217,11 +218,10 @@ class CWrapperCodePrinter(CCodePrinter):
             body =  [AliasAssign(variable, Nil())]
 
         else:
-            body = [Assign(c_variable, c_variable.value)]
+            body = [Assign(c_variable, default_value)]
 
         body = IfSection(check, body)
         return body
-        #TODO modify it to accepte multiple variables or list of variables ?
 
     # --------------------------------------------------------------------
     #                        Custom error generators
@@ -285,7 +285,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # (Valued / Optional) variable check
         if isinstance(variable, ValuedVariable):
-            body.append(self.generate_valued_variable_body(py_variable, variable))
+            body.append(self.generate_valued_variable_body(py_variable, c_variable, variable.value))
 
         #datatqype check
         if check_is_needed:

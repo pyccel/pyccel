@@ -182,6 +182,9 @@ def PyArray_to_C(py_variable, c_variable, type_check_needed = False, language = 
         The variable needed for the generation of the type check
     py_variable : Variable
         The python argument of the check function
+    type_check_needed : boolean
+        True if data type check is needed, used to avoid multiple type check
+        in interface
     language    : string
         Needed to collect the flag for order check
     Returns
