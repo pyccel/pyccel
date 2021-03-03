@@ -157,7 +157,7 @@ def test_modules_14_1(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(sys.platform == 'darwin', reason="omp_get_team_num() return a wrong result!"),
+            pytest.mark.xfail(reason="omp_get_team_num() return a wrong result!"),
             pytest.mark.c]),
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="Compilation fails on github action"),
@@ -173,7 +173,7 @@ def test_modules_15(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(sys.platform == 'darwin', reason="omp_get_num_teams() return a wrong result!"),
+            pytest.mark.xfail(reason="omp_get_num_teams() return a wrong result!"),
             pytest.mark.c]),
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="Compilation fails on github action"),
