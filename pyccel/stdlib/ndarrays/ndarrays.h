@@ -113,8 +113,4 @@ int32_t         free_pointer(t_ndarray dump);
 /* indexing */
 int64_t         get_index(t_ndarray arr, ...);
 
-/* data converting between numpy and ndarray */
-int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd);
-int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd);
-
 #endif

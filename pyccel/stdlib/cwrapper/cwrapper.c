@@ -368,6 +368,21 @@ static bool	_check_array(PyArrayObject *a, int dtype, int rank, int flag)
  * https://numpy.org/doc/stable/reference/c-api/array.html
  */
 
+/*
+** convert numpy strides to nd_array strides, and return it in a new array, to
+** avoid the problem of different implementations of strides in numpy and ndarray.
+*/
+static int64_t	*_numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd)
+{
+    int64_t *ndarray_strides;
+
+    ndarray_strides = (int64_t*)malloc(sizeof(int64_t) * nd);
+    for (int i = 0; i < nd; i++)
+        ndarray_strides[i] = np_strides[i] / type_size;
+
+    return ndarray_strides;
+}
+
 bool	pyarray_to_ndarray(PyObject *o, t_ndarray *array, int dtype, int rank, int flag)
 {
 	PyArrayObject	*pyarray;
@@ -387,12 +402,9 @@ bool	pyarray_to_ndarray(PyObject *o, t_ndarray *array, int dtype, int rank, int 
 	array->type        = PyArray_TYPE(pyarray);
 	array->length      = PyArray_SIZE(pyarray);
 	array->buffer_size = PyArray_NBYTES(pyarray);
-
 	array->shape       = (int64_t*)malloc(sizeof(int64_t) * array->nd);
-	memcpy(array->shape, PyArray_SHAPE(pyarray), sizeof(int64_t) * array->nd);
-
-	array->strides     = (int64_t*)malloc(sizeof(int64_t) * array->nd);
-	memcpy(array->strides, PyArray_STRIDES(pyarray), sizeof(int64_t) * array->nd);
+	memcpy(array->shape, PyArray_SHAPE(pyarray), array->nd);
+	array->strides     = _numpy_to_ndarray_strides(PyArray_STRIDES(pyarray), array->type_size, array->nd);
 
 	array->is_view     = 1;
 
