@@ -27,7 +27,7 @@ __all__ = ['execute_pyccel']
 
 # map internal libraries to their folders inside pyccel/stdlib
 internal_libs = {
-    "ndarrays" : "ndarrays",
+    'ndarrays' : 'ndarrays',
     "pyc_math" : "math",
 }
 
@@ -314,8 +314,10 @@ def execute_pyccel(fname, *,
 
         # Iterate over the internal_libs list and determine if the printer
         # requires an internal lib to be included.
+        l = codegen.get_printer_imports()
+        l.add('ndarrays')
         for lib in internal_libs:
-            if lib in codegen.get_printer_imports():
+            if lib in l:
                 # get the include folder path and library files
                 if lib not in internal_libs_name:
                     # get the library folder name
@@ -340,14 +342,15 @@ def execute_pyccel(fname, *,
                     # get library source files
                     source_files = []
                     for e in os.listdir(lib_dest_path):
-                        if e.endswith(lang_ext_dict[language]):
+                        if e[-2:] == '.c' or (e[-4:] == '.f90' and language == fortran):
                             source_files.append(os.path.join(lib_dest_path, e))
-
+                    print('[HERE]', source_files)
                     # compile library source files
                     flags = construct_flags(f90exec,
                                             fflags=fflags,
                                             debug=debug,
                                             includes=[lib_dest_path])
+
                     try:
                         for f in source_files:
                             compile_files(f, f90exec, flags,
