@@ -306,6 +306,11 @@ class PythonCodePrinter(CodePrinter):
         rhs = self._print(expr.rhs)
         return'{0} = {1}'.format(lhs,rhs)
 
+    def _print_AliasAssign(self, expr):
+        lhs = self._print(expr.lhs)
+        rhs = self._print(expr.rhs)
+        return'{0} = {1}'.format(lhs,rhs)
+
     def _print_AugAssign(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
