@@ -54,6 +54,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self._global_names                = set()
         self._module_name                 = None
         self.converter_functions_dict     = {}
+        self.tmp_fix                      = False
 
     # --------------------------------------------------------------------
     #                       Helper functions
@@ -199,9 +200,26 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         if not isinstance(a, Variable):
             return False
-        if self._target_language == 'fortran' and a.rank > 0:
-            return a.is_pointer or a.is_optional
-        return a.is_pointer or a.is_optional
+
+        return a.is_pointer or a.is_optional or (self._target_language == 'fortran' and a.rank > 0)
+
+    def get_declare_type(self, expr):
+        dtype = self._print(expr.dtype)
+        prec  = expr.precision
+
+        if self._target_language == 'c'  or (self._target_language == 'fortran' and not self.tmp_fix) :
+            f =  CCodePrinter.get_declare_type(self, expr)
+            print('2--', f)
+            return f
+
+        else :
+            dtype = self.find_in_dtype_registry(dtype, prec)
+            print('3--', dtype)
+
+        if self.stored_in_c_pointer(expr):
+            return '{0} *'.format(dtype)
+        else:
+            return '{0} '.format(dtype)
     # --------------------------------------------------------------------
     #                  Custom body generators [helpers]
     # --------------------------------------------------------------------
@@ -673,10 +691,10 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_Module(self, expr):
         self._global_names = set(f.name for f in expr.funcs)
         self._module_name  = expr.name
-        
+        self.tmp_fix = True#TODO remove need a better solution
         static_funcs = [self.get_static_function(func) for func in expr.funcs]
-        
         function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in static_funcs)
+        self.tmp_fix = False
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
         funcs = [*expr.interfaces, *(f for f in expr.funcs if f.name not in interface_funcs)]
