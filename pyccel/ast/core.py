@@ -1604,8 +1604,8 @@ class FunctionCall(PyccelAstNode):
 
         if isinstance(func, Interface):
             self._interface = func
-            func = func.point(args)
             self._interface_name = func.name
+            func = func.point(args)
         else:
             self._interface = None
 
