@@ -222,8 +222,8 @@ def epyccel( python_function_or_module, **kwargs ):
     root  = kwargs.pop('root', 0)
     bcast = kwargs.pop('bcast', True)
     if kwargs.pop('developer_mode', None):
-        # this will initialize the singleton ErrorsMode
-        # making this settings available everywhere
+        # This will initialize the singleton ErrorsMode
+        # making this setting available everywhere
         err_mode = ErrorsMode()
         err_mode.set_mode('developer')
 
