@@ -120,6 +120,7 @@ class NumpyBool(PythonBool):
     """
     def __new__(cls, arg=None, base=10):
         return super().__new__(cls, arg)
+
 #=======================================================================================
 # TODO [YG, 13.03.2020]: handle case where base != 10
 class NumpyInt(PythonInt):
@@ -172,8 +173,8 @@ class NumpyReal(PythonReal):
 
 DtypePrecisionToCastFunction = {
     'Int' : {
-        1: NumpyInt8,
-        2: NumpyInt16,
+        1 : NumpyInt8,
+        2 : NumpyInt16,
         4 : NumpyInt32,
         8 : NumpyInt64},
     'Real' : {
@@ -1003,9 +1004,9 @@ numpy_functions = {
     'mod'       : NumpyMod,
     'float32'   : NumpyFloat32,
     'float64'   : NumpyFloat64,
-    'bool': NumpyBool,
-    'int8': NumpyInt8,
-    'int16': NumpyInt16,
+    'bool'      : NumpyBool,
+    'int8'      : NumpyInt8,
+    'int16'     : NumpyInt16,
     'int32'     : NumpyInt32,
     'int64'     : NumpyInt64,
     'complex'   : NumpyComplex,
@@ -1013,8 +1014,8 @@ numpy_functions = {
     'complex64' : NumpyComplex64,
     'matmul'    : NumpyMatmul,
     'sum'       : NumpySum,
-    'max'      : NumpyMax,
-    'min'      : NumpyMin,
+    'max'       : NumpyMax,
+    'min'       : NumpyMin,
     'prod'      : NumpyProduct,
     'product'   : NumpyProduct,
     'linspace'  : NumpyLinspace,
