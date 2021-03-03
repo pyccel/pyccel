@@ -193,6 +193,15 @@ class CWrapperCodePrinter(CCodePrinter):
             'datatype not implemented as arguments : {}'.format(variable.dtype))
         return (flag << 4) + flag
 
+    def stored_in_c_pointer(self, a):
+        """
+
+        """
+        if not isinstance(a, Variable):
+            return False
+        if self._target_language == 'fortran' and a.rank > 0:
+            return a.is_pointer or a.is_optional
+        return a.is_pointer or a.is_optional
     # --------------------------------------------------------------------
     #                  Custom body generators [helpers]
     # --------------------------------------------------------------------

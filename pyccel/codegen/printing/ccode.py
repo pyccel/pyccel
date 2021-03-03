@@ -733,8 +733,9 @@ class CCodePrinter(CodePrinter):
         if rank > 0:
             if expr.is_ndarray:
                 self._additional_imports.add('ndarrays')
-                return 't_ndarray '
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
+                dtype = 't_ndarray'
+            else:
+                errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
 
         if self.stored_in_c_pointer(expr):
             return '{0} *'.format(dtype)
