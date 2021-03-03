@@ -2938,7 +2938,7 @@ class SemanticParser(BasicParser):
                 expr = Import(expr.source.name)
 
             if source_target in container['imports']:
-                targets = container['imports'][source_target].target + expr.target
+                targets = container['imports'][source_target].target.union(expr.target)
             else:
                 targets = expr.target
 
