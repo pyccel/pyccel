@@ -26,12 +26,6 @@ class CodePrinter:
     The base class for code-printing subclasses.
     """
 
-    _operators = {
-        'and': '&&',
-        'or': '||',
-        'not': '!',
-    }
-
     def doprint(self, expr, assign_to=None):
         """
         Print the expression as code.

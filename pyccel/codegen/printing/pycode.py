@@ -35,11 +35,6 @@ def _construct_header(func_name, args):
 class PythonCodePrinter(CodePrinter):
     """A printer to convert pyccel expressions to strings of Python code"""
     printmethod = "_pycode"
-    _kf = dict(chain(
-        _known_functions.items(),
-        [(k, '' + v) for k, v in _known_functions_math.items()]
-    ))
-    _kc = {k: ''+v for k, v in _known_constants_math.items()}
 
     def __init__(self, parser=None):
         self.parser = parser

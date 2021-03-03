@@ -77,11 +77,6 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 __all__ = ["FCodePrinter", "fcode"]
 
-known_functions = {
-    "sign": "sign",       # TODO: move to numpyext
-    "conjugate": "conjg"  # TODO: move to numpyext
-}
-
 numpy_ufunc_to_fortran = {
     'NumpyAbs'  : 'abs',
     'NumpyFabs'  : 'abs',
@@ -174,31 +169,11 @@ class FCodePrinter(CodePrinter):
     language = "Fortran"
 
     _default_settings = {
-        'order': None,
-        'full_prec': 'auto',
-        'precision': 15,
-        'user_functions': {},
-        'human': True,
-        'source_format': 'fixed',
         'tabwidth': 2,
-        'contract': True,
-        'standard': 77
-    }
-
-    _operators = {
-        'and': '.and.',
-        'or': '.or.',
-        'xor': '.neqv.',
-        'equivalent': '.eqv.',
-        'not': '.not. ',
-    }
-
-    _relationals = {
-        '!=': '/=',
     }
 
 
-    def __init__(self, parser, prefix_module = None, user_functions = None):
+    def __init__(self, parser, prefix_module = None)
 
         if parser.filename:
             errors.set_target(parser.filename, 'file')
@@ -206,9 +181,6 @@ class FCodePrinter(CodePrinter):
         super().__init__()
         self.parser = parser
         self._namespace = self.parser.namespace
-        self.known_functions = dict(known_functions)
-        userfuncs = user_functions if user_functions is not None else {}
-        self.known_functions.update(userfuncs)
         self._current_function = None
         self._current_class    = None
 

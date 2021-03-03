@@ -53,31 +53,6 @@ errors = Errors()
 
 __all__ = ["CCodePrinter", "ccode"]
 
-# dictionary mapping sympy function to (argument_conditions, C_function).
-# Used in CCodePrinter._print_Function(self)
-known_functions = {
-    "Abs": [(lambda x: not x.is_integer, "fabs")],
-    "gamma": "tgamma",
-    "sin"  : "sin",
-    "cos"  : "cos",
-    "tan"  : "tan",
-    "asin" : "asin",
-    "acos" : "acos",
-    "atan" : "atan",
-    "atan2": "atan2",
-    "exp"  : "exp",
-    "log"  : "log",
-    "erf"  : "erf",
-    "sinh" : "sinh",
-    "cosh" : "cosh",
-    "tanh" : "tanh",
-    "asinh": "asinh",
-    "acosh": "acosh",
-    "atanh": "atanh",
-    "floor": "floor",
-    "ceiling": "ceil",
-}
-
 # dictionary mapping numpy function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
 numpy_ufunc_to_c_real = {
@@ -243,15 +218,12 @@ class CCodePrinter(CodePrinter):
     printmethod = "_ccode"
     language = "C"
 
-    def __init__(self, parser, prefix_module = None, user_functions = None):
+    def __init__(self, parser, prefix_module = None):
 
         if parser.filename:
             errors.set_target(parser.filename, 'file')
 
         super().__init__()
-        self.known_functions = dict(known_functions)
-        userfuncs = user_functions if user_functions is not None else {}
-        self.known_functions.update(userfuncs)
         self.prefix_module = prefix_module
         self._additional_imports = set(['stdlib'])
         self._parser = parser
