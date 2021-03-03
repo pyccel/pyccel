@@ -63,7 +63,7 @@ else:
 def matching_types(pyccel_result, python_result):
     """  Returns True if the types match, False otherwise
     """
-    if isinstance(python_result, np.number):
+    if isinstance(python_result, np.generic):
         #TODO: Remove when #735 is fixed
         return isinstance(pyccel_result, (type(python_result.item()), type(python_result)))
     else:
