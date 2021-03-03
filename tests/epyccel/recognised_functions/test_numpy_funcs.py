@@ -4410,6 +4410,7 @@ def test_numpy_int64_scalar(language):
     assert f_fl64_output == test_float64_output
     assert matching_types(f_fl64_output, test_float64_output)
 
+@pytest.mark.xfail(reason="Bool cast to float gives integer, see #784")
 def test_numpy_float_scalar(language):
 
     @types('bool')
