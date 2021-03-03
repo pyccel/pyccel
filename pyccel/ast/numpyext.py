@@ -349,14 +349,18 @@ class NumpyProduct(PyccelInternalFunction):
         if not isinstance(arg, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
-        self._dtype = arg.dtype
+        self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
+        self._arg = PythonInt(self._arg) if (isinstance(arg.dtype, NativeBool) or \
+                    (isinstance(arg.dtype, NativeInteger) and self._arg.precision < default_precision['int']))\
+                    else self._arg
+        self._dtype = self._arg.dtype
         self._rank  = 0
         self._shape = ()
         self._precision = default_precision[str_dtype(self._dtype)]
 
     @property
     def arg(self):
-        return self._args[0]
+        return self._arg
 
 
 #==============================================================================
