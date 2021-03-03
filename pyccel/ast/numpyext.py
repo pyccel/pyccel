@@ -371,14 +371,18 @@ class NumpyProduct(PyccelInternalFunction):
         if not isinstance(arg, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
-        self._dtype = arg.dtype
+        self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
+        self._arg = PythonInt(self._arg) if (isinstance(arg.dtype, NativeBool) or \
+                    (isinstance(arg.dtype, NativeInteger) and self._arg.precision < default_precision['int']))\
+                    else self._arg
+        self._dtype = self._arg.dtype
         self._rank  = 0
         self._shape = ()
         self._precision = default_precision[str_dtype(self._dtype)]
 
     @property
     def arg(self):
-        return self._args[0]
+        return self._arg
 
 
 #==============================================================================
@@ -896,6 +900,12 @@ class NumpyFloor(NumpyUfuncUnary):
         self._precision = default_precision[str_dtype(self._dtype)]
 
 class NumpyMod(NumpyUfuncBinary):
+
+    def __init__(self, x1, x2):
+        super().__init__(x1, x2)
+        x1 = PythonInt(x1) if isinstance(x1.dtype, NativeBool) else x1
+        x2 = PythonInt(x2) if isinstance(x2.dtype, NativeBool) else x2
+        self._args = (x1, x2)
 
     def _set_shape_rank(self, x1, x2):
         args   = (x1, x2)
