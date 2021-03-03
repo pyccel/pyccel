@@ -158,6 +158,9 @@ class PythonCodePrinter(CodePrinter):
 
         return code
 
+    def _print_FunctionAddress(self, expr):
+        return expr.name
+
     def _print_Return(self, expr):
 
         rhs_list = [i.rhs for i in expr.stmt.body if isinstance(i, Assign)] if expr.stmt else []
