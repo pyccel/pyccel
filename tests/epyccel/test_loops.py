@@ -184,6 +184,13 @@ def test_loop_on_real_array(language):
 
     assert np.array_equal( out1, out2 )
 
+def test_for_loops(language):
+    f1 = loops.for_loop
+    f2 = epyccel(f1, language=language)
+
+    assert (f1(1,10,1) == f2(1,10,1))
+    assert (f1(10,1,-1) == f2(10,1,-1))
+
 def test_breaks(language):
     f1 = loops.fizzbuzz_search_with_breaks
     f2 = epyccel( f1, language = language )

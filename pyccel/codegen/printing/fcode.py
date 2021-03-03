@@ -1788,9 +1788,7 @@ class FCodePrinter(CodePrinter):
     def _print_PythonRange(self, expr):
         start = self._print(expr.start)
         step  = self._print(expr.step)
-        stop = self._print(expr.stop) + '-' + self._print(LiteralInteger(1))
-        if isinstance(expr.step, PyccelUnarySub):
-            stop = self._print(expr.stop) + '+' + self._print(LiteralInteger(1))
+        stop = self._print(expr.stop) + '- ( (merge(1_C_INT64_T, -1_C_INT64_T, ' + self._print(expr.step) + ' > 0_C_INT64_T)) *' + self._print(LiteralInteger(1)) + ')'
         return '{0}, {1}, {2}'.format(start, stop, step)
 
     def _print_FunctionalFor(self, expr):

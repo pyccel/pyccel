@@ -215,3 +215,10 @@ def while_not_0( n ):
     while n:
         n -= 1
     return n
+
+@types( int, int, int )
+def for_loop(start, stop, step):
+    x = 0
+    for i in range(start, stop, step):
+        x += i
+    return x
