@@ -217,8 +217,14 @@ def while_not_0( n ):
     return n
 
 @types( int, int, int )
-def for_loop(start, stop, step):
+def for_loop1(start, stop, step):
     x = 0
     for i in range(start, stop, step):
+        x += i
+    return x
+
+def for_loop2():
+    x = 0
+    for i in range(1, 10, -1):
         x += i
     return x
