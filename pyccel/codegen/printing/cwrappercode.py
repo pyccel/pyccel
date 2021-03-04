@@ -532,7 +532,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyBuildValueNode(self, expr):
         name  = 'Py_BuildValue'
         flags = expr.flags
-        args  = ', '.join(['&{}, {}'.format(f.name, a.name) for f, a in zip(expr.converters, expr.args)])
+        args  = ', '.join(['&{}, &{}'.format(f.name, a.name) for f, a in zip(expr.converters, expr.args)])
 
         #to change for args rank 1 +
         if expr.args:

@@ -37,13 +37,13 @@ bool			PyBool_to_Bool(PyObject *o);
 
 
 /* casting c type to python object */
-PyObject	*Complex_to_PyComplex(double complex c);
+PyObject	*Complex_to_PyComplex(double complex *c);
 
-PyObject	*Bool_to_PyBool(bool b);
+PyObject	*Bool_to_PyBool(bool *b);
 
-PyObject	*Int_to_PyLong(int64_t i);
+PyObject	*Int_to_PyLong(int64_t *i);
 
-PyObject	*Double_to_PyDouble(double d);
+PyObject	*Double_to_PyDouble(double *d);
 
 
 #endif

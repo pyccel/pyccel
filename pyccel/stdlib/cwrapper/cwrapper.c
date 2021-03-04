@@ -155,38 +155,38 @@ double	PyDouble_to_Double(PyObject *o)
  * https://docs.python.org/3/c-api/long.html#c.PyLong_FromLongLong
  */
 
-PyObject	*Complex_to_PyComplex(double complex c)
+PyObject	*Complex_to_PyComplex(double complex *c)
 {
 	double		real_part;
 	double		imag_part;
 	PyObject	*o;
 
-	real_part = creal(c);
-	imag_part = cimag(c);
+	real_part = creal(*c);
+	imag_part = cimag(*c);
 	o = PyComplex_FromDoubles(real_part, imag_part);
 
 	return o;
 }
 
-PyObject	*Bool_to_PyBool(bool b)
+PyObject	*Bool_to_PyBool(bool *b)
 {
-	return b == true ? Py_True : Py_False;
+	return *b == true ? Py_True : Py_False;
 }
 
-PyObject	*Int_to_PyLong(int64_t i)
+PyObject	*Int_to_PyLong(int64_t *i)
 {
 	PyObject	*o;
 
-	o = PyLong_FromLongLong((long long) i);
+	o = PyLong_FromLongLong((long long) *i);
 
 	return o;
 }
 
-PyObject	*Double_to_PyDouble(double d)
+PyObject	*Double_to_PyDouble(double *d)
 {
 	PyObject	*o;
 
-	o = PyFloat_FromDouble(d);
+	o = PyFloat_FromDouble(*d);
 
 	return o;
 }
@@ -411,7 +411,16 @@ bool	pyarray_to_ndarray(PyObject *o, t_ndarray *array, int dtype, int rank, int 
 
 	pyarray = (PyArrayObject *)o;
 
+	// check array element type / rank / order
 	if (!_check_array(pyarray, dtype, rank, flag)) return false;
+
+	// if language is fortran no need to collect all ndarray info
+	if (flag != NO_ORDER_CHECK)
+	{
+		array->raw_data    = PyArray_DATA(pyarray);
+		array->shape       = PyArray_SHAPE(pyarray);
+		return true;
+	}
 
 	array->nd          = PyArray_NDIM(pyarray);
 	array->raw_data    = PyArray_DATA(pyarray);
