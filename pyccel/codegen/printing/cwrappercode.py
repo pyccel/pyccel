@@ -324,7 +324,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         if variable.rank > 0: #array
             collect = PyArray_to_C(py_variable, var, check_is_needed, self._target_language)
-            collect = If(IfSection(PyccelNot(collect), [Return([LiteralInteger(0)])]))
+            collect = [If(IfSection(PyccelNot(collect), [Return([LiteralInteger(0)])]))]
 
         else: #scalar #is there any way to make it look like array one?(see cwrapper.c)
             collect = generate_scalar_collector(py_variable, var, check_is_needed)
