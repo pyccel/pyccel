@@ -590,6 +590,10 @@ class NumpyRandint(PyccelInternalFunction):
         if not hasattr(size,'__iter__'):
             size = (size,)
 
+        if high is None:
+            high = low
+            low  = None
+
         self._shape   = size
         self._rank    = len(self.shape)
         self._rand    = NumpyRand(*size)
