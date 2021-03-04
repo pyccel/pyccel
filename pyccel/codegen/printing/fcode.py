@@ -802,9 +802,6 @@ class FCodePrinter(CodePrinter):
         prec_code = self._print(prec)
         return 'floor({}, kind={})'.format(arg_code, prec_code)
 
-    def _print_Real(self, expr):
-        return expr.fprint(self._print)
-
     def _print_PythonComplex(self, expr):
         if expr.is_cast:
             code = 'cmplx({0}, kind={1})'.format(expr.internal_var,
