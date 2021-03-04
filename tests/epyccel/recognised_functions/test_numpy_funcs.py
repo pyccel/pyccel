@@ -3522,7 +3522,8 @@ def test_numpy_real_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output))
+    assert (type(f_bl_true_output) == type(test_bool_true_output))
+    assert (type(f_bl_false_output) == type(test_bool_false_output))
 
     f_integer = epyccel(get_real, language=language)
     f_integer8 = epyccel(get_real, language=language)
@@ -3602,7 +3603,7 @@ def test_numpy_real_scalar(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="See https://github.com/pyccel/pyccel/issues/792."),
             pytest.mark.c]
         )
     )
@@ -3624,8 +3625,10 @@ def test_numpy_real_array_like_1d(language):
     def get_real(arr):
         from numpy import real, shape
         a = real(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+        return shape(a)[0], a[0]
+        # Tuples not implemented yet, once be implemented we can use:
+        # s = shape(a)
+        # return len(s), s[0], a[0]
 
     size = 5
 
@@ -3684,7 +3687,7 @@ def test_numpy_real_array_like_1d(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
+            pytest.mark.skip(reason="See https://github.com/pyccel/pyccel/issues/792."),
             pytest.mark.c]
         )
     )
@@ -3706,8 +3709,10 @@ def test_numpy_real_array_like_2d(language):
     def get_real(arr):
         from numpy import real, shape
         a = real(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
+        return shape(a)[0], shape(a)[1], a[0,1], a[1,0]
+        # Tuples not implemented yet, once be implemented we can use:
+        # s = shape(a)
+        # return len(s), s[0], s[1], a[0,1], a[1,0]
 
     size = (2, 5)
 
@@ -3763,7 +3768,6 @@ def test_numpy_real_array_like_2d(language):
     assert (f_complex64(cmplx64) == get_real(cmplx64))
     assert (f_complex128(cmplx128) == get_real(cmplx128))
 
-
 def test_numpy_imag_scalar(language):
 
     @types('bool')
@@ -3810,7 +3814,8 @@ def test_numpy_imag_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output))
+    assert (type(f_bl_true_output) == type(test_bool_true_output))
+    assert (type(f_bl_false_output) == type(test_bool_false_output))
 
     f_integer = epyccel(get_imag, language=language)
     f_integer8 = epyccel(get_imag, language=language)
@@ -3887,15 +3892,6 @@ def test_numpy_imag_scalar(language):
     assert f_complex128_output == test_complex128_output
     assert (type(f_complex64_output) == type(test_complex64_output.item()))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        )
-    )
-)
-
 def test_numpy_imag_array_like_1d(language):
 
     @types('bool[:]')
@@ -3912,8 +3908,10 @@ def test_numpy_imag_array_like_1d(language):
     def get_imag(arr):
         from numpy import imag, shape
         a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], a[0]
+        return shape(a)[0], a[0]
+        # Tuples not implemented yet, once be implemented we can use:
+        # s = shape(a)
+        # return len(s), s[0], a[0]
 
     size = 5
 
@@ -3969,15 +3967,6 @@ def test_numpy_imag_array_like_1d(language):
     assert (f_complex64(cmplx64) == get_imag(cmplx64))
     assert (f_complex128(cmplx128) == get_imag(cmplx128))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not implemented yet"),
-            pytest.mark.c]
-        )
-    )
-)
-
 def test_numpy_imag_array_like_2d(language):
 
     @types('bool[:,:]')
@@ -3994,8 +3983,10 @@ def test_numpy_imag_array_like_2d(language):
     def get_imag(arr):
         from numpy import imag, shape
         a = imag(arr)
-        s = shape(a)
-        return len(s), s[0], s[1], a[0,1], a[1,0]
+        return shape(a)[0], shape(a)[1], a[0,1], a[1,0]
+        # Tuples not implemented yet, once be implemented we can use:
+        # s = shape(a)
+        # return len(s), s[0], s[1], a[0,1], a[1,0]
 
     size = (2, 5)
 
@@ -4090,7 +4081,8 @@ def test_numpy_bool_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output))
+    assert (type(f_bl_true_output) == type(test_bool_true_output))
+    assert (type(f_bl_false_output) == type(test_bool_false_output))
 
     f_integer = epyccel(get_bool, language=language)
     f_integer8 = epyccel(get_bool, language=language)
@@ -4191,7 +4183,8 @@ def test_numpy_int_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output))
+    assert (type(f_bl_true_output) == type(test_bool_true_output))
+    assert (type(f_bl_false_output) == type(test_bool_false_output))
 
     f_integer = epyccel(get_int, language=language)
     f_integer8 = epyccel(get_int, language=language)
@@ -4292,7 +4285,8 @@ def test_numpy_int8_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output.item()))
+    assert (type(f_bl_true_output) == type(test_bool_true_output.item()))
+    assert (type(f_bl_false_output) == type(test_bool_false_output.item()))
 
     f_integer = epyccel(get_int8, language=language)
     f_integer8 = epyccel(get_int8, language=language)
@@ -4394,7 +4388,8 @@ def test_numpy_int16_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output.item()))
+    assert (type(f_bl_true_output) == type(test_bool_true_output.item()))
+    assert (type(f_bl_false_output) == type(test_bool_false_output.item()))
 
     f_integer = epyccel(get_int16, language=language)
     f_integer8 = epyccel(get_int16, language=language)
@@ -4495,7 +4490,8 @@ def test_numpy_int32_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output.item()))
+    assert (type(f_bl_true_output) == type(test_bool_true_output.item()))
+    assert (type(f_bl_false_output) == type(test_bool_false_output.item()))
 
     f_integer = epyccel(get_int32, language=language)
     f_integer8 = epyccel(get_int32, language=language)
@@ -4596,7 +4592,8 @@ def test_numpy_int64_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output.item()))
+    assert (type(f_bl_true_output) == type(test_bool_true_output.item()))
+    assert (type(f_bl_false_output) == type(test_bool_false_output.item()))
 
     f_integer = epyccel(get_int64, language=language)
     f_integer8 = epyccel(get_int64, language=language)
@@ -4697,6 +4694,9 @@ def test_numpy_float_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
+    assert (type(f_bl_true_output) == type(test_bool_true_output))
+    assert (type(f_bl_false_output) == type(test_bool_false_output))
+
     f_integer = epyccel(get_float, language=language)
     f_integer8 = epyccel(get_float, language=language)
     f_integer16 = epyccel(get_float, language=language)
@@ -4795,6 +4795,9 @@ def test_numpy_float32_scalar(language):
 
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
+
+    assert (type(f_bl_true_output) == type(test_bool_true_output.item()))
+    assert (type(f_bl_false_output) == type(test_bool_false_output.item()))
 
     f_integer = epyccel(get_float32, language=language)
     f_integer8 = epyccel(get_float32, language=language)
@@ -4895,6 +4898,9 @@ def test_numpy_float64_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
+    assert (type(f_bl_true_output) == type(test_bool_true_output.item()))
+    assert (type(f_bl_false_output) == type(test_bool_false_output.item()))
+
     f_integer = epyccel(get_float64, language=language)
     f_integer8 = epyccel(get_float64, language=language)
     f_integer16 = epyccel(get_float64, language=language)
@@ -4993,6 +4999,9 @@ def test_numpy_double_scalar(language):
 
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
+
+    assert (type(f_bl_true_output) == type(test_bool_true_output.item()))
+    assert (type(f_bl_false_output) == type(test_bool_false_output.item()))
 
     f_integer = epyccel(get_double, language=language)
     f_integer8 = epyccel(get_double, language=language)
@@ -5093,6 +5102,9 @@ def test_numpy_complex64_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
+    assert (type(f_bl_true_output) == type(test_bool_true_output.item()))
+    assert (type(f_bl_false_output) == type(test_bool_false_output.item()))
+
     f_integer = epyccel(get_complex64, language=language)
     f_integer8 = epyccel(get_complex64, language=language)
     f_integer16 = epyccel(get_complex64, language=language)
@@ -5192,6 +5204,9 @@ def test_numpy_complex128_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
+    assert (type(f_bl_true_output) == type(test_bool_true_output.item()))
+    assert (type(f_bl_false_output) == type(test_bool_false_output.item()))
+
     f_integer = epyccel(get_complex128, language=language)
     f_integer8 = epyccel(get_complex128, language=language)
     f_integer16 = epyccel(get_complex128, language=language)
@@ -5255,7 +5270,7 @@ def test_numpy_complex128_scalar(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Mod function not supported in C"),
+            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         )
     )
@@ -5365,7 +5380,7 @@ def test_numpy_mod_scalar(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Mod function not supported in C"),
+            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         )
     )
@@ -5431,7 +5446,7 @@ def test_numpy_mod_array_like_1d(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Mod function not supported in C"),
+            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         )
     )
@@ -5497,7 +5512,7 @@ def test_numpy_mod_array_like_2d(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Prod function not supported in C"),
+            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         )
     )
@@ -5551,7 +5566,8 @@ def test_numpy_prod_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output.item()))
+    assert (type(f_bl_true_output) == type(test_bool_true_output.item()))
+    assert (type(f_bl_false_output) == type(test_bool_false_output.item()))
 
     f_integer = epyccel(get_prod, language=language)
     f_integer8 = epyccel(get_prod, language=language)
@@ -5631,7 +5647,7 @@ def test_numpy_prod_scalar(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Prod function not supported in C"),
+            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         )
     )
@@ -5712,7 +5728,7 @@ def test_numpy_prod_array_like_1d(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Prod function not supported in C"),
+            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         )
     )
@@ -5795,7 +5811,7 @@ def test_numpy_prod_array_like_2d(language):
         pytest.param("fortran", marks = [pytest.mark.fortran,
             pytest.mark.skip(reason="Pyccel raises 'ValueError: Incompatible rank in variable allocation'")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Matmul function not supported in C"),
+            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         )
     )
@@ -5873,7 +5889,7 @@ def test_numpy_matmul_array_like_1d(language):
         pytest.param("fortran", marks = [pytest.mark.fortran,
             pytest.mark.skip(reason="Complex not supported yet")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Matmul function not supported in C"),
+            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         )
     )
@@ -5953,7 +5969,7 @@ def test_numpy_matmul_array_like_2x2d(language):
         pytest.param("fortran", marks = [pytest.mark.fortran,
             pytest.mark.skip(reason="Still under maintenance, See #770")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #770"),
+            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         )
     )
@@ -6032,7 +6048,7 @@ def test_numpy_where_scalar(language):
         pytest.param("fortran", marks = [pytest.mark.fortran,
             pytest.mark.skip(reason="Still under maintenance, See #770")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #770"),
+            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         )
     )
@@ -6112,7 +6128,7 @@ def test_numpy_where_array_like_1d_with_condition(language):
         pytest.param("fortran", marks = [pytest.mark.fortran,
             pytest.mark.skip(reason="Still under maintenance, See #770")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #770"),
+            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         )
     )
@@ -6192,7 +6208,7 @@ def test_numpy_where_array_like_1d(language):
         pytest.param("fortran", marks = [pytest.mark.fortran,
             pytest.mark.skip(reason="Still under maintenance, See #770")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #770"),
+            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         )
     )
@@ -6273,7 +6289,7 @@ def test_numpy_where_array_like_2d_with_condition(language):
         pytest.param("fortran", marks = [pytest.mark.fortran,
             pytest.mark.skip(reason="Still under maintenance, See #770")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #770"),
+            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         )
     )
@@ -6353,7 +6369,7 @@ def test_numpy_where_array_like_2d(language):
         pytest.param("fortran", marks = [pytest.mark.fortran,
             pytest.mark.skip(reason="Still under maintenance, See #771")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #771"),
+            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         )
     )
@@ -6432,7 +6448,7 @@ def test_numpy_linspace_scalar(language):
         pytest.param("fortran", marks = [pytest.mark.fortran,
             pytest.mark.skip(reason="Still under maintenance, See #771")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #771"),
+            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         )
     )
@@ -6515,7 +6531,7 @@ def test_numpy_linspace_array_like_1d(language):
         pytest.param("fortran", marks = [pytest.mark.fortran,
             pytest.mark.skip(reason="Still under maintenance, See #771")]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Still under maintenance, See #771"),
+            pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
         )
     )

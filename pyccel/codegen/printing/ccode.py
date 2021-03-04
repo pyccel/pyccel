@@ -1207,7 +1207,7 @@ class CCodePrinter(CodePrinter):
             else:
                 code = '\n'+self._print(expr.stmt)
                 self._additional_declare.append(last_assign[0].lhs)
-        return code + 'return {0};'.format(self._print(args[0]))
+        return code + '\nreturn {0};'.format(self._print(args[0]))
 
     def _print_Pass(self, expr):
         return '// pass'
