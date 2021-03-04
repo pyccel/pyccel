@@ -54,9 +54,9 @@ class CodePrinter:
         return ''.join(self._format_code(lines))
 
     def _print(self, expr):
-        """Annotates the AST.
+        """Print the AST node in the printer language
 
-        The annotation is done by finding the appropriate function _visit_X
+        The printing is done by finding the appropriate function _visit_X
         for the object expr. X is the type of the object expr. If this function
         does not exist then the method resolution order is used to search for
         other compatible _visit_X functions. If none are found then an error is
