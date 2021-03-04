@@ -97,11 +97,7 @@ __all__ = (
 #    'operator',
 #    'op_registry',
     'process_shape',
-    'subs',
-    'OMP_For_Loop',
-    'OMP_Parallel_Construct',
-    'OMP_Single_Construct',
-    'Omp_End_Clause'
+    'subs'
 )
 
 #==============================================================================
@@ -3151,7 +3147,7 @@ class AnnotatedComment(Basic):
     Parameters
     ----------
     accel : str
-       accelerator id. One among {'omp', 'acc'}
+       accelerator id. One among {'acc'}
 
     txt: str
         statement to print
@@ -3159,8 +3155,8 @@ class AnnotatedComment(Basic):
     Examples
     --------
     >>> from pyccel.ast.core import AnnotatedComment
-    >>> AnnotatedComment('omp', 'parallel')
-    AnnotatedComment(omp, parallel)
+    >>> AnnotatedComment('acc', 'parallel')
+    AnnotatedComment(acc, parallel)
     """
     _attribute_nodes = ()
 
@@ -3182,26 +3178,6 @@ class AnnotatedComment(Basic):
 
         args = (self.accel, self.txt)
         return args
-
-class OMP_For_Loop(AnnotatedComment):
-    """ Represents an OpenMP Loop construct. """
-    def __init__(self, txt):
-        super().__init__('omp', txt)
-
-class OMP_Parallel_Construct(AnnotatedComment):
-    """ Represents an OpenMP Parallel construct. """
-    def __init__(self, txt):
-        super().__init__('omp', txt)
-
-class OMP_Single_Construct(AnnotatedComment):
-    """ Represents an OpenMP Single construct. """
-    def __init__(self, txt):
-        super().__init__('omp', txt)
-
-class Omp_End_Clause(AnnotatedComment):
-    """ Represents the End of an OpenMP block. """
-    def __init__(self, txt):
-        super().__init__('omp', txt)
 
 class CommentBlock(Basic):
 

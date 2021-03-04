@@ -5,7 +5,7 @@ Openmp:
   statements*=OpenmpStmt
 ;
 
-OpenmpStmt: 
+OpenmpStmt:
   '#$' 'omp' stmt=OmpConstructOrDirective
 ;
 
@@ -13,78 +13,169 @@ OpenmpStmt:
 //         Constructs and Directives
 ////////////////////////////////////////////////////
 OmpConstructOrDirective:
-    OmpParallelConstruct 
+    OmpParallelConstruct
   | OmpLoopConstruct
   | OmpSingleConstruct
   | OmpEndClause
+  | OmpCriticalConstruct
+  | OmpBarrierConstruct
+  | OmpMasterConstruct
+  | OmpMaskedConstruct
+  | OmpTaskLoopConstruct
+  | OmpSimdConstruct
+  | OmpAtomicConstruct
+  | OmpTaskWaitConstruct
+  | OmpTaskyieldConstruct
+  | OmpTaskConstruct
+  | OmpFlushConstruct
+  | OmpCancelConstruct
+  | OmpTargetConstruct
+  | OmpTeamsConstruct
+  | OmpDistributeConstruct
+  | OmpSectionsConstruct
+  | OmpSectionConstruct
 ;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
 //     Constructs and Directives definitions
 ////////////////////////////////////////////////////
-OmpParallelConstruct: 'parallel' clauses*=OmpParallelClause;
-OmpLoopConstruct:      'for'       clauses*=OmpLoopClause;
-OmpSingleConstruct:   'single'   clauses*=OmpSingleClause;
+OmpParallelConstruct:   'parallel'        combined=ParallelCombined? clauses*=AllOmpClauses;
+OmpLoopConstruct:       'for'             clauses*=AllOmpClauses;
+OmpTaskLoopConstruct:   name='taskloop'   clauses*=AllOmpClauses;
+OmpSingleConstruct:     name='single'     clauses*=AllOmpClauses;
+OmpCriticalConstruct:   name='critical'   clauses*=AllOmpClauses;
+OmpMaskedConstruct:     'masked'          combined=MaskedCombined? clauses*=AllOmpClauses;
+OmpSimdConstruct:       name='simd'       clauses*=AllOmpClauses;
+OmpAtomicConstruct:     name='atomic'     clauses*=AllOmpClauses; // Not all clauses were added (can't test them).
+OmpTaskConstruct:       name='task'       clauses*=AllOmpClauses;
+OmpCancelConstruct:     name='cancel'     clauses*=OmpCancelType;
+OmpTargetConstruct:     'target'          combined=TargetCombined? clauses*=AllOmpClauses;
+OmpTeamsConstruct:      'teams'           combined=TeamsCombined? clauses*=AllOmpClauses;
+OmpDistributeConstruct: name='distribute' clauses*=AllOmpClauses;
+OmpSectionsConstruct:   name='sections'   clauses*=AllOmpClauses;
+OmpFlushConstruct:      name='flush'      clauses*=AllOmpClauses;
+OmpSectionConstruct:    name='section';
+OmpBarrierConstruct:    name='barrier';
+OmpMasterConstruct:     name='master';
+OmpTaskWaitConstruct:   name='taskwait';
+OmpTaskyieldConstruct:  name='taskyield';
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//         Combined Constructs
+////////////////////////////////////////////////////
+
+ParallelCombined: OmpForSimd | OmpMaskedTaskloop | OmpPSections;
+MaskedCombined:   OmpTaskloopSimd;
+TeamsCombined:    OmpDistributeCombined;
+TargetCombined:   OmpTargetParallel | OmpTargetTeams;
+////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////
+//         Combined Constructs
+////////////////////////////////////////////////////
+
+OmpForSimd: fname='for' sname='simd'?;
+OmpMaskedTaskloop: mname='masked' (tname='taskloop' sname='simd'?)?;
+OmpPSections: sname='sections';
+OmpTaskloopSimd: tname='taskloop' sname='simd'?;
+OmpDistributeCombined: dname='distribute' (sname='simd' | (pname='parallel' fname='for' ssname='simd'?))?;
+OmpTargetParallel: pname='parallel' (fname='for' sname='simd'?)?;
+OmpTargetTeams: tname='teams' (dname='distribute' (sname='simd' | (pname='parallel' fname='for' ssname='simd'?))?)?;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
 //      Clauses for Constructs and Directives
 ////////////////////////////////////////////////////
-OmpParallelClause:
-    OmpNumThread
+
+AllOmpClauses:
+    OmpAtomicClause
+  | AtomicMemoryClause
+  | OmpPriority
   | OmpDefault
   | OmpPrivate
   | OmpShared
   | OmpFirstPrivate
-  | OmpCopyin
+  | OmpUntied
+  | OmpMergeable
   | OmpReduction
-  | OmpProcBind
-;
-
-OmpLoopClause:
-    OmpPrivate
-  | OmpFirstPrivate
+  | OmpinReduction // Deprecated in OpenMP 5.0 for TaskLoop/Task Constructs
+  | OmpDepend // TODO : depend-modifier, dependence-type: (source, sink)
+  | FlushList
   | OmpLastPrivate
+  | OmpMap
+  | OmpNumTeams
+  | OmpThreadLimit
   | OmpLinear
-  | OmpReduction
-  | OmpSchedule
   | OmpCollapse
+  | OmpFilter
+  | OmpNumThread
+  | OmpCopyin
+  | OmpProcBind
+  | OmpCriticalName
+  | OmpNumTasks
+  | OmpGrainSize
+  | OmpNogroup
+  | OmpSchedule
   | OmpOrdered
+  | OmpFinal
 ;
 
-OmpSingleClause:
-    OmpPrivate
-  | OmpFirstPrivate
-;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
 //              Clauses definitions
 ////////////////////////////////////////////////////
 OmpNumThread: 'num_threads' '(' thread=ThreadIndex ')';
+OmpNumTeams: 'num_teams' '(' teams=TeamIndex ')';
+OmpNumTasks: 'num_tasks' '(' tasks=TaskIndex ')';
+OmpThreadLimit: 'thread_limit' '(' limit=ThreadIndex ')';
+OmpGrainSize: 'grainsize' '(' tasks=TaskIndex ')';
+OmpFinal: 'final' '(' final=TaskIndex ')';
 OmpDefault: 'default' '(' status=OmpDefaultStatus ')';
 OmpProcBind: 'proc_bind' '(' status=OmpProcBindStatus ')';
+OmpMap: 'map' '(' mtype=OmpMapType? args+=ID[','] ')'; // TODO NH : Array and shaping
 OmpPrivate: 'private' '(' args+=ID[','] ')';
 OmpShared: 'shared' '(' args+=ID[','] ')';
 OmpFirstPrivate: 'firstprivate' '(' args+=ID[','] ')';
 OmpLastPrivate: 'lastprivate' '(' args+=ID[','] ')';
 OmpCopyin: 'copyin' '(' args+=ID[','] ')';
+OmpDepend: 'depend' '('dtype=OmpDependenceType ':' args+=ID[','] ')';
 OmpReduction: 'reduction' '('op=OmpReductionOperator ':' args+=ID[','] ')';
+OmpinReduction: ctype='in_reduction' '('op=OmpReductionOperator ':' args+=ID[','] ')';
 OmpCollapse: 'collapse' '(' n=INT ')';
 OmpLinear: 'linear' '(' val=ID ':' step=INT ')';
 OmpOrdered: 'ordered' ('(' n=INT ')')?;
 OmpSchedule: 'schedule' '(' kind=OmpScheduleKind (',' chunk_size=INT)? ')';
-OmpEndClause: 'end' construct=OpenmpConstructs (simd='simd')? (nowait='nowait')?;
+OmpEndClause: 'end' construct*=OpenmpConstructs (simd='simd')? (nowait='nowait')?;
+OmpCriticalName: '(' args=ID ')';
+OmpFilter: name='filter' '(' n=INT ')';
+OmpPriority: name='priority' '(' n=PriorityIndex ')';
+OmpUntied: name='untied';
+OmpMergeable: name='mergeable';
+OmpNogroup: name='nogroup';
+OmpAtomicClause: name=AtomicClause;
+AtomicMemoryClause: name=AtomicMClause;
+FlushList: '(' args+=ID[','] ')';
+OmpCancelType: name=CancelType;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
+CancelType: ('parallel' | 'sections' | 'taskgroup' | 'for');
 OmpScheduleKind: ('static' | 'dynamic' | 'guided' | 'auto' | 'runtime' );
 OmpProcBindStatus: ('master' | 'close' | 'spread');
 OmpReductionOperator: ('+' | '-' | '*' | '/');
+OmpDependenceType: ('in' | 'out' | 'inout' | 'mutexinoutset' | 'depobj');
 OmpDefaultStatus: ('private' | 'firstprivate' | 'shared' | 'none');
-OpenmpConstructs: ('single' | 'parallel' | 'for');
+OmpMapType: (('always' | 'close' | ('mapper' '(' ID ')') ',')? ('tofrom' | 'from' | 'to' | 'alloc' | 'release' | 'delete')) ':';
+OpenmpConstructs: ('simd' | 'masked' | 'master' | 'single' | 'parallel' | 'for' | 'critical' ('(' ID  ')')? | 'task' | 'target' | 'teams' | 'sections' | 'section');
 
+AtomicClause: ('write' | 'read' | 'update' | 'capture' | 'compare' | 'weak');
+AtomicMClause: ('seq_cst' | 'acq_rel' | 'release' | 'acquire' | 'relaxed');
 ThreadIndex: (ID | INT);
+TaskIndex: (ID | INT);
+TeamIndex: (ID | INT);
+PriorityIndex: (ID | INT);
 NotaStmt: /.*$/;
 ////////////////////////////////////////////////////
