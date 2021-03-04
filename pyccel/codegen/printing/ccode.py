@@ -218,6 +218,10 @@ class CCodePrinter(CodePrinter):
     printmethod = "_ccode"
     language = "C"
 
+    _default_settings = {
+        'tabwidth': 4,
+    }
+
     def __init__(self, parser, prefix_module = None):
 
         if parser.filename:
@@ -1498,7 +1502,7 @@ class CCodePrinter(CodePrinter):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
-        tab = "    "
+        tab = " "*self._default_settings["tabwidth"]
         inc_token = ('{', '(', '{\n', '(\n')
         dec_token = ('}', ')')
 
