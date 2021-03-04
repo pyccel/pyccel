@@ -37,7 +37,7 @@ def _construct_header(func_name, args):
 #==============================================================================
 
 import_target_swap = {
-        'numpy' : {'double' : 'float64'}
+        'numpy' : {'double' : 'float64', 'product' : 'prod'}
         }
 
 class PythonCodePrinter(CodePrinter):
@@ -195,7 +195,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonTuple(self, expr):
         args = ', '.join(self._print(i) for i in expr.args)
-        if len(args) == 1:
+        if len(expr.args) == 1:
             args += ','
         return '('+args+')'
 
@@ -405,6 +405,9 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NumpySum(self, expr):
         return "sum({})".format(self._print(expr.arg))
+
+    def _print_NumpyProduct(self, expr):
+        return "prod({})".format(self._print(expr.arg))
 
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__
