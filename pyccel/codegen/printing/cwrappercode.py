@@ -278,13 +278,14 @@ class CWrapperCodePrinter(CCodePrinter):
         prec   = variable.precision
         order  = '_' + str(variable.order) if variable.order else ''
         rank   = '_' + str(variable.rank) if variable.rank else ''
-        valued = 'V_' if isinstance(variable, ValuedVariable) else ''
+        valued = 'v_' if isinstance(variable, ValuedVariable) else '' #v for valued
 
-        name = '{dtype}_{prec}{rank}{order}'.format(
-            prec  = prec,
-            dtype = dtype,
-            rank  = rank,
-            order = order)
+        name = '{valued}{dtype}_{prec}{rank}{order}'.format(
+            valued = valued,
+            prec   = prec,
+            dtype  = dtype,
+            rank   = rank,
+            order  = order)
         name = self.get_new_name(used_names, name)
 
         return name
