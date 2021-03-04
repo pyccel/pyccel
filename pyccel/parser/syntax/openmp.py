@@ -49,16 +49,18 @@ class OmpConstruct(BasicStmt):
                 _valid_clauses += _valid_teams_clauses
             com = combined.expr
 
+        has_nowait = False
         txt = ''
         if name:
             txt += name
         if clauses:
-            txt += check_get_clauses(self, _valid_clauses, clauses, combined)
+            clause_expr, has_nowait = check_get_clauses(self, _valid_clauses, clauses, combined)
+            txt += clause_expr
 
         if combined:
-            self._expr = omp_type(txt, com)
+            self._expr = omp_type(txt, has_nowait, com)
         else:
-            self._expr = omp_type(txt)
+            self._expr = omp_type(txt, has_nowait)
 
         super().__init__(**kwargs)
 
@@ -83,15 +85,19 @@ def check_get_clauses(name, valid_clauses, clauses, combined = None):
     """
     Function to check if the clauses are correct for a given construct.
     """
+    has_nowait = False
     txt = ''
     for clause in clauses:
         if isinstance(clause, valid_clauses) and \
            not (isinstance(clause, OmpCopyin) and isinstance(combined, OmpTargetParallel)):
-            txt = '{0} {1}'.format(txt, clause.expr)
+            if isinstance(clause, OmpNowait):
+                has_nowait = True
+            else:
+                txt = '{0} {1}'.format(txt, clause.expr)
         else:
             msg = "Wrong clause " + type(clause).__name__
             raise TypeError(msg)
-    return txt
+    return txt, has_nowait
 
 
 class Openmp(object):
@@ -227,7 +233,7 @@ class OmpEndClause(BasicStmt):
         construct = ' '.join(self.construct)
         txt = 'end {0} {1} {2}'.format(construct, self.simd, self.nowait)
 
-        self._expr = Omp_End_Clause(txt)
+        self._expr = Omp_End_Clause(txt, False)
 
         super().__init__(**kwargs)
 

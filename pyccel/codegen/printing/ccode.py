@@ -1494,6 +1494,8 @@ class CCodePrinter(CodePrinter):
         if expr.combined:
             clauses = ' ' + expr.combined
         clauses += str(expr.txt)
+        if expr._has_nowait:
+            clauses = ' nowait' + clauses
         omp_expr = '#pragma omp {}{}'.format(expr.name, clauses)
 
         if expr.is_multiline:

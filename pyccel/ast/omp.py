@@ -34,9 +34,10 @@ class OmpAnnotatedComment(Basic):
     _attribute_nodes = ()
     _is_multiline = False
 
-    def __init__(self, txt, combined=None):
+    def __init__(self, txt, has_nowait=False, combined=None):
         self._txt = txt
         self._combined = combined
+        self._has_nowait = has_nowait
         super().__init__()
 
     @property
@@ -67,8 +68,8 @@ class OmpAnnotatedComment(Basic):
 
 class OMP_For_Loop(OmpAnnotatedComment):
     """ Represents an OpenMP Loop construct. """
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
     @property
     def name(self):
@@ -86,26 +87,26 @@ class OMP_Parallel_Construct(OmpAnnotatedComment):
 class OMP_Task_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Task construct. """
     _is_multiline = True
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
 class OMP_Single_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Single construct. """
     _is_multiline = True
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
 class OMP_Critical_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Critical construct. """
     _is_multiline = True
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
 class OMP_Master_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Master construct. """
     _is_multiline = True
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
 class OMP_Masked_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Masked construct. """
@@ -117,8 +118,8 @@ class OMP_Masked_Construct(OmpAnnotatedComment):
 
 class OMP_Cancel_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Cancel construct. """
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
 class OMP_Target_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Target construct. """
@@ -140,16 +141,16 @@ class OMP_Teams_Construct(OmpAnnotatedComment):
 class OMP_Sections_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Sections construct. """
     _is_multiline = True
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
 class OMP_Section_Construct(OmpAnnotatedComment):
     """ Represent OpenMP Section construct. """
     _is_multiline = True
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
 class Omp_End_Clause(OmpAnnotatedComment):
     """ Represents the End of an OpenMP block. """
-    def __init__(self, txt):
-        super().__init__(txt)
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
