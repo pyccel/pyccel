@@ -35,6 +35,11 @@ def _construct_header(func_name, args):
     return pattern.format(name=func_name, args=args)
 
 #==============================================================================
+
+import_target_swap = {
+        'numpy' : {'double' : 'float64'}
+        }
+
 class PythonCodePrinter(CodePrinter):
     """A printer to convert pyccel expressions to strings of Python code"""
     printmethod = "_pycode"
@@ -45,7 +50,7 @@ class PythonCodePrinter(CodePrinter):
     }
 
     def __init__(self, parser=None):
-        self.parser = parser
+        self._parser = parser
         super().__init__()
         self._additional_imports = set()
 
@@ -206,13 +211,13 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonInt(self, expr):
         type_name = type(expr).__name__.lower()
-        is_numpy = type_name.startswith('numpy')
+        is_numpy  = type_name[-1].isdigit()
         precision = str(expr.precision*8) if is_numpy else ''
         return 'int{}({})'.format(precision, self._print(expr.arg))
 
     def _print_PythonFloat(self, expr):
         type_name = type(expr).__name__.lower()
-        is_numpy = type_name.startswith('numpy')
+        is_numpy  = type_name[-1].isdigit()
         precision = str(expr.precision*8) if is_numpy else ''
         return 'float{}({})'.format(precision, self._print(expr.arg))
 
@@ -279,7 +284,10 @@ class PythonCodePrinter(CodePrinter):
         if not expr.target:
             return 'import {source}'.format(source=source)
         else:
-            target = [self._print(i) for i in expr.target]
+            if source in import_target_swap:
+                target = [self._print(import_target_swap[source].get(i,i)) for i in expr.target]
+            else:
+                target = [self._print(i) for i in expr.target]
             if source == "numpy":
                 target = [t[:-5] if t.endswith('_like') else t for t in target]
             target = ', '.join(target)
@@ -625,5 +633,4 @@ def pycode(expr, assign_to=None, **settings):
     >>> pycode(tan(Symbol('x')) + 1)
     'math.tan(x) + 1'
     """
-    settings.pop('parser', None)
     return PythonCodePrinter(settings).doprint(expr, assign_to)
