@@ -396,6 +396,17 @@ class CCodePrinter(CodePrinter):
 
     # ============ Elements ============ #
 
+    def _print_PythonAbs(self, expr):
+        if expr.arg.dtype is NativeReal():
+            self._additional_imports.add("math")
+            func = "fabs"
+        elif expr.arg.dtype is NativeComplex():
+            self._additional_imports.add("complex")
+            func = "cabs"
+        else:
+            func = "abs"
+        return "{}({})".format(func, self._print(expr.arg))
+
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
         type_name = self.find_in_dtype_registry('real', expr.precision)
