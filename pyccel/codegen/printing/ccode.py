@@ -457,7 +457,6 @@ class CCodePrinter(CodePrinter):
                             PyccelMul(expr.imag, LiteralImaginaryUnit()))))
 
     def _print_PythonComplex(self, expr):
-        self._additional_imports.add("complex")
         if expr.is_cast:
             value = self._print(expr.internal_var)
         else:
@@ -467,6 +466,7 @@ class CCodePrinter(CodePrinter):
         return '({0})({1})'.format(type_name, value)
 
     def _print_LiteralImaginaryUnit(self, expr):
+        self._additional_imports.add("complex")
         return '_Complex_I'
 
     def _print_ModuleHeader(self, expr):
@@ -1489,17 +1489,22 @@ class CCodePrinter(CodePrinter):
         return ''
 
     #=================== OMP ==================
-    def _print_OMP_For_Loop(self, expr):
-        omp_expr   = str(expr.txt)
-        return '#pragma omp for{}\n{{'.format(omp_expr)
 
-    def _print_OMP_Parallel_Construct(self, expr):
-        omp_expr   = str(expr.txt)
-        return '#pragma omp {}\n{{'.format(omp_expr)
+    def _print_OmpAnnotatedComment(self, expr):
+        clauses = ''
+        if expr.combined:
+            clauses = ' ' + expr.combined
+        clauses += str(expr.txt)
+        omp_expr = '#pragma omp {}{}'.format(expr.name, clauses)
 
-    def _print_OMP_Single_Construct(self, expr):
-        omp_expr   = str(expr.txt)
-        return '#pragma omp {}\n{{'.format(omp_expr)
+        if expr.is_multiline:
+            if expr.combined is None:
+                omp_expr += '\n{'
+            elif (expr.combined and "for" not in expr.combined):
+                if ("masked taskloop" not in expr.combined) and ("distribute" not in expr.combined):
+                    omp_expr += '\n{'
+
+        return omp_expr
 
     def _print_Omp_End_Clause(self, expr):
         return '}'
