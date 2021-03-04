@@ -383,6 +383,23 @@ static int64_t	*_numpy_to_ndarray_strides(int64_t *np_strides, int type_size, in
     return ndarray_strides;
 }
 
+/*
+** copy numpy shape to nd_array shape, and return it in a new array, to
+** avoid the problem of variation of system architecture because numpy shape
+** is not saved in fixed length type.
+*/
+static int64_t     *_numpy_to_ndarray_shape(int64_t *np_shape, int nd)
+{
+    int64_t *nd_shape;
+
+    nd_shape = (int64_t*)malloc(sizeof(int64_t) * nd);
+    for (int i = 0; i < nd; i++)
+        nd_shape[i] = np_shape[i];
+    return nd_shape;
+
+}
+
+
 bool	pyarray_to_ndarray(PyObject *o, t_ndarray *array, int dtype, int rank, int flag)
 {
 	PyArrayObject	*pyarray;
@@ -402,8 +419,7 @@ bool	pyarray_to_ndarray(PyObject *o, t_ndarray *array, int dtype, int rank, int 
 	array->type        = PyArray_TYPE(pyarray);
 	array->length      = PyArray_SIZE(pyarray);
 	array->buffer_size = PyArray_NBYTES(pyarray);
-	array->shape       = (int64_t*)malloc(sizeof(int64_t) * array->nd);
-	memcpy(array->shape, PyArray_SHAPE(pyarray), array->nd);
+	array->shape       = _numpy_to_ndarray_shape(PyArray_SHAPE(pyarray), array->nd);
 	array->strides     = _numpy_to_ndarray_strides(PyArray_STRIDES(pyarray), array->type_size, array->nd);
 
 	array->is_view     = 1;
