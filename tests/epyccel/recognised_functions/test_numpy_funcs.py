@@ -4693,6 +4693,8 @@ def test_numpy_float_scalar(language):
 
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
+    assert type(f_bl_true_output) == type(test_bool_true_output)
+    assert type(f_bl_false_output) == type(test_bool_false_output)
 
     assert (type(f_bl_true_output) == type(test_bool_true_output))
     assert (type(f_bl_false_output) == type(test_bool_false_output))
