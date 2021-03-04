@@ -23,12 +23,13 @@ from pyccel.ast.cwrapper    import (PyArgKeywords, PyArg_ParseTupleNode,
                                     PyBuildValueNode)
 from pyccel.ast.cwrapper    import C_to_Python, generate_scalar_collector
 from pyccel.ast.cwrapper    import get_custom_key, flags_registry, PyErr_SetString
+from pyccel.ast.cwrapper    import PyccelArrayData
 
 from pyccel.ast.cwrapper    import PyccelPyObject, PyccelPyArrayObject, Py_None
 
 from pyccel.ast.numpy_wrapper   import PyArray_to_C
 
-from pyccel.ast.internals       import PyccelArraySize, PyccelArrayData
+from pyccel.ast.internals       import PyccelArraySize
 from pyccel.ast.variable        import Variable, ValuedVariable, VariableAddress
 
 from pyccel.ast.builtins         import PythonBool
@@ -237,7 +238,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         check = PyccelEq(VariableAddress(py_variable), VariableAddress(Py_None))
         if c_variable.is_optional:
-            body =  [AliasAssign(variable, Nil())]
+            body = [] # NULL already set in the wrapper
 
         else:
             body = [Assign(c_variable, default_value)]
@@ -620,6 +621,9 @@ class CWrapperCodePrinter(CCodePrinter):
             function = self.get_PyArgParse_Converter_Function(used_names, arg)
             parsing_converter_functions.append(function)
             func_args.extend(self.get_static_args(arg)) # Bind_C args
+
+            if arg.is_optional: # if arguments is optional default value is NULL
+                wrapper_body.append(Assign(VariableAddress(arg), Nil()))
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(*wrapper_args[1:],

@@ -13,7 +13,7 @@ import numpy as np
 from ..errors.errors   import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
-from .basic     import Basic
+from .basic     import Basic, PyccelAstNode
 
 from .literals  import LiteralInteger
 from .datatypes import DataType
@@ -21,6 +21,7 @@ from .datatypes import NativeInteger, NativeReal, NativeComplex
 from .datatypes import NativeBool, NativeString, NativeGeneric, NativeVoid
 
 from .operators import PyccelOr, PyccelNot
+from .internals import PyccelInternalFunction
 
 from .core      import FunctionCall, FunctionDef, FunctionAddress
 from .core      import Assign, If, IfSection, Return
@@ -225,6 +226,39 @@ class PyBuildValueNode(Basic):
     @property
     def converters(self):
         return self._converter_functions
+
+
+class PyccelArrayData(PyccelInternalFunction):
+    """
+    Class representing a call to a function which would
+    return the raw_data of an array object, normally used
+    for binding c/fortran
+
+    Parameters
+    ==========
+    arg   : PyccelAstNode
+    """
+    _attribute_nodes = ('_arg',)
+
+    def __init__(self, arg):
+        if not isinstance(arg, (list,
+                                tuple,
+                                PyccelAstNode)):
+            raise TypeError('Unknown type of  %s.' % type(arg))
+
+        self._arg   = arg
+        self._rank = 1
+
+        super().__init__()
+
+    @property
+    def arg(self):
+        """ Object whose data is investigated
+        """
+        return self._arg
+
+    def __str__(self):
+        return 'Data({})'.format(str(self.arg))
 
 def get_custom_key(variable):
     """

@@ -94,39 +94,6 @@ class PyccelArraySize(PyccelInternalFunction):
         else:
             return False
 
-class PyccelArrayData(PyccelInternalFunction):
-    """
-    Class representing a call to a function which would
-    return the raw_data of an array object, normally used
-    for binding c/fortran
-
-    Parameters
-    ==========
-    arg   : PyccelAstNode
-    """
-    _attribute_nodes = ('_arg',)
-
-    def __init__(self, arg):
-        if not isinstance(arg, (list,
-                                tuple,
-                                PyccelAstNode)):
-            raise TypeError('Unknown type of  %s.' % type(arg))
-
-        self._arg   = arg
-        self._rank = 1
-
-        super().__init__()
-
-    @property
-    def arg(self):
-        """ Object whose data is investigated
-        """
-        return self._arg
-
-    def __str__(self):
-        return 'Data({})'.format(str(self.arg))
-
-
 class Slice(Basic):
 
     """Represents a slice in the code.
