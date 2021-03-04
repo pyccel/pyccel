@@ -1014,7 +1014,8 @@ def test_floor_phrase(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_shape_indexed(language):
@@ -1045,7 +1046,8 @@ def test_shape_indexed(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_shape_property(language):
@@ -1074,7 +1076,8 @@ def test_shape_property(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_shape_tuple_output(language):
@@ -1114,7 +1117,8 @@ def test_shape_tuple_output(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_shape_real(language):
@@ -1146,7 +1150,8 @@ def test_shape_real(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_shape_int(language):
@@ -1179,7 +1184,8 @@ def test_shape_int(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_shape_bool(language):
@@ -1211,7 +1217,8 @@ def test_shape_bool(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_basic_int(language):
@@ -1259,7 +1266,8 @@ def test_full_basic_int(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_basic_real(language):
@@ -1308,7 +1316,8 @@ def test_full_basic_real(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_basic_bool(language):
@@ -1357,7 +1366,8 @@ def test_full_basic_bool(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_order(language):
@@ -1387,7 +1397,8 @@ def test_full_order(language):
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_dtype(language):
@@ -1472,7 +1483,8 @@ def test_full_dtype(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_combined_args(language):
@@ -1527,7 +1539,8 @@ def test_full_combined_args(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_empty_basic(language):
@@ -1557,7 +1570,8 @@ def test_empty_basic(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_empty_order(language):
@@ -1646,7 +1660,8 @@ def test_empty_dtype(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_empty_combined_args(language):
@@ -1698,7 +1713,8 @@ def test_empty_combined_args(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_ones_basic(language):
@@ -1728,7 +1744,8 @@ def test_ones_basic(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_ones_order(language):
@@ -1825,7 +1842,8 @@ def test_ones_dtype(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_ones_combined_args(language):
@@ -1880,7 +1898,8 @@ def test_ones_combined_args(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_zeros_basic(language):
@@ -1910,7 +1929,8 @@ def test_zeros_basic(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_zeros_order(language):
@@ -2007,7 +2027,8 @@ def test_zeros_dtype(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_zeros_combined_args(language):
@@ -2062,7 +2083,8 @@ def test_zeros_combined_args(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_array(language):
@@ -2100,7 +2122,8 @@ def test_array(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_rand_basic(language):
@@ -2120,7 +2143,8 @@ def test_rand_basic(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_rand_args(language):
@@ -2186,7 +2210,8 @@ def test_rand_args(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_rand_expr(language):
@@ -2221,7 +2246,8 @@ def test_rand_expr_array(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="randint not implemented"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_randint_basic(language):
@@ -2265,7 +2291,8 @@ def test_randint_basic(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="randint not implemented"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_randint_expr(language):
@@ -2300,7 +2327,8 @@ def test_randint_expr(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_sum_int(language):
@@ -2318,7 +2346,8 @@ def test_sum_int(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_sum_real(language):
@@ -2336,7 +2365,8 @@ def test_sum_real(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_sum_phrase(language):
@@ -2356,7 +2386,8 @@ def test_sum_phrase(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_sum_property(language):
@@ -2373,7 +2404,8 @@ def test_sum_property(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_min_int(language):
@@ -2391,7 +2423,8 @@ def test_min_int(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_min_real(language):
@@ -2409,7 +2442,8 @@ def test_min_real(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_min_phrase(language):
@@ -2429,7 +2463,8 @@ def test_min_phrase(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_min_property(language):
@@ -2446,7 +2481,8 @@ def test_min_property(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_max_int(language):
@@ -2464,7 +2500,8 @@ def test_max_int(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_max_real(language):
@@ -2482,7 +2519,8 @@ def test_max_real(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_max_phrase(language):
@@ -2502,7 +2540,8 @@ def test_max_phrase(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_max_property(language):
@@ -2519,7 +2558,8 @@ def test_max_property(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 
@@ -2572,7 +2612,8 @@ def test_full_like_basic_int(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_like_basic_real(language):
@@ -2625,7 +2666,8 @@ def test_full_like_basic_real(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_like_basic_bool(language):
@@ -2678,7 +2720,8 @@ def test_full_like_basic_bool(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_like_order(language):
@@ -2709,7 +2752,8 @@ def test_full_like_order(language):
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_like_dtype(language):
@@ -2802,7 +2846,8 @@ def test_full_like_dtype(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_like_combined_args(language):
@@ -2864,7 +2909,8 @@ def test_full_like_combined_args(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_empty_like_basic(language):
@@ -2896,7 +2942,8 @@ def test_empty_like_basic(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_empty_like_order(language):
@@ -3004,7 +3051,8 @@ def test_empty_like_dtype(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_empty_like_combined_args(language):
@@ -3068,7 +3116,8 @@ def test_empty_like_combined_args(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_ones_like_basic(language):
@@ -3100,7 +3149,8 @@ def test_ones_like_basic(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_ones_like_order(language):
@@ -3216,7 +3266,8 @@ def test_ones_like_dtype(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_ones_like_combined_args(language):
@@ -3283,7 +3334,8 @@ def test_ones_like_combined_args(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_zeros_like_basic(language):
@@ -3315,7 +3367,8 @@ def test_zeros_like_basic(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_zeros_like_order(language):
@@ -3430,7 +3483,8 @@ def test_zeros_like_dtype(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_zeros_like_combined_args(language):
@@ -3940,7 +3994,7 @@ def test_numpy_imag_scalar(language):
             pytest.mark.c]
         ),
         pytest.param("python", marks = [
-            pytest.mark.skip(reason=("real handles types in __new__ so it "
+            pytest.mark.skip(reason=("imag handles types in __new__ so it "
                 "cannot be used in a translated interface in python")),
             pytest.mark.python]
         )
@@ -4027,7 +4081,7 @@ def test_numpy_imag_array_like_1d(language):
             pytest.mark.c]
         ),
         pytest.param("python", marks = [
-            pytest.mark.skip(reason=("real handles types in __new__ so it "
+            pytest.mark.skip(reason=("imag handles types in __new__ so it "
                 "cannot be used in a translated interface in python")),
             pytest.mark.python]
         )
@@ -4348,7 +4402,7 @@ def test_numpy_int8_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert matching_types(f_bl_true_output, test_bool_false_output.item())
+    assert matching_types(f_bl_true_output, test_bool_false_output)
 
     f_integer = epyccel(get_int8, language=language)
     f_integer8 = epyccel(get_int8, language=language)
@@ -4360,25 +4414,25 @@ def test_numpy_int8_scalar(language):
     test_int_output  = get_int8(integer)
 
     assert f_integer_output == test_int_output
-    assert matching_types(f_integer_output, test_int_output.item())
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_int8(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert matching_types(f_integer8_output, test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_int8(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert matching_types(f_integer16_output, test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_int8(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert matching_types(f_integer32_output, test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -4386,7 +4440,7 @@ def test_numpy_int8_scalar(language):
         test_int64_output = get_int8(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert matching_types(f_integer64_output, test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_int8, language=language)
     f_fl32 = epyccel(get_int8, language=language)
@@ -4396,19 +4450,19 @@ def test_numpy_int8_scalar(language):
     test_float_output = get_int8(fl)
 
     assert f_fl_output == test_float_output
-    assert matching_types(f_fl_output, test_float_output.item())
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_int8(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert matching_types(f_fl32_output, test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_int8(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert matching_types(f_fl64_output, test_float64_output.item())
+    assert matching_types(f_fl64_output, test_float64_output)
 
 
 def test_numpy_int16_scalar(language):
@@ -4450,7 +4504,8 @@ def test_numpy_int16_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert matching_types(f_bl_true_output, test_bool_false_output.item())
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_int16, language=language)
     f_integer8 = epyccel(get_int16, language=language)
@@ -4462,25 +4517,25 @@ def test_numpy_int16_scalar(language):
     test_int_output  = get_int16(integer)
 
     assert f_integer_output == test_int_output
-    assert matching_types(f_integer_output, test_int_output.item())
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_int16(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert matching_types(f_integer8_output, test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_int16(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert matching_types(f_integer16_output, test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_int16(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert matching_types(f_integer32_output, test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -4488,7 +4543,7 @@ def test_numpy_int16_scalar(language):
         test_int64_output = get_int16(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert matching_types(f_integer64_output, test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_int16, language=language)
     f_fl32 = epyccel(get_int16, language=language)
@@ -4498,19 +4553,19 @@ def test_numpy_int16_scalar(language):
     test_float_output = get_int16(fl)
 
     assert f_fl_output == test_float_output
-    assert matching_types(f_fl_output, test_float_output.item())
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_int16(fl32) # oups
 
     assert f_fl32_output == test_float32_output
-    assert matching_types(f_fl32_output, test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_int16(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert matching_types(f_fl64_output, test_float64_output.item())
+    assert matching_types(f_fl64_output, test_float64_output)
 
 def test_numpy_int32_scalar(language):
 
@@ -4714,7 +4769,6 @@ def test_numpy_int64_scalar(language):
     assert f_fl64_output == test_float64_output
     assert matching_types(f_fl64_output, test_float64_output)
 
-@pytest.mark.xfail(reason="Bool cast to float gives integer, see #784")
 def test_numpy_float_scalar(language):
 
     @types('bool')
@@ -5310,14 +5364,15 @@ def test_numpy_complex128_scalar(language):
 
     assert f_fl64_output == test_float64_output
     assert matching_types(f_fl64_output, test_float64_output)
-    assert matching_types(f_fl64_output, test_float64_output.item())
+    assert matching_types(f_fl64_output, test_float64_output)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Mod function not supported in C"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 
@@ -5372,25 +5427,25 @@ def test_numpy_mod_scalar(language):
     test_int_output  = get_mod(integer)
 
     assert f_integer_output == test_int_output
-    assert matching_types(f_integer_output, test_int_output.item())
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_mod(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert matching_types(f_integer8_output, test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_mod(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert matching_types(f_integer16_output, test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_mod(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert matching_types(f_integer32_output, test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -5398,7 +5453,7 @@ def test_numpy_mod_scalar(language):
         test_int64_output = get_mod(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert matching_types(f_integer64_output, test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_mod, language=language)
     f_fl32 = epyccel(get_mod, language=language)
@@ -5408,26 +5463,27 @@ def test_numpy_mod_scalar(language):
     test_float_output = get_mod(fl)
 
     assert f_fl_output == test_float_output
-    assert matching_types(f_fl_output, test_float_output.item())
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_mod(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert matching_types(f_fl32_output, test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_mod(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert matching_types(f_fl64_output, test_float64_output.item())
+    assert matching_types(f_fl64_output, test_float64_output)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Mod function not supported in C"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 
@@ -5493,7 +5549,8 @@ def test_numpy_mod_array_like_1d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Mod function not supported in C"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 
@@ -5559,7 +5616,8 @@ def test_numpy_mod_array_like_2d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Prod function not supported in C"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 
@@ -5611,7 +5669,7 @@ def test_numpy_prod_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert matching_types(f_bl_true_output, test_bool_false_output.item())
+    assert matching_types(f_bl_true_output, test_bool_false_output)
 
     f_integer = epyccel(get_prod, language=language)
     f_integer8 = epyccel(get_prod, language=language)
@@ -5623,25 +5681,25 @@ def test_numpy_prod_scalar(language):
     test_int_output  = get_prod(integer)
 
     assert f_integer_output == test_int_output
-    assert matching_types(f_integer_output, test_int_output.item())
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_prod(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert matching_types(f_integer8_output, test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_prod(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert matching_types(f_integer16_output, test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_prod(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert matching_types(f_integer32_output, test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -5649,7 +5707,7 @@ def test_numpy_prod_scalar(language):
         test_int64_output = get_prod(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert matching_types(f_integer64_output, test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_prod, language=language)
     f_fl32 = epyccel(get_prod, language=language)
@@ -5659,19 +5717,19 @@ def test_numpy_prod_scalar(language):
     test_float_output = get_prod(fl)
 
     assert f_fl_output == test_float_output
-    assert matching_types(f_fl_output, test_float_output.item())
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_prod(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert matching_types(f_fl32_output, test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_prod(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert matching_types(f_fl64_output, test_float64_output.item())
+    assert matching_types(f_fl64_output, test_float64_output)
 
     f_complex64 = epyccel(get_prod, language=language)
     f_complex128 = epyccel(get_prod, language=language)
@@ -5680,7 +5738,7 @@ def test_numpy_prod_scalar(language):
     test_complex64_output = get_prod(cmplx64)
 
     assert f_complex64_output == test_complex64_output
-    assert matching_types(f_complex64_output, test_complex64_output.item())
+    assert matching_types(f_complex64_output, test_complex64_output)
 
     f_complex128_output = f_complex128(cmplx128)
     test_complex128_output = get_prod(cmplx128)
@@ -5693,7 +5751,8 @@ def test_numpy_prod_scalar(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Prod function not supported in C"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 
@@ -5774,7 +5833,8 @@ def test_numpy_prod_array_like_1d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Prod function not supported in C"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 
