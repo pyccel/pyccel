@@ -854,20 +854,14 @@ class SemanticParser(BasicParser):
     def _visit_AnnotatedComment(self, expr, **settings):
         return expr
     def _visit_OmpAnnotatedComment(self, expr, **settings):
-        #print(dir(expr._user_nodes))
-        code = expr._user_nodes
-        #print(len(code))
-        #print("*")
-        #print(code[0])
-        #print("*")
-        #print(code[1])
-        #print(type(code[0].body))
-        #print("---------------- start")
-        #for i in code[0].body:
-        #    print(expr == i)
-        #print("----------------")
-        #print(type(code))
-        #print(expr._attribute_nodes)
+        if expr._has_nowait:
+            code = expr._user_nodes
+            code = code[len(code) - 1]
+            index = code.body.index(expr)
+            print(index)
+            for i, node in enumerate(code.body):
+                if i == index + 1:
+                    print(node)
         return expr
     def _visit_Literal(self, expr, **settings):
         return expr
