@@ -53,31 +53,6 @@ errors = Errors()
 
 __all__ = ["CCodePrinter", "ccode"]
 
-# dictionary mapping sympy function to (argument_conditions, C_function).
-# Used in CCodePrinter._print_Function(self)
-known_functions = {
-    "Abs": [(lambda x: not x.is_integer, "fabs")],
-    "gamma": "tgamma",
-    "sin"  : "sin",
-    "cos"  : "cos",
-    "tan"  : "tan",
-    "asin" : "asin",
-    "acos" : "acos",
-    "atan" : "atan",
-    "atan2": "atan2",
-    "exp"  : "exp",
-    "log"  : "log",
-    "erf"  : "erf",
-    "sinh" : "sinh",
-    "cosh" : "cosh",
-    "tanh" : "tanh",
-    "asinh": "asinh",
-    "acosh": "acosh",
-    "atanh": "atanh",
-    "floor": "floor",
-    "ceiling": "ceil",
-}
-
 # dictionary mapping numpy function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_NumpyUfuncBase(self, expr)
 numpy_ufunc_to_c_real = {
@@ -244,25 +219,15 @@ class CCodePrinter(CodePrinter):
     language = "C"
 
     _default_settings = {
-        'order': None,
-        'full_prec': 'auto',
-        'human': True,
-        'precision': 15,
-        'user_functions': {},
-        'dereference': set()
+        'tabwidth': 4,
     }
 
-    def __init__(self, parser, **settings):
+    def __init__(self, parser, prefix_module = None):
 
         if parser.filename:
             errors.set_target(parser.filename, 'file')
 
-        prefix_module = settings.pop('prefix_module', None)
-        CodePrinter.__init__(self, settings)
-        self.known_functions = dict(known_functions)
-        userfuncs = settings.get('user_functions', {})
-        self.known_functions.update(userfuncs)
-        self._dereference = set(settings.get('dereference', []))
+        super().__init__()
         self.prefix_module = prefix_module
         self._additional_imports = set(['stdlib'])
         self._parser = parser
@@ -448,6 +413,7 @@ class CCodePrinter(CodePrinter):
         return '({0})({1})'.format(type_name, value)
 
     def _print_PythonInt(self, expr):
+        self._additional_imports.add('stdint')
         value = self._print(expr.arg)
         type_name = self.find_in_dtype_registry('int', expr.precision)
         return '({0})({1})'.format(type_name, value)
@@ -467,7 +433,6 @@ class CCodePrinter(CodePrinter):
                             PyccelMul(expr.imag, LiteralImaginaryUnit()))))
 
     def _print_PythonComplex(self, expr):
-        self._additional_imports.add("complex")
         if expr.is_cast:
             value = self._print(expr.internal_var)
         else:
@@ -477,6 +442,7 @@ class CCodePrinter(CodePrinter):
         return '({0})({1})'.format(type_name, value)
 
     def _print_LiteralImaginaryUnit(self, expr):
+        self._additional_imports.add("complex")
         return '_Complex_I'
 
     def _print_ModuleHeader(self, expr):
@@ -1455,7 +1421,7 @@ class CCodePrinter(CodePrinter):
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
 
     def _print_Variable(self, expr):
-        if expr in self._dereference or self.stored_in_c_pointer(expr):
+        if self.stored_in_c_pointer(expr):
             return '(*{0})'.format(expr.name)
         else:
             return expr.name
@@ -1498,17 +1464,22 @@ class CCodePrinter(CodePrinter):
         return ''
 
     #=================== OMP ==================
-    def _print_OMP_For_Loop(self, expr):
-        omp_expr   = str(expr.txt)
-        return '#pragma omp for{}\n{{'.format(omp_expr)
 
-    def _print_OMP_Parallel_Construct(self, expr):
-        omp_expr   = str(expr.txt)
-        return '#pragma omp {}\n{{'.format(omp_expr)
+    def _print_OmpAnnotatedComment(self, expr):
+        clauses = ''
+        if expr.combined:
+            clauses = ' ' + expr.combined
+        clauses += str(expr.txt)
+        omp_expr = '#pragma omp {}{}'.format(expr.name, clauses)
 
-    def _print_OMP_Single_Construct(self, expr):
-        omp_expr   = str(expr.txt)
-        return '#pragma omp {}\n{{'.format(omp_expr)
+        if expr.is_multiline:
+            if expr.combined is None:
+                omp_expr += '\n{'
+            elif (expr.combined and "for" not in expr.combined):
+                if ("masked taskloop" not in expr.combined) and ("distribute" not in expr.combined):
+                    omp_expr += '\n{'
+
+        return omp_expr
 
     def _print_Omp_End_Clause(self, expr):
         return '}'
@@ -1542,7 +1513,7 @@ class CCodePrinter(CodePrinter):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
-        tab = "    "
+        tab = " "*self._default_settings["tabwidth"]
         inc_token = ('{', '(', '{\n', '(\n')
         dec_token = ('}', ')')
 
@@ -1562,8 +1533,6 @@ class CCodePrinter(CodePrinter):
             pretty.append("%s%s" % (tab*level, line))
             level += increase[n]
         return pretty
-
-    _print_Function = CodePrinter._print_not_supported
 
 def ccode(expr, parser, assign_to=None, **settings):
     """Converts an expr to a string of c code

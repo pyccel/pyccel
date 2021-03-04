@@ -80,7 +80,8 @@ from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonMap, PythonTuple, Lambda)
 
 from pyccel.ast.numpyext import NumpyZeros
-from pyccel.ast.numpyext import NumpyInt, NumpyInt32, NumpyInt64
+from pyccel.ast.numpyext import NumpyBool
+from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
@@ -663,7 +664,7 @@ class SemanticParser(BasicParser):
         d_var = {}
         # TODO improve => put settings as attribut of Parser
 
-        if expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt,
+        if expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyBool, NumpyInt, NumpyInt8, NumpyInt16,
                       NumpyInt32, NumpyInt64, NumpyComplex, NumpyComplex64,
 					  NumpyComplex128, NumpyFloat, NumpyFloat64, NumpyFloat32):
 
@@ -852,24 +853,14 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_AnnotatedComment(self, expr, **settings):
         return expr
+    def _visit_OmpAnnotatedComment(self, expr, **settings):
+        return expr
     def _visit_Literal(self, expr, **settings):
         return expr
-    def _visit_Integer(self, expr, **settings):
-        """Visit sympy.Integer"""
-        return LiteralInteger(expr.p)
-    def _visit_Float(self, expr, **settings):
-        """Visit sympy.Integer"""
-        return LiteralFloat(expr)
     def _visit_PythonComplex(self, expr, **settings):
         return expr
     def _visit_Pass(self, expr, **settings):
         return expr
-
-    def _visit_NumberSymbol(self, expr, **settings):
-        return expr.n()
-
-    def _visit_Number(self, expr, **settings):
-        return expr.n()
 
     def _visit_Variable(self, expr, **settings):
         name = expr.name
@@ -3053,7 +3044,7 @@ class SemanticParser(BasicParser):
         if isinstance(val, (TupleVariable, PythonTuple)) and \
                 not isinstance(val, PythonList):
             if isinstance(length, LiteralInteger):
-                length = length.p
+                length = length.python_value
             if isinstance(val, TupleVariable):
                 return PythonTuple(*(val.get_vars()*length))
             else:
