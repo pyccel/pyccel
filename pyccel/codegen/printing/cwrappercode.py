@@ -241,7 +241,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         else:
             body = [Assign(c_variable, default_value)]
-        body += [Return(LiteralInteger(1))]
+        body += [Return([LiteralInteger(1)])]
 
         body = If(IfSection(check, body))
         return body
@@ -298,7 +298,7 @@ class CWrapperCodePrinter(CCodePrinter):
             collect = PyArray_to_C(py_variable, c_variable, check_is_needed, self._target_language)
             collect = [Return([collect])]
 
-        else: #scalar
+        else: #scalar #is there any way to make it look like array one?(see cwrapper.c)
             collect = generate_scalar_collector(py_variable, c_variable, check_is_needed)
 
         body += collect
