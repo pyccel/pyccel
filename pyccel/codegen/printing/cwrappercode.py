@@ -11,8 +11,8 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.literals    import LiteralTrue, LiteralInteger, LiteralString
 
-from pyccel.ast.operators   import PyccelNot, PyccelEq, PyccelOr
-from pyccel.ast.datatypes   import NativeBool, NativeComplex, NativeInteger
+from pyccel.ast.operators   import PyccelNot, PyccelEq
+from pyccel.ast.datatypes   import NativeInteger
 from pyccel.ast.core        import create_incremented_string, SeparatorComment
 
 from pyccel.ast.core        import FunctionCall, FunctionDef, FunctionAddress
@@ -21,13 +21,12 @@ from pyccel.ast.core        import If, IfSection, Import, Return
 
 from pyccel.ast.cwrapper    import (PyArgKeywords, PyArg_ParseTupleNode,
                                     PyBuildValueNode)
-from pyccel.ast.cwrapper    import Python_to_C, C_to_Python, PythonType_Check
-from pyccel.ast.cwrapper    import get_custom_key, flags_registry
+from pyccel.ast.cwrapper    import C_to_Python, generate_scalar_collector
+from pyccel.ast.cwrapper    import get_custom_key, flags_registry, PyErr_SetString
 
 from pyccel.ast.cwrapper    import PyccelPyObject, PyccelPyArrayObject, Py_None
-from pyccel.ast.cwrapper    import get_custom_key, PyErr_SetString, PyErr_Occurred
 
-from pyccel.ast.numpy_wrapper   import NumpyType_Check, PyArray_to_C
+from pyccel.ast.numpy_wrapper   import PyArray_to_C
 
 from pyccel.ast.internals       import PyccelArraySize, PyccelArrayData
 from pyccel.ast.variable        import Variable, ValuedVariable, VariableAddress
@@ -233,7 +232,7 @@ class CWrapperCodePrinter(CCodePrinter):
             default value of the variable
         Returns   :
         -----------
-        body      : IfSection
+        body      : If block
         """
 
         check = PyccelEq(VariableAddress(py_variable), VariableAddress(Py_None))
@@ -242,56 +241,43 @@ class CWrapperCodePrinter(CCodePrinter):
 
         else:
             body = [Assign(c_variable, default_value)]
+        body += [Return(LiteralInteger(1))]
 
-        body = IfSection(check, body)
+        body = If(IfSection(check, body))
         return body
-
-    # --------------------------------------------------------------------
-    #                        Custom error generators
-    # --------------------------------------------------------------------
-    @staticmethod
-    def generate_datatype_error(variable):
-        """
-        Generate TypeError exception from the variable information (datatype, precision)
-        Parameters:
-        ----------
-        variable : Variable
-
-        Returns:
-        -------
-        func     : FunctionCall
-            call to PyErr_SetString with TypeError as exception and custom message
-        """
-        dtype     = variable.dtype
-
-        if isinstance(dtype, NativeBool):
-            precision = ''
-        if isinstance(dtype, NativeComplex):
-            precision = '{} bit '.format(variable.precision * 2 * 8)
-        else:
-            precision = '{} bit '.format(variable.precision * 8)
-
-        message = '"Argument must be {precision}{dtype}"'.format(
-                precision = precision,
-                dtype     = variable.dtype)
-        return PyErr_SetString('PyExc_TypeError', message)
 
     #--------------------------------------------------------------------
     #                   Convert functions
     #--------------------------------------------------------------------
 
-    def generate_scalar_converter_function(self, used_names, variable, check_is_needed = True):
+    def generate_converter_name(self, used_names, variable):
         """
-        Generate converter function responsible for collecting value 
-        and managing errors (data type, precision) of arguments
-        with rank less than 1
+        """
+        dtype = self._print(variable.dtype)
+        prec  = variable.precision
+        dtype = self.find_in_dtype_registry(dtype, prec)
+        order = variable.order or ''
+        rank  = variable.rank or ''
+        name = 'py_to_{dtype}_{rank}_{order}'.format(
+            dtype = dtype,
+            rank  = rank,
+            order = order)
+        name = self.get_new_name(used_names, name)
+
+        return name
+
+
+    def generate_converter(self, name, variable, check_is_needed):
+        """
+        Generate converter function responsible for collecting value
+        and managing errors (data type, precision, rank, order) of arguments
         Parameters:
         ----------
         used_names : set of strings
             Set of variable and function names to avoid name collisions
         variable   : Variable
-            variable holdding information (data type, precision) needed
-            in bulding converter function body 
+            variable holdding information (data type, precision, rank, order) needed
+            for bulding converter function body
         check_is_needed : Boolean
             True if data type check is needed, used to avoid multiple type check
             in interface
@@ -300,86 +286,29 @@ class CWrapperCodePrinter(CCodePrinter):
         funcDef   : FunctionDef
         """
 
-        func_name       = 'py_to_{}'.format(self._print(variable.dtype))
-        func_name       = self.get_new_name(used_names, func_name)
-        py_variable     = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
-        c_variable      = variable.clone(name = variable.name, is_pointer = True)
-        body            = []
+        py_variable = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
+        c_variable  = variable.clone(name = 'c_variable', is_pointer = True)
+        body        = []
 
         # (Valued / Optional) variable check
         if isinstance(variable, ValuedVariable):
             body.append(self.generate_valued_variable_body(py_variable, c_variable, variable.value))
 
-        #datatqype check
-        if check_is_needed:
-            numpy_check  = NumpyType_Check(py_variable, c_variable)
-            python_check = PythonType_Check(py_variable, c_variable)
-            check        = PyccelNot(PyccelOr(numpy_check, python_check))
-            error        = self.generate_datatype_error(c_variable)
-            body.append(IfSection(check, [error, Return([LiteralInteger(0)])]))
+        if variable.rank > 0: #array
+            collect = PyArray_to_C(py_variable, c_variable, check_is_needed, self._target_language)
+            collect = [Return([collect])]
 
-        body = [If(*body)]
-        # Collect value
-        body.append(Assign(c_variable, FunctionCall(Python_to_C(c_variable), [py_variable])))
-        # call PyErr_Occurred to check any error durring conversion
-        body.append(If(IfSection(FunctionCall(PyErr_Occurred, []),
-            [Return([LiteralInteger(0)])])))
-        body.append(Return([LiteralInteger(1)]))
+        else: #scalar
+            collect = generate_scalar_collector(py_variable, c_variable, check_is_needed)
 
-        funcDef = FunctionDef(name     = func_name,
-                            arguments  = [py_variable, c_variable],
-                            results    = [Variable(name = 'r', dtype = NativeInteger(), is_temp = True)],
-                            body       = body)
+        body += collect
 
-        return funcDef
+        function = FunctionDef(name      = name,
+                               body      = body,
+                               arguments = [py_variable, c_variable],
+                               results   = [Variable(name = 'r', dtype = NativeInteger(), is_temp = True)])
 
-    def generate_array_converter_function(self, used_names, variable, check_is_needed = True):
-        """
-        Generate converter function responsible for collecting value 
-        and managing errors (data type, rank, order) of arguments
-        with rank greater than 0
-        Parameters:
-        ----------
-        used_names : set of strings
-            Set of variable and function names to avoid name collisions
-        variable   : Variable
-            variable holdding information (data type, rank, order) needed
-            in bulding converter function body 
-        check_is_needed : Boolean
-            True if data type check is needed, used to avoid multiple type check
-            in interface
-        Returns:
-        --------
-        funcDef   : FunctionDef
-        """
-
-        func_name       = 'py_to_nd{}'.format(self._print(variable.dtype))
-        func_name       = self.get_new_name(used_names, func_name)
-        py_variable     = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
-        c_variable      = variable.clone(name = 'c_variable', is_pointer = True)
-        body            = []
-
-        # (Valued / Optional) variable check
-        if isinstance(variable, ValuedVariable):
-            body.append(self.generate_valued_variable_body(py_variable, c_variable, variable.value))
-
-        body = [Return([PyArray_to_C(py_variable, c_variable,
-                            check_is_needed, self._target_language)])]
-
-        funcDef = FunctionDef(name     = func_name,
-                            arguments  = [py_variable, c_variable],
-                            results    = [Variable(dtype = NativeInteger(), name = 'r', is_temp = True)],
-                            body       = body)
-
-        return funcDef
-
-    def generate_tuple_converter_function(self, used_names, variable):
-        pass
-        #TODO
-
-    def generate_list_converter_function(self, used_names, variable):
-        pass
-        #TODO
+        return function
 
     # -------------------------------------------------------------------
     #       Parsing arguments and building values  functions
@@ -405,10 +334,10 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         if get_custom_key(variable) not in self.converter_functions_dict:
 
-            if variable.rank > 0:
-                function = self.generate_array_converter_function(used_names, variable)
-            else:
-                function = self.generate_scalar_converter_function(used_names, variable)
+            name = self.generate_converter_name(used_names, variable)
+            function = self.generate_converter(name, variable, check_is_needed)
+
+            #save function in dict so it will be printed later
             self.converter_functions_dict[get_custom_key(variable)] = function
             return function
         return self.converter_functions_dict[get_custom_key(variable)]
@@ -427,6 +356,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         # TODO when returning complex data type (array, tuple) this function should like
         # get_PyArgParse_Converter_Function
+
         if variable.rank > 0:
             raise NotImplementedError('return not implemented for arrays.')
 
