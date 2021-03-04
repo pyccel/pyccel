@@ -646,8 +646,6 @@ class FCodePrinter(CodePrinter):
     def _print_PythonReal(self, expr):
         value = self._print(expr.internal_var)
         return 'real({0})'.format(value)
-    def _print_PythonFloat(self, expr):
-        return expr.fprint(self._print)
     def _print_PythonImag(self, expr):
         value = self._print(expr.internal_var)
         return 'aimag({0})'.format(value)
@@ -815,7 +813,11 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
-        return 'Real({0}, {1})'.format(value, self.print_kind(expr))
+        if (expr.arg.dtype is NativeBool()):
+            code = 'MERGE(1.0_{0}, 0.0_{1}, {2})'.format(self.print_kind(expr), self.print_kind(expr),value)
+        else:
+            code  = 'Real({0}, {1})'.format(value, self.print_kind(expr))
+        return code
 
     def _print_MathFloor(self, expr):
         arg = expr.args[0]
