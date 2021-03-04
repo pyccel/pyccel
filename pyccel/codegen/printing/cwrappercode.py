@@ -257,8 +257,8 @@ class CWrapperCodePrinter(CCodePrinter):
         dtype = self._print(variable.dtype)
         prec  = variable.precision
         dtype = self.find_in_dtype_registry(dtype, prec)
-        order = variable.order or ''
-        rank  = variable.rank or ''
+        order = variable.order or '0'
+        rank  = variable.rank or '0'
         name = 'py_to_{dtype}_{rank}_{order}'.format(
             dtype = dtype,
             rank  = rank,
@@ -416,9 +416,13 @@ class CWrapperCodePrinter(CCodePrinter):
         dtype = self._print(expr.arg.dtype)
         prec  = expr.arg.precision
 
-        dtype = self.find_in_ndarray_type_registry(dtype, prec)
+        dtype   = self.find_in_ndarray_type_registry(dtype, prec)
+        op      = '->' if self.stored_in_c_pointer(expr) else '.'
+        return '{}{}{}'.format(expr.arg, op, dtype)
 
-        return '{}.{}'.format(expr.arg, dtype)
+    def _print_PyccelArraySize(self, expr):
+        op      = '->' if self.stored_in_c_pointer(expr) else '.'
+        return '{}{}shape[{}]'.format(expr.arg, op, expr.index)
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
