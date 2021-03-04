@@ -10,6 +10,8 @@ def test_abs_i(language):
 
     f2 = epyccel(f1, language=language)
 
+    assert f1(0) == f2(0)
+    assert f1(-5) == f2(-5)
     assert f1(11) == f2(11)
 
 def test_abs_r(language):
@@ -19,7 +21,10 @@ def test_abs_r(language):
 
     f2 = epyccel(f1, language=language)
 
+    assert f1(0.00000) == f2(0.00000)
     assert f1(-3.1415) == f2(-3.1415)
+    assert f1(2.71828) == f2(2.71828)
+
 
 
 def test_abs_c(language):
@@ -29,4 +34,8 @@ def test_abs_c(language):
 
     f2 = epyccel(f1, language=language)
 
-    assert f1(3j+2) == f2(3j+2)
+    assert f1(3j + 4) == f2(3j + 4)
+    assert f1(3j - 4) == f2(3j - 4)
+    assert f1(5j + 0) == f2(5j + 0)
+    assert f1(0j + 5) == f2(0j + 5)
+    assert f1(0j + 0) == f2(0j + 0)
