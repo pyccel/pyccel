@@ -19,8 +19,8 @@ bool	pyarray_to_ndarray(PyObject *o, t_ndarray *array, int dtype, int rank, int 
 /* functions prototypes */
 
 /* casting python object to c type */
-float complex	Pycomplex_to_Complex64(PyObject *o, float complex *c);
-double complex	Pycomplex_to_Complex128(PyObject *o, double complex *c);
+float complex	PyComplex_to_Complex64(PyObject *o) ;
+double complex	PyComplex_to_Complex128(PyObject *o);
 
 int64_t			PyInt64_to_Int64(PyObject *o);
 int32_t			PyInt32_to_Int32(PyObject *o);
