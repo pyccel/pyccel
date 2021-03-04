@@ -1823,6 +1823,8 @@ class FCodePrinter(CodePrinter):
 
         body = self._print(expr.body)
 
+        if expr._has_nowait:
+            epilog += '!$omp end do nowait\n'
         return ('{prolog}'
                 '{body}'
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)

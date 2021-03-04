@@ -858,10 +858,9 @@ class SemanticParser(BasicParser):
             code = expr._user_nodes
             code = code[len(code) - 1]
             index = code.body.index(expr)
-            print(index)
-            for i, node in enumerate(code.body):
+            for i, node in enumerate(expr._user_nodes[len(expr._user_nodes) - 1].body):
                 if i == index + 1:
-                    print(node)
+                    node._has_nowait = True
         return expr
     def _visit_Literal(self, expr, **settings):
         return expr
@@ -1975,7 +1974,7 @@ class SemanticParser(BasicParser):
             return result
 
     def _visit_For(self, expr, **settings):
-
+        
         self.create_new_loop_scope()
 
         # treatment of the index/indices
@@ -2061,7 +2060,9 @@ class SemanticParser(BasicParser):
         if isinstance(iterable, Variable):
             return ForIterator(target, iterable, body)
 
-        return For(target, iterable, body, local_vars=local_vars)
+        for_expr = For(target, iterable, body, local_vars=local_vars)
+        for_expr._has_nowait = expr._has_nowait
+        return for_expr
 
 
     def _visit_GeneratorComprehension(self, expr, **settings):
