@@ -90,6 +90,8 @@ from pyccel.ast.internals import Slice, PyccelSymbol
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
+from pyccel.ast.omp import OMP_For_Loop
+
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
 
@@ -856,11 +858,17 @@ class SemanticParser(BasicParser):
     def _visit_OmpAnnotatedComment(self, expr, **settings):
         if expr._has_nowait:
             code = expr._user_nodes
-            code = code[len(code) - 1]
-            index = code.body.index(expr)
-            for i, node in enumerate(expr._user_nodes[len(expr._user_nodes) - 1].body):
-                if i == index + 1:
-                    node._has_nowait = True
+            if isinstance(expr, OMP_For_Loop):
+                code = code[len(code) - 1]
+                index = code.body.index(expr)
+                for i, node in enumerate(code.body):
+                    if i == index + 1:
+                        if isinstance(node, For):
+                            node._has_nowait = True
+                        else:
+                            errors.report("Expected a For loop after the OpenMP for pragma", symbol=type(node).__name__,
+                                severity='fatal', blocker=self.blocking)
+
         return expr
     def _visit_Literal(self, expr, **settings):
         return expr
@@ -1974,7 +1982,7 @@ class SemanticParser(BasicParser):
             return result
 
     def _visit_For(self, expr, **settings):
-        
+
         self.create_new_loop_scope()
 
         # treatment of the index/indices

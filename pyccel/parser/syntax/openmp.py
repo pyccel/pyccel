@@ -91,7 +91,10 @@ def check_get_clauses(name, valid_clauses, clauses, combined = None):
         if isinstance(clause, valid_clauses) and \
            not (isinstance(clause, OmpCopyin) and isinstance(combined, OmpTargetParallel)):
             if isinstance(clause, OmpNowait):
-                has_nowait = True
+                if isinstance(name, OmpLoopConstruct):
+                    has_nowait = True
+                else:
+                    raise TypeError("Wrong clause nowait")
             else:
                 txt = '{0} {1}'.format(txt, clause.expr)
         else:

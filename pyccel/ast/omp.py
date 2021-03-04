@@ -129,7 +129,6 @@ class OMP_Target_Construct(OmpAnnotatedComment):
         """Name of the construct."""
         return 'target'
 
-
 class OMP_Teams_Construct(OmpAnnotatedComment):
     """ Represents OpenMP Teams construct. """
     _is_multiline = True
