@@ -432,9 +432,6 @@ class CCodePrinter(CodePrinter):
     # ============ Elements ============ #
 
     def _print_PythonAbs(self, expr):
-        """ print the python builtin function abs
-        args : variable
-        """
         if expr.arg.dtype is NativeReal():
             self._additional_imports.add("math")
             func = "fabs"
