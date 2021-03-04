@@ -204,6 +204,23 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return expr.is_pointer or expr.is_optional
 
+    def get_declare_type(self, expr):
+        declare = CCodePrinter.get_declare_type(self, expr)
+        if not expr.is_optional or not expr.is_pointer:
+            return declare
+
+        # this is because variable is optional (represented by pointer in pyccel)
+        # and passed as address to a function
+        return declare + '*'
+
+    @staticmethod
+    def get_default_assign(arg):
+        """
+        """
+        if arg.is_optional:
+            return Assign(VariableAddress(arg), Nil())
+        return Assign(arg, arg.value)
+
     @staticmethod
     def get_flag_value(flag, variable):
         """
@@ -220,7 +237,7 @@ class CWrapperCodePrinter(CCodePrinter):
     #                  Custom body generators [helpers]
     # --------------------------------------------------------------------
     @staticmethod
-    def generate_valued_variable_body(py_variable, c_variable, default_value):
+    def generate_valued_variable_body(py_variable, c_variable, default_value, local_var):
         """
         Generate valued variable code section (check, collect default value)
         Parameters:
@@ -231,6 +248,8 @@ class CWrapperCodePrinter(CCodePrinter):
             The variable that will hold default value
         default_value : Literal | None
             default value of the variable
+        local_var     : list
+            list thats going to hold any additional temporary variable
         Returns   :
         -----------
         body      : If block
@@ -238,11 +257,12 @@ class CWrapperCodePrinter(CCodePrinter):
 
         check = PyccelEq(VariableAddress(py_variable), VariableAddress(Py_None))
         if c_variable.is_optional:
-            body = [] # NULL already set in the wrapper
+            tmp_variable = Variable(name      = 'tmp_variable',
+                                    dtype     = c_variable.dtype,
+                                    precision = c_variable.precision)
+            local_var.append(tmp_variable)
 
-        else:
-            body = [Assign(c_variable, default_value)]
-        body += [Return([LiteralInteger(1)])]
+        body = [Return([LiteralInteger(1)])]
 
         body = If(IfSection(check, body))
         return body
@@ -254,12 +274,14 @@ class CWrapperCodePrinter(CCodePrinter):
     def generate_converter_name(self, used_names, variable):
         """
         """
-        dtype = self._print(variable.dtype)
-        prec  = variable.precision
-        dtype = self.find_in_dtype_registry(dtype, prec)
-        order = variable.order or '0'
-        rank  = variable.rank or '0'
-        name = 'py_to_{dtype}_{rank}_{order}'.format(
+        dtype  = self._print(variable.dtype)
+        prec   = variable.precision
+        order  = '_' + str(variable.order) if variable.order else ''
+        rank   = '_' + str(variable.rank) if variable.rank else ''
+        valued = 'V_' if isinstance(variable, ValuedVariable) else ''
+
+        name = '{dtype}_{prec}{rank}{order}'.format(
+            prec  = prec,
             dtype = dtype,
             rank  = rank,
             order = order)
@@ -289,23 +311,34 @@ class CWrapperCodePrinter(CCodePrinter):
 
         py_variable = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
         c_variable  = variable.clone(name = 'c_variable', is_pointer = True)
+        local_vars  = []
         body        = []
-
+        var         = c_variable
         # (Valued / Optional) variable check
         if isinstance(variable, ValuedVariable):
-            body.append(self.generate_valued_variable_body(py_variable, c_variable, variable.value))
+            body.append(self.generate_valued_variable_body(py_variable,
+                                                           c_variable,
+                                                           variable.value,
+                                                           local_vars))
+            var = local_vars[0] if local_vars else c_variable
 
         if variable.rank > 0: #array
-            collect = PyArray_to_C(py_variable, c_variable, check_is_needed, self._target_language)
-            collect = [Return([collect])]
+            collect = PyArray_to_C(py_variable, var, check_is_needed, self._target_language)
+            collect = If(IfSection(PyccelNot(collect), [Return([LiteralInteger(0)])]))
 
         else: #scalar #is there any way to make it look like array one?(see cwrapper.c)
-            collect = generate_scalar_collector(py_variable, c_variable, check_is_needed)
+            collect = generate_scalar_collector(py_variable, var, check_is_needed)
 
         body += collect
 
+        if variable.is_optional:
+            body += [Assign(c_variable, VariableAddress(var))]
+
+        body.append(Return([LiteralInteger(1)]))
+
         function = FunctionDef(name      = name,
                                body      = body,
+                               local_vars= local_vars,
                                arguments = [py_variable, c_variable],
                                results   = [Variable(name = 'r', dtype = NativeInteger(), is_temp = True)])
 
@@ -626,8 +659,8 @@ class CWrapperCodePrinter(CCodePrinter):
             parsing_converter_functions.append(function)
             func_args.extend(self.get_static_args(arg)) # Bind_C args
 
-            if arg.is_optional: # if arguments is optional default value is NULL
-                wrapper_body.append(Assign(VariableAddress(arg), Nil()))
+            if isinstance(arg, ValuedVariable): # if arguments is valued get default value
+                wrapper_body.append(self.get_default_assign(arg))
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(*wrapper_args[1:],
