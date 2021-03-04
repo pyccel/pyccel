@@ -1350,11 +1350,9 @@ class CCodePrinter(CodePrinter):
         else:
             raise NotImplementedError("Only iterable currently supported is Range")
 
-        test_step = None
+        test_step = expr.iterable.step
         if isinstance(test_step, PyccelUnarySub):
             test_step = expr.iterable.step.args[0]
-        else:
-            test_step = expr.iterable.step
 
         # testing if the step is a value or an expression
         if isinstance(test_step, Literal):
