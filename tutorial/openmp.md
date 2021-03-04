@@ -769,8 +769,7 @@ loop-nest
 
 #### Example
 
-The ```#$ omp parallel for simd``` construct specifies a parallel construct containing only one worksharing-loo
-p SIMD construct.
+The ```#$ omp parallel for simd``` construct specifies a parallel construct containing only one worksharing-loop SIMD construct.
 
 ```python
 r = 0
