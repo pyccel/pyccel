@@ -1795,9 +1795,10 @@ class FCodePrinter(CodePrinter):
 
         # testing if the step is a value or an expression
         if isinstance(test_step, Literal):
-            stop = PyccelMinus(expr.stop, LiteralInteger(1))
             if isinstance(expr.step, PyccelUnarySub):
                 stop = PyccelAdd(expr.stop, LiteralInteger(1))
+            else:
+                stop = PyccelMinus(expr.stop, LiteralInteger(1))
         else:
             stop = IfTernaryOperator(PyccelGt(expr.step, LiteralInteger(0)),
                                      PyccelMinus(expr.stop, LiteralInteger(1)),
