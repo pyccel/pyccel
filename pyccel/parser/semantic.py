@@ -853,6 +853,8 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_AnnotatedComment(self, expr, **settings):
         return expr
+    def _visit_OmpAnnotatedComment(self, expr, **settings):
+        return expr
     def _visit_Literal(self, expr, **settings):
         return expr
     def _visit_PythonComplex(self, expr, **settings):

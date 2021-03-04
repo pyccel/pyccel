@@ -30,6 +30,7 @@ from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, Dlist, AsName,
                              If, IfSection)
+
 from pyccel.ast.variable  import (Variable, TupleVariable,
                              IndexedElement,
                              DottedName, PyccelArraySize)
@@ -1857,27 +1858,28 @@ class FCodePrinter(CodePrinter):
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
 
     # .....................................................
-    #                   OpenMP statements
+    #               Print OpenMP AnnotatedComment
     # .....................................................
-    def _print_OMP_Parallel_Construct(self, expr):
-        omp_expr   = str(expr.txt)
-        ompexpr = '!$omp {}\n'.format(omp_expr)
-        return ompexpr
+
+    def _print_OmpAnnotatedComment(self, expr):
+        clauses = ''
+        if expr.combined:
+            combined = expr.combined.replace("for", "do")
+            clauses = ' ' + combined
+
+        omp_expr = '!$omp {}'.format(expr.name.replace("for", "do"))
+        clauses += str(expr.txt).replace("cancel for", "cancel do")
+        omp_expr = '{}{}\n'.format(omp_expr, clauses)
+
+        return omp_expr
 
     def _print_Omp_End_Clause(self, expr):
         omp_expr = str(expr.txt)
+        if "section" in omp_expr and "sections" not in omp_expr:
+            return ''
         omp_expr = omp_expr.replace("for", "do")
-        ompexpr = '!$omp {}\n'.format(omp_expr)
-        return ompexpr
-
-    def _print_OMP_Single_Construct(self, expr):
-        omp_expr   = str(expr.txt)
-        ompexpr = '!$omp {}\n'.format(omp_expr)
-        return ompexpr
-
-    def _print_OMP_For_Loop(self, expr):
-        omp_expr   = str(expr.txt)
-        return '!$omp do{}\n'.format(omp_expr)
+        omp_expr = '!$omp {}\n'.format(omp_expr)
+        return omp_expr
 
     # .....................................................
     def _print_OMP_Parallel(self, expr):
