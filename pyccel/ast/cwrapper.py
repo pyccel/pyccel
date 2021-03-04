@@ -362,8 +362,6 @@ def generate_scalar_collector(py_variable, c_variable, check_is_needed):
     body.append(If(IfSection(FunctionCall(PyErr_Occurred, []),
         [Return([LiteralInteger(0)])])))
 
-    body.append(Return([LiteralInteger(1)]))
-
     return body
 
 
