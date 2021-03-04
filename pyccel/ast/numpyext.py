@@ -783,15 +783,6 @@ class NumpyNorm(PyccelInternalFunction):
     _dtype = NativeReal()
 
     def __init__(self, arg, dim=None):
-        super().__init__(arg, dim)
-        if isinstance(arg.dtype, NativeBool):
-            arg = PythonFloat(PythonInt(arg))
-        elif isinstance(arg.dtype, NativeComplex):
-            arg = PythonAbs(arg)
-        elif not isinstance(arg.dtype, NativeReal):
-            arg = PythonFloat(arg)
-        self._arg = PythonList(arg) if arg.rank == 0 else arg
-
         if isinstance(dim, ValuedArgument):
             dim = dim.value
         if self.dim is not None:
@@ -801,10 +792,11 @@ class NumpyNorm(PyccelInternalFunction):
         else:
             self._shape = ()
         self._rank = len(self._shape)
+        super().__init__(arg, dim)
 
     @property
     def arg(self):
-        return self._arg
+        return self._args[0]
 
     @property
     def dim(self):
