@@ -260,8 +260,6 @@ class PythonFloat(PyccelAstNode):
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
-        if isinstance(arg.dtype, NativeBool):
-            return PythonInt(arg)
         if isinstance(arg, LiteralFloat) and arg.precision == cls._precision:
             return arg
         if isinstance(arg, (LiteralInteger, LiteralFloat)):
