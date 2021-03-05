@@ -217,6 +217,9 @@ class PythonCodePrinter(CodePrinter):
     def _print_PythonLen(self, expr):
         return 'len({})'.format(self._print(expr.arg))
 
+    def _print_PythonAbs(self, expr):
+        return 'abs({})'.format(self._print(expr.arg))
+
     def _print_PythonBool(self, expr):
         return 'bool({})'.format(self._print(expr.arg))
 
