@@ -35,20 +35,20 @@ def _construct_header(func_name, args):
 class PythonCodePrinter(CodePrinter):
     """A printer to convert pyccel expressions to strings of Python code"""
     printmethod = "_pycode"
-    _kf = dict(chain(
-        _known_functions.items(),
-        [(k, '' + v) for k, v in _known_functions_math.items()]
-    ))
-    _kc = {k: ''+v for k, v in _known_constants_math.items()}
+    language = "python"
 
-    def __init__(self, parser=None, **settings):
-        self.assert_contiguous = settings.pop('assert_contiguous', False)
+    _default_settings = {
+        'tabwidth': 4,
+    }
+
+    def __init__(self, parser=None):
         self.parser = parser
-        super().__init__(settings=settings)
+        super().__init__()
         self._additional_imports = set()
 
     def _indent_codestring(self, lines):
-        return '    '+lines.replace('\n','\n    ')
+        tab = " "*self._default_settings['tabwidth']
+        return tab+lines.replace('\n','\n'+tab)
 
     def _format_code(self, lines):
         return lines

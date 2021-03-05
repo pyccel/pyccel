@@ -80,7 +80,8 @@ from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonMap, PythonTuple, Lambda)
 
 from pyccel.ast.numpyext import NumpyZeros
-from pyccel.ast.numpyext import NumpyInt, NumpyInt32, NumpyInt64
+from pyccel.ast.numpyext import NumpyBool
+from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
@@ -663,7 +664,7 @@ class SemanticParser(BasicParser):
         d_var = {}
         # TODO improve => put settings as attribut of Parser
 
-        if expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyInt,
+        if expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyBool, NumpyInt, NumpyInt8, NumpyInt16,
                       NumpyInt32, NumpyInt64, NumpyComplex, NumpyComplex64,
 					  NumpyComplex128, NumpyFloat, NumpyFloat64, NumpyFloat32):
 
@@ -851,6 +852,8 @@ class SemanticParser(BasicParser):
     def _visit_CommentBlock(self, expr, **settings):
         return expr
     def _visit_AnnotatedComment(self, expr, **settings):
+        return expr
+    def _visit_OmpAnnotatedComment(self, expr, **settings):
         return expr
     def _visit_Literal(self, expr, **settings):
         return expr
@@ -2391,8 +2394,8 @@ class SemanticParser(BasicParser):
                         severity='warning')
         for hd in headers:
             if (args_number != len(hd.dtypes)):
-                msg = 'The number of arguments in the function {} ({}) does not match the number\
-                        of types in decorator/header ({}).'.format(name ,args_number, len(hd.dtypes))
+                msg = """The number of arguments in the function {} ({}) does not match the number
+                        of types in decorator/header ({}).'.format(name ,args_number, len(hd.dtypes))"""
                 if (args_number < len(hd.dtypes)):
                     errors.report(msg, symbol=expr.arguments, severity='warning')
                 else:
