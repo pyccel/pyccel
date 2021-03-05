@@ -53,7 +53,7 @@ class PythonCodePrinter(CodePrinter):
     def __init__(self, parser=None):
         self._parser = parser
         super().__init__()
-        self._additional_imports = set()
+        self._additional_imports = {}
 
     def _indent_codestring(self, lines):
         tab = " "*self._default_settings['tabwidth']
@@ -64,7 +64,14 @@ class PythonCodePrinter(CodePrinter):
 
     def get_additional_imports(self):
         """return the additional imports collected in printing stage"""
-        return self._additional_imports
+        imports = [i for tup in self._additional_imports.values() for i in tup[1]]
+        return imports
+
+    def insert_new_import(self, import_obj):
+        source = str(import_obj.source)
+        src_info = self._additional_imports.setdefault(source, (set(), []))
+        src_info[0].update(import_obj.target)
+        src_info[1].append(import_obj)
 
     def _print_tuple(self, expr):
         fs = ', '.join(self._print(f) for f in expr)
@@ -136,7 +143,7 @@ class PythonCodePrinter(CodePrinter):
                 expr.decorators.pop('template')
             for n,f in decorators.items():
                 if n in pyccel_decorators:
-                    self._additional_imports.add(Import(DottedName('pyccel.decorators'), n))
+                    self.insert_new_import(Import(DottedName('pyccel.decorators'), n))
                 # TODO - All decorators must be stored in a list
                 if not isinstance(f, list):
                     f = [f]
@@ -179,7 +186,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_Program(self, expr):
         body  = self._print(expr.body)
         body = self._indent_codestring(body)
-        imports  = [*expr.imports, *self._additional_imports]
+        imports  = [*expr.imports, *self.get_additional_import()]
         imports  = '\n'.join(self._print(i) for i in imports)
 
         return ('{imports}\n'
@@ -214,13 +221,19 @@ class PythonCodePrinter(CodePrinter):
         type_name = type(expr).__name__.lower()
         is_numpy  = type_name[-1].isdigit()
         precision = str(expr.precision*8) if is_numpy else ''
-        return 'int{}({})'.format(precision, self._print(expr.arg))
+        name = 'int{}'.format(precision)
+        if is_numpy:
+            self.insert_new_import(Import('numpy',name))
+        return '{}({})'.format(name, self._print(expr.arg))
 
     def _print_PythonFloat(self, expr):
         type_name = type(expr).__name__.lower()
         is_numpy  = type_name[-1].isdigit()
         precision = str(expr.precision*8) if is_numpy else ''
-        return 'float{}({})'.format(precision, self._print(expr.arg))
+        name = 'float{}'.format(precision)
+        if is_numpy:
+            self.insert_new_import(Import('numpy',name))
+        return '{}({})'.format(name, self._print(expr.arg))
 
     def _print_PythonComplex(self, expr):
         if expr.is_cast:
@@ -230,10 +243,12 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NumpyComplex(self, expr):
         precision = str(expr.precision*16)
+        name = 'complex{}'.format(precision)
+        self.insert_new_import(Import('numpy',name))
         if expr.is_cast:
-            return 'complex{}({})'.format(precision, self._print(expr.internal_var))
+            return '{}({})'.format(name, self._print(expr.internal_var))
         else:
-            return 'complex{}({}+{}*1j)'.format(precision, self._print(expr.real), self._print(expr.imag))
+            return '{}({}+{}*1j)'.format(name, self._print(expr.real), self._print(expr.imag))
 
     def _print_PythonRange(self, expr):
         return 'range({start}, {stop}, {step})'.format(
@@ -535,7 +550,7 @@ class PythonCodePrinter(CodePrinter):
         funcs = '\n'.join(self._print(f) for f in funcs)
         classes = '\n'.join(self._print(c) for c in expr.classes)
         body = '\n'.join((interfaces, funcs, classes))
-        imports  = [*expr.imports, *self._additional_imports]
+        imports  = [*expr.imports, *self.get_additional_imports()]
         imports  = '\n'.join(self._print(i) for i in imports)
         return ('{imports}\n\n'
                 '{body}').format(
