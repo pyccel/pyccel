@@ -245,18 +245,8 @@ class CWrapperCodePrinter(CCodePrinter):
         -----------
         body      : If block
         """
+        pass
 
-        check = PyccelEq(VariableAddress(py_variable), VariableAddress(Py_None))
-        if c_variable.is_optional:
-            tmp_variable = Variable(name      = 'tmp_variable',
-                                    dtype     = c_variable.dtype,
-                                    precision = c_variable.precision)
-            local_var.append(tmp_variable)
-
-        body = [Return([LiteralInteger(1)])]
-
-        body = If(IfSection(check, body))
-        return body
 
     #--------------------------------------------------------------------
     #                   Convert functions
@@ -303,34 +293,27 @@ class CWrapperCodePrinter(CCodePrinter):
 
         py_variable = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
         c_variable  = variable.clone(name = 'c_variable', is_pointer = True)
-        local_vars  = []
         body        = []
-        var         = c_variable
+
         # (Valued / Optional) variable check
         if isinstance(variable, ValuedVariable):
-            body.append(self.generate_valued_variable_body(py_variable,
-                                                           c_variable,
-                                                           variable.value,
-                                                           local_vars))
-            var = local_vars[0] if local_vars else c_variable
+            check = PyccelEq(VariableAddress(py_variable), VariableAddress(Py_None))
+            body.append(If(IfSection(check, [Return([LiteralInteger(1)])])))
+
 
         if variable.rank > 0: #array
-            collect = PyArray_to_C(py_variable, var, check_is_needed, self._target_language)
+            collect = PyArray_to_C(py_variable, c_variable, check_is_needed, self._target_language)
             collect = [If(IfSection(PyccelNot(collect), [Return([LiteralInteger(0)])]))]
 
         else: #scalar #is there any way to make it look like array one?(see cwrapper.c)
-            collect = generate_scalar_collector(py_variable, var, check_is_needed)
+            collect = generate_scalar_collector(py_variable, c_variable, check_is_needed)
 
         body += collect
-
-        if variable.is_optional:
-            body += [Assign(c_variable, VariableAddress(var))]
 
         body.append(Return([LiteralInteger(1)]))
 
         function = FunctionDef(name      = name,
                                body      = body,
-                               local_vars= local_vars,
                                arguments = [py_variable, c_variable],
                                results   = [Variable(name = 'r', dtype = NativeInteger(), is_temp = True)])
 
@@ -401,6 +384,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def static_function_signature(self, expr):
         """Extract from function definition all the information
         (name, input, output) needed to create the signature
+        used for c/fortran binding
 
         Parameters
         ----------
@@ -638,6 +622,8 @@ class CWrapperCodePrinter(CCodePrinter):
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
 
         wrapper_body      = [keyword_list]
+        local_args        = {a : a for a in expr.arguments}
+        tmp_arg           = {}
         func_args         = []
         parsing_converter_functions = []
         # loop on all functions argument to collect needed converter functions
@@ -645,9 +631,7 @@ class CWrapperCodePrinter(CCodePrinter):
             function = self.get_PyArgParse_Converter_Function(used_names, arg)
             parsing_converter_functions.append(function)
             func_args.extend(self.get_static_args(arg)) # Bind_C args
-
-            if isinstance(arg, ValuedVariable): # if arguments is valued get default value
-                wrapper_body.append(self.get_default_assign(arg))
+            #TODO optional_args
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(*wrapper_args[1:],
