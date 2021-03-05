@@ -421,9 +421,10 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyccelArrayData(self, expr):
         dtype = self._print(expr.arg.dtype)
         prec  = expr.arg.precision
+        arg   = self._print(expr.arg)
 
         dtype   = self.find_in_ndarray_type_registry(dtype, prec)
-        return '{}.{}'.format(expr.arg, dtype)
+        return '{}.{}'.format(arg, dtype)
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
