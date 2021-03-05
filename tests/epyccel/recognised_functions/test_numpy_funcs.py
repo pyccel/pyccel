@@ -5266,6 +5266,20 @@ def test_numpy_complex64_scalar(language):
     assert f_fl64_output == test_float64_output
     assert matching_types(f_fl64_output, test_float64_output)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Mod function not supported in C"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("complex cast uses NumpyReal which"
+                "handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
+        )
+    )
+)
 def test_numpy_complex128_scalar(language):
 
     @types('bool')
