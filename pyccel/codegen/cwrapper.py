@@ -50,7 +50,7 @@ def create_c_setup(mod_name,
             A string containing the contents of the setup file
     """
 
-    code  = "from setuptools import Extension, setup\n"
+    code  = "from distutils.core import Extension, setup\n"
     code += "import numpy\n"
     code += "\n"
 
