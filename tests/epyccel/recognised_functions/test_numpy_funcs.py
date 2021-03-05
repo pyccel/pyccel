@@ -3603,7 +3603,7 @@ def test_numpy_real_scalar(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="See https://github.com/pyccel/pyccel/issues/792."),
+            pytest.mark.skip(reason="See https://github.com/pyccel/pyccel/issues/794."),
             pytest.mark.c]
         )
     )
@@ -3687,7 +3687,7 @@ def test_numpy_real_array_like_1d(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="See https://github.com/pyccel/pyccel/issues/792."),
+            pytest.mark.skip(reason="See https://github.com/pyccel/pyccel/issues/794."),
             pytest.mark.c]
         )
     )
