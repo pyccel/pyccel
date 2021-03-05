@@ -278,8 +278,8 @@ class CWrapperCodePrinter(CCodePrinter):
         and managing errors (data type, precision, rank, order) of arguments
         Parameters:
         ----------
-        used_names : set of strings
-            Set of variable and function names to avoid name collisions
+        names : string
+            custom name of the converter function
         variable   : Variable
             variable holdding information (data type, precision, rank, order) needed
             for bulding converter function body
