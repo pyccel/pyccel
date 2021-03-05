@@ -300,15 +300,12 @@ class CWrapperCodePrinter(CCodePrinter):
             check = PyccelEq(VariableAddress(py_variable), VariableAddress(Py_None))
             body.append(If(IfSection(check, [Return([LiteralInteger(1)])])))
 
-
         if variable.rank > 0: #array
             collect = PyArray_to_C(py_variable, c_variable, check_is_needed, self._target_language)
-            collect = [If(IfSection(PyccelNot(collect), [Return([LiteralInteger(0)])]))]
+            body   += [If(IfSection(PyccelNot(collect), [Return([LiteralInteger(0)])]))]
 
         else: #scalar #is there any way to make it look like array one?(see cwrapper.c)
-            collect = generate_scalar_collector(py_variable, c_variable, check_is_needed)
-
-        body += collect
+            body   += generate_scalar_collector(py_variable, c_variable, check_is_needed)
 
         body.append(Return([LiteralInteger(1)]))
 
