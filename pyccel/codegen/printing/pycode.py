@@ -37,7 +37,8 @@ def _construct_header(func_name, args):
 #==============================================================================
 
 import_target_swap = {
-        'numpy' : {'double' : 'float64', 'product' : 'prod'}
+        'numpy' : {'double' : 'float64', 'product' : 'prod'},
+        'numpy.random' : {'random' : 'rand'}
         }
 
 class PythonCodePrinter(CodePrinter):
@@ -408,6 +409,21 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NumpyProduct(self, expr):
         return "prod({})".format(self._print(expr.arg))
+
+    def _print_NumpyRand(self, expr):
+        args = ', '.join(self._print(a) for a in expr.args)
+        return "rand({})".format(args)
+
+    def _print_NumpyRandint(self, expr):
+        if expr.low:
+            args = "{}, ".format(self._print(expr.low))
+        else:
+            args = ""
+        args += "{}".format(self._print(expr.high))
+        if expr.shape != ():
+            size = self._print(expr.shape)
+            args += ", size = {}".format(size)
+        return "randint({})".format(args)
 
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__
