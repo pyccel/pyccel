@@ -204,15 +204,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return expr.is_pointer or expr.is_optional
 
-    def get_declare_type(self, expr):
-        declare = CCodePrinter.get_declare_type(self, expr)
-        if not expr.is_optional or not expr.is_pointer:
-            return declare
-
-        # this is because variable is optional (represented by pointer in pyccel)
-        # and passed as address to a function
-        return declare + '*'
-
     @staticmethod
     def get_default_assign(arg):
         """
