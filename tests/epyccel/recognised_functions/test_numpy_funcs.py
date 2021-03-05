@@ -3600,6 +3600,14 @@ def test_numpy_real_scalar(language):
     assert f_complex128_output == test_complex128_output
     assert (type(f_complex64_output) == type(test_complex64_output.item()))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="See https://github.com/pyccel/pyccel/issues/792."),
+            pytest.mark.c]
+        )
+    )
+)
 
 def test_numpy_real_array_like_1d(language):
 
@@ -3675,6 +3683,15 @@ def test_numpy_real_array_like_1d(language):
 
     assert (f_complex64(cmplx64) == get_real(cmplx64))
     assert (f_complex128(cmplx128) == get_real(cmplx128))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="See https://github.com/pyccel/pyccel/issues/792."),
+            pytest.mark.c]
+        )
+    )
+)
 
 def test_numpy_real_array_like_2d(language):
 
