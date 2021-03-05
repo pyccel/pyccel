@@ -68,6 +68,9 @@ class PythonCodePrinter(CodePrinter):
         return imports
 
     def insert_new_import(self, import_obj):
+        """ Add an import of an object which may have been
+        added by pyccel and therefore may not have been imported
+        """
         source = str(import_obj.source)
         src_info = self._additional_imports.setdefault(source, (set(), []))
         src_info[0].update(import_obj.target)
@@ -186,7 +189,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_Program(self, expr):
         body  = self._print(expr.body)
         body = self._indent_codestring(body)
-        imports  = [*expr.imports, *self.get_additional_import()]
+        imports  = [*expr.imports, *self.get_additional_imports()]
         imports  = '\n'.join(self._print(i) for i in imports)
 
         return ('{imports}\n'
