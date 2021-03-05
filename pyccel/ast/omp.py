@@ -76,6 +76,16 @@ class OMP_For_Loop(OmpAnnotatedComment):
         """Name of the construct."""
         return 'for'
 
+class OMP_Simd_Construct(OmpAnnotatedComment):
+    """ Represents an OpenMP Simd construct"""
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
+
+class OMP_Distribute_Construct(OmpAnnotatedComment):
+    """ Represents an OpenMP Distribute construct"""
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
+
 class OMP_Parallel_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Parallel construct. """
     _is_multiline = True

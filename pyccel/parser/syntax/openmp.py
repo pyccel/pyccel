@@ -16,7 +16,8 @@ from pyccel.ast.omp import (OmpAnnotatedComment, OMP_For_Loop, OMP_Parallel_Cons
                             OMP_Single_Construct, Omp_End_Clause, OMP_Critical_Construct,
                             OMP_Master_Construct, OMP_Masked_Construct, OMP_Task_Construct,
                             OMP_Cancel_Construct, OMP_Target_Construct, OMP_Teams_Construct,
-                            OMP_Sections_Construct, OMP_Section_Construct)
+                            OMP_Sections_Construct, OMP_Section_Construct, OMP_Simd_Construct,
+                            OMP_Distribute_Construct)
 
 DEBUG = False
 
@@ -159,7 +160,7 @@ class OmpCriticalConstruct(OmpConstruct):
 class OmpSimdConstruct(OmpConstruct):
     """Class representing the Simd construct."""
     def __init__(self, **kwargs):
-        super().__init__(OmpAnnotatedComment, _valid_simd_clauses, **kwargs)
+        super().__init__(OMP_Simd_Construct, _valid_simd_clauses, **kwargs)
 
 class OmpMasterConstruct(OmpConstruct):
     """Class representing the master construct."""
@@ -184,7 +185,7 @@ class OmpSectionConstruct(OmpConstruct):
 class OmpDistributeConstruct(OmpConstruct):
     """Class representing the Distribute construct."""
     def __init__(self, **kwargs):
-        super().__init__(OmpAnnotatedComment, _valid_Distribute_clauses, **kwargs)
+        super().__init__(OMP_Distribute_Construct, _valid_Distribute_clauses, **kwargs)
 
 class OmpBarrierConstruct(OmpConstruct):
     """Class representing the Barrier construct."""

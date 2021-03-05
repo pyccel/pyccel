@@ -92,7 +92,7 @@ from pyccel.ast.internals import Slice, PyccelSymbol
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
-from pyccel.ast.omp import OMP_For_Loop
+from pyccel.ast.omp import OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
@@ -859,11 +859,12 @@ class SemanticParser(BasicParser):
         return expr
     def _visit_OmpAnnotatedComment(self, expr, **settings):
         code = expr._user_nodes
-        if isinstance(expr, OMP_For_Loop):
-            code = code[len(code) - 1]
-            index = code.body.index(expr)
+        code = code[len(code) - 1]
+        index = code.body.index(expr)
+        if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct)):
+            msg = "statement after {} must be a for loop.".format(type(expr).__name__)
             if index == (len(code.body) - 1):
-                errors.report("OpenMP for loop pragma must be followed bu a for loop", symbol=type(node).__name__,
+                errors.report(msg, symbol=type(expr).__name__,
                 severity='fatal', blocker=self.blocking)
             for i, node in enumerate(code.body):
                 if i == index + 1:
@@ -876,7 +877,7 @@ class SemanticParser(BasicParser):
                         if isinstance(node, Comment):
                             index += 1
                         else:
-                            errors.report("Expected a For loop after the OpenMP for pragma", symbol=type(node).__name__,
+                            errors.report(msg, symbol=type(node).__name__,
                             severity='fatal', blocker=self.blocking)
 
         return expr
