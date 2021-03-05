@@ -3555,7 +3555,7 @@ def test_numpy_real_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
         test_int64_output = get_real(integer64)
@@ -3600,14 +3600,6 @@ def test_numpy_real_scalar(language):
     assert f_complex128_output == test_complex128_output
     assert (type(f_complex64_output) == type(test_complex64_output.item()))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="See https://github.com/pyccel/pyccel/issues/792."),
-            pytest.mark.c]
-        )
-    )
-)
 
 def test_numpy_real_array_like_1d(language):
 
@@ -3665,7 +3657,7 @@ def test_numpy_real_array_like_1d(language):
     assert (f_integer(integer) == get_real(integer))
     assert (f_integer32(integer32) == get_real(integer32))
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64 = epyccel(get_real, language=language)
         assert (f_integer64(integer64) == get_real(integer64))
@@ -3683,15 +3675,6 @@ def test_numpy_real_array_like_1d(language):
 
     assert (f_complex64(cmplx64) == get_real(cmplx64))
     assert (f_complex128(cmplx128) == get_real(cmplx128))
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="See https://github.com/pyccel/pyccel/issues/792."),
-            pytest.mark.c]
-        )
-    )
-)
 
 def test_numpy_real_array_like_2d(language):
 
@@ -3749,7 +3732,7 @@ def test_numpy_real_array_like_2d(language):
     assert (f_integer(integer) == get_real(integer))
     assert (f_integer32(integer32) == get_real(integer32))
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64 = epyccel(get_real, language=language)
         assert (f_integer64(integer64) == get_real(integer64))
@@ -3847,7 +3830,7 @@ def test_numpy_imag_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
         test_int64_output = get_imag(integer64)
@@ -3948,7 +3931,7 @@ def test_numpy_imag_array_like_1d(language):
     assert (f_integer(integer) == get_imag(integer))
     assert (f_integer32(integer32) == get_imag(integer32))
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64 = epyccel(get_imag, language=language)
         assert (f_integer64(integer64) == get_imag(integer64))
@@ -4023,7 +4006,7 @@ def test_numpy_imag_array_like_2d(language):
     assert (f_integer(integer) == get_imag(integer))
     assert (f_integer32(integer32) == get_imag(integer32))
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64 = epyccel(get_imag, language=language)
         assert (f_integer64(integer64) == get_imag(integer64))
@@ -4114,7 +4097,7 @@ def test_numpy_bool_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output)
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
         test_int64_output = get_bool(integer64)
@@ -4216,7 +4199,7 @@ def test_numpy_int_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output)
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
         test_int64_output = get_int(integer64)
@@ -4318,7 +4301,7 @@ def test_numpy_int8_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
         test_int64_output = get_int8(integer64)
@@ -4421,7 +4404,7 @@ def test_numpy_int16_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
         test_int64_output = get_int16(integer64)
@@ -4523,7 +4506,7 @@ def test_numpy_int32_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
         test_int64_output = get_int32(integer64)
@@ -4625,7 +4608,7 @@ def test_numpy_int64_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
         test_int64_output = get_int64(integer64)
@@ -4729,7 +4712,7 @@ def test_numpy_float_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output)
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
         test_int64_output = get_float(integer64)
@@ -4831,7 +4814,7 @@ def test_numpy_float32_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
         test_int64_output = get_float32(integer64)
@@ -4933,7 +4916,7 @@ def test_numpy_float64_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
         test_int64_output = get_float64(integer64)
@@ -5035,7 +5018,7 @@ def test_numpy_double_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
         test_int64_output = get_double(integer64)
@@ -5137,7 +5120,7 @@ def test_numpy_complex64_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
         test_int64_output = get_complex64(integer64)
@@ -5239,7 +5222,7 @@ def test_numpy_complex128_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
         test_int64_output = get_complex128(integer64)
@@ -5349,7 +5332,7 @@ def test_numpy_mod_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
         test_int64_output = get_mod(integer64)
@@ -5432,7 +5415,7 @@ def test_numpy_mod_array_like_1d(language):
     assert (f_integer(integer) == get_mod(integer))
     assert (f_integer32(integer32) == get_mod(integer32))
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64 = epyccel(get_mod, language=language)
         assert (f_integer64(integer64) == get_mod(integer64))
@@ -5498,7 +5481,7 @@ def test_numpy_mod_array_like_2d(language):
     assert (f_integer(integer) == get_mod(integer))
     assert (f_integer32(integer32) == get_mod(integer32))
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64 = epyccel(get_mod, language=language)
         assert (f_integer64(integer64) == get_mod(integer64))
@@ -5601,7 +5584,7 @@ def test_numpy_prod_scalar(language):
     assert f_integer32_output == test_int32_output
     assert type(f_integer32_output) == type(test_int32_output.item())
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64_output = f_integer64(integer64)
         test_int64_output = get_prod(integer64)
@@ -5708,7 +5691,7 @@ def test_numpy_prod_array_like_1d(language):
     assert (f_integer(integer) == get_prod(integer))
     assert (f_integer32(integer32) == get_prod(integer32))
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64 = epyccel(get_prod, language=language)
         assert (f_integer64(integer64) == get_prod(integer64))
@@ -5790,7 +5773,7 @@ def test_numpy_prod_array_like_2d(language):
     assert (f_integer(integer) == get_prod(integer))
     assert (f_integer32(integer32) == get_prod(integer32))
 
-    # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
+    # the if block should be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
         f_integer64 = epyccel(get_prod, language=language)
         assert (f_integer64(integer64) == get_prod(integer64))
