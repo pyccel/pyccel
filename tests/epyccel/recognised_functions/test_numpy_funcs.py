@@ -5372,7 +5372,11 @@ def test_numpy_complex128_scalar(language):
             pytest.mark.skip(reason="Mod function not supported in C"),
             pytest.mark.c]
         ),
-        pytest.param("python", marks = pytest.mark.python)
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("mod handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
+        )
     )
 )
 
@@ -5483,7 +5487,11 @@ def test_numpy_mod_scalar(language):
             pytest.mark.skip(reason="Mod function not supported in C"),
             pytest.mark.c]
         ),
-        pytest.param("python", marks = pytest.mark.python)
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("mod handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
+        )
     )
 )
 
@@ -5550,7 +5558,11 @@ def test_numpy_mod_array_like_1d(language):
             pytest.mark.skip(reason="Mod function not supported in C"),
             pytest.mark.c]
         ),
-        pytest.param("python", marks = pytest.mark.python)
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("mod handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
+        )
     )
 )
 
@@ -5617,7 +5629,11 @@ def test_numpy_mod_array_like_2d(language):
             pytest.mark.skip(reason="Prod function not supported in C"),
             pytest.mark.c]
         ),
-        pytest.param("python", marks = pytest.mark.python)
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("prod handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
+        )
     )
 )
 
@@ -5752,7 +5768,11 @@ def test_numpy_prod_scalar(language):
             pytest.mark.skip(reason="Prod function not supported in C"),
             pytest.mark.c]
         ),
-        pytest.param("python", marks = pytest.mark.python)
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("prod handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
+        )
     )
 )
 
@@ -5834,7 +5854,11 @@ def test_numpy_prod_array_like_1d(language):
             pytest.mark.skip(reason="Prod function not supported in C"),
             pytest.mark.c]
         ),
-        pytest.param("python", marks = pytest.mark.python)
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("prod handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
+        )
     )
 )
 
