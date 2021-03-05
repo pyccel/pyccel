@@ -241,9 +241,7 @@ class PyccelArrayData(PyccelInternalFunction):
     _attribute_nodes = ('_arg',)
 
     def __init__(self, arg):
-        if not isinstance(arg, (list,
-                                tuple,
-                                PyccelAstNode)):
+        if not isinstance(arg, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
 
         self._arg   = arg
