@@ -9,7 +9,7 @@ import numpy
 
 from .basic          import PyccelAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
-                             PythonComplex, PythonReal, PythonAbs, PythonImag, PythonList)
+                             PythonComplex, PythonReal, PythonImag, PythonList)
 
 from .core           import (ClassDef, FunctionDef,
                             process_shape, ValuedArgument)
