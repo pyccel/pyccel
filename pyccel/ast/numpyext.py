@@ -237,6 +237,7 @@ class NumpyArray(NumpyNewArray):
     arg : list, tuple, PythonList
 
     """
+    __slots__ = ('_arg',)
     _attribute_nodes = ('_arg',)
 
     def __init__(self, arg, dtype=None, order='C'):
@@ -300,6 +301,7 @@ class NumpyArange(NumpyNewArray):
         The type of the output array, if dtype is not given,
         infer the data type from the other input arguments.
     """
+    __slots__ = ('_start','_step','_stop')
     _attribute_nodes = ('_start','_step','_stop')
 
     def __init__(self, start, stop = None, step = None, dtype = None):
@@ -487,6 +489,7 @@ class NumpyLinspace(NumpyNewArray):
     Represents numpy.linspace.
 
     """
+    __slots__ = ('_index','_start','_stop','_size')
     _dtype     = NativeReal()
     _precision = default_precision['real']
     _rank      = 1
@@ -579,6 +582,7 @@ class NumpyRandint(PyccelInternalFunction):
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
 
     """
+    __slots__ = ('_rand','_low','_high')
     _dtype = NativeInteger()
     _precision = default_precision['integer']
     _order = 'C'
@@ -633,6 +637,7 @@ class NumpyFull(NumpyNewArray):
         (row- or column-wise) order in memory.
 
     """
+    __slots__ = ('_fill_value',)
 
     def __init__(self, shape, fill_value, dtype=None, order='C'):
 
