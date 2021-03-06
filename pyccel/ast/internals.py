@@ -21,6 +21,7 @@ class PyccelInternalFunction(PyccelAstNode):
     """ Abstract class used by function calls
     which are translated to Pyccel objects
     """
+    __slots__ = ('_args',)
     _attribute_nodes = ('_args',)
     def __init__(self, *args):
         self._args   = tuple(args)
@@ -53,6 +54,7 @@ class PyccelArraySize(PyccelInternalFunction):
             The dimension along which the shape is
             provided
     """
+    __slots__ = ('_arg','_index')
     _attribute_nodes = ('_arg', '_index')
 
     def __init__(self, arg, index):
@@ -121,6 +123,7 @@ class Slice(Basic):
     >>> Slice(start, stop, step)
     start : stop : step
     """
+    __slots__ = ('_start','_stop','_step')
     _attribute_nodes = ('_start','_stop','_step')
 
     def __init__(self, start, stop, step = None):
@@ -182,6 +185,7 @@ class PyccelSymbol(str, Immutable):
     >>> x = PyccelSymbol('x')
     x
     """
+    __slots__ = ('_is_temp',)
 
     def __new__(cls, name, is_temp=False):
         return super().__new__(cls, name)
