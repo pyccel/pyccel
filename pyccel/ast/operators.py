@@ -204,10 +204,8 @@ class PyccelUnaryOperator(PyccelOperator):
         a _dtype or _precision member
         """
         a = self._args[0]
-        if self._dtype is None:
-            self._dtype     = a.dtype
-        if self._precision is None:
-            self._precision = a.precision
+        self._dtype     = a.dtype
+        self._precision = a.precision
 
     def _set_shape_rank(self):
         """ Sets the shape and rank
@@ -215,10 +213,8 @@ class PyccelUnaryOperator(PyccelOperator):
         a _shape or _rank member
         """
         a = self._args[0]
-        if self._rank is None:
-            self._rank      = a.rank
-        if self._shape is None:
-            self._shape     = a.shape
+        self._rank      = a.rank
+        self._shape     = a.shape
 
 #==============================================================================
 
