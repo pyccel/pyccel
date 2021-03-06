@@ -47,11 +47,12 @@ class Basic:
                 setattr(self, c_name, c)
 
             elif iterable(c):
-                if any(iterable(ci) for ci in c):
-                    raise TypeError("Basic child cannot be a tuple of tuples")
+                size = len(c)
                 c = tuple(ci if (not isinstance(ci, (int, float, complex, str, bool)) \
                                  or self.ignore(ci)) \
-                        else convert_to_literal(ci) for ci in c)
+                        else convert_to_literal(ci) for ci in c if not iterable(ci))
+                if len(c) != size:
+                    raise TypeError("Basic child cannot be a tuple of tuples")
                 setattr(self, c_name, c)
 
             elif not isinstance(c, Basic):
