@@ -102,6 +102,7 @@ class PyArgKeywords(Basic):
     arg_names : list of str
         A list of the names of the function arguments
     """
+    __slots__ = ('_name','_arg_names')
     _attribute_nodes = ()
     def __init__(self, name, arg_names):
         self._name = name
@@ -151,6 +152,7 @@ class PyArg_ParseTupleNode(Basic):
     is_interface : boolean
         Default value False and True when working with interface functions
     """
+    __slots__ = ('_pyarg','_pykwarg','_parse_args','_arg_names','_flags')
     _attribute_nodes = ('_pyarg','_pykwarg','_parse_args','_arg_names')
 
     def __init__(self, python_func_args,
@@ -236,6 +238,7 @@ class PyBuildValueNode(Basic):
     parse_args: list of Variable
         List of arguments which the result will be buit from
     """
+    __slots__ = ('_flags','_result_args',)
     _attribute_nodes = ('_result_args',)
 
     def __init__(self, result_args = ()):
