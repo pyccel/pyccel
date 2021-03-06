@@ -24,6 +24,7 @@ __all__ = (
 #==============================================================================
 class Macro(PyccelAstNode):
     """."""
+    __slots__ = ('_argument',)
     _name = '__UNDEFINED__'
     _attribute_nodes = ()
 
@@ -45,6 +46,7 @@ class Macro(PyccelAstNode):
 #==============================================================================
 class MacroShape(Macro):
     """."""
+    __slots__ = ('_index',)
     _name      = 'shape'
     _rank      = 1
     _shape     = ()
