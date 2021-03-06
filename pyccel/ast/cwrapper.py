@@ -67,6 +67,7 @@ class PyccelPyArrayObject(DataType):
     class used to hold numpy objects"""
     _name = 'pyarrayobject'
 
+PyArray_Type = Variable(NativeGeneric(), 'PyArray_Type')
 
 #-------------------------------------------------------------------
 #                  Parsing and Building Classes
@@ -121,43 +122,40 @@ class PyArg_ParseTupleNode(Basic):
 
     def __init__(self, python_func_args,
                        python_func_kwargs,
-                       converter_functions,
                        parse_args,
+                       func_args,
                        arg_names):
 
         if not isinstance(python_func_args, Variable):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
             raise TypeError('Python func kwargs should be a Variable')
-        if not isinstance(converter_functions, list):
-            raise TypeError('converter_functions should be a list')
-        if any(not isinstance(f, FunctionDef) for f in converter_functions):
-            raise TypeError('Converter function should be a FunctionDef')
+        if not isinstance(func_args, list) and any(not isinstance(c, Variable) for c in func_args):
+            raise TypeError('C func args should be a list of Variables')
         if not isinstance(parse_args, list) and any(not isinstance(c, Variable) for c in parse_args):
             raise TypeError('Parse args should be a list of Variables')
         if not isinstance(arg_names, PyArgKeywords):
             raise TypeError('Parse args should be a list of Variables')
-        if (len(parse_args) != len(converter_functions)):
-            raise TypeError('There should be same number of converter functions and arguments')
+        if (len(parse_args) != len(func_args)):
+            raise TypeError('There should be the same number of c_func_args and parse_args')
 
         self._flags = ''
         i           = 0
-        args_count  = len(parse_args)
+        args_count  = len(func_args)
 
-        while i < args_count and not isinstance(parse_args[i], ValuedVariable):
-            self._flags += 'O&'
+        while i < args_count and not isinstance(func_args[i], ValuedVariable):
+            self._flags += 'O'
             i += 1
         if i < args_count:
             self._flags += '|'
         while i < args_count:
-            self._flags += 'O&' #TODO ? when iterface are back this should be in a function
+            self._flags += 'O'
             i += 1
         # Restriction as of python 3.8
         if any([isinstance(a, (Variable, FunctionAddress)) and a.is_kwonly for a in parse_args]):
             errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
                           symbol=parse_args, severity='warning')
 
-        self._converter_functions = converter_functions
         self._pyarg               = python_func_args
         self._pykwarg             =  python_func_kwargs
         self._parse_args          = parse_args
@@ -183,10 +181,6 @@ class PyArg_ParseTupleNode(Basic):
     @property
     def arg_names(self):
         return self._arg_names
-
-    @property
-    def converters(self):
-        return self._converter_functions
 
 class PyBuildValueNode(Basic):
     """
@@ -283,6 +277,20 @@ Py_False = Variable(PyccelPyObject(), 'Py_False',is_pointer=True)
 Py_None  = Variable(PyccelPyObject(), 'Py_None', is_pointer=True)
 
 #-------------------------------------------------------------------
+#                  C memory management functions
+#-------------------------------------------------------------------
+
+malloc   = FunctionDef(name      = 'malloc',
+                       arguments = [Variable(name = 'size', dtype = NativeInteger())],
+                       results   = [Variable(name = 'ptr', dtype = NativeVoid(), is_pointer  = True)],
+                       body      = [])
+
+free     = FunctionDef(name      = 'free',
+                       arguments = [Variable(name = 'ptr', dtype = NativeVoid(), is_pointer = True)],
+                       results   = [],
+                       body      = [])
+
+#-------------------------------------------------------------------
 #                      cwrapper.h functions
 #-------------------------------------------------------------------
 
@@ -356,10 +364,6 @@ def generate_scalar_collector(py_variable, c_variable, check_is_needed):
 
     # Collect value
     body.append(Assign(c_variable, FunctionCall(Python_to_C(c_variable), [py_variable])))
-
-    # call PyErr_Occurred to check any error durring conversion
-    body.append(If(IfSection(FunctionCall(PyErr_Occurred, []),
-        [Return([LiteralInteger(0)])])))
 
     return body
 

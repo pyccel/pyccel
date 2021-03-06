@@ -11,8 +11,8 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.literals    import LiteralTrue, LiteralInteger, LiteralString
 
-from pyccel.ast.operators   import PyccelNot, PyccelEq
-from pyccel.ast.datatypes   import NativeInteger
+from pyccel.ast.operators   import PyccelNot, PyccelEq, PyccelNe
+from pyccel.ast.datatypes   import NativeInteger, NativeVoid
 from pyccel.ast.core        import create_incremented_string, SeparatorComment
 
 from pyccel.ast.core        import FunctionCall, FunctionDef, FunctionAddress
@@ -21,9 +21,9 @@ from pyccel.ast.core        import If, IfSection, Import, Return
 
 from pyccel.ast.cwrapper    import (PyArgKeywords, PyArg_ParseTupleNode,
                                     PyBuildValueNode)
-from pyccel.ast.cwrapper    import C_to_Python, generate_scalar_collector
+from pyccel.ast.cwrapper    import C_to_Python, generate_scalar_collector, PyErr_Occurred
 from pyccel.ast.cwrapper    import get_custom_key, flags_registry, PyErr_SetString
-from pyccel.ast.cwrapper    import PyccelArrayData
+from pyccel.ast.cwrapper    import PyccelArrayData, malloc
 
 from pyccel.ast.cwrapper    import PyccelPyObject, PyccelPyArrayObject, Py_None
 
@@ -202,19 +202,11 @@ class CWrapperCodePrinter(CCodePrinter):
             'datatype not implemented as arguments : {}'.format(variable.dtype))
         return (flag << 4) + flag
 
-    @staticmethod
-    def get_default_assign(arg):
-        """
-        """
-        if arg.is_optional:
-            return Assign(VariableAddress(arg), Nil())
-        return Assign(arg, arg.value)
-
     # --------------------------------------------------------------------
     #                  Custom body generators [helpers]
     # --------------------------------------------------------------------
 
-    def generate_valued_variable_body(self, py_variable, c_variable):
+    def generate_valued_variable_body(self, py_variable, c_variable, default_value):
         """
         Generate valued variable code section (check, collect default value)
         Parameters:
@@ -227,32 +219,23 @@ class CWrapperCodePrinter(CCodePrinter):
         -----------
         body         : list
             list of If statement
-        tmp_variable : Variable | None
-            return a temporary variable to hold value when we are working with optional variable
-            otherwise return None
 
         """
-        temp_variable = None #used to hold value
+        default_assign = Assign(c_variable, default_value) #defaut value
 
-        body = If(IfSection(PyccelEq(VariableAddress(py_variable), VariableAddress(Py_None)), [
-            Return([LiteralInteger(1)])
-        ]))
+        if c_variable.is_optional: # default is NULL when variable is optional
+            default_assign = AliasAssign(c_variable, Nil())
 
-        if c_variable.is_optional:
-            temp_variable = Variable(name = 'tmp_variable', dtype = c_variable.dtype,
-                                     precision = c_variable.precision, rank = c_variable.rank)
+        body = [If(IfSection(PyccelEq(VariableAddress(py_variable), VariableAddress(Py_None)), [
+            default_assign,
+            Return([c_variable])
+        ]))]
 
-        return [body], temp_variable
+        # if variable is optional mempry need to be allocated
+        if c_variable.is_optional and c_variable.rank < 1:
+            body += [AliasAssign(c_variable, FunctionCall(malloc, [c_variable.precision]))]
 
-    def get_declare_type(self, expr):
-        #if variable is optional and pointer
-        if expr.is_pointer and expr.is_optional:
-            dtype = self.find_in_dtype_registry(self._print(expr.dtype), expr.precision)
-
-            return '{} **'.format(dtype)
-
-        else:
-            return CCodePrinter.get_declare_type(self, expr)
+        return  body
 
     #--------------------------------------------------------------------
     #                   Convert functions
@@ -297,39 +280,44 @@ class CWrapperCodePrinter(CCodePrinter):
         --------
         funcDef   : FunctionDef
         """
+        body = []
 
         py_variable  = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
-        c_variable   = variable.clone(name = 'c_variable', is_pointer = True)
-        argument     = c_variable
-        local_vars   = []
-        body         = []
+        c_variable   = variable.clone(name = 'c_variable',
+                      is_pointer = (variable.is_optional or variable.is_pointer))
 
-        # (Valued / Optional) variable check
         if isinstance(variable, ValuedVariable):
-            body, tmp_var = self.generate_valued_variable_body(py_variable, c_variable)
-            if tmp_var: # optional case
-                local_vars.append(tmp_var)
-                argument = tmp_var
+            body += self.generate_valued_variable_body(py_variable, c_variable, variable.value)
 
-        if variable.rank > 0: #array
+
+        '''if variable.rank > 0: #array
             collect = PyArray_to_C(py_variable, argument, check_is_needed, self._target_language)
-            body   += [If(IfSection(PyccelNot(collect), [Return([LiteralInteger(0)])]))]
+            body   += [If(IfSection(PyccelNot(collect), [Return([LiteralInteger(0)])]))]'''
 
-        else: #scalar #is there any way to make it look like array one?(see cwrapper.c)
-            body   += generate_scalar_collector(py_variable, argument, check_is_needed)
+        #else: #scalar #is there any way to make it look like array one?(see cwrapper.c)
+        body   += generate_scalar_collector(py_variable, c_variable, check_is_needed)
 
-        if variable.is_optional:
-            body   += [AliasAssign(c_variable, argument)]
-
-        body.append(Return([LiteralInteger(1)]))
+        body.append(Return([c_variable]))
 
         function = FunctionDef(name      = name,
                                body      = body,
-                               local_vars = local_vars,
-                               arguments = [py_variable, c_variable],
-                               results   = [Variable(name = 'r', dtype = NativeInteger(), is_temp = True)])
+                               arguments = [py_variable],
+                               results   = [c_variable])
 
         return function
+
+    def collect_value(self, used_names, p_arg, c_arg, converter):
+        """
+        """
+        if not self.stored_in_c_pointer(c_arg):
+            collect_body = [Assign(c_arg, FunctionCall(converter, [p_arg]))]
+        else:
+            collect_body = [Assign(VariableAddress(c_arg), FunctionCall(converter, [p_arg]))]
+
+        # call PyErr_Occurred to check any error durring conversion return NULL
+        collect_body += [If(IfSection(FunctionCall(PyErr_Occurred, []), [Return([Nil()])]))]
+
+        return collect_body
 
     # -------------------------------------------------------------------
     #       Parsing arguments and building values  functions
@@ -422,7 +410,7 @@ class CWrapperCodePrinter(CCodePrinter):
         pykwarg = expr.pykwarg
         flags   = expr.flags
         # All args are modified so even pointers are passed by address
-        args  = ', '.join(['&{}, &{}'.format(f.name, a.name) for f, a in zip(expr.converters, expr.args)])
+        args  = ', '.join(['&{}'.format(a.name) for a in expr.args])
 
         if expr.args:
             code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(
@@ -455,24 +443,6 @@ class CWrapperCodePrinter(CCodePrinter):
             code = '{name}("")'.format(name = name)
 
         return code
-
-    def _print_AliasAssign(self, expr):
-        lhs = expr.lhs
-        rhs = expr.rhs
-        if isinstance(rhs, Variable):
-            rhs = VariableAddress(rhs)
-
-        lhs = self._print(lhs.name)
-        rhs = self._print(rhs)
-
-        # the below condition handles the case of reassinging a pointer to an array view.
-        # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
-        if isinstance(expr.lhs, Variable) and expr.lhs.is_ndarray \
-                and isinstance(expr.rhs, Variable) and expr.rhs.is_ndarray and expr.rhs.is_pointer:
-            return 'alias_assign(&{}, {});'.format(lhs, rhs)
-        if expr.lhs.is_pointer and expr.lhs.is_optional:
-            return '*{} = {};'.format(lhs, rhs)
-        return '{} = {};'.format(lhs, rhs)
 
     def _print_Interface(self, expr):
         funcs = expr.functions
@@ -612,28 +582,29 @@ class CWrapperCodePrinter(CCodePrinter):
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
 
         wrapper_body                = [keyword_list]
-        converters                  = []
-        func_args                   = []
+        static_func_args            = []
+        collect_body                = []
+        # temporary parsing args needed to hold python value
+        parse_args     = tuple([self.get_new_PyObject('py_' + a.name, used_names)
+                          for a in expr.arguments])
 
         # loop on all functions argument to collect needed converter functions
-        for arg in expr.arguments:
-            function = self.get_PyArgParse_Converter_Function(used_names, arg)
-            converters.append(function)
-            func_args.extend(self.get_static_args(arg)) # Bind_C args
+        for p_arg, c_arg in zip(parse_args, expr.arguments):
+            converter = self.get_PyArgParse_Converter_Function(used_names, c_arg)
+            static_func_args.extend(self.get_static_args(c_arg)) # Bind_C args
 
-            # write default assign
-            if isinstance( arg, ValuedVariable):
-                wrapper_body.append(self.get_default_assign(arg))
+            collect_body += self.collect_value(used_names, p_arg, c_arg, converter)
 
         # Parse arguments
-        parse_node = PyArg_ParseTupleNode(*wrapper_args[1:], converters,
-                                          expr.arguments, keyword_list)
+        parse_node = PyArg_ParseTupleNode(*wrapper_args[1:], parse_args, expr.arguments, keyword_list)
 
         wrapper_body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
 
+        wrapper_body.extend(collect_body)
+
         # Call function
         static_function = self.get_static_function(expr)
-        function_call   = FunctionCall(static_function, func_args)
+        function_call   = FunctionCall(static_function, static_func_args)
 
         if len(expr.results) > 0:
             results       = expr.results if len(expr.results) > 1 else expr.results[0]
@@ -657,7 +628,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                     arguments   = wrapper_args,
                                     results     = wrapper_results,
                                     body        = wrapper_body,
-                                    local_vars = tuple(expr.arguments + expr.results))
+                                    local_vars  = expr.arguments + expr.results + parse_args)
         
         return CCodePrinter._print_FunctionDef(self, wrapper_function)
 
