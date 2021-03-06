@@ -79,6 +79,7 @@ class MacroType(Macro):
         self._precision = 0
         self._rank      = 0
         self._shape     = ()
+        super().__init__(argument)
 
     def __str__(self):
         return 'MacroType({})'.format(str(self.argument))
@@ -94,6 +95,7 @@ class MacroCount(Macro):
         self._precision = self._default_precision
         self._rank      = 0
         self._shape     = ()
+        super().__init__(argument)
 
     def __str__(self):
         return 'MacroCount({})'.format(str(self.argument))
