@@ -3602,7 +3602,8 @@ def test_numpy_real_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert matching_types(f_bl_true_output, test_bool_false_output)
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_real, language=language)
     f_integer8 = epyccel(get_real, language=language)
@@ -3910,7 +3911,8 @@ def test_numpy_imag_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert matching_types(f_bl_true_output, test_bool_false_output)
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_imag, language=language)
     f_integer8 = epyccel(get_imag, language=language)
@@ -4200,7 +4202,8 @@ def test_numpy_bool_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert matching_types(f_bl_true_output, test_bool_false_output)
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_bool, language=language)
     f_integer8 = epyccel(get_bool, language=language)
@@ -4301,7 +4304,8 @@ def test_numpy_int_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert matching_types(f_bl_true_output, test_bool_false_output)
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_int, language=language)
     f_integer8 = epyccel(get_int, language=language)
@@ -4402,7 +4406,8 @@ def test_numpy_int8_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert matching_types(f_bl_true_output, test_bool_false_output)
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_int8, language=language)
     f_integer8 = epyccel(get_int8, language=language)
@@ -5699,7 +5704,8 @@ def test_numpy_prod_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert matching_types(f_bl_true_output, test_bool_false_output)
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_prod, language=language)
     f_integer8 = epyccel(get_prod, language=language)
