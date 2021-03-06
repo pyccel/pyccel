@@ -274,11 +274,12 @@ class CWrapperCodePrinter(CCodePrinter):
     def generate_converter_name(self, used_names, variable):
         """
         """
-        dtype  = self._print(variable.dtype)
-        prec   = variable.precision
-        order  = '_' + str(variable.order) if variable.order else ''
-        rank   = '_' + str(variable.rank) if variable.rank else ''
-        valued = 'v_' if isinstance(variable, ValuedVariable) else '' #v for valued
+        dtype    = self._print(variable.dtype)
+        prec     = variable.precision
+        order    = '_' + str(variable.order) if variable.order else ''
+        rank     = '_' + str(variable.rank) if variable.rank else ''
+        valued   = 'v_' if isinstance(variable, ValuedVariable) else '' #v for valued
+        valued   = 'o_' if variable.is_optional else valued
 
         name = '{valued}{dtype}_{prec}{rank}{order}'.format(
             valued = valued,

@@ -266,8 +266,9 @@ def get_custom_key(variable):
     precision = variable.precision
     rank      = variable.rank #TODO find a global way to manage different rank in one function
     is_valued = isinstance(variable, ValuedVariable)
+    is_optional = variable.is_optional
 
-    return (dtype, precision, rank, is_valued)
+    return (dtype, precision, rank, is_valued, is_optional)
 
 
 #-------------------------------------------------------------------
