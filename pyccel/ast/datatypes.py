@@ -13,8 +13,6 @@ import numpy
 
 from pyccel.utilities.metaclasses import Singleton
 
-from .basic import Basic
-
 # TODO [YG, 12.03.2020] verify why we need all these types
 # NOTE: symbols not used in pyccel are commented out
 __all__ = (
@@ -158,18 +156,18 @@ class NativeSymbol(DataType):
 
 # TODO to be removed
 class CustomDataType(DataType):
-    _name = '__UNDEFINED__'
+    __slots__ = ('_name',)
 
     def __init__(self, name='__UNDEFINED__'):
         self._name = name
 
 class NativeGeneric(DataType):
     _name = 'Generic'
-    pass
 
 
 # ...
 class VariableType(DataType):
+    __slots__ = ('_alias','_rhs','_name')
 
     def __init__(self, rhs, alias):
         self._alias = alias
@@ -181,6 +179,7 @@ class VariableType(DataType):
         return self._alias
 
 class FunctionType(DataType):
+    __slots__ = ('_domain','_codomain','_domains','_name')
 
     def __init__(self, domains):
         self._domain = domains[0]
@@ -221,8 +220,8 @@ dtype_registry = {'bool': Bool,
                   'str': String}
 
 
-class UnionType(Basic):
-    _attribute_nodes = ()
+class UnionType:
+    __slots__ = ('_args',)
 
     def __init__(self, args):
         self._args = args
