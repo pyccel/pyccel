@@ -5383,7 +5383,6 @@ def test_numpy_complex128_scalar(language):
 
     assert f_fl64_output == test_float64_output
     assert matching_types(f_fl64_output, test_float64_output)
-    assert matching_types(f_fl64_output, test_float64_output)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
