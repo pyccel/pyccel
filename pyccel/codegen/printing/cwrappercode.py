@@ -183,19 +183,6 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             return [argument]
 
-    def get_static_declare_type(self, expr):
-        """
-        """
-        dtype = self._print(expr.dtype)
-        prec  = expr.precision
-
-        dtype = self.find_in_dtype_registry(dtype, prec)
-
-        if self.stored_in_c_pointer(expr) or (self._target_language == 'fortran' and expr.rank > 0):
-            return '{0} *'.format(dtype)
-        else:
-            return '{0} '.format(dtype)
-
     def stored_in_c_pointer(self, expr):
         """
         """
@@ -405,46 +392,6 @@ class CWrapperCodePrinter(CCodePrinter):
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
     #--------------------------------------------------------------------
-
-    def static_function_signature(self, expr):
-        """Extract from function definition all the information
-        (name, input, output) needed to create the signature
-        used for c/fortran binding
-
-        Parameters
-        ----------
-        expr            : FunctionDef
-            the function defintion
-
-        Return
-        ------
-        String
-            Signature of the function
-        """
-        if self._target_language == 'c':
-            return self.function_signature(expr)
-
-        args = list(expr.arguments)
-        if len(expr.results) == 1:
-            ret_type = self.get_declare_type(expr.results[0])
-        elif len(expr.results) > 1:
-            ret_type = self._print(datatype('int')) + ' '
-            args += [a.clone(name = a.name, is_pointer =True) for a in expr.results]
-        else:
-            ret_type = self._print(datatype('void')) + ' '
-        name = expr.name
-        if not args:
-            arg_code = 'void'
-        else:
-            arg_code = ', '.join('{}'.format(self.function_signature(i, False))
-                        if isinstance(i, FunctionAddress)
-                        else '{0}{1}'.format(self.get_static_declare_type(i), i.name)
-                        for i in args)
-
-        if isinstance(expr, FunctionAddress):
-            return '{}(*{})({})'.format(ret_type, name, arg_code)
-        else:
-            return '{0}{1}({2})'.format(ret_type, name, arg_code)
 
     def _print_PyccelArrayData(self, expr):
         dtype = self._print(expr.arg.dtype)
@@ -719,7 +666,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self._module_name  = expr.name
 
         static_funcs = [self.get_static_function(func) for func in expr.funcs]
-        function_signatures = '\n'.join('{};'.format(self.static_function_signature(f)) for f in static_funcs)
+        function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in static_funcs)
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
         funcs = [*expr.interfaces, *(f for f in expr.funcs if f.name not in interface_funcs)]
