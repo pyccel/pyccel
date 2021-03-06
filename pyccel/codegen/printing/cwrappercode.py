@@ -11,7 +11,7 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.literals    import LiteralTrue, LiteralInteger, LiteralString
 
-from pyccel.ast.operators   import PyccelNot, PyccelEq, PyccelNe
+from pyccel.ast.operators   import PyccelNot, PyccelEq, PyccelNe, PyccelIs
 from pyccel.ast.datatypes   import NativeInteger, NativeVoid
 from pyccel.ast.core        import create_incremented_string, SeparatorComment
 
@@ -21,13 +21,13 @@ from pyccel.ast.core        import If, IfSection, Import, Return
 
 from pyccel.ast.cwrapper    import (PyArgKeywords, PyArg_ParseTupleNode,
                                     PyBuildValueNode)
-from pyccel.ast.cwrapper    import C_to_Python, generate_scalar_collector, PyErr_Occurred
+from pyccel.ast.cwrapper    import C_to_Python, scalar_checker, Python_to_C
 from pyccel.ast.cwrapper    import get_custom_key, flags_registry, PyErr_SetString
-from pyccel.ast.cwrapper    import PyccelArrayData, malloc
+from pyccel.ast.cwrapper    import malloc, free
 
 from pyccel.ast.cwrapper    import PyccelPyObject, PyccelPyArrayObject, Py_None
 
-from pyccel.ast.numpy_wrapper   import PyArray_to_C
+from pyccel.ast.numpy_wrapper   import array_checker, numpy_get_dim, numpy_get_data
 
 from pyccel.ast.internals       import PyccelArraySize
 from pyccel.ast.variable        import Variable, ValuedVariable, VariableAddress
@@ -54,8 +54,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self._global_names                = set()
         self._module_name                 = None
         self.converter_functions_dict     = {}
-        self.tmp_fix                      = False
-
+        self.to_free_objects              = []
     # --------------------------------------------------------------------
     #                       Helper functions
     # --------------------------------------------------------------------
@@ -106,7 +105,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return wrapper_name
 
-    def get_new_PyObject(self, name, used_names):
+    def get_new_PyObject(self, name, used_names, is_array = None):
         """
         Create new PyccelPyObject Variable with the desired name
         Parameters:
@@ -115,10 +114,15 @@ class CWrapperCodePrinter(CCodePrinter):
             The desired name
         used_names : set of strings
             Set of variable and function names to avoid name collisions
+        is_arrat   : Integer
+            set dtype to PyccelPyArrayObject if rank > 0 else PyccelPyObject
         Returns: Variable
         -------
         """
-        return Variable(dtype      = PyccelPyObject(),
+        dtype = PyccelPyObject()
+        if is_array:
+            dtype = PyccelPyArrayObject()
+        return Variable(dtype      = dtype,
                         name       = self.get_new_name(used_names, name),
                         is_pointer = True)
 
@@ -146,6 +150,30 @@ class CWrapperCodePrinter(CCodePrinter):
         except KeyError:
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
+    def get_declare_type(self, expr):
+        """
+        """
+        dtype = self._print(expr.dtype)
+        prec  = expr.precision
+        if self._target_language == 'c' and expr.rank > 0:
+            return CCodePrinter.get_declare_type(self, expr)
+        else :
+            dtype = self.find_in_dtype_registry(dtype, prec)
+
+        if self.stored_in_c_pointer(expr):
+            return '{0} *'.format(dtype)
+        else:
+            return '{0} '.format(dtype)
+
+    def stored_in_c_pointer(self, a):
+        """
+        """
+        stored_in_c = CCodePrinter.stored_in_c_pointer(self, a)
+        if self._target_language == 'fortran':
+            return stored_in_c or (isinstance(a, Variable) and a.rank>0)
+        else:
+            return stored_in_c
+
     def get_static_function(self, function):
         """
         Create functionDef for arguments rank > 0 in fortran.
@@ -165,7 +193,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return static_func
 
-    def get_static_args(self, argument):
+    def get_static_args(self, p_arg, argument):
         """
         Create bind_C arguments for arguments rank > 0 in fortran.
         needed in static function call
@@ -178,18 +206,16 @@ class CWrapperCodePrinter(CCodePrinter):
         Returns     : List of arguments
         -----------
         """
+
         if self._target_language == 'fortran' and argument.rank > 0:
-            return [PyccelArraySize(argument, i) for i in range(argument.rank)] + [PyccelArrayData(argument)]
+            static_args = [
+                FunctionCall(numpy_get_dim, [p_arg, i]) for i in range(argument.rank)
+            ]
+            static_args.append(argument)
         else:
-            return [argument]
-
-    def stored_in_c_pointer(self, expr):
-        """
-        """
-        if not isinstance(expr, Variable):
-            return False
-
-        return expr.is_pointer or expr.is_optional
+            static_args = [argument]
+    
+        return static_args
 
     @staticmethod
     def get_flag_value(flag, variable):
@@ -226,41 +252,20 @@ class CWrapperCodePrinter(CCodePrinter):
         if c_variable.is_optional: # default is NULL when variable is optional
             default_assign = AliasAssign(c_variable, Nil())
 
-        body = [If(IfSection(PyccelEq(VariableAddress(py_variable), VariableAddress(Py_None)), [
-            default_assign,
-            Return([c_variable])
+        body = [If(IfSection(PyccelIs(VariableAddress(py_variable), Nil()), [
+            default_assign
         ]))]
 
         # if variable is optional mempry need to be allocated
         if c_variable.is_optional and c_variable.rank < 1:
             body += [AliasAssign(c_variable, FunctionCall(malloc, [c_variable.precision]))]
+            self.to_free_objects.append(c_variable)
 
         return  body
 
     #--------------------------------------------------------------------
     #                   Convert functions
     #--------------------------------------------------------------------
-
-    def generate_converter_name(self, used_names, variable):
-        """
-        """
-        dtype    = self._print(variable.dtype)
-        prec     = variable.precision
-        order    = '_' + str(variable.order) if variable.order else ''
-        rank     = '_' + str(variable.rank) if variable.rank else ''
-        valued   = 'v_' if isinstance(variable, ValuedVariable) else '' #v for valued
-        valued   = 'o_' if variable.is_optional else valued
-
-        name = '{valued}{dtype}_{prec}{rank}{order}'.format(
-            valued = valued,
-            prec   = prec,
-            dtype  = dtype,
-            rank   = rank,
-            order  = order)
-        name = self.get_new_name(used_names, name)
-
-        return name
-
 
     def generate_converter(self, name, variable, check_is_needed):
         """
@@ -280,78 +285,68 @@ class CWrapperCodePrinter(CCodePrinter):
         --------
         funcDef   : FunctionDef
         """
+        pass
+
+    def collect_value(self, p_arg, c_arg, converter, check_is_needed = True):
+        """
+        """
+        #set c argument to pointer if its optional
+        c_variable  = c_arg.clone(name = c_arg.name,
+                    is_pointer = (c_arg.is_optional or c_arg.is_pointer))
         body = []
 
-        py_variable  = Variable(name = 'py_variable', dtype = PyccelPyObject(), is_pointer = True)
-        c_variable   = variable.clone(name = 'c_variable',
-                      is_pointer = (variable.is_optional or variable.is_pointer))
+        #get default value
+        if isinstance(c_arg, ValuedVariable):
+            body += self.generate_valued_variable_body(p_arg, c_variable, c_arg.value)
+        #check element
+        if c_arg.rank > 0: # array
+            check = array_checker(p_arg, c_variable, check_is_needed, self._target_language)
+            body += [If(IfSection(check, self.free_allocated_object()))]
 
-        if isinstance(variable, ValuedVariable):
-            body += self.generate_valued_variable_body(py_variable, c_variable, variable.value)
+        elif check_is_needed: # scalar
+            check, error = scalar_checker(p_arg, c_variable)
+            body += [If(IfSection(check, error + self.free_allocated_object()))]
 
+        #collect value
+        body += [Assign(c_variable, FunctionCall(converter, [p_arg]))]
 
-        '''if variable.rank > 0: #array
-            collect = PyArray_to_C(py_variable, argument, check_is_needed, self._target_language)
-            body   += [If(IfSection(PyccelNot(collect), [Return([LiteralInteger(0)])]))]'''
+        return body
 
-        #else: #scalar #is there any way to make it look like array one?(see cwrapper.c)
-        body   += generate_scalar_collector(py_variable, c_variable, check_is_needed)
-
-        body.append(Return([c_variable]))
-
-        function = FunctionDef(name      = name,
-                               body      = body,
-                               arguments = [py_variable],
-                               results   = [c_variable])
-
-        return function
-
-    def collect_value(self, used_names, p_arg, c_arg, converter):
+    def free_allocated_object(self):
         """
         """
-        if not self.stored_in_c_pointer(c_arg):
-            collect_body = [Assign(c_arg, FunctionCall(converter, [p_arg]))]
-        else:
-            collect_body = [Assign(VariableAddress(c_arg), FunctionCall(converter, [p_arg]))]
-
-        # call PyErr_Occurred to check any error durring conversion return NULL
-        collect_body += [If(IfSection(FunctionCall(PyErr_Occurred, []), [Return([Nil()])]))]
-
-        return collect_body
+        return [FunctionCall(free, [i]) for i in self.to_free_objects]
 
     # -------------------------------------------------------------------
     #       Parsing arguments and building values  functions
     # -------------------------------------------------------------------
 
-    def get_PyArgParse_Converter_Function(self, used_names, variable, check_is_needed = True):
+    def get_PyArgParse_Converter(self, variable):
         """
         Responsible for collecting any necessary intermediate functions which are used
         to convert python to C.
         Parameters:
         ----------
-        used_names : set of strings
-            Set of variable and function names to avoid name collisions
         variable   : Variable
             variable holding information needed to chose converter function
             in bulding converter function body
-        check_is_needed : Boolean
-            True if data type check is needed, used to avoid multiple type check
-            in interface
         Returns:
         --------
         function : FunctionDef
         """
-        if get_custom_key(variable) not in self.converter_functions_dict:
+        if variable.rank > 0:
+            function = numpy_get_data if self._target_language is 'fortran' else pyarray_to_ndarray
 
-            name = self.generate_converter_name(used_names, variable)
-            function = self.generate_converter(name, variable, check_is_needed)
+        else:
+            try:
+                function = Python_to_C(variable)
+            except KeyError:
+                raise NotImplementedError(
+                'return not implemented for this datatype : {}'.format(variable.dtype))
+            
+        return function
 
-            #save function in dict so it will be printed later
-            self.converter_functions_dict[get_custom_key(variable)] = function
-            return function
-        return self.converter_functions_dict[get_custom_key(variable)]
-
-    def get_PyBuildValue_Converter_function(self, variable):
+    def get_PyBuildValue_Converter(self, variable):
         """
         Responsible for collecting any necessary intermediate functions which are used
         to convert c type to python.
@@ -363,8 +358,6 @@ class CWrapperCodePrinter(CCodePrinter):
         --------
         func     : FunctionDef
         """
-        # TODO when returning complex data type (array, tuple) this function should like
-        # get_PyArgParse_Converter_Function
 
         if variable.rank > 0:
             raise NotImplementedError('return not implemented for arrays.')
@@ -380,14 +373,6 @@ class CWrapperCodePrinter(CCodePrinter):
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
     #--------------------------------------------------------------------
-
-    def _print_PyccelArrayData(self, expr):
-        dtype = self._print(expr.arg.dtype)
-        prec  = expr.arg.precision
-        arg   = self._print(expr.arg)
-
-        dtype   = self.find_in_ndarray_type_registry(dtype, prec)
-        return '{}.{}'.format(arg, dtype)
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
@@ -487,7 +472,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # loop on all functions argument to collect needed converter functions
             for f_arg, p_arg in zip(func.arguments, parse_args):
-                function = self.get_PyArgParse_Converter_Function(used_names, f_arg)
+                function = self.get_PyArgParse_Converter(f_arg)
                 func_args.extend(self.get_static_args(arg)) # Bind_C args
                 parsing_converter_functions = function
 
@@ -510,7 +495,7 @@ class CWrapperCodePrinter(CCodePrinter):
             # loop on all results to collect needed converter functions
             building_converter_functions = {}
             for res in expr.results:
-                convert_func = self.get_PyBuildValue_Converter_function(res)
+                convert_func = self.get_PyBuildValue_Converter(res)
             building_converter_functions[get_custom_key(res)] = convert_func
 
             # builde results
@@ -585,15 +570,17 @@ class CWrapperCodePrinter(CCodePrinter):
         static_func_args            = []
         collect_body                = []
         # temporary parsing args needed to hold python value
-        parse_args     = tuple([self.get_new_PyObject('py_' + a.name, used_names)
+        parse_args     = tuple([self.get_new_PyObject('py_' + a.name, used_names, a.rank)
                           for a in expr.arguments])
 
         # loop on all functions argument to collect needed converter functions
         for p_arg, c_arg in zip(parse_args, expr.arguments):
-            converter = self.get_PyArgParse_Converter_Function(used_names, c_arg)
-            static_func_args.extend(self.get_static_args(c_arg)) # Bind_C args
+            converter = self.get_PyArgParse_Converter(c_arg)
+            static_func_args.extend(self.get_static_args(p_arg, c_arg)) # Bind_C args
+            if isinstance(c_arg, ValuedVariable):
+                wrapper_body.append(AliasAssign(p_arg, Nil()))
 
-            collect_body += self.collect_value(used_names, p_arg, c_arg, converter)
+            collect_body += self.collect_value(p_arg, c_arg, converter)
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(*wrapper_args[1:], parse_args, expr.arguments, keyword_list)
@@ -615,7 +602,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # loop on all results to collect needed converter functions
         converters = []
         for res in expr.results:
-            function = self.get_PyBuildValue_Converter_function(res)
+            function = self.get_PyBuildValue_Converter(res)
             converters.append(function)
 
         # builde results

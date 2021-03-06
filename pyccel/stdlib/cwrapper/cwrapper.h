@@ -14,8 +14,8 @@
 
 /* array converter */
 
-bool	pyarray_to_ndarray(PyObject *o, t_ndarray *array, int dtype, int rank, int flag);
-
+t_ndarray	pyarray_to_ndarray(PyArrayObject *o);
+bool        pyarray_check(PyArrayObject *o, int dtype, int rank, int flag);
 /* functions prototypes */
 
 /* casting python object to c type */

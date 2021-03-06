@@ -295,60 +295,6 @@ static bool _check_pyarray_order(PyArrayObject *a, int flag)
 }
 
 /*
- * Function: _check_pyarray_type
- * --------------------
- * Check if Python Object is ArrayType:
- *
- * 	Parameters	:
- *		a 	  : python array object
- *
- * 	Returns		:
- *		return true if no error occurred otherwise it will return false
- *      and raise TypeError exception
- * reference of the used c/python api function
- * -------------------------------------------
- * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_Check
- */
-
-static bool _check_pyarray_type(PyObject *a)
-{
-	if (!PyArray_Check(a))
-	{
-		PyErr_Format(PyExc_TypeError,
-			"argument must be numpy.ndarray, not %s",
-			 a == Py_None ? "None" : Py_TYPE(a)->tp_name);
-		return false;
-	}
-
-	return true;
-}
-
-/*
- * Function: _check_array
- * --------------------
- * Check Python Object (DataType, Rank, Order):
- *
- * 	Parameters	:
- *		a 	  : python array object
- *      dtype : desired data type enum
- *		rank  : desired rank
- *		flag  : desired order flag
- * 	Returns		:
- *		return true if no error occurred otherwise it will return false
- */
-
-static bool	_check_array(PyArrayObject *a, int dtype, int rank, int flag)
-{
-	if(!check_pyarray_dtype(a, dtype)) return false;
-
-	if(!_check_pyarray_rank(a, rank)) return false;
-
-	if(rank > 1 && !_check_pyarray_order(a, flag)) return false;
-
-	return true;
-}
-
-/*
  * Function: pyarray_to_ndarray
  * ----------------------------
  * A Cast function that convert numpy array variable into ndarray variable,
@@ -400,38 +346,36 @@ static int64_t     *_numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 }
 
 
-bool	pyarray_to_ndarray(PyObject *o, t_ndarray *array, int dtype, int rank, int flag)
+t_ndarray	pyarray_to_ndarray(PyArrayObject *o)
 {
-	PyArrayObject	*pyarray;
+	t_ndarray		array;
 
+	array.nd          = PyArray_NDIM(o);
+	array.raw_data    = PyArray_DATA(o);
+	array.type_size   = PyArray_ITEMSIZE(o);
+	array.type        = PyArray_TYPE(o);
+	array.length      = PyArray_SIZE(o);
+	array.buffer_size = PyArray_NBYTES(o);
+	array.shape       = _numpy_to_ndarray_shape(PyArray_SHAPE(o), array.nd);
+	array.strides     = _numpy_to_ndarray_strides(PyArray_STRIDES(o), array.type_size, array.nd);
+
+	array.is_view     = 1;
+
+	return array;
+}
+
+
+bool	pyarray_check(PyArrayObject *a, int dtype, int rank, int flag)
+{
 	// Importing the API
 	if (PyArray_API == NULL) import_array();
-	// Array type c
-	if (!_check_pyarray_type(o)) return false;
-
-	pyarray = (PyArrayObject *)o;
 
 	// check array element type / rank / order
-	if (!_check_array(pyarray, dtype, rank, flag)) return false;
+	if(!check_pyarray_dtype(a, dtype)) return false;
 
-	// if language is fortran no need to collect all ndarray info
-	if (flag != NO_ORDER_CHECK)
-	{
-		array->raw_data    = PyArray_DATA(pyarray);
-		array->shape       = PyArray_SHAPE(pyarray);
-		return true;
-	}
+	if(!_check_pyarray_rank(a, rank)) return false;
 
-	array->nd          = PyArray_NDIM(pyarray);
-	array->raw_data    = PyArray_DATA(pyarray);
-	array->type_size   = PyArray_ITEMSIZE(pyarray);
-	array->type        = PyArray_TYPE(pyarray);
-	array->length      = PyArray_SIZE(pyarray);
-	array->buffer_size = PyArray_NBYTES(pyarray);
-	array->shape       = _numpy_to_ndarray_shape(PyArray_SHAPE(pyarray), array->nd);
-	array->strides     = _numpy_to_ndarray_strides(PyArray_STRIDES(pyarray), array->type_size, array->nd);
-
-	array->is_view     = 1;
+	if(rank > 1 && !_check_pyarray_order(a, flag)) return false;
 
 	return true;
 }

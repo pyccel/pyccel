@@ -24,7 +24,7 @@ from .operators import PyccelOr, PyccelNot
 from .internals import PyccelInternalFunction
 
 from .core      import FunctionCall, FunctionDef, FunctionAddress
-from .core      import Assign, If, IfSection, Return
+from .core      import Assign, If, IfSection, Return, Nil
 
 from .variable  import Variable, ValuedVariable
 
@@ -144,23 +144,38 @@ class PyArg_ParseTupleNode(Basic):
         args_count  = len(func_args)
 
         while i < args_count and not isinstance(func_args[i], ValuedVariable):
-            self._flags += 'O'
+            self._flags += self.get_pytype(parse_args[i])
             i += 1
         if i < args_count:
             self._flags += '|'
         while i < args_count:
-            self._flags += 'O'
+            self._flags += self.get_pytype(parse_args[i])
             i += 1
         # Restriction as of python 3.8
         if any([isinstance(a, (Variable, FunctionAddress)) and a.is_kwonly for a in parse_args]):
             errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
                           symbol=parse_args, severity='warning')
 
+        parse_args = [[PyArray_Type, a] if isinstance(a, Variable) and f.rank > 0
+                else [a] for a, f in zip(parse_args, func_args)]
+        parse_args = [a for arg in parse_args for a in arg]
+
         self._pyarg               = python_func_args
-        self._pykwarg             =  python_func_kwargs
+        self._pykwarg             = python_func_kwargs
         self._parse_args          = parse_args
         self._arg_names           = arg_names
         super().__init__()
+
+    def get_pytype(self, parse_arg):
+        """
+        Return the needed flag to parse or build value
+        """
+        if isinstance(parse_arg.dtype, PyccelPyObject):
+            return 'O'
+        elif isinstance(parse_arg.dtype, PyccelPyArrayObject):
+            return 'O!'
+        else:
+            raise NotImplementedError("Type not implemented for argument collection : "+str(type(parse_arg)))
 
     @property
     def pyarg(self):
@@ -220,37 +235,6 @@ class PyBuildValueNode(Basic):
     @property
     def converters(self):
         return self._converter_functions
-
-
-class PyccelArrayData(PyccelInternalFunction):
-    """
-    Class representing a call to a function which would
-    return the raw_data of an array object, normally used
-    for binding c/fortran
-
-    Parameters
-    ==========
-    arg   : PyccelAstNode
-    """
-    _attribute_nodes = ('_arg',)
-
-    def __init__(self, arg):
-        if not isinstance(arg, PyccelAstNode):
-            raise TypeError('Unknown type of  %s.' % type(arg))
-
-        self._arg   = arg
-        self._rank = 1
-
-        super().__init__()
-
-    @property
-    def arg(self):
-        """ Object whose data is investigated
-        """
-        return self._arg
-
-    def __str__(self):
-        return 'Data({})'.format(str(self.arg))
 
 def get_custom_key(variable):
     """
@@ -329,7 +313,7 @@ py_to_c_registry = {
     (NativeComplex(), 8)   : 'PyComplex_to_Complex128'}
 
 
-def generate_scalar_collector(py_variable, c_variable, check_is_needed):
+def scalar_checker(py_variable, c_variable):
     """
     Generate collector codeblock responsible for collecting value
     and managing errors (data type, precision) of arguments
@@ -339,33 +323,21 @@ def generate_scalar_collector(py_variable, c_variable, check_is_needed):
     variable   : Variable
         variable holdding information (data type, precision) needed
         in bulding converter function body
-    check_is_needed : Boolean
-        True if data type check is needed, used to avoid multiple type check
-        in interface
     Returns:
     --------
-    funcDef   : list of statements
+    body   : condition
     """
     #TODO is there any way to make it like array one ?
     from .numpy_wrapper import NumpyType_Check #avoid import problem
-
+    
     body = []
-    #datatqype check
-    if check_is_needed:
-        numpy_check  = NumpyType_Check(py_variable, c_variable)
-        python_check = PythonType_Check(py_variable, c_variable)
+    numpy_check  = NumpyType_Check(py_variable, c_variable)
+    python_check = PythonType_Check(py_variable, c_variable)
 
-        check        = PyccelNot(PyccelOr(numpy_check, python_check))
-        error        = generate_datatype_error(c_variable)
+    check        = PyccelNot(PyccelOr(numpy_check, python_check))
+    error        = [generate_datatype_error(c_variable)]
 
-        body.append(IfSection(check, [error, Return([LiteralInteger(0)])]))
-
-        body = [If(*body)]
-
-    # Collect value
-    body.append(Assign(c_variable, FunctionCall(Python_to_C(c_variable), [py_variable])))
-
-    return body
+    return check, error
 
 
 def C_to_Python(c_object):
