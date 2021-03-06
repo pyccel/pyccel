@@ -31,6 +31,7 @@ class OmpAnnotatedComment(Basic):
     >>> OmpAnnotatedComment('parallel')
     OmpAnnotatedComment(parallel)
     """
+    __slots__ = ('_txt', '_combined')
     _attribute_nodes = ()
     _is_multiline = False
 
