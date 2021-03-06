@@ -101,6 +101,9 @@ class Variable(PyccelAstNode):
     >>> Variable('int', DottedName('matrix', 'n_rows'))
     matrix.n_rows
     """
+    __slots__ = ('_name', '_alloc_shape', '_allocatable', '_is_const', '_is_pointer',
+            '_is_stack_array', '_is_target', '_is_optional', '_allows_negative_indexes',
+            '_cls_base', '_is_argument', '_is_kwonly', '_is_temp')
     _attribute_nodes = ()
 
     def __init__(
@@ -495,6 +498,7 @@ class DottedName(Basic):
     >>> DottedName('pyccel', 'stdlib', 'parallel')
     pyccel.stdlib.parallel
     """
+    __slots__ = ('_name',)
     _attribute_nodes = ()
 
     def __init__(self, *args):
@@ -530,6 +534,7 @@ class ValuedVariable(Variable):
     >>> n
     n := 4
     """
+    __slots__ = ('_value',)
     _attribute_nodes = ('_value',)
 
     def __init__(self, *args, **kwargs):
@@ -567,6 +572,7 @@ class TupleVariable(Variable):
     >>> n
     n
     """
+    __slots__ = ('_vars','_inconsistent_shape','_is_homogeneous')
     _attribute_nodes = ('_vars',)
 
     def __init__(self, arg_vars, dtype, name, *args, **kwargs):
@@ -705,6 +711,7 @@ class IndexedElement(PyccelAstNode):
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
+    __slots__ = ('_label', '_indices')
     _attribute_nodes = ('_label', '_indices')
 
     def __init__(
@@ -794,6 +801,7 @@ class VariableAddress(PyccelAstNode):
     VariableAddress(Variable('int','a'))                     is  &a
     VariableAddress(Variable('int','a', is_pointer=True))    is   a
     """
+    __slots__ = ('_variable',)
     _attribute_nodes = ('_variable',)
 
     def __init__(self, variable):
@@ -827,6 +835,7 @@ class DottedVariable(Variable):
     In this case b is a DottedVariable where the lhs
     is a
     """
+    __slots__ = ('_lhs',)
     _attribute_nodes = ('_lhs',)
 
     def __init__(self, *args, lhs, **kwargs):
