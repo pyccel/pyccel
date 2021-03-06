@@ -230,7 +230,9 @@ class Basic:
 
     @property
     def is_atomic(self):
-        """ Indicates whether the object has any attribute nodes
+        """ Indicates whether the object has any attribute nodes.
+        Returns true if it is an atom (no attribute nodes) and
+        false otherwise
         """
         return not bool(self._attribute_nodes)
 
