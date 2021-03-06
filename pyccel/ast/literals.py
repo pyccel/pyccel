@@ -8,7 +8,7 @@ from pyccel.utilities.metaclasses import Singleton, ArgumentSingleton
 
 from .basic              import PyccelAstNode, Basic
 from .datatypes          import (NativeInteger, NativeBool, NativeReal,
-                                  NativeComplex, NativeString, default_precision)
+                                  NativeComplex, NativeString, default_precision, NativeReal)
 
 __all__ = (
     'LiteralTrue',
@@ -89,6 +89,7 @@ class LiteralInteger(Literal):
     __slots__ = ('_value',)
 
     def __init__(self, value, precision = default_precision['integer']):
+        self._dtype     = NativeInteger()
         super().__init__(precision)
         if not isinstance(value, int):
             raise TypeError("A LiteralInteger can only be created with an integer")
@@ -107,6 +108,7 @@ class LiteralFloat(Literal):
     __slots__ = ('_value',)
 
     def __init__(self, value, *, precision = default_precision['float']):
+        self._dtype     = NativeReal()
         if not isinstance(value, (int, float, LiteralFloat)):
             raise TypeError("A LiteralFloat can only be created with an integer or a float")
         Literal.__init__(self, precision)
@@ -183,11 +185,11 @@ class LiteralString(Literal):
     __slots__ = ('_string',)
 
     def __init__(self, arg):
+        self._precision = 0
         super().__init__(self._precision)
         if not isinstance(arg, str):
             raise TypeError('arg must be of type str')
         self._dtype     = NativeString()
-        self._precision = 0
         self._string = arg
 
     @property
