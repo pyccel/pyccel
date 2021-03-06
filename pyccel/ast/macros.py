@@ -48,12 +48,13 @@ class MacroShape(Macro):
     """."""
     __slots__ = ('_index',)
     _name      = 'shape'
-    _rank      = 1
-    _shape     = ()
-    _dtype     = NativeInteger()
-    _precision = default_precision['integer']
+    _default_precision = default_precision['integer']
 
     def __init__(self, argument, index=None):
+        self._dtype     = NativeInteger()
+        self._precision = self._default_precision
+        self._rank      = 1
+        self._shape     = ()
         self._index = index
         super().__init__(argument)
 
@@ -72,10 +73,12 @@ class MacroShape(Macro):
 class MacroType(Macro):
     """."""
     _name      = 'dtype'
-    _dtype     = NativeGeneric()
-    _rank      = 0
-    _shape     = ()
-    _precision = 0
+
+    def __init__(self, argument):
+        self._dtype     = NativeGeneric()
+        self._precision = 0
+        self._rank      = 0
+        self._shape     = ()
 
     def __str__(self):
         return 'MacroType({})'.format(str(self.argument))
@@ -84,10 +87,13 @@ class MacroType(Macro):
 class MacroCount(Macro):
     """."""
     _name      = 'count'
-    _rank      = 0
-    _shape     = ()
-    _dtype     = NativeInteger()
-    _precision = default_precision['integer']
+    _default_precision = default_precision['integer']
+
+    def __init__(self, argument):
+        self._dtype     = NativeInteger()
+        self._precision = self._default_precision
+        self._rank      = 0
+        self._shape     = ()
 
     def __str__(self):
         return 'MacroCount({})'.format(str(self.argument))

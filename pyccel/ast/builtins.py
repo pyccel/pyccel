@@ -52,11 +52,11 @@ class PythonComplexProperty(PyccelInternalFunction):
 
     arg : Variable, Literal
     """
-    _dtype = NativeReal()
-    _rank  = 0
-    _shape = ()
 
     def __init__(self, arg):
+        self._dtype = NativeReal()
+        self._rank  = 0
+        self._shape = ()
         self._precision = arg.precision
         super().__init__(arg)
 
@@ -110,8 +110,7 @@ class PythonBool(PyccelAstNode):
     """ Represents a call to Python's native bool() function.
     """
     __slots__ = ('_arg',)
-    _precision = default_precision['bool']
-    _dtype = NativeBool()
+    _default_precision = default_precision['bool']
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
@@ -124,6 +123,8 @@ class PythonBool(PyccelAstNode):
 
     def __init__(self, arg):
         self._arg = arg
+        self._dtype = NativeBool()
+        self._precision = self._default_precision
         self._shape = arg.shape
         self._rank  = len(self._shape)
         super().__init__()
@@ -141,10 +142,7 @@ class PythonComplex(PyccelAstNode):
     """
     __slots__ = ('_real_part', '_imag_part', '_internal_var', '_is_cast')
 
-    _rank = 0
-    _shape = ()
-    _precision = default_precision['complex']
-    _dtype = NativeComplex()
+    _default_precision = default_precision['complex']
     _attribute_nodes = ('_real_part', '_imag_part', '_internal_var')
 
     def __new__(cls, arg0, arg1=LiteralFloat(0)):
@@ -179,6 +177,10 @@ class PythonComplex(PyccelAstNode):
         return super().__new__(cls)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
+        self._dtype = NativeComplex()
+        self._precision = self._default_precision
+        self._rank = 0
+        self._shape = ()
         self._is_cast = arg0.dtype is NativeComplex() and \
                         isinstance(arg1, Literal) and arg1.python_value == 0
 
@@ -259,8 +261,7 @@ class PythonFloat(PyccelAstNode):
     """ Represents a call to Python's native float() function.
     """
     __slots__ = ('_arg',)
-    _precision = default_precision['real']
-    _dtype = NativeReal()
+    _default_precision = default_precision['real']
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
@@ -271,6 +272,8 @@ class PythonFloat(PyccelAstNode):
         return super().__new__(cls)
 
     def __init__(self, arg):
+        self._dtype = NativeReal()
+        self._precision = self._default_precision
         self._arg = arg
         self._shape = arg.shape
         self._rank  = len(self._shape)
@@ -289,8 +292,7 @@ class PythonInt(PyccelAstNode):
     """
 
     __slots__ = ('_arg',)
-    _precision = default_precision['integer']
-    _dtype     = NativeInteger()
+    _default_precision = default_precision['integer']
     _attribute_nodes  = ('_arg',)
 
     def __new__(cls, arg):
@@ -300,6 +302,8 @@ class PythonInt(PyccelAstNode):
             return super().__new__(cls)
 
     def __init__(self, arg):
+        self._dtype     = NativeInteger()
+        self._precision = self._default_precision
         self._arg = arg
         self._shape = arg.shape
         self._rank  = len(self._shape)
@@ -315,12 +319,11 @@ class PythonTuple(PyccelAstNode):
     """
     __slots__ = ('_args','_inconsistent_shape','_is_homogeneous')
     _iterable        = True
-    _is_homogeneous  = False
-    _order = 'C'
     _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
         self._args = args
+        self._order = 'C'
         super().__init__()
         if self.stage == 'syntactic' or len(args) == 0:
             return
@@ -402,12 +405,13 @@ class PythonLen(PyccelInternalFunction):
     Represents a 'len' expression in the code.
     """
 
-    _rank      = 0
-    _shape     = ()
-    _precision = default_precision['int']
-    _dtype     = NativeInteger()
+    _default_precision = default_precision['int']
 
     def __init__(self, arg):
+        self._dtype     = NativeInteger()
+        self._precision = self._default_precision
+        self._rank      = 0
+        self._shape     = ()
         super().__init__(arg)
 
     @property
@@ -418,7 +422,6 @@ class PythonLen(PyccelInternalFunction):
 class PythonList(PythonTuple):
     """ Represents a call to Python's native list() function.
     """
-    _order = 'C'
     _is_homogeneous = True
 
 #==============================================================================

@@ -86,20 +86,31 @@ math_constants = {
 #==============================================================================
 class MathFunctionBase(PyccelInternalFunction):
     """Abstract base class for the Math Functions"""
-    _shape = ()
-    _rank  = 0
+    def __init__(self, *args):
+        self._shape = ()
+        self._rank  = 0
+        super().__init__(*args)
 
 class MathFunctionFloat(MathFunctionBase):
-    _dtype = NativeReal()
-    _precision = default_precision['real']
+    _default_precision = default_precision['real']
+    def __init__(self, *args):
+        self._dtype = NativeReal()
+        self._precision = self._default_precision
+        super().__init__(*args)
 
 class MathFunctionInt(MathFunctionBase):
-    _dtype = NativeInteger()
-    _precision = default_precision['integer']
+    _default_precision = default_precision['integer']
+    def __init__(self, *args):
+        self._dtype = NativeInteger()
+        self._precision = self._default_precision
+        super().__init__(*args)
 
 class MathFunctionBool(MathFunctionBase):
-    _dtype = NativeBool()
-    _precision = default_precision['bool']
+    _default_precision = default_precision['bool']
+    def __init__(self, *args):
+        self._dtype = NativeBool()
+        self._precision = self._default_precision
+        super().__init__(*args)
 
 #==============================================================================
 # Functions that return one value

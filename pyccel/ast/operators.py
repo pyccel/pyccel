@@ -279,10 +279,22 @@ class PyccelNot(PyccelUnaryOperator):
         The argument passed to the operator
     """
     _precedence = 6
-    _dtype = NativeBool()
-    _rank  = 0
-    _shape = ()
-    _precision = default_precision['bool']
+    _default_precision = default_precision['bool']
+    def _set_dtype(self):
+        """ Sets the dtype and precision
+        They are chosen to match the argument unless the class has
+        a _dtype or _precision member
+        """
+        self._dtype = NativeBool()
+        self._precision = self._default_precision
+
+    def _set_shape_rank(self):
+        """ Sets the shape and rank
+        They are chosen to match the argument unless the class has
+        a _shape or _rank member
+        """
+        self._rank  = 0
+        self._shape = ()
 
     def __repr__(self):
         return 'not {}'.format(repr(self.args[0]))
@@ -628,10 +640,10 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
         The second argument passed to the operator
     """
     _precedence = 7
-    _dtype = NativeBool()
-    _precision = default_precision['bool']
+    _default_precision = default_precision['bool']
     def _set_dtype(self):
-        pass
+        self._dtype = NativeBool()
+        self._precision = self._default_precision
 
 #==============================================================================
 
@@ -762,15 +774,14 @@ class PyccelBooleanOperator(PyccelOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
-    _dtype = NativeBool()
-    _rank  = 0
-    _shape = ()
-    _precision = default_precision['bool']
+    _default_precision = default_precision['bool']
 
     def _set_dtype(self):
-        pass
+        self._dtype = NativeBool()
+        self._precision = self._default_precision
     def _set_shape_rank(self):
-        pass
+        self._rank  = 0
+        self._shape = ()
 
 #==============================================================================
 

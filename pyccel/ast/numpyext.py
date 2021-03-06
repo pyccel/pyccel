@@ -94,10 +94,10 @@ class NumpyComplex(PythonComplex):
     """
 
 class NumpyComplex64(NumpyComplex):
-    _precision = dtype_registry['complex64'][1]
+    _default_precision = dtype_registry['complex64'][1]
 
 class NumpyComplex128(NumpyComplex):
-    _precision = dtype_registry['complex128'][1]
+    _default_precision = dtype_registry['complex128'][1]
 
 #=======================================================================================
 class NumpyFloat(PythonFloat):
@@ -107,12 +107,12 @@ class NumpyFloat(PythonFloat):
 class NumpyFloat32(NumpyFloat):
     """ Represents a call to numpy.float32() function.
     """
-    _precision = dtype_registry['float32'][1]
+    _default_precision = dtype_registry['float32'][1]
 
 class NumpyFloat64(NumpyFloat):
     """ Represents a call to numpy.float64() function.
     """
-    _precision = dtype_registry['float64'][1]
+    _default_precision = dtype_registry['float64'][1]
 
 #=======================================================================================
 class NumpyBool(PythonBool):
@@ -132,22 +132,22 @@ class NumpyInt(PythonInt):
 class NumpyInt8(NumpyInt):
     """ Represents a call to numpy.int8() function.
     """
-    _precision = dtype_registry['int8'][1]
+    _default_precision = dtype_registry['int8'][1]
 
 class NumpyInt16(NumpyInt):
     """ Represents a call to numpy.int16() function.
     """
-    _precision = dtype_registry['int16'][1]
+    _default_precision = dtype_registry['int16'][1]
 
 class NumpyInt32(NumpyInt):
     """ Represents a call to numpy.int32() function.
     """
-    _precision = dtype_registry['int32'][1]
+    _default_precision = dtype_registry['int32'][1]
 
 class NumpyInt64(NumpyInt):
     """ Represents a call to numpy.int64() function.
     """
-    _precision = dtype_registry['int64'][1]
+    _default_precision = dtype_registry['int64'][1]
 
 #==============================================================================
 class NumpyReal(PythonReal):
@@ -490,10 +490,7 @@ class NumpyLinspace(NumpyNewArray):
 
     """
     __slots__ = ('_index','_start','_stop','_size')
-    _dtype     = NativeReal()
-    _precision = default_precision['real']
-    _rank      = 1
-    _order     = 'F'
+    _default_precision = default_precision['real']
 
     def __init__(self, start, stop, size):
 
@@ -510,6 +507,11 @@ class NumpyLinspace(NumpyNewArray):
         self._stop  = stop
         self._size  = size
         self._shape = (self.size,)
+
+        self._dtype     = NativeReal()
+        self._precision = self._default_precision
+        self._rank      = 1
+        self._order     = 'F'
         super().__init__()
 
     @property
@@ -563,11 +565,12 @@ class NumpyRand(PyccelInternalFunction):
       Represents a call to  numpy.random.random or numpy.random.rand for code generation.
 
     """
-    _dtype = NativeReal()
-    _precision = default_precision['real']
+    _default_precision = default_precision['real']
 
     def __init__(self, *args):
         super().__init__(*args)
+        self._dtype = NativeReal()
+        self._precision = self._default_precision
         self._shape = args
         self._rank  = len(self.shape)
 
@@ -583,9 +586,7 @@ class NumpyRandint(PyccelInternalFunction):
 
     """
     __slots__ = ('_rand','_low','_high')
-    _dtype = NativeInteger()
-    _precision = default_precision['integer']
-    _order = 'C'
+    _default_precision = default_precision['integer']
     _attribute_nodes = ('_low', '_high')
 
     def __init__(self, low, high = None, size = None):
@@ -594,11 +595,14 @@ class NumpyRandint(PyccelInternalFunction):
         if not hasattr(size,'__iter__'):
             size = (size,)
 
-        self._shape   = size
-        self._rank    = len(self.shape)
-        self._rand    = NumpyRand(*size)
-        self._low     = low
-        self._high    = high
+        self._dtype     = NativeInteger()
+        self._precision = self._default_precision
+        self._shape     = size
+        self._rank      = len(self.shape)
+        self._order     = 'C'
+        self._rand      = NumpyRand(*size)
+        self._low       = low
+        self._high      = high
         super().__init__()
 
     @property
@@ -785,7 +789,6 @@ class NumpyZerosLike:
 
 class NumpyNorm(PyccelInternalFunction):
     """ Represents call to numpy.norm"""
-    _dtype = NativeReal()
 
     def __init__(self, arg, dim=None):
         if isinstance(dim, ValuedArgument):
@@ -796,6 +799,7 @@ class NumpyNorm(PyccelInternalFunction):
             self._shape = tuple(sh)
         else:
             self._shape = ()
+        self._dtype = NativeReal()
         self._rank = len(self._shape)
         super().__init__(arg, dim)
 
