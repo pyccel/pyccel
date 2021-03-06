@@ -33,7 +33,7 @@ class Basic:
         self._user_nodes = []
         self._fst = []
         self._recursion_in_progress = False
-        for c_name in self._attribute_nodes:
+        for c_name in self._attributes:
             c = getattr(self, c_name)
 
             from pyccel.ast.literals import convert_to_literal
@@ -75,7 +75,7 @@ class Basic:
         This will allow it to remove itself from its children's users.
         If a child subsequently has no users, invalidate_node is called recursively
         """
-        for c_name in self._attribute_nodes:
+        for c_name in self._attributes:
             c = getattr(self, c_name)
 
             if self.ignore(c):
@@ -136,7 +136,7 @@ class Basic:
         self._recursion_in_progress = True
 
         results = []
-        for n in self._attribute_nodes:
+        for n in self._attributes:
             v = getattr(self, n)
 
             if isinstance(v, excluded_nodes):
@@ -201,7 +201,7 @@ class Basic:
                     rep.set_current_user_node(self)
             return rep
 
-        for n in self._attribute_nodes:
+        for n in self._attributes:
             v = getattr(self, n)
 
             if isinstance(v, excluded_nodes):
@@ -234,7 +234,7 @@ class Basic:
         Returns true if it is an atom (no attribute nodes) and
         false otherwise
         """
-        return not bool(self._attribute_nodes)
+        return not self._attributes
 
     def set_fst(self, fst):
         """Sets the python.ast fst."""
@@ -293,6 +293,15 @@ class Basic:
         """ Indicates whether the class has any users
         """
         return len(self._user_nodes)==0
+
+    @property
+    def _attributes(self):
+        """ Getter for _attribute_nodes to avoid codacy warnings
+        about no-member. This attribute must be instantiated in
+        the subclasses and this ensures that an error is raised
+        if it isn't
+        """
+        return self._attribute_nodes # pylint: disable=no-member
 
 class PyccelAstNode(Basic):
     """Class from which all nodes containing objects inherit
