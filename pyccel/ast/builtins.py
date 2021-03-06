@@ -109,6 +109,7 @@ class PythonImag(PythonComplexProperty):
 class PythonBool(PyccelAstNode):
     """ Represents a call to Python's native bool() function.
     """
+    __slots__ = ('_arg',)
     _precision = default_precision['bool']
     _dtype = NativeBool()
     _attribute_nodes = ('_arg',)
@@ -138,6 +139,7 @@ class PythonBool(PyccelAstNode):
 class PythonComplex(PyccelAstNode):
     """ Represents a call to Python's native complex() function.
     """
+    __slots__ = ('_real_part', '_imag_part', '_internal_var', '_is_cast')
 
     _rank = 0
     _shape = ()
@@ -238,6 +240,7 @@ class PythonEnumerate(Basic):
     Represents the enumerate stmt
 
     """
+    __slots__ = ('_element',)
     _attribute_nodes = ('_element',)
 
     def __init__(self, arg):
@@ -255,6 +258,7 @@ class PythonEnumerate(Basic):
 class PythonFloat(PyccelAstNode):
     """ Represents a call to Python's native float() function.
     """
+    __slots__ = ('_arg',)
     _precision = default_precision['real']
     _dtype = NativeReal()
     _attribute_nodes = ('_arg',)
@@ -284,6 +288,7 @@ class PythonInt(PyccelAstNode):
     """ Represents a call to Python's native int() function.
     """
 
+    __slots__ = ('_arg',)
     _precision = default_precision['integer']
     _dtype     = NativeInteger()
     _attribute_nodes  = ('_arg',)
@@ -308,6 +313,7 @@ class PythonInt(PyccelAstNode):
 class PythonTuple(PyccelAstNode):
     """ Represents a call to Python's native tuple() function.
     """
+    __slots__ = ('_args','_inconsistent_shape','_is_homogeneous')
     _iterable        = True
     _is_homogeneous  = False
     _order = 'C'
@@ -419,6 +425,7 @@ class PythonList(PythonTuple):
 class PythonMap(Basic):
     """ Represents the map stmt
     """
+    __slots__ = ('_args',)
     _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
@@ -449,6 +456,7 @@ class PythonPrint(Basic):
     >>> Print(('results', n,m))
     Print((results, n, m))
     """
+    __slots__ = ('_expr')
     _attribute_nodes = ('_expr',)
 
     def __init__(self, expr):
@@ -475,6 +483,7 @@ class PythonRange(Basic):
     >>> Range(s, e, 1)
     Range(0, n, 1)
     """
+    __slots__ = ('_start','_stop','_step')
     _attribute_nodes = ('_start', '_stop', '_step')
 
     def __init__(self, *args):
@@ -518,6 +527,7 @@ class PythonZip(PyccelInternalFunction):
     Represents a zip stmt.
 
     """
+    __slots__ = ('_length','_args')
     _attribute_nodes = ('_args',)
 
     def __init__(self, *args):
@@ -621,6 +631,7 @@ class Lambda(Basic):
     expr      : PyccelAstNode
                 The expression carried out when the lambda function is called
     """
+    __slots__ = ('_variables', '_expr')
     _attribute_nodes = ('_variables', '_expr')
     def __init__(self, variables, expr):
         if not isinstance(variables, (list, tuple)):
