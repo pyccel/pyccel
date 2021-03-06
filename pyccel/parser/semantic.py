@@ -2659,7 +2659,7 @@ class SemanticParser(BasicParser):
                     functions = sub_funcs,
                     interfaces = func_interfaces,
                     doc_string = doc_string)
-            if recursive_func_obj not in body.get_attribute_nodes(FunctionDef):
+            if not is_recursive:
                 recursive_func_obj.invalidate_node()
 
             if cls_name:
