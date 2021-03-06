@@ -19,6 +19,7 @@ __all__ = (
 class FunctionalFor(Basic):
 
     """."""
+    __slots__ = ('_loops','_expr', '_lhs', '_indices', '_index')
     _attribute_nodes = ('_loops','_expr', '_lhs', '_indices', '_index')
 
     def __init__(
