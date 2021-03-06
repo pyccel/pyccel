@@ -86,7 +86,7 @@ class LiteralFalse(Literal, metaclass = ArgumentSingleton):
 #------------------------------------------------------------------------------
 class LiteralInteger(Literal):
     """Represents an integer literal in python"""
-    _dtype     = NativeInteger()
+    __slots__ = ('_value',)
 
     def __init__(self, value, precision = default_precision['integer']):
         super().__init__(precision)
@@ -104,7 +104,7 @@ class LiteralInteger(Literal):
 #------------------------------------------------------------------------------
 class LiteralFloat(Literal):
     """Represents a float literal in python"""
-    _dtype     = NativeReal()
+    __slots__ = ('_value',)
 
     def __init__(self, value, *, precision = default_precision['float']):
         if not isinstance(value, (int, float, LiteralFloat)):
@@ -123,6 +123,7 @@ class LiteralFloat(Literal):
 #------------------------------------------------------------------------------
 class LiteralComplex(Literal):
     """Represents a complex literal in python"""
+    __slots__ = ('_real_part','_imag_part')
     _dtype     = NativeComplex()
 
     def __new__(cls, real, imag, precision = default_precision['complex']):
@@ -179,6 +180,7 @@ class LiteralImaginaryUnit(LiteralComplex):
 #------------------------------------------------------------------------------
 class LiteralString(Literal):
     """Represents a string literal in python"""
+    __slots__ = ('_string',)
     _dtype     = NativeString()
     _precision = 0
 
