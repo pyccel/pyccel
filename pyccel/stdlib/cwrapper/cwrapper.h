@@ -35,7 +35,6 @@ bool			PyBool_to_Bool(PyObject *o);
 /* numpy array to ndarray */
 //t_ndarray	PyArray_to_ndarray(PyArrayObject *o);
 
-
 /* casting c type to python object */
 PyObject	*Complex_to_PyComplex(double complex *c);
 

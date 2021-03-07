@@ -274,6 +274,12 @@ free     = FunctionDef(name      = 'free',
                        results   = [],
                        body      = [])
 
+#sizeof operator presented as functionDef node
+sizeof   = FunctionDef(name      = 'sizeof',
+                       arguments = [Variable(name = 'ptr', dtype = NativeGeneric())],
+                       results   = [Variable(name = 'size', dtype = NativeInteger())],
+                       body      = [])
+
 #-------------------------------------------------------------------
 #                      cwrapper.h functions
 #-------------------------------------------------------------------
