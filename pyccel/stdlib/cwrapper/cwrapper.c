@@ -318,6 +318,8 @@ static bool _check_pyarray_order(PyArrayObject *a, int flag)
 ** convert numpy strides to nd_array strides, and return it in a new array, to
 ** avoid the problem of different implementations of strides in numpy and ndarray.
 */
+#ifdef NDARRAYS_H
+
 static int64_t	*_numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd)
 {
     int64_t *ndarray_strides;
@@ -345,7 +347,6 @@ static int64_t     *_numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 
 }
 
-
 t_ndarray	pyarray_to_ndarray(PyArrayObject *o)
 {
 	t_ndarray		array;
@@ -363,6 +364,7 @@ t_ndarray	pyarray_to_ndarray(PyArrayObject *o)
 
 	return array;
 }
+#endif
 
 
 bool	pyarray_check(PyArrayObject *a, int dtype, int rank, int flag)

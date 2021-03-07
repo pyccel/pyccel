@@ -7,15 +7,20 @@
 # include <complex.h>
 # include <stdint.h>
 # include <stdbool.h>
-# include "ndarrays.h"
 # define NO_TYPE_CHECK -1
 # define NO_ORDER_CHECK -1
 
+#ifdef NDARRAYS_H
+
+# include "ndarrays.h"
+t_ndarray	pyarray_to_ndarray(PyArrayObject *o);
+
+#endif
+
 
 /* array converter */
-
-t_ndarray	pyarray_to_ndarray(PyArrayObject *o);
 bool        pyarray_check(PyArrayObject *o, int dtype, int rank, int flag);
+
 /* functions prototypes */
 
 /* casting python object to c type */
