@@ -5,34 +5,33 @@
 #------------------------------------------------------------------------------------------#
 # pylint: disable=R0201
 
-import numpy as np
-
 from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.literals    import LiteralTrue, LiteralInteger, LiteralString
 
-from pyccel.ast.operators   import PyccelNot, PyccelEq, PyccelNe, PyccelIs, IfTernaryOperator, PyccelIsNot
-from pyccel.ast.datatypes   import NativeInteger, NativeVoid, NativeGeneric
+from pyccel.ast.operators   import PyccelNot, PyccelEq, PyccelIs, PyccelIsNot
+
+from pyccel.ast.datatypes   import NativeInteger, NativeGeneric
+
 from pyccel.ast.core        import create_incremented_string, SeparatorComment
 
-from pyccel.ast.core        import FunctionCall, FunctionDef, FunctionAddress
+from pyccel.ast.core        import FunctionCall, FunctionDef
 from pyccel.ast.core        import Assign, AliasAssign, Nil, datatype
 from pyccel.ast.core        import If, IfSection, Import, Return
 
-from pyccel.ast.cwrapper    import (PyArgKeywords, PyArg_ParseTupleNode,
-                                    PyBuildValueNode)
-from pyccel.ast.cwrapper    import C_to_Python, scalar_checker, Python_to_C
-from pyccel.ast.cwrapper    import get_custom_key, flags_registry, PyErr_SetString
-from pyccel.ast.cwrapper    import malloc, free, sizeof,generate_datatype_error
+from pyccel.ast.cwrapper    import PyArgKeywords, PyArg_ParseTupleNode, PyBuildValueNode
 
-from pyccel.ast.cwrapper    import PyccelPyObject, PyccelPyArrayObject, Py_None
+from pyccel.ast.cwrapper    import C_to_Python, scalar_checker, Python_to_C
+
+from pyccel.ast.cwrapper    import flags_registry, PyErr_SetString
+from pyccel.ast.cwrapper    import malloc, free, sizeof, generate_datatype_error
+
+from pyccel.ast.cwrapper    import PyccelPyObject, PyccelPyArrayObject
 
 from pyccel.ast.numpy_wrapper   import array_checker, numpy_get_dim, numpy_get_data, pyarray_to_ndarray
 
-from pyccel.ast.internals       import PyccelArraySize
 from pyccel.ast.variable        import Variable, ValuedVariable, VariableAddress
 
-from pyccel.ast.builtins         import PythonBool
 from pyccel.ast.bind_c          import as_static_function_call
 
 from pyccel.errors.errors   import Errors

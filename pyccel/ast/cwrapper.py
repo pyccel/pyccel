@@ -2,7 +2,6 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# pylint: disable=missing-function-docstring
 
 """
 Handling the transitions between python code and C code using (Python/C Api).
@@ -13,18 +12,16 @@ import numpy as np
 from ..errors.errors   import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
-from .basic     import Basic, PyccelAstNode
+from .basic     import Basic
 
 from .literals  import LiteralInteger
-from .datatypes import DataType
-from .datatypes import NativeInteger, NativeReal, NativeComplex
-from .datatypes import NativeBool, NativeString, NativeGeneric, NativeVoid
+
+from .datatypes import (DataType, NativeInteger, NativeReal, NativeComplex,
+                        NativeBool, NativeString, NativeGeneric, NativeVoid)
 
 from .operators import PyccelOr, PyccelNot
-from .internals import PyccelInternalFunction
 
 from .core      import FunctionCall, FunctionDef, FunctionAddress
-from .core      import Assign, If, IfSection, Return, Nil
 
 from .variable  import Variable, ValuedVariable
 
@@ -44,14 +41,19 @@ __all__ = (
     'Py_False',
     'Py_None',
 #----- C / PYTHON FUNCTIONS ---
-    'PyErr_SetString',
+    'malloc',
+    'free',
+    'sizeof',
 #------- CAST FUNCTIONS ------
     'C_to_Python',
     'Python_to_C',
 #-------CHECK FUNCTIONS ------
     'PythonType_Check',
+    'scalar_checker',
 #-------- Regestry -----------
     'flags_registry'
+#---------Helpers-------------
+    'generate_datatype_error'
 )
 
 
@@ -60,6 +62,8 @@ __all__ = (
 #-------------------------------------------------------------------
 
 class PyccelPyObject(DataType):
+    """ Datatype representing a PyObject which is the
+    class used to hold python objects"""
     _name = 'pyobject'
 
 class PyccelPyArrayObject(DataType):
@@ -236,19 +240,6 @@ class PyBuildValueNode(Basic):
     def converters(self):
         return self._converter_functions
 
-def get_custom_key(variable):
-    """
-    #TODO
-    """
-    dtype     = variable.dtype
-    precision = variable.precision
-    rank      = variable.rank #TODO find a global way to manage different rank in one function
-    is_valued = isinstance(variable, ValuedVariable)
-    is_optional = variable.is_optional
-
-    return (dtype, precision, rank, is_valued, is_optional)
-
-
 #-------------------------------------------------------------------
 #                      Python.h Constants
 #-------------------------------------------------------------------
@@ -274,7 +265,7 @@ free     = FunctionDef(name      = 'free',
                        results   = [],
                        body      = [])
 
-#sizeof operator presented as functionDef node
+#sizeof operator presented as FunctionDef node
 sizeof   = FunctionDef(name      = 'sizeof',
                        arguments = [Variable(name = 'ptr', dtype = NativeGeneric())],
                        results   = [Variable(name = 'size', dtype = NativeInteger())],
@@ -384,12 +375,6 @@ c_to_py_registry = {
 #-------------------------------------------------------------------
 #              errors and check functions
 #-------------------------------------------------------------------
-# https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Occurred
-PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
-                             arguments = [],
-                             results   = [Variable(dtype = PyccelPyObject(), name = 'r', is_pointer = True)],
-                             body      = [])
-
 
 def PyErr_SetString(exception, message):
     """

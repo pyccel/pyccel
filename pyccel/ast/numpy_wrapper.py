@@ -10,18 +10,18 @@ Handling the transitions between python code and C code using (Numpy/C Api).
 
 import numpy as np
 
-from .datatypes         import NativeInteger, NativeReal, NativeComplex
-from .datatypes         import NativeBool, NativeGeneric, NativeVoid
+from .datatypes         import (NativeInteger, NativeReal, NativeComplex,
+                                NativeBool, NativeGeneric, NativeVoid)
 
 from .cwrapper          import PyccelPyObject, PyccelPyArrayObject
 
-from .core              import FunctionDef, FunctionCall, Assign, If, IfSection, Return
-from .operators         import PyccelOr, PyccelNot
+from .core              import FunctionDef, FunctionCall
+from .operators         import PyccelNot
 
 
 from .literals          import LiteralInteger
 
-from .variable          import Variable, VariableAddress
+from .variable          import Variable
 
 from ..errors.errors   import Errors
 
@@ -30,19 +30,14 @@ from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 errors = Errors()
 
 __all__ = (
-    'numpy_get_ndims',
+    #------- CAST FUNCTIONS ------
     'numpy_get_data',
+    'pyarray_to_ndarray',
+    #-------CHECK FUNCTIONS ------
+    'array_checker',
+    'NumpyType_Check',
+    #-------HELPERS ------
     'numpy_get_dim',
-    'numpy_get_stride',
-    'numpy_check_flag',
-    'numpy_get_base',
-    'numpy_itemsize',
-    'numpy_flag_own_data',
-    'numpy_flag_c_contig',
-    'numpy_flag_f_contig',
-    'numpy_dtype_registry',
-    'PyArray_CheckScalar',
-    'PyArray_ScalarAsCtype',
 )
 
 #-------------------------------------------------------------------
