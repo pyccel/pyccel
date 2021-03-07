@@ -145,6 +145,16 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def find_in_dtype_registry(self, dtype, prec):
         """
+        find the corresponding C dtype in the dtype_registry
+        raise PYCCEL_RESTRICTION_TODO if not found
+        Parameters:
+        -----------
+        dtype : String
+            expression data type
+        prec  : Integer
+            expression precision
+        Returns: String
+        --------
         """
         try :
             return dtype_registry[(dtype, prec)]
@@ -153,6 +163,14 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_declare_type(self, expr):
         """
+        Get the declaration type of an expression
+        it can be (variable, functiondef)
+        Parameters:
+        -----------
+        expr   : FunctionDef or variable
+
+        Returns: String
+        --------
         """
         dtype = self._print(expr.dtype)
         prec  = expr.precision
@@ -168,6 +186,13 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def stored_in_c_pointer(self, a):
         """
+        Return True if variable is pointer or stored in pointer
+        Parameters:
+        -----------
+        a      : Variable
+
+        Returns: boolean
+        --------
         """
         stored_in_c = CCodePrinter.stored_in_c_pointer(self, a)
         if self._target_language == 'fortran':
@@ -220,8 +245,21 @@ class CWrapperCodePrinter(CCodePrinter):
         return static_args
 
     @staticmethod
-    def get_flag_value(flag, variable):
+    def set_flag_value(flag, variable):
         """
+        Collect data type value from flags_registry used to avoid
+        multiple data type check when using interfaces,
+        and set the new flag value
+        raise NotImplementedError if not found
+        Parameters:
+        -----------
+        flag     : Integer
+            the current flag value
+        variable : Variable
+            needed to collect value from registry
+        Returns  : Integer
+        -------
+            the new flag value
         """
         try :
             new_flag = flags_registry[(variable.dtype, variable.precision)]
@@ -230,8 +268,24 @@ class CWrapperCodePrinter(CCodePrinter):
             'datatype not implemented as arguments : {}'.format(variable.dtype))
         return (flag << 4) + flag
 
+
+    def free_allocated_object(self):
+        """
+        loop on all the allocated memory and free them before exit
+        """
+        return [FunctionCall(free, [i]) for i in self.to_free_objects]
+
     def need_memory_allocation(self, variable):
         """
+        allocated needed memory to hold value this is used to avoid creating mass
+        temporary variables and multiples checks, add the allocated variable
+        to list (to_free_objects) to free it later
+        Parameters:
+        -----------
+        variable : Variable
+            variable to allocate if needed
+        Returns     : List of Assign
+        -----------
         """
         body = []
 
@@ -287,22 +341,19 @@ class CWrapperCodePrinter(CCodePrinter):
     def collect_value(self, p_arg, c_arg, converter):
         """
         Generate list of statement responsible for collecting value
-        and managing errors (data type, precision, rank, order) of an argument
+        of an argument
         Parameters:
         ----------
         p_arg   : Variable
-
+            The python argument needed for collection value
         c_arg   : Variable
             variable holdding information (data type, precision, rank, order) needed
             for bulding converter function body
         converter : FunctionDef
 
-        check_is_needed : Boolean
-            True if data type check is needed, used to avoid multiple type check
-            in interface
         Returns:
         --------
-        funcDef   : FunctionDef
+        body   : list of statements
         """
         # change arg to pointer if its optional
         c_var = c_arg.clone(name = c_arg.name, is_pointer = (c_arg.is_pointer or c_arg.is_optional))
@@ -322,6 +373,20 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def check_argument(self, p_arg, c_arg, is_interface = True):
         """
+        Generate list of statement responsible for collecting value
+        of an argument
+        Parameters:
+        ----------
+        p_arg   : Variable
+            The python argument needed for checking
+        c_arg   : Variable
+            variable holdding information (data type, precision, rank, order) needed
+            for bulding converter function body
+        is_interface : Boolean
+            default True used to avoid date type check when working with interfaces
+        Returns:
+        --------
+        body   : list of statements
         """
         body  = []
 
@@ -342,13 +407,6 @@ class CWrapperCodePrinter(CCodePrinter):
             body = [If(*body)]
 
         return body
-
-
-    def free_allocated_object(self):
-        """
-        loop on all the allocated memory and free them before exit
-        """
-        return [FunctionCall(free, [i]) for i in self.to_free_objects]
 
     # -------------------------------------------------------------------
     #       Parsing arguments and building values  functions
@@ -717,12 +775,14 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports  = [Import(s) for s in self._additional_imports]
+        imports += [Import('numpy/arrayobject')]
         imports += [Import('cwrapper')]
         imports  = '\n'.join(self._print(i) for i in imports)
 
         sep = self._print(SeparatorComment(40))
 
-        return ('{imports}\n\n'
+        return ('#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API\n'
+                '{imports}\n\n'
                 '{function_signatures}\n\n'
                 '{sep}\n\n'
                 '{function_defs}\n\n'

@@ -429,9 +429,6 @@ t_ndarray	pyarray_to_ndarray(PyArrayObject *o)
 
 bool	pyarray_check(PyArrayObject *a, int dtype, int rank, int flag)
 {
-	// Importing the API
-	if (PyArray_API == NULL) import_array();
-
 	// check array element type / rank / order
 	if(!check_pyarray_dtype(a, dtype)) return false;
 

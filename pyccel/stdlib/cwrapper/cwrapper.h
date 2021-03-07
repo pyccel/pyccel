@@ -3,12 +3,19 @@
 # define PY_SSIZE_T_CLEAN
 
 # include "Python.h"
-# include "numpy/arrayobject.h"
 # include <complex.h>
 # include <stdint.h>
 # include <stdbool.h>
+
+# define NO_IMPORT_ARRAY
+# define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API
+# include "numpy/arrayobject.h"
+
 # define NO_TYPE_CHECK -1
 # define NO_ORDER_CHECK -1
+
+
+
 
 #ifdef NDARRAYS_H
 
