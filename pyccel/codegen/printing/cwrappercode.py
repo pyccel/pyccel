@@ -11,8 +11,8 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.literals    import LiteralTrue, LiteralInteger, LiteralString
 
-from pyccel.ast.operators   import PyccelNot, PyccelEq, PyccelNe, PyccelIs, IfTernaryOperator
-from pyccel.ast.datatypes   import NativeInteger, NativeVoid
+from pyccel.ast.operators   import PyccelNot, PyccelEq, PyccelNe, PyccelIs, IfTernaryOperator, PyccelIsNot
+from pyccel.ast.datatypes   import NativeInteger, NativeVoid, NativeGeneric
 from pyccel.ast.core        import create_incremented_string, SeparatorComment
 
 from pyccel.ast.core        import FunctionCall, FunctionDef, FunctionAddress
@@ -23,7 +23,7 @@ from pyccel.ast.cwrapper    import (PyArgKeywords, PyArg_ParseTupleNode,
                                     PyBuildValueNode)
 from pyccel.ast.cwrapper    import C_to_Python, scalar_checker, Python_to_C
 from pyccel.ast.cwrapper    import get_custom_key, flags_registry, PyErr_SetString
-from pyccel.ast.cwrapper    import malloc, free, sizeof
+from pyccel.ast.cwrapper    import malloc, free, sizeof,generate_datatype_error
 
 from pyccel.ast.cwrapper    import PyccelPyObject, PyccelPyArrayObject, Py_None
 
@@ -62,7 +62,7 @@ class CWrapperCodePrinter(CCodePrinter):
     @staticmethod
     def get_new_name(used_names, requested_name):
         """
-        Generate a new name, return the requested_name if it's not in 
+        Generate a new name, return the requested_name if it's not in
         used_names set  or generate new one based on the requested_name.
         the generated name is appended to the set
         Parameters
@@ -222,7 +222,7 @@ class CWrapperCodePrinter(CCodePrinter):
             static_args.append(argument)
         else:
             static_args = [argument]
-    
+
         return static_args
 
     @staticmethod
@@ -236,11 +236,30 @@ class CWrapperCodePrinter(CCodePrinter):
             'datatype not implemented as arguments : {}'.format(variable.dtype))
         return (flag << 4) + flag
 
+    def need_memory_allocation(self, variable):
+        """
+        """
+        body = []
+
+        if variable.is_optional and not (variable.rank > 0 and self._target_language is 'fortran'):
+            dtype = self.find_in_dtype_registry(self._print(variable.dtype), variable.precision)
+
+            size = Variable(NativeGeneric(), dtype)
+
+            body += [AliasAssign(variable,
+                FunctionCall(malloc, [
+                    FunctionCall(sizeof, [size])
+                    ])
+                )]
+            self.to_free_objects.append(variable)
+
+        return body
+
     # --------------------------------------------------------------------
     #                  Custom body generators [helpers]
     # --------------------------------------------------------------------
 
-    def generate_valued_variable_body(self, py_variable, c_variable, default_value):
+    def valued_checker(self, py_variable, c_variable):
         """
         Generate valued variable code section (check, collect default value)
         Parameters:
@@ -255,31 +274,23 @@ class CWrapperCodePrinter(CCodePrinter):
             list of If statement
 
         """
-        default_assign = Assign(c_variable, default_value) #defaut value
-
         if c_variable.is_optional: # default is NULL when variable is optional
-            default_assign = AliasAssign(c_variable, Nil())
+            default_assign = Assign(VariableAddress(c_variable), Nil())
 
-        body = [If(IfSection(PyccelIs(VariableAddress(py_variable), Nil()), [
+        else:
+            default_assign = Assign(c_variable, c_variable.value) #defaut value
+
+        check = IfSection(PyccelIs(VariableAddress(py_variable), Nil()), [
             default_assign
-        ]))]
+        ])
 
-        # if variable is optional mempry need to be allocated
-        if c_variable.is_optional and not (c_variable.rank > 0 and self._target_language is 'fortran'):
-            body += [AliasAssign(c_variable,
-                FunctionCall(malloc, [
-                    FunctionCall(sizeof, [VariableAddress(c_variable)])
-                    ])
-                )]
-            self.to_free_objects.append(c_variable)
-
-        return  body
+        return  check
 
     #--------------------------------------------------------------------
     #                   Convert functions
     #--------------------------------------------------------------------
 
-    def collect_value(self, p_arg, c_arg, converter, check_is_needed = True):
+    def collect_value(self, p_arg, c_arg, converter):
         """
         Generate list of statement responsible for collecting value
         and managing errors (data type, precision, rank, order) of an argument
@@ -299,32 +310,45 @@ class CWrapperCodePrinter(CCodePrinter):
         --------
         funcDef   : FunctionDef
         """
+        # change arg to pointer if its optional
+        c_var = c_arg.clone(name = c_arg.name, is_pointer = (c_arg.is_pointer or c_arg.is_optional))
 
-        #set c argument to pointer if its optional
-        c_variable  = c_arg.clone(name = c_arg.name,
-                    is_pointer = (c_arg.is_optional or c_arg.is_pointer))
-        body = []
+        if c_arg.rank > 0 and self._target_language  is 'fortran': # array
+            body = [Assign(VariableAddress(c_var), FunctionCall(converter, [p_arg]))]
 
-        #get default value
+        else: #scalar
+            body =  [Assign(c_var, FunctionCall(converter, [p_arg]))]
+
         if isinstance(c_arg, ValuedVariable):
-            body += self.generate_valued_variable_body(p_arg, c_variable, c_arg.value)
+            check = PyccelIsNot(c_var, Nil())
+            body = [If(IfSection(check, self.need_memory_allocation(c_var) + body))]
 
-        #check elements
-        if c_arg.rank > 0: # array
-            check = array_checker(p_arg, c_variable, check_is_needed, self._target_language)
-            body += [If(IfSection(check, self.free_allocated_object() + [RETURN_NULL]))]
+        return  body
 
-        elif check_is_needed: # scalar
-            check, error = scalar_checker(p_arg, c_variable)
-            body += [If(IfSection(check, error + self.free_allocated_object() + [RETURN_NULL]))]
 
-        #collect value
-        if c_arg.rank > 0 and self._target_language  is 'fortran':
-            body += [Assign(VariableAddress(c_variable), FunctionCall(converter, [p_arg]))]
-        else:
-            body += [Assign(c_variable, FunctionCall(converter, [p_arg]))]
+    def check_argument(self, p_arg, c_arg, is_interface = True):
+        """
+        """
+        body  = []
+
+        if isinstance(c_arg, ValuedVariable):
+            body.append(self.valued_checker(p_arg, c_arg))
+
+        if c_arg.rank > 0: # this is an array
+            check = array_checker(p_arg, c_arg, is_interface, self._target_language)
+            body.append(IfSection(check, [RETURN_NULL]))
+            # error is set on the C side
+
+        elif not is_interface: #this is for scalar (check is done elsewhere when interfacing)
+            check = scalar_checker(p_arg, c_arg)
+            error = generate_datatype_error(c_arg)
+            body.append(IfSection(check, [error, RETURN_NULL]))
+
+        if body: # body was set above
+            body = [If(*body)]
 
         return body
+
 
     def free_allocated_object(self):
         """
@@ -358,7 +382,7 @@ class CWrapperCodePrinter(CCodePrinter):
             except KeyError:
                 raise NotImplementedError(
                 'return not implemented for this datatype : {}'.format(variable.dtype))
-            
+
         return function
 
     def get_PyBuildValue_Converter(self, variable):
@@ -382,7 +406,7 @@ class CWrapperCodePrinter(CCodePrinter):
         except KeyError:
             raise NotImplementedError(
             'return not implemented for this datatype : {}'.format(variable.dtype))
-        
+
         return func
 
     #--------------------------------------------------------------------
@@ -398,7 +422,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyArgKeywords(self, expr):
         arg_names  = ['"{}"'.format(a) for a in expr.arg_names]
         arg_names += [self._print(Nil())]
-        
+
         arg_names  = ',\n'.join(arg_names)
         code       = 'static char *{name}[] = {{\n{arg_names}\n}};\n'
 
@@ -583,7 +607,10 @@ class CWrapperCodePrinter(CCodePrinter):
 
         wrapper_body                = [keyword_list]
         static_func_args            = []
-        collect_body                = []
+        collect_statements          = []
+        check_statements            = [] # list to store args check statements
+
+
         # temporary parsing args needed to hold python value
         parse_args     = tuple([self.get_new_PyObject('py_' + a.name, used_names, a.rank)
                           for a in expr.arguments])
@@ -595,14 +622,16 @@ class CWrapperCodePrinter(CCodePrinter):
             if isinstance(c_arg, ValuedVariable):
                 wrapper_body.append(AliasAssign(p_arg, Nil()))
 
-            collect_body += self.collect_value(p_arg, c_arg, converter)
+            check_statements   += self.check_argument(p_arg, c_arg, False)
+            collect_statements += self.collect_value(p_arg, c_arg, converter)
 
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(*wrapper_args[1:], parse_args, expr.arguments, keyword_list)
 
         wrapper_body.append(If(IfSection(PyccelNot(parse_node), [RETURN_NULL])))
 
-        wrapper_body.extend(collect_body)
+        wrapper_body.extend(check_statements)
+        wrapper_body.extend(collect_statements)
 
         # Call function
         static_function = self.get_static_function(expr)
@@ -624,6 +653,10 @@ class CWrapperCodePrinter(CCodePrinter):
         build_node = PyBuildValueNode(expr.results, converters)
 
         wrapper_body.append(AliasAssign(wrapper_results[0], build_node))
+
+        # free all allocated memory :
+        wrapper_body += self.free_allocated_object()
+
         # Return
         wrapper_body.append(Return(wrapper_results))
         wrapper_function = FunctionDef(name     = wrapper_name,
@@ -631,7 +664,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                     results     = wrapper_results,
                                     body        = wrapper_body,
                                     local_vars  = expr.arguments + expr.results + parse_args)
-        
+
         return CCodePrinter._print_FunctionDef(self, wrapper_function)
 
     def _print_Module(self, expr):
@@ -655,15 +688,15 @@ class CWrapperCodePrinter(CCodePrinter):
                                             wrapper_name = self._function_wrapper_names[f.name],
                                             doc_string   = self._print(LiteralString('\n'.join(f.doc_string.comments)))\
                                                             if f.doc_string else '""') for f in funcs)
-        
+
         method_def_name = self.get_new_name(self._global_names, '{}_methods'.format(expr.name))
-        
+
         method_def = ('static PyMethodDef {method_def_name}[] = {{\n'
                             '{method_def_func},\n'
                             '{{ NULL, NULL, 0, NULL}}\n'
                             '}};'.format(method_def_name = method_def_name,
                                         method_def_func = method_def_func))
-        
+
         module_def_name = self.get_new_name(self._global_names, '{}_module'.format(expr.name))
         module_def = ('static struct PyModuleDef {module_def_name} = {{\n'
                     'PyModuleDef_HEAD_INIT,\n'
@@ -687,12 +720,12 @@ class CWrapperCodePrinter(CCodePrinter):
                     'if (m == NULL) return NULL;\n\n'
                     'return m;\n}}'.format(mod_name        = expr.name,
                                         module_def_name = module_def_name))
-        
+
         # Print imports last to be sure that all additional_imports have been collected
         imports  = [Import(s) for s in self._additional_imports]
         imports += [Import('cwrapper')]
         imports  = '\n'.join(self._print(i) for i in imports)
-        
+
         sep = self._print(SeparatorComment(40))
 
         return ('{imports}\n\n'

@@ -341,9 +341,8 @@ def scalar_checker(py_variable, c_variable):
     python_check = PythonType_Check(py_variable, c_variable)
 
     check        = PyccelNot(PyccelOr(numpy_check, python_check))
-    error        = [generate_datatype_error(c_variable)]
 
-    return check, error
+    return check
 
 
 def C_to_Python(c_object):
