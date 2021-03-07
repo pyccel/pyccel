@@ -268,7 +268,7 @@ PyObject	*Float_to_PyDouble(float *d)
  */
 
 
-static bool	check_pyarray_dtype(PyArrayObject *a, int dtype)
+bool	check_pyarray_dtype(PyArrayObject *a, int dtype)
 {
 	int current_dtype;
 
@@ -354,25 +354,6 @@ static bool _check_pyarray_order(PyArrayObject *a, int flag)
 	return true;
 }
 
-/*
- * Function: pyarray_to_ndarray
- * ----------------------------
- * A Cast function that convert numpy array variable into ndarray variable,
- * by copying its information and data to a new variable of type ndarray struct
- * and return this variable to be used inside c code.
- * 	Parameters	:
- *		o 	  : python array object
- *      array : c ndarray object
- *      dtype : desired data type enum
- *		rank  : desired rank
- *		flag  : desired order flag
- * 	Returns		:
- *		return true if no error occurred otherwise it will return false
- *
- * reference of the used c/numpy api function
- * -------------------------------------------
- * https://numpy.org/doc/stable/reference/c-api/array.html
- */
 
 /*
 ** convert numpy strides to nd_array strides, and return it in a new array, to
@@ -407,6 +388,22 @@ static int64_t     *_numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 
 }
 
+/*
+ * Function: pyarray_to_ndarray
+ * ----------------------------
+ * A Cast function that convert numpy array variable into ndarray variable,
+ * by copying its information and data to a new variable of type ndarray struct
+ * and return this variable to be used inside c code.
+ * 	Parameters	:
+ *		o 	  : python array object
+ * 	Returns		:
+ *    array   :  c ndarray
+ *
+ * reference of the used c/numpy api function
+ * -------------------------------------------
+ * https://numpy.org/doc/stable/reference/c-api/array.html
+ */
+
 t_ndarray	pyarray_to_ndarray(PyArrayObject *o)
 {
 	t_ndarray		array;
@@ -424,8 +421,23 @@ t_ndarray	pyarray_to_ndarray(PyArrayObject *o)
 
 	return array;
 }
+
 #endif
 
+
+/*
+ * Function: pyarray_check
+ * --------------------
+ * Check Python Object (DataType, Rank, Order):
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ *      dtype : desired data type enum
+ *		rank  : desired rank
+ *		flag  : desired order flag
+ * 	Returns		:
+ *		return true if no error occurred otherwise it will return false
+ */
 
 bool	pyarray_check(PyArrayObject *a, int dtype, int rank, int flag)
 {
@@ -439,6 +451,22 @@ bool	pyarray_check(PyArrayObject *a, int dtype, int rank, int flag)
 	return true;
 }
 
+
+
+/*
+ * Function: array_ndim
+ * --------------------
+ * Return the shape in the n dimension.
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ *      index : dimension index
+ * 	Returns		:
+ *		return 0 if object is NULL or shape at indexed dimension
+ * reference of the used c/numpy api function
+ * -------------------------------------------
+ * https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_DIM
+ */
 
 int32_t     array_ndim(PyArrayObject *o, int index)
 {

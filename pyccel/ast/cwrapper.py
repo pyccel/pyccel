@@ -317,9 +317,11 @@ def scalar_checker(py_variable, c_variable):
     with rank less than 1
     Parameters:
     ----------
-    variable   : Variable
+    py_variable  : Variable
+        python variable used in check
+    c_variable   : Variable
         variable holdding information (data type, precision) needed
-        in bulding converter function body
+        in selecting check functions
     Returns:
     --------
     body   : condition

@@ -25,11 +25,12 @@ t_ndarray	pyarray_to_ndarray(PyArrayObject *o);
 #endif
 
 
-/* array converter */
+
+/* arrays checkers and helpers */
+bool	    check_pyarray_dtype(PyArrayObject *a, int dtype);
 bool        pyarray_check(PyArrayObject *o, int dtype, int rank, int flag);
 int32_t     array_ndim(PyArrayObject *o, int index);
 
-/* functions prototypes */
 
 /* casting python object to c type */
 float complex	PyComplex_to_Complex64(PyObject *o) ;
@@ -45,8 +46,6 @@ double			PyDouble_to_Double(PyObject *o);
 
 bool			PyBool_to_Bool(PyObject *o);
 
-/* numpy array to ndarray */
-//t_ndarray	PyArray_to_ndarray(PyArrayObject *o);
 
 /* casting c type to python object */
 PyObject	*Complex128_to_PyComplex(double complex *c);
