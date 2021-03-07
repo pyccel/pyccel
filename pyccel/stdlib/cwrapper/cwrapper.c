@@ -37,12 +37,18 @@ float complex PyComplex_to_Complex64(PyObject *o)
 	float			real_part;
 	float			imag_part;
 
+	// numpy complex64
+	//https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_ScalarAsCtype
+	if (PyArray_IsScalar(o, Complex64))
+		PyArray_ScalarAsCtype(o, &c);
 
-	real_part = (float)PyComplex_RealAsDouble(o);
-	imag_part = (float)PyComplex_ImagAsDouble(o);
+	else
+	{
+		real_part = (float)PyComplex_RealAsDouble(o);
+		imag_part = (float)PyComplex_ImagAsDouble(o);
 
-	c = CMPLXF(real_part, imag_part);
-
+		c = CMPLXF(real_part, imag_part);
+	}
 	return	c;
 }
 
@@ -244,6 +250,7 @@ PyObject	*Float_to_PyDouble(float *d)
 	return o;
 }
 
+
 /*
  * Function: _check_pyarray_dtype
  * --------------------
@@ -433,4 +440,13 @@ bool	pyarray_check(PyArrayObject *a, int dtype, int rank, int flag)
 	if(rank > 1 && !_check_pyarray_order(a, flag)) return false;
 
 	return true;
+}
+
+
+int32_t     array_ndim(PyArrayObject *o, int index)
+{
+	if (o == NULL)
+		return 0;
+	
+	return PyArray_DIM(o, index);
 }

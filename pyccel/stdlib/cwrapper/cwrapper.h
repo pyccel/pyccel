@@ -20,6 +20,7 @@ t_ndarray	pyarray_to_ndarray(PyArrayObject *o);
 
 /* array converter */
 bool        pyarray_check(PyArrayObject *o, int dtype, int rank, int flag);
+int32_t     array_ndim(PyArrayObject *o, int index);
 
 /* functions prototypes */
 

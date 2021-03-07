@@ -48,27 +48,20 @@ __all__ = (
 #-------------------------------------------------------------------
 #                      Numpy functions
 #-------------------------------------------------------------------
-# All the numpy function list are part of  numpy/c api
-# https://numpy.org/doc/stable/reference/c-api/array.html
 
-numpy_get_data  = FunctionDef(name      = 'PyArray_DATA',
+# https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_DATA
+numpy_get_data  = FunctionDef(name   = 'PyArray_DATA',
                            body      = [],
                            arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
                            results   = [Variable(dtype=NativeVoid(), name = 'v', rank = 1)])
 
-numpy_get_dim  = FunctionDef(name      = 'PyArray_DIM',
-                           body      = [],
-                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True),
-                                        Variable(dtype=NativeInteger(), name = 'idx')],
-                           results   = [Variable(dtype=NativeInteger(), name = 'd')])
 
 #  numpy array to ndarray : function definition in pyccel/stdlib/cwrapper.c
 pyarray_to_ndarray = FunctionDef(
-            name      = 'pyarray_to_ndarray',
-            arguments = [
-                Variable(name = 'a', dtype = PyccelPyArrayObject(), is_pointer = True)],
-            body      = [],
-            results   = [Variable(name = 'array', dtype = NativeGeneric())])
+                name      = 'pyarray_to_ndarray',
+                arguments = [Variable(name = 'a', dtype = PyccelPyArrayObject(), is_pointer = True)],
+                body      = [],
+                results   = [Variable(name = 'array', dtype = NativeGeneric())])
 
 #  numpy array to check element : function definition in pyccel/stdlib/cwrapper.c
 pyarray_check = FunctionDef(
@@ -81,6 +74,15 @@ pyarray_check = FunctionDef(
                     ],
                 body      = [], 
                 results   = [Variable(name = 'b', dtype = NativeBool())])
+
+# Return the shape in the n dimension : function definition in pyccel/stdlib/cwrapper.c
+numpy_get_dim  = FunctionDef(name    = 'array_ndim',
+                           body      = [],
+                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True),
+                                        Variable(dtype=NativeInteger(), name = 'idx')],
+                           results   = [Variable(dtype=NativeInteger(), name = 'd')])
+
+
 
 
 numpy_flag_own_data     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_OWNDATA')

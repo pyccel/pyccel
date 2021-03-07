@@ -212,12 +212,6 @@ class CWrapperCodePrinter(CCodePrinter):
             static_args = [
                 FunctionCall(numpy_get_dim, [p_arg, i]) for i in range(argument.rank)
             ]
-            # if optional argument extra check are needed
-            if argument.is_optional:
-                static_args = [
-                    IfTernaryOperator(PyccelIs(argument, Nil()), LiteralInteger(0), i)
-                    for i in static_args
-                ]
 
             static_args.append(argument)
         else:
