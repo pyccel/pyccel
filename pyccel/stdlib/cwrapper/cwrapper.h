@@ -41,13 +41,18 @@ bool			PyBool_to_Bool(PyObject *o);
 //t_ndarray	PyArray_to_ndarray(PyArrayObject *o);
 
 /* casting c type to python object */
-PyObject	*Complex_to_PyComplex(double complex *c);
+PyObject	*Complex128_to_PyComplex(double complex *c);
+PyObject	*Complex64_to_PyComplex(float complex *c);
 
 PyObject	*Bool_to_PyBool(bool *b);
 
-PyObject	*Int_to_PyLong(int64_t *i);
+PyObject	*Int64_to_PyLong(int64_t *i);
+PyObject	*Int32_to_PyLong(int32_t *i);
+PyObject	*Int16_to_PyLong(int16_t *i);
+PyObject	*Int8_to_PyLong(int8_t *i);
 
 PyObject	*Double_to_PyDouble(double *d);
+PyObject	*Float_to_PyDouble(float *d);
 
 
 #endif

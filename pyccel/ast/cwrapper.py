@@ -372,14 +372,14 @@ def C_to_Python(c_object):
 # TODO create cast functions of different precision of int issue #735
 c_to_py_registry = {
     (NativeBool(), 4)      : 'Bool_to_PyBool',
-    (NativeInteger(), 1)   : 'Int_to_pyLong',
-    (NativeInteger(), 2)   : 'Int_to_pyLong',
-    (NativeInteger(), 4)   : 'Int_to_PyLong',
-    (NativeInteger(), 8)   : 'Int_to_PyLong',
-    (NativeReal(), 4)      : 'Double_to_PyDouble',
+    (NativeInteger(), 1)   : 'Int8_to_PyLong',
+    (NativeInteger(), 2)   : 'Int16_to_PyLong',
+    (NativeInteger(), 4)   : 'Int32_to_PyLong',
+    (NativeInteger(), 8)   : 'Int64_to_PyLong',
+    (NativeReal(), 4)      : 'Float_to_PyDouble',
     (NativeReal(), 8)      : 'Double_to_PyDouble',
-    (NativeComplex(), 4)   : 'Complex_to_PyComplex',
-    (NativeComplex(), 8)   : 'Complex_to_PyComplex'}
+    (NativeComplex(), 4)   : 'Complex64_to_PyComplex',
+    (NativeComplex(), 8)   : 'Complex128_to_PyComplex'}
 
 
 #-------------------------------------------------------------------
