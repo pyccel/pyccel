@@ -576,7 +576,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_PyccelNot(self, expr):
         a = self._print(expr.args[0])
-        return '!{}'.format(a)
+        return '!({})'.format(a)
 
     def _print_PyccelMod(self, expr):
         self._additional_imports.add("math")

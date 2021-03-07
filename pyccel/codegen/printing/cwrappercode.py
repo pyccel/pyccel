@@ -9,7 +9,7 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.literals    import LiteralTrue, LiteralInteger, LiteralString
 
-from pyccel.ast.operators   import PyccelNot, PyccelEq, PyccelIs, PyccelIsNot
+from pyccel.ast.operators   import PyccelNot, PyccelEq, PyccelIs, PyccelIsNot, PyccelNe
 
 from pyccel.ast.datatypes   import NativeInteger, NativeGeneric
 
@@ -23,7 +23,7 @@ from pyccel.ast.cwrapper    import PyArgKeywords, PyArg_ParseTupleNode, PyBuildV
 
 from pyccel.ast.cwrapper    import C_to_Python, scalar_checker, Python_to_C
 
-from pyccel.ast.cwrapper    import flags_registry, PyErr_SetString
+from pyccel.ast.cwrapper    import flags_registry, PyErr_SetString, Py_None
 from pyccel.ast.cwrapper    import malloc, free, sizeof, generate_datatype_error
 
 from pyccel.ast.cwrapper    import PyccelPyObject, PyccelPyArrayObject
@@ -267,12 +267,48 @@ class CWrapperCodePrinter(CCodePrinter):
             'datatype not implemented as arguments : {}'.format(variable.dtype))
         return (flag << 4) + flag
 
+    @staticmethod
+    def get_default_value(variable):
+        """
+        Return default value for variable initialisation
+        """
+        if isinstance(variable.dtype, PyccelPyObject):
+            default = Py_None
+
+        elif isinstance(variable.dtype, PyccelPyArrayObject):
+            default = Nil()
+
+        elif variable.is_optional:
+            default = Nil()
+
+        else:
+            default = variable.value
+
+        return default
+
+
+    def get_default_assign(self, variable):
+        """
+        look up for the default value and create default assign
+        """
+        default_value = self.get_default_value(variable)
+
+        if self.stored_in_c_pointer(variable):
+            assign = AliasAssign(variable, default_value)
+
+        else:
+            assign = Assign(variable, default_value)
+
+        return assign
 
     def free_allocated_object(self):
         """
         loop on all the allocated memory and free them before exit
         """
-        return [FunctionCall(free, [i]) for i in self.to_free_objects]
+        body = [FunctionCall(free, [i]) for i in self.to_free_objects]
+        self.to_free_objects.clear()
+
+        return body
 
     def need_memory_allocation(self, variable):
         """
@@ -317,19 +353,15 @@ class CWrapperCodePrinter(CCodePrinter):
             The variable that will hold default value
         Returns   :
         -----------
-        body         : list
-            list of If statement
+        body         : IfSection
 
         """
-        if c_variable.is_optional: # default is NULL when variable is optional
-            default_assign = Assign(VariableAddress(c_variable), Nil())
+        default = self.get_default_value(py_variable)
 
+        if isinstance(default, Nil):
+            check = PyccelIs(VariableAddress(py_variable), default)
         else:
-            default_assign = Assign(c_variable, c_variable.value) #defaut value
-
-        check = IfSection(PyccelIs(VariableAddress(py_variable), Nil()), [
-            default_assign
-        ])
+            check = PyccelEq(VariableAddress(py_variable), VariableAddress(default))
 
         return  check
 
@@ -364,8 +396,8 @@ class CWrapperCodePrinter(CCodePrinter):
             body =  [Assign(c_var, FunctionCall(converter, [p_arg]))]
 
         if isinstance(c_arg, ValuedVariable):
-            check = PyccelIsNot(c_var, Nil())
-            body = [If(IfSection(check, self.need_memory_allocation(c_var) + body))]
+            check = PyccelNot(self.valued_checker(p_arg, c_arg))
+            body  = [If(IfSection(check, self.need_memory_allocation(c_var) + body))]
 
         return  body
 
@@ -387,10 +419,13 @@ class CWrapperCodePrinter(CCodePrinter):
         --------
         body   : list of statements
         """
+        # change arg to pointer if its optional
+        c_var = c_arg.clone(name = c_arg.name, is_pointer = (c_arg.is_pointer or c_arg.is_optional))
         body  = []
 
         if isinstance(c_arg, ValuedVariable):
-            body.append(self.valued_checker(p_arg, c_arg))
+            check = self.valued_checker(p_arg, c_arg)
+            body.append(IfSection(check, [self.get_default_assign(c_var)]))
 
         if c_arg.rank > 0: # this is an array
             check = array_checker(p_arg, c_arg, is_interface, self._target_language)
@@ -671,7 +706,7 @@ class CWrapperCodePrinter(CCodePrinter):
             converter = self.get_PyArgParse_Converter(c_arg)
             static_func_args.extend(self.get_static_args(p_arg, c_arg)) # Bind_C args
             if isinstance(c_arg, ValuedVariable):
-                wrapper_body.append(AliasAssign(p_arg, Nil()))
+                wrapper_body.append(self.get_default_assign(p_arg))
 
             check_statements   += self.check_argument(p_arg, c_arg, False)
             collect_statements += self.collect_value(p_arg, c_arg, converter)
