@@ -4054,8 +4054,8 @@ def test_numpy_bool_scalar(language):
     @types('float32')
     @types('float64')
     def get_bool(a):
-        from numpy import bool
-        b = bool(a)
+        from numpy import bool as NumpyBool
+        b = NumpyBool(a)
         return b
 
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
