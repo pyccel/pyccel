@@ -225,6 +225,12 @@ def for_loop1(start, stop, step):
 
 def for_loop2():
     x = 0
-    for i in range(1, 10, -1):
+    for i in range(1, 10, 1):
+        x += i
+    return x
+
+def for_loop3():
+    x = 0
+    for i in range(10, 1, -2):
         x += i
     return x

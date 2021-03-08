@@ -186,13 +186,18 @@ def test_loop_on_real_array(language):
 
 def test_for_loops(language):
     f1 = loops.for_loop1
-    f2 = epyccel(f1, language=language)
+    g1 = epyccel(f1, language=language)
+    f2 = loops.for_loop2
+    g2 = epyccel(f2, language=language)
     f3 = loops.for_loop2
-    f4 = epyccel(f3, language=language)
+    g3 = epyccel(f3, language=language)
 
-    assert (f1(1,10,1) == f2(1,10,1))
-    assert (f1(10,1,-1) == f2(10,1,-1))
-    assert (f3() == f4())
+    assert (f1(1,10,1) == g1(1,10,1))
+    assert (f1(10,1,-1) == g1(10,1,-1))
+    assert (f1(1, 10, 2) == g1(1, 10, 2))
+    assert (f1(10, 1, -3) == g1(10, 1, -3))
+    assert (f2() == g2())
+    assert (f3() == g3())
 
 def test_breaks(language):
     f1 = loops.fizzbuzz_search_with_breaks
