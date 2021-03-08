@@ -1191,7 +1191,7 @@ class CCodePrinter(CodePrinter):
         if expr.stmt:
             # get Assign nodes form the CodeBlock object expr.stmt.
             last_assign = expr.stmt.get_attribute_nodes(Assign)
-            deallocate_nodes = expr.stmt.get_attribute_nodes(Deallocate)
+            deallocate_nodes = expr.stmt.get_attribute_nodes(Deallocate, excluded_nodes=(Assign,))
             vars_in_deallocate_nodes = [i.variable for i in deallocate_nodes]
 
             # Check the Assign objects list in case of
