@@ -781,6 +781,8 @@ class NumpyZerosLike:
 class NumpyNorm(PyccelInternalFunction):
     """ Represents call to numpy.norm"""
     _dtype = NativeReal()
+    _shape = ()
+    _rank  = 0
 
     def __init__(self, arg, dim=None):
         super().__init__(arg, dim)

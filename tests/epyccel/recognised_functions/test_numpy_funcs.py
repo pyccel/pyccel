@@ -5970,16 +5970,16 @@ def test_numpy_norm_array_like_1d(language):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(low=-((min_float ** (1/2)) / size), high=((max_float** (1/2)) / size), size=size)
-    fl32 = uniform(min_float32, max_float32, size=size)
+    fl = uniform(-abs(min_float / size)**(1/2), high=(max_float / size)**(1/2), size=size)
+    fl32 = uniform(low=-abs(min_float32 / size)**(1/2), high=(max_float32 / size)**(1/2), size=size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=size)
+    fl64 = uniform(low=-abs(min_float64 / size)**(1/2), high=(max_float64 / size)**(1/2), size=size)
 
-    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) * 1j
+    cmplx128_from_float32 = uniform(low=-abs(min_float32 / size)**(1/2), high=(max_float32 / size)**(1/2), size=size) + uniform(low=-abs(min_float32 / size)**(1/2), high=(max_float32 / size)**(1/2), size=size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
+    cmplx128 = uniform(low=-abs(min_float64 / size)**(1/2), high=(max_float64 / size)**(1/2), size=size) + uniform(low=-abs(min_float64 / size)**(1/2), high=(max_float64 / size)**(1/2), size=size) * 1j
 
     f_bl = epyccel(get_norm, language=language)
 
@@ -6003,7 +6003,7 @@ def test_numpy_norm_array_like_1d(language):
     f_fl64 = epyccel(get_norm, language=language)
 
     assert np.isclose(f_fl(fl), get_norm(fl), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f_fl32(fl32), get_norm(fl32), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_fl32(fl32), get_norm(fl32), rtol=RTOL*10e+6, atol=ATOL*10e+7)
     assert np.isclose(f_fl64(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
 
     f_complex64 = epyccel(get_norm, language=language)
@@ -6050,21 +6050,16 @@ def test_numpy_norm_array_like_2d(language):
     integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
     integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
 
-    fl = uniform(min_float / 2, max_float / 2, size=size)
-    fl32 = uniform(min_float32, max_float32, size=size)
+    fl = uniform(-abs(min_float / size)**(1/2), high=(max_float / size)**(1/2), size=size)
+    fl32 = uniform(low=-abs(min_float32 / size)**(1/2), high=(max_float32 / size)**(1/2), size=size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(min_float64 / 2, max_float64 / 2, size=size)
+    fl64 = uniform(low=-abs(min_float64 / size)**(1/2), high=(max_float64 / size)**(1/2), size=size)
 
-    # cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) + uniform(low=min_float32 / 2, high=max_float32 / 2, size=size) * 1j
-    # # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
-    # # that's why we need to convert it to a numpy.complex64 the needed type.
-    # cmplx64 = np.complex64(cmplx128_from_float32)
-    # cmplx128 = uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) + uniform(low=min_float64 / 2, high=max_float64 / 2, size=size) * 1j
-    cmplx128_from_float32 = uniform(low=-((-min_float32) ** (1/5)), high=(max_float32 ** (1/5)), size = size) + uniform(low=-((-min_float32) ** (1/5)), high=(max_float32 ** (1/5)), size = size) * 1j
+    cmplx128_from_float32 = uniform(low=-abs(min_float32 / size)**(1/2), high=(max_float32 / size)**(1/2), size=size) + uniform(low=-abs(min_float32 / size)**(1/2), high=(max_float32 / size)**(1/2), size=size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=-((-min_float64) ** (1/5)), high=(max_float64 ** (1/5)), size = size) + uniform(low=-((-min_float64) ** (1/5)), high=(max_float64 ** (1/5)), size = size) * 1j
+    cmplx128 = uniform(low=-abs(min_float64 / size)**(1/2), high=(max_float64 / size)**(1/2), size=size) + uniform(low=-abs(min_float64 / size)**(1/2), high=(max_float64 / size)**(1/2), size=size) * 1j
 
     f_bl = epyccel(get_norm, language=language)
 
