@@ -1317,7 +1317,8 @@ class CCodePrinter(CodePrinter):
         return '{} = {};'.format(lhs, rhs)
 
     def _print_For(self, expr):
-        target = self._print(expr.target)
+        loop_counter = self._print(expr.target)
+        loop_counter = self._print(expr.target)
         body  = self._print(expr.body)
         if isinstance(expr.iterable, PythonRange):
             start = self._print(expr.iterable.start)
@@ -1333,13 +1334,13 @@ class CCodePrinter(CodePrinter):
         # testing if the step is a value or an expression
         if isinstance(test_step, Literal):
             op = '>' if isinstance(expr.iterable.step, PyccelUnarySub) else '<'
-            return ('for ({target} = {start}; {target} {op} {stop}; {target} += '
-                        '{step})\n{{\n{body}\n}}').format(target=target, start=start, op=op,
+            return ('for ({loop_counter} = {start}; {loop_counter} {op} {stop}; {loop_counter} += '
+                        '{step})\n{{\n{body}\n}}').format(loop_counter=loop_counter, start=start, op=op,
                                                           stop=stop, step=step, body=body)
         else:
             return (
-                'for ({target} = {start}; (({step} > 0 ? 1 : -1)*({target})) < (({step} > 0 ? 1 : -1)*({stop})); {target} += '
-                '{step})\n{{\n{body}\n}}').format(target=target, start=start,
+                'for ({loop_counter} = {start}; (({step} > 0 ? 1 : -1)*({loop_counter})) < (({step} > 0 ? 1 : -1)*({stop})); {loop_counter} += '
+                '{step})\n{{\n{body}\n}}').format(loop_counter=loop_counter, start=start,
                                                   stop=stop, step=step, body=body)
 
     def _print_CodeBlock(self, expr):
