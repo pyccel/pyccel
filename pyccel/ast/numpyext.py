@@ -590,6 +590,10 @@ class NumpyRandint(PyccelInternalFunction):
         if not hasattr(size,'__iter__'):
             size = (size,)
 
+        if high is None:
+            high = low
+            low  = None
+
         self._shape   = size
         self._rank    = len(self.shape)
         self._rand    = NumpyRand(*size)
@@ -651,9 +655,10 @@ class NumpyFull(NumpyNewArray):
         order = NumpyNewArray._process_order(order)
 
         # Cast fill_value to correct type
-        if fill_value and not isinstance(fill_value, Nil):
-            cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
-            fill_value = cast_func(fill_value)
+        if fill_value:
+            if fill_value.dtype != dtype or fill_value.precision != precision:
+                cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
+                fill_value = cast_func(fill_value)
         self._shape = shape
         self._rank  = len(self._shape)
         self._dtype = dtype
