@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring, unidiomatic-typecheck/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import sys
 import pytest
 from numpy.random import rand, randint, uniform
@@ -60,6 +60,15 @@ else:
     RTOL = 1e-14
     ATOL = 1e-15
 
+def matching_types(pyccel_result, python_result):
+    """  Returns True if the types match, False otherwise
+    """
+    if isinstance(python_result, np.generic):
+        #TODO: Remove when #735 is fixed
+        return isinstance(pyccel_result, (type(python_result.item()), type(python_result)))
+    else:
+        return isinstance(pyccel_result, type(python_result))
+
 #-------------------------------- Fabs function ------------------------------#
 def test_fabs_call_r(language):
     @types('real')
@@ -71,7 +80,7 @@ def test_fabs_call_r(language):
     x = uniform(high=1e6)
     assert(isclose(f1(x), fabs_call_r(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), fabs_call_r(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(fabs_call_r(x).item()))
+    assert matching_types(f1(x), fabs_call_r(x))
 
 def test_fabs_call_i(language):
     @types('int')
@@ -83,7 +92,7 @@ def test_fabs_call_i(language):
     x = randint(1e6)
     assert(isclose(f1(x), fabs_call_i(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), fabs_call_i(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(fabs_call_i(x).item()))
+    assert matching_types(f1(x), fabs_call_i(x))
 
 def test_fabs_phrase_r_r(language):
     @types('real','real')
@@ -156,7 +165,7 @@ def test_absolute_call_r(language):
     x = uniform(high=1e6)
     assert(isclose(f1(x), absolute_call_r(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), absolute_call_r(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(absolute_call_r(x).item()))
+    assert matching_types(f1(x), absolute_call_r(x))
 
 def test_absolute_call_i(language):
     @types('int')
@@ -168,7 +177,7 @@ def test_absolute_call_i(language):
     x = randint(1e6)
     assert(isclose(f1(x), absolute_call_i(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), absolute_call_i(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(absolute_call_i(x).item()))
+    assert matching_types(f1(x), absolute_call_i(x))
 
 def test_absolute_phrase_r_r(language):
     @types('real','real')
@@ -226,7 +235,7 @@ def test_sin_call_r(language):
     x = uniform(high=1e6)
     assert(isclose(f1(x), sin_call_r(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), sin_call_r(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(sin_call_r(x).item()))
+    assert matching_types(f1(x), sin_call_r(x))
 
 def test_sin_call_i(language):
     @types('int')
@@ -238,7 +247,7 @@ def test_sin_call_i(language):
     x = randint(1e6)
     assert(isclose(f1(x), sin_call_i(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), sin_call_i(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(sin_call_i(x).item()))
+    assert matching_types(f1(x), sin_call_i(x))
 
 def test_sin_phrase_r_r(language):
     @types('real','real')
@@ -311,7 +320,7 @@ def test_cos_call_i(language):
     x = randint(1e6)
     assert(isclose(f1(x), cos_call_i(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), cos_call_i(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(cos_call_i(x).item()))
+    assert matching_types(f1(x), cos_call_i(x))
 
 def test_cos_call_r(language):
     @types('real')
@@ -323,7 +332,7 @@ def test_cos_call_r(language):
     x = uniform(high=1e6)
     assert(isclose(f1(x), cos_call_r(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), cos_call_r(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(cos_call_r(x).item()))
+    assert matching_types(f1(x), cos_call_r(x))
 
 
 def test_cos_phrase_i_i(language):
@@ -397,7 +406,7 @@ def test_tan_call_i(language):
     x = randint(1e6)
     assert(isclose(f1(x), tan_call_i(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), tan_call_i(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(tan_call_i(x).item()))
+    assert matching_types(f1(x), tan_call_i(x))
 
 def test_tan_call_r(language):
     @types('real')
@@ -409,7 +418,7 @@ def test_tan_call_r(language):
     x = uniform(high=1e6)
     assert(isclose(f1(x), tan_call_r(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), tan_call_r(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(tan_call_r(x).item()))
+    assert matching_types(f1(x), tan_call_r(x))
 
 def test_tan_phrase_i_i(language):
     @types('int','int')
@@ -482,7 +491,7 @@ def test_exp_call_i(language):
     x = randint(1e2)
     assert(isclose(f1(x), exp_call_i(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), exp_call_i(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(exp_call_i(x).item()))
+    assert matching_types(f1(x), exp_call_i(x))
 
 def test_exp_call_r(language):
     @types('real')
@@ -494,7 +503,7 @@ def test_exp_call_r(language):
     x = uniform(high=1e2)
     assert(isclose(f1(x), exp_call_r(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), exp_call_r(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(exp_call_r(x).item()))
+    assert matching_types(f1(x), exp_call_r(x))
 
 def test_exp_phrase_i_i(language):
     @types('int','int')
@@ -566,7 +575,7 @@ def test_log_call_i(language):
     f1 = epyccel(log_call_i, language = language)
     x = randint(low=sys.float_info.min, high=1e6)
     assert(isclose(f1(x), log_call_i(x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(log_call_i(x).item()))
+    assert matching_types(f1(x), log_call_i(x))
 
 def test_log_call_r(language):
     @types('real')
@@ -577,7 +586,7 @@ def test_log_call_r(language):
     f1 = epyccel(log_call_r, language = language)
     x = uniform(low=sys.float_info.min, high=max_float)
     assert(isclose(f1(x), log_call_r(x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(log_call_r(x).item()))
+    assert matching_types(f1(x), log_call_r(x))
 
 def test_log_phrase(language):
     @types('real','real')
@@ -602,7 +611,7 @@ def test_arcsin_call_i(language):
     x = randint(2)
     assert(isclose(f1(x), arcsin_call_i(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), arcsin_call_i(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(arcsin_call_i(x).item()))
+    assert matching_types(f1(x), arcsin_call_i(x))
 
 def test_arcsin_call_r(language):
     @types('real')
@@ -614,7 +623,7 @@ def test_arcsin_call_r(language):
     x = rand()
     assert(isclose(f1(x), arcsin_call_r(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), arcsin_call_r(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(arcsin_call_r(x).item()))
+    assert matching_types(f1(x), arcsin_call_r(x))
 
 def test_arcsin_phrase(language):
     @types('real','real')
@@ -643,7 +652,7 @@ def test_arccos_call_i(language):
     x = randint(2)
     assert(isclose(f1(x), arccos_call_i(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), arccos_call_i(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(arccos_call_i(x).item()))
+    assert matching_types(f1(x), arccos_call_i(x))
 
 def test_arccos_call_r(language):
     @types('real')
@@ -655,7 +664,7 @@ def test_arccos_call_r(language):
     x = rand()
     assert(isclose(f1(x), arccos_call_r(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), arccos_call_r(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(arccos_call_r(x).item()))
+    assert matching_types(f1(x), arccos_call_r(x))
 
 def test_arccos_phrase(language):
     @types('real','real')
@@ -683,7 +692,7 @@ def test_arctan_call_i(language):
     x = randint(1e6)
     assert(isclose(f1(x), arctan_call_i(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), arctan_call_i(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(arctan_call_i(x).item()))
+    assert matching_types(f1(x), arctan_call_i(x))
 
 def test_arctan_call_r(language):
     @types('real')
@@ -695,7 +704,7 @@ def test_arctan_call_r(language):
     x = uniform(high=1e6)
     assert(isclose(f1(x), arctan_call_r(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), arctan_call_r(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(arctan_call_r(x).item()))
+    assert matching_types(f1(x), arctan_call_r(x))
 
 def test_arctan_phrase(language):
     @types('real','real')
@@ -723,7 +732,7 @@ def test_sinh_call_i(language):
     x = randint(100)
     assert(isclose(f1(x), sinh_call_i(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), sinh_call_i(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(sinh_call_i(x).item()))
+    assert matching_types(f1(x), sinh_call_i(x))
 
 def test_sinh_call_r(language):
     @types('real')
@@ -735,7 +744,7 @@ def test_sinh_call_r(language):
     x = uniform(high=1e2)
     assert(isclose(f1(x), sinh_call_r(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), sinh_call_r(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(sinh_call_r(x).item()))
+    assert matching_types(f1(x), sinh_call_r(x))
 
 def test_sinh_phrase(language):
     @types('real','real')
@@ -763,7 +772,7 @@ def test_cosh_call_i(language):
     x = randint(100)
     assert(isclose(f1(x), cosh_call_i(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), cosh_call_i(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(cosh_call_i(x).item()))
+    assert matching_types(f1(x), cosh_call_i(x))
 
 def test_cosh_call_r(language):
     @types('real')
@@ -775,7 +784,7 @@ def test_cosh_call_r(language):
     x = uniform(high=1e2)
     assert(isclose(f1(x), cosh_call_r(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), cosh_call_r(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(cosh_call_r(x).item()))
+    assert matching_types(f1(x), cosh_call_r(x))
 
 def test_cosh_phrase(language):
     @types('real','real')
@@ -803,7 +812,7 @@ def test_tanh_call_i(language):
     x = randint(100)
     assert(isclose(f1(x), tanh_call_i(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), tanh_call_i(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(tanh_call_i(x).item()))
+    assert matching_types(f1(x), tanh_call_i(x))
 
 def test_tanh_call_r(language):
     @types('real')
@@ -815,7 +824,7 @@ def test_tanh_call_r(language):
     x = uniform(high=1e2)
     assert(isclose(f1(x), tanh_call_r(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), tanh_call_r(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(tanh_call_r(x).item()))
+    assert matching_types(f1(x), tanh_call_r(x))
 
 def test_tanh_phrase(language):
     @types('real','real')
@@ -846,7 +855,7 @@ def test_arctan2_call_i_i(language):
     assert(isclose(f1(-x,-y), arctan2_call(-x,-y), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x,y), arctan2_call(-x,y), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(x,-y), arctan2_call(x,-y), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x, y)) == type(arctan2_call(x, y).item()))
+    assert matching_types(f1(x, y), arctan2_call(x, y))
 
 def test_arctan2_call_i_r(language):
     @types('int','real')
@@ -861,7 +870,7 @@ def test_arctan2_call_i_r(language):
     assert(isclose(f1(-x,-y), arctan2_call(-x,-y), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x,y), arctan2_call(-x,y), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(x,-y), arctan2_call(x,-y), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x, y)) == type(arctan2_call(x, y).item()))
+    assert matching_types(f1(x, y), arctan2_call(x, y))
 
 def test_arctan2_call_r_i(language):
     @types('real','int')
@@ -876,7 +885,7 @@ def test_arctan2_call_r_i(language):
     assert(isclose(f1(-x,-y), arctan2_call(-x,-y), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x,y), arctan2_call(-x,y), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(x,-y), arctan2_call(x,-y), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x, y)) == type(arctan2_call(x, y).item()))
+    assert matching_types(f1(x, y), arctan2_call(x, y))
 
 def test_arctan2_call_r_r(language):
     @types('real','real')
@@ -891,7 +900,7 @@ def test_arctan2_call_r_r(language):
     assert(isclose(f1(-x,-y), arctan2_call(-x,-y), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x,y), arctan2_call(-x,y), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(x,-y), arctan2_call(x,-y), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x, y)) == type(arctan2_call(x, y).item()))
+    assert matching_types(f1(x, y), arctan2_call(x, y))
 
 def test_arctan2_phrase(language):
     @types('real','real','real')
@@ -946,7 +955,7 @@ def test_sqrt_return_type_r(language):
     f1 = epyccel(sqrt_return_type_real, language = language)
     x = rand()
     assert(isclose(f1(x), sqrt_return_type_real(x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(sqrt_return_type_real(x).item()))
+    assert matching_types(f1(x), sqrt_return_type_real(x))
 
 def test_sqrt_return_type_c(language):
     @types('complex')
@@ -958,7 +967,7 @@ def test_sqrt_return_type_c(language):
     f1 = epyccel(sqrt_return_type_comp, language = language)
     x = rand() + 1j * rand()
     assert(isclose(f1(x), sqrt_return_type_comp(x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(sqrt_return_type_comp(x).item()))
+    assert matching_types(f1(x), sqrt_return_type_comp(x))
 
 #-------------------------------- floor function -----------------------------#
 def test_floor_call_i(language):
@@ -971,7 +980,7 @@ def test_floor_call_i(language):
     x = randint(1e6)
     assert(isclose(f1(x), floor_call(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), floor_call(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(floor_call(x).item()))
+    assert matching_types(f1(x), floor_call(x))
 
 def test_floor_call_r(language):
     @types('real')
@@ -983,7 +992,7 @@ def test_floor_call_r(language):
     x = uniform(high=1e6)
     assert(isclose(f1(x), floor_call(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x), floor_call(-x), rtol=RTOL, atol=ATOL))
-    assert(type(f1(x)) == type(floor_call(x).item()))
+    assert matching_types(f1(x), floor_call(x))
 
 def test_floor_phrase(language):
     @types('real','real')
@@ -1005,7 +1014,8 @@ def test_floor_phrase(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_shape_indexed(language):
@@ -1036,7 +1046,8 @@ def test_shape_indexed(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_shape_property(language):
@@ -1065,7 +1076,8 @@ def test_shape_property(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_shape_tuple_output(language):
@@ -1105,7 +1117,8 @@ def test_shape_tuple_output(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_shape_real(language):
@@ -1137,7 +1150,8 @@ def test_shape_real(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_shape_int(language):
@@ -1170,7 +1184,8 @@ def test_shape_int(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_shape_bool(language):
@@ -1202,7 +1217,8 @@ def test_shape_bool(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_basic_int(language):
@@ -1239,18 +1255,19 @@ def test_full_basic_int(language):
 
     f_val       = epyccel(create_full_val, language = language)
     assert(f_val(size)      == create_full_val(size))
-    assert(type(f_val(size)[0])       == type(create_full_val(size)[0].item()))
+    assert matching_types(f_val(size)[0], create_full_val(size)[0])
 
     f_arg_names = epyccel(create_full_arg_names, language = language)
     assert(f_arg_names(size) == create_full_arg_names(size))
-    assert(type(f_arg_names(size)[0]) == type(create_full_arg_names(size)[0].item()))
+    assert matching_types(f_arg_names(size)[0], create_full_arg_names(size)[0])
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_basic_real(language):
@@ -1288,18 +1305,19 @@ def test_full_basic_real(language):
 
     f_val       = epyccel(create_full_val, language = language)
     assert(f_val(val)           == create_full_val(val))
-    assert(type(f_val(val)[0])       == type(create_full_val(val)[0].item()))
+    assert matching_types(f_val(val)[0], create_full_val(val)[0])
 
     f_arg_names = epyccel(create_full_arg_names, language = language)
     assert(f_arg_names(val)     == create_full_arg_names(val))
-    assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0].item()))
+    assert matching_types(f_arg_names(val)[0], create_full_arg_names(val)[0])
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_basic_bool(language):
@@ -1337,18 +1355,19 @@ def test_full_basic_bool(language):
 
     f_val       = epyccel(create_full_val, language = language)
     assert(f_val(val)           == create_full_val(val))
-    assert(type(f_val(val)[0])       == type(create_full_val(val)[0].item()))
+    assert matching_types(f_val(val)[0], create_full_val(val)[0])
 
     f_arg_names = epyccel(create_full_arg_names, language = language)
     assert(f_arg_names(val)     == create_full_arg_names(val))
-    assert(type(f_arg_names(val)[0]) == type(create_full_arg_names(val)[0].item()))
+    assert matching_types(f_arg_names(val)[0], create_full_arg_names(val)[0])
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_order(language):
@@ -1378,7 +1397,8 @@ def test_full_order(language):
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_dtype(language):
@@ -1428,42 +1448,43 @@ def test_full_dtype(language):
 
     f_int_int   = epyccel(create_full_val_int_int, language = language)
     assert(     f_int_int(val_int)        ==      create_full_val_int_int(val_int))
-    assert(type(f_int_int(val_int))       == type(create_full_val_int_int(val_int).item()))
+    assert matching_types(f_int_int(val_int), create_full_val_int_int(val_int))
 
     f_int_float = epyccel(create_full_val_int_float, language = language)
     assert(isclose(     f_int_float(val_int)     ,      create_full_val_int_float(val_int), rtol=RTOL, atol=ATOL))
-    assert(type(f_int_float(val_int))     == type(create_full_val_int_float(val_int).item()))
+    assert matching_types(f_int_float(val_int), create_full_val_int_float(val_int))
 
     f_int_complex = epyccel(create_full_val_int_complex, language = language)
     assert(isclose(     f_int_complex(val_int)     ,      create_full_val_int_complex(val_int), rtol=RTOL, atol=ATOL))
-    assert(type(f_int_complex(val_int))     == type(create_full_val_int_complex(val_int).item()))
+    assert matching_types(f_int_complex(val_int), create_full_val_int_complex(val_int))
 
     f_real_int32   = epyccel(create_full_val_real_int32, language = language)
     assert(     f_real_int32(val_float)        ==      create_full_val_real_int32(val_float))
-    assert(type(f_real_int32(val_float))       == type(create_full_val_real_int32(val_float).item()))
+    assert matching_types(f_real_int32(val_float), create_full_val_real_int32(val_float))
 
     f_real_float32   = epyccel(create_full_val_real_float32, language = language)
     assert(isclose(     f_real_float32(val_float)       ,      create_full_val_real_float32(val_float), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_float32(val_float))       == type(create_full_val_real_float32(val_float).item()))
+    assert matching_types(f_real_float32(val_float), create_full_val_real_float32(val_float))
 
     f_real_float64   = epyccel(create_full_val_real_float64, language = language)
     assert(isclose(     f_real_float64(val_float)       ,      create_full_val_real_float64(val_float), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_float64(val_float))       == type(create_full_val_real_float64(val_float).item()))
+    assert matching_types(f_real_float64(val_float), create_full_val_real_float64(val_float))
 
     f_real_complex64   = epyccel(create_full_val_real_complex64, language = language)
     assert(isclose(     f_real_complex64(val_float)       ,      create_full_val_real_complex64(val_float), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_complex64(val_float))       == type(create_full_val_real_complex64(val_float).item()))
+    assert matching_types(f_real_complex64(val_float), create_full_val_real_complex64(val_float))
 
     f_real_complex128   = epyccel(create_full_val_real_complex128, language = language)
     assert(isclose(     f_real_complex128(val_float)       ,      create_full_val_real_complex128(val_float), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_complex128(val_float))       == type(create_full_val_real_complex128(val_float).item()))
+    assert matching_types(f_real_complex128(val_float), create_full_val_real_complex128(val_float))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_combined_args(language):
@@ -1499,26 +1520,27 @@ def test_full_combined_args(language):
     f1_val   = epyccel(create_full_1_val, language = language)
     assert(f1_shape() == create_full_1_shape())
     assert(f1_val()   == create_full_1_val()  )
-    assert(type(f1_val())  == type(create_full_1_val().item()))
+    assert matching_types(f1_val(), create_full_1_val())
 
     f2_shape = epyccel(create_full_2_shape, language = language)
     f2_val   = epyccel(create_full_2_val, language = language)
     assert(f2_shape() == create_full_2_shape()    )
     assert(isclose(f2_val()  , create_full_2_val()      , rtol=RTOL, atol=ATOL))
-    assert(type(f2_val())  == type(create_full_2_val().item()))
+    assert matching_types(f2_val(), create_full_2_val())
 
     f3_shape = epyccel(create_full_3_shape, language = language)
     f3_val   = epyccel(create_full_3_val, language = language)
     assert(             f3_shape() ==    create_full_3_shape()      )
     assert(isclose(     f3_val()  ,      create_full_3_val()        , rtol=RTOL, atol=ATOL))
-    assert(type(f3_val())  == type(create_full_3_val().item()))
+    assert matching_types(f3_val(), create_full_3_val())
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_empty_basic(language):
@@ -1548,7 +1570,8 @@ def test_empty_basic(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_empty_order(language):
@@ -1609,35 +1632,36 @@ def test_empty_dtype(language):
         return a[0]
 
     f_int_int   = epyccel(create_empty_val_int, language = language)
-    assert(type(f_int_int())         == type(create_empty_val_int().item()))
+    assert matching_types(f_int_int(), create_empty_val_int())
 
     f_int_float = epyccel(create_empty_val_float, language = language)
-    assert(type(f_int_float())       == type(create_empty_val_float().item()))
+    assert matching_types(f_int_float(), create_empty_val_float())
 
     f_int_complex = epyccel(create_empty_val_complex, language = language)
-    assert(type(f_int_complex())     == type(create_empty_val_complex().item()))
+    assert matching_types(f_int_complex(), create_empty_val_complex())
 
     f_real_int32   = epyccel(create_empty_val_int32, language = language)
-    assert(type(f_real_int32())      == type(create_empty_val_int32().item()))
+    assert matching_types(f_real_int32(), create_empty_val_int32())
 
     f_real_float32   = epyccel(create_empty_val_float32, language = language)
-    assert(type(f_real_float32())    == type(create_empty_val_float32().item()))
+    assert matching_types(f_real_float32(), create_empty_val_float32())
 
     f_real_float64   = epyccel(create_empty_val_float64, language = language)
-    assert(type(f_real_float64())    == type(create_empty_val_float64().item()))
+    assert matching_types(f_real_float64(), create_empty_val_float64())
 
     f_real_complex64   = epyccel(create_empty_val_complex64, language = language)
-    assert(type(f_real_complex64())  == type(create_empty_val_complex64().item()))
+    assert matching_types(f_real_complex64(), create_empty_val_complex64())
 
     f_real_complex128   = epyccel(create_empty_val_complex128, language = language)
-    assert(type(f_real_complex128()) == type(create_empty_val_complex128().item()))
+    assert matching_types(f_real_complex128(), create_empty_val_complex128())
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_empty_combined_args(language):
@@ -1672,24 +1696,25 @@ def test_empty_combined_args(language):
     f1_shape = epyccel(create_empty_1_shape, language = language)
     f1_val   = epyccel(create_empty_1_val, language = language)
     assert(     f1_shape() ==      create_empty_1_shape()      )
-    assert(type(f1_val())  == type(create_empty_1_val().item()))
+    assert matching_types(f1_val(), create_empty_1_val())
 
     f2_shape = epyccel(create_empty_2_shape, language = language)
     f2_val   = epyccel(create_empty_2_val, language = language)
     assert(all(isclose(     f2_shape(),      create_empty_2_shape()      )))
-    assert(type(f2_val())  == type(create_empty_2_val().item()))
+    assert matching_types(f2_val(), create_empty_2_val())
 
     f3_shape = epyccel(create_empty_3_shape, language = language)
     f3_val   = epyccel(create_empty_3_val, language = language)
     assert(all(isclose(     f3_shape(),      create_empty_3_shape()      )))
-    assert(type(f3_val())  == type(create_empty_3_val().item()))
+    assert matching_types(f3_val(), create_empty_3_val())
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_ones_basic(language):
@@ -1719,7 +1744,8 @@ def test_ones_basic(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_ones_order(language):
@@ -1781,42 +1807,43 @@ def test_ones_dtype(language):
 
     f_int_int   = epyccel(create_ones_val_int, language = language)
     assert(     f_int_int()          ==      create_ones_val_int())
-    assert(type(f_int_int())         == type(create_ones_val_int().item()))
+    assert matching_types(f_int_int(), create_ones_val_int())
 
     f_int_float = epyccel(create_ones_val_float, language = language)
     assert(isclose(     f_int_float()       ,      create_ones_val_float(), rtol=RTOL, atol=ATOL))
-    assert(type(f_int_float())       == type(create_ones_val_float().item()))
+    assert matching_types(f_int_float(), create_ones_val_float())
 
     f_int_complex = epyccel(create_ones_val_complex, language = language)
     assert(isclose(     f_int_complex()     ,      create_ones_val_complex(), rtol=RTOL, atol=ATOL))
-    assert(type(f_int_complex())     == type(create_ones_val_complex().item()))
+    assert matching_types(f_int_complex(), create_ones_val_complex())
 
     f_real_int32   = epyccel(create_ones_val_int32, language = language)
     assert(     f_real_int32()       ==      create_ones_val_int32())
-    assert(type(f_real_int32())      == type(create_ones_val_int32().item()))
+    assert matching_types(f_real_int32(), create_ones_val_int32())
 
     f_real_float32   = epyccel(create_ones_val_float32, language = language)
     assert(isclose(     f_real_float32()    ,      create_ones_val_float32(), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_float32())    == type(create_ones_val_float32().item()))
+    assert matching_types(f_real_float32(), create_ones_val_float32())
 
     f_real_float64   = epyccel(create_ones_val_float64, language = language)
     assert(isclose(     f_real_float64()    ,      create_ones_val_float64(), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_float64())    == type(create_ones_val_float64().item()))
+    assert matching_types(f_real_float64(), create_ones_val_float64())
 
     f_real_complex64   = epyccel(create_ones_val_complex64, language = language)
     assert(isclose(     f_real_complex64()  ,      create_ones_val_complex64(), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_complex64())  == type(create_ones_val_complex64().item()))
+    assert matching_types(f_real_complex64(), create_ones_val_complex64())
 
     f_real_complex128   = epyccel(create_ones_val_complex128, language = language)
     assert(isclose(     f_real_complex128() ,      create_ones_val_complex128(), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_complex128()) == type(create_ones_val_complex128().item()))
+    assert matching_types(f_real_complex128(), create_ones_val_complex128())
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_ones_combined_args(language):
@@ -1852,26 +1879,27 @@ def test_ones_combined_args(language):
     f1_val   = epyccel(create_ones_1_val, language = language)
     assert(     f1_shape() ==      create_ones_1_shape()      )
     assert(     f1_val()   ==      create_ones_1_val()        )
-    assert(type(f1_val())  == type(create_ones_1_val().item()))
+    assert matching_types(f1_val(), create_ones_1_val())
 
     f2_shape = epyccel(create_ones_2_shape, language = language)
     f2_val   = epyccel(create_ones_2_val, language = language)
     assert(     f2_shape() ==      create_ones_2_shape()      )
     assert(isclose(     f2_val()  ,      create_ones_2_val()        , rtol=RTOL, atol=ATOL))
-    assert(type(f2_val())  == type(create_ones_2_val().item()))
+    assert matching_types(f2_val(), create_ones_2_val())
 
     f3_shape = epyccel(create_ones_3_shape, language = language)
     f3_val   = epyccel(create_ones_3_val, language = language)
     assert(     f3_shape() ==      create_ones_3_shape()      )
     assert(isclose(     f3_val()  ,      create_ones_3_val()        , rtol=RTOL, atol=ATOL))
-    assert(type(f3_val())  == type(create_ones_3_val().item()))
+    assert matching_types(f3_val(), create_ones_3_val())
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_zeros_basic(language):
@@ -1901,7 +1929,8 @@ def test_zeros_basic(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_zeros_order(language):
@@ -1963,42 +1992,43 @@ def test_zeros_dtype(language):
 
     f_int_int   = epyccel(create_zeros_val_int, language = language)
     assert(     f_int_int()          ==      create_zeros_val_int())
-    assert(type(f_int_int())         == type(create_zeros_val_int().item()))
+    assert matching_types(f_int_int(), create_zeros_val_int())
 
     f_int_float = epyccel(create_zeros_val_float, language = language)
     assert(isclose(     f_int_float()       ,      create_zeros_val_float(), rtol=RTOL, atol=ATOL))
-    assert(type(f_int_float())       == type(create_zeros_val_float().item()))
+    assert matching_types(f_int_float(), create_zeros_val_float())
 
     f_int_complex = epyccel(create_zeros_val_complex, language = language)
     assert(isclose(     f_int_complex()     ,      create_zeros_val_complex(), rtol=RTOL, atol=ATOL))
-    assert(type(f_int_complex())     == type(create_zeros_val_complex().item()))
+    assert matching_types(f_int_complex(), create_zeros_val_complex())
 
     f_real_int32   = epyccel(create_zeros_val_int32, language = language)
     assert(     f_real_int32()       ==      create_zeros_val_int32())
-    assert(type(f_real_int32())      == type(create_zeros_val_int32().item()))
+    assert matching_types(f_real_int32(), create_zeros_val_int32())
 
     f_real_float32   = epyccel(create_zeros_val_float32, language = language)
     assert(isclose(     f_real_float32()    ,      create_zeros_val_float32(), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_float32())    == type(create_zeros_val_float32().item()))
+    assert matching_types(f_real_float32(), create_zeros_val_float32())
 
     f_real_float64   = epyccel(create_zeros_val_float64, language = language)
     assert(isclose(     f_real_float64()    ,      create_zeros_val_float64(), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_float64())    == type(create_zeros_val_float64().item()))
+    assert matching_types(f_real_float64(), create_zeros_val_float64())
 
     f_real_complex64   = epyccel(create_zeros_val_complex64, language = language)
     assert(isclose(     f_real_complex64()  ,      create_zeros_val_complex64(), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_complex64())  == type(create_zeros_val_complex64().item()))
+    assert matching_types(f_real_complex64(), create_zeros_val_complex64())
 
     f_real_complex128   = epyccel(create_zeros_val_complex128, language = language)
     assert(isclose(     f_real_complex128() ,      create_zeros_val_complex128(), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_complex128()) == type(create_zeros_val_complex128().item()))
+    assert matching_types(f_real_complex128(), create_zeros_val_complex128())
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_zeros_combined_args(language):
@@ -2034,26 +2064,27 @@ def test_zeros_combined_args(language):
     f1_val   = epyccel(create_zeros_1_val, language = language)
     assert(     f1_shape() ==      create_zeros_1_shape()      )
     assert(     f1_val()   ==      create_zeros_1_val()        )
-    assert(type(f1_val())  == type(create_zeros_1_val().item()))
+    assert matching_types(f1_val(), create_zeros_1_val())
 
     f2_shape = epyccel(create_zeros_2_shape, language = language)
     f2_val   = epyccel(create_zeros_2_val, language = language)
     assert(     f2_shape() ==      create_zeros_2_shape()      )
     assert(isclose(     f2_val()  ,      create_zeros_2_val()        , rtol=RTOL, atol=ATOL))
-    assert(type(f2_val())  == type(create_zeros_2_val().item()))
+    assert matching_types(f2_val(), create_zeros_2_val())
 
     f3_shape = epyccel(create_zeros_3_shape, language = language)
     f3_val   = epyccel(create_zeros_3_val, language = language)
     assert(     f3_shape() ==      create_zeros_3_shape()      )
     assert(isclose(     f3_val()  ,      create_zeros_3_val()        , rtol=RTOL, atol=ATOL))
-    assert(type(f3_val())  == type(create_zeros_3_val().item()))
+    assert matching_types(f3_val(), create_zeros_3_val())
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_array(language):
@@ -2079,19 +2110,20 @@ def test_array(language):
     f1_val   = epyccel(create_array_list_val, language = language)
     assert(f1_shape() == create_array_list_shape())
     assert(f1_val()   == create_array_list_val())
-    assert(type(f1_val()) == type(create_array_list_val().item()))
+    assert matching_types(f1_val(), create_array_list_val())
     f2_shape = epyccel(create_array_tuple_shape, language = language)
     f2_val   = epyccel(create_array_tuple_val, language = language)
     assert(f2_shape() == create_array_tuple_shape())
     assert(f2_val()   == create_array_tuple_val())
-    assert(type(f2_val()) == type(create_array_tuple_val().item()))
+    assert matching_types(f2_val(), create_array_tuple_val())
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_rand_basic(language):
@@ -2111,7 +2143,8 @@ def test_rand_basic(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_rand_args(language):
@@ -2177,7 +2210,8 @@ def test_rand_args(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_rand_expr(language):
@@ -2212,7 +2246,8 @@ def test_rand_expr_array(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="randint not implemented"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_randint_basic(language):
@@ -2256,7 +2291,8 @@ def test_randint_basic(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="randint not implemented"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_randint_expr(language):
@@ -2291,7 +2327,8 @@ def test_randint_expr(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_sum_int(language):
@@ -2309,7 +2346,8 @@ def test_sum_int(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_sum_real(language):
@@ -2327,7 +2365,8 @@ def test_sum_real(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_sum_phrase(language):
@@ -2347,7 +2386,8 @@ def test_sum_phrase(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_sum_property(language):
@@ -2364,7 +2404,8 @@ def test_sum_property(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_min_int(language):
@@ -2382,7 +2423,8 @@ def test_min_int(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_min_real(language):
@@ -2400,7 +2442,8 @@ def test_min_real(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_min_phrase(language):
@@ -2420,7 +2463,8 @@ def test_min_phrase(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_min_property(language):
@@ -2437,7 +2481,8 @@ def test_min_property(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_max_int(language):
@@ -2455,7 +2500,8 @@ def test_max_int(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_max_real(language):
@@ -2473,7 +2519,8 @@ def test_max_real(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_max_phrase(language):
@@ -2493,7 +2540,8 @@ def test_max_phrase(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_max_property(language):
@@ -2510,7 +2558,8 @@ def test_max_property(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 
@@ -2552,18 +2601,19 @@ def test_full_like_basic_int(language):
 
     f_val       = epyccel(create_full_like_val, language = language)
     assert(f_val(size)      == create_full_like_val(size))
-    assert(type(f_val(size)[0])       == type(create_full_like_val(size)[0].item()))
+    assert matching_types(f_val(size)[0], create_full_like_val(size)[0])
 
     f_arg_names = epyccel(create_full_like_arg_names, language = language)
     assert(f_arg_names(size) == create_full_like_arg_names(size))
-    assert(type(f_arg_names(size)[0]) == type(create_full_like_arg_names(size)[0].item()))
+    assert matching_types(f_arg_names(size)[0], create_full_like_arg_names(size)[0])
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_like_basic_real(language):
@@ -2605,18 +2655,19 @@ def test_full_like_basic_real(language):
 
     f_val       = epyccel(create_full_like_val, language = language)
     assert(f_val(val)           == create_full_like_val(val))
-    assert(type(f_val(val)[0])       == type(create_full_like_val(val)[0].item()))
+    assert matching_types(f_val(val)[0], create_full_like_val(val)[0])
 
     f_arg_names = epyccel(create_full_like_arg_names, language = language)
     assert(f_arg_names(val)     == create_full_like_arg_names(val))
-    assert(type(f_arg_names(val)[0]) == type(create_full_like_arg_names(val)[0].item()))
+    assert matching_types(f_arg_names(val)[0], create_full_like_arg_names(val)[0])
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_like_basic_bool(language):
@@ -2658,18 +2709,19 @@ def test_full_like_basic_bool(language):
 
     f_val       = epyccel(create_full_like_val, language = language)
     assert(f_val(val)           == create_full_like_val(val))
-    assert(type(f_val(val)[0])       == type(create_full_like_val(val)[0].item()))
+    assert matching_types(f_val(val)[0], create_full_like_val(val)[0])
 
     f_arg_names = epyccel(create_full_like_arg_names, language = language)
     assert(f_arg_names(val)     == create_full_like_arg_names(val))
-    assert(type(f_arg_names(val)[0]) == type(create_full_like_arg_names(val)[0].item()))
+    assert matching_types(f_arg_names(val)[0], create_full_like_arg_names(val)[0])
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_like_order(language):
@@ -2700,7 +2752,8 @@ def test_full_like_order(language):
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_like_dtype(language):
@@ -2758,42 +2811,43 @@ def test_full_like_dtype(language):
 
     f_int_int   = epyccel(create_full_like_val_int_int, language = language)
     assert(     f_int_int(val_int)        ==      create_full_like_val_int_int(val_int))
-    assert(type(f_int_int(val_int))       == type(create_full_like_val_int_int(val_int).item()))
+    assert matching_types(f_int_int(val_int), create_full_like_val_int_int(val_int))
 
     f_int_float = epyccel(create_full_like_val_int_float, language = language)
     assert(isclose(     f_int_float(val_int)     ,      create_full_like_val_int_float(val_int), rtol=RTOL, atol=ATOL))
-    assert(type(f_int_float(val_int))     == type(create_full_like_val_int_float(val_int).item()))
+    assert matching_types(f_int_float(val_int), create_full_like_val_int_float(val_int))
 
     f_int_complex = epyccel(create_full_like_val_int_complex, language = language)
     assert(isclose(     f_int_complex(val_int)     ,      create_full_like_val_int_complex(val_int), rtol=RTOL, atol=ATOL))
-    assert(type(f_int_complex(val_int))     == type(create_full_like_val_int_complex(val_int).item()))
+    assert matching_types(f_int_complex(val_int), create_full_like_val_int_complex(val_int))
 
     f_real_int32   = epyccel(create_full_like_val_real_int32, language = language)
     assert(     f_real_int32(val_float)        ==      create_full_like_val_real_int32(val_float))
-    assert(type(f_real_int32(val_float))       == type(create_full_like_val_real_int32(val_float).item()))
+    assert matching_types(f_real_int32(val_float), create_full_like_val_real_int32(val_float))
 
     f_real_float32   = epyccel(create_full_like_val_real_float32, language = language)
     assert(isclose(     f_real_float32(val_float)       ,      create_full_like_val_real_float32(val_float), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_float32(val_float))       == type(create_full_like_val_real_float32(val_float).item()))
+    assert matching_types(f_real_float32(val_float), create_full_like_val_real_float32(val_float))
 
     f_real_float64   = epyccel(create_full_like_val_real_float64, language = language)
     assert(isclose(     f_real_float64(val_float)       ,      create_full_like_val_real_float64(val_float), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_float64(val_float))       == type(create_full_like_val_real_float64(val_float).item()))
+    assert matching_types(f_real_float64(val_float), create_full_like_val_real_float64(val_float))
 
     f_real_complex64   = epyccel(create_full_like_val_real_complex64, language = language)
     assert(isclose(     f_real_complex64(val_float)       ,      create_full_like_val_real_complex64(val_float), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_complex64(val_float))       == type(create_full_like_val_real_complex64(val_float).item()))
+    assert matching_types(f_real_complex64(val_float), create_full_like_val_real_complex64(val_float))
 
     f_real_complex128   = epyccel(create_full_like_val_real_complex128, language = language)
     assert(isclose(     f_real_complex128(val_float)       ,      create_full_like_val_real_complex128(val_float), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_complex128(val_float))       == type(create_full_like_val_real_complex128(val_float).item()))
+    assert matching_types(f_real_complex128(val_float), create_full_like_val_real_complex128(val_float))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_full_like_combined_args(language):
@@ -2836,26 +2890,27 @@ def test_full_like_combined_args(language):
     f1_val   = epyccel(create_full_like_1_val, language = language)
     assert(f1_shape() == create_full_like_1_shape())
     assert(f1_val()   == create_full_like_1_val()  )
-    assert(type(f1_val())  == type(create_full_like_1_val().item()))
+    assert matching_types(f1_val(), create_full_like_1_val())
 
     f2_shape = epyccel(create_full_like_2_shape, language = language)
     f2_val   = epyccel(create_full_like_2_val, language = language)
     assert(f2_shape() == create_full_like_2_shape()    )
     assert(isclose(f2_val()  , create_full_like_2_val()      , rtol=RTOL, atol=ATOL))
-    assert(type(f2_val())  == type(create_full_like_2_val().item()))
+    assert matching_types(f2_val(), create_full_like_2_val())
 
     f3_shape = epyccel(create_full_like_3_shape, language = language)
     f3_val   = epyccel(create_full_like_3_val, language = language)
     assert(             f3_shape() ==    create_full_like_3_shape()      )
     assert(isclose(     f3_val()  ,      create_full_like_3_val()        , rtol=RTOL, atol=ATOL))
-    assert(type(f3_val())  == type(create_full_like_3_val().item()))
+    assert matching_types(f3_val(), create_full_like_3_val())
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_empty_like_basic(language):
@@ -2887,7 +2942,8 @@ def test_empty_like_basic(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_empty_like_order(language):
@@ -2967,35 +3023,36 @@ def test_empty_like_dtype(language):
 
 
     f_int_int   = epyccel(create_empty_like_val_int, language = language)
-    assert(type(f_int_int())         == type(create_empty_like_val_int().item()))
+    assert matching_types(f_int_int(), create_empty_like_val_int())
 
     f_int_float = epyccel(create_empty_like_val_float, language = language)
-    assert(type(f_int_float())       == type(create_empty_like_val_float().item()))
+    assert matching_types(f_int_float(), create_empty_like_val_float())
 
     f_int_complex = epyccel(create_empty_like_val_complex, language = language)
-    assert(type(f_int_complex())     == type(create_empty_like_val_complex().item()))
+    assert matching_types(f_int_complex(), create_empty_like_val_complex())
 
     f_real_int32   = epyccel(create_empty_like_val_int32, language = language)
-    assert(type(f_real_int32())      == type(create_empty_like_val_int32().item()))
+    assert matching_types(f_real_int32(), create_empty_like_val_int32())
 
     f_real_float32   = epyccel(create_empty_like_val_float32, language = language)
-    assert(type(f_real_float32())    == type(create_empty_like_val_float32().item()))
+    assert matching_types(f_real_float32(), create_empty_like_val_float32())
 
     f_real_float64   = epyccel(create_empty_like_val_float64, language = language)
-    assert(type(f_real_float64())    == type(create_empty_like_val_float64().item()))
+    assert matching_types(f_real_float64(), create_empty_like_val_float64())
 
     f_real_complex64   = epyccel(create_empty_like_val_complex64, language = language)
-    assert(type(f_real_complex64())  == type(create_empty_like_val_complex64().item()))
+    assert matching_types(f_real_complex64(), create_empty_like_val_complex64())
 
     f_real_complex128   = epyccel(create_empty_like_val_complex128, language = language)
-    assert(type(f_real_complex128()) == type(create_empty_like_val_complex128().item()))
+    assert matching_types(f_real_complex128(), create_empty_like_val_complex128())
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_empty_like_combined_args(language):
@@ -3042,24 +3099,25 @@ def test_empty_like_combined_args(language):
     f1_shape = epyccel(create_empty_like_1_shape, language = language)
     f1_val   = epyccel(create_empty_like_1_val, language = language)
     assert(     f1_shape() ==      create_empty_like_1_shape()      )
-    assert(type(f1_val())  == type(create_empty_like_1_val().item()))
+    assert matching_types(f1_val(), create_empty_like_1_val())
 
     f2_shape = epyccel(create_empty_like_2_shape, language = language)
     f2_val   = epyccel(create_empty_like_2_val, language = language)
     assert(all(isclose(     f2_shape(),      create_empty_like_2_shape()      )))
-    assert(type(f2_val())  == type(create_empty_like_2_val().item()))
+    assert matching_types(f2_val(), create_empty_like_2_val())
 
     f3_shape = epyccel(create_empty_like_3_shape, language = language)
     f3_val   = epyccel(create_empty_like_3_val, language = language)
     assert(all(isclose(     f3_shape(),      create_empty_like_3_shape()      )))
-    assert(type(f3_val())  == type(create_empty_like_3_val().item()))
+    assert matching_types(f3_val(), create_empty_like_3_val())
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_ones_like_basic(language):
@@ -3091,7 +3149,8 @@ def test_ones_like_basic(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_ones_like_order(language):
@@ -3172,42 +3231,43 @@ def test_ones_like_dtype(language):
 
     f_int_int   = epyccel(create_ones_like_val_int, language = language)
     assert(     f_int_int()          ==      create_ones_like_val_int())
-    assert(type(f_int_int())         == type(create_ones_like_val_int().item()))
+    assert matching_types(f_int_int(), create_ones_like_val_int())
 
     f_int_float = epyccel(create_ones_like_val_float, language = language)
     assert(isclose(     f_int_float()       ,      create_ones_like_val_float(), rtol=RTOL, atol=ATOL))
-    assert(type(f_int_float())       == type(create_ones_like_val_float().item()))
+    assert matching_types(f_int_float(), create_ones_like_val_float())
 
     f_int_complex = epyccel(create_ones_like_val_complex, language = language)
     assert(isclose(     f_int_complex()     ,      create_ones_like_val_complex(), rtol=RTOL, atol=ATOL))
-    assert(type(f_int_complex())     == type(create_ones_like_val_complex().item()))
+    assert matching_types(f_int_complex(), create_ones_like_val_complex())
 
     f_real_int32   = epyccel(create_ones_like_val_int32, language = language)
     assert(     f_real_int32()       ==      create_ones_like_val_int32())
-    assert(type(f_real_int32())      == type(create_ones_like_val_int32().item()))
+    assert matching_types(f_real_int32(), create_ones_like_val_int32())
 
     f_real_float32   = epyccel(create_ones_like_val_float32, language = language)
     assert(isclose(     f_real_float32()    ,      create_ones_like_val_float32(), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_float32())    == type(create_ones_like_val_float32().item()))
+    assert matching_types(f_real_float32(), create_ones_like_val_float32())
 
     f_real_float64   = epyccel(create_ones_like_val_float64, language = language)
     assert(isclose(     f_real_float64()    ,      create_ones_like_val_float64(), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_float64())    == type(create_ones_like_val_float64().item()))
+    assert matching_types(f_real_float64(), create_ones_like_val_float64())
 
     f_real_complex64   = epyccel(create_ones_like_val_complex64, language = language)
     assert(isclose(     f_real_complex64()  ,      create_ones_like_val_complex64(), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_complex64())  == type(create_ones_like_val_complex64().item()))
+    assert matching_types(f_real_complex64(), create_ones_like_val_complex64())
 
     f_real_complex128   = epyccel(create_ones_like_val_complex128, language = language)
     assert(isclose(     f_real_complex128() ,      create_ones_like_val_complex128(), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_complex128()) == type(create_ones_like_val_complex128().item()))
+    assert matching_types(f_real_complex128(), create_ones_like_val_complex128())
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_ones_like_combined_args(language):
@@ -3255,26 +3315,27 @@ def test_ones_like_combined_args(language):
     f1_val   = epyccel(create_ones_like_1_val, language = language)
     assert(     f1_shape() ==      create_ones_like_1_shape()      )
     assert(     f1_val()   ==      create_ones_like_1_val()        )
-    assert(type(f1_val())  == type(create_ones_like_1_val().item()))
+    assert matching_types(f1_val(), create_ones_like_1_val())
 
     f2_shape = epyccel(create_ones_like_2_shape, language = language)
     f2_val   = epyccel(create_ones_like_2_val, language = language)
     assert(     f2_shape() ==      create_ones_like_2_shape()      )
     assert(isclose(     f2_val()  ,      create_ones_like_2_val()        , rtol=RTOL, atol=ATOL))
-    assert(type(f2_val())  == type(create_ones_like_2_val().item()))
+    assert matching_types(f2_val(), create_ones_like_2_val())
 
     f3_shape = epyccel(create_ones_like_3_shape, language = language)
     f3_val   = epyccel(create_ones_like_3_val, language = language)
     assert(     f3_shape() ==      create_ones_like_3_shape()      )
     assert(isclose(     f3_val()  ,      create_ones_like_3_val()        , rtol=RTOL, atol=ATOL))
-    assert(type(f3_val())  == type(create_ones_like_3_val().item()))
+    assert matching_types(f3_val(), create_ones_like_3_val())
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_zeros_like_basic(language):
@@ -3306,7 +3367,8 @@ def test_zeros_like_basic(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_zeros_like_order(language):
@@ -3386,42 +3448,43 @@ def test_zeros_like_dtype(language):
 
     f_int_int   = epyccel(create_zeros_like_val_int, language = language)
     assert(     f_int_int()          ==      create_zeros_like_val_int())
-    assert(type(f_int_int())         == type(create_zeros_like_val_int().item()))
+    assert matching_types(f_int_int(), create_zeros_like_val_int())
 
     f_int_float = epyccel(create_zeros_like_val_float, language = language)
     assert(isclose(     f_int_float()       ,      create_zeros_like_val_float(), rtol=RTOL, atol=ATOL))
-    assert(type(f_int_float())       == type(create_zeros_like_val_float().item()))
+    assert matching_types(f_int_float(), create_zeros_like_val_float())
 
     f_int_complex = epyccel(create_zeros_like_val_complex, language = language)
     assert(isclose(     f_int_complex()     ,      create_zeros_like_val_complex(), rtol=RTOL, atol=ATOL))
-    assert(type(f_int_complex())     == type(create_zeros_like_val_complex().item()))
+    assert matching_types(f_int_complex(), create_zeros_like_val_complex())
 
     f_real_int32   = epyccel(create_zeros_like_val_int32, language = language)
     assert(     f_real_int32()       ==      create_zeros_like_val_int32())
-    assert(type(f_real_int32())      == type(create_zeros_like_val_int32().item()))
+    assert matching_types(f_real_int32(), create_zeros_like_val_int32())
 
     f_real_float32   = epyccel(create_zeros_like_val_float32, language = language)
     assert(isclose(     f_real_float32()    ,      create_zeros_like_val_float32(), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_float32())    == type(create_zeros_like_val_float32().item()))
+    assert matching_types(f_real_float32(), create_zeros_like_val_float32())
 
     f_real_float64   = epyccel(create_zeros_like_val_float64, language = language)
     assert(isclose(     f_real_float64()    ,      create_zeros_like_val_float64(), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_float64())    == type(create_zeros_like_val_float64().item()))
+    assert matching_types(f_real_float64(), create_zeros_like_val_float64())
 
     f_real_complex64   = epyccel(create_zeros_like_val_complex64, language = language)
     assert(isclose(     f_real_complex64()  ,      create_zeros_like_val_complex64(), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_complex64())  == type(create_zeros_like_val_complex64().item()))
+    assert matching_types(f_real_complex64(), create_zeros_like_val_complex64())
 
     f_real_complex128   = epyccel(create_zeros_like_val_complex128, language = language)
     assert(isclose(     f_real_complex128() ,      create_zeros_like_val_complex128(), rtol=RTOL, atol=ATOL))
-    assert(type(f_real_complex128()) == type(create_zeros_like_val_complex128().item()))
+    assert matching_types(f_real_complex128(), create_zeros_like_val_complex128())
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_zeros_like_combined_args(language):
@@ -3469,20 +3532,30 @@ def test_zeros_like_combined_args(language):
     f1_val   = epyccel(create_zeros_like_1_val, language = language)
     assert(     f1_shape() ==      create_zeros_like_1_shape()      )
     assert(     f1_val()   ==      create_zeros_like_1_val()        )
-    assert(type(f1_val())  == type(create_zeros_like_1_val().item()))
+    assert matching_types(f1_val(), create_zeros_like_1_val())
 
     f2_shape = epyccel(create_zeros_like_2_shape, language = language)
     f2_val   = epyccel(create_zeros_like_2_val, language = language)
     assert(     f2_shape() ==      create_zeros_like_2_shape()      )
     assert(isclose(     f2_val()  ,      create_zeros_like_2_val()        , rtol=RTOL, atol=ATOL))
-    assert(type(f2_val())  == type(create_zeros_like_2_val().item()))
+    assert matching_types(f2_val(), create_zeros_like_2_val())
 
     f3_shape = epyccel(create_zeros_like_3_shape, language = language)
     f3_val   = epyccel(create_zeros_like_3_val, language = language)
     assert(     f3_shape() ==      create_zeros_like_3_shape()      )
     assert(isclose(     f3_val()  ,      create_zeros_like_3_val()        , rtol=RTOL, atol=ATOL))
-    assert(type(f3_val())  == type(create_zeros_like_3_val().item()))
+    assert matching_types(f3_val(), create_zeros_like_3_val())
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("real handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
+        )
+    )
+)
 def test_numpy_real_scalar(language):
 
     @types('bool')
@@ -3529,7 +3602,8 @@ def test_numpy_real_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output))
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_real, language=language)
     f_integer8 = epyccel(get_real, language=language)
@@ -3541,25 +3615,25 @@ def test_numpy_real_scalar(language):
     test_int_output  = get_real(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output)
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_real(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert type(f_integer8_output) == type(test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_real(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert type(f_integer16_output) == type(test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_real(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert type(f_integer32_output) == type(test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -3567,7 +3641,7 @@ def test_numpy_real_scalar(language):
         test_int64_output = get_real(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert type(f_integer64_output) == type(test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_real, language=language)
     f_fl32 = epyccel(get_real, language=language)
@@ -3577,19 +3651,19 @@ def test_numpy_real_scalar(language):
     test_float_output = get_real(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output)
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_real(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert type(f_fl32_output) == type(test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_real(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output)
+    assert matching_types(f_fl64_output, test_float64_output)
 
     f_complex64 = epyccel(get_real, language=language)
     f_complex128 = epyccel(get_real, language=language)
@@ -3598,19 +3672,24 @@ def test_numpy_real_scalar(language):
     test_complex64_output = get_real(cmplx64)
 
     assert f_complex64_output == test_complex64_output
-    assert (type(f_complex64_output) == type(test_complex64_output.item()))
+    assert matching_types(f_complex64_output, test_complex64_output)
 
     f_complex128_output = f_complex128(cmplx128)
     test_complex128_output = get_real(cmplx128)
 
     assert f_complex128_output == test_complex128_output
-    assert (type(f_complex64_output) == type(test_complex64_output.item()))
+    assert matching_types(f_complex64_output, test_complex64_output)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("real handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
         )
     )
 )
@@ -3693,6 +3772,11 @@ def test_numpy_real_array_like_1d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("real handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
         )
     )
 )
@@ -3771,6 +3855,16 @@ def test_numpy_real_array_like_2d(language):
     assert (f_complex128(cmplx128) == get_real(cmplx128))
 
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("imag handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
+        )
+    )
+)
 def test_numpy_imag_scalar(language):
 
     @types('bool')
@@ -3817,7 +3911,8 @@ def test_numpy_imag_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output))
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_imag, language=language)
     f_integer8 = epyccel(get_imag, language=language)
@@ -3829,25 +3924,25 @@ def test_numpy_imag_scalar(language):
     test_int_output  = get_imag(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output)
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_imag(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert type(f_integer8_output) == type(test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_imag(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert type(f_integer16_output) == type(test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_imag(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert type(f_integer32_output) == type(test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -3855,7 +3950,7 @@ def test_numpy_imag_scalar(language):
         test_int64_output = get_imag(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert type(f_integer64_output) == type(test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_imag, language=language)
     f_fl32 = epyccel(get_imag, language=language)
@@ -3865,19 +3960,19 @@ def test_numpy_imag_scalar(language):
     test_float_output = get_imag(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output)
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_imag(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert type(f_fl32_output) == type(test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_imag(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output)
+    assert matching_types(f_fl64_output, test_float64_output)
 
     f_complex64 = epyccel(get_imag, language=language)
     f_complex128 = epyccel(get_imag, language=language)
@@ -3886,19 +3981,24 @@ def test_numpy_imag_scalar(language):
     test_complex64_output = get_imag(cmplx64)
 
     assert f_complex64_output == test_complex64_output
-    assert (type(f_complex64_output) == type(test_complex64_output.item()))
+    assert matching_types(f_complex64_output, test_complex64_output)
 
     f_complex128_output = f_complex128(cmplx128)
     test_complex128_output = get_imag(cmplx128)
 
     assert f_complex128_output == test_complex128_output
-    assert (type(f_complex64_output) == type(test_complex64_output.item()))
+    assert matching_types(f_complex64_output, test_complex64_output)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("imag handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
         )
     )
 )
@@ -3981,6 +4081,11 @@ def test_numpy_imag_array_like_1d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Tuples not implemented yet"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("imag handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
         )
     )
 )
@@ -4097,7 +4202,8 @@ def test_numpy_bool_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output))
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_bool, language=language)
     f_integer8 = epyccel(get_bool, language=language)
@@ -4109,25 +4215,25 @@ def test_numpy_bool_scalar(language):
     test_int_output  = get_bool(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output)
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_bool(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert type(f_integer8_output) == type(test_int8_output)
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_bool(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert type(f_integer16_output) == type(test_int16_output)
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_bool(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert type(f_integer32_output) == type(test_int32_output)
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -4135,7 +4241,7 @@ def test_numpy_bool_scalar(language):
         test_int64_output = get_bool(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert type(f_integer64_output) == type(test_int64_output)
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_bool, language=language)
     f_fl32 = epyccel(get_bool, language=language)
@@ -4145,19 +4251,19 @@ def test_numpy_bool_scalar(language):
     test_float_output = get_bool(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output)
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_bool(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert type(f_fl32_output) == type(test_float32_output)
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_bool(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output)
+    assert matching_types(f_fl64_output, test_float64_output)
 
 def test_numpy_int_scalar(language):
 
@@ -4198,7 +4304,8 @@ def test_numpy_int_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output))
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_int, language=language)
     f_integer8 = epyccel(get_int, language=language)
@@ -4210,25 +4317,25 @@ def test_numpy_int_scalar(language):
     test_int_output  = get_int(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output)
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_int(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert type(f_integer8_output) == type(test_int8_output)
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_int(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert type(f_integer16_output) == type(test_int16_output)
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_int(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert type(f_integer32_output) == type(test_int32_output)
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -4236,7 +4343,7 @@ def test_numpy_int_scalar(language):
         test_int64_output = get_int(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert type(f_integer64_output) == type(test_int64_output)
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_int, language=language)
     f_fl32 = epyccel(get_int, language=language)
@@ -4246,19 +4353,19 @@ def test_numpy_int_scalar(language):
     test_float_output = get_int(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output)
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_int(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert type(f_fl32_output) == type(test_float32_output)
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_int(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output)
+    assert matching_types(f_fl64_output, test_float64_output)
 
 def test_numpy_int8_scalar(language):
 
@@ -4299,7 +4406,8 @@ def test_numpy_int8_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output.item()))
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_int8, language=language)
     f_integer8 = epyccel(get_int8, language=language)
@@ -4311,25 +4419,25 @@ def test_numpy_int8_scalar(language):
     test_int_output  = get_int8(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output.item())
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_int8(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert type(f_integer8_output) == type(test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_int8(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert type(f_integer16_output) == type(test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_int8(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert type(f_integer32_output) == type(test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -4337,7 +4445,7 @@ def test_numpy_int8_scalar(language):
         test_int64_output = get_int8(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert type(f_integer64_output) == type(test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_int8, language=language)
     f_fl32 = epyccel(get_int8, language=language)
@@ -4347,19 +4455,19 @@ def test_numpy_int8_scalar(language):
     test_float_output = get_int8(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output.item())
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_int8(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert type(f_fl32_output) == type(test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_int8(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output.item())
+    assert matching_types(f_fl64_output, test_float64_output)
 
 
 def test_numpy_int16_scalar(language):
@@ -4401,7 +4509,8 @@ def test_numpy_int16_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output.item()))
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_int16, language=language)
     f_integer8 = epyccel(get_int16, language=language)
@@ -4413,25 +4522,25 @@ def test_numpy_int16_scalar(language):
     test_int_output  = get_int16(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output.item())
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_int16(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert type(f_integer8_output) == type(test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_int16(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert type(f_integer16_output) == type(test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_int16(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert type(f_integer32_output) == type(test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -4439,7 +4548,7 @@ def test_numpy_int16_scalar(language):
         test_int64_output = get_int16(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert type(f_integer64_output) == type(test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_int16, language=language)
     f_fl32 = epyccel(get_int16, language=language)
@@ -4449,19 +4558,19 @@ def test_numpy_int16_scalar(language):
     test_float_output = get_int16(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output.item())
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_int16(fl32) # oups
 
     assert f_fl32_output == test_float32_output
-    assert type(f_fl32_output) == type(test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_int16(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output.item())
+    assert matching_types(f_fl64_output, test_float64_output)
 
 def test_numpy_int32_scalar(language):
 
@@ -4502,7 +4611,7 @@ def test_numpy_int32_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output.item()))
+    assert matching_types(f_bl_true_output, test_bool_false_output)
 
     f_integer = epyccel(get_int32, language=language)
     f_integer8 = epyccel(get_int32, language=language)
@@ -4514,25 +4623,25 @@ def test_numpy_int32_scalar(language):
     test_int_output  = get_int32(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output.item())
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_int32(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert type(f_integer8_output) == type(test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_int32(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert type(f_integer16_output) == type(test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_int32(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert type(f_integer32_output) == type(test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -4540,7 +4649,7 @@ def test_numpy_int32_scalar(language):
         test_int64_output = get_int32(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert type(f_integer64_output) == type(test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_int32, language=language)
     f_fl32 = epyccel(get_int32, language=language)
@@ -4550,19 +4659,19 @@ def test_numpy_int32_scalar(language):
     test_float_output = get_int32(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output.item())
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_int32(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert type(f_fl32_output) == type(test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_int32(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output.item())
+    assert matching_types(f_fl64_output, test_float64_output)
 
 def test_numpy_int64_scalar(language):
 
@@ -4603,7 +4712,7 @@ def test_numpy_int64_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output.item()))
+    assert matching_types(f_bl_true_output, test_bool_false_output)
 
     f_integer = epyccel(get_int64, language=language)
     f_integer8 = epyccel(get_int64, language=language)
@@ -4615,25 +4724,25 @@ def test_numpy_int64_scalar(language):
     test_int_output  = get_int64(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output.item())
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_int64(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert type(f_integer8_output) == type(test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_int64(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert type(f_integer16_output) == type(test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_int64(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert type(f_integer32_output) == type(test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -4641,7 +4750,7 @@ def test_numpy_int64_scalar(language):
         test_int64_output = get_int64(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert type(f_integer64_output) == type(test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_int64, language=language)
     f_fl32 = epyccel(get_int64, language=language)
@@ -4651,19 +4760,19 @@ def test_numpy_int64_scalar(language):
     test_float_output = get_int64(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output.item())
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_int64(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert type(f_fl32_output) == type(test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_int64(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output.item())
+    assert matching_types(f_fl64_output, test_float64_output)
 
 def test_numpy_float_scalar(language):
 
@@ -4703,8 +4812,8 @@ def test_numpy_float_scalar(language):
 
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
-    assert type(f_bl_true_output) == type(test_bool_true_output)
-    assert type(f_bl_false_output) == type(test_bool_false_output)
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_float, language=language)
     f_integer8 = epyccel(get_float, language=language)
@@ -4716,25 +4825,25 @@ def test_numpy_float_scalar(language):
     test_int_output  = get_float(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output)
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_float(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert type(f_integer8_output) == type(test_int8_output)
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_float(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert type(f_integer16_output) == type(test_int16_output)
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_float(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert type(f_integer32_output) == type(test_int32_output)
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -4742,7 +4851,7 @@ def test_numpy_float_scalar(language):
         test_int64_output = get_float(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert type(f_integer64_output) == type(test_int64_output)
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_float, language=language)
     f_fl32 = epyccel(get_float, language=language)
@@ -4752,19 +4861,19 @@ def test_numpy_float_scalar(language):
     test_float_output = get_float(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output)
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_float(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert type(f_fl32_output) == type(test_float32_output)
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_float(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output)
+    assert matching_types(f_fl64_output, test_float64_output)
 
 def test_numpy_float32_scalar(language):
 
@@ -4815,25 +4924,25 @@ def test_numpy_float32_scalar(language):
     test_int_output  = get_float32(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output.item())
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_float32(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert type(f_integer8_output) == type(test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_float32(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert type(f_integer16_output) == type(test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_float32(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert type(f_integer32_output) == type(test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -4841,7 +4950,7 @@ def test_numpy_float32_scalar(language):
         test_int64_output = get_float32(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert type(f_integer64_output) == type(test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_float32, language=language)
     f_fl32 = epyccel(get_float32, language=language)
@@ -4851,19 +4960,19 @@ def test_numpy_float32_scalar(language):
     test_float_output = get_float32(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output.item())
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_float32(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert type(f_fl32_output) == type(test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_float32(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output.item())
+    assert matching_types(f_fl64_output, test_float64_output)
 
 def test_numpy_float64_scalar(language):
 
@@ -4914,25 +5023,25 @@ def test_numpy_float64_scalar(language):
     test_int_output  = get_float64(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output.item())
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_float64(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert type(f_integer8_output) == type(test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_float64(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert type(f_integer16_output) == type(test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_float64(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert type(f_integer32_output) == type(test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -4940,7 +5049,7 @@ def test_numpy_float64_scalar(language):
         test_int64_output = get_float64(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert type(f_integer64_output) == type(test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_float64, language=language)
     f_fl32 = epyccel(get_float64, language=language)
@@ -4950,19 +5059,19 @@ def test_numpy_float64_scalar(language):
     test_float_output = get_float64(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output.item())
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_float64(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert type(f_fl32_output) == type(test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_float64(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output.item())
+    assert matching_types(f_fl64_output, test_float64_output)
 
 def test_numpy_double_scalar(language):
 
@@ -5013,25 +5122,25 @@ def test_numpy_double_scalar(language):
     test_int_output  = get_double(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output.item())
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_double(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert type(f_integer8_output) == type(test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_double(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert type(f_integer16_output) == type(test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_double(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert type(f_integer32_output) == type(test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -5039,7 +5148,7 @@ def test_numpy_double_scalar(language):
         test_int64_output = get_double(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert type(f_integer64_output) == type(test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_double, language=language)
     f_fl32 = epyccel(get_double, language=language)
@@ -5049,19 +5158,19 @@ def test_numpy_double_scalar(language):
     test_float_output = get_double(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output.item())
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_double(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert type(f_fl32_output) == type(test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_double(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output.item())
+    assert matching_types(f_fl64_output, test_float64_output)
 
 def test_numpy_complex64_scalar(language):
 
@@ -5112,25 +5221,25 @@ def test_numpy_complex64_scalar(language):
     test_int_output  = get_complex64(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output.item())
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_complex64(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert type(f_integer8_output) == type(test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_complex64(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert type(f_integer16_output) == type(test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_complex64(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert type(f_integer32_output) == type(test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -5138,7 +5247,7 @@ def test_numpy_complex64_scalar(language):
         test_int64_output = get_complex64(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert type(f_integer64_output) == type(test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_complex64, language=language)
     f_fl32 = epyccel(get_complex64, language=language)
@@ -5148,20 +5257,34 @@ def test_numpy_complex64_scalar(language):
     test_float_output = get_complex64(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output.item())
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_complex64(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert type(f_fl32_output) == type(test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_complex64(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output.item())
+    assert matching_types(f_fl64_output, test_float64_output)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Mod function not supported in C"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("complex cast uses NumpyReal which"
+                "handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
+        )
+    )
+)
 def test_numpy_complex128_scalar(language):
 
     @types('bool')
@@ -5211,25 +5334,25 @@ def test_numpy_complex128_scalar(language):
     test_int_output  = get_complex128(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output.item())
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_complex128(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert type(f_integer8_output) == type(test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_complex128(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert type(f_integer16_output) == type(test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_complex128(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert type(f_integer32_output) == type(test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -5237,7 +5360,7 @@ def test_numpy_complex128_scalar(language):
         test_int64_output = get_complex128(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert type(f_integer64_output) == type(test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_complex128, language=language)
     f_fl32 = epyccel(get_complex128, language=language)
@@ -5247,25 +5370,30 @@ def test_numpy_complex128_scalar(language):
     test_float_output = get_complex128(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output.item())
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_complex128(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert type(f_fl32_output) == type(test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_complex128(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output.item())
+    assert matching_types(f_fl64_output, test_float64_output)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Mod function not supported in C"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("mod handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
         )
     )
 )
@@ -5321,25 +5449,25 @@ def test_numpy_mod_scalar(language):
     test_int_output  = get_mod(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output.item())
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_mod(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert type(f_integer8_output) == type(test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_mod(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert type(f_integer16_output) == type(test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_mod(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert type(f_integer32_output) == type(test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -5347,7 +5475,7 @@ def test_numpy_mod_scalar(language):
         test_int64_output = get_mod(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert type(f_integer64_output) == type(test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_mod, language=language)
     f_fl32 = epyccel(get_mod, language=language)
@@ -5357,25 +5485,30 @@ def test_numpy_mod_scalar(language):
     test_float_output = get_mod(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output.item())
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_mod(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert type(f_fl32_output) == type(test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_mod(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output.item())
+    assert matching_types(f_fl64_output, test_float64_output)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Mod function not supported in C"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("mod handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
         )
     )
 )
@@ -5442,6 +5575,11 @@ def test_numpy_mod_array_like_1d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Mod function not supported in C"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("mod handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
         )
     )
 )
@@ -5508,6 +5646,11 @@ def test_numpy_mod_array_like_2d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Prod function not supported in C"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("prod handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
         )
     )
 )
@@ -5560,7 +5703,8 @@ def test_numpy_prod_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_false_output.item()))
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_prod, language=language)
     f_integer8 = epyccel(get_prod, language=language)
@@ -5572,25 +5716,25 @@ def test_numpy_prod_scalar(language):
     test_int_output  = get_prod(integer)
 
     assert f_integer_output == test_int_output
-    assert type(f_integer_output) == type(test_int_output.item())
+    assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_prod(integer8)
 
     assert f_integer8_output == test_int8_output
-    assert type(f_integer8_output) == type(test_int8_output.item())
+    assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_prod(integer16)
 
     assert f_integer16_output == test_int16_output
-    assert type(f_integer16_output) == type(test_int16_output.item())
+    assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_prod(integer32)
 
     assert f_integer32_output == test_int32_output
-    assert type(f_integer32_output) == type(test_int32_output.item())
+    assert matching_types(f_integer32_output, test_int32_output)
 
     # the if block shoud be removed after resolving (https://github.com/pyccel/pyccel/issues/735).
     if sys.platform != 'win32':
@@ -5598,7 +5742,7 @@ def test_numpy_prod_scalar(language):
         test_int64_output = get_prod(integer64)
 
         assert f_integer64_output == test_int64_output
-        assert type(f_integer64_output) == type(test_int64_output.item())
+        assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_prod, language=language)
     f_fl32 = epyccel(get_prod, language=language)
@@ -5608,19 +5752,19 @@ def test_numpy_prod_scalar(language):
     test_float_output = get_prod(fl)
 
     assert f_fl_output == test_float_output
-    assert type(f_fl_output) == type(test_float_output.item())
+    assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_prod(fl32)
 
     assert f_fl32_output == test_float32_output
-    assert type(f_fl32_output) == type(test_float32_output.item())
+    assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_prod(fl64)
 
     assert f_fl64_output == test_float64_output
-    assert type(f_fl64_output) == type(test_float64_output.item())
+    assert matching_types(f_fl64_output, test_float64_output)
 
     f_complex64 = epyccel(get_prod, language=language)
     f_complex128 = epyccel(get_prod, language=language)
@@ -5629,19 +5773,24 @@ def test_numpy_prod_scalar(language):
     test_complex64_output = get_prod(cmplx64)
 
     assert f_complex64_output == test_complex64_output
-    assert (type(f_complex64_output) == type(test_complex64_output.item()))
+    assert matching_types(f_complex64_output, test_complex64_output)
 
     f_complex128_output = f_complex128(cmplx128)
     test_complex128_output = get_prod(cmplx128)
 
     assert f_complex128_output == test_complex128_output
-    assert (type(f_complex64_output) == type(test_complex64_output.item()))
+    assert matching_types(f_complex64_output, test_complex64_output)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Prod function not supported in C"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("prod handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
         )
     )
 )
@@ -5723,6 +5872,11 @@ def test_numpy_prod_array_like_1d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Prod function not supported in C"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("prod handles types in __new__ so it "
+                "cannot be used in a translated interface in python")),
+            pytest.mark.python]
         )
     )
 )
