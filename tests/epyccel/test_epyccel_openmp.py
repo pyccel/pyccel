@@ -160,7 +160,7 @@ def test_modules_14_0(language):
 
 def test_modules_14_1(language):
     f3 = epyccel(openmp.test_omp_is_initial_device, accelerator='openmp', language=language)
-    f4 = epyccel(openmp.test_omp_get_initial_device, accelerator='openmp') #Needs a non-host device to test the function properly
+    f4 = epyccel(openmp.test_omp_get_initial_device, accelerator='openmp', language=language) #Needs a non-host device to test the function properly
 
     assert f3() == 1
     assert f4() == 0
