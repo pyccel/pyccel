@@ -36,8 +36,18 @@ def _construct_header(func_name, args):
 
 #==============================================================================
 
+# Dictionary mapping imported targets to their aliases used internally by pyccel
+# This prevents a mismatch between printed imports and function calls
+# The keys are modules from which the target is imported
+# The values are a dictionary whose keys are object aliases and whose values
+# are the names used in pyccel
 import_target_swap = {
-        'numpy' : {'double' : 'float64', 'product' : 'prod'},
+        'numpy' : {'double'     : 'float64',
+                   'product'    : 'prod',
+                   'empty_like' : 'empty',
+                   'zeros_like' : 'zeros',
+                   'ones_like'  : 'ones',
+                   'full_like'  : 'full'},
         'numpy.random' : {'random' : 'rand'}
         }
 
@@ -307,11 +317,13 @@ class PythonCodePrinter(CodePrinter):
             return 'import {source}'.format(source=source)
         else:
             if source in import_target_swap:
+                # If the source contains multiple names which reference the same object
+                # check if the target is referred to by another name in pyccel.
+                # Print the name used by pyccel (either the value from import_target_swap
+                # or the original name from the import
                 target = [self._print(import_target_swap[source].get(i,i)) for i in expr.target]
             else:
                 target = [self._print(i) for i in expr.target]
-            if source == "numpy":
-                target = [t[:-5] if t.endswith('_like') else t for t in target]
             target = ', '.join(target)
             return 'from {source} import {target}'.format(source=source, target=target)
 
