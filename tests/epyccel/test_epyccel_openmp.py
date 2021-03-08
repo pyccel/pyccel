@@ -158,6 +158,13 @@ def test_modules_14_0(language):
     assert f1(2) == 2
     assert f2() >= 0
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="omp_get_initial_device doesn't compile in C !"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_modules_14_1(language):
     f3 = epyccel(openmp.test_omp_is_initial_device, accelerator='openmp', language=language)
     f4 = epyccel(openmp.test_omp_get_initial_device, accelerator='openmp', language=language) #Needs a non-host device to test the function properly
