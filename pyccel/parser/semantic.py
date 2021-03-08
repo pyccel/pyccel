@@ -92,7 +92,8 @@ from pyccel.ast.internals import Slice, PyccelSymbol
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
-from pyccel.ast.omp import OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct
+from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
+                            OMP_Parallel_Construct)
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
@@ -861,8 +862,11 @@ class SemanticParser(BasicParser):
         code = expr._user_nodes
         code = code[len(code) - 1]
         index = code.body.index(expr)
-        if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct)):
-            msg = "statement after {} must be a for loop.".format(type(expr).__name__)
+        combined_loop = False
+        if expr.combined:
+            combined_loop = (isinstance(expr, OMP_Parallel_Construct) and 'for' in expr.combined)
+        if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct)) or combined_loop:
+            msg = "Statement after {} must be a for loop.".format(type(expr).__name__)
             if index == (len(code.body) - 1):
                 errors.report(msg, symbol=type(expr).__name__,
                 severity='fatal', blocker=self.blocking)
@@ -871,8 +875,6 @@ class SemanticParser(BasicParser):
                     if isinstance(node, For):
                         if expr._has_nowait:
                             node._has_nowait = True
-                        else:
-                            pass
                     else:
                         if isinstance(node, Comment):
                             index += 1
