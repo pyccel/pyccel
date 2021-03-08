@@ -41,3 +41,12 @@ def pytest_runtest_teardown(item, nextitem):
     marks = [m.name for m in item.own_markers ]
     if 'parallel' not in marks:
         teardown()
+
+def pytest_addoption(parser):
+    parser.addoption("--developer-mode", action="store_true", default=False, help="Show tracebacks when pyccel errors are raised")
+
+def pytest_sessionstart(session):
+    # setup_stuff
+    if session.config.option.developer_mode:
+        from pyccel.errors.errors import ErrorsMode
+        ErrorsMode().set_mode('developer')
