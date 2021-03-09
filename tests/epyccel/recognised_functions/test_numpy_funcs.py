@@ -5981,6 +5981,9 @@ def test_numpy_norm_scalar(language):
         b = norm(a)
         return b
 
+    rtol=1e-6
+    atol=1e-7
+
     integer8 = randint(min_int8, max_int8, dtype=np.int8)
     integer16 = randint(min_int16, max_int16, dtype=np.int16)
     integer = randint(min_int, max_int, dtype=np.int)
@@ -6021,31 +6024,31 @@ def test_numpy_norm_scalar(language):
     f_integer_output = f_integer(integer)
     test_int_output  = get_norm(integer)
 
-    assert np.isclose(f_integer_output, test_int_output, rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_integer_output, test_int_output, rtol=rtol, atol=atol)
     assert matching_types(f_integer_output, test_int_output)
 
     f_integer8_output = f_integer8(integer8)
     test_int8_output = get_norm(integer8)
 
-    assert np.isclose(f_integer8_output, test_int8_output, rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_integer8_output, test_int8_output, rtol=rtol, atol=atol)
     assert matching_types(f_integer8_output, test_int8_output)
 
     f_integer16_output = f_integer16(integer16)
     test_int16_output = get_norm(integer16)
 
-    assert np.isclose(f_integer16_output, test_int16_output, rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_integer16_output, test_int16_output, rtol=rtol, atol=atol)
     assert matching_types(f_integer16_output, test_int16_output)
 
     f_integer32_output = f_integer32(integer32)
     test_int32_output = get_norm(integer32)
 
-    assert np.isclose(f_integer32_output, test_int32_output, rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_integer32_output, test_int32_output, rtol=rtol, atol=atol)
     assert matching_types(f_integer32_output, test_int32_output)
 
     f_integer64_output = f_integer64(integer64)
     test_int64_output = get_norm(integer64)
 
-    assert np.isclose(f_integer64_output, test_int64_output, rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_integer64_output, test_int64_output, rtol=rtol, atol=atol)
     assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl = epyccel(get_norm, language=language)
@@ -6055,19 +6058,19 @@ def test_numpy_norm_scalar(language):
     f_fl_output = f_fl(fl)
     test_float_output = get_norm(fl)
 
-    assert np.isclose(f_fl_output, test_float_output, rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_fl_output, test_float_output, rtol=rtol, atol=atol)
     assert matching_types(f_fl_output, test_float_output)
 
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_norm(fl32)
 
-    assert np.isclose(f_fl32_output, test_float32_output, rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_fl32_output, test_float32_output, rtol=rtol, atol=atol)
     assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
     test_float64_output = get_norm(fl64)
 
-    assert np.isclose(f_fl64_output, test_float64_output, rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_fl64_output, test_float64_output, rtol=rtol, atol=atol)
     assert matching_types(f_fl64_output, test_float64_output)
 
     f_complex64 = epyccel(get_norm, language=language)
@@ -6082,7 +6085,7 @@ def test_numpy_norm_scalar(language):
     f_complex128_output = f_complex128(cmplx128)
     test_complex128_output = get_norm(cmplx128)
 
-    assert np.isclose(f_complex128_output, test_complex128_output, rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_complex128_output, test_complex128_output, rtol=rtol, atol=atol)
     assert matching_types(f_complex128_output, test_complex128_output)
 
 @pytest.mark.parametrize( 'language', (
@@ -6114,6 +6117,8 @@ def test_numpy_norm_array_like_1d(language):
         return a
 
     size = 5
+    rtol=1e-6
+    atol=1e-7
 
     bl = randint(0, 1, size=size, dtype= bool)
 
@@ -6136,34 +6141,34 @@ def test_numpy_norm_array_like_1d(language):
 
     f_bl = epyccel(get_norm, language=language)
 
-    assert np.isclose(f_bl(bl), get_norm(bl), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_bl(bl), get_norm(bl), rtol=rtol, atol=atol)
 
     f_integer8 = epyccel(get_norm, language=language)
     f_integer16 = epyccel(get_norm, language=language)
     f_integer = epyccel(get_norm, language=language)
     f_integer32 = epyccel(get_norm, language=language)
 
-    assert np.isclose(f_integer8(integer8), get_norm(integer8), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f_integer16(integer16), get_norm(integer16), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f_integer(integer), get_norm(integer), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f_integer32(integer32), get_norm(integer32), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_integer8(integer8), get_norm(integer8), rtol=rtol, atol=atol)
+    assert np.isclose(f_integer16(integer16), get_norm(integer16), rtol=rtol, atol=atol)
+    assert np.isclose(f_integer(integer), get_norm(integer), rtol=rtol, atol=atol)
+    assert np.isclose(f_integer32(integer32), get_norm(integer32), rtol=rtol, atol=atol)
 
     f_integer64 = epyccel(get_norm, language=language)
-    assert np.isclose(f_integer64(integer64), get_norm(integer64), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_integer64(integer64), get_norm(integer64), rtol=rtol, atol=atol)
 
     f_fl = epyccel(get_norm, language=language)
     f_fl32 = epyccel(get_norm, language=language)
     f_fl64 = epyccel(get_norm, language=language)
 
-    assert np.isclose(f_fl(fl), get_norm(fl), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_fl(fl), get_norm(fl), rtol=rtol, atol=atol)
     assert np.isclose(f_fl32(fl32), get_norm(fl32), rtol=1e-6, atol=1e-7)
-    assert np.isclose(f_fl64(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_fl64(fl64), get_norm(fl64), rtol=rtol, atol=atol)
 
     f_complex64 = epyccel(get_norm, language=language)
     f_complex128 = epyccel(get_norm, language=language)
 
-    assert np.isclose(f_complex64(cmplx64), get_norm(cmplx64), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f_complex128(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_complex64(cmplx64), get_norm(cmplx64), rtol=rtol, atol=atol)
+    assert np.isclose(f_complex128(cmplx128), get_norm(cmplx128), rtol=rtol, atol=atol)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
@@ -6194,6 +6199,8 @@ def test_numpy_norm_array_like_2d(language):
         return a
 
     size = (2, 5)
+    rtol=1e-6
+    atol=1e-7
 
     bl = randint(0, 1, size=size, dtype= bool)
 
@@ -6216,31 +6223,31 @@ def test_numpy_norm_array_like_2d(language):
 
     f_bl = epyccel(get_norm, language=language)
 
-    assert np.isclose(f_bl(bl), get_norm(bl), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_bl(bl), get_norm(bl), rtol=rtol, atol=atol)
 
     f_integer8 = epyccel(get_norm, language=language)
     f_integer16 = epyccel(get_norm, language=language)
     f_integer = epyccel(get_norm, language=language)
     f_integer32 = epyccel(get_norm, language=language)
 
-    assert np.isclose(f_integer8(integer8), get_norm(integer8), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f_integer16(integer16), get_norm(integer16), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f_integer(integer), get_norm(integer), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f_integer32(integer32), get_norm(integer32), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_integer8(integer8), get_norm(integer8), rtol=rtol, atol=atol)
+    assert np.isclose(f_integer16(integer16), get_norm(integer16), rtol=rtol, atol=atol)
+    assert np.isclose(f_integer(integer), get_norm(integer), rtol=rtol, atol=atol)
+    assert np.isclose(f_integer32(integer32), get_norm(integer32), rtol=rtol, atol=atol)
 
     f_integer64 = epyccel(get_norm, language=language)
-    assert np.isclose(f_integer64(integer64), get_norm(integer64), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_integer64(integer64), get_norm(integer64), rtol=rtol, atol=atol)
 
     f_fl = epyccel(get_norm, language=language)
     f_fl32 = epyccel(get_norm, language=language)
     f_fl64 = epyccel(get_norm, language=language)
 
-    assert np.isclose(f_fl(fl), get_norm(fl), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f_fl32(fl32), get_norm(fl32), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f_fl64(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_fl(fl), get_norm(fl), rtol=rtol, atol=atol)
+    assert np.isclose(f_fl32(fl32), get_norm(fl32), rtol=rtol, atol=atol)
+    assert np.isclose(f_fl64(fl64), get_norm(fl64), rtol=rtol, atol=atol)
 
     f_complex64 = epyccel(get_norm, language=language)
     f_complex128 = epyccel(get_norm, language=language)
 
     assert np.isclose(f_complex64(cmplx64), get_norm(cmplx64), rtol=1e-6, atol=1e-7)
-    assert np.isclose(f_complex128(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_complex128(cmplx128), get_norm(cmplx128), rtol=rtol, atol=atol)
