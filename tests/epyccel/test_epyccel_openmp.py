@@ -150,7 +150,7 @@ def test_modules_13(language):
 #        pytest.param("fortran", marks = pytest.mark.fortran)
 #    ]
 #)
-@pytest.mark.skip("Compiling is not fully managed for GPU commands")
+@pytest.mark.skip("Compiling is not fully managed for GPU commands. See #798")
 def test_modules_14_0(language):
     f1 = epyccel(openmp.test_omp_set_get_default_device, accelerator='openmp', language=language)
     f2 = epyccel(openmp.test_omp_get_num_devices, accelerator='openmp', language=language)
@@ -159,7 +159,7 @@ def test_modules_14_0(language):
     assert f1(2) == 2
     assert f2() >= 0
 
-@pytest.mark.skip("Compiling is not fully managed for GPU commands")
+@pytest.mark.skip("Compiling is not fully managed for GPU commands. See #798")
 def test_modules_14_1(language):
     f3 = epyccel(openmp.test_omp_is_initial_device, accelerator='openmp', language=language)
     f4 = epyccel(openmp.test_omp_get_initial_device, accelerator='openmp', language=language) #Needs a non-host device to test the function properly
@@ -177,7 +177,7 @@ def test_modules_14_1(language):
 #
 #    ]
 #)
-@pytest.mark.skip("Compiling is not fully managed for GPU commands")
+@pytest.mark.skip("Compiling is not fully managed for GPU commands. See #798")
 def test_modules_15(language):
     f1 = epyccel(openmp.test_omp_get_team_num, accelerator='openmp', language=language)
 
@@ -193,7 +193,7 @@ def test_modules_15(language):
 #            pytest.mark.fortran])
 #    ]
 #)
-@pytest.mark.skip("Compiling is not fully managed for GPU commands")
+@pytest.mark.skip("Compiling is not fully managed for GPU commands. See #798")
 def test_modules_15_1(language):
     f1 = epyccel(openmp.test_omp_get_num_teams, accelerator='openmp', language=language)
 
