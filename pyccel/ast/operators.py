@@ -356,7 +356,6 @@ class PyccelBinaryOperator(PyccelOperator):
             return cls._handle_complex_type(complexes)
         elif reals:
             return cls._handle_real_type(reals)
-            return _dtype, _precision
         elif integers:
             return cls._handle_integer_type(integers)
         else:
