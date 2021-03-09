@@ -54,10 +54,10 @@ jobs:
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
-      - name: Run prog test
+      - name: Scalar test
         run: |
-          pyccel basic_test.py
-          ./prog_basic_test
+          python -m pytest -rx -m "fortran" epyccel/test_bitwise.py
+        working-directory: ./tests
       - name: Serial fortran tests and non-tagged tests
         run: |
           python -m pytest -rx -m "not parallel and not (c or python)" --ignore=printers --ignore=symbolic --ignore=ndarrays -s
