@@ -951,12 +951,10 @@ class IfTernaryOperator(PyccelOperator):
             errors.report('Ternary Operator results should have the same shape', severity='fatal')
 
     @staticmethod
-    def _calculate_dtype(*_args):
+    def _calculate_dtype(cond, value_true, value_false):
         """
         Sets the dtype and precision for IfTernaryOperator
         """
-        value_true = _args[1]
-        value_false = _args[2]
         if value_true.dtype in NativeNumeric and value_false.dtype in NativeNumeric:
             _dtype = max([value_true.dtype, value_false.dtype], key = NativeNumeric.index)
         else:
@@ -966,12 +964,10 @@ class IfTernaryOperator(PyccelOperator):
         return _dtype, _precision
 
     @staticmethod
-    def _calculate_shape_rank(*_args):
+    def _calculate_shape_rank(cond, value_true, value_false):
         """
         Sets the shape and rank and the order for IfTernaryOperator
         """
-        value_true = _args[1]
-        value_false = _args[2]
         _shape = value_true.shape
         _rank  = value_true.rank
         if _rank is not None and _rank > 1:
