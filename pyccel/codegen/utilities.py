@@ -56,7 +56,7 @@ def construct_flags(compiler,
         raise ValueError("Only {0} are available.".format(_avail_compilers))
 
     if not fflags:
-        fflags = '-O3'
+        fflags = '-O0'
 
     # make sure there are spaces
     flags = str(fflags)
