@@ -142,11 +142,12 @@ def as_static_function_call(func, mod_name, name=None, imports = None):
     # function arguments
     args = sanitize_arguments(func.arguments)
     # function body
-    call    = FunctionCall(func_alias, args)
+    #call    = FunctionCall(func_alias, args)
     results = func.results
     results = results[0] if len(results) == 1 else results
-    stmt    = call if len(func.results) == 0 else Assign(results, call)
-    body    = [stmt]
+    #stmt    = call if len(func.results) == 0 else Assign(results, call)
+    #body    = [stmt]
+    body = []
 
     # new function declaration
     new_func = FunctionDef(func.name, list(args), func.results, body,
