@@ -60,7 +60,11 @@ jobs:
         working-directory: ./tests
       - name: Serial fortran tests and non-tagged tests
         run: |
-          python -m pytest -rx -m "not parallel and not c" --ignore=printers --ignore=symbolic --ignore=ndarrays
+          python -m pytest -rx -m "not parallel and not (c or python)" --ignore=printers --ignore=symbolic --ignore=ndarrays
+        working-directory: ./tests
+      - name: Serial Python tests
+        run: |
+          python -m pytest -rx -m "not parallel and python" --ignore=printers --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
       - name: ND-Array tests
         run: |

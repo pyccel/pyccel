@@ -10,6 +10,16 @@ import modules.openmp as openmp
 from pyccel.epyccel import epyccel
 #==============================================================================
 
+@pytest.fixture(params=[
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c'      , marks = pytest.mark.c)
+    ]
+)
+def language(request):
+    return request.param
+
+#==============================================================================
+
 def test_module_1(language):
     f1 = epyccel(openmp.f1, accelerator='openmp', language=language)
     set_num_threads = epyccel(openmp.set_num_threads, accelerator='openmp', language=language)

@@ -616,8 +616,6 @@ class FCodePrinter(CodePrinter):
     def _print_PythonReal(self, expr):
         value = self._print(expr.internal_var)
         return 'real({0})'.format(value)
-    def _print_PythonFloat(self, expr):
-        return expr.fprint(self._print)
     def _print_PythonImag(self, expr):
         value = self._print(expr.internal_var)
         return 'aimag({0})'.format(value)
@@ -785,7 +783,11 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
-        return 'Real({0}, {1})'.format(value, self.print_kind(expr))
+        if (expr.arg.dtype is NativeBool()):
+            code = 'MERGE(1.0_{0}, 0.0_{1}, {2})'.format(self.print_kind(expr), self.print_kind(expr),value)
+        else:
+            code  = 'Real({0}, {1})'.format(value, self.print_kind(expr))
+        return code
 
     def _print_MathFloor(self, expr):
         arg = expr.args[0]
@@ -799,9 +801,6 @@ class FCodePrinter(CodePrinter):
         prec = expr.precision
         prec_code = self._print(prec)
         return 'floor({}, kind={})'.format(arg_code, prec_code)
-
-    def _print_Real(self, expr):
-        return expr.fprint(self._print)
 
     def _print_PythonComplex(self, expr):
         if expr.is_cast:
@@ -841,8 +840,8 @@ class FCodePrinter(CodePrinter):
         if expr.rank != 0:
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
-        if expr.high is None:
-            randreal = self._print(PyccelMul(expr.low, NumpyRand()))
+        if expr.low is None:
+            randreal = self._print(PyccelMul(expr.high, NumpyRand()))
         else:
             randreal = self._print(PyccelAdd(PyccelMul(PyccelMinus(expr.high, expr.low), NumpyRand()), expr.low))
 
@@ -2253,9 +2252,6 @@ class FCodePrinter(CodePrinter):
         lines = []
 
         for i, (c, e) in enumerate(expr.blocks):
-
-            if (not e) or (isinstance(e, CodeBlock) and not e.body):
-                continue
 
             if i == 0:
                 lines.append("if (%s) then\n" % self._print(c))
