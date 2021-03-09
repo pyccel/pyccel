@@ -5981,10 +5981,14 @@ def test_numpy_prod_array_like_2d(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="Pyccel raises 'ValueError: Incompatible rank in variable allocation' (semantic.py)")]),
+            pytest.mark.skip(reason="Pyccel raises 'ValueError: Incompatible rank in variable allocation' (semantic.py), see https://github.com/pyccel/pyccel/issues/767")]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.python,
+            pytest.mark.skip(reason="Pyccel raises 'ValueError: Incompatible rank in variable allocation' (semantic.py), see https://github.com/pyccel/pyccel/issues/767")]
         )
     )
 )
@@ -6065,6 +6069,10 @@ def test_numpy_matmul_array_like_1d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.python,
+            pytest.mark.skip(reason="Missing Python printer")]
         )
     )
 )
@@ -6147,6 +6155,10 @@ def test_numpy_matmul_array_like_2x2d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.python,
+            pytest.mark.skip(reason="Missing Python printer")]
         )
     )
 )
@@ -6226,6 +6238,10 @@ def test_numpy_where_scalar(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.python,
+            pytest.mark.skip(reason="Missing Python printer")]
         )
     )
 )
@@ -6307,6 +6323,10 @@ def test_numpy_where_array_like_1d_with_condition(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.python,
+            pytest.mark.skip(reason="Missing Python printer")]
         )
     )
 )
@@ -6388,6 +6408,10 @@ def test_numpy_where_array_like_1d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.python,
+            pytest.mark.skip(reason="Missing Python printer")]
         )
     )
 )
@@ -6469,6 +6493,10 @@ def test_numpy_where_array_like_2d_with_condition(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.python,
+            pytest.mark.skip(reason="Missing Python printer")]
         )
     )
 )
@@ -6551,6 +6579,10 @@ def test_numpy_where_array_like_2d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.python,
+            pytest.mark.skip(reason="Missing Python printer")]
         )
     )
 )
@@ -6630,6 +6662,10 @@ def test_numpy_linspace_scalar(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.python,
+            pytest.mark.skip(reason="Missing Python printer")]
         )
     )
 )
@@ -6715,6 +6751,10 @@ def test_numpy_linspace_array_like_1d(language):
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]
+        ),
+        pytest.param("python", marks = [
+            pytest.mark.python,
+            pytest.mark.skip(reason="Missing Python printer")]
         )
     )
 )
