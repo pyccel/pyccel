@@ -140,7 +140,7 @@ def test_decorator_f5(language):
         for i in range(0, m1):
             x[i] = i * 1.
 
-    f = epyccel(f5)
+    f = epyccel(f5, language=language)
 
     # ...
     m1 = 3
