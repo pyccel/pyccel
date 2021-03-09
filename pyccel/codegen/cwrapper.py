@@ -5,6 +5,7 @@
 """ Functions necessary for creating the setup_X.py file which
 uses python setuptools to compile a c file and generate the
 corresponding shared library file"""
+from numpy import get_include as get_numpy_include
 
 import numpy as np
 
@@ -52,8 +53,7 @@ def create_c_setup(mod_name,
             A string containing the contents of the setup file
     """
 
-    code  = "from setuptools import Extension, setup\n"
-    code += "import numpy\n"
+    code  = "from distutils.core import Extension, setup\n"
     code += "\n"
 
     wrapper_file = "[ r'{0}' , r'cwrapper/cwrapper.c']".format(wrapper_file) #TODO temporary fix
@@ -66,9 +66,10 @@ def create_c_setup(mod_name,
                    if deps else None)
 
     if include is None:
-        include_str = 'include_dirs = [numpy.get_include()]'
+        include_str = 'include_dirs = {0}'.format(print_list([get_numpy_include()]))
     else:
-        include_str = ('include_dirs = [{0}, numpy.get_include()]'.format(print_list(include)[1:-1])
+        include.append(get_numpy_include())
+        include_str = ('include_dirs = {0}'.format(print_list(include))
                        if include else None)
 
     libs_str    = ('libraries = {0}'.format(print_list(libs))

@@ -6,6 +6,17 @@ import numpy as np
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
 
+@pytest.fixture(params=[
+    pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('c'      , marks = pytest.mark.c),
+    pytest.param("python", marks = [
+        pytest.mark.skip(reason="Confusion around ValuedVariable means it cannot be used in python"),
+        pytest.mark.python]
+    )]
+)
+def language(request):
+    return request.param
+
 #------------------------------------------------------------------------------
 def test_f1(language):
     @types('int')

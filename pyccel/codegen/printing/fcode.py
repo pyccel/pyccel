@@ -78,11 +78,6 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 __all__ = ["FCodePrinter", "fcode"]
 
-known_functions = {
-    "sign": "sign",       # TODO: move to numpyext
-    "conjugate": "conjg"  # TODO: move to numpyext
-}
-
 numpy_ufunc_to_fortran = {
     'NumpyAbs'  : 'abs',
     'NumpyFabs'  : 'abs',
@@ -175,43 +170,18 @@ class FCodePrinter(CodePrinter):
     language = "Fortran"
 
     _default_settings = {
-        'order': None,
-        'full_prec': 'auto',
-        'precision': 15,
-        'user_functions': {},
-        'human': True,
-        'source_format': 'fixed',
         'tabwidth': 2,
-        'contract': True,
-        'standard': 77
-    }
-
-    _operators = {
-        'and': '.and.',
-        'or': '.or.',
-        'xor': '.neqv.',
-        'equivalent': '.eqv.',
-        'not': '.not. ',
-    }
-
-    _relationals = {
-        '!=': '/=',
     }
 
 
-    def __init__(self, parser, **settings):
-
-        prefix_module = settings.pop('prefix_module', None)
+    def __init__(self, parser, prefix_module = None):
 
         if parser.filename:
             errors.set_target(parser.filename, 'file')
 
-        CodePrinter.__init__(self, settings)
+        super().__init__()
         self.parser = parser
         self._namespace = self.parser.namespace
-        self.known_functions = dict(known_functions)
-        userfuncs = settings.get('user_functions', {})
-        self.known_functions.update(userfuncs)
         self._current_function = None
         self._current_class    = None
 
@@ -646,8 +616,6 @@ class FCodePrinter(CodePrinter):
     def _print_PythonReal(self, expr):
         value = self._print(expr.internal_var)
         return 'real({0})'.format(value)
-    def _print_PythonFloat(self, expr):
-        return expr.fprint(self._print)
     def _print_PythonImag(self, expr):
         value = self._print(expr.internal_var)
         return 'aimag({0})'.format(value)
@@ -815,7 +783,11 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
-        return 'Real({0}, {1})'.format(value, self.print_kind(expr))
+        if (expr.arg.dtype is NativeBool()):
+            code = 'MERGE(1.0_{0}, 0.0_{1}, {2})'.format(self.print_kind(expr), self.print_kind(expr),value)
+        else:
+            code  = 'Real({0}, {1})'.format(value, self.print_kind(expr))
+        return code
 
     def _print_MathFloor(self, expr):
         arg = expr.args[0]
@@ -829,9 +801,6 @@ class FCodePrinter(CodePrinter):
         prec = expr.precision
         prec_code = self._print(prec)
         return 'floor({}, kind={})'.format(arg_code, prec_code)
-
-    def _print_Real(self, expr):
-        return expr.fprint(self._print)
 
     def _print_PythonComplex(self, expr):
         if expr.is_cast:
@@ -871,8 +840,8 @@ class FCodePrinter(CodePrinter):
         if expr.rank != 0:
             errors.report(FORTRAN_ALLOCATABLE_IN_EXPRESSION,
                           symbol=expr, severity='fatal')
-        if expr.high is None:
-            randreal = self._print(PyccelMul(expr.low, NumpyRand()))
+        if expr.low is None:
+            randreal = self._print(PyccelMul(expr.high, NumpyRand()))
         else:
             randreal = self._print(PyccelAdd(PyccelMul(PyccelMinus(expr.high, expr.low), NumpyRand()), expr.low))
 
@@ -2281,9 +2250,6 @@ class FCodePrinter(CodePrinter):
         lines = []
 
         for i, (c, e) in enumerate(expr.blocks):
-
-            if (not e) or (isinstance(e, CodeBlock) and not e.body):
-                continue
 
             if i == 0:
                 lines.append("if (%s) then\n" % self._print(c))
