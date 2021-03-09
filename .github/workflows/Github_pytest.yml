@@ -56,7 +56,7 @@ jobs:
         uses: ./.github/actions/pip_installation
       - name: Serial fortran tests and non-tagged tests
         run: |
-          python -m pytest -rx -m "not parallel and not (c or python)" --ignore=printers --ignore=symbolic --ignore=ndarrays
+          python -m pytest -rx -m "not parallel and not (c or python)" --ignore=printers --ignore=symbolic --ignore=ndarrays -s
         working-directory: ./tests
       - name: Serial C tests
         run: |
