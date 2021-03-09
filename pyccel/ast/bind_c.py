@@ -129,27 +129,26 @@ def as_static_function_call(func, mod_name, name=None, imports = None):
     assert isinstance(func, FunctionDef)
     assert isinstance(mod_name, str)
 
-    # create function alias by prepending 'mod_' to its name
-    func_alias = func.clone('mod_' + str(func.name))
-
-    # from module import func as func_alias
+    # from module import func
     if imports is None:
-        local_imports = [Import(target=AsName(func.name, func_alias.name), source=mod_name)]
+        local_imports = [Import(target=func.name, source=mod_name)]
     else:
-        imports.append(Import(target=AsName(func.name, func_alias.name), source=mod_name))
+        imports.append(Import(target=func.name, source=mod_name))
         local_imports = ()
 
     # function arguments
     args = sanitize_arguments(func.arguments)
     # function body
-    call    = FunctionCall(func_alias, args)
+    call    = FunctionCall(func, args)
     results = func.results
     results = results[0] if len(results) == 1 else results
     stmt    = call if len(func.results) == 0 else Assign(results, call)
     body    = [stmt]
 
+    name = 'bind_c_{}'.format(func.name)
+
     # new function declaration
-    new_func = FunctionDef(func.name, list(args), func.results, body,
+    new_func = FunctionDef(name, list(args), func.results, body,
                        arguments_inout = func.arguments_inout,
                        functions = func.functions,
                        interfaces = func.interfaces,
