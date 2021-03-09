@@ -54,13 +54,13 @@ jobs:
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
         uses: ./.github/actions/pip_installation
-      - name: Serial C tests
-        run: |
-          python -m pytest -rx -m "not parallel and c" --ignore=printers --ignore=symbolic --ignore=ndarrays
-        working-directory: ./tests
       - name: Serial fortran tests and non-tagged tests
         run: |
           python -m pytest -rx -m "not parallel and not (c or python)" --ignore=printers --ignore=symbolic --ignore=ndarrays
+        working-directory: ./tests
+      - name: Serial C tests
+        run: |
+          python -m pytest -rx -m "not parallel and c" --ignore=printers --ignore=symbolic --ignore=ndarrays
         working-directory: ./tests
       - name: Serial Python tests
         run: |

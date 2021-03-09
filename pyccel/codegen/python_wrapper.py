@@ -69,6 +69,7 @@ def create_shared_library(codegen,
             new_module_name = 'bind_c_{}'.format(module_name)
             bind_c_mod = as_static_module(codegen.routines, module_name, new_module_name)
             bind_c_code = fcode(bind_c_mod, codegen.parser)
+            print(bind_c_code)
             bind_c_filename = '{}.f90'.format(new_module_name)
 
             with open(bind_c_filename, 'w') as f:
