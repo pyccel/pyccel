@@ -21,7 +21,7 @@ runs:
       shell: bash
     - name: Install OpenMP
       run:
-        sudo apt-get install libomp-dev gcc-offload-nvptx
+        sudo apt-get install libomp-dev
       shell: bash
     - name: Install Valgrind
       run:
