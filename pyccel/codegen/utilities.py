@@ -18,9 +18,9 @@ __all__ = ['construct_flags', 'compile_files', 'get_gfortran_library_dir']
 
 #==============================================================================
 # TODO use constructor and a dict to map flags w.r.t the compiler
-_avail_compilers = ['gfortran', 'mpif90', 'pgfortran', 'ifort', 'gcc', 'icc']
+_avail_compilers = ['gfortran', 'mpif90', 'pgfortran', 'ifort', 'gcc', 'icc', 'nvcc']
 
-language_extension = {'fortran':'f90', 'c':'c', 'python':'py'}
+language_extension = {'fortran':'f90', 'c':'c', 'python':'py', 'cu':'cu'}
 
 #==============================================================================
 # TODO add opt flags, etc... look at f2py interface in numpy

@@ -20,6 +20,7 @@ __all__ = (
     'private',
     'elemental',
     'stack_array',
+    'cuda',
     'allow_negative_index'
 )
 
@@ -35,6 +36,9 @@ def lambdify(f):
     return wrapper
 
 def python(f):
+    return f
+
+def cuda(f):
     return f
 
 def sympy(f):

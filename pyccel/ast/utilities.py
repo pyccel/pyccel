@@ -15,7 +15,7 @@ import pyccel.decorators as pyccel_decorators
 from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors
 
-from .core          import (AsName, Import, FunctionDef, FunctionCall,
+from .core          import (AsName, Import, FunctionDef, FunctionCall,KernelCall,
                             Allocate, Dlist, Assign, For)
 
 from .builtins      import (builtin_functions_dict, PythonMap,
@@ -27,6 +27,10 @@ from .literals      import LiteralString, LiteralInteger, Literal, Nil
 
 from .numpyext      import (numpy_functions, numpy_linalg_functions,
                             numpy_random_functions, numpy_constants)
+
+from .cupyext       import cupy_functions
+
+from .cudext        import cuda_functions
 from .operators     import PyccelAdd, PyccelMul, PyccelIs
 from .variable      import (Constant, Variable, ValuedVariable,
                             IndexedElement, TupleVariable, VariableAddress)
@@ -49,7 +53,7 @@ scipy_constants = {
 def builtin_function(expr, args=None):
     """Returns a builtin-function call applied to given arguments."""
 
-    if isinstance(expr, FunctionCall):
+    if isinstance(expr, (FunctionCall,KernelCall)):
         name = str(expr.funcdef)
     elif isinstance(expr, str):
         name = expr
@@ -77,8 +81,10 @@ builtin_import_registery = {'numpy': {
                                       'linalg':numpy_linalg_functions,
                                       'random':numpy_random_functions
                                       },
+                            'cupy': cupy_functions,
                             'numpy.linalg': numpy_linalg_functions,
                             'numpy.random': numpy_random_functions,
+                            'pyccel.stdlib.internal.cuda' : cuda_functions,
                             'scipy.constants': scipy_constants,
                             'itertools': {'product': Product},
                             'math': {**math_functions, ** math_constants},

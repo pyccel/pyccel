@@ -29,7 +29,7 @@ from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return, Argument
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import ValuedFunctionAddress
-from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall
+from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall, KernelCall
 from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For, FunctionalFor, ForIterator
@@ -84,6 +84,11 @@ from pyccel.ast.numpyext import NumpyInt, NumpyInt32, NumpyInt64
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyArrayClass, NumpyNewArray
+
+from pyccel.ast.cudext import CudaArray
+
+from pyccel.ast.cupyext import CupyNewArray
+
 
 from pyccel.ast.internals import Slice, PyccelSymbol
 
@@ -1246,6 +1251,11 @@ class SemanticParser(BasicParser):
             expr = FunctionCall(func, args, self._current_function)
             return expr
 
+    def _visit_KernelCall(self, expr, **settings):
+        # print(expr.func, type(expr.func))
+        func = self._visit(expr.func, **settings)
+        return KernelCall(func, expr.dims)
+
     def _visit_FunctionCall(self, expr, **settings):
         name     = expr.funcdef
 
@@ -1454,6 +1464,8 @@ class SemanticParser(BasicParser):
                         status='unallocated'
 
                     # Create Allocate node
+                    if isinstance(rhs, (CudaArray, CupyNewArray)):
+                        lhs.is_ondevice = True
                     new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
                 # ...
 

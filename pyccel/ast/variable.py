@@ -62,6 +62,9 @@ class Variable(PyccelAstNode):
     is_target: bool
         if object is pointed to by another variable [Default value: False]
 
+    is_ondevice: bool
+        if object is a on the GPU [Default value: False]
+
     is_optional: bool
         if object is an optional argument of a function [Default value: False]
 
@@ -110,6 +113,7 @@ class Variable(PyccelAstNode):
         is_pointer=False,
         is_const=False,
         is_target=False,
+        is_ondevice=False,
         is_optional=False,
         shape=None,
         cls_base=None,
@@ -191,6 +195,9 @@ class Variable(PyccelAstNode):
             raise TypeError('is_target must be a boolean.')
         self.is_target = is_target
 
+        if not isinstance(is_ondevice, bool):
+            raise TypeError('is_ondevice must be a boolean.')
+        self.is_ondevice = is_ondevice
         if not isinstance(is_optional, bool):
             raise TypeError('is_optional must be a boolean.')
         self._is_optional = is_optional
@@ -298,6 +305,19 @@ class Variable(PyccelAstNode):
         if not isinstance(is_target, bool):
             raise TypeError('is_target must be a boolean.')
         self._is_target = is_target
+
+    @property
+    def is_ondevice(self):
+        """ Indicates if the data in this Variable is
+        shared with (pointed at by) another Variable
+        """
+        return self._is_ondevice
+
+    @is_ondevice.setter
+    def is_ondevice(self, is_ondevice):
+        if not isinstance(is_ondevice, bool):
+            raise TypeError('is_ondevice must be a boolean.')
+        self._is_ondevice = is_ondevice
 
     @property
     def is_optional(self):

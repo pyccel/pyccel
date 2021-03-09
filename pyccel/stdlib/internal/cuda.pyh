@@ -1,0 +1,18 @@
+# pyccel header for Cuda.
+
+# ............................................................
+#            Runtime Library Routines for C
+# ............................................................
+
+#$ header metavar ignore_at_import=True
+#$ header metavar save=True
+
+#$ header function cudaMalloc(int, str) results(*)
+#$ header function array(*, *, str) results(*)
+#$ header function deviceSynchronize()
+// #$ header function indexing(str, int)
+#$ header function threadIdx(int)
+#$ header function blockDim(int)
+#$ header function blockIdx(int)
+#$ header function gridDim(int)
+// #$ header macro (threadIdx.x) := indexing('threadIdx', 0)

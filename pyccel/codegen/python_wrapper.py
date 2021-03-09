@@ -61,7 +61,7 @@ def create_shared_library(codegen,
 
     sharedlib_folder = ''
 
-    if language in ['c', 'fortran']:
+    if language in ['c', 'fortran', 'cu']:
         extra_libs = []
         extra_libdirs = []
         if language == 'fortran':

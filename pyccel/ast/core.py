@@ -504,10 +504,17 @@ class Allocate(Basic):
         if status not in ('allocated', 'unallocated', 'unknown'):
             raise ValueError("Value of 'status' not allowed: '{}'".format(status))
 
+        # if not isinstance(arch, str):
+        #     raise TypeError("Cannot understand 'arch' parameter of type '{}'".format(type(arch)))
+
+        # if arch not in ('CPU', 'GPU'):
+        #     raise ValueError("Value of 'arch' not allowed: '{}'".format(arch))
+
         self._variable = variable
         self._shape    = shape
         self._order    = order
         self._status   = status
+        # self._arch     = arch
         super().__init__()
     # ...
 
@@ -526,10 +533,14 @@ class Allocate(Basic):
     @property
     def status(self):
         return self._status
+    
+    # @property
+    # def arch(self):
+    #     return self._arch
 
     def __str__(self):
-        return 'Allocate({}, shape={}, order={}, status={})'.format(
-                str(self.variable), str(self.shape), str(self.order), str(self.status))
+        return 'Allocate({}, shape={}, order={}, status={}, arch={})'.format(
+                str(self.variable), str(self.shape), str(self.order), str(self.status), str(self.arch))
 
     def __eq__(self, other):
         if isinstance(other, Allocate):
@@ -537,11 +548,12 @@ class Allocate(Basic):
                    (self.shape    == other.shape   ) and \
                    (self.order    == other.order   ) and \
                    (self.status   == other.status  )
+                #    (self.arch    == other.arch   ) and \
         else:
             return False
 
     def __hash__(self):
-        return hash((id(self.variable), self.shape, self.order, self.status))
+        return hash((id(self.variable), self.shape, self.order, self.status, self.arch))
 
 #------------------------------------------------------------------------------
 class Deallocate(Basic):
@@ -1581,6 +1593,51 @@ class ValuedArgument(Basic):
         argument = str(self.argument)
         value = str(self.value)
         return '{0}={1}'.format(argument, value)
+
+class KernelCall(PyccelAstNode):
+
+    """Represents a function call in the code.
+    """
+    _attribute_nodes = ('_func','_dims')
+    def __init__(self, func, dims):
+
+        if self.stage == "syntactic":
+            self._func       = func
+            self._dims       = dims
+            super().__init__()
+            return
+
+        # ...
+        if not isinstance(func, FunctionCall):
+            raise TypeError('> expecting a FunctionCall')
+        
+        name = func.func_name
+
+        # ...
+        if not isinstance(dims, (tuple, list)):
+            raise TypeError('dims must be a list or tuple')
+
+        self._func          = func
+        self._args          = func.args
+        self._dtype         = func.funcdef.results[0].dtype     if len(func.funcdef.results) == 1 else NativeTuple()
+        self._rank          = func.funcdef.results[0].rank      if len(func.funcdef.results) == 1 else None
+        self._shape         = func.funcdef.results[0].shape     if len(func.funcdef.results) == 1 else None
+        self._precision     = func.funcdef.results[0].precision if len(func.funcdef.results) == 1 else None
+        self._order         = func.funcdef.results[0].order     if len(func.funcdef.results) == 1 else None
+        self._func_name     = name
+        self._dims          = dims
+        super().__init__()
+
+    @property
+    def dims(self):
+        return self._dims
+
+    @property
+    def func(self):
+        return self._func
+
+    def __repr__(self):
+        return '{}<<<{}>>>({})'.format(self._func.func_name, ', '.join(str(a) for a in self._dims),', '.join(str(a) for a in self._func.args))
 
 class FunctionCall(PyccelAstNode):
 

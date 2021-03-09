@@ -35,6 +35,7 @@ internal_libs = {
 lang_ext_dict = {
     "c" : ".c",
     "fortran": ".f90",
+    "cu": ".cu"
 }
 
 #==============================================================================
@@ -195,6 +196,8 @@ def execute_pyccel(fname, *,
             compiler = 'gfortran'
         elif language == 'c':
             compiler = 'gcc'
+        elif language == 'cu':
+            compiler = 'nvcc'
 
     f90exec = mpi_compiler if mpi_compiler else compiler
 
@@ -209,7 +212,8 @@ def execute_pyccel(fname, *,
 
         elif compiler == 'ifort':
             libs.append('iomp5')
-
+    if (language == 'cu'):
+        libs = libs + ['m']
     # ...
     # Construct flags for the compiler (if one is required)
     if fflags is None and compiler:
@@ -220,7 +224,8 @@ def execute_pyccel(fname, *,
                                  includes=())
 
     # Build position-independent code, suited for use in shared library
-    fflags = ' {} -fPIC '.format(fflags)
+    if (language != 'cu'):
+        fflags = ' {} -fPIC '.format(fflags)
     # ...
 
     # Parse Python file
