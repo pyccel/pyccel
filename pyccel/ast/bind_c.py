@@ -116,6 +116,19 @@ def as_static_function(func, name=None):
 
 #=======================================================================================
 def as_static_module(funcs, original_module, name = None):
+    """ Create the module contained in the bind_c_mod.f90 file
+    This is the interface between the c code and the fortran code thanks
+    to iso_c_bindings
+
+    Parameters
+    ==========
+    funcs : list of FunctionDef
+            All the functions which may be exposed to c
+    original_module : str
+            The name of the module being wrapped
+    name  : str
+            The name of the new module
+    """
     funcs = [f for f in funcs if not f.is_private]
     imports = []
     bind_c_funcs = [as_static_function_call(f, original_module, name=f.name, imports = imports) for f in funcs]
