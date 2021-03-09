@@ -16,8 +16,9 @@ runs:
         sudo apt-get install libblas-dev liblapack-dev
       shell: bash
     - name: Install MPI
-      run:
+      run: |
         sudo apt-get install libomp5 libopenmpi-dev openmpi-bin
+        echo "MPI_OPTS=--oversubscribe" >> $GITHUB_ENV
       shell: bash
     - name: Install OpenMP
       run:
