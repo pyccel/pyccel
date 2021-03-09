@@ -138,6 +138,23 @@ def as_static_module(funcs, original_module, name = None):
 
 #=======================================================================================
 def as_static_function_call(func, mod_name, name=None, imports = None):
+    """ Translate a FunctionDef to a BindCFunctionDef which calls the
+    original function. A BindCFunctionDef is a FunctionDef where the
+    arguments are altered to allow the function to be called from c.
+    E.g. the size of each dimension of an array is provided
+
+    Parameters
+    ==========
+    func     : FunctionDef
+               The function to be translated
+    mod_name : str
+               The name of the module which contains func
+    name     : str
+               The new name of the function
+    imports  : list
+               An optional parameter into which any required imports
+               can be collected
+    """
 
     assert isinstance(func, FunctionDef)
     assert isinstance(mod_name, str)
@@ -158,10 +175,10 @@ def as_static_function_call(func, mod_name, name=None, imports = None):
     stmt    = call if len(func.results) == 0 else Assign(results, call)
     body    = [stmt]
 
-    name = 'bind_c_{}'.format(func.name)
+    func_name = 'bind_c_{}'.format(func.name)
 
     # new function declaration
-    new_func = FunctionDef(name, list(args), func.results, body,
+    new_func = FunctionDef(func_name, list(args), func.results, body,
                        arguments_inout = func.arguments_inout,
                        functions = func.functions,
                        interfaces = func.interfaces,
