@@ -6084,7 +6084,7 @@ def test_numpy_matmul_array_like_2x2d(language):
     @types('complex128[:,:]')
     def get_matmul(arr):
         from numpy import matmul, shape
-        a = matmul(arr)
+        a = matmul(arr, arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
