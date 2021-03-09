@@ -221,6 +221,11 @@ dtype_registry = {'bool': Bool,
 
 
 class UnionType:
+    """ Class representing multiple different possible
+    datatypes for a function argument. If multiple
+    arguments have union types then the result is a
+    cross product of types
+    """
     __slots__ = ('_args',)
 
     def __init__(self, args):
