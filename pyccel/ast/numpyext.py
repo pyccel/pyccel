@@ -62,7 +62,10 @@ __all__ = (
     'NumpyFull',
     'NumpyFullLike',
     'NumpyImag',
+    'NumpyBool',
     'NumpyInt',
+    'NumpyInt8',
+    'NumpyInt16',
     'NumpyInt32',
     'NumpyInt64',
     'NumpyLinspace',
@@ -112,12 +115,29 @@ class NumpyFloat64(NumpyFloat):
     _precision = dtype_registry['float64'][1]
 
 #=======================================================================================
+class NumpyBool(PythonBool):
+    """ Represents a call to numpy.bool() function.
+    """
+    def __new__(cls, arg=None, base=10):
+        return super().__new__(cls, arg)
+
+#=======================================================================================
 # TODO [YG, 13.03.2020]: handle case where base != 10
 class NumpyInt(PythonInt):
     """ Represents a call to numpy.int() function.
     """
     def __new__(cls, arg=None, base=10):
         return super().__new__(cls, arg)
+
+class NumpyInt8(NumpyInt):
+    """ Represents a call to numpy.int8() function.
+    """
+    _precision = dtype_registry['int8'][1]
+
+class NumpyInt16(NumpyInt):
+    """ Represents a call to numpy.int16() function.
+    """
+    _precision = dtype_registry['int16'][1]
 
 class NumpyInt32(NumpyInt):
     """ Represents a call to numpy.int32() function.
@@ -153,6 +173,8 @@ class NumpyReal(PythonReal):
 
 DtypePrecisionToCastFunction = {
     'Int' : {
+        1 : NumpyInt8,
+        2 : NumpyInt16,
         4 : NumpyInt32,
         8 : NumpyInt64},
     'Real' : {
@@ -175,7 +197,7 @@ def process_dtype(dtype):
     if dtype  in (PythonInt, PythonFloat, PythonComplex, PythonBool):
         # remove python prefix from dtype.name len("python") = 6
         dtype = dtype.__name__.lower()[6:]
-    elif dtype  in (NumpyInt, NumpyInt32, NumpyInt64, NumpyComplex, NumpyFloat,
+    elif dtype  in (NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64, NumpyComplex, NumpyFloat,
 				  NumpyComplex128, NumpyComplex64, NumpyFloat64, NumpyFloat32):
         # remove numpy prefix from dtype.name len("numpy") = 5
         dtype = dtype.__name__.lower()[5:]
@@ -349,14 +371,18 @@ class NumpyProduct(PyccelInternalFunction):
         if not isinstance(arg, PyccelAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
-        self._dtype = arg.dtype
+        self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
+        self._arg = PythonInt(self._arg) if (isinstance(arg.dtype, NativeBool) or \
+                    (isinstance(arg.dtype, NativeInteger) and self._arg.precision < default_precision['int']))\
+                    else self._arg
+        self._dtype = self._arg.dtype
         self._rank  = 0
         self._shape = ()
         self._precision = default_precision[str_dtype(self._dtype)]
 
     @property
     def arg(self):
-        return self._args[0]
+        return self._arg
 
 
 #==============================================================================
@@ -564,6 +590,10 @@ class NumpyRandint(PyccelInternalFunction):
         if not hasattr(size,'__iter__'):
             size = (size,)
 
+        if high is None:
+            high = low
+            low  = None
+
         self._shape   = size
         self._rank    = len(self.shape)
         self._rand    = NumpyRand(*size)
@@ -625,9 +655,10 @@ class NumpyFull(NumpyNewArray):
         order = NumpyNewArray._process_order(order)
 
         # Cast fill_value to correct type
-        if fill_value and not isinstance(fill_value, Nil):
-            cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
-            fill_value = cast_func(fill_value)
+        if fill_value:
+            if fill_value.dtype != dtype or fill_value.precision != precision:
+                cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
+                fill_value = cast_func(fill_value)
         self._shape = shape
         self._rank  = len(self._shape)
         self._dtype = dtype
@@ -875,6 +906,12 @@ class NumpyFloor(NumpyUfuncUnary):
 
 class NumpyMod(NumpyUfuncBinary):
 
+    def __init__(self, x1, x2):
+        super().__init__(x1, x2)
+        x1 = PythonInt(x1) if isinstance(x1.dtype, NativeBool) else x1
+        x2 = PythonInt(x2) if isinstance(x2.dtype, NativeBool) else x2
+        self._args = (x1, x2)
+
     def _set_shape_rank(self, x1, x2):
         args   = (x1, x2)
         shapes = [a.shape for a in args]
@@ -982,6 +1019,9 @@ numpy_functions = {
     'mod'       : NumpyMod,
     'float32'   : NumpyFloat32,
     'float64'   : NumpyFloat64,
+    'bool'      : NumpyBool,
+    'int8'      : NumpyInt8,
+    'int16'     : NumpyInt16,
     'int32'     : NumpyInt32,
     'int64'     : NumpyInt64,
     'complex'   : NumpyComplex,
@@ -989,8 +1029,8 @@ numpy_functions = {
     'complex64' : NumpyComplex64,
     'matmul'    : NumpyMatmul,
     'sum'       : NumpySum,
-    'max'      : NumpyMax,
-    'min'      : NumpyMin,
+    'max'       : NumpyMax,
+    'min'       : NumpyMin,
     'prod'      : NumpyProduct,
     'product'   : NumpyProduct,
     'linspace'  : NumpyLinspace,
