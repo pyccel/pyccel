@@ -131,7 +131,7 @@ def as_static_module(funcs, original_module, name = None):
     """
     funcs = [f for f in funcs if not f.is_private]
     imports = []
-    bind_c_funcs = [as_static_function_call(f, original_module, name=f.name, imports = imports) for f in funcs]
+    bind_c_funcs = [as_static_function_call(f, original_module, imports = imports) for f in funcs]
     if name is None:
         name = 'bind_c_{}'.format(original_module)
     return Module(name, (), bind_c_funcs, imports = imports)
@@ -175,10 +175,8 @@ def as_static_function_call(func, mod_name, name=None, imports = None):
     stmt    = call if len(func.results) == 0 else Assign(results, call)
     body    = [stmt]
 
-    func_name = 'bind_c_{}'.format(func.name)
-
     # new function declaration
-    new_func = FunctionDef(func_name, list(args), func.results, body,
+    new_func = FunctionDef(func.name, list(args), func.results, body,
                        arguments_inout = func.arguments_inout,
                        functions = func.functions,
                        interfaces = func.interfaces,
