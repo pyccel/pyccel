@@ -4818,8 +4818,8 @@ def test_numpy_float_scalar(language):
     assert matching_types(f_bl_true_output, test_bool_true_output)
     assert matching_types(f_bl_false_output, test_bool_false_output)
 
-    assert (type(f_bl_true_output) == type(test_bool_true_output))
-    assert (type(f_bl_false_output) == type(test_bool_false_output))
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_float, language=language)
     f_integer8 = epyccel(get_float, language=language)
@@ -4920,8 +4920,8 @@ def test_numpy_float32_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_true_output.item()))
-    assert (type(f_bl_false_output) == type(test_bool_false_output.item()))
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_float32, language=language)
     f_integer8 = epyccel(get_float32, language=language)
@@ -5022,8 +5022,8 @@ def test_numpy_float64_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_true_output.item()))
-    assert (type(f_bl_false_output) == type(test_bool_false_output.item()))
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_float64, language=language)
     f_integer8 = epyccel(get_float64, language=language)
@@ -5124,8 +5124,8 @@ def test_numpy_double_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_true_output.item()))
-    assert (type(f_bl_false_output) == type(test_bool_false_output.item()))
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_double, language=language)
     f_integer8 = epyccel(get_double, language=language)
@@ -5226,8 +5226,8 @@ def test_numpy_complex64_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_true_output.item()))
-    assert (type(f_bl_false_output) == type(test_bool_false_output.item()))
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_complex64, language=language)
     f_integer8 = epyccel(get_complex64, language=language)
@@ -5342,8 +5342,8 @@ def test_numpy_complex128_scalar(language):
     assert f_bl_true_output == test_bool_true_output
     assert f_bl_false_output == test_bool_false_output
 
-    assert (type(f_bl_true_output) == type(test_bool_true_output.item()))
-    assert (type(f_bl_false_output) == type(test_bool_false_output.item()))
+    assert matching_types(f_bl_true_output, test_bool_true_output)
+    assert matching_types(f_bl_false_output, test_bool_false_output)
 
     f_integer = epyccel(get_complex128, language=language)
     f_integer8 = epyccel(get_complex128, language=language)
@@ -6060,8 +6060,8 @@ def test_numpy_matmul_array_like_1d(language):
     assert (f_complex128(cmplx128) == get_matmul(cmplx128))
 
 @pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran,
-            pytest.mark.skip(reason="TypeError: cannot determine the type of <pyccel.ast.numpyext.NumpyMatmul object at 0x1218b9d60> (semantic.py -> numpyext.py)")]),
+        pytest.param("fortran", marks = [pytest.mark.fortran]),
+       #     pytest.mark.skip(reason="TypeError: cannot determine the type of <pyccel.ast.numpyext.NumpyMatmul object at 0x1218b9d60> (semantic.py -> numpyext.py)")]),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Needs a C printer see https://github.com/pyccel/pyccel/issues/791"),
             pytest.mark.c]

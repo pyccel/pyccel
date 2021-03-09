@@ -406,7 +406,7 @@ class NumpyMatmul(PyccelInternalFunction):
         if complexs:
             self._dtype     = NativeComplex()
             self._precision = max(e.precision for e in complexs)
-        if reals:
+        elif reals:
             self._dtype     = NativeReal()
             self._precision = max(e.precision for e in reals)
         elif integers:
