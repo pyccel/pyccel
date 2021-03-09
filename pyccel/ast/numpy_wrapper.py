@@ -51,7 +51,7 @@ array_get_data  = FunctionDef(name   = 'nd_data',
                            results   = [Variable(dtype=NativeVoid(), name = 'v', is_pointer=True, rank = 1)])
 
 #  numpy array to fortrab ndarray : function definition in pyccel/stdlib/cwrapper.c
-pyarray_to_f_ndarray = FunctionDef(
+pyarray_to_c_ndarray = FunctionDef(
                 name      = 'pyarray_to_c_ndarray',
                 arguments = [Variable(name = 'a', dtype = PyccelPyArrayObject(), is_pointer = True)],
                 body      = [],
@@ -59,7 +59,7 @@ pyarray_to_f_ndarray = FunctionDef(
 
 
 #  numpy array to c ndarray : function definition in pyccel/stdlib/cwrapper.c
-pyarray_to_c_ndarray = FunctionDef(
+pyarray_to_f_ndarray = FunctionDef(
                 name      = 'pyarray_to_f_ndarray',
                 arguments = [Variable(name = 'a', dtype = PyccelPyArrayObject(), is_pointer = True)],
                 body      = [],
