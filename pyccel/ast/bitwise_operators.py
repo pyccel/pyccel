@@ -40,14 +40,15 @@ class PyccelInvert(PyccelUnaryOperator):
     _precedence = 14
     _dtype     = NativeInteger()
 
-    def _set_dtype(self):
-        a = self._args[0]
+    def _calculate_dtype(self, *_args):
+        a = _args[0]
         if a.dtype not in (NativeInteger(), NativeBool()):
-            raise TypeError('unsupported operand type(s): {}'.format(self))
+            raise TypeError('unsupported operand type(s): {}'.format(_args))
 
         self._args      = (PythonInt(a) if a.dtype is NativeBool() else a,)
-
-        self._precision = a.precision
+        _precision = a.precision
+        _dtype = a.dtype
+        return _dtype, _precision
 
     def __repr__(self):
         return '~{}'.format(repr(self.args[0]))
@@ -68,7 +69,7 @@ class PyccelBitOperator(PyccelOperator):
     _rank = 0
     _shape = ()
 
-    def _set_dtype(self):
+    def _calculate_dtype(self, *_args):
         """ Sets the dtype and precision
 
         If one argument is a string then all arguments must be strings
@@ -78,25 +79,30 @@ class PyccelBitOperator(PyccelOperator):
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
-        integers  = [a for a in self._args if a.dtype in (NativeInteger(),NativeBool())]
-        reals     = [a for a in self._args if a.dtype is NativeReal()]
-        complexes = [a for a in self._args if a.dtype is NativeComplex()]
-        strs      = [a for a in self._args if a.dtype is NativeString()]
+        integers  = [a for a in _args if a.dtype in (NativeInteger(),NativeBool())]
+        reals     = [a for a in _args if a.dtype is NativeReal()]
+        complexes = [a for a in _args if a.dtype is NativeComplex()]
+        strs      = [a for a in _args if a.dtype is NativeString()]
 
         if strs or complexes or reals:
-            raise TypeError('unsupported operand type(s): {}'.format(self))
+            raise TypeError('unsupported operand type(s): {}'.format(_args))
         elif integers:
-            self._handle_integer_type(integers)
+            return self._handle_integer_type(integers)
         else:
-            raise TypeError('cannot determine the type of {}'.format(self))
+            raise TypeError('cannot determine the type of {}'.format(_args))
 
-    def _set_shape_rank(self):
-        pass
+    @staticmethod
+    def _calculate_shape_rank(*_args):
+        _rank = 0
+        _shape = ()
+        return _shape, _rank
+
 
     def _handle_integer_type(self, integers):
-        self._dtype     = NativeInteger()
-        self._precision = max(a.precision for a in integers)
+        _dtype     = NativeInteger()
+        _precision = max(a.precision for a in integers)
         self._args = [PythonInt(a) if a.dtype is NativeBool() else a for a in integers]
+        return _dtype, _precision
 
 #==============================================================================
 
