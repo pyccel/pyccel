@@ -23,16 +23,16 @@ def test_array_int_1d_scalar_add(language):
     f1 = array_int_1d_scalar_add
     f2 = epyccel(f1, language=language)
 
-    for t in int_types:
-        size = randint(1, 30)
-        x1 = randint(np.iinfo(t).max / 2, size=size, dtype=t)
-        x2 = np.copy(x1)
-        a = randint(np.iinfo(t).max / 2, dtype=t)
+    #for t in int_types:
+    #    size = randint(1, 30)
+    #    x1 = randint(np.iinfo(t).max / 2, size=size, dtype=t)
+    #    x2 = np.copy(x1)
+    #    a = randint(np.iinfo(t).max / 2, dtype=t)
 
-        f1(x1, a, size)
-        f2(x2, a, size)
+    #    f1(x1, a, size)
+    #    f2(x2, a, size)
 
-        assert np.array_equal( x1, x2 )
+    #    assert np.array_equal( x1, x2 )
 
 def test_array_real_1d_scalar_add(language):
     @types( 'float32[:]', 'float32', 'int')
@@ -42,6 +42,8 @@ def test_array_real_1d_scalar_add(language):
             x[i] += a
     f1 = array_real_1d_scalar_add
     f2 = epyccel(f1, language=language)
+
+    print("Code?")
 
     for t in float_types:
         size = randint(1, 30)
