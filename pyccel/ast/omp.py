@@ -81,6 +81,11 @@ class OMP_Simd_Construct(OmpAnnotatedComment):
     def __init__(self, txt, has_nowait):
         super().__init__(txt, has_nowait)
 
+class OMP_TaskLoop_Construct(OmpAnnotatedComment):
+    """ Represents an OpenMP Taskloop construct"""
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
+
 class OMP_Distribute_Construct(OmpAnnotatedComment):
     """ Represents an OpenMP Distribute construct"""
     def __init__(self, txt, has_nowait):

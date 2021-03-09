@@ -22,7 +22,7 @@ from sympy.core import cache
 
 from pyccel.ast.basic import Basic, PyccelAstNode
 
-from pyccel.ast.core import Comment
+from pyccel.ast.core import Comment, CommentBlock
 
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
@@ -93,7 +93,7 @@ from pyccel.ast.internals import Slice, PyccelSymbol
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
-                            OMP_Parallel_Construct)
+                            OMP_TaskLoop_Construct)
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.errors import PyccelSemanticError
@@ -865,7 +865,8 @@ class SemanticParser(BasicParser):
         combined_loop = False
         if expr.combined:
             combined_loop = ('for' in expr.combined or 'distribute' in expr.combined)
-        if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct)) or combined_loop:
+        if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct, 
+                            OMP_Distribute_Construct, OMP_TaskLoop_Construct)) or combined_loop:
             msg = "Statement after {} must be a for loop.".format(type(expr).__name__)
             if index == (len(code.body) - 1):
                 errors.report(msg, symbol=type(expr).__name__,
@@ -876,7 +877,7 @@ class SemanticParser(BasicParser):
                         if expr._has_nowait:
                             node._has_nowait = True
                     else:
-                        if isinstance(node, Comment):
+                        if isinstance(node, (Comment, CommentBlock)):
                             index += 1
                         else:
                             errors.report(msg, symbol=type(node).__name__,

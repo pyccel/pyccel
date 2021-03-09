@@ -17,7 +17,7 @@ from pyccel.ast.omp import (OmpAnnotatedComment, OMP_For_Loop, OMP_Parallel_Cons
                             OMP_Master_Construct, OMP_Masked_Construct, OMP_Task_Construct,
                             OMP_Cancel_Construct, OMP_Target_Construct, OMP_Teams_Construct,
                             OMP_Sections_Construct, OMP_Section_Construct, OMP_Simd_Construct,
-                            OMP_Distribute_Construct)
+                            OMP_Distribute_Construct, OMP_TaskLoop_Construct)
 
 DEBUG = False
 
@@ -140,7 +140,7 @@ class OmpLoopConstruct(OmpConstruct):
 class OmpTaskLoopConstruct(OmpConstruct):
     """Class representing the Taskloop construct."""
     def __init__(self, **kwargs):
-        super().__init__(OmpAnnotatedComment, (_valid_taskloop_clauses + (OmpinReduction,)), **kwargs)
+        super().__init__(OMP_TaskLoop_Construct, (_valid_taskloop_clauses + (OmpinReduction,)), **kwargs)
 
 class OmpTaskConstruct(OmpConstruct):
     """Class representing the Task construct """

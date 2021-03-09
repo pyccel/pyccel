@@ -1098,9 +1098,7 @@ class SyntaxParser(BasicParser):
         if stmt.s.startswith('#$'):
             env = stmt.s[2:].lstrip()
             if env.startswith('omp'):
-                expr_omp = omp_parse(stmts=stmt.s)
-                #print(expr_omp.__dict__)
-                return expr_omp
+                return omp_parse(stmts=stmt.s)
             elif env.startswith('acc'):
                 return acc_parse(stmts=stmt.s)
             elif env.startswith('header'):
