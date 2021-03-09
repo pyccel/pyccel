@@ -864,7 +864,7 @@ class SemanticParser(BasicParser):
         index = code.body.index(expr)
         combined_loop = False
         if expr.combined:
-            combined_loop = (isinstance(expr, OMP_Parallel_Construct) and 'for' in expr.combined)
+            combined_loop = ('for' in expr.combined or 'distribute' in expr.combined)
         if isinstance(expr, (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct)) or combined_loop:
             msg = "Statement after {} must be a for loop.".format(type(expr).__name__)
             if index == (len(code.body) - 1):
