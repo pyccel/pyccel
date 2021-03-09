@@ -12,6 +12,7 @@ from pyccel.errors.messages import (ARRAY_REALLOCATION,
 
 @pytest.fixture(params=[
     pytest.param('fortran', marks = pytest.mark.fortran),
+    pytest.param('python', marks = pytest.mark.python),
     pytest.param('c'      , marks = [pytest.mark.c,
         pytest.mark.skip(message='NumpySum not implemented in C')])
     ]
