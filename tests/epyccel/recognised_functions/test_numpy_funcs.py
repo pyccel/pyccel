@@ -6489,7 +6489,8 @@ def test_numpy_where_array_like_2d(language):
     @types('complex128[:,:]')
     def get_chosen_elements(arr):
         from numpy import where, shape
-        s = shape(arr)
+        a = where(arr)
+        s = shape(a)
         return len(s), s[0], a[0,0], a[0,1], a[1,0], a[1,1]
 
     size = (2, 5)
