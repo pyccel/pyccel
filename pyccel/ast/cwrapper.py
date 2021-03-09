@@ -71,7 +71,8 @@ class PyccelPyArrayObject(DataType):
     class used to hold numpy objects"""
     _name = 'pyarrayobject'
 
-PyArray_Type = Variable(NativeGeneric(), 'PyArray_Type')
+PyArray_Type         = Variable(NativeGeneric(), 'PyArray_Type')
+Py_CLEANUP_SUPPORTED = Variable(dtype=NativeInteger(),  name = 'Py_CLEANUP_SUPPORTED')
 
 #-------------------------------------------------------------------
 #                  Parsing and Building Classes
@@ -126,60 +127,46 @@ class PyArg_ParseTupleNode(Basic):
 
     def __init__(self, python_func_args,
                        python_func_kwargs,
-                       parse_args,
+                       arg_names,
                        func_args,
-                       arg_names):
+                       parse_args = [],
+                       converters = {}):
 
         if not isinstance(python_func_args, Variable):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
             raise TypeError('Python func kwargs should be a Variable')
-        if not isinstance(func_args, list) and any(not isinstance(c, Variable) for c in func_args):
-            raise TypeError('C func args should be a list of Variables')
-        if not isinstance(parse_args, list) and any(not isinstance(c, Variable) for c in parse_args):
-            raise TypeError('Parse args should be a list of Variables')
         if not isinstance(arg_names, PyArgKeywords):
             raise TypeError('Parse args should be a list of Variables')
-        if (len(parse_args) != len(func_args)):
-            raise TypeError('There should be the same number of c_func_args and parse_args')
+        if not isinstance(func_args, list) and any(not isinstance(c, Variable) for c in func_args):
+            raise TypeError('C func args should be a list of Variables')
 
         self._flags = ''
         i           = 0
         args_count  = len(func_args)
 
         while i < args_count and not isinstance(func_args[i], ValuedVariable):
-            self._flags += self.get_pytype(parse_args[i])
+            self._flags += 'O&'
             i += 1
         if i < args_count:
             self._flags += '|'
         while i < args_count:
-            self._flags += self.get_pytype(parse_args[i])
+            self._flags += 'O&'
             i += 1
         # Restriction as of python 3.8
         if any([isinstance(a, (Variable, FunctionAddress)) and a.is_kwonly for a in parse_args]):
             errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
                           symbol=parse_args, severity='warning')
 
-        parse_args = [[PyArray_Type, a] if isinstance(a, Variable) and f.rank > 0
-                else [a] for a, f in zip(parse_args, func_args)]
-        parse_args = [a for arg in parse_args for a in arg]
+        if converters:
+            parse_args = [[c, a] for a, c in zip(func_args, converters)]
+            parse_args = [a for args in parse_args for a in args]
 
         self._pyarg               = python_func_args
         self._pykwarg             = python_func_kwargs
         self._parse_args          = parse_args
         self._arg_names           = arg_names
         super().__init__()
-
-    def get_pytype(self, parse_arg):
-        """
-        Return the needed flag to parse or build value
-        """
-        if isinstance(parse_arg.dtype, PyccelPyObject):
-            return 'O'
-        elif isinstance(parse_arg.dtype, PyccelPyArrayObject):
-            return 'O!'
-        else:
-            raise NotImplementedError("Type not implemented for argument collection : "+str(type(parse_arg)))
 
     @property
     def pyarg(self):
@@ -215,16 +202,16 @@ class PyBuildValueNode(Basic):
     """
     _attribute_nodes = ('_result_args',)
 
-    def __init__(self, result_args = (), converter_functions = []):
+    def __init__(self, result_args = (), converters = []):
         self._flags       = ''
         for i in result_args:
             self._flags  += 'O&'
 
-        if (len(result_args) != len(converter_functions)):
+        if (len(result_args) != len(converters)):
             raise TypeError('There should be same number of converter functions and arguments')
 
-        self._result_args         = result_args
-        self._converter_functions = converter_functions
+        self._result_args = result_args
+        self._converters   = converters
 
         super().__init__()
 
@@ -238,7 +225,23 @@ class PyBuildValueNode(Basic):
 
     @property
     def converters(self):
-        return self._converter_functions
+        return self._converters
+
+def get_custom_key(variable):
+    """
+    """
+    dtype     = variable.dtype
+    precision = variable.precision
+    rank      = variable.rank
+    order     = variable.order
+    valued    = isinstance(variable, ValuedVariable)
+    optional  = variable.is_optional
+
+    return (valued, optional, dtype, precision, order, rank)
+
+    
+
+
 
 #-------------------------------------------------------------------
 #                      Python.h Constants
