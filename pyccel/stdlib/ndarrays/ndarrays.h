@@ -54,6 +54,7 @@ typedef struct  s_ndarray
     /* raw data buffer*/
     union {
             char            *raw_data;
+            void            *data;
             int8_t          *nd_int8;
             int16_t         *nd_int16;
             int32_t         *nd_int32;

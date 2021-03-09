@@ -239,9 +239,6 @@ def get_custom_key(variable):
 
     return (valued, optional, dtype, precision, order, rank)
 
-    
-
-
 
 #-------------------------------------------------------------------
 #                      Python.h Constants

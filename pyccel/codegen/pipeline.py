@@ -314,7 +314,8 @@ def execute_pyccel(fname, *,
 
         # Iterate over the internal_libs list and determine if the printer
         # requires an internal lib to be included.
-
+        l = codegen.get_printer_imports()
+        l.add("ndarrays")
         for lib in internal_libs:
             if lib in codegen.get_printer_imports():
                 # get the include folder path and library files

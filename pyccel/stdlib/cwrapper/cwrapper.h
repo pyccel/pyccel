@@ -6,6 +6,7 @@
 # include <complex.h>
 # include <stdint.h>
 # include <stdbool.h>
+# include "ndarrays.h"
 
 # define NO_IMPORT_ARRAY
 # define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API
@@ -16,20 +17,15 @@
 
 
 
-
-#ifdef NDARRAYS_H
-
-# include "ndarrays.h"
-t_ndarray	pyarray_to_ndarray(PyArrayObject *o);
-
-#endif
-
+t_ndarray	pyarray_to_c_ndarray(PyObject *o);
+t_ndarray	pyarray_to_f_ndarray(PyObject *o);
 
 
 /* arrays checkers and helpers */
-bool	    check_pyarray_dtype(PyArrayObject *a, int dtype);
-bool        pyarray_check(PyArrayObject *o, int dtype, int rank, int flag);
-int32_t     array_ndim(PyArrayObject *o, int index);
+bool	pyarray_check(PyObject *o, int dtype, int rank, int flag);
+
+void    *nd_data(t_ndarray *a);
+int     nd_ndim(t_ndarray *a, int n);
 
 
 /* casting python object to c type */

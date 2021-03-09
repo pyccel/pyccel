@@ -15,7 +15,7 @@ from pyccel.ast.datatypes   import NativeInteger, NativeGeneric, NativeBool, Nat
 
 from pyccel.ast.core        import create_incremented_string, SeparatorComment
 
-from pyccel.ast.core        import FunctionCall, FunctionDef
+from pyccel.ast.core        import FunctionCall, FunctionDef, FunctionAddress
 from pyccel.ast.core        import Assign, AliasAssign, Nil, datatype
 from pyccel.ast.core        import If, IfSection, Import, Return
 
@@ -29,7 +29,8 @@ from pyccel.ast.cwrapper    import malloc, free, sizeof, generate_datatype_error
 
 from pyccel.ast.cwrapper    import PyccelPyObject, PyccelPyArrayObject
 
-from pyccel.ast.numpy_wrapper   import array_checker, numpy_get_dim, numpy_get_data, pyarray_to_ndarray
+from pyccel.ast.numpy_wrapper   import array_checker, array_get_dim, array_get_data
+from pyccel.ast.numpy_wrapper   import pyarray_to_f_ndarray, pyarray_to_c_ndarray
 
 from pyccel.ast.variable        import Variable, ValuedVariable, VariableAddress
 
@@ -165,40 +166,14 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_declare_type(self, expr):
         """
-        Get the declaration type of an expression
-        it can be (variable, functiondef)
-        Parameters:
-        -----------
-        expr   : FunctionDef or variable
-
-        Returns: String
-        --------
-        """
-        dtype = self._print(expr.dtype)
-        prec  = expr.precision
-        if self._target_language == 'c' and expr.rank > 0:
-            return CCodePrinter.get_declare_type(self, expr)
-        else :
-            dtype = self.find_in_dtype_registry(dtype, prec)
-
-        if self.stored_in_c_pointer(expr):
-            return '{0} *'.format(dtype)
-        else:
-            return '{0} '.format(dtype)
-
-    def get_declare_type(self, expr):
-        """
         """
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         rank  = expr.rank
 
-        if isinstance(expr.dtype, NativeInteger):
-            self._additional_imports.add('stdint')
         dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
             if expr.is_ndarray:
-                self._additional_imports.add('ndarrays')
                 dtype = 't_ndarray'
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol="rank > 0",severity='fatal')
@@ -211,7 +186,59 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return '{0} '.format(dtype)
 
-    def stored_in_c_pointer(self, a):
+    def get_static_declare_type(self, expr):
+        """
+        """
+        dtype = self._print(expr.dtype)
+        prec  = expr.precision
+
+        dtype = self.find_in_dtype_registry(dtype, prec)
+
+        if self.stored_in_c_pointer(expr) or (self._target_language == 'fortran' and expr.rank > 0):
+            return '{0} *'.format(dtype)
+        else:
+            return '{0} '.format(dtype)
+
+    def static_function_signature(self, expr):
+        """Extract from function definition all the information
+        (name, input, output) needed to create the signature
+        used for c/fortran binding
+        Parameters
+        ----------
+        expr            : FunctionDef
+            the function defintion
+        Return
+        ------
+        String
+            Signature of the function
+        """
+        if self._target_language == 'c':
+            return self.function_signature(expr)
+
+        args = list(expr.arguments)
+        if len(expr.results) == 1:
+            ret_type = self.get_declare_type(expr.results[0])
+        elif len(expr.results) > 1:
+            ret_type = self._print(datatype('int')) + ' '
+            args += [a.clone(name = a.name, is_pointer =True) for a in expr.results]
+        else:
+            ret_type = self._print(datatype('void')) + ' '
+        name = expr.name
+        if not args:
+            arg_code = 'void'
+        else:
+            arg_code = ', '.join('{}'.format(self.function_signature(i, False))
+                        if isinstance(i, FunctionAddress)
+                        else '{0}{1}'.format(self.get_static_declare_type(i), i.name)
+                        for i in args)
+
+        if isinstance(expr, FunctionAddress):
+            return '{}(*{})({})'.format(ret_type, name, arg_code)
+        else:
+            return '{0}{1}({2})'.format(ret_type, name, arg_code)
+
+
+    def stored_in_c_pointer(self, expr):
         """
         Return True if variable is pointer or stored in pointer
         Parameters:
@@ -221,11 +248,10 @@ class CWrapperCodePrinter(CCodePrinter):
         Returns: boolean
         --------
         """
-        stored_in_c = CCodePrinter.stored_in_c_pointer(self, a)
-        if self._target_language == 'fortran':
-            return stored_in_c or (isinstance(a, Variable) and a.rank > 0)
-        else:
-            return stored_in_c
+        if not isinstance(expr, Variable):
+            return False
+
+        return expr.is_pointer or expr.is_optional
 
     def get_static_function(self, function):
         """
@@ -262,10 +288,10 @@ class CWrapperCodePrinter(CCodePrinter):
 
         if self._target_language == 'fortran' and argument.rank > 0:
             static_args = [
-                #TODO
+                FunctionCall(array_get_dim, [argument, i]) for i in range(argument.rank)
             ]
 
-            static_args.append(argument)
+            static_args.append(FunctionCall(array_get_data, [argument]))
         else:
             static_args = [argument]
 
@@ -312,18 +338,21 @@ class CWrapperCodePrinter(CCodePrinter):
     def get_free_statement(self, variable):
         """
         """
+        body = []
         if variable.rank > 0 and self._target_language is 'c':
-            pass
-        else :
-            body = FunctionCall(free, [variable])
+            body.append(Deallocate(i))
+        
+        if variable.is_optional:
+            body.append(FunctionCall(free, [variable]))
 
         return body
 
-    def free_allocated_object(self):
-        """
-        loop on all the allocated memory and free them before exit
-        """
-        body = [self.get_free_statement(i) for i in self.to_free_objects]
+    def free_allocated_memory(self):
+        body = []
+
+        for elem in  self.to_free_objects:
+            body += self.get_free_statement(elem)
+
         self.to_free_objects.clear()
 
         return body
@@ -379,7 +408,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
 
         if c_arg.rank > 0:
-            body = [Assign(VariableAddress(c_arg), FunctionCall(converter, [p_arg]))]
+            body = [Assign(c_arg, FunctionCall(converter, [p_arg]))]
 
         else: #scalar
             body =  [Assign(c_arg, FunctionCall(converter, [p_arg]))]
@@ -425,10 +454,8 @@ class CWrapperCodePrinter(CCodePrinter):
         p_arg = Variable(name = 'p_arg', dtype = PyccelPyObject(), is_pointer = True)
 
         check = PyccelIs(VariableAddress(p_arg), Nil())
-        body  = [If(IfSection(check, [
-            self.get_free_statement(c_arg),
-            Return([LiteralInteger(1)])]))
-            ]
+        body  = [If(IfSection(check,
+            self.get_free_statement(c_arg) + [RETURN_ZERO]))]
 
         if c_var.is_optional: #optional variable
             check = PyccelEq(VariableAddress(p_arg), VariableAddress(Py_None))
@@ -505,8 +532,8 @@ class CWrapperCodePrinter(CCodePrinter):
         name = self.generate_converter_function_name(used_names, variable)
 
         if variable.rank > 0:
-            cast_functions = numpy_get_data if self._target_language is 'fortran'\
-                                            else pyarray_to_ndarray
+            cast_function = pyarray_to_f_ndarray if self._target_language is 'fortran'\
+                                            else pyarray_to_c_ndarray
         else:
             try:
                 cast_function = Python_to_C(variable)
@@ -576,8 +603,12 @@ class CWrapperCodePrinter(CCodePrinter):
         return CCodePrinter._print_Variable(self, expr)
     
     def _print_VariableAddress(self, expr):
-        if expr.variable.is_pointer and expr.variable.is_optional:
-            return '(*{})'.format(expr.variable.name)
+        variable = expr.variable
+        if variable.is_pointer and variable.is_optional:
+            return '(*{})'.format(variable.name)
+
+        if not self.stored_in_c_pointer(variable) and variable.rank > 0:
+            return '&{}'.format(variable.name)
 
         return CCodePrinter._print_VariableAddress(self, expr)
 
@@ -809,10 +840,11 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.append(AliasAssign(wrapper_results[0], build_node))
 
         # free all allocated memory :
-        wrapper_body += self.free_allocated_object()
-
+        wrapper_body += self.free_allocated_memory()
+        
         # Return
         wrapper_body.append(Return(wrapper_results))
+
         wrapper_function = FunctionDef(name     = wrapper_name,
                                     arguments   = wrapper_args,
                                     results     = wrapper_results,
@@ -826,13 +858,15 @@ class CWrapperCodePrinter(CCodePrinter):
         self._module_name  = expr.name
 
         static_funcs = [self.get_static_function(func) for func in expr.funcs]
-        function_signatures = '\n'.join('{};'.format(self.function_signature(f)) for f in static_funcs)
+
+        function_signatures = '\n'.join('{};'.format(self.static_function_signature(f))
+                                                        for f in static_funcs)
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
         funcs = [*expr.interfaces, *(f for f in expr.funcs if f.name not in interface_funcs)]
 
         function_defs         = '\n\n'.join(self._print(f) for f in funcs)
-        
+
         converters            = '\n\n'.join(CCodePrinter._print_FunctionDef(self, c)
                                 for c in self._converter_functions.values())
 

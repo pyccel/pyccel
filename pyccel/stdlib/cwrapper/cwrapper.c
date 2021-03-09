@@ -266,8 +266,6 @@ PyObject	*Float_to_PyDouble(float *d)
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_TYPE
  */
-
-
 bool	check_pyarray_dtype(PyArrayObject *a, int dtype)
 {
 	int current_dtype;
@@ -303,7 +301,6 @@ bool	check_pyarray_dtype(PyArrayObject *a, int dtype)
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_NDIM
  */
-
 static bool _check_pyarray_rank(PyArrayObject *a, int rank)
 {
 	int	current_rank;
@@ -335,7 +332,6 @@ static bool _check_pyarray_rank(PyArrayObject *a, int rank)
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_CHKFLAGS
  */
-
 static bool _check_pyarray_order(PyArrayObject *a, int flag)
 {
 	char	order;
@@ -356,11 +352,39 @@ static bool _check_pyarray_order(PyArrayObject *a, int flag)
 
 
 /*
+ * Function: _check_pyarray_type
+ * --------------------
+ * Check if Python Object is ArrayType:
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ *
+ * 	Returns		:
+ *		return true if no error occurred otherwise it will return false
+ *      and raise TypeError exception
+ * reference of the used c/python api function
+ * -------------------------------------------
+ * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_Check
+ */
+static bool _check_pyarray_type(PyObject *a)
+{
+	if (!PyArray_Check(a))
+	{
+		PyErr_Format(PyExc_TypeError,
+			"argument must be numpy.ndarray, not %s",
+			 a == Py_None ? "None" : Py_TYPE(a)->tp_name);
+		return false;
+	}
+
+	return true;
+}
+
+
+
+/*
 ** convert numpy strides to nd_array strides, and return it in a new array, to
 ** avoid the problem of different implementations of strides in numpy and ndarray.
 */
-#ifdef NDARRAYS_H
-
 static int64_t	*_numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd)
 {
     int64_t *ndarray_strides;
@@ -371,6 +395,7 @@ static int64_t	*_numpy_to_ndarray_strides(int64_t *np_strides, int type_size, in
 
     return ndarray_strides;
 }
+
 
 /*
 ** copy numpy shape to nd_array shape, and return it in a new array, to
@@ -389,7 +414,7 @@ static int64_t     *_numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 }
 
 /*
- * Function: pyarray_to_ndarray
+ * Function: pyarray_to_c_ndarray
  * ----------------------------
  * A Cast function that convert numpy array variable into ndarray variable,
  * by copying its information and data to a new variable of type ndarray struct
@@ -403,26 +428,54 @@ static int64_t     *_numpy_to_ndarray_shape(int64_t *np_shape, int nd)
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html
  */
-
-t_ndarray	pyarray_to_ndarray(PyArrayObject *o)
+t_ndarray	pyarray_to_c_ndarray(PyObject *o)
 {
 	t_ndarray		array;
+	PyArrayObject	*a;
 
-	array.nd          = PyArray_NDIM(o);
-	array.raw_data    = PyArray_DATA(o);
-	array.type_size   = PyArray_ITEMSIZE(o);
-	array.type        = PyArray_TYPE(o);
-	array.length      = PyArray_SIZE(o);
-	array.buffer_size = PyArray_NBYTES(o);
-	array.shape       = _numpy_to_ndarray_shape(PyArray_SHAPE(o), array.nd);
-	array.strides     = _numpy_to_ndarray_strides(PyArray_STRIDES(o), array.type_size, array.nd);
+	a = (PyArrayObject *)o;
+
+	array.nd          = PyArray_NDIM(a);
+	array.raw_data    = PyArray_DATA(a);
+	array.type_size   = PyArray_ITEMSIZE(a);
+	array.type        = PyArray_TYPE(a);
+	array.length      = PyArray_SIZE(a);
+	array.buffer_size = PyArray_NBYTES(a);
+	array.shape       = _numpy_to_ndarray_shape(PyArray_SHAPE(a), array.nd);
+	array.strides     = _numpy_to_ndarray_strides(PyArray_STRIDES(a), array.type_size, array.nd);
 
 	array.is_view     = 1;
 
 	return array;
 }
 
-#endif
+/*
+ * Function: pyarray_to_f_ndarray
+ * ----------------------------
+ * A Cast function that convert numpy array variable into ndarray variable,
+ * by copying its information and data to a new variable of type ndarray struct
+ * and return this variable to be used inside fortran code.
+ * 	Parameters	:
+ *		o 	  : python array object
+ * 	Returns		:
+ *    array   :  c ndarray
+ *
+ * reference of the used c/numpy api function
+ * -------------------------------------------
+ * https://numpy.org/doc/stable/reference/c-api/array.html
+ */
+t_ndarray	pyarray_to_f_ndarray(PyObject *o)
+{
+	t_ndarray	array;
+	PyArrayObject *a;
+
+	a = (PyArrayObject *)o;
+
+	array.data	= PyArray_DATA(a);
+	array.shape = PyArray_SHAPE(a);
+
+	return array;
+}
 
 
 /*
@@ -438,9 +491,14 @@ t_ndarray	pyarray_to_ndarray(PyArrayObject *o)
  * 	Returns		:
  *		return true if no error occurred otherwise it will return false
  */
-
-bool	pyarray_check(PyArrayObject *a, int dtype, int rank, int flag)
+bool	pyarray_check(PyObject *o, int dtype, int rank, int flag)
 {
+	PyArrayObject *a;
+
+	if (!_check_pyarray_type(o)) return false;
+
+	a = (PyArrayObject *)o;
+
 	// check array element type / rank / order
 	if(!check_pyarray_dtype(a, dtype)) return false;
 
@@ -452,9 +510,8 @@ bool	pyarray_check(PyArrayObject *a, int dtype, int rank, int flag)
 }
 
 
-
 /*
- * Function: array_ndim
+ * Function: nd_ndim
  * --------------------
  * Return the shape in the n dimension.
  *
@@ -467,11 +524,34 @@ bool	pyarray_check(PyArrayObject *a, int dtype, int rank, int flag)
  * -------------------------------------------
  * https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_DIM
  */
-
-int32_t     array_ndim(PyArrayObject *o, int index)
+int     nd_ndim(t_ndarray *a, int n)
 {
-	if (o == NULL)
+	if (a == NULL)
 		return 0;
 	
-	return PyArray_DIM(o, index);
+	return a->shape[n];
 }
+
+
+/*
+ * Function: nd_data
+ * --------------------
+ * Return data pointed by array
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ *      index : dimension index
+ * 	Returns		:
+ *		return NULL if object is NULL or the data of the array
+ * reference of the used c/numpy api function
+ * -------------------------------------------
+ * https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_DIM
+ */
+void    *nd_data(t_ndarray *a)
+{
+	if (a == NULL)
+		return NULL;
+	
+	return a->data;
+}
+

@@ -45,15 +45,22 @@ __all__ = (
 #-------------------------------------------------------------------
 
 # https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_DATA
-numpy_get_data  = FunctionDef(name   = 'PyArray_DATA',
+array_get_data  = FunctionDef(name   = 'nd_data',
                            body      = [],
-                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True)],
-                           results   = [Variable(dtype=NativeVoid(), name = 'v', rank = 1)])
+                           arguments = [Variable(dtype=NativeVoid(), name = 'o', is_pointer=True)],
+                           results   = [Variable(dtype=NativeVoid(), name = 'v', is_pointer=True, rank = 1)])
+
+#  numpy array to fortrab ndarray : function definition in pyccel/stdlib/cwrapper.c
+pyarray_to_f_ndarray = FunctionDef(
+                name      = 'pyarray_to_c_ndarray',
+                arguments = [Variable(name = 'a', dtype = PyccelPyArrayObject(), is_pointer = True)],
+                body      = [],
+                results   = [Variable(name = 'array', dtype = NativeGeneric())])
 
 
-#  numpy array to ndarray : function definition in pyccel/stdlib/cwrapper.c
-pyarray_to_ndarray = FunctionDef(
-                name      = 'pyarray_to_ndarray',
+#  numpy array to c ndarray : function definition in pyccel/stdlib/cwrapper.c
+pyarray_to_c_ndarray = FunctionDef(
+                name      = 'pyarray_to_f_ndarray',
                 arguments = [Variable(name = 'a', dtype = PyccelPyArrayObject(), is_pointer = True)],
                 body      = [],
                 results   = [Variable(name = 'array', dtype = NativeGeneric())])
@@ -71,9 +78,9 @@ pyarray_check = FunctionDef(
                 results   = [Variable(name = 'b', dtype = NativeBool())])
 
 # Return the shape in the n dimension : function definition in pyccel/stdlib/cwrapper.c
-numpy_get_dim  = FunctionDef(name    = 'array_ndim',
+array_get_dim  = FunctionDef(name    = 'nd_ndim',
                            body      = [],
-                           arguments = [Variable(dtype=PyccelPyArrayObject(), name = 'o', is_pointer=True),
+                           arguments = [Variable(dtype=NativeVoid(), name = 'o', is_pointer=True),
                                         Variable(dtype=NativeInteger(), name = 'idx')],
                            results   = [Variable(dtype=NativeInteger(), name = 'd')])
 
