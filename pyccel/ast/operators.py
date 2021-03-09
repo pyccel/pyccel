@@ -112,8 +112,8 @@ class PyccelOperator(PyccelAstNode):
         if self.stage == 'syntactic':
             super().__init__()
             return
-        self._dtype, self._precision = self._calculate_dtype(self._args)
-        self._shape, self._rank = self._calculate_shape_rank(self._args)
+        self._dtype, self._precision = self._calculate_dtype(*self._args)
+        self._shape, self._rank = self._calculate_shape_rank(*self._args)
         # rank is None for lambda functions
         if self._rank is not None and self._rank > 1:
             self._set_order()
@@ -202,7 +202,7 @@ class PyccelUnaryOperator(PyccelOperator):
         """ Sets the dtype and precision
         They are chosen to match the argument
         """
-        a = _args[0][0]
+        a = _args[0]
         _dtype = a.dtype
         _precision = a.precision
         return _dtype, _precision
@@ -212,7 +212,7 @@ class PyccelUnaryOperator(PyccelOperator):
         """ Sets the shape and rank
         They are chosen to match the argument
         """
-        a = _args[0][0]
+        a = _args[0]
         _rank = a.rank
         _shape = a.shape
         return _shape, _rank
@@ -335,8 +335,8 @@ class PyccelBinaryOperator(PyccelOperator):
     def __init__(self, arg1, arg2):
         super().__init__(arg1, arg2)
 
-    @staticmethod
-    def _calculate_dtype(*_args):
+    @classmethod
+    def _calculate_dtype(cls, *_args):
         """ Sets the dtype and precision
         If one argument is a string then all arguments must be strings
         If the arguments are numeric then the dtype and precision
@@ -344,28 +344,57 @@ class PyccelBinaryOperator(PyccelOperator):
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
-        integers  = [a for a in _args[0] if a.dtype in (NativeInteger(),NativeBool())]
-        reals     = [a for a in _args[0] if a.dtype is NativeReal()]
-        complexes = [a for a in _args[0] if a.dtype is NativeComplex()]
-        strs      = [a for a in _args[0] if a.dtype is NativeString()]
+        integers  = [a for a in _args if a.dtype in (NativeInteger(),NativeBool())]
+        reals     = [a for a in _args if a.dtype is NativeReal()]
+        complexes = [a for a in _args if a.dtype is NativeComplex()]
+        strs      = [a for a in _args if a.dtype is NativeString()]
 
         if strs:
+            return cls._handle_str_type(strs)
             assert len(integers + reals + complexes) == 0
-            raise TypeError("unsupported operand type(s) for /: 'str' and 'str'")
         elif complexes:
-            _dtype = NativeComplex()
-            _precision = max(a.precision for a in complexes)
-            return _dtype, _precision
+            return cls._handle_complex_type(complexes)
         elif reals:
-            _dtype = NativeReal()
-            _precision = max(a.precision for a in reals)
+            return cls._handle_real_type(reals)
             return _dtype, _precision
         elif integers:
-            _dtype = NativeInteger()
-            _precision = max(a.precision for a in integers)
-            return _dtype, _precision
+            return cls._handle_integer_type(integers)
         else:
-            raise TypeError('cannot determine the type of {}'.format(_args[0]))
+            raise TypeError('cannot determine the type of {}'.format(_args))
+
+    @staticmethod
+    def _handle_str_type(strs):
+        """
+        Set dtype and precision when both arguments are strings
+        """
+        raise TypeError("unsupported operand type(s) for /: 'str' and 'str'")
+
+    @staticmethod
+    def _handle_complex_type(complexes):
+        """
+        Set dtype and precision when the result is complex
+        """
+        _dtype = NativeComplex()
+        _precision = max(a.precision for a in complexes)
+        return _dtype, _precision
+
+    @staticmethod
+    def _handle_real_type(reals):
+        """
+        Set dtype and precision when the result is real
+        """
+        _dtype = NativeReal()
+        _precision = max(a.precision for a in reals)
+        return _dtype, _precision
+
+    @staticmethod
+    def _handle_integer_type(integers):
+        """
+        Set dtype and precision when the result is integer
+        """
+        _dtype = NativeInteger()
+        _precision = max(a.precision for a in integers)
+        return _dtype, _precision
 
     @staticmethod
     def _calculate_shape_rank(*_args):
@@ -374,27 +403,27 @@ class PyccelBinaryOperator(PyccelOperator):
         For numeric types the rank and shape is determined according
         to numpy broadcasting rules where possible
         """
-        strs = [a for a in _args[0] if a.dtype is NativeString()]
+        strs = [a for a in _args if a.dtype is NativeString()]
         if strs:
-            other = [a for a in _args[0] if a.dtype in (NativeInteger(), NativeBool(), NativeReal(), NativeComplex())]
+            other = [a for a in _args if a.dtype in (NativeInteger(), NativeBool(), NativeReal(), NativeComplex())]
             assert len(other) == 0
             _rank  = 0
             _shape = ()
         else:
-            ranks  = [a.rank for a in  _args[0]]
-            shapes = [a.shape for a in _args[0]]
+            ranks  = [a.rank for a in  _args]
+            shapes = [a.shape for a in _args]
 
             if None in ranks:
                 _rank  = None
                 _shape = None
 
             elif all(sh is not None for tup in shapes for sh in tup):
-                shape = broadcast(_args[0][1].shape, _args[0][1].shape)
+                shape = broadcast(_args[1].shape, _args[1].shape)
 
                 _shape = shape
                 _rank  = len(shape)
             else:
-                _rank  = max(a.rank for a in _args[0])
+                _rank  = max(a.rank for a in _args)
                 _shape = [None]*_rank
         return _shape, _rank
 
@@ -474,38 +503,11 @@ class PyccelAdd(PyccelArithmeticOperator):
         else:
             return super().__new__(cls)
 
-    def _calculate_dtype(*_args):
-        """ Sets the dtype and precision
-        If one argument is a string then all arguments must be strings
-        If the arguments are numeric then the dtype and precision
-        match the broadest type and the largest precision
-        e.g.
-            1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
-        """
-        integers  = [a for a in _args[1] if a.dtype in (NativeInteger(),NativeBool())]
-        reals     = [a for a in _args[1] if a.dtype is NativeReal()]
-        complexes = [a for a in _args[1] if a.dtype is NativeComplex()]
-        strs      = [a for a in _args[1] if a.dtype is NativeString()]
-
-        if strs:
-            assert len(integers + reals + complexes) == 0
-            _dtype = NativeString()
-            _precision = None
-            return _dtype, _precision
-        elif complexes:
-            _dtype = NativeComplex()
-            _precision = max(a.precision for a in complexes)
-            return _dtype, _precision
-        elif reals:
-            _dtype = NativeReal()
-            _precision = max(a.precision for a in reals)
-            return _dtype, _precision
-        elif integers:
-            _dtype = NativeInteger()
-            _precision = max(a.precision for a in integers)
-            return _dtype, _precision
-        else:
-            raise TypeError('cannot determine the type of {}'.format(_args[1]))
+    @staticmethod
+    def _handle_str_type(strs):
+        _dtype = NativeString()
+        _precision = None
+        return _dtype, _precision
 
     def __repr__(self):
         return '{} + {}'.format(self.args[0], self.args[1])
@@ -585,36 +587,11 @@ class PyccelDiv(PyccelArithmeticOperator):
     """
     _precedence = 13
 
-    def _calculate_dtype(*_args):
-        """ Sets the dtype and precision
-        If one argument is a string then all arguments must be strings
-        If the arguments are numeric then the dtype and precision
-        match the broadest type and the largest precision
-        e.g.
-            1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
-        """
-        integers  = [a for a in _args[1] if a.dtype in (NativeInteger(),NativeBool())]
-        reals     = [a for a in _args[1] if a.dtype is NativeReal()]
-        complexes = [a for a in _args[1] if a.dtype is NativeComplex()]
-        strs      = [a for a in _args[1] if a.dtype is NativeString()]
-
-        if strs:
-            assert len(integers + reals + complexes) == 0
-            raise TypeError("unsupported operand type(s) for /: 'str' and 'str'")
-        elif complexes:
-            _dtype = NativeComplex()
-            _precision = max(a.precision for a in complexes)
-            return _dtype, _precision
-        elif reals:
-            _dtype = NativeReal()
-            _precision = max(a.precision for a in reals)
-            return _dtype, _precision
-        elif integers:
-            _dtype = NativeReal()
-            _precision = default_precision['real']
-            return _dtype, _precision
-        else:
-            raise TypeError('cannot determine the type of {}'.format(_args[1]))
+    @staticmethod
+    def _handle_integer_type(integers):
+        _dtype = NativeReal()
+        _precision = default_precision['real']
+        return _dtype, _precision
 
     def __repr__(self):
         return '{} + {}'.format(self.args[0], self.args[1])
@@ -978,8 +955,8 @@ class IfTernaryOperator(PyccelOperator):
         """
         Sets the dtype and precision for IfTernaryOperator
         """
-        value_true = _args[0][1]
-        value_false = _args[0][2]
+        value_true = _args[1]
+        value_false = _args[2]
         if value_true.dtype in NativeNumeric and value_false.dtype in NativeNumeric:
             _dtype = max([value_true.dtype, value_false.dtype], key = NativeNumeric.index)
         else:
@@ -993,8 +970,8 @@ class IfTernaryOperator(PyccelOperator):
         """
         Sets the shape and rank and the order for IfTernaryOperator
         """
-        value_true = _args[0][1]
-        value_false = _args[0][2]
+        value_true = _args[1]
+        value_false = _args[2]
         _shape = value_true.shape
         _rank  = value_true.rank
         if _rank is not None and _rank > 1:
