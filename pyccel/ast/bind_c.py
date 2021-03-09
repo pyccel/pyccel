@@ -4,7 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-from pyccel.ast.core import FunctionCall
+from pyccel.ast.core import FunctionCall, Module
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import FunctionDef, BindCFunctionDef
 from pyccel.ast.core import Assign
@@ -13,9 +13,10 @@ from pyccel.ast.core import AsName
 from pyccel.ast.variable import Variable
 
 __all__ = (
-   'as_static_function',
-   'as_static_function_call',
-   'sanitize_arguments',
+    'as_static_module',
+    'as_static_function',
+    'as_static_function_call',
+    'sanitize_arguments',
 )
 
 #=======================================================================================
@@ -114,7 +115,16 @@ def as_static_function(func, name=None):
                         )
 
 #=======================================================================================
-def as_static_function_call(func, mod_name, name=None):
+def as_static_module(funcs, original_module, name = None):
+    funcs = [f for f in funcs if not f.is_private]
+    imports = []
+    bind_c_funcs = [as_static_function_call(f, original_module, name=f.name, imports = imports) for f in funcs]
+    if name is None:
+        name = 'bind_c_{}'.format(original_module)
+    return Module(name, (), bind_c_funcs, imports = imports)
+
+#=======================================================================================
+def as_static_function_call(func, mod_name, name=None, imports = None):
 
     assert isinstance(func, FunctionDef)
     assert isinstance(mod_name, str)
@@ -123,7 +133,11 @@ def as_static_function_call(func, mod_name, name=None):
     func_alias = func.clone('mod_' + str(func.name))
 
     # from module import func as func_alias
-    imports = [Import(target=AsName(func.name, func_alias.name), source=mod_name)]
+    if imports is None:
+        local_imports = [Import(target=AsName(func.name, func_alias.name), source=mod_name)]
+    else:
+        imports.append(Import(target=AsName(func.name, func_alias.name), source=mod_name))
+        local_imports = ()
 
     # function arguments
     args = sanitize_arguments(func.arguments)
@@ -139,7 +153,7 @@ def as_static_function_call(func, mod_name, name=None):
                        arguments_inout = func.arguments_inout,
                        functions = func.functions,
                        interfaces = func.interfaces,
-                       imports = imports,
+                       imports = local_imports,
                        doc_string = func.doc_string,
                        )
 
