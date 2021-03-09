@@ -17,7 +17,7 @@ from pyccel.ast.core        import create_incremented_string, SeparatorComment
 
 from pyccel.ast.core        import FunctionCall, FunctionDef, FunctionAddress
 from pyccel.ast.core        import Assign, AliasAssign, Nil, datatype
-from pyccel.ast.core        import If, IfSection, Import, Return
+from pyccel.ast.core        import If, IfSection, Import, Return, Deallocate
 
 from pyccel.ast.cwrapper    import PyArgKeywords, PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper    import Py_CLEANUP_SUPPORTED
@@ -339,9 +339,15 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         """
         body = []
+        # once valued variable rank > 0 are implemented change should be made here
         if variable.rank > 0 and self._target_language is 'c':
-            body.append(Deallocate(i))
-        
+            if variable.is_pointer and variable.is_optional: #double pointer
+                body.append(Deallocate(variable))
+            else: # anyway there should be a better way to handle this
+                arg = variable.clone(name = variable.name, is_pointer = True, is_optional = False)
+                body.append(Deallocate(arg))
+
+
         if variable.is_optional:
             body.append(FunctionCall(free, [variable]))
 
@@ -371,11 +377,13 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         body = []
 
-        if variable.is_optional and not (variable.rank > 0 and self._target_language is 'fortran'):
-            dtype = self.find_in_dtype_registry(self._print(variable.dtype), variable.precision)
+        if variable.is_optional:
+            if variable.rank > 0:
+                dtype = 't_ndarray'
+            else:
+                dtype = self.find_in_dtype_registry(self._print(variable.dtype), variable.precision)
 
             size = Variable(NativeGeneric(), dtype)
-
             body += [AliasAssign(variable,
                 FunctionCall(malloc, [
                     FunctionCall(sizeof, [size])
