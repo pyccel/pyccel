@@ -354,6 +354,8 @@ class CWrapperCodePrinter(CCodePrinter):
         return body
 
     def free_allocated_memory(self):
+        """
+        """
         body = []
 
         for elem in  self.to_free_objects:
