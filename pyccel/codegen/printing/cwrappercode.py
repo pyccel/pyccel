@@ -457,84 +457,42 @@ class CWrapperCodePrinter(CCodePrinter):
     #                   Convert functions
     #--------------------------------------------------------------------
 
-    def check_argument(self, p_arg, c_arg, is_interface = True):
-        """
-        Generate list of statement responsible for collecting value
-        of an argument
-        Parameters:
-        ----------
-        p_arg   : Variable
-            The python argument needed for checking
-        c_arg   : Variable
-            variable holdding information (data type, precision, rank, order) needed
-            for bulding converter function body
-        is_interface : Boolean
-            default True used to avoid date type check when working with interfaces
-        Returns:
-        --------
-        body   : list of statements
-        """
-        check  = []
-        error = []
-
-        if c_arg.rank > 0: # this is an array
-            check = array_checker(p_arg, c_arg, is_interface, self._target_language)
-            # error is set on the C side
-
-        elif is_interface:
-            check = scalar_object_check(p_arg, c_arg, True)
-            # error is set on the interface side
-
-        else:
-            check = PyccelNot(scalar_object_check(p_arg, c_arg, False))
-            error = [generate_datatype_error(c_arg)]
-
-        return check, error
-
     def generate_converter_function(self, name, cast_function, c_var, is_interface = False):
         """
         """
         c_arg = c_var.clone(name = 'c_arg', is_pointer = True)
         p_arg = Variable(name = 'p_arg', dtype = PyccelPyObject(), is_pointer = True)
-        body  = []
 
-        def set_destructor():
-            """Setting up the destructor to free memory in case of error
-            """
-            check = PyccelIs(VariableAddress(p_arg), Nil())
-            return If(IfSection(check, self.get_free_statements(c_arg) + [RETURN_ZERO]))
+        # Setting up the destructor to free allocated memory in case of error
+        check = PyccelIs(VariableAddress(p_arg), Nil())
+        body = [IfSection(check, self.get_free_statements(c_arg) + [RETURN_ZERO])]
 
-        def set_optional():
-            """Setting up the converter to know if variable is optional
-            """
-            if not c_var.is_optional:
-                return []
+        # Setting up the converter to know if an argument can be optional
+        if c_var.is_optional:
             check = PyccelEq(VariableAddress(p_arg), VariableAddress(Py_None))
-            return [If(IfSection(check, [Return([Py_CLEANUP_SUPPORTED])]))]
+            body.append(IfSection(check, [Return([Py_CLEANUP_SUPPORTED])]))
 
-        def get_type_check():
-            """Getting type check statement
-            """
-            check, error = self.check_argument(p_arg, c_arg, is_interface)
-            if check != []:
-                return [If(IfSection(check, error + [RETURN_ZERO]))]
-            return []
+        # Getting argument type check statement
+        if c_arg.rank > 0:
+            check = array_checker(p_arg, c_arg, is_interface, self._target_language)
+            body.append(IfSection(check, [RETURN_ZERO]))
 
-        def set_collector():
-            """Collect value from python object and check if and error occurred during conversion
-            """
-            body  = [Assign(c_arg, FunctionCall(cast_function, [p_arg]))]
-            check = FunctionCall(PyErr_Occurred, [])
-            body.append(If(IfSection(check, self.get_free_statements(c_arg) + [RETURN_ZERO])))
-            return body
+        if not is_interface:
+            check = PyccelNot(scalar_object_check(p_arg, c_arg, False))
+            error = [generate_datatype_error(c_arg)]
+            body.append(IfSection(check, error + [RETURN_ZERO]))
 
-        body.append(set_destructor())
-        body.extend(set_optional())
-        body.extend(get_type_check())
-        #allocate needed memory
+        body = [If(*body)]
+
+        # Allocate memory if needed
         body.extend(self.need_memory_allocation(c_var, c_arg))
-        body.extend(set_collector())
 
+        # Collect value from python object and check if and error occurred during conversion
+        body.append(Assign(c_arg, FunctionCall(cast_function, [p_arg])))
+        check = FunctionCall(PyErr_Occurred, [])
+        body.append(If(IfSection(check, self.get_free_statements(c_arg) + [RETURN_ZERO])))
+
+        # Succes return
         body.append(Return([Py_CLEANUP_SUPPORTED]))
 
         function = FunctionDef(name      = name,
