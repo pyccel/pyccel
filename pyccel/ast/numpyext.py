@@ -793,7 +793,7 @@ class NumpyNorm(PyccelInternalFunction):
         super().__init__(arg, dim)
         cmplx_precision = None
         if isinstance(arg.dtype, NativeBool):
-            arg = PythonFloat(PythonInt(arg))
+            arg = PythonFloat(arg)
         elif isinstance(arg.dtype, NativeComplex):
             cmplx_precision = arg.precision
             arg = PythonAbs(arg)
