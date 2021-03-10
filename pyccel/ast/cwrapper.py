@@ -378,6 +378,12 @@ c_to_py_registry = {
 #              errors and check functions
 #-------------------------------------------------------------------
 
+# https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Occurred
+PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
+                             arguments = [],
+                             results   = [Variable(dtype = PyccelPyObject(), name = 'r', is_pointer = True)],
+                             body      = [])
+
 def PyErr_SetString(exception, message):
     """
     Generate function Call of c/python api PyErr_SetString
@@ -443,7 +449,6 @@ check_type_registry  = {
     NativeReal()    : 'PyFloat_Check',
     NativeBool()    : 'PyBool_Check',
 }
-
 
 def PythonType_Check(py_object, c_object):
     """
