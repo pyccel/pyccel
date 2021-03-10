@@ -554,4 +554,3 @@ void    *nd_data(t_ndarray *a)
 	
 	return a->data;
 }
-

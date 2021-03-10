@@ -447,7 +447,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         body += self.need_memory_allocation(c_var, c_arg)
 
-        body += [Assign(c_arg, FunctionCall(converter, [p_arg]))]
+        body += [Assign(c_arg, FunctionCall(cast_function, [p_arg]))]
 
         body += [If(IfSection(FunctionCall(PyErr_Occurred, []), [RETURN_ZERO]))]
 
@@ -485,7 +485,6 @@ class CWrapperCodePrinter(CCodePrinter):
         )
         name = self.get_new_name(used_names, name) # to avoid name collision
         return name
-
 
     # -------------------------------------------------------------------
     #       Parsing arguments and building values  functions
@@ -559,6 +558,34 @@ class CWrapperCodePrinter(CCodePrinter):
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
     #--------------------------------------------------------------------
+    def PyFunc_to_CFunc(self, wrapper_name, wrapper_args, wrapper_results):
+        """
+        """
+        wrapper_func = FunctionDef(\
+                name = wrapper_name,
+                arguments = wrapper_args,
+                results = wrapper_results,
+                body = [PyErr_SetString('PyExc_NotImplementedError',
+                                        '"Cannot pass a function as an argument"'),
+                        AliasAssign(wrapper_results[0], Nil()),
+                        Return(wrapper_results)])
+
+        return CCodePrinter._print_FunctionDef(self, wrapper_func)
+
+
+    def private_function_printer(self, wrapper_name, wrapper_args, wrapper_results):
+        """
+        """
+        wrapper_func = FunctionDef(
+                name = wrapper_name,
+                arguments = wrapper_args,
+                results = wrapper_results,
+                body = [PyErr_SetString('PyExc_NotImplementedError',
+                                        '"Private functions are not accessible from python"'),
+                        AliasAssign(wrapper_results[0], Nil()),
+                        Return(wrapper_results)])
+
+        return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_PyccelPyObject(self, expr):
         return 'pyobject'
@@ -784,6 +811,12 @@ class CWrapperCodePrinter(CCodePrinter):
 
         wrapper_body                = [keyword_list]
         static_func_args            = []
+
+        if expr.is_private:
+            return self.private_function_printer(wrapper_name, wrapper_args, wrapper_results)
+
+        if any(isinstance(arg, FunctionAddress) for arg in expr.arguments):
+            return self.PyFunc_to_CFunc(wrapper_name, wrapper_args, wrapper_results)
 
         converters = []
         # loop on all functions argument to collect needed converter functions

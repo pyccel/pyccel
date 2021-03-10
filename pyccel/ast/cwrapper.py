@@ -474,7 +474,6 @@ def PythonType_Check(py_object, c_object):
 
     return FunctionCall(check_func, [py_object])
 
-
 # This registry is used for interface management,
 # mapping each data type to a given flag
 # Those flags are used in a bitset #TODO
