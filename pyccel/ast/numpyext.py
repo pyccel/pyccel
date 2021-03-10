@@ -791,13 +791,23 @@ class NumpyNorm(PyccelInternalFunction):
 
     def __init__(self, arg, dim=None):
         super().__init__(arg, dim)
+        cmplx_precision = None
         if isinstance(arg.dtype, NativeBool):
             arg = PythonFloat(PythonInt(arg))
         elif isinstance(arg.dtype, NativeComplex):
+            cmplx_precision = arg.precision
             arg = PythonAbs(arg)
         elif not isinstance(arg.dtype, NativeReal):
             arg = PythonFloat(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else arg
+        self._precision = cmplx_precision if cmplx_precision else arg.precision
+        if self.dim is not None:
+            sh = list(sh)
+            del sh[self.dim]
+            self._shape = tuple(sh)
+        else:
+            self._shape = ()
+        self._rank = len(self._shape)
 
     @property
     def arg(self):
