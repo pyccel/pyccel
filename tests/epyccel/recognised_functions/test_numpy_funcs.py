@@ -60,6 +60,9 @@ else:
     RTOL = 1e-14
     ATOL = 1e-15
 
+RTOL32 = 1e-6
+ATOL32 = 1e-7
+
 def matching_types(pyccel_result, python_result):
     """  Returns True if the types match, False otherwise
     """
@@ -6063,7 +6066,7 @@ def test_numpy_norm_scalar(language):
     f_fl32_output = f_fl32(fl32)
     test_float32_output = get_norm(fl32)
 
-    assert np.isclose(f_fl32_output, test_float32_output, rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_fl32_output, test_float32_output, rtol=RTOL32, atol=ATOL32)
     assert matching_types(f_fl32_output, test_float32_output)
 
     f_fl64_output = f_fl64(fl64)
@@ -6078,7 +6081,7 @@ def test_numpy_norm_scalar(language):
     f_complex64_output = f_complex64(cmplx64)
     test_complex64_output = get_norm(cmplx64)
 
-    assert np.isclose(f_complex64_output, test_complex64_output, rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_complex64_output, test_complex64_output, rtol=RTOL32, atol=ATOL32)
     assert matching_types(f_complex64_output, test_complex64_output)
 
     f_complex128_output = f_complex128(cmplx128)
@@ -6159,13 +6162,13 @@ def test_numpy_norm_array_like_1d(language):
     f_fl64 = epyccel(get_norm, language=language)
 
     assert np.isclose(f_fl(fl), get_norm(fl), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f_fl32(fl32), get_norm(fl32), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_fl32(fl32), get_norm(fl32), rtol=RTOL32, atol=ATOL32)
     assert np.isclose(f_fl64(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
 
     f_complex64 = epyccel(get_norm, language=language)
     f_complex128 = epyccel(get_norm, language=language)
 
-    assert np.isclose(f_complex64(cmplx64), get_norm(cmplx64), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_complex64(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.isclose(f_complex128(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
 
 @pytest.mark.parametrize( 'language', (
@@ -6241,11 +6244,11 @@ def test_numpy_norm_array_like_2d(language):
     f_fl64 = epyccel(get_norm, language=language)
 
     assert np.isclose(f_fl(fl), get_norm(fl), rtol=RTOL, atol=ATOL)
-    assert np.isclose(f_fl32(fl32), get_norm(fl32), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_fl32(fl32), get_norm(fl32), rtol=RTOL32, atol=ATOL32)
     assert np.isclose(f_fl64(fl64), get_norm(fl64), rtol=RTOL, atol=ATOL)
 
     f_complex64 = epyccel(get_norm, language=language)
     f_complex128 = epyccel(get_norm, language=language)
 
-    assert np.isclose(f_complex64(cmplx64), get_norm(cmplx64), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f_complex64(cmplx64), get_norm(cmplx64), rtol=RTOL32, atol=ATOL32)
     assert np.isclose(f_complex128(cmplx128), get_norm(cmplx128), rtol=RTOL, atol=ATOL)
