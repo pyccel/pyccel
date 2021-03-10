@@ -6071,8 +6071,8 @@ def test_numpy_matmul_array_like_1d(language):
             pytest.mark.c]
         ),
         pytest.param("python", marks = [
-            pytest.mark.python,
-            pytest.mark.skip(reason="Missing Python printer")]
+            pytest.mark.python],
+        #    pytest.mark.skip(reason="Missing Python printer")]
         )
     )
 )
@@ -6501,7 +6501,6 @@ def test_numpy_where_array_like_2d_with_condition(language):
     )
 )
 
-
 def test_numpy_where_array_like_2d(language):
 
     @types('bool[:,:]')
@@ -6581,8 +6580,7 @@ def test_numpy_where_array_like_2d(language):
             pytest.mark.c]
         ),
         pytest.param("python", marks = [
-            pytest.mark.python,
-            pytest.mark.skip(reason="Missing Python printer")]
+            pytest.mark.python]
         )
     )
 )
@@ -6664,8 +6662,7 @@ def test_numpy_linspace_scalar(language):
             pytest.mark.c]
         ),
         pytest.param("python", marks = [
-            pytest.mark.python,
-            pytest.mark.skip(reason="Missing Python printer")]
+            pytest.mark.python]
         )
     )
 )
@@ -6753,8 +6750,7 @@ def test_numpy_linspace_array_like_1d(language):
             pytest.mark.c]
         ),
         pytest.param("python", marks = [
-            pytest.mark.python,
-            pytest.mark.skip(reason="Missing Python printer")]
+            pytest.mark.python]
         )
     )
 )
@@ -6780,7 +6776,7 @@ def test_numpy_linspace_array_like_2d(language):
         stop = arr
         a = linspace(start, stop, numberOfSamplesToGenerate)
         s = shape(a)
-        return len(s), s[0], s[1], s[2], s[3], a[0, 0, 0, 0], a[0, 0, 1, 0], a[0, 1, 0, 0], a[0, 1, 1, 0]
+        return len(s), s[0], s[1], s[2], a[0, 0, 0], a[0, 1, 0], a[1, 0, 0], a[1, 1, 0]
 
     size = (2, 5)
 

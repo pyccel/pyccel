@@ -418,6 +418,18 @@ class PythonCodePrinter(CodePrinter):
                 dtype = dtype,
                 order = expr.order)
 
+    def _print_NumpyLinspace(self, expr):
+        return expr.__str__()
+
+    def _print_NumpyMatmul(self, expr):
+        type_name = type(expr).__name__
+        func_name = type_name[5:].lower()
+        return "{func_name}({x1}, {x2})".format(
+                func_name = func_name,
+                x1 = self._print(expr.a),
+                x2 = self._print(expr.b))
+
+
     def _print_NumpyFull(self, expr):
         dtype = self._print(expr.dtype)
         if expr.precision != default_precision[str(expr.dtype)]:

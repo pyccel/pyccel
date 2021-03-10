@@ -489,7 +489,6 @@ class NumpyLinspace(NumpyNewArray):
     """
     _dtype     = NativeReal()
     _precision = default_precision['real']
-    _rank      = 1
     _order     = 'F'
 
     def __init__(self, start, stop, size):
@@ -506,7 +505,8 @@ class NumpyLinspace(NumpyNewArray):
         self._start = start
         self._stop  = stop
         self._size  = size
-        self._shape = (self.size,)
+        self._shape = (self._size,) + self._start.shape
+        self._rank  = len(self._shape)
         super().__init__()
 
     @property
