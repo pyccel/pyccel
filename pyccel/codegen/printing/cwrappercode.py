@@ -502,7 +502,7 @@ class CWrapperCodePrinter(CCodePrinter):
         valued = '' if not isinstance(c_var, ValuedVariable) else 'v_'
         valued = 'o_' if c_var.is_optional else valued
 
-        name = '{valued}{dtype}{precision}{rank}{order}'.format(
+        name = 'py_to_{valued}{dtype}{precision}{rank}{order}'.format(
             valued    = valued,
             dtype     = dtype,
             precision = prec,
